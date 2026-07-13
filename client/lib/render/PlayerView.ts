@@ -25,6 +25,7 @@ export class PlayerView {
   private readonly sprite = new Sprite();
   private readonly frames = new Map<string, Texture>();
   private direction: Direction;
+  private walkDirection: Direction;
   private tileX: number;
   private tileY: number;
   private fromX: number;
@@ -40,6 +41,7 @@ export class PlayerView {
     nameColor: number,
   ) {
     this.direction = state.direction;
+    this.walkDirection = state.direction;
     this.tileX = state.x;
     this.tileY = state.y;
     this.fromX = state.x;
@@ -74,14 +76,14 @@ export class PlayerView {
       this.updateFrame();
       return;
     }
-    // animate strictly tile-to-tile: finish the previous step, then walk the
-    // new one. Anything farther than one tile is a server correction — snap.
+    const renderedPosition = this.pixelPosition();
     const adjacent = Math.abs(x - this.tileX) + Math.abs(y - this.tileY) === 1;
-    this.fromX = adjacent ? this.tileX : x;
-    this.fromY = adjacent ? this.tileY : y;
+    this.fromX = adjacent ? renderedPosition.x / TILE : x;
+    this.fromY = adjacent ? renderedPosition.y / TILE : y;
     this.tileX = x;
     this.tileY = y;
     this.moveT = adjacent ? 0 : 1;
+    if (adjacent) this.walkDirection = direction;
     this.updateFrame();
   }
 
@@ -118,7 +120,7 @@ export class PlayerView {
       moving && walkPhases > 0
         ? 1 + (Math.floor(this.walkDist / 8) % walkPhases)
         : 0;
-    const dir = DIR_INDEX[this.direction];
+    const dir = DIR_INDEX[moving ? this.walkDirection : this.direction];
     const key = `${dir}:${phase}`;
     let texture = this.frames.get(key);
     if (!texture) {

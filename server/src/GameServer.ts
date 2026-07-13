@@ -76,6 +76,7 @@ export class GameServer {
       for (const intent of session.drainIntents()) {
         this.handleIntent(session, intent, now);
       }
+      this.continueMovement(session, now);
     }
   }
 
@@ -113,6 +114,9 @@ export class GameServer {
         return;
       case "move":
         this.handleMove(session, intent, now);
+        return;
+      case "stop-move":
+        session.movementDirection = null;
         return;
     }
   }
@@ -160,7 +164,16 @@ export class GameServer {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
+    session.movementDirection = intent.direction;
     const result = this.world.tryMove(player, intent.direction, now);
+    if (result.moved || result.turned) this.broadcastMove(player);
+  }
+
+  private continueMovement(session: Session, now: number): void {
+    if (!session.playerId || !session.movementDirection) return;
+    const player = this.world.getPlayer(session.playerId);
+    if (!player) return;
+    const result = this.world.tryMove(player, session.movementDirection, now);
     if (result.moved || result.turned) this.broadcastMove(player);
   }
 

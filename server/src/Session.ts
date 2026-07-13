@@ -3,6 +3,7 @@ import {
   clientMessageSchema,
   PROTOCOL_LIMITS,
   type ClientMessage,
+  type Direction,
   type ServerMessage,
 } from "@tibia/protocol";
 
@@ -13,6 +14,7 @@ import {
  */
 export class Session {
   playerId: string | null = null;
+  movementDirection: Direction | null = null;
   isAlive = true;
 
   private pendingIntents: ClientMessage[] = [];

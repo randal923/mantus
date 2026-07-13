@@ -36,6 +36,10 @@ export class GameClient {
     this.send({ type: "move", direction });
   }
 
+  stopMoving(): void {
+    this.send({ type: "stop-move" });
+  }
+
   disconnect(): void {
     this.socket?.close();
     this.socket = null;

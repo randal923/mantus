@@ -6,9 +6,6 @@ import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
-/** Minimum gap between move sends so OS key-repeat cannot exceed the
- * server's 30 messages/second rate limit. */
-const MOVE_SEND_MS = 50;
 
 const KEY_DIRECTIONS: Record<string, Direction> = {
   ArrowUp: "north",
@@ -38,7 +35,7 @@ export default function GameWindow() {
     let disposed = false;
     let client: GameClient | undefined;
     let renderer: WorldRenderer | undefined;
-    let lastMoveSentAt = 0;
+    let heldMovementKeys: ReadonlyArray<string> = [];
 
     (async () => {
       const [{ GameClient }, { WorldRenderer }] = await Promise.all([
@@ -62,24 +59,54 @@ export default function GameWindow() {
       client.connect(`Hero-${Math.random().toString(36).slice(2, 6)}`);
     })();
 
-    // simplest possible walking: every keydown (OS key-repeat included) sends
-    // one move intent and the server decides — step if off cooldown,
-    // otherwise just turn. Nothing is queued or replayed on either side.
+    const sendHeldDirection = () => {
+      const activeKey = heldMovementKeys[heldMovementKeys.length - 1];
+      if (!activeKey) return;
+      const direction = KEY_DIRECTIONS[activeKey];
+      if (!direction) return;
+      client?.sendMove(direction);
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       const direction = KEY_DIRECTIONS[event.code];
       if (!direction) return;
       event.preventDefault();
-      const now = performance.now();
-      if (now - lastMoveSentAt < MOVE_SEND_MS) return;
-      lastMoveSentAt = now;
-      client?.sendMove(direction);
+      if (heldMovementKeys.includes(event.code)) return;
+      heldMovementKeys = [...heldMovementKeys, event.code];
+      sendHeldDirection();
+    };
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (!KEY_DIRECTIONS[event.code]) return;
+      event.preventDefault();
+      const wasActive =
+        heldMovementKeys[heldMovementKeys.length - 1] === event.code;
+      heldMovementKeys = heldMovementKeys.filter(
+        (keyCode) => keyCode !== event.code,
+      );
+      if (!wasActive) return;
+      if (heldMovementKeys.length > 0) {
+        sendHeldDirection();
+        return;
+      }
+      client?.stopMoving();
+    };
+
+    const onBlur = () => {
+      if (heldMovementKeys.length === 0) return;
+      heldMovementKeys = [];
+      client?.stopMoving();
     };
 
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
 
     return () => {
       disposed = true;
       window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
       client?.disconnect();
       renderer?.destroy();
     };
