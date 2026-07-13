@@ -12,13 +12,13 @@ export function ItemSlot({ item, placeholderSpriteId }: ItemSlotProps) {
   return (
     <div
       title={item ? `${item.count > 1 ? `${item.count} ` : ""}${item.name}` : undefined}
-      className="relative flex size-18 items-center justify-center rounded-md bg-black/10 inset-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
+      className="relative flex size-18 items-center justify-center rounded-md bg-black/20 inset-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
     >
       {item ? (
         <SpriteIcon spriteId={item.spriteId} />
       ) : (
         placeholderSpriteId !== undefined && (
-          <SpriteIcon spriteId={placeholderSpriteId} className="opacity-20 brightness-0" />
+          <SpriteIcon spriteId={placeholderSpriteId} className="opacity-20 brightness-0 invert" />
         )
       )}
       {item && item.count > 1 && (

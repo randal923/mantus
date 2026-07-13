@@ -16,8 +16,8 @@ export function CapacityBar({ used, max }: CapacityBarProps) {
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="mb-0.5 text-center text-sm font-bold text-ui-ink">
-        <span aria-hidden>⚖</span> {pct}%
+      <div className="mb-0.5 text-center text-sm font-bold text-ui-text">
+        <span aria-hidden>CAP</span> {pct}%
       </div>
       <div className="h-2.5 overflow-hidden rounded-sm border border-black/50 bg-black/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
         <div

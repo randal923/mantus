@@ -1,6 +1,7 @@
 "use client";
 
 import type { Equipment, InventoryItem } from "./inventoryTypes";
+import { TibiaButton } from "../ui/TibiaButton";
 import { CapacityBar } from "./CapacityBar";
 import { EquipmentPaperdoll } from "./EquipmentPaperdoll";
 import { ItemSlot } from "./ItemSlot";
@@ -27,9 +28,6 @@ interface InventoryPanelProps {
   onSort?: () => void;
 }
 
-const PILL_BUTTON_CLASS =
-  "rounded-full border-2 border-ui-gold bg-linear-to-b from-[#4d5878] to-[#272e47] px-5 py-0.5 text-sm font-bold text-ui-gold shadow-[0_2px_3px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.25)] hover:brightness-125 active:translate-y-px";
-
 export function InventoryPanel({
   characterName,
   equipment,
@@ -49,31 +47,39 @@ export function InventoryPanel({
   return (
     <section
       aria-label={`${characterName}'s inventory`}
-      className="flex h-full w-88 flex-col gap-3 rounded-xl border-4 border-[#332c24] bg-radial-[at_50%_8%] from-ui-parchment-light via-ui-parchment via-55% to-ui-parchment-deep p-4 font-serif shadow-[0_4px_16px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.4)] select-none"
+      className="relative isolate flex h-full w-88 flex-col gap-3 overflow-hidden rounded-sm border border-[#3a5054] bg-radial-[at_50%_8%] from-ui-panel-light via-ui-panel via-55% to-ui-panel-deep p-4 font-tibia shadow-[0_4px_20px_rgba(0,0,0,0.7),inset_0_0_0_1px_rgba(0,0,0,0.7)] select-none"
     >
+      <div aria-hidden className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-50 mix-blend-overlay" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-linear-to-b from-[#2c5b5c]/60 to-transparent"
+      />
       <header className="flex items-center gap-3">
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-full border-4 border-[#4b463f] bg-neutral-900 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+        <div className="flex size-16 shrink-0 items-center justify-center rounded-full border-2 border-[#3a5054] bg-neutral-950 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
           <SpriteIcon spriteId={equipment.helmet?.spriteId ?? 428} scale={1.5} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm text-ui-ink/70">{characterName}&rsquo;s</div>
-          <h2 className="text-3xl leading-7 font-bold text-ui-ink">Inventory</h2>
+          <div className="truncate text-sm text-ui-text/60">{characterName}&rsquo;s</div>
+          <h2 className="font-display text-3xl leading-7 tracking-wide text-ui-text [font-variant:small-caps] [text-shadow:0_2px_4px_rgba(0,0,0,0.8)]">
+            Inventory
+          </h2>
         </div>
         {onClose && (
           <button
             aria-label="Close inventory"
             onClick={onClose}
-            className="flex size-8 items-center justify-center self-start rounded-full border-2 border-white/80 bg-radial-[at_35%_30%] from-[#d5564a] to-[#8c1f1f] font-bold text-white shadow-[0_2px_3px_rgba(0,0,0,0.4)] hover:brightness-115"
+            className="flex size-8 items-center justify-center self-start rounded-sm border border-[#1b2126] bg-linear-to-b from-[#c65a54] via-[#9c3434] via-40% to-[#611c1c] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_3px_rgba(0,0,0,0.5)] hover:brightness-115 active:bg-linear-to-t"
           >
             ✕
           </button>
         )}
       </header>
+      <div aria-hidden className="h-px bg-linear-to-r from-transparent via-ui-accent/50 to-transparent" />
 
       <EquipmentPaperdoll equipment={equipment} />
 
       <div className="flex items-center gap-3">
-        <div className="flex flex-1 flex-col gap-1 text-sm font-bold text-ui-ink">
+        <div className="flex flex-1 flex-col gap-1 text-sm font-bold text-ui-text">
           <div className="flex items-center gap-2">
             <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1} />
             {gold.toLocaleString()}
@@ -85,16 +91,8 @@ export function InventoryPanel({
         </div>
         {(onStack || onSort) && (
           <div className="flex flex-col gap-1.5">
-            {onStack && (
-              <button onClick={onStack} className={PILL_BUTTON_CLASS}>
-                Stack
-              </button>
-            )}
-            {onSort && (
-              <button onClick={onSort} className={PILL_BUTTON_CLASS}>
-                Sort
-              </button>
-            )}
+            {onStack && <TibiaButton onClick={onStack}>Stack</TibiaButton>}
+            {onSort && <TibiaButton onClick={onSort}>Sort</TibiaButton>}
           </div>
         )}
       </div>
@@ -113,7 +111,7 @@ export function InventoryPanel({
       </div>
 
       {totalValue !== undefined && (
-        <footer className="flex items-center gap-1.5 text-sm font-bold text-ui-ink">
+        <footer className="flex items-center gap-1.5 text-sm font-bold text-ui-text">
           <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1} />
           {totalValue.toLocaleString()}
         </footer>

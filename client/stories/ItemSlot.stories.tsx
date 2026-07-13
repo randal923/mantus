@@ -5,9 +5,12 @@ import { ItemSlot } from "../components/inventory/ItemSlot";
 const meta = {
   title: "Game/ItemSlot",
   component: ItemSlot,
+  parameters: {
+    layout: "centered",
+  },
   decorators: [
     (Story) => (
-      <div className="bg-ui-parchment p-6">
+      <div className="bg-ui-panel p-6">
         <Story />
       </div>
     ),
