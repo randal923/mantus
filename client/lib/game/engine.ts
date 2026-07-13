@@ -19,16 +19,46 @@ const DIR_DY = [-1, 0, 1, 0];
 
 const EFFECT_BLOOD = 1;
 const EFFECT_PUFF = 3;
+const EFFECT_AREA_HIT = 10; // gray slash burst (exori)
+const EFFECT_ENERGY = 12; // blue lightning strike (exevo gran mas vis)
+const EFFECT_SPARKLES = 15; // green sparkles (utani hur)
+
+const BASE_STEP_MS = 250;
+const HASTE_STEP_MS = 150;
 
 const PLAYER_COLORS_IDX = { head: 78, body: 69, legs: 58, feet: 76 };
 
 const AGGRO_RANGE = 7;
 const LEASH_RANGE = 4;
 
+export interface SpellUiState {
+  hotkey: string;
+  name: string;
+  words: string;
+  icon: string; // data URL for the slot image
+  manaCost: number;
+  remainingMs: number; // cooldown left
+  totalMs: number; // full cooldown
+  activeMs: number; // for buffs: time left on the effect
+}
+
 export interface GameStats {
   hp: number;
   maxHp: number;
+  mana: number;
+  maxMana: number;
   kills: number;
+  spells: SpellUiState[];
+}
+
+interface SpellDef {
+  name: string;
+  words: string;
+  manaCost: number;
+  cooldownMs: number;
+  cd: number; // cooldown remaining
+  icon: string;
+  cast: () => void;
 }
 
 export interface GameCallbacks {
@@ -234,6 +264,11 @@ export class Game {
   private timedItems: TimedItem[] = [];
   private kills = 0;
   private regenAcc = 0;
+  private mana = 200;
+  private maxMana = 200;
+  private spells: SpellDef[] = [];
+  private hasteMsLeft = 0;
+  private statsAcc = 0;
   private destroyed = false;
   private keydownHandler = (e: KeyboardEvent) => this.onKeyDown(e);
   private keyupHandler = (e: KeyboardEvent) => this.onKeyUp(e);
@@ -276,6 +311,9 @@ export class Game {
     collect(this.store.outfit(128));
     collect(this.store.effect(EFFECT_BLOOD));
     collect(this.store.effect(EFFECT_PUFF));
+    collect(this.store.effect(EFFECT_AREA_HIT));
+    collect(this.store.effect(EFFECT_ENERGY));
+    collect(this.store.effect(EFFECT_SPARKLES));
     collect(this.store.item(BLOOD_SPLAT));
     await this.store.preload(spriteIds);
     if (this.destroyed) return;
@@ -333,6 +371,8 @@ export class Game {
       this.monsters.push(m);
       this.addCreature(m);
     }
+
+    this.buildSpells();
 
     this.targetMarker
       .rect(0.5, 0.5, TILE - 1, TILE - 1)
@@ -459,6 +499,99 @@ export class Game {
     this.floats.push({ text, worldX, worldY, age: 0 });
   }
 
+  // ---------------------------------------------------------------- spells
+
+  private effectIcon(effectId: number): string {
+    const o = this.store.effect(effectId);
+    return this.store
+      .bakeFrame(o, { phase: Math.floor(o.phases / 2) })
+      .toDataURL();
+  }
+
+  private buildSpells(): void {
+    this.spells = [
+      {
+        name: "Berserk",
+        words: "exori",
+        manaCost: 40,
+        cooldownMs: 2000,
+        cd: 0,
+        icon: this.effectIcon(EFFECT_AREA_HIT),
+        cast: () => this.castAreaSpell(EFFECT_AREA_HIT, 1, 40, 90),
+      },
+      {
+        name: "Rage of the Skies",
+        words: "exevo gran mas vis",
+        manaCost: 120,
+        cooldownMs: 8000,
+        cd: 0,
+        icon: this.effectIcon(EFFECT_ENERGY),
+        cast: () => this.castAreaSpell(EFFECT_ENERGY, 3, 80, 180),
+      },
+      {
+        name: "Haste",
+        words: "utani hur",
+        manaCost: 50,
+        cooldownMs: 2000,
+        cd: 0,
+        icon: this.effectIcon(EFFECT_SPARKLES),
+        cast: () => {
+          this.hasteMsLeft = 20000;
+          this.spawnEffect(
+            EFFECT_SPARKLES,
+            this.player.tileX,
+            this.player.tileY,
+          );
+        },
+      },
+    ];
+  }
+
+  /** Hit every living monster within `radius` (chebyshev for r=1, circle otherwise). */
+  private castAreaSpell(
+    effectId: number,
+    radius: number,
+    dmgMin: number,
+    dmgMax: number,
+  ): void {
+    const p = this.player;
+    const inArea = (dx: number, dy: number) =>
+      radius <= 1
+        ? Math.max(Math.abs(dx), Math.abs(dy)) <= radius
+        : dx * dx + dy * dy <= radius * radius + 2;
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (!inArea(dx, dy)) continue;
+        const x = p.tileX + dx;
+        const y = p.tileY + dy;
+        if (this.isWalkable(x, y)) this.spawnEffect(effectId, x, y);
+      }
+    }
+    for (const m of this.monsters) {
+      if (m.dead) continue;
+      if (!inArea(m.tileX - p.tileX, m.tileY - p.tileY)) continue;
+      this.dealDamage(m, randInt(dmgMin, dmgMax));
+    }
+  }
+
+  castSpell(index: number): void {
+    const spell = this.spells[index];
+    if (!spell || this.destroyed) return;
+    const p = this.player;
+    if (spell.cd > 0) return;
+    if (this.mana < spell.manaCost) {
+      const v = p.visualPos();
+      this.spawnFloat(v.x + TILE / 2, v.y - 12, "Not enough mana", 0xbbbbff);
+      return;
+    }
+    this.mana -= spell.manaCost;
+    spell.cd = spell.cooldownMs;
+    const v = p.visualPos();
+    this.spawnFloat(v.x + TILE / 2, v.y - 24, spell.words, 0xffff00);
+    spell.cast();
+    this.pushStats();
+  }
+
   // ---------------------------------------------------------------- game logic
 
   private isWalkable(x: number, y: number): boolean {
@@ -498,17 +631,20 @@ export class Game {
     c.updateFrame();
   }
 
-  private strike(attacker: Creature, victim: Creature): void {
-    attacker.attackCd = attacker.attackMs;
-    this.faceToward(attacker, victim.tileX, victim.tileY);
-    const dmg = randInt(attacker.dmgMin, attacker.dmgMax);
+  private dealDamage(victim: Creature, dmg: number): void {
     victim.hp = Math.max(0, victim.hp - dmg);
     victim.redrawBar();
-    this.spawnEffect(EFFECT_BLOOD, victim.tileX, victim.tileY);
     const vp = victim.visualPos();
     this.spawnFloat(vp.x + TILE / 2, vp.y - 12, String(dmg), 0xff3333);
     if (victim === this.player) this.pushStats();
     if (victim.hp <= 0) this.die(victim);
+  }
+
+  private strike(attacker: Creature, victim: Creature): void {
+    attacker.attackCd = attacker.attackMs;
+    this.faceToward(attacker, victim.tileX, victim.tileY);
+    this.spawnEffect(EFFECT_BLOOD, victim.tileX, victim.tileY);
+    this.dealDamage(victim, randInt(attacker.dmgMin, attacker.dmgMax));
   }
 
   private die(c: Creature): void {
@@ -525,6 +661,8 @@ export class Game {
       c.tileY = this.map.playerStart.y;
       c.moving = false;
       c.hp = c.maxHp;
+      this.mana = this.maxMana;
+      this.hasteMsLeft = 0;
       c.redrawBar();
       this.target = null;
       this.pushStats();
@@ -637,15 +775,27 @@ export class Game {
       this.monsterAI(m, dtMs);
     }
 
-    // hp regen
+    // spell cooldowns + haste
+    for (const s of this.spells) s.cd = Math.max(0, s.cd - dtMs);
+    this.hasteMsLeft = Math.max(0, this.hasteMsLeft - dtMs);
+    p.stepMs = this.hasteMsLeft > 0 ? HASTE_STEP_MS : BASE_STEP_MS;
+
+    // hp/mana regen
     this.regenAcc += dtMs;
     if (this.regenAcc >= 1000) {
       this.regenAcc -= 1000;
       if (p.hp < p.maxHp) {
         p.hp = Math.min(p.maxHp, p.hp + 2);
         p.redrawBar();
-        this.pushStats();
       }
+      this.mana = Math.min(this.maxMana, this.mana + 8);
+    }
+
+    // keep the HUD's cooldown/mana display moving
+    this.statsAcc += dtMs;
+    if (this.statsAcc >= 100) {
+      this.statsAcc = 0;
+      this.pushStats();
     }
 
     // position creatures + camera
@@ -754,6 +904,10 @@ export class Game {
       this.targetNearest();
       return;
     }
+    if (/^(Digit|Numpad)[1-5]$/.test(e.code)) {
+      this.castSpell(Number(e.code.slice(-1)) - 1);
+      return;
+    }
     if (Game.KEY_DIRS[e.code] !== undefined) {
       this.keysDown = this.keysDown.filter((k) => k !== e.code);
       this.keysDown.push(e.code);
@@ -809,7 +963,19 @@ export class Game {
     this.cb.onStats({
       hp: this.player.hp,
       maxHp: this.player.maxHp,
+      mana: this.mana,
+      maxMana: this.maxMana,
       kills: this.kills,
+      spells: this.spells.map((s, i) => ({
+        hotkey: String(i + 1),
+        name: s.name,
+        words: s.words,
+        icon: s.icon,
+        manaCost: s.manaCost,
+        remainingMs: s.cd,
+        totalMs: s.cooldownMs,
+        activeMs: s.words === "utani hur" ? this.hasteMsLeft : 0,
+      })),
     });
   }
 }

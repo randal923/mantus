@@ -71,6 +71,12 @@ offset `(-w*32, -h*32)`. Creatures additionally draw displaced `(-8, -8)`.
 | Blood splats (ground decals) | 2693–2698 (2696 = big) |
 | Effect: blood spark (hit) | 1 |
 | Effect: white puff (death) | 3 |
+| Effect: orange explosion | 7 |
+| Effect: gray slash burst (exori-style area) | 10 |
+| Effect: blue energy ball / lightning strike | 11 / 12 |
+| Effect: magic sparkles blue / red / green | 13 / 14 / 15 |
+| Effect: fire flame | 16 |
+| Effects generally: phase 0 is tiny — judge them at `phases/2` |  |
 | Outfit: rat / orc / cyclops / demon | 21 / 5 / 22 / 35 |
 | Outfit: citizen (colorizable, 9 phases) | 128 (male), 136+ (female) |
 | Outfits ≥ ~145 | mostly white = colorizable, need the mask pass |
