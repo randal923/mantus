@@ -1,33 +1,52 @@
-import { Application, Container, Graphics, Text } from "pixi.js";
+import { Application, Container, Sprite } from "pixi.js";
 import type { MapState, PlayerState, ServerMessage } from "@tibia/protocol";
+import { AssetStore, type OutfitColors, type TibiaObject } from "./AssetStore";
+import { PlayerView } from "./PlayerView";
+import { SPRITE_IDS } from "./spriteIds";
 
 const TILE = 32;
-const ZOOM = 2;
-
-interface PlayerView {
-  container: Container;
-  body: Graphics;
-}
+const ZOOM = 3;
+const NAME_COLOR = 0x44dd44;
 
 /**
- * Pure renderer: draws whatever the server says, holds no game rules.
+ * Pure renderer: draws whatever the server says using the Tibia sprite
+ * atlas. Holds no game rules — movement, occupancy, and speed all come from
+ * server messages.
  */
 export class WorldRenderer {
   private readonly app = new Application();
+  private readonly store = new AssetStore();
   private readonly world = new Container();
+  private readonly groundLayer = new Container();
+  private readonly objectLayer = new Container();
+  private readonly overlay = new Container();
   private readonly playerViews = new Map<string, PlayerView>();
   private ownPlayerId = "";
+  private mapCenter = { x: 0, y: 0 };
   private destroyed = false;
 
   async init(host: HTMLElement): Promise<void> {
-    await this.app.init({ resizeTo: host, background: "#101014" });
+    await this.app.init({
+      resizeTo: host,
+      background: "#101014",
+      antialias: false,
+    });
     if (this.destroyed) {
       this.app.destroy(true, { children: true });
       return;
     }
     host.appendChild(this.app.canvas);
+
+    await this.store.load();
+    if (this.destroyed) return;
+    await this.store.preload(this.spriteIdsToPreload());
+    if (this.destroyed) return;
+
     this.world.scale.set(ZOOM);
-    this.app.stage.addChild(this.world);
+    this.objectLayer.sortableChildren = true;
+    this.world.addChild(this.groundLayer, this.objectLayer);
+    this.app.stage.addChild(this.world, this.overlay);
+    this.app.ticker.add(() => this.tick(this.app.ticker.deltaMS));
   }
 
   applyMessage(message: ServerMessage): void {
@@ -45,7 +64,9 @@ export class WorldRenderer {
         this.removePlayer(message.playerId);
         return;
       case "player-moved":
-        this.movePlayer(message.playerId, message.x, message.y);
+        this.playerViews
+          .get(message.playerId)
+          ?.applyMove(message.x, message.y, message.direction);
         return;
       case "error":
         return;
@@ -57,74 +78,127 @@ export class WorldRenderer {
     if (this.app.renderer) this.app.destroy(true, { children: true });
   }
 
-  private drawMap(map: MapState): void {
-    const grid = new Graphics();
-    grid
-      .rect(0, 0, map.width * TILE, map.height * TILE)
-      .fill(0x1d2b1d)
-      .stroke({ color: 0x3a3a3a, width: 2 });
-    for (let x = 1; x < map.width; x++) {
-      grid.moveTo(x * TILE, 0).lineTo(x * TILE, map.height * TILE);
-    }
-    for (let y = 1; y < map.height; y++) {
-      grid.moveTo(0, y * TILE).lineTo(map.width * TILE, y * TILE);
-    }
-    grid.stroke({ color: 0x28321f, width: 1 });
-    for (const [x, y] of map.blocked) {
-      grid
-        .rect(x * TILE + 2, y * TILE + 2, TILE - 4, TILE - 4)
-        .fill(0x555b60);
-    }
-    this.world.addChildAt(grid, 0);
-    this.centerWorld(map);
+  private spriteIdsToPreload(): number[] {
+    const objects = [
+      this.store.item(SPRITE_IDS.grass),
+      this.store.item(SPRITE_IDS.grassFlowersA),
+      this.store.item(SPRITE_IDS.grassFlowersB),
+      ...SPRITE_IDS.trees.map((id) => this.store.item(id)),
+      this.store.outfit(SPRITE_IDS.citizenOutfit),
+    ];
+    return objects.flatMap((o) => o.sprites);
   }
 
-  private centerWorld(map: MapState): void {
-    const { width, height } = this.app.screen;
-    this.world.position.set(
-      Math.round((width - map.width * TILE * ZOOM) / 2),
-      Math.round((height - map.height * TILE * ZOOM) / 2),
-    );
+  private drawMap(map: MapState): void {
+    this.mapCenter = {
+      x: (map.width * TILE) / 2,
+      y: (map.height * TILE) / 2,
+    };
+    for (let y = 0; y < map.height; y++) {
+      for (let x = 0; x < map.width; x++) {
+        this.drawGround(this.groundTileId(x, y), x, y);
+      }
+    }
+    for (const [x, y] of map.blocked) {
+      const treeId =
+        SPRITE_IDS.trees[(x * 7 + y * 13) % SPRITE_IDS.trees.length] ??
+        SPRITE_IDS.trees[0];
+      this.drawBlockingItem(this.store.item(treeId), x, y);
+    }
+  }
+
+  private groundTileId(x: number, y: number): number {
+    const roll = (x * 31 + y * 17) % 19;
+    if (roll === 3) return SPRITE_IDS.grassFlowersA;
+    if (roll === 11) return SPRITE_IDS.grassFlowersB;
+    return SPRITE_IDS.grass;
+  }
+
+  private drawGround(itemId: number, tileX: number, tileY: number): void {
+    const o = this.store.item(itemId);
+    const spriteId = this.store.spriteId(o, { x: tileX, y: tileY });
+    if (!spriteId) return;
+    const sprite = new Sprite(this.store.spriteTexture(spriteId));
+    sprite.position.set(tileX * TILE, tileY * TILE);
+    this.groundLayer.addChild(sprite);
+  }
+
+  private drawBlockingItem(o: TibiaObject, tileX: number, tileY: number): void {
+    for (let h = 0; h < o.height; h++) {
+      for (let w = 0; w < o.width; w++) {
+        const spriteId = this.store.spriteId(o, { w, h });
+        if (!spriteId) continue;
+        const sprite = new Sprite(this.store.spriteTexture(spriteId));
+        sprite.position.set((tileX - w) * TILE, (tileY - h) * TILE);
+        sprite.zIndex = tileY * 16 + 2;
+        this.objectLayer.addChild(sprite);
+      }
+    }
   }
 
   private addPlayer(player: PlayerState): void {
     if (this.playerViews.has(player.id)) return;
-    const container = new Container();
-    const isOwn = player.id === this.ownPlayerId;
-    const body = new Graphics();
-    body
-      .rect(4, 4, TILE - 8, TILE - 8)
-      .fill(isOwn ? 0x3fae4a : 0xc98a3b)
-      .stroke({ color: 0x000000, width: 1 });
-    const label = new Text({
-      text: player.name,
-      style: {
-        fontFamily: "Verdana, sans-serif",
-        fontSize: 9,
-        fontWeight: "bold",
-        fill: isOwn ? 0x66ff66 : 0xffcc88,
-        stroke: { color: 0x000000, width: 2 },
-      },
-    });
-    label.resolution = 2;
-    label.anchor.set(0.5, 1);
-    label.position.set(TILE / 2, 2);
-    container.addChild(body, label);
-    container.position.set(player.x * TILE, player.y * TILE);
-    this.world.addChild(container);
-    this.playerViews.set(player.id, { container, body });
+    const view = new PlayerView(
+      this.store,
+      this.store.outfit(SPRITE_IDS.citizenOutfit),
+      player,
+      this.outfitColorsFor(player.id),
+      NAME_COLOR,
+    );
+    this.objectLayer.addChild(view.container);
+    this.overlay.addChild(view.plate);
+    this.playerViews.set(player.id, view);
   }
 
   private removePlayer(playerId: string): void {
     const view = this.playerViews.get(playerId);
     if (!view) return;
-    view.container.destroy({ children: true });
+    view.destroy();
     this.playerViews.delete(playerId);
   }
 
-  private movePlayer(playerId: string, x: number, y: number): void {
-    const view = this.playerViews.get(playerId);
-    if (!view) return;
-    view.container.position.set(x * TILE, y * TILE);
+  /** Deterministic per-player outfit colors so everyone looks distinct. */
+  private outfitColorsFor(playerId: string): OutfitColors {
+    const palette = this.store.outfitPalette;
+    let hash = 0;
+    for (const char of playerId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    const pick = (salt: number) => {
+      let mixed = (hash ^ Math.imul(salt, 0x9e3779b9)) >>> 0;
+      mixed = Math.imul(mixed ^ (mixed >>> 16), 0x45d9f3b) >>> 0;
+      return palette[mixed % palette.length] ?? [255, 255, 255];
+    };
+    return {
+      head: pick(1),
+      body: pick(2),
+      legs: pick(3),
+      feet: pick(4),
+    };
+  }
+
+  private tick(dtMs: number): void {
+    for (const view of this.playerViews.values()) {
+      view.tick(dtMs);
+      const pos = view.pixelPosition();
+      view.container.position.set(pos.x, pos.y);
+      view.container.zIndex = (pos.y / TILE) * 16 + 3;
+    }
+
+    const focus =
+      this.playerViews.get(this.ownPlayerId)?.pixelPosition() ?? this.mapCenter;
+    const cameraX = Math.round(
+      this.app.screen.width / 2 - (focus.x + TILE / 2) * ZOOM,
+    );
+    const cameraY = Math.round(
+      this.app.screen.height / 2 - (focus.y + TILE / 2) * ZOOM,
+    );
+    this.world.position.set(cameraX, cameraY);
+
+    for (const view of this.playerViews.values()) {
+      const pos = view.pixelPosition();
+      view.plate.position.set(
+        cameraX + (pos.x + TILE / 2 - 8) * ZOOM,
+        cameraY + (pos.y - 8) * ZOOM - 26,
+      );
+    }
   }
 }

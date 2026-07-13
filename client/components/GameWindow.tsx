@@ -6,7 +6,9 @@ import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
-const MOVE_SEND_MS = 120;
+/** Minimum gap between move sends so OS key-repeat cannot exceed the
+ * server's 30 messages/second rate limit. */
+const MOVE_SEND_MS = 50;
 
 const KEY_DIRECTIONS: Record<string, Direction> = {
   ArrowUp: "north",
@@ -36,7 +38,7 @@ export default function GameWindow() {
     let disposed = false;
     let client: GameClient | undefined;
     let renderer: WorldRenderer | undefined;
-    const heldKeys: string[] = [];
+    let lastMoveSentAt = 0;
 
     (async () => {
       const [{ GameClient }, { WorldRenderer }] = await Promise.all([
@@ -60,30 +62,24 @@ export default function GameWindow() {
       client.connect(`Hero-${Math.random().toString(36).slice(2, 6)}`);
     })();
 
+    // simplest possible walking: every keydown (OS key-repeat included) sends
+    // one move intent and the server decides — step if off cooldown,
+    // otherwise just turn. Nothing is queued or replayed on either side.
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!KEY_DIRECTIONS[event.code]) return;
+      const direction = KEY_DIRECTIONS[event.code];
+      if (!direction) return;
       event.preventDefault();
-      if (event.repeat) return;
-      heldKeys.push(event.code);
+      const now = performance.now();
+      if (now - lastMoveSentAt < MOVE_SEND_MS) return;
+      lastMoveSentAt = now;
+      client?.sendMove(direction);
     };
-    const onKeyUp = (event: KeyboardEvent) => {
-      const index = heldKeys.indexOf(event.code);
-      if (index >= 0) heldKeys.splice(index, 1);
-    };
-    const moveTimer = setInterval(() => {
-      const lastHeld = heldKeys[heldKeys.length - 1];
-      const direction = lastHeld ? KEY_DIRECTIONS[lastHeld] : undefined;
-      if (direction) client?.sendMove(direction);
-    }, MOVE_SEND_MS);
 
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
 
     return () => {
       disposed = true;
-      clearInterval(moveTimer);
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
       client?.disconnect();
       renderer?.destroy();
     };

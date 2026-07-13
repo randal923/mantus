@@ -60,10 +60,27 @@ describe("World.tryMove", () => {
     world.addPlayer(player);
 
     expect(world.tryMove(player, "north", 1000).moved).toBe(true);
-    expect(world.tryMove(player, "north", 1000 + STEP_MS - 1).moved).toBe(
-      false,
-    );
+
+    const duringCooldown = world.tryMove(player, "north", 1000 + STEP_MS - 1);
+    expect(duringCooldown.moved).toBe(false);
+    expect([player.x, player.y]).toEqual([5, 4]);
+
     expect(world.tryMove(player, "north", 1000 + STEP_MS).moved).toBe(true);
+  });
+
+  it("turns without stepping when the cooldown has not expired", () => {
+    const world = makeWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.tryMove(player, "north", 1000).moved).toBe(true);
+
+    const result = world.tryMove(player, "east", 1000 + STEP_MS - 1);
+
+    expect(result.moved).toBe(false);
+    expect(result.turned).toBe(true);
+    expect(player.direction).toBe("east");
+    expect([player.x, player.y]).toEqual([5, 4]);
   });
 
   it("still turns the player when the step is rejected", () => {

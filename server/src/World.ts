@@ -68,6 +68,10 @@ export class World {
     return this.players.get(playerId);
   }
 
+  allPlayers(): Iterable<Player> {
+    return this.players.values();
+  }
+
   playerStates() {
     return [...this.players.values()].map((player) => player.toState());
   }

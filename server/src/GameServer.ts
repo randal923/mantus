@@ -79,6 +79,16 @@ export class GameServer {
     }
   }
 
+  private broadcastMove(player: Player): void {
+    this.registry.broadcast({
+      type: "player-moved",
+      playerId: player.id,
+      x: player.x,
+      y: player.y,
+      direction: player.direction,
+    });
+  }
+
   private processDisconnects(): void {
     for (const session of this.disconnected.splice(0)) {
       if (session.playerId && this.world.getPlayer(session.playerId)) {
@@ -151,14 +161,7 @@ export class GameServer {
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
     const result = this.world.tryMove(player, intent.direction, now);
-    if (!result.moved && !result.turned) return;
-    this.registry.broadcast({
-      type: "player-moved",
-      playerId: player.id,
-      x: player.x,
-      y: player.y,
-      direction: player.direction,
-    });
+    if (result.moved || result.turned) this.broadcastMove(player);
   }
 
   private pingSessions(): void {

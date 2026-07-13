@@ -1,9 +1,11 @@
+import { GAME_RULES } from "@tibia/protocol";
+
 export const serverConfig = {
   port: Number(process.env.SERVER_PORT ?? 4000),
-  tickMs: 50,
+  tickMs: 25,
   heartbeatMs: 30_000,
-  /** Server-enforced walk speed; the client's pacing is just politeness. */
-  stepCooldownMs: 180,
+  /** Server-enforced walk speed; the client animates at the same shared value. */
+  stepCooldownMs: GAME_RULES.stepCooldownMs,
   maxSessions: 100,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
