@@ -222,8 +222,8 @@ signals server-side (never tell the client why it was flagged).
 
 ## 8. Milestone checklist
 
-- [ ] Monorepo restructure (`client/`, `server/`, `protocol/`), `git init`
-- [ ] Server tick loop + WS + zod protocol; echo world, two browsers see each other walk
+- [x] Monorepo restructure (`client/`, `server/`, `protocol/`), `git init`
+- [x] Server tick loop + WS + zod protocol; echo world, two browsers see each other walk
 - [ ] Move combat/AI/spells server-side; client = renderer + prediction
 - [ ] Postgres: accounts, characters, login flow, persistence of position/stats
 - [ ] Items & containers with transactional moves + audit log

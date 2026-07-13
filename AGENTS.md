@@ -1,8 +1,8 @@
 # Security charter for building this game
 
 This repo is an online game (Tibia-clone): PixiJS client in `client/`, a
-server-authoritative Node.js game server (planned in `server/`), Postgres
-persistence. Online games are adversarial software — assume every player runs
+server-authoritative Node.js game server in `server/`, shared zod message
+schemas in `protocol/`, Postgres persistence. Online games are adversarial software — assume every player runs
 a modified client. These rules are mandatory for ALL gameplay code you write
 or review. Rationale and the full roadmap live in `plan.md`; asset-format
 rules live in `client/AGENTS.md` and `client/ASSETS.md`.
@@ -32,7 +32,7 @@ copies of these exist only for prediction/display and are never trusted.
    point between "checked" and "changed" is a race window (double-spend,
    double-move, dupe).
 4. **Never act on stale validation.** Re-check ownership, distance, mana,
-   cooldown, capacity at *execution* time inside the tick loop, not when the
+   cooldown, capacity at _execution_ time inside the tick loop, not when the
    intent was enqueued.
 5. **Never mutate game state from a socket/timer callback.** All intents go
    through the per-tick queue so operations on the same entity serialize.
@@ -73,6 +73,7 @@ copies of these exist only for prediction/display and are never trusted.
 ## Definition of done for gameplay PRs
 
 A feature touching items, gold, stats, or player state is not done until:
+
 - [ ] all validation happens server-side at execution time,
 - [ ] state changes are atomic (single tick mutation + single DB transaction),
 - [ ] a regression test exists for the obvious exploit (race, replay,
@@ -82,3 +83,78 @@ A feature touching items, gold, stats, or player state is not done until:
 
 If a requested change conflicts with these rules, say so and propose the safe
 variant instead of implementing the unsafe one.
+
+## Code Principles
+
+## Package Manager
+
+Use Yarn, not npm.
+
+## Core Principles
+
+Keep changes simple, direct, and TypeScript-first.
+
+Do not add abstractions, helper layers, validators, factories, adapters, or new dependencies unless the current code path clearly needs them. When unsure, ask first.
+
+Prefer small, cohesive files with one clear responsibility.
+
+## File Structure
+
+- One exported top-level function, component, hook, or class per file.
+- Name files after the main export.
+- Prefer named exports unless the framework requires default exports.
+- Do not place helper functions, subcomponents, or custom hooks below a component. Extract them into their own files.
+- Keep business rules in pure feature-local `utils/` or `lib/` files.
+- Keep React components focused on rendering and orchestration.
+
+## Code Standards
+
+- Avoid `any`, loose objects, and stringly typed state.
+- Return early to reduce nesting.
+- Avoid mutation of props, state, shared module state, or values passed to JSX.
+- Handle async failures deliberately.
+- Keep comments rare and useful.
+- Do not expose secrets to browser or renderer code.
+- Treat user input, environment variables, request data, filesystem paths, and IPC payloads as untrusted.
+
+## React Standards
+
+- Follow the official React rules of hooks.
+- Components and hooks must be pure and idempotent.
+- Use effects only for syncing with external systems.
+- Prefer derived render values over effect-driven state.
+- Use reducers for complex state transitions.
+- Keep props explicit and minimal.
+- Use stable domain IDs for keys.
+- Build accessibility in by default.
+
+## Next.js Standards
+
+- Prefer Server Components by default.
+- Add `"use client"` only at the smallest interactive boundary.
+- Keep Client Component props serializable.
+- Keep secrets, server-only work, and environment parsing out of Client Components.
+- Use Route Handlers for server endpoints.
+- Use Next metadata conventions for SEO.
+
+## Tailwind Standards
+
+- Prefer standard Tailwind utility classes and design-system tokens over arbitrary values.
+- Use classes like `text-sm`, `text-base`, `text-xl`, `font-medium`, `gap-4`, and `p-6` instead of arbitrary values like `text-[25px]`, `font-[25px]`, `gap-[13px]`, or `p-[18px]`.
+- Use arbitrary values only when required to match a specific design spec and no existing Tailwind token fits.
+- Avoid inline styles when the same result can be expressed with Tailwind classes.
+
+## Node, Electron, and Server Code
+
+- Prefer modern ECMAScript modules where supported.
+- Use explicit Node built-in imports such as `node:fs/promises`.
+- Prefer async, non-blocking APIs.
+- Keep Electron main, preload, and renderer responsibilities separate.
+- Expose the smallest safe IPC surface.
+- Avoid Node-only APIs in browser-rendered code.
+
+## Agent Workflow
+
+- Do not run `yarn dev`, development servers, preview servers, or long-running watch commands in the agent session.
+- Do not start local servers unless explicitly asked.
+- Prefer static checks, tests, builds, type checks, and lint commands that exit on completion.
