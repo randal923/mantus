@@ -3,6 +3,7 @@ import type { Session } from "./Session";
 
 export class SessionRegistry {
   private readonly sessions = new Map<string, Session>();
+  private readonly sessionsByPlayerId = new Map<string, Session>();
   private readonly connectionsPerIp = new Map<string, number>();
 
   canAccept(remoteAddress: string, maxSessions: number): boolean {
@@ -19,9 +20,22 @@ export class SessionRegistry {
 
   remove(session: Session): void {
     if (!this.sessions.delete(session.id)) return;
+    const { playerId } = session;
+    if (playerId && this.sessionsByPlayerId.get(playerId) === session) {
+      this.sessionsByPlayerId.delete(playerId);
+    }
     const count = this.connectionsPerIp.get(session.remoteAddress) ?? 1;
     if (count <= 1) this.connectionsPerIp.delete(session.remoteAddress);
     else this.connectionsPerIp.set(session.remoteAddress, count - 1);
+  }
+
+  /** Call after session.playerId is assigned at join. */
+  bindPlayer(session: Session): void {
+    if (session.playerId) this.sessionsByPlayerId.set(session.playerId, session);
+  }
+
+  sessionFor(playerId: string): Session | undefined {
+    return this.sessionsByPlayerId.get(playerId);
   }
 
   contains(session: Session): boolean {

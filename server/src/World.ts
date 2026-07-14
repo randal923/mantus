@@ -1,5 +1,6 @@
 import type { Direction, MapState } from "@tibia/protocol";
 import { Player } from "./Player";
+import { SpatialGrid } from "./SpatialGrid";
 
 const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
   north: [0, -1],
@@ -15,6 +16,7 @@ export interface MoveResult {
 
 export class World {
   private readonly players = new Map<string, Player>();
+  private readonly grid = new SpatialGrid();
   private readonly blocked: ReadonlySet<string>;
 
   constructor(
@@ -32,10 +34,16 @@ export class World {
   }
 
   isOccupied(x: number, y: number): boolean {
-    for (const player of this.players.values()) {
-      if (player.x === x && player.y === y) return true;
-    }
-    return false;
+    return this.grid.query(x, y, 0, 0).length > 0;
+  }
+
+  /** Players within the view box centered on (x, y). */
+  playersNear(
+    x: number,
+    y: number,
+    range: { x: number; y: number },
+  ): Player[] {
+    return this.grid.query(x, y, range.x, range.y);
   }
 
   /** Spiral out from the center until a free tile is found. */
@@ -58,10 +66,14 @@ export class World {
 
   addPlayer(player: Player): void {
     this.players.set(player.id, player);
+    this.grid.insert(player);
   }
 
   removePlayer(playerId: string): void {
+    const player = this.players.get(playerId);
+    if (!player) return;
     this.players.delete(playerId);
+    this.grid.remove(player);
   }
 
   getPlayer(playerId: string): Player | undefined {
@@ -93,9 +105,12 @@ export class World {
     if (!this.isWalkable(nx, ny) || this.isOccupied(nx, ny)) {
       return { moved: false, turned };
     }
+    const fromX = player.x;
+    const fromY = player.y;
     player.x = nx;
     player.y = ny;
     player.lastStepAt = now;
+    this.grid.move(player, fromX, fromY);
     return { moved: true, turned };
   }
 

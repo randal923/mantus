@@ -40,6 +40,31 @@ Known and deliberately deferred; revisit before public deployment.
   limits apply. *Recommendation:* enable captcha in Supabase auth settings
   if bot signups or login floods appear.
 
+## Architecture watch list
+
+Known limitations, ordered by when they'll bite (assessed 2026-07-14).
+
+1. **Characters & persistence before more gameplay.** Players are ephemeral
+   (`Hero-xxxx`, random spawn, nothing saved). Every system built before the
+   `characters` table exists will be retrofitted later — do this next.
+2. **Real migrations.** `db/schema.sql` is `CREATE IF NOT EXISTS`-only; the
+   first `ALTER` breaks the workflow. Adopt numbered migrations + tracking
+   table before the schema grows (hand-rolled or `node-pg-migrate`).
+3. **Decompose `GameServer` when combat lands.** It owns sockets, auth
+   orchestration, world mutation, and visibility. Split into per-system
+   intent handlers + a broadcast/visibility module before it accretes more.
+4. **Client reconnect.** No retry/backoff on the game socket; any hiccup is
+   a dead window until refresh. Needed before real playtests.
+5. ~~**Spatial visibility lookup.**~~ Done 2026-07-14: `SpatialGrid` cell
+   index; `World.playersNear` + occupancy checks and all `GameServer`
+   broadcast paths now query neighborhoods instead of scanning every
+   session. Remaining caveat: step reconciliation assumes 1-tile moves —
+   any future teleport/large-jump feature must reconcile visibility
+   explicitly (see comment in `GameServer.onPlayerStepped`).
+6. **One process = one world (deliberate).** Vertical scaling only; growth
+   means more worlds, not bigger ones. Cross-world features would need new
+   infrastructure — decide consciously if that ever changes.
+
 ## Production checklist (pre-launch)
 
 - [ ] `wss://` (TLS) for the game socket

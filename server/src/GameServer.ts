@@ -115,15 +115,33 @@ export class GameServer {
   private processDisconnects(): void {
     for (const session of this.disconnected.splice(0)) {
       const { playerId } = session;
-      if (playerId && this.world.getPlayer(playerId)) {
+      const player = playerId ? this.world.getPlayer(playerId) : undefined;
+      if (playerId && player) {
         this.world.removePlayer(playerId);
-        for (const other of this.registry.all()) {
-          if (other.id === session.id) continue;
-          if (!other.knownPlayerIds.delete(playerId)) continue;
-          other.send({ type: "player-left", playerId });
+        // every session that knows a player is within view range of them
+        for (const near of this.nearbySessions(player.x, player.y, 0)) {
+          if (near.id === session.id) continue;
+          if (!near.knownPlayerIds.delete(playerId)) continue;
+          near.send({ type: "player-left", playerId });
         }
       }
       this.registry.remove(session);
+    }
+  }
+
+  /** Sessions of players within viewRange (+margin tiles) of a position. */
+  private *nearbySessions(
+    x: number,
+    y: number,
+    margin: number,
+  ): Iterable<Session> {
+    const range = {
+      x: this.config.viewRange.x + margin,
+      y: this.config.viewRange.y + margin,
+    };
+    for (const player of this.world.playersNear(x, y, range)) {
+      const session = this.registry.sessionFor(player.id);
+      if (session) yield session;
     }
   }
 
@@ -227,14 +245,14 @@ export class GameServer {
     );
     this.world.addPlayer(player);
     session.playerId = player.id;
+    this.registry.bindPlayer(session);
     session.knownPlayerIds.add(player.id);
 
     const visiblePlayers = [player.toState()];
-    for (const other of this.registry.all()) {
+    for (const other of this.nearbySessions(player.x, player.y, 0)) {
       if (other.id === session.id || !other.playerId) continue;
       const otherPlayer = this.world.getPlayer(other.playerId);
       if (!otherPlayer) continue;
-      if (!canSee(player, otherPlayer, this.config.viewRange)) continue;
       session.knownPlayerIds.add(otherPlayer.id);
       visiblePlayers.push(otherPlayer.toState());
       other.knownPlayerIds.add(player.id);
@@ -282,13 +300,12 @@ export class GameServer {
   }
 
   private onPlayerStepped(mover: Session, player: Player): void {
-    for (const session of this.registry.all()) {
-      if (!session.playerId) continue;
-      if (session.id === mover.id) {
-        session.send(this.movedMessage(player));
-        this.reconcileMoverView(session, player);
-        continue;
-      }
+    mover.send(this.movedMessage(player));
+    this.reconcileMoverView(mover, player);
+    // margin 1 covers viewers the one-tile step just left behind; larger
+    // jumps (teleports, when they exist) must reconcile visibility themselves
+    for (const session of this.nearbySessions(player.x, player.y, 1)) {
+      if (session.id === mover.id || !session.playerId) continue;
       const viewer = this.world.getPlayer(session.playerId);
       if (viewer) this.updateViewOfMover(session, viewer, player);
     }
@@ -317,24 +334,33 @@ export class GameServer {
   }
 
   private reconcileMoverView(mover: Session, player: Player): void {
-    for (const other of this.world.allPlayers()) {
-      if (other.id === player.id) continue;
-      const visible = canSee(player, other, this.config.viewRange);
-      const known = mover.knownPlayerIds.has(other.id);
-      if (visible && !known) {
-        mover.knownPlayerIds.add(other.id);
-        mover.send({ type: "player-joined", player: other.toState() });
-      } else if (!visible && known) {
-        mover.knownPlayerIds.delete(other.id);
-        mover.send({ type: "player-left", playerId: other.id });
+    // known players no longer visible → left view (known ⊆ near old position)
+    for (const knownId of [...mover.knownPlayerIds]) {
+      if (knownId === player.id) continue;
+      const other = this.world.getPlayer(knownId);
+      if (other && canSee(player, other, this.config.viewRange)) continue;
+      mover.knownPlayerIds.delete(knownId);
+      mover.send({ type: "player-left", playerId: knownId });
+    }
+    // nearby players not yet known → entered view
+    for (const other of this.world.playersNear(
+      player.x,
+      player.y,
+      this.config.viewRange,
+    )) {
+      if (other.id === player.id || mover.knownPlayerIds.has(other.id)) {
+        continue;
       }
+      mover.knownPlayerIds.add(other.id);
+      mover.send({ type: "player-joined", player: other.toState() });
     }
   }
 
   private broadcastPose(player: Player): void {
-    for (const session of this.registry.all()) {
+    const message = this.movedMessage(player);
+    for (const session of this.nearbySessions(player.x, player.y, 0)) {
       if (!session.knownPlayerIds.has(player.id)) continue;
-      session.send(this.movedMessage(player));
+      session.send(message);
     }
   }
 
