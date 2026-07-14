@@ -50,6 +50,7 @@ export function LoginScreen() {
     try {
       const result = await getSupabaseClient().auth.signInWithOAuth({
         provider: "google",
+        options: { redirectTo: window.location.origin },
       });
       setError(result.error?.message ?? null);
     } catch {

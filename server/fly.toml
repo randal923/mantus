@@ -2,12 +2,12 @@
 # with wss:// while the container speaks plain ws on the internal port.
 #
 # One-time setup:
-#   fly apps create mantus-online
-#   fly secrets set -a mantus-online SUPABASE_URL=https://<ref>.supabase.co DATABASE_URL=<session-pooler-uri>
+#   fly apps create mantus
+#   fly secrets set -a mantus SUPABASE_URL=https://<ref>.supabase.co DATABASE_URL=<session-pooler-uri>
 # Deploy — run from the REPO ROOT so the build context includes protocol/:
 #   fly deploy . --config server/fly.toml --dockerfile server/Dockerfile
 
-app = "mantus-online"
+app = "mantus"
 # Match your Supabase project's region (fly regions list ↔ supabase dashboard).
 primary_region = "iad"
 
