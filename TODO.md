@@ -50,9 +50,12 @@ Known limitations, ordered by when they'll bite (assessed 2026-07-14).
 2. **Real migrations.** `db/schema.sql` is `CREATE IF NOT EXISTS`-only; the
    first `ALTER` breaks the workflow. Adopt numbered migrations + tracking
    table before the schema grows (hand-rolled or `node-pg-migrate`).
-3. **Decompose `GameServer` when combat lands.** It owns sockets, auth
-   orchestration, world mutation, and visibility. Split into per-system
-   intent handlers + a broadcast/visibility module before it accretes more.
+3. ~~**Decompose `GameServer` when combat lands.**~~ Done 2026-07-14: split
+   into `AuthHandler`, `JoinHandler`, `MovementHandler` (per-system intent
+   handlers) and `Visibility` (all view-range bookkeeping and broadcasts).
+   `GameServer` keeps only socket lifecycle, tick orchestration, and intent
+   dispatch — new systems (combat) get their own handler + a case in
+   `GameServer.handleIntent`.
 4. **Client reconnect.** No retry/backoff on the game socket; any hiccup is
    a dead window until refresh. Needed before real playtests.
 5. ~~**Spatial visibility lookup.**~~ Done 2026-07-14: `SpatialGrid` cell
@@ -60,7 +63,7 @@ Known limitations, ordered by when they'll bite (assessed 2026-07-14).
    broadcast paths now query neighborhoods instead of scanning every
    session. Remaining caveat: step reconciliation assumes 1-tile moves —
    any future teleport/large-jump feature must reconcile visibility
-   explicitly (see comment in `GameServer.onPlayerStepped`).
+   explicitly (see comment in `Visibility.onPlayerStepped`).
 6. **One process = one world (deliberate).** Vertical scaling only; growth
    means more worlds, not bigger ones. Cross-world features would need new
    infrastructure — decide consciously if that ever changes.

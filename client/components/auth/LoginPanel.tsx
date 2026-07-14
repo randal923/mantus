@@ -45,7 +45,7 @@ export function LoginPanel({
       />
       <header className="flex flex-col items-center gap-1">
         <h1 className="font-display text-4xl tracking-wide [font-variant:small-caps] [text-shadow:0_2px_4px_rgba(0,0,0,0.8)]">
-          Manus Online
+          Mantus Online
         </h1>
         <p className="text-sm text-ui-text/60">Sign in to enter the world</p>
       </header>
