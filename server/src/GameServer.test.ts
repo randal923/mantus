@@ -14,6 +14,7 @@ const testConfig: ServerConfig = {
   tickMs: 5,
   heartbeatMs: 30_000,
   authTimeoutMs: 5_000,
+  trustProxyHeader: false,
   stepCooldownMs: 5,
   maxSessions: 10,
   maxPendingIntents: 16,

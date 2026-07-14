@@ -1,0 +1,53 @@
+# Game server on fly.io. TLS terminates at Fly's edge, so clients connect
+# with wss:// while the container speaks plain ws on the internal port.
+#
+# One-time setup:
+#   fly apps create mantus-online
+#   fly secrets set -a mantus-online SUPABASE_URL=https://<ref>.supabase.co DATABASE_URL=<session-pooler-uri>
+# Deploy — run from the REPO ROOT so the build context includes protocol/:
+#   fly deploy . --config server/fly.toml --dockerfile server/Dockerfile
+
+app = "mantus-online"
+# Match your Supabase project's region (fly regions list ↔ supabase dashboard).
+primary_region = "iad"
+
+# No [build] section: the dockerfile is passed on the CLI (see deploy command
+# above) so the build context can be the repo root instead of server/.
+
+[env]
+  SERVER_PORT = "4000"
+  # Fly's proxy sets Fly-Client-IP; required for the per-IP connection limit.
+  TRUST_PROXY = "1"
+
+# Raw TCP service with the http/tls handlers: WebSocket upgrades pass through,
+# and health checking stays at the TCP level (the ws server answers HTTP GETs
+# with 426, which would fail an HTTP check).
+[[services]]
+  internal_port = 4000
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # Matches maxSessions (100) in server config.
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "10s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

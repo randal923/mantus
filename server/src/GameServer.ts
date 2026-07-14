@@ -78,7 +78,7 @@ export class GameServer {
   }
 
   private onConnection(socket: WebSocket, request: IncomingMessage): void {
-    const remoteAddress = request.socket.remoteAddress ?? "unknown";
+    const remoteAddress = this.clientAddress(request);
     if (!this.registry.canAccept(remoteAddress, this.config.maxSessions)) {
       socket.close();
       return;
@@ -90,6 +90,15 @@ export class GameServer {
     this.registry.add(session);
     // queue the leave; world state only changes inside the tick (charter rule 5)
     socket.on("close", () => this.disconnected.push(session));
+  }
+
+  private clientAddress(request: IncomingMessage): string {
+    if (this.config.trustProxyHeader) {
+      const header = request.headers["fly-client-ip"];
+      const ip = Array.isArray(header) ? header[0] : header;
+      if (ip) return ip;
+    }
+    return request.socket.remoteAddress ?? "unknown";
   }
 
   private tick(): void {

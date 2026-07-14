@@ -6,6 +6,12 @@ export interface ServerConfig {
   heartbeatMs: number;
   /** Unauthenticated sockets are dropped after this long. */
   authTimeoutMs: number;
+  /**
+   * Take the client IP from the Fly-Client-IP header. Only enable behind a
+   * proxy that sets it (fly.io); trusting it on direct connections would let
+   * clients spoof around the per-IP connection limit.
+   */
+  trustProxyHeader: boolean;
   stepCooldownMs: number;
   maxSessions: number;
   maxPendingIntents: number;
@@ -23,6 +29,7 @@ export const serverConfig: ServerConfig = {
   tickMs: 25,
   heartbeatMs: 30_000,
   authTimeoutMs: 10_000,
+  trustProxyHeader: process.env.TRUST_PROXY === "1",
   /** Server-enforced walk speed; the client animates at the same shared value. */
   stepCooldownMs: GAME_RULES.stepCooldownMs,
   maxSessions: 100,
