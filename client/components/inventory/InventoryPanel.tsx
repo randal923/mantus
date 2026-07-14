@@ -91,17 +91,17 @@ export function InventoryPanel({
 
       <div className="flex items-center">
         <div className="flex flex-1 flex-col text-sm font-bold text-ui-text">
-          <div className="flex items-center">
+          <div className="flex h-5 items-center">
             <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1.4} />
             {gold.toLocaleString()}
           </div>
-          <div className="flex items-center">
+          <div className="flex h-5 items-center">
             <SpriteIcon spriteId={PLATINUM_COIN_SPRITE} scale={1.4} />
             {platinum.toLocaleString()}
           </div>
         </div>
         {(onStack || onSort) && (
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-2">
             {onStack && <Button onClick={onStack}>Stack</Button>}
             {onSort && <Button onClick={onSort}>Sort</Button>}
           </div>
