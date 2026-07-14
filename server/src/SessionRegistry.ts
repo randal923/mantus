@@ -1,4 +1,4 @@
-import { PROTOCOL_LIMITS, type ServerMessage } from "@tibia/protocol";
+import { PROTOCOL_LIMITS } from "@tibia/protocol";
 import type { Session } from "./Session";
 
 export class SessionRegistry {
@@ -26,13 +26,5 @@ export class SessionRegistry {
 
   all(): Iterable<Session> {
     return this.sessions.values();
-  }
-
-  broadcast(message: ServerMessage, excludeSessionId?: string): void {
-    for (const session of this.sessions.values()) {
-      if (session.id === excludeSessionId) continue;
-      if (!session.playerId) continue;
-      session.send(message);
-    }
   }
 }

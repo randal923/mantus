@@ -16,6 +16,7 @@ export class Session {
   playerId: string | null = null;
   movementDirection: Direction | null = null;
   isAlive = true;
+  readonly knownPlayerIds = new Set<string>();
 
   private pendingIntents: ClientMessage[] = [];
   private windowStartedAt = 0;

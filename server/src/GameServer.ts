@@ -4,9 +4,12 @@ import { WebSocketServer, type WebSocket } from "ws";
 import {
   PROTOCOL_LIMITS,
   type ClientMessage,
+  type Direction,
   type JoinMessage,
   type MoveMessage,
+  type ServerMessage,
 } from "@tibia/protocol";
+import { canSee } from "./canSee";
 import type { ServerConfig } from "./config";
 import { Player } from "./Player";
 import { Session } from "./Session";
@@ -36,6 +39,13 @@ export class GameServer {
     this.loop = new TickLoop(config.tickMs, () => this.tick());
   }
 
+  get port(): number {
+    const address = this.wss.address();
+    return typeof address === "object" && address
+      ? address.port
+      : this.config.port;
+  }
+
   start(): void {
     this.wss.on("connection", (socket, request) =>
       this.onConnection(socket, request),
@@ -45,7 +55,7 @@ export class GameServer {
       () => this.pingSessions(),
       this.config.heartbeatMs,
     );
-    console.log(`game server listening on ws://localhost:${this.config.port}`);
+    console.log(`game server listening on ws://localhost:${this.port}`);
   }
 
   stop(): void {
@@ -80,24 +90,16 @@ export class GameServer {
     }
   }
 
-  private broadcastMove(player: Player): void {
-    this.registry.broadcast({
-      type: "player-moved",
-      playerId: player.id,
-      x: player.x,
-      y: player.y,
-      direction: player.direction,
-    });
-  }
-
   private processDisconnects(): void {
     for (const session of this.disconnected.splice(0)) {
-      if (session.playerId && this.world.getPlayer(session.playerId)) {
-        this.world.removePlayer(session.playerId);
-        this.registry.broadcast({
-          type: "player-left",
-          playerId: session.playerId,
-        });
+      const { playerId } = session;
+      if (playerId && this.world.getPlayer(playerId)) {
+        this.world.removePlayer(playerId);
+        for (const other of this.registry.all()) {
+          if (other.id === session.id) continue;
+          if (!other.knownPlayerIds.delete(playerId)) continue;
+          other.send({ type: "player-left", playerId });
+        }
       }
       this.registry.remove(session);
     }
@@ -141,16 +143,25 @@ export class GameServer {
     );
     this.world.addPlayer(player);
     session.playerId = player.id;
+    session.knownPlayerIds.add(player.id);
+
+    const visiblePlayers = [player.toState()];
+    for (const other of this.registry.all()) {
+      if (other.id === session.id || !other.playerId) continue;
+      const otherPlayer = this.world.getPlayer(other.playerId);
+      if (!otherPlayer) continue;
+      if (!canSee(player, otherPlayer, this.config.viewRange)) continue;
+      session.knownPlayerIds.add(otherPlayer.id);
+      visiblePlayers.push(otherPlayer.toState());
+      other.knownPlayerIds.add(player.id);
+      other.send({ type: "player-joined", player: player.toState() });
+    }
     session.send({
       type: "welcome",
       playerId: player.id,
       map: this.world.toMapState(),
-      players: this.world.playerStates(),
+      players: visiblePlayers,
     });
-    this.registry.broadcast(
-      { type: "player-joined", player: player.toState() },
-      session.id,
-    );
   }
 
   private handleMove(
@@ -165,16 +176,92 @@ export class GameServer {
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
     session.movementDirection = intent.direction;
-    const result = this.world.tryMove(player, intent.direction, now);
-    if (result.moved || result.turned) this.broadcastMove(player);
+    this.applyMove(session, player, intent.direction, now);
   }
 
   private continueMovement(session: Session, now: number): void {
     if (!session.playerId || !session.movementDirection) return;
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
-    const result = this.world.tryMove(player, session.movementDirection, now);
-    if (result.moved || result.turned) this.broadcastMove(player);
+    this.applyMove(session, player, session.movementDirection, now);
+  }
+
+  private applyMove(
+    session: Session,
+    player: Player,
+    direction: Direction,
+    now: number,
+  ): void {
+    const result = this.world.tryMove(player, direction, now);
+    if (result.moved) this.onPlayerStepped(session, player);
+    else if (result.turned) this.broadcastPose(player);
+  }
+
+  private onPlayerStepped(mover: Session, player: Player): void {
+    for (const session of this.registry.all()) {
+      if (!session.playerId) continue;
+      if (session.id === mover.id) {
+        session.send(this.movedMessage(player));
+        this.reconcileMoverView(session, player);
+        continue;
+      }
+      const viewer = this.world.getPlayer(session.playerId);
+      if (viewer) this.updateViewOfMover(session, viewer, player);
+    }
+  }
+
+  private updateViewOfMover(
+    viewerSession: Session,
+    viewer: Player,
+    moved: Player,
+  ): void {
+    const visible = canSee(viewer, moved, this.config.viewRange);
+    const known = viewerSession.knownPlayerIds.has(moved.id);
+    if (visible && known) {
+      viewerSession.send(this.movedMessage(moved));
+      return;
+    }
+    if (visible) {
+      viewerSession.knownPlayerIds.add(moved.id);
+      viewerSession.send({ type: "player-joined", player: moved.toState() });
+      return;
+    }
+    if (known) {
+      viewerSession.knownPlayerIds.delete(moved.id);
+      viewerSession.send({ type: "player-left", playerId: moved.id });
+    }
+  }
+
+  private reconcileMoverView(mover: Session, player: Player): void {
+    for (const other of this.world.allPlayers()) {
+      if (other.id === player.id) continue;
+      const visible = canSee(player, other, this.config.viewRange);
+      const known = mover.knownPlayerIds.has(other.id);
+      if (visible && !known) {
+        mover.knownPlayerIds.add(other.id);
+        mover.send({ type: "player-joined", player: other.toState() });
+      } else if (!visible && known) {
+        mover.knownPlayerIds.delete(other.id);
+        mover.send({ type: "player-left", playerId: other.id });
+      }
+    }
+  }
+
+  private broadcastPose(player: Player): void {
+    for (const session of this.registry.all()) {
+      if (!session.knownPlayerIds.has(player.id)) continue;
+      session.send(this.movedMessage(player));
+    }
+  }
+
+  private movedMessage(player: Player): ServerMessage {
+    return {
+      type: "player-moved",
+      playerId: player.id,
+      x: player.x,
+      y: player.y,
+      direction: player.direction,
+    };
   }
 
   private pingSessions(): void {
