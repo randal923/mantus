@@ -6,6 +6,7 @@ import {
   type Direction,
   type ServerMessage,
 } from "@tibia/protocol";
+import type { Account } from "./AccountStore";
 
 /**
  * One WebSocket connection. Inbound messages are size/rate-checked and
@@ -13,6 +14,11 @@ import {
  * the queue once per tick (charter rules 1, 5).
  */
 export class Session {
+  /** Set inside the tick once the token is verified; null = unauthenticated. */
+  account: Account | null = null;
+  /** True while a token is being verified; blocks repeat auth attempts. */
+  authPending = false;
+  readonly connectedAt = Date.now();
   playerId: string | null = null;
   movementDirection: Direction | null = null;
   isAlive = true;

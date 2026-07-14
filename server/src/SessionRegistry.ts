@@ -24,6 +24,10 @@ export class SessionRegistry {
     else this.connectionsPerIp.set(session.remoteAddress, count - 1);
   }
 
+  contains(session: Session): boolean {
+    return this.sessions.get(session.id) === session;
+  }
+
   all(): Iterable<Session> {
     return this.sessions.values();
   }

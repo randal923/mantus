@@ -1,5 +1,5 @@
-import GameWindow from "../components/GameWindow";
+import { AuthGate } from "../components/auth/AuthGate";
 
 export default function Home() {
-  return <GameWindow />;
+  return <AuthGate />;
 }

@@ -3,8 +3,9 @@
  * (security charter rule 10); the client respects them to stay connected.
  */
 export const PROTOCOL_LIMITS = {
-  maxMessageBytes: 1024,
+  maxMessageBytes: 4096,
   maxMessagesPerSecond: 30,
   maxConnectionsPerIp: 5,
   maxNameLength: 20,
+  maxTokenLength: 3072,
 } as const;

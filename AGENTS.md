@@ -158,3 +158,7 @@ Prefer small, cohesive files with one clear responsibility.
 - Do not run `yarn dev`, development servers, preview servers, or long-running watch commands in the agent session.
 - Do not start local servers unless explicitly asked.
 - Prefer static checks, tests, builds, type checks, and lint commands that exit on completion.
+- If something you build is knowingly incomplete or deferred — a limitation, a
+  stopgap, a risk accepted for now (e.g. `banned_until` was only enforced at
+  login, not against online players) — record it in `TODO.md` with the reason
+  and the recommended fix. Don't let known gaps live only in the conversation.

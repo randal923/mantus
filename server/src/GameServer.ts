@@ -3,19 +3,27 @@ import type { IncomingMessage } from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
 import {
   PROTOCOL_LIMITS,
+  type AuthMessage,
   type ClientMessage,
   type Direction,
   type JoinMessage,
   type MoveMessage,
   type ServerMessage,
 } from "@tibia/protocol";
+import type { Account, AccountStore } from "./AccountStore";
 import { canSee } from "./canSee";
 import type { ServerConfig } from "./config";
 import { Player } from "./Player";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
 import { TickLoop } from "./TickLoop";
+import type { TokenVerifier } from "./TokenVerifier";
 import { World } from "./World";
+
+export interface GameServerDeps {
+  verifier: TokenVerifier;
+  accounts: AccountStore;
+}
 
 export class GameServer {
   private readonly wss: WebSocketServer;
@@ -23,9 +31,14 @@ export class GameServer {
   private readonly registry = new SessionRegistry();
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
+  /** Outcomes of async token checks, applied at the top of the next tick. */
+  private readonly authOutcomes: Array<() => void> = [];
   private heartbeat: NodeJS.Timeout | undefined;
 
-  constructor(private readonly config: ServerConfig) {
+  constructor(
+    private readonly config: ServerConfig,
+    private readonly deps: GameServerDeps,
+  ) {
     this.world = new World(
       config.map.width,
       config.map.height,
@@ -82,12 +95,21 @@ export class GameServer {
   private tick(): void {
     const now = Date.now();
     this.processDisconnects();
+    for (const outcome of this.authOutcomes.splice(0)) outcome();
     for (const session of this.registry.all()) {
+      this.enforceAuthDeadline(session, now);
       for (const intent of session.drainIntents()) {
         this.handleIntent(session, intent, now);
       }
       this.continueMovement(session, now);
     }
+  }
+
+  private enforceAuthDeadline(session: Session, now: number): void {
+    if (session.account || session.authPending) return;
+    if (now - session.connectedAt < this.config.authTimeoutMs) return;
+    session.sendError("auth-timeout");
+    session.terminate();
   }
 
   private processDisconnects(): void {
@@ -110,6 +132,15 @@ export class GameServer {
     intent: ClientMessage,
     now: number,
   ): void {
+    if (intent.type === "auth") {
+      this.handleAuth(session, intent);
+      return;
+    }
+    // re-checked at execution time, not enqueue time (charter rule 4)
+    if (!session.account) {
+      session.sendError("auth-required");
+      return;
+    }
     switch (intent.type) {
       case "join":
         this.handleJoin(session, intent);
@@ -121,6 +152,59 @@ export class GameServer {
         session.movementDirection = null;
         return;
     }
+  }
+
+  private handleAuth(session: Session, intent: AuthMessage): void {
+    if (session.account || session.authPending) {
+      session.sendError("already-authenticated");
+      return;
+    }
+    session.authPending = true;
+    void this.resolveAuth(session, intent.token);
+  }
+
+  /**
+   * Token verification and the account upsert are async; nothing here touches
+   * game state. The outcome is queued and applied inside the tick.
+   */
+  private async resolveAuth(session: Session, token: string): Promise<void> {
+    try {
+      const user = await this.deps.verifier.verify(token);
+      const account = await this.deps.accounts.findOrCreateBySupabaseId(
+        user.supabaseUserId,
+        user.email,
+      );
+      this.authOutcomes.push(() => this.applyAuth(session, account));
+    } catch (cause) {
+      // reason only — the token itself is never logged (charter rule 9)
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(`auth failed for ${session.remoteAddress}: ${reason}`);
+      this.authOutcomes.push(() => {
+        session.authPending = false;
+        session.sendError("auth-failed");
+        session.terminate();
+      });
+    }
+  }
+
+  private applyAuth(session: Session, account: Account): void {
+    session.authPending = false;
+    // the socket may have closed while the token was being verified; a stale
+    // outcome must not kick the account's live session
+    if (!this.registry.contains(session)) return;
+    if (account.bannedUntil && account.bannedUntil.getTime() > Date.now()) {
+      session.sendError("account-banned");
+      session.terminate();
+      return;
+    }
+    // one live session per account: the newest login wins (charter §login)
+    for (const other of this.registry.all()) {
+      if (other.id === session.id || other.account?.id !== account.id) continue;
+      other.sendError("logged-in-elsewhere");
+      other.terminate();
+    }
+    session.account = account;
+    session.send({ type: "auth-ok" });
   }
 
   private handleJoin(session: Session, intent: JoinMessage): void {

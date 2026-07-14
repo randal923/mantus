@@ -14,18 +14,21 @@ export interface GameClientHandlers {
 
 export class GameClient {
   private socket: WebSocket | null = null;
+  private joinName = "";
 
   constructor(
     private readonly url: string,
     private readonly handlers: GameClientHandlers,
   ) {}
 
-  connect(name: string): void {
+  /** Opens the socket, authenticates, then joins once the server says auth-ok. */
+  connect(accessToken: string, name: string): void {
+    this.joinName = name;
     this.handlers.onStatus("connecting");
     const socket = new WebSocket(this.url);
     socket.onopen = () => {
       this.handlers.onStatus("connected");
-      this.send({ type: "join", name });
+      this.send({ type: "auth", token: accessToken });
     };
     socket.onmessage = (event) => this.onMessage(event.data);
     socket.onclose = () => this.handlers.onStatus("disconnected");
@@ -55,6 +58,10 @@ export class GameClient {
     }
     const result = serverMessageSchema.safeParse(json);
     if (!result.success) return;
+    if (result.data.type === "auth-ok") {
+      this.send({ type: "join", name: this.joinName });
+      return;
+    }
     this.handlers.onMessage(result.data);
   }
 

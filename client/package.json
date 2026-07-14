@@ -12,6 +12,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.3",
     "@tibia/protocol": "*",
     "next": "16.2.10",
     "pixi.js": "^8.19.0",

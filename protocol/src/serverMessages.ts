@@ -15,6 +15,10 @@ export const mapStateSchema = z.object({
   blocked: z.array(z.tuple([z.number().int(), z.number().int()])),
 });
 
+export const authOkMessageSchema = z.object({
+  type: z.literal("auth-ok"),
+});
+
 export const welcomeMessageSchema = z.object({
   type: z.literal("welcome"),
   playerId: z.string(),
@@ -46,6 +50,7 @@ export const errorMessageSchema = z.object({
 });
 
 export const serverMessageSchema = z.discriminatedUnion("type", [
+  authOkMessageSchema,
   welcomeMessageSchema,
   playerJoinedMessageSchema,
   playerLeftMessageSchema,

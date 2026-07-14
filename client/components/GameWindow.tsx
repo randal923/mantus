@@ -24,7 +24,11 @@ const STATUS_COLORS: Record<ConnectionStatus, string> = {
   disconnected: "#c04040",
 };
 
-export default function GameWindow() {
+interface GameWindowProps {
+  accessToken: string;
+}
+
+export default function GameWindow({ accessToken }: GameWindowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
 
@@ -56,7 +60,10 @@ export default function GameWindow() {
         onMessage: (message) => worldRenderer.applyMessage(message),
         onStatus: setStatus,
       });
-      client.connect(`Hero-${Math.random().toString(36).slice(2, 6)}`);
+      client.connect(
+        accessToken,
+        `Hero-${Math.random().toString(36).slice(2, 6)}`,
+      );
     })();
 
     const sendHeldDirection = () => {
@@ -110,7 +117,7 @@ export default function GameWindow() {
       client?.disconnect();
       renderer?.destroy();
     };
-  }, []);
+  }, [accessToken]);
 
   return (
     <div

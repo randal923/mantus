@@ -11,7 +11,8 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
-    "test": "yarn workspace server test"
+    "test": "yarn workspace server test",
+    "db:schema": "yarn workspace server db:schema"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

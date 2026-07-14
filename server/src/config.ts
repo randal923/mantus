@@ -4,6 +4,8 @@ export interface ServerConfig {
   port: number;
   tickMs: number;
   heartbeatMs: number;
+  /** Unauthenticated sockets are dropped after this long. */
+  authTimeoutMs: number;
   stepCooldownMs: number;
   maxSessions: number;
   maxPendingIntents: number;
@@ -20,6 +22,7 @@ export const serverConfig: ServerConfig = {
   port: Number(process.env.SERVER_PORT ?? 4000),
   tickMs: 25,
   heartbeatMs: 30_000,
+  authTimeoutMs: 10_000,
   /** Server-enforced walk speed; the client animates at the same shared value. */
   stepCooldownMs: GAME_RULES.stepCooldownMs,
   maxSessions: 100,
