@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes } from "react";
 
 type PlaqueVariant = "steel" | "gold" | "red";
 
-interface TibiaButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: PlaqueVariant;
 }
 
@@ -22,7 +22,7 @@ const FILL_CLASS: Record<PlaqueVariant, string> = {
 };
 
 /** Banner-plaque button: metal frame, textured face, chamfered plaque shape. */
-export function TibiaButton({ variant = "steel", className, children, ...props }: TibiaButtonProps) {
+export function Button({ variant = "steel", className, children, ...props }: ButtonProps) {
   return (
     <button
       className={`group relative isolate px-6 py-1.5 font-display text-sm tracking-wider text-[#f2f5f7] [font-variant:small-caps] [text-shadow:0_1px_2px_rgba(0,0,0,0.8)] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] hover:brightness-110 disabled:pointer-events-none disabled:opacity-50 ${className ?? ""}`}

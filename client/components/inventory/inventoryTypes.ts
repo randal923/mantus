@@ -1,8 +1,6 @@
 export interface InventoryItem {
-  /** Unique item instance id (the server's item row id). */
   id: string;
   clientId: number;
-  /** First sprite of the object — resolved from objects.json by the caller. */
   spriteId: number;
   name: string;
   count: number;

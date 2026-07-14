@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
-import { TibiaButton } from "../components/ui/TibiaButton";
+import { Button } from "../components/ui/Button";
 
 const meta = {
-  title: "Game/TibiaButton",
-  component: TibiaButton,
+  title: "Game/Button",
+  component: Button,
   parameters: {
     layout: "centered",
   },
@@ -19,7 +19,7 @@ const meta = {
   args: {
     onClick: fn(),
   },
-} satisfies Meta<typeof TibiaButton>;
+} satisfies Meta<typeof Button>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
