@@ -1,7 +1,11 @@
-import { Texture } from "pixi.js";
+import { Sprite, Texture } from "pixi.js";
 import { describe, expect, it } from "vitest";
 import type { PlayerState } from "@tibia/protocol";
-import type { AssetStore, TibiaObject } from "./AssetStore";
+import type {
+  AssetStore,
+  SpritePattern,
+  TibiaObject,
+} from "./AssetStore";
 import { PlayerView } from "./PlayerView";
 
 const state: PlayerState = {
@@ -29,7 +33,7 @@ const outfit: TibiaObject = {
   px: 4,
   py: 1,
   pz: 1,
-  phases: 2,
+  phases: 3,
   flags: {
     ground: false,
     groundSpeed: 0,
@@ -59,6 +63,12 @@ const outfit: TibiaObject = {
 
 const store = {
   frameTexture: () => Texture.EMPTY,
+} as unknown as AssetStore;
+
+const animationTextures = [new Texture(), new Texture(), new Texture()];
+const animationStore = {
+  frameTexture: (_outfit: TibiaObject, pattern: SpritePattern) =>
+    animationTextures[pattern.phase ?? 0] ?? Texture.EMPTY,
 } as unknown as AssetStore;
 
 describe("PlayerView", () => {
@@ -95,6 +105,51 @@ describe("PlayerView", () => {
     view.applyCorrection({ x: 12, y: 10, z: 7 }, "east", 2);
 
     expect(view.pixelPosition()).toEqual({ x: 12 * 32, y: 10 * 32 });
+    view.destroy();
+  });
+
+  it("paces walk frames independently from pixels traveled", () => {
+    const view = new PlayerView(
+      animationStore,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    const sprite = view.container.children[0];
+    if (!(sprite instanceof Sprite)) throw new Error("expected player sprite");
+
+    view.tick(205);
+    view.applyMove({ x: 11, y: 10, z: 7 }, "east", 1, 100);
+    view.tick(1);
+    expect(sprite.texture).toBe(animationTextures[1]);
+
+    view.tick(24);
+    expect(view.pixelPosition().x).toBe(10.25 * 32);
+    expect(sprite.texture).toBe(animationTextures[1]);
+
+    view.tick(26);
+    expect(sprite.texture).toBe(animationTextures[2]);
+    view.destroy();
+  });
+
+  it("returns to the idle frame when a step finishes", () => {
+    const view = new PlayerView(
+      animationStore,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    const sprite = view.container.children[0];
+    if (!(sprite instanceof Sprite)) throw new Error("expected player sprite");
+
+    view.tick(205);
+    view.applyMove({ x: 11, y: 10, z: 7 }, "east", 1, 100);
+    view.tick(100);
+
+    expect(view.pixelPosition().x).toBe(11 * 32);
+    expect(sprite.texture).toBe(animationTextures[0]);
     view.destroy();
   });
 });

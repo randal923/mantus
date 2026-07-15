@@ -3,6 +3,9 @@ import type { Direction, PlayerState, Position } from "@tibia/protocol";
 import type { AssetStore, OutfitColors, TibiaObject } from "./AssetStore";
 
 const TILE = 32;
+const MIN_FOOT_ANIMATION_DELAY_MS = 20;
+const MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS = 205;
+const MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS = 80;
 
 const DIR_INDEX: Record<Direction, number> = {
   north: 0,
@@ -30,7 +33,8 @@ export class PlayerView {
   private fromX: number;
   private fromY: number;
   private moveT = 1;
-  private walkDist = 0;
+  private footAnimationElapsedMs = 0;
+  private walkAnimationPhase = 0;
   private stepDurationMs = 1;
   private positionRevision: number;
 
@@ -114,7 +118,11 @@ export class PlayerView {
     this.positionRevision = revision;
     this.stepDurationMs = Math.max(1, durationMs);
     this.moveT = adjacent ? 0 : 1;
-    if (adjacent) this.walkDirection = direction;
+    if (adjacent) {
+      this.walkDirection = direction;
+    } else {
+      this.walkAnimationPhase = 0;
+    }
     this.updateFrame();
   }
 
@@ -144,20 +152,48 @@ export class PlayerView {
     this.fromY = position.y;
     this.positionRevision = revision;
     this.moveT = 1;
-    this.walkDist = 0;
+    this.walkAnimationPhase = 0;
     this.updateFrame();
   }
 
   tick(dtMs: number): void {
     if (this.moveT >= 1) {
-      if (this.walkDist !== 0) {
-        this.walkDist = 0;
+      this.footAnimationElapsedMs = Math.min(
+        MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS,
+        this.footAnimationElapsedMs + dtMs,
+      );
+      if (this.walkAnimationPhase !== 0) {
+        this.walkAnimationPhase = 0;
         this.updateFrame();
       }
       return;
     }
-    this.moveT = Math.min(1, this.moveT + dtMs / this.stepDurationMs);
-    this.walkDist += (dtMs / this.stepDurationMs) * TILE;
+
+    const movementMs = Math.min(
+      dtMs,
+      (1 - this.moveT) * this.stepDurationMs,
+    );
+    this.moveT = Math.min(1, this.moveT + movementMs / this.stepDurationMs);
+
+    const walkPhases = this.outfit.phases - 1;
+    if (walkPhases > 0) {
+      this.footAnimationElapsedMs += movementMs;
+      const maxDelayMs =
+        walkPhases > 2
+          ? MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS
+          : MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS;
+      const footAnimationDelayMs = Math.max(
+        MIN_FOOT_ANIMATION_DELAY_MS,
+        Math.min(maxDelayMs, Math.floor(this.stepDurationMs / walkPhases)),
+      );
+      if (this.footAnimationElapsedMs >= footAnimationDelayMs) {
+        this.walkAnimationPhase =
+          this.walkAnimationPhase >= walkPhases
+            ? 1
+            : this.walkAnimationPhase + 1;
+        this.footAnimationElapsedMs = 0;
+      }
+    }
     this.updateFrame();
   }
 
@@ -177,10 +213,7 @@ export class PlayerView {
   private updateFrame(): void {
     const walkPhases = this.outfit.phases - 1;
     const moving = this.moveT < 1;
-    const phase =
-      moving && walkPhases > 0
-        ? 1 + (Math.floor(this.walkDist / 8) % walkPhases)
-        : 0;
+    const phase = moving && walkPhases > 0 ? this.walkAnimationPhase : 0;
     const dir = DIR_INDEX[moving ? this.walkDirection : this.direction];
     const key = `${dir}:${phase}`;
     let texture = this.frames.get(key);
