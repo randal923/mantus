@@ -36,10 +36,10 @@ export function CharacterListItem({
           : "border-ui-stone-light/15 bg-black/20 hover:border-ui-stone-light/40 hover:brightness-110"
       }`}
     >
-      <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-stone-light/20 bg-black/35 shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)]">
+      <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-stone-light/20 bg-black/35 p-1 shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)]">
         <OutfitPortrait
           outfit={character.outfit}
-          scale={2}
+          scale={1.75}
           className="transition-transform duration-150 group-hover:scale-105"
         />
       </span>
