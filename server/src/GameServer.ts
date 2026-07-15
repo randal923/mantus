@@ -4,8 +4,10 @@ import { WebSocketServer, type WebSocket } from "ws";
 import { PROTOCOL_LIMITS, type ClientMessage } from "@tibia/protocol";
 import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
+import { CharacterHandler } from "./CharacterHandler";
+import { CharacterService } from "./character/CharacterService";
+import type { CharacterStore } from "./character/CharacterStore";
 import type { ServerConfig } from "./config";
-import { JoinHandler } from "./JoinHandler";
 import { LanguageHandler } from "./LanguageHandler";
 import { MovementHandler } from "./MovementHandler";
 import { resolveMapData } from "./resolveMapData";
@@ -19,6 +21,7 @@ import { World } from "./World";
 export interface GameServerDeps {
   verifier: TokenVerifier;
   accounts: AccountStore;
+  characters: CharacterStore;
 }
 
 export class GameServer {
@@ -27,7 +30,7 @@ export class GameServer {
   private readonly registry = new SessionRegistry();
   private readonly visibility: Visibility;
   private readonly auth: AuthHandler;
-  private readonly join: JoinHandler;
+  private readonly characters: CharacterHandler;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
   private readonly loop: TickLoop;
@@ -50,7 +53,16 @@ export class GameServer {
       deps.accounts,
       config.authTimeoutMs,
     );
-    this.join = new JoinHandler(this.world, this.registry, this.visibility);
+    const characterService = new CharacterService(deps.characters, {
+      ...this.world.templePosition,
+      townId: config.starterTownId,
+    });
+    this.characters = new CharacterHandler(
+      characterService,
+      this.world,
+      this.registry,
+      this.visibility,
+    );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.movement = new MovementHandler(this.world, this.visibility);
     this.wss = new WebSocketServer({
@@ -113,6 +125,7 @@ export class GameServer {
     const now = Date.now();
     this.processDisconnects();
     this.auth.applyResolvedOutcomes();
+    this.characters.applyResolvedOutcomes();
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -127,7 +140,11 @@ export class GameServer {
     for (const session of this.disconnected.splice(0)) {
       const { playerId } = session;
       const player = playerId ? this.world.getPlayer(playerId) : undefined;
-      if (playerId && player) {
+      if (
+        playerId &&
+        player &&
+        this.registry.sessionFor(playerId) === session
+      ) {
         this.world.removePlayer(playerId);
         this.visibility.announceLeave(session, player);
       }
@@ -150,8 +167,14 @@ export class GameServer {
       return;
     }
     switch (intent.type) {
-      case "join":
-        this.join.handle(session, intent);
+      case "list-characters":
+        this.characters.handleList(session, intent);
+        return;
+      case "create-character":
+        this.characters.handleCreate(session, intent);
+        return;
+      case "select-character":
+        this.characters.handleSelect(session, intent);
         return;
       case "move":
         this.movement.handle(session, intent, now);

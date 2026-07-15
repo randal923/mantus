@@ -6,41 +6,41 @@ persisted character.
 
 ## Database and domain model
 
-- [ ] Add a `characters` migration with an immutable id, `account_id` foreign
+- [x] Add a `characters` migration with an immutable id, `account_id` foreign
   key, display name, normalized name, vocation, level/experience, health/mana,
   capacity, position x/y/z, direction, outfit fields, town/temple id,
   `created_at`, `updated_at`, `last_login_at`, and an optimistic version.
-- [ ] Make normalized character names globally unique and enforce a bounded
+- [x] Make normalized character names globally unique and enforce a bounded
   number of characters per account in the database transaction as well as the
   service.
-- [ ] Define explicit `Character`, `CharacterSummary`, `CreateCharacterInput`,
+- [x] Define explicit `Character`, `CharacterSummary`, `CreateCharacterInput`,
   and `CharacterSaveSnapshot` types. Do not reuse the public creature
   projection as the persistence model.
-- [ ] Store outfit palette indexes and an allowed look type, not arbitrary RGB
+- [x] Store outfit palette indexes and an allowed look type, not arbitrary RGB
   or client-claimed unlocks.
-- [ ] Keep inventory, skills, quests, storage, conditions, and other expanding
+- [x] Keep inventory, skills, quests, storage, conditions, and other expanding
   state in later normalized migrations rather than a mutable JSON character
   blob.
 
 ## Protocol and server flow
 
-- [ ] Replace the free-form `join` packet with character-list,
+- [x] Replace the free-form `join` packet with character-list,
   create-character, select-character, and delete/rename flows as needed.
-- [ ] Define each zod message in `protocol/` first, with maximum byte size and
+- [x] Define each zod message in `protocol/` first, with maximum byte size and
   a per-connection rate expectation.
-- [ ] Derive `account_id` from the authenticated session. Never accept an
+- [x] Derive `account_id` from the authenticated session. Never accept an
   account id or owner id in a character intent.
-- [ ] Validate names server-side: normalized uniqueness, length, allowed
+- [x] Validate names server-side: normalized uniqueness, length, allowed
   characters/spacing, reserved names, and impersonation policy.
-- [ ] Let the server choose starter vocation options, stats, outfit ownership,
+- [x] Let the server choose starter vocation options, stats, outfit ownership,
   town, and spawn. The client sends selections only from advertised options.
-- [ ] Re-check character ownership during selection, then atomically claim the
+- [x] Re-check character ownership during selection, then atomically claim the
   one-live-session-per-character slot and kick/reject the older session.
-- [ ] Validate saved position against the current map on login. Fall back to a
+- [x] Validate saved position against the current map on login. Fall back to a
   configured temple position when the tile is missing, blocked, or invalid.
-- [ ] Send only the selected character's exact private stats; list responses
+- [x] Send only the selected character's exact private stats; list responses
   contain summaries only.
-- [ ] Replace `client/components/navigation/placeholderCharacter.ts` with real
+- [x] Replace `client/components/navigation/placeholderCharacter.ts` with real
   server-sent character stats. Added 2026-07-15 so the in-game
   `TopNavigationBar` (name, level, vocation, health/mana) renders before the
   server projects character state; it is display-only hardcoded data and must
@@ -48,9 +48,9 @@ persisted character.
 
 ## Persistence lifecycle
 
-- [ ] Add a `CharacterStore` interface and `PgCharacterStore` implementation
+- [x] Add a `CharacterStore` interface and `PgCharacterStore` implementation
   with parameterized queries and deliberate errors.
-- [ ] Load a complete player aggregate once while entering the world and lock
+- [x] Load a complete player aggregate once while entering the world and lock
   that character against concurrent online loads.
 - [ ] Mutate the in-memory player synchronously inside ticks. Queue immutable,
   versioned save snapshots after the mutation; never await a database write in
@@ -64,13 +64,13 @@ persisted character.
 
 ## Client
 
-- [ ] Add a character selection screen after authentication with loading,
+- [x] Add a character selection screen after authentication with loading,
   empty, failure, reconnect, and selected states.
-- [ ] Add a create-character form driven by server-provided vocation/outfit
+- [x] Add a create-character form driven by server-provided vocation/outfit
   options and accessible validation messages.
-- [ ] Remove hard-coded player outfit/name and random color choices from world
+- [x] Remove hard-coded player outfit/name and random color choices from world
   entry; render the selected saved character.
-- [ ] Make status UI consume the server's own-player projection instead of
+- [x] Make status UI consume the server's own-player projection instead of
   Storybook values.
 
 ## Planned file surface
@@ -88,12 +88,12 @@ persisted character.
 
 ## Required tests
 
-- [ ] Two accounts racing to create the same normalized name produce one row.
+- [x] Two accounts racing to create the same normalized name produce one row.
 - [ ] A user cannot list, select, rename, or delete another account's character.
-- [ ] A forged starting position, stats, outfit, or vocation is ignored/rejected.
-- [ ] Two connections selecting one character leave exactly one live session.
+- [x] A forged starting position, stats, outfit, or vocation is ignored/rejected.
+- [x] Two connections selecting one character leave exactly one live session.
 - [ ] A stale save cannot roll a character back after a newer tick snapshot.
-- [ ] Invalid saved positions recover to the configured temple safely.
+- [x] Invalid saved positions recover to the configured temple safely.
 - [ ] Reconnect restores position, direction, outfit, and private stats without
   leaking another character's data.
 

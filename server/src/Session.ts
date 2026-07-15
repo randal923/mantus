@@ -19,6 +19,7 @@ export class Session {
   account: Account | null = null;
   /** True while a token is being verified; blocks repeat auth attempts. */
   authPending = false;
+  characterOperationPending = false;
   languageUpdatePending = false;
   readonly connectedAt = Date.now();
   playerId: string | null = null;

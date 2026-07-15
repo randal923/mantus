@@ -70,6 +70,12 @@
     "nameRules": "Letters and spaces only, starting with a letter",
     "namePlaceholder": "Choose a name",
     "vocation": "Vocation",
+    "outfit": "Outfit",
+    "outfits": {
+      "citizen-male": "Citizen I",
+      "citizen-female": "Citizen II"
+    },
+    "loading": "Loading your characters…",
     "creating": "Creating",
     "create": "Create Character"
   },
@@ -104,7 +110,8 @@
   "connection": {
     "connecting": "Connecting",
     "connected": "Connected",
-    "disconnected": "Disconnected"
+    "disconnected": "Disconnected",
+    "reconnect": "Reconnect"
   },
   "stats": {
     "health": "Health",
@@ -134,6 +141,12 @@
     "goldCoin": "gold coin",
     "greatHealthPotion": "great health potion",
     "meat": "meat"
+  },
+  "itemTooltip": {
+    "requiresLevel": "Requires Level {{level}}",
+    "accountBound": "Account Bound",
+    "sellValue": "Sell Value: {{value}}",
+    "durability": "Durability: {{current}}/{{max}}"
   },
   "spells": {
     "bar": "Spell bar",
@@ -202,6 +215,13 @@
     "auth-failed": "The game server could not authenticate this session.",
     "auth-required": "Sign in before performing this action.",
     "auth-timeout": "Authentication timed out. Please reconnect.",
+    "character-limit-reached": "All character slots are already used.",
+    "character-list-failed": "Your characters could not be loaded. Please reconnect and try again.",
+    "character-load-failed": "That character could not enter the world. Please try again.",
+    "character-name-invalid": "Use 3–20 letters with single spaces, and avoid reserved staff names.",
+    "character-name-taken": "A character with that name already exists.",
+    "character-not-found": "That character does not belong to this account.",
+    "character-operation-pending": "Wait for the current character request to finish.",
     "invalid-message": "The game server rejected an invalid request.",
     "join-required": "Enter the world before performing this action.",
     "language-update-failed": "Language could not be saved. Please try again.",

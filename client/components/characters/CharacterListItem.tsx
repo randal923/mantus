@@ -2,7 +2,8 @@
 
 import { SpriteIcon } from "../inventory/SpriteIcon";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import type { CharacterSummary } from "./characterTypes";
+import type { CharacterSummary } from "@tibia/protocol";
+import { getOutfitPortraitSpriteId } from "./getOutfitPortraitSpriteId";
 
 interface CharacterListItemProps {
   character: CharacterSummary;
@@ -38,7 +39,7 @@ export function CharacterListItem({
     >
       <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-stone-light/20 bg-black/35 shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)]">
         <SpriteIcon
-          spriteId={character.portraitSpriteId}
+          spriteId={getOutfitPortraitSpriteId(character.outfit.lookType)}
           scale={2}
           className="translate-y-1 transition-transform duration-150 group-hover:scale-105"
         />

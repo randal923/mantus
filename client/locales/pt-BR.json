@@ -70,6 +70,12 @@
     "nameRules": "Apenas letras e espaços, começando com uma letra",
     "namePlaceholder": "Escolha um nome",
     "vocation": "Vocação",
+    "outfit": "Visual",
+    "outfits": {
+      "citizen-male": "Cidadão I",
+      "citizen-female": "Cidadão II"
+    },
+    "loading": "Carregando seus personagens…",
     "creating": "Criando",
     "create": "Criar Personagem"
   },
@@ -104,7 +110,8 @@
   "connection": {
     "connecting": "Conectando",
     "connected": "Conectado",
-    "disconnected": "Desconectado"
+    "disconnected": "Desconectado",
+    "reconnect": "Reconectar"
   },
   "stats": {
     "health": "Vida",
@@ -134,6 +141,12 @@
     "goldCoin": "moeda de ouro",
     "greatHealthPotion": "poção de vida suprema",
     "meat": "carne"
+  },
+  "itemTooltip": {
+    "requiresLevel": "Requer Nível {{level}}",
+    "accountBound": "Vinculado à Conta",
+    "sellValue": "Valor de Venda: {{value}}",
+    "durability": "Durabilidade: {{current}}/{{max}}"
   },
   "spells": {
     "bar": "Barra de magias",
@@ -202,6 +215,13 @@
     "auth-failed": "O servidor do jogo não conseguiu autenticar esta sessão.",
     "auth-required": "Entre na sua conta antes de realizar esta ação.",
     "auth-timeout": "O tempo de autenticação esgotou. Reconecte-se.",
+    "character-limit-reached": "Todos os espaços de personagem já estão ocupados.",
+    "character-list-failed": "Não foi possível carregar seus personagens. Reconecte-se e tente novamente.",
+    "character-load-failed": "Não foi possível entrar no mundo com esse personagem. Tente novamente.",
+    "character-name-invalid": "Use de 3 a 20 letras com espaços simples e evite nomes reservados da equipe.",
+    "character-name-taken": "Já existe um personagem com esse nome.",
+    "character-not-found": "Esse personagem não pertence a esta conta.",
+    "character-operation-pending": "Aguarde a conclusão da solicitação de personagem atual.",
     "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
     "join-required": "Entre no mundo antes de realizar esta ação.",
     "language-update-failed": "Não foi possível salvar o idioma. Tente novamente.",

@@ -1,21 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import type {
+  CharacterCreationOptions,
+  CharacterSummary,
+  CreateCharacterInput,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { CharacterListItem } from "./CharacterListItem";
 import { CreateCharacterForm } from "./CreateCharacterForm";
-import type { CharacterSummary, Vocation } from "./characterTypes";
 
 type CharacterModalView = "select" | "create";
 
 interface CharacterSelectModalProps {
   characters: ReadonlyArray<CharacterSummary>;
+  creationOptions: CharacterCreationOptions;
   onClose: () => void;
   onSelectCharacter: (characterId: string) => void;
-  onCreateCharacter: (name: string, vocation: Vocation) => void;
-  maxCharacters?: number;
+  onCreateCharacter: (input: CreateCharacterInput) => void;
   busy?: boolean;
   error?: string | null;
   initialView?: CharacterModalView;
@@ -23,10 +27,10 @@ interface CharacterSelectModalProps {
 
 export function CharacterSelectModal({
   characters,
+  creationOptions,
   onClose,
   onSelectCharacter,
   onCreateCharacter,
-  maxCharacters = 5,
   busy = false,
   error,
   initialView,
@@ -39,7 +43,7 @@ export function CharacterSelectModal({
     characters[0]?.id ?? null,
   );
 
-  const atCapacity = characters.length >= maxCharacters;
+  const atCapacity = characters.length >= creationOptions.maxCharacters;
 
   return (
     <Modal
@@ -102,7 +106,7 @@ export function CharacterSelectModal({
             <p className="text-center text-[10px] tracking-wider text-ui-muted uppercase">
               {t("characters.slotsUsed", {
                 count: characters.length,
-                max: maxCharacters,
+                max: creationOptions.maxCharacters,
               })}
             </p>
             {error && (
@@ -116,6 +120,7 @@ export function CharacterSelectModal({
           </>
         ) : (
           <CreateCharacterForm
+            creationOptions={creationOptions}
             busy={busy}
             error={error}
             onCancel={

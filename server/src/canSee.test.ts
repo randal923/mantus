@@ -5,18 +5,24 @@ const RANGE = { x: 9, y: 7 };
 
 describe("canSee", () => {
   it("sees a player on the exact edge of the range", () => {
-    expect(canSee({ x: 0, y: 0 }, { x: 9, y: 7 }, RANGE)).toBe(true);
-    expect(canSee({ x: 0, y: 0 }, { x: -9, y: -7 }, RANGE)).toBe(true);
+    expect(canSee({ x: 0, y: 0, z: 7 }, { x: 9, y: 7, z: 7 }, RANGE)).toBe(true);
+    expect(canSee({ x: 0, y: 0, z: 7 }, { x: -9, y: -7, z: 7 }, RANGE)).toBe(true);
   });
 
   it("does not see a player one tile beyond the range", () => {
-    expect(canSee({ x: 0, y: 0 }, { x: 10, y: 0 }, RANGE)).toBe(false);
-    expect(canSee({ x: 0, y: 0 }, { x: 0, y: 8 }, RANGE)).toBe(false);
+    expect(canSee({ x: 0, y: 0, z: 7 }, { x: 10, y: 0, z: 7 }, RANGE)).toBe(false);
+    expect(canSee({ x: 0, y: 0, z: 7 }, { x: 0, y: 8, z: 7 }, RANGE)).toBe(false);
   });
 
   it("is symmetric", () => {
-    const a = { x: 3, y: 5 };
-    const b = { x: 12, y: 11 };
+    const a = { x: 3, y: 5, z: 7 };
+    const b = { x: 12, y: 11, z: 7 };
     expect(canSee(a, b, RANGE)).toBe(canSee(b, a, RANGE));
+  });
+
+  it("does not reveal players on another floor", () => {
+    expect(
+      canSee({ x: 3, y: 5, z: 7 }, { x: 3, y: 5, z: 6 }, RANGE),
+    ).toBe(false);
   });
 });

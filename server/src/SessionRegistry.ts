@@ -29,9 +29,15 @@ export class SessionRegistry {
     else this.connectionsPerIp.set(session.remoteAddress, count - 1);
   }
 
-  /** Call after session.playerId is assigned at join. */
+  /** Call after session.playerId is assigned during character selection. */
   bindPlayer(session: Session): void {
     if (session.playerId) this.sessionsByPlayerId.set(session.playerId, session);
+  }
+
+  unbindPlayer(playerId: string, session: Session): void {
+    if (this.sessionsByPlayerId.get(playerId) === session) {
+      this.sessionsByPlayerId.delete(playerId);
+    }
   }
 
   sessionFor(playerId: string): Session | undefined {

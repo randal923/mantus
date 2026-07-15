@@ -18,12 +18,17 @@ export class Visibility {
   ) {}
 
   /** Sessions of players within viewRange (+margin tiles) of a position. */
-  *nearbySessions(x: number, y: number, margin: number): Iterable<Session> {
+  *nearbySessions(
+    x: number,
+    y: number,
+    z: number,
+    margin: number,
+  ): Iterable<Session> {
     const range = {
       x: this.viewRange.x + margin,
       y: this.viewRange.y + margin,
     };
-    for (const player of this.world.playersNear(x, y, range)) {
+    for (const player of this.world.playersNear(x, y, z, range)) {
       const session = this.registry.sessionFor(player.id);
       if (session) yield session;
     }
@@ -36,7 +41,7 @@ export class Visibility {
   announceSpawn(joiner: Session, player: Player): PlayerState[] {
     joiner.knownPlayerIds.add(player.id);
     const visiblePlayers = [player.toState()];
-    for (const other of this.nearbySessions(player.x, player.y, 0)) {
+    for (const other of this.nearbySessions(player.x, player.y, player.z, 0)) {
       if (other.id === joiner.id || !other.playerId) continue;
       const otherPlayer = this.world.getPlayer(other.playerId);
       if (!otherPlayer) continue;
@@ -50,7 +55,7 @@ export class Visibility {
 
   announceLeave(leaver: Session, player: Player): void {
     // every session that knows a player is within view range of them
-    for (const near of this.nearbySessions(player.x, player.y, 0)) {
+    for (const near of this.nearbySessions(player.x, player.y, player.z, 0)) {
       if (near.id === leaver.id) continue;
       if (!near.knownPlayerIds.delete(player.id)) continue;
       near.send({ type: "player-left", playerId: player.id });
@@ -62,7 +67,7 @@ export class Visibility {
     this.reconcileMoverView(mover, player);
     // margin 1 covers viewers the one-tile step just left behind; larger
     // jumps (teleports, when they exist) must reconcile visibility themselves
-    for (const session of this.nearbySessions(player.x, player.y, 1)) {
+    for (const session of this.nearbySessions(player.x, player.y, player.z, 1)) {
       if (session.id === mover.id || !session.playerId) continue;
       const viewer = this.world.getPlayer(session.playerId);
       if (viewer) this.updateViewOfMover(session, viewer, player);
@@ -71,7 +76,7 @@ export class Visibility {
 
   broadcastPose(player: Player): void {
     const message = this.movedMessage(player);
-    for (const session of this.nearbySessions(player.x, player.y, 0)) {
+    for (const session of this.nearbySessions(player.x, player.y, player.z, 0)) {
       if (!session.knownPlayerIds.has(player.id)) continue;
       session.send(message);
     }
@@ -112,6 +117,7 @@ export class Visibility {
     for (const other of this.world.playersNear(
       player.x,
       player.y,
+      player.z,
       this.viewRange,
     )) {
       if (other.id === player.id || mover.knownPlayerIds.has(other.id)) {

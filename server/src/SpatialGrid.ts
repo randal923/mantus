@@ -11,12 +11,12 @@ export class SpatialGrid {
 
   constructor(private readonly cellSize = 8) {}
 
-  private cellKey(x: number, y: number): string {
-    return `${Math.floor(x / this.cellSize)},${Math.floor(y / this.cellSize)}`;
+  private cellKey(x: number, y: number, z: number): string {
+    return `${z}:${Math.floor(x / this.cellSize)},${Math.floor(y / this.cellSize)}`;
   }
 
   insert(player: Player): void {
-    const key = this.cellKey(player.x, player.y);
+    const key = this.cellKey(player.x, player.y, player.z);
     let cell = this.cells.get(key);
     if (!cell) {
       cell = new Set();
@@ -27,20 +27,26 @@ export class SpatialGrid {
 
   /** Remove using the player's current coordinates. */
   remove(player: Player): void {
-    this.removeAt(player, player.x, player.y);
+    this.removeAt(player, player.x, player.y, player.z);
   }
 
   /** Re-bucket after a position change; fromX/fromY are the old coordinates. */
   move(player: Player, fromX: number, fromY: number): void {
-    const fromKey = this.cellKey(fromX, fromY);
-    const toKey = this.cellKey(player.x, player.y);
+    const fromKey = this.cellKey(fromX, fromY, player.z);
+    const toKey = this.cellKey(player.x, player.y, player.z);
     if (fromKey === toKey) return;
-    this.removeAt(player, fromX, fromY);
+    this.removeAt(player, fromX, fromY, player.z);
     this.insert(player);
   }
 
   /** Players within the box |px - x| <= rangeX and |py - y| <= rangeY. */
-  query(x: number, y: number, rangeX: number, rangeY: number): Player[] {
+  query(
+    x: number,
+    y: number,
+    z: number,
+    rangeX: number,
+    rangeY: number,
+  ): Player[] {
     const found: Player[] = [];
     const minCx = Math.floor((x - rangeX) / this.cellSize);
     const maxCx = Math.floor((x + rangeX) / this.cellSize);
@@ -48,7 +54,7 @@ export class SpatialGrid {
     const maxCy = Math.floor((y + rangeY) / this.cellSize);
     for (let cy = minCy; cy <= maxCy; cy++) {
       for (let cx = minCx; cx <= maxCx; cx++) {
-        const cell = this.cells.get(`${cx},${cy}`);
+        const cell = this.cells.get(`${z}:${cx},${cy}`);
         if (!cell) continue;
         for (const player of cell) {
           if (Math.abs(player.x - x) > rangeX) continue;
@@ -60,8 +66,8 @@ export class SpatialGrid {
     return found;
   }
 
-  private removeAt(player: Player, x: number, y: number): void {
-    const key = this.cellKey(x, y);
+  private removeAt(player: Player, x: number, y: number, z: number): void {
+    const key = this.cellKey(x, y, z);
     const cell = this.cells.get(key);
     if (!cell) return;
     cell.delete(player);

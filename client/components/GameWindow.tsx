@@ -1,16 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Direction, ServerErrorCode } from "@tibia/protocol";
+import type {
+  CharacterCreationOptions,
+  CharacterSummary,
+  CreateCharacterInput,
+  Direction,
+  OwnCharacterState,
+  ServerErrorCode,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { useLanguageStore } from "../stores/useLanguageStore";
+import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
+import { getOutfitPortraitSpriteId } from "./characters/getOutfitPortraitSpriteId";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
 import { getPlaceholderInventory } from "./inventory/getPlaceholderInventory";
-import { getPlaceholderCharacter } from "./navigation/getPlaceholderCharacter";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
 
@@ -40,20 +48,32 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const clientRef = useRef<GameClient | null>(null);
   const languageRef = useRef(language);
   const confirmedLanguageRef = useRef(language);
+  const joinedRef = useRef(false);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
+  const [connectionAttempt, setConnectionAttempt] = useState(0);
+  const [characters, setCharacters] = useState<
+    ReadonlyArray<CharacterSummary> | null
+  >(null);
+  const [creationOptions, setCreationOptions] =
+    useState<CharacterCreationOptions | null>(null);
+  const [ownCharacter, setOwnCharacter] =
+    useState<OwnCharacterState | null>(null);
+  const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState(false);
   const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
-  const placeholderCharacter = getPlaceholderCharacter(t);
-  const placeholderInventory = getPlaceholderInventory(t);
+  const placeholderInventory = ownCharacter
+    ? getPlaceholderInventory(t, ownCharacter.name, ownCharacter.capacity)
+    : null;
 
   useEffect(() => {
     languageRef.current = language;
   }, [language]);
 
   useHotkeys((action) => {
+    if (!ownCharacter) return;
     if (action === "toggleInventory") {
       if (gameMenuOpen) return;
       setInventoryOpen((open) => !open);
@@ -71,6 +91,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     let client: GameClient | undefined;
     let renderer: WorldRenderer | undefined;
     let heldMovementKeys: ReadonlyArray<string> = [];
+    joinedRef.current = false;
 
     (async () => {
       const [{ GameClient }, { WorldRenderer }] = await Promise.all([
@@ -88,7 +109,22 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       renderer = worldRenderer;
 
       client = new GameClient(WS_URL, {
-        onMessage: (message) => worldRenderer.applyMessage(message),
+        onMessage: (message) => {
+          if (message.type === "character-list") {
+            setCharacters(message.characters);
+            setCreationOptions(message.creationOptions);
+            setCharacterBusy(false);
+            setServerError(null);
+            return;
+          }
+          if (message.type === "welcome") {
+            joinedRef.current = true;
+            setOwnCharacter(message.character);
+            setCharacterBusy(false);
+            setServerError(null);
+          }
+          worldRenderer.applyMessage(message);
+        },
         onStatus: setStatus,
         onLanguage: (nextLanguage) => {
           confirmedLanguageRef.current = nextLanguage;
@@ -104,15 +140,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             return;
           }
           if (code !== "language-update-pending") setLanguageSaving(false);
+          setCharacterBusy(false);
           setServerError(code);
         },
       });
       clientRef.current = client;
-      client.connect(
-        accessToken,
-        `Hero-${Math.random().toString(36).slice(2, 6)}`,
-        languageRef.current,
-      );
+      client.connect(accessToken, languageRef.current);
     })();
 
     const sendHeldDirection = () => {
@@ -125,7 +158,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
 
     const onKeyDown = (event: KeyboardEvent) => {
       const direction = KEY_DIRECTIONS[event.code];
-      if (!direction) return;
+      if (!direction || !joinedRef.current) return;
       event.preventDefault();
       if (heldMovementKeys.includes(event.code)) return;
       heldMovementKeys = [...heldMovementKeys, event.code];
@@ -134,6 +167,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
 
     const onKeyUp = (event: KeyboardEvent) => {
       if (!KEY_DIRECTIONS[event.code]) return;
+      if (!joinedRef.current) return;
       event.preventDefault();
       const wasActive =
         heldMovementKeys[heldMovementKeys.length - 1] === event.code;
@@ -166,62 +200,113 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       client?.disconnect();
       clientRef.current = null;
       renderer?.destroy();
+      joinedRef.current = false;
     };
-  }, [accessToken, setLanguage]);
+  }, [accessToken, connectionAttempt, setLanguage]);
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-black">
       <div ref={containerRef} className="absolute inset-0" />
       <div aria-hidden className="ui-game-vignette pointer-events-none absolute inset-0 z-10" />
-      <div className="absolute inset-x-0 top-0 z-40">
-        <TopNavigationBar
-          {...placeholderCharacter}
-          connectionStatus={status}
-          activePanel={inventoryOpen ? "inventory" : undefined}
-          onInventory={() => setInventoryOpen((open) => !open)}
-          onSettings={() => {
-            setInventoryOpen(false);
-            setGameMenuOpen(true);
-          }}
-        />
-      </div>
-      {serverError && (
-        <button
-          type="button"
-          role="alert"
-          onClick={() => setServerError(null)}
-          className="ui-panel-frame absolute top-24 left-1/2 z-50 max-w-md -translate-x-1/2 px-4 py-3 font-tibia text-sm text-red-200"
-        >
-          {t(`serverErrors.${serverError}`, {
-            defaultValue: t("serverErrors.unknown"),
-          })}
-        </button>
-      )}
-      <GameHud spellHotkeysEnabled={!gameMenuOpen} />
-      {inventoryOpen && (
-        <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
-          <InventoryPanel
-            {...placeholderInventory}
-            onClose={() => setInventoryOpen(false)}
-          />
-        </div>
-      )}
-      {gameMenuOpen && (
-        <GameMenuModal
-          onClose={() => setGameMenuOpen(false)}
+      {!ownCharacter ? (
+        <CharacterSelectScreen
+          status={status}
+          characters={characters}
+          creationOptions={creationOptions}
+          busy={characterBusy}
+          error={
+            serverError
+              ? t(`serverErrors.${serverError}`, {
+                  defaultValue: t("serverErrors.unknown"),
+                })
+              : null
+          }
           onLogout={onLogout}
-          languageSaving={languageSaving}
-          languageError={languageError}
-          onChangeLanguage={(nextLanguage) => {
-            setLanguage(nextLanguage);
-            setLanguageSaving(true);
-            setLanguageError(false);
-            if (clientRef.current?.updateLanguage(nextLanguage)) return;
-            setLanguage(confirmedLanguageRef.current);
-            setLanguageSaving(false);
-            setLanguageError(true);
+          onReconnect={() => {
+            setCharacters(null);
+            setCreationOptions(null);
+            setServerError(null);
+            setConnectionAttempt((attempt) => attempt + 1);
+          }}
+          onCreate={(input: CreateCharacterInput) => {
+            setServerError(null);
+            if (clientRef.current?.createCharacter(input)) {
+              setCharacterBusy(true);
+              return;
+            }
+            setServerError("character-list-failed");
+          }}
+          onSelect={(characterId) => {
+            setServerError(null);
+            if (clientRef.current?.selectCharacter(characterId)) {
+              setCharacterBusy(true);
+              return;
+            }
+            setServerError("character-load-failed");
           }}
         />
+      ) : (
+        <>
+          <div className="absolute inset-x-0 top-0 z-40">
+            <TopNavigationBar
+              characterName={ownCharacter.name}
+              level={ownCharacter.level}
+              vocation={t(`vocations.${ownCharacter.vocation}.name`)}
+              portraitSpriteId={getOutfitPortraitSpriteId(
+                ownCharacter.outfit.lookType,
+              )}
+              health={ownCharacter.health}
+              maxHealth={ownCharacter.maxHealth}
+              mana={ownCharacter.mana}
+              maxMana={ownCharacter.maxMana}
+              connectionStatus={status}
+              activePanel={inventoryOpen ? "inventory" : undefined}
+              onInventory={() => setInventoryOpen((open) => !open)}
+              onSettings={() => {
+                setInventoryOpen(false);
+                setGameMenuOpen(true);
+              }}
+            />
+          </div>
+          {serverError && (
+            <button
+              type="button"
+              role="alert"
+              onClick={() => setServerError(null)}
+              className="ui-panel-frame absolute top-24 left-1/2 z-50 max-w-md -translate-x-1/2 px-4 py-3 font-tibia text-sm text-red-200"
+            >
+              {t(`serverErrors.${serverError}`, {
+                defaultValue: t("serverErrors.unknown"),
+              })}
+            </button>
+          )}
+          <GameHud spellHotkeysEnabled={!gameMenuOpen} />
+          {inventoryOpen && placeholderInventory && (
+            <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
+              <InventoryPanel
+                {...placeholderInventory}
+                onClose={() => setInventoryOpen(false)}
+              />
+            </div>
+          )}
+          {gameMenuOpen && (
+            <GameMenuModal
+              onClose={() => setGameMenuOpen(false)}
+              onLogout={onLogout}
+              languageSaving={languageSaving}
+              languageError={languageError}
+              onChangeLanguage={(nextLanguage) => {
+                setLanguage(nextLanguage);
+                setLanguageSaving(true);
+                setLanguageError(false);
+                if (clientRef.current?.updateLanguage(nextLanguage)) return;
+                setLanguage(confirmedLanguageRef.current);
+                setLanguageSaving(false);
+                setLanguageError(true);
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   );

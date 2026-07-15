@@ -1,5 +1,10 @@
 import { Application, Container } from "pixi.js";
-import type { PlayerState, ServerMessage } from "@tibia/protocol";
+import {
+  CHARACTER_OUTFIT_LOOK_TYPES,
+  type CharacterOutfit,
+  type PlayerState,
+  type ServerMessage,
+} from "@tibia/protocol";
 import { AssetStore, type OutfitColors } from "./AssetStore";
 import { getMapObjectZ } from "./getMapObjectZ";
 import { MapView } from "./MapView";
@@ -9,7 +14,6 @@ import { PlayerView } from "./PlayerView";
 const TILE = 32;
 const ZOOM = 3;
 const NAME_COLOR = 0x44dd44;
-const CITIZEN_OUTFIT_ID = 128;
 
 /**
  * Pure renderer: draws whatever the server says using the Tibia sprite
@@ -41,7 +45,9 @@ export class WorldRenderer {
 
     await this.store.load();
     if (this.destroyed) return;
-    await this.store.preload(this.store.outfit(CITIZEN_OUTFIT_ID).sprites);
+    for (const lookType of CHARACTER_OUTFIT_LOOK_TYPES) {
+      await this.store.preload(this.store.outfit(lookType).sprites);
+    }
     if (this.destroyed) return;
 
     this.world.scale.set(ZOOM);
@@ -53,6 +59,8 @@ export class WorldRenderer {
   applyMessage(message: ServerMessage): void {
     if (this.destroyed) return;
     switch (message.type) {
+      case "character-list":
+        return;
       case "welcome": {
         this.ownPlayerId = message.playerId;
         void this.mapView.setMap(message.map.name);
@@ -92,9 +100,9 @@ export class WorldRenderer {
     if (this.playerViews.has(player.id)) return;
     const view = new PlayerView(
       this.store,
-      this.store.outfit(CITIZEN_OUTFIT_ID),
+      this.store.outfit(player.outfit.lookType),
       player,
-      this.outfitColorsFor(player.id),
+      this.outfitColorsFor(player.outfit),
       NAME_COLOR,
     );
     this.mapView.creatureLayer.addChild(view.container);
@@ -109,21 +117,13 @@ export class WorldRenderer {
     this.playerViews.delete(playerId);
   }
 
-  /** Deterministic per-player outfit colors so everyone looks distinct. */
-  private outfitColorsFor(playerId: string): OutfitColors {
+  private outfitColorsFor(outfit: CharacterOutfit): OutfitColors {
     const palette = this.store.outfitPalette;
-    let hash = 0;
-    for (const char of playerId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-    const pick = (salt: number) => {
-      let mixed = (hash ^ Math.imul(salt, 0x9e3779b9)) >>> 0;
-      mixed = Math.imul(mixed ^ (mixed >>> 16), 0x45d9f3b) >>> 0;
-      return palette[mixed % palette.length] ?? [255, 255, 255];
-    };
     return {
-      head: pick(1),
-      body: pick(2),
-      legs: pick(3),
-      feet: pick(4),
+      head: palette[outfit.head] ?? [255, 255, 255],
+      body: palette[outfit.body] ?? [255, 255, 255],
+      legs: palette[outfit.legs] ?? [255, 255, 255],
+      feet: palette[outfit.feet] ?? [255, 255, 255],
     };
   }
 

@@ -6,6 +6,7 @@ export const PROTOCOL_LIMITS = {
   maxMessageBytes: 4096,
   maxMessagesPerSecond: 30,
   maxConnectionsPerIp: 5,
-  maxNameLength: 20,
+  minCharacterNameLength: 3,
+  maxCharacterNameLength: 20,
   maxTokenLength: 3072,
 } as const;

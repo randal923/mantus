@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { serverConfig } from "./config";
 import { GameServer } from "./GameServer";
+import { PgCharacterStore } from "./character/PgCharacterStore";
 import { PgAccountStore } from "./PgAccountStore";
 import { SupabaseTokenVerifier } from "./SupabaseTokenVerifier";
 
@@ -26,8 +27,9 @@ pool.on("error", (cause) => {
   console.error(`postgres pool error: ${cause.message}`);
 });
 const accounts = new PgAccountStore(pool);
+const characters = new PgCharacterStore(pool);
 
-const server = new GameServer(serverConfig, { verifier, accounts });
+const server = new GameServer(serverConfig, { verifier, accounts, characters });
 server.start();
 
 const shutdown = () => {

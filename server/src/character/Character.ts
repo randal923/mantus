@@ -1,0 +1,71 @@
+import type {
+  CharacterLookType,
+  CharacterVocation,
+  Direction,
+} from "@tibia/protocol";
+
+export interface CharacterOutfit {
+  readonly lookType: CharacterLookType;
+  readonly head: number;
+  readonly body: number;
+  readonly legs: number;
+  readonly feet: number;
+  readonly addons: number;
+}
+
+export interface Character {
+  readonly id: string;
+  readonly accountId: string;
+  readonly displayName: string;
+  readonly normalizedName: string;
+  readonly vocation: CharacterVocation;
+  readonly level: number;
+  readonly experience: bigint;
+  readonly health: number;
+  readonly maxHealth: number;
+  readonly mana: number;
+  readonly maxMana: number;
+  readonly capacity: number;
+  readonly positionX: number;
+  readonly positionY: number;
+  readonly positionZ: number;
+  readonly direction: Direction;
+  readonly outfit: CharacterOutfit;
+  readonly townId: number;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly lastLoginAt: Date | null;
+  readonly version: number;
+}
+
+export interface CharacterSummary {
+  readonly id: string;
+  readonly displayName: string;
+  readonly vocation: CharacterVocation;
+  readonly level: number;
+  readonly outfit: CharacterOutfit;
+  readonly lastLoginAt: Date | null;
+}
+
+export interface CreateCharacterInput {
+  readonly displayName: string;
+  readonly vocation: CharacterVocation;
+  readonly lookType: CharacterLookType;
+}
+
+export interface CharacterSaveSnapshot {
+  readonly characterId: string;
+  readonly expectedVersion: number;
+  readonly level: number;
+  readonly experience: bigint;
+  readonly health: number;
+  readonly maxHealth: number;
+  readonly mana: number;
+  readonly maxMana: number;
+  readonly capacity: number;
+  readonly positionX: number;
+  readonly positionY: number;
+  readonly positionZ: number;
+  readonly direction: Direction;
+  readonly outfit: CharacterOutfit;
+}

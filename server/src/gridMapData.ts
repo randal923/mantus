@@ -14,8 +14,10 @@ export function gridMapData(config: GridMapConfig): MapData {
     spawn: {
       x: Math.floor(config.width / 2),
       y: Math.floor(config.height / 2),
+      z: 7,
     },
-    isWalkable(x, y) {
+    isWalkable(x, y, z) {
+      if (z !== 7) return false;
       if (x < 0 || y < 0 || x >= config.width || y >= config.height) {
         return false;
       }

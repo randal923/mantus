@@ -4,9 +4,13 @@ export interface ViewRange {
 }
 
 export function canSee(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
+  a: { x: number; y: number; z: number },
+  b: { x: number; y: number; z: number },
   range: ViewRange,
 ): boolean {
-  return Math.abs(a.x - b.x) <= range.x && Math.abs(a.y - b.y) <= range.y;
+  return (
+    a.z === b.z &&
+    Math.abs(a.x - b.x) <= range.x &&
+    Math.abs(a.y - b.y) <= range.y
+  );
 }

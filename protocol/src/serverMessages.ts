@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  characterCreationOptionsSchema,
+  characterOutfitSchema,
+  characterSummarySchema,
+  ownCharacterStateSchema,
+} from "./character";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 
@@ -7,7 +13,9 @@ export const playerStateSchema = z.object({
   name: z.string(),
   x: z.number().int(),
   y: z.number().int(),
+  z: z.number().int().min(0).max(15),
   direction: z.enum(DIRECTIONS),
+  outfit: characterOutfitSchema,
 });
 
 /**
@@ -32,9 +40,16 @@ export const languageUpdatedMessageSchema = z.object({
   language: languageSchema,
 });
 
+export const characterListMessageSchema = z.object({
+  type: z.literal("character-list"),
+  characters: z.array(characterSummarySchema),
+  creationOptions: characterCreationOptionsSchema,
+});
+
 export const welcomeMessageSchema = z.object({
   type: z.literal("welcome"),
   playerId: z.string(),
+  character: ownCharacterStateSchema,
   map: mapInfoSchema,
   players: z.array(playerStateSchema),
 });
@@ -64,6 +79,13 @@ export const serverErrorCodeSchema = z.enum([
   "auth-failed",
   "auth-required",
   "auth-timeout",
+  "character-limit-reached",
+  "character-list-failed",
+  "character-load-failed",
+  "character-name-invalid",
+  "character-name-taken",
+  "character-not-found",
+  "character-operation-pending",
   "invalid-message",
   "join-required",
   "language-update-failed",
@@ -81,6 +103,7 @@ export const errorMessageSchema = z.object({
 export const serverMessageSchema = z.discriminatedUnion("type", [
   authOkMessageSchema,
   languageUpdatedMessageSchema,
+  characterListMessageSchema,
   welcomeMessageSchema,
   playerJoinedMessageSchema,
   playerLeftMessageSchema,
@@ -90,6 +113,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 
 export type PlayerState = z.infer<typeof playerStateSchema>;
 export type MapInfo = z.infer<typeof mapInfoSchema>;
+export type CharacterListMessage = z.infer<typeof characterListMessageSchema>;
 export type WelcomeMessage = z.infer<typeof welcomeMessageSchema>;
 export type ServerErrorCode = z.infer<typeof serverErrorCodeSchema>;
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { gridMapData } from "./gridMapData";
 import { Player } from "./Player";
+import { makeCharacter } from "./test/makeCharacter";
 import { World } from "./World";
 
 const STEP_MS = 180;
@@ -12,7 +13,7 @@ const makeWorld = () =>
   );
 
 const makePlayer = (x: number, y: number) =>
-  new Player("p1", "Tester", x, y, "south");
+  new Player(makeCharacter("p1", "Tester"), { x, y, z: 7 });
 
 describe("World.tryMove", () => {
   it("moves onto a free walkable tile", () => {
@@ -50,7 +51,11 @@ describe("World.tryMove", () => {
   it("rejects steps onto occupied tiles", () => {
     const world = makeWorld();
     const player = makePlayer(5, 5);
-    const other = new Player("p2", "Blocker", 5, 4, "south");
+    const other = new Player(makeCharacter("p2", "Blocker"), {
+      x: 5,
+      y: 4,
+      z: 7,
+    });
     world.addPlayer(player);
     world.addPlayer(other);
 

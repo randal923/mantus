@@ -1,5 +1,6 @@
 import {
   serverMessageSchema,
+  type CreateCharacterInput,
   type ClientMessage,
   type Direction,
   type Language,
@@ -18,16 +19,14 @@ export interface GameClientHandlers {
 
 export class GameClient {
   private socket: WebSocket | null = null;
-  private joinName = "";
 
   constructor(
     private readonly url: string,
     private readonly handlers: GameClientHandlers,
   ) {}
 
-  /** Opens the socket, authenticates, then joins once the server says auth-ok. */
-  connect(accessToken: string, name: string, language: Language): void {
-    this.joinName = name;
+  /** Opens the socket and authenticates; world entry requires a character id. */
+  connect(accessToken: string, language: Language): void {
     this.handlers.onStatus("connecting");
     const socket = new WebSocket(this.url);
     socket.onopen = () => {
@@ -45,6 +44,14 @@ export class GameClient {
 
   stopMoving(): void {
     this.send({ type: "stop-move" });
+  }
+
+  createCharacter(input: CreateCharacterInput): boolean {
+    return this.send({ type: "create-character", ...input });
+  }
+
+  selectCharacter(characterId: string): boolean {
+    return this.send({ type: "select-character", characterId });
   }
 
   updateLanguage(language: Language): boolean {
@@ -68,7 +75,7 @@ export class GameClient {
     if (!result.success) return;
     if (result.data.type === "auth-ok") {
       this.handlers.onLanguage(result.data.language);
-      this.send({ type: "join", name: this.joinName });
+      this.send({ type: "list-characters" });
       return;
     }
     if (result.data.type === "language-updated") {

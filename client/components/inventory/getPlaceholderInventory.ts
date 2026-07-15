@@ -11,9 +11,13 @@ interface PlaceholderInventory {
   capacityMax: number;
 }
 
-export function getPlaceholderInventory(t: TFunction): PlaceholderInventory {
+export function getPlaceholderInventory(
+  t: TFunction,
+  characterName: string,
+  capacityMax: number,
+): PlaceholderInventory {
   return {
-    characterName: t("character.hero"),
+    characterName,
     equipment: {
       helmet: {
         id: "eq-1",
@@ -70,6 +74,6 @@ export function getPlaceholderInventory(t: TFunction): PlaceholderInventory {
     gold: 100,
     platinum: 0,
     capacityUsed: 62,
-    capacityMax: 400,
+    capacityMax,
   };
 }

@@ -1,9 +1,18 @@
+import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 import type { Language, ServerMessage } from "@tibia/protocol";
 import type { Account, AccountStore } from "./AccountStore";
+import type {
+  Character,
+  CharacterSaveSnapshot,
+  CharacterSummary,
+} from "./character/Character";
+import { CharacterError } from "./character/CharacterError";
+import type { CharacterStore } from "./character/CharacterStore";
 import type { ServerConfig } from "./config";
 import { GameServer } from "./GameServer";
+import { makeCharacter } from "./test/makeCharacter";
 import type { TokenVerifier, VerifiedUser } from "./TokenVerifier";
 
 const VIEW_RANGE = { x: 9, y: 7 };
@@ -20,6 +29,7 @@ const testConfig: ServerConfig = {
   maxSessions: 10,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
+  starterTownId: 1,
   viewRange: VIEW_RANGE,
   map: { source: "grid", name: "test-grid", ...GRID, blocked: [] },
 };
@@ -74,6 +84,81 @@ class InMemoryAccountStore implements AccountStore {
   }
 }
 
+class InMemoryCharacterStore implements CharacterStore {
+  private readonly characters = new Map<string, Character>();
+
+  seed(character: Character): void {
+    this.characters.set(character.id, character);
+  }
+
+  async listByAccountId(accountId: string): Promise<CharacterSummary[]> {
+    return [...this.characters.values()]
+      .filter((character) => character.accountId === accountId)
+      .map((character) => ({
+        id: character.id,
+        displayName: character.displayName,
+        vocation: character.vocation,
+        level: character.level,
+        outfit: character.outfit,
+        lastLoginAt: character.lastLoginAt,
+      }));
+  }
+
+  async create(character: Character, maxCharacters: number): Promise<Character> {
+    const roster = [...this.characters.values()].filter(
+      (existing) => existing.accountId === character.accountId,
+    );
+    if (roster.length >= maxCharacters) {
+      throw new CharacterError("limit-reached");
+    }
+    if (
+      [...this.characters.values()].some(
+        (existing) => existing.normalizedName === character.normalizedName,
+      )
+    ) {
+      throw new CharacterError("name-taken");
+    }
+    this.characters.set(character.id, character);
+    return character;
+  }
+
+  async loadForLogin(
+    accountId: string,
+    characterId: string,
+    loggedInAt: Date,
+  ): Promise<Character | null> {
+    const character = this.characters.get(characterId);
+    if (!character || character.accountId !== accountId) return null;
+    const loaded = {
+      ...character,
+      lastLoginAt: loggedInAt,
+      updatedAt: loggedInAt,
+      version: character.version + 1,
+    };
+    this.characters.set(characterId, loaded);
+    return loaded;
+  }
+
+  async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {
+    const character = this.characters.get(snapshot.characterId);
+    if (!character || character.version !== snapshot.expectedVersion) {
+      throw new CharacterError("version-conflict");
+    }
+    const version = character.version + 1;
+    this.characters.set(snapshot.characterId, {
+      ...character,
+      ...snapshot,
+      id: character.id,
+      positionX: snapshot.positionX,
+      positionY: snapshot.positionY,
+      positionZ: snapshot.positionZ,
+      version,
+      updatedAt: new Date(),
+    });
+    return version;
+  }
+}
+
 interface TestClient {
   socket: WebSocket;
   messages: ServerMessage[];
@@ -92,6 +177,8 @@ const connect = (
     const socket = new WebSocket(`ws://127.0.0.1:${port}`);
     const messages: ServerMessage[] = [];
     let closed = false;
+    let createRequested = false;
+    let selectRequested = false;
     socket.on("close", () => {
       closed = true;
     });
@@ -103,7 +190,32 @@ const connect = (
       const message = JSON.parse(data.toString()) as ServerMessage;
       messages.push(message);
       if (message.type === "auth-ok") {
-        socket.send(JSON.stringify({ type: "join", name }));
+        socket.send(JSON.stringify({ type: "list-characters" }));
+        return;
+      }
+      if (message.type === "character-list") {
+        const character = message.characters[0];
+        if (!character && !createRequested) {
+          createRequested = true;
+          socket.send(
+            JSON.stringify({
+              type: "create-character",
+              name,
+              vocation: "Knight",
+              lookType: 128,
+            }),
+          );
+          return;
+        }
+        if (character && !selectRequested) {
+          selectRequested = true;
+          socket.send(
+            JSON.stringify({
+              type: "select-character",
+              characterId: character.id,
+            }),
+          );
+        }
         return;
       }
       if (message.type !== "welcome") return;
@@ -177,6 +289,7 @@ describe("view-range broadcast", () => {
     server = new GameServer(testConfig, {
       verifier: fakeVerifier,
       accounts: new InMemoryAccountStore(),
+      characters: new InMemoryCharacterStore(),
     });
     server.start();
   };
@@ -311,10 +424,11 @@ describe("auth gate", () => {
   const startServer = (
     overrides: Partial<ServerConfig> = {},
     accounts = new InMemoryAccountStore(),
+    characters = new InMemoryCharacterStore(),
   ) => {
     server = new GameServer(
       { ...testConfig, ...overrides },
-      { verifier: fakeVerifier, accounts },
+      { verifier: fakeVerifier, accounts, characters },
     );
     server.start();
   };
@@ -323,7 +437,7 @@ describe("auth gate", () => {
     startServer();
     const client = await openRaw(server.port);
     sockets.push(client.socket);
-    client.socket.send(JSON.stringify({ type: "join", name: "Mallory" }));
+    client.socket.send(JSON.stringify({ type: "list-characters" }));
     await waitFor(
       () => sawError(client.messages, "auth-required"),
       "auth-required error",
@@ -354,6 +468,91 @@ describe("auth gate", () => {
       "first session to be kicked",
     );
     expect(second.closed()).toBe(false);
+  });
+
+  it("does not list or select another account's character", async () => {
+    const characters = new InMemoryCharacterStore();
+    const owned = {
+      ...makeCharacter(randomUUID(), "Owner Hero"),
+      accountId: "acc-sub-tok.owner",
+    };
+    characters.seed(owned);
+    startServer({}, new InMemoryAccountStore(), characters);
+    const client = await openRaw(server.port);
+    sockets.push(client.socket);
+    client.socket.send(
+      JSON.stringify({ type: "auth", token: "tok.intruder", language: "en" }),
+    );
+    await waitFor(
+      () => client.messages.some((message) => message.type === "auth-ok"),
+      "intruder authentication",
+    );
+    client.socket.send(JSON.stringify({ type: "list-characters" }));
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "character-list" &&
+            message.characters.length === 0,
+        ),
+      "isolated empty character list",
+    );
+
+    client.socket.send(
+      JSON.stringify({
+        type: "select-character",
+        characterId: owned.id,
+      }),
+    );
+    await waitFor(
+      () => sawError(client.messages, "character-not-found"),
+      "cross-account selection rejection",
+    );
+    expect(
+      client.messages.some((message) => message.type === "welcome"),
+    ).toBe(false);
+  });
+
+  it("falls back to the temple when a saved position is blocked", async () => {
+    const characters = new InMemoryCharacterStore();
+    characters.seed({
+      ...makeCharacter(randomUUID(), "Blocked Hero"),
+      accountId: "acc-sub-tok.blocked",
+      positionX: 3,
+      positionY: 2,
+      positionZ: 7,
+    });
+    startServer(
+      {
+        map: {
+          source: "grid",
+          name: "blocked-grid",
+          ...GRID,
+          blocked: [[3, 2]],
+        },
+      },
+      new InMemoryAccountStore(),
+      characters,
+    );
+
+    const client = await connect(
+      server.port,
+      "Blocked Hero",
+      "tok.blocked",
+    );
+    sockets.push(client.socket);
+
+    expect(client.spawn).toEqual({ x: GRID.width / 2, y: GRID.height / 2 });
+    const welcome = client.messages.find(
+      (message) => message.type === "welcome",
+    );
+    if (welcome?.type !== "welcome") throw new Error("missing welcome");
+    expect(welcome.character).toMatchObject({
+      name: "Blocked Hero",
+      x: GRID.width / 2,
+      y: GRID.height / 2,
+      z: 7,
+    });
   });
 
   it("rejects a banned account", async () => {

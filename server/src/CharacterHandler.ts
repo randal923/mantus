@@ -1,0 +1,199 @@
+import type {
+  CreateCharacterMessage,
+  ListCharactersMessage,
+  SelectCharacterMessage,
+  ServerErrorCode,
+} from "@tibia/protocol";
+import type { Character } from "./character/Character";
+import { CharacterError } from "./character/CharacterError";
+import type { CharacterService } from "./character/CharacterService";
+import { Player } from "./Player";
+import type { Session } from "./Session";
+import type { SessionRegistry } from "./SessionRegistry";
+import type { Visibility } from "./Visibility";
+import type { World } from "./World";
+
+export class CharacterHandler {
+  private readonly outcomes: Array<() => void> = [];
+
+  constructor(
+    private readonly service: CharacterService,
+    private readonly world: World,
+    private readonly registry: SessionRegistry,
+    private readonly visibility: Visibility,
+  ) {}
+
+  handleList(session: Session, _intent: ListCharactersMessage): void {
+    const account = this.beginOperation(session);
+    if (!account) return;
+    void this.resolveList(session, account.id);
+  }
+
+  handleCreate(session: Session, intent: CreateCharacterMessage): void {
+    const account = this.beginOperation(session);
+    if (!account) return;
+    void this.resolveCreate(session, account.id, intent);
+  }
+
+  handleSelect(session: Session, intent: SelectCharacterMessage): void {
+    if (session.playerId) {
+      session.sendError("already-joined");
+      return;
+    }
+    const account = this.beginOperation(session);
+    if (!account) return;
+    void this.resolveSelection(session, account.id, intent.characterId);
+  }
+
+  applyResolvedOutcomes(): void {
+    for (const outcome of this.outcomes.splice(0)) outcome();
+  }
+
+  private beginOperation(session: Session): Session["account"] {
+    if (!session.account) return null;
+    if (session.characterOperationPending) {
+      session.sendError("character-operation-pending");
+      return null;
+    }
+    session.characterOperationPending = true;
+    return session.account;
+  }
+
+  private async resolveList(session: Session, accountId: string): Promise<void> {
+    try {
+      const characters = await this.service.list(accountId);
+      this.outcomes.push(() => {
+        if (!this.finishOperation(session, accountId)) return;
+        session.send({
+          type: "character-list",
+          characters,
+          creationOptions: this.service.creationOptions(),
+        });
+      });
+    } catch (cause) {
+      this.queueFailure(session, accountId, "character-list-failed", cause);
+    }
+  }
+
+  private async resolveCreate(
+    session: Session,
+    accountId: string,
+    intent: CreateCharacterMessage,
+  ): Promise<void> {
+    try {
+      const characters = await this.service.create(accountId, {
+        displayName: intent.name,
+        vocation: intent.vocation,
+        lookType: intent.lookType,
+      });
+      this.outcomes.push(() => {
+        if (!this.finishOperation(session, accountId)) return;
+        session.send({
+          type: "character-list",
+          characters,
+          creationOptions: this.service.creationOptions(),
+        });
+      });
+    } catch (cause) {
+      const code =
+        cause instanceof CharacterError
+          ? this.publicErrorFor(cause)
+          : "character-list-failed";
+      this.queueFailure(session, accountId, code, cause);
+    }
+  }
+
+  private async resolveSelection(
+    session: Session,
+    accountId: string,
+    characterId: string,
+  ): Promise<void> {
+    try {
+      const character = await this.service.loadForLogin(accountId, characterId);
+      this.outcomes.push(() => {
+        if (!this.finishOperation(session, accountId)) return;
+        if (!character) {
+          session.sendError("character-not-found");
+          return;
+        }
+        this.enterWorld(session, character);
+      });
+    } catch (cause) {
+      this.queueFailure(session, accountId, "character-load-failed", cause);
+    }
+  }
+
+  private enterWorld(session: Session, character: Character): void {
+    if (session.playerId) {
+      session.sendError("already-joined");
+      return;
+    }
+    this.evictExistingSession(character.id, session);
+    const spawn = this.world.findSpawn({
+      x: character.positionX,
+      y: character.positionY,
+      z: character.positionZ,
+    });
+    if (!spawn) {
+      session.sendError("world-full");
+      session.terminate();
+      return;
+    }
+    const player = new Player(character, spawn);
+    this.world.addPlayer(player);
+    session.playerId = player.id;
+    this.registry.bindPlayer(session);
+    const players = this.visibility.announceSpawn(session, player);
+    session.send({
+      type: "welcome",
+      playerId: player.id,
+      character: this.service.ownState(player),
+      map: { name: this.world.mapName },
+      players,
+    });
+  }
+
+  private evictExistingSession(characterId: string, replacement: Session): void {
+    const existing = this.registry.sessionFor(characterId);
+    if (!existing || existing.id === replacement.id) return;
+    const player = this.world.getPlayer(characterId);
+    if (player) {
+      this.world.removePlayer(characterId);
+      this.visibility.announceLeave(existing, player);
+    }
+    existing.playerId = null;
+    existing.movementDirection = null;
+    existing.knownPlayerIds.clear();
+    this.registry.unbindPlayer(characterId, existing);
+    existing.sendError("logged-in-elsewhere");
+    existing.terminate();
+  }
+
+  private finishOperation(session: Session, accountId: string): boolean {
+    session.characterOperationPending = false;
+    return (
+      this.registry.contains(session) && session.account?.id === accountId
+    );
+  }
+
+  private queueFailure(
+    session: Session,
+    accountId: string,
+    code: ServerErrorCode,
+    cause: unknown,
+  ): void {
+    const reason = cause instanceof Error ? cause.message : "unknown";
+    console.warn(`character operation failed for account ${accountId}: ${reason}`);
+    this.outcomes.push(() => {
+      if (!this.finishOperation(session, accountId)) return;
+      session.sendError(code);
+    });
+  }
+
+  private publicErrorFor(error: CharacterError): ServerErrorCode {
+    if (error.code === "limit-reached") return "character-limit-reached";
+    if (error.code === "name-invalid") return "character-name-invalid";
+    if (error.code === "name-taken") return "character-name-taken";
+    return "character-list-failed";
+  }
+}

@@ -1,0 +1,134 @@
+import { randomUUID } from "node:crypto";
+import {
+  CHARACTER_OUTFIT_LOOK_TYPES,
+  CHARACTER_VOCATIONS,
+  MAX_CHARACTERS_PER_ACCOUNT,
+  type CharacterCreationOptions,
+  type CharacterSummary as PublicCharacterSummary,
+  type OwnCharacterState,
+} from "@tibia/protocol";
+import type { Player } from "../Player";
+import type { Character, CreateCharacterInput } from "./Character";
+import { CharacterError } from "./CharacterError";
+import type { CharacterStore } from "./CharacterStore";
+import { normalizeCharacterName } from "./normalizeCharacterName";
+
+interface StarterPosition {
+  x: number;
+  y: number;
+  z: number;
+  townId: number;
+}
+
+const STARTER_OUTFIT_COLORS = {
+  head: 78,
+  body: 68,
+  legs: 58,
+  feet: 76,
+  addons: 0,
+} as const;
+
+export class CharacterService {
+  constructor(
+    private readonly store: CharacterStore,
+    private readonly starter: StarterPosition,
+  ) {}
+
+  creationOptions(): CharacterCreationOptions {
+    return {
+      vocations: [...CHARACTER_VOCATIONS],
+      outfits: [
+        { lookType: CHARACTER_OUTFIT_LOOK_TYPES[0], label: "citizen-male" },
+        { lookType: CHARACTER_OUTFIT_LOOK_TYPES[1], label: "citizen-female" },
+      ],
+      maxCharacters: MAX_CHARACTERS_PER_ACCOUNT,
+    };
+  }
+
+  async list(accountId: string): Promise<PublicCharacterSummary[]> {
+    const characters = await this.store.listByAccountId(accountId);
+    return characters.map((character) => ({
+      id: character.id,
+      name: character.displayName,
+      vocation: character.vocation,
+      level: character.level,
+      outfit: character.outfit,
+      lastLoginAt: character.lastLoginAt?.toISOString() ?? null,
+    }));
+  }
+
+  async create(
+    accountId: string,
+    input: CreateCharacterInput,
+  ): Promise<PublicCharacterSummary[]> {
+    const name = normalizeCharacterName(input.displayName);
+    if (!name) throw new CharacterError("name-invalid");
+    const options = this.creationOptions();
+    if (
+      !options.vocations.includes(input.vocation) ||
+      !options.outfits.some((outfit) => outfit.lookType === input.lookType)
+    ) {
+      throw new CharacterError("name-invalid");
+    }
+    const existing = await this.store.listByAccountId(accountId);
+    if (existing.length >= MAX_CHARACTERS_PER_ACCOUNT) {
+      throw new CharacterError("limit-reached");
+    }
+    const now = new Date();
+    const character: Character = {
+      id: randomUUID(),
+      accountId,
+      displayName: name.displayName,
+      normalizedName: name.normalizedName,
+      vocation: input.vocation,
+      level: 1,
+      experience: 0n,
+      health: 150,
+      maxHealth: 150,
+      mana: 55,
+      maxMana: 55,
+      capacity: 400,
+      positionX: this.starter.x,
+      positionY: this.starter.y,
+      positionZ: this.starter.z,
+      direction: "south",
+      outfit: { lookType: input.lookType, ...STARTER_OUTFIT_COLORS },
+      townId: this.starter.townId,
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: null,
+      version: 1,
+    };
+    await this.store.create(character, MAX_CHARACTERS_PER_ACCOUNT);
+    return this.list(accountId);
+  }
+
+  loadForLogin(
+    accountId: string,
+    characterId: string,
+  ): Promise<Character | null> {
+    return this.store.loadForLogin(accountId, characterId, new Date());
+  }
+
+  ownState(player: Player): OwnCharacterState {
+    return {
+      id: player.id,
+      name: player.name,
+      vocation: player.vocation,
+      level: player.level,
+      experience: player.experience,
+      health: player.health,
+      maxHealth: player.maxHealth,
+      mana: player.mana,
+      maxMana: player.maxMana,
+      capacity: player.capacity,
+      x: player.x,
+      y: player.y,
+      z: player.z,
+      direction: player.direction,
+      outfit: player.outfit,
+      townId: player.townId,
+      lastLoginAt: player.lastLoginAt?.toISOString() ?? null,
+    };
+  }
+}

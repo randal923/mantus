@@ -37,6 +37,7 @@ export interface ServerConfig {
   maxSessions: number;
   maxPendingIntents: number;
   maxProtocolViolations: number;
+  starterTownId: number;
   viewRange: { x: number; y: number };
   map: MapConfig;
 }
@@ -52,6 +53,7 @@ export const serverConfig: ServerConfig = {
   maxSessions: 100,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
+  starterTownId: 1,
   viewRange: { x: 9, y: 7 },
   map: {
     source: "data",

@@ -53,9 +53,9 @@ export function loadMapData(
 
   return {
     name,
-    spawn: { x: spawn.x, y: spawn.y },
-    isWalkable(x, y) {
-      if (x < 0 || y < 0) return false;
+    spawn: { x: spawn.x, y: spawn.y, z: spawn.z },
+    isWalkable(x, y, z) {
+      if (x < 0 || y < 0 || z !== GAMEPLAY_FLOOR) return false;
       const bits = sectors.get(
         `${Math.floor(x / sectorSize)},${Math.floor(y / sectorSize)}`,
       );
