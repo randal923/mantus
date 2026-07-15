@@ -1,3 +1,7 @@
+-- Bootstrap migration: matches the schema that server/db/schema.sql used to
+-- apply, so it must stay re-runnable over a database that already has these
+-- tables (hence "if not exists" / idempotent statements).
+
 -- Game-owned tables. Supabase's auth schema stays untouched; we key our
 -- accounts on the Supabase user id from the verified JWT.
 create table if not exists accounts (

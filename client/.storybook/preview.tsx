@@ -1,8 +1,28 @@
 import type { Preview } from '@storybook/nextjs-vite'
+import { Cinzel, Geist } from 'next/font/google'
 
 import '../app/globals.css'
 
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
+
+const cinzel = Cinzel({
+  variable: '--font-cinzel',
+  subsets: ['latin'],
+})
+
 const preview: Preview = {
+  decorators: [
+    (Story) => (
+      <div
+        className={`${geistSans.variable} ${cinzel.variable} contents`}
+      >
+        <Story />
+      </div>
+    ),
+  ],
   parameters: {
     controls: {
       matchers: {

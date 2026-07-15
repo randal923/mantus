@@ -18,7 +18,7 @@ export function CloseButton({
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-ui-gold/15 bg-white/5 text-ui-muted outline-none transition-[color,background-color,border-color,transform] duration-150 hover:border-ui-accent-light/45 hover:bg-ui-accent/20 hover:text-red-100 active:scale-95 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ui-panel-deep disabled:pointer-events-none disabled:opacity-40 ${className ?? ""}`}
+      className={`ui-button ui-button-secondary inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-ui-stone-light/20 text-ui-muted outline-none transition-[color,border-color,transform,filter] duration-150 hover:border-ui-accent-light/55 hover:text-ui-accent-light hover:brightness-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ui-panel-deep disabled:pointer-events-none disabled:opacity-40 ${className ?? ""}`}
       {...buttonProps}
     >
       <svg

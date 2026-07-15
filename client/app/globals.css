@@ -22,6 +22,7 @@
   --color-ui-success: #617758;
   --font-tibia: var(--font-geist-sans, Arial), sans-serif;
   --font-display: var(--font-cinzel, Georgia), serif;
+  --font-button: var(--font-cinzel, Georgia), serif;
 }
 
 @utility texture-noise {
@@ -56,6 +57,58 @@
   border-radius: 0.5rem;
   pointer-events: none;
   content: '';
+}
+
+.ui-button {
+  position: relative;
+  background-position: center, center;
+  background-repeat: no-repeat, repeat;
+  background-size: 100% 100%, 280px 280px;
+  box-shadow:
+    inset 0 1px 0 rgb(226 226 219 / 8%),
+    inset 0 -1px 0 rgb(0 0 0 / 55%),
+    0 4px 12px rgb(0 0 0 / 24%);
+}
+
+.ui-button::before {
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgb(214 213 205 / 8%);
+  border-radius: 0.3rem;
+  pointer-events: none;
+  content: '';
+}
+
+.ui-button-secondary {
+  background-image:
+    linear-gradient(180deg, rgb(48 51 50 / 76%), rgb(13 15 15 / 90%)),
+    url('/assets/ui/forged-stone-texture.webp');
+}
+
+.ui-button-primary {
+  background-image:
+    linear-gradient(180deg, rgb(151 34 25 / 88%), rgb(75 10 7 / 94%)),
+    url('/assets/ui/forged-stone-texture.webp');
+  box-shadow:
+    inset 0 1px 0 rgb(255 218 207 / 14%),
+    inset 0 -1px 0 rgb(31 2 1 / 68%),
+    0 5px 16px rgb(55 10 8 / 32%);
+}
+
+.ui-button-danger {
+  background-image:
+    linear-gradient(180deg, rgb(90 17 13 / 72%), rgb(31 7 6 / 94%)),
+    url('/assets/ui/forged-stone-texture.webp');
+}
+
+.ui-button:active:not(:disabled) {
+  box-shadow:
+    inset 0 3px 7px rgb(0 0 0 / 58%),
+    0 1px 3px rgb(0 0 0 / 24%);
+}
+
+.ui-button:disabled {
+  filter: grayscale(0.45) saturate(0.45);
 }
 
 .ui-divider {
@@ -95,11 +148,6 @@ body {
   font-family: var(--font-geist-sans, Arial), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-button,
-input {
-  font: inherit;
 }
 
 button {

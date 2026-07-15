@@ -14,7 +14,7 @@
     "map:convert": "node tools/convertOtbm.mjs",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
     "test": "yarn workspace client test && yarn workspace server test",
-    "db:schema": "yarn workspace server db:schema"
+    "db:migrate": "yarn workspace server db:migrate"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

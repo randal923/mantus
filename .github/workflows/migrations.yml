@@ -1,0 +1,92 @@
+name: Database migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/migrations.yml
+      - package.json
+      - yarn.lock
+      - server/db/migrations/**
+      - server/scripts/migrate.ts
+      - server/package.json
+  pull_request:
+    paths:
+      - .github/workflows/migrations.yml
+      - package.json
+      - yarn.lock
+      - server/db/migrations/**
+      - server/scripts/migrate.ts
+      - server/package.json
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Migrate from empty and from current schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Migrate from empty database
+        run: |
+          psql -c 'create database from_empty'
+          yarn db:migrate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/from_empty
+
+      - name: Re-run is a no-op
+        run: yarn db:migrate | tee rerun.log && grep -q 'database is up to date' rerun.log
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/from_empty
+
+      - name: Migrate from current (pre-migrations) schema
+        run: |
+          psql -c 'create database from_current'
+          psql -d from_current -v ON_ERROR_STOP=1 -f server/db/migrations/001_accounts.sql
+          yarn db:migrate
+          psql -d from_current -tAc 'select version from schema_migrations' | grep -qx 1
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/from_current
+
+      - name: Editing an applied migration fails the checksum
+        run: |
+          echo '-- tampered' >> server/db/migrations/001_accounts.sql
+          if yarn db:migrate; then
+            echo 'expected checksum mismatch to fail' && exit 1
+          fi
+          git checkout -- server/db/migrations/001_accounts.sql
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/from_empty

@@ -13,10 +13,13 @@ interface NavigationIconButtonProps
 }
 
 const BUTTON_CLASS =
-  "group inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-transparent text-ui-muted outline-none transition-[color,background-color,border-color] duration-150 hover:border-ui-gold/15 hover:bg-white/5 hover:text-ui-text focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-30 sm:size-11 lg:h-10 lg:w-auto lg:gap-2 lg:px-3";
+  "ui-button group inline-flex size-10 shrink-0 items-center justify-center rounded-md border text-ui-muted outline-none transition-[color,border-color,filter,transform] duration-150 hover:-translate-y-px hover:text-ui-text hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-30 disabled:hover:translate-y-0 sm:size-11 lg:h-10 lg:w-auto lg:gap-2 lg:px-3";
+
+const INACTIVE_BUTTON_CLASS =
+  "ui-button-secondary border-ui-stone-light/15 hover:border-ui-gold/40";
 
 const ACTIVE_BUTTON_CLASS =
-  "border-ui-accent-light/30 bg-ui-accent/20 text-ui-text-bright shadow-sm shadow-ui-accent-deep/20";
+  "ui-button-primary border-ui-accent-light/50 text-ui-text-bright";
 
 export function NavigationIconButton({
   label,
@@ -30,11 +33,11 @@ export function NavigationIconButton({
       title={label}
       aria-label={label}
       aria-pressed={active}
-      className={`${BUTTON_CLASS} ${active ? ACTIVE_BUTTON_CLASS : ""}`}
+      className={`${BUTTON_CLASS} ${active ? ACTIVE_BUTTON_CLASS : INACTIVE_BUTTON_CLASS}`}
       {...buttonProps}
     >
       {children}
-      <span className="hidden font-display text-[10px] font-semibold tracking-wider uppercase lg:inline">
+      <span className="hidden font-button text-xs font-normal tracking-wide uppercase lg:inline">
         {label}
       </span>
     </button>

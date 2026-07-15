@@ -18,16 +18,18 @@ the [audit overview](README.md) for pinned source versions.
 
 ## Real migrations
 
-- [ ] Replace `server/db/schema.sql` as the ongoing migration mechanism before
-      adding characters. Keep it only as a bootstrap snapshot if useful.
-- [ ] Add `server/db/migrations/001_accounts.sql` for the existing table and a
+- [x] Replace `server/db/schema.sql` as the ongoing migration mechanism before
+      adding characters. Removed entirely — `001_accounts.sql` is byte-identical,
+      so a separate snapshot would only drift.
+- [x] Add `server/db/migrations/001_accounts.sql` for the existing table and a
       `schema_migrations(version, applied_at)` table.
-- [ ] Add `server/scripts/migrate.ts`; take a Postgres advisory lock, apply each
+- [x] Add `server/scripts/migrate.ts`; take a Postgres advisory lock, apply each
       numbered migration once in one transaction, and fail on a changed checksum.
-- [ ] Change root/server `package.json` scripts so `yarn db:migrate` is the only
+- [x] Change root/server `package.json` scripts so `yarn db:migrate` is the only
       schema-changing command. Continue using Yarn.
-- [ ] Test migrate-from-empty and migrate-from-current-schema in CI; never run
-      a migration from the game tick.
+- [x] Test migrate-from-empty and migrate-from-current-schema in CI
+      (`.github/workflows/migrations.yml`); nothing runs migrations from the
+      game tick — `yarn db:migrate` is the only entry point.
 
 ## Planned file surface
 
@@ -39,4 +41,4 @@ the [audit overview](README.md) for pinned source versions.
 ## Completion gate
 
 - [ ] Generated content has a reproducible provenance manifest.
-- [ ] Migrations are serialized, transactional, checksummed, and covered by CI.
+- [x] Migrations are serialized, transactional, checksummed, and covered by CI.
