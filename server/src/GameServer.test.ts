@@ -256,7 +256,7 @@ const connect = (
         socket,
         messages,
         playerId: message.playerId,
-        spawn: { x: self.x, y: self.y },
+        spawn: { x: self.position.x, y: self.position.y },
         closed: () => closed,
       });
     });
@@ -358,10 +358,10 @@ describe("view-range broadcast", () => {
     expect(updatesAboutBob.length).toBeGreaterThan(0);
     for (const update of updatesAboutBob) {
       if (update.type !== "player-moved") continue;
-      expect(Math.abs(update.x - alice.spawn.x)).toBeLessThanOrEqual(
+      expect(Math.abs(update.position.x - alice.spawn.x)).toBeLessThanOrEqual(
         VIEW_RANGE.x,
       );
-      expect(Math.abs(update.y - alice.spawn.y)).toBeLessThanOrEqual(
+      expect(Math.abs(update.position.y - alice.spawn.y)).toBeLessThanOrEqual(
         VIEW_RANGE.y,
       );
     }
@@ -410,10 +410,14 @@ describe("view-range broadcast", () => {
       .slice(leaveIndex + 1)
       .find((m) => m.type === "player-joined" && m.player.id === bob.playerId);
     if (reentry?.type !== "player-joined") throw new Error("unreachable");
-    expect(Math.abs(reentry.player.x - alice.spawn.x)).toBeLessThanOrEqual(
+    expect(
+      Math.abs(reentry.player.position.x - alice.spawn.x),
+    ).toBeLessThanOrEqual(
       VIEW_RANGE.x,
     );
-    expect(Math.abs(reentry.player.y - alice.spawn.y)).toBeLessThanOrEqual(
+    expect(
+      Math.abs(reentry.player.position.y - alice.spawn.y),
+    ).toBeLessThanOrEqual(
       VIEW_RANGE.y,
     );
   });
@@ -428,7 +432,7 @@ describe("view-range broadcast", () => {
           (m) =>
             m.type === "player-moved" &&
             m.playerId === alice.playerId &&
-            m.x === GRID.width - 1,
+            m.position.x === GRID.width - 1,
         ),
       "Alice to reach the east edge",
     );
@@ -578,9 +582,7 @@ describe("auth gate", () => {
     if (welcome?.type !== "welcome") throw new Error("missing welcome");
     expect(welcome.character).toMatchObject({
       name: "Blocked Hero",
-      x: GRID.width / 2,
-      y: GRID.height / 2,
-      z: 7,
+      position: { x: GRID.width / 2, y: GRID.height / 2, z: 7 },
     });
     await waitFor(
       () =>
@@ -607,7 +609,7 @@ describe("auth gate", () => {
           (message) =>
             message.type === "player-moved" &&
             message.playerId === first.playerId &&
-            message.x === first.spawn.x + 1,
+            message.position.x === first.spawn.x + 1,
         ),
       "eastward step",
     );

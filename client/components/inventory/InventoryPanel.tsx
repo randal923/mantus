@@ -134,7 +134,7 @@ export function InventoryPanel({
         </span>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45 scrollbar-thin">
+      <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
         <div className="grid grid-cols-4 justify-items-center gap-2">
           {items.map((item) => (
             <ItemSlot key={item.id} item={item} />

@@ -42,10 +42,10 @@ export class PlayerView {
   ) {
     this.direction = state.direction;
     this.walkDirection = state.direction;
-    this.tileX = state.x;
-    this.tileY = state.y;
-    this.fromX = state.x;
-    this.fromY = state.y;
+    this.tileX = state.position.x;
+    this.tileY = state.position.y;
+    this.fromX = state.position.x;
+    this.fromY = state.position.y;
 
     // outfits anchor bottom-right and draw displaced 8px up-left
     this.sprite.position.set(

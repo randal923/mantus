@@ -1,4 +1,5 @@
 import type { MapData } from "./MapData";
+import { positionKey } from "./positionKey";
 
 interface GridMapConfig {
   name: string;
@@ -8,7 +9,9 @@ interface GridMapConfig {
 }
 
 export function gridMapData(config: GridMapConfig): MapData {
-  const blocked = new Set(config.blocked.map(([x, y]) => `${x},${y}`));
+  const blocked = new Set(
+    config.blocked.map(([x, y]) => positionKey({ x, y, z: 7 })),
+  );
   return {
     name: config.name,
     spawn: {
@@ -16,12 +19,13 @@ export function gridMapData(config: GridMapConfig): MapData {
       y: Math.floor(config.height / 2),
       z: 7,
     },
-    isWalkable(x, y, z) {
+    isWalkable(position) {
+      const { x, y, z } = position;
       if (z !== 7) return false;
       if (x < 0 || y < 0 || x >= config.width || y >= config.height) {
         return false;
       }
-      return !blocked.has(`${x},${y}`);
+      return !blocked.has(positionKey(position));
     },
   };
 }

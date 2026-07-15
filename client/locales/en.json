@@ -151,6 +151,13 @@
   "spells": {
     "bar": "Spell bar",
     "shortcut": "{{name}}, shortcut {{shortcut}}",
+    "list": {
+      "title": "{{vocation}} Spells",
+      "description": "{{count}} spells available to the {{vocation}} vocation.",
+      "level": "Level",
+      "mana": "Mana",
+      "variable": "Var."
+    },
     "lightHealing": "Light Healing",
     "energyStrike": "Energy Strike",
     "iceWave": "Ice Wave",

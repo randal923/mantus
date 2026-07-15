@@ -40,8 +40,8 @@ translate and refactor the useful parts into this project's use case.
   position, direction, private stats, and saved outfits survive reconnects.
 - The server owns a fixed tick, intent queues, cardinal movement, occupancy,
   view-range player visibility, and one live session per account.
-- The converted OTServBR map provides z=7 server walkability and client map
-  regions for z=0..7.
+- The converted OTServBR map provides server walkability and client map regions
+  for all floors z=0..15.
 - The client streams static map regions, draws the Tibia atlases, animates
   player walking, and renders other connected players.
 - Inventory and status components exist only as Storybook/mock UI. They are

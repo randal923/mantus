@@ -28,12 +28,18 @@ version.
 
 Outputs:
 
-- `client/public/assets/map/<name>/` — gitignored manifest + per-floor region
-  JSONs the client streams over HTTP for rendering. Regenerate these after
-  pulling.
-- `server/data/<name>.map.bin` + `<name>.map.json` — walkability sectors and
-  spawn metadata the game server loads at boot. These compact runtime files
-  are committed so CI deployments include them in the server image.
+- `client/public/assets/map/<name>/` — manifest plus region JSONs for floors
+  0 through 15 that the client streams over HTTP for rendering.
+- `server/data/<name>.map.bin` + `<name>.map.json` — walkability sectors for
+  floors 0 through 15 and spawn metadata that the game server loads at boot.
+  These runtime files are committed so CI deployments include them in the
+  server image.
+
+Static map regions are intentionally public downloadable terrain. Until the
+immutable/mutable item classification in `todo/02-map-and-movement.md` is
+complete, converted OTBM regions may include map-placed item ids and must not
+be treated as live authoritative state. The server sends dynamic state
+separately under its visibility rules.
 
 ## Asset compatibility checks
 

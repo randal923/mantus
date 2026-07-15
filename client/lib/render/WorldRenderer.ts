@@ -67,8 +67,11 @@ export class WorldRenderer {
         for (const player of message.players) this.addPlayer(player);
         const own = message.players.find((p) => p.id === message.playerId);
         if (own) {
-          this.cameraFallback = { x: own.x * TILE, y: own.y * TILE };
-          this.mapView.setCenter(own.x, own.y);
+          this.cameraFallback = {
+            x: own.position.x * TILE,
+            y: own.position.y * TILE,
+          };
+          this.mapView.setCenter(own.position.x, own.position.y);
         }
         return;
       }
@@ -81,9 +84,9 @@ export class WorldRenderer {
       case "player-moved":
         this.playerViews
           .get(message.playerId)
-          ?.applyMove(message.x, message.y, message.direction);
+          ?.applyMove(message.position.x, message.position.y, message.direction);
         if (message.playerId === this.ownPlayerId) {
-          this.mapView.setCenter(message.x, message.y);
+          this.mapView.setCenter(message.position.x, message.position.y);
         }
         return;
       case "error":

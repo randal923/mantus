@@ -1,11 +1,5 @@
-import type { PlayerState } from "@tibia/protocol";
+import type { PlayerState, Position } from "@tibia/protocol";
 import type { Character } from "./character/Character";
-
-interface PlayerPosition {
-  x: number;
-  y: number;
-  z: number;
-}
 
 export class Player {
   lastStepAt = 0;
@@ -23,15 +17,10 @@ export class Player {
   readonly townId: number;
   readonly lastLoginAt: Date | null;
   readonly version: number;
-  x: number;
-  y: number;
-  z: number;
+  private currentPosition: Position;
   direction: Character["direction"];
 
-  constructor(
-    character: Character,
-    position: PlayerPosition,
-  ) {
+  constructor(character: Character, position: Position) {
     this.id = character.id;
     this.name = character.displayName;
     this.vocation = character.vocation;
@@ -42,9 +31,7 @@ export class Player {
     this.mana = character.mana;
     this.maxMana = character.maxMana;
     this.capacity = character.capacity;
-    this.x = position.x;
-    this.y = position.y;
-    this.z = position.z;
+    this.currentPosition = { ...position };
     this.direction = character.direction;
     this.outfit = character.outfit;
     this.townId = character.townId;
@@ -52,13 +39,19 @@ export class Player {
     this.version = character.version;
   }
 
+  get position(): Position {
+    return this.currentPosition;
+  }
+
+  moveTo(position: Position): void {
+    this.currentPosition = { ...position };
+  }
+
   toState(): PlayerState {
     return {
       id: this.id,
       name: this.name,
-      x: this.x,
-      y: this.y,
-      z: this.z,
+      position: { ...this.position },
       direction: this.direction,
       outfit: this.outfit,
     };

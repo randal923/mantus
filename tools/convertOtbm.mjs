@@ -2,7 +2,7 @@
 //   client/public/assets/map/<name>/  manifest + per-floor region JSONs (rendering)
 //   server/data/<name>.map.bin        32x32-sector walkability bitsets
 //   server/data/<name>.map.json       bounds, towns, spawn
-// Usage: node tools/convertOtbm.mjs map/<name>.otbm [--floors=7,8 | --floors=all]
+// Usage: node tools/convertOtbm.mjs map/<name>.otbm
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
@@ -24,24 +24,15 @@ const OTBM = {
 
 const REGION_SIZE = 256;
 const SECTOR_SIZE = 32;
-const GAMEPLAY_FLOOR = 7;
+const FLOORS = new Set(Array.from({ length: 16 }, (_, z) => z));
 
 const mapPath = process.argv[2];
 if (!mapPath) {
   console.error(
-    "usage: node tools/convertOtbm.mjs <map.otbm> [--floors=7,8|all]",
+    "usage: node tools/convertOtbm.mjs <map.otbm>",
   );
   process.exit(1);
 }
-// above-ground floors by default: the client stacks z7..z0 for street views;
-// underground (z8+) waits for stairs
-const floorsArg =
-  process.argv.find((a) => a.startsWith("--floors="))?.slice(9) ?? "0,1,2,3,4,5,6,7";
-const clientFloors =
-  floorsArg === "all"
-    ? new Set(Array.from({ length: 16 }, (_, z) => z))
-    : new Set(floorsArg.split(",").map(Number));
-
 const mapName = basename(mapPath).replace(/\.otbm$/, "");
 const repoRoot = join(import.meta.dirname, "..");
 const clientDir = join(repoRoot, "client/public/assets/map", mapName);
@@ -164,7 +155,7 @@ function finishTile(tile) {
   }
   stats.itemsPlaced += drawIds.length;
 
-  if (z === GAMEPLAY_FLOOR && hasGround && !blocked) {
+  if (FLOORS.has(z) && hasGround && !blocked) {
     stats.walkable++;
     const key = `${Math.floor(x / SECTOR_SIZE)},${Math.floor(y / SECTOR_SIZE)},${z}`;
     let bits = sectors.get(key);
@@ -176,7 +167,7 @@ function finishTile(tile) {
     bits[bit >> 3] |= 1 << (bit & 7);
   }
 
-  if (!clientFloors.has(z) || drawIds.length === 0) return;
+  if (!FLOORS.has(z) || drawIds.length === 0) return;
   const regionKey = `${Math.floor(x / REGION_SIZE)},${Math.floor(y / REGION_SIZE)},${z}`;
   let entries = regions.get(regionKey);
   if (!entries) {
@@ -318,5 +309,5 @@ console.log(`bounds: x ${stats.minX}..${stats.maxX}, y ${stats.minY}..${stats.ma
 console.log(`floors: ${floorSummary}`);
 console.log(`towns: ${towns.map((t) => `${t.name}(${t.x},${t.y},${t.z})`).join(" ") || "none"}`);
 console.log(`spawn: ${spawn.x},${spawn.y},${spawn.z}`);
-console.log(`client regions written: ${regions.size} (floors ${[...clientFloors].join(",")})`);
+console.log(`client regions written: ${regions.size} (floors ${[...FLOORS].join(",")})`);
 console.log(`server sectors written: ${sectors.size}`);

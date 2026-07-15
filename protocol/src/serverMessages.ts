@@ -7,13 +7,12 @@ import {
 } from "./character";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
+import { positionSchema } from "./position";
 
 export const playerStateSchema = z.object({
   id: z.string(),
   name: z.string(),
-  x: z.number().int(),
-  y: z.number().int(),
-  z: z.number().int().min(0).max(15),
+  position: positionSchema,
   direction: z.enum(DIRECTIONS),
   outfit: characterOutfitSchema,
 });
@@ -67,8 +66,7 @@ export const playerLeftMessageSchema = z.object({
 export const playerMovedMessageSchema = z.object({
   type: z.literal("player-moved"),
   playerId: z.string(),
-  x: z.number().int(),
-  y: z.number().int(),
+  position: positionSchema,
   direction: z.enum(DIRECTIONS),
 });
 

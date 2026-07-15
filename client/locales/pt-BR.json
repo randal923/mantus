@@ -151,6 +151,13 @@
   "spells": {
     "bar": "Barra de magias",
     "shortcut": "{{name}}, atalho {{shortcut}}",
+    "list": {
+      "title": "Magias de {{vocation}}",
+      "description": "{{count}} magias disponíveis para a vocação {{vocation}}.",
+      "level": "Nível",
+      "mana": "Mana",
+      "variable": "Var."
+    },
     "lightHealing": "Cura Leve",
     "energyStrike": "Golpe de Energia",
     "iceWave": "Onda de Gelo",

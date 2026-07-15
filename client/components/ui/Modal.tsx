@@ -51,7 +51,7 @@ export function Modal({ title, onClose, children, footer }: ModalProps) {
         </header>
         <div aria-hidden className="ui-divider" />
 
-        <div className="min-h-0 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85">
+        <div className="ui-scrollbar min-h-0 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85">
           {children}
         </div>
 

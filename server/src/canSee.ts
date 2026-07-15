@@ -1,11 +1,13 @@
+import type { Position } from "@tibia/protocol";
+
 export interface ViewRange {
   x: number;
   y: number;
 }
 
 export function canSee(
-  a: { x: number; y: number; z: number },
-  b: { x: number; y: number; z: number },
+  a: Position,
+  b: Position,
   range: ViewRange,
 ): boolean {
   return (

@@ -163,9 +163,9 @@ export class CharacterPersistence {
       mana: player.mana,
       maxMana: player.maxMana,
       capacity: player.capacity,
-      positionX: player.x,
-      positionY: player.y,
-      positionZ: player.z,
+      positionX: player.position.x,
+      positionY: player.position.y,
+      positionZ: player.position.z,
       direction: player.direction,
       outfit: player.outfit,
     };

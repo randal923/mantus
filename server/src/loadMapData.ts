@@ -1,9 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { MapData } from "./MapData";
-
-/** Gameplay is single-floor until stairs/ladders exist (see TODO.md). */
-const GAMEPLAY_FLOOR = 7;
+import { positionKey } from "./positionKey";
 
 interface MapMeta {
   towns: Array<{ name: string; x: number; y: number; z: number }>;
@@ -36,28 +34,33 @@ export function loadMapData(
     const sx = buf.readUInt16LE(off);
     const sy = buf.readUInt16LE(off + 2);
     const z = buf.readUInt8(off + 4);
-    if (z === GAMEPLAY_FLOOR) {
-      sectors.set(`${sx},${sy}`, buf.subarray(off + 5, off + 5 + bytesPerSector));
-    }
+    sectors.set(
+      positionKey({ x: sx, y: sy, z }),
+      buf.subarray(off + 5, off + 5 + bytesPerSector),
+    );
     off += 5 + bytesPerSector;
   }
 
-  const groundTowns = meta.towns.filter((t) => t.z === GAMEPLAY_FLOOR);
-  const named = groundTowns.find(
+  const named = meta.towns.find(
     (t) => t.name.toLowerCase() === spawnTown?.toLowerCase(),
   );
-  const spawn = named ?? groundTowns[0] ?? meta.spawn;
-  if (spawn.z !== GAMEPLAY_FLOOR) {
-    throw new Error(`map ${name} has no spawn on floor ${GAMEPLAY_FLOOR}`);
+  const spawn = named ?? meta.towns[0] ?? meta.spawn;
+  if (spawn.z < 0 || spawn.z > 15) {
+    throw new Error(`map ${name} has an invalid spawn floor ${spawn.z}`);
   }
 
   return {
     name,
     spawn: { x: spawn.x, y: spawn.y, z: spawn.z },
-    isWalkable(x, y, z) {
-      if (x < 0 || y < 0 || z !== GAMEPLAY_FLOOR) return false;
+    isWalkable(position) {
+      const { x, y, z } = position;
+      if (x < 0 || y < 0 || z < 0 || z > 15) return false;
       const bits = sectors.get(
-        `${Math.floor(x / sectorSize)},${Math.floor(y / sectorSize)}`,
+        positionKey({
+          x: Math.floor(x / sectorSize),
+          y: Math.floor(y / sectorSize),
+          z,
+        }),
       );
       if (!bits) return false;
       const bit = (y % sectorSize) * sectorSize + (x % sectorSize);

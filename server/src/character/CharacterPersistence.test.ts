@@ -47,10 +47,10 @@ describe("CharacterPersistence", () => {
     });
 
     persistence.track(player, 0);
-    player.x = 1;
+    player.moveTo({ x: 1, y: 0, z: 7 });
     persistence.saveNow(player, 1);
     await nextTurn();
-    player.x = 2;
+    player.moveTo({ x: 2, y: 0, z: 7 });
     persistence.saveNow(player, 2);
 
     expect(snapshots).toHaveLength(1);
@@ -102,7 +102,7 @@ describe("CharacterPersistence", () => {
     });
 
     persistence.track(player, 0);
-    player.x = 1;
+    player.moveTo({ x: 1, y: 0, z: 7 });
     persistence.markDirty(player);
     persistence.tick(99);
     await nextTurn();

@@ -1,5 +1,7 @@
+import type { Position } from "@tibia/protocol";
+
 export interface MapData {
   name: string;
-  spawn: { x: number; y: number; z: number };
-  isWalkable(x: number, y: number, z: number): boolean;
+  spawn: Position;
+  isWalkable(position: Position): boolean;
 }

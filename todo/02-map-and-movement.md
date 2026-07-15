@@ -5,7 +5,7 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
 
 ## Converted map data
 
-- [ ] Extend the OTBM converter to export all floors 0 through 15 for both
+- [x] Extend the OTBM converter to export all floors 0 through 15 for both
   server navigation and client regions. Do not keep the server limited to z=7.
 - [ ] Decode and preserve item attributes needed for gameplay: unique/action
   ids, text, subtype/count, charges, depot/door data, teleports, and tile flags.
@@ -29,12 +29,12 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
 
 ## Server map and movement architecture
 
-- [ ] Introduce one typed `Position` and z-aware key utility shared by map,
+- [x] Introduce one typed `Position` and z-aware key utility shared by map,
   occupancy, visibility, pathfinding, creatures, and protocol projections.
 - [ ] Replace z=7-specific `MapData` access with `getTile(position)`,
   `isWalkable(position, creature)`, `getGroundSpeed(position)`,
   `blocksProjectile(position)`, and `getTransition(position, direction)`.
-- [ ] Key occupancy and spatial buckets by x/y/z. Creatures at equal x/y on
+- [x] Key occupancy and spatial buckets by x/y/z. Creatures at equal x/y on
   different floors must never collide or observe one another accidentally.
 - [ ] Keep movement packets as directions/intents, never destinations. During
   the tick re-check adjacency, source ownership, destination walkability,
@@ -61,7 +61,7 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
   visible and add only entities visible from the destination floor.
 - [ ] Filter dynamic tile state, items, effects, missiles, and creatures by the
   same visibility policy; no out-of-view or wrong-floor data may be sent.
-- [ ] Document whether static map regions are considered public downloadable
+- [x] Document whether static map regions are considered public downloadable
   content. If not, authorize and crop region delivery rather than exposing the
   entire world through HTTP.
 
@@ -84,8 +84,8 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
 - [ ] Stairs and ramps resolve correct x/y/z offsets in every direction.
 - [ ] A forged destination, non-adjacent move, early speed replay, blocked
   transition, and illegal z change are rejected at execution time.
-- [ ] Simultaneous moves into one destination serialize to one winner.
-- [ ] Equal x/y on different floors does not collide or leak visibility.
+- [x] Simultaneous moves into one destination serialize to one winner.
+- [x] Equal x/y on different floors does not collide or leak visibility.
 - [ ] Reconnect after a floor change restores the authoritative position.
 - [ ] Static and dynamic map outputs are deterministic for the same manifest.
 

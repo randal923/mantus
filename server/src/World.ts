@@ -1,4 +1,4 @@
-import type { Direction } from "@tibia/protocol";
+import type { Direction, Position } from "@tibia/protocol";
 import type { MapData } from "./MapData";
 import { Player } from "./Player";
 import { SpatialGrid } from "./SpatialGrid";
@@ -18,12 +18,6 @@ export interface MoveResult {
   turned: boolean;
 }
 
-export interface WorldPosition {
-  x: number;
-  y: number;
-  z: number;
-}
-
 export class World {
   private readonly players = new Map<string, Player>();
   private readonly grid = new SpatialGrid();
@@ -37,34 +31,32 @@ export class World {
     return this.map.name;
   }
 
-  get templePosition(): WorldPosition {
+  get templePosition(): Position {
     return { ...this.map.spawn };
   }
 
-  isWalkable(x: number, y: number, z: number): boolean {
-    return this.map.isWalkable(x, y, z);
+  isWalkable(position: Position): boolean {
+    return this.map.isWalkable(position);
   }
 
-  isOccupied(x: number, y: number, z: number): boolean {
-    return this.grid.query(x, y, z, 0, 0).length > 0;
+  isOccupied(position: Position): boolean {
+    return this.grid.query(position, 0, 0).length > 0;
   }
 
   /** Players within the view box centered on (x, y). */
   playersNear(
-    x: number,
-    y: number,
-    z: number,
+    position: Position,
     range: { x: number; y: number },
   ): Player[] {
-    return this.grid.query(x, y, z, range.x, range.y);
+    return this.grid.query(position, range.x, range.y);
   }
 
   /** Spiral out from the map's spawn point until a free tile is found. */
-  findSpawn(preferred?: WorldPosition): WorldPosition | null {
+  findSpawn(preferred?: Position): Position | null {
     if (
       preferred &&
-      this.isWalkable(preferred.x, preferred.y, preferred.z) &&
-      !this.isOccupied(preferred.x, preferred.y, preferred.z)
+      this.isWalkable(preferred) &&
+      !this.isOccupied(preferred)
     ) {
       return { ...preferred };
     }
@@ -75,8 +67,9 @@ export class World {
           if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
           const x = cx + dx;
           const y = cy + dy;
-          if (this.isWalkable(x, y, z) && !this.isOccupied(x, y, z)) {
-            return { x, y, z };
+          const position = { x, y, z };
+          if (this.isWalkable(position) && !this.isOccupied(position)) {
+            return position;
           }
         }
       }
@@ -120,17 +113,18 @@ export class World {
       return { moved: false, turned };
     }
     const [dx, dy] = DIRECTION_DELTAS[direction];
-    const nx = player.x + dx;
-    const ny = player.y + dy;
-    if (!this.isWalkable(nx, ny, player.z) || this.isOccupied(nx, ny, player.z)) {
+    const from = player.position;
+    const destination = {
+      x: from.x + dx,
+      y: from.y + dy,
+      z: from.z,
+    };
+    if (!this.isWalkable(destination) || this.isOccupied(destination)) {
       return { moved: false, turned };
     }
-    const fromX = player.x;
-    const fromY = player.y;
-    player.x = nx;
-    player.y = ny;
+    player.moveTo(destination);
     player.lastStepAt = now;
-    this.grid.move(player, fromX, fromY);
+    this.grid.move(player, from);
     return { moved: true, turned };
   }
 }

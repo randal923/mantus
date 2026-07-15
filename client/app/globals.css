@@ -231,6 +231,34 @@
   box-shadow: 0 1px 0 rgb(0 0 0 / 80%);
 }
 
+.ui-scrollbar {
+  scrollbar-color: #52534f rgb(0 0 0 / 35%);
+  scrollbar-width: thin;
+}
+
+.ui-scrollbar::-webkit-scrollbar {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.ui-scrollbar::-webkit-scrollbar-track {
+  border: 1px solid rgb(133 137 131 / 12%);
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 45%);
+  box-shadow: inset 0 2px 5px rgb(0 0 0 / 70%);
+}
+
+.ui-scrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid #111313;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #72756f, #3f423e);
+  box-shadow: inset 0 1px 0 rgb(226 226 219 / 14%);
+}
+
+.ui-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a09c92, #5b5c57);
+}
+
 .ui-game-vignette {
   background:
     radial-gradient(circle at center, transparent 52%, rgb(0 0 0 / 44%) 100%),

@@ -12,8 +12,8 @@ const makeWorld = () =>
     STEP_MS,
   );
 
-const makePlayer = (x: number, y: number) =>
-  new Player(makeCharacter("p1", "Tester"), { x, y, z: 7 });
+const makePlayer = (x: number, y: number, z = 7, id = "p1") =>
+  new Player(makeCharacter(id, "Tester"), { x, y, z });
 
 describe("World.tryMove", () => {
   it("moves onto a free walkable tile", () => {
@@ -24,7 +24,7 @@ describe("World.tryMove", () => {
     const result = world.tryMove(player, "north", 1000);
 
     expect(result.moved).toBe(true);
-    expect([player.x, player.y]).toEqual([5, 4]);
+    expect(player.position).toEqual({ x: 5, y: 4, z: 7 });
   });
 
   it("rejects steps outside the map bounds", () => {
@@ -35,7 +35,7 @@ describe("World.tryMove", () => {
     const result = world.tryMove(player, "west", 1000);
 
     expect(result.moved).toBe(false);
-    expect([player.x, player.y]).toEqual([0, 0]);
+    expect(player.position).toEqual({ x: 0, y: 0, z: 7 });
   });
 
   it("rejects steps onto blocked tiles", () => {
@@ -64,6 +64,29 @@ describe("World.tryMove", () => {
     expect(result.moved).toBe(false);
   });
 
+  it("does not treat the same x/y on another floor as occupied", () => {
+    const world = makeWorld();
+    const player = makePlayer(5, 5);
+    const otherFloor = makePlayer(5, 4, 8, "p2");
+    world.addPlayer(player);
+    world.addPlayer(otherFloor);
+
+    expect(world.tryMove(player, "north", 1000).moved).toBe(true);
+  });
+
+  it("serializes simultaneous moves into one destination to one winner", () => {
+    const world = makeWorld();
+    const west = makePlayer(4, 5, 7, "west");
+    const east = makePlayer(6, 5, 7, "east");
+    world.addPlayer(west);
+    world.addPlayer(east);
+
+    expect(world.tryMove(west, "east", 1000).moved).toBe(true);
+    expect(world.tryMove(east, "west", 1000).moved).toBe(false);
+    expect(west.position).toEqual({ x: 5, y: 5, z: 7 });
+    expect(east.position).toEqual({ x: 6, y: 5, z: 7 });
+  });
+
   it("enforces the walk-speed cooldown server-side", () => {
     const world = makeWorld();
     const player = makePlayer(5, 5);
@@ -73,7 +96,7 @@ describe("World.tryMove", () => {
 
     const duringCooldown = world.tryMove(player, "north", 1000 + STEP_MS - 1);
     expect(duringCooldown.moved).toBe(false);
-    expect([player.x, player.y]).toEqual([5, 4]);
+    expect(player.position).toEqual({ x: 5, y: 4, z: 7 });
 
     expect(world.tryMove(player, "north", 1000 + STEP_MS).moved).toBe(true);
   });
@@ -90,7 +113,7 @@ describe("World.tryMove", () => {
     expect(result.moved).toBe(false);
     expect(result.turned).toBe(true);
     expect(player.direction).toBe("east");
-    expect([player.x, player.y]).toEqual([5, 4]);
+    expect(player.position).toEqual({ x: 5, y: 4, z: 7 });
   });
 
   it("still turns the player when the step is rejected", () => {

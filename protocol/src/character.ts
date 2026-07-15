@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DIRECTIONS } from "./direction";
 import { PROTOCOL_LIMITS } from "./limits";
+import { positionSchema } from "./position";
 
 export const CHARACTER_VOCATIONS = [
   "Knight",
@@ -51,9 +52,7 @@ export const ownCharacterStateSchema = characterSummarySchema.extend({
   mana: z.number().int().nonnegative(),
   maxMana: z.number().int().nonnegative(),
   capacity: z.number().int().nonnegative(),
-  x: z.number().int(),
-  y: z.number().int(),
-  z: z.number().int().min(0).max(15),
+  position: positionSchema,
   direction: z.enum(DIRECTIONS),
   townId: z.number().int().positive(),
 });

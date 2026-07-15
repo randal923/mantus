@@ -6,7 +6,7 @@ const TILES_PER_SHEET = 14400;
 
 interface SpriteIconProps {
   spriteId: number;
-  /** Integer zoom; sprites are 32px, default renders at 64px. */
+  /** Zoom multiplier; sprites are 32px, default renders at 64px. */
   scale?: number;
   className?: string;
 }

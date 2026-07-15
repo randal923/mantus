@@ -6,6 +6,7 @@ import {
   type CharacterCreationOptions,
   type CharacterSummary as PublicCharacterSummary,
   type OwnCharacterState,
+  type Position,
 } from "@tibia/protocol";
 import type { Player } from "../Player";
 import type { Character, CreateCharacterInput } from "./Character";
@@ -13,10 +14,7 @@ import { CharacterError } from "./CharacterError";
 import type { CharacterStore } from "./CharacterStore";
 import { normalizeCharacterName } from "./normalizeCharacterName";
 
-interface StarterPosition {
-  x: number;
-  y: number;
-  z: number;
+interface StarterPosition extends Position {
   townId: number;
 }
 
@@ -130,9 +128,7 @@ export class CharacterService {
       mana: player.mana,
       maxMana: player.maxMana,
       capacity: player.capacity,
-      x: player.x,
-      y: player.y,
-      z: player.z,
+      position: { ...player.position },
       direction: player.direction,
       outfit: player.outfit,
       townId: player.townId,
