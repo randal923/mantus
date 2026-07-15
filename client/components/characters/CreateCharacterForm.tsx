@@ -9,6 +9,7 @@ import { VOCATION_OPTIONS } from "./vocationOptions";
 
 interface CreateCharacterFormProps {
   busy?: boolean;
+  error?: string | null;
   /** Omit to hide the back button (e.g. when the account has no characters yet). */
   onCancel?: () => void;
   onCreate: (name: string, vocation: Vocation) => void;
@@ -16,6 +17,7 @@ interface CreateCharacterFormProps {
 
 export function CreateCharacterForm({
   busy = false,
+  error,
   onCancel,
   onCreate,
 }: CreateCharacterFormProps) {
@@ -44,6 +46,15 @@ export function CreateCharacterForm({
         value={name}
         onChange={(event) => setName(event.target.value)}
       />
+
+      {error && (
+        <p
+          role="alert"
+          className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200"
+        >
+          {error}
+        </p>
+      )}
 
       <fieldset disabled={busy} className="min-w-0 has-disabled:opacity-45">
         <legend className="font-display text-[10px] font-semibold tracking-[0.18em] text-ui-gold uppercase">

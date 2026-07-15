@@ -105,24 +105,24 @@ export function CharacterSelectModal({
                 max: maxCharacters,
               })}
             </p>
+            {error && (
+              <p
+                role="alert"
+                className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200"
+              >
+                {error}
+              </p>
+            )}
           </>
         ) : (
           <CreateCharacterForm
             busy={busy}
+            error={error}
             onCancel={
               characters.length > 0 ? () => setView("select") : undefined
             }
             onCreate={onCreateCharacter}
           />
-        )}
-
-        {error && (
-          <p
-            role="alert"
-            className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200"
-          >
-            {error}
-          </p>
         )}
       </div>
     </Modal>
