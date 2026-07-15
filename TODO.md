@@ -23,7 +23,7 @@ order.
 14. [Parties, guilds, houses, and social systems](todo/13-social-and-houses.md)
 15. [Optional content and client polish](todo/14-optional-features.md)
 16. [Client and session resilience](todo/15-client-resilience.md)
-17. [Production operations and security](todo/16-operations-and-security.md)
+17. [Production observability, operations, error handling, and security](todo/16-operations-and-security.md)
 18. [Known authentication follow-ups](todo/17-auth-follow-ups.md)
 
 Add a newly discovered gap to the narrowest matching feature file. Add it here

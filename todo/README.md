@@ -161,7 +161,7 @@ interface CreatureState {
 9. Add [`quests/world actions`](12-quests-and-world-actions.md), then social
    and optional systems.
 10. Harden [`resilience`](15-client-resilience.md),
-    [`operations`](16-operations-and-security.md), and known
+    [`observability and operations`](16-operations-and-security.md), and known
     [`authentication gaps`](17-auth-follow-ups.md) continuously.
 
 Do not bulk-enable the whole global content pack until spawn loading, AI,
