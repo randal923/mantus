@@ -40,7 +40,7 @@ export function CharacterListItem({
         <OutfitPortrait
           outfit={character.outfit}
           scale={2}
-          className="translate-y-1 transition-transform duration-150 group-hover:scale-105"
+          className="transition-transform duration-150 group-hover:scale-105"
         />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
