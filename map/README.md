@@ -26,12 +26,14 @@ Conversion stops before replacing existing outputs if the map references item
 ids missing from the asset pack. Use a map and asset pack from the same client
 version.
 
-Outputs (gitignored, regenerate after pulling):
+Outputs:
 
-- `client/public/assets/map/<name>/` — manifest + per-floor region JSONs the
-  client streams over HTTP for rendering.
+- `client/public/assets/map/<name>/` — gitignored manifest + per-floor region
+  JSONs the client streams over HTTP for rendering. Regenerate these after
+  pulling.
 - `server/data/<name>.map.bin` + `<name>.map.json` — walkability sectors and
-  spawn metadata the game server loads at boot.
+  spawn metadata the game server loads at boot. These compact runtime files
+  are committed so CI deployments include them in the server image.
 
 ## Asset compatibility checks
 
