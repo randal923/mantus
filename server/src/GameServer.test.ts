@@ -25,7 +25,6 @@ const testConfig: ServerConfig = {
   heartbeatMs: 30_000,
   authTimeoutMs: 5_000,
   trustProxyHeader: false,
-  stepCooldownMs: 5,
   maxSessions: 10,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
@@ -33,8 +32,14 @@ const testConfig: ServerConfig = {
   characterSaveIntervalMs: 30_000,
   maxCharacterSaveRetries: 3,
   characterSaveRetryDelayMs: 1,
-  viewRange: VIEW_RANGE,
-  map: { source: "grid", name: "test-grid", ...GRID, blocked: [] },
+  defaultViewRange: VIEW_RANGE,
+  map: {
+    source: "grid",
+    name: "test-grid",
+    ...GRID,
+    blocked: [],
+    groundSpeed: 1,
+  },
 };
 
 const fakeVerifier: TokenVerifier = {
@@ -442,6 +447,53 @@ describe("view-range broadcast", () => {
     if (welcome?.type !== "welcome") throw new Error("unreachable");
     expect(welcome.players.map((p) => p.id)).toEqual([bob.playerId]);
   });
+
+  it("reconciles visible players when the viewer resizes", async () => {
+    startServer();
+    const alice = await join("Alice");
+    const bob = await join("Bob");
+
+    alice.socket.send(
+      JSON.stringify({ type: "set-viewport", range: { x: 1, y: 1 } }),
+    );
+    bob.socket.send(JSON.stringify({ type: "move", direction: "east" }));
+    await waitFor(
+      () => sawLeave(alice, bob.playerId),
+      "Bob to leave Alice's small viewport",
+    );
+    bob.socket.send(JSON.stringify({ type: "stop-move" }));
+    const leaveIndex = alice.messages.length;
+
+    alice.socket.send(
+      JSON.stringify({ type: "set-viewport", range: { x: 6, y: 6 } }),
+    );
+    await waitFor(
+      () =>
+        alice.messages
+          .slice(leaveIndex)
+          .some(
+            (message) =>
+              message.type === "player-joined" &&
+              message.player.id === bob.playerId,
+          ),
+      "Bob to enter Alice's expanded viewport",
+    );
+
+    alice.socket.send(
+      JSON.stringify({ type: "set-viewport", range: { x: 1, y: 1 } }),
+    );
+    await waitFor(
+      () =>
+        alice.messages
+          .slice(leaveIndex)
+          .filter(
+            (message) =>
+              message.type === "player-left" &&
+              message.playerId === bob.playerId,
+          ).length === 1,
+      "Bob to leave Alice's shrunken viewport",
+    );
+  });
 });
 
 describe("auth gate", () => {
@@ -592,10 +644,236 @@ describe("auth gate", () => {
     );
   });
 
+  it("sends an authoritative correction when a move is blocked", async () => {
+    startServer({
+      map: {
+        source: "grid",
+        name: "correction-grid",
+        ...GRID,
+        blocked: [[GRID.width / 2, GRID.height / 2 - 1]],
+        groundSpeed: 50,
+      },
+    });
+    const client = await connect(server.port, "Corrected", "tok.corrected");
+    sockets.push(client.socket);
+
+    client.socket.send(JSON.stringify({ type: "move", direction: "north" }));
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "position-correction" &&
+            message.reason === "blocked",
+        ),
+      "blocked movement correction",
+    );
+
+    const correction = client.messages.find(
+      (message) => message.type === "position-correction",
+    );
+    if (correction?.type !== "position-correction") {
+      throw new Error("missing position correction");
+    }
+    expect(correction.position).toEqual({ ...client.spawn, z: 7 });
+    expect(correction.positionRevision).toBe(0);
+  });
+
+  it("buffers a tapped direction before resuming an older held key", async () => {
+    startServer({
+      map: {
+        source: "grid",
+        name: "buffered-direction-grid",
+        ...GRID,
+        blocked: [],
+        groundSpeed: 200,
+      },
+    });
+    const client = await connect(server.port, "Buffered", "tok.buffered");
+    sockets.push(client.socket);
+
+    client.socket.send(
+      JSON.stringify({
+        type: "move",
+        direction: "north",
+        queueStep: true,
+      }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "player-moved" &&
+            message.playerId === client.playerId &&
+            message.positionRevision === 1,
+        ),
+      "initial north step",
+    );
+
+    client.socket.send(
+      JSON.stringify({ type: "move", direction: "east", queueStep: true }),
+    );
+    client.socket.send(
+      JSON.stringify({ type: "move", direction: "north", queueStep: false }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "player-moved" &&
+            message.playerId === client.playerId &&
+            message.positionRevision === 2 &&
+            message.direction === "east" &&
+            message.position.x === client.spawn.x + 1 &&
+            message.position.y === client.spawn.y - 1,
+        ),
+      "buffered east step",
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "player-moved" &&
+            message.playerId === client.playerId &&
+            message.positionRevision === 3 &&
+            message.direction === "north" &&
+            message.position.x === client.spawn.x + 1 &&
+            message.position.y === client.spawn.y - 2,
+        ),
+      "resumed north step",
+    );
+    client.socket.send(JSON.stringify({ type: "stop-move" }));
+  });
+
+  it("sends only visible server-owned map items", async () => {
+    const spawn = { x: GRID.width / 2, y: GRID.height / 2, z: 7 };
+    startServer({
+      map: {
+        source: "grid",
+        name: "item-visibility-grid",
+        ...GRID,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        items: [
+          {
+            position: spawn,
+            item: {
+              instanceId: "visible",
+              itemId: 3003,
+              stackIndex: 1,
+              mutable: true,
+            },
+          },
+          {
+            position: { ...spawn, z: 6 },
+            item: {
+              instanceId: "covered-floor",
+              itemId: 3003,
+              stackIndex: 1,
+              mutable: true,
+            },
+          },
+          {
+            position: { x: 0, y: 0, z: 7 },
+            item: {
+              instanceId: "out-of-view",
+              itemId: 3003,
+              stackIndex: 1,
+              mutable: true,
+            },
+          },
+        ],
+      },
+    });
+    const client = await connect(server.port, "Viewer", "tok.viewer");
+    sockets.push(client.socket);
+    await waitFor(
+      () => client.messages.some((message) => message.type === "tile-states"),
+      "visible tile state",
+    );
+
+    const instanceIds = client.messages.flatMap((message) =>
+      message.type === "tile-states"
+        ? message.visible.flatMap((tile) =>
+            tile.items.map((item) => item.instanceId),
+          )
+        : [],
+    );
+    expect(instanceIds).toEqual(["visible"]);
+  });
+
+  it("reconciles server-owned map items when the viewport changes", async () => {
+    const spawn = { x: GRID.width / 2, y: GRID.height / 2, z: 7 };
+    const itemPosition = { ...spawn, x: spawn.x + 4 };
+    startServer({
+      defaultViewRange: { x: 1, y: 1 },
+      map: {
+        source: "grid",
+        name: "resized-item-grid",
+        ...GRID,
+        blocked: [],
+        items: [
+          {
+            position: itemPosition,
+            item: {
+              instanceId: "resized-visible",
+              itemId: 3003,
+              stackIndex: 1,
+              mutable: true,
+            },
+          },
+        ],
+      },
+    });
+    const client = await connect(server.port, "Resize Viewer", "tok.resize-viewer");
+    sockets.push(client.socket);
+
+    client.socket.send(
+      JSON.stringify({ type: "set-viewport", range: { x: 4, y: 2 } }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "tile-states" &&
+            message.visible.some((tile) =>
+              tile.items.some((item) => item.instanceId === "resized-visible"),
+            ),
+        ),
+      "expanded viewport item",
+    );
+
+    client.socket.send(
+      JSON.stringify({ type: "set-viewport", range: { x: 1, y: 1 } }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "tile-states" &&
+            message.hidden.some(
+              (position) =>
+                position.x === itemPosition.x &&
+                position.y === itemPosition.y &&
+                position.z === itemPosition.z,
+            ),
+        ),
+      "shrunken viewport item removal",
+    );
+  });
+
   it("restores the last persisted position after reconnecting", async () => {
     const characters = new InMemoryCharacterStore();
     startServer(
-      { stepCooldownMs: 1_000 },
+      {
+        map: {
+          source: "grid",
+          name: "slow-grid",
+          ...GRID,
+          blocked: [],
+          groundSpeed: 300,
+        },
+      },
       new InMemoryAccountStore(),
       characters,
     );
@@ -642,6 +920,143 @@ describe("auth gate", () => {
         addons: 0,
       },
     });
+  });
+
+  it("restores the authoritative floor after a transition and reconnect", async () => {
+    const characters = new InMemoryCharacterStore();
+    const source = { x: GRID.width / 2, y: GRID.height / 2 - 1, z: 7 };
+    const destination = { x: source.x, y: source.y - 1, z: 6 };
+    startServer(
+      {
+        map: {
+          source: "grid",
+          name: "transition-grid",
+          ...GRID,
+          blocked: [],
+          groundSpeed: 300,
+          floors: [6, 7],
+          transitions: [
+            {
+              kind: "floor-change",
+              activation: "step",
+              source,
+              destination,
+              itemId: 1947,
+            },
+          ],
+        },
+      },
+      new InMemoryAccountStore(),
+      characters,
+    );
+    const first = await connect(server.port, "Climber", "tok.climber");
+    sockets.push(first.socket);
+
+    first.socket.send(JSON.stringify({ type: "move", direction: "north" }));
+    await waitFor(
+      () =>
+        first.messages.some(
+          (message) =>
+            message.type === "player-moved" &&
+            message.playerId === first.playerId &&
+            message.position.z === destination.z,
+        ),
+      "floor transition",
+    );
+    first.socket.terminate();
+    await waitFor(
+      () => {
+        const persisted = characters.positionFor(first.playerId);
+        return (
+          persisted?.x === destination.x &&
+          persisted.y === destination.y &&
+          persisted.z === destination.z
+        );
+      },
+      "transition position save",
+    );
+
+    const second = await connect(server.port, "Climber", "tok.climber");
+    sockets.push(second.socket);
+    const welcome = second.messages.find((message) => message.type === "welcome");
+    if (welcome?.type !== "welcome") throw new Error("missing transition welcome");
+    expect(welcome.character.position).toEqual(destination);
+  });
+
+  it("reconciles old-floor and destination-floor visibility after stairs", async () => {
+    const characters = new InMemoryCharacterStore();
+    const source = { x: GRID.width / 2, y: GRID.height / 2 - 1, z: 7 };
+    const destination = { x: source.x, y: source.y - 1, z: 6 };
+    characters.seed({
+      ...makeCharacter(randomUUID(), "Upper"),
+      accountId: "acc-sub-tok.upper",
+      positionX: destination.x + 2,
+      positionY: destination.y,
+      positionZ: 6,
+    });
+    startServer(
+      {
+        map: {
+          source: "grid",
+          name: "floor-visibility-grid",
+          ...GRID,
+          blocked: [],
+          floors: [6, 7],
+          groundSpeed: 300,
+          transitions: [
+            {
+              kind: "floor-change",
+              activation: "step",
+              source,
+              destination,
+              itemId: 1947,
+            },
+          ],
+        },
+      },
+      new InMemoryAccountStore(),
+      characters,
+    );
+    const upper = await connect(server.port, "Upper", "tok.upper");
+    const climber = await connect(server.port, "Climber", "tok.floor-climber");
+    const watcher = await connect(server.port, "Watcher", "tok.watcher");
+    sockets.push(upper.socket, climber.socket, watcher.socket);
+    await waitFor(
+      () =>
+        watcher.messages.some(
+          (message) =>
+            (message.type === "player-joined" &&
+              message.player.id === climber.playerId) ||
+            (message.type === "welcome" &&
+              message.players.some((player) => player.id === climber.playerId)),
+        ),
+      "watcher to see climber before stairs",
+    );
+
+    climber.socket.send(JSON.stringify({ type: "move", direction: "north" }));
+
+    await waitFor(
+      () => sawLeave(watcher, climber.playerId),
+      "old-floor watcher to lose climber",
+    );
+    await waitFor(
+      () =>
+        upper.messages.some(
+          (message) =>
+            message.type === "player-joined" &&
+            message.player.id === climber.playerId,
+        ),
+      "destination-floor player to see climber",
+    );
+    await waitFor(
+      () =>
+        climber.messages.some(
+          (message) =>
+            message.type === "player-joined" &&
+            message.player.id === upper.playerId,
+        ),
+      "climber to see destination-floor player",
+    );
   });
 
   it("records last login only after a character enters the world", async () => {

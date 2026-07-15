@@ -1,18 +1,16 @@
-import type { Position } from "@tibia/protocol";
-
-export interface ViewRange {
-  x: number;
-  y: number;
-}
+import type { Position, ViewRange } from "@tibia/protocol";
 
 export function canSee(
-  a: Position,
-  b: Position,
+  viewer: Position,
+  target: Position,
   range: ViewRange,
+  firstVisibleFloor = viewer.z,
 ): boolean {
+  if (viewer.z > 7 && target.z !== viewer.z) return false;
+  if (target.z < firstVisibleFloor || target.z > viewer.z) return false;
+  const shift = viewer.z - target.z;
   return (
-    a.z === b.z &&
-    Math.abs(a.x - b.x) <= range.x &&
-    Math.abs(a.y - b.y) <= range.y
+    Math.abs(viewer.x - (target.x - shift)) <= range.x &&
+    Math.abs(viewer.y - (target.y - shift)) <= range.y
   );
 }

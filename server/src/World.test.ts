@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { clientMessageSchema } from "@tibia/protocol";
 import { gridMapData } from "./gridMapData";
 import { Player } from "./Player";
 import { makeCharacter } from "./test/makeCharacter";
@@ -8,7 +9,13 @@ const STEP_MS = 180;
 
 const makeWorld = () =>
   new World(
-    gridMapData({ name: "test", width: 10, height: 8, blocked: [[3, 2]] }),
+    gridMapData({
+      name: "test",
+      width: 10,
+      height: 8,
+      blocked: [[3, 2]],
+      groundSpeed: 50,
+    }),
     STEP_MS,
   );
 
@@ -25,6 +32,9 @@ describe("World.tryMove", () => {
 
     expect(result.moved).toBe(true);
     expect(player.position).toEqual({ x: 5, y: 4, z: 7 });
+    if (!result.moved) throw new Error("expected movement");
+    expect(result.durationMs).toBe(STEP_MS);
+    expect(player.positionRevision).toBe(1);
   });
 
   it("rejects steps outside the map bounds", () => {
@@ -87,6 +97,104 @@ describe("World.tryMove", () => {
     expect(east.position).toEqual({ x: 6, y: 5, z: 7 });
   });
 
+  it("resolves a server-authored floor transition atomically", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 3, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "transitions",
+        width: 10,
+        height: 8,
+        blocked: [],
+        groundSpeed: 50,
+        floors: [6, 7],
+        transitions: [
+          {
+            kind: "floor-change",
+            activation: "step",
+            source,
+            destination,
+            itemId: 1947,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    const result = world.tryMove(player, "north", 1000);
+
+    expect(result.moved).toBe(true);
+    expect(player.position).toEqual(destination);
+    expect(world.isOccupied(source)).toBe(false);
+    expect(world.isOccupied(destination)).toBe(true);
+  });
+
+  it("rejects a floor transition when its destination is occupied", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 3, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "transitions",
+        width: 10,
+        height: 8,
+        blocked: [],
+        groundSpeed: 50,
+        floors: [6, 7],
+        transitions: [
+          {
+            kind: "floor-change",
+            activation: "step",
+            source,
+            destination,
+            itemId: 1947,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    const blocker = makePlayer(5, 3, 6, "blocker");
+    world.addPlayer(player);
+    world.addPlayer(blocker);
+
+    expect(world.tryMove(player, "north", 1000).moved).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("rejects a floor transition when its destination is blocked", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 3, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "transitions",
+        width: 10,
+        height: 8,
+        blocked: [[5, 3]],
+        groundSpeed: 50,
+        floors: [6, 7],
+        transitions: [
+          {
+            kind: "floor-change",
+            activation: "step",
+            source,
+            destination,
+            itemId: 1947,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.tryMove(player, "north", 1000).moved).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+    expect(world.isOccupied(source)).toBe(false);
+    expect(world.isOccupied(destination)).toBe(false);
+  });
+
   it("enforces the walk-speed cooldown server-side", () => {
     const world = makeWorld();
     const player = makePlayer(5, 5);
@@ -99,6 +207,104 @@ describe("World.tryMove", () => {
     expect(player.position).toEqual({ x: 5, y: 4, z: 7 });
 
     expect(world.tryMove(player, "north", 1000 + STEP_MS).moved).toBe(true);
+  });
+
+  it("derives duration from destination ground and server-side speed conditions", () => {
+    const fastWorld = makeWorld();
+    const fast = makePlayer(5, 5);
+    fastWorld.addPlayer(fast);
+    const fastResult = fastWorld.tryMove(fast, "north", 1000);
+
+    const slowWorld = makeWorld();
+    const slowed = makePlayer(5, 5);
+    slowed.setSpeedModifier(-50);
+    slowWorld.addPlayer(slowed);
+    const slowResult = slowWorld.tryMove(slowed, "north", 1000);
+
+    if (!fastResult.moved || !slowResult.moved) {
+      throw new Error("expected both movements");
+    }
+    expect(slowResult.durationMs).toBeGreaterThan(fastResult.durationMs);
+  });
+
+  it("uses a slower destination ground for the next-step deadline", () => {
+    const world = new World(
+      gridMapData({
+        name: "ground-speed",
+        width: 10,
+        height: 8,
+        blocked: [],
+        groundSpeed: 50,
+        groundSpeeds: [[5, 4, 7, 100]],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    const result = world.tryMove(player, "north", 1000);
+
+    if (!result.moved) throw new Error("expected movement");
+    expect(result.durationMs).toBe(STEP_MS * 2);
+    expect(world.tryMove(player, "north", 1000 + STEP_MS).moved).toBe(false);
+  });
+
+  it("executes an adjacent server-authored ladder action", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "ladder",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "ladder",
+            activation: "use",
+            source,
+            destination,
+            itemId: 1948,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.tryUseMap(player, source, 1000).moved).toBe(true);
+    expect(player.position).toEqual(destination);
+  });
+
+  it("rejects remote map use and packets that forge movement coordinates", () => {
+    const world = makeWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(
+      world.tryUseMap(player, { x: 8, y: 5, z: 7 }, 1000).moved,
+    ).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move",
+        direction: "north",
+        position: { x: 5, y: 4, z: 6 },
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({ type: "move", direction: "northeast" })
+        .success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "use-map",
+        position: { x: 5, y: 4, z: 16 },
+      }).success,
+    ).toBe(false);
   });
 
   it("turns without stepping when the cooldown has not expired", () => {

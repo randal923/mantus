@@ -1,10 +1,8 @@
 import { Container, Sprite, Text, Texture } from "pixi.js";
-import { GAME_RULES, type Direction, type PlayerState } from "@tibia/protocol";
+import type { Direction, PlayerState, Position } from "@tibia/protocol";
 import type { AssetStore, OutfitColors, TibiaObject } from "./AssetStore";
 
 const TILE = 32;
-/** Visual walk duration; matches the server's step cooldown so steps chain smoothly. */
-const STEP_MS = GAME_RULES.stepCooldownMs;
 
 const DIR_INDEX: Record<Direction, number> = {
   north: 0,
@@ -28,10 +26,13 @@ export class PlayerView {
   private walkDirection: Direction;
   private tileX: number;
   private tileY: number;
+  private tileZ: number;
   private fromX: number;
   private fromY: number;
   private moveT = 1;
   private walkDist = 0;
+  private stepDurationMs = 1;
+  private positionRevision: number;
 
   constructor(
     private readonly store: AssetStore,
@@ -44,8 +45,10 @@ export class PlayerView {
     this.walkDirection = state.direction;
     this.tileX = state.position.x;
     this.tileY = state.position.y;
+    this.tileZ = state.position.z;
     this.fromX = state.position.x;
     this.fromY = state.position.y;
+    this.positionRevision = state.positionRevision;
 
     // outfits anchor bottom-right and draw displaced 8px up-left
     this.sprite.position.set(
@@ -69,21 +72,79 @@ export class PlayerView {
     this.updateFrame();
   }
 
-  /** Server said the player is now at (x, y) facing `direction`. */
-  applyMove(x: number, y: number, direction: Direction): void {
+  get floor(): number {
+    return this.tileZ;
+  }
+
+  /** Applies only a fresh authoritative position revision. */
+  applyMove(
+    position: Position,
+    direction: Direction,
+    revision: number,
+    durationMs: number,
+  ): void {
+    if (revision < this.positionRevision) return;
     this.direction = direction;
-    if (x === this.tileX && y === this.tileY) {
+    if (
+      revision === this.positionRevision &&
+      (position.x !== this.tileX ||
+        position.y !== this.tileY ||
+        position.z !== this.tileZ)
+    ) {
+      return;
+    }
+    if (
+      position.x === this.tileX &&
+      position.y === this.tileY &&
+      position.z === this.tileZ
+    ) {
       this.updateFrame();
       return;
     }
     const renderedPosition = this.pixelPosition();
-    const adjacent = Math.abs(x - this.tileX) + Math.abs(y - this.tileY) === 1;
-    this.fromX = adjacent ? renderedPosition.x / TILE : x;
-    this.fromY = adjacent ? renderedPosition.y / TILE : y;
-    this.tileX = x;
-    this.tileY = y;
+    const adjacent =
+      position.z === this.tileZ &&
+      revision === this.positionRevision + 1 &&
+      Math.abs(position.x - this.tileX) + Math.abs(position.y - this.tileY) === 1;
+    this.fromX = adjacent ? renderedPosition.x / TILE : position.x;
+    this.fromY = adjacent ? renderedPosition.y / TILE : position.y;
+    this.tileX = position.x;
+    this.tileY = position.y;
+    this.tileZ = position.z;
+    this.positionRevision = revision;
+    this.stepDurationMs = Math.max(1, durationMs);
     this.moveT = adjacent ? 0 : 1;
     if (adjacent) this.walkDirection = direction;
+    this.updateFrame();
+  }
+
+  applyCorrection(
+    position: Position,
+    direction: Direction,
+    revision: number,
+  ): void {
+    if (revision < this.positionRevision) return;
+    const confirmsCurrentMove =
+      revision === this.positionRevision &&
+      position.x === this.tileX &&
+      position.y === this.tileY &&
+      position.z === this.tileZ;
+    if (confirmsCurrentMove) {
+      this.direction = direction;
+      if (this.moveT >= 1) this.walkDirection = direction;
+      this.updateFrame();
+      return;
+    }
+    this.direction = direction;
+    this.walkDirection = direction;
+    this.tileX = position.x;
+    this.tileY = position.y;
+    this.tileZ = position.z;
+    this.fromX = position.x;
+    this.fromY = position.y;
+    this.positionRevision = revision;
+    this.moveT = 1;
+    this.walkDist = 0;
     this.updateFrame();
   }
 
@@ -95,8 +156,8 @@ export class PlayerView {
       }
       return;
     }
-    this.moveT = Math.min(1, this.moveT + dtMs / STEP_MS);
-    this.walkDist += (dtMs / STEP_MS) * TILE;
+    this.moveT = Math.min(1, this.moveT + dtMs / this.stepDurationMs);
+    this.walkDist += (dtMs / this.stepDurationMs) * TILE;
     this.updateFrame();
   }
 

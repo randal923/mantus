@@ -197,6 +197,7 @@ export class CharacterHandler {
       map: { name: this.world.mapName },
       players,
     });
+    this.visibility.syncMapItems(session, player);
     void this.service
       .recordLogin(character.accountId, character.id, new Date())
       .catch((cause: unknown) => {
@@ -218,7 +219,9 @@ export class CharacterHandler {
     }
     existing.playerId = null;
     existing.movementDirection = null;
+    existing.bufferedMovementDirection = null;
     existing.knownPlayerIds.clear();
+    existing.knownMapItemTiles.clear();
     this.registry.unbindPlayer(characterId, existing);
     existing.sendError("logged-in-elsewhere");
     existing.terminate();

@@ -11,9 +11,11 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "assets:import": "node tools/importTibiaAssets.mjs",
+    "items:convert": "node tools/convertCanaryItems.mjs",
     "map:convert": "node tools/convertOtbm.mjs",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
-    "test": "yarn workspace client test && yarn workspace server test",
+    "test": "yarn test:tools && yarn workspace client test && yarn workspace server test",
+    "test:tools": "node --test tools/*.test.mjs",
     "db:migrate": "yarn workspace server db:migrate"
   },
   "devDependencies": {

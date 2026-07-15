@@ -2,7 +2,8 @@ import type { PlayerState, Position } from "@tibia/protocol";
 import type { Character } from "./character/Character";
 
 export class Player {
-  lastStepAt = 0;
+  nextStepAt = 0;
+  positionRevision = 0;
   readonly id: string;
   readonly name: string;
   readonly vocation: Character["vocation"];
@@ -17,6 +18,7 @@ export class Player {
   readonly townId: number;
   readonly lastLoginAt: Date | null;
   readonly version: number;
+  private speedModifier = 0;
   private currentPosition: Position;
   direction: Character["direction"];
 
@@ -45,6 +47,16 @@ export class Player {
 
   moveTo(position: Position): void {
     this.currentPosition = { ...position };
+    this.positionRevision++;
+  }
+
+  get stepSpeed(): number {
+    return Math.max(10, 110 + (this.level - 1) + this.speedModifier);
+  }
+
+  setSpeedModifier(modifier: number): void {
+    if (!Number.isInteger(modifier)) throw new Error("speed modifier must be an integer");
+    this.speedModifier = modifier;
   }
 
   toState(): PlayerState {
@@ -52,6 +64,7 @@ export class Player {
       id: this.id,
       name: this.name,
       position: { ...this.position },
+      positionRevision: this.positionRevision,
       direction: this.direction,
       outfit: this.outfit,
     };

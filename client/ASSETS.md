@@ -16,7 +16,8 @@ asset packs do **not** match. Everything below was verified with
   `tilesPerSheet: 14400`, `sheets[]`).
 - `objects.json` — every object from the DAT: `{ category, clientId, width,
   height, layers, px, py, pz, phases, flags, sprites[] }`, including ground
-  border, stack/fluid, hook, displacement, elevation, and corpse flags.
+  border, container, pickup, projectile blocking, floor-change, stack/fluid,
+  hook, displacement, elevation, and corpse flags, plus source hashes.
 - `outfit-colors.json` — the 133-entry RGB palette for outfit colorization.
 
 ## Atlas addressing
@@ -51,7 +52,9 @@ offset `(-w*32, -h*32)`. Creatures additionally draw displaced `(-8, -8)`.
   wall patterns often contain alternating continuation pieces.
 - **Special item patterns**: stack counts, fluids, splashes, and hanging
   objects derive their pattern from subtype or wall-hook state instead of map
-  position. The current OTBM conversion does not retain that state yet.
+  position. The OTBM conversion preserves subtype and item attributes in the
+  server-only content output; projecting mutable subtype changes to the client
+  belongs to the item/rendering systems.
 - **Item layers**: draw every layer in order at the same anchor. They are
   pieces of one rendered item, not alternate materials.
 - **Outfits**: `px = 4` directions (patternX: 0=N, 1=E, 2=S, 3=W), `py` =
@@ -128,8 +131,14 @@ and the rest of the Windows client can be deleted.
 
 The importer validates every object and sprite reference, builds all atlases
 in a staging directory, and only replaces the existing generated files after
-the complete import succeeds. To check a pack without generating atlases:
+the complete import succeeds. To validate a pack without generating outputs:
 
 ```bash
 node tools/importTibiaAssets.mjs --validate-only
+```
+
+To replace only `objects.json` while preserving the existing atlases:
+
+```bash
+node tools/importTibiaAssets.mjs --metadata-only
 ```

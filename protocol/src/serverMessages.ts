@@ -13,6 +13,7 @@ export const playerStateSchema = z.object({
   id: z.string(),
   name: z.string(),
   position: positionSchema,
+  positionRevision: z.number().int().nonnegative(),
   direction: z.enum(DIRECTIONS),
   outfit: characterOutfitSchema,
 });
@@ -66,8 +67,39 @@ export const playerLeftMessageSchema = z.object({
 export const playerMovedMessageSchema = z.object({
   type: z.literal("player-moved"),
   playerId: z.string(),
+  from: positionSchema,
   position: positionSchema,
   direction: z.enum(DIRECTIONS),
+  positionRevision: z.number().int().nonnegative(),
+  durationMs: z.number().int().min(0).max(60_000),
+});
+
+export const positionCorrectionMessageSchema = z.object({
+  type: z.literal("position-correction"),
+  playerId: z.string(),
+  position: positionSchema,
+  direction: z.enum(DIRECTIONS),
+  positionRevision: z.number().int().nonnegative(),
+  retryAfterMs: z.number().int().min(0).max(60_000),
+  reason: z.enum(["cooldown", "blocked", "occupied", "invalid-transition"]),
+});
+
+export const mapItemStateSchema = z.object({
+  instanceId: z.string().min(1).max(128),
+  itemId: z.number().int().positive().max(65_535),
+  stackIndex: z.number().int().min(0).max(255),
+});
+
+export const tileStateSchema = z.object({
+  position: positionSchema,
+  revision: z.number().int().nonnegative(),
+  items: z.array(mapItemStateSchema).max(16),
+});
+
+export const tileStatesMessageSchema = z.object({
+  type: z.literal("tile-states"),
+  visible: z.array(tileStateSchema).max(1_024),
+  hidden: z.array(positionSchema).max(1_024),
 });
 
 export const serverErrorCodeSchema = z.enum([
@@ -106,11 +138,15 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   playerJoinedMessageSchema,
   playerLeftMessageSchema,
   playerMovedMessageSchema,
+  positionCorrectionMessageSchema,
+  tileStatesMessageSchema,
   errorMessageSchema,
 ]);
 
 export type PlayerState = z.infer<typeof playerStateSchema>;
 export type MapInfo = z.infer<typeof mapInfoSchema>;
+export type MapItemState = z.infer<typeof mapItemStateSchema>;
+export type TileState = z.infer<typeof tileStateSchema>;
 export type CharacterListMessage = z.infer<typeof characterListMessageSchema>;
 export type WelcomeMessage = z.infer<typeof welcomeMessageSchema>;
 export type ServerErrorCode = z.infer<typeof serverErrorCodeSchema>;

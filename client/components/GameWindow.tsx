@@ -107,6 +107,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     let heldMovementKeys: ReadonlyArray<string> = [];
     joinedRef.current = false;
 
+    const syncViewport = () => {
+      const range = renderer?.setViewportSize(
+        container.clientWidth,
+        container.clientHeight,
+      );
+      if (range) client?.setViewport(range);
+    };
+    const resizeObserver = new ResizeObserver(syncViewport);
+    resizeObserver.observe(container);
+
     (async () => {
       const [{ GameClient }, { WorldRenderer }] = await Promise.all([
         import("../lib/net/GameClient"),
@@ -121,6 +131,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         return;
       }
       renderer = worldRenderer;
+      syncViewport();
 
       client = new GameClient(WS_URL, {
         onMessage: (message) => {
@@ -180,15 +191,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         },
       });
       clientRef.current = client;
+      syncViewport();
       client.connect(accessToken, languageRef.current);
     })();
 
-    const sendHeldDirection = () => {
+    const sendHeldDirection = (queueStep: boolean) => {
       const activeKey = heldMovementKeys[heldMovementKeys.length - 1];
       if (!activeKey) return;
       const direction = KEY_DIRECTIONS[activeKey];
       if (!direction) return;
-      client?.sendMove(direction);
+      client?.sendMove(direction, queueStep);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -197,7 +209,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       event.preventDefault();
       if (heldMovementKeys.includes(event.code)) return;
       heldMovementKeys = [...heldMovementKeys, event.code];
-      sendHeldDirection();
+      sendHeldDirection(true);
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
@@ -211,7 +223,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       );
       if (!wasActive) return;
       if (heldMovementKeys.length > 0) {
-        sendHeldDirection();
+        sendHeldDirection(false);
         return;
       }
       client?.stopMoving();
@@ -232,6 +244,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
+      resizeObserver.disconnect();
       client?.disconnect();
       clientRef.current = null;
       renderer?.destroy();

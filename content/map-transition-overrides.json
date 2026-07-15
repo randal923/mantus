@@ -1,0 +1,11 @@
+{
+  "formatVersion": 1,
+  "mapSha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2",
+  "overrides": [
+    {
+      "position": { "x": 33912, "y": 31039, "z": 12 },
+      "floorChange": "south",
+      "reason": "The source tile combines stairs-down ground 469 with south ramp 33262. The adjacent 33262 ramp row and valid z11 landing identify the ramp as the usable transition."
+    }
+  ]
+}

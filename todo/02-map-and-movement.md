@@ -7,86 +7,95 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
 
 - [x] Extend the OTBM converter to export all floors 0 through 15 for both
   server navigation and client regions. Do not keep the server limited to z=7.
-- [ ] Decode and preserve item attributes needed for gameplay: unique/action
+- [x] Decode and preserve item attributes needed for gameplay: unique/action
   ids, text, subtype/count, charges, depot/door data, teleports, and tile flags.
-- [ ] Merge OTBM item ids with static `items.xml` semantics: blocking,
+- [x] Merge OTBM item ids with static `items.xml` semantics: blocking,
   projectile blocking, path blocking, ground speed, elevation, stack order,
   floor-change direction, movable/pickupable, container, door, field, and
   hangable behavior.
-- [ ] Export explicit floor-transition metadata instead of guessing from a
+- [x] Export explicit floor-transition metadata instead of guessing from a
   sprite or walkability at runtime. Include stairs, ladders, ramps, holes,
   rope spots, and teleports, with source and destination rules.
-- [ ] Preserve OTBM references to external monster/NPC spawn files and towns;
+- [x] Classify the converted floor-change items whose Canary-compatible target
+  tile is absent. Keep them disabled as unresolved metadata until each is
+  identified as a world action, intentional no-op, or corrected content.
+- [x] Preserve OTBM references to external monster/NPC spawn files and towns;
   do not assume spawn positions live in the tile tree.
-- [ ] Classify immutable decoration separately from mutable world items. The
+- [x] Classify immutable decoration separately from mutable world items. The
   static region payload may contain the former; the server must seed and own
   the latter.
-- [ ] Version the generated map format and include source hashes. Build into a
-  staging directory and atomically replace the output only after all validation
-  passes so a failed conversion cannot leave a mixed dataset.
-- [ ] Fail conversion on unknown required attributes, out-of-range positions,
+- [x] Version the generated map format and include source hashes.
+- [x] Build into a staging directory and atomically replace the output only
+  after all validation passes so a failed conversion cannot leave a mixed
+  dataset.
+- [x] Fail conversion on unknown required attributes, out-of-range positions,
   asset-era mismatches, duplicate transitions, or invalid destinations.
 
 ## Server map and movement architecture
 
 - [x] Introduce one typed `Position` and z-aware key utility shared by map,
   occupancy, visibility, pathfinding, creatures, and protocol projections.
-- [ ] Replace z=7-specific `MapData` access with `getTile(position)`,
+- [x] Replace z=7-specific `MapData` access with `getTile(position)`,
   `isWalkable(position, creature)`, `getGroundSpeed(position)`,
   `blocksProjectile(position)`, and `getTransition(position, direction)`.
 - [x] Key occupancy and spatial buckets by x/y/z. Creatures at equal x/y on
   different floors must never collide or observe one another accidentally.
-- [ ] Keep movement packets as directions/intents, never destinations. During
+- [x] Keep movement packets as directions/intents, never destinations. During
   the tick re-check adjacency, source ownership, destination walkability,
   occupancy, speed delay, conditions, and transition rules.
-- [ ] Implement cardinal stairs/ramps using explicit source item/tile metadata
+- [x] Implement cardinal stairs/ramps using explicit source item/tile metadata
   and Tibia-compatible destination offsets. Support step-up onto a higher floor
   from the adjacent tile and automatic step-down only where the map semantics
   require it.
-- [ ] Treat ladder, hole, rope, shovel, and teleport activation as server-side
+- [x] Treat ladder, hole, rope, shovel, and teleport activation as server-side
   world actions, not arbitrary client z changes.
-- [ ] Decide diagonal movement deliberately. If enabled, validate the diagonal
-  intent and corner constraints and apply the correct duration multiplier.
-- [ ] Calculate walk duration from server speed, ground speed, diagonal factor,
+- [x] Decide diagonal movement deliberately. It is disabled: the protocol only
+  accepts cardinal directions, while the duration helper retains the diagonal
+  multiplier for a future explicit protocol change.
+- [x] Calculate walk duration from server speed, ground speed, diagonal factor,
   and conditions. Client animation may predict that duration but cannot decide
   when another step is legal.
-- [ ] On rejection, send a bounded correction containing the authoritative
+- [x] On rejection, send a bounded correction containing the authoritative
   position/revision. Never accept a client coordinate to resynchronize.
 
 ## Visibility and security
 
-- [ ] Make viewport tests floor-aware. Above ground, visible-floor rules differ
+- [x] Make viewport tests floor-aware. Above ground, visible-floor rules differ
   from underground; walls/cover may reduce which upper floors are rendered.
-- [ ] Reconcile visibility after every transition: remove creatures no longer
+- [x] Reconcile visibility after every transition: remove creatures no longer
   visible and add only entities visible from the destination floor.
-- [ ] Filter dynamic tile state, items, effects, missiles, and creatures by the
-  same visibility policy; no out-of-view or wrong-floor data may be sent.
+- [x] Filter current dynamic tile state, items, and creatures by one visibility
+  policy; no out-of-view or wrong-floor data may be sent. Effects and missiles
+  do not exist yet and must join this policy when their systems are added.
 - [x] Document whether static map regions are considered public downloadable
   content. If not, authorize and crop region delivery rather than exposing the
   entire world through HTTP.
 
-## Planned file surface
+## Implemented file surface
 
-- Converter: extend `map` conversion code with `OtbmItemAttribute`,
-  `ItemTypeFlags`, `FloorTransition`, generated format validation, and fixtures.
-- Server: `server/src/world/Position.ts`, `server/src/world/positionKey.ts`,
-  `server/src/world/MapData.ts`, `server/src/world/FloorTransition.ts`,
-  `server/src/movement/resolveStep.ts`, and z-aware `SpatialIndex`/`World`.
-- Protocol: position, direction, floor-change, authoritative correction, and
-  world-revision schemas.
-- Client: floor-aware region selection and transition handling; rendering work
-  belongs in [`03-rendering-and-animation.md`](03-rendering-and-animation.md).
+- Converter: typed OTBM attribute decoding, Canary item-semantic conversion,
+  explicit transition/action resolution, generated format validation, and
+  focused fixtures in `tools/`.
+- Server: z-aware `MapData`, `MapTransition`, `MapAction`, compact generated
+  loaders, `SpatialGrid`, `World`, and tick-serialized `MovementHandler`.
+- Protocol: strict direction/use intents and revisioned movement, correction,
+  and dynamic tile-state messages.
+- Client: floor-aware region selection, dynamic tile reconciliation, and
+  transition/correction handling. Remaining visual fidelity belongs in
+  [`03-rendering-and-animation.md`](03-rendering-and-animation.md).
 
 ## Required tests
 
-- [ ] Converter fixtures cover ground, borders, blocking items, ground speed,
+- [x] Converter fixtures cover ground, borders, blocking items, ground speed,
   subtype/action attributes, every floor-change kind, and invalid data.
-- [ ] Stairs and ramps resolve correct x/y/z offsets in every direction.
-- [ ] A forged destination, non-adjacent move, early speed replay, blocked
-  transition, and illegal z change are rejected at execution time.
+- [x] Stairs and ramps resolve correct x/y/z offsets in every direction.
+- [x] A forged destination, non-adjacent move, and illegal z change are rejected
+  before they can affect authoritative state.
+- [x] An early speed replay and blocked floor-transition destination are
+  rejected at execution time.
 - [x] Simultaneous moves into one destination serialize to one winner.
 - [x] Equal x/y on different floors does not collide or leak visibility.
-- [ ] Reconnect after a floor change restores the authoritative position.
-- [ ] Static and dynamic map outputs are deterministic for the same manifest.
+- [x] Reconnect after a floor change restores the authoritative position.
+- [x] Static and dynamic map outputs are deterministic for the same manifest.
 
 [Back to overview](README.md)

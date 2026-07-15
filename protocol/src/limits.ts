@@ -9,4 +9,6 @@ export const PROTOCOL_LIMITS = {
   minCharacterNameLength: 3,
   maxCharacterNameLength: 20,
   maxTokenLength: 3072,
+  maxViewRangeX: 32,
+  maxViewRangeY: 24,
 } as const;

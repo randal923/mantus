@@ -4,8 +4,10 @@ import {
   type ClientMessage,
   type Direction,
   type Language,
+  type Position,
   type ServerErrorCode,
   type ServerMessage,
+  type ViewRange,
 } from "@tibia/protocol";
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
@@ -19,6 +21,8 @@ export interface GameClientHandlers {
 
 export class GameClient {
   private socket: WebSocket | null = null;
+  private authenticated = false;
+  private viewRange: ViewRange | null = null;
 
   constructor(
     private readonly url: string,
@@ -38,12 +42,30 @@ export class GameClient {
     this.socket = socket;
   }
 
-  sendMove(direction: Direction): void {
-    this.send({ type: "move", direction });
+  sendMove(direction: Direction, queueStep = true): void {
+    this.send({ type: "move", direction, queueStep });
   }
 
   stopMoving(): void {
     this.send({ type: "stop-move" });
+  }
+
+  setViewport(range: ViewRange): void {
+    if (
+      this.viewRange &&
+      range.x === this.viewRange.x &&
+      range.y === this.viewRange.y
+    ) {
+      return;
+    }
+    this.viewRange = { ...range };
+    if (this.authenticated) {
+      this.send({ type: "set-viewport", range: this.viewRange });
+    }
+  }
+
+  useMap(position: Position): void {
+    this.send({ type: "use-map", position });
   }
 
   createCharacter(input: CreateCharacterInput): boolean {
@@ -59,6 +81,7 @@ export class GameClient {
   }
 
   disconnect(): void {
+    this.authenticated = false;
     this.socket?.close();
     this.socket = null;
   }
@@ -74,7 +97,11 @@ export class GameClient {
     const result = serverMessageSchema.safeParse(json);
     if (!result.success) return;
     if (result.data.type === "auth-ok") {
+      this.authenticated = true;
       this.handlers.onLanguage(result.data.language);
+      if (this.viewRange) {
+        this.send({ type: "set-viewport", range: this.viewRange });
+      }
       this.send({ type: "list-characters" });
       return;
     }

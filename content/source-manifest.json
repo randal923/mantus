@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "assetEra": "Tibia 15.11 extended",
+  "sources": {
+    "map": {
+      "name": "otservbr",
+      "url": "https://github.com/opentibiabr/canary/releases/download/v3.6.1/otservbr.otbm",
+      "sha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2"
+    },
+    "dat": {
+      "sha256": "e25fadcf0cd9140cff8c89fa94026438d7c42322c6e23a71b1da5471a317b057"
+    },
+    "spr": {
+      "sha256": "a7085447ddaa340ada42bfa71aed5f41582b1cd368f4a781b0464594f3c9b9ee"
+    },
+    "canaryItems": {
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+      "sha256": "f7f60d81a7b7b613b32328b0cd921cb222b45ec49d31b0d01af6a67a74a687ed"
+    }
+  },
+  "converters": {
+    "assets": 1,
+    "canaryItems": 2,
+    "map": 3
+  }
+}

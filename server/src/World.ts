@@ -1,5 +1,8 @@
-import type { Direction, Position } from "@tibia/protocol";
+import type { Direction, Position, ViewRange } from "@tibia/protocol";
+import { canSee } from "./canSee";
+import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
 import type { MapData } from "./MapData";
+import { getStepDurationMs } from "./getStepDurationMs";
 import { Player } from "./Player";
 import { SpatialGrid } from "./SpatialGrid";
 
@@ -13,10 +16,19 @@ const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
 /** A full spawn ring this far out means the temple area is packed solid. */
 const SPAWN_SEARCH_RADIUS = 256;
 
-export interface MoveResult {
-  moved: boolean;
-  turned: boolean;
-}
+export type MoveResult =
+  | {
+      moved: false;
+      turned: boolean;
+      reason: "cooldown" | "blocked" | "occupied" | "invalid-transition";
+      retryAfterMs: number;
+    }
+  | {
+      moved: true;
+      turned: boolean;
+      from: Position;
+      durationMs: number;
+    };
 
 export class World {
   private readonly players = new Map<string, Player>();
@@ -24,7 +36,7 @@ export class World {
 
   constructor(
     private readonly map: MapData,
-    private readonly stepCooldownMs: number,
+    private readonly tickMs: number,
   ) {}
 
   get mapName(): string {
@@ -39,6 +51,14 @@ export class World {
     return this.map.isWalkable(position);
   }
 
+  getTile(position: Position) {
+    return this.map.getTile(position);
+  }
+
+  getMapItems(position: Position) {
+    return this.map.getItems(position);
+  }
+
   isOccupied(position: Position): boolean {
     return this.grid.query(position, 0, 0).length > 0;
   }
@@ -49,6 +69,85 @@ export class World {
     range: { x: number; y: number },
   ): Player[] {
     return this.grid.query(position, range.x, range.y);
+  }
+
+  canSee(viewer: Position, target: Position, range: ViewRange): boolean {
+    return canSee(
+      viewer,
+      target,
+      range,
+      getFirstVisibleFloor(viewer, this.map),
+    );
+  }
+
+  playersVisibleFrom(position: Position, range: ViewRange): Player[] {
+    const firstFloor = getFirstVisibleFloor(position, this.map);
+    const floors =
+      position.z > 7
+        ? [position.z]
+        : Array.from(
+            { length: position.z - firstFloor + 1 },
+            (_, index) => firstFloor + index,
+          );
+    const players = new Set<Player>();
+    for (const z of floors) {
+      const shift = position.z - z;
+      const center = { x: position.x + shift, y: position.y + shift, z };
+      for (const player of this.grid.query(center, range.x, range.y)) {
+        if (this.canSee(position, player.position, range)) players.add(player);
+      }
+    }
+    return [...players];
+  }
+
+  mapItemTilesVisibleFrom(position: Position, range: ViewRange) {
+    const firstFloor = getFirstVisibleFloor(position, this.map);
+    const floors =
+      position.z > 7
+        ? [position.z]
+        : Array.from(
+            { length: position.z - firstFloor + 1 },
+            (_, index) => firstFloor + index,
+          );
+    const tiles = [];
+    for (const z of floors) {
+      const shift = position.z - z;
+      const centerX = position.x + shift;
+      const centerY = position.y + shift;
+      for (let y = centerY - range.y; y <= centerY + range.y; y++) {
+        for (let x = centerX - range.x; x <= centerX + range.x; x++) {
+          const tilePosition = { x, y, z };
+          const items = this.map.getItems(tilePosition);
+          if (items.length === 0) continue;
+          tiles.push({
+            position: tilePosition,
+            revision: 0,
+            items: items.map(({ instanceId, itemId, stackIndex }) => ({
+              instanceId,
+              itemId,
+              stackIndex,
+            })),
+          });
+        }
+      }
+    }
+    return tiles;
+  }
+
+  playersWhoCanSee(position: Position, range: ViewRange): Player[] {
+    const viewerFloors =
+      position.z > 7
+        ? [position.z]
+        : Array.from({ length: 8 - position.z }, (_, index) => position.z + index);
+    const players = new Set<Player>();
+    for (const z of viewerFloors) {
+      const shift = z - position.z;
+      const center = { x: position.x - shift, y: position.y - shift, z };
+      for (const player of this.grid.query(center, range.x, range.y)) {
+        if (this.canSee(player.position, position, range)) players.add(player);
+      }
+    }
+    return [...players];
   }
 
   /** Spiral out from the map's spawn point until a free tile is found. */
@@ -109,8 +208,13 @@ export class World {
     const turned = player.direction !== direction;
     player.direction = direction;
 
-    if (now - player.lastStepAt < this.stepCooldownMs) {
-      return { moved: false, turned };
+    if (now < player.nextStepAt) {
+      return {
+        moved: false,
+        turned,
+        reason: "cooldown",
+        retryAfterMs: player.nextStepAt - now,
+      };
     }
     const [dx, dy] = DIRECTION_DELTAS[direction];
     const from = player.position;
@@ -119,12 +223,88 @@ export class World {
       y: from.y + dy,
       z: from.z,
     };
-    if (!this.isWalkable(destination) || this.isOccupied(destination)) {
-      return { moved: false, turned };
+    if (!this.isWalkable(destination)) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
     }
-    player.moveTo(destination);
-    player.lastStepAt = now;
+    if (this.isOccupied(destination)) {
+      return { moved: false, turned, reason: "occupied", retryAfterMs: 0 };
+    }
+    const transition = this.map.getTransition(destination, direction);
+    const resolved = transition?.destination ?? destination;
+    if (!this.isWalkable(resolved)) {
+      return {
+        moved: false,
+        turned,
+        reason: transition ? "invalid-transition" : "blocked",
+        retryAfterMs: 0,
+      };
+    }
+    if (this.isOccupied(resolved)) {
+      return { moved: false, turned, reason: "occupied", retryAfterMs: 0 };
+    }
+    const groundSpeed = this.map.getGroundSpeed(resolved);
+    if (!groundSpeed) {
+      return {
+        moved: false,
+        turned,
+        reason: "invalid-transition",
+        retryAfterMs: 0,
+      };
+    }
+    const durationMs = getStepDurationMs(
+      player.stepSpeed,
+      groundSpeed,
+      this.tickMs,
+    );
+    player.moveTo(resolved);
+    player.nextStepAt = now + durationMs;
     this.grid.move(player, from);
-    return { moved: true, turned };
+    return { moved: true, turned, from, durationMs };
+  }
+
+  tryUseMap(player: Player, target: Position, now: number): MoveResult {
+    const from = player.position;
+    const distance = Math.abs(target.x - from.x) + Math.abs(target.y - from.y);
+    if (target.z !== from.z || distance > 1) {
+      return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
+    }
+    if (now < player.nextStepAt) {
+      return {
+        moved: false,
+        turned: false,
+        reason: "cooldown",
+        retryAfterMs: player.nextStepAt - now,
+      };
+    }
+    const action = this.map.getAction(target);
+    if (!action || !this.isWalkable(action.destination)) {
+      return {
+        moved: false,
+        turned: false,
+        reason: "invalid-transition",
+        retryAfterMs: 0,
+      };
+    }
+    if (this.isOccupied(action.destination)) {
+      return { moved: false, turned: false, reason: "occupied", retryAfterMs: 0 };
+    }
+    const groundSpeed = this.map.getGroundSpeed(action.destination);
+    if (!groundSpeed) {
+      return {
+        moved: false,
+        turned: false,
+        reason: "invalid-transition",
+        retryAfterMs: 0,
+      };
+    }
+    const durationMs = getStepDurationMs(
+      player.stepSpeed,
+      groundSpeed,
+      this.tickMs,
+    );
+    player.moveTo(action.destination);
+    player.nextStepAt = now + durationMs;
+    this.grid.move(player, from);
+    return { moved: true, turned: false, from, durationMs };
   }
 }

@@ -1,17 +1,17 @@
 import { Container, Sprite } from "pixi.js";
+import type { Position, TileState, ViewRange } from "@tibia/protocol";
 import type { AssetStore, TibiaObject } from "./AssetStore";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
 import { getMapItemPattern } from "./getMapItemPattern";
 import { getMapObjectZ } from "./getMapObjectZ";
 import { getOrderedTileObjects } from "./getOrderedTileObjects";
+import { getVisibleFloors } from "./getVisibleFloors";
 
 const TILE = 32;
 const GROUND_FLOOR = 7;
-/** Draw order: ground floor first, higher stories stacked above. */
-const FLOORS = [7, 6, 5, 4, 3, 2, 1, 0];
-/** Tiles kept drawn around the camera; covers the viewport at zoom 3 plus margin. */
-const WINDOW_X = 18;
-const WINDOW_Y = 14;
+/** Draw deeper floors first so physically higher floors can cover them. */
+const FLOORS = Array.from({ length: 16 }, (_, index) => 15 - index);
+const STATIC_TILE_MARGIN = 2;
 const MAX_CACHED_REGIONS = 48;
 const MAX_ELEVATION = 24;
 
@@ -50,7 +50,10 @@ export class MapView {
   private readonly loaded = new Map<string, Region | null>();
   private readonly regionUse = new Map<string, number>();
   private readonly drawnTiles = new Map<string, Sprite[]>();
-  private center: { x: number; y: number } | null = null;
+  private readonly dynamicTiles = new Map<string, Sprite[]>();
+  private readonly dynamicRequests = new Map<string, TileState>();
+  private center: { x: number; y: number; z: number } | null = null;
+  private viewRange: ViewRange = { x: 1, y: 1 };
   private generation = 0;
   private useTick = 0;
 
@@ -62,22 +65,25 @@ export class MapView {
       objects.sortableChildren = true;
       const container = new Container();
       container.addChild(ground, objects);
-      const shift = (GROUND_FLOOR - z) * TILE;
-      container.position.set(-shift, -shift);
       this.container.addChild(container);
       this.floors.set(z, { container, ground, objects });
     }
   }
 
-  /** Creatures live between the ground floor's items and its on-top items. */
-  get creatureLayer(): Container {
-    const floor = this.floors.get(GROUND_FLOOR);
-    if (!floor) throw new Error("ground floor missing");
+  /** Creatures remain attached to their authoritative floor. */
+  creatureLayer(z: number): Container {
+    const floor = this.floors.get(z);
+    if (!floor) throw new Error(`map floor ${z} is out of range`);
     return floor.objects;
   }
 
   async setMap(name: string): Promise<void> {
     this.mapName = name;
+    for (const sprites of this.dynamicTiles.values()) {
+      for (const sprite of sprites) sprite.destroy();
+    }
+    this.dynamicTiles.clear();
+    this.dynamicRequests.clear();
     const response = await fetch(`/assets/map/${name}/manifest.json`);
     if (!response.ok) throw new Error(`missing map manifest for ${name}`);
     this.manifest = (await response.json()) as MapManifest;
@@ -91,16 +97,87 @@ export class MapView {
     this.refresh();
   }
 
-  setCenter(x: number, y: number): void {
-    this.center = { x, y };
+  setCenter(x: number, y: number, z: number): void {
+    this.center = { x, y, z };
+    for (const [floorZ, floor] of this.floors) {
+      const shift = (z - floorZ) * TILE;
+      floor.container.position.set(-shift, -shift);
+    }
     this.refresh();
+  }
+
+  setViewRange(range: ViewRange): void {
+    if (range.x === this.viewRange.x && range.y === this.viewRange.y) return;
+    this.viewRange = { ...range };
+    this.refresh();
+  }
+
+  async applyTileStates(
+    visible: ReadonlyArray<TileState>,
+    hidden: ReadonlyArray<Position>,
+  ): Promise<void> {
+    for (const position of hidden) {
+      const key = `${position.z}:${position.x},${position.y}`;
+      this.dynamicRequests.delete(key);
+      for (const sprite of this.dynamicTiles.get(key) ?? []) sprite.destroy();
+      this.dynamicTiles.delete(key);
+    }
+    for (const state of visible) {
+      const key = `${state.position.z}:${state.position.x},${state.position.y}`;
+      this.dynamicRequests.set(key, state);
+    }
+    const appearances = new Map<number, TibiaObject>();
+    for (const state of visible) {
+      for (const item of state.items) {
+        appearances.set(item.itemId, this.store.item(item.itemId));
+      }
+    }
+    await this.store.preload(
+      [...appearances.values()].flatMap((object) => object.sprites),
+    );
+    for (const state of visible) {
+      const key = `${state.position.z}:${state.position.x},${state.position.y}`;
+      const objects = state.items.map((item) => this.store.item(item.itemId));
+      if (this.dynamicRequests.get(key) !== state) continue;
+      for (const sprite of this.dynamicTiles.get(key) ?? []) sprite.destroy();
+      const floor = this.floors.get(state.position.z);
+      if (!floor) continue;
+      const sprites: Sprite[] = [];
+      const hooks = {
+        south: objects.some((object) => object.flags.hookSouth),
+        east: objects.some((object) => object.flags.hookEast),
+      };
+      let elevation = 0;
+      for (const ordered of getOrderedTileObjects(objects)) {
+        this.drawPieces(
+          ordered.object,
+          state.position.x,
+          state.position.y,
+          state.position.z,
+          ordered.ground ? floor.ground : floor.objects,
+          sprites,
+          getMapObjectZ(state.position.x, state.position.y, ordered.stack),
+          elevation,
+          hooks,
+        );
+        elevation = Math.min(
+          MAX_ELEVATION,
+          elevation + ordered.object.flags.elevation,
+        );
+      }
+      this.dynamicTiles.set(key, sprites);
+    }
   }
 
   /** Window center on a floor: higher floors draw shifted up-left, so the
    * tiles that appear over the viewport lie down-right of the camera. */
   private floorCenter(z: number): { x: number; y: number } {
-    const shift = GROUND_FLOOR - z;
+    const shift = (this.center?.z ?? GROUND_FLOOR) - z;
     return { x: (this.center?.x ?? 0) + shift, y: (this.center?.y ?? 0) + shift };
+  }
+
+  private visibleFloors(): number[] {
+    return getVisibleFloors(this.center?.z ?? GROUND_FLOOR);
   }
 
   private refresh(): void {
@@ -110,11 +187,18 @@ export class MapView {
 
     const needed = new Set<string>();
     const loads: Array<Promise<Region | null>> = [];
-    for (const z of FLOORS) {
+    const visibleFloors = this.visibleFloors();
+    const windowX = this.viewRange.x + STATIC_TILE_MARGIN;
+    const windowY = this.viewRange.y + STATIC_TILE_MARGIN;
+    for (const z of visibleFloors) {
       const { x, y } = this.floorCenter(z);
-      for (const cornerX of [x - WINDOW_X, x + WINDOW_X]) {
-        for (const cornerY of [y - WINDOW_Y, y + WINDOW_Y]) {
-          const key = `${z}:${Math.floor(cornerX / size)},${Math.floor(cornerY / size)}`;
+      const firstRegionX = Math.floor((x - windowX) / size);
+      const lastRegionX = Math.floor((x + windowX) / size);
+      const firstRegionY = Math.floor((y - windowY) / size);
+      const lastRegionY = Math.floor((y + windowY) / size);
+      for (let regionY = firstRegionY; regionY <= lastRegionY; regionY++) {
+        for (let regionX = firstRegionX; regionX <= lastRegionX; regionX++) {
+          const key = `${z}:${regionX},${regionY}`;
           if (needed.has(key)) continue;
           needed.add(key);
           loads.push(this.loadRegion(key));
@@ -123,7 +207,10 @@ export class MapView {
     }
     void Promise.all(loads).then(() => {
       if (generation !== this.generation) return;
-      for (const z of FLOORS) this.drawFloorWindow(z);
+      for (const z of visibleFloors) this.drawFloorWindow(z);
+      for (const z of FLOORS) {
+        if (!visibleFloors.includes(z)) this.clearFloorWindow(z);
+      }
       this.applyCover();
       this.evictRegions(needed);
     });
@@ -173,9 +260,11 @@ export class MapView {
 
   private drawFloorWindow(z: number): void {
     const { x: cx, y: cy } = this.floorCenter(z);
+    const windowX = this.viewRange.x + STATIC_TILE_MARGIN;
+    const windowY = this.viewRange.y + STATIC_TILE_MARGIN;
     const wanted = new Set<string>();
-    for (let y = cy - WINDOW_Y; y <= cy + WINDOW_Y; y++) {
-      for (let x = cx - WINDOW_X; x <= cx + WINDOW_X; x++) {
+    for (let y = cy - windowY; y <= cy + windowY; y++) {
+      for (let x = cx - windowX; x <= cx + windowX; x++) {
         const key = `${z}:${x},${y}`;
         wanted.add(key);
         if (!this.drawnTiles.has(key)) this.drawTile(z, x, y);
@@ -183,6 +272,14 @@ export class MapView {
     }
     for (const [key, sprites] of this.drawnTiles) {
       if (!key.startsWith(`${z}:`) || wanted.has(key)) continue;
+      for (const sprite of sprites) sprite.destroy();
+      this.drawnTiles.delete(key);
+    }
+  }
+
+  private clearFloorWindow(z: number): void {
+    for (const [key, sprites] of this.drawnTiles) {
+      if (!key.startsWith(`${z}:`)) continue;
       for (const sprite of sprites) sprite.destroy();
       this.drawnTiles.delete(key);
     }
@@ -271,11 +368,18 @@ export class MapView {
   /** Hide only the floors blocked by a roof/wall over or beside the player. */
   private applyCover(): void {
     if (!this.center) return;
-    const { x, y } = this.center;
+    const { x, y, z: playerFloor } = this.center;
+    if (playerFloor > GROUND_FLOOR) {
+      const visible = new Set(this.visibleFloors());
+      for (const [z, floor] of this.floors) {
+        floor.container.visible = visible.has(z);
+      }
+      return;
+    }
     const firstVisibleFloor = getFirstVisibleFloor(
       x,
       y,
-      GROUND_FLOOR,
+      playerFloor,
       (floor, tileX, tileY) => {
         const ids = this.tileIds(floor, tileX, tileY);
         return (
@@ -294,7 +398,7 @@ export class MapView {
         }) ?? false,
     );
     for (const [z, floor] of this.floors) {
-      floor.container.visible = z >= firstVisibleFloor;
+      floor.container.visible = z >= firstVisibleFloor && z <= GROUND_FLOOR;
     }
   }
 

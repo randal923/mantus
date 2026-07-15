@@ -4,9 +4,11 @@ import {
   type CharacterOutfit,
   type PlayerState,
   type ServerMessage,
+  type ViewRange,
 } from "@tibia/protocol";
 import { AssetStore, type OutfitColors } from "./AssetStore";
 import { getMapObjectZ } from "./getMapObjectZ";
+import { getViewportRange } from "./getViewportRange";
 import { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
 import { PlayerView } from "./PlayerView";
@@ -71,7 +73,11 @@ export class WorldRenderer {
             x: own.position.x * TILE,
             y: own.position.y * TILE,
           };
-          this.mapView.setCenter(own.position.x, own.position.y);
+          this.mapView.setCenter(
+            own.position.x,
+            own.position.y,
+            own.position.z,
+          );
         }
         return;
       }
@@ -82,16 +88,54 @@ export class WorldRenderer {
         this.removePlayer(message.playerId);
         return;
       case "player-moved":
-        this.playerViews
-          .get(message.playerId)
-          ?.applyMove(message.position.x, message.position.y, message.direction);
+        this.applyPlayerMove(
+          message.playerId,
+          message.position,
+          message.direction,
+          message.positionRevision,
+          message.durationMs,
+        );
         if (message.playerId === this.ownPlayerId) {
-          this.mapView.setCenter(message.position.x, message.position.y);
+          this.mapView.setCenter(
+            message.position.x,
+            message.position.y,
+            message.position.z,
+          );
         }
+        return;
+      case "position-correction": {
+        const view = this.playerViews.get(message.playerId);
+        if (!view) return;
+        const previousFloor = view.floor;
+        view.applyCorrection(
+          message.position,
+          message.direction,
+          message.positionRevision,
+        );
+        if (view.floor !== previousFloor) {
+          this.mapView.creatureLayer(view.floor).addChild(view.container);
+        }
+        if (message.playerId === this.ownPlayerId) {
+          this.mapView.setCenter(
+            message.position.x,
+            message.position.y,
+            message.position.z,
+          );
+        }
+        return;
+      }
+      case "tile-states":
+        void this.mapView.applyTileStates(message.visible, message.hidden);
         return;
       case "error":
         return;
     }
+  }
+
+  setViewportSize(width: number, height: number): ViewRange {
+    const range = getViewportRange(width, height, TILE * ZOOM);
+    this.mapView.setViewRange(range);
+    return range;
   }
 
   destroy(): void {
@@ -108,7 +152,7 @@ export class WorldRenderer {
       this.outfitColorsFor(player.outfit),
       NAME_COLOR,
     );
-    this.mapView.creatureLayer.addChild(view.container);
+    this.mapView.creatureLayer(player.position.z).addChild(view.container);
     this.overlay.addChild(view.plate);
     this.playerViews.set(player.id, view);
   }
@@ -118,6 +162,22 @@ export class WorldRenderer {
     if (!view) return;
     view.destroy();
     this.playerViews.delete(playerId);
+  }
+
+  private applyPlayerMove(
+    playerId: string,
+    position: PlayerState["position"],
+    direction: PlayerState["direction"],
+    revision: number,
+    durationMs: number,
+  ): void {
+    const view = this.playerViews.get(playerId);
+    if (!view) return;
+    const previousFloor = view.floor;
+    view.applyMove(position, direction, revision, durationMs);
+    if (view.floor !== previousFloor) {
+      this.mapView.creatureLayer(view.floor).addChild(view.container);
+    }
   }
 
   private outfitColorsFor(outfit: CharacterOutfit): OutfitColors {

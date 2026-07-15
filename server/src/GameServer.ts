@@ -44,11 +44,10 @@ export class GameServer {
     private readonly config: ServerConfig,
     deps: GameServerDeps,
   ) {
-    this.world = new World(resolveMapData(config.map), config.stepCooldownMs);
+    this.world = new World(resolveMapData(config.map), config.tickMs);
     this.visibility = new Visibility(
       this.world,
       this.registry,
-      config.viewRange,
     );
     this.auth = new AuthHandler(
       this.registry,
@@ -126,6 +125,7 @@ export class GameServer {
     const session = new Session(randomUUID(), remoteAddress, socket, {
       maxPendingIntents: this.config.maxPendingIntents,
       maxProtocolViolations: this.config.maxProtocolViolations,
+      initialViewRange: this.config.defaultViewRange,
     });
     this.registry.add(session);
     // queue the leave; world state only changes inside the tick (charter rule 5)
@@ -203,6 +203,15 @@ export class GameServer {
         return;
       case "stop-move":
         this.movement.stop(session);
+        return;
+      case "set-viewport": {
+        if (!session.setViewRange(intent.range) || !session.playerId) return;
+        const player = this.world.getPlayer(session.playerId);
+        if (player) this.visibility.onViewerRangeChanged(session, player);
+        return;
+      }
+      case "use-map":
+        this.movement.handleUseMap(session, intent, now);
         return;
       case "set-language":
         this.language.handle(session, intent);

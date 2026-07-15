@@ -1,5 +1,6 @@
 // Imports an extended Tibia 8.6-format DAT/SPR pair into the web asset format.
 // Usage: node tools/importTibiaAssets.mjs [Tibia.dat] [Tibia.spr]
+import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import sharp from "sharp";
@@ -113,6 +114,8 @@ function createFlags() {
     groundSpeed: 0,
     groundBorder: false,
     fullGround: false,
+    container: false,
+    pickupable: false,
     notWalkable: false,
     blockProjectile: false,
     notMoveable: false,
@@ -131,6 +134,7 @@ function createFlags() {
     elevation: 0,
     lyingCorpse: false,
     animateAlways: false,
+    floorChange: false,
   };
 }
 
@@ -154,6 +158,9 @@ function readFlags(reader) {
       case ATTR.onTop:
         flags.onTop = true;
         break;
+      case ATTR.container:
+        flags.container = true;
+        break;
       case ATTR.stackable:
         flags.stackable = true;
         break;
@@ -174,6 +181,9 @@ function readFlags(reader) {
         break;
       case ATTR.notPathable:
         flags.notPathable = true;
+        break;
+      case ATTR.pickupable:
+        flags.pickupable = true;
         break;
       case ATTR.hangable:
         flags.hangable = true;
@@ -203,6 +213,9 @@ function readFlags(reader) {
       case ATTR.fullGround:
         flags.fullGround = true;
         break;
+      case ATTR.floorChange:
+        flags.floorChange = true;
+        break;
       case ATTR.writable:
       case ATTR.writableOnce:
       case ATTR.minimapColor:
@@ -223,10 +236,8 @@ function readFlags(reader) {
         reader.u16();
         reader.u16();
         break;
-      case ATTR.container:
       case ATTR.forceUse:
       case ATTR.multiUse:
-      case ATTR.pickupable:
       case ATTR.rotateable:
       case ATTR.translucent:
       case ATTR.ignoreLook:
@@ -241,7 +252,6 @@ function readFlags(reader) {
       case ATTR.expireStop:
       case ATTR.podium:
       case ATTR.decoKit:
-      case ATTR.floorChange:
       case ATTR.noMoveAnimation:
       case ATTR.chargeable:
         break;
@@ -395,8 +405,9 @@ async function writeAtlases(spr, spriteCount, stagingDir) {
 async function publish(stagingDir, outputDir, names) {
   const backupDir = join(outputDir, `.import-backup-${Date.now()}`);
   await mkdir(backupDir, { recursive: true });
-  const existing = (await readdir(outputDir)).filter(
-    (name) => /^atlas-\d+\.png$/.test(name) || name === "atlas-index.json" || name === "objects.json",
+  const replacements = new Set(names);
+  const existing = (await readdir(outputDir)).filter((name) =>
+    replacements.has(name),
   );
   try {
     for (const name of existing) await rename(join(outputDir, name), join(backupDir, name));
@@ -418,6 +429,10 @@ async function publish(stagingDir, outputDir, names) {
 const repoRoot = resolve(import.meta.dirname, "..");
 const args = process.argv.slice(2);
 const validateOnly = args.includes("--validate-only");
+const metadataOnly = args.includes("--metadata-only");
+if (validateOnly && metadataOnly) {
+  throw new Error("--validate-only and --metadata-only cannot be combined");
+}
 const paths = args.filter((argument) => !argument.startsWith("--"));
 const datPath = resolve(paths[0] ?? join(repoRoot, "map/Tibia.dat"));
 const sprPath = resolve(paths[1] ?? join(repoRoot, "map/Tibia.spr"));
@@ -448,8 +463,12 @@ if (validateOnly) {
   process.exit(0);
 }
 
-const sheets = await writeAtlases(spr, spriteCount, stagingDir);
 const objectsFile = {
+  formatVersion: 1,
+  source: {
+    datSha256: createHash("sha256").update(dat).digest("hex"),
+    sprSha256: createHash("sha256").update(spr).digest("hex"),
+  },
   datSignature: parsed.datSignature,
   sprSignature,
   counts: parsed.counts,
@@ -461,6 +480,14 @@ const objectsFile = {
   },
   objects: parsed.objects,
 };
+await writeFile(join(stagingDir, "objects.json"), JSON.stringify(objectsFile));
+if (metadataOnly) {
+  await publish(stagingDir, outputDir, ["objects.json"]);
+  console.log(`imported ${basename(datPath)} metadata into ${outputDir}`);
+  process.exit(0);
+}
+
+const sheets = await writeAtlases(spr, spriteCount, stagingDir);
 const atlasIndex = {
   tile: TILE,
   pad: PAD,
@@ -473,7 +500,6 @@ const atlasIndex = {
   spriteCount,
   sheets,
 };
-await writeFile(join(stagingDir, "objects.json"), JSON.stringify(objectsFile));
 await writeFile(join(stagingDir, "atlas-index.json"), JSON.stringify(atlasIndex));
 await publish(stagingDir, outputDir, [...sheets, "objects.json", "atlas-index.json"]);
 

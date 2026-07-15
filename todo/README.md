@@ -38,19 +38,21 @@ translate and refactor the useful parts into this project's use case.
 - Supabase users authenticate to a rate-limited WebSocket server.
 - Accounts own persisted characters selected before entering the world;
   position, direction, private stats, and saved outfits survive reconnects.
-- The server owns a fixed tick, intent queues, cardinal movement, occupancy,
-  view-range player visibility, and one live session per account.
-- The converted OTServBR map provides server walkability and client map regions
+- The server owns a fixed tick, intent queues, speed/ground-timed cardinal
+  movement, z-aware occupancy and visibility, explicit floor transitions and
+  map actions, and one live session per account.
+- The converted OTServBR map provides validated server navigation, mutable item
+  placements, towns/content references, and public immutable client regions
   for all floors z=0..15.
-- The client streams static map regions, draws the Tibia atlases, animates
-  player walking, and renders other connected players.
+- The client streams floor-aware static regions, reconciles visible mutable
+  tile items and creatures, snaps authoritative corrections/floor changes, and
+  animates accepted same-floor player steps.
 - Inventory and status components exist only as Storybook/mock UI. They are
   not backed by protocol or server state.
 
-Everything else is absent or partial: multi-floor movement, map-item
-animation, correct creature elevation, monster
-and NPC spawns, item ownership, combat, loot, chat, shops, quests, and the
-long-tail social/economy systems.
+Everything else is absent or partial: map-item animation, correct creature
+elevation, monster and NPC spawns, persistent item ownership, combat, loot,
+chat, shops, quests, and the long-tail social/economy systems.
 
 ## Reference implementation map
 

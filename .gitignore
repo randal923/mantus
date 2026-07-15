@@ -6,6 +6,7 @@ dist/
 *Zone.Identifier
 # OTBM map sources (large binaries; download URLs in map/README.md)
 map/*.otbm
+map/items.xml
 # Local client files used by the asset importer.
 map/Tibia.dat
 map/Tibia.spr

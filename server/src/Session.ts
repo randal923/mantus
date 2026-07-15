@@ -4,8 +4,10 @@ import {
   PROTOCOL_LIMITS,
   type ClientMessage,
   type Direction,
+  type Position,
   type ServerErrorCode,
   type ServerMessage,
+  type ViewRange,
 } from "@tibia/protocol";
 import type { Account } from "./AccountStore";
 
@@ -24,8 +26,11 @@ export class Session {
   readonly connectedAt = Date.now();
   playerId: string | null = null;
   movementDirection: Direction | null = null;
+  bufferedMovementDirection: Direction | null = null;
   isAlive = true;
   readonly knownPlayerIds = new Set<string>();
+  readonly knownMapItemTiles = new Map<string, Position>();
+  viewRange: ViewRange;
 
   private pendingIntents: ClientMessage[] = [];
   private windowStartedAt = 0;
@@ -39,8 +44,10 @@ export class Session {
     private readonly limits: {
       maxPendingIntents: number;
       maxProtocolViolations: number;
+      initialViewRange: ViewRange;
     },
   ) {
+    this.viewRange = { ...limits.initialViewRange };
     socket.on("message", (data) => this.onMessage(data));
     socket.on("pong", () => {
       this.isAlive = true;
@@ -91,6 +98,14 @@ export class Session {
     const intents = this.pendingIntents;
     this.pendingIntents = [];
     return intents;
+  }
+
+  setViewRange(range: ViewRange): boolean {
+    if (range.x === this.viewRange.x && range.y === this.viewRange.y) {
+      return false;
+    }
+    this.viewRange = { ...range };
+    return true;
   }
 
   send(message: ServerMessage): void {

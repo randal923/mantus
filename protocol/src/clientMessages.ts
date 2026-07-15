@@ -3,6 +3,8 @@ import { createCharacterInputSchema } from "./character";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { PROTOCOL_LIMITS } from "./limits";
+import { positionSchema } from "./position";
+import { viewRangeSchema } from "./viewRange";
 
 export const authMessageSchema = z.object({
   type: z.literal("auth"),
@@ -32,16 +34,37 @@ export const selectCharacterMessageSchema = z
   })
   .strict();
 
-/** Starts or redirects held movement; normal clients send once per key change. */
-export const moveMessageSchema = z.object({
-  type: z.literal("move"),
-  direction: z.enum(DIRECTIONS),
-});
+/** Starts or redirects held movement and optionally buffers the pressed step. */
+export const moveMessageSchema = z
+  .object({
+    type: z.literal("move"),
+    direction: z.enum(DIRECTIONS),
+    queueStep: z.boolean().default(true),
+  })
+  .strict();
 
 /** Stops held movement; covered by the shared message size and rate caps. */
-export const stopMoveMessageSchema = z.object({
-  type: z.literal("stop-move"),
-});
+export const stopMoveMessageSchema = z
+  .object({
+    type: z.literal("stop-move"),
+  })
+  .strict();
+
+/** Updates the bounded tile range derived from the current rendered viewport. */
+export const setViewportMessageSchema = z
+  .object({
+    type: z.literal("set-viewport"),
+    range: viewRangeSchema,
+  })
+  .strict();
+
+/** Uses an adjacent server-authored map action; never supplies a destination. */
+export const useMapMessageSchema = z
+  .object({
+    type: z.literal("use-map"),
+    position: positionSchema,
+  })
+  .strict();
 
 /** Fixed-size account setting intent; covered by the 4 KiB/30-per-second caps. */
 export const setLanguageMessageSchema = z.object({
@@ -56,6 +79,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   selectCharacterMessageSchema,
   moveMessageSchema,
   stopMoveMessageSchema,
+  setViewportMessageSchema,
+  useMapMessageSchema,
   setLanguageMessageSchema,
 ]);
 
@@ -71,5 +96,7 @@ export type SelectCharacterMessage = z.infer<
 >;
 export type MoveMessage = z.infer<typeof moveMessageSchema>;
 export type StopMoveMessage = z.infer<typeof stopMoveMessageSchema>;
+export type SetViewportMessage = z.infer<typeof setViewportMessageSchema>;
+export type UseMapMessage = z.infer<typeof useMapMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
