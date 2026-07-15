@@ -111,6 +111,120 @@
   filter: grayscale(0.45) saturate(0.45);
 }
 
+.ui-dropdown {
+  appearance: none;
+  background:
+    linear-gradient(180deg, rgb(48 51 50 / 82%), rgb(13 15 15 / 94%)),
+    url('/assets/ui/forged-stone-texture.webp') center / 280px 280px;
+  box-shadow:
+    inset 0 1px 0 rgb(226 226 219 / 7%),
+    inset 0 -1px 0 rgb(0 0 0 / 60%),
+    0 3px 10px rgb(0 0 0 / 22%);
+}
+
+.ui-dropdown option {
+  color: #fff;
+  background: #171918;
+}
+
+.ui-dropdown option:checked,
+.ui-dropdown option:hover,
+.ui-dropdown option:focus {
+  color: #fff;
+  background: #8f1e16;
+}
+
+.ui-dropdown:open {
+  border-color: #bd3b2e;
+  box-shadow:
+    0 0 0 2px rgb(143 30 22 / 28%),
+    inset 0 1px 0 rgb(255 218 207 / 10%),
+    0 5px 16px rgb(0 0 0 / 35%);
+}
+
+@supports (appearance: base-select) {
+  .ui-dropdown,
+  .ui-dropdown::picker(select) {
+    appearance: base-select;
+  }
+
+  .ui-dropdown::picker(select) {
+    margin-top: 0.375rem;
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: none;
+    border: 1px solid rgb(189 59 46 / 70%);
+    border-radius: 0.5rem;
+    background:
+      linear-gradient(180deg, rgb(37 40 39 / 98%), rgb(9 10 10 / 99%)),
+      url('/assets/ui/forged-stone-texture.webp') center / 280px 280px;
+    box-shadow: 0 14px 32px rgb(0 0 0 / 58%);
+  }
+
+  .ui-dropdown::picker-icon,
+  .ui-dropdown option::checkmark {
+    display: none;
+  }
+
+  .ui-dropdown option {
+    border-bottom: 1px solid rgb(133 137 131 / 12%);
+    padding: 0.625rem 0.75rem;
+  }
+
+  .ui-dropdown option:last-child {
+    border-bottom: 0;
+  }
+}
+
+.ui-range {
+  width: 100%;
+  height: 0.5rem;
+  appearance: none;
+  border: 1px solid rgb(133 137 131 / 25%);
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 62%);
+  box-shadow:
+    inset 0 2px 5px rgb(0 0 0 / 80%),
+    0 1px 0 rgb(255 255 255 / 4%);
+  cursor: pointer;
+}
+
+.ui-range::-webkit-slider-thumb {
+  width: 1rem;
+  height: 1.25rem;
+  appearance: none;
+  border: 1px solid rgb(189 59 46 / 70%);
+  border-radius: 0.25rem;
+  background:
+    linear-gradient(180deg, rgb(151 34 25 / 96%), rgb(75 10 7 / 98%)),
+    url('/assets/ui/forged-stone-texture.webp') center / 160px 160px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 218 207 / 14%),
+    0 2px 6px rgb(0 0 0 / 55%);
+}
+
+.ui-range::-moz-range-thumb {
+  width: 1rem;
+  height: 1.25rem;
+  border: 1px solid rgb(189 59 46 / 70%);
+  border-radius: 0.25rem;
+  background:
+    linear-gradient(180deg, rgb(151 34 25 / 96%), rgb(75 10 7 / 98%)),
+    url('/assets/ui/forged-stone-texture.webp') center / 160px 160px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 218 207 / 14%),
+    0 2px 6px rgb(0 0 0 / 55%);
+}
+
+.ui-range:focus-visible {
+  outline: 2px solid rgb(154 150 141 / 60%);
+  outline-offset: 3px;
+}
+
+.ui-range:disabled {
+  cursor: default;
+  filter: grayscale(0.5);
+}
+
 .ui-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, #424744 20%, #7c807a 50%, #424744 80%, transparent);

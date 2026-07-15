@@ -46,5 +46,13 @@ export function AuthGate() {
   }
   if (!ready) return null;
   if (!session) return <LoginScreen />;
-  return <GameWindow accessToken={session.access_token} />;
+  return (
+    <GameWindow
+      accessToken={session.access_token}
+      onLogout={async () => {
+        const { error } = await getSupabaseClient().auth.signOut();
+        if (error) throw error;
+      }}
+    />
+  );
 }

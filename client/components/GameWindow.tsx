@@ -10,6 +10,7 @@ import { InventoryPanel } from "./inventory/InventoryPanel";
 import { PLACEHOLDER_INVENTORY } from "./inventory/placeholderInventory";
 import { PLACEHOLDER_CHARACTER } from "./navigation/placeholderCharacter";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
+import { GameMenuModal } from "./settings/GameMenuModal";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
 
@@ -26,17 +27,23 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
 
 interface GameWindowProps {
   accessToken: string;
+  onLogout: () => void | Promise<void>;
 }
 
-export default function GameWindow({ accessToken }: GameWindowProps) {
+export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [gameMenuOpen, setGameMenuOpen] = useState(false);
 
   useHotkeys((action) => {
     if (action === "toggleInventory") {
+      if (gameMenuOpen) return;
       setInventoryOpen((open) => !open);
+      return;
     }
+    setInventoryOpen(false);
+    setGameMenuOpen((open) => !open);
   });
 
   useEffect(() => {
@@ -136,9 +143,13 @@ export default function GameWindow({ accessToken }: GameWindowProps) {
           connectionStatus={status}
           activePanel={inventoryOpen ? "inventory" : undefined}
           onInventory={() => setInventoryOpen((open) => !open)}
+          onSettings={() => {
+            setInventoryOpen(false);
+            setGameMenuOpen(true);
+          }}
         />
       </div>
-      <GameHud />
+      <GameHud spellHotkeysEnabled={!gameMenuOpen} />
       {inventoryOpen && (
         <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
           <InventoryPanel
@@ -146,6 +157,12 @@ export default function GameWindow({ accessToken }: GameWindowProps) {
             onClose={() => setInventoryOpen(false)}
           />
         </div>
+      )}
+      {gameMenuOpen && (
+        <GameMenuModal
+          onClose={() => setGameMenuOpen(false)}
+          onLogout={onLogout}
+        />
       )}
     </div>
   );

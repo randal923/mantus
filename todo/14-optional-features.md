@@ -22,11 +22,14 @@ item into an earlier feature file if the initial game design requires it.
   visibility-safe effect rendering.
 - [ ] Sound/music with bounded asset loading and accessible volume/mute controls.
 - [ ] Hotkeys, action bars, targeting controls, mouse/touch input, context menus,
-  drag feedback, and keyboard accessibility.
+  drag feedback, and keyboard accessibility. The current settings mapping and
+  bottom spell bar are visual previews only: persist validated bindings and
+  send bounded cast intents only after the protocol/server execution path exists.
 - [ ] Battle list filters, party frames, status icons, combat log, loot channel,
   quest tracker, and notification UX.
 - [ ] Settings persistence, localization, accessibility preferences, and
-  responsive panel layout.
+  responsive panel layout. `GameMenuModal` currently keeps language, volume,
+  and hotkey changes only for the lifetime of the open modal.
 - [ ] Performance budgets for region streaming, sprite count, animated items,
   effects, UI updates, and low-power/background behavior.
 

@@ -1,0 +1,63 @@
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, fn, userEvent } from "storybook/test";
+
+import { SpellBar } from "../components/spells/SpellBar";
+
+const SPELLS = [
+  { id: "heal", name: "Light Healing", glyph: "✚", shortcut: "1", manaCost: 20 },
+  { id: "energy", name: "Energy Strike", glyph: "ϟ", shortcut: "2", manaCost: 35 },
+  { id: "ice", name: "Ice Wave", glyph: "❄", shortcut: "3", manaCost: 55 },
+  {
+    id: "fire",
+    name: "Fire Bomb",
+    glyph: "✦",
+    shortcut: "4",
+    manaCost: 85,
+    cooldownRemaining: 3,
+    cooldownTotal: 6,
+  },
+  { id: "haste", name: "Haste", glyph: "»", shortcut: "5", manaCost: 60 },
+  { id: "shield", name: "Magic Shield", glyph: "◇", shortcut: "6", manaCost: 50 },
+  { id: "ultimate", name: "Ultimate Healing", glyph: "✥", shortcut: "7", manaCost: 160 },
+  { id: "empty", name: "Empty Slot", glyph: "", shortcut: "8", disabled: true },
+];
+
+const meta = {
+  title: "Game/Spells/SpellBar",
+  component: SpellBar,
+  parameters: {
+    layout: "centered",
+  },
+  decorators: [
+    (Story) => (
+      <div className="ui-backdrop p-8">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    spells: SPELLS,
+    onCast: fn(),
+    hotkeysEnabled: true,
+  },
+} satisfies Meta<typeof SpellBar>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  play: async ({ args }) => {
+    await userEvent.keyboard("1");
+    await expect(args.onCast).toHaveBeenCalledWith("heal");
+  },
+};
+
+export const Ready: Story = {
+  args: {
+    spells: SPELLS.map((spell) => ({
+      ...spell,
+      cooldownRemaining: 0,
+      cooldownTotal: 0,
+    })),
+  },
+};

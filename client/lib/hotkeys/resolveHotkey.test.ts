@@ -18,6 +18,10 @@ describe("resolveHotkey", () => {
     expect(resolveHotkey(press("KeyI"))).toBe("toggleInventory");
   });
 
+  it("maps Escape to toggleGameMenu", () => {
+    expect(resolveHotkey(press("Escape"))).toBe("toggleGameMenu");
+  });
+
   it("returns null for unbound keys", () => {
     expect(resolveHotkey(press("KeyZ"))).toBeNull();
   });

@@ -33,6 +33,9 @@ online player does nothing until they reconnect.
   Enable captcha and production auth rate-limit/settings before public access.
 - [ ] Confirm account/session authorization always derives identity from the
   verified token and never a body-supplied account or character id.
+- [ ] Connect the preview change-email and change-password forms to the
+  supported Supabase reauthentication/confirmation flows, surface failures,
+  and never log or persist plaintext credential input in client state.
 
 ## Required tests
 
