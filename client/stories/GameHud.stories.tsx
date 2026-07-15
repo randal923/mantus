@@ -19,24 +19,9 @@ const meta = {
       </div>
     ),
   ],
-  args: {
-    connectionStatus: "connected",
-  },
 } satisfies Meta<typeof GameHud>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Connected: Story = {};
-
-export const Connecting: Story = {
-  args: {
-    connectionStatus: "connecting",
-  },
-};
-
-export const Disconnected: Story = {
-  args: {
-    connectionStatus: "disconnected",
-  },
-};
+export const Default: Story = {};

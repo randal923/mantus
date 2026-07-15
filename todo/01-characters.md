@@ -40,6 +40,11 @@ persisted character.
   configured temple position when the tile is missing, blocked, or invalid.
 - [ ] Send only the selected character's exact private stats; list responses
   contain summaries only.
+- [ ] Replace `client/components/navigation/placeholderCharacter.ts` with real
+  server-sent character stats. Added 2026-07-15 so the in-game
+  `TopNavigationBar` (name, level, vocation, health/mana) renders before the
+  server projects character state; it is display-only hardcoded data and must
+  be deleted once real stats arrive.
 
 ## Persistence lifecycle
 

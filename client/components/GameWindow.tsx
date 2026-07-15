@@ -8,6 +8,8 @@ import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
 import { PLACEHOLDER_INVENTORY } from "./inventory/placeholderInventory";
+import { PLACEHOLDER_CHARACTER } from "./navigation/placeholderCharacter";
+import { TopNavigationBar } from "./navigation/TopNavigationBar";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
 
@@ -128,9 +130,17 @@ export default function GameWindow({ accessToken }: GameWindowProps) {
     <div className="fixed inset-0 overflow-hidden bg-black">
       <div ref={containerRef} className="absolute inset-0" />
       <div aria-hidden className="ui-game-vignette pointer-events-none absolute inset-0 z-10" />
-      <GameHud connectionStatus={status} />
+      <div className="absolute inset-x-0 top-0 z-40">
+        <TopNavigationBar
+          {...PLACEHOLDER_CHARACTER}
+          connectionStatus={status}
+          activePanel={inventoryOpen ? "inventory" : undefined}
+          onInventory={() => setInventoryOpen((open) => !open)}
+        />
+      </div>
+      <GameHud />
       {inventoryOpen && (
-        <div className="absolute inset-y-4 right-4 z-30 w-96">
+        <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
           <InventoryPanel
             {...PLACEHOLDER_INVENTORY}
             onClose={() => setInventoryOpen(false)}
