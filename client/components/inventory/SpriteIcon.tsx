@@ -1,4 +1,5 @@
-const TILE = 32;
+import { TILE_SIZE } from "@/lib/render/tileSize";
+
 const PAD = 1;
 const CELL = 34;
 const COLS = 120;
@@ -23,13 +24,13 @@ export function SpriteIcon({ spriteId, scale = 2, className }: SpriteIconProps) 
     <div
       aria-hidden
       className={className}
-      style={{ width: TILE * scale, height: TILE * scale }}
+      style={{ width: TILE_SIZE * scale, height: TILE_SIZE * scale }}
     >
       <div
         className="origin-top-left [image-rendering:pixelated]"
         style={{
-          width: TILE,
-          height: TILE,
+          width: TILE_SIZE,
+          height: TILE_SIZE,
           transform: `scale(${scale})`,
           backgroundImage: `url(/assets/atlas-${sheet}.png)`,
           backgroundPosition: `${-x}px ${-y}px`,

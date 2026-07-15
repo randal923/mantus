@@ -1,6 +1,5 @@
 import { SpriteIcon } from "../inventory/SpriteIcon";
-
-const SPRITE_SIZE = 32;
+import { TILE_SIZE } from "@/lib/render/tileSize";
 
 interface EffectArtworkProps {
   width: number;
@@ -15,15 +14,15 @@ export function EffectArtwork({
   spriteIds,
   size = 40,
 }: EffectArtworkProps) {
-  const scale = size / (Math.max(width, height) * SPRITE_SIZE);
+  const scale = size / (Math.max(width, height) * TILE_SIZE);
 
   return (
     <div
       aria-hidden
       className="relative shrink-0"
       style={{
-        width: width * SPRITE_SIZE * scale,
-        height: height * SPRITE_SIZE * scale,
+        width: width * TILE_SIZE * scale,
+        height: height * TILE_SIZE * scale,
       }}
     >
       {spriteIds.map((spriteId, index) => {
@@ -36,8 +35,8 @@ export function EffectArtwork({
             key={`${spriteId}-${index}`}
             className="absolute"
             style={{
-              left: (width - 1 - x) * SPRITE_SIZE * scale,
-              top: (height - 1 - y) * SPRITE_SIZE * scale,
+              left: (width - 1 - x) * TILE_SIZE * scale,
+              top: (height - 1 - y) * TILE_SIZE * scale,
             }}
           >
             <SpriteIcon spriteId={spriteId} scale={scale} />

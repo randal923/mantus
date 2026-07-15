@@ -1,8 +1,8 @@
 import { Container, Sprite, Text, Texture } from "pixi.js";
 import type { Direction, PlayerState, Position } from "@tibia/protocol";
 import type { AssetStore, OutfitColors, TibiaObject } from "./AssetStore";
+import { TILE_SIZE } from "./tileSize";
 
-const TILE = 32;
 const MIN_FOOT_ANIMATION_DELAY_MS = 20;
 const MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS = 205;
 const MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS = 80;
@@ -56,8 +56,8 @@ export class PlayerView {
 
     // outfits anchor bottom-right and draw displaced 8px up-left
     this.sprite.position.set(
-      -(outfit.width - 1) * TILE - 8,
-      -(outfit.height - 1) * TILE - 8,
+      -(outfit.width - 1) * TILE_SIZE - 8,
+      -(outfit.height - 1) * TILE_SIZE - 8,
     );
     this.container.addChild(this.sprite);
 
@@ -110,8 +110,8 @@ export class PlayerView {
       position.z === this.tileZ &&
       revision === this.positionRevision + 1 &&
       Math.abs(position.x - this.tileX) + Math.abs(position.y - this.tileY) === 1;
-    this.fromX = adjacent ? renderedPosition.x / TILE : position.x;
-    this.fromY = adjacent ? renderedPosition.y / TILE : position.y;
+    this.fromX = adjacent ? renderedPosition.x / TILE_SIZE : position.x;
+    this.fromY = adjacent ? renderedPosition.y / TILE_SIZE : position.y;
     this.tileX = position.x;
     this.tileY = position.y;
     this.tileZ = position.z;
@@ -200,8 +200,8 @@ export class PlayerView {
   pixelPosition(): { x: number; y: number } {
     const t = this.moveT;
     return {
-      x: (this.fromX + (this.tileX - this.fromX) * t) * TILE,
-      y: (this.fromY + (this.tileY - this.fromY) * t) * TILE,
+      x: (this.fromX + (this.tileX - this.fromX) * t) * TILE_SIZE,
+      y: (this.fromY + (this.tileY - this.fromY) * t) * TILE_SIZE,
     };
   }
 

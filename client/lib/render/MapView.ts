@@ -6,8 +6,8 @@ import { getMapItemPattern } from "./getMapItemPattern";
 import { getMapObjectZ } from "./getMapObjectZ";
 import { getOrderedTileObjects } from "./getOrderedTileObjects";
 import { getVisibleFloors } from "./getVisibleFloors";
+import { TILE_SIZE } from "./tileSize";
 
-const TILE = 32;
 const GROUND_FLOOR = 7;
 /** Draw deeper floors first so physically higher floors can cover them. */
 const FLOORS = Array.from({ length: 16 }, (_, index) => 15 - index);
@@ -100,7 +100,7 @@ export class MapView {
   setCenter(x: number, y: number, z: number): void {
     this.center = { x, y, z };
     for (const [floorZ, floor] of this.floors) {
-      const shift = (z - floorZ) * TILE;
+      const shift = (z - floorZ) * TILE_SIZE;
       floor.container.position.set(-shift, -shift);
     }
     this.refresh();
@@ -354,8 +354,8 @@ export class MapView {
           if (!spriteId) continue;
           const sprite = new Sprite(this.store.spriteTexture(spriteId));
           sprite.position.set(
-            (tileX - w) * TILE - o.flags.displacementX - elevation,
-            (tileY - h) * TILE - o.flags.displacementY - elevation,
+            (tileX - w) * TILE_SIZE - o.flags.displacementX - elevation,
+            (tileY - h) * TILE_SIZE - o.flags.displacementY - elevation,
           );
           sprite.zIndex = zIndex;
           layer.addChild(sprite);

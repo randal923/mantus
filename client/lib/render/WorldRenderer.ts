@@ -12,8 +12,8 @@ import { getViewportRange } from "./getViewportRange";
 import { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
 import { PlayerView } from "./PlayerView";
+import { TILE_SIZE } from "./tileSize";
 
-const TILE = 32;
 const ZOOM = 3;
 const NAME_COLOR = 0x44dd44;
 
@@ -70,8 +70,8 @@ export class WorldRenderer {
         const own = message.players.find((p) => p.id === message.playerId);
         if (own) {
           this.cameraFallback = {
-            x: own.position.x * TILE,
-            y: own.position.y * TILE,
+            x: own.position.x * TILE_SIZE,
+            y: own.position.y * TILE_SIZE,
           };
           this.mapView.setCenter(
             own.position.x,
@@ -133,7 +133,7 @@ export class WorldRenderer {
   }
 
   setViewportSize(width: number, height: number): ViewRange {
-    const range = getViewportRange(width, height, TILE * ZOOM);
+    const range = getViewportRange(width, height, TILE_SIZE * ZOOM);
     this.mapView.setViewRange(range);
     return range;
   }
@@ -196,8 +196,8 @@ export class WorldRenderer {
       const pos = view.pixelPosition();
       view.container.position.set(pos.x, pos.y);
       view.container.zIndex = getMapObjectZ(
-        pos.x / TILE,
-        pos.y / TILE,
+        pos.x / TILE_SIZE,
+        pos.y / TILE_SIZE,
         MAP_DEPTH.creature,
       );
     }
@@ -206,17 +206,17 @@ export class WorldRenderer {
       this.playerViews.get(this.ownPlayerId)?.pixelPosition() ??
       this.cameraFallback;
     const cameraX = Math.round(
-      this.app.screen.width / 2 - (focus.x + TILE / 2) * ZOOM,
+      this.app.screen.width / 2 - (focus.x + TILE_SIZE / 2) * ZOOM,
     );
     const cameraY = Math.round(
-      this.app.screen.height / 2 - (focus.y + TILE / 2) * ZOOM,
+      this.app.screen.height / 2 - (focus.y + TILE_SIZE / 2) * ZOOM,
     );
     this.world.position.set(cameraX, cameraY);
 
     for (const view of this.playerViews.values()) {
       const pos = view.pixelPosition();
       view.plate.position.set(
-        cameraX + (pos.x + TILE / 2 - 8) * ZOOM,
+        cameraX + (pos.x + TILE_SIZE / 2 - 8) * ZOOM,
         cameraY + (pos.y - 8) * ZOOM - 26,
       );
     }

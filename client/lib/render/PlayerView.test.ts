@@ -7,6 +7,7 @@ import type {
   TibiaObject,
 } from "./AssetStore";
 import { PlayerView } from "./PlayerView";
+import { TILE_SIZE } from "./tileSize";
 
 const state: PlayerState = {
   id: "player",
@@ -87,7 +88,7 @@ describe("PlayerView", () => {
     view.applyCorrection({ x: 11, y: 10, z: 7 }, "north", 1);
 
     expect(view.pixelPosition()).toEqual(beforeCorrection);
-    expect(view.pixelPosition().x).toBeLessThan(11 * 32);
+    expect(view.pixelPosition().x).toBeLessThan(11 * TILE_SIZE);
     view.destroy();
   });
 
@@ -104,7 +105,10 @@ describe("PlayerView", () => {
 
     view.applyCorrection({ x: 12, y: 10, z: 7 }, "east", 2);
 
-    expect(view.pixelPosition()).toEqual({ x: 12 * 32, y: 10 * 32 });
+    expect(view.pixelPosition()).toEqual({
+      x: 12 * TILE_SIZE,
+      y: 10 * TILE_SIZE,
+    });
     view.destroy();
   });
 
@@ -125,7 +129,7 @@ describe("PlayerView", () => {
     expect(sprite.texture).toBe(animationTextures[1]);
 
     view.tick(24);
-    expect(view.pixelPosition().x).toBe(10.25 * 32);
+    expect(view.pixelPosition().x).toBe(10.25 * TILE_SIZE);
     expect(sprite.texture).toBe(animationTextures[1]);
 
     view.tick(26);
@@ -148,7 +152,7 @@ describe("PlayerView", () => {
     view.applyMove({ x: 11, y: 10, z: 7 }, "east", 1, 100);
     view.tick(100);
 
-    expect(view.pixelPosition().x).toBe(11 * 32);
+    expect(view.pixelPosition().x).toBe(11 * TILE_SIZE);
     expect(sprite.texture).toBe(animationTextures[0]);
     view.destroy();
   });
