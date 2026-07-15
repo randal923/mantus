@@ -37,6 +37,8 @@ machines rather than one large social subsystem.
   server-side. Eviction moves items transactionally to a safe depot/inbox; it
   must never copy then delete them.
 - [ ] Audit ownership, rent, auction, and mass item movement.
+- [ ] Run rent, auction expiry, and eviction from durable idempotent schedules;
+  do not depend on a daily server save or restart to advance them.
 
 ## Other social services
 
@@ -58,6 +60,8 @@ machines rather than one large social subsystem.
 - [ ] Guild permission and concurrent membership/name races fail safely.
 - [ ] PVP restrictions cannot be bypassed with stale party/guild state.
 - [ ] House sale/eviction/rent races conserve every item and gold unit.
+- [ ] House schedules run once across continuous uptime and crash/restart
+  boundaries without requiring a global-save event.
 - [ ] Presence, access lists, reports, and moderation data are not over-shared.
 
 [Back to overview](README.md)

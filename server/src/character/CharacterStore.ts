@@ -7,10 +7,14 @@ import type {
 export interface CharacterStore {
   listByAccountId(accountId: string): Promise<CharacterSummary[]>;
   create(character: Character, maxCharacters: number): Promise<Character>;
-  loadForLogin(
+  findByIdForAccount(
+    accountId: string,
+    characterId: string,
+  ): Promise<Character | null>;
+  recordLogin(
     accountId: string,
     characterId: string,
     loggedInAt: Date,
-  ): Promise<Character | null>;
+  ): Promise<void>;
   saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number>;
 }

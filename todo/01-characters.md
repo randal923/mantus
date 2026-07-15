@@ -25,7 +25,8 @@ persisted character.
 ## Protocol and server flow
 
 - [x] Replace the free-form `join` packet with character-list,
-  create-character, select-character, and delete/rename flows as needed.
+  create-character, and select-character flows. Rename/delete remain deferred
+  product operations and are not required for saved world entry.
 - [x] Define each zod message in `protocol/` first, with maximum byte size and
   a per-connection rate expectation.
 - [x] Derive `account_id` from the authenticated session. Never accept an
@@ -38,6 +39,11 @@ persisted character.
   one-live-session-per-character slot and kick/reject the older session.
 - [x] Validate saved position against the current map on login. Fall back to a
   configured temple position when the tile is missing, blocked, or invalid.
+- [x] Persist a validated temple fallback with optimistic versioning so an
+  invalid saved position is repaired instead of reconsidered on every login.
+- [x] Set `last_login_at` only after the character is claimed and successfully
+  enters the world; a failed spawn or stale selection must not count as a
+  login.
 - [x] Send only the selected character's exact private stats; list responses
   contain summaries only.
 - [x] Replace `client/components/navigation/placeholderCharacter.ts` with real
@@ -52,14 +58,14 @@ persisted character.
   with parameterized queries and deliberate errors.
 - [x] Load a complete player aggregate once while entering the world and lock
   that character against concurrent online loads.
-- [ ] Mutate the in-memory player synchronously inside ticks. Queue immutable,
+- [x] Mutate the in-memory player synchronously inside ticks. Queue immutable,
   versioned save snapshots after the mutation; never await a database write in
   the shared-state mutation.
-- [ ] Save on meaningful dirty-state intervals, clean logout, and shutdown;
+- [x] Save on meaningful dirty-state intervals, clean logout, and shutdown;
   retry transient failures with a cap and expose a metric for unsaved players.
-- [ ] Prevent an older async save from overwriting a newer position/stats
+- [x] Prevent an older async save from overwriting a newer position/stats
   version.
-- [ ] Do not persist item ownership or economy changes through this snapshot
+- [x] Do not persist item ownership or economy changes through this snapshot
   path. Those require their own atomic transactions and audit entries.
 
 ## Client
@@ -72,29 +78,37 @@ persisted character.
   entry; render the selected saved character.
 - [x] Make status UI consume the server's own-player projection instead of
   Storybook values.
+- [x] Colorize character-selection and HUD portraits from the saved outfit
+  palette indexes instead of displaying only the look type's base sprite.
 
 ## Planned file surface
 
 - Protocol: `protocol/src/character.ts`, `protocol/src/messages.ts`.
-- Server: `server/db/migrations/002_characters.sql`,
+- Server: `server/db/migrations/003_characters.sql`,
   `server/src/character/Character.ts`, `server/src/character/CharacterStore.ts`,
   `server/src/character/PgCharacterStore.ts`,
-  `server/src/character/CharacterService.ts`,
-  `server/src/session/CharacterSessionRegistry.ts`.
-- Client: `client/components/character/CharacterSelectScreen.tsx`,
+  `server/src/character/CharacterService.ts`, `server/src/CharacterHandler.ts`,
+  `server/src/SessionRegistry.ts`.
+- Client: `client/components/characters/CharacterSelectScreen.tsx`,
   `CharacterList.tsx`, `CharacterListItem.tsx`, `CreateCharacterForm.tsx`.
 - Modify the existing connection/session, player construction, app routing,
   and own-player state files rather than introducing a parallel game flow.
 
 ## Required tests
 
-- [x] Two accounts racing to create the same normalized name produce one row.
-- [ ] A user cannot list, select, rename, or delete another account's character.
+- [x] Add a PostgreSQL-backed race test proving two accounts creating the same
+  normalized name produce exactly one row.
+- [x] Add a PostgreSQL-backed race test proving concurrent creates at the
+  account slot limit cannot exceed the configured maximum.
+- [x] A user cannot list or select another account's character.
+- [ ] When rename/delete flows are added, prove a user cannot rename or delete
+  another account's character.
 - [x] A forged starting position, stats, outfit, or vocation is ignored/rejected.
 - [x] Two connections selecting one character leave exactly one live session.
-- [ ] A stale save cannot roll a character back after a newer tick snapshot.
+- [x] Add a PostgreSQL-backed test proving a stale save cannot roll a character
+  back after a newer tick snapshot.
 - [x] Invalid saved positions recover to the configured temple safely.
-- [ ] Reconnect restores position, direction, outfit, and private stats without
+- [x] Reconnect restores position, direction, outfit, and private stats without
   leaking another character's data.
 
 [Back to overview](README.md)

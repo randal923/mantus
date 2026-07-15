@@ -15,7 +15,6 @@ import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { useLanguageStore } from "../stores/useLanguageStore";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
-import { getOutfitPortraitSpriteId } from "./characters/getOutfitPortraitSpriteId";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
 import { getPlaceholderInventory } from "./inventory/getPlaceholderInventory";
@@ -49,6 +48,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const languageRef = useRef(language);
   const confirmedLanguageRef = useRef(language);
   const joinedRef = useRef(false);
+  const resumeCharacterIdRef = useRef<string | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [characters, setCharacters] = useState<
@@ -67,6 +67,20 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const placeholderInventory = ownCharacter
     ? getPlaceholderInventory(t, ownCharacter.name, ownCharacter.capacity)
     : null;
+
+  const reconnect = (characterId: string | null) => {
+    resumeCharacterIdRef.current = characterId;
+    joinedRef.current = false;
+    setStatus("connecting");
+    setCharacters(null);
+    setCreationOptions(null);
+    setOwnCharacter(null);
+    setCharacterBusy(characterId !== null);
+    setInventoryOpen(false);
+    setGameMenuOpen(false);
+    setServerError(null);
+    setConnectionAttempt((attempt) => attempt + 1);
+  };
 
   useEffect(() => {
     languageRef.current = language;
@@ -110,35 +124,56 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
 
       client = new GameClient(WS_URL, {
         onMessage: (message) => {
+          if (disposed) return;
           if (message.type === "character-list") {
             setCharacters(message.characters);
             setCreationOptions(message.creationOptions);
-            setCharacterBusy(false);
             setServerError(null);
+            const resumeCharacterId = resumeCharacterIdRef.current;
+            if (resumeCharacterId) {
+              const canResume = message.characters.some(
+                (character) => character.id === resumeCharacterId,
+              );
+              if (canResume && client?.selectCharacter(resumeCharacterId)) {
+                setCharacterBusy(true);
+                return;
+              }
+              resumeCharacterIdRef.current = null;
+              setServerError("character-load-failed");
+            }
+            setCharacterBusy(false);
             return;
           }
           if (message.type === "welcome") {
             joinedRef.current = true;
+            resumeCharacterIdRef.current = null;
             setOwnCharacter(message.character);
             setCharacterBusy(false);
             setServerError(null);
           }
           worldRenderer.applyMessage(message);
         },
-        onStatus: setStatus,
+        onStatus: (nextStatus) => {
+          if (disposed) return;
+          if (nextStatus === "disconnected") joinedRef.current = false;
+          setStatus(nextStatus);
+        },
         onLanguage: (nextLanguage) => {
+          if (disposed) return;
           confirmedLanguageRef.current = nextLanguage;
           setLanguage(nextLanguage);
           setLanguageSaving(false);
           setLanguageError(false);
         },
         onError: (code) => {
+          if (disposed) return;
           if (code === "language-update-failed") {
             setLanguage(confirmedLanguageRef.current);
             setLanguageSaving(false);
             setLanguageError(true);
             return;
           }
+          resumeCharacterIdRef.current = null;
           if (code !== "language-update-pending") setLanguageSaving(false);
           setCharacterBusy(false);
           setServerError(code);
@@ -222,12 +257,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               : null
           }
           onLogout={onLogout}
-          onReconnect={() => {
-            setCharacters(null);
-            setCreationOptions(null);
-            setServerError(null);
-            setConnectionAttempt((attempt) => attempt + 1);
-          }}
+          onReconnect={() => reconnect(null)}
           onCreate={(input: CreateCharacterInput) => {
             setServerError(null);
             if (clientRef.current?.createCharacter(input)) {
@@ -252,9 +282,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               characterName={ownCharacter.name}
               level={ownCharacter.level}
               vocation={t(`vocations.${ownCharacter.vocation}.name`)}
-              portraitSpriteId={getOutfitPortraitSpriteId(
-                ownCharacter.outfit.lookType,
-              )}
+              outfit={ownCharacter.outfit}
               health={ownCharacter.health}
               maxHealth={ownCharacter.maxHealth}
               mana={ownCharacter.mana}
@@ -268,6 +296,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               }}
             />
           </div>
+          {status === "disconnected" && (
+            <button
+              type="button"
+              role="alert"
+              onClick={() => reconnect(ownCharacter.id)}
+              className="ui-panel-frame absolute top-24 left-1/2 z-50 -translate-x-1/2 px-4 py-3 font-tibia text-sm text-ui-text-bright"
+            >
+              {t("connection.disconnected")} · {t("connection.reconnect")}
+            </button>
+          )}
           {serverError && (
             <button
               type="button"

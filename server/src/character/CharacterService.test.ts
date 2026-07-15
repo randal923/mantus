@@ -43,21 +43,25 @@ class MemoryCharacterStore implements CharacterStore {
     return character;
   }
 
-  async loadForLogin(
+  async findByIdForAccount(
     accountId: string,
     characterId: string,
-    loggedInAt: Date,
   ): Promise<Character | null> {
     const character = this.characters.get(characterId);
     if (!character || character.accountId !== accountId) return null;
-    const loaded = {
-      ...character,
-      lastLoginAt: loggedInAt,
-      updatedAt: loggedInAt,
-      version: character.version + 1,
-    };
-    this.characters.set(characterId, loaded);
-    return loaded;
+    return character;
+  }
+
+  async recordLogin(
+    accountId: string,
+    characterId: string,
+    loggedInAt: Date,
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character || character.accountId !== accountId) {
+      throw new CharacterError("not-found");
+    }
+    this.characters.set(characterId, { ...character, lastLoginAt: loggedInAt });
   }
 
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {
@@ -65,7 +69,25 @@ class MemoryCharacterStore implements CharacterStore {
     if (!character || character.version !== snapshot.expectedVersion) {
       throw new CharacterError("version-conflict");
     }
-    return character.version + 1;
+    const version = character.version + 1;
+    this.characters.set(snapshot.characterId, {
+      ...character,
+      level: snapshot.level,
+      experience: snapshot.experience,
+      health: snapshot.health,
+      maxHealth: snapshot.maxHealth,
+      mana: snapshot.mana,
+      maxMana: snapshot.maxMana,
+      capacity: snapshot.capacity,
+      positionX: snapshot.positionX,
+      positionY: snapshot.positionY,
+      positionZ: snapshot.positionZ,
+      direction: snapshot.direction,
+      outfit: snapshot.outfit,
+      version,
+      updatedAt: new Date(),
+    });
+    return version;
   }
 }
 

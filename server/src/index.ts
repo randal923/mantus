@@ -32,9 +32,20 @@ const characters = new PgCharacterStore(pool);
 const server = new GameServer(serverConfig, { verifier, accounts, characters });
 server.start();
 
-const shutdown = () => {
-  server.stop();
-  process.exit(0);
+let shuttingDown = false;
+const shutdown = async () => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  await server.stop();
+  await pool.end();
+  process.exitCode = server.unsavedPlayerCount > 0 ? 1 : 0;
 };
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+const requestShutdown = () => {
+  void shutdown().catch((cause: unknown) => {
+    const reason = cause instanceof Error ? cause.message : "unknown";
+    console.error(`game server shutdown failed: ${reason}`);
+    process.exitCode = 1;
+  });
+};
+process.on("SIGINT", requestShutdown);
+process.on("SIGTERM", requestShutdown);

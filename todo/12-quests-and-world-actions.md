@@ -37,6 +37,9 @@ scripts executed at runtime.
   ids, bounded work per tick, announcements, spawn/action steps, and completion.
 - [ ] Make durable events restart-safe and idempotent. A restart cannot create
   rewards or bosses twice.
+- [ ] Drive daily resets, rewards, raids, and event start/end boundaries from
+  durable server-clock schedules with idempotency keys or leases. Never use
+  process startup or a daily global save as the event trigger.
 - [ ] Add operator controls and audit entries for starting/canceling high-impact
   events.
 
@@ -55,6 +58,8 @@ scripts executed at runtime.
 - [ ] Forged storage, action id, target, position, and destination are rejected.
 - [ ] Door/lever/teleport state remains coherent for simultaneous users.
 - [ ] World-event restart/retry does not duplicate spawns or rewards.
+- [ ] Crossing a daily boundary while the server remains continuously online
+  produces the same result as crossing it during a restart.
 - [ ] Private quest state is not exposed to other players.
 
 [Back to overview](README.md)

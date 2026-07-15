@@ -5,6 +5,7 @@ import { PROTOCOL_LIMITS, type ClientMessage } from "@tibia/protocol";
 import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
 import { CharacterHandler } from "./CharacterHandler";
+import { CharacterPersistence } from "./character/CharacterPersistence";
 import { CharacterService } from "./character/CharacterService";
 import type { CharacterStore } from "./character/CharacterStore";
 import type { ServerConfig } from "./config";
@@ -31,11 +32,13 @@ export class GameServer {
   private readonly visibility: Visibility;
   private readonly auth: AuthHandler;
   private readonly characters: CharacterHandler;
+  private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
   private heartbeat: NodeJS.Timeout | undefined;
+  private stopPromise: Promise<void> | null = null;
 
   constructor(
     private readonly config: ServerConfig,
@@ -57,14 +60,25 @@ export class GameServer {
       ...this.world.templePosition,
       townId: config.starterTownId,
     });
+    this.persistence = new CharacterPersistence(
+      deps.characters,
+      config.characterSaveIntervalMs,
+      config.maxCharacterSaveRetries,
+      config.characterSaveRetryDelayMs,
+    );
     this.characters = new CharacterHandler(
       characterService,
       this.world,
       this.registry,
       this.visibility,
+      this.persistence,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
-    this.movement = new MovementHandler(this.world, this.visibility);
+    this.movement = new MovementHandler(
+      this.world,
+      this.visibility,
+      this.persistence,
+    );
     this.wss = new WebSocketServer({
       port: config.port,
       maxPayload: PROTOCOL_LIMITS.maxMessageBytes,
@@ -79,6 +93,10 @@ export class GameServer {
       : this.config.port;
   }
 
+  get unsavedPlayerCount(): number {
+    return this.persistence.unsavedPlayerCount;
+  }
+
   start(): void {
     this.wss.on("connection", (socket, request) =>
       this.onConnection(socket, request),
@@ -91,10 +109,12 @@ export class GameServer {
     console.log(`game server listening on ws://localhost:${this.port}`);
   }
 
-  stop(): void {
+  stop(): Promise<void> {
+    if (this.stopPromise) return this.stopPromise;
     this.loop.stop();
     if (this.heartbeat) clearInterval(this.heartbeat);
-    this.wss.close();
+    this.stopPromise = this.finishStop();
+    return this.stopPromise;
   }
 
   private onConnection(socket: WebSocket, request: IncomingMessage): void {
@@ -123,7 +143,7 @@ export class GameServer {
 
   private tick(): void {
     const now = Date.now();
-    this.processDisconnects();
+    this.processDisconnects(now);
     this.auth.applyResolvedOutcomes();
     this.characters.applyResolvedOutcomes();
     this.language.applyResolvedOutcomes();
@@ -134,9 +154,10 @@ export class GameServer {
       }
       this.movement.continueMovement(session, now);
     }
+    this.persistence.tick(now);
   }
 
-  private processDisconnects(): void {
+  private processDisconnects(now: number): void {
     for (const session of this.disconnected.splice(0)) {
       const { playerId } = session;
       const player = playerId ? this.world.getPlayer(playerId) : undefined;
@@ -145,6 +166,7 @@ export class GameServer {
         player &&
         this.registry.sessionFor(playerId) === session
       ) {
+        this.persistence.untrack(player, now);
         this.world.removePlayer(playerId);
         this.visibility.announceLeave(session, player);
       }
@@ -196,5 +218,24 @@ export class GameServer {
       }
       session.ping();
     }
+  }
+
+  private async finishStop(): Promise<void> {
+    await this.persistence.stop();
+    if (this.persistence.unsavedPlayerCount > 0) {
+      console.error(
+        `game server stopped with ${this.persistence.unsavedPlayerCount} unsaved player(s)`,
+      );
+    }
+    for (const session of this.registry.all()) session.terminate();
+    await new Promise<void>((resolve, reject) => {
+      this.wss.close((cause) => {
+        if (cause) {
+          reject(cause);
+          return;
+        }
+        resolve();
+      });
+    });
   }
 }

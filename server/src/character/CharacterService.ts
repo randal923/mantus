@@ -103,11 +103,19 @@ export class CharacterService {
     return this.list(accountId);
   }
 
-  loadForLogin(
+  findForSelection(
     accountId: string,
     characterId: string,
   ): Promise<Character | null> {
-    return this.store.loadForLogin(accountId, characterId, new Date());
+    return this.store.findByIdForAccount(accountId, characterId);
+  }
+
+  recordLogin(
+    accountId: string,
+    characterId: string,
+    loggedInAt: Date,
+  ): Promise<void> {
+    return this.store.recordLogin(accountId, characterId, loggedInAt);
   }
 
   ownState(player: Player): OwnCharacterState {

@@ -32,6 +32,9 @@ is atomic.
 - [ ] Give rares/audited economy objects stable serials where useful and append
   creation, destruction, and ownership changes to `audit_log` in the same
   database transaction.
+- [ ] Make every ownership/count/location change durable in its operation's
+  transaction before success is published. Periodic character snapshots and a
+  global server save are never item-durability boundaries.
 
 ## Intent and transaction architecture
 
@@ -92,6 +95,9 @@ is atomic.
   over-capacity moves, container cycles, and excessive nesting are rejected.
 - [ ] Disconnect/persistence failure during a move resolves to one durable owner.
 - [ ] Map seed reruns and restarts do not duplicate mutable world items.
+- [ ] Abrupt process death immediately before or after an ownership transaction
+  leaves the item in exactly one durable location after restart; no daily
+  global save is needed to reconcile it.
 - [ ] Economy-relevant creation/destruction/transfer and its audit entry commit
   together or neither commits.
 

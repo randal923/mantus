@@ -1,5 +1,6 @@
 "use client";
 
+import type { CharacterOutfit } from "@tibia/protocol";
 import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
@@ -18,7 +19,7 @@ interface TopNavigationBarProps {
   characterName: string;
   level: number;
   vocation: string;
-  portraitSpriteId: number;
+  outfit: CharacterOutfit;
   health: number;
   maxHealth: number;
   mana: number;
@@ -36,7 +37,7 @@ export function TopNavigationBar({
   characterName,
   level,
   vocation,
-  portraitSpriteId,
+  outfit,
   health,
   maxHealth,
   mana,
@@ -74,7 +75,7 @@ export function TopNavigationBar({
         <CharacterPortrait
           characterName={characterName}
           level={level}
-          spriteId={portraitSpriteId}
+          outfit={outfit}
           onClick={onCharacter}
         />
 

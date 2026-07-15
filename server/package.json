@@ -8,6 +8,7 @@
     "start": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:integration": "vitest run src/character/PgCharacterStore.integration.test.ts",
     "db:migrate": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/migrate.ts"
   },
   "dependencies": {

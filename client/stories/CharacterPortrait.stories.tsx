@@ -19,7 +19,14 @@ const meta = {
   args: {
     characterName: "Deceius",
     level: 47,
-    spriteId: 67704,
+    outfit: {
+      lookType: 128,
+      head: 78,
+      body: 68,
+      legs: 58,
+      feet: 76,
+      addons: 0,
+    },
     onClick: fn(),
   },
 } satisfies Meta<typeof CharacterPortrait>;

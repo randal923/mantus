@@ -38,6 +38,9 @@ export interface ServerConfig {
   maxPendingIntents: number;
   maxProtocolViolations: number;
   starterTownId: number;
+  characterSaveIntervalMs: number;
+  maxCharacterSaveRetries: number;
+  characterSaveRetryDelayMs: number;
   viewRange: { x: number; y: number };
   map: MapConfig;
 }
@@ -54,6 +57,9 @@ export const serverConfig: ServerConfig = {
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
   starterTownId: 1,
+  characterSaveIntervalMs: 30_000,
+  maxCharacterSaveRetries: 3,
+  characterSaveRetryDelayMs: 100,
   viewRange: { x: 9, y: 7 },
   map: {
     source: "data",

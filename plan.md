@@ -197,6 +197,10 @@ signals server-side (never tell the client why it was flagged).
 
 ### 6.7 Operational safety
 
+- No daily global-save dependency: ordinary character state persists within a
+  bounded interval, economy/ownership changes commit immediately, scheduled
+  world work is durable and idempotent, and restart rebuilds transient indexes
+  from durable state.
 - `audit_log` for every economically meaningful event (trades, market, drops
   of rares, gold sinks/sources) — append-only, partitioned by day.
 - Automated backups + tested restore; point-in-time recovery (WAL) so a dupe
@@ -225,7 +229,7 @@ signals server-side (never tell the client why it was flagged).
 - [x] Monorepo restructure (`client/`, `server/`, `protocol/`), `git init`
 - [x] Server tick loop + WS + zod protocol; echo world, two browsers see each other walk
 - [ ] Move combat/AI/spells server-side; client = renderer + prediction
-- [ ] Postgres: accounts, characters, login flow, persistence of position/stats
+- [x] Postgres: accounts, characters, login flow, persistence of position/stats
 - [ ] Items & containers with transactional moves + audit log
 - [ ] NPC shop + player trade (both fully transactional)
 - [ ] Rate limiting, session hardening, TLS, backups + restore drill

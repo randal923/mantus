@@ -1,4 +1,5 @@
 import type { Direction, MoveMessage } from "@tibia/protocol";
+import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { Player } from "./Player";
 import type { Session } from "./Session";
 import type { Visibility } from "./Visibility";
@@ -8,6 +9,7 @@ export class MovementHandler {
   constructor(
     private readonly world: World,
     private readonly visibility: Visibility,
+    private readonly persistence: CharacterPersistence,
   ) {}
 
   handle(session: Session, intent: MoveMessage, now: number): void {
@@ -39,6 +41,7 @@ export class MovementHandler {
     now: number,
   ): void {
     const result = this.world.tryMove(player, direction, now);
+    if (result.moved || result.turned) this.persistence.markDirty(player);
     if (result.moved) this.visibility.onPlayerStepped(session, player);
     else if (result.turned) this.visibility.broadcastPose(player);
   }

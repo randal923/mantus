@@ -130,20 +130,32 @@ export class PgCharacterStore implements CharacterStore {
     }
   }
 
-  async loadForLogin(
+  async findByIdForAccount(
     accountId: string,
     characterId: string,
-    loggedInAt: Date,
   ): Promise<Character | null> {
     const result = await this.pool.query<CharacterRow>(
-      `UPDATE characters
-       SET last_login_at = $3, updated_at = $3, version = version + 1
-       WHERE id = $1 AND account_id = $2
-       RETURNING ${CHARACTER_COLUMNS}`,
-      [characterId, accountId, loggedInAt],
+      `SELECT ${CHARACTER_COLUMNS}
+       FROM characters
+       WHERE id = $1 AND account_id = $2`,
+      [characterId, accountId],
     );
     const row = result.rows[0];
     return row ? this.toCharacter(row) : null;
+  }
+
+  async recordLogin(
+    accountId: string,
+    characterId: string,
+    loggedInAt: Date,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET last_login_at = $3
+       WHERE id = $1 AND account_id = $2`,
+      [characterId, accountId, loggedInAt],
+    );
+    if (result.rowCount !== 1) throw new CharacterError("not-found");
   }
 
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {

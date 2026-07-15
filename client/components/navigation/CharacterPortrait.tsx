@@ -1,19 +1,20 @@
 "use client";
 
-import { SpriteIcon } from "../inventory/SpriteIcon";
+import type { CharacterOutfit } from "@tibia/protocol";
+import { OutfitPortrait } from "../characters/OutfitPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 interface CharacterPortraitProps {
   characterName: string;
   level: number;
-  spriteId: number;
+  outfit: CharacterOutfit;
   onClick?: () => void;
 }
 
 export function CharacterPortrait({
   characterName,
   level,
-  spriteId,
+  outfit,
   onClick,
 }: CharacterPortraitProps) {
   const { t } = useAppTranslation();
@@ -39,8 +40,8 @@ export function CharacterPortrait({
         aria-hidden
         className="pointer-events-none absolute inset-1 rounded-md border border-white/5"
       />
-      <SpriteIcon
-        spriteId={spriteId}
+      <OutfitPortrait
+        outfit={outfit}
         scale={2}
         className="relative translate-y-1 transition-transform duration-150 group-hover:scale-105"
       />

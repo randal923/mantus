@@ -30,6 +30,9 @@ const testConfig: ServerConfig = {
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
   starterTownId: 1,
+  characterSaveIntervalMs: 30_000,
+  maxCharacterSaveRetries: 3,
+  characterSaveRetryDelayMs: 1,
   viewRange: VIEW_RANGE,
   map: { source: "grid", name: "test-grid", ...GRID, blocked: [] },
 };
@@ -91,6 +94,20 @@ class InMemoryCharacterStore implements CharacterStore {
     this.characters.set(character.id, character);
   }
 
+  positionFor(characterId: string): { x: number; y: number; z: number } | null {
+    const character = this.characters.get(characterId);
+    if (!character) return null;
+    return {
+      x: character.positionX,
+      y: character.positionY,
+      z: character.positionZ,
+    };
+  }
+
+  lastLoginFor(characterId: string): Date | null {
+    return this.characters.get(characterId)?.lastLoginAt ?? null;
+  }
+
   async listByAccountId(accountId: string): Promise<CharacterSummary[]> {
     return [...this.characters.values()]
       .filter((character) => character.accountId === accountId)
@@ -122,21 +139,25 @@ class InMemoryCharacterStore implements CharacterStore {
     return character;
   }
 
-  async loadForLogin(
+  async findByIdForAccount(
     accountId: string,
     characterId: string,
-    loggedInAt: Date,
   ): Promise<Character | null> {
     const character = this.characters.get(characterId);
     if (!character || character.accountId !== accountId) return null;
-    const loaded = {
-      ...character,
-      lastLoginAt: loggedInAt,
-      updatedAt: loggedInAt,
-      version: character.version + 1,
-    };
-    this.characters.set(characterId, loaded);
-    return loaded;
+    return character;
+  }
+
+  async recordLogin(
+    accountId: string,
+    characterId: string,
+    loggedInAt: Date,
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character || character.accountId !== accountId) {
+      throw new CharacterError("not-found");
+    }
+    this.characters.set(characterId, { ...character, lastLoginAt: loggedInAt });
   }
 
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {
@@ -147,11 +168,18 @@ class InMemoryCharacterStore implements CharacterStore {
     const version = character.version + 1;
     this.characters.set(snapshot.characterId, {
       ...character,
-      ...snapshot,
-      id: character.id,
+      level: snapshot.level,
+      experience: snapshot.experience,
+      health: snapshot.health,
+      maxHealth: snapshot.maxHealth,
+      mana: snapshot.mana,
+      maxMana: snapshot.maxMana,
+      capacity: snapshot.capacity,
       positionX: snapshot.positionX,
       positionY: snapshot.positionY,
       positionZ: snapshot.positionZ,
+      direction: snapshot.direction,
+      outfit: snapshot.outfit,
       version,
       updatedAt: new Date(),
     });
@@ -280,9 +308,9 @@ describe("view-range broadcast", () => {
   let server: GameServer;
   const sockets: WebSocket[] = [];
 
-  afterEach(() => {
+  afterEach(async () => {
     for (const socket of sockets.splice(0)) socket.terminate();
-    server.stop();
+    await server.stop();
   });
 
   const startServer = () => {
@@ -416,9 +444,9 @@ describe("auth gate", () => {
   let server: GameServer;
   const sockets: WebSocket[] = [];
 
-  afterEach(() => {
+  afterEach(async () => {
     for (const socket of sockets.splice(0)) socket.terminate();
-    server.stop();
+    await server.stop();
   });
 
   const startServer = (
@@ -515,13 +543,14 @@ describe("auth gate", () => {
 
   it("falls back to the temple when a saved position is blocked", async () => {
     const characters = new InMemoryCharacterStore();
-    characters.seed({
+    const character = {
       ...makeCharacter(randomUUID(), "Blocked Hero"),
       accountId: "acc-sub-tok.blocked",
       positionX: 3,
       positionY: 2,
       positionZ: 7,
-    });
+    };
+    characters.seed(character);
     startServer(
       {
         map: {
@@ -553,6 +582,112 @@ describe("auth gate", () => {
       y: GRID.height / 2,
       z: 7,
     });
+    await waitFor(
+      () =>
+        characters.positionFor(character.id)?.x === GRID.width / 2 &&
+        characters.positionFor(character.id)?.y === GRID.height / 2,
+      "repaired temple position to persist",
+    );
+  });
+
+  it("restores the last persisted position after reconnecting", async () => {
+    const characters = new InMemoryCharacterStore();
+    startServer(
+      { stepCooldownMs: 1_000 },
+      new InMemoryAccountStore(),
+      characters,
+    );
+    const first = await connect(server.port, "Walker", "tok.reconnect");
+    sockets.push(first.socket);
+
+    first.socket.send(JSON.stringify({ type: "move", direction: "east" }));
+    await waitFor(
+      () =>
+        first.messages.some(
+          (message) =>
+            message.type === "player-moved" &&
+            message.playerId === first.playerId &&
+            message.x === first.spawn.x + 1,
+        ),
+      "eastward step",
+    );
+    first.socket.terminate();
+    await waitFor(
+      () => characters.positionFor(first.playerId)?.x === first.spawn.x + 1,
+      "logout save",
+    );
+
+    const second = await connect(server.port, "Walker", "tok.reconnect");
+    sockets.push(second.socket);
+    expect(second.playerId).toBe(first.playerId);
+    expect(second.spawn).toEqual({ x: first.spawn.x + 1, y: first.spawn.y });
+    const welcome = second.messages.find((message) => message.type === "welcome");
+    if (welcome?.type !== "welcome") throw new Error("missing reconnect welcome");
+    expect(welcome.character).toMatchObject({
+      id: first.playerId,
+      direction: "east",
+      health: 150,
+      maxHealth: 150,
+      mana: 55,
+      maxMana: 55,
+      capacity: 400,
+      outfit: {
+        lookType: 128,
+        head: 78,
+        body: 68,
+        legs: 58,
+        feet: 76,
+        addons: 0,
+      },
+    });
+  });
+
+  it("records last login only after a character enters the world", async () => {
+    const characters = new InMemoryCharacterStore();
+    const character = {
+      ...makeCharacter(randomUUID(), "No Room"),
+      accountId: "acc-sub-tok.no-room",
+      positionX: 0,
+      positionY: 0,
+      positionZ: 7,
+    };
+    characters.seed(character);
+    startServer(
+      {
+        map: {
+          source: "grid",
+          name: "full-grid",
+          width: 1,
+          height: 1,
+          blocked: [[0, 0]],
+        },
+      },
+      new InMemoryAccountStore(),
+      characters,
+    );
+    const client = await openRaw(server.port);
+    sockets.push(client.socket);
+    client.socket.send(
+      JSON.stringify({ type: "auth", token: "tok.no-room", language: "en" }),
+    );
+    await waitFor(
+      () => client.messages.some((message) => message.type === "auth-ok"),
+      "authentication",
+    );
+    client.socket.send(JSON.stringify({ type: "list-characters" }));
+    await waitFor(
+      () => client.messages.some((message) => message.type === "character-list"),
+      "character list",
+    );
+    client.socket.send(
+      JSON.stringify({ type: "select-character", characterId: character.id }),
+    );
+    await waitFor(
+      () => sawError(client.messages, "world-full") && client.closed(),
+      "world-full rejection",
+    );
+
+    expect(characters.lastLoginFor(character.id)).toBeNull();
   });
 
   it("rejects a banned account", async () => {

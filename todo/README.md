@@ -36,6 +36,8 @@ translate and refactor the useful parts into this project's use case.
 ## What exists now
 
 - Supabase users authenticate to a rate-limited WebSocket server.
+- Accounts own persisted characters selected before entering the world;
+  position, direction, private stats, and saved outfits survive reconnects.
 - The server owns a fixed tick, intent queues, cardinal movement, occupancy,
   view-range player visibility, and one live session per account.
 - The converted OTServBR map provides z=7 server walkability and client map
@@ -45,8 +47,8 @@ translate and refactor the useful parts into this project's use case.
 - Inventory and status components exist only as Storybook/mock UI. They are
   not backed by protocol or server state.
 
-Everything else is absent or partial: characters, saved position/stats,
-multi-floor movement, map-item animation, correct creature elevation, monster
+Everything else is absent or partial: multi-floor movement, map-item
+animation, correct creature elevation, monster
 and NPC spawns, item ownership, combat, loot, chat, shops, quests, and the
 long-tail social/economy systems.
 
@@ -123,6 +125,25 @@ interface CreatureState {
   model, or database design. Define small zod intent/event messages and
   project-native TypeScript models for this game; keep packet limits/rates in
   `protocol/`.
+
+### Continuous durability instead of a daily global save
+
+- Correctness must never depend on a Tibia-style daily global save, map clean,
+  or process restart. Persist ordinary dirty character state continuously
+  within a documented bounded window and flush it on logout and graceful
+  shutdown.
+- Commit item ownership, gold, trades, quest rewards, house transfers, market
+  operations, and audit entries immediately in their feature transaction. A
+  later player save must never be able to duplicate or roll them back.
+- Drive daily rewards, rent, raids, and world-event boundaries from durable,
+  idempotent schedules using the server clock. Startup or shutdown is not a
+  calendar event.
+- Use PostgreSQL backups and point-in-time recovery independently of the game
+  process. Graceful draining, deployment restarts, and maintenance mode remain
+  supported, but a scheduled daily outage is not required for durability.
+- Rebuild disposable in-memory indexes from durable state after a crash. Test
+  crash/restart boundaries explicitly so no persistent system quietly depends
+  on a global-save command.
 
 ## Recommended implementation order
 

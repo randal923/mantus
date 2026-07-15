@@ -6,6 +6,7 @@ import type {
 } from "@tibia/protocol";
 import type { Character } from "./character/Character";
 import { CharacterError } from "./character/CharacterError";
+import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { CharacterService } from "./character/CharacterService";
 import { Player } from "./Player";
 import type { Session } from "./Session";
@@ -21,6 +22,7 @@ export class CharacterHandler {
     private readonly world: World,
     private readonly registry: SessionRegistry,
     private readonly visibility: Visibility,
+    private readonly persistence: CharacterPersistence,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -109,13 +111,50 @@ export class CharacterHandler {
     characterId: string,
   ): Promise<void> {
     try {
-      const character = await this.service.loadForLogin(accountId, characterId);
+      const character = await this.service.findForSelection(
+        accountId,
+        characterId,
+      );
       this.outcomes.push(() => {
-        if (!this.finishOperation(session, accountId)) return;
+        if (!this.isCurrentOperation(session, accountId)) return;
         if (!character) {
+          this.finishOperation(session, accountId);
           session.sendError("character-not-found");
           return;
         }
+        this.evictExistingSession(character.id, session);
+        void this.resolveWorldEntry(session, accountId, character.id);
+      });
+    } catch (cause) {
+      this.queueFailure(session, accountId, "character-load-failed", cause);
+    }
+  }
+
+  private async resolveWorldEntry(
+    session: Session,
+    accountId: string,
+    characterId: string,
+  ): Promise<void> {
+    try {
+      await this.persistence.flushCharacter(characterId);
+      const character = await this.service.findForSelection(
+        accountId,
+        characterId,
+      );
+      this.outcomes.push(() => {
+        if (!this.isCurrentOperation(session, accountId)) return;
+        if (!character) {
+          this.finishOperation(session, accountId);
+          session.sendError("character-not-found");
+          return;
+        }
+        const existing = this.registry.sessionFor(characterId);
+        if (existing && existing.id !== session.id) {
+          this.evictExistingSession(characterId, session);
+          void this.resolveWorldEntry(session, accountId, characterId);
+          return;
+        }
+        if (!this.finishOperation(session, accountId)) return;
         this.enterWorld(session, character);
       });
     } catch (cause) {
@@ -128,7 +167,6 @@ export class CharacterHandler {
       session.sendError("already-joined");
       return;
     }
-    this.evictExistingSession(character.id, session);
     const spawn = this.world.findSpawn({
       x: character.positionX,
       y: character.positionY,
@@ -140,7 +178,15 @@ export class CharacterHandler {
       return;
     }
     const player = new Player(character, spawn);
+    this.persistence.track(player, Date.now());
     this.world.addPlayer(player);
+    if (
+      spawn.x !== character.positionX ||
+      spawn.y !== character.positionY ||
+      spawn.z !== character.positionZ
+    ) {
+      this.persistence.saveNow(player, Date.now());
+    }
     session.playerId = player.id;
     this.registry.bindPlayer(session);
     const players = this.visibility.announceSpawn(session, player);
@@ -151,6 +197,14 @@ export class CharacterHandler {
       map: { name: this.world.mapName },
       players,
     });
+    void this.service
+      .recordLogin(character.accountId, character.id, new Date())
+      .catch((cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(
+          `failed to record login for character ${character.id}: ${reason}`,
+        );
+      });
   }
 
   private evictExistingSession(characterId: string, replacement: Session): void {
@@ -158,6 +212,7 @@ export class CharacterHandler {
     if (!existing || existing.id === replacement.id) return;
     const player = this.world.getPlayer(characterId);
     if (player) {
+      this.persistence.untrack(player, Date.now());
       this.world.removePlayer(characterId);
       this.visibility.announceLeave(existing, player);
     }
@@ -171,6 +226,10 @@ export class CharacterHandler {
 
   private finishOperation(session: Session, accountId: string): boolean {
     session.characterOperationPending = false;
+    return this.isCurrentOperation(session, accountId);
+  }
+
+  private isCurrentOperation(session: Session, accountId: string): boolean {
     return (
       this.registry.contains(session) && session.account?.id === accountId
     );
