@@ -9,10 +9,16 @@ export const playerStateSchema = z.object({
   direction: z.enum(DIRECTIONS),
 });
 
-export const mapStateSchema = z.object({
-  width: z.number().int().positive(),
-  height: z.number().int().positive(),
-  blocked: z.array(z.tuple([z.number().int(), z.number().int()])),
+/**
+ * Static terrain is public data served over HTTP from
+ * /assets/map/<name>/; the socket only carries dynamic, view-filtered state.
+ */
+export const mapInfoSchema = z.object({
+  name: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[a-z0-9-]+$/),
 });
 
 export const authOkMessageSchema = z.object({
@@ -22,7 +28,7 @@ export const authOkMessageSchema = z.object({
 export const welcomeMessageSchema = z.object({
   type: z.literal("welcome"),
   playerId: z.string(),
-  map: mapStateSchema,
+  map: mapInfoSchema,
   players: z.array(playerStateSchema),
 });
 
@@ -59,6 +65,6 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 ]);
 
 export type PlayerState = z.infer<typeof playerStateSchema>;
-export type MapState = z.infer<typeof mapStateSchema>;
+export type MapInfo = z.infer<typeof mapInfoSchema>;
 export type WelcomeMessage = z.infer<typeof welcomeMessageSchema>;
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

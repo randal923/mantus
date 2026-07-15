@@ -98,8 +98,11 @@ async function contactSheet(entries, outFile, cols, cellPx) {
 
 function parseFlags(args) {
   const p = {};
-  for (let i = 0; i < args.length; i += 2) {
-    if (args[i]?.startsWith("--")) p[args[i].slice(2)] = Number(args[i + 1]);
+  for (let i = 0; i < args.length; i++) {
+    if (!args[i]?.startsWith("--")) continue;
+    const key = args[i].slice(2) === "layer" ? "l" : args[i].slice(2);
+    p[key] = Number(args[i + 1]);
+    i++;
   }
   return p;
 }

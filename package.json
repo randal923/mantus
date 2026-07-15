@@ -10,8 +10,10 @@
     "dev": "concurrently -k -n next.js,server,storybook -c cyan,magenta,yellow \"yarn workspace client dev\" \"yarn workspace server dev\" \"yarn workspace client storybook --no-open\"",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
+    "assets:import": "node tools/importTibiaAssets.mjs",
+    "map:convert": "node tools/convertOtbm.mjs",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
-    "test": "yarn workspace server test",
+    "test": "yarn workspace client test && yarn workspace server test",
     "db:schema": "yarn workspace server db:schema"
   },
   "devDependencies": {

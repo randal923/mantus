@@ -1,17 +1,22 @@
 # Tibia asset pack (`public/assets/`)
 
-Sprites and metadata ripped from `Tibia.dat` / `Tibia.spr` (a modern ~12.x-era
-client: 30,515 items, 1,070 outfits, 92 effects — classic 7.x/8.x item IDs do
-NOT apply). Everything below was verified visually with `tools/spritetool.mjs`.
+Sprites and metadata imported from Canary's extended Tibia 15.11
+`Tibia.dat` / `Tibia.spr`: item ids through 51,950, 1,875 outfits, 303
+effects, 62 missiles, and 569,684 sprites. The extended files retain the
+classic container format but contain modern client ids; ordinary 7.x/8.x
+asset packs do **not** match. Everything below was verified with
+`client/tools/spritetool.mjs`.
 
 ## Files
 
-- `atlas-0.png` … `atlas-23.png` — 4096×4096 sprite sheets, 120×120 cells of
-  34px (32px sprite + 1px padding on each side).
+- `atlas-0.png` … `atlas-39.png` — 4096×4096 sprite sheets, 120×120 cells of
+  34px (32px sprite + 1px padding on each side). All 40 sheets are referenced
+  by `atlas-index.json`; none are legacy copies from the previous pack.
 - `atlas-index.json` — the numbers above (`tile`, `pad`, `cell`, `cols`,
   `tilesPerSheet: 14400`, `sheets[]`).
-- `objects.json` — every object from the .dat: `{ category, clientId, width,
-  height, layers, px, py, pz, phases, flags, sprites[] }`.
+- `objects.json` — every object from the DAT: `{ category, clientId, width,
+  height, layers, px, py, pz, phases, flags, sprites[] }`, including ground
+  border, stack/fluid, hook, displacement, elevation, and corpse flags.
 - `outfit-colors.json` — the 133-entry RGB palette for outfit colorization.
 
 ## Atlas addressing
@@ -38,13 +43,17 @@ idx = (((((phase*pz + z)*py + y)*px + x)*layers + l)*height + h)*width + w
 Multi-tile sprites anchor at the **bottom-right** tile; piece `(w, h)` draws at
 offset `(-w*32, -h*32)`. Creatures additionally draw displaced `(-8, -8)`.
 
-## Semantics (learned the hard way)
+## Semantics
 
-- **Ground items**: `px`/`py` are map-position variation — pick pattern
-  `x = tileX % px`, `y = tileY % py` for natural tiling.
-- **Non-ground items (walls etc.)**: extra patterns and extra layers are
-  *alternate materials/states*, not overlays or variation. Always draw
-  **pattern 0, layer 0**, or walls come out as a patchwork of cobble/timber.
+- **Ordinary map items**: select `patternX`, `patternY`, and `patternZ` from
+  the item's map position. `getSpriteIndex` applies the modulo for
+  each dimension. This applies to grounds, walls, and ordinary decorations;
+  wall patterns often contain alternating continuation pieces.
+- **Special item patterns**: stack counts, fluids, splashes, and hanging
+  objects derive their pattern from subtype or wall-hook state instead of map
+  position. The current OTBM conversion does not retain that state yet.
+- **Item layers**: draw every layer in order at the same anchor. They are
+  pieces of one rendered item, not alternate materials.
 - **Outfits**: `px = 4` directions (patternX: 0=N, 1=E, 2=S, 3=W), `py` =
   addons (use 0), `pz` = mount (use 0). Phase 0 = idle, phases 1..n-1 = walk
   cycle. `layers = 2` means layer 1 is the color mask: yellow→head, red→body,
@@ -86,11 +95,31 @@ Framed-window tiles that *look* like floors but aren't: 413, 414, 428, 432, 446.
 ## Inspecting sprites
 
 ```bash
-node tools/spritetool.mjs render outfit 128 out.png --x 2 --phase 1
-node tools/spritetool.mjs render item 1292 out.png
-node tools/spritetool.mjs sheet outfit 1 160        # contact sheet + id grid
-node tools/spritetool.mjs tiled 429                 # 4×4 map-pattern preview
+node client/tools/spritetool.mjs render outfit 128 out.png --x 2 --phase 1
+node client/tools/spritetool.mjs render item 1292 out.png
+node client/tools/spritetool.mjs sheet outfit 1 160 # contact sheet + id grid
+node client/tools/spritetool.mjs tiled 429          # 4×4 map-pattern preview
 ```
 
-The game engine (`lib/game/assets.ts`) implements all of the above for
-runtime; `tools/spritetool.mjs` is the offline twin for picking new IDs.
+`lib/render/AssetStore.ts` and `lib/render/MapView.ts` implement runtime
+selection; `client/tools/spritetool.mjs` is the offline inspector.
+
+## Rebuilding the web assets
+
+Place the matching extended files at `map/Tibia.dat` and `map/Tibia.spr`, then
+run:
+
+```bash
+yarn assets:import
+```
+
+Only those two source files are needed after extraction; the downloaded ZIP
+and the rest of the Windows client can be deleted.
+
+The importer validates every object and sprite reference, builds all atlases
+in a staging directory, and only replaces the existing generated files after
+the complete import succeeds. To check a pack without generating atlases:
+
+```bash
+node tools/importTibiaAssets.mjs --validate-only
+```

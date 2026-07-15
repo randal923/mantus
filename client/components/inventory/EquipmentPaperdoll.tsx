@@ -2,16 +2,16 @@ import type { Equipment, EquipmentSlotId } from "./inventoryTypes";
 import { ItemSlot } from "./ItemSlot";
 
 const SLOT_HINT_SPRITES: Record<EquipmentSlotId, number> = {
-  helmet: 428,
-  amulet: 3810,
-  backpack: 185,
-  armor: 3829,
-  weapon: 114,
-  shield: 1986,
-  legs: 3830,
-  boots: 438,
-  ring: 3816,
-  ammo: 884,
+  helmet: 7837,
+  amulet: 7522,
+  backpack: 7137,
+  armor: 7843,
+  weapon: 7734,
+  shield: 7912,
+  legs: 8141,
+  boots: 8125,
+  ring: 7545,
+  ammo: 7946,
 };
 
 const SLOT_GRID: (EquipmentSlotId | null)[][] = [

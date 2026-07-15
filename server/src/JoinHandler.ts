@@ -38,7 +38,7 @@ export class JoinHandler {
     session.send({
       type: "welcome",
       playerId: player.id,
-      map: this.world.toMapState(),
+      map: { name: this.world.mapName },
       players,
     });
   }

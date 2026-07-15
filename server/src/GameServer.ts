@@ -7,6 +7,7 @@ import { AuthHandler } from "./AuthHandler";
 import type { ServerConfig } from "./config";
 import { JoinHandler } from "./JoinHandler";
 import { MovementHandler } from "./MovementHandler";
+import { resolveMapData } from "./resolveMapData";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
 import { TickLoop } from "./TickLoop";
@@ -35,12 +36,7 @@ export class GameServer {
     private readonly config: ServerConfig,
     deps: GameServerDeps,
   ) {
-    this.world = new World(
-      config.map.width,
-      config.map.height,
-      config.map.blocked,
-      config.stepCooldownMs,
-    );
+    this.world = new World(resolveMapData(config.map), config.stepCooldownMs);
     this.visibility = new Visibility(
       this.world,
       this.registry,

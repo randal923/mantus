@@ -8,6 +8,7 @@ import type { TokenVerifier, VerifiedUser } from "./TokenVerifier";
 
 const VIEW_RANGE = { x: 9, y: 7 };
 const BAD_TOKEN = "bad.token";
+const GRID = { width: 48, height: 32 };
 
 const testConfig: ServerConfig = {
   port: 0,
@@ -20,7 +21,7 @@ const testConfig: ServerConfig = {
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
   viewRange: VIEW_RANGE,
-  map: { width: 48, height: 32, blocked: [] },
+  map: { source: "grid", name: "test-grid", ...GRID, blocked: [] },
 };
 
 const fakeVerifier: TokenVerifier = {
@@ -264,7 +265,7 @@ describe("view-range broadcast", () => {
           (m) =>
             m.type === "player-moved" &&
             m.playerId === alice.playerId &&
-            m.x === testConfig.map.width - 1,
+            m.x === GRID.width - 1,
         ),
       "Alice to reach the east edge",
     );

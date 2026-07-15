@@ -1,5 +1,26 @@
 import { GAME_RULES } from "@tibia/protocol";
 
+const mapName = process.env.MAP_NAME ?? "otservbr";
+if (!/^[a-z0-9-]+$/.test(mapName)) {
+  throw new Error("MAP_NAME may contain only lowercase letters, numbers, and hyphens");
+}
+
+export type MapConfig =
+  | {
+      /** Converted map loaded from server/data/<name>.map.bin (see map/README.md). */
+      source: "data";
+      name: string;
+      spawnTown?: string;
+    }
+  | {
+      /** Inline grid, used by tests. */
+      source: "grid";
+      name: string;
+      width: number;
+      height: number;
+      blocked: ReadonlyArray<readonly [number, number]>;
+    };
+
 export interface ServerConfig {
   port: number;
   tickMs: number;
@@ -17,11 +38,7 @@ export interface ServerConfig {
   maxPendingIntents: number;
   maxProtocolViolations: number;
   viewRange: { x: number; y: number };
-  map: {
-    width: number;
-    height: number;
-    blocked: ReadonlyArray<readonly [number, number]>;
-  };
+  map: MapConfig;
 }
 
 export const serverConfig: ServerConfig = {
@@ -37,34 +54,8 @@ export const serverConfig: ServerConfig = {
   maxProtocolViolations: 5,
   viewRange: { x: 9, y: 7 },
   map: {
-    width: 48,
-    height: 32,
-    blocked: [
-      [6, 4],
-      [7, 4],
-      [6, 5],
-      [17, 10],
-      [18, 10],
-      [17, 11],
-      [11, 8],
-      [26, 6],
-      [27, 6],
-      [33, 14],
-      [34, 15],
-      [9, 20],
-      [10, 21],
-      [22, 24],
-      [23, 24],
-      [38, 8],
-      [40, 22],
-      [41, 23],
-      [30, 27],
-      [14, 28],
-      [44, 12],
-      [5, 13],
-      [36, 29],
-      [19, 3],
-      [43, 3],
-    ],
+    source: "data",
+    name: mapName,
+    spawnTown: process.env.SPAWN_TOWN ?? "Thais",
   },
 };

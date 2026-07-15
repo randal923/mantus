@@ -68,6 +68,42 @@ Known limitations, ordered by when they'll bite (assessed 2026-07-14).
    means more worlds, not bigger ones. Cross-world features would need new
    infrastructure — decide consciously if that ever changes.
 
+## Map pipeline (added 2026-07-14)
+
+The real Tibia map (OTServBR `otservbr.otbm`) now drives the game: converted
+by `tools/convertOtbm.mjs` (see `map/README.md`), walkability + temple spawn
+on the server, HTTP-streamed region JSONs rendered by `client/lib/render/MapView.ts`.
+Known, deliberate gaps:
+
+1. **Gameplay is single floor (z=7); rendering covers above-ground only
+   (z0–7).** The client stacks floors 7→0 with the one-tile-per-floor
+   perspective shift and hides floors above the player when a ground tile
+   sits overhead (indoor rule) — but there are no stairs/ladders/holes, no
+   underground rendering (z8+ regions aren't exported to the client), and no
+   partial transparency for covered areas. Underground locations still show
+   black. `GAMEPLAY_FLOOR` in the converter and `server/src/loadMapData.ts`,
+   plus `GROUND_FLOOR` in `MapView.ts`, are the anchors. Converter
+   `--floors=all` exports client regions, but multi-floor gameplay will also
+   require server movement and a regenerated walkability binary.
+2. **Ground speed ignored** — step cooldown is constant; real Tibia walks
+   faster on pavement than swamp. `objects.json` has `groundSpeed`; wire it
+   into `World.tryMove` + client animation when movement gets attention.
+3. **Special item state is only partially retained.** The matching asset
+   import now supplies stack/fluid/hangable, hook, elevation, displacement,
+   ground-border, and lying-corpse flags. The renderer uses the static flags,
+   but the converter still drops OTBM count/fluid subtype attributes. Exact
+   stack counts and fluids, item animation timing, and large-corpse redraw
+   need compact map state encoding and runtime support.
+4. **Converted artifacts are gitignored** (`client/public/assets/map/`,
+   `server/data/`) — run `yarn map:convert map/otservbr.otbm` after cloning or
+   re-ripping assets. OTServBR adds ~80 MB of streamed region JSON. The asset
+   pack also has ~126 MB of lazily loaded atlases, while the ~30 MB
+   `objects.json` catalog is loaded eagerly. Before public deployment, measure
+   startup/network cost; compact or split the catalog and move regions to
+   object storage/CDN if the hosting platform needs it.
+5. **Protection zones, house ownership, and tile flags** are parsed but
+   dropped by the converter; revisit with PvP/houses.
+
 ## Production checklist (pre-launch)
 
 - [ ] `wss://` (TLS) for the game socket

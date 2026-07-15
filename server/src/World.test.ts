@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { gridMapData } from "./gridMapData";
 import { Player } from "./Player";
 import { World } from "./World";
 
 const STEP_MS = 180;
 
-const makeWorld = () => new World(10, 8, [[3, 2]], STEP_MS);
+const makeWorld = () =>
+  new World(
+    gridMapData({ name: "test", width: 10, height: 8, blocked: [[3, 2]] }),
+    STEP_MS,
+  );
 
 const makePlayer = (x: number, y: number) =>
   new Player("p1", "Tester", x, y, "south");

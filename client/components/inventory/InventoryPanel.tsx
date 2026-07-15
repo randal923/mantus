@@ -7,8 +7,8 @@ import { EquipmentPaperdoll } from "./EquipmentPaperdoll";
 import { ItemSlot } from "./ItemSlot";
 import { SpriteIcon } from "./SpriteIcon";
 
-const GOLD_COIN_SPRITE = 350;
-const PLATINUM_COIN_SPRITE = 342;
+const GOLD_COIN_SPRITE = 7384;
+const PLATINUM_COIN_SPRITE = 7409;
 
 interface InventoryPanelProps {
   characterName: string;
@@ -21,8 +21,6 @@ interface InventoryPanelProps {
   capacityMax: number;
   /** Backpack size in slots; empty slots render as open squares. */
   slotCount?: number;
-  /** Estimated market value of carried items, shown in the footer. */
-  totalValue?: number;
   onClose?: () => void;
   onStack?: () => void;
   onSort?: () => void;
@@ -37,7 +35,6 @@ export function InventoryPanel({
   capacityUsed,
   capacityMax,
   slotCount = 24,
-  totalValue,
   onClose,
   onStack,
   onSort,
@@ -60,7 +57,7 @@ export function InventoryPanel({
       <header className="flex items-center gap-3">
         <div className="flex size-16 shrink-0 items-center justify-center rounded-full border-2 border-[#3a5054] bg-neutral-950 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
           <SpriteIcon
-            spriteId={equipment.helmet?.spriteId ?? 428}
+            spriteId={equipment.helmet?.spriteId ?? 7837}
             scale={1.5}
           />
         </div>

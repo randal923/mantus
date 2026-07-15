@@ -1,4 +1,5 @@
-import type { Direction, MapState } from "@tibia/protocol";
+import type { Direction } from "@tibia/protocol";
+import type { MapData } from "./MapData";
 import { Player } from "./Player";
 import { SpatialGrid } from "./SpatialGrid";
 
@@ -9,6 +10,9 @@ const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
   west: [-1, 0],
 };
 
+/** A full spawn ring this far out means the temple area is packed solid. */
+const SPAWN_SEARCH_RADIUS = 256;
+
 export interface MoveResult {
   moved: boolean;
   turned: boolean;
@@ -17,20 +21,18 @@ export interface MoveResult {
 export class World {
   private readonly players = new Map<string, Player>();
   private readonly grid = new SpatialGrid();
-  private readonly blocked: ReadonlySet<string>;
 
   constructor(
-    readonly width: number,
-    readonly height: number,
-    blockedTiles: ReadonlyArray<readonly [number, number]>,
+    private readonly map: MapData,
     private readonly stepCooldownMs: number,
-  ) {
-    this.blocked = new Set(blockedTiles.map(([x, y]) => `${x},${y}`));
+  ) {}
+
+  get mapName(): string {
+    return this.map.name;
   }
 
   isWalkable(x: number, y: number): boolean {
-    if (x < 0 || y < 0 || x >= this.width || y >= this.height) return false;
-    return !this.blocked.has(`${x},${y}`);
+    return this.map.isWalkable(x, y);
   }
 
   isOccupied(x: number, y: number): boolean {
@@ -46,12 +48,10 @@ export class World {
     return this.grid.query(x, y, range.x, range.y);
   }
 
-  /** Spiral out from the center until a free tile is found. */
+  /** Spiral out from the map's spawn point until a free tile is found. */
   findSpawn(): { x: number; y: number } | null {
-    const cx = Math.floor(this.width / 2);
-    const cy = Math.floor(this.height / 2);
-    const maxRadius = Math.max(this.width, this.height);
-    for (let radius = 0; radius < maxRadius; radius++) {
+    const { x: cx, y: cy } = this.map.spawn;
+    for (let radius = 0; radius < SPAWN_SEARCH_RADIUS; radius++) {
       for (let dy = -radius; dy <= radius; dy++) {
         for (let dx = -radius; dx <= radius; dx++) {
           if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
@@ -112,16 +112,5 @@ export class World {
     player.lastStepAt = now;
     this.grid.move(player, fromX, fromY);
     return { moved: true, turned };
-  }
-
-  toMapState(): MapState {
-    return {
-      width: this.width,
-      height: this.height,
-      blocked: [...this.blocked].map((key) => {
-        const [x = 0, y = 0] = key.split(",").map(Number);
-        return [x, y] as [number, number];
-      }),
-    };
   }
 }

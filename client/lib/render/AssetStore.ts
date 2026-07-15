@@ -1,14 +1,29 @@
 import { Rectangle, Texture } from "pixi.js";
+import { getSpriteIndex } from "./getSpriteIndex";
 
 export interface TibiaFlags {
   ground: boolean;
   groundSpeed: number;
+  groundBorder: boolean;
   fullGround: boolean;
   notWalkable: boolean;
   blockProjectile: boolean;
   notMoveable: boolean;
+  notPathable: boolean;
   onBottom: boolean;
   onTop: boolean;
+  stackable: boolean;
+  fluidContainer: boolean;
+  splash: boolean;
+  hangable: boolean;
+  hookSouth: boolean;
+  hookEast: boolean;
+  dontHide: boolean;
+  displacementX: number;
+  displacementY: number;
+  elevation: number;
+  lyingCorpse: boolean;
+  animateAlways: boolean;
 }
 
 export interface TibiaObject {
@@ -21,7 +36,6 @@ export interface TibiaObject {
   py: number;
   pz: number;
   phases: number;
-  groups: number;
   flags: TibiaFlags;
   sprites: number[];
 }
@@ -30,12 +44,8 @@ interface AtlasIndex {
   tile: number;
   pad: number;
   cell: number;
-  sheetPx: number;
   cols: number;
-  rows: number;
   tilesPerSheet: number;
-  sheetCount: number;
-  spriteCount: number;
   sheets: string[];
 }
 
@@ -103,17 +113,8 @@ export class AssetStore {
     return o;
   }
 
-  spriteIndex(o: TibiaObject, p: SpritePattern): number {
-    const { w = 0, h = 0, l = 0, x = 0, y = 0, z = 0, phase = 0 } = p;
-    return (
-      (((((phase * o.pz + z) * o.py + y % o.py) * o.px + x % o.px) * o.layers + l) * o.height + h) *
-        o.width +
-      w
-    );
-  }
-
   spriteId(o: TibiaObject, p: SpritePattern): number {
-    return o.sprites[this.spriteIndex(o, p)] ?? 0;
+    return o.sprites[getSpriteIndex(o, p)] ?? 0;
   }
 
   private spriteRect(spriteId: number): { sheet: number; x: number; y: number } {
@@ -152,11 +153,6 @@ export class AssetStore {
       tex.source.scaleMode = "nearest";
       this.sheetTextures[s] = tex;
     }
-  }
-
-  /** Every sprite id an object can display (all patterns/phases/layers/pieces). */
-  allSprites(o: TibiaObject): number[] {
-    return o.sprites;
   }
 
   spriteTexture(spriteId: number): Texture {

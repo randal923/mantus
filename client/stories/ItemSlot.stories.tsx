@@ -22,13 +22,13 @@ type Story = StoryObj<typeof meta>;
 
 export const WithItem: Story = {
   args: {
-    item: { id: "it-1", clientId: 3280, spriteId: 188, name: "fire sword", count: 1 },
+    item: { id: "it-1", clientId: 3280, spriteId: 7749, name: "fire sword", count: 1 },
   },
 };
 
 export const Stacked: Story = {
   args: {
-    item: { id: "it-2", clientId: 3031, spriteId: 350, name: "gold coin", count: 100 },
+    item: { id: "it-2", clientId: 3031, spriteId: 7384, name: "gold coin", count: 100 },
   },
 };
 
@@ -38,6 +38,6 @@ export const Empty: Story = {
 
 export const EmptyWithPlaceholder: Story = {
   args: {
-    placeholderSpriteId: 3829,
+    placeholderSpriteId: 7843,
   },
 };
