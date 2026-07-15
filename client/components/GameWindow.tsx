@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Direction } from "@tibia/protocol";
+import { useHotkeys } from "../hooks/useHotkeys";
 import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { GameHud } from "./GameHud";
+import { InventoryPanel } from "./inventory/InventoryPanel";
+import { PLACEHOLDER_INVENTORY } from "./inventory/placeholderInventory";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
 
@@ -26,6 +29,13 @@ interface GameWindowProps {
 export default function GameWindow({ accessToken }: GameWindowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+
+  useHotkeys((action) => {
+    if (action === "toggleInventory") {
+      setInventoryOpen((open) => !open);
+    }
+  });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -119,6 +129,14 @@ export default function GameWindow({ accessToken }: GameWindowProps) {
       <div ref={containerRef} className="absolute inset-0" />
       <div aria-hidden className="ui-game-vignette pointer-events-none absolute inset-0 z-10" />
       <GameHud connectionStatus={status} />
+      {inventoryOpen && (
+        <div className="absolute inset-y-4 right-4 z-30 w-96">
+          <InventoryPanel
+            {...PLACEHOLDER_INVENTORY}
+            onClose={() => setInventoryOpen(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

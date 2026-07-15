@@ -26,14 +26,24 @@ export function HealthManaBars({
         aria-valuemin={0}
         aria-valuemax={healthMax}
         aria-valuenow={healthValue}
-        className="relative h-4 overflow-hidden rounded-full border border-black/70 bg-black/55 shadow-inner shadow-black/60 sm:h-5"
+        className="relative h-5 overflow-hidden rounded-md border border-ui-stone-light/25 bg-black/60 shadow-[inset_0_2px_5px_rgba(0,0,0,0.75),0_1px_0_rgba(255,255,255,0.04)]"
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-ui-health to-ui-health-light transition-[width] duration-300"
+          className="absolute inset-y-0 left-0 border-r border-ui-health-light/30 bg-linear-to-b from-ui-health-light/80 to-ui-health transition-[width] duration-300"
           style={{ width: `${healthPercent}%` }}
-        />
-        <span className="relative flex h-full items-center justify-center text-xs font-bold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
-          {healthValue.toLocaleString()} / {healthMax.toLocaleString()}
+        >
+          <span
+            aria-hidden
+            className="texture-noise absolute inset-0 opacity-[0.06] mix-blend-soft-light"
+          />
+        </div>
+        <span className="relative flex h-full items-center justify-between gap-2 px-2 text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
+          <span className="font-display text-[9px] font-bold tracking-wider uppercase">
+            HP
+          </span>
+          <span className="truncate text-[10px] font-semibold tabular-nums">
+            {healthValue.toLocaleString()} / {healthMax.toLocaleString()}
+          </span>
         </span>
       </div>
 
@@ -43,14 +53,24 @@ export function HealthManaBars({
         aria-valuemin={0}
         aria-valuemax={manaMax}
         aria-valuenow={manaValue}
-        className="relative h-2.5 overflow-hidden rounded-full border border-black/70 bg-black/55 shadow-inner shadow-black/60 sm:h-3"
+        className="relative h-4 overflow-hidden rounded-md border border-ui-stone-light/20 bg-black/60 shadow-[inset_0_2px_5px_rgba(0,0,0,0.75),0_1px_0_rgba(255,255,255,0.04)]"
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-ui-mana to-ui-mana-light transition-[width] duration-300"
+          className="absolute inset-y-0 left-0 border-r border-ui-mana-light/30 bg-linear-to-b from-ui-mana-light/75 to-ui-mana transition-[width] duration-300"
           style={{ width: `${manaPercent}%` }}
-        />
-        <span className="relative hidden h-full items-center justify-center text-xs font-bold text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] sm:flex">
-          {manaValue.toLocaleString()} / {manaMax.toLocaleString()}
+        >
+          <span
+            aria-hidden
+            className="texture-noise absolute inset-0 opacity-[0.06] mix-blend-soft-light"
+          />
+        </div>
+        <span className="relative flex h-full items-center justify-between gap-2 px-2 text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
+          <span className="font-display text-[8px] font-bold tracking-wider uppercase">
+            MP
+          </span>
+          <span className="truncate text-[9px] font-semibold tabular-nums">
+            {manaValue.toLocaleString()} / {manaMax.toLocaleString()}
+          </span>
         </span>
       </div>
     </div>

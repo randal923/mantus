@@ -71,11 +71,18 @@ export function TopNavigationBar({
         />
 
         <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex min-w-0 items-baseline gap-2 px-0.5">
-            <h2 className="truncate font-display text-sm font-semibold tracking-wider text-ui-text-bright uppercase">
+          <div className="flex min-w-0 items-center gap-2 px-0.5">
+            <span
+              aria-hidden
+              className="h-3 w-0.5 shrink-0 rounded-full bg-ui-accent-light/80"
+            />
+            <h2
+              title={characterName}
+              className="truncate font-display text-sm font-bold tracking-wide text-ui-text-bright uppercase sm:text-base"
+            >
               {characterName}
             </h2>
-            <span className="hidden truncate text-[10px] tracking-wider text-ui-muted uppercase sm:block">
+            <span className="hidden max-w-28 shrink-0 truncate rounded-sm border border-ui-stone-light/15 bg-black/30 px-1.5 py-0.5 text-[9px] font-medium tracking-wider text-ui-muted uppercase sm:block">
               {vocation}
             </span>
           </div>
@@ -99,7 +106,7 @@ export function TopNavigationBar({
 
       <nav
         aria-label="Game panels"
-        className="flex gap-1 rounded-xl border border-ui-gold/10 bg-black/20 p-1"
+        className="ml-auto flex gap-1 rounded-xl border border-ui-gold/10 bg-black/20 p-1"
       >
         <NavigationIconButton
           label="Inventory"

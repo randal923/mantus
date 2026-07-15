@@ -63,6 +63,11 @@ is atomic.
   quest/world actions as typed server behaviors. Do not execute imported Lua.
 - [ ] Keep inventory/equipment/container UI as projections of committed server
   state; optimistic animation must reconcile to authoritative revisions.
+- [ ] Replace `client/components/inventory/placeholderInventory.ts` with real
+  server-sent inventory state. Added 2026-07-15 so the `I` hotkey
+  (`client/lib/hotkeys/`) can open the InventoryPanel before the server sends
+  inventory; it is display-only hardcoded data and must be deleted once the
+  server projects real inventory to the client.
 
 ## Planned file surface
 
