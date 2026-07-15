@@ -1,11 +1,7 @@
-# Game server on fly.io. TLS terminates at Fly's edge, so clients connect
-# with wss:// while the container speaks plain ws on the internal port.
+# fly.toml app configuration file generated for mantus on 2026-07-15T17:20:54Z
 #
-# One-time setup:
-#   fly apps create mantus
-#   fly secrets set -a mantus SUPABASE_URL=https://<ref>.supabase.co DATABASE_URL=<session-pooler-uri>
-# Deploy — run from the REPO ROOT so the build context includes protocol/:
-#   fly deploy . --config server/fly.toml --dockerfile server/Dockerfile
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
 app = "mantus"
 # Match your Supabase project's region (fly regions list ↔ supabase dashboard).
@@ -22,6 +18,7 @@ primary_region = "iad"
 # Raw TCP service with the http/tls handlers: WebSocket upgrades pass through,
 # and health checking stays at the TCP level (the ws server answers HTTP GETs
 # with 426, which would fail an HTTP check).
+
 [[services]]
   internal_port = 4000
   protocol = "tcp"
@@ -30,6 +27,7 @@ primary_region = "iad"
   min_machines_running = 1
 
   # Matches maxSessions (100) in server config.
+
   [services.concurrency]
     type = "connections"
     hard_limit = 100
@@ -49,5 +47,13 @@ primary_region = "iad"
     grace_period = "10s"
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'
+
+[[vm]]
+  size = 'shared-cpu-2x'
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 2
+  memory_mb = 1024
+  processes = ['app']
