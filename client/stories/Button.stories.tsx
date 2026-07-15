@@ -11,7 +11,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="bg-ui-panel p-6">
+      <div className="ui-backdrop p-8">
         <Story />
       </div>
     ),
@@ -24,23 +24,30 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Steel: Story = {
+export const Secondary: Story = {
   args: {
     children: "Cancel",
   },
 };
 
-export const Gold: Story = {
+export const Primary: Story = {
   args: {
     children: "Confirm",
-    variant: "gold",
+    variant: "primary",
   },
 };
 
-export const Red: Story = {
+export const Danger: Story = {
   args: {
     children: "Exit to Desktop",
-    variant: "red",
+    variant: "danger",
+  },
+};
+
+export const Small: Story = {
+  args: {
+    children: "Sort",
+    size: "sm",
   },
 };
 

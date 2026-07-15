@@ -1,39 +1,43 @@
 import type { ButtonHTMLAttributes } from "react";
 
-type PlaqueVariant = "steel" | "gold" | "red";
+type ButtonVariant = "primary" | "secondary" | "danger";
+type ButtonSize = "sm" | "md";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: PlaqueVariant;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
 }
 
-/** Outer metal frame edge of the plaque. */
-const FRAME_CLASS: Record<PlaqueVariant, string> = {
-  steel: "bg-linear-to-b from-[#d8dee4] via-[#8b959f] to-[#4b545d]",
-  gold: "bg-linear-to-b from-[#efdda6] via-[#c3a05a] to-[#775a24]",
-  red: "bg-linear-to-b from-[#f08795] via-[#c04257] to-[#6d1322]",
+const BASE_CLASS =
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border font-display text-xs font-semibold tracking-[0.12em] uppercase outline-none transition-[color,background-color,border-color,box-shadow,transform] duration-150 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ui-panel-deep disabled:pointer-events-none disabled:opacity-40 disabled:shadow-none";
+
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
+  primary:
+    "border-ui-accent-light/40 bg-ui-accent/90 text-ui-text-bright shadow-md shadow-ui-accent-deep/20 hover:border-ui-accent-light/70 hover:bg-ui-accent-light/90",
+  secondary:
+    "border-ui-gold/20 bg-white/5 text-ui-text shadow-sm shadow-black/20 hover:border-ui-gold/40 hover:bg-white/10 hover:text-ui-text-bright",
+  danger:
+    "border-ui-accent/45 bg-ui-accent-deep/55 text-ui-accent-light shadow-sm shadow-black/20 hover:border-ui-accent-light/60 hover:bg-ui-accent/30 hover:text-ui-text-bright",
 };
 
-/** Inner face of the plaque; gradient flips while pressed. */
-const FILL_CLASS: Record<PlaqueVariant, string> = {
-  steel:
-    "bg-linear-to-b from-[#bcc5ce] via-[#77828d] via-45% to-[#37404a] group-active:bg-linear-to-t",
-  gold: "bg-linear-to-b from-[#e8ca82] via-[#bd974a] via-45% to-[#6b4d1e] group-active:bg-linear-to-t",
-  red: "bg-linear-to-b from-[#dd5b6d] via-[#a52737] via-45% to-[#520f1b] group-active:bg-linear-to-t",
+const SIZE_CLASS: Record<ButtonSize, string> = {
+  sm: "h-8 px-3 text-xs",
+  md: "h-10 px-5",
 };
 
-/** Banner-plaque button: metal frame, textured face, chamfered plaque shape. */
-export function Button({ variant = "steel", className, children, ...props }: ButtonProps) {
+export function Button({
+  variant = "secondary",
+  size = "md",
+  className,
+  children,
+  ...props
+}: ButtonProps) {
   return (
     <button
-      className={`group relative isolate px-6 py-1.5 font-display text-sm tracking-wider text-[#f2f5f7] [font-variant:small-caps] [text-shadow:0_1px_2px_rgba(0,0,0,0.8)] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] hover:brightness-110 disabled:pointer-events-none disabled:opacity-50 ${className ?? ""}`}
+      type="button"
+      className={`${BASE_CLASS} ${VARIANT_CLASS[variant]} ${SIZE_CLASS[size]} ${className ?? ""}`}
       {...props}
     >
-      <span aria-hidden className={`clip-plaque absolute inset-0 -z-20 ${FRAME_CLASS[variant]}`} />
-      <span aria-hidden className={`clip-plaque absolute inset-[2px] -z-10 ${FILL_CLASS[variant]}`} />
-      <span
-        aria-hidden
-        className="clip-plaque texture-noise absolute inset-[2px] -z-10 opacity-40 mix-blend-overlay"
-      />
       {children}
     </button>
   );

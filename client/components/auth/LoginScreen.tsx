@@ -61,15 +61,20 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-neutral-950 p-4">
-      <LoginPanel
-        onSignIn={signIn}
-        onSignUp={signUp}
-        onGoogle={signInWithGoogle}
-        busy={busy}
-        error={error}
-        notice={notice}
-      />
+    <div className="ui-backdrop fixed inset-0 isolate flex items-center justify-center overflow-hidden p-4">
+      <div aria-hidden className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.035]" />
+      <div aria-hidden className="absolute inset-x-[12%] top-10 h-px bg-linear-to-r from-transparent via-ui-gold/25 to-transparent" />
+      <div aria-hidden className="absolute inset-x-[20%] bottom-10 h-px bg-linear-to-r from-transparent via-ui-accent/30 to-transparent" />
+      <div className="relative w-full max-w-md">
+        <LoginPanel
+          onSignIn={signIn}
+          onSignUp={signUp}
+          onGoogle={signInWithGoogle}
+          busy={busy}
+          error={error}
+          notice={notice}
+        />
+      </div>
     </div>
   );
 }

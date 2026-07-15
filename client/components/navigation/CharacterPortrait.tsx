@@ -22,15 +22,15 @@ export function CharacterPortrait({
       aria-label={`Open ${characterName}'s character panel`}
       disabled={!onClick}
       onClick={onClick}
-      className="group relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-ui-accent/45 bg-radial from-ui-panel-light to-black shadow-[0_0_22px_rgba(70,164,157,0.12),inset_0_0_0_2px_rgba(255,255,255,0.04)] transition hover:border-ui-accent hover:shadow-[0_0_25px_rgba(70,164,157,0.25)] disabled:pointer-events-none sm:size-16"
+      className="group relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ui-gold/30 bg-radial from-ui-panel-light to-black shadow-lg shadow-black/25 outline-none transition-[border-color,box-shadow,filter] duration-150 hover:border-ui-gold/60 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none sm:size-16"
     >
-      <div className="absolute inset-0 bg-linear-to-t from-ui-accent/15 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-ui-accent-deep/35 to-transparent" />
       <SpriteIcon
         spriteId={spriteId}
         scale={2}
-        className="relative translate-y-1 transition-transform group-hover:scale-105"
+        className="relative translate-y-1 transition-transform duration-150 group-hover:scale-105"
       />
-      <span className="absolute right-0 bottom-0 flex min-w-5 items-center justify-center rounded-tl-lg border-t border-l border-white/10 bg-[#101b20] px-1 py-0.5 text-xs font-bold text-ui-gold">
+      <span className="absolute right-0.5 bottom-0.5 flex min-w-5 items-center justify-center rounded-md border border-ui-gold/20 bg-black/80 px-1 py-0.5 text-xs font-semibold text-ui-gold">
         {level}
       </span>
     </button>

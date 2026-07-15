@@ -104,6 +104,16 @@ node client/tools/spritetool.mjs tiled 429          # 4×4 map-pattern preview
 `lib/render/AssetStore.ts` and `lib/render/MapView.ts` implement runtime
 selection; `client/tools/spritetool.mjs` is the offline inspector.
 
+## Project UI assets
+
+`public/assets/ui/` contains original presentation assets created for this
+project. They are not ripped from Tibia or another game. UI textures should
+remain visually quiet behind text, avoid recognizable third-party ornament,
+and be stored in a web-optimized format.
+
+- `forged-stone-texture.webp` — seamless warm-black forged stone used beneath
+  the CSS gradients and borders on gothic panels and full-screen backdrops.
+
 ## Rebuilding the web assets
 
 Place the matching extended files at `map/Tibia.dat` and `map/Tibia.spr`, then

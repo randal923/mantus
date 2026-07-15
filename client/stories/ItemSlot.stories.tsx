@@ -10,7 +10,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="bg-ui-panel p-6">
+      <div className="ui-backdrop p-6">
         <Story />
       </div>
     ),

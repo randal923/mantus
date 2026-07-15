@@ -7,6 +7,12 @@ import { NavigationIconButton } from "./NavigationIconButton";
 type NavigationPanel = "inventory" | "quests" | "map";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
+const STATUS_CLASS: Record<ConnectionStatus, string> = {
+  connecting: "bg-ui-gold text-ui-gold",
+  connected: "bg-ui-success text-ui-success",
+  disconnected: "bg-ui-accent-light text-ui-accent-light",
+};
+
 interface TopNavigationBarProps {
   characterName: string;
   level: number;
@@ -34,6 +40,7 @@ export function TopNavigationBar({
   maxHealth,
   mana,
   maxMana,
+  connectionStatus,
   activePanel,
   onCharacter,
   onInventory,
@@ -42,14 +49,14 @@ export function TopNavigationBar({
   onSettings,
 }: TopNavigationBarProps) {
   return (
-    <header className="relative isolate z-40 flex min-h-20 w-full items-center gap-2 border-b border-white/10 bg-[#071014]/92 px-2 font-tibia text-ui-text shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl select-none sm:gap-5 sm:px-4">
+    <header className="relative isolate z-40 flex min-h-20 w-full items-center gap-2 border-b border-ui-gold/25 bg-ui-panel-deep/95 px-2 font-tibia text-ui-text shadow-[0_12px_40px_rgba(0,0,0,0.55),inset_0_-1px_0_rgba(0,0,0,0.8)] backdrop-blur-md select-none sm:gap-4 sm:px-4">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-ui-accent/8 via-transparent to-black/20"
+        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.035] mix-blend-soft-light"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-ui-accent/70 via-white/10 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-ui-gold/55 to-transparent"
       />
 
       <section
@@ -65,10 +72,10 @@ export function TopNavigationBar({
 
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex min-w-0 items-baseline gap-2 px-0.5">
-            <h2 className="truncate text-sm font-bold tracking-wide text-white">
+            <h2 className="truncate font-display text-sm font-semibold tracking-wider text-ui-text-bright uppercase">
               {characterName}
             </h2>
-            <span className="hidden truncate text-xs text-ui-text/45 sm:block">
+            <span className="hidden truncate text-[10px] tracking-wider text-ui-muted uppercase sm:block">
               {vocation}
             </span>
           </div>
@@ -82,7 +89,18 @@ export function TopNavigationBar({
         </div>
       </section>
 
-      <nav aria-label="Game panels" className="flex gap-2">
+      <div className="hidden items-center gap-2 text-[10px] tracking-widest text-ui-muted uppercase md:flex">
+        <span
+          aria-hidden
+          className={`size-1.5 rounded-full shadow-[0_0_8px_currentColor] ${STATUS_CLASS[connectionStatus]}`}
+        />
+        {connectionStatus}
+      </div>
+
+      <nav
+        aria-label="Game panels"
+        className="flex gap-1 rounded-xl border border-ui-gold/10 bg-black/20 p-1"
+      >
         <NavigationIconButton
           label="Inventory"
           active={activePanel === "inventory"}

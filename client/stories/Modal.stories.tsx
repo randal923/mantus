@@ -33,7 +33,7 @@ export const WithFooter: Story = {
     footer: (
       <>
         <Button>Cancel</Button>
-        <Button variant="red">Delete</Button>
+        <Button variant="danger">Delete</Button>
       </>
     ),
   },
@@ -46,7 +46,7 @@ export const WithInput: Story = {
     footer: (
       <>
         <Button>Cancel</Button>
-        <Button variant="gold">Create</Button>
+        <Button variant="primary">Create</Button>
       </>
     ),
   },

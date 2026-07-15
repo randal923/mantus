@@ -33,28 +33,34 @@ export function LoginPanel({
   return (
     <section
       aria-label="Sign in"
-      className="relative isolate flex w-full max-w-sm flex-col gap-4 overflow-hidden rounded-sm border border-[#3a5054] bg-radial-[at_50%_8%] from-ui-panel-light via-ui-panel via-55% to-ui-panel-deep p-6 font-tibia text-ui-text shadow-[0_4px_20px_rgba(0,0,0,0.7),inset_0_0_0_1px_rgba(0,0,0,0.7)]"
+      className="ui-panel-frame relative isolate flex w-full flex-col gap-5 overflow-hidden px-7 py-8 font-tibia text-ui-text sm:px-9"
     >
       <div
         aria-hidden
-        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-50 mix-blend-overlay"
+        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.045] mix-blend-soft-light"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-linear-to-b from-[#2c5b5c]/60 to-transparent"
+        className="pointer-events-none absolute inset-x-12 top-0 -z-10 h-32 bg-radial from-ui-accent/15 to-transparent blur-2xl"
       />
-      <header className="flex flex-col items-center gap-1">
-        <h1 className="font-display text-4xl tracking-wide [font-variant:small-caps] [text-shadow:0_2px_4px_rgba(0,0,0,0.8)]">
+      <header className="flex flex-col items-center gap-2 text-center">
+        <div
+          aria-hidden
+          className="mb-1 flex size-11 rotate-45 items-center justify-center border border-ui-gold/35 bg-black/45 shadow-[0_0_24px_rgba(143,30,22,0.22)]"
+        >
+          <span className="size-3 border border-ui-accent-light/70 bg-ui-accent-deep shadow-[0_0_12px_rgba(189,59,46,0.42)]" />
+        </div>
+        <p className="text-[10px] tracking-[0.34em] text-ui-gold uppercase">
+          Welcome back
+        </p>
+        <h1 className="font-display text-3xl tracking-[0.12em] text-ui-text-bright uppercase [text-shadow:0_2px_12px_rgba(0,0,0,0.9)] sm:text-4xl">
           Mantus Online
         </h1>
-        <p className="text-sm text-ui-text/60">Sign in to enter the world</p>
+        <p className="text-sm text-ui-muted">Sign in to enter the world</p>
       </header>
-      <div
-        aria-hidden
-        className="h-px bg-linear-to-r from-transparent via-ui-accent/50 to-transparent"
-      />
+      <div aria-hidden className="ui-divider" />
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           label="Email"
           type="email"
@@ -75,14 +81,24 @@ export function LoginPanel({
           onChange={(event) => setPassword(event.target.value)}
         />
         {error && (
-          <p role="alert" className="text-sm text-[#e08585]">
+          <p role="alert" className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200">
             {error}
           </p>
         )}
-        {notice && <p className="text-sm text-[#9ed08a]">{notice}</p>}
-        <div className="mt-1 flex justify-center gap-2">
-          <Button type="submit" variant="gold" disabled={busy}>
-            Sign In
+        {notice && (
+          <p className="border-l-2 border-ui-success bg-ui-success/10 px-3 py-2 text-sm text-green-200">
+            {notice}
+          </p>
+        )}
+        <div className="mt-1 grid grid-cols-2 gap-3">
+          <Button type="submit" variant="primary" disabled={busy}>
+            {busy && (
+              <span
+                aria-hidden
+                className="size-3 rotate-45 border border-current border-t-transparent motion-safe:animate-spin"
+              />
+            )}
+            {busy ? "Entering" : "Sign In"}
           </Button>
           <Button
             type="button"
@@ -96,18 +112,18 @@ export function LoginPanel({
 
       <div
         aria-hidden
-        className="flex items-center gap-3 text-xs text-ui-text/40"
+        className="flex items-center gap-3 text-[10px] tracking-[0.22em] text-ui-muted uppercase"
       >
-        <span className="h-px flex-1 bg-linear-to-r from-transparent to-ui-accent/40" />
+        <span className="h-px flex-1 bg-linear-to-r from-transparent to-ui-gold/35" />
         or
-        <span className="h-px flex-1 bg-linear-to-l from-transparent to-ui-accent/40" />
+        <span className="h-px flex-1 bg-linear-to-l from-transparent to-ui-gold/35" />
       </div>
 
       <Button
         type="button"
         disabled={busy}
         onClick={onGoogle}
-        className="flex items-center justify-center gap-2"
+        className="w-full"
       >
         <GoogleIcon />
         Continue with Google

@@ -19,17 +19,17 @@ export function HealthManaBars({
   const manaPercent = manaMax > 0 ? (manaValue / manaMax) * 100 : 0;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <div
         role="progressbar"
         aria-label="Health"
         aria-valuemin={0}
         aria-valuemax={healthMax}
         aria-valuenow={healthValue}
-        className="relative h-4 overflow-hidden rounded-md border border-black/60 bg-black/55 shadow-[inset_0_2px_4px_rgba(0,0,0,0.7)] sm:h-5"
+        className="relative h-4 overflow-hidden rounded-full border border-black/70 bg-black/55 shadow-inner shadow-black/60 sm:h-5"
       >
         <div
-          className="absolute inset-y-0 left-0 bg-linear-to-r from-[#9f2634] via-[#dc3f4d] to-[#f0646f] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_10px_rgba(220,63,77,0.35)] transition-[width]"
+          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-ui-health to-ui-health-light transition-[width] duration-300"
           style={{ width: `${healthPercent}%` }}
         />
         <span className="relative flex h-full items-center justify-center text-xs font-bold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
@@ -43,10 +43,10 @@ export function HealthManaBars({
         aria-valuemin={0}
         aria-valuemax={manaMax}
         aria-valuenow={manaValue}
-        className="relative h-2.5 overflow-hidden rounded-sm border border-black/60 bg-black/55 shadow-[inset_0_2px_3px_rgba(0,0,0,0.65)] sm:h-3"
+        className="relative h-2.5 overflow-hidden rounded-full border border-black/70 bg-black/55 shadow-inner shadow-black/60 sm:h-3"
       >
         <div
-          className="absolute inset-y-0 left-0 bg-linear-to-r from-[#17699a] to-[#3cb5e7] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_8px_rgba(60,181,231,0.3)] transition-[width]"
+          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-ui-mana to-ui-mana-light transition-[width] duration-300"
           style={{ width: `${manaPercent}%` }}
         />
         <span className="relative hidden h-full items-center justify-center text-xs font-bold text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] sm:flex">

@@ -37,8 +37,10 @@ export function AuthGate() {
 
   if (configError) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-neutral-950 p-4 text-center font-tibia text-sm text-ui-text">
-        {configError}
+      <div className="ui-backdrop fixed inset-0 flex items-center justify-center p-4 text-center font-tibia text-sm text-ui-text">
+        <div className="ui-panel-frame relative max-w-md px-6 py-5 text-ui-accent-light">
+          {configError}
+        </div>
       </div>
     );
   }

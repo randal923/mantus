@@ -11,7 +11,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="flex w-lg items-center justify-center bg-neutral-950 p-8">
+      <div className="ui-backdrop flex w-lg items-center justify-center p-8">
         <Story />
       </div>
     ),

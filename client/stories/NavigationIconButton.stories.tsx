@@ -26,7 +26,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="bg-[#071014] p-8">
+      <div className="ui-backdrop p-8">
         <Story />
       </div>
     ),

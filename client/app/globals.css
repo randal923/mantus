@@ -1,61 +1,83 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Game UI palette: Albion-style parchment panels, metal item tiles */
-  --color-ui-panel-light: #253a41;
-  --color-ui-panel: #16262c;
-  --color-ui-panel-deep: #0c1418;
-  --color-ui-text: #dce4e4;
-  --color-ui-gold: #d8ac52;
-  --color-ui-accent: #46a49d;
-  --color-ui-stone: #5b656f;
-  --color-ui-stone-light: #9aa4ae;
-  --color-ui-stone-dark: #20262c;
-  /* Body text font */
-  --font-tibia: Verdana, Tahoma, 'DejaVu Sans', sans-serif;
-  /* Serif display font for headings and button labels */
-  --font-display: Georgia, 'Times New Roman', serif;
+  --color-ui-panel-light: #252827;
+  --color-ui-panel: #171918;
+  --color-ui-panel-deep: #090a0a;
+  --color-ui-text: #cbc9c2;
+  --color-ui-text-bright: #e4e1da;
+  --color-ui-muted: #858781;
+  --color-ui-gold: #9a968d;
+  --color-ui-gold-deep: #52534f;
+  --color-ui-accent: #8f1e16;
+  --color-ui-accent-light: #bd3b2e;
+  --color-ui-accent-deep: #370a08;
+  --color-ui-stone: #505451;
+  --color-ui-stone-light: #858983;
+  --color-ui-stone-dark: #252827;
+  --color-ui-health: #8f201b;
+  --color-ui-health-light: #c64132;
+  --color-ui-mana: #284962;
+  --color-ui-mana-light: #527792;
+  --color-ui-success: #617758;
+  --font-tibia: var(--font-geist-sans, Arial), sans-serif;
+  --font-display: var(--font-cinzel, Georgia), serif;
 }
 
-/* Banner-plaque silhouette: chamfered corners, pointed mid-side tips */
-@utility clip-plaque {
-  clip-path: polygon(
-    8px 0,
-    calc(100% - 8px) 0,
-    calc(100% - 3px) 3px,
-    calc(100% - 3px) calc(50% - 5px),
-    100% 50%,
-    calc(100% - 3px) calc(50% + 5px),
-    calc(100% - 3px) calc(100% - 3px),
-    calc(100% - 8px) 100%,
-    8px 100%,
-    3px calc(100% - 3px),
-    3px calc(50% + 5px),
-    0 50%,
-    3px calc(50% - 5px),
-    3px 3px
-  );
-}
-
-/* Fine monochrome grain for panel surfaces (inline SVG, no asset request) */
 @utility texture-noise {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix type=%22saturate%22 values=%220%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix type=%22saturate%22 values=%220%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E");
+}
+
+.ui-backdrop {
+  background:
+    radial-gradient(circle at 50% 115%, rgb(91 16 12 / 32%), transparent 42%),
+    radial-gradient(circle at 50% 18%, rgb(114 116 110 / 8%), transparent 28%),
+    linear-gradient(180deg, rgb(8 10 10 / 91%) 0%, rgb(3 4 4 / 97%) 100%),
+    url('/assets/ui/forged-stone-texture.webp') center / 900px 900px;
+}
+
+.ui-panel-frame {
+  border: 1px solid #444844;
+  border-radius: 0.75rem;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(64 68 66 / 28%), transparent 38%),
+    linear-gradient(180deg, rgb(27 30 29 / 84%), rgb(10 12 12 / 94%)),
+    url('/assets/ui/forged-stone-texture.webp') center / 620px 620px;
+  box-shadow:
+    0 18px 56px rgb(0 0 0 / 58%),
+    inset 0 1px 0 rgb(210 213 205 / 6%),
+    inset 0 0 0 3px rgb(0 0 0 / 28%);
+}
+
+.ui-panel-frame::before {
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgb(154 157 150 / 14%);
+  border-radius: 0.5rem;
+  pointer-events: none;
+  content: '';
+}
+
+.ui-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #424744 20%, #7c807a 50%, #424744 80%, transparent);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 80%);
+}
+
+.ui-game-vignette {
+  background:
+    radial-gradient(circle at center, transparent 52%, rgb(0 0 0 / 44%) 100%),
+    linear-gradient(180deg, rgb(0 0 0 / 22%), transparent 22%, transparent 74%, rgb(0 0 0 / 42%));
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #090a0a;
+  --foreground: #cbc9c2;
 }
 
 html {
   height: 100%;
+  color-scheme: dark;
 }
 
 html,
@@ -70,9 +92,22 @@ body {
   flex-direction: column;
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans, Arial), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
 }
 
 a {
@@ -80,8 +115,7 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+::selection {
+  color: #e6e3dc;
+  background: #681710;
 }

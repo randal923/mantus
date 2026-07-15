@@ -49,7 +49,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="flex h-dvh items-start justify-center bg-neutral-900 p-6">
+      <div className="ui-backdrop flex h-dvh items-start justify-center p-6">
         <Story />
       </div>
     ),

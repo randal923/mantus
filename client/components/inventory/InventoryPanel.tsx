@@ -2,6 +2,7 @@
 
 import type { Equipment, InventoryItem } from "./inventoryTypes";
 import { Button } from "../ui/Button";
+import { CloseButton } from "../ui/CloseButton";
 import { CapacityBar } from "./CapacityBar";
 import { EquipmentPaperdoll } from "./EquipmentPaperdoll";
 import { ItemSlot } from "./ItemSlot";
@@ -44,70 +45,88 @@ export function InventoryPanel({
   return (
     <section
       aria-label={`${characterName}'s inventory`}
-      className="relative isolate flex h-full w-88 flex-col gap-3 overflow-hidden rounded-sm border border-[#3a5054] bg-radial-[at_50%_8%] from-ui-panel-light via-ui-panel via-55% to-ui-panel-deep p-4 font-tibia shadow-[0_4px_20px_rgba(0,0,0,0.7),inset_0_0_0_1px_rgba(0,0,0,0.7)] select-none"
+      className="ui-panel-frame relative isolate flex h-full w-full max-w-96 flex-col gap-4 overflow-hidden p-4 font-tibia text-ui-text select-none"
     >
       <div
         aria-hidden
-        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-50 mix-blend-overlay"
+        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.045] mix-blend-soft-light"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-linear-to-b from-[#2c5b5c]/60 to-transparent"
+        className="pointer-events-none absolute inset-x-8 top-0 -z-10 h-28 bg-radial from-ui-accent/12 to-transparent blur-xl"
       />
       <header className="flex items-center gap-3">
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-full border-2 border-[#3a5054] bg-neutral-950 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+        <div className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-ui-gold/30 bg-black/40 shadow-inner shadow-black/45">
           <SpriteIcon
             spriteId={equipment.helmet?.spriteId ?? 7837}
-            scale={1.5}
+            scale={1.4}
           />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm text-ui-text/60">
-            {characterName}&rsquo;s
+          <div className="truncate text-[10px] tracking-[0.2em] text-ui-gold uppercase">
+            {characterName}
           </div>
-          <h2 className="font-display text-3xl leading-7 tracking-wide text-ui-text [font-variant:small-caps] [text-shadow:0_2px_4px_rgba(0,0,0,0.8)]">
+          <h2 className="font-display text-2xl tracking-[0.12em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
             Inventory
           </h2>
         </div>
         {onClose && (
-          <button
-            aria-label="Close inventory"
+          <CloseButton
+            label="Close inventory"
             onClick={onClose}
-            className="flex size-8 items-center justify-center self-start rounded-sm border border-[#1b2126] bg-linear-to-b from-[#c65a54] via-[#9c3434] via-40% to-[#611c1c] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_3px_rgba(0,0,0,0.5)] hover:brightness-115 active:bg-linear-to-t"
-          >
-            ✕
-          </button>
+            className="self-start"
+          />
         )}
       </header>
-      <div
-        aria-hidden
-        className="h-px bg-linear-to-r from-transparent via-ui-accent/50 to-transparent"
-      />
+      <div aria-hidden className="ui-divider" />
 
       <EquipmentPaperdoll equipment={equipment} />
 
-      <div className="flex items-center">
-        <div className="flex flex-1 flex-col text-sm font-bold text-ui-text">
-          <div className="flex h-5 items-center">
+      <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
+        <div className="grid flex-1 grid-cols-2 gap-2 text-xs text-ui-text">
+          <div className="flex items-center gap-1.5 border-r border-ui-gold/10">
             <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1.4} />
-            {gold.toLocaleString()}
+            <span>
+              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">Gold</span>
+              {gold.toLocaleString()}
+            </span>
           </div>
-          <div className="flex h-5 items-center">
+          <div className="flex items-center gap-1.5">
             <SpriteIcon spriteId={PLATINUM_COIN_SPRITE} scale={1.4} />
-            {platinum.toLocaleString()}
+            <span>
+              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">Platinum</span>
+              {platinum.toLocaleString()}
+            </span>
           </div>
         </div>
         {(onStack || onSort) && (
-          <div className="flex flex-col gap-2">
-            {onStack && <Button onClick={onStack}>Stack</Button>}
-            {onSort && <Button onClick={onSort}>Sort</Button>}
+          <div className="flex flex-col gap-1.5">
+            {onStack && (
+              <Button size="sm" onClick={onStack}>
+                Stack
+              </Button>
+            )}
+            {onSort && (
+              <Button size="sm" onClick={onSort}>
+                Sort
+              </Button>
+            )}
           </div>
         )}
       </div>
 
       <CapacityBar used={capacityUsed} max={capacityMax} />
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-lg bg-linear-to-b from-black/20 to-black/5 p-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] scrollbar-thin">
+      <div className="flex items-center justify-between border-b border-ui-gold/15 pb-2">
+        <h3 className="font-display text-xs tracking-[0.18em] text-ui-gold uppercase">
+          Backpack
+        </h3>
+        <span className="text-xs text-ui-muted">
+          {items.length} / {slotCount}
+        </span>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45 scrollbar-thin">
         <div className="grid grid-cols-4 justify-items-center gap-2">
           {items.map((item) => (
             <ItemSlot key={item.id} item={item} />

@@ -21,7 +21,7 @@ const meta = {
   component: EquipmentPaperdoll,
   decorators: [
     (Story) => (
-      <div className="bg-ui-panel p-4">
+      <div className="ui-backdrop p-6">
         <Story />
       </div>
     ),

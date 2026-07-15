@@ -11,7 +11,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="min-h-dvh bg-neutral-950">
+      <div className="ui-backdrop min-h-dvh">
         <Story />
       </div>
     ),
