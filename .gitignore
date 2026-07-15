@@ -11,5 +11,3 @@ map/Tibia.dat
 map/Tibia.spr
 map/tibia-*.zip
 map/tibia-8.6-extended/
-# generated browser map; deploy it separately from the game server
-client/public/assets/map/
