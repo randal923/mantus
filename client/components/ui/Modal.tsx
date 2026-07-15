@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { CloseButton } from "./CloseButton";
 
 interface ModalProps {
@@ -13,6 +14,7 @@ interface ModalProps {
 
 /** Centered dialog on a dimmed backdrop, styled like the game panels. */
 export function Modal({ title, onClose, children, footer }: ModalProps) {
+  const { t } = useAppTranslation();
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -45,7 +47,7 @@ export function Modal({ title, onClose, children, footer }: ModalProps) {
           <h2 className="min-w-0 flex-1 truncate font-display text-xl tracking-[0.1em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
             {title}
           </h2>
-          <CloseButton label="Close dialog" onClick={onClose} />
+          <CloseButton label={t("modal.close")} onClick={onClose} />
         </header>
         <div aria-hidden className="ui-divider" />
 

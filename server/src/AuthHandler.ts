@@ -21,7 +21,7 @@ export class AuthHandler {
       return;
     }
     session.authPending = true;
-    void this.resolve(session, intent.token);
+    void this.resolve(session, intent.token, intent.language);
   }
 
   applyResolvedOutcomes(): void {
@@ -39,12 +39,17 @@ export class AuthHandler {
    * Token verification and the account upsert are async; nothing here touches
    * game state. The outcome is queued and applied inside the tick.
    */
-  private async resolve(session: Session, token: string): Promise<void> {
+  private async resolve(
+    session: Session,
+    token: string,
+    language: AuthMessage["language"],
+  ): Promise<void> {
     try {
       const user = await this.verifier.verify(token);
       const account = await this.accounts.findOrCreateBySupabaseId(
         user.supabaseUserId,
         user.email,
+        language,
       );
       this.outcomes.push(() => this.apply(session, account));
     } catch (cause) {
@@ -76,6 +81,6 @@ export class AuthHandler {
       other.terminate();
     }
     session.account = account;
-    session.send({ type: "auth-ok" });
+    session.send({ type: "auth-ok", language: account.language });
   }
 }

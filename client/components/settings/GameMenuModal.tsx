@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import type { Language } from "@tibia/protocol";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
 import { Dropdown } from "../ui/Dropdown";
 import { Input } from "../ui/Input";
@@ -8,7 +11,6 @@ import { Modal } from "../ui/Modal";
 import { RangeSlider } from "../ui/RangeSlider";
 
 type MenuView = "menu" | "settings" | "hotkeys" | "email" | "password";
-type Language = "en" | "pt-BR";
 type HotkeyId =
   | "moveUp"
   | "moveLeft"
@@ -35,6 +37,9 @@ interface GameMenuModalProps {
   onLogout?: () => void | Promise<void>;
   onChangeEmail?: (email: string) => void;
   onChangePassword?: (currentPassword: string, newPassword: string) => void;
+  onChangeLanguage?: (language: Language) => void;
+  languageSaving?: boolean;
+  languageError?: boolean;
   initialView?: MenuView;
 }
 
@@ -48,34 +53,6 @@ interface HotkeyRow {
   label: string;
 }
 
-const HOTKEY_OPTIONS: ReadonlyArray<HotkeyOption> = [
-  { value: "KeyW", label: "W" },
-  { value: "KeyA", label: "A" },
-  { value: "KeyS", label: "S" },
-  { value: "KeyD", label: "D" },
-  { value: "KeyI", label: "I" },
-  { value: "KeyM", label: "M" },
-  { value: "ArrowUp", label: "Arrow Up" },
-  { value: "ArrowLeft", label: "Arrow Left" },
-  { value: "ArrowDown", label: "Arrow Down" },
-  { value: "ArrowRight", label: "Arrow Right" },
-  { value: "Escape", label: "Escape" },
-];
-
-const LANGUAGE_OPTIONS: ReadonlyArray<{ value: Language; label: string }> = [
-  { value: "en", label: "English" },
-  { value: "pt-BR", label: "Português" },
-];
-
-const HOTKEY_ROWS: ReadonlyArray<HotkeyRow> = [
-  { id: "moveUp", label: "Move Up" },
-  { id: "moveLeft", label: "Move Left" },
-  { id: "moveDown", label: "Move Down" },
-  { id: "moveRight", label: "Move Right" },
-  { id: "inventory", label: "Inventory" },
-  { id: "gameMenu", label: "Game Menu" },
-];
-
 const DEFAULT_HOTKEYS: Readonly<Record<HotkeyId, HotkeyCode>> = {
   moveUp: "KeyW",
   moveLeft: "KeyA",
@@ -85,41 +62,70 @@ const DEFAULT_HOTKEYS: Readonly<Record<HotkeyId, HotkeyCode>> = {
   gameMenu: "Escape",
 };
 
-const VIEW_TITLES: Readonly<Record<MenuView, string>> = {
-  menu: "Game Menu",
-  settings: "Settings",
-  hotkeys: "Hotkey Mapping",
-  email: "Change Email",
-  password: "Change Password",
-};
-
 export function GameMenuModal({
   onClose,
   onChangeCharacter,
   onLogout,
   onChangeEmail,
   onChangePassword,
+  onChangeLanguage,
+  languageSaving = false,
+  languageError = false,
   initialView = "menu",
 }: GameMenuModalProps) {
+  const { t } = useAppTranslation();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
   const [view, setView] = useState<MenuView>(initialView);
-  const [language, setLanguage] = useState<Language>("en");
   const [volume, setVolume] = useState(65);
   const [hotkeys, setHotkeys] = useState(DEFAULT_HOTKEYS);
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState(false);
+  const languageOptions: ReadonlyArray<{ value: Language; label: string }> = [
+    { value: "en", label: t("languages.en") },
+    { value: "pt-BR", label: t("languages.pt-BR") },
+  ];
+  const hotkeyOptions: ReadonlyArray<HotkeyOption> = [
+    { value: "KeyW", label: "W" },
+    { value: "KeyA", label: "A" },
+    { value: "KeyS", label: "S" },
+    { value: "KeyD", label: "D" },
+    { value: "KeyI", label: "I" },
+    { value: "KeyM", label: "M" },
+    { value: "ArrowUp", label: t("hotkeys.arrowUp") },
+    { value: "ArrowLeft", label: t("hotkeys.arrowLeft") },
+    { value: "ArrowDown", label: t("hotkeys.arrowDown") },
+    { value: "ArrowRight", label: t("hotkeys.arrowRight") },
+    { value: "Escape", label: t("hotkeys.escape") },
+  ];
+  const hotkeyRows: ReadonlyArray<HotkeyRow> = [
+    { id: "moveUp", label: t("hotkeys.moveUp") },
+    { id: "moveLeft", label: t("hotkeys.moveLeft") },
+    { id: "moveDown", label: t("hotkeys.moveDown") },
+    { id: "moveRight", label: t("hotkeys.moveRight") },
+    { id: "inventory", label: t("hotkeys.inventory") },
+    { id: "gameMenu", label: t("hotkeys.gameMenu") },
+  ];
+  const viewTitles: Readonly<Record<MenuView, string>> = {
+    menu: t("menu.title"),
+    settings: t("settings.title"),
+    hotkeys: t("hotkeys.title"),
+    email: t("settings.changeEmail"),
+    password: t("settings.changePassword"),
+  };
 
   const logout = async () => {
     if (!onLogout) return;
     setActionBusy(true);
-    setActionError(null);
+    setActionError(false);
     try {
       await onLogout();
       onClose();
     } catch {
-      setActionError("Logout failed. Please try again.");
+      setActionError(true);
     } finally {
       setActionBusy(false);
     }
@@ -141,15 +147,15 @@ export function GameMenuModal({
   };
 
   return (
-    <Modal title={VIEW_TITLES[view]} onClose={onClose}>
+    <Modal title={viewTitles[view]} onClose={onClose}>
       {view === "menu" && (
-        <nav aria-label="Game menu actions" className="flex flex-col gap-2">
+        <nav aria-label={t("menu.actions")} className="flex flex-col gap-2">
           <Button
             variant="primary"
             className="w-full justify-between"
             onClick={() => setView("settings")}
           >
-            Settings
+            {t("menu.settings")}
             <span aria-hidden>›</span>
           </Button>
           <Button
@@ -157,7 +163,7 @@ export function GameMenuModal({
             disabled={!onChangeCharacter}
             onClick={onChangeCharacter}
           >
-            Change Character
+            {t("menu.changeCharacter")}
           </Button>
           <Button
             variant="danger"
@@ -165,15 +171,15 @@ export function GameMenuModal({
             disabled={!onLogout || actionBusy}
             onClick={() => void logout()}
           >
-            {actionBusy ? "Logging Out" : "Logout"}
+            {actionBusy ? t("menu.loggingOut") : t("menu.logout")}
           </Button>
           {actionError && (
             <p role="alert" className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200">
-              {actionError}
+              {t("menu.logoutFailed")}
             </p>
           )}
           <p className="mt-2 text-center text-[10px] tracking-wider text-ui-muted uppercase">
-            Press Esc to return to the game
+            {t("menu.returnHint")}
           </p>
         </nav>
       )}
@@ -181,15 +187,30 @@ export function GameMenuModal({
       {view === "settings" && (
         <div className="flex flex-col gap-5">
           <Dropdown
-            ariaLabel="Language"
-            label="Language"
+            ariaLabel={t("languages.label")}
+            label={t("languages.label")}
             value={language}
-            options={LANGUAGE_OPTIONS}
-            onChange={setLanguage}
+            options={languageOptions}
+            disabled={languageSaving}
+            onChange={(nextLanguage) => {
+              if (onChangeLanguage) {
+                onChangeLanguage(nextLanguage);
+                return;
+              }
+              setLanguage(nextLanguage);
+            }}
           />
+          {languageSaving && (
+            <p className="text-xs text-ui-muted">{t("languages.saving")}</p>
+          )}
+          {languageError && (
+            <p role="alert" className="text-xs text-red-200">
+              {t("languages.saveFailed")}
+            </p>
+          )}
 
           <RangeSlider
-            label="Master Volume"
+            label={t("settings.masterVolume")}
             value={volume}
             min={0}
             max={100}
@@ -199,32 +220,32 @@ export function GameMenuModal({
 
           <section className="flex flex-col gap-2">
             <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
-              Controls
+              {t("settings.controls")}
             </h3>
             <Button className="w-full" onClick={() => setView("hotkeys")}>
-              Hotkey Mapping
+              {t("settings.hotkeyMapping")}
             </Button>
           </section>
 
           <section className="flex flex-col gap-2">
             <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
-              Account
+              {t("settings.account")}
             </h3>
             <div className="grid grid-cols-2 gap-2">
               <Button size="sm" onClick={() => setView("email")}>
-                Change Email
+                {t("settings.changeEmail")}
               </Button>
               <Button size="sm" onClick={() => setView("password")}>
-                Change Password
+                {t("settings.changePassword")}
               </Button>
             </div>
           </section>
 
           <Button size="sm" className="self-start" onClick={() => setView("menu")}>
-            ‹ Back
+            ‹ {t("common.back")}
           </Button>
           <p className="text-[10px] leading-4 text-ui-muted">
-            Language, volume, and hotkeys are preview-only until settings persistence is connected.
+            {t("settings.previewNotice")}
           </p>
         </div>
       )}
@@ -232,16 +253,16 @@ export function GameMenuModal({
       {view === "hotkeys" && (
         <div className="flex flex-col gap-4">
           <div className="overflow-hidden rounded-lg border border-ui-stone-light/15 bg-black/20">
-            {HOTKEY_ROWS.map((row) => (
+            {hotkeyRows.map((row) => (
               <div
                 key={row.id}
                 className="flex items-center justify-between gap-4 border-b border-ui-stone-light/10 px-3 py-2.5 last:border-b-0"
               >
                 <span className="text-xs font-medium text-ui-text">{row.label}</span>
                 <Dropdown
-                  ariaLabel={`${row.label} hotkey`}
+                  ariaLabel={t("hotkeys.inputLabel", { action: row.label })}
                   value={hotkeys[row.id]}
-                  options={HOTKEY_OPTIONS}
+                  options={hotkeyOptions}
                   onChange={(value) => {
                     setHotkeys((current) => ({
                       ...current,
@@ -255,18 +276,18 @@ export function GameMenuModal({
           </div>
           <div className="flex justify-between gap-2">
             <Button size="sm" onClick={() => setView("settings")}>
-              ‹ Back
+              ‹ {t("common.back")}
             </Button>
             <Button
               size="sm"
               variant="danger"
               onClick={() => setHotkeys(DEFAULT_HOTKEYS)}
             >
-              Reset Defaults
+              {t("hotkeys.resetDefaults")}
             </Button>
           </div>
           <p className="text-[10px] leading-4 text-ui-muted">
-            These mappings are local to this preview and do not change runtime controls yet.
+            {t("hotkeys.previewNotice")}
           </p>
         </div>
       )}
@@ -274,7 +295,7 @@ export function GameMenuModal({
       {view === "email" && (
         <form onSubmit={submitEmail} className="flex flex-col gap-4">
           <Input
-            label="New Email"
+            label={t("settings.newEmail")}
             type="email"
             autoComplete="email"
             required
@@ -283,7 +304,7 @@ export function GameMenuModal({
           />
           <div className="flex justify-end gap-2">
             <Button size="sm" onClick={() => setView("settings")}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               size="sm"
@@ -291,7 +312,7 @@ export function GameMenuModal({
               variant="primary"
               disabled={!onChangeEmail}
             >
-              Update Email
+              {t("settings.updateEmail")}
             </Button>
           </div>
         </form>
@@ -300,7 +321,7 @@ export function GameMenuModal({
       {view === "password" && (
         <form onSubmit={submitPassword} className="flex flex-col gap-4">
           <Input
-            label="Current Password"
+            label={t("settings.currentPassword")}
             type="password"
             autoComplete="current-password"
             required
@@ -308,7 +329,7 @@ export function GameMenuModal({
             onChange={(event) => setCurrentPassword(event.currentTarget.value)}
           />
           <Input
-            label="New Password"
+            label={t("settings.newPassword")}
             type="password"
             autoComplete="new-password"
             required
@@ -318,7 +339,7 @@ export function GameMenuModal({
           />
           <div className="flex justify-end gap-2">
             <Button size="sm" onClick={() => setView("settings")}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               size="sm"
@@ -326,7 +347,7 @@ export function GameMenuModal({
               variant="primary"
               disabled={!onChangePassword}
             >
-              Update Password
+              {t("settings.updatePassword")}
             </Button>
           </div>
         </form>

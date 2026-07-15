@@ -2,6 +2,7 @@ import type { Preview } from '@storybook/nextjs-vite'
 import { Cinzel, Geist } from 'next/font/google'
 
 import '../app/globals.css'
+import '../i18n/i18n'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

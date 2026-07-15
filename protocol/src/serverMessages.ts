@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DIRECTIONS } from "./direction";
+import { languageSchema } from "./language";
 
 export const playerStateSchema = z.object({
   id: z.string(),
@@ -23,6 +24,12 @@ export const mapInfoSchema = z.object({
 
 export const authOkMessageSchema = z.object({
   type: z.literal("auth-ok"),
+  language: languageSchema,
+});
+
+export const languageUpdatedMessageSchema = z.object({
+  type: z.literal("language-updated"),
+  language: languageSchema,
 });
 
 export const welcomeMessageSchema = z.object({
@@ -50,13 +57,30 @@ export const playerMovedMessageSchema = z.object({
   direction: z.enum(DIRECTIONS),
 });
 
+export const serverErrorCodeSchema = z.enum([
+  "account-banned",
+  "already-authenticated",
+  "already-joined",
+  "auth-failed",
+  "auth-required",
+  "auth-timeout",
+  "invalid-message",
+  "join-required",
+  "language-update-failed",
+  "language-update-pending",
+  "logged-in-elsewhere",
+  "rate-limited",
+  "world-full",
+]);
+
 export const errorMessageSchema = z.object({
   type: z.literal("error"),
-  code: z.string().max(64),
+  code: serverErrorCodeSchema,
 });
 
 export const serverMessageSchema = z.discriminatedUnion("type", [
   authOkMessageSchema,
+  languageUpdatedMessageSchema,
   welcomeMessageSchema,
   playerJoinedMessageSchema,
   playerLeftMessageSchema,
@@ -67,4 +91,5 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 export type PlayerState = z.infer<typeof playerStateSchema>;
 export type MapInfo = z.infer<typeof mapInfoSchema>;
 export type WelcomeMessage = z.infer<typeof welcomeMessageSchema>;
+export type ServerErrorCode = z.infer<typeof serverErrorCodeSchema>;
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

@@ -6,6 +6,7 @@ import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
 import type { ServerConfig } from "./config";
 import { JoinHandler } from "./JoinHandler";
+import { LanguageHandler } from "./LanguageHandler";
 import { MovementHandler } from "./MovementHandler";
 import { resolveMapData } from "./resolveMapData";
 import { Session } from "./Session";
@@ -27,6 +28,7 @@ export class GameServer {
   private readonly visibility: Visibility;
   private readonly auth: AuthHandler;
   private readonly join: JoinHandler;
+  private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
@@ -49,6 +51,7 @@ export class GameServer {
       config.authTimeoutMs,
     );
     this.join = new JoinHandler(this.world, this.registry, this.visibility);
+    this.language = new LanguageHandler(this.registry, deps.accounts);
     this.movement = new MovementHandler(this.world, this.visibility);
     this.wss = new WebSocketServer({
       port: config.port,
@@ -110,6 +113,7 @@ export class GameServer {
     const now = Date.now();
     this.processDisconnects();
     this.auth.applyResolvedOutcomes();
+    this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
       for (const intent of session.drainIntents()) {
@@ -154,6 +158,9 @@ export class GameServer {
         return;
       case "stop-move":
         this.movement.stop(session);
+        return;
+      case "set-language":
+        this.language.handle(session, intent);
         return;
     }
   }

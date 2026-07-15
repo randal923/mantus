@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Direction } from "@tibia/protocol";
+import type { Direction, ServerErrorCode } from "@tibia/protocol";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
+import { useLanguageStore } from "../stores/useLanguageStore";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
-import { PLACEHOLDER_INVENTORY } from "./inventory/placeholderInventory";
-import { PLACEHOLDER_CHARACTER } from "./navigation/placeholderCharacter";
+import { getPlaceholderInventory } from "./inventory/getPlaceholderInventory";
+import { getPlaceholderCharacter } from "./navigation/getPlaceholderCharacter";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
 
@@ -31,10 +33,25 @@ interface GameWindowProps {
 }
 
 export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
+  const { t } = useAppTranslation();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
   const containerRef = useRef<HTMLDivElement>(null);
+  const clientRef = useRef<GameClient | null>(null);
+  const languageRef = useRef(language);
+  const confirmedLanguageRef = useRef(language);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
+  const [languageSaving, setLanguageSaving] = useState(false);
+  const [languageError, setLanguageError] = useState(false);
+  const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
+  const placeholderCharacter = getPlaceholderCharacter(t);
+  const placeholderInventory = getPlaceholderInventory(t);
+
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
 
   useHotkeys((action) => {
     if (action === "toggleInventory") {
@@ -73,10 +90,28 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       client = new GameClient(WS_URL, {
         onMessage: (message) => worldRenderer.applyMessage(message),
         onStatus: setStatus,
+        onLanguage: (nextLanguage) => {
+          confirmedLanguageRef.current = nextLanguage;
+          setLanguage(nextLanguage);
+          setLanguageSaving(false);
+          setLanguageError(false);
+        },
+        onError: (code) => {
+          if (code === "language-update-failed") {
+            setLanguage(confirmedLanguageRef.current);
+            setLanguageSaving(false);
+            setLanguageError(true);
+            return;
+          }
+          if (code !== "language-update-pending") setLanguageSaving(false);
+          setServerError(code);
+        },
       });
+      clientRef.current = client;
       client.connect(
         accessToken,
         `Hero-${Math.random().toString(36).slice(2, 6)}`,
+        languageRef.current,
       );
     })();
 
@@ -129,9 +164,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
       client?.disconnect();
+      clientRef.current = null;
       renderer?.destroy();
     };
-  }, [accessToken]);
+  }, [accessToken, setLanguage]);
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-black">
@@ -139,7 +175,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       <div aria-hidden className="ui-game-vignette pointer-events-none absolute inset-0 z-10" />
       <div className="absolute inset-x-0 top-0 z-40">
         <TopNavigationBar
-          {...PLACEHOLDER_CHARACTER}
+          {...placeholderCharacter}
           connectionStatus={status}
           activePanel={inventoryOpen ? "inventory" : undefined}
           onInventory={() => setInventoryOpen((open) => !open)}
@@ -149,11 +185,23 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }}
         />
       </div>
+      {serverError && (
+        <button
+          type="button"
+          role="alert"
+          onClick={() => setServerError(null)}
+          className="ui-panel-frame absolute top-24 left-1/2 z-50 max-w-md -translate-x-1/2 px-4 py-3 font-tibia text-sm text-red-200"
+        >
+          {t(`serverErrors.${serverError}`, {
+            defaultValue: t("serverErrors.unknown"),
+          })}
+        </button>
+      )}
       <GameHud spellHotkeysEnabled={!gameMenuOpen} />
       {inventoryOpen && (
         <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
           <InventoryPanel
-            {...PLACEHOLDER_INVENTORY}
+            {...placeholderInventory}
             onClose={() => setInventoryOpen(false)}
           />
         </div>
@@ -162,6 +210,17 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         <GameMenuModal
           onClose={() => setGameMenuOpen(false)}
           onLogout={onLogout}
+          languageSaving={languageSaving}
+          languageError={languageError}
+          onChangeLanguage={(nextLanguage) => {
+            setLanguage(nextLanguage);
+            setLanguageSaving(true);
+            setLanguageError(false);
+            if (clientRef.current?.updateLanguage(nextLanguage)) return;
+            setLanguage(confirmedLanguageRef.current);
+            setLanguageSaving(false);
+            setLanguageError(true);
+          }}
         />
       )}
     </div>

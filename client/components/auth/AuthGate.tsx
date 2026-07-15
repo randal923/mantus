@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import GameWindow from "../GameWindow";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { getSupabaseClient } from "../../lib/auth/getSupabaseClient";
 import { LoginScreen } from "./LoginScreen";
 
 export function AuthGate() {
+  const { t } = useAppTranslation();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
-  const [configError] = useState<string | null>(() => {
+  const [configError] = useState(() => {
     try {
       getSupabaseClient();
-      return null;
-    } catch (cause) {
-      return cause instanceof Error ? cause.message : String(cause);
+      return false;
+    } catch {
+      return true;
     }
   });
 
@@ -39,7 +41,7 @@ export function AuthGate() {
     return (
       <div className="ui-backdrop fixed inset-0 flex items-center justify-center p-4 text-center font-tibia text-sm text-ui-text">
         <div className="ui-panel-frame relative max-w-md px-6 py-5 text-ui-accent-light">
-          {configError}
+          {t("configuration.supabase")}
         </div>
       </div>
     );

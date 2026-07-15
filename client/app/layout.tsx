@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cinzel, Geist } from "next/font/google";
+import en from "../locales/en.json";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,8 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
-  title: "Mantus Online",
-  description: "Enter the world of Mantus Online.",
+  title: en.metadata.title,
+  description: en.metadata.description,
 };
 
 export default function RootLayout({

@@ -15,10 +15,13 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.110.3",
     "@tibia/protocol": "*",
+    "i18next": "^26.3.6",
     "next": "16.2.10",
     "pixi.js": "^8.19.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-i18next": "^17.0.9",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.2.1",

@@ -1,4 +1,5 @@
 import type { InventoryItem } from "./inventoryTypes";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { SpriteIcon } from "./SpriteIcon";
 
 interface ItemSlotProps {
@@ -9,9 +10,18 @@ interface ItemSlotProps {
 
 /** One recessed inventory cell; the item sprite sits directly on it. */
 export function ItemSlot({ item, placeholderSpriteId }: ItemSlotProps) {
+  const { t } = useAppTranslation();
+
   return (
     <div
-      title={item ? `${item.count > 1 ? `${item.count} ` : ""}${item.name}` : undefined}
+      title={
+        item
+          ? t("inventory.itemTitle", {
+              count: item.count > 1 ? `${item.count} ` : "",
+              name: item.name,
+            })
+          : undefined
+      }
       className="group relative flex size-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5"
     >
       {item ? (

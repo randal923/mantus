@@ -1,4 +1,6 @@
 import { WeightIcon } from "./WeightIcon";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { useLanguageStore } from "../../stores/useLanguageStore";
 
 interface CapacityBarProps {
   used: number;
@@ -6,12 +8,14 @@ interface CapacityBarProps {
 }
 
 export function CapacityBar({ used, max }: CapacityBarProps) {
+  const { t } = useAppTranslation();
+  const language = useLanguageStore((state) => state.language);
   const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
 
   return (
     <div
       role="meter"
-      aria-label="Capacity"
+      aria-label={t("inventory.capacity")}
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
@@ -19,10 +23,11 @@ export function CapacityBar({ used, max }: CapacityBarProps) {
       <div className="mb-2 flex items-center justify-between text-xs text-ui-muted">
         <span className="flex items-center gap-1.5 font-display tracking-wider text-ui-gold uppercase">
           <WeightIcon className="text-ui-gold" />
-          Capacity
+          {t("inventory.capacity")}
         </span>
         <span>
-          {used.toLocaleString()} / {max.toLocaleString()} · {pct}%
+          {used.toLocaleString(language)} / {max.toLocaleString(language)} ·{" "}
+          {pct}%
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full border border-black/70 bg-black/55 shadow-inner shadow-black/60">

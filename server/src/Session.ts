@@ -4,6 +4,7 @@ import {
   PROTOCOL_LIMITS,
   type ClientMessage,
   type Direction,
+  type ServerErrorCode,
   type ServerMessage,
 } from "@tibia/protocol";
 import type { Account } from "./AccountStore";
@@ -18,6 +19,7 @@ export class Session {
   account: Account | null = null;
   /** True while a token is being verified; blocks repeat auth attempts. */
   authPending = false;
+  languageUpdatePending = false;
   readonly connectedAt = Date.now();
   playerId: string | null = null;
   movementDirection: Direction | null = null;
@@ -95,7 +97,7 @@ export class Session {
     this.socket.send(JSON.stringify(message));
   }
 
-  sendError(code: string): void {
+  sendError(code: ServerErrorCode): void {
     this.send({ type: "error", code });
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { isEditableTarget } from "../../lib/hotkeys/isEditableTarget";
 
 interface SpellBarSpell {
@@ -25,6 +26,7 @@ export function SpellBar({
   onCast,
   hotkeysEnabled = true,
 }: SpellBarProps) {
+  const { t } = useAppTranslation();
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function SpellBar({
   return (
     <div
       role="toolbar"
-      aria-label="Spell bar"
+      aria-label={t("spells.bar")}
       className="ui-panel-frame pointer-events-auto relative isolate flex max-w-[calc(100vw-2rem)] gap-1.5 overflow-x-auto p-2"
     >
       {spells.map((spell) => {
@@ -75,7 +77,10 @@ export function SpellBar({
             key={spell.id}
             type="button"
             title={`${spell.name} (${spell.shortcut})`}
-            aria-label={`${spell.name}, shortcut ${spell.shortcut}`}
+            aria-label={t("spells.shortcut", {
+              name: spell.name,
+              shortcut: spell.shortcut,
+            })}
             aria-keyshortcuts={spell.shortcut}
             disabled={spell.disabled}
             onClick={() => onCast?.(spell.id)}

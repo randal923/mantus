@@ -1,6 +1,7 @@
 "use client";
 
 import { SpriteIcon } from "../inventory/SpriteIcon";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 interface CharacterPortraitProps {
   characterName: string;
@@ -15,11 +16,13 @@ export function CharacterPortrait({
   spriteId,
   onClick,
 }: CharacterPortraitProps) {
+  const { t } = useAppTranslation();
+
   return (
     <button
       type="button"
-      title="Character"
-      aria-label={`Open ${characterName}'s character panel`}
+      title={t("character.button")}
+      aria-label={t("character.openPanel", { name: characterName })}
       disabled={!onClick}
       onClick={onClick}
       className="group relative isolate flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-ui-stone-light/30 bg-ui-panel shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-2px_5px_rgba(0,0,0,0.65),0_4px_14px_rgba(0,0,0,0.3)] outline-none transition-[border-color,filter] duration-150 hover:border-ui-gold/55 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none sm:size-16"

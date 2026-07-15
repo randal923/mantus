@@ -1,0 +1,214 @@
+{
+  "metadata": {
+    "title": "Mantus Online",
+    "description": "Enter the world of Mantus Online."
+  },
+  "brand": {
+    "name": "Mantus Online",
+    "mantus": "Mantus",
+    "online": "Online"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "loading": "Loading"
+  },
+  "languages": {
+    "label": "Language",
+    "selector": "Choose language",
+    "en": "English",
+    "pt-BR": "Português",
+    "saving": "Saving language…",
+    "saveFailed": "Language could not be saved. Please try again."
+  },
+  "configuration": {
+    "supabase": "Authentication is not configured. Add the Supabase URL and anonymous key to client/.env.local."
+  },
+  "auth": {
+    "signInLabel": "Sign in",
+    "welcomeBack": "Welcome back",
+    "enterWorld": "Sign in to enter the world",
+    "email": "Email",
+    "password": "Password",
+    "entering": "Entering",
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "or": "or",
+    "continueWithGoogle": "Continue with Google",
+    "confirmationNotice": "Check your email to confirm your account.",
+    "errors": {
+      "connectionFailed": "Connection failed. Please try again.",
+      "invalidCredentials": "The email or password is incorrect.",
+      "emailNotConfirmed": "Confirm your email before signing in.",
+      "emailAlreadyExists": "An account already exists for this email.",
+      "weakPassword": "Choose a stronger password.",
+      "rateLimited": "Too many attempts. Please wait and try again.",
+      "signupDisabled": "Account creation is currently unavailable.",
+      "providerDisabled": "This sign-in method is currently unavailable.",
+      "invalidEmail": "Enter a valid email address.",
+      "unexpected": "Authentication failed. Please try again."
+    }
+  },
+  "character": {
+    "hero": "Hero",
+    "noVocation": "None",
+    "button": "Character",
+    "openPanel": "Open {{name}}'s character panel",
+    "status": "{{name}}'s status"
+  },
+  "characters": {
+    "selectTitle": "Select Character",
+    "createTitle": "Create Character",
+    "slotsFull": "All character slots are used",
+    "newCharacter": "New Character",
+    "entering": "Entering",
+    "enterWorld": "Enter World",
+    "empty": "No characters yet. Create your first hero to enter the world.",
+    "slotsUsed": "{{count}} of {{max}} character slots used",
+    "level": "Level {{level}} · {{vocation}}",
+    "name": "Character Name",
+    "nameRules": "Letters and spaces only, starting with a letter",
+    "namePlaceholder": "Choose a name",
+    "vocation": "Vocation",
+    "creating": "Creating",
+    "create": "Create Character"
+  },
+  "vocations": {
+    "Knight": {
+      "name": "Knight",
+      "description": "Stalwart front-line fighter with heavy armour and melee mastery."
+    },
+    "Paladin": {
+      "name": "Paladin",
+      "description": "Versatile ranged hunter armed with bows, spears, and holy magic."
+    },
+    "Sorcerer": {
+      "name": "Sorcerer",
+      "description": "Fragile master of raw destructive magic and summoning."
+    },
+    "Druid": {
+      "name": "Druid",
+      "description": "Healer and nature mage wielding ice and life-saving support."
+    },
+    "None": {
+      "name": "None"
+    }
+  },
+  "navigation": {
+    "gamePanels": "Game panels",
+    "inventory": "Inventory",
+    "quests": "Quests",
+    "worldMap": "World map",
+    "settings": "Settings"
+  },
+  "connection": {
+    "connecting": "Connecting",
+    "connected": "Connected",
+    "disconnected": "Disconnected"
+  },
+  "stats": {
+    "health": "Health",
+    "mana": "Mana",
+    "healthAbbreviation": "HP",
+    "manaAbbreviation": "MP"
+  },
+  "inventory": {
+    "label": "{{name}}'s inventory",
+    "title": "Inventory",
+    "close": "Close inventory",
+    "gold": "Gold",
+    "platinum": "Platinum",
+    "stack": "Stack",
+    "sort": "Sort",
+    "capacity": "Capacity",
+    "backpack": "Backpack",
+    "equippedItems": "Equipped items",
+    "equipped": "Equipped",
+    "itemTitle": "{{count}}{{name}}"
+  },
+  "items": {
+    "steelHelmet": "steel helmet",
+    "plateArmor": "plate armor",
+    "fireSword": "fire sword",
+    "backpack": "backpack",
+    "goldCoin": "gold coin",
+    "greatHealthPotion": "great health potion",
+    "meat": "meat"
+  },
+  "spells": {
+    "bar": "Spell bar",
+    "shortcut": "{{name}}, shortcut {{shortcut}}",
+    "lightHealing": "Light Healing",
+    "energyStrike": "Energy Strike",
+    "iceWave": "Ice Wave",
+    "fireBomb": "Fire Bomb",
+    "haste": "Haste",
+    "magicShield": "Magic Shield",
+    "ultimateHealing": "Ultimate Healing",
+    "emptySlot": "Empty Slot"
+  },
+  "hud": {
+    "controls": "WASD to move · I for inventory · Esc for menu"
+  },
+  "modal": {
+    "close": "Close dialog"
+  },
+  "menu": {
+    "title": "Game Menu",
+    "actions": "Game menu actions",
+    "settings": "Settings",
+    "changeCharacter": "Change Character",
+    "loggingOut": "Logging Out",
+    "logout": "Logout",
+    "logoutFailed": "Logout failed. Please try again.",
+    "returnHint": "Press Esc to return to the game"
+  },
+  "settings": {
+    "title": "Settings",
+    "masterVolume": "Master Volume",
+    "controls": "Controls",
+    "hotkeyMapping": "Hotkey Mapping",
+    "account": "Account",
+    "changeEmail": "Change Email",
+    "changePassword": "Change Password",
+    "previewNotice": "Volume and hotkeys are preview-only until their settings persistence is connected.",
+    "newEmail": "New Email",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "updateEmail": "Update Email",
+    "updatePassword": "Update Password"
+  },
+  "hotkeys": {
+    "title": "Hotkey Mapping",
+    "moveUp": "Move Up",
+    "moveLeft": "Move Left",
+    "moveDown": "Move Down",
+    "moveRight": "Move Right",
+    "inventory": "Inventory",
+    "gameMenu": "Game Menu",
+    "arrowUp": "Arrow Up",
+    "arrowLeft": "Arrow Left",
+    "arrowDown": "Arrow Down",
+    "arrowRight": "Arrow Right",
+    "escape": "Escape",
+    "inputLabel": "{{action}} hotkey",
+    "resetDefaults": "Reset Defaults",
+    "previewNotice": "These mappings are local to this preview and do not change runtime controls yet."
+  },
+  "serverErrors": {
+    "account-banned": "This account is banned.",
+    "already-authenticated": "This connection is already authenticated.",
+    "already-joined": "This character has already entered the world.",
+    "auth-failed": "The game server could not authenticate this session.",
+    "auth-required": "Sign in before performing this action.",
+    "auth-timeout": "Authentication timed out. Please reconnect.",
+    "invalid-message": "The game server rejected an invalid request.",
+    "join-required": "Enter the world before performing this action.",
+    "language-update-failed": "Language could not be saved. Please try again.",
+    "language-update-pending": "A language update is already in progress.",
+    "logged-in-elsewhere": "This account signed in from another connection.",
+    "rate-limited": "Too many requests were sent. Please reconnect.",
+    "world-full": "The game world is currently full.",
+    "unknown": "The game server returned an unexpected error."
+  }
+}

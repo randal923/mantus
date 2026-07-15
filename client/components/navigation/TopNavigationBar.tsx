@@ -1,6 +1,7 @@
 "use client";
 
 import { CharacterPortrait } from "./CharacterPortrait";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
 
@@ -48,6 +49,13 @@ export function TopNavigationBar({
   onMap,
   onSettings,
 }: TopNavigationBarProps) {
+  const { t } = useAppTranslation();
+  const connectionLabel = {
+    connecting: t("connection.connecting"),
+    connected: t("connection.connected"),
+    disconnected: t("connection.disconnected"),
+  }[connectionStatus];
+
   return (
     <header className="relative isolate z-40 flex min-h-20 w-full items-center gap-2 border-b border-ui-gold/25 bg-ui-panel-deep/95 px-2 font-tibia text-ui-text shadow-[0_12px_40px_rgba(0,0,0,0.55),inset_0_-1px_0_rgba(0,0,0,0.8)] backdrop-blur-md select-none sm:gap-4 sm:px-4">
       <div
@@ -60,7 +68,7 @@ export function TopNavigationBar({
       />
 
       <section
-        aria-label={`${characterName}'s status`}
+        aria-label={t("character.status", { name: characterName })}
         className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md sm:gap-3"
       >
         <CharacterPortrait
@@ -101,15 +109,15 @@ export function TopNavigationBar({
           aria-hidden
           className={`size-1.5 rounded-full shadow-[0_0_8px_currentColor] ${STATUS_CLASS[connectionStatus]}`}
         />
-        {connectionStatus}
+        {connectionLabel}
       </div>
 
       <nav
-        aria-label="Game panels"
+        aria-label={t("navigation.gamePanels")}
         className="ml-auto flex gap-1 rounded-xl border border-ui-gold/10 bg-black/20 p-1"
       >
         <NavigationIconButton
-          label="Inventory"
+          label={t("navigation.inventory")}
           active={activePanel === "inventory"}
           disabled={!onInventory}
           onClick={onInventory}
@@ -129,7 +137,7 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
-          label="Quests"
+          label={t("navigation.quests")}
           active={activePanel === "quests"}
           disabled={!onQuests}
           onClick={onQuests}
@@ -150,7 +158,7 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
-          label="World map"
+          label={t("navigation.worldMap")}
           active={activePanel === "map"}
           disabled={!onMap}
           onClick={onMap}
@@ -170,7 +178,7 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
-          label="Settings"
+          label={t("navigation.settings")}
           disabled={!onSettings}
           onClick={onSettings}
         >

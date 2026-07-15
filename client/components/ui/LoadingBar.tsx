@@ -10,9 +10,11 @@ export function LoadingBar({
   value,
   min = 0,
   max = 100,
-  label = "Loading",
+  label,
   showValue = true,
 }: LoadingBarProps) {
+  const { t } = useAppTranslation();
+  const resolvedLabel = label ?? t("common.loading");
   const safeMax = Math.max(min, max);
   const safeValue = Math.min(Math.max(min, value), safeMax);
   const range = safeMax - min;
@@ -23,7 +25,7 @@ export function LoadingBar({
     <div className="w-full space-y-2 font-tibia">
       <div className="flex items-center justify-between gap-4 px-0.5">
         <span className="font-display text-[10px] font-bold tracking-widest text-ui-text uppercase">
-          {label}
+          {resolvedLabel}
         </span>
         {showValue && (
           <span className="text-[10px] font-semibold tabular-nums text-ui-muted">
@@ -33,7 +35,7 @@ export function LoadingBar({
       </div>
       <div
         role="progressbar"
-        aria-label={label}
+        aria-label={resolvedLabel}
         aria-valuemin={min}
         aria-valuemax={safeMax}
         aria-valuenow={safeValue}
@@ -53,3 +55,4 @@ export function LoadingBar({
     </div>
   );
 }
+import { useAppTranslation } from "../../i18n/useAppTranslation";

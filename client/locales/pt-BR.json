@@ -1,0 +1,214 @@
+{
+  "metadata": {
+    "title": "Mantus Online",
+    "description": "Entre no mundo de Mantus Online."
+  },
+  "brand": {
+    "name": "Mantus Online",
+    "mantus": "Mantus",
+    "online": "Online"
+  },
+  "common": {
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "loading": "Carregando"
+  },
+  "languages": {
+    "label": "Idioma",
+    "selector": "Escolher idioma",
+    "en": "English",
+    "pt-BR": "Português",
+    "saving": "Salvando idioma…",
+    "saveFailed": "Não foi possível salvar o idioma. Tente novamente."
+  },
+  "configuration": {
+    "supabase": "A autenticação não está configurada. Adicione a URL e a chave anônima do Supabase ao arquivo client/.env.local."
+  },
+  "auth": {
+    "signInLabel": "Entrar",
+    "welcomeBack": "Bem-vindo de volta",
+    "enterWorld": "Entre para acessar o mundo",
+    "email": "E-mail",
+    "password": "Senha",
+    "entering": "Entrando",
+    "signIn": "Entrar",
+    "createAccount": "Criar conta",
+    "or": "ou",
+    "continueWithGoogle": "Continuar com o Google",
+    "confirmationNotice": "Verifique seu e-mail para confirmar sua conta.",
+    "errors": {
+      "connectionFailed": "Falha na conexão. Tente novamente.",
+      "invalidCredentials": "O e-mail ou a senha está incorreto.",
+      "emailNotConfirmed": "Confirme seu e-mail antes de entrar.",
+      "emailAlreadyExists": "Já existe uma conta com este e-mail.",
+      "weakPassword": "Escolha uma senha mais forte.",
+      "rateLimited": "Muitas tentativas. Aguarde e tente novamente.",
+      "signupDisabled": "A criação de contas não está disponível no momento.",
+      "providerDisabled": "Este método de acesso não está disponível no momento.",
+      "invalidEmail": "Digite um endereço de e-mail válido.",
+      "unexpected": "Falha na autenticação. Tente novamente."
+    }
+  },
+  "character": {
+    "hero": "Herói",
+    "noVocation": "Nenhuma",
+    "button": "Personagem",
+    "openPanel": "Abrir painel do personagem {{name}}",
+    "status": "Status de {{name}}"
+  },
+  "characters": {
+    "selectTitle": "Selecionar Personagem",
+    "createTitle": "Criar Personagem",
+    "slotsFull": "Todos os espaços de personagem estão ocupados",
+    "newCharacter": "Novo Personagem",
+    "entering": "Entrando",
+    "enterWorld": "Entrar no Mundo",
+    "empty": "Você ainda não tem personagens. Crie seu primeiro herói para entrar no mundo.",
+    "slotsUsed": "{{count}} de {{max}} espaços de personagem ocupados",
+    "level": "Nível {{level}} · {{vocation}}",
+    "name": "Nome do Personagem",
+    "nameRules": "Apenas letras e espaços, começando com uma letra",
+    "namePlaceholder": "Escolha um nome",
+    "vocation": "Vocação",
+    "creating": "Criando",
+    "create": "Criar Personagem"
+  },
+  "vocations": {
+    "Knight": {
+      "name": "Cavaleiro",
+      "description": "Combatente resistente da linha de frente, mestre em armaduras pesadas e combate corpo a corpo."
+    },
+    "Paladin": {
+      "name": "Paladino",
+      "description": "Caçador versátil de longa distância, armado com arcos, lanças e magia sagrada."
+    },
+    "Sorcerer": {
+      "name": "Feiticeiro",
+      "description": "Mestre frágil da magia destrutiva e da invocação."
+    },
+    "Druid": {
+      "name": "Druida",
+      "description": "Curandeiro e mago da natureza que domina o gelo e o suporte vital."
+    },
+    "None": {
+      "name": "Nenhuma"
+    }
+  },
+  "navigation": {
+    "gamePanels": "Painéis do jogo",
+    "inventory": "Inventário",
+    "quests": "Missões",
+    "worldMap": "Mapa-múndi",
+    "settings": "Configurações"
+  },
+  "connection": {
+    "connecting": "Conectando",
+    "connected": "Conectado",
+    "disconnected": "Desconectado"
+  },
+  "stats": {
+    "health": "Vida",
+    "mana": "Mana",
+    "healthAbbreviation": "PV",
+    "manaAbbreviation": "PM"
+  },
+  "inventory": {
+    "label": "Inventário de {{name}}",
+    "title": "Inventário",
+    "close": "Fechar inventário",
+    "gold": "Ouro",
+    "platinum": "Platina",
+    "stack": "Empilhar",
+    "sort": "Organizar",
+    "capacity": "Capacidade",
+    "backpack": "Mochila",
+    "equippedItems": "Itens equipados",
+    "equipped": "Equipado",
+    "itemTitle": "{{count}}{{name}}"
+  },
+  "items": {
+    "steelHelmet": "capacete de aço",
+    "plateArmor": "armadura de placas",
+    "fireSword": "espada de fogo",
+    "backpack": "mochila",
+    "goldCoin": "moeda de ouro",
+    "greatHealthPotion": "poção de vida suprema",
+    "meat": "carne"
+  },
+  "spells": {
+    "bar": "Barra de magias",
+    "shortcut": "{{name}}, atalho {{shortcut}}",
+    "lightHealing": "Cura Leve",
+    "energyStrike": "Golpe de Energia",
+    "iceWave": "Onda de Gelo",
+    "fireBomb": "Bomba de Fogo",
+    "haste": "Velocidade",
+    "magicShield": "Escudo Mágico",
+    "ultimateHealing": "Cura Suprema",
+    "emptySlot": "Espaço Vazio"
+  },
+  "hud": {
+    "controls": "WASD para mover · I para inventário · Esc para o menu"
+  },
+  "modal": {
+    "close": "Fechar janela"
+  },
+  "menu": {
+    "title": "Menu do Jogo",
+    "actions": "Ações do menu do jogo",
+    "settings": "Configurações",
+    "changeCharacter": "Trocar Personagem",
+    "loggingOut": "Saindo",
+    "logout": "Sair",
+    "logoutFailed": "Não foi possível sair. Tente novamente.",
+    "returnHint": "Pressione Esc para voltar ao jogo"
+  },
+  "settings": {
+    "title": "Configurações",
+    "masterVolume": "Volume Geral",
+    "controls": "Controles",
+    "hotkeyMapping": "Mapeamento de Teclas",
+    "account": "Conta",
+    "changeEmail": "Alterar E-mail",
+    "changePassword": "Alterar Senha",
+    "previewNotice": "O volume e os atalhos são apenas uma prévia até que a persistência dessas configurações seja conectada.",
+    "newEmail": "Novo E-mail",
+    "currentPassword": "Senha Atual",
+    "newPassword": "Nova Senha",
+    "updateEmail": "Atualizar E-mail",
+    "updatePassword": "Atualizar Senha"
+  },
+  "hotkeys": {
+    "title": "Mapeamento de Teclas",
+    "moveUp": "Mover para Cima",
+    "moveLeft": "Mover para a Esquerda",
+    "moveDown": "Mover para Baixo",
+    "moveRight": "Mover para a Direita",
+    "inventory": "Inventário",
+    "gameMenu": "Menu do Jogo",
+    "arrowUp": "Seta para Cima",
+    "arrowLeft": "Seta para a Esquerda",
+    "arrowDown": "Seta para Baixo",
+    "arrowRight": "Seta para a Direita",
+    "escape": "Escape",
+    "inputLabel": "Atalho de {{action}}",
+    "resetDefaults": "Restaurar Padrões",
+    "previewNotice": "Estes mapeamentos são locais desta prévia e ainda não alteram os controles do jogo."
+  },
+  "serverErrors": {
+    "account-banned": "Esta conta está banida.",
+    "already-authenticated": "Esta conexão já está autenticada.",
+    "already-joined": "Este personagem já entrou no mundo.",
+    "auth-failed": "O servidor do jogo não conseguiu autenticar esta sessão.",
+    "auth-required": "Entre na sua conta antes de realizar esta ação.",
+    "auth-timeout": "O tempo de autenticação esgotou. Reconecte-se.",
+    "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
+    "join-required": "Entre no mundo antes de realizar esta ação.",
+    "language-update-failed": "Não foi possível salvar o idioma. Tente novamente.",
+    "language-update-pending": "Uma atualização de idioma já está em andamento.",
+    "logged-in-elsewhere": "Esta conta entrou por outra conexão.",
+    "rate-limited": "Foram enviadas solicitações demais. Reconecte-se.",
+    "world-full": "O mundo do jogo está cheio no momento.",
+    "unknown": "O servidor do jogo retornou um erro inesperado."
+  }
+}

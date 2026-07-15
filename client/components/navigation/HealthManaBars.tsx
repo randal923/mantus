@@ -11,6 +11,8 @@ export function HealthManaBars({
   mana,
   maxMana,
 }: HealthManaBarsProps) {
+  const { t } = useAppTranslation();
+  const language = useLanguageStore((state) => state.language);
   const healthMax = Math.max(0, maxHealth);
   const healthValue = Math.min(Math.max(0, health), healthMax);
   const healthPercent = healthMax > 0 ? (healthValue / healthMax) * 100 : 0;
@@ -22,7 +24,7 @@ export function HealthManaBars({
     <div className="space-y-1">
       <div
         role="progressbar"
-        aria-label="Health"
+        aria-label={t("stats.health")}
         aria-valuemin={0}
         aria-valuemax={healthMax}
         aria-valuenow={healthValue}
@@ -39,17 +41,18 @@ export function HealthManaBars({
         </div>
         <span className="relative flex h-full items-center justify-between gap-2 px-2 text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
           <span className="font-display text-[9px] font-bold tracking-wider uppercase">
-            HP
+            {t("stats.healthAbbreviation")}
           </span>
           <span className="truncate text-[10px] font-semibold tabular-nums">
-            {healthValue.toLocaleString()} / {healthMax.toLocaleString()}
+            {healthValue.toLocaleString(language)} /{" "}
+            {healthMax.toLocaleString(language)}
           </span>
         </span>
       </div>
 
       <div
         role="progressbar"
-        aria-label="Mana"
+        aria-label={t("stats.mana")}
         aria-valuemin={0}
         aria-valuemax={manaMax}
         aria-valuenow={manaValue}
@@ -66,13 +69,16 @@ export function HealthManaBars({
         </div>
         <span className="relative flex h-full items-center justify-between gap-2 px-2 text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
           <span className="font-display text-[8px] font-bold tracking-wider uppercase">
-            MP
+            {t("stats.manaAbbreviation")}
           </span>
           <span className="truncate text-[9px] font-semibold tabular-nums">
-            {manaValue.toLocaleString()} / {manaMax.toLocaleString()}
+            {manaValue.toLocaleString(language)} /{" "}
+            {manaMax.toLocaleString(language)}
           </span>
         </span>
       </div>
     </div>
   );
 }
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { useLanguageStore } from "../../stores/useLanguageStore";

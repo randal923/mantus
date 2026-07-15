@@ -1,18 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { getSupabaseClient } from "../../lib/auth/getSupabaseClient";
+import { getAuthErrorTranslationKey } from "../../lib/auth/getAuthErrorTranslationKey";
+import { getBrowserLanguage } from "../../lib/i18n/getBrowserLanguage";
+import { useLanguageStore } from "../../stores/useLanguageStore";
+import { LanguageButtons } from "./LanguageButtons";
 import { LoginPanel } from "./LoginPanel";
 
 export function LoginScreen() {
+  const { t } = useAppTranslation();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<
+    | ReturnType<typeof getAuthErrorTranslationKey>
+    | "auth.errors.connectionFailed"
+    | null
+  >(null);
+  const [showConfirmationNotice, setShowConfirmationNotice] = useState(false);
+
+  useEffect(() => {
+    setLanguage(getBrowserLanguage(navigator.language));
+  }, [setLanguage]);
 
   const begin = () => {
     setBusy(true);
-    setError(null);
-    setNotice(null);
+    setErrorKey(null);
+    setShowConfirmationNotice(false);
   };
 
   const signIn = async (email: string, password: string) => {
@@ -22,9 +38,11 @@ export function LoginScreen() {
         email,
         password,
       });
-      setError(result.error?.message ?? null);
+      setErrorKey(
+        result.error ? getAuthErrorTranslationKey(result.error.code) : null,
+      );
     } catch {
-      setError("Connection failed");
+      setErrorKey("auth.errors.connectionFailed");
     } finally {
       setBusy(false);
     }
@@ -34,12 +52,14 @@ export function LoginScreen() {
     begin();
     try {
       const result = await getSupabaseClient().auth.signUp({ email, password });
-      setError(result.error?.message ?? null);
+      setErrorKey(
+        result.error ? getAuthErrorTranslationKey(result.error.code) : null,
+      );
       if (!result.error && !result.data.session) {
-        setNotice("Check your email to confirm your account.");
+        setShowConfirmationNotice(true);
       }
     } catch {
-      setError("Connection failed");
+      setErrorKey("auth.errors.connectionFailed");
     } finally {
       setBusy(false);
     }
@@ -52,9 +72,11 @@ export function LoginScreen() {
         provider: "google",
         options: { redirectTo: window.location.origin },
       });
-      setError(result.error?.message ?? null);
+      setErrorKey(
+        result.error ? getAuthErrorTranslationKey(result.error.code) : null,
+      );
     } catch {
-      setError("Connection failed");
+      setErrorKey("auth.errors.connectionFailed");
     } finally {
       setBusy(false);
     }
@@ -65,14 +87,21 @@ export function LoginScreen() {
       <div aria-hidden className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.035]" />
       <div aria-hidden className="absolute inset-x-[12%] top-10 h-px bg-linear-to-r from-transparent via-ui-gold/25 to-transparent" />
       <div aria-hidden className="absolute inset-x-[20%] bottom-10 h-px bg-linear-to-r from-transparent via-ui-accent/30 to-transparent" />
-      <div className="relative w-full max-w-md">
+      <div className="relative flex w-full max-w-md flex-col gap-4">
         <LoginPanel
           onSignIn={signIn}
           onSignUp={signUp}
           onGoogle={signInWithGoogle}
           busy={busy}
-          error={error}
-          notice={notice}
+          error={errorKey ? t(errorKey) : null}
+          notice={
+            showConfirmationNotice ? t("auth.confirmationNotice") : null
+          }
+        />
+        <LanguageButtons
+          language={language}
+          onChange={setLanguage}
+          disabled={busy}
         />
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { MantusLogo } from "../ui/MantusLogo";
@@ -23,6 +24,7 @@ export function LoginPanel({
   error,
   notice,
 }: LoginPanelProps) {
+  const { t } = useAppTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -33,7 +35,7 @@ export function LoginPanel({
 
   return (
     <section
-      aria-label="Sign in"
+      aria-label={t("auth.signInLabel")}
       className="ui-panel-frame relative isolate flex w-full flex-col gap-5 overflow-hidden px-7 py-8 font-tibia text-ui-text sm:px-9"
     >
       <div
@@ -49,15 +51,15 @@ export function LoginPanel({
           <MantusLogo className="mb-2" />
         </h1>
         <p className="text-[10px] tracking-[0.34em] text-ui-gold uppercase">
-          Welcome back
+          {t("auth.welcomeBack")}
         </p>
-        <p className="text-sm text-ui-muted">Sign in to enter the world</p>
+        <p className="text-sm text-ui-muted">{t("auth.enterWorld")}</p>
       </header>
       <div aria-hidden className="ui-divider" />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
-          label="Email"
+          label={t("auth.email")}
           type="email"
           autoComplete="email"
           required
@@ -66,7 +68,7 @@ export function LoginPanel({
           onChange={(event) => setEmail(event.target.value)}
         />
         <Input
-          label="Password"
+          label={t("auth.password")}
           type="password"
           autoComplete="current-password"
           required
@@ -93,14 +95,14 @@ export function LoginPanel({
                 className="size-3 rotate-45 border border-current border-t-transparent motion-safe:animate-spin"
               />
             )}
-            {busy ? "Entering" : "Sign In"}
+            {busy ? t("auth.entering") : t("auth.signIn")}
           </Button>
           <Button
             type="button"
             disabled={busy}
             onClick={() => onSignUp(email, password)}
           >
-            Create Account
+            {t("auth.createAccount")}
           </Button>
         </div>
       </form>
@@ -110,7 +112,7 @@ export function LoginPanel({
         className="flex items-center gap-3 text-[10px] tracking-[0.22em] text-ui-muted uppercase"
       >
         <span className="h-px flex-1 bg-linear-to-r from-transparent to-ui-gold/35" />
-        or
+        {t("auth.or")}
         <span className="h-px flex-1 bg-linear-to-l from-transparent to-ui-gold/35" />
       </div>
 
@@ -121,7 +123,7 @@ export function LoginPanel({
         className="w-full"
       >
         <GoogleIcon />
-        Continue with Google
+        {t("auth.continueWithGoogle")}
       </Button>
     </section>
   );

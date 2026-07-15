@@ -1,6 +1,8 @@
 "use client";
 
 import type { Equipment, InventoryItem } from "./inventoryTypes";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
 import { CloseButton } from "../ui/CloseButton";
 import { CapacityBar } from "./CapacityBar";
@@ -40,11 +42,13 @@ export function InventoryPanel({
   onStack,
   onSort,
 }: InventoryPanelProps) {
+  const { t } = useAppTranslation();
+  const language = useLanguageStore((state) => state.language);
   const emptySlots = Math.max(0, slotCount - items.length);
 
   return (
     <section
-      aria-label={`${characterName}'s inventory`}
+      aria-label={t("inventory.label", { name: characterName })}
       className="ui-panel-frame relative isolate flex h-full w-full max-w-96 flex-col gap-4 overflow-hidden p-4 font-tibia text-ui-text select-none"
     >
       <div
@@ -67,12 +71,12 @@ export function InventoryPanel({
             {characterName}
           </div>
           <h2 className="font-display text-2xl tracking-[0.12em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
-            Inventory
+            {t("inventory.title")}
           </h2>
         </div>
         {onClose && (
           <CloseButton
-            label="Close inventory"
+            label={t("inventory.close")}
             onClick={onClose}
             className="self-start"
           />
@@ -87,15 +91,19 @@ export function InventoryPanel({
           <div className="flex items-center gap-1.5 border-r border-ui-gold/10">
             <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1.4} />
             <span>
-              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">Gold</span>
-              {gold.toLocaleString()}
+              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
+                {t("inventory.gold")}
+              </span>
+              {gold.toLocaleString(language)}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <SpriteIcon spriteId={PLATINUM_COIN_SPRITE} scale={1.4} />
             <span>
-              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">Platinum</span>
-              {platinum.toLocaleString()}
+              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
+                {t("inventory.platinum")}
+              </span>
+              {platinum.toLocaleString(language)}
             </span>
           </div>
         </div>
@@ -103,12 +111,12 @@ export function InventoryPanel({
           <div className="flex flex-col gap-1.5">
             {onStack && (
               <Button size="sm" onClick={onStack}>
-                Stack
+                {t("inventory.stack")}
               </Button>
             )}
             {onSort && (
               <Button size="sm" onClick={onSort}>
-                Sort
+                {t("inventory.sort")}
               </Button>
             )}
           </div>
@@ -119,7 +127,7 @@ export function InventoryPanel({
 
       <div className="flex items-center justify-between border-b border-ui-gold/15 pb-2">
         <h3 className="font-display text-xs tracking-[0.18em] text-ui-gold uppercase">
-          Backpack
+          {t("inventory.backpack")}
         </h3>
         <span className="text-xs text-ui-muted">
           {items.length} / {slotCount}

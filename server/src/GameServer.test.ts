@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
-import type { ServerMessage } from "@tibia/protocol";
+import type { Language, ServerMessage } from "@tibia/protocol";
 import type { Account, AccountStore } from "./AccountStore";
 import type { ServerConfig } from "./config";
 import { GameServer } from "./GameServer";
@@ -38,20 +38,39 @@ class InMemoryAccountStore implements AccountStore {
     this.accounts.set(account.supabaseUserId, account);
   }
 
+  languageFor(supabaseUserId: string): Language | undefined {
+    return this.accounts.get(supabaseUserId)?.language;
+  }
+
   async findOrCreateBySupabaseId(
     supabaseUserId: string,
     email: string | null,
+    language: Language,
   ): Promise<Account> {
     const existing = this.accounts.get(supabaseUserId);
-    if (existing) return existing;
+    if (existing) {
+      const account = { ...existing, email, language };
+      this.accounts.set(supabaseUserId, account);
+      return account;
+    }
     const account = {
       id: `acc-${supabaseUserId}`,
       supabaseUserId,
       email,
       bannedUntil: null,
+      language,
     };
     this.accounts.set(supabaseUserId, account);
     return account;
+  }
+
+  async updateLanguage(accountId: string, language: Language): Promise<void> {
+    const entry = [...this.accounts.entries()].find(
+      ([, account]) => account.id === accountId,
+    );
+    if (!entry) throw new Error("account not found");
+    const [supabaseUserId, account] = entry;
+    this.accounts.set(supabaseUserId, { ...account, language });
   }
 }
 
@@ -67,6 +86,7 @@ const connect = (
   port: number,
   name: string,
   token = `tok.${name}`,
+  language: Language = "en",
 ): Promise<TestClient> =>
   new Promise((resolve, reject) => {
     const socket = new WebSocket(`ws://127.0.0.1:${port}`);
@@ -75,7 +95,9 @@ const connect = (
     socket.on("close", () => {
       closed = true;
     });
-    socket.on("open", () => socket.send(JSON.stringify({ type: "auth", token })));
+    socket.on("open", () =>
+      socket.send(JSON.stringify({ type: "auth", token, language })),
+    );
     socket.on("error", reject);
     socket.on("message", (data) => {
       const message = JSON.parse(data.toString()) as ServerMessage;
@@ -312,7 +334,9 @@ describe("auth gate", () => {
     startServer();
     const client = await openRaw(server.port);
     sockets.push(client.socket);
-    client.socket.send(JSON.stringify({ type: "auth", token: BAD_TOKEN }));
+    client.socket.send(
+      JSON.stringify({ type: "auth", token: BAD_TOKEN, language: "en" }),
+    );
     await waitFor(
       () => sawError(client.messages, "auth-failed") && client.closed(),
       "auth-failed error and disconnect",
@@ -339,11 +363,14 @@ describe("auth gate", () => {
       supabaseUserId: "sub-tok.outlaw",
       email: null,
       bannedUntil: new Date(Date.now() + 60_000),
+      language: "en",
     });
     startServer({}, accounts);
     const client = await openRaw(server.port);
     sockets.push(client.socket);
-    client.socket.send(JSON.stringify({ type: "auth", token: "tok.outlaw" }));
+    client.socket.send(
+      JSON.stringify({ type: "auth", token: "tok.outlaw", language: "en" }),
+    );
     await waitFor(
       () => sawError(client.messages, "account-banned") && client.closed(),
       "banned account to be rejected",
@@ -358,5 +385,46 @@ describe("auth gate", () => {
       () => sawError(client.messages, "auth-timeout") && client.closed(),
       "unauthenticated socket to be dropped",
     );
+  });
+
+  it("persists a schema-validated language change for the session account", async () => {
+    const accounts = new InMemoryAccountStore();
+    startServer({}, accounts);
+    const client = await connect(server.port, "Alice", "tok.language", "en");
+    sockets.push(client.socket);
+
+    client.socket.send(
+      JSON.stringify({ type: "set-language", language: "pt-BR" }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "language-updated" &&
+            message.language === "pt-BR",
+        ),
+      "language update acknowledgement",
+    );
+
+    expect(accounts.languageFor("sub-tok.language")).toBe("pt-BR");
+  });
+
+  it("rejects an unsupported language before it reaches the account store", async () => {
+    const accounts = new InMemoryAccountStore();
+    startServer({}, accounts);
+    const client = await connect(server.port, "Alice", "tok.language", "en");
+    sockets.push(client.socket);
+
+    for (let attempt = 0; attempt < testConfig.maxProtocolViolations; attempt++) {
+      client.socket.send(
+        JSON.stringify({ type: "set-language", language: "es" }),
+      );
+    }
+    await waitFor(
+      () => sawError(client.messages, "invalid-message") && client.closed(),
+      "invalid language messages to be rejected",
+    );
+
+    expect(accounts.languageFor("sub-tok.language")).toBe("en");
   });
 });
