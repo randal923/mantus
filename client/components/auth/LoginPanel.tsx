@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { MantusLogo } from "../ui/MantusLogo";
 import { GoogleIcon } from "./GoogleIcon";
 
 interface LoginPanelProps {
@@ -44,18 +45,12 @@ export function LoginPanel({
         className="pointer-events-none absolute inset-x-12 top-0 -z-10 h-32 bg-radial from-ui-accent/15 to-transparent blur-2xl"
       />
       <header className="flex flex-col items-center gap-2 text-center">
-        <div
-          aria-hidden
-          className="mb-1 flex size-11 rotate-45 items-center justify-center border border-ui-gold/35 bg-black/45 shadow-[0_0_24px_rgba(143,30,22,0.22)]"
-        >
-          <span className="size-3 border border-ui-accent-light/70 bg-ui-accent-deep shadow-[0_0_12px_rgba(189,59,46,0.42)]" />
-        </div>
+        <h1 className="contents">
+          <MantusLogo className="mb-2" />
+        </h1>
         <p className="text-[10px] tracking-[0.34em] text-ui-gold uppercase">
           Welcome back
         </p>
-        <h1 className="font-display text-3xl tracking-[0.12em] text-ui-text-bright uppercase [text-shadow:0_2px_12px_rgba(0,0,0,0.9)] sm:text-4xl">
-          Mantus Online
-        </h1>
         <p className="text-sm text-ui-muted">Sign in to enter the world</p>
       </header>
       <div aria-hidden className="ui-divider" />
