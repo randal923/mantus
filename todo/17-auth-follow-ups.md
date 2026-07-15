@@ -1,0 +1,47 @@
+# Known authentication follow-ups
+
+These gaps predate the feature split and remain deliberately deferred. Resolve
+them before public deployment, alongside
+[`16-operations-and-security.md`](16-operations-and-security.md).
+
+## Instant ban enforcement
+
+`banned_until` is currently read once when the token is verified, so banning an
+online player does nothing until they reconnect.
+
+- [ ] Recommended: add an authorized game-server admin action (`/ban` command
+  or admin endpoint) that writes `banned_until`, kicks the live session, and
+  appends the audit record in one place. The audited path is also the instant
+  path; production data should not be hand-edited.
+- [ ] If a temporary stopgap is needed sooner, periodically re-check
+  `banned_until` for online accounts in the tick loop and accept/document the
+  polling delay and recurring database reads.
+- [ ] Do not build LISTEN/NOTIFY plumbing solely to support hand-edited account
+  rows unless another durable event use case justifies it.
+
+## Accepted residual auth risks
+
+- [ ] Bearer-token replay window: a stolen access token works until expiry. Use
+  WSS/TLS in production, short-lived tokens, and the one-session rule; never log
+  tokens.
+- [ ] XSS can steal a token kept in browser storage. Keep React escaping, never
+  put user strings into `dangerouslySetInnerHTML`, use a strict CSP where
+  practical, and keep dependencies small/current.
+- [ ] Free-form join names permit impersonation. Remove that path through the
+  account-owned unique character flow in [`01-characters.md`](01-characters.md).
+- [ ] Signup abuse and credential stuffing rely partly on Supabase controls.
+  Enable captcha and production auth rate-limit/settings before public access.
+- [ ] Confirm account/session authorization always derives identity from the
+  verified token and never a body-supplied account or character id.
+
+## Required tests
+
+- [ ] Banning an online player through the supported admin path commits the ban,
+  audit entry, and disconnect behavior coherently.
+- [ ] A banned account cannot reconnect/select a character until allowed.
+- [ ] Old and refreshed/replaced sessions cannot both control a character.
+- [ ] Auth failures and logs contain no bearer token, password, or credential.
+- [ ] Origin, connection, token-expiry, and account rate limits behave as the
+  production policy specifies.
+
+[Back to overview](README.md)

@@ -7,6 +7,8 @@ a modified client. These rules are mandatory for ALL gameplay code you write
 or review. Rationale and the full roadmap live in `plan.md`; asset-format
 rules live in `client/AGENTS.md` and `client/ASSETS.md`.
 
+You can use Tibia Canary as source of information about the server of our project git@github.com:opentibiabr/canary.git
+
 ## The golden rule
 
 The client sends **intents** ("walk north", "cast spell 2", "move item A to
