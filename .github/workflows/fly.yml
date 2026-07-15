@@ -1,0 +1,38 @@
+name: Deploy server to Fly.io
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/fly.yml
+      - .dockerignore
+      - package.json
+      - yarn.lock
+      - protocol/**
+      - server/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fly-mantus
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy server
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy . --config server/fly.toml --dockerfile server/Dockerfile --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
