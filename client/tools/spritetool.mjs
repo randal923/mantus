@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // Offline sprite inspector for the Tibia assets in public/assets.
 // See ASSETS.md for the data format. Requires sharp (already a dependency).
-//
 //   node tools/spritetool.mjs render <item|outfit|effect> <id> [out.png] [--x N --y N --z N --phase N --layer N]
 //   node tools/spritetool.mjs sheet  <item|outfit|effect> <fromId> <toId> [out.png] [--cols N --cell N]
 //   node tools/spritetool.mjs tiled  <groundItemId> [out.png]
@@ -10,11 +9,19 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
-const ASSETS = join(dirname(fileURLToPath(import.meta.url)), "../public/assets");
+const ASSETS = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../public/assets",
+);
 const idx = JSON.parse(readFileSync(join(ASSETS, "atlas-index.json"), "utf8"));
 const data = JSON.parse(readFileSync(join(ASSETS, "objects.json"), "utf8"));
 
-const byCat = { item: new Map(), outfit: new Map(), effect: new Map(), missile: new Map() };
+const byCat = {
+  item: new Map(),
+  outfit: new Map(),
+  effect: new Map(),
+  missile: new Map(),
+};
 for (const o of data.objects) byCat[o.category]?.set(o.clientId, o);
 
 function spriteRect(spriteId) {
@@ -38,7 +45,11 @@ async function cropSprite(spriteId) {
 
 function spriteId(o, { w = 0, h = 0, l = 0, x = 0, y = 0, z = 0, phase = 0 }) {
   const i =
-    (((((phase * o.pz + z) * o.py + (y % o.py)) * o.px + (x % o.px)) * o.layers + l) * o.height + h) *
+    (((((phase * o.pz + z) * o.py + (y % o.py)) * o.px + (x % o.px)) *
+      o.layers +
+      l) *
+      o.height +
+      h) *
       o.width +
     w;
   return o.sprites[i] ?? 0;
@@ -60,7 +71,12 @@ async function renderObject(o, p = {}) {
     }
   }
   return sharp({
-    create: { width: o.width * t, height: o.height * t, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    create: {
+      width: o.width * t,
+      height: o.height * t,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
   })
     .composite(comps)
     .png();
@@ -71,12 +87,18 @@ async function contactSheet(entries, outFile, cols, cellPx) {
   const comps = [];
   for (let i = 0; i < entries.length; i++) {
     try {
-      const buf = await (await renderObject(entries[i].o, entries[i].p)).toBuffer();
+      const buf = await (
+        await renderObject(entries[i].o, entries[i].p)
+      ).toBuffer();
       const meta = await sharp(buf).metadata();
       const scale = Math.min(cellPx / meta.width, cellPx / meta.height, 2);
       comps.push({
         input: await sharp(buf)
-          .resize(Math.round(meta.width * scale), Math.round(meta.height * scale), { kernel: "nearest" })
+          .resize(
+            Math.round(meta.width * scale),
+            Math.round(meta.height * scale),
+            { kernel: "nearest" },
+          )
           .toBuffer(),
         left: (i % cols) * cellPx,
         top: Math.floor(i / cols) * cellPx,
@@ -86,13 +108,23 @@ async function contactSheet(entries, outFile, cols, cellPx) {
     }
   }
   await sharp({
-    create: { width: cols * cellPx, height: rows * cellPx, channels: 4, background: { r: 40, g: 40, b: 60, alpha: 255 } },
+    create: {
+      width: cols * cellPx,
+      height: rows * cellPx,
+      channels: 4,
+      background: { r: 40, g: 40, b: 60, alpha: 255 },
+    },
   })
     .composite(comps)
     .png()
     .toFile(outFile);
   for (let r = 0; r < rows; r++) {
-    console.log(`row ${r}: ${entries.slice(r * cols, (r + 1) * cols).map((e) => e.label).join(" | ")}`);
+    console.log(
+      `row ${r}: ${entries
+        .slice(r * cols, (r + 1) * cols)
+        .map((e) => e.label)
+        .join(" | ")}`,
+    );
   }
 }
 
@@ -119,12 +151,19 @@ if (cmd === "render") {
   console.log("wrote", out);
 } else if (cmd === "sheet") {
   const [cat, from, to] = rest;
-  const out = rest[3]?.endsWith(".png") ? rest[3] : `sheet-${cat}-${from}-${to}.png`;
+  const out = rest[3]?.endsWith(".png")
+    ? rest[3]
+    : `sheet-${cat}-${from}-${to}.png`;
   const flags = parseFlags(rest);
   const entries = [];
   for (let id = Number(from); id <= Number(to); id++) {
     const o = byCat[cat]?.get(id);
-    if (o) entries.push({ label: String(id), o, p: cat === "outfit" ? { x: 2 } : {} });
+    if (o)
+      entries.push({
+        label: String(id),
+        o,
+        p: cat === "outfit" ? { x: 2 } : {},
+      });
   }
   await contactSheet(entries, out, flags.cols || 16, flags.cell || 56);
   console.log("wrote", out, `(${entries.length} objects)`);
@@ -137,12 +176,25 @@ if (cmd === "render") {
   const comps = [];
   for (let y = 0; y < 4; y++)
     for (let x = 0; x < 4; x++)
-      comps.push({ input: await (await renderObject(o, { x, y })).toBuffer(), left: x * t, top: y * t });
-  await sharp({ create: { width: 4 * t, height: 4 * t, channels: 4, background: { r: 30, g: 30, b: 40, alpha: 255 } } })
+      comps.push({
+        input: await (await renderObject(o, { x, y })).toBuffer(),
+        left: x * t,
+        top: y * t,
+      });
+  await sharp({
+    create: {
+      width: 4 * t,
+      height: 4 * t,
+      channels: 4,
+      background: { r: 30, g: 30, b: 40, alpha: 255 },
+    },
+  })
     .composite(comps)
     .png()
     .toFile(out);
   console.log("wrote", out);
 } else {
-  console.log("usage: render <cat> <id> [out] [--x --y --phase --layer] | sheet <cat> <from> <to> [out] | tiled <id> [out]");
+  console.log(
+    "usage: render <cat> <id> [out] [--x --y --phase --layer] | sheet <cat> <from> <to> [out] | tiled <id> [out]",
+  );
 }
