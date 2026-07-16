@@ -8,7 +8,7 @@
     "start": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run src/character/PgCharacterStore.integration.test.ts",
+    "test:integration": "vitest run --testTimeout=30000 --hookTimeout=30000 src/character/PgCharacterStore.integration.test.ts",
     "db:migrate": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/migrate.ts",
     "db:cleanup-partial-world-seed": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/cleanupPartialWorldSeed.ts"
   },

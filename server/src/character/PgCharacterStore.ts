@@ -8,6 +8,8 @@ import type {
 } from "./Character";
 import type { CharacterStore } from "./CharacterStore";
 import type { StarterSet } from "../item/StarterSet";
+import type { CharacterSkill } from "../progression/CharacterSkill";
+import { assertValidCharacterSaveSnapshot } from "../progression/assertValidCharacterSaveSnapshot";
 
 interface CharacterRow {
   id: string;
@@ -17,11 +19,12 @@ interface CharacterRow {
   vocation: Character["vocation"];
   level: number;
   experience: string;
+  magic_level: number;
+  mana_spent: string;
   health: number;
-  max_health: number;
   mana: number;
-  max_mana: number;
-  capacity: number;
+  soul: number;
+  progression_definition_version: number;
   position_x: number;
   position_y: number;
   position_z: number;
@@ -39,9 +42,19 @@ interface CharacterRow {
   version: number;
 }
 
+interface LoadedCharacterRow extends CharacterRow {
+  skills: Array<{
+    skill: CharacterSkill["skill"];
+    level: number;
+    tries: string;
+  }>;
+  progression_event_ids: string[];
+}
+
 const CHARACTER_COLUMNS = `
   id, account_id, display_name, normalized_name, vocation, level,
-  experience, health, max_health, mana, max_mana, capacity,
+  experience, magic_level, mana_spent, health, mana, soul,
+  progression_definition_version,
   position_x, position_y, position_z, direction, outfit_look_type,
   outfit_head, outfit_body, outfit_legs, outfit_feet, outfit_addons,
   town_id, created_at, updated_at, last_login_at, version`;
@@ -57,7 +70,21 @@ export class PgCharacterStore implements CharacterStore {
        ORDER BY last_login_at DESC NULLS LAST, created_at ASC`,
       [accountId],
     );
-    return result.rows.map((row) => this.toSummary(row));
+    return result.rows.map((row) => ({
+      id: row.id,
+      displayName: row.display_name,
+      vocation: row.vocation,
+      level: row.level,
+      outfit: {
+        lookType: row.outfit_look_type,
+        head: row.outfit_head,
+        body: row.outfit_body,
+        legs: row.outfit_legs,
+        feet: row.outfit_feet,
+        addons: row.outfit_addons,
+      },
+      lastLoginAt: row.last_login_at,
+    }));
   }
 
   async create(
@@ -65,6 +92,29 @@ export class PgCharacterStore implements CharacterStore {
     maxCharacters: number,
     starterSet: StarterSet,
   ): Promise<Character> {
+    if (character.progressionEventIds.length > 0) {
+      throw new Error("new character cannot have progression events");
+    }
+    assertValidCharacterSaveSnapshot({
+      characterId: character.id,
+      expectedVersion: character.version,
+      vocation: character.vocation,
+      progressionDefinitionVersion: character.progressionDefinitionVersion,
+      level: character.level,
+      experience: character.experience,
+      magicLevel: character.magicLevel,
+      manaSpent: character.manaSpent,
+      health: character.health,
+      mana: character.mana,
+      soul: character.soul,
+      skills: character.skills,
+      progressionEvents: [],
+      positionX: character.positionX,
+      positionY: character.positionY,
+      positionZ: character.positionZ,
+      direction: character.direction,
+      outfit: character.outfit,
+    });
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
@@ -79,13 +129,15 @@ export class PgCharacterStore implements CharacterStore {
       const result = await client.query<CharacterRow>(
         `INSERT INTO characters (
            id, account_id, display_name, normalized_name, vocation, level,
-           experience, health, max_health, mana, max_mana, capacity,
+           experience, magic_level, mana_spent, health, mana, soul,
+           progression_definition_version,
            position_x, position_y, position_z, direction, outfit_look_type,
            outfit_head, outfit_body, outfit_legs, outfit_feet, outfit_addons,
            town_id, created_at, updated_at, last_login_at, version
          ) VALUES (
            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-           $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
+           $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26,
+           $27, $28
          )
          RETURNING ${CHARACTER_COLUMNS}`,
         [
@@ -96,11 +148,12 @@ export class PgCharacterStore implements CharacterStore {
           character.vocation,
           character.level,
           character.experience.toString(),
+          character.magicLevel,
+          character.manaSpent.toString(),
           character.health,
-          character.maxHealth,
           character.mana,
-          character.maxMana,
-          character.capacity,
+          character.soul,
+          character.progressionDefinitionVersion,
           character.positionX,
           character.positionY,
           character.positionZ,
@@ -120,9 +173,10 @@ export class PgCharacterStore implements CharacterStore {
       );
       const row = result.rows[0];
       if (!row) throw new Error("character insert returned no row");
+      await this.insertSkills(client, character.id, character.skills);
       await this.insertStarterSet(client, character.id, starterSet);
       await client.query("COMMIT");
-      return this.toCharacter(row);
+      return this.toCharacter(row, character.skills, []);
     } catch (cause) {
       await client.query("ROLLBACK");
       if (this.isNormalizedNameConflict(cause)) {
@@ -138,14 +192,46 @@ export class PgCharacterStore implements CharacterStore {
     accountId: string,
     characterId: string,
   ): Promise<Character | null> {
-    const result = await this.pool.query<CharacterRow>(
-      `SELECT ${CHARACTER_COLUMNS}
+    const result = await this.pool.query<LoadedCharacterRow>(
+      `SELECT ${CHARACTER_COLUMNS},
+         coalesce(
+           (
+             SELECT json_agg(
+               json_build_object(
+                 'skill', skill,
+                 'level', level,
+                 'tries', tries::text
+               )
+               ORDER BY skill
+             )
+             FROM character_skills
+             WHERE character_id = characters.id
+           ),
+           '[]'::json
+         ) AS skills,
+         coalesce(
+           (
+             SELECT array_agg(event_id ORDER BY occurred_at, event_id)
+             FROM progression_events
+             WHERE character_id = characters.id
+           ),
+           ARRAY[]::varchar[]
+         ) AS progression_event_ids
        FROM characters
        WHERE id = $1 AND account_id = $2`,
       [characterId, accountId],
     );
     const row = result.rows[0];
-    return row ? this.toCharacter(row) : null;
+    if (!row) return null;
+    return this.toCharacter(
+      row,
+      row.skills.map((skill) => ({
+        skill: skill.skill,
+        level: skill.level,
+        tries: Number(skill.tries),
+      })),
+      row.progression_event_ids,
+    );
   }
 
   async recordLogin(
@@ -163,41 +249,83 @@ export class PgCharacterStore implements CharacterStore {
   }
 
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {
-    const result = await this.pool.query<{ version: number }>(
-      `UPDATE characters
-       SET level = $3, experience = $4, health = $5, max_health = $6,
-           mana = $7, max_mana = $8, capacity = $9, position_x = $10,
-           position_y = $11, position_z = $12, direction = $13,
-           outfit_look_type = $14, outfit_head = $15, outfit_body = $16,
-           outfit_legs = $17, outfit_feet = $18, outfit_addons = $19,
-           updated_at = now(), version = version + 1
-       WHERE id = $1 AND version = $2
-       RETURNING version`,
-      [
-        snapshot.characterId,
-        snapshot.expectedVersion,
-        snapshot.level,
-        snapshot.experience.toString(),
-        snapshot.health,
-        snapshot.maxHealth,
-        snapshot.mana,
-        snapshot.maxMana,
-        snapshot.capacity,
-        snapshot.positionX,
-        snapshot.positionY,
-        snapshot.positionZ,
-        snapshot.direction,
-        snapshot.outfit.lookType,
-        snapshot.outfit.head,
-        snapshot.outfit.body,
-        snapshot.outfit.legs,
-        snapshot.outfit.feet,
-        snapshot.outfit.addons,
-      ],
-    );
-    const version = result.rows[0]?.version;
-    if (!version) throw new CharacterError("version-conflict");
-    return version;
+    assertValidCharacterSaveSnapshot(snapshot);
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await client.query<{ version: number }>(
+        `UPDATE characters
+         SET level = $3, experience = $4, magic_level = $5, mana_spent = $6,
+             health = $7, mana = $8, soul = $9, position_x = $10,
+             position_y = $11, position_z = $12, direction = $13,
+             outfit_look_type = $14, outfit_head = $15, outfit_body = $16,
+             outfit_legs = $17, outfit_feet = $18, outfit_addons = $19,
+             updated_at = now(), version = version + 1
+         WHERE id = $1 AND version = $2
+           AND vocation = $20 AND progression_definition_version = $21
+         RETURNING version`,
+        [
+          snapshot.characterId,
+          snapshot.expectedVersion,
+          snapshot.level,
+          snapshot.experience.toString(),
+          snapshot.magicLevel,
+          snapshot.manaSpent.toString(),
+          snapshot.health,
+          snapshot.mana,
+          snapshot.soul,
+          snapshot.positionX,
+          snapshot.positionY,
+          snapshot.positionZ,
+          snapshot.direction,
+          snapshot.outfit.lookType,
+          snapshot.outfit.head,
+          snapshot.outfit.body,
+          snapshot.outfit.legs,
+          snapshot.outfit.feet,
+          snapshot.outfit.addons,
+          snapshot.vocation,
+          snapshot.progressionDefinitionVersion,
+        ],
+      );
+      const version = result.rows[0]?.version;
+      if (!version) throw new CharacterError("version-conflict");
+      for (const skill of snapshot.skills) {
+        const updated = await client.query(
+          `UPDATE character_skills
+           SET level = $3, tries = $4
+           WHERE character_id = $1 AND skill = $2`,
+          [
+            snapshot.characterId,
+            skill.skill,
+            skill.level,
+            skill.tries.toString(),
+          ],
+        );
+        if (updated.rowCount !== 1) {
+          throw new Error(`character skill ${skill.skill} was not found`);
+        }
+      }
+      for (const event of snapshot.progressionEvents) {
+        const inserted = await client.query(
+          `INSERT INTO progression_events (
+             character_id, event_id, event_type
+           ) VALUES ($1, $2, $3)
+           ON CONFLICT DO NOTHING`,
+          [snapshot.characterId, event.id, event.type],
+        );
+        if (inserted.rowCount !== 1) {
+          throw new CharacterError("version-conflict");
+        }
+      }
+      await client.query("COMMIT");
+      return version;
+    } catch (cause) {
+      await client.query("ROLLBACK");
+      throw cause;
+    } finally {
+      client.release();
+    }
   }
 
   private async lockAccount(
@@ -255,6 +383,20 @@ export class PgCharacterStore implements CharacterStore {
     }
   }
 
+  private async insertSkills(
+    client: PoolClient,
+    characterId: string,
+    skills: ReadonlyArray<CharacterSkill>,
+  ): Promise<void> {
+    for (const skill of skills) {
+      await client.query(
+        `INSERT INTO character_skills (character_id, skill, level, tries)
+         VALUES ($1, $2, $3, $4)`,
+        [characterId, skill.skill, skill.level, skill.tries.toString()],
+      );
+    }
+  }
+
   private async auditStarterItem(
     client: PoolClient,
     characterId: string,
@@ -284,19 +426,11 @@ export class PgCharacterStore implements CharacterStore {
     );
   }
 
-  private toSummary(row: CharacterRow): CharacterSummary {
-    const character = this.toCharacter(row);
-    return {
-      id: character.id,
-      displayName: character.displayName,
-      vocation: character.vocation,
-      level: character.level,
-      outfit: character.outfit,
-      lastLoginAt: character.lastLoginAt,
-    };
-  }
-
-  private toCharacter(row: CharacterRow): Character {
+  private toCharacter(
+    row: CharacterRow,
+    skills: ReadonlyArray<CharacterSkill>,
+    progressionEventIds: ReadonlyArray<string>,
+  ): Character {
     return {
       id: row.id,
       accountId: row.account_id,
@@ -305,11 +439,14 @@ export class PgCharacterStore implements CharacterStore {
       vocation: row.vocation,
       level: row.level,
       experience: BigInt(row.experience),
+      magicLevel: row.magic_level,
+      manaSpent: BigInt(row.mana_spent),
       health: row.health,
-      maxHealth: row.max_health,
       mana: row.mana,
-      maxMana: row.max_mana,
-      capacity: row.capacity,
+      soul: row.soul,
+      skills,
+      progressionDefinitionVersion: row.progression_definition_version,
+      progressionEventIds,
       positionX: row.position_x,
       positionY: row.position_y,
       positionZ: row.position_z,

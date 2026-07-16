@@ -1,7 +1,16 @@
 import type { Character } from "../character/Character";
+import { createInitialSkills } from "../progression/createInitialSkills";
+import { deriveCharacterStats } from "../progression/deriveCharacterStats";
+import { getVocation } from "../progression/getVocation";
+import { PROGRESSION_DEFINITION_VERSION } from "../progression/progressionDefinitionVersion";
 
 export function makeCharacter(id: string, displayName = id): Character {
   const now = new Date("2026-01-01T00:00:00.000Z");
+  const stats = deriveCharacterStats({
+    vocation: "Knight",
+    definitionVersion: PROGRESSION_DEFINITION_VERSION,
+    level: 1,
+  });
   return {
     id,
     accountId: "account-id",
@@ -10,11 +19,14 @@ export function makeCharacter(id: string, displayName = id): Character {
     vocation: "Knight",
     level: 1,
     experience: 0n,
-    health: 150,
-    maxHealth: 150,
-    mana: 55,
-    maxMana: 55,
-    capacity: 400,
+    magicLevel: 0,
+    manaSpent: 0n,
+    health: stats.maxHealth,
+    mana: stats.maxMana,
+    soul: getVocation("Knight").maxSoul,
+    skills: createInitialSkills(),
+    progressionDefinitionVersion: PROGRESSION_DEFINITION_VERSION,
+    progressionEventIds: [],
     positionX: 0,
     positionY: 0,
     positionZ: 7,

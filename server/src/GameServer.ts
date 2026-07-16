@@ -16,6 +16,7 @@ import type { ItemStore } from "./item/ItemStore";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
 import { MovementHandler } from "./MovementHandler";
 import { resolveMapData } from "./resolveMapData";
+import { ProgressionSystem } from "./progression/ProgressionSystem";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
 import { loadCreatureContent } from "./spawn/loadCreatureContent";
@@ -44,6 +45,7 @@ export class GameServer {
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
+  private readonly progression: ProgressionSystem;
   private readonly items: ItemIntentHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -99,6 +101,12 @@ export class GameServer {
       this.world,
       this.visibility,
       this.persistence,
+    );
+    this.progression = new ProgressionSystem(
+      this.world,
+      this.registry,
+      this.persistence,
+      this.items,
     );
     this.spawns =
       config.creatures && config.map.source === "data"
@@ -187,6 +195,7 @@ export class GameServer {
       this.movement.continueMovement(session, now);
     }
     this.spawns?.tick(now);
+    this.progression.tick(now);
     this.persistence.tick(now);
   }
 

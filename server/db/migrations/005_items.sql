@@ -136,7 +136,7 @@ begin
     or new.seed_z is distinct from old.seed_z
     or new.seed_stack_index is distinct from old.seed_stack_index
   then
-    raise exception 'item identity and seed origin are immutable';
+    raise exception 'item identity, type, and seed origin are immutable';
   end if;
   return new;
 end;

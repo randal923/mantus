@@ -1,4 +1,4 @@
-import type { CharacterVocation } from "@tibia/protocol";
+import type { StarterVocation } from "@tibia/protocol";
 import type { StarterSet } from "./StarterSet";
 
 const COMMON_EQUIPMENT = [
@@ -13,7 +13,7 @@ const COMMON_SUPPLIES = [
   { typeId: 3577, count: 3 },
 ] as const;
 
-const STARTER_SETS: Readonly<Record<CharacterVocation, StarterSet>> = {
+const STARTER_SETS: Readonly<Record<StarterVocation, StarterSet>> = {
   Knight: {
     equipment: [
       ...COMMON_EQUIPMENT,
@@ -67,6 +67,6 @@ const STARTER_SETS: Readonly<Record<CharacterVocation, StarterSet>> = {
   },
 };
 
-export function getStarterSet(vocation: CharacterVocation): StarterSet {
+export function getStarterSet(vocation: StarterVocation): StarterSet {
   return STARTER_SETS[vocation];
 }

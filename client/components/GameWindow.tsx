@@ -65,6 +65,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   >([]);
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
   const [inventory, setInventory] = useState<InventoryState | null>(null);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
@@ -82,6 +83,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setVisibleCreatures([]);
     setCharacterBusy(characterId !== null);
     setInventoryOpen(false);
+    setCharacterStatsOpen(false);
     setGameMenuOpen(false);
     setServerError(null);
     setConnectionAttempt((attempt) => attempt + 1);
@@ -95,10 +97,18 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     if (!ownCharacter) return;
     if (action === "toggleInventory") {
       if (gameMenuOpen) return;
+      setCharacterStatsOpen(false);
       setInventoryOpen((open) => !open);
       return;
     }
+    if (action === "openCharacterStats") {
+      setGameMenuOpen(false);
+      setInventoryOpen(true);
+      setCharacterStatsOpen(true);
+      return;
+    }
     setInventoryOpen(false);
+    setCharacterStatsOpen(false);
     setGameMenuOpen((open) => !open);
   });
 
@@ -177,6 +187,22 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "inventory-updated") {
             setInventory(message.inventory);
+            return;
+          }
+          if (message.type === "progression-updated") {
+            setOwnCharacter((current) =>
+              current?.id === message.playerId
+                ? { ...current, ...message.progression }
+                : current,
+            );
+            setInventory((current) =>
+              current
+                ? {
+                    ...current,
+                    capacityMax: message.progression.capacity,
+                  }
+                : current,
+            );
             return;
           }
           if (
@@ -337,10 +363,31 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               mana={ownCharacter.mana}
               maxMana={ownCharacter.maxMana}
               connectionStatus={status}
-              activePanel={inventoryOpen ? "inventory" : undefined}
-              onInventory={() => setInventoryOpen((open) => !open)}
+              activePanel={
+                characterStatsOpen
+                  ? "character"
+                  : inventoryOpen
+                    ? "inventory"
+                    : undefined
+              }
+              onCharacter={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(true);
+                setCharacterStatsOpen(true);
+              }}
+              onInventory={() => {
+                setGameMenuOpen(false);
+                if (characterStatsOpen) {
+                  setCharacterStatsOpen(false);
+                  setInventoryOpen(true);
+                  return;
+                }
+                setCharacterStatsOpen(false);
+                setInventoryOpen((open) => !open);
+              }}
               onSettings={() => {
                 setInventoryOpen(false);
+                setCharacterStatsOpen(false);
                 setGameMenuOpen(true);
               }}
             />
@@ -368,16 +415,28 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             </button>
           )}
           <GameHud
-            spellHotkeysEnabled={!gameMenuOpen}
+            spellHotkeysEnabled={!gameMenuOpen && !characterStatsOpen}
             visibleCreatures={visibleCreatures}
             ownPlayerId={ownCharacter.id}
           />
           {inventoryOpen && inventory && (
-            <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
+            <div
+              className={`absolute top-24 right-4 bottom-4 z-30 w-[calc(100vw-2rem)] transition-[max-width] duration-300 ease-in-out motion-reduce:transition-none ${
+                characterStatsOpen ? "max-w-3xl" : "max-w-96"
+              }`}
+            >
               <InventoryPanel
                 characterName={ownCharacter.name}
+                character={ownCharacter}
+                characterStatsOpen={characterStatsOpen}
                 {...inventory}
-                onClose={() => setInventoryOpen(false)}
+                onClose={() => {
+                  setInventoryOpen(false);
+                  setCharacterStatsOpen(false);
+                }}
+                onToggleCharacterStats={() =>
+                  setCharacterStatsOpen((open) => !open)
+                }
                 onEquip={(item) => clientRef.current?.equipItem(item)}
                 onUnequip={(item, slot) =>
                   clientRef.current?.unequipItem(item, slot)

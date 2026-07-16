@@ -2,7 +2,10 @@ import type {
   CharacterLookType,
   CharacterVocation,
   Direction,
+  StarterVocation,
 } from "@tibia/protocol";
+import type { CharacterSkill } from "../progression/CharacterSkill";
+import type { ProgressionEvent } from "../progression/ProgressionEvent";
 
 export interface CharacterOutfit {
   readonly lookType: CharacterLookType;
@@ -21,11 +24,14 @@ export interface Character {
   readonly vocation: CharacterVocation;
   readonly level: number;
   readonly experience: bigint;
+  readonly magicLevel: number;
+  readonly manaSpent: bigint;
   readonly health: number;
-  readonly maxHealth: number;
   readonly mana: number;
-  readonly maxMana: number;
-  readonly capacity: number;
+  readonly soul: number;
+  readonly skills: ReadonlyArray<CharacterSkill>;
+  readonly progressionDefinitionVersion: number;
+  readonly progressionEventIds: ReadonlyArray<string>;
   readonly positionX: number;
   readonly positionY: number;
   readonly positionZ: number;
@@ -49,7 +55,7 @@ export interface CharacterSummary {
 
 export interface CreateCharacterInput {
   readonly displayName: string;
-  readonly vocation: CharacterVocation;
+  readonly vocation: StarterVocation;
   readonly lookType: CharacterLookType;
 }
 
@@ -58,11 +64,15 @@ export interface CharacterSaveSnapshot {
   readonly expectedVersion: number;
   readonly level: number;
   readonly experience: bigint;
+  readonly magicLevel: number;
+  readonly manaSpent: bigint;
   readonly health: number;
-  readonly maxHealth: number;
   readonly mana: number;
-  readonly maxMana: number;
-  readonly capacity: number;
+  readonly soul: number;
+  readonly skills: ReadonlyArray<CharacterSkill>;
+  readonly progressionDefinitionVersion: number;
+  readonly progressionEvents: ReadonlyArray<ProgressionEvent>;
+  readonly vocation: CharacterVocation;
   readonly positionX: number;
   readonly positionY: number;
   readonly positionZ: number;

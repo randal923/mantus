@@ -9,6 +9,7 @@ import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { inventoryStateSchema } from "./item";
 import { positionSchema } from "./position";
+import { ownProgressionStateSchema } from "./progression";
 
 /**
  * Static terrain is public data served over HTTP from
@@ -50,6 +51,12 @@ export const welcomeMessageSchema = z.object({
 export const inventoryUpdatedMessageSchema = z.object({
   type: z.literal("inventory-updated"),
   inventory: inventoryStateSchema,
+});
+
+export const progressionUpdatedMessageSchema = z.object({
+  type: z.literal("progression-updated"),
+  playerId: z.string(),
+  progression: ownProgressionStateSchema,
 });
 
 export const creatureJoinedMessageSchema = z.object({
@@ -137,6 +144,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   characterListMessageSchema,
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,
+  progressionUpdatedMessageSchema,
   creatureJoinedMessageSchema,
   creatureLeftMessageSchema,
   creatureMovedMessageSchema,

@@ -79,6 +79,21 @@ export class ItemIntentHandler {
     this.inventories.delete(characterId);
   }
 
+  updateCapacity(
+    characterId: string,
+    capacityMax: number,
+  ): InventoryState | null {
+    const cache = this.inventories.get(characterId);
+    if (!cache || cache.capacityMax === capacityMax) return null;
+    const updated = {
+      ...cache,
+      capacityMax,
+      revision: cache.revision + 1,
+    };
+    this.inventories.set(characterId, updated);
+    return this.project(updated);
+  }
+
   applyResolvedOutcomes(): void {
     for (const outcome of this.outcomes.splice(0)) outcome();
   }

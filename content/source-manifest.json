@@ -21,7 +21,15 @@
       "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
       "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
       "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9"
+    },
+    "canaryProgression": {
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+      "vocationsSha256": "d3ecc1319710012265e8225649d9cae3dbb6d1f90036310a8b81f6e40a8a3a14",
+      "vocationImplementationSha256": "a3930265d68ccf188a0aeddebfd4bd19fcc257bfb3865e5ee8e429f043be83b3"
     }
+  },
+  "balanceDefinitions": {
+    "progression": 1
   },
   "converters": {
     "assets": 2,

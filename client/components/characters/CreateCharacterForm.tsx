@@ -4,8 +4,8 @@ import { useState, type FormEvent } from "react";
 import type {
   CharacterCreationOptions,
   CharacterLookType,
-  CharacterVocation,
   CreateCharacterInput,
+  StarterVocation,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
@@ -29,7 +29,7 @@ export function CreateCharacterForm({
 }: CreateCharacterFormProps) {
   const { t } = useAppTranslation();
   const [name, setName] = useState("");
-  const [vocation, setVocation] = useState<CharacterVocation | null>(
+  const [vocation, setVocation] = useState<StarterVocation | null>(
     creationOptions.vocations[0] ?? null,
   );
   const [lookType, setLookType] = useState<CharacterLookType | null>(

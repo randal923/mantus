@@ -96,12 +96,29 @@
       "name": "Druid",
       "description": "Healer and nature mage wielding ice and life-saving support."
     },
+    "Elite Knight": {
+      "name": "Elite Knight",
+      "description": "Promoted knight with stronger regeneration."
+    },
+    "Royal Paladin": {
+      "name": "Royal Paladin",
+      "description": "Promoted paladin with stronger regeneration."
+    },
+    "Master Sorcerer": {
+      "name": "Master Sorcerer",
+      "description": "Promoted sorcerer with stronger regeneration."
+    },
+    "Elder Druid": {
+      "name": "Elder Druid",
+      "description": "Promoted druid with stronger regeneration."
+    },
     "None": {
       "name": "None"
     }
   },
   "navigation": {
     "gamePanels": "Game panels",
+    "character": "Character",
     "inventory": "Inventory",
     "quests": "Quests",
     "worldMap": "World map",
@@ -116,6 +133,14 @@
   "stats": {
     "health": "Health",
     "mana": "Mana",
+    "maxHealth": "Max health",
+    "maxMana": "Max mana",
+    "healthRegeneration": "Health regeneration",
+    "manaRegeneration": "Mana regeneration",
+    "soul": "Soul",
+    "soulRegeneration": "Soul regeneration",
+    "speed": "Move speed",
+    "attackSpeed": "Attack speed",
     "healthAbbreviation": "HP",
     "manaAbbreviation": "MP"
   },
@@ -123,6 +148,8 @@
     "label": "{{name}}'s inventory",
     "title": "Inventory",
     "close": "Close inventory",
+    "openCharacterStats": "Open character stats",
+    "closeCharacterStats": "Close character stats",
     "gold": "Gold",
     "platinum": "Platinum",
     "stack": "Stack",
@@ -132,6 +159,27 @@
     "equippedItems": "Equipped items",
     "equipped": "Equipped",
     "itemTitle": "{{count}}{{name}}"
+  },
+  "characterStats": {
+    "label": "{{name}}'s character stats",
+    "title": "Character Details",
+    "level": "Level {{level}}",
+    "experience": "Experience",
+    "magicLevel": "Magic Level {{level}}",
+    "details": "Details",
+    "skills": "Skills",
+    "maximum": "Maximum",
+    "regeneration": "{{amount}} every {{seconds}}s",
+    "seconds": "{{seconds}}s"
+  },
+  "skills": {
+    "fist": "Fist Fighting",
+    "club": "Club Fighting",
+    "sword": "Sword Fighting",
+    "axe": "Axe Fighting",
+    "distance": "Distance Fighting",
+    "shielding": "Shielding",
+    "fishing": "Fishing"
   },
   "items": {
     "steelHelmet": "steel helmet",
@@ -169,7 +217,7 @@
     "emptySlot": "Empty Slot"
   },
   "hud": {
-    "controls": "WASD to move · I for inventory · Esc for menu",
+    "controls": "WASD to move · I for inventory · C for character · Esc for menu",
     "battleList": "Battle List"
   },
   "modal": {
@@ -207,6 +255,7 @@
     "moveDown": "Move Down",
     "moveRight": "Move Right",
     "inventory": "Inventory",
+    "characterStats": "Character Stats",
     "gameMenu": "Game Menu",
     "arrowUp": "Arrow Up",
     "arrowLeft": "Arrow Left",

@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import {
   CHARACTER_OUTFIT_LOOK_TYPES,
-  CHARACTER_VOCATIONS,
   MAX_CHARACTERS_PER_ACCOUNT,
+  STARTER_VOCATIONS,
   type CharacterCreationOptions,
   type CharacterSummary as PublicCharacterSummary,
   type OwnCharacterState,
@@ -13,6 +13,11 @@ import type { Character, CreateCharacterInput } from "./Character";
 import { CharacterError } from "./CharacterError";
 import type { CharacterStore } from "./CharacterStore";
 import { getStarterSet } from "../item/getStarterSet";
+import { createInitialSkills } from "../progression/createInitialSkills";
+import { deriveCharacterStats } from "../progression/deriveCharacterStats";
+import { getVocation } from "../progression/getVocation";
+import { PROGRESSION_DEFINITION_VERSION } from "../progression/progressionDefinitionVersion";
+import { projectOwnProgression } from "../progression/projectOwnProgression";
 import { normalizeCharacterName } from "./normalizeCharacterName";
 
 interface StarterPosition extends Position {
@@ -35,7 +40,7 @@ export class CharacterService {
 
   creationOptions(): CharacterCreationOptions {
     return {
-      vocations: [...CHARACTER_VOCATIONS],
+      vocations: [...STARTER_VOCATIONS],
       outfits: [
         { lookType: CHARACTER_OUTFIT_LOOK_TYPES[0], label: "citizen-male" },
         { lookType: CHARACTER_OUTFIT_LOOK_TYPES[1], label: "citizen-female" },
@@ -74,6 +79,11 @@ export class CharacterService {
       throw new CharacterError("limit-reached");
     }
     const now = new Date();
+    const stats = deriveCharacterStats({
+      vocation: input.vocation,
+      definitionVersion: PROGRESSION_DEFINITION_VERSION,
+      level: 1,
+    });
     const character: Character = {
       id: randomUUID(),
       accountId,
@@ -82,11 +92,17 @@ export class CharacterService {
       vocation: input.vocation,
       level: 1,
       experience: 0n,
-      health: 150,
-      maxHealth: 150,
-      mana: 55,
-      maxMana: 55,
-      capacity: 400,
+      magicLevel: 0,
+      manaSpent: 0n,
+      health: stats.maxHealth,
+      mana: stats.maxMana,
+      soul: getVocation(
+        input.vocation,
+        PROGRESSION_DEFINITION_VERSION,
+      ).maxSoul,
+      skills: createInitialSkills(),
+      progressionDefinitionVersion: PROGRESSION_DEFINITION_VERSION,
+      progressionEventIds: [],
       positionX: this.starter.x,
       positionY: this.starter.y,
       positionZ: this.starter.z,
@@ -101,7 +117,7 @@ export class CharacterService {
     await this.store.create(
       character,
       MAX_CHARACTERS_PER_ACCOUNT,
-      getStarterSet(character.vocation),
+      getStarterSet(input.vocation),
     );
     return this.list(accountId);
   }
@@ -126,13 +142,7 @@ export class CharacterService {
       id: player.id,
       name: player.name,
       vocation: player.vocation,
-      level: player.level,
-      experience: player.experience,
-      health: player.health,
-      maxHealth: player.maxHealth,
-      mana: player.mana,
-      maxMana: player.maxMana,
-      capacity: player.capacity,
+      ...projectOwnProgression(player),
       position: { ...player.position },
       direction: player.direction,
       outfit: player.outfit,

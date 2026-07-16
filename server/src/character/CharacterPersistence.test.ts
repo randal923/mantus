@@ -88,6 +88,31 @@ describe("CharacterPersistence", () => {
     expect(persistence.unsavedPlayerCount).toBe(0);
   });
 
+  it("persists progression event ids with the awarded snapshot", async () => {
+    const snapshots: CharacterSaveSnapshot[] = [];
+    const store = makeStore(async (snapshot) => {
+      snapshots.push(snapshot);
+      return snapshot.expectedVersion + 1;
+    });
+    const persistence = new CharacterPersistence(store, 30_000, 0, 0);
+    const player = new Player(
+      makeCharacter("character-id"),
+      { x: 0, y: 0, z: 7 },
+      0,
+    );
+
+    persistence.track(player, 0);
+    player.awardExperience("kill:rat:1", 100);
+    persistence.saveNow(player, 1);
+    await persistence.flushCharacter(player.id);
+
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0]).toMatchObject({
+      level: 2,
+      progressionEvents: [{ id: "kill:rat:1", type: "experience" }],
+    });
+  });
+
   it("queues dirty state when the save interval elapses", async () => {
     const snapshots: CharacterSaveSnapshot[] = [];
     const store = makeStore(async (snapshot) => {

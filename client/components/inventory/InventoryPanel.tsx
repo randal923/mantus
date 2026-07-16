@@ -1,5 +1,6 @@
 "use client";
 
+import type { OwnCharacterState } from "@tibia/protocol";
 import type { Equipment, InventoryItem } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
@@ -9,12 +10,15 @@ import { CapacityBar } from "./CapacityBar";
 import { EquipmentPaperdoll } from "./EquipmentPaperdoll";
 import { ItemSlot } from "./ItemSlot";
 import { SpriteIcon } from "./SpriteIcon";
+import { InventoryCharacterStats } from "./InventoryCharacterStats";
 
 const GOLD_COIN_SPRITE = 7384;
 const PLATINUM_COIN_SPRITE = 7409;
 
 interface InventoryPanelProps {
   characterName: string;
+  character?: OwnCharacterState;
+  characterStatsOpen?: boolean;
   equipment: Equipment;
   /** Backpack contents; display only — all mutations go through server intents. */
   items: InventoryItem[];
@@ -25,6 +29,7 @@ interface InventoryPanelProps {
   /** Backpack size in slots; empty slots render as open squares. */
   slotCount?: number;
   onClose?: () => void;
+  onToggleCharacterStats?: () => void;
   onStack?: () => void;
   onSort?: () => void;
   onEquip?: (item: InventoryItem) => void;
@@ -34,6 +39,8 @@ interface InventoryPanelProps {
 
 export function InventoryPanel({
   characterName,
+  character,
+  characterStatsOpen = false,
   equipment,
   items,
   gold,
@@ -42,6 +49,7 @@ export function InventoryPanel({
   capacityMax,
   slotCount = 24,
   onClose,
+  onToggleCharacterStats,
   onStack,
   onSort,
   onEquip,
@@ -55,106 +63,159 @@ export function InventoryPanel({
   return (
     <section
       aria-label={t("inventory.label", { name: characterName })}
-      className="ui-panel-frame relative isolate flex h-full w-full max-w-96 flex-col gap-4 overflow-hidden p-4 font-tibia text-ui-text select-none"
+      className="relative flex h-full w-full justify-end font-tibia text-ui-text select-none"
     >
-      <div
-        aria-hidden
-        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.045] mix-blend-soft-light"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-8 top-0 -z-10 h-28 bg-radial from-ui-accent/12 to-transparent blur-xl"
-      />
-      <header className="flex items-center gap-3">
-        <div className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-ui-gold/30 bg-black/40 shadow-inner shadow-black/45">
-          <SpriteIcon
-            spriteId={equipment.helmet?.spriteId ?? 7837}
-            scale={1.4}
+      {character && (
+        <div
+          aria-hidden={!characterStatsOpen}
+          className={`h-full min-w-0 overflow-hidden transition-[width,opacity,transform] duration-300 ease-in-out motion-reduce:transition-none ${
+            characterStatsOpen
+              ? "w-96 translate-x-0 opacity-100"
+              : "pointer-events-none w-0 -translate-x-4 opacity-0"
+          }`}
+        >
+          <InventoryCharacterStats
+            character={character}
+            capacityUsed={capacityUsed}
           />
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[10px] tracking-[0.2em] text-ui-gold uppercase">
-            {characterName}
-          </div>
-          <h2 className="font-display text-2xl tracking-[0.12em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
-            {t("inventory.title")}
-          </h2>
-        </div>
-        {onClose && (
-          <CloseButton
-            label={t("inventory.close")}
-            onClick={onClose}
-            className="self-start"
-          />
-        )}
-      </header>
-      <div aria-hidden className="ui-divider" />
+      )}
 
-      <EquipmentPaperdoll equipment={equipment} onUnequip={onUnequip} />
+      {character && onToggleCharacterStats && (
+        <button
+          type="button"
+          title={
+            characterStatsOpen
+              ? t("inventory.closeCharacterStats")
+              : t("inventory.openCharacterStats")
+          }
+          aria-label={
+            characterStatsOpen
+              ? t("inventory.closeCharacterStats")
+              : t("inventory.openCharacterStats")
+          }
+          aria-expanded={characterStatsOpen}
+          aria-controls="character-stats-panel"
+          onClick={onToggleCharacterStats}
+          className="ui-button ui-button-secondary absolute top-1 right-96 z-20 flex size-9 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-ui-gold/35 font-display text-xl text-ui-gold shadow-lg shadow-black/60 outline-none transition-[color,filter] hover:brightness-125 focus-visible:ring-2 focus-visible:ring-ui-gold/60"
+        >
+          <span
+            aria-hidden
+            className={`inline-block transition-transform duration-300 ease-in-out motion-reduce:transition-none ${
+              characterStatsOpen ? "rotate-180" : ""
+            }`}
+          >
+            ‹
+          </span>
+        </button>
+      )}
 
-      <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
-        <div className="grid flex-1 grid-cols-2 gap-2 text-xs text-ui-text">
-          <div className="flex items-center gap-1.5 border-r border-ui-gold/10">
-            <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1.4} />
-            <span>
-              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
-                {t("inventory.gold")}
-              </span>
-              {gold.toLocaleString(language)}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <SpriteIcon spriteId={PLATINUM_COIN_SPRITE} scale={1.4} />
-            <span>
-              <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
-                {t("inventory.platinum")}
-              </span>
-              {platinum.toLocaleString(language)}
-            </span>
-          </div>
-        </div>
-        {(onStack || onSort) && (
-          <div className="flex flex-col gap-1.5">
-            {onStack && (
-              <Button size="sm" onClick={onStack}>
-                {t("inventory.stack")}
-              </Button>
-            )}
-            {onSort && (
-              <Button size="sm" onClick={onSort}>
-                {t("inventory.sort")}
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-
-      <CapacityBar used={capacityUsed} max={capacityMax} />
-
-      <div className="flex items-center justify-between border-b border-ui-gold/15 pb-2">
-        <h3 className="font-display text-xs tracking-[0.18em] text-ui-gold uppercase">
-          {t("inventory.backpack")}
-        </h3>
-        <span className="text-xs text-ui-muted">
-          {items.length} / {slotCount}
-        </span>
-      </div>
-
-      <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
-        <div className="grid grid-cols-4 justify-items-center gap-2">
-          {items.map((item) => (
-            <ItemSlot
-              key={item.id}
-              item={item}
-              onActivate={
-                item.equipmentSlot && onEquip ? () => onEquip(item) : undefined
-              }
-              onContextAction={onDrop ? () => onDrop(item) : undefined}
+      <div
+        className={`ui-panel-frame relative isolate flex h-full w-96 shrink-0 flex-col gap-4 overflow-hidden p-4 transition-[border-radius] duration-300 ease-in-out motion-reduce:transition-none ${
+          characterStatsOpen ? "rounded-l-none" : ""
+        }`}
+      >
+        <div
+          aria-hidden
+          className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.045] mix-blend-soft-light"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-8 top-0 -z-10 h-28 bg-radial from-ui-accent/12 to-transparent blur-xl"
+        />
+        <header className="flex items-center gap-3">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-ui-gold/30 bg-black/40 shadow-inner shadow-black/45">
+            <SpriteIcon
+              spriteId={equipment.helmet?.spriteId ?? 7837}
+              scale={1.4}
             />
-          ))}
-          {Array.from({ length: emptySlots }, (_, i) => (
-            <ItemSlot key={`empty-${i}`} />
-          ))}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[10px] tracking-[0.2em] text-ui-gold uppercase">
+              {characterName}
+            </div>
+            <h2 className="font-display text-2xl tracking-[0.12em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+              {t("inventory.title")}
+            </h2>
+          </div>
+          {onClose && (
+            <CloseButton
+              label={t("inventory.close")}
+              onClick={onClose}
+              className="self-start"
+            />
+          )}
+        </header>
+        <div aria-hidden className="ui-divider" />
+
+        <EquipmentPaperdoll equipment={equipment} onUnequip={onUnequip} />
+
+        <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
+          <div className="grid flex-1 grid-cols-2 gap-2 text-xs text-ui-text">
+            <div className="flex items-center gap-1.5 border-r border-ui-gold/10">
+              <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1.4} />
+              <span>
+                <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
+                  {t("inventory.gold")}
+                </span>
+                {gold.toLocaleString(language)}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <SpriteIcon spriteId={PLATINUM_COIN_SPRITE} scale={1.4} />
+              <span>
+                <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
+                  {t("inventory.platinum")}
+                </span>
+                {platinum.toLocaleString(language)}
+              </span>
+            </div>
+          </div>
+          {(onStack || onSort) && (
+            <div className="flex flex-col gap-1.5">
+              {onStack && (
+                <Button size="sm" onClick={onStack}>
+                  {t("inventory.stack")}
+                </Button>
+              )}
+              {onSort && (
+                <Button size="sm" onClick={onSort}>
+                  {t("inventory.sort")}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <CapacityBar used={capacityUsed} max={capacityMax} />
+
+        <div className="flex items-center justify-between border-b border-ui-gold/15 pb-2">
+          <h3 className="font-display text-xs tracking-[0.18em] text-ui-gold uppercase">
+            {t("inventory.backpack")}
+          </h3>
+          <span className="text-xs text-ui-muted">
+            {items.length} / {slotCount}
+          </span>
+        </div>
+
+        <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
+          <div className="grid grid-cols-4 justify-items-center gap-2">
+            {items.map((item) => (
+              <ItemSlot
+                key={item.id}
+                item={item}
+                onActivate={
+                  item.equipmentSlot && onEquip
+                    ? () => onEquip(item)
+                    : undefined
+                }
+                onContextAction={onDrop ? () => onDrop(item) : undefined}
+              />
+            ))}
+            {Array.from({ length: emptySlots }, (_, i) => (
+              <ItemSlot key={`empty-${i}`} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

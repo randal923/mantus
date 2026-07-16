@@ -37,13 +37,17 @@ const saveSnapshot = (
 ): CharacterSaveSnapshot => ({
   characterId: character.id,
   expectedVersion: character.version,
+  vocation: character.vocation,
+  progressionDefinitionVersion: character.progressionDefinitionVersion,
   level: character.level,
   experience: character.experience,
+  magicLevel: character.magicLevel,
+  manaSpent: character.manaSpent,
   health: character.health,
-  maxHealth: character.maxHealth,
   mana: character.mana,
-  maxMana: character.maxMana,
-  capacity: character.capacity,
+  soul: character.soul,
+  skills: character.skills,
+  progressionEvents: [],
   positionX,
   positionY: character.positionY,
   positionZ: character.positionZ,
@@ -71,6 +75,8 @@ databaseDescribe("PgCharacterStore integration", () => {
       "003_characters.sql",
       "004_audit_log.sql",
       "005_items.sql",
+      "006_item_identity_error.sql",
+      "007_progression.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -181,10 +187,61 @@ databaseDescribe("PgCharacterStore integration", () => {
     const character = await store.findByIdForAccount(accountId, summary.id);
     if (!character) throw new Error("character was not found");
 
-    await expect(store.saveSnapshot(saveSnapshot(character, 101))).resolves.toBe(2);
-    await expect(store.saveSnapshot(saveSnapshot(character, 102))).rejects.toMatchObject({
+    const newer = saveSnapshot(character, 101);
+    const newerSkills = newer.skills.map((skill) =>
+      skill.skill === "sword" ? { ...skill, tries: 1 } : skill,
+    );
+    await expect(
+      store.saveSnapshot({ ...newer, skills: newerSkills }),
+    ).resolves.toBe(2);
+    const stale = saveSnapshot(character, 102);
+    await expect(
+      store.saveSnapshot({
+        ...stale,
+        skills: stale.skills.map((skill) =>
+          skill.skill === "sword" ? { ...skill, tries: 2 } : skill,
+        ),
+      }),
+    ).rejects.toMatchObject({
       code: "version-conflict",
     });
+
+    const persisted = await store.findByIdForAccount(accountId, character.id);
+    expect(persisted).toMatchObject({ positionX: 101, version: 2 });
+    expect(
+      persisted?.skills.find((skill) => skill.skill === "sword"),
+    ).toMatchObject({ tries: 1 });
+  });
+
+  it("rejects a duplicate progression event without changing the snapshot", async () => {
+    const accountId = await createAccount("progression-event");
+    await service.create(accountId, {
+      displayName: "Replay Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const summary = (await store.listByAccountId(accountId))[0];
+    if (!summary) throw new Error("character was not created");
+    const character = await store.findByIdForAccount(accountId, summary.id);
+    if (!character) throw new Error("character was not found");
+    const event = { id: "kill:rat:durable", type: "experience" } as const;
+
+    await expect(
+      store.saveSnapshot({
+        ...saveSnapshot(character, 101),
+        progressionEvents: [event],
+      }),
+    ).resolves.toBe(2);
+    const reloaded = await store.findByIdForAccount(accountId, character.id);
+    if (!reloaded) throw new Error("character was not reloaded");
+    expect(reloaded.progressionEventIds).toContain(event.id);
+
+    await expect(
+      store.saveSnapshot({
+        ...saveSnapshot(reloaded, 102),
+        progressionEvents: [event],
+      }),
+    ).rejects.toMatchObject({ code: "version-conflict" });
 
     const persisted = await store.findByIdForAccount(accountId, character.id);
     expect(persisted).toMatchObject({ positionX: 101, version: 2 });

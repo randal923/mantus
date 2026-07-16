@@ -6,7 +6,7 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
 
-type NavigationPanel = "inventory" | "quests" | "map";
+type NavigationPanel = "character" | "inventory" | "quests" | "map";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 const STATUS_CLASS: Record<ConnectionStatus, string> = {
@@ -117,6 +117,27 @@ export function TopNavigationBar({
         aria-label={t("navigation.gamePanels")}
         className="ml-auto flex gap-1 rounded-xl border border-ui-gold/10 bg-black/20 p-1"
       >
+        <NavigationIconButton
+          label={t("navigation.character")}
+          active={activePanel === "character"}
+          disabled={!onCharacter}
+          onClick={onCharacter}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5 sm:size-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5.5 20a6.5 6.5 0 0 1 13 0M4 4.5h3M17 4.5h3" />
+          </svg>
+        </NavigationIconButton>
+
         <NavigationIconButton
           label={t("navigation.inventory")}
           active={activePanel === "inventory"}

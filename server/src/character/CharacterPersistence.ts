@@ -12,6 +12,7 @@ interface SaveState {
   failed: unknown | null;
   tail: Promise<void>;
   lastQueuedAt: number;
+  nextProgressionEventIndex: number;
 }
 
 export class CharacterPersistence {
@@ -45,6 +46,7 @@ export class CharacterPersistence {
       failed: null,
       tail: Promise.resolve(),
       lastQueuedAt: now,
+      nextProgressionEventIndex: 0,
     });
   }
 
@@ -102,9 +104,14 @@ export class CharacterPersistence {
 
   private enqueueSnapshot(state: SaveState, now: number): void {
     if (!state.dirty || state.failed) return;
-    const snapshot = this.snapshot(state.player, state.nextExpectedVersion);
+    const snapshot = this.snapshot(
+      state.player,
+      state.nextExpectedVersion,
+      state.nextProgressionEventIndex,
+    );
     state.dirty = false;
     state.nextExpectedVersion += 1;
+    state.nextProgressionEventIndex += snapshot.progressionEvents.length;
     state.pendingCount += 1;
     state.lastQueuedAt = now;
     const save = state.tail.then(async () => {
@@ -152,17 +159,25 @@ export class CharacterPersistence {
   private snapshot(
     player: Player,
     expectedVersion: number,
+    progressionEventIndex: number,
   ): CharacterSaveSnapshot {
     return {
       characterId: player.id,
       expectedVersion,
+      vocation: player.vocation,
+      progressionDefinitionVersion: player.progression.definitionVersion,
       level: player.level,
       experience: BigInt(player.experience),
+      magicLevel: player.progression.magicLevel,
+      manaSpent: BigInt(player.progression.manaSpent),
       health: player.health,
-      maxHealth: player.maxHealth,
       mana: player.mana,
-      maxMana: player.maxMana,
-      capacity: player.capacity,
+      soul: player.progression.soul,
+      skills: player.progression.skills,
+      progressionEvents:
+        player.progression.sessionProgressionEvents.slice(
+          progressionEventIndex,
+        ),
       positionX: player.position.x,
       positionY: player.position.y,
       positionZ: player.position.z,

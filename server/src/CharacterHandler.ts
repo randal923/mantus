@@ -15,6 +15,7 @@ import type { Visibility } from "./Visibility";
 import type { World } from "./World";
 import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { LoadedInventory } from "./item/LoadedInventory";
+import { deriveCharacterStats } from "./progression/deriveCharacterStats";
 
 export class CharacterHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -145,7 +146,14 @@ export class CharacterHandler {
         characterId,
       );
       const inventory = character
-        ? await this.items.load(character.id, character.capacity)
+        ? await this.items.load(
+            character.id,
+            deriveCharacterStats({
+              vocation: character.vocation,
+              definitionVersion: character.progressionDefinitionVersion,
+              level: character.level,
+            }).capacity,
+          )
         : null;
       this.outcomes.push(() => {
         if (!this.isCurrentOperation(session, accountId)) return;
@@ -191,15 +199,16 @@ export class CharacterHandler {
       session.terminate();
       return;
     }
-    const player = new Player(character, spawn);
-    this.persistence.track(player, Date.now());
+    const now = Date.now();
+    const player = new Player(character, spawn, now);
+    this.persistence.track(player, now);
     this.world.addPlayer(player);
     if (
       spawn.x !== character.positionX ||
       spawn.y !== character.positionY ||
       spawn.z !== character.positionZ
     ) {
-      this.persistence.saveNow(player, Date.now());
+      this.persistence.saveNow(player, now);
     }
     session.playerId = player.id;
     this.registry.bindPlayer(session);

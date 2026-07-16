@@ -1,0 +1,482 @@
+import {
+  MAX_CHARACTER_LEVEL,
+  MAX_MAGIC_LEVEL,
+  MAX_PROGRESSION_VALUE,
+  MAX_SKILL_LEVEL,
+  MIN_SKILL_LEVEL,
+  SKILLS,
+  type CharacterVocation,
+  type Skill,
+} from "@tibia/protocol";
+import type { CharacterSkill } from "./CharacterSkill";
+import { deriveCharacterStats } from "./deriveCharacterStats";
+import { getExperienceForLevel } from "./getExperienceForLevel";
+import { getLevelForExperience } from "./getLevelForExperience";
+import { getManaForNextMagicLevel } from "./getManaForNextMagicLevel";
+import { getSkillTriesForNextLevel } from "./getSkillTriesForNextLevel";
+import { getVocation } from "./getVocation";
+import type { ProgressionEvent, ProgressionEventType } from "./ProgressionEvent";
+
+const MAX_AWARD_AMOUNT = 1_000_000_000;
+const MAX_SCHEDULES = 4;
+const MIN_TRAINING_INTERVAL_MS = 250;
+const MAX_SCHEDULE_TICKS_PER_SERVER_TICK = 5;
+const EVENT_ID_PATTERN = /^[A-Za-z0-9:_-]{1,128}$/;
+
+interface ProgressionMutation {
+  readonly processed: boolean;
+  readonly changed: boolean;
+}
+
+interface ProgressionTick {
+  readonly changed: boolean;
+  readonly healthGain: number;
+}
+
+interface TrainingSchedule {
+  readonly id: string;
+  readonly skill: Skill;
+  readonly intervalMs: number;
+  readonly tries: number;
+  nextAt: number;
+}
+
+interface DueTicks {
+  readonly count: number;
+  readonly nextAt: number;
+}
+
+export class CharacterProgression {
+  private currentLevel: number;
+  private currentExperience: number;
+  private currentMagicLevel: number;
+  private currentManaSpent: number;
+  private currentMana: number;
+  private currentSoul: number;
+  private readonly skillStates = new Map<Skill, CharacterSkill>();
+  private readonly processedEventIds: Set<string>;
+  private readonly sessionEvents: ProgressionEvent[] = [];
+  private readonly trainingSchedules = new Map<string, TrainingSchedule>();
+  private nextHealthAt: number;
+  private nextManaAt: number;
+  private nextSoulAt: number;
+
+  constructor(
+    readonly vocation: CharacterVocation,
+    readonly definitionVersion: number,
+    state: {
+      level: number;
+      experience: number;
+      magicLevel: number;
+      manaSpent: number;
+      mana: number;
+      soul: number;
+      skills: ReadonlyArray<CharacterSkill>;
+      processedEventIds: ReadonlyArray<string>;
+    },
+    now: number,
+  ) {
+    const definition = getVocation(vocation, definitionVersion);
+    if (
+      !Number.isSafeInteger(state.experience) ||
+      state.experience < 0 ||
+      state.experience > getExperienceForLevel(MAX_CHARACTER_LEVEL) ||
+      getLevelForExperience(state.experience) !== state.level
+    ) {
+      throw new Error("persisted experience and level are inconsistent");
+    }
+    if (
+      !Number.isInteger(state.magicLevel) ||
+      state.magicLevel < 0 ||
+      state.magicLevel > MAX_MAGIC_LEVEL
+    ) {
+      throw new Error("persisted magic level is out of range");
+    }
+    const manaForNext = getManaForNextMagicLevel(
+      definition,
+      state.magicLevel,
+    );
+    if (
+      !Number.isSafeInteger(state.manaSpent) ||
+      state.manaSpent < 0 ||
+      (manaForNext > 0 && state.manaSpent >= manaForNext) ||
+      (manaForNext === 0 && state.manaSpent !== 0)
+    ) {
+      throw new Error("persisted magic progress is out of range");
+    }
+    const stats = deriveCharacterStats({
+      vocation,
+      definitionVersion,
+      level: state.level,
+    });
+    if (
+      !Number.isInteger(state.mana) ||
+      state.mana < 0 ||
+      state.mana > stats.maxMana
+    ) {
+      throw new Error("persisted mana is out of range");
+    }
+    if (
+      !Number.isInteger(state.soul) ||
+      state.soul < 0 ||
+      state.soul > definition.maxSoul
+    ) {
+      throw new Error("persisted soul is out of range");
+    }
+    if (state.skills.length !== SKILLS.length) {
+      throw new Error("persisted skill set is incomplete");
+    }
+    for (const skill of state.skills) {
+      if (this.skillStates.has(skill.skill)) {
+        throw new Error(`persisted skill ${skill.skill} is duplicated`);
+      }
+      if (
+        !Number.isInteger(skill.level) ||
+        skill.level < MIN_SKILL_LEVEL ||
+        skill.level > MAX_SKILL_LEVEL
+      ) {
+        throw new Error(`persisted skill ${skill.skill} level is out of range`);
+      }
+      const required = getSkillTriesForNextLevel(
+        definition,
+        skill.skill,
+        skill.level,
+      );
+      if (
+        !Number.isSafeInteger(skill.tries) ||
+        skill.tries < 0 ||
+        (required > 0 && skill.tries >= required) ||
+        (required === 0 && skill.tries !== 0)
+      ) {
+        throw new Error(
+          `persisted skill ${skill.skill} progress is out of range`,
+        );
+      }
+      this.skillStates.set(skill.skill, { ...skill });
+    }
+    for (const skill of SKILLS) {
+      if (!this.skillStates.has(skill)) {
+        throw new Error(`persisted skill ${skill} is missing`);
+      }
+    }
+    for (const eventId of state.processedEventIds) {
+      this.assertEventId(eventId);
+    }
+    if (new Set(state.processedEventIds).size !== state.processedEventIds.length) {
+      throw new Error("persisted progression event ids are duplicated");
+    }
+    this.currentLevel = state.level;
+    this.currentExperience = state.experience;
+    this.currentMagicLevel = state.magicLevel;
+    this.currentManaSpent = state.manaSpent;
+    this.currentMana = state.mana;
+    this.currentSoul = state.soul;
+    this.processedEventIds = new Set(state.processedEventIds);
+    this.nextHealthAt = now + definition.regeneration.healthIntervalMs;
+    this.nextManaAt = now + definition.regeneration.manaIntervalMs;
+    this.nextSoulAt = now + definition.regeneration.soulIntervalMs;
+  }
+
+  get level(): number {
+    return this.currentLevel;
+  }
+
+  get experience(): number {
+    return this.currentExperience;
+  }
+
+  get magicLevel(): number {
+    return this.currentMagicLevel;
+  }
+
+  get manaSpent(): number {
+    return this.currentManaSpent;
+  }
+
+  get mana(): number {
+    return this.currentMana;
+  }
+
+  get maxMana(): number {
+    return this.stats.maxMana;
+  }
+
+  get maxHealth(): number {
+    return this.stats.maxHealth;
+  }
+
+  get capacity(): number {
+    return this.stats.capacity;
+  }
+
+  get speed(): number {
+    return this.stats.speed;
+  }
+
+  get soul(): number {
+    return this.currentSoul;
+  }
+
+  get maxSoul(): number {
+    return getVocation(this.vocation, this.definitionVersion).maxSoul;
+  }
+
+  get skills(): ReadonlyArray<CharacterSkill> {
+    return SKILLS.map((skill) => ({ ...this.requireSkill(skill) }));
+  }
+
+  get attackSpeedMs(): number {
+    return getVocation(
+      this.vocation,
+      this.definitionVersion,
+    ).attackSpeedMs;
+  }
+
+  get sessionProgressionEvents(): ReadonlyArray<ProgressionEvent> {
+    return this.sessionEvents;
+  }
+
+  awardExperience(eventId: string, amount: number): ProgressionMutation {
+    this.assertAward(eventId, amount);
+    if (!this.recordEvent(eventId, "experience")) {
+      return { processed: false, changed: false };
+    }
+    const maximum = getExperienceForLevel(MAX_CHARACTER_LEVEL);
+    const experience = Math.min(maximum, this.currentExperience + amount);
+    const level = getLevelForExperience(experience);
+    const changed =
+      experience !== this.currentExperience || level !== this.currentLevel;
+    this.currentExperience = experience;
+    if (level !== this.currentLevel) {
+      this.currentLevel = level;
+      this.currentMana = this.maxMana;
+    }
+    return { processed: true, changed };
+  }
+
+  awardMagicProgress(eventId: string, amount: number): ProgressionMutation {
+    this.assertAward(eventId, amount);
+    if (!this.recordEvent(eventId, "magic")) {
+      return { processed: false, changed: false };
+    }
+    if (this.currentMagicLevel === MAX_MAGIC_LEVEL) {
+      return { processed: true, changed: false };
+    }
+    let remaining = amount;
+    while (remaining > 0 && this.currentMagicLevel < MAX_MAGIC_LEVEL) {
+      const required = getManaForNextMagicLevel(
+        getVocation(this.vocation, this.definitionVersion),
+        this.currentMagicLevel,
+      );
+      const needed = required - this.currentManaSpent;
+      if (remaining < needed) {
+        this.currentManaSpent += remaining;
+        remaining = 0;
+        break;
+      }
+      remaining -= needed;
+      this.currentMagicLevel += 1;
+      this.currentManaSpent = 0;
+    }
+    return { processed: true, changed: true };
+  }
+
+  awardSkillTries(
+    eventId: string,
+    skill: Skill,
+    amount: number,
+  ): ProgressionMutation {
+    this.assertAward(eventId, amount);
+    if (!this.recordEvent(eventId, "skill")) {
+      return { processed: false, changed: false };
+    }
+    return {
+      processed: true,
+      changed: this.addSkillTries(skill, amount),
+    };
+  }
+
+  startTraining(options: {
+    id: string;
+    skill: Skill;
+    intervalMs: number;
+    tries: number;
+    now: number;
+  }): boolean {
+    this.assertEventId(options.id);
+    if (
+      !Number.isInteger(options.intervalMs) ||
+      options.intervalMs < MIN_TRAINING_INTERVAL_MS ||
+      !Number.isSafeInteger(options.tries) ||
+      options.tries < 1 ||
+      options.tries > MAX_AWARD_AMOUNT
+    ) {
+      throw new Error("training schedule is out of range");
+    }
+    if (this.trainingSchedules.has(options.id)) return false;
+    if (this.trainingSchedules.size >= MAX_SCHEDULES) {
+      throw new Error("too many active training schedules");
+    }
+    this.trainingSchedules.set(options.id, {
+      id: options.id,
+      skill: options.skill,
+      intervalMs: options.intervalMs,
+      tries: options.tries,
+      nextAt: options.now + options.intervalMs,
+    });
+    return true;
+  }
+
+  stopTraining(id: string): boolean {
+    return this.trainingSchedules.delete(id);
+  }
+
+  tick(now: number, regenerationBlocked: boolean): ProgressionTick {
+    const vocation = getVocation(this.vocation, this.definitionVersion);
+    if (regenerationBlocked) {
+      this.nextHealthAt = now + vocation.regeneration.healthIntervalMs;
+      this.nextManaAt = now + vocation.regeneration.manaIntervalMs;
+      this.nextSoulAt = now + vocation.regeneration.soulIntervalMs;
+    }
+    const health = regenerationBlocked
+      ? { count: 0, nextAt: this.nextHealthAt }
+      : this.dueTicks(
+          now,
+          this.nextHealthAt,
+          vocation.regeneration.healthIntervalMs,
+        );
+    const mana = regenerationBlocked
+      ? { count: 0, nextAt: this.nextManaAt }
+      : this.dueTicks(
+          now,
+          this.nextManaAt,
+          vocation.regeneration.manaIntervalMs,
+        );
+    const soul = regenerationBlocked
+      ? { count: 0, nextAt: this.nextSoulAt }
+      : this.dueTicks(
+          now,
+          this.nextSoulAt,
+          vocation.regeneration.soulIntervalMs,
+        );
+    this.nextHealthAt = health.nextAt;
+    this.nextManaAt = mana.nextAt;
+    this.nextSoulAt = soul.nextAt;
+
+    const manaBefore = this.currentMana;
+    const soulBefore = this.currentSoul;
+    this.currentMana = Math.min(
+      this.maxMana,
+      this.currentMana + mana.count * vocation.regeneration.manaAmount,
+    );
+    this.currentSoul = Math.min(
+      this.maxSoul,
+      this.currentSoul + soul.count * vocation.regeneration.soulAmount,
+    );
+
+    let trained = false;
+    for (const schedule of this.trainingSchedules.values()) {
+      const due = this.dueTicks(
+        now,
+        schedule.nextAt,
+        schedule.intervalMs,
+      );
+      schedule.nextAt = due.nextAt;
+      if (due.count === 0) continue;
+      trained =
+        this.addSkillTries(schedule.skill, schedule.tries * due.count) ||
+        trained;
+    }
+    return {
+      changed:
+        manaBefore !== this.currentMana ||
+        soulBefore !== this.currentSoul ||
+        trained,
+      healthGain: health.count * vocation.regeneration.healthAmount,
+    };
+  }
+
+  private get stats() {
+    return deriveCharacterStats({
+      vocation: this.vocation,
+      definitionVersion: this.definitionVersion,
+      level: this.currentLevel,
+    });
+  }
+
+  private addSkillTries(skill: Skill, amount: number): boolean {
+    const state = this.requireSkill(skill);
+    if (state.level === MAX_SKILL_LEVEL) return false;
+    let level = state.level;
+    let tries = state.tries;
+    let remaining = Math.min(MAX_PROGRESSION_VALUE, amount);
+    while (remaining > 0 && level < MAX_SKILL_LEVEL) {
+      const required = getSkillTriesForNextLevel(
+        getVocation(this.vocation, this.definitionVersion),
+        skill,
+        level,
+      );
+      const needed = required - tries;
+      if (remaining < needed) {
+        tries += remaining;
+        remaining = 0;
+        break;
+      }
+      remaining -= needed;
+      level += 1;
+      tries = 0;
+    }
+    this.skillStates.set(skill, { skill, level, tries });
+    return level !== state.level || tries !== state.tries;
+  }
+
+  private dueTicks(
+    now: number,
+    nextAt: number,
+    intervalMs: number,
+  ): DueTicks {
+    if (now < nextAt) return { count: 0, nextAt };
+    const elapsedTicks = Math.floor((now - nextAt) / intervalMs) + 1;
+    const count = Math.min(
+      MAX_SCHEDULE_TICKS_PER_SERVER_TICK,
+      elapsedTicks,
+    );
+    return {
+      count,
+      nextAt:
+        elapsedTicks > count
+          ? now + intervalMs
+          : nextAt + count * intervalMs,
+    };
+  }
+
+  private recordEvent(id: string, type: ProgressionEventType): boolean {
+    if (this.processedEventIds.has(id)) return false;
+    this.processedEventIds.add(id);
+    this.sessionEvents.push({ id, type });
+    return true;
+  }
+
+  private requireSkill(skill: Skill): CharacterSkill {
+    const state = this.skillStates.get(skill);
+    if (!state) throw new Error(`character skill ${skill} is missing`);
+    return state;
+  }
+
+  private assertAward(eventId: string, amount: number): void {
+    this.assertEventId(eventId);
+    if (
+      !Number.isSafeInteger(amount) ||
+      amount < 1 ||
+      amount > MAX_AWARD_AMOUNT
+    ) {
+      throw new Error("progression award is out of range");
+    }
+  }
+
+  private assertEventId(eventId: string): void {
+    if (!EVENT_ID_PATTERN.test(eventId)) {
+      throw new Error("progression event id is invalid");
+    }
+  }
+}

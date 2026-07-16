@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
-import type { EquipmentSlot, Position } from "@tibia/protocol";
+import type {
+  CharacterVocation,
+  EquipmentSlot,
+  Position,
+} from "@tibia/protocol";
 import { Pool, type PoolClient } from "pg";
+import { deriveCharacterStats } from "../progression/deriveCharacterStats";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemLocation } from "./ItemLocation";
@@ -32,7 +37,8 @@ interface ItemRow {
 
 interface CharacterItemRow {
   level: number;
-  vocation: string;
+  vocation: CharacterVocation;
+  progression_definition_version: number;
   capacity: number;
 }
 
@@ -644,14 +650,23 @@ export class PgItemStore implements ItemStore {
     client: PoolClient,
     characterId: string,
   ): Promise<CharacterItemRow> {
-    const result = await client.query<CharacterItemRow>(
-      `SELECT level, vocation, capacity
+    const result = await client.query<
+      Omit<CharacterItemRow, "capacity">
+    >(
+      `SELECT level, vocation, progression_definition_version
        FROM characters WHERE id = $1 FOR UPDATE`,
       [characterId],
     );
     const row = result.rows[0];
     if (!row) throw new Error("character not found");
-    return row;
+    return {
+      ...row,
+      capacity: deriveCharacterStats({
+        vocation: row.vocation,
+        definitionVersion: row.progression_definition_version,
+        level: row.level,
+      }).capacity,
+    };
   }
 
   private async lockItem(client: PoolClient, reference: string): Promise<ItemRow> {

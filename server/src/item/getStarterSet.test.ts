@@ -1,4 +1,4 @@
-import { CHARACTER_VOCATIONS } from "@tibia/protocol";
+import { STARTER_VOCATIONS } from "@tibia/protocol";
 import { describe, expect, it } from "vitest";
 import { getStarterSet } from "./getStarterSet";
 
@@ -6,7 +6,7 @@ describe("getStarterSet", () => {
   it("gives every vocation a backpack, armor, supplies, and its own weapon", () => {
     const weaponIds = new Set<number>();
 
-    for (const vocation of CHARACTER_VOCATIONS) {
+    for (const vocation of STARTER_VOCATIONS) {
       const starterSet = getStarterSet(vocation);
       const slots = new Set(starterSet.equipment.map((item) => item.slot));
       const weapon = starterSet.equipment.find((item) => item.slot === "weapon");
@@ -24,7 +24,7 @@ describe("getStarterSet", () => {
       if (weapon) weaponIds.add(weapon.typeId);
     }
 
-    expect(weaponIds.size).toBe(CHARACTER_VOCATIONS.length);
+    expect(weaponIds.size).toBe(STARTER_VOCATIONS.length);
   });
 
   it("keeps vocation wands and rods in the backpack until level requirements are met", () => {

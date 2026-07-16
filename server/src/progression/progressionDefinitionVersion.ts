@@ -1,0 +1,1 @@
+export const PROGRESSION_DEFINITION_VERSION = 1;

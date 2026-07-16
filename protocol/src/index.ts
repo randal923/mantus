@@ -5,6 +5,7 @@ export * from "./item";
 export * from "./limits";
 export * from "./language";
 export * from "./position";
+export * from "./progression";
 export * from "./viewRange";
 export * from "./clientMessages";
 export * from "./serverMessages";

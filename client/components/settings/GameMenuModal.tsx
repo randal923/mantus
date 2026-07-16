@@ -17,6 +17,7 @@ type HotkeyId =
   | "moveDown"
   | "moveRight"
   | "inventory"
+  | "characterStats"
   | "gameMenu";
 type HotkeyCode =
   | "KeyW"
@@ -24,6 +25,7 @@ type HotkeyCode =
   | "KeyS"
   | "KeyD"
   | "KeyI"
+  | "KeyC"
   | "KeyM"
   | "ArrowUp"
   | "ArrowLeft"
@@ -59,6 +61,7 @@ const DEFAULT_HOTKEYS: Readonly<Record<HotkeyId, HotkeyCode>> = {
   moveDown: "KeyS",
   moveRight: "KeyD",
   inventory: "KeyI",
+  characterStats: "KeyC",
   gameMenu: "Escape",
 };
 
@@ -94,6 +97,7 @@ export function GameMenuModal({
     { value: "KeyS", label: "S" },
     { value: "KeyD", label: "D" },
     { value: "KeyI", label: "I" },
+    { value: "KeyC", label: "C" },
     { value: "KeyM", label: "M" },
     { value: "ArrowUp", label: t("hotkeys.arrowUp") },
     { value: "ArrowLeft", label: t("hotkeys.arrowLeft") },
@@ -107,6 +111,7 @@ export function GameMenuModal({
     { id: "moveDown", label: t("hotkeys.moveDown") },
     { id: "moveRight", label: t("hotkeys.moveRight") },
     { id: "inventory", label: t("hotkeys.inventory") },
+    { id: "characterStats", label: t("hotkeys.characterStats") },
     { id: "gameMenu", label: t("hotkeys.gameMenu") },
   ];
   const viewTitles: Readonly<Record<MenuView, string>> = {

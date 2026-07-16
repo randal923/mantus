@@ -15,10 +15,10 @@ export abstract class Creature<
   readonly id: string;
   readonly kind: CreatureKind;
   readonly name: string;
-  readonly maxHealth: number;
   readonly outfit: TOutfit;
   private readonly activeConditions = new Set<string>();
   private currentHealth: number;
+  private currentMaxHealth: number;
   private currentPosition: Position;
 
   protected constructor(options: {
@@ -38,7 +38,7 @@ export abstract class Creature<
     this.direction = options.direction;
     this.outfit = options.outfit;
     this.currentHealth = options.health;
-    this.maxHealth = options.maxHealth;
+    this.currentMaxHealth = options.maxHealth;
   }
 
   get position(): Position {
@@ -47,6 +47,10 @@ export abstract class Creature<
 
   get health(): number {
     return this.currentHealth;
+  }
+
+  get maxHealth(): number {
+    return this.currentMaxHealth;
   }
 
   abstract get stepSpeed(): number;
@@ -59,6 +63,14 @@ export abstract class Creature<
   setHealth(health: number): void {
     if (!Number.isInteger(health)) throw new Error("health must be an integer");
     this.currentHealth = Math.max(0, Math.min(this.maxHealth, health));
+  }
+
+  setMaxHealth(maxHealth: number): void {
+    if (!Number.isInteger(maxHealth) || maxHealth < 1) {
+      throw new Error("max health must be a positive integer");
+    }
+    this.currentMaxHealth = maxHealth;
+    this.currentHealth = Math.min(this.currentHealth, maxHealth);
   }
 
   applyCondition(condition: string): void {

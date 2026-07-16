@@ -2,8 +2,20 @@ import { z } from "zod";
 import { DIRECTIONS } from "./direction";
 import { PROTOCOL_LIMITS } from "./limits";
 import { positionSchema } from "./position";
+import { ownProgressionStateSchema } from "./progression";
 
 export const CHARACTER_VOCATIONS = [
+  "Knight",
+  "Paladin",
+  "Sorcerer",
+  "Druid",
+  "Elite Knight",
+  "Royal Paladin",
+  "Master Sorcerer",
+  "Elder Druid",
+] as const;
+
+export const STARTER_VOCATIONS = [
   "Knight",
   "Paladin",
   "Sorcerer",
@@ -15,6 +27,7 @@ export const OUTFIT_PALETTE_SIZE = 133;
 export const MAX_CHARACTERS_PER_ACCOUNT = 5;
 
 export const characterVocationSchema = z.enum(CHARACTER_VOCATIONS);
+export const starterVocationSchema = z.enum(STARTER_VOCATIONS);
 
 export const characterLookTypeSchema = z.union([
   z.literal(CHARACTER_OUTFIT_LOOK_TYPES[0]),
@@ -45,20 +58,17 @@ export const characterSummarySchema = z.object({
   lastLoginAt: z.string().datetime().nullable(),
 });
 
-export const ownCharacterStateSchema = characterSummarySchema.extend({
-  experience: z.number().int().nonnegative(),
-  health: z.number().int().nonnegative(),
-  maxHealth: z.number().int().positive(),
-  mana: z.number().int().nonnegative(),
-  maxMana: z.number().int().nonnegative(),
-  capacity: z.number().int().nonnegative(),
-  position: positionSchema,
-  direction: z.enum(DIRECTIONS),
-  townId: z.number().int().positive(),
-});
+export const ownCharacterStateSchema = characterSummarySchema
+  .omit({ level: true })
+  .merge(ownProgressionStateSchema)
+  .extend({
+    position: positionSchema,
+    direction: z.enum(DIRECTIONS),
+    townId: z.number().int().positive(),
+  });
 
 export const characterCreationOptionsSchema = z.object({
-  vocations: z.array(characterVocationSchema).min(1),
+  vocations: z.array(starterVocationSchema).min(1),
   outfits: z
     .array(
       z.object({
@@ -76,12 +86,13 @@ export const createCharacterInputSchema = z
       .string()
       .min(PROTOCOL_LIMITS.minCharacterNameLength)
       .max(PROTOCOL_LIMITS.maxCharacterNameLength),
-    vocation: characterVocationSchema,
+    vocation: starterVocationSchema,
     lookType: characterLookTypeSchema,
   })
   .strict();
 
 export type CharacterVocation = z.infer<typeof characterVocationSchema>;
+export type StarterVocation = z.infer<typeof starterVocationSchema>;
 export type CharacterLookType = z.infer<typeof characterLookTypeSchema>;
 export type CharacterOutfit = z.infer<typeof characterOutfitSchema>;
 export type CharacterSummary = z.infer<typeof characterSummarySchema>;

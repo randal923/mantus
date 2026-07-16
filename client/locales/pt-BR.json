@@ -96,12 +96,29 @@
       "name": "Druida",
       "description": "Curandeiro e mago da natureza que domina o gelo e o suporte vital."
     },
+    "Elite Knight": {
+      "name": "Cavaleiro de Elite",
+      "description": "Cavaleiro promovido com regeneração aprimorada."
+    },
+    "Royal Paladin": {
+      "name": "Paladino Real",
+      "description": "Paladino promovido com regeneração aprimorada."
+    },
+    "Master Sorcerer": {
+      "name": "Mestre Feiticeiro",
+      "description": "Feiticeiro promovido com regeneração aprimorada."
+    },
+    "Elder Druid": {
+      "name": "Druida Ancião",
+      "description": "Druida promovido com regeneração aprimorada."
+    },
     "None": {
       "name": "Nenhuma"
     }
   },
   "navigation": {
     "gamePanels": "Painéis do jogo",
+    "character": "Personagem",
     "inventory": "Inventário",
     "quests": "Missões",
     "worldMap": "Mapa-múndi",
@@ -116,6 +133,14 @@
   "stats": {
     "health": "Vida",
     "mana": "Mana",
+    "maxHealth": "Vida máxima",
+    "maxMana": "Mana máxima",
+    "healthRegeneration": "Regeneração de vida",
+    "manaRegeneration": "Regeneração de mana",
+    "soul": "Alma",
+    "soulRegeneration": "Regeneração de alma",
+    "speed": "Velocidade de movimento",
+    "attackSpeed": "Velocidade de ataque",
     "healthAbbreviation": "PV",
     "manaAbbreviation": "PM"
   },
@@ -123,6 +148,8 @@
     "label": "Inventário de {{name}}",
     "title": "Inventário",
     "close": "Fechar inventário",
+    "openCharacterStats": "Abrir atributos do personagem",
+    "closeCharacterStats": "Fechar atributos do personagem",
     "gold": "Ouro",
     "platinum": "Platina",
     "stack": "Empilhar",
@@ -132,6 +159,27 @@
     "equippedItems": "Itens equipados",
     "equipped": "Equipado",
     "itemTitle": "{{count}}{{name}}"
+  },
+  "characterStats": {
+    "label": "Atributos do personagem {{name}}",
+    "title": "Detalhes do Personagem",
+    "level": "Nível {{level}}",
+    "experience": "Experiência",
+    "magicLevel": "Nível Mágico {{level}}",
+    "details": "Detalhes",
+    "skills": "Habilidades",
+    "maximum": "Máximo",
+    "regeneration": "{{amount}} a cada {{seconds}}s",
+    "seconds": "{{seconds}}s"
+  },
+  "skills": {
+    "fist": "Combate sem Armas",
+    "club": "Combate com Clavas",
+    "sword": "Combate com Espadas",
+    "axe": "Combate com Machados",
+    "distance": "Combate à Distância",
+    "shielding": "Defesa com Escudo",
+    "fishing": "Pesca"
   },
   "items": {
     "steelHelmet": "capacete de aço",
@@ -169,7 +217,7 @@
     "emptySlot": "Espaço Vazio"
   },
   "hud": {
-    "controls": "WASD para mover · I para inventário · Esc para o menu",
+    "controls": "WASD para mover · I para inventário · C para personagem · Esc para o menu",
     "battleList": "Lista de Batalha"
   },
   "modal": {
@@ -207,6 +255,7 @@
     "moveDown": "Mover para Baixo",
     "moveRight": "Mover para a Direita",
     "inventory": "Inventário",
+    "characterStats": "Atributos do Personagem",
     "gameMenu": "Menu do Jogo",
     "arrowUp": "Seta para Cima",
     "arrowLeft": "Seta para a Esquerda",
