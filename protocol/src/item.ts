@@ -48,7 +48,10 @@ export const inventoryItemSchema = z
     count: z.number().int().positive().max(100),
     revision: z.number().int().positive(),
     equipmentSlot: equipmentSlotSchema.optional(),
-    useKind: z.literal("rune").optional(),
+    containerCapacity: z.number().int().min(0).max(100).optional(),
+    useKind: z
+      .enum(["rune", "container", "rotate", "read", "food"])
+      .optional(),
     tooltip: itemTooltipSchema,
   })
   .strict();
@@ -68,6 +71,24 @@ const equipmentSchema = z
   })
   .strict();
 
+export const containerStateSchema = z
+  .object({
+    container: inventoryItemSchema,
+    parentContainerId: z.string().uuid().nullable(),
+    capacity: z.number().int().min(0).max(100),
+    items: z
+      .array(
+        z
+          .object({
+            slot: z.number().int().min(0).max(99),
+            item: inventoryItemSchema,
+          })
+          .strict(),
+      )
+      .max(100),
+  })
+  .strict();
+
 export const inventoryStateSchema = z
   .object({
     revision: z.number().int().nonnegative(),
@@ -78,6 +99,7 @@ export const inventoryStateSchema = z
     capacityUsed: z.number().int().nonnegative(),
     capacityMax: z.number().int().nonnegative(),
     slotCount: z.number().int().min(0).max(100),
+    containers: z.array(containerStateSchema).max(16).optional(),
   })
   .strict();
 
@@ -85,4 +107,5 @@ export type EquipmentSlot = z.infer<typeof equipmentSlotSchema>;
 export type ItemAffix = z.infer<typeof itemAffixSchema>;
 export type ItemTooltipData = z.infer<typeof itemTooltipSchema>;
 export type InventoryItem = z.infer<typeof inventoryItemSchema>;
+export type ContainerState = z.infer<typeof containerStateSchema>;
 export type InventoryState = z.infer<typeof inventoryStateSchema>;

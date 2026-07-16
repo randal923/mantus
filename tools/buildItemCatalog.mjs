@@ -12,9 +12,12 @@ const semanticsDocument = JSON.parse(
 const appearancesDocument = JSON.parse(
   await readFile(join(repoRoot, "client/public/assets/objects.json"), "utf8"),
 );
+const foodsDocument = JSON.parse(
+  await readFile(join(repoRoot, "content/items/canary-foods.json"), "utf8"),
+);
 
-if (sourceManifest.converters.itemCatalog !== 1) {
-  throw new Error("source manifest does not declare item catalog version 1");
+if (sourceManifest.converters.itemCatalog !== 2) {
+  throw new Error("source manifest does not declare item catalog version 2");
 }
 if (
   semanticsDocument.formatVersion !== sourceManifest.converters.canaryItems ||
@@ -31,11 +34,20 @@ if (
 ) {
   throw new Error("DAT appearances do not match the pinned source manifest");
 }
+if (
+  foodsDocument.formatVersion !== sourceManifest.converters.foods ||
+  foodsDocument.source?.canaryCommit !==
+    sourceManifest.sources.canaryFoods.commit ||
+  foodsDocument.source?.sha256 !== sourceManifest.sources.canaryFoods.sha256
+) {
+  throw new Error("Canary foods do not match the pinned source manifest");
+}
 
 const EQUIPMENT_SLOT_BY_SOURCE = {
   head: "helmet",
   necklace: "amulet",
   backpack: "backpack",
+  body: "armor",
   armor: "armor",
   hand: "weapon",
   shield: "shield",
@@ -165,6 +177,9 @@ for (const appearance of appearancesDocument.objects) {
       : {}),
     ...(semantics.field ? { field: semantics.field } : {}),
     ...(semantics.charges !== undefined ? { charges: semantics.charges } : {}),
+    ...(foodsDocument.foods[appearance.clientId]
+      ? { food: foodsDocument.foods[appearance.clientId] }
+      : {}),
     ...(semantics.writeable !== undefined ||
     semantics.readable !== undefined ||
     semantics.maxTextLength !== undefined
@@ -233,6 +248,7 @@ const output = {
     assetEra: sourceManifest.assetEra,
     canaryCommit: sourceManifest.sources.canaryItems.commit,
     canaryItemsSha256: sourceManifest.sources.canaryItems.sha256,
+    canaryFoodsSha256: sourceManifest.sources.canaryFoods.sha256,
     datSha256: sourceManifest.sources.dat.sha256,
     sprSha256: sourceManifest.sources.spr.sha256,
   },

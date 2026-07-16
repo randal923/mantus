@@ -7,6 +7,9 @@ const MONSTER_FIELDS = new Set([
   "maxHealth",
   "corpse",
   "speed",
+  "manaCost",
+  "changeTarget",
+  "light",
   "strategiesTarget",
   "flags",
   "attacks",
@@ -16,6 +19,20 @@ const MONSTER_FIELDS = new Set([
   "summons",
   "voices",
   "loot",
+]);
+const MONSTER_FLAG_FIELDS = new Set([
+  "attackable",
+  "hostile",
+  "pushable",
+  "summonable",
+  "convinceable",
+  "illusionable",
+  "canPushItems",
+  "canPushCreatures",
+  "targetDistance",
+  "runHealth",
+  "staticAttackChance",
+  "healthHidden",
 ]);
 const NPC_FIELDS = new Set([
   "name",
@@ -355,6 +372,10 @@ function parseMonsterDefinition(definition, name, context, corrections) {
   const source = definition.source;
   const flags = objectValue(assignment(source, "monster", "flags"));
   const strategy = objectValue(assignment(source, "monster", "strategiesTarget"));
+  const changeTarget = objectValue(
+    assignment(source, "monster", "changeTarget"),
+  );
+  const light = objectValue(assignment(source, "monster", "light"));
   const elementRecords = recordList(assignment(source, "monster", "elements"));
   const immunityRecords = recordList(assignment(source, "monster", "immunities"));
   const health = numberValue(assignment(source, "monster", "health"), 1);
@@ -371,6 +392,15 @@ function parseMonsterDefinition(definition, name, context, corrections) {
       health,
       maxHealth: numberValue(assignment(source, "monster", "maxHealth"), health),
       speed: numberValue(assignment(source, "monster", "speed"), 100),
+      manaCost: numberValue(assignment(source, "monster", "manaCost"), 0),
+      changeTarget: {
+        intervalMs: numberValue(changeTarget.interval, 4_000),
+        chance: numberValue(changeTarget.chance, 0),
+      },
+      light: {
+        intensity: numberValue(light.level, 0),
+        color: numberValue(light.color, 0),
+      },
       experience: numberValue(assignment(source, "monster", "experience"), 0),
       corpseItemTypeId: numberValue(assignment(source, "monster", "corpse"), 0),
       flags: {
@@ -384,6 +414,8 @@ function parseMonsterDefinition(definition, name, context, corrections) {
         canPushCreatures: booleanValue(flags.canPushCreatures),
         targetDistance: numberValue(flags.targetDistance, 1),
         runHealth: numberValue(flags.runHealth, 0),
+        staticAttackChance: numberValue(flags.staticAttackChance, 95),
+        healthHidden: booleanValue(flags.healthHidden),
       },
       targetStrategy: {
         nearest: numberValue(strategy.nearest, 100),
@@ -405,7 +437,18 @@ function parseMonsterDefinition(definition, name, context, corrections) {
       voices: recordList(assignment(source, "monster", "voices")),
       loot: recordList(assignment(source, "monster", "loot")),
     },
-    ignored: ignoredAssignments(source, "monster", MONSTER_FIELDS),
+    ignored: [
+      ...ignoredAssignments(source, "monster", MONSTER_FIELDS),
+      ...Object.keys(flags)
+        .filter(
+          (field) =>
+            field !== "$entries" && !MONSTER_FLAG_FIELDS.has(field),
+        )
+        .map((field) => `flags.${field}`),
+      ...(recordList(assignment(source, "monster", "voices")).length > 0
+        ? ["voices.runtime"]
+        : []),
+    ].sort(),
     sourcePath: definition.path,
   };
 }

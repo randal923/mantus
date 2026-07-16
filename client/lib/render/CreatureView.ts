@@ -12,6 +12,10 @@ const DIR_INDEX: Record<Direction, number> = {
   east: 1,
   south: 2,
   west: 3,
+  northeast: 1,
+  southeast: 1,
+  southwest: 3,
+  northwest: 3,
 };
 
 /**
@@ -103,7 +107,12 @@ export class CreatureView {
     this.attackTarget.visible = targeted;
   }
 
-  updateHealth(healthPercent: number): void {
+  updateHealth(healthPercent: number | null): void {
+    this.health.visible = healthPercent !== null;
+    if (healthPercent === null) {
+      this.health.clear();
+      return;
+    }
     const bounded = Math.min(100, Math.max(0, healthPercent));
     const color =
       bounded > 60 ? 0x33cc44 : bounded > 30 ? 0xffbb33 : 0xee4444;
@@ -164,7 +173,10 @@ export class CreatureView {
     const adjacent =
       position.z === this.tileZ &&
       revision === this.positionRevision + 1 &&
-      Math.abs(position.x - this.tileX) + Math.abs(position.y - this.tileY) === 1;
+      Math.max(
+        Math.abs(position.x - this.tileX),
+        Math.abs(position.y - this.tileY),
+      ) === 1;
     this.fromX = adjacent ? renderedPosition.x / TILE_SIZE : position.x;
     this.fromY = adjacent ? renderedPosition.y / TILE_SIZE : position.y;
     this.tileX = position.x;

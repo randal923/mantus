@@ -112,6 +112,14 @@
       "name": "Druida Ancião",
       "description": "Druida promovido com regeneração aprimorada."
     },
+    "Monk": {
+      "name": "Monge",
+      "description": "Artista marcial disciplinado, especializado em combate com os punhos."
+    },
+    "Exalted Monk": {
+      "name": "Monge Exaltado",
+      "description": "Monge promovido com regeneração de vida aprimorada."
+    },
     "None": {
       "name": "Nenhuma"
     }
@@ -158,7 +166,9 @@
     "backpack": "Mochila",
     "equippedItems": "Itens equipados",
     "equipped": "Equipado",
-    "itemTitle": "{{count}}{{name}}"
+    "itemTitle": "{{count}}{{name}}",
+    "closeContainer": "Fechar {{name}}",
+    "saveText": "Salvar"
   },
   "characterStats": {
     "label": "Atributos do personagem {{name}}",
@@ -226,6 +236,7 @@
     "chase": "Perseguir alvo",
     "secureMode": "Modo PVP seguro",
     "conditions": "Condições ativas",
+    "selectRuneTarget": "Selecione um piso para a runa",
     "conditionTitle": "{{condition}}, {{seconds}} segundos restantes",
     "log": "Registro de combate",
     "condition": {
@@ -234,6 +245,9 @@
       "poison": "Veneno",
       "fire": "Queimando",
       "energy": "Eletrificado",
+      "bleeding": "Sangramento",
+      "curse": "Amaldiçoado",
+      "dazzled": "Ofuscado",
       "regeneration": "Regeneração",
       "invisible": "Invisível",
       "light": "Luz",
@@ -312,6 +326,7 @@
     "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
     "combat-action-failed": "Não foi possível concluir essa ação de combate.",
     "item-action-failed": "Não foi possível concluir essa ação de item.",
+    "player-full": "Você está cheio.",
     "join-required": "Entre no mundo antes de realizar esta ação.",
     "language-update-failed": "Não foi possível salvar o idioma. Tente novamente.",
     "language-update-pending": "Uma atualização de idioma já está em andamento.",

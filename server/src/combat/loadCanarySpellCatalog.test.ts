@@ -16,8 +16,11 @@ describe("Canary spell catalog", () => {
     const suddenDeath = spells.find(
       (spell) => spell.name === "sudden death rune",
     );
+    const haste = spells.find((spell) => spell.name === "Haste");
+    const curse = spells.find((spell) => spell.name === "Curse");
+    const energyBeam = spells.find((spell) => spell.name === "Energy Beam");
 
-    expect(spells).toHaveLength(71);
+    expect(spells).toHaveLength(151);
     expect(buzz).toMatchObject({
       id: "exori-infir-vis",
       manaCost: 6,
@@ -64,6 +67,41 @@ describe("Canary spell catalog", () => {
       ],
       directional: true,
     });
+    expect(haste?.condition).toEqual({
+      type: "haste",
+      durationMs: 30_000,
+      speedFormula: { coefficient: 1.3, base: 40 },
+    });
+    expect(curse?.condition?.tickAmounts).toHaveLength(55);
+    expect(curse?.condition).toMatchObject({
+      type: "curse",
+      durationMs: 165_000,
+      tickIntervalMs: 3_000,
+      damageType: "death",
+    });
+    expect(
+      spells.find((spell) => spell.name === "Heal Friend")?.castRules,
+    ).toEqual({
+      targetPlayerOnly: true,
+      allowSelf: false,
+      excludedVocations: [],
+      casterEffectId: 15,
+    });
+    expect(energyBeam).toMatchObject({
+      damageType: "energy",
+      effectId: 12,
+      area: { shape: "beam", length: 5 },
+    });
+    expect(
+      Math.floor(
+        evaluateSpellExpression(energyBeam!.formula.maximum, {
+          level: 23,
+          magicLevel: 10,
+          skill: 10,
+          attack: 7,
+        }),
+      ),
+    ).toBe(53);
   });
 
   it("projects only the player's server-owned instant spell metadata", () => {

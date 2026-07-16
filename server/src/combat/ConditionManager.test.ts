@@ -50,6 +50,55 @@ describe("ConditionManager", () => {
     expect(conditions.has("fire")).toBe(false);
   });
 
+  it("extends regeneration from its remaining server-owned duration", () => {
+    const conditions = new ConditionManager();
+    const regeneration = {
+      type: "regeneration" as const,
+      sourceId: "player",
+      durationMs: 60_000,
+    };
+
+    conditions.apply(regeneration, 0);
+    conditions.extend(regeneration, 10_000);
+
+    expect(conditions.remainingMs("regeneration", 10_000)).toBe(110_000);
+    expect(conditions.project(10_000)).toContainEqual({
+      type: "regeneration",
+      remainingMs: 110_000,
+      stacks: 1,
+    });
+  });
+
+  it("uses server-authored condition tick sequences and shield capacity", () => {
+    const conditions = new ConditionManager();
+    conditions.apply(
+      {
+        type: "curse",
+        sourceId: "caster",
+        durationMs: 6_000,
+        tickIntervalMs: 2_000,
+        tickAmounts: [9, 6, 3],
+        damageType: "death",
+      },
+      0,
+    );
+    conditions.apply(
+      {
+        type: "magic-shield",
+        sourceId: "caster",
+        durationMs: 60_000,
+        capacity: 100,
+      },
+      0,
+    );
+
+    expect(conditions.tick(2_000).effects[0]?.amount).toBe(9);
+    expect(conditions.tick(4_000).effects[0]?.amount).toBe(6);
+    expect(conditions.absorbMagicShield(70)).toBe(70);
+    expect(conditions.absorbMagicShield(70)).toBe(30);
+    expect(conditions.has("magic-shield")).toBe(false);
+  });
+
   it("projects speed, light, outfit, drunk, mute, and lock conditions", () => {
     const conditions = new ConditionManager();
     conditions.apply(

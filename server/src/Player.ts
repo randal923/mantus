@@ -89,6 +89,31 @@ export class Player extends Creature<Character["outfit"]> {
     return this.progression.spendSoul(amount);
   }
 
+  canFeed(durationSeconds: number, now: number): boolean {
+    if (!Number.isInteger(durationSeconds) || durationSeconds < 0) {
+      throw new Error("food duration is out of range");
+    }
+    const remainingMs = this.conditions.remainingMs("regeneration", now);
+    if (remainingMs === 0) return true;
+    return Math.floor(remainingMs / 1_000 + durationSeconds) < 1_200;
+  }
+
+  feed(durationSeconds: number, now: number): void {
+    if (!this.canFeed(durationSeconds, now)) {
+      throw new Error("player is full");
+    }
+    if (durationSeconds === 0) return;
+    this.conditions.extend(
+      {
+        type: "regeneration",
+        sourceId: this.id,
+        durationMs: durationSeconds * 1_000,
+        naturalRegeneration: true,
+      },
+      now,
+    );
+  }
+
   skillLevel(skill: Skill): number {
     return (
       this.progression.skills.find((state) => state.skill === skill)?.level ?? 10
@@ -168,8 +193,12 @@ export class Player extends Creature<Character["outfit"]> {
   }
 
   tickProgression(now: number): boolean {
+    const regenerationBlocked =
+      !this.conditions.allowsNaturalRegeneration ||
+      this.hasCondition("no-regeneration");
     const tick = this.progression.tick(
       now,
+      regenerationBlocked,
       this.hasCondition("no-regeneration") ||
         this.conditions.has("combat-lock"),
     );

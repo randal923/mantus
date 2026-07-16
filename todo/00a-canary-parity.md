@@ -31,9 +31,9 @@ callback, formula, placement, or content system is not.
 
 ## Current audited gaps
 
-- The spell/rune catalog contains 236 parsed entries: 71 are enabled and 165
-  are disabled. The example definition may be classified as non-content; every
-  registered spell and rune must become executable.
+- The spell/rune catalog contains 236 parsed entries: 151 are enabled, 84
+  registered definitions are disabled, and one example is classified as
+  non-content. Every registered spell and rune must become executable.
 - The world creature import enables all 83,286 monster and 1,008 NPC
   placements, but its report contains 1,853 definitions with ignored fields or
   procedural callbacks, plus duplicate/ambiguous definitions and invalid
@@ -46,7 +46,7 @@ callback, formula, placement, or content system is not.
 
 ## Required parity workstreams
 
-- [ ] Maintain a machine-readable source inventory covering Canary XML, Lua
+- [x] Maintain a machine-readable source inventory covering Canary XML, Lua
   registrations, map/spawn content, item definitions, protocol-facing
   gameplay systems, and persistent player/world systems. CI must detect source
   entries that disappear from the inventory or lack an owner TODO.

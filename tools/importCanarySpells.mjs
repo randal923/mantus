@@ -26,7 +26,7 @@ const manifest = JSON.parse(
   readFileSync(join(repoRoot, "content/source-manifest.json"), "utf8"),
 );
 const source = manifest.sources.canarySpells;
-if (!source || manifest.converters.spells !== 1) {
+if (!source || manifest.converters.spells !== 2) {
   throw new Error("source manifest has no supported Canary spell source");
 }
 const commit = execFileSync("git", ["-C", canaryRoot, "rev-parse", "HEAD"], {
@@ -91,7 +91,10 @@ const document = {
     definitionsSha256,
   },
   report,
-  spells,
+  spells: spells.map((spell) => ({
+    ...spell,
+    parity: spellParity(spell),
+  })),
 };
 const target = join(repoRoot, "content/spells/canary-spells.json");
 const staging = `${target}.${process.pid}.tmp`;
@@ -155,4 +158,65 @@ function parseAreas(source) {
     );
   }
   return areas;
+}
+
+function spellParity(spell) {
+  if (spell.unsupportedReasons.includes("example definition")) {
+    return {
+      ownerTodo: "07-combat",
+      status: "non-content",
+      reason:
+        "Pinned example file is documentation for content authors and is not a registered gameplay definition.",
+    };
+  }
+  if (spell.supported) {
+    return {
+      ownerTodo: "07-combat",
+      status: "implemented",
+      reason:
+        "Executable through the project-native authoritative spell registry.",
+    };
+  }
+  const blockedBy = spellDependency(spell.sourcePath);
+  return {
+    ownerTodo: "07-combat",
+    status: "blocked",
+    blockedBy,
+    reason:
+      blockedBy === "07-combat"
+        ? `Requires a reviewed TypeScript combat implementation: ${spell.unsupportedReasons.join(", ")}.`
+        : `Requires ${blockedBy} before its registered behavior can be enabled: ${spell.unsupportedReasons.join(", ")}.`,
+  };
+}
+
+function spellDependency(path) {
+  if (
+    path.includes("/field") ||
+    path.includes("_field") ||
+    path.includes("_wall") ||
+    path.includes("_bomb") ||
+    path.endsWith("/magic_wall.lua") ||
+    path.endsWith("/wild_growth.lua") ||
+    path.endsWith("/destroy_field_rune.lua")
+  ) {
+    return "08c-decay";
+  }
+  if (path.includes("/party/")) return "13a-parties";
+  if (path.includes("/house/")) return "13d-houses";
+  if (path.includes("/familiar/") || path.includes("/avatar_")) {
+    return "14-optional-features";
+  }
+  if (
+    path.endsWith("/find_person.lua") ||
+    path.endsWith("/find_fiend.lua")
+  ) {
+    return "13e-social-services";
+  }
+  if (
+    path.endsWith("/levitate.lua") ||
+    path.endsWith("/magic_rope.lua")
+  ) {
+    return "12b-world-actions";
+  }
+  return "07-combat";
 }

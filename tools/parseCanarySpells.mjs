@@ -7,6 +7,8 @@ const ALL_VOCATIONS = [
   "Royal Paladin",
   "Master Sorcerer",
   "Elder Druid",
+  "Monk",
+  "Exalted Monk",
 ];
 
 const DAMAGE_TYPES = {
@@ -52,6 +54,18 @@ function parseDefinition(definition, constants, areas) {
   const formula = callback
     ? parseFormula(source, callback[2], callback[1])
     : parseFixedFormula(source);
+  const conjure = parseConjure(source);
+  const castRules = reviewedCastRules(definition.path);
+  const specialCombat =
+    parseSpecialCombat(definition.path) ??
+    (conjure
+      ? {
+          damageType: "healing",
+          formula: zeroSpellFormula(),
+          dispel: null,
+          allowsProceduralCast: true,
+        }
+      : null);
   const effectConstant = parameter(source, "COMBAT_PARAM_EFFECT");
   const missileConstant = parameter(source, "COMBAT_PARAM_DISTANCEEFFECT");
   const hasArea = /combat:setArea\(/.test(source);
@@ -74,12 +88,20 @@ function parseDefinition(definition, constants, areas) {
   if (definition.path.includes("/#")) {
     unsupportedReasons.push("example definition");
   }
-  if (!isLiteralCombatCast(source, variable)) {
+  if (
+    !isLiteralCombatCast(source, variable) &&
+    !specialCombat?.allowsProceduralCast &&
+    !castRules
+  ) {
     unsupportedReasons.push("procedural cast callback");
   }
-  if (!damageType) unsupportedReasons.push("unsupported or missing combat type");
-  if (!formula) unsupportedReasons.push("unsupported or missing combat formula");
-  if (/\bCondition\s*\(/.test(source)) {
+  if (!damageType && !specialCombat) {
+    unsupportedReasons.push("unsupported or missing combat type");
+  }
+  if (!formula && !specialCombat) {
+    unsupportedReasons.push("unsupported or missing combat formula");
+  }
+  if (/\bCondition\s*\(/.test(source) && !specialCombat) {
     unsupportedReasons.push("condition mechanics require a dedicated importer");
   }
   if (/COMBAT_PARAM_CREATEITEM/.test(source)) {
@@ -134,23 +156,330 @@ function parseDefinition(definition, constants, areas) {
     targetKind,
     aggressive: booleanArgument(method("isAggressive"), 0) ?? false,
     needWeapon: booleanArgument(method("needWeapon"), 0) ?? false,
-    combat: damageType && formula
+    combat: (damageType && formula) || specialCombat
       ? {
-          damageType,
-          formula,
-          effectId: constantValue(constants, effectConstant),
-          missileId: constantValue(constants, missileConstant),
+          damageType: specialCombat?.damageType ?? damageType,
+          formula: specialCombat?.formula ?? formula,
+          effectId:
+            specialCombat?.effectId ??
+            constantValue(constants, effectConstant) ??
+            0,
+          missileId:
+            specialCombat?.missileId ??
+            constantValue(constants, missileConstant),
           blockArmor:
             booleanParameter(source, "COMBAT_PARAM_BLOCKARMOR") ?? false,
           blockShield:
             booleanParameter(source, "COMBAT_PARAM_BLOCKSHIELD") ?? false,
-          area,
-          dispel: conditionType(parameter(source, "COMBAT_PARAM_DISPEL")),
+          area: specialCombat?.area ?? area,
+          dispel:
+            specialCombat?.dispel ??
+            conditionType(parameter(source, "COMBAT_PARAM_DISPEL")),
+          ...(specialCombat?.condition
+            ? { condition: specialCombat.condition }
+            : {}),
+          ...(specialCombat?.casterEffectId
+            ? { casterEffectId: specialCombat.casterEffectId }
+            : {}),
         }
       : null,
+    conjure,
+    castRules,
     supported: unsupportedReasons.length === 0,
     unsupportedReasons,
   };
+}
+
+function reviewedCastRules(path) {
+  const rules = {
+    "data/scripts/runes/intense_healing_rune.lua": {
+      targetPlayerOnly: true,
+      allowSelf: true,
+      excludedVocations: [],
+      casterEffectId: 0,
+    },
+    "data/scripts/runes/ultimate_healing_rune.lua": {
+      targetPlayerOnly: true,
+      allowSelf: true,
+      excludedVocations: ["Exalted Monk"],
+      casterEffectId: 0,
+    },
+    "data/scripts/spells/healing/heal_friend.lua": {
+      targetPlayerOnly: true,
+      allowSelf: false,
+      excludedVocations: [],
+      casterEffectId: 15,
+    },
+    "data/scripts/spells/healing/nature's_embrace.lua": {
+      targetPlayerOnly: true,
+      allowSelf: false,
+      excludedVocations: [],
+      casterEffectId: 15,
+    },
+  };
+  return rules[path] ?? null;
+}
+
+function parseSpecialCombat(path) {
+  const zeroFormula = zeroSpellFormula();
+  const support = (condition, allowsProceduralCast = false) => ({
+    damageType: "healing",
+    formula: zeroFormula,
+    condition,
+    dispel: null,
+    allowsProceduralCast,
+  });
+  const damageCondition = (
+    type,
+    damageType,
+    tickIntervalMs,
+    tickAmounts,
+  ) => ({
+    damageType,
+    formula: zeroFormula,
+    condition: {
+      type,
+      durationMs: tickIntervalMs * tickAmounts.length,
+      tickIntervalMs,
+      tickAmounts,
+      damageType,
+    },
+    dispel: null,
+    allowsProceduralCast: false,
+  });
+  const simple = {
+    "data/scripts/spells/support/light.lua": support({
+      type: "light",
+      durationMs: 370_000,
+      light: { intensity: 6, color: 215 },
+    }),
+    "data/scripts/spells/support/great_light.lua": support({
+      type: "light",
+      durationMs: 695_000,
+      light: { intensity: 8, color: 215 },
+    }),
+    "data/scripts/spells/support/ultimate_light.lua": support({
+      type: "light",
+      durationMs: 1_990_000,
+      light: { intensity: 8, color: 215 },
+    }),
+    "data/scripts/spells/support/invisible.lua": support({
+      type: "invisible",
+      durationMs: 200_000,
+    }),
+    "data/scripts/spells/support/haste.lua": support(
+      {
+        type: "haste",
+        durationMs: 30_000,
+        speedFormula: { coefficient: 1.3, base: 40 },
+      },
+      true,
+    ),
+    "data/scripts/spells/support/strong_haste.lua": support(
+      {
+        type: "haste",
+        durationMs: 22_000,
+        speedFormula: { coefficient: 1.7, base: 40 },
+      },
+      true,
+    ),
+    "data/scripts/spells/support/magic_shield.lua": support(
+      {
+        type: "magic-shield",
+        durationMs: 180_000,
+        magicShieldFormula: {
+          base: 300,
+          level: 7.6,
+          magicLevel: 7,
+        },
+      },
+      true,
+    ),
+    "data/scripts/spells/healing/recovery.lua": support({
+      type: "regeneration",
+      durationMs: 60_000,
+      magnitude: 20,
+      tickIntervalMs: 3_000,
+      damageType: "healing",
+    }),
+    "data/scripts/spells/healing/intense_recovery.lua": support({
+      type: "regeneration",
+      durationMs: 60_000,
+      magnitude: 40,
+      tickIntervalMs: 3_000,
+      damageType: "healing",
+    }),
+    "data/scripts/runes/paralyze_rune.lua": {
+      ...support(
+        {
+        type: "paralyze",
+        durationMs: 6_000,
+        speedTarget: 40,
+        },
+        true,
+      ),
+      damageType: "earth",
+      casterEffectId: 15,
+    },
+    "data/scripts/spells/attack/energy_beam.lua": {
+      damageType: "energy",
+      formula: levelMagicFormula(1.8, 11, 3, 19),
+      effectId: 12,
+      missileId: null,
+      area: { shape: "beam", length: 5 },
+      dispel: null,
+      allowsProceduralCast: true,
+    },
+    "data/scripts/spells/attack/energy_wave.lua": {
+      damageType: "energy",
+      formula: levelMagicFormula(4.5, 0, 9, 0),
+      effectId: 38,
+      missileId: 5,
+      area: { shape: "cone", length: 5, spread: 5 },
+      dispel: null,
+      allowsProceduralCast: true,
+    },
+    "data/scripts/spells/attack/great_energy_beam.lua": {
+      damageType: "energy",
+      formula: levelMagicFormula(4, 0, 7, 0),
+      effectId: 38,
+      missileId: null,
+      area: { shape: "beam", length: 8 },
+      dispel: null,
+      allowsProceduralCast: true,
+    },
+    "data/scripts/runes/soul_fire.lua": damageCondition(
+      "fire",
+      "fire",
+      2_000,
+      Array(10).fill(10),
+    ),
+    "data/scripts/spells/attack/electrify.lua": damageCondition(
+      "energy",
+      "energy",
+      3_000,
+      Array(25).fill(45),
+    ),
+    "data/scripts/spells/attack/envenom.lua": damageCondition(
+      "poison",
+      "earth",
+      3_000,
+      Array(25).fill(45),
+    ),
+    "data/scripts/spells/attack/ignite.lua": damageCondition(
+      "fire",
+      "fire",
+      3_000,
+      Array(25).fill(45),
+    ),
+    "data/scripts/spells/attack/inflict_wound.lua": damageCondition(
+      "bleeding",
+      "physical",
+      2_000,
+      Array(15).fill(50),
+    ),
+    "data/scripts/spells/attack/curse.lua": damageCondition(
+      "curse",
+      "death",
+      3_000,
+      [
+        45,
+        40,
+        35,
+        34,
+        ...Array(2).fill(33),
+        ...Array(2).fill(32),
+        ...Array(2).fill(31),
+        ...Array(2).fill(30),
+        ...Array(3).fill(29),
+        ...Array(3).fill(25),
+        ...Array(3).fill(24),
+        ...Array(4).fill(23),
+        ...Array(4).fill(20),
+        ...Array(5).fill(19),
+        ...Array(5).fill(15),
+        ...Array(6).fill(10),
+        ...Array(10).fill(5),
+      ],
+    ),
+  };
+  if (simple[path]) return simple[path];
+  const dispel = conditionTypeForDispelPath(path);
+  return dispel
+    ? {
+        damageType: "healing",
+        formula: zeroFormula,
+        dispel,
+        allowsProceduralCast:
+          path === "data/scripts/spells/support/cancel_magic_shield.lua",
+      }
+    : null;
+}
+
+function parseConjure(source) {
+  const match = source.match(
+    /:conjureItem\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/,
+  );
+  if (!match) return null;
+  const sourceItemTypeId = Number(match[1]);
+  const targetItemTypeId = Number(match[2]);
+  const count = Number(match[3]);
+  if (
+    sourceItemTypeId < 0 ||
+    sourceItemTypeId > 65_535 ||
+    targetItemTypeId < 1 ||
+    targetItemTypeId > 65_535 ||
+    count < 1 ||
+    count > 100
+  ) {
+    return null;
+  }
+  return { sourceItemTypeId, targetItemTypeId, count };
+}
+
+function zeroSpellFormula() {
+  return {
+    kind: "fixed",
+    minimum: number(0),
+    maximum: number(0),
+  };
+}
+
+function levelMagicFormula(
+  minimumMagicMultiplier,
+  minimumConstant,
+  maximumMagicMultiplier,
+  maximumConstant,
+) {
+  const expression = (magicMultiplier, constant) =>
+    binary(
+      "add",
+      binary(
+        "add",
+        binary("divide", variable("level"), number(5)),
+        binary("multiply", variable("magicLevel"), number(magicMultiplier)),
+      ),
+      number(constant),
+    );
+  return {
+    kind: "level-magic",
+    minimum: expression(minimumMagicMultiplier, minimumConstant),
+    maximum: expression(maximumMagicMultiplier, maximumConstant),
+  };
+}
+
+function conditionTypeForDispelPath(path) {
+  const types = {
+    "data/scripts/runes/antidote_rune.lua": "poison",
+    "data/scripts/spells/healing/cure_bleeding.lua": "bleeding",
+    "data/scripts/spells/healing/cure_burning.lua": "fire",
+    "data/scripts/spells/healing/cure_curse.lua": "curse",
+    "data/scripts/spells/healing/cure_electrification.lua": "energy",
+    "data/scripts/spells/healing/cure_poison.lua": "poison",
+    "data/scripts/spells/support/cancel_invisibility.lua": "invisible",
+    "data/scripts/spells/support/cancel_magic_shield.lua": "magic-shield",
+  };
+  return types[path] ?? null;
 }
 
 function parseFormula(source, callbackName, callbackType) {
@@ -478,6 +807,9 @@ function conditionType(value) {
   if (value === "CONDITION_FIRE") return "fire";
   if (value === "CONDITION_ENERGY") return "energy";
   if (value === "CONDITION_INVISIBLE") return "invisible";
+  if (value === "CONDITION_CURSED") return "curse";
+  if (value === "CONDITION_BLEEDING") return "bleeding";
+  if (value === "CONDITION_DAZZLED") return "dazzled";
   return null;
 }
 

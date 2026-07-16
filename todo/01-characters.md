@@ -47,10 +47,8 @@ persisted character.
 - [x] Send only the selected character's exact private stats; list responses
   contain summaries only.
 - [x] Replace `client/components/navigation/placeholderCharacter.ts` with real
-  server-sent character stats. Added 2026-07-15 so the in-game
-  `TopNavigationBar` (name, level, vocation, health/mana) renders before the
-  server projects character state; it is display-only hardcoded data and must
-  be deleted once real stats arrive.
+  server-sent character stats. The placeholder has been removed; the in-game
+  navigation and HUD render only the selected character's projection.
 
 ## Persistence lifecycle
 

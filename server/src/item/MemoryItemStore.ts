@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { EquipmentSlot, Position } from "@tibia/protocol";
 import type { Item } from "./Item";
+import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
 import type { LootItemCreation } from "./LootItemCreation";
@@ -9,6 +10,9 @@ import type { WorldItemSource } from "./WorldItemSource";
 
 export class MemoryItemStore implements ItemStore {
   private readonly items = new Map<string, Item>();
+  private readonly characterVersions = new Map<string, number>();
+  private readonly characterMana = new Map<string, number>();
+  private readonly characterSoul = new Map<string, number>();
 
   seed(item: Item): void {
     this.items.set(item.id, item);
@@ -141,12 +145,111 @@ export class MemoryItemStore implements ItemStore {
     return Promise.reject(new Error("memory rotate is not configured"));
   }
 
+  async moveToContainer(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    destinationContainerId: string,
+    destinationVersion: number,
+    count?: number,
+  ): Promise<ItemMutation> {
+    const before = this.requireOwned(characterId, itemId, expectedVersion);
+    const destination = this.requireOwned(
+      characterId,
+      destinationContainerId,
+      destinationVersion,
+    );
+    if (before.id === destination.id) {
+      throw new Error("an item cannot contain itself");
+    }
+    let parent: Item | undefined = destination;
+    for (let depth = 0; parent && depth < 8; depth++) {
+      if (parent.id === before.id) throw new Error("item container cycle detected");
+      parent =
+        parent.location.kind === "container" ||
+        parent.location.kind === "corpse"
+          ? this.items.get(parent.location.containerId)
+          : undefined;
+    }
+    const movingCount = count ?? before.count;
+    if (
+      !Number.isInteger(movingCount) ||
+      movingCount < 1 ||
+      movingCount > before.count
+    ) {
+      throw new Error("invalid move count");
+    }
+    const occupiedSlots = new Set(
+      [...this.items.values()]
+        .flatMap((item) =>
+          (item.location.kind === "container" ||
+            item.location.kind === "corpse") &&
+          item.location.containerId === destination.id
+            ? [item.location.slot]
+            : [],
+        ),
+    );
+    const slot = Array.from({ length: 100 }, (_, index) => index).find(
+      (index) => !occupiedSlots.has(index),
+    );
+    if (slot === undefined) throw new Error("container is full");
+    if (movingCount === before.count) {
+      const after = {
+        ...before,
+        version: before.version + 1,
+        location: {
+          kind: "container",
+          containerId: destination.id,
+          slot,
+        } as const,
+      };
+      this.items.set(after.id, after);
+      return { before, after: [after] };
+    }
+    const sourceAfter = {
+      ...before,
+      count: before.count - movingCount,
+      version: before.version + 1,
+    };
+    const { seedKey: _seedKey, ...copyable } = before;
+    const created: Item = {
+      ...copyable,
+      id: randomUUID(),
+      count: movingCount,
+      version: 1,
+      location: {
+        kind: "container",
+        containerId: destination.id,
+        slot,
+      },
+    };
+    this.items.set(sourceAfter.id, sourceAfter);
+    this.items.set(created.id, created);
+    return { before, after: [sourceAfter, created] };
+  }
+
+  async writeText(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    text: string,
+  ): Promise<ItemMutation> {
+    const before = this.requireOwned(characterId, itemId, expectedVersion);
+    const after = {
+      ...before,
+      attributes: { ...before.attributes, text },
+      version: before.version + 1,
+    };
+    this.items.set(after.id, after);
+    return { before, after: [after] };
+  }
+
   async consume(
     characterId: string,
     itemId: string,
     expectedVersion: number,
     count: number,
-    _reason: "rune" | "ammunition" | "break",
+    _reason: "rune" | "ammunition" | "break" | "food",
   ): Promise<ItemMutation> {
     const before = this.requireOwned(characterId, itemId, expectedVersion);
     if (!Number.isInteger(count) || count < 1 || count > before.count) {
@@ -163,6 +266,142 @@ export class MemoryItemStore implements ItemStore {
     };
     this.items.set(itemId, after);
     return { before, after: [after] };
+  }
+
+  async conjure(
+    characterId: string,
+    expectedCharacterVersion: number,
+    expectedMana: number,
+    expectedSoul: number,
+    manaCost: number,
+    soulCost: number,
+    sourceItemTypeId: number,
+    targetItemTypeId: number,
+    count: number,
+  ): Promise<ConjureItemResult> {
+    if (
+      !Number.isInteger(expectedCharacterVersion) ||
+      expectedCharacterVersion < 1 ||
+      !Number.isInteger(count) ||
+      count < 1 ||
+      count > 100 ||
+      expectedMana < manaCost ||
+      expectedSoul < soulCost
+    ) {
+      throw new Error("invalid conjure request");
+    }
+    const currentVersion =
+      this.characterVersions.get(characterId) ?? expectedCharacterVersion;
+    const currentMana = this.characterMana.get(characterId) ?? expectedMana;
+    const currentSoul = this.characterSoul.get(characterId) ?? expectedSoul;
+    if (
+      currentVersion !== expectedCharacterVersion ||
+      currentMana !== expectedMana ||
+      currentSoul !== expectedSoul
+    ) {
+      throw new Error("character resources are stale");
+    }
+    const source =
+      sourceItemTypeId === 0
+        ? undefined
+        : [...this.items.values()].find((item) => {
+            if (item.typeId !== sourceItemTypeId) return false;
+            try {
+              this.requireOwned(characterId, item.id, item.version);
+              return true;
+            } catch {
+              return false;
+            }
+          });
+    if (sourceItemTypeId !== 0 && !source) {
+      throw new Error("conjure source item is missing");
+    }
+    if (source?.count === 1) {
+      const after = {
+        ...source,
+        typeId: targetItemTypeId,
+        count,
+        attributes: {},
+        version: source.version + 1,
+      };
+      this.items.set(after.id, after);
+      this.commitConjureResources(
+        characterId,
+        expectedCharacterVersion,
+        expectedMana,
+        expectedSoul,
+        manaCost,
+        soulCost,
+      );
+      return {
+        mutation: { before: source, after: [after] },
+        characterVersion: expectedCharacterVersion + 1,
+      };
+    }
+    const backpack = [...this.items.values()].find(
+      (item) =>
+        item.location.kind === "equipment" &&
+        item.location.characterId === characterId &&
+        item.location.slot === "backpack",
+    );
+    if (!backpack) throw new Error("equipped backpack is missing");
+    const occupied = new Set(
+      [...this.items.values()].flatMap((item) =>
+        item.location.kind === "container" &&
+        item.location.containerId === backpack.id
+          ? [item.location.slot]
+          : [],
+      ),
+    );
+    const slot = Array.from({ length: 100 }, (_, index) => index).find(
+      (index) => !occupied.has(index),
+    );
+    if (slot === undefined) throw new Error("backpack is full");
+    const after: Item[] = [];
+    if (source) {
+      const remaining = {
+        ...source,
+        count: source.count - 1,
+        version: source.version + 1,
+      };
+      this.items.set(remaining.id, remaining);
+      after.push(remaining);
+    }
+    const created: Item = {
+      id: randomUUID(),
+      typeId: targetItemTypeId,
+      count,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: backpack.id, slot },
+    };
+    this.items.set(created.id, created);
+    after.push(created);
+    this.commitConjureResources(
+      characterId,
+      expectedCharacterVersion,
+      expectedMana,
+      expectedSoul,
+      manaCost,
+      soulCost,
+    );
+    return {
+      mutation: { ...(source ? { before: source } : {}), after },
+      characterVersion: expectedCharacterVersion + 1,
+    };
+  }
+
+  private commitConjureResources(
+    characterId: string,
+    expectedCharacterVersion: number,
+    expectedMana: number,
+    expectedSoul: number,
+    manaCost: number,
+    soulCost: number,
+  ): void {
+    this.characterVersions.set(characterId, expectedCharacterVersion + 1);
+    this.characterMana.set(characterId, expectedMana - manaCost);
+    this.characterSoul.set(characterId, expectedSoul - soulCost);
   }
 
   async createCorpse(
@@ -211,13 +450,25 @@ export class MemoryItemStore implements ItemStore {
     if (!item || item.version !== expectedVersion) {
       throw new Error("item is missing or stale");
     }
-    if (
-      (item.location.kind !== "equipment" &&
-        item.location.kind !== "inventory") ||
-      item.location.characterId !== characterId
-    ) {
-      throw new Error("item is not owned by character");
+    let root = item;
+    for (let depth = 0; depth < 8; depth++) {
+      if (
+        (root.location.kind === "equipment" ||
+          root.location.kind === "inventory") &&
+        root.location.characterId === characterId
+      ) {
+        return item;
+      }
+      if (
+        root.location.kind !== "container" &&
+        root.location.kind !== "corpse"
+      ) {
+        break;
+      }
+      const parent = this.items.get(root.location.containerId);
+      if (!parent) break;
+      root = parent;
     }
-    return item;
+    throw new Error("item is not owned by character");
   }
 }

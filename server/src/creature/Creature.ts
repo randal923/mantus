@@ -25,6 +25,10 @@ export abstract class Creature<
   private currentHealth: number;
   private currentMaxHealth: number;
   private currentPosition: Position;
+  private readonly baseLight: {
+    readonly intensity: number;
+    readonly color: number;
+  };
 
   protected constructor(options: {
     id: string;
@@ -35,6 +39,10 @@ export abstract class Creature<
     outfit: TOutfit;
     health: number;
     maxHealth: number;
+    light?: {
+      readonly intensity: number;
+      readonly color: number;
+    };
   }) {
     this.id = options.id;
     this.kind = options.kind;
@@ -44,6 +52,7 @@ export abstract class Creature<
     this.outfit = options.outfit;
     this.currentHealth = options.health;
     this.currentMaxHealth = options.maxHealth;
+    this.baseLight = options.light ?? { intensity: 0, color: 0 };
   }
 
   get position(): Position {
@@ -131,7 +140,9 @@ export abstract class Creature<
   }
 
   toState(): CreatureState {
-    const light = this.conditions.light;
+    const conditionLight = this.conditions.light;
+    const light =
+      conditionLight.intensity > 0 ? conditionLight : this.baseLight;
     return {
       id: this.id,
       kind: this.kind,

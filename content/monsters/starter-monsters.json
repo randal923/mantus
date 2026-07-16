@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
     "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
@@ -22,6 +22,15 @@
       "health": 15,
       "maxHealth": 15,
       "speed": 64,
+      "manaCost": 220,
+      "changeTarget": {
+        "intervalMs": 4000,
+        "chance": 0
+      },
+      "light": {
+        "intensity": 0,
+        "color": 0
+      },
       "experience": 0,
       "corpseItemTypeId": 6042,
       "flags": {
@@ -34,7 +43,9 @@
         "canPushItems": false,
         "canPushCreatures": false,
         "targetDistance": 1,
-        "runHealth": 15
+        "runHealth": 15,
+        "staticAttackChance": 90,
+        "healthHidden": false
       },
       "targetStrategy": {
         "nearest": 100,
@@ -114,6 +125,15 @@
       "health": 20,
       "maxHealth": 20,
       "speed": 62,
+      "manaCost": 220,
+      "changeTarget": {
+        "intervalMs": 4000,
+        "chance": 0
+      },
+      "light": {
+        "intensity": 0,
+        "color": 0
+      },
       "experience": 0,
       "corpseItemTypeId": 5971,
       "flags": {
@@ -126,7 +146,9 @@
         "canPushItems": false,
         "canPushCreatures": false,
         "targetDistance": 1,
-        "runHealth": 8
+        "runHealth": 8,
+        "staticAttackChance": 90,
+        "healthHidden": false
       },
       "targetStrategy": {
         "nearest": 100,
@@ -182,6 +204,15 @@
       "health": 25,
       "maxHealth": 25,
       "speed": 57,
+      "manaCost": 255,
+      "changeTarget": {
+        "intervalMs": 4000,
+        "chance": 0
+      },
+      "light": {
+        "intensity": 0,
+        "color": 0
+      },
       "experience": 0,
       "corpseItemTypeId": 6000,
       "flags": {
@@ -194,7 +225,9 @@
         "canPushItems": false,
         "canPushCreatures": false,
         "targetDistance": 1,
-        "runHealth": 25
+        "runHealth": 25,
+        "staticAttackChance": 90,
+        "healthHidden": false
       },
       "targetStrategy": {
         "nearest": 100,
@@ -265,6 +298,15 @@
       "health": 20,
       "maxHealth": 20,
       "speed": 58,
+      "manaCost": 250,
+      "changeTarget": {
+        "intervalMs": 4000,
+        "chance": 0
+      },
+      "light": {
+        "intensity": 0,
+        "color": 0
+      },
       "experience": 0,
       "corpseItemTypeId": 5991,
       "flags": {
@@ -277,7 +319,9 @@
         "canPushItems": false,
         "canPushCreatures": false,
         "targetDistance": 1,
-        "runHealth": 20
+        "runHealth": 20,
+        "staticAttackChance": 90,
+        "healthHidden": false
       },
       "targetStrategy": {
         "nearest": 100,
@@ -352,6 +396,15 @@
       "health": 15,
       "maxHealth": 15,
       "speed": 60,
+      "manaCost": 205,
+      "changeTarget": {
+        "intervalMs": 4000,
+        "chance": 0
+      },
+      "light": {
+        "intensity": 0,
+        "color": 0
+      },
       "experience": 10,
       "corpseItemTypeId": 3998,
       "flags": {
@@ -364,7 +417,9 @@
         "canPushItems": false,
         "canPushCreatures": false,
         "targetDistance": 1,
-        "runHealth": 0
+        "runHealth": 0,
+        "staticAttackChance": 90,
+        "healthHidden": false
       },
       "targetStrategy": {
         "nearest": 100,

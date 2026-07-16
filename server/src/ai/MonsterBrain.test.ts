@@ -16,6 +16,9 @@ const baseType: MonsterType = {
   health: 20,
   maxHealth: 20,
   speed: 67,
+  manaCost: 0,
+  changeTarget: { intervalMs: 4_000, chance: 0 },
+  light: { intensity: 0, color: 0 },
   experience: 5,
   corpseItemTypeId: 5964,
   flags: {
@@ -29,6 +32,8 @@ const baseType: MonsterType = {
     canPushCreatures: false,
     targetDistance: 1,
     runHealth: 5,
+    staticAttackChance: 95,
+    healthHidden: false,
   },
   targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
   attacks: [],
@@ -213,5 +218,34 @@ describe("MonsterBrain", () => {
         Math.abs(monster.position.y - damager.position.y),
       ),
     ).toBeGreaterThanOrEqual(2);
+  });
+
+  it("keeps the current target when Canary's change-target roll is zero", () => {
+    const type: MonsterType = {
+      ...baseType,
+      speed: 0,
+      changeTarget: { intervalMs: 250, chance: 0 },
+      targetStrategy: { nearest: 1, health: 0, damage: 100, random: 0 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const first = new Player(makeCharacter("first"), { x: 3, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(first);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 100, 32);
+    expect(brain.targetCreatureId).toBe(first.id);
+
+    const damager = new Player(makeCharacter("damager"), {
+      x: 4,
+      y: 2,
+      z: 7,
+    });
+    monster.recordPlayerDamage(damager.id, 10);
+    world.addPlayer(damager);
+    brain.tick(world, 1_000, 32);
+
+    expect(brain.targetCreatureId).toBe(first.id);
   });
 });

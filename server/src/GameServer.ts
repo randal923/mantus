@@ -270,6 +270,9 @@ export class GameServer {
       case "stop-move":
         this.movement.stop(session);
         return;
+      case "auto-walk":
+        this.movement.handleAutoWalk(session, intent, now);
+        return;
       case "set-viewport": {
         if (!session.setViewRange(intent.range) || !session.playerId) return;
         const player = this.world.getPlayer(session.playerId);
@@ -296,7 +299,9 @@ export class GameServer {
       case "use-item-with":
       case "split-stack":
       case "rotate-item":
-        this.items.handle(session, intent);
+      case "move-item":
+      case "write-item":
+        this.items.handle(session, intent, now);
         return;
       case "set-language":
         this.language.handle(session, intent);

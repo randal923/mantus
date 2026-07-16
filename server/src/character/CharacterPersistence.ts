@@ -13,6 +13,7 @@ interface SaveState {
   tail: Promise<void>;
   lastQueuedAt: number;
   nextProgressionEventIndex: number;
+  externalMutationPending: boolean;
 }
 
 export class CharacterPersistence {
@@ -47,6 +48,7 @@ export class CharacterPersistence {
       tail: Promise.resolve(),
       lastQueuedAt: now,
       nextProgressionEventIndex: 0,
+      externalMutationPending: false,
     });
   }
 
@@ -59,12 +61,75 @@ export class CharacterPersistence {
   saveNow(player: Player, now: number): void {
     this.markDirty(player);
     const state = this.states.get(player.id);
-    if (state) this.enqueueSnapshot(state, now);
+    if (state && !state.externalMutationPending) {
+      this.enqueueSnapshot(state, now);
+    }
+  }
+
+  async beginExternalMutation(player: Player, now: number): Promise<number> {
+    const state = this.states.get(player.id);
+    if (
+      !state ||
+      state.player !== player ||
+      state.externalMutationPending ||
+      state.failed
+    ) {
+      throw new Error("character cannot begin an external mutation");
+    }
+    state.externalMutationPending = true;
+    if (state.dirty) this.enqueueSnapshot(state, now);
+    try {
+      await state.tail;
+      if (state.failed) throw state.failed;
+      return state.nextExpectedVersion;
+    } catch (cause) {
+      state.externalMutationPending = false;
+      throw cause;
+    }
+  }
+
+  completeExternalMutation(
+    player: Player,
+    expectedVersion: number,
+    characterVersion: number,
+  ): void {
+    const state = this.states.get(player.id);
+    if (
+      !state ||
+      state.player !== player ||
+      !state.externalMutationPending ||
+      state.nextExpectedVersion !== expectedVersion ||
+      characterVersion !== expectedVersion + 1
+    ) {
+      throw new Error("character external mutation version mismatch");
+    }
+    state.nextExpectedVersion = characterVersion;
+    state.externalMutationPending = false;
+  }
+
+  cancelExternalMutation(player: Player): void {
+    const state = this.states.get(player.id);
+    if (!state || state.player !== player) return;
+    state.externalMutationPending = false;
+  }
+
+  isExternalMutationPending(player: Player): boolean {
+    const state = this.states.get(player.id);
+    return Boolean(
+      state?.player === player && state.externalMutationPending,
+    );
   }
 
   tick(now: number): void {
     for (const state of this.states.values()) {
-      if (!state.online || !state.dirty || state.failed) continue;
+      if (
+        !state.online ||
+        !state.dirty ||
+        state.failed ||
+        state.externalMutationPending
+      ) {
+        continue;
+      }
       if (now - state.lastQueuedAt < this.saveIntervalMs) continue;
       this.enqueueSnapshot(state, now);
     }
@@ -74,14 +139,22 @@ export class CharacterPersistence {
     const state = this.states.get(player.id);
     if (!state || state.player !== player) return;
     state.online = false;
-    if (state.dirty && !state.failed) this.enqueueSnapshot(state, now);
+    if (state.dirty && !state.failed && !state.externalMutationPending) {
+      this.enqueueSnapshot(state, now);
+    }
     this.removeSettledState(player.id, state);
   }
 
   async flushCharacter(characterId: string): Promise<void> {
     const state = this.states.get(characterId);
     if (!state) return;
-    if (state.dirty && !state.failed) this.enqueueSnapshot(state, Date.now());
+    if (
+      state.dirty &&
+      !state.failed &&
+      !state.externalMutationPending
+    ) {
+      this.enqueueSnapshot(state, Date.now());
+    }
     await state.tail;
     if (state.failed) throw state.failed;
     this.removeSettledState(characterId, state);
@@ -92,7 +165,9 @@ export class CharacterPersistence {
     const now = Date.now();
     for (const [characterId, state] of this.states) {
       state.online = false;
-      if (state.dirty && !state.failed) this.enqueueSnapshot(state, now);
+      if (state.dirty && !state.failed && !state.externalMutationPending) {
+        this.enqueueSnapshot(state, now);
+      }
       tails.push(state.tail);
       this.removeSettledState(characterId, state);
     }
@@ -187,7 +262,13 @@ export class CharacterPersistence {
   }
 
   private removeSettledState(characterId: string, state: SaveState): void {
-    if (state.online || state.dirty || state.pendingCount > 0 || state.failed) {
+    if (
+      state.online ||
+      state.dirty ||
+      state.pendingCount > 0 ||
+      state.failed ||
+      state.externalMutationPending
+    ) {
       return;
     }
     if (this.states.get(characterId) === state) {

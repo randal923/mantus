@@ -9,6 +9,7 @@ export interface ConditionApplication {
   readonly sourceId: string | null;
   readonly durationMs: number;
   readonly magnitude?: number;
+  readonly tickAmounts?: ReadonlyArray<number>;
   readonly tickIntervalMs?: number;
   readonly damageType?: DamageType;
   readonly effectId?: number;
@@ -17,6 +18,8 @@ export interface ConditionApplication {
     readonly intensity: number;
     readonly color: number;
   };
+  readonly capacity?: number;
+  readonly naturalRegeneration?: boolean;
 }
 
 export interface ActiveCondition extends ConditionApplication {
@@ -24,6 +27,7 @@ export interface ActiveCondition extends ConditionApplication {
   readonly expiresAt: number;
   readonly stacks: number;
   readonly nextTickAt: number | null;
+  readonly nextTickIndex: number;
 }
 
 export interface ConditionTick {

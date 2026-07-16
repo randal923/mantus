@@ -28,6 +28,29 @@ export interface SpellFormula {
   readonly maximum: SpellExpression;
 }
 
+export interface SpellCondition {
+  readonly type: ConditionType;
+  readonly durationMs: number;
+  readonly magnitude?: number;
+  readonly tickIntervalMs?: number;
+  readonly tickAmounts?: ReadonlyArray<number>;
+  readonly damageType?: DamageType;
+  readonly light?: {
+    readonly intensity: number;
+    readonly color: number;
+  };
+  readonly speedFormula?: {
+    readonly coefficient: number;
+    readonly base: number;
+  };
+  readonly speedTarget?: number;
+  readonly magicShieldFormula?: {
+    readonly base: number;
+    readonly level: number;
+    readonly magicLevel: number;
+  };
+}
+
 export interface SpellDefinition {
   readonly id: string;
   readonly numericId: number | null;
@@ -73,4 +96,17 @@ export interface SpellDefinition {
     readonly directional?: boolean;
   };
   readonly dispel: ConditionType | null;
+  readonly condition: SpellCondition | null;
+  readonly casterEffectId: number;
+  readonly conjure: {
+    readonly sourceItemTypeId: number;
+    readonly targetItemTypeId: number;
+    readonly count: number;
+  } | null;
+  readonly castRules: {
+    readonly targetPlayerOnly: boolean;
+    readonly allowSelf: boolean;
+    readonly excludedVocations: ReadonlyArray<CharacterVocation>;
+    readonly casterEffectId: number;
+  } | null;
 }

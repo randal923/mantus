@@ -58,6 +58,10 @@ export interface ItemType {
   readonly levelDoor?: number;
   readonly field?: string;
   readonly charges?: number;
+  readonly food?: {
+    readonly durationSeconds: number;
+    readonly message: string;
+  };
   readonly text?: {
     readonly readable: boolean;
     readonly writeable: boolean;

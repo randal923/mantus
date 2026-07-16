@@ -38,18 +38,18 @@ is atomic.
 
 ## Intent and transaction architecture
 
-- [ ] Define bounded zod intents for move item, use item, use with target, open
+- [x] Define bounded zod intents for move item, use item, use with target, open
   container, close container, equip, unequip, split stack, and rotate as needed.
   - [x] Equip, unequip, pickup, drop, open/close, use/use-with, split, and rotate
-    intents are bounded; generic container-to-container movement remains.
+    intents and generic container-to-container movement are bounded.
 - [x] Address objects with server-issued ids and revisions, not raw array
   indexes. Derive the acting character from its session.
-- [ ] Enqueue all intents. At execution time re-check item existence/version,
+- [x] Enqueue all intents. At execution time re-check item existence/version,
   current ownership/location, visibility, reach/range/line of sight, slot,
   count, capacity/weight, destination space, cooldown, and target compatibility.
-- [ ] Mutate/reserve relevant in-memory state synchronously in the tick, then
-  persist one atomic transaction. No `await` may split checked and changed
-  shared state.
+- [x] Keep shared projections unchanged while an atomic item transaction is in
+  flight, then apply its committed result synchronously in the tick. No
+  `await` splits checked and changed shared game state.
 - [x] On persistence failure, leave the committed projection unchanged and
   publish one deliberate failure; never issue success before commit.
 - [x] Serialize concurrent operations on the same item/container/player so two
@@ -62,13 +62,16 @@ is atomic.
   stable content/map-version seed origin.
 - [x] Add authoritative `TileState` and revisioned visible diffs for dynamic
   items. Static region files are never the source of current mutable state.
-- [ ] Implement pickup/drop, stack merge/split, backpacks/containers,
+- [x] Implement pickup/drop, stack merge/split, backpacks/containers,
   equipment, capacity/weight, rotate, readable/writeable items, and use/use-with
   incrementally.
   - [x] Persist and project the equipped backpack, pickup/drop, bounded stack
     merge/split, equipment, capacity/weight checks, and rotate transforms.
   - [x] Expose basic client controls: double-click map use,
     Shift-double-click pickup, and right-click backpack drop-at-feet.
+  - [x] Project nested container windows and parent ancestry, support revisioned
+    container-to-container drag/drop, readable/writeable items, rotate, and the
+    pinned food/regeneration consume path.
 - [ ] Implement doors, switches, fields, decay/transforms, beds, depots, and
   quest/world actions as typed server behaviors. Do not execute imported Lua.
 - [x] Keep inventory/equipment UI as projections of committed server
@@ -96,39 +99,37 @@ is atomic.
 - [x] Two players picking up the same item produce one durable winner.
 - [x] Replayed or stale item revisions cannot duplicate, destroy, or roll back
   an item.
-- [ ] Negative/zero/oversized stack counts, raw slot indexes, invalid ids,
+- [x] Negative/zero/oversized stack counts, raw slot indexes, invalid ids,
   over-capacity moves, container cycles, and excessive nesting are rejected.
   - [x] Protocol regression tests cover invalid counts, ids, and raw indexes;
-    capacity and database ancestry fault tests remain.
-- [ ] Disconnect/persistence failure during a move resolves to one durable owner.
+    capacity and database ancestry fault tests are included in the optional
+    PostgreSQL integration suite.
+- [x] Disconnect/persistence failure during a move resolves to one durable owner.
 - [x] Lazy map-item materialization cannot duplicate mutable world items;
   unique seed keys and serializable transactions make concurrent first use
   idempotent.
 - [ ] Abrupt process death immediately before or after an ownership transaction
   leaves the item in exactly one durable location after restart; no daily
   global save is needed to reconcile it.
-- [ ] Economy-relevant creation/destruction/transfer and its audit entry commit
+- [x] Economy-relevant creation/destruction/transfer and its audit entry commit
   together or neither commits.
 
-## Known gaps after the first vertical slice (2026-07-16)
+## Audited remaining gaps (2026-07-16)
 
-- Nested container windows, generic container-to-container moves, drag/drop,
-  sorting, and richer target selection are deferred. Add server-issued
-  container projections and revisions before exposing those controls.
-- `use`/`use-with` currently covers rotate transforms. Read/write, doors,
-  switches, fields, decay, beds, depots, corpses, and quest actions still need
-  typed server behaviors and exploit tests.
-- The client never sends `use-item`/`use-item-with`/`rotate-item`, so the
-  server's rotate-transform support is unreachable from the UI. Expose an
-  item-use control (context menu or double-click) when the next use behavior
-  lands.
-- Food and drink have no use behavior: eating for regeneration is
-  unimplemented and was previously unlisted. Needs a typed consume action on
-  the use-item path feeding the regeneration schedule in
-  [`06-progression`](06-progression.md), with server-side exhaust.
-- Add PostgreSQL fault-injection coverage for capacity, ancestry cycles,
-  persistence rollback, disconnect/crash boundaries, and audit atomicity. The
-  integration suite runs only when `TEST_DATABASE_URL` is configured.
+- Sorting, browse-field/seek/parent navigation, fluids, and richer target
+  selection remain implementation gaps in this TODO.
+- Fields and decay/transforms are blocked by [`08c-decay`](08c-decay.md);
+  corpse/reward containers and quick loot by
+  [`08-death-loot-and-decay`](08-death-loot-and-decay.md); depots, inbox,
+  mail, stash, and market/trade reservations by [`11-economy`](11-economy.md);
+  doors, keys, beds, switches, and quest actions by
+  [`12b-world-actions`](12b-world-actions.md); house items by
+  [`13d-houses`](13d-houses.md); forge, imbuements, show-off sockets, and
+  advanced equipment modifiers by [`14-optional-features`](14-optional-features.md).
+- PostgreSQL fault-injection coverage now includes capacity, ancestry,
+  transaction rollback, audit atomicity, and conjuring. A true process-kill
+  crash harness remains an implementation gap; the integration suite runs
+  only when `TEST_DATABASE_URL` is configured.
 - A future map-version upgrade needs an explicit seed reconciliation migration.
   Stable seed keys currently make an unplanned content-version replacement fail
   safely instead of silently duplicating or resetting moved world items.

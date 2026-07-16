@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
     "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
@@ -9,6 +9,11 @@
   "mapExternalFiles": {
     "monsters": "otservbr-monster.xml",
     "npcs": "otservbr-npc.xml"
+  },
+  "appearanceValidation": {
+    "outfits": 26,
+    "items": 0,
+    "intentionallyInvisible": 0
   },
   "bounds": {
     "centerX": 32369,
@@ -179,16 +184,6 @@
     },
     {
       "kind": "npc",
-      "typeId": "oberon",
-      "paths": [
-        "data-otservbr-global/npc/oberon's_bile.lua",
-        "data-otservbr-global/npc/oberon's_hate.lua",
-        "data-otservbr-global/npc/oberon's_ire.lua",
-        "data-otservbr-global/npc/oberon's_spite.lua"
-      ]
-    },
-    {
-      "kind": "npc",
       "typeId": "rapanaio",
       "paths": [
         "data-otservbr-global/npc/rapanaio_boat.lua",
@@ -255,6 +250,7 @@
       ]
     }
   ],
+  "ambiguousDefinitions": [],
   "outOfMap": [],
   "blocked": [],
   "unsupportedDefinitions": [
@@ -264,13 +260,99 @@
       "sourcePath": "data-otservbr-global/monster/mammals/dog.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "changeTarget",
-        "light",
-        "manaCost",
+        "flags.canWalkOnEnergy",
+        "flags.canWalkOnFire",
+        "flags.canWalkOnPoison",
+        "flags.isBlockable",
+        "flags.isPreyExclusive",
+        "flags.rewardBoss",
         "race",
-        "raceId"
+        "raceId",
+        "voices.runtime"
       ],
-      "proceduralCallbacks": []
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnEnergy",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnFire",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnPoison",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isBlockable",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isPreyExclusive",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.rewardBoss",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "race",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices.runtime",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "09-chat",
+          "reason": "Requires 09-chat before this imported creature behavior can be completed."
+        }
+      ]
     },
     {
       "kind": "monster",
@@ -278,13 +360,99 @@
       "sourcePath": "data-otservbr-global/monster/mammals/pig.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "changeTarget",
-        "light",
-        "manaCost",
+        "flags.canWalkOnEnergy",
+        "flags.canWalkOnFire",
+        "flags.canWalkOnPoison",
+        "flags.isBlockable",
+        "flags.isPreyExclusive",
+        "flags.rewardBoss",
         "race",
-        "raceId"
+        "raceId",
+        "voices.runtime"
       ],
-      "proceduralCallbacks": []
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnEnergy",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnFire",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnPoison",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isBlockable",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isPreyExclusive",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.rewardBoss",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "race",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices.runtime",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "09-chat",
+          "reason": "Requires 09-chat before this imported creature behavior can be completed."
+        }
+      ]
     },
     {
       "kind": "monster",
@@ -292,13 +460,99 @@
       "sourcePath": "data-otservbr-global/monster/mammals/sheep.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "changeTarget",
-        "light",
-        "manaCost",
+        "flags.canWalkOnEnergy",
+        "flags.canWalkOnFire",
+        "flags.canWalkOnPoison",
+        "flags.isBlockable",
+        "flags.isPreyExclusive",
+        "flags.rewardBoss",
         "race",
-        "raceId"
+        "raceId",
+        "voices.runtime"
       ],
-      "proceduralCallbacks": []
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnEnergy",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnFire",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnPoison",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isBlockable",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isPreyExclusive",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.rewardBoss",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "race",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices.runtime",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "09-chat",
+          "reason": "Requires 09-chat before this imported creature behavior can be completed."
+        }
+      ]
     },
     {
       "kind": "monster",
@@ -306,13 +560,108 @@
       "sourcePath": "data-otservbr-global/monster/birds/chicken.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "changeTarget",
-        "light",
-        "manaCost",
+        "flags.canWalkOnEnergy",
+        "flags.canWalkOnFire",
+        "flags.canWalkOnPoison",
+        "flags.isBlockable",
+        "flags.isPreyExclusive",
+        "flags.isPreyable",
+        "flags.rewardBoss",
         "race",
-        "raceId"
+        "raceId",
+        "voices.runtime"
       ],
-      "proceduralCallbacks": []
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnEnergy",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnFire",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnPoison",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isBlockable",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isPreyExclusive",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isPreyable",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.rewardBoss",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "race",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices.runtime",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "09-chat",
+          "reason": "Requires 09-chat before this imported creature behavior can be completed."
+        }
+      ]
     },
     {
       "kind": "monster",
@@ -320,13 +669,99 @@
       "sourcePath": "data-otservbr-global/monster/reptiles/snake.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "changeTarget",
-        "light",
-        "manaCost",
+        "flags.canWalkOnEnergy",
+        "flags.canWalkOnFire",
+        "flags.canWalkOnPoison",
+        "flags.isBlockable",
+        "flags.isPreyExclusive",
+        "flags.rewardBoss",
         "race",
-        "raceId"
+        "raceId",
+        "voices.runtime"
       ],
-      "proceduralCallbacks": []
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnEnergy",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnFire",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.canWalkOnPoison",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isBlockable",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "08c-decay",
+          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.isPreyExclusive",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "flags.rewardBoss",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "race",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "14-optional-features",
+          "reason": "Requires 14-optional-features before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices.runtime",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "09-chat",
+          "reason": "Requires 09-chat before this imported creature behavior can be completed."
+        }
+      ]
     },
     {
       "kind": "npc",
@@ -348,6 +783,112 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -365,6 +906,72 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -387,6 +994,112 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -404,6 +1117,72 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -426,6 +1205,112 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -444,6 +1329,80 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -455,7 +1414,33 @@
         "speechBubble",
         "voices"
       ],
-      "proceduralCallbacks": []
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
+      ]
     },
     {
       "kind": "npc",
@@ -477,6 +1462,112 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -498,6 +1589,104 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -515,6 +1704,72 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -537,6 +1792,112 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -558,6 +1919,104 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -576,6 +2035,80 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -597,6 +2130,104 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -614,6 +2245,72 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -635,6 +2332,104 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -657,6 +2452,112 @@
         "onBuyItem",
         "onSellItem",
         "onCheckItem"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "shop",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onBuyItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSellItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCheckItem",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "blocked",
+          "blockedBy": "11b-npc-shops",
+          "reason": "Requires 11b-npc-shops before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -674,6 +2575,72 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -692,6 +2659,80 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "voices",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -709,6 +2750,72 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     },
     {
@@ -726,8 +2833,76 @@
         "onMove",
         "onSay",
         "onCloseChannel"
+      ],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "flags",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "field",
+          "name": "speechBubble",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onThink",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onAppear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onDisappear",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onMove",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onSay",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        },
+        {
+          "kind": "callback",
+          "name": "onCloseChannel",
+          "ownerTodo": "10-npcs",
+          "status": "blocked",
+          "blockedBy": "10-npcs",
+          "reason": "Requires 10-npcs before this imported creature behavior can be completed."
+        }
       ]
     }
   ],
+  "invisibleAppearances": [],
+  "appearanceCorrections": [],
   "fullPlacementsEnabled": false
 }

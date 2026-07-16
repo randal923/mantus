@@ -12,6 +12,9 @@ monster.health = 20
 monster.maxHealth = 20
 monster.corpse = 5964
 monster.speed = 67
+monster.manaCost = 220
+monster.changeTarget = { interval = 4000, chance = 25 }
+monster.light = { level = 7, color = 215 }
 monster.strategiesTarget = { nearest = 100 }
 monster.flags = { attackable = true, hostile = true, pushable = true, targetDistance = 1, runHealth = 5 }
 monster.attacks = { { name = "melee", interval = 2000, chance = 100, maxDamage = -8 } }
@@ -48,6 +51,15 @@ test("resolves spawn offsets, centerz, direction, and static type data", () => {
   assert.equal(result.slots[0].respawnMs, 10_000);
   assert.equal(result.monsterTypes[0].outfit.lookType, 21);
   assert.equal(result.monsterTypes[0].flags.hostile, true);
+  assert.equal(result.monsterTypes[0].manaCost, 220);
+  assert.deepEqual(result.monsterTypes[0].changeTarget, {
+    intervalMs: 4000,
+    chance: 25,
+  });
+  assert.deepEqual(result.monsterTypes[0].light, {
+    intensity: 7,
+    color: 215,
+  });
   assert.deepEqual(result.monsterTypes[0].immunities, ["paralyze"]);
 });
 

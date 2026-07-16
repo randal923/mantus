@@ -31,4 +31,11 @@ describe("loadItemCatalog", () => {
   it("rejects unknown item ids instead of accepting client-authored stats", () => {
     expect(() => catalog.require(65_535)).toThrow("unknown item type");
   });
+
+  it("imports pinned Canary food durations and messages", () => {
+    expect(catalog.require(3577).food).toEqual({
+      durationSeconds: 180,
+      message: "Munch.",
+    });
+  });
 });

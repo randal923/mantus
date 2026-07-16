@@ -359,28 +359,34 @@ export class CharacterProgression {
     return this.trainingSchedules.delete(id);
   }
 
-  tick(now: number, regenerationBlocked: boolean): ProgressionTick {
+  tick(
+    now: number,
+    healthManaRegenerationBlocked: boolean,
+    soulRegenerationBlocked = false,
+  ): ProgressionTick {
     const vocation = getVocation(this.vocation, this.definitionVersion);
-    if (regenerationBlocked) {
+    if (healthManaRegenerationBlocked) {
       this.nextHealthAt = now + vocation.regeneration.healthIntervalMs;
       this.nextManaAt = now + vocation.regeneration.manaIntervalMs;
+    }
+    if (soulRegenerationBlocked) {
       this.nextSoulAt = now + vocation.regeneration.soulIntervalMs;
     }
-    const health = regenerationBlocked
+    const health = healthManaRegenerationBlocked
       ? { count: 0, nextAt: this.nextHealthAt }
       : this.dueTicks(
           now,
           this.nextHealthAt,
           vocation.regeneration.healthIntervalMs,
         );
-    const mana = regenerationBlocked
+    const mana = healthManaRegenerationBlocked
       ? { count: 0, nextAt: this.nextManaAt }
       : this.dueTicks(
           now,
           this.nextManaAt,
           vocation.regeneration.manaIntervalMs,
         );
-    const soul = regenerationBlocked
+    const soul = soulRegenerationBlocked
       ? { count: 0, nextAt: this.nextSoulAt }
       : this.dueTicks(
           now,

@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
@@ -77,6 +78,9 @@ databaseDescribe("PgCharacterStore integration", () => {
       "005_items.sql",
       "006_item_identity_error.sql",
       "007_progression.sql",
+      "008_diagonal_direction.sql",
+      "009_item_interactions.sql",
+      "010_monk_vocations.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -254,8 +258,10 @@ databaseDescribe("PgCharacterStore integration", () => {
       vocation: "Druid",
       lookType: 136,
     });
-    const character = characters[0];
-    if (!character) throw new Error("character was not created");
+    const summary = characters[0];
+    if (!summary) throw new Error("character was not created");
+    const character = await store.findByIdForAccount(accountId, summary.id);
+    if (!character) throw new Error("created character could not be loaded");
 
     const items = await pool.query<{ item_type_id: number; location_type: string }>(
       `WITH RECURSIVE owned AS (
@@ -355,5 +361,343 @@ databaseDescribe("PgCharacterStore integration", () => {
         .flat()
         .filter((item) => item.id === itemId),
     ).toHaveLength(1);
+  });
+
+  it("serializes generic container moves and keeps one durable owner", async () => {
+    const accountId = await createAccount("container-move");
+    const characters = await service.create(accountId, {
+      displayName: "Container Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const character = characters[0];
+    if (!character) throw new Error("character was not created");
+    const backpack = await pool.query<{ id: string }>(
+      `SELECT id FROM items
+       WHERE character_id = $1 AND location_type = 'equipment'
+         AND equipment_slot = 'backpack'`,
+      [character.id],
+    );
+    const backpackId = backpack.rows[0]?.id;
+    if (!backpackId) throw new Error("starter backpack was not created");
+    const bagId = randomUUID();
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, location_type, container_id, slot_index
+       ) VALUES ($1, 2853, 'container', $2, 10)`,
+      [bagId, backpackId],
+    );
+    const source = await pool.query<{ id: string; version: number }>(
+      `SELECT id, version FROM items
+       WHERE container_id = $1 AND item_type_id = 3031`,
+      [backpackId],
+    );
+    const item = source.rows[0];
+    if (!item) throw new Error("starter gold was not created");
+
+    const results = await Promise.allSettled([
+      itemStore.moveToContainer(
+        character.id,
+        item.id,
+        item.version,
+        bagId,
+        1,
+      ),
+      itemStore.moveToContainer(
+        character.id,
+        item.id,
+        item.version,
+        bagId,
+        1,
+      ),
+    ]);
+    const persisted = await pool.query<{
+      container_id: string | null;
+      count: number;
+    }>(
+      `SELECT container_id, count FROM items WHERE id = $1`,
+      [item.id],
+    );
+    const audits = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count
+       FROM audit_log
+       WHERE item_id = $1 AND event_type = 'item-transferred'`,
+      [item.id],
+    );
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    expect(persisted.rows).toEqual([
+      { container_id: bagId, count: 100 },
+    ]);
+    expect(Number(audits.rows[0]?.count)).toBe(1);
+  });
+
+  it("rejects over-capacity pickup, container cycles, and excessive nesting", async () => {
+    const accountId = await createAccount("container-validation");
+    const characters = await service.create(accountId, {
+      displayName: "Nested Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const character = characters[0];
+    if (!character) throw new Error("character was not created");
+    const overweightSource = {
+      seedKey: "test:102:200:7:0",
+      mapName: "test",
+      mapVersion: "test-version",
+      typeId: 21100,
+      attributes: {},
+      position: { x: 102, y: 200, z: 7 },
+      stackIndex: 0,
+      contents: [],
+    } as const;
+    await expect(
+      itemStore.pickup(
+        character.id,
+        overweightSource.seedKey,
+        1,
+        overweightSource.position,
+        overweightSource,
+      ),
+    ).rejects.toThrow("capacity");
+
+    const rootId = randomUUID();
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, location_type, character_id, slot_index
+       ) VALUES ($1, 2853, 'inventory', $2, 0)`,
+      [rootId, character.id],
+    );
+    const chain = [rootId];
+    for (let depth = 1; depth < 8; depth++) {
+      const id = randomUUID();
+      await pool.query(
+        `INSERT INTO items (
+           id, item_type_id, location_type, container_id, slot_index
+         ) VALUES ($1, 2853, 'container', $2, 0)`,
+        [id, chain.at(-1)],
+      );
+      chain.push(id);
+    }
+    const deepestId = chain.at(-1);
+    if (!deepestId) throw new Error("nested chain was not created");
+    await expect(
+      itemStore.moveToContainer(
+        character.id,
+        rootId,
+        1,
+        deepestId,
+        1,
+      ),
+    ).rejects.toThrow("cycle");
+
+    const subtreeId = randomUUID();
+    const childId = randomUUID();
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, location_type, character_id, slot_index
+       ) VALUES ($1, 2853, 'inventory', $2, 1)`,
+      [subtreeId, character.id],
+    );
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, location_type, container_id, slot_index
+       ) VALUES ($1, 2853, 'container', $2, 0)`,
+      [childId, subtreeId],
+    );
+    await expect(
+      itemStore.moveToContainer(
+        character.id,
+        subtreeId,
+        1,
+        deepestId,
+        1,
+      ),
+    ).rejects.toThrow("nesting");
+  });
+
+  it("rolls ownership and audit back together when persistence fails", async () => {
+    const accountId = await createAccount("container-rollback");
+    const characters = await service.create(accountId, {
+      displayName: "Rollback Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const character = characters[0];
+    if (!character) throw new Error("character was not created");
+    const backpack = await pool.query<{ id: string }>(
+      `SELECT id FROM items
+       WHERE character_id = $1 AND location_type = 'equipment'
+         AND equipment_slot = 'backpack'`,
+      [character.id],
+    );
+    const backpackId = backpack.rows[0]?.id;
+    if (!backpackId) throw new Error("starter backpack was not created");
+    const bagId = randomUUID();
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, location_type, container_id, slot_index
+       ) VALUES ($1, 2853, 'container', $2, 10)`,
+      [bagId, backpackId],
+    );
+    const source = await pool.query<{
+      id: string;
+      version: number;
+      container_id: string;
+    }>(
+      `SELECT id, version, container_id FROM items
+       WHERE container_id = $1 AND item_type_id = 3031`,
+      [backpackId],
+    );
+    const item = source.rows[0];
+    if (!item) throw new Error("starter gold was not created");
+    await pool.query(`
+      CREATE FUNCTION fail_item_transfer_audit()
+      RETURNS trigger
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+        IF NEW.event_type = 'item-transferred' THEN
+          RAISE EXCEPTION 'injected audit failure';
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+      CREATE TRIGGER fail_item_transfer_audit
+      BEFORE INSERT ON audit_log
+      FOR EACH ROW EXECUTE FUNCTION fail_item_transfer_audit();
+    `);
+    try {
+      await expect(
+        itemStore.moveToContainer(
+          character.id,
+          item.id,
+          item.version,
+          bagId,
+          1,
+        ),
+      ).rejects.toThrow("injected audit failure");
+    } finally {
+      await pool.query("DROP TRIGGER fail_item_transfer_audit ON audit_log");
+      await pool.query("DROP FUNCTION fail_item_transfer_audit()");
+    }
+    const persisted = await pool.query<{
+      container_id: string;
+      version: number;
+    }>(
+      `SELECT container_id, version FROM items WHERE id = $1`,
+      [item.id],
+    );
+    const audits = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count
+       FROM audit_log
+       WHERE item_id = $1 AND event_type = 'item-transferred'`,
+      [item.id],
+    );
+
+    expect(persisted.rows).toEqual([
+      { container_id: item.container_id, version: item.version },
+    ]);
+    expect(Number(audits.rows[0]?.count)).toBe(0);
+  });
+
+  it("commits conjuring resources, item creation, and audit atomically", async () => {
+    const accountId = await createAccount("conjuring");
+    const characters = await service.create(accountId, {
+      displayName: "Conjuring Hero",
+      vocation: "Paladin",
+      lookType: 128,
+    });
+    const summary = characters[0];
+    if (!summary) throw new Error("character was not created");
+    const character = await store.findByIdForAccount(accountId, summary.id);
+    if (!character) throw new Error("created character could not be loaded");
+
+    const result = await itemStore.conjure(
+      character.id,
+      character.version,
+      character.mana,
+      character.soul,
+      10,
+      1,
+      0,
+      3447,
+      10,
+    );
+    const persisted = await pool.query<{
+      mana: number;
+      soul: number;
+      version: number;
+    }>(
+      `SELECT mana, soul, version FROM characters WHERE id = $1`,
+      [character.id],
+    );
+    const created = await pool.query<{ count: number }>(
+      `SELECT count FROM items
+       WHERE item_type_id = 3447
+         AND id IN (
+           SELECT item_id FROM audit_log
+           WHERE character_id = $1
+             AND event_type = 'item-created'
+             AND details->>'reason' = 'conjuring'
+         )`,
+      [character.id],
+    );
+
+    expect(result.characterVersion).toBe(character.version + 1);
+    expect(persisted.rows).toEqual([
+      {
+        mana: character.mana - 10,
+        soul: character.soul - 1,
+        version: character.version + 1,
+      },
+    ]);
+    expect(created.rows).toEqual([{ count: 10 }]);
+
+    await pool.query(`
+      CREATE FUNCTION fail_conjuring_audit()
+      RETURNS trigger
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+        IF NEW.event_type = 'item-created'
+           AND NEW.details->>'reason' = 'conjuring' THEN
+          RAISE EXCEPTION 'injected conjuring audit failure';
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+      CREATE TRIGGER fail_conjuring_audit
+      BEFORE INSERT ON audit_log
+      FOR EACH ROW EXECUTE FUNCTION fail_conjuring_audit();
+    `);
+    try {
+      await expect(
+        itemStore.conjure(
+          character.id,
+          character.version + 1,
+          character.mana - 10,
+          character.soul - 1,
+          10,
+          1,
+          0,
+          3447,
+          10,
+        ),
+      ).rejects.toThrow("injected conjuring audit failure");
+    } finally {
+      await pool.query("DROP TRIGGER fail_conjuring_audit ON audit_log");
+      await pool.query("DROP FUNCTION fail_conjuring_audit()");
+    }
+    const afterFailure = await pool.query<{
+      mana: number;
+      soul: number;
+      version: number;
+    }>(
+      `SELECT mana, soul, version FROM characters WHERE id = $1`,
+      [character.id],
+    );
+    expect(afterFailure.rows).toEqual(persisted.rows);
   });
 });

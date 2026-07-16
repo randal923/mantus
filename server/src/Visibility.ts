@@ -108,10 +108,11 @@ export class Visibility {
   }
 
   broadcastHealth(creature: Creature): void {
+    const state = creature.toState();
     const message = {
       type: "creature-health" as const,
       creatureId: creature.id,
-      healthPercent: creature.healthPercent,
+      healthPercent: state.healthPercent,
     };
     for (const session of this.viewerSessionsFor(creature.position, 0)) {
       if (!session.knownCreatureIds.has(creature.id)) continue;

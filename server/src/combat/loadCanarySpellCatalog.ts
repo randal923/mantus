@@ -8,6 +8,7 @@ import {
 } from "@tibia/protocol";
 import type {
   SpellDefinition,
+  SpellCondition,
   SpellExpression,
   SpellFormula,
 } from "./Spell";
@@ -23,7 +24,7 @@ export function loadCanarySpellCatalog(): ReadonlyArray<SpellDefinition> {
   const value: unknown = JSON.parse(readFileSync(CATALOG_PATH, "utf8"));
   if (
     !isRecord(value) ||
-    value.formatVersion !== 1 ||
+    value.formatVersion !== 2 ||
     !isRecord(value.source) ||
     value.source.canaryCommit !== EXPECTED_COMMIT ||
     value.source.definitionsSha256 !== EXPECTED_DEFINITIONS_SHA256 ||
@@ -132,7 +133,132 @@ function parseSpell(value: Record<string, unknown>): SpellDefinition {
     blockShield: combat.blockShield,
     area: parseArea(area, value.id),
     dispel: dispel as SpellDefinition["dispel"],
+    condition: parseCondition(combat.condition, value.id),
+    casterEffectId:
+      combat.casterEffectId === undefined
+        ? 0
+        : requiredNonnegativeInteger(
+            combat.casterEffectId,
+            `${value.id} caster effect`,
+          ),
+    conjure: parseConjure(value.conjure, value.id),
+    castRules: parseCastRules(value.castRules, value.id),
   };
+}
+
+function parseCastRules(
+  value: unknown,
+  id: unknown,
+): SpellDefinition["castRules"] {
+  if (value === null || value === undefined) return null;
+  if (
+    !isRecord(value) ||
+    typeof value.targetPlayerOnly !== "boolean" ||
+    typeof value.allowSelf !== "boolean" ||
+    !Array.isArray(value.excludedVocations) ||
+    !value.excludedVocations.every((vocation) =>
+      CHARACTER_VOCATIONS.includes(
+        vocation as (typeof CHARACTER_VOCATIONS)[number],
+      )
+    ) ||
+    !Number.isInteger(value.casterEffectId) ||
+    Number(value.casterEffectId) < 0
+  ) {
+    throw new Error(`Canary spell ${String(id)} has invalid cast rules`);
+  }
+  return value as SpellDefinition["castRules"];
+}
+
+function parseConjure(
+  value: unknown,
+  id: unknown,
+): SpellDefinition["conjure"] {
+  if (value === null || value === undefined) return null;
+  if (
+    !isRecord(value) ||
+    !Number.isInteger(value.sourceItemTypeId) ||
+    Number(value.sourceItemTypeId) < 0 ||
+    Number(value.sourceItemTypeId) > 65_535 ||
+    !Number.isInteger(value.targetItemTypeId) ||
+    Number(value.targetItemTypeId) < 1 ||
+    Number(value.targetItemTypeId) > 65_535 ||
+    !Number.isInteger(value.count) ||
+    Number(value.count) < 1 ||
+    Number(value.count) > 100
+  ) {
+    throw new Error(`Canary spell ${String(id)} has invalid conjuring data`);
+  }
+  return value as SpellDefinition["conjure"];
+}
+
+function parseCondition(value: unknown, id: unknown): SpellCondition | null {
+  if (value === undefined || value === null) return null;
+  if (
+    !isRecord(value) ||
+    !CONDITION_TYPES.includes(
+      value.type as (typeof CONDITION_TYPES)[number],
+    ) ||
+    !Number.isInteger(value.durationMs) ||
+    Number(value.durationMs) < 1 ||
+    Number(value.durationMs) > 24 * 60 * 60 * 1_000
+  ) {
+    throw new Error(`Canary spell ${String(id)} has an invalid condition`);
+  }
+  for (const field of ["magnitude", "tickIntervalMs", "speedTarget"] as const) {
+    if (
+      value[field] !== undefined &&
+      (!Number.isInteger(value[field]) || Number(value[field]) < 0)
+    ) {
+      throw new Error(
+        `Canary spell ${String(id)} has an invalid condition ${field}`,
+      );
+    }
+  }
+  if (
+    value.tickAmounts !== undefined &&
+    (!Array.isArray(value.tickAmounts) ||
+      value.tickAmounts.length < 1 ||
+      value.tickAmounts.length > 1_000 ||
+      !value.tickAmounts.every(
+        (amount) => Number.isInteger(amount) && Number(amount) > 0,
+      ))
+  ) {
+    throw new Error(
+      `Canary spell ${String(id)} has invalid condition tick amounts`,
+    );
+  }
+  if (
+    value.damageType !== undefined &&
+    !DAMAGE_TYPES.includes(value.damageType as (typeof DAMAGE_TYPES)[number])
+  ) {
+    throw new Error(
+      `Canary spell ${String(id)} has an invalid condition damage type`,
+    );
+  }
+  if (
+    value.light !== undefined &&
+    (!isRecord(value.light) ||
+      !Number.isInteger(value.light.intensity) ||
+      !Number.isInteger(value.light.color))
+  ) {
+    throw new Error(`Canary spell ${String(id)} has invalid condition light`);
+  }
+  for (const field of ["speedFormula", "magicShieldFormula"] as const) {
+    const formula = value[field];
+    if (
+      formula !== undefined &&
+      (!isRecord(formula) ||
+        Object.values(formula).some(
+          (coefficient) =>
+            typeof coefficient !== "number" || !Number.isFinite(coefficient),
+        ))
+    ) {
+      throw new Error(
+        `Canary spell ${String(id)} has an invalid ${field}`,
+      );
+    }
+  }
+  return value as unknown as SpellCondition;
 }
 
 function parseFormula(value: unknown, id: unknown): SpellFormula {
@@ -261,6 +387,13 @@ function nullableInteger(value: unknown): number | null {
   if (value === null) return null;
   if (!Number.isInteger(value) || Number(value) < 0) {
     throw new Error("Canary spell catalog has an invalid nullable integer");
+  }
+  return value as number;
+}
+
+function requiredNonnegativeInteger(value: unknown, label: string): number {
+  if (!Number.isInteger(value) || Number(value) < 0) {
+    throw new Error(`Canary spell ${label} is invalid`);
   }
   return value as number;
 }

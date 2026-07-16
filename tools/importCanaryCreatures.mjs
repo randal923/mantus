@@ -30,7 +30,7 @@ const manifest = JSON.parse(
   readFileSync(join(repoRoot, "content/source-manifest.json"), "utf8"),
 );
 const source = manifest.sources.canaryCreatures;
-if (!source || manifest.converters.creatures !== 1) {
+if (!source || manifest.converters.creatures !== 2) {
   throw new Error("source manifest has no supported Canary creature source");
 }
 const commit = execFileSync("git", ["-C", canaryRoot, "rev-parse", "HEAD"], {
@@ -118,6 +118,9 @@ writeJson(join(staging, `spawns/${contentName}-import-report.json`), {
   appearanceValidation,
   bounds,
   ...parsed.report,
+  unsupportedDefinitions: parsed.report.unsupportedDefinitions.map(
+    addGapOwnership,
+  ),
 });
 for (const directory of ["monsters", "npcs", "spawns"]) {
   const target = join(repoRoot, "content", directory);
@@ -198,6 +201,78 @@ function readDefinitions(directory) {
     });
   }
   return definitions.sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function addGapOwnership(definition) {
+  return {
+    ...definition,
+    gaps: [
+      ...definition.ignoredAssignments.map((name) =>
+        creatureGap(definition.kind, "field", name),
+      ),
+      ...definition.proceduralCallbacks.map((name) =>
+        creatureGap(definition.kind, "callback", name),
+      ),
+    ],
+  };
+}
+
+function creatureGap(kind, gapKind, name) {
+  const blockedBy = creatureGapOwner(kind, name);
+  return {
+    kind: gapKind,
+    name,
+    ownerTodo:
+      kind === "npc" && blockedBy === "10-npcs"
+        ? "10-npcs"
+        : "04-creatures-spawns-and-ai",
+    status: "blocked",
+    blockedBy,
+    reason:
+      blockedBy === "04-creatures-spawns-and-ai" ||
+      blockedBy === "07-combat"
+        ? "Dependency-ready typed creature behavior remains to be implemented in the owning early workstream."
+        : `Requires ${blockedBy} before this imported creature behavior can be completed.`,
+  };
+}
+
+function creatureGapOwner(kind, name) {
+  if (
+    ["Bestiary", "bosstiary", "race", "raceId"].includes(name) ||
+    name.startsWith("flags.rewardBoss") ||
+    name.startsWith("flags.isPrey") ||
+    name.startsWith("flags.forge")
+  ) {
+    return "14-optional-features";
+  }
+  if (name === "voices.runtime") return "09-chat";
+  if (
+    name.startsWith("flags.canWalkOn") ||
+    name.startsWith("flags.isBlockable")
+  ) {
+    return "08c-decay";
+  }
+  if (
+    ["shop", "currency", "moneyToNeedDonation"].includes(name) ||
+    ["onBuyItem", "onSellItem", "onCheckItem"].includes(name)
+  ) {
+    return "11b-npc-shops";
+  }
+  if (kind === "npc") return "10-npcs";
+  if (["events"].includes(name)) return "12-quests-and-world-actions";
+  if (
+    [
+      "enemyFactions",
+      "faction",
+      "heals",
+      "maxSummons",
+      "reflects",
+      "summon",
+    ].includes(name)
+  ) {
+    return "07-combat";
+  }
+  return "04-creatures-spawns-and-ai";
 }
 
 function readNavigation(path) {

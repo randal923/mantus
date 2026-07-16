@@ -10,6 +10,18 @@ import { toItemTooltip } from "./toItemTooltip";
 
 function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
   const type = catalog.require(item.typeId);
+  const useKind =
+    type.kind === "rune"
+      ? "rune"
+      : type.containerCapacity !== undefined
+        ? "container"
+        : type.food
+          ? "food"
+        : type.text?.readable
+          ? "read"
+          : type.rotateTo
+            ? "rotate"
+            : undefined;
   return {
     id: item.id,
     typeId: type.id,
@@ -19,7 +31,10 @@ function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
     count: item.count,
     revision: item.version,
     ...(type.equipmentSlot ? { equipmentSlot: type.equipmentSlot } : {}),
-    ...(type.kind === "rune" ? { useKind: "rune" as const } : {}),
+    ...(type.containerCapacity !== undefined
+      ? { containerCapacity: type.containerCapacity }
+      : {}),
+    ...(useKind ? { useKind } : {}),
     tooltip: toItemTooltip(type),
   };
 }
@@ -29,6 +44,7 @@ export function projectInventory(
   catalog: ItemCatalog,
   capacityMax: number,
   revision: number,
+  openContainerIds: ReadonlySet<string> = new Set(),
 ): InventoryState {
   const equipment: Partial<Record<EquipmentSlot, InventoryItem>> = {};
   for (const slot of EQUIPMENT_SLOTS) {
@@ -71,6 +87,53 @@ export function projectInventory(
     (total, item) => total + catalog.require(item.typeId).weight * item.count,
     0,
   );
+  const containers = [...openContainerIds].flatMap((containerId) => {
+    const container = items.find((item) => item.id === containerId);
+    if (!container) return [];
+    const capacity =
+      catalog.require(container.typeId).containerCapacity;
+    if (capacity === undefined) return [];
+    const containerItems = items
+      .filter(
+        (item) =>
+          (item.location.kind === "container" ||
+            item.location.kind === "corpse") &&
+          item.location.containerId === container.id,
+      )
+      .sort((left, right) => {
+        const leftSlot =
+          left.location.kind === "container" ||
+          left.location.kind === "corpse"
+            ? left.location.slot
+            : 0;
+        const rightSlot =
+          right.location.kind === "container" ||
+          right.location.kind === "corpse"
+            ? right.location.slot
+            : 0;
+        return leftSlot - rightSlot;
+      })
+      .map((item) => ({
+        slot:
+          item.location.kind === "container" ||
+          item.location.kind === "corpse"
+            ? item.location.slot
+            : 0,
+        item: projectItem(item, catalog),
+      }));
+    return [
+      {
+        container: projectItem(container, catalog),
+        parentContainerId:
+          container.location.kind === "container" ||
+          container.location.kind === "corpse"
+            ? container.location.containerId
+            : null,
+        capacity,
+        items: containerItems,
+      },
+    ];
+  });
 
   return {
     revision,
@@ -83,5 +146,6 @@ export function projectInventory(
     slotCount: backpack
       ? (catalog.require(backpack.typeId).containerCapacity ?? 0)
       : 0,
+    containers,
   };
 }

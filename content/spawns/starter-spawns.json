@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
     "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
@@ -14,7 +14,7 @@
     "radius": 48
   },
   "restartSemantics": "Ordinary spawn deadlines are ephemeral and reset when the process restarts.",
-  "activationSemantics": "A nearby player activates empty slots; deactivation never despawns or changes a live creature.",
+  "activationSemantics": "Nearby players activate empty slots; creatures outside every player's activation range retain identity and state while dormant, then reactivate at their last position.",
   "slots": [
     {
       "id": "monster:011395:000",

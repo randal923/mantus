@@ -37,6 +37,19 @@ describe("World.tryMove", () => {
     expect(player.positionRevision).toBe(1);
   });
 
+  it("moves diagonally with Canary's three-times step duration", () => {
+    const world = makeWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    const result = world.tryMove(player, "northeast", 1000);
+
+    expect(result.moved).toBe(true);
+    expect(player.position).toEqual({ x: 6, y: 4, z: 7 });
+    if (!result.moved) throw new Error("expected diagonal movement");
+    expect(result.durationMs).toBe(STEP_MS * 3);
+  });
+
   it("rejects steps outside the map bounds", () => {
     const world = makeWorld();
     const player = makePlayer(0, 0);
@@ -296,8 +309,16 @@ describe("World.tryMove", () => {
       }).success,
     ).toBe(false);
     expect(
-      clientMessageSchema.safeParse({ type: "move", direction: "northeast" })
+      clientMessageSchema.safeParse({ type: "move", direction: "up-right" })
         .success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "auto-walk",
+        positionRevision: 0,
+        directions: ["northeast"],
+        destination: { x: 6, y: 4, z: 7 },
+      }).success,
     ).toBe(false);
     expect(
       clientMessageSchema.safeParse({

@@ -19,6 +19,7 @@ export class MonsterBrain {
   private cachedPath: Direction[] = [];
   private readonly nextAbilityAt = new Map<MonsterAbility, number>();
   private readonly nextSummonAt = new Map<MonsterSummon, number>();
+  private nextTargetChangeAt: number;
   private brainState:
     | "idle"
     | "wander"
@@ -49,6 +50,7 @@ export class MonsterBrain {
   ) {
     this.randomState = this.seedFor(seed, monster.id);
     this.nextThinkAt = now + (this.randomState % config.thinkIntervalMs);
+    this.nextTargetChangeAt = now + monster.type.changeTarget.intervalMs;
     for (const ability of [
       ...monster.type.attacks,
       ...monster.type.defenses,
@@ -89,10 +91,18 @@ export class MonsterBrain {
       this.clearPath();
     }
     if (this.monster.type.flags.hostile) {
-      const preferred = this.acquireTarget(world);
-      if (preferred && preferred.id !== target?.id) {
-        target = preferred;
-        this.clearPath();
+      if (!target) {
+        target = this.acquireTarget(world);
+      } else if (now >= this.nextTargetChangeAt) {
+        this.nextTargetChangeAt =
+          now + this.monster.type.changeTarget.intervalMs;
+        if (this.randomChance(this.monster.type.changeTarget.chance)) {
+          const preferred = this.acquireTarget(world);
+          if (preferred && preferred.id !== target.id) {
+            target = preferred;
+            this.clearPath();
+          }
+        }
       }
       this.targetId = target?.id ?? null;
     }
@@ -128,6 +138,16 @@ export class MonsterBrain {
       }
       this.brainState = "chase";
       if (currentDistance <= targetDistance) {
+        if (
+          this.randomChance(
+            100 - this.monster.type.flags.staticAttackChance,
+          )
+        ) {
+          return {
+            work,
+            movement: this.danceAround(world, target.position, now),
+          };
+        }
         return { work, movement: null };
       }
       if (this.monster.type.speed <= 0) return { work, movement: null };
@@ -287,6 +307,46 @@ export class MonsterBrain {
       const movement = world.tryMoveCreature(
         this.monster,
         candidate.direction,
+        now,
+        {
+          home: this.monster.home,
+          radius: this.monster.spawnRadius,
+        },
+      );
+      if (movement.moved) return movement;
+      if (movement.turned) turned = movement;
+    }
+    return turned;
+  }
+
+  private danceAround(
+    world: World,
+    target: Position,
+    now: number,
+  ): MoveResult | null {
+    this.clearPath();
+    const first = Math.floor(this.random() * DIRECTIONS.length);
+    let turned: MoveResult | null = null;
+    for (let offset = 0; offset < DIRECTIONS.length; offset++) {
+      const direction = DIRECTIONS[(first + offset) % DIRECTIONS.length];
+      if (!direction) continue;
+      const [dx, dy] = this.delta(direction);
+      const position = {
+        x: this.monster.position.x + dx,
+        y: this.monster.position.y + dy,
+        z: this.monster.position.z,
+      };
+      if (
+        this.distance(position, target) !==
+          this.monster.type.flags.targetDistance ||
+        this.distance(position, this.monster.home) >
+          this.monster.spawnRadius
+      ) {
+        continue;
+      }
+      const movement = world.tryMoveCreature(
+        this.monster,
+        direction,
         now,
         {
           home: this.monster.home,

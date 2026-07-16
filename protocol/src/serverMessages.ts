@@ -61,6 +61,16 @@ export const inventoryUpdatedMessageSchema = z.object({
   inventory: inventoryStateSchema,
 });
 
+export const itemTextMessageSchema = z.object({
+  type: z.literal("item-text"),
+  itemId: z.string().uuid(),
+  revision: z.number().int().positive(),
+  name: z.string().min(1).max(120),
+  text: z.string().max(3_997),
+  writeable: z.boolean(),
+  maxLength: z.number().int().min(0).max(3_997),
+});
+
 export const progressionUpdatedMessageSchema = z.object({
   type: z.literal("progression-updated"),
   playerId: z.string(),
@@ -94,7 +104,13 @@ export const positionCorrectionMessageSchema = z.object({
   direction: z.enum(DIRECTIONS),
   positionRevision: z.number().int().nonnegative(),
   retryAfterMs: z.number().int().min(0).max(60_000),
-  reason: z.enum(["cooldown", "blocked", "occupied", "invalid-transition"]),
+  reason: z.enum([
+    "cooldown",
+    "blocked",
+    "occupied",
+    "invalid-transition",
+    "stale-revision",
+  ]),
 });
 
 export const attackTargetChangedMessageSchema = z.object({
@@ -110,7 +126,7 @@ export const fightStateMessageSchema = z.object({
 export const creatureHealthMessageSchema = z.object({
   type: z.literal("creature-health"),
   creatureId: z.string().min(1).max(192),
-  healthPercent: z.number().int().min(0).max(100),
+  healthPercent: z.number().int().min(0).max(100).nullable(),
 });
 
 export const creatureStateChangedMessageSchema = z.object({
@@ -193,6 +209,7 @@ export const serverErrorCodeSchema = z.enum([
   "language-update-pending",
   "combat-action-failed",
   "item-action-failed",
+  "player-full",
   "logged-in-elsewhere",
   "rate-limited",
   "world-full",
@@ -209,6 +226,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   characterListMessageSchema,
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,
+  itemTextMessageSchema,
   progressionUpdatedMessageSchema,
   creatureJoinedMessageSchema,
   creatureLeftMessageSchema,

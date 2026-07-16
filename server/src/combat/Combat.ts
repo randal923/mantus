@@ -162,6 +162,10 @@ export class Combat {
       this.reject(session, now);
       return;
     }
+    if (spell.conjure) {
+      this.executeConjure(session, spell, intent.target, now);
+      return;
+    }
     this.executeSpell(session, spell, intent.target, now, true);
   }
 
@@ -700,19 +704,7 @@ export class Combat {
         return;
       }
     }
-    this.setCooldown(
-      session,
-      `spell:${spell.id}`,
-      spell.cooldownMs,
-      now,
-    );
-    for (let index = 0; index < spell.groups.length; index++) {
-      const group = spell.groups[index];
-      const totalMs = spell.groupCooldownMs[index] ?? 0;
-      if (group && totalMs > 0) {
-        this.setCooldown(session, `group:${group}`, totalMs, now);
-      }
-    }
+    this.applySpellCooldowns(session, spell, now);
     if (spendResources && spell.manaCost > 0) {
       this.progression.awardMagicProgress(
         player.id,
@@ -813,12 +805,186 @@ export class Combat {
         target.creature?.id,
       );
     }
+    if (spell.condition) {
+      for (const creature of affected.length > 0 ? affected : [player]) {
+        if (
+          spell.damageType !== "healing" &&
+          !this.canPlayerHarm(session, player, creature)
+        ) {
+          continue;
+        }
+        const condition = this.spellCondition(
+          player,
+          creature,
+          spell,
+          variables.magicLevel,
+        );
+        if (condition) this.applyCondition(creature, condition, now);
+      }
+    }
+    if (spell.casterEffectId > 0) {
+      this.visibility.broadcastMagicEffect(
+        player.position,
+        spell.casterEffectId,
+        player.id,
+      );
+    }
+    if (spell.castRules?.casterEffectId) {
+      this.visibility.broadcastMagicEffect(
+        player.position,
+        spell.castRules.casterEffectId,
+        player.id,
+      );
+    }
     if (spell.dispel) {
       for (const creature of affected.length > 0 ? affected : [player]) {
-        creature.conditions.remove(spell.dispel);
+        if (!creature.conditions.remove(spell.dispel)) continue;
+        this.visibility.onCreatureStateChanged(creature);
+        if (creature instanceof Player) {
+          this.sendFightStateForPlayer(creature.id, now);
+        }
       }
     }
     this.sendFightState(session, now);
+  }
+
+  private executeConjure(
+    session: Session,
+    spell: SpellDefinition,
+    targetIntent: CombatTarget,
+    now: number,
+  ): void {
+    const player = this.playerFor(session);
+    const conjure = spell.conjure;
+    if (
+      !player ||
+      !conjure ||
+      !this.canBeginSpell(session, player, spell, targetIntent, now)
+    ) {
+      this.reject(session, now);
+      return;
+    }
+    const expectedMana = player.mana;
+    const expectedSoul = player.progression.soul;
+    const expectedVersion = this.persistence.beginExternalMutation(
+      player,
+      now,
+    );
+    this.items.conjureForCombat(
+      session,
+      expectedVersion,
+      expectedMana,
+      expectedSoul,
+      spell.manaCost,
+      spell.soulCost,
+      conjure.sourceItemTypeId,
+      conjure.targetItemTypeId,
+      conjure.count,
+      (version, characterVersion, committedAt) => {
+        this.persistence.completeExternalMutation(
+          player,
+          version,
+          characterVersion,
+        );
+        const spentMana = player.spendMana(spell.manaCost);
+        const spentSoul = player.spendSoul(spell.soulCost);
+        if (!spentMana || !spentSoul) {
+          throw new Error("committed conjuring resources diverged");
+        }
+        this.applySpellCooldowns(session, spell, committedAt);
+        if (spell.manaCost > 0) {
+          this.progression.awardMagicProgress(
+            player.id,
+            this.nextEventId(`magic:${player.id}`),
+            spell.manaCost,
+            committedAt,
+          );
+        } else {
+          this.progression.syncPlayer(player, committedAt, true);
+        }
+        if (spell.effectId > 0) {
+          this.visibility.broadcastMagicEffect(
+            player.position,
+            spell.effectId,
+            player.id,
+          );
+        }
+        this.sendFightState(session, committedAt);
+      },
+      (failedAt) => {
+        this.persistence.cancelExternalMutation(player);
+        this.persistence.saveNow(player, failedAt);
+      },
+    );
+  }
+
+  private applySpellCooldowns(
+    session: Session,
+    spell: SpellDefinition,
+    now: number,
+  ): void {
+    this.setCooldown(
+      session,
+      `spell:${spell.id}`,
+      spell.cooldownMs,
+      now,
+    );
+    for (let index = 0; index < spell.groups.length; index++) {
+      const group = spell.groups[index];
+      const totalMs = spell.groupCooldownMs[index] ?? 0;
+      if (group && totalMs > 0) {
+        this.setCooldown(session, `group:${group}`, totalMs, now);
+      }
+    }
+  }
+
+  private spellCondition(
+    source: Player,
+    target: Creature,
+    spell: SpellDefinition,
+    magicLevel: number,
+  ): ConditionApplication | null {
+    const condition = spell.condition;
+    if (!condition) return null;
+    let magnitude = condition.magnitude;
+    if (condition.speedFormula) {
+      const baseSpeed =
+        target instanceof Player ? target.progression.speed : target.stepSpeed;
+      const targetSpeed = Math.floor(
+        condition.speedFormula.coefficient *
+          (baseSpeed - condition.speedFormula.base) +
+          condition.speedFormula.base,
+      );
+      magnitude = Math.max(0, targetSpeed - baseSpeed);
+    } else if (condition.speedTarget !== undefined) {
+      magnitude = Math.max(0, target.stepSpeed - condition.speedTarget);
+    }
+    const capacity =
+      condition.magicShieldFormula && target instanceof Player
+        ? Math.floor(
+            Math.min(
+              target.maxMana,
+              condition.magicShieldFormula.base +
+                condition.magicShieldFormula.level * target.level +
+                condition.magicShieldFormula.magicLevel * magicLevel,
+            ),
+          )
+        : undefined;
+    return {
+      type: condition.type,
+      sourceId: source.id,
+      durationMs: condition.durationMs,
+      ...(magnitude !== undefined ? { magnitude } : {}),
+      ...(condition.tickIntervalMs !== undefined
+        ? { tickIntervalMs: condition.tickIntervalMs }
+        : {}),
+      ...(condition.tickAmounts
+        ? { tickAmounts: condition.tickAmounts }
+        : {}),
+      ...(condition.damageType ? { damageType: condition.damageType } : {}),
+      ...(condition.light ? { light: condition.light } : {}),
+      ...(capacity !== undefined ? { capacity } : {}),
+    };
   }
 
   private canBeginSpell(
@@ -830,6 +996,7 @@ export class Combat {
   ): boolean {
     const equipment = this.items.combatEquipment(player.id);
     if (
+      session.itemOperationPending ||
       player.conditions.has("mute") ||
       !spell.vocations.includes(player.vocation) ||
       player.level < spell.requiredLevel ||
@@ -856,6 +1023,15 @@ export class Combat {
     }
     const resolved = this.resolveSpellTarget(session, player, target);
     if (!resolved) return false;
+    if (
+      spell.castRules &&
+      (spell.castRules.excludedVocations.includes(player.vocation) ||
+        (spell.castRules.targetPlayerOnly &&
+          !(resolved.creature instanceof Player)) ||
+        (!spell.castRules.allowSelf && resolved.creature === player))
+    ) {
+      return false;
+    }
     const harmful = spell.damageType !== "healing";
     if (
       harmful &&
@@ -1022,11 +1198,18 @@ export class Combat {
       }
     } else {
       if (target instanceof Player && target.conditions.has("magic-shield")) {
-        const absorbed = Math.min(target.mana, amount);
+        const absorbed = target.conditions.absorbMagicShield(
+          Math.min(target.mana, amount),
+        );
         if (absorbed > 0) {
           target.spendMana(absorbed);
+          if (target.mana === 0) {
+            target.conditions.remove("magic-shield");
+          }
           manaChanged = true;
           amount -= absorbed;
+          this.visibility.onCreatureStateChanged(target);
+          this.sendFightStateForPlayer(target.id, now);
         }
       }
       if (amount > 0) {
@@ -1940,6 +2123,10 @@ export class Combat {
   private directionToward(from: Position, to: Position): Direction {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
+    if (dx > 0 && dy < 0) return "northeast";
+    if (dx > 0 && dy > 0) return "southeast";
+    if (dx < 0 && dy > 0) return "southwest";
+    if (dx < 0 && dy < 0) return "northwest";
     if (Math.abs(dx) > Math.abs(dy)) return dx >= 0 ? "east" : "west";
     return dy >= 0 ? "south" : "north";
   }
@@ -1948,7 +2135,11 @@ export class Combat {
     if (direction === "north") return [0, -1];
     if (direction === "east") return [1, 0];
     if (direction === "south") return [0, 1];
-    return [-1, 0];
+    if (direction === "west") return [-1, 0];
+    if (direction === "northeast") return [1, -1];
+    if (direction === "southeast") return [1, 1];
+    if (direction === "southwest") return [-1, 1];
+    return [-1, -1];
   }
 
   private rotateAreaOffset(
@@ -1959,6 +2150,12 @@ export class Combat {
     if (direction === "east") return [-y, x];
     if (direction === "south") return [-x, -y];
     if (direction === "west") return [y, -x];
+    if (direction === "northeast" || direction === "southeast") {
+      return [-y, x];
+    }
+    if (direction === "southwest" || direction === "northwest") {
+      return [y, -x];
+    }
     return [x, y];
   }
 

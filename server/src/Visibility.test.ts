@@ -18,6 +18,9 @@ const monsterType: MonsterType = {
   health: 13,
   maxHealth: 20,
   speed: 67,
+  manaCost: 0,
+  changeTarget: { intervalMs: 4_000, chance: 0 },
+  light: { intensity: 0, color: 0 },
   experience: 5,
   corpseItemTypeId: 5964,
   flags: {
@@ -31,6 +34,8 @@ const monsterType: MonsterType = {
     canPushCreatures: false,
     targetDistance: 1,
     runHealth: 5,
+    staticAttackChance: 95,
+    healthHidden: false,
   },
   targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
   attacks: [],
@@ -53,6 +58,42 @@ const makeMonster = (id: string, x: number, y: number, z: number) =>
   });
 
 describe("Visibility creature projections", () => {
+  it("projects pinned static monster light without exact private stats", () => {
+    const monster = new Monster({
+      id: "lit",
+      type: {
+        ...monsterType,
+        light: { intensity: 7, color: 215 },
+      },
+      position: { x: 2, y: 2, z: 7 },
+      direction: "south",
+      home: { x: 2, y: 2, z: 7 },
+      spawnRadius: 2,
+    });
+
+    expect(monster.toState()).toMatchObject({
+      light: { intensity: 7, color: 215 },
+      healthPercent: 65,
+    });
+    expect(monster.toState()).not.toHaveProperty("health");
+  });
+
+  it("does not project health for a health-hidden monster", () => {
+    const monster = new Monster({
+      id: "hidden-health",
+      type: {
+        ...monsterType,
+        flags: { ...monsterType.flags, healthHidden: true },
+      },
+      position: { x: 2, y: 2, z: 7 },
+      direction: "south",
+      home: { x: 2, y: 2, z: 7 },
+      spawnRadius: 2,
+    });
+
+    expect(monster.toState().healthPercent).toBeNull();
+  });
+
   it("omits far and wrong-floor creatures and exposes only health percentage", () => {
     const world = new World(
       gridMapData({

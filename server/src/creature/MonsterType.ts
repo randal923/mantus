@@ -55,6 +55,15 @@ export interface MonsterType {
   health: number;
   maxHealth: number;
   speed: number;
+  manaCost: number;
+  changeTarget: {
+    intervalMs: number;
+    chance: number;
+  };
+  light: {
+    intensity: number;
+    color: number;
+  };
   experience: number;
   corpseItemTypeId: number;
   flags: {
@@ -68,6 +77,8 @@ export interface MonsterType {
     canPushCreatures: boolean;
     targetDistance: number;
     runHealth: number;
+    staticAttackChance: number;
+    healthHidden: boolean;
   };
   targetStrategy: {
     nearest: number;

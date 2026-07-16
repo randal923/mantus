@@ -3,6 +3,7 @@ import {
   CHARACTER_OUTFIT_LOOK_TYPES,
   type CreatureOutfit,
   type CreatureState,
+  type Direction,
   type MapItemState,
   type Position,
   type ServerMessage,
@@ -10,6 +11,7 @@ import {
 } from "@tibia/protocol";
 import { AssetStore, type OutfitColors } from "./AssetStore";
 import { getCreatureSortPosition } from "./getCreatureSortPosition";
+import { getAutoWalkDirections } from "../movement/getAutoWalkDirections";
 import { getMapObjectZ } from "./getMapObjectZ";
 import { getMapPointerPosition } from "./getMapPointerPosition";
 import { getViewportRange } from "./getViewportRange";
@@ -31,6 +33,8 @@ interface WorldRendererActions {
   attackTarget(creatureId: string): void;
   cancelAttack(): void;
   pickupMapItem(item: MapItemState, position: Position): void;
+  autoWalk(directions: ReadonlyArray<Direction>): void;
+  targetPosition(position: Position): void;
 }
 
 /**
@@ -69,6 +73,7 @@ export class WorldRenderer {
       return;
     }
     host.appendChild(this.app.canvas);
+    this.app.canvas.addEventListener("click", this.onMapClick);
     this.app.canvas.addEventListener("dblclick", this.onMapDoubleClick);
     this.app.canvas.addEventListener("contextmenu", this.onMapContextMenu);
 
@@ -205,6 +210,7 @@ export class WorldRenderer {
 
   destroy(): void {
     this.destroyed = true;
+    this.app.canvas.removeEventListener("click", this.onMapClick);
     this.app.canvas.removeEventListener("dblclick", this.onMapDoubleClick);
     this.app.canvas.removeEventListener("contextmenu", this.onMapContextMenu);
     this.combatEffects.destroy();
@@ -277,7 +283,7 @@ export class WorldRenderer {
 
   private applyCreatureHealth(
     creatureId: string,
-    healthPercent: number,
+    healthPercent: number | null,
   ): void {
     const view = this.creatureViews.get(creatureId);
     if (view) {
@@ -335,6 +341,28 @@ export class WorldRenderer {
       return;
     }
     this.actions.useMap(position);
+  };
+
+  private readonly onMapClick = (event: MouseEvent): void => {
+    if (!this.actions || !this.ownPosition) return;
+    const point = this.canvasPoint(event);
+    if (!point) return;
+    const target = getMapPointerPosition(
+      point.x,
+      point.y,
+      this.world.position.x,
+      this.world.position.y,
+      ZOOM,
+      TILE_SIZE,
+      this.ownPosition.z,
+    );
+    if (event.ctrlKey) {
+      this.actions.autoWalk(
+        getAutoWalkDirections(this.ownPosition, target),
+      );
+      return;
+    }
+    this.actions.targetPosition(target);
   };
 
   private readonly onMapContextMenu = (event: MouseEvent): void => {

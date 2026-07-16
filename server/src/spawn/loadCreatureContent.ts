@@ -18,7 +18,16 @@ import type { CreatureContent } from "./CreatureContent";
 import type { SpawnSlotDefinition } from "./SpawnDefinition";
 
 const CONTENT_DIR = fileURLToPath(new URL("../../../content", import.meta.url));
-const DIRECTIONS = new Set<Direction>(["north", "east", "south", "west"]);
+const DIRECTIONS = new Set<Direction>([
+  "north",
+  "east",
+  "south",
+  "west",
+  "northeast",
+  "southeast",
+  "southwest",
+  "northwest",
+]);
 
 export function loadCreatureContent(
   name: string,
@@ -29,9 +38,9 @@ export function loadCreatureContent(
   const npcs = readDocument(`npcs/${name}-npcs.json`);
   const spawns = readDocument(`spawns/${name}-spawns.json`);
   if (
-    monsters.formatVersion !== 1 ||
-    npcs.formatVersion !== 1 ||
-    spawns.formatVersion !== 1
+    monsters.formatVersion !== 2 ||
+    npcs.formatVersion !== 2 ||
+    spawns.formatVersion !== 2
   ) {
     throw new Error(`${name} creature content has an unsupported version`);
   }
@@ -95,6 +104,9 @@ function parseMonsterType(value: unknown): MonsterType {
     health,
     maxHealth,
     speed: nonnegativeInteger(type.speed, "monster speed"),
+    manaCost: nonnegativeInteger(type.manaCost, "monster mana cost"),
+    changeTarget: parseChangeTarget(type.changeTarget),
+    light: parseLight(type.light),
     experience: nonnegativeInteger(type.experience, "monster experience"),
     corpseItemTypeId: nonnegativeInteger(type.corpseItemTypeId, "monster corpse"),
     flags: {
@@ -108,6 +120,13 @@ function parseMonsterType(value: unknown): MonsterType {
       canPushCreatures: bool(flags.canPushCreatures, "canPushCreatures"),
       targetDistance: nonnegativeInteger(flags.targetDistance, "targetDistance"),
       runHealth: nonnegativeInteger(flags.runHealth, "runHealth"),
+      staticAttackChance: boundedInteger(
+        flags.staticAttackChance,
+        "staticAttackChance",
+        0,
+        100,
+      ),
+      healthHidden: bool(flags.healthHidden, "healthHidden"),
     },
     targetStrategy: {
       nearest: nonnegativeInteger(strategy.nearest, "nearest strategy"),
@@ -122,6 +141,42 @@ function parseMonsterType(value: unknown): MonsterType {
     summons: parseSummons(type.summons),
     voices: primitiveRecords(type.voices, "monster voices"),
     loot: parseLoot(type.loot),
+  };
+}
+
+function parseChangeTarget(
+  value: unknown,
+): MonsterType["changeTarget"] {
+  const changeTarget = record(value, "monster change target");
+  return {
+    intervalMs:
+      changeTarget.intervalMs === 0
+        ? 0
+        : boundedInteger(
+            changeTarget.intervalMs,
+            "monster change target interval",
+            250,
+            60_000,
+          ),
+    chance: boundedInteger(
+      changeTarget.chance,
+      "monster change target chance",
+      0,
+      100,
+    ),
+  };
+}
+
+function parseLight(value: unknown): MonsterType["light"] {
+  const light = record(value, "monster light");
+  return {
+    intensity: boundedInteger(
+      light.intensity,
+      "monster light intensity",
+      0,
+      255,
+    ),
+    color: boundedInteger(light.color, "monster light color", 0, 255),
   };
 }
 
@@ -454,14 +509,18 @@ function conditionTypeFor(value: unknown, name: string): ConditionType | undefin
   if (key === "CONDITION_FIRE" || name.includes("firefield")) return "fire";
   if (key === "CONDITION_ENERGY" || name.includes("energyfield")) return "energy";
   if (key === "CONDITION_FREEZING") return "paralyze";
-  if (key === "CONDITION_CURSED") return "poison";
-  if (key === "CONDITION_BLEEDING") return "poison";
+  if (key === "CONDITION_CURSED") return "curse";
+  if (key === "CONDITION_BLEEDING") return "bleeding";
+  if (key === "CONDITION_DAZZLED") return "dazzled";
   return undefined;
 }
 
 function damageTypeForCondition(type: ConditionType): DamageType {
   if (type === "fire") return "fire";
   if (type === "energy") return "energy";
+  if (type === "bleeding") return "physical";
+  if (type === "curse") return "death";
+  if (type === "dazzled") return "holy";
   return "earth";
 }
 

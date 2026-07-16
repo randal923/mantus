@@ -28,6 +28,8 @@ export class GameClient {
   private socket: WebSocket | null = null;
   private authenticated = false;
   private viewRange: ViewRange | null = null;
+  private ownPlayerId: string | null = null;
+  private positionRevision = 0;
 
   constructor(
     private readonly url: string,
@@ -53,6 +55,15 @@ export class GameClient {
 
   stopMoving(): void {
     this.send({ type: "stop-move" });
+  }
+
+  autoWalk(directions: ReadonlyArray<Direction>): boolean {
+    if (directions.length === 0) return false;
+    return this.send({
+      type: "auto-walk",
+      positionRevision: this.positionRevision,
+      directions: [...directions],
+    });
   }
 
   setViewport(range: ViewRange): void {
@@ -135,6 +146,50 @@ export class GameClient {
     });
   }
 
+  openContainer(item: InventoryItem): boolean {
+    return this.send({
+      type: "open-container",
+      itemId: item.id,
+      revision: item.revision,
+    });
+  }
+
+  closeContainer(containerId: string): boolean {
+    return this.send({ type: "close-container", containerId });
+  }
+
+  moveItem(
+    item: InventoryItem,
+    destination: InventoryItem,
+    count?: number,
+  ): boolean {
+    return this.send({
+      type: "move-item",
+      itemId: item.id,
+      revision: item.revision,
+      destinationContainerId: destination.id,
+      destinationRevision: destination.revision,
+      ...(count !== undefined ? { count } : {}),
+    });
+  }
+
+  useItem(item: InventoryItem): boolean {
+    return this.send({
+      type: "use-item",
+      itemId: item.id,
+      revision: item.revision,
+    });
+  }
+
+  writeItem(itemId: string, revision: number, text: string): boolean {
+    return this.send({
+      type: "write-item",
+      itemId,
+      revision,
+      text,
+    });
+  }
+
   createCharacter(input: CreateCharacterInput): boolean {
     return this.send({ type: "create-character", ...input });
   }
@@ -149,6 +204,8 @@ export class GameClient {
 
   disconnect(): void {
     this.authenticated = false;
+    this.ownPlayerId = null;
+    this.positionRevision = 0;
     this.socket?.close();
     this.socket = null;
   }
@@ -175,6 +232,26 @@ export class GameClient {
     if (result.data.type === "language-updated") {
       this.handlers.onLanguage(result.data.language);
       return;
+    }
+    if (result.data.type === "welcome") {
+      const playerId = result.data.playerId;
+      this.ownPlayerId = playerId;
+      const own = result.data.creatures.find(
+        (creature) => creature.id === playerId,
+      );
+      this.positionRevision = own?.positionRevision ?? 0;
+    }
+    if (
+      result.data.type === "creature-moved" &&
+      result.data.creatureId === this.ownPlayerId
+    ) {
+      this.positionRevision = result.data.positionRevision;
+    }
+    if (
+      result.data.type === "position-correction" &&
+      result.data.playerId === this.ownPlayerId
+    ) {
+      this.positionRevision = result.data.positionRevision;
     }
     if (result.data.type === "error") {
       this.handlers.onError(result.data.code);

@@ -128,6 +128,13 @@ interface MonsterType {
   represented as typed data or reviewed TypeScript behavior. This includes
   race/bestiary/bosstiary metadata, light/mana, target changes, forge and
   reward-boss classifications, event hooks, and special summon/death behavior.
+  Static mana cost, light, target-change rules, hidden health, and static-attack
+  chance are now typed. Loot/corpse/death/reward-boss callbacks are owned by
+  [`08-death-loot-and-decay`](08-death-loot-and-decay.md), NPC behavior by
+  [`10-npcs`](10-npcs.md), creature/world event hooks by
+  [`12-quests-and-world-actions`](12-quests-and-world-actions.md), and
+  bestiary/bosstiary/forge classifications by
+  [`14-optional-features`](14-optional-features.md).
 - [ ] Resolve every duplicate/ambiguous definition, blocked/out-of-map
   placement, appearance correction, and intentionally invisible creature
   individually. Keep valid variants addressable instead of choosing one by
@@ -135,5 +142,8 @@ interface MonsterType {
 - [ ] Add aggregate parity tests for definition and placement counts and require
   zero unreviewed creature/NPC gameplay fields or callbacks before marking the
   pinned creature workstream complete.
+  Aggregate tests currently pin 897 monster types, 956 NPC types, 83,286
+  monster placements, and 1,008 NPC placements. The zero-gap clause remains
+  blocked by the owners above.
 
 [Back to overview](README.md)

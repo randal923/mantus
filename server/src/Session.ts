@@ -29,6 +29,7 @@ export class Session {
   playerId: string | null = null;
   movementDirection: Direction | null = null;
   bufferedMovementDirection: Direction | null = null;
+  autoWalkDirections: Direction[] = [];
   attackTargetId: string | null = null;
   fightMode: FightMode = {
     attack: "offensive",

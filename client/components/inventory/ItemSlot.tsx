@@ -12,6 +12,8 @@ interface ItemSlotProps {
   placeholderSpriteId?: number;
   onActivate?: () => void;
   onContextAction?: () => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 /** One recessed inventory cell; owned item details are shown from server data. */
@@ -20,6 +22,8 @@ export function ItemSlot({
   placeholderSpriteId,
   onActivate,
   onContextAction,
+  onDragStart,
+  onDragEnd,
 }: ItemSlotProps) {
   const { t } = useAppTranslation();
   const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
@@ -29,6 +33,7 @@ export function ItemSlot({
       <button
         type="button"
         disabled={!item}
+        draggable={Boolean(item && onDragStart)}
         title={
           item
             ? t("inventory.itemTitle", {
@@ -43,6 +48,16 @@ export function ItemSlot({
           event.preventDefault();
           onContextAction();
         }}
+        onDragStart={(event) => {
+          if (!item || !onDragStart) {
+            event.preventDefault();
+            return;
+          }
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", item.id);
+          onDragStart();
+        }}
+        onDragEnd={onDragEnd}
         onMouseEnter={(event) => {
           if (!item) return;
           const bounds = event.currentTarget.getBoundingClientRect();

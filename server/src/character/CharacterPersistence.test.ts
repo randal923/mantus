@@ -139,6 +139,41 @@ describe("CharacterPersistence", () => {
     expect(snapshots[0]).toMatchObject({ positionX: 1 });
   });
 
+  it("coordinates an external atomic mutation with snapshot versions", async () => {
+    const snapshots: CharacterSaveSnapshot[] = [];
+    const store = makeStore(async (snapshot) => {
+      snapshots.push(snapshot);
+      return snapshot.expectedVersion + 1;
+    });
+    const persistence = new CharacterPersistence(store, 1, 0, 0);
+    const player = new Player(makeCharacter("character-id"), {
+      x: 0,
+      y: 0,
+      z: 7,
+    });
+    persistence.track(player, 0);
+    player.spendMana(5);
+    persistence.markDirty(player);
+
+    const expectedVersion = await persistence.beginExternalMutation(player, 1);
+    expect(expectedVersion).toBe(2);
+    expect(persistence.isExternalMutationPending(player)).toBe(true);
+    player.moveTo({ x: 1, y: 0, z: 7 });
+    persistence.markDirty(player);
+    persistence.tick(2);
+    await nextTurn();
+    expect(snapshots).toHaveLength(1);
+
+    persistence.completeExternalMutation(player, expectedVersion, 3);
+    persistence.saveNow(player, 3);
+    await persistence.flushCharacter(player.id);
+
+    expect(snapshots[1]).toMatchObject({
+      expectedVersion: 3,
+      positionX: 1,
+    });
+  });
+
   it("retains a failed save in the unsaved-player metric", async () => {
     const failure = new Error("database unavailable");
     const store = makeStore(async () => {

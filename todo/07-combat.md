@@ -89,7 +89,7 @@ every disabled definition and reason. Disabled registered content is a
 temporary backlog state: pinned parity requires every registered spell and
 rune to become executable.
 
-- [ ] Import and implement condition-backed player spells such as haste,
+- [x] Import and implement condition-backed player spells such as haste,
   strong haste, paralyze, and magic shield. Preserve Canary speed formulas,
   magic-shield capacity/depletion, refresh rules, and dispels before enabling
   them.
@@ -104,12 +104,21 @@ rune to become executable.
 - [ ] Implement conjuring, ammunition/enchantment, cure/dispel, house, levitate,
   rope, find-person/find-fiend, creature illusion, challenge, food, light, and
   every other support callback represented by the pinned spell registrations.
+  Conjuring, ammunition/enchantment, cure/dispel, light, and the inventory food
+  path are now executable. The random food-creation spell remains a TODO 7
+  gap. House spells are blocked by [`13d-houses`](13d-houses.md);
+  levitate/rope by [`12b-world-actions`](12b-world-actions.md);
+  find-person/find-fiend by [`13e-social-services`](13e-social-services.md);
+  party spells by [`13a-parties`](13a-parties.md); familiar/avatar and
+  Wheel/animus branches by [`14-optional-features`](14-optional-features.md).
+  Creature illusion, challenge/taunt, summons, chains, Monk harmony, focus/
+  virtue, and remaining direct callbacks are explicit TODO 7 gaps.
 - [ ] Support every static and dynamic combat area, including custom tile
   matrices and direction-dependent areas, without evaluating Lua at runtime.
-- [ ] Add an explicit ground-targeting cursor for position runes. The current
-  client safely targets the selected creature's tile, or the caster's tile when
-  no creature is selected.
-- [ ] Add Monk/Exalted Monk only after those vocations exist in the shared
+- [x] Add an explicit ground-targeting cursor for position runes. Selecting a
+  position rune arms one bounded tile click; the server still validates range,
+  line of sight, target rules, ownership, and revision at execution.
+- [x] Add Monk/Exalted Monk only after those vocations exist in the shared
   protocol, progression definitions, character creation, and client UI.
 - [ ] Make the generated spell report distinguish examples/non-content from
   registered gameplay definitions and reach zero disabled registered spells,

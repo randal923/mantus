@@ -1,5 +1,6 @@
 import type { EquipmentSlot, Position } from "@tibia/protocol";
 import type { Item } from "./Item";
+import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemMutation } from "./ItemMutation";
 import type { LootItemCreation } from "./LootItemCreation";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
@@ -44,13 +45,38 @@ export interface ItemStore {
     itemId: string,
     expectedVersion: number,
   ): Promise<ItemMutation>;
+  moveToContainer(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    destinationContainerId: string,
+    destinationVersion: number,
+    count?: number,
+  ): Promise<ItemMutation>;
+  writeText(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    text: string,
+  ): Promise<ItemMutation>;
   consume(
     characterId: string,
     itemId: string,
     expectedVersion: number,
     count: number,
-    reason: "rune" | "ammunition" | "break",
+    reason: "rune" | "ammunition" | "break" | "food",
   ): Promise<ItemMutation>;
+  conjure(
+    characterId: string,
+    expectedCharacterVersion: number,
+    expectedMana: number,
+    expectedSoul: number,
+    manaCost: number,
+    soulCost: number,
+    sourceItemTypeId: number,
+    targetItemTypeId: number,
+    count: number,
+  ): Promise<ConjureItemResult>;
   createCorpse(
     characterId: string | null,
     eventId: string,

@@ -12,6 +12,8 @@ const EXPECTED_SOURCE = {
   canaryCommit: "a879c9312e34381e8eedf397b8ed44510698b689",
   canaryItemsSha256:
     "f7f60d81a7b7b613b32328b0cd921cb222b45ec49d31b0d01af6a67a74a687ed",
+  canaryFoodsSha256:
+    "d561ef0e3c583b7f08415e29b7da91cc6956ce2b2a99b87f27f18d0426b55cde",
   datSha256: "e25fadcf0cd9140cff8c89fa94026438d7c42322c6e23a71b1da5471a317b057",
   sprSha256: "a7085447ddaa340ada42bfa71aed5f41582b1cd368f4a781b0464594f3c9b9ee",
 } as const;
@@ -59,7 +61,7 @@ function parseItem(value: unknown, key: string): ItemType {
 
 export async function loadItemCatalog(): Promise<ItemCatalog> {
   const parsed: unknown = JSON.parse(await readFile(CATALOG_PATH, "utf8"));
-  if (!isRecord(parsed) || parsed.formatVersion !== 1) {
+  if (!isRecord(parsed) || parsed.formatVersion !== 2) {
     throw new Error("item catalog has an unsupported format version");
   }
   if (!isRecord(parsed.source)) {

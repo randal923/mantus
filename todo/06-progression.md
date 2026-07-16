@@ -18,8 +18,10 @@ only.
 
 - [x] Add character experience/level/magic-level/mana-spent and normalized
   `character_skills(character_id, skill, level, tries)` rows with constraints.
-- [x] Store base/current health, mana, capacity, soul/stamina only where the
+- [ ] Store base/current health, mana, capacity, soul/stamina only where the
   selected game design actually uses them; document regeneration/logout rules.
+  Health, mana, capacity, and soul are covered. Pinned Canary stamina is still
+  missing, so this checkbox was previously only partially complete.
 - [x] Keep derived totals pure and recomputable from vocation, level, skills,
   equipment, and conditions. Do not persist conflicting copies unnecessarily.
 
@@ -58,7 +60,7 @@ only.
 - Current health, mana, and soul persist. Max health, max mana, capacity, and
   speed are pure derived values. Stamina is not implemented yet and remains a
   required Canary parity item rather than an optional omission.
-- Regeneration and scheduled training are online-only and process at most five
+- Food-backed regeneration and scheduled training are online-only and process at most five
   overdue intervals per server tick. Exact progression is sent only to the
   owning session; the public creature projection exposes none of it.
 - The inventory has a collapsible character-details pane. Inventory opens with
@@ -66,14 +68,25 @@ only.
 
 ## Remaining pinned Canary parity
 
-- [ ] Support every pinned vocation and promotion, including Monk/Exalted Monk,
+- [x] Support every pinned vocation and promotion, including Monk/Exalted Monk,
   with exact gains, skill/magic curves, regeneration, attack speed, formulas,
   requirements, and public/private projections.
 - [ ] Implement stamina, soul rules, offline and exercise training, blessings,
   skill stages/rates, death-loss interaction, and every persistent progression
   modifier used by pinned Canary content.
+  Blessings and death loss are owned by
+  [`08b-player-death`](08b-player-death.md). Party-shared training modifiers
+  belong to [`13a-parties`](13a-parties.md), and Wheel/animus modifiers to
+  [`14-optional-features`](14-optional-features.md). Stamina, exact soul
+  eligibility, offline training, exercise training, and configurable skill
+  stages remain explicit TODO 6 implementation gaps.
 - [ ] Add formula fixtures and aggregate definition checks so every pinned
   progression coefficient is either matched or identified as non-gameplay
   configuration; no balance field may be silently ignored.
+  Aggregate vocation count and core Monk coefficient fixtures now exist.
+  Vocation PvP coefficients belong to [`13c-pvp-policy`](13c-pvp-policy.md)
+  and gem/Wheel coefficients to
+  [`14-optional-features`](14-optional-features.md); remaining base
+  coefficients still need an exhaustive generated fixture before this closes.
 
 [Back to overview](README.md)

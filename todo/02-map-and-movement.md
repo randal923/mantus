@@ -51,7 +51,7 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
   world actions, not arbitrary client z changes.
 - [x] Keep the initial protocol cardinal-only while the authoritative movement
   and correction path is established.
-- [ ] Add Canary-compatible diagonal movement and bounded auto-walk/path
+- [x] Add Canary-compatible diagonal movement and bounded auto-walk/path
   intents. Revalidate every step, use the correct diagonal duration, and stop
   on the first stale, blocked, occupied, or otherwise invalid step.
 - [x] Calculate walk duration from server speed, ground speed, diagonal factor,
@@ -102,5 +102,9 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
 - [ ] The map/action parity audit resolves every disabled transition, movement
   action, zone behavior, and invalid placement from the pinned source; no
   player-visible map behavior remains silently classified as unsupported.
+  Remaining ladder/hole/rope/shovel and scripted movement actions belong to
+  [`12b-world-actions`](12b-world-actions.md); house/zone ownership belongs to
+  [`13d-houses`](13d-houses.md). They remain disabled rather than accepting a
+  client-authored destination.
 
 [Back to overview](README.md)

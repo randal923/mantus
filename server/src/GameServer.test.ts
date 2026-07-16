@@ -693,6 +693,93 @@ describe("auth gate", () => {
     expect(correction.positionRevision).toBe(0);
   });
 
+  it("rejects an auto-walk path whose starting revision is stale", async () => {
+    startServer({
+      map: {
+        source: "grid",
+        name: "stale-auto-walk-grid",
+        ...GRID,
+        blocked: [],
+        groundSpeed: 1,
+      },
+    });
+    const client = await connect(server.port, "Stale Walker", "tok.stale-walk");
+    sockets.push(client.socket);
+
+    client.socket.send(
+      JSON.stringify({
+        type: "auto-walk",
+        positionRevision: 1,
+        directions: ["east"],
+      }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "position-correction" &&
+            message.reason === "stale-revision",
+        ),
+      "stale auto-walk correction",
+    );
+
+    expect(
+      client.messages.some(
+        (message) =>
+          message.type === "creature-moved" &&
+          message.creatureId === client.playerId,
+      ),
+    ).toBe(false);
+  });
+
+  it("revalidates every auto-walk step and stops at the first blocker", async () => {
+    startServer({
+      map: {
+        source: "grid",
+        name: "bounded-auto-walk-grid",
+        ...GRID,
+        blocked: [[GRID.width / 2 + 2, GRID.height / 2 - 1]],
+        groundSpeed: 1,
+      },
+    });
+    const client = await connect(server.port, "Path Walker", "tok.path-walk");
+    sockets.push(client.socket);
+
+    client.socket.send(
+      JSON.stringify({
+        type: "auto-walk",
+        positionRevision: 0,
+        directions: ["east", "east", "north", "east"],
+      }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "position-correction" &&
+            message.reason === "blocked" &&
+            message.positionRevision === 2,
+        ),
+      "blocked auto-walk correction",
+    );
+
+    const moves = client.messages.filter(
+      (message) =>
+        message.type === "creature-moved" &&
+        message.creatureId === client.playerId &&
+        message.durationMs > 0,
+    );
+    expect(moves).toHaveLength(2);
+    expect(moves.at(-1)).toMatchObject({
+      type: "creature-moved",
+      position: {
+        x: client.spawn.x + 2,
+        y: client.spawn.y,
+        z: 7,
+      },
+    });
+  });
+
   it("buffers a tapped direction before resuming an older held key", async () => {
     startServer({
       map: {

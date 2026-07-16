@@ -7,6 +7,7 @@ import type {
 import { Pool, type PoolClient } from "pg";
 import { deriveCharacterStats } from "../progression/deriveCharacterStats";
 import type { Item } from "./Item";
+import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemLocation } from "./ItemLocation";
 import type { ItemMutation } from "./ItemMutation";
@@ -41,6 +42,9 @@ interface CharacterItemRow {
   vocation: CharacterVocation;
   progression_definition_version: number;
   capacity: number;
+  version: number;
+  mana: number;
+  soul: number;
 }
 
 const ITEM_COLUMNS = `
@@ -513,6 +517,7 @@ export class PgItemStore implements ItemStore {
       if (!type.stackable || count < 1 || count >= row.count) {
         throw new Error("invalid stack split");
       }
+      await this.requireOwnedItemSpace(client, characterId);
       if (
         row.location_type !== "container" &&
         row.location_type !== "inventory"
@@ -592,12 +597,252 @@ export class PgItemStore implements ItemStore {
     });
   }
 
+  moveToContainer(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    destinationContainerId: string,
+    destinationVersion: number,
+    requestedCount?: number,
+  ): Promise<ItemMutation> {
+    return this.transaction(async (client) => {
+      await this.lockCharacter(client, characterId);
+      const locked = await this.lockItems(
+        client,
+        [itemId, destinationContainerId],
+      );
+      const row = this.requireRow(locked.get(itemId));
+      const destination = this.requireRow(locked.get(destinationContainerId));
+      this.requireVersion(row, expectedVersion);
+      this.requireVersion(destination, destinationVersion);
+      await this.requireOwned(client, row.id, characterId);
+      await this.requireOwned(client, destination.id, characterId);
+      if (
+        row.location_type !== "inventory" &&
+        row.location_type !== "container"
+      ) {
+        throw new Error("item cannot move from this location");
+      }
+      if (row.id === destination.id) {
+        throw new Error("an item cannot contain itself");
+      }
+      const type = this.catalog.require(row.item_type_id);
+      const destinationType = this.catalog.require(destination.item_type_id);
+      if ((destinationType.containerCapacity ?? 0) < 1) {
+        throw new Error("destination is not a container");
+      }
+      const count = requestedCount ?? row.count;
+      if (
+        !Number.isInteger(count) ||
+        count < 1 ||
+        count > row.count ||
+        (!type.stackable && count !== 1)
+      ) {
+        throw new Error("invalid container move count");
+      }
+      if (count < row.count) {
+        await this.requireOwnedItemSpace(client, characterId);
+      }
+      if (
+        row.location_type === "container" &&
+        row.container_id === destination.id &&
+        count === row.count
+      ) {
+        throw new Error("item is already in destination container");
+      }
+      await this.requireContainerPlacement(client, row.id, destination.id);
+      const before = itemFromRow(row);
+      const mergeTarget = type.stackable
+        ? await this.lockContainerMergeTarget(
+            client,
+            destination.id,
+            row,
+            count,
+          )
+        : undefined;
+      if (mergeTarget) {
+        if (count === row.count && row.seed_key) {
+          await client.query("DELETE FROM items WHERE id = $1", [
+            mergeTarget.id,
+          ]);
+          const result = await client.query<ItemRow>(
+            `UPDATE items
+             SET count = count + $2, location_type = 'container',
+                 character_id = null, equipment_slot = null,
+                 container_id = $3, slot_index = $4,
+                 version = version + 1, updated_at = now()
+             WHERE id = $1
+             RETURNING ${ITEM_COLUMNS}`,
+            [
+              row.id,
+              mergeTarget.count,
+              destination.id,
+              mergeTarget.slot_index,
+            ],
+          );
+          const after = this.requireReturnedItem(result.rows[0]);
+          await this.auditMerge(
+            client,
+            characterId,
+            after,
+            mergeTarget.id,
+            mergeTarget.count,
+            0,
+          );
+          await this.auditTransfer(client, characterId, before, after);
+          return {
+            before,
+            after: [after],
+            removedItemIds: [mergeTarget.id],
+          };
+        }
+        const mergedResult = await client.query<ItemRow>(
+          `UPDATE items
+           SET count = count + $2, version = version + 1, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}`,
+          [mergeTarget.id, count],
+        );
+        const merged = this.requireReturnedItem(mergedResult.rows[0]);
+        if (count === row.count) {
+          await client.query("DELETE FROM items WHERE id = $1", [row.id]);
+          await this.auditMerge(
+            client,
+            characterId,
+            merged,
+            row.id,
+            count,
+            0,
+          );
+          return {
+            before,
+            after: [merged],
+            removedItemIds: [row.id],
+          };
+        }
+        const sourceResult = await client.query<ItemRow>(
+          `UPDATE items
+           SET count = count - $2, version = version + 1, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}`,
+          [row.id, count],
+        );
+        const sourceAfter = this.requireReturnedItem(sourceResult.rows[0]);
+        await this.auditMerge(
+          client,
+          characterId,
+          merged,
+          row.id,
+          count,
+          sourceAfter.count,
+        );
+        return { before, after: [sourceAfter, merged] };
+      }
+      const destinationSlot = await this.firstContainerSlot(
+        client,
+        destination,
+      );
+      if (count === row.count) {
+        const result = await client.query<ItemRow>(
+          `UPDATE items
+           SET location_type = 'container', character_id = null,
+               equipment_slot = null, container_id = $2, slot_index = $3,
+               version = version + 1, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}`,
+          [row.id, destination.id, destinationSlot],
+        );
+        const after = this.requireReturnedItem(result.rows[0]);
+        await this.auditTransfer(client, characterId, before, after);
+        return { before, after: [after] };
+      }
+      const sourceResult = await client.query<ItemRow>(
+        `UPDATE items
+         SET count = count - $2, version = version + 1, updated_at = now()
+         WHERE id = $1
+         RETURNING ${ITEM_COLUMNS}`,
+        [row.id, count],
+      );
+      const createdResult = await client.query<ItemRow>(
+        `INSERT INTO items (
+           id, item_type_id, count, attributes, location_type,
+           container_id, slot_index
+         ) VALUES ($1, $2, $3, $4::jsonb, 'container', $5, $6)
+         RETURNING ${ITEM_COLUMNS}`,
+        [
+          randomUUID(),
+          row.item_type_id,
+          count,
+          JSON.stringify(row.attributes),
+          destination.id,
+          destinationSlot,
+        ],
+      );
+      const sourceAfter = this.requireReturnedItem(sourceResult.rows[0]);
+      const created = this.requireReturnedItem(createdResult.rows[0]);
+      await this.auditSplit(client, characterId, before, sourceAfter, created);
+      return { before, after: [sourceAfter, created] };
+    });
+  }
+
+  writeText(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    text: string,
+  ): Promise<ItemMutation> {
+    return this.transaction(async (client) => {
+      await this.lockCharacter(client, characterId);
+      const row = await this.lockItem(client, itemId);
+      this.requireVersion(row, expectedVersion);
+      await this.requireOwned(client, row.id, characterId);
+      const type = this.catalog.require(row.item_type_id);
+      if (!type.text?.writeable) throw new Error("item is not writeable");
+      const before = itemFromRow(row);
+      if (
+        text.length > type.text.maxLength ||
+        Buffer.byteLength(JSON.stringify({ ...before.attributes, text })) > 4_096
+      ) {
+        throw new Error("item text is too long");
+      }
+      const result = await client.query<ItemRow>(
+        `UPDATE items
+         SET attributes = jsonb_set(
+               attributes, '{text}', to_jsonb($2::text), true
+             ),
+             version = version + 1, updated_at = now()
+         WHERE id = $1
+         RETURNING ${ITEM_COLUMNS}`,
+        [row.id, text],
+      );
+      const after = this.requireReturnedItem(result.rows[0]);
+      await client.query(
+        `INSERT INTO audit_log(event_type, character_id, item_id, details)
+         VALUES (
+           'item-written', $1, $2,
+           jsonb_build_object(
+             'previousLength', $3::integer, 'length', $4::integer
+           )
+         )`,
+        [
+          characterId,
+          row.id,
+          typeof before.attributes.text === "string"
+            ? before.attributes.text.length
+            : 0,
+          text.length,
+        ],
+      );
+      return { before, after: [after] };
+    });
+  }
+
   consume(
     characterId: string,
     itemId: string,
     expectedVersion: number,
     count: number,
-    reason: "rune" | "ammunition" | "break",
+    reason: "rune" | "ammunition" | "break" | "food",
   ): Promise<ItemMutation> {
     return this.transaction(async (client) => {
       await this.lockCharacter(client, characterId);
@@ -635,6 +880,174 @@ export class PgItemStore implements ItemStore {
         reason,
       );
       return { before, after: [after] };
+    });
+  }
+
+  conjure(
+    characterId: string,
+    expectedCharacterVersion: number,
+    expectedMana: number,
+    expectedSoul: number,
+    manaCost: number,
+    soulCost: number,
+    sourceItemTypeId: number,
+    targetItemTypeId: number,
+    count: number,
+  ): Promise<ConjureItemResult> {
+    return this.transaction(async (client) => {
+      const character = await this.lockCharacter(client, characterId);
+      if (
+        character.version !== expectedCharacterVersion ||
+        character.mana !== expectedMana ||
+        character.soul !== expectedSoul ||
+        !Number.isInteger(manaCost) ||
+        manaCost < 0 ||
+        character.mana < manaCost ||
+        !Number.isInteger(soulCost) ||
+        soulCost < 0 ||
+        character.soul < soulCost
+      ) {
+        throw new Error("character resources are stale");
+      }
+      const targetType = this.catalog.require(targetItemTypeId);
+      if (
+        !Number.isInteger(count) ||
+        count < 1 ||
+        count > targetType.maxCount
+      ) {
+        throw new Error("conjured item count is out of range");
+      }
+      const source =
+        sourceItemTypeId === 0
+          ? undefined
+          : await this.lockOwnedItemByType(
+              client,
+              characterId,
+              sourceItemTypeId,
+            );
+      if (sourceItemTypeId !== 0 && !source) {
+        throw new Error("conjure source item is missing");
+      }
+      const currentItems = await client.query<ItemRow>(OWNED_ITEMS_QUERY, [
+        characterId,
+      ]);
+      if (currentItems.rows.length > 500) {
+        throw new Error("character has excessive items");
+      }
+      const currentWeight = currentItems.rows.reduce(
+        (total, item) =>
+          total + this.catalog.require(item.item_type_id).weight * item.count,
+        0,
+      );
+      const sourceWeight = source
+        ? this.catalog.require(source.item_type_id).weight
+        : 0;
+      const resultWeight =
+        targetType.weight * count;
+      if (
+        currentWeight - sourceWeight + resultWeight >
+        character.capacity * 100
+      ) {
+        throw new Error("character capacity exceeded");
+      }
+
+      const characterResult = await client.query<{ version: number }>(
+        `UPDATE characters
+         SET mana = mana - $3, soul = soul - $4,
+             version = version + 1, updated_at = now()
+         WHERE id = $1 AND version = $2
+           AND mana = $5 AND soul = $6
+         RETURNING version`,
+        [
+          characterId,
+          expectedCharacterVersion,
+          manaCost,
+          soulCost,
+          expectedMana,
+          expectedSoul,
+        ],
+      );
+      const characterVersion = characterResult.rows[0]?.version;
+      if (characterVersion !== expectedCharacterVersion + 1) {
+        throw new Error("character resources changed during conjuring");
+      }
+
+      const before = source ? itemFromRow(source) : undefined;
+      if (source?.count === 1) {
+        const transformed = await client.query<ItemRow>(
+          `UPDATE items
+           SET item_type_id = $2, count = $3, attributes = '{}'::jsonb,
+               version = version + 1, seed_key = null,
+               seed_map_name = null, seed_map_version = null,
+               seed_x = null, seed_y = null, seed_z = null,
+               seed_stack_index = null, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}`,
+          [source.id, targetItemTypeId, count],
+        );
+        const after = this.requireReturnedItem(transformed.rows[0]);
+        await this.auditDestruction(
+          client,
+          characterId,
+          before!,
+          1,
+          "conjure-source",
+        );
+        await this.auditCreation(
+          client,
+          characterId,
+          after,
+          "conjuring",
+        );
+        return {
+          mutation: { before, after: [after] },
+          characterVersion,
+        };
+      }
+
+      const after: Item[] = [];
+      if (source) {
+        const remaining = await client.query<ItemRow>(
+          `UPDATE items
+           SET count = count - 1, version = version + 1, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}`,
+          [source.id],
+        );
+        after.push(this.requireReturnedItem(remaining.rows[0]));
+        await this.auditDestruction(
+          client,
+          characterId,
+          before!,
+          1,
+          "conjure-source",
+        );
+      }
+      await this.requireOwnedItemSpace(client, characterId);
+      const backpack = await this.lockBackpack(client, characterId);
+      const slot = await this.firstContainerSlot(client, backpack);
+      const itemId = randomUUID();
+      const inserted = await client.query<ItemRow>(
+        `INSERT INTO items(
+           id, item_type_id, count, attributes, version,
+           location_type, container_id, slot_index
+         )
+         VALUES ($1, $2, $3, '{}'::jsonb, 1, 'container', $4, $5)
+         RETURNING ${ITEM_COLUMNS}`,
+        [itemId, targetItemTypeId, count, backpack.id, slot],
+      );
+      const created = this.requireReturnedItem(inserted.rows[0]);
+      after.push(created);
+      await this.auditCreation(
+        client,
+        characterId,
+        created,
+        "conjuring",
+      );
+      return {
+        mutation: { ...(before ? { before } : {}), after },
+        characterVersion,
+      };
     });
   }
 
@@ -778,7 +1191,8 @@ export class PgItemStore implements ItemStore {
     const result = await client.query<
       Omit<CharacterItemRow, "capacity">
     >(
-      `SELECT level, vocation, progression_definition_version
+      `SELECT level, vocation, progression_definition_version,
+         version, mana, soul
        FROM characters WHERE id = $1 FOR UPDATE`,
       [characterId],
     );
@@ -794,10 +1208,57 @@ export class PgItemStore implements ItemStore {
     };
   }
 
+  private async lockOwnedItemByType(
+    client: PoolClient,
+    characterId: string,
+    itemTypeId: number,
+  ): Promise<ItemRow | undefined> {
+    const result = await client.query<ItemRow>(
+      `WITH RECURSIVE owned AS (
+         SELECT id, container_id, character_id, location_type, 1 AS depth
+         FROM items
+         WHERE character_id = $1
+           AND location_type IN ('equipment', 'inventory')
+         UNION ALL
+         SELECT child.id, child.container_id, child.character_id,
+           child.location_type, owned.depth + 1
+         FROM items child
+         JOIN owned ON child.container_id = owned.id
+         WHERE child.location_type IN ('container', 'corpse')
+           AND owned.depth < 8
+       )
+       SELECT ${ITEM_COLUMNS}
+       FROM items
+       WHERE id IN (SELECT id FROM owned)
+         AND item_type_id = $2
+       ORDER BY id
+       LIMIT 1
+       FOR UPDATE`,
+      [characterId, itemTypeId],
+    );
+    return result.rows[0];
+  }
+
   private async lockItem(client: PoolClient, reference: string): Promise<ItemRow> {
     const row = await this.findLockedItem(client, reference);
     if (!row) throw new Error("item not found");
     return row;
+  }
+
+  private async lockItems(
+    client: PoolClient,
+    itemIds: ReadonlyArray<string>,
+  ): Promise<Map<string, ItemRow>> {
+    const uniqueIds = [...new Set(itemIds)].sort();
+    const result = await client.query<ItemRow>(
+      `SELECT ${ITEM_COLUMNS}
+       FROM items
+       WHERE id = ANY($1::uuid[])
+       ORDER BY id
+       FOR UPDATE`,
+      [uniqueIds],
+    );
+    return new Map(result.rows.map((row) => [row.id, row]));
   }
 
   private async findLockedItem(
@@ -1073,6 +1534,7 @@ export class PgItemStore implements ItemStore {
     client: PoolClient,
     containerId: string,
     source: ItemRow,
+    count = source.count,
   ): Promise<ItemRow | undefined> {
     const type = this.catalog.require(source.item_type_id);
     const result = await client.query<ItemRow>(
@@ -1082,6 +1544,7 @@ export class PgItemStore implements ItemStore {
          AND item_type_id = $2 AND attributes = $3::jsonb
          AND seed_key IS NULL
          AND count + $4 <= $5
+         AND id <> $6
        ORDER BY slot_index
        LIMIT 1
        FOR UPDATE`,
@@ -1089,11 +1552,59 @@ export class PgItemStore implements ItemStore {
         containerId,
         source.item_type_id,
         JSON.stringify(source.attributes),
-        source.count,
+        count,
         type.maxCount,
+        source.id,
       ],
     );
     return result.rows[0];
+  }
+
+  private async requireContainerPlacement(
+    client: PoolClient,
+    itemId: string,
+    destinationContainerId: string,
+  ): Promise<void> {
+    const ancestry = await client.query<{ id: string; depth: number }>(
+      `WITH RECURSIVE ancestry AS (
+         SELECT id, container_id, 1 AS depth
+         FROM items
+         WHERE id = $1
+         UNION ALL
+         SELECT parent.id, parent.container_id, ancestry.depth + 1
+         FROM items parent
+         JOIN ancestry ON parent.id = ancestry.container_id
+         WHERE ancestry.depth < 9
+       )
+       SELECT id, depth FROM ancestry`,
+      [destinationContainerId],
+    );
+    if (ancestry.rows.some((row) => row.id === itemId)) {
+      throw new Error("item container cycle detected");
+    }
+    const descendants = await client.query<{ depth: number }>(
+      `WITH RECURSIVE descendants AS (
+         SELECT id, 1 AS depth
+         FROM items
+         WHERE id = $1
+         UNION ALL
+         SELECT child.id, descendants.depth + 1
+         FROM items child
+         JOIN descendants ON child.container_id = descendants.id
+         WHERE child.location_type IN ('container', 'corpse')
+           AND descendants.depth < 9
+       )
+       SELECT max(depth)::integer AS depth FROM descendants`,
+      [itemId],
+    );
+    const destinationDepth = Math.max(
+      0,
+      ...ancestry.rows.map((row) => row.depth),
+    );
+    const descendantDepth = descendants.rows[0]?.depth ?? 1;
+    if (destinationDepth + descendantDepth > 8) {
+      throw new Error("item container nesting exceeds 8 levels");
+    }
   }
 
   private async lockWorldMergeTarget(
@@ -1206,6 +1717,30 @@ export class PgItemStore implements ItemStore {
     }
   }
 
+  private async requireOwnedItemSpace(
+    client: PoolClient,
+    characterId: string,
+  ): Promise<void> {
+    const result = await client.query<{ count: string }>(
+      `WITH RECURSIVE owned AS (
+         SELECT id
+         FROM items
+         WHERE character_id = $1
+           AND location_type IN ('equipment', 'inventory')
+         UNION ALL
+         SELECT child.id
+         FROM items child
+         JOIN owned parent ON child.container_id = parent.id
+         WHERE child.location_type IN ('container', 'corpse')
+       )
+       SELECT count(*)::text AS count FROM owned`,
+      [characterId],
+    );
+    if (Number(result.rows[0]?.count ?? 0) >= 500) {
+      throw new Error("character has excessive items");
+    }
+  }
+
   private async auditTransfer(
     client: PoolClient,
     characterId: string,
@@ -1297,7 +1832,12 @@ export class PgItemStore implements ItemStore {
     characterId: string,
     item: Item,
     count: number,
-    reason: "rune" | "ammunition" | "break",
+    reason:
+      | "rune"
+      | "ammunition"
+      | "break"
+      | "food"
+      | "conjure-source",
   ): Promise<void> {
     await client.query(
       `INSERT INTO audit_log(event_type, character_id, item_id, details)
@@ -1308,6 +1848,24 @@ export class PgItemStore implements ItemStore {
          )
        )`,
       [characterId, item.id, item.typeId, count, reason],
+    );
+  }
+
+  private async auditCreation(
+    client: PoolClient,
+    characterId: string,
+    item: Item,
+    reason: "conjuring",
+  ): Promise<void> {
+    await client.query(
+      `INSERT INTO audit_log(event_type, character_id, item_id, details)
+       VALUES (
+         'item-created', $1, $2,
+         jsonb_build_object(
+           'itemTypeId', $3::integer, 'count', $4::integer, 'reason', $5::text
+         )
+       )`,
+      [characterId, item.id, item.typeId, item.count, reason],
     );
   }
 

@@ -8,9 +8,11 @@ import type {
   CreateCharacterInput,
   Direction,
   FightState,
+  InventoryItem,
   InventoryState,
   OwnCharacterState,
   ServerErrorCode,
+  ServerMessage,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../i18n/useAppTranslation";
@@ -23,6 +25,7 @@ import { getRuneCombatTarget } from "../lib/combat/getRuneCombatTarget";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
+import { ItemTextModal } from "./inventory/ItemTextModal";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
 
@@ -37,7 +40,40 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
   KeyD: "east",
   KeyS: "south",
   KeyA: "west",
+  Numpad7: "northwest",
+  Numpad9: "northeast",
+  Numpad1: "southwest",
+  Numpad3: "southeast",
 };
+
+const KEY_VECTORS: Readonly<Record<string, readonly [number, number]>> = {
+  ArrowUp: [0, -1],
+  ArrowRight: [1, 0],
+  ArrowDown: [0, 1],
+  ArrowLeft: [-1, 0],
+  KeyW: [0, -1],
+  KeyD: [1, 0],
+  KeyS: [0, 1],
+  KeyA: [-1, 0],
+};
+
+function combinedHeldDirection(
+  heldMovementKeys: ReadonlyArray<string>,
+): Direction | null {
+  let horizontal = 0;
+  let vertical = 0;
+  for (const key of heldMovementKeys) {
+    const vector = KEY_VECTORS[key];
+    if (!vector) continue;
+    if (vector[0] !== 0) horizontal = vector[0];
+    if (vector[1] !== 0) vertical = vector[1];
+  }
+  if (horizontal === 1 && vertical === -1) return "northeast";
+  if (horizontal === 1 && vertical === 1) return "southeast";
+  if (horizontal === -1 && vertical === 1) return "southwest";
+  if (horizontal === -1 && vertical === -1) return "northwest";
+  return null;
+}
 
 interface GameWindowProps {
   accessToken: string;
@@ -54,6 +90,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const confirmedLanguageRef = useRef(language);
   const joinedRef = useRef(false);
   const resumeCharacterIdRef = useRef<string | null>(null);
+  const pendingRuneRef = useRef<InventoryItem | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [characters, setCharacters] = useState<
@@ -73,10 +110,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
   const [inventory, setInventory] = useState<InventoryState | null>(null);
+  const [itemText, setItemText] = useState<
+    Extract<ServerMessage, { type: "item-text" }> | null
+  >(null);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState(false);
   const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
+  const [runeTargeting, setRuneTargeting] = useState(false);
 
   const reconnect = (characterId: string | null) => {
     resumeCharacterIdRef.current = characterId;
@@ -86,6 +127,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setCreationOptions(null);
     setOwnCharacter(null);
     setInventory(null);
+    setItemText(null);
     setVisibleCreatures([]);
     setFightState(null);
     setSpells([]);
@@ -159,6 +201,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         cancelAttack: () => client?.cancelAttack(),
         pickupMapItem: (item, position) =>
           client?.pickupMapItem(item, position),
+        autoWalk: (directions) => client?.autoWalk(directions),
+        targetPosition: (position) => {
+          const rune = pendingRuneRef.current;
+          if (!rune) return;
+          pendingRuneRef.current = null;
+          setRuneTargeting(false);
+          client?.useRune(rune, { kind: "position", position });
+        },
       });
       await worldRenderer.init(container);
       if (disposed) {
@@ -205,6 +255,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "inventory-updated") {
             setInventory(message.inventory);
+            return;
+          }
+          if (message.type === "item-text") {
+            setItemText(message);
             return;
           }
           if (message.type === "attack-target-changed") {
@@ -270,6 +324,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setFightState(null);
           if (nextStatus === "disconnected") setSpells([]);
           if (nextStatus === "disconnected") setCombatLog([]);
+          if (nextStatus === "disconnected") setItemText(null);
           setStatus(nextStatus);
         },
         onLanguage: (nextLanguage) => {
@@ -301,7 +356,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     const sendHeldDirection = (queueStep: boolean) => {
       const activeKey = heldMovementKeys[heldMovementKeys.length - 1];
       if (!activeKey) return;
-      const direction = KEY_DIRECTIONS[activeKey];
+      const direction =
+        (KEY_VECTORS[activeKey]
+          ? combinedHeldDirection(heldMovementKeys)
+          : null) ??
+        KEY_DIRECTIONS[activeKey];
       if (!direction) return;
       client?.sendMove(direction, queueStep);
     };
@@ -455,6 +514,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               })}
             </button>
           )}
+          {runeTargeting && (
+            <div
+              role="status"
+              className="ui-panel-frame pointer-events-none absolute top-24 left-1/2 z-40 -translate-x-1/2 px-4 py-2 font-tibia text-sm text-ui-text-bright"
+            >
+              {t("combat.selectRuneTarget")}
+            </div>
+          )}
           {fightState && (
             <GameHud
               spellHotkeysEnabled={!gameMenuOpen && !characterStatsOpen}
@@ -506,13 +573,48 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     visibleCreatures,
                     ownCharacter.position,
                   );
+                  if (rune?.targetKind === "position") {
+                    pendingRuneRef.current = item;
+                    setRuneTargeting(true);
+                    setInventoryOpen(false);
+                    setCharacterStatsOpen(false);
+                    return;
+                  }
                   clientRef.current?.useRune(item, target);
                 }}
+                onOpenContainer={(item) =>
+                  clientRef.current?.openContainer(item)
+                }
+                onCloseContainer={(containerId) =>
+                  clientRef.current?.closeContainer(containerId)
+                }
+                onUseItem={(item) => clientRef.current?.useItem(item)}
+                onMove={(item, destination) =>
+                  clientRef.current?.moveItem(item, destination)
+                }
                 onDrop={(item) =>
                   clientRef.current?.dropItem(item, ownCharacter.position)
                 }
               />
             </div>
+          )}
+          {itemText && (
+            <ItemTextModal
+              key={`${itemText.itemId}:${itemText.revision}`}
+              item={itemText}
+              onClose={() => setItemText(null)}
+              onSave={(text) => {
+                if (
+                  clientRef.current?.writeItem(
+                    itemText.itemId,
+                    itemText.revision,
+                    text,
+                  )
+                ) {
+                  setItemText(null);
+                }
+              }}
+            />
           )}
           {gameMenuOpen && (
             <GameMenuModal

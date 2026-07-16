@@ -16,6 +16,10 @@ const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
   east: [1, 0],
   south: [0, 1],
   west: [-1, 0],
+  northeast: [1, -1],
+  southeast: [1, 1],
+  southwest: [-1, 1],
+  northwest: [-1, -1],
 };
 
 /** A full spawn ring this far out means the temple area is packed solid. */
@@ -232,7 +236,7 @@ export class World {
 
   applyItemMutation(mutation: ItemMutation): Position[] {
     const changed = new Map<string, Position>();
-    if (mutation.before.location.kind === "world") {
+    if (mutation.before?.location.kind === "world") {
       const { position } = mutation.before.location;
       changed.set(positionKey(position), position);
       if (mutation.before.seedKey) {
@@ -477,6 +481,7 @@ export class World {
       creature.stepSpeed,
       groundSpeed,
       this.tickMs,
+      dx !== 0 && dy !== 0,
     );
     creature.moveTo(resolved);
     creature.nextStepAt = now + durationMs;

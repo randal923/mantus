@@ -1,4 +1,9 @@
-import type { Direction, MoveMessage, UseMapMessage } from "@tibia/protocol";
+import type {
+  AutoWalkMessage,
+  Direction,
+  MoveMessage,
+  UseMapMessage,
+} from "@tibia/protocol";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { Player } from "./Player";
 import type { Session } from "./Session";
@@ -19,6 +24,7 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
+    session.autoWalkDirections = [];
     session.movementDirection = intent.direction;
     if (!intent.queueStep) return;
     session.bufferedMovementDirection = intent.direction;
@@ -26,6 +32,28 @@ export class MovementHandler {
     if (result.moved || result.reason !== "cooldown") {
       session.bufferedMovementDirection = null;
     }
+  }
+
+  handleAutoWalk(
+    session: Session,
+    intent: AutoWalkMessage,
+    now: number,
+  ): void {
+    if (!session.playerId) {
+      session.sendError("join-required");
+      return;
+    }
+    const player = this.world.getPlayer(session.playerId);
+    if (!player) return;
+    session.movementDirection = null;
+    session.bufferedMovementDirection = null;
+    session.autoWalkDirections = [];
+    if (player.positionRevision !== intent.positionRevision) {
+      this.sendCorrection(session, player, "stale-revision", 0);
+      return;
+    }
+    session.autoWalkDirections = [...intent.directions];
+    this.continueAutoWalk(session, player, now);
   }
 
   handleUseMap(session: Session, intent: UseMapMessage, now: number): void {
@@ -37,6 +65,7 @@ export class MovementHandler {
     if (!player) return;
     session.movementDirection = null;
     session.bufferedMovementDirection = null;
+    session.autoWalkDirections = [];
     this.publishResult(
       session,
       player,
@@ -48,14 +77,19 @@ export class MovementHandler {
   stop(session: Session): void {
     session.movementDirection = null;
     session.bufferedMovementDirection = null;
+    session.autoWalkDirections = [];
   }
 
   continueMovement(session: Session, now: number): void {
     const bufferedDirection = session.bufferedMovementDirection;
     const direction = bufferedDirection ?? session.movementDirection;
-    if (!session.playerId || !direction) return;
+    if (!session.playerId) return;
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
+    if (!direction) {
+      this.continueAutoWalk(session, player, now);
+      return;
+    }
     const result = this.applyMove(session, player, direction, now, false);
     if (
       bufferedDirection &&
@@ -63,6 +97,23 @@ export class MovementHandler {
     ) {
       session.bufferedMovementDirection = null;
     }
+  }
+
+  private continueAutoWalk(
+    session: Session,
+    player: Player,
+    now: number,
+  ): void {
+    const direction = session.autoWalkDirections[0];
+    if (!direction) return;
+    const result = this.applyMove(session, player, direction, now, false);
+    if (result.moved) {
+      session.autoWalkDirections.shift();
+      return;
+    }
+    if (result.reason === "cooldown") return;
+    session.autoWalkDirections = [];
+    this.sendCorrection(session, player, result.reason, result.retryAfterMs);
   }
 
   private applyMove(
@@ -94,15 +145,34 @@ export class MovementHandler {
     }
     else if (result.turned) this.visibility.broadcastPose(player);
     if (!result.moved && sendCorrection) {
-      session.send({
-        type: "position-correction",
-        playerId: player.id,
-        position: { ...player.position },
-        direction: player.direction,
-        positionRevision: player.positionRevision,
-        retryAfterMs: result.retryAfterMs,
-        reason: result.reason,
-      });
+      this.sendCorrection(
+        session,
+        player,
+        result.reason,
+        result.retryAfterMs,
+      );
     }
+  }
+
+  private sendCorrection(
+    session: Session,
+    player: Player,
+    reason:
+      | "cooldown"
+      | "blocked"
+      | "occupied"
+      | "invalid-transition"
+      | "stale-revision",
+    retryAfterMs: number,
+  ): void {
+    session.send({
+      type: "position-correction",
+      playerId: player.id,
+      position: { ...player.position },
+      direction: player.direction,
+      positionRevision: player.positionRevision,
+      retryAfterMs,
+      reason,
+    });
   }
 }

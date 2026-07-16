@@ -20,6 +20,7 @@ interface InventoryCache {
   readonly capacityMax: number;
   readonly items: ReadonlyArray<Item>;
   readonly revision: number;
+  readonly openContainerIds: ReadonlySet<string>;
 }
 
 type ItemIntent = Extract<
@@ -35,7 +36,9 @@ type ItemIntent = Extract<
       | "use-item"
       | "use-item-with"
       | "split-stack"
-      | "rotate-item";
+      | "rotate-item"
+      | "move-item"
+      | "write-item";
   }
 >;
 
@@ -73,6 +76,7 @@ export class ItemIntentHandler {
       capacityMax: loaded.capacityMax,
       items: loaded.items,
       revision: 0,
+      openContainerIds: new Set<string>(),
     };
     this.inventories.set(loaded.characterId, cache);
     return this.project(cache);
@@ -178,6 +182,116 @@ export class ItemIntentHandler {
     return true;
   }
 
+  conjureForCombat(
+    session: Session,
+    expectedCharacterVersion: Promise<number>,
+    expectedMana: number,
+    expectedSoul: number,
+    manaCost: number,
+    soulCost: number,
+    sourceItemTypeId: number,
+    targetItemTypeId: number,
+    count: number,
+    onCommitted: (
+      expectedVersion: number,
+      characterVersion: number,
+      now: number,
+    ) => void,
+    onFailed: (now: number) => void,
+  ): boolean {
+    const characterId = session.playerId;
+    if (!characterId || session.itemOperationPending) {
+      session.sendError("combat-action-failed");
+      return false;
+    }
+    session.itemOperationPending = true;
+    const operation = expectedCharacterVersion.then(async (version) => ({
+      expectedVersion: version,
+      result: await this.store.conjure(
+        characterId,
+        version,
+        expectedMana,
+        expectedSoul,
+        manaCost,
+        soulCost,
+        sourceItemTypeId,
+        targetItemTypeId,
+        count,
+      ),
+    }));
+    const resolution = operation
+      .then(({ expectedVersion, result }) => {
+        this.outcomes.push((now) => {
+          session.itemOperationPending = false;
+          onCommitted(
+            expectedVersion,
+            result.characterVersion,
+            now,
+          );
+          const inventory = this.applyMutation(
+            characterId,
+            result.mutation,
+          );
+          if (inventory && session.playerId === characterId) {
+            session.send({ type: "inventory-updated", inventory });
+          }
+        });
+      })
+      .catch((cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(
+          `conjuring failed for character ${characterId}: ${reason}`,
+        );
+        this.outcomes.push((now) => {
+          session.itemOperationPending = false;
+          onFailed(now);
+          if (session.playerId === characterId) {
+            session.sendError("combat-action-failed");
+          }
+        });
+      });
+    this.pendingOperations.set(characterId, resolution);
+    void resolution.finally(() => {
+      if (this.pendingOperations.get(characterId) === resolution) {
+        this.pendingOperations.delete(characterId);
+      }
+    });
+    return true;
+  }
+
+  private consumeForUse(
+    session: Session,
+    itemId: string,
+    revision: number,
+    onCommitted: (now: number) => void,
+  ): void {
+    const characterId = session.playerId;
+    if (!characterId || session.itemOperationPending) {
+      session.sendError("item-action-failed");
+      return;
+    }
+    session.itemOperationPending = true;
+    const operation = this.store.consume(
+      characterId,
+      itemId,
+      revision,
+      1,
+      "food",
+    );
+    const resolution = this.resolveUseConsumption(
+      session,
+      characterId,
+      operation,
+      onCommitted,
+    );
+    this.pendingOperations.set(characterId, resolution);
+    void resolution.finally(() => {
+      if (this.pendingOperations.get(characterId) === resolution) {
+        this.pendingOperations.delete(characterId);
+      }
+    });
+  }
+
   createCorpse(
     characterId: string | null,
     eventId: string,
@@ -214,7 +328,7 @@ export class ItemIntentHandler {
     });
   }
 
-  handle(session: Session, intent: ItemIntent): void {
+  handle(session: Session, intent: ItemIntent, now = Date.now()): void {
     const playerId = session.playerId;
     const player = playerId ? this.world.getPlayer(playerId) : undefined;
     const cache = playerId ? this.inventories.get(playerId) : undefined;
@@ -230,7 +344,20 @@ export class ItemIntentHandler {
       const container = cache.items.find((item) => item.id === intent.containerId);
       if (!container || this.catalog.require(container.typeId).containerCapacity === undefined) {
         session.sendError("item-action-failed");
+        return;
       }
+      const openContainerIds = new Set(cache.openContainerIds);
+      openContainerIds.delete(container.id);
+      const updated = {
+        ...cache,
+        openContainerIds,
+        revision: cache.revision + 1,
+      };
+      this.inventories.set(playerId, updated);
+      session.send({
+        type: "inventory-updated",
+        inventory: this.project(updated),
+      });
       return;
     }
     const item =
@@ -250,8 +377,93 @@ export class ItemIntentHandler {
         session.sendError("item-action-failed");
         return;
       }
-      session.send({ type: "inventory-updated", inventory: this.project(cache) });
+      const openContainerIds = new Set(cache.openContainerIds);
+      if (
+        !openContainerIds.has(item!.id) &&
+        openContainerIds.size >= 16
+      ) {
+        session.sendError("item-action-failed");
+        return;
+      }
+      openContainerIds.add(item!.id);
+      const updated = {
+        ...cache,
+        openContainerIds,
+        revision: cache.revision + 1,
+      };
+      this.inventories.set(playerId, updated);
+      session.send({
+        type: "inventory-updated",
+        inventory: this.project(updated),
+      });
       return;
+    }
+    if (intent.type === "use-item") {
+      const type = this.catalog.require(item!.typeId);
+      if (type.food) {
+        if (!player.canFeed(type.food.durationSeconds, now)) {
+          session.sendError("player-full");
+          return;
+        }
+        this.consumeForUse(
+          session,
+          item!.id,
+          item!.version,
+          (now) => {
+            player.feed(type.food!.durationSeconds, now);
+            session.send({
+              type: "combat-log",
+              kind: "condition",
+              text: type.food!.message,
+            });
+          },
+        );
+        return;
+      }
+      if (type.text?.readable) {
+        const text = item!.attributes.text;
+        session.send({
+          type: "item-text",
+          itemId: item!.id,
+          revision: item!.version,
+          name: type.name,
+          text: typeof text === "string" ? text : "",
+          writeable: type.text.writeable,
+          maxLength: type.text.maxLength,
+        });
+        return;
+      }
+    }
+    if (intent.type === "move-item") {
+      const destination = cache.items.find(
+        (candidate) => candidate.id === intent.destinationContainerId,
+      );
+      if (
+        !destination ||
+        destination.version !== intent.destinationRevision ||
+        this.catalog.require(destination.typeId).containerCapacity === undefined
+      ) {
+        session.sendError("item-action-failed");
+        return;
+      }
+      const type = this.catalog.require(item!.typeId);
+      if (
+        intent.count !== undefined &&
+        (!type.stackable || intent.count > item!.count)
+      ) {
+        session.sendError("item-action-failed");
+        return;
+      }
+    }
+    if (intent.type === "write-item") {
+      const type = this.catalog.require(item!.typeId);
+      if (
+        !type.text?.writeable ||
+        intent.text.length > type.text.maxLength
+      ) {
+        session.sendError("item-action-failed");
+        return;
+      }
     }
     if (
       (intent.type === "drop-item" || intent.type === "use-item-with") &&
@@ -338,6 +550,22 @@ export class ItemIntentHandler {
         );
       case "rotate-item":
         return this.store.rotate(characterId, intent.itemId, intent.revision);
+      case "move-item":
+        return this.store.moveToContainer(
+          characterId,
+          intent.itemId,
+          intent.revision,
+          intent.destinationContainerId,
+          intent.destinationRevision,
+          intent.count,
+        );
+      case "write-item":
+        return this.store.writeText(
+          characterId,
+          intent.itemId,
+          intent.revision,
+          intent.text,
+        );
       case "use-item":
       case "use-item-with":
         if (!item || !this.catalog.require(item.typeId).rotateTo) return null;
@@ -405,6 +633,36 @@ export class ItemIntentHandler {
     }
   }
 
+  private async resolveUseConsumption(
+    session: Session,
+    characterId: string,
+    operation: Promise<ItemMutation>,
+    onCommitted: (now: number) => void,
+  ): Promise<void> {
+    try {
+      const mutation = await operation;
+      this.outcomes.push((now) => {
+        session.itemOperationPending = false;
+        const inventory = this.applyMutation(characterId, mutation);
+        if (inventory && session.playerId === characterId) {
+          session.send({ type: "inventory-updated", inventory });
+        }
+        if (session.playerId === characterId) onCommitted(now);
+      });
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(
+        `item use consumption failed for character ${characterId}: ${reason}`,
+      );
+      this.outcomes.push(() => {
+        session.itemOperationPending = false;
+        if (session.playerId === characterId) {
+          session.sendError("item-action-failed");
+        }
+      });
+    }
+  }
+
   private applyMutation(
     characterId: string,
     mutation: ItemMutation,
@@ -417,7 +675,8 @@ export class ItemIntentHandler {
     const removed = new Set(mutation.removedItemIds ?? []);
     const items = current.items
       .filter(
-        (item) => item.id !== mutation.before.id && !removed.has(item.id),
+        (item) =>
+          item.id !== mutation.before?.id && !removed.has(item.id),
       )
       .map((item) => afterById.get(item.id) ?? item);
     for (const after of mutation.after) {
@@ -432,6 +691,16 @@ export class ItemIntentHandler {
     const next = {
       ...current,
       items,
+      openContainerIds: new Set(
+        [...current.openContainerIds].filter((containerId) => {
+          const container = items.find((item) => item.id === containerId);
+          return (
+            container !== undefined &&
+            this.catalog.require(container.typeId).containerCapacity !==
+              undefined
+          );
+        }),
+      ),
       revision: current.revision + 1,
     };
     this.inventories.set(characterId, next);
@@ -444,6 +713,7 @@ export class ItemIntentHandler {
       this.catalog,
       cache.capacityMax,
       cache.revision,
+      cache.openContainerIds,
     );
   }
 }

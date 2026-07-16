@@ -66,3 +66,31 @@ spell:register()
   assert.equal(spell.supported, false);
   assert.ok(spell.unsupportedReasons.includes("procedural cast callback"));
 });
+
+test("imports literal conjuring inputs without executing the callback", () => {
+  const source = `
+local spell = Spell("instant")
+function spell.onCastSpell(creature, variant)
+  return creature:conjureItem(3147, 3155, 3)
+end
+spell:name("Sudden Death Rune")
+spell:words("adori vita vis")
+spell:group("support")
+spell:mana(985)
+spell:soul(5)
+spell:register()
+`;
+  const [spell] = parseCanarySpells([
+    {
+      path: "data/scripts/spells/conjuring/sudden_death_rune.lua",
+      source,
+    },
+  ]);
+
+  assert.equal(spell.supported, true);
+  assert.deepEqual(spell.conjure, {
+    sourceItemTypeId: 3147,
+    targetItemTypeId: 3155,
+    count: 3,
+  });
+});

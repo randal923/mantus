@@ -11,4 +11,5 @@ export const PROTOCOL_LIMITS = {
   maxTokenLength: 3072,
   maxViewRangeX: 32,
   maxViewRangeY: 24,
+  maxAutoWalkSteps: 128,
 } as const;

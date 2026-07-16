@@ -52,6 +52,21 @@ export const stopMoveMessageSchema = z
   })
   .strict();
 
+/**
+ * Starts one bounded client-authored path. The server accepts only directions,
+ * verifies the starting revision, and revalidates every step in the tick.
+ */
+export const autoWalkMessageSchema = z
+  .object({
+    type: z.literal("auto-walk"),
+    positionRevision: z.number().int().nonnegative(),
+    directions: z
+      .array(z.enum(DIRECTIONS))
+      .min(1)
+      .max(PROTOCOL_LIMITS.maxAutoWalkSteps),
+  })
+  .strict();
+
 /** Updates the bounded tile range derived from the current rendered viewport. */
 export const setViewportMessageSchema = z
   .object({
@@ -182,6 +197,24 @@ export const rotateItemMessageSchema = ownedItemIntentSchema
   .extend({ type: z.literal("rotate-item") })
   .strict();
 
+/** Moves an owned item into an owned revisioned container; the server picks a slot. */
+export const moveItemMessageSchema = ownedItemIntentSchema
+  .extend({
+    type: z.literal("move-item"),
+    destinationContainerId: z.string().uuid(),
+    destinationRevision: z.number().int().positive(),
+    count: z.number().int().positive().max(100).optional(),
+  })
+  .strict();
+
+/** Writes bounded text only to an owned writeable item after revision checks. */
+export const writeItemMessageSchema = ownedItemIntentSchema
+  .extend({
+    type: z.literal("write-item"),
+    text: z.string().max(3_997),
+  })
+  .strict();
+
 /** Fixed-size account setting intent; covered by the 4 KiB/30-per-second caps. */
 export const setLanguageMessageSchema = z.object({
   type: z.literal("set-language"),
@@ -195,6 +228,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   selectCharacterMessageSchema,
   moveMessageSchema,
   stopMoveMessageSchema,
+  autoWalkMessageSchema,
   setViewportMessageSchema,
   useMapMessageSchema,
   attackTargetMessageSchema,
@@ -212,6 +246,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   useItemWithMessageSchema,
   splitStackMessageSchema,
   rotateItemMessageSchema,
+  moveItemMessageSchema,
+  writeItemMessageSchema,
   setLanguageMessageSchema,
 ]);
 
@@ -227,6 +263,7 @@ export type SelectCharacterMessage = z.infer<
 >;
 export type MoveMessage = z.infer<typeof moveMessageSchema>;
 export type StopMoveMessage = z.infer<typeof stopMoveMessageSchema>;
+export type AutoWalkMessage = z.infer<typeof autoWalkMessageSchema>;
 export type SetViewportMessage = z.infer<typeof setViewportMessageSchema>;
 export type UseMapMessage = z.infer<typeof useMapMessageSchema>;
 export type AttackTargetMessage = z.infer<typeof attackTargetMessageSchema>;
@@ -244,5 +281,7 @@ export type UseItemMessage = z.infer<typeof useItemMessageSchema>;
 export type UseItemWithMessage = z.infer<typeof useItemWithMessageSchema>;
 export type SplitStackMessage = z.infer<typeof splitStackMessageSchema>;
 export type RotateItemMessage = z.infer<typeof rotateItemMessageSchema>;
+export type MoveItemMessage = z.infer<typeof moveItemMessageSchema>;
+export type WriteItemMessage = z.infer<typeof writeItemMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;
 export type ClientMessage = z.infer<typeof clientMessageSchema>;

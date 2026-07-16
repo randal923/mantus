@@ -1,4 +1,8 @@
-import type { Direction, Position } from "@tibia/protocol";
+import type {
+  CreatureState,
+  Direction,
+  Position,
+} from "@tibia/protocol";
 import { Creature } from "./Creature";
 import type { MonsterType } from "./MonsterType";
 
@@ -23,6 +27,7 @@ export class Monster extends Creature {
       outfit: options.type.outfit,
       health: options.type.health,
       maxHealth: options.type.maxHealth,
+      light: options.type.light,
     });
     this.type = options.type;
     this.home = { ...options.home };
@@ -34,6 +39,13 @@ export class Monster extends Creature {
 
   override get stepSpeed(): number {
     return Math.max(10, this.type.speed + this.conditions.speedModifier);
+  }
+
+  override toState(): CreatureState {
+    const state = super.toState();
+    return this.type.flags.healthHidden
+      ? { ...state, healthPercent: null }
+      : state;
   }
 
   recordPlayerDamage(playerId: string, amount: number): void {

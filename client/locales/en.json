@@ -112,6 +112,14 @@
       "name": "Elder Druid",
       "description": "Promoted druid with stronger regeneration."
     },
+    "Monk": {
+      "name": "Monk",
+      "description": "Disciplined martial artist specializing in fist combat."
+    },
+    "Exalted Monk": {
+      "name": "Exalted Monk",
+      "description": "Promoted monk with stronger health regeneration."
+    },
     "None": {
       "name": "None"
     }
@@ -158,7 +166,9 @@
     "backpack": "Backpack",
     "equippedItems": "Equipped items",
     "equipped": "Equipped",
-    "itemTitle": "{{count}}{{name}}"
+    "itemTitle": "{{count}}{{name}}",
+    "closeContainer": "Close {{name}}",
+    "saveText": "Save"
   },
   "characterStats": {
     "label": "{{name}}'s character stats",
@@ -226,6 +236,7 @@
     "chase": "Chase target",
     "secureMode": "Secure PVP mode",
     "conditions": "Active conditions",
+    "selectRuneTarget": "Select a tile for the rune",
     "conditionTitle": "{{condition}}, {{seconds}} seconds remaining",
     "log": "Combat log",
     "condition": {
@@ -234,6 +245,9 @@
       "poison": "Poison",
       "fire": "Burning",
       "energy": "Electrified",
+      "bleeding": "Bleeding",
+      "curse": "Cursed",
+      "dazzled": "Dazzled",
       "regeneration": "Regeneration",
       "invisible": "Invisible",
       "light": "Light",
@@ -312,6 +326,7 @@
     "invalid-message": "The game server rejected an invalid request.",
     "combat-action-failed": "That combat action could not be completed.",
     "item-action-failed": "That item action could not be completed.",
+    "player-full": "You are full.",
     "join-required": "Enter the world before performing this action.",
     "language-update-failed": "Language could not be saved. Please try again.",
     "language-update-pending": "A language update is already in progress.",

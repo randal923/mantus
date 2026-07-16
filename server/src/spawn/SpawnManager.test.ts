@@ -17,6 +17,9 @@ const monsterType: MonsterType = {
   health: 20,
   maxHealth: 20,
   speed: 67,
+  manaCost: 0,
+  changeTarget: { intervalMs: 4_000, chance: 0 },
+  light: { intensity: 0, color: 0 },
   experience: 5,
   corpseItemTypeId: 5964,
   flags: {
@@ -30,6 +33,8 @@ const monsterType: MonsterType = {
     canPushCreatures: false,
     targetDistance: 1,
     runHealth: 5,
+    staticAttackChance: 95,
+    healthHidden: false,
   },
   targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
   attacks: [],

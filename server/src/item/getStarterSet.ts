@@ -65,6 +65,18 @@ const STARTER_SETS: Readonly<Record<StarterVocation, StarterSet>> = {
       { typeId: 3066, count: 1 },
     ],
   },
+  Monk: {
+    equipment: [
+      ...COMMON_EQUIPMENT,
+      { typeId: 50257, slot: "armor" },
+      { typeId: 3362, slot: "legs" },
+      { typeId: 3412, slot: "shield" },
+    ],
+    backpackContents: [
+      ...COMMON_SUPPLIES,
+      { typeId: 50181, count: 1 },
+    ],
+  },
 };
 
 export function getStarterSet(vocation: StarterVocation): StarterSet {

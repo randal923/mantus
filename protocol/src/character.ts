@@ -13,6 +13,8 @@ export const CHARACTER_VOCATIONS = [
   "Royal Paladin",
   "Master Sorcerer",
   "Elder Druid",
+  "Monk",
+  "Exalted Monk",
 ] as const;
 
 export const STARTER_VOCATIONS = [
@@ -20,6 +22,7 @@ export const STARTER_VOCATIONS = [
   "Paladin",
   "Sorcerer",
   "Druid",
+  "Monk",
 ] as const;
 
 export const CHARACTER_OUTFIT_LOOK_TYPES = [128, 136] as const;

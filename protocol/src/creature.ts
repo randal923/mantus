@@ -29,7 +29,7 @@ export const creatureStateSchema = z.object({
   positionRevision: z.number().int().nonnegative(),
   direction: z.enum(DIRECTIONS),
   outfit: creatureOutfitSchema,
-  healthPercent: z.number().int().min(0).max(100),
+  healthPercent: z.number().int().min(0).max(100).nullable(),
   light: z
     .object({
       intensity: z.number().int().min(0).max(255),

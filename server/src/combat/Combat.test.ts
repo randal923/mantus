@@ -34,6 +34,7 @@ const PLAYER_ID = "00000000-0000-4000-8000-000000000010";
 const WEAPON_ID = "00000000-0000-4000-8000-000000000011";
 const AMMO_ID = "00000000-0000-4000-8000-000000000012";
 const RUNE_ID = "00000000-0000-4000-8000-000000000013";
+const BACKPACK_ID = "00000000-0000-4000-8000-000000000014";
 
 let catalog: ItemCatalog;
 
@@ -70,6 +71,9 @@ function makeMonsterType(
     health: 20,
     maxHealth: 20,
     speed: 67,
+    manaCost: 0,
+    changeTarget: { intervalMs: 4_000, chance: 0 },
+    light: { intensity: 0, color: 0 },
     experience: 5,
     corpseItemTypeId: 5964,
     flags: {
@@ -83,6 +87,8 @@ function makeMonsterType(
       canPushCreatures: false,
       targetDistance: 1,
       runHealth: 0,
+      staticAttackChance: 95,
+      healthHidden: false,
     },
     targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
     attacks: [],
@@ -226,6 +232,10 @@ async function makeHarness(options: {
   const persistence = {
     markDirty: vi.fn(),
     saveNow: vi.fn(),
+    beginExternalMutation: vi.fn(async () => player.version),
+    completeExternalMutation: vi.fn(),
+    cancelExternalMutation: vi.fn(),
+    isExternalMutationPending: vi.fn(() => false),
   } as unknown as CharacterPersistence;
   const progression = new ProgressionSystem(
     world,
@@ -417,6 +427,189 @@ describe("Combat", () => {
     expect(
       harness.session.combatCooldowns.get("group:attack")?.readyAt,
     ).toBe(3_000);
+  });
+
+  it("applies pinned haste and recovery conditions on the server clock", async () => {
+    const hasteHarness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 0),
+    });
+    const baseSpeed = hasteHarness.player.progression.speed;
+
+    hasteHarness.combat.castSpell(
+      hasteHarness.session,
+      {
+        type: "cast-spell",
+        spellId: "utani-hur",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    expect(hasteHarness.player.stepSpeed).toBe(
+      Math.floor(1.3 * (baseSpeed - 40) + 40),
+    );
+    expect(
+      hasteHarness.player.conditions.remainingMs("haste", 1_000),
+    ).toBe(30_000);
+
+    const recoveryHarness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 0),
+    });
+    recoveryHarness.player.setHealth(recoveryHarness.player.health - 100);
+    const healthBefore = recoveryHarness.player.health;
+    recoveryHarness.combat.castSpell(
+      recoveryHarness.session,
+      {
+        type: "cast-spell",
+        spellId: "utura",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    recoveryHarness.combat.tick(4_000);
+
+    expect(recoveryHarness.player.health).toBe(healthBefore + 20);
+    expect(
+      recoveryHarness.player.conditions.allowsNaturalRegeneration,
+    ).toBe(false);
+  });
+
+  it("applies and cures pinned damage conditions without client-authored values", async () => {
+    const damageHarness = await makeHarness({
+      character: makeLeveledCharacter(34, "Sorcerer", 3),
+    });
+    const target = makeMonster(
+      "monster-instance:electrify:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({ health: 500, maxHealth: 500 }),
+    );
+    damageHarness.world.addCreature(target);
+    damageHarness.session.knownCreatureIds.add(target.id);
+
+    damageHarness.combat.castSpell(
+      damageHarness.session,
+      {
+        type: "cast-spell",
+        spellId: "utori-vis",
+        target: { kind: "creature", creatureId: target.id },
+      },
+      1_000,
+    );
+    damageHarness.combat.tick(4_000);
+
+    expect(target.health).toBe(455);
+    expect(target.conditions.has("energy")).toBe(true);
+
+    const cureHarness = await makeHarness({
+      character: makeLeveledCharacter(10, "Knight", 0),
+    });
+    cureHarness.player.conditions.apply(
+      {
+        type: "poison",
+        sourceId: target.id,
+        durationMs: 30_000,
+        magnitude: 5,
+        tickIntervalMs: 3_000,
+        damageType: "earth",
+      },
+      0,
+    );
+    cureHarness.combat.castSpell(
+      cureHarness.session,
+      {
+        type: "cast-spell",
+        spellId: "exana-pox",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    expect(cureHarness.player.conditions.has("poison")).toBe(false);
+  });
+
+  it("enforces reviewed player-target healing callback rules", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(18, "Druid", 3),
+    });
+    const friend = new Player(
+      {
+        ...makeLeveledCharacter(18, "Druid", 3),
+        id: "00000000-0000-4000-8000-000000000030",
+        displayName: "Friend",
+        normalizedName: "friend",
+        health: 100,
+      },
+      { x: 2, y: 1, z: 7 },
+      0,
+    );
+    harness.world.addPlayer(friend);
+    harness.session.knownCreatureIds.add(friend.id);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exura-sio",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    expect(harness.sent).toContainEqual({
+      type: "error",
+      code: "combat-action-failed",
+    });
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exura-sio",
+        target: { kind: "creature", creatureId: friend.id },
+      },
+      1_000,
+    );
+    expect(friend.health).toBeGreaterThan(100);
+  });
+
+  it("commits conjured ammunition with mana, soul, and inventory as one operation", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(13, "Paladin", 0),
+      inventory: [
+        ownedItem(BACKPACK_ID, 2854, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "backpack",
+        }),
+      ],
+    });
+    const manaBefore = harness.player.mana;
+    const soulBefore = harness.player.progression.soul;
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-con",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    expect(harness.session.itemOperationPending).toBe(true);
+    await settleItems(harness, 1_100);
+
+    expect(harness.player.mana).toBe(manaBefore - 100);
+    expect(harness.player.progression.soul).toBe(soulBefore - 1);
+    expect(await harness.store.loadForCharacter(PLAYER_ID)).toContainEqual(
+      expect.objectContaining({
+        typeId: 3447,
+        count: 10,
+        location: expect.objectContaining({
+          kind: "container",
+          containerId: BACKPACK_ID,
+        }),
+      }),
+    );
+    expect(harness.session.itemOperationPending).toBe(false);
   });
 
   it("does not let rapid ticks bypass the authoritative attack speed", async () => {

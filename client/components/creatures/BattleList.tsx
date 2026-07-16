@@ -41,13 +41,17 @@ export function BattleList({
           >
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="truncate text-ui-text">{creature.name}</span>
-              <span className="text-ui-muted">{creature.healthPercent}%</span>
+              <span className="text-ui-muted">
+                {creature.healthPercent === null
+                  ? "?"
+                  : `${creature.healthPercent}%`}
+              </span>
             </div>
             <progress
               aria-label={`${creature.name} health`}
               className="h-1 w-full accent-red-600"
               max={100}
-              value={creature.healthPercent}
+              value={creature.healthPercent ?? 0}
             />
           </li>
         ))}

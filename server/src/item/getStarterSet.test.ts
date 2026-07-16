@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getStarterSet } from "./getStarterSet";
 
 describe("getStarterSet", () => {
-  it("gives every vocation a backpack, armor, supplies, and its own weapon", () => {
+  it("gives every vocation a backpack, armor, and supplies", () => {
     const weaponIds = new Set<number>();
 
     for (const vocation of STARTER_VOCATIONS) {
@@ -12,9 +12,11 @@ describe("getStarterSet", () => {
       const weapon = starterSet.equipment.find((item) => item.slot === "weapon");
 
       expect(slots).toEqual(
-        new Set(["helmet", "backpack", "armor", "weapon", "shield", "legs", "boots"]),
+        vocation === "Monk"
+          ? new Set(["helmet", "backpack", "armor", "shield", "legs", "boots"])
+          : new Set(["helmet", "backpack", "armor", "weapon", "shield", "legs", "boots"]),
       );
-      expect(weapon).toBeDefined();
+      if (vocation !== "Monk") expect(weapon).toBeDefined();
       expect(starterSet.backpackContents).toEqual(
         expect.arrayContaining([
           { typeId: 3031, count: 100 },
@@ -24,7 +26,7 @@ describe("getStarterSet", () => {
       if (weapon) weaponIds.add(weapon.typeId);
     }
 
-    expect(weaponIds.size).toBe(STARTER_VOCATIONS.length);
+    expect(weaponIds.size).toBe(STARTER_VOCATIONS.length - 1);
   });
 
   it("keeps vocation wands and rods in the backpack until level requirements are met", () => {
@@ -34,6 +36,10 @@ describe("getStarterSet", () => {
     });
     expect(getStarterSet("Druid").backpackContents).toContainEqual({
       typeId: 3066,
+      count: 1,
+    });
+    expect(getStarterSet("Monk").backpackContents).toContainEqual({
+      typeId: 50181,
       count: 1,
     });
   });

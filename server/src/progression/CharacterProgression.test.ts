@@ -108,6 +108,7 @@ describe("CharacterProgression", () => {
       soul: 0,
     };
     const player = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    player.feed(120, 0);
 
     expect(player.tickProgression(60_000)).toBe(true);
     expect(player.health).toBe(105);
@@ -122,6 +123,24 @@ describe("CharacterProgression", () => {
     expect(reconnected.tickProgression(60_000)).toBe(false);
     expect(reconnected.health).toBe(100);
     expect(reconnected.mana).toBe(0);
+  });
+
+  it("uses Canary food fullness and extends online regeneration", () => {
+    const player = new Player(
+      { ...makeCharacter("hero"), health: 100, mana: 0 },
+      { x: 0, y: 0, z: 7 },
+      0,
+    );
+
+    player.feed(1_130, 0);
+    expect(player.canFeed(69, 0)).toBe(true);
+    expect(player.canFeed(70, 0)).toBe(false);
+    player.feed(69, 0);
+
+    expect(player.conditions.remainingMs("regeneration", 0)).toBe(1_199_000);
+    expect(player.tickProgression(6_000)).toBe(true);
+    expect(player.health).toBe(101);
+    expect(player.mana).toBe(2);
   });
 
   it("bounds scheduled training work and drops schedules on reconnect", () => {
