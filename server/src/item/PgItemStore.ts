@@ -11,6 +11,7 @@ import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemLocation } from "./ItemLocation";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
+import type { LootItemCreation } from "./LootItemCreation";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type {
   WorldItemSource,
@@ -591,6 +592,130 @@ export class PgItemStore implements ItemStore {
     });
   }
 
+  consume(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    count: number,
+    reason: "rune" | "ammunition" | "break",
+  ): Promise<ItemMutation> {
+    return this.transaction(async (client) => {
+      await this.lockCharacter(client, characterId);
+      const row = await this.lockItem(client, itemId);
+      this.requireVersion(row, expectedVersion);
+      await this.requireOwned(client, row.id, characterId);
+      if (!Number.isInteger(count) || count < 1 || count > row.count) {
+        throw new Error("invalid consume count");
+      }
+      const before = itemFromRow(row);
+      if (count === row.count) {
+        await client.query(`DELETE FROM items WHERE id = $1`, [row.id]);
+        await this.auditDestruction(
+          client,
+          characterId,
+          before,
+          count,
+          reason,
+        );
+        return { before, after: [], removedItemIds: [row.id] };
+      }
+      const result = await client.query<ItemRow>(
+        `UPDATE items
+         SET count = count - $2, version = version + 1, updated_at = now()
+         WHERE id = $1
+         RETURNING ${ITEM_COLUMNS}`,
+        [row.id, count],
+      );
+      const after = this.requireReturnedItem(result.rows[0]);
+      await this.auditDestruction(
+        client,
+        characterId,
+        before,
+        count,
+        reason,
+      );
+      return { before, after: [after] };
+    });
+  }
+
+  createCorpse(
+    characterId: string | null,
+    eventId: string,
+    position: Position,
+    stackIndex: number,
+    corpseTypeId: number,
+    loot: ReadonlyArray<LootItemCreation>,
+  ): Promise<ReadonlyArray<Item>> {
+    return this.transaction(async (client) => {
+      if (!/^[A-Za-z0-9:_-]{1,128}$/.test(eventId)) {
+        throw new Error("loot event id is invalid");
+      }
+      if (!Number.isInteger(stackIndex) || stackIndex < 0 || stackIndex > 255) {
+        throw new Error("corpse stack index is invalid");
+      }
+      const corpseType = this.catalog.require(corpseTypeId);
+      const capacity = corpseType.containerCapacity ?? 0;
+      if (capacity < loot.length) {
+        throw new Error("corpse cannot contain rolled loot");
+      }
+      for (const entry of loot) {
+        const type = this.catalog.require(entry.typeId);
+        if (
+          !Number.isInteger(entry.count) ||
+          entry.count < 1 ||
+          entry.count > type.maxCount
+        ) {
+          throw new Error("loot count is invalid");
+        }
+      }
+      const corpseId = randomUUID();
+      const corpseResult = await client.query<ItemRow>(
+        `INSERT INTO items (
+           id, item_type_id, count, attributes, location_type,
+           world_map_name, world_x, world_y, world_z, world_stack_index
+         ) VALUES ($1, $2, 1, '{}'::jsonb, 'world', $3, $4, $5, $6, $7)
+         RETURNING ${ITEM_COLUMNS}`,
+        [
+          corpseId,
+          corpseTypeId,
+          this.mapName,
+          position.x,
+          position.y,
+          position.z,
+          stackIndex,
+        ],
+      );
+      const created = [this.requireReturnedItem(corpseResult.rows[0])];
+      for (let slot = 0; slot < loot.length; slot++) {
+        const entry = loot[slot];
+        if (!entry) continue;
+        const result = await client.query<ItemRow>(
+          `INSERT INTO items (
+             id, item_type_id, count, attributes, location_type,
+             container_id, slot_index
+           ) VALUES ($1, $2, $3, '{}'::jsonb, 'corpse', $4, $5)
+           RETURNING ${ITEM_COLUMNS}`,
+          [randomUUID(), entry.typeId, entry.count, corpseId, slot],
+        );
+        created.push(this.requireReturnedItem(result.rows[0]));
+      }
+      for (const item of created) {
+        await client.query(
+          `INSERT INTO audit_log(event_type, character_id, item_id, details)
+           VALUES (
+             'item-created', $1, $2,
+             jsonb_build_object(
+               'eventId', $3::text, 'itemTypeId', $4::integer,
+               'count', $5::integer, 'reason', 'monster-loot'
+             )
+           )`,
+          [characterId, item.id, eventId, item.typeId, item.count],
+        );
+      }
+      return created;
+    });
+  }
+
   async loadWorldDeltas(
     mapName: string,
     mapVersion: string,
@@ -1164,6 +1289,25 @@ export class PgItemStore implements ItemStore {
         sourceRemaining,
         survivor.count,
       ],
+    );
+  }
+
+  private async auditDestruction(
+    client: PoolClient,
+    characterId: string,
+    item: Item,
+    count: number,
+    reason: "rune" | "ammunition" | "break",
+  ): Promise<void> {
+    await client.query(
+      `INSERT INTO audit_log(event_type, character_id, item_id, details)
+       VALUES (
+         'item-destroyed', $1, $2,
+         jsonb_build_object(
+           'itemTypeId', $3::integer, 'count', $4::integer, 'reason', $5::text
+         )
+       )`,
+      [characterId, item.id, item.typeId, count, reason],
     );
   }
 

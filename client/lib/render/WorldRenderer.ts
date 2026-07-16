@@ -16,6 +16,7 @@ import { getViewportRange } from "./getViewportRange";
 import { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
 import { CreatureView } from "./CreatureView";
+import { CombatEffectRenderer } from "./CombatEffectRenderer";
 import { TILE_SIZE } from "./tileSize";
 
 const ZOOM = 3;
@@ -27,6 +28,8 @@ const NAME_COLORS: Record<CreatureState["kind"], number> = {
 
 interface WorldRendererActions {
   useMap(position: Position): void;
+  attackTarget(creatureId: string): void;
+  cancelAttack(): void;
   pickupMapItem(item: MapItemState, position: Position): void;
 }
 
@@ -40,11 +43,16 @@ export class WorldRenderer {
   private readonly world = new Container();
   private readonly overlay = new Container();
   private readonly mapView = new MapView(this.store);
+  private readonly combatEffects = new CombatEffectRenderer(
+    this.store,
+    this.mapView,
+  );
   private readonly creatureViews = new Map<string, CreatureView>();
   private readonly pendingCreatures = new Map<string, CreatureState>();
   private readonly loadingCreatureIds = new Set<string>();
   private ownPlayerId = "";
   private ownPosition: Position | null = null;
+  private attackTargetId: string | null = null;
   private cameraFallback = { x: 0, y: 0 };
   private destroyed = false;
 
@@ -62,6 +70,7 @@ export class WorldRenderer {
     }
     host.appendChild(this.app.canvas);
     this.app.canvas.addEventListener("dblclick", this.onMapDoubleClick);
+    this.app.canvas.addEventListener("contextmenu", this.onMapContextMenu);
 
     await this.store.load();
     if (this.destroyed) return;
@@ -149,6 +158,37 @@ export class WorldRenderer {
         }
         return;
       }
+      case "attack-target-changed":
+        this.applyAttackTarget(message.creatureId);
+        return;
+      case "creature-health":
+        this.applyCreatureHealth(message.creatureId, message.healthPercent);
+        return;
+      case "creature-state-changed":
+        this.replaceCreature(message.creature);
+        return;
+      case "combat-text":
+        this.combatEffects.showCombatText(
+          message.position,
+          message.value,
+          message.damageType,
+          message.block,
+        );
+        return;
+      case "magic-effect":
+        this.combatEffects.showMagicEffect(
+          message.position,
+          message.effectId,
+        );
+        return;
+      case "distance-missile":
+        this.combatEffects.showMissile(
+          message.from,
+          message.to,
+          message.missileId,
+          message.durationMs,
+        );
+        return;
       case "tile-states":
         void this.mapView.applyTileStates(message.visible, message.hidden);
         return;
@@ -166,6 +206,8 @@ export class WorldRenderer {
   destroy(): void {
     this.destroyed = true;
     this.app.canvas.removeEventListener("dblclick", this.onMapDoubleClick);
+    this.app.canvas.removeEventListener("contextmenu", this.onMapContextMenu);
+    this.combatEffects.destroy();
     this.mapView.destroy();
     if (this.app.renderer) this.app.destroy(true, { children: true });
   }
@@ -210,18 +252,41 @@ export class WorldRenderer {
       this.mapView.creatureLayer(creature.position.z).addChild(view.container);
       this.overlay.addChild(view.plate);
       this.creatureViews.set(creature.id, view);
+      view.setAttackTarget(creature.id === this.attackTargetId);
       this.pendingCreatures.delete(creature.id);
     } finally {
       this.loadingCreatureIds.delete(creatureId);
     }
   }
 
-  private removeCreature(creatureId: string): void {
+  private removeCreature(creatureId: string, clearTarget = true): void {
     this.pendingCreatures.delete(creatureId);
+    if (clearTarget && this.attackTargetId === creatureId) {
+      this.attackTargetId = null;
+    }
     const view = this.creatureViews.get(creatureId);
     if (!view) return;
     view.destroy();
     this.creatureViews.delete(creatureId);
+  }
+
+  private replaceCreature(creature: CreatureState): void {
+    this.removeCreature(creature.id, false);
+    this.addCreature(creature);
+  }
+
+  private applyCreatureHealth(
+    creatureId: string,
+    healthPercent: number,
+  ): void {
+    const view = this.creatureViews.get(creatureId);
+    if (view) {
+      view.updateHealth(healthPercent);
+      return;
+    }
+    const pending = this.pendingCreatures.get(creatureId);
+    if (!pending) return;
+    this.pendingCreatures.set(creatureId, { ...pending, healthPercent });
   }
 
   private applyCreatureMove(
@@ -253,11 +318,11 @@ export class WorldRenderer {
 
   private readonly onMapDoubleClick = (event: MouseEvent): void => {
     if (!this.actions || !this.ownPosition) return;
-    const bounds = this.app.canvas.getBoundingClientRect();
-    if (bounds.width <= 0 || bounds.height <= 0) return;
+    const point = this.canvasPoint(event);
+    if (!point) return;
     const position = getMapPointerPosition(
-      (event.clientX - bounds.left) * (this.app.screen.width / bounds.width),
-      (event.clientY - bounds.top) * (this.app.screen.height / bounds.height),
+      point.x,
+      point.y,
       this.world.position.x,
       this.world.position.y,
       ZOOM,
@@ -271,6 +336,72 @@ export class WorldRenderer {
     }
     this.actions.useMap(position);
   };
+
+  private readonly onMapContextMenu = (event: MouseEvent): void => {
+    event.preventDefault();
+    if (!this.actions || !this.ownPosition) return;
+    const point = this.canvasPoint(event);
+    if (!point) return;
+    const creatureId = this.creatureIdAt(point.x, point.y);
+    if (creatureId) {
+      if (creatureId === this.attackTargetId) {
+        this.actions.cancelAttack();
+        return;
+      }
+      this.actions.attackTarget(creatureId);
+      return;
+    }
+    this.actions.useMap(
+      getMapPointerPosition(
+        point.x,
+        point.y,
+        this.world.position.x,
+        this.world.position.y,
+        ZOOM,
+        TILE_SIZE,
+        this.ownPosition.z,
+      ),
+    );
+  };
+
+  private canvasPoint(event: MouseEvent): { x: number; y: number } | null {
+    const bounds = this.app.canvas.getBoundingClientRect();
+    if (bounds.width <= 0 || bounds.height <= 0) return null;
+    return {
+      x: (event.clientX - bounds.left) * (this.app.screen.width / bounds.width),
+      y: (event.clientY - bounds.top) * (this.app.screen.height / bounds.height),
+    };
+  }
+
+  private creatureIdAt(screenX: number, screenY: number): string | null {
+    let selected: { id: string; zIndex: number } | null = null;
+    for (const [id, view] of this.creatureViews) {
+      if (
+        id === this.ownPlayerId ||
+        !view.containsScreenPoint(screenX, screenY)
+      ) {
+        continue;
+      }
+      if (
+        !selected ||
+        view.container.zIndex > selected.zIndex ||
+        (view.container.zIndex === selected.zIndex && id > selected.id)
+      ) {
+        selected = { id, zIndex: view.container.zIndex };
+      }
+    }
+    return selected?.id ?? null;
+  }
+
+  private applyAttackTarget(creatureId: string | null): void {
+    if (this.attackTargetId) {
+      this.creatureViews.get(this.attackTargetId)?.setAttackTarget(false);
+    }
+    this.attackTargetId = creatureId;
+    if (creatureId) {
+      this.creatureViews.get(creatureId)?.setAttackTarget(true);
+    }
+  }
 
   private updatePendingCreature(
     creatureId: string,
@@ -308,6 +439,7 @@ export class WorldRenderer {
 
   private tick(dtMs: number): void {
     this.mapView.tick(dtMs);
+    this.combatEffects.tick(dtMs);
     const orderedViews = [...this.creatureViews.entries()].sort(([left], [right]) =>
       left.localeCompare(right),
     );

@@ -30,8 +30,27 @@ export class Monster extends Creature {
   }
 
   readonly type: MonsterType;
+  private readonly playerDamage = new Map<string, number>();
 
   override get stepSpeed(): number {
-    return Math.max(10, this.type.speed);
+    return Math.max(10, this.type.speed + this.conditions.speedModifier);
+  }
+
+  recordPlayerDamage(playerId: string, amount: number): void {
+    if (amount <= 0) return;
+    this.playerDamage.set(playerId, (this.playerDamage.get(playerId) ?? 0) + amount);
+  }
+
+  damageFrom(playerId: string): number {
+    return this.playerDamage.get(playerId) ?? 0;
+  }
+
+  topDamagerId(): string | null {
+    return (
+      [...this.playerDamage.entries()].sort(
+        ([leftId, left], [rightId, right]) =>
+          right - left || leftId.localeCompare(rightId),
+      )[0]?.[0] ?? null
+    );
   }
 }

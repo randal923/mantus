@@ -83,6 +83,12 @@ export class ProgressionSystem {
     );
   }
 
+  syncPlayer(player: Player, now: number, immediate = false): void {
+    if (immediate) this.persistence.saveNow(player, now);
+    else this.persistence.markDirty(player);
+    this.sendProgression(player);
+  }
+
   tick(now: number): void {
     for (const player of this.world.allPlayers()) {
       if (!player.tickProgression(now)) continue;

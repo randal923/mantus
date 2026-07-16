@@ -2,12 +2,12 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-interface NavigationIconButtonProps
-  extends Pick<
-    ButtonHTMLAttributes<HTMLButtonElement>,
-    "disabled" | "onClick"
-  > {
+interface NavigationIconButtonProps extends Pick<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "disabled" | "onClick"
+> {
   label: string;
+  hotkey?: string;
   active?: boolean;
   children: ReactNode;
 }
@@ -23,15 +23,17 @@ const ACTIVE_BUTTON_CLASS =
 
 export function NavigationIconButton({
   label,
+  hotkey,
   active,
   children,
   ...buttonProps
 }: NavigationIconButtonProps) {
+  const title = hotkey ? `${label} [${hotkey}]` : label;
   return (
     <button
       type="button"
-      title={label}
-      aria-label={label}
+      title={title}
+      aria-label={title}
       aria-pressed={active}
       className={`${BUTTON_CLASS} ${active ? ACTIVE_BUTTON_CLASS : INACTIVE_BUTTON_CLASS}`}
       {...buttonProps}
@@ -40,6 +42,14 @@ export function NavigationIconButton({
       <span className="hidden font-button text-xs font-normal tracking-wide uppercase lg:inline">
         {label}
       </span>
+      {hotkey && (
+        <span
+          aria-hidden
+          className="hidden font-button text-sm font-normal tracking-wide uppercase lg:inline"
+        >
+          ( {hotkey} )
+        </span>
+      )}
     </button>
   );
 }

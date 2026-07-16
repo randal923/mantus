@@ -11,7 +11,9 @@ import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
+import type { ItemType } from "./ItemType";
 import type { LoadedInventory } from "./LoadedInventory";
+import type { LootItemCreation } from "./LootItemCreation";
 import { projectInventory } from "./projectInventory";
 
 interface InventoryCache {
@@ -47,7 +49,8 @@ function isNear(left: Position, right: Position): boolean {
 export class ItemIntentHandler {
   private readonly inventories = new Map<string, InventoryCache>();
   private readonly pendingOperations = new Map<string, Promise<void>>();
-  private readonly outcomes: Array<() => void> = [];
+  private readonly pendingCorpseOperations = new Map<string, Promise<void>>();
+  private readonly outcomes: Array<(now: number) => void> = [];
 
   constructor(
     private readonly store: ItemStore,
@@ -94,8 +97,121 @@ export class ItemIntentHandler {
     return this.project(updated);
   }
 
-  applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+  applyResolvedOutcomes(now: number): void {
+    for (const outcome of this.outcomes.splice(0)) outcome(now);
+  }
+
+  combatEquipment(
+    characterId: string,
+  ): ReadonlyArray<{ item: Item; type: ItemType }> {
+    const cache = this.inventories.get(characterId);
+    if (!cache) return [];
+    return cache.items.flatMap((item) =>
+      item.location.kind === "equipment"
+        ? [{ item, type: this.catalog.require(item.typeId) }]
+        : [],
+    );
+  }
+
+  itemType(itemTypeId: number): ItemType | undefined {
+    return this.catalog.get(itemTypeId);
+  }
+
+  itemTypeByName(name: string): ItemType | undefined {
+    return this.catalog.findByName(name);
+  }
+
+  combatItem(
+    characterId: string,
+    itemId: string,
+    revision: number,
+  ): { item: Item; type: ItemType } | null {
+    const item = this.inventories
+      .get(characterId)
+      ?.items.find(
+        (candidate) =>
+          candidate.id === itemId && candidate.version === revision,
+      );
+    return item ? { item, type: this.catalog.require(item.typeId) } : null;
+  }
+
+  consumeForCombat(
+    session: Session,
+    itemId: string,
+    revision: number,
+    reason: "rune" | "ammunition" | "break",
+    onCommitted: (now: number) => void,
+  ): boolean {
+    const characterId = session.playerId;
+    const combatItem = characterId
+      ? this.combatItem(characterId, itemId, revision)
+      : null;
+    if (
+      !characterId ||
+      !combatItem ||
+      session.itemOperationPending ||
+      combatItem.item.count < 1
+    ) {
+      session.sendError("combat-action-failed");
+      return false;
+    }
+    session.itemOperationPending = true;
+    const operation = this.store.consume(
+      characterId,
+      itemId,
+      revision,
+      1,
+      reason,
+    );
+    const resolution = this.resolveCombatConsumption(
+      session,
+      characterId,
+      operation,
+      onCommitted,
+    );
+    this.pendingOperations.set(characterId, resolution);
+    void resolution.finally(() => {
+      if (this.pendingOperations.get(characterId) === resolution) {
+        this.pendingOperations.delete(characterId);
+      }
+    });
+    return true;
+  }
+
+  createCorpse(
+    characterId: string | null,
+    eventId: string,
+    position: Position,
+    stackIndex: number,
+    corpseTypeId: number,
+    loot: ReadonlyArray<LootItemCreation>,
+  ): void {
+    if (this.pendingCorpseOperations.has(eventId)) return;
+    const operation = this.store.createCorpse(
+      characterId,
+      eventId,
+      position,
+      stackIndex,
+      corpseTypeId,
+      loot,
+    );
+    const resolution = operation
+      .then((items) => {
+        this.outcomes.push(() => {
+          const positions = this.world.applyCreatedWorldItems(items);
+          this.visibility.onMapItemsChanged(positions);
+        });
+      })
+      .catch((cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(`corpse creation failed for ${eventId}: ${reason}`);
+      });
+    this.pendingCorpseOperations.set(eventId, resolution);
+    void resolution.finally(() => {
+      if (this.pendingCorpseOperations.get(eventId) === resolution) {
+        this.pendingCorpseOperations.delete(eventId);
+      }
+    });
   }
 
   handle(session: Session, intent: ItemIntent): void {
@@ -241,34 +357,10 @@ export class ItemIntentHandler {
       const mutation = await operation;
       this.outcomes.push(() => {
         session.itemOperationPending = false;
-        const changedWorldTiles = this.world.applyItemMutation(mutation);
-        this.visibility.onMapItemsChanged(changedWorldTiles);
-        if (session.playerId !== characterId) return;
-        const current = this.inventories.get(characterId);
-        if (!current) return;
-        const afterById = new Map(mutation.after.map((item) => [item.id, item]));
-        const removed = new Set(mutation.removedItemIds ?? []);
-        const items = current.items
-          .filter(
-            (item) => item.id !== mutation.before.id && !removed.has(item.id),
-          )
-          .map((item) => afterById.get(item.id) ?? item);
-        for (const after of mutation.after) {
-          if (
-            after.location.kind === "world" ||
-            items.some((item) => item.id === after.id)
-          ) {
-            continue;
-          }
-          items.push(after);
+        const inventory = this.applyMutation(characterId, mutation);
+        if (inventory && session.playerId === characterId) {
+          session.send({ type: "inventory-updated", inventory });
         }
-        const next = {
-          ...current,
-          items,
-          revision: current.revision + 1,
-        };
-        this.inventories.set(characterId, next);
-        session.send({ type: "inventory-updated", inventory: this.project(next) });
       });
     } catch (cause) {
       const reason = cause instanceof Error ? cause.message : "unknown";
@@ -280,6 +372,70 @@ export class ItemIntentHandler {
         }
       });
     }
+  }
+
+  private async resolveCombatConsumption(
+    session: Session,
+    characterId: string,
+    operation: Promise<ItemMutation>,
+    onCommitted: (now: number) => void,
+  ): Promise<void> {
+    try {
+      const mutation = await operation;
+      this.outcomes.push((now) => {
+        session.itemOperationPending = false;
+        const inventory = this.applyMutation(characterId, mutation);
+        if (inventory && session.playerId === characterId) {
+          session.send({ type: "inventory-updated", inventory });
+        }
+        if (session.playerId !== characterId) return;
+        onCommitted(now);
+      });
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(
+        `combat item consumption failed for character ${characterId}: ${reason}`,
+      );
+      this.outcomes.push(() => {
+        session.itemOperationPending = false;
+        if (session.playerId === characterId) {
+          session.sendError("combat-action-failed");
+        }
+      });
+    }
+  }
+
+  private applyMutation(
+    characterId: string,
+    mutation: ItemMutation,
+  ): InventoryState | null {
+    const changedWorldTiles = this.world.applyItemMutation(mutation);
+    this.visibility.onMapItemsChanged(changedWorldTiles);
+    const current = this.inventories.get(characterId);
+    if (!current) return null;
+    const afterById = new Map(mutation.after.map((item) => [item.id, item]));
+    const removed = new Set(mutation.removedItemIds ?? []);
+    const items = current.items
+      .filter(
+        (item) => item.id !== mutation.before.id && !removed.has(item.id),
+      )
+      .map((item) => afterById.get(item.id) ?? item);
+    for (const after of mutation.after) {
+      if (
+        after.location.kind === "world" ||
+        items.some((item) => item.id === after.id)
+      ) {
+        continue;
+      }
+      items.push(after);
+    }
+    const next = {
+      ...current,
+      items,
+      revision: current.revision + 1,
+    };
+    this.inventories.set(characterId, next);
+    return this.project(next);
   }
 
   private project(cache: InventoryCache): InventoryState {

@@ -1,6 +1,7 @@
 import type { EquipmentSlot, Position } from "@tibia/protocol";
 import type { Item } from "./Item";
 import type { ItemMutation } from "./ItemMutation";
+import type { LootItemCreation } from "./LootItemCreation";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
 
@@ -43,6 +44,21 @@ export interface ItemStore {
     itemId: string,
     expectedVersion: number,
   ): Promise<ItemMutation>;
+  consume(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    count: number,
+    reason: "rune" | "ammunition" | "break",
+  ): Promise<ItemMutation>;
+  createCorpse(
+    characterId: string | null,
+    eventId: string,
+    position: Position,
+    stackIndex: number,
+    corpseTypeId: number,
+    loot: ReadonlyArray<LootItemCreation>,
+  ): Promise<ReadonlyArray<Item>>;
   loadWorldDeltas(
     mapName: string,
     mapVersion: string,

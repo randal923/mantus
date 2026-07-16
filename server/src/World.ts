@@ -74,6 +74,39 @@ export class World {
     return this.map.getTile(position);
   }
 
+  isProtectionZone(position: Position): boolean {
+    return this.map.getTile(position)?.protectionZone ?? false;
+  }
+
+  isNoPvpZone(position: Position): boolean {
+    return this.map.getTile(position)?.noPvpZone ?? false;
+  }
+
+  hasLineOfSight(from: Position, to: Position): boolean {
+    if (from.z !== to.z) return false;
+    let x = from.x;
+    let y = from.y;
+    const dx = Math.abs(to.x - from.x);
+    const dy = Math.abs(to.y - from.y);
+    const stepX = from.x < to.x ? 1 : -1;
+    const stepY = from.y < to.y ? 1 : -1;
+    let error = dx - dy;
+    while (x !== to.x || y !== to.y) {
+      const doubled = error * 2;
+      if (doubled > -dy) {
+        error -= dy;
+        x += stepX;
+      }
+      if (doubled < dx) {
+        error += dx;
+        y += stepY;
+      }
+      if (x === to.x && y === to.y) return true;
+      if (this.map.blocksProjectile({ x, y, z: from.z })) return false;
+    }
+    return true;
+  }
+
   getMapItems(position: Position) {
     const key = positionKey(position);
     return [
@@ -127,6 +160,17 @@ export class World {
       }
     }
     return [...creatures];
+  }
+
+  creaturesNear(
+    position: Position,
+    range: { x: number; y: number },
+  ): Creature[] {
+    return this.grid.query(position, range.x, range.y);
+  }
+
+  creaturesAt(position: Position): Creature[] {
+    return this.grid.query(position, 0, 0);
   }
 
   playersVisibleFrom(position: Position, range: ViewRange): Player[] {
@@ -212,6 +256,18 @@ export class World {
       changed.set(positionKey(item.location.position), item.location.position);
     }
     for (const key of changed.keys()) {
+      this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
+    }
+    return [...changed.values()];
+  }
+
+  applyCreatedWorldItems(items: ReadonlyArray<ItemMutation["after"][number]>): Position[] {
+    const changed = new Map<string, Position>();
+    for (const item of items) {
+      if (item.location.kind !== "world") continue;
+      this.addDynamicWorldItem(item);
+      const key = positionKey(item.location.position);
+      changed.set(key, item.location.position);
       this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
     }
     return [...changed.values()];
@@ -309,6 +365,13 @@ export class World {
     return this.creatures.get(creatureId);
   }
 
+  relocateCreature(creature: Creature, position: Position): Position {
+    const from = creature.position;
+    creature.moveTo(position);
+    this.grid.move(creature, from);
+    return from;
+  }
+
   allCreatures(): Iterable<Creature> {
     return this.creatures.values();
   }
@@ -336,11 +399,15 @@ export class World {
 
   private tryMoveInternal(
     creature: Creature,
-    direction: Direction,
+    requestedDirection: Direction,
     now: number,
     allowTransitions: boolean,
     leash?: { home: Position; radius: number },
   ): MoveResult {
+    const direction = creature.conditions.resolveDirection(
+      requestedDirection,
+      now,
+    );
     const turned = creature.direction !== direction;
     creature.direction = direction;
 
@@ -359,6 +426,13 @@ export class World {
       y: from.y + dy,
       z: from.z,
     };
+    if (
+      creature instanceof Player &&
+      creature.conditions.has("pz-lock") &&
+      this.isProtectionZone(destination)
+    ) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
     if (
       leash &&
       (destination.z !== leash.home.z ||

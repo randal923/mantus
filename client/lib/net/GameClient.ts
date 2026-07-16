@@ -2,8 +2,10 @@ import {
   serverMessageSchema,
   type CreateCharacterInput,
   type ClientMessage,
+  type CombatTarget,
   type Direction,
   type EquipmentSlot,
+  type FightMode,
   type InventoryItem,
   type Language,
   type MapItemState,
@@ -69,6 +71,31 @@ export class GameClient {
 
   useMap(position: Position): void {
     this.send({ type: "use-map", position });
+  }
+
+  attackTarget(creatureId: string): void {
+    this.send({ type: "attack-target", creatureId });
+  }
+
+  cancelAttack(): void {
+    this.send({ type: "cancel-attack" });
+  }
+
+  setFightMode(mode: FightMode): boolean {
+    return this.send({ type: "set-fight-mode", mode });
+  }
+
+  castSpell(spellId: string, target: CombatTarget): boolean {
+    return this.send({ type: "cast-spell", spellId, target });
+  }
+
+  useRune(item: InventoryItem, target: CombatTarget): boolean {
+    return this.send({
+      type: "use-rune",
+      itemId: item.id,
+      revision: item.revision,
+      target,
+    });
   }
 
   pickupMapItem(item: MapItemState, position: Position): boolean {

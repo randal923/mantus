@@ -1,7 +1,18 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { CreatureOutfit, Direction, Position } from "@tibia/protocol";
-import type { MonsterType } from "../creature/MonsterType";
+import type {
+  ConditionType,
+  CreatureOutfit,
+  DamageType,
+  Direction,
+  Position,
+} from "@tibia/protocol";
+import type {
+  MonsterAbility,
+  MonsterLoot,
+  MonsterSummon,
+  MonsterType,
+} from "../creature/MonsterType";
 import type { NpcType } from "../creature/NpcType";
 import type { CreatureContent } from "./CreatureContent";
 import type { SpawnSlotDefinition } from "./SpawnDefinition";
@@ -104,14 +115,392 @@ function parseMonsterType(value: unknown): MonsterType {
       damage: nonnegativeInteger(strategy.damage, "damage strategy"),
       random: nonnegativeInteger(strategy.random, "random strategy"),
     },
-    attacks: primitiveRecords(type.attacks, "monster attacks"),
-    defenses: primitiveRecords(type.defenses, "monster defenses"),
-    elements: numberRecord(type.elements, "monster elements"),
-    immunities: stringArray(type.immunities, "monster immunities"),
-    summons: primitiveRecords(type.summons, "monster summons"),
+    attacks: parseMonsterAbilities(type.attacks, false),
+    defenses: parseMonsterAbilities(type.defenses, true),
+    elements: parseElements(type.elements),
+    immunities: parseImmunities(type.immunities),
+    summons: parseSummons(type.summons),
     voices: primitiveRecords(type.voices, "monster voices"),
-    loot: primitiveRecords(type.loot, "monster loot"),
+    loot: parseLoot(type.loot),
   };
+}
+
+function parseMonsterAbilities(
+  value: unknown,
+  defensive: boolean,
+): MonsterAbility[] {
+  if (!Array.isArray(value)) throw new Error("monster abilities must be an array");
+  return value.map((entry) => {
+    const ability = record(entry, "monster ability");
+    const name = typeof ability.name === "string" ? ability.name : "";
+    const intervalMs = boundedInteger(
+      ability.interval ?? ability.intervall ?? 2_000,
+      "monster ability interval",
+      50,
+      60_000,
+    );
+    const chance = Math.min(
+      100,
+      boundedInteger(
+        ability.chance ?? 100,
+        "monster ability chance",
+        0,
+        1_000,
+      ),
+    );
+    const range = boundedInteger(
+      ability.range ?? (name === "melee" ? 1 : 0),
+      "monster ability range",
+      0,
+      32,
+    );
+    const target =
+      defensive || (ability.target !== true && range === 0) ? "self" : "target";
+    const area = parseArea(ability);
+    if (!name && (ability.defense !== undefined || ability.armor !== undefined)) {
+      return {
+        kind: "stats",
+        intervalMs,
+        chance,
+        target: "self",
+        range: 0,
+        area: { shape: "single" },
+        defense: boundedInteger(
+          ability.defense ?? 0,
+          "monster defense",
+          0,
+          100_000,
+        ),
+        armor: boundedInteger(
+          ability.armor ?? 0,
+          "monster armor",
+          0,
+          100_000,
+        ),
+        mitigation: finiteNumber(
+          ability.mitigation ?? 0,
+          "monster mitigation",
+          0,
+          100,
+        ),
+      };
+    }
+    if (name === "speed" || name === "haste") {
+      const speedChange = boundedInteger(
+        Math.abs(Number(ability.speedChange ?? ability.speed ?? 0)),
+        "monster speed condition",
+        0,
+        10_000,
+      );
+      const paralyze = Number(ability.speedChange ?? 0) < 0;
+      return {
+        kind: "condition",
+        intervalMs,
+        chance,
+        target: defensive && !paralyze ? "self" : target,
+        range,
+        area,
+        conditionType: paralyze ? "paralyze" : "haste",
+        durationMs: boundedInteger(
+          ability.duration ?? 5_000,
+          "monster condition duration",
+          250,
+          24 * 60 * 60 * 1000,
+        ),
+        magnitude: speedChange,
+        ...(ability.effect !== undefined ? { effect: primitive(ability.effect) } : {}),
+        ...(typeof ability.shootEffect === "string"
+          ? { missile: ability.shootEffect }
+          : {}),
+      };
+    }
+    if (name === "drunk" || name === "invisible" || name === "outfit") {
+      const conditionType = name as ConditionType;
+      return {
+        kind: "condition",
+        intervalMs,
+        chance,
+        target: defensive || name === "invisible" ? "self" : target,
+        range,
+        area,
+        conditionType,
+        durationMs: boundedInteger(
+          ability.duration ?? 5_000,
+          "monster condition duration",
+          250,
+          24 * 60 * 60 * 1000,
+        ),
+        ...(typeof ability.outfitMonster === "string"
+          ? { outfitMonsterId: normalizeIdentifier(ability.outfitMonster) }
+          : {}),
+        ...(ability.outfitItem !== undefined
+          ? {
+              outfitItemTypeId: boundedInteger(
+                ability.outfitItem,
+                "monster outfit item",
+                1,
+                65_535,
+              ),
+            }
+          : {}),
+        ...(ability.effect !== undefined ? { effect: primitive(ability.effect) } : {}),
+        ...(typeof ability.shootEffect === "string"
+          ? { missile: ability.shootEffect }
+          : {}),
+      };
+    }
+    const conditionType = conditionTypeFor(ability.type, name);
+    if (conditionType) {
+      const damageType = damageTypeFor(ability.type) ?? damageTypeForCondition(conditionType);
+      const maximum = damageBound(ability.maxDamage ?? ability.minDamage ?? 5);
+      return {
+        kind: "condition",
+        intervalMs,
+        chance,
+        target,
+        range,
+        area,
+        conditionType,
+        durationMs: boundedInteger(
+          ability.duration ?? Math.max(5_000, intervalMs * 5),
+          "monster condition duration",
+          250,
+          24 * 60 * 60 * 1000,
+        ),
+        magnitude: Math.max(1, Math.ceil(maximum / 5)),
+        tickIntervalMs: 2_000,
+        damageType,
+        ...(ability.effect !== undefined ? { effect: primitive(ability.effect) } : {}),
+        ...(typeof ability.shootEffect === "string"
+          ? { missile: ability.shootEffect }
+          : {}),
+      };
+    }
+    const damageType =
+      name === "melee" ? "physical" : damageTypeFor(ability.type);
+    const healing = damageType === "healing";
+    if (
+      damageType ||
+      ability.minDamage !== undefined ||
+      ability.maxDamage !== undefined
+    ) {
+      const minimum = damageBound(ability.minDamage ?? 0);
+      const maximum = damageBound(ability.maxDamage ?? minimum);
+      return {
+        kind: healing ? "healing" : "damage",
+        intervalMs,
+        chance,
+        target: healing || defensive ? "self" : target,
+        range,
+        area,
+        damageType: damageType ?? "physical",
+        minimum: Math.min(minimum, maximum),
+        maximum: Math.max(minimum, maximum),
+        ...(ability.effect !== undefined ? { effect: primitive(ability.effect) } : {}),
+        ...(typeof ability.shootEffect === "string"
+          ? { missile: ability.shootEffect }
+          : {}),
+      };
+    }
+    return {
+      kind: "effect",
+      intervalMs,
+      chance,
+      target,
+      range,
+      area,
+      ...(ability.effect !== undefined ? { effect: primitive(ability.effect) } : {}),
+    };
+  });
+}
+
+function parseArea(ability: Record<string, unknown>): MonsterAbility["area"] {
+  if (ability.radius !== undefined) {
+    return {
+      shape: "circle",
+      radius: boundedInteger(ability.radius, "monster ability radius", 0, 16),
+    };
+  }
+  if (ability.length !== undefined || ability.lenght !== undefined) {
+    const spread = boundedInteger(
+      ability.spread ?? 1,
+      "monster ability spread",
+      0,
+      16,
+    );
+    return {
+      shape: spread > 1 ? "cone" : "beam",
+      length: boundedInteger(
+        ability.length ?? ability.lenght,
+        "monster ability length",
+        1,
+        16,
+      ),
+      spread: Math.max(1, spread),
+    };
+  }
+  return { shape: "single" };
+}
+
+function parseElements(
+  value: unknown,
+): Partial<Record<DamageType, number>> {
+  const source = record(value, "monster elements");
+  const parsed: Partial<Record<DamageType, number>> = {};
+  for (const [key, amount] of Object.entries(source)) {
+    const damageType = damageTypeFor(key);
+    if (!damageType || damageType === "healing") continue;
+    parsed[damageType] = finiteNumber(amount, "monster element", -1_000, 1_000);
+  }
+  return parsed;
+}
+
+function parseImmunities(value: unknown): ConditionType[] {
+  return stringArray(value, "monster immunities").flatMap((immunity) => {
+    if (immunity === "paralyze") return ["paralyze"] as const;
+    if (immunity === "invisible") return ["invisible"] as const;
+    if (immunity === "outfit") return ["outfit"] as const;
+    if (immunity === "bleed") return ["poison"] as const;
+    return [];
+  });
+}
+
+function parseSummons(value: unknown): MonsterSummon[] {
+  if (!Array.isArray(value)) throw new Error("monster summons must be an array");
+  return value.map((entry) => {
+    const summon = record(entry, "monster summon");
+    const rawName = summon.name ?? summon.typeId;
+    if (typeof rawName !== "string") throw new Error("monster summon has no type");
+    return {
+      typeId: normalizeIdentifier(rawName),
+      intervalMs: boundedInteger(
+        summon.interval ?? 2_000,
+        "monster summon interval",
+        250,
+        60_000,
+      ),
+      chance: boundedInteger(
+        summon.chance ?? 100,
+        "monster summon chance",
+        0,
+        100,
+      ),
+      maxCount: boundedInteger(
+        summon.max ?? summon.maxCount ?? 1,
+        "monster summon limit",
+        1,
+        16,
+      ),
+    };
+  });
+}
+
+function parseLoot(value: unknown): MonsterLoot[] {
+  if (!Array.isArray(value)) throw new Error("monster loot must be an array");
+  return value.map((entry) => {
+    const loot = record(entry, "monster loot");
+    const itemTypeId =
+      loot.id === undefined
+        ? undefined
+        : boundedInteger(loot.id, "monster loot item id", 1, 65_535);
+    const itemName =
+      loot.name === undefined ? undefined : text(loot.name, "monster loot name");
+    if (!itemTypeId && !itemName) throw new Error("monster loot has no item");
+    return {
+      ...(itemTypeId ? { itemTypeId } : {}),
+      ...(itemName ? { itemName } : {}),
+      chance: Math.min(
+        100_000,
+        boundedInteger(
+          loot.chance ?? 0,
+          "monster loot chance",
+          0,
+          1_000_000,
+        ),
+      ),
+      maxCount: boundedInteger(
+        loot.maxCount ?? 1,
+        "monster loot max count",
+        1,
+        1_000,
+      ),
+    };
+  });
+}
+
+function damageTypeFor(value: unknown): DamageType | undefined {
+  const key = typeof value === "string" ? value : "";
+  const types: Readonly<Record<string, DamageType>> = {
+    COMBAT_PHYSICALDAMAGE: "physical",
+    COMBAT_ENERGYDAMAGE: "energy",
+    COMBAT_EARTHDAMAGE: "earth",
+    COMBAT_FIREDAMAGE: "fire",
+    COMBAT_LIFEDRAIN: "life-drain",
+    COMBAT_LIFEDRAINDAMAGE: "life-drain",
+    COMBAT_MANADRAIN: "mana-drain",
+    COMBAT_MANADRAINDAMAGE: "mana-drain",
+    COMBAT_DROWNDAMAGE: "drown",
+    COMBAT_ICEDAMAGE: "ice",
+    COMBAT_HOLYDAMAGE: "holy",
+    COMBAT_DEATHDAMAGE: "death",
+    COMBAT_HEALING: "healing",
+  };
+  return types[key];
+}
+
+function conditionTypeFor(value: unknown, name: string): ConditionType | undefined {
+  const key = typeof value === "string" ? value : "";
+  if (key === "CONDITION_POISON" || name.includes("poisonfield")) return "poison";
+  if (key === "CONDITION_FIRE" || name.includes("firefield")) return "fire";
+  if (key === "CONDITION_ENERGY" || name.includes("energyfield")) return "energy";
+  if (key === "CONDITION_FREEZING") return "paralyze";
+  if (key === "CONDITION_CURSED") return "poison";
+  if (key === "CONDITION_BLEEDING") return "poison";
+  return undefined;
+}
+
+function damageTypeForCondition(type: ConditionType): DamageType {
+  if (type === "fire") return "fire";
+  if (type === "energy") return "energy";
+  return "earth";
+}
+
+function damageBound(value: unknown): number {
+  const amount = Math.abs(Number(value));
+  if (!Number.isFinite(amount) || amount > 1_000_000) {
+    throw new Error("monster damage is out of range");
+  }
+  return Math.floor(amount);
+}
+
+function finiteNumber(
+  value: unknown,
+  label: string,
+  minimum: number,
+  maximum: number,
+): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(`${label} is out of range`);
+  }
+  return parsed;
+}
+
+function primitive(value: unknown): string | number {
+  if (typeof value !== "string" && typeof value !== "number") {
+    throw new Error("monster visual is invalid");
+  }
+  return value;
+}
+
+function normalizeIdentifier(value: string): string {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  if (!normalized) throw new Error("monster identifier is invalid");
+  return normalized;
 }
 
 function parseNpcType(value: unknown): NpcType {
@@ -202,18 +591,6 @@ function primitiveRecords(
     }
     return parsed;
   });
-}
-
-function numberRecord(value: unknown, label: string): Readonly<Record<string, number>> {
-  const source = record(value, label);
-  const parsed: Record<string, number> = {};
-  for (const [key, number] of Object.entries(source)) {
-    if (typeof number !== "number" || !Number.isFinite(number)) {
-      throw new Error(`${label} contains a non-number`);
-    }
-    parsed[key] = number;
-  }
-  return parsed;
 }
 
 function stringArray(value: unknown, label: string): string[] {

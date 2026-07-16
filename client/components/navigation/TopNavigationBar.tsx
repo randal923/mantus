@@ -115,10 +115,11 @@ export function TopNavigationBar({
 
       <nav
         aria-label={t("navigation.gamePanels")}
-        className="ml-auto flex gap-1 rounded-xl border border-ui-gold/10 bg-black/20 p-1"
+        className="ml-auto flex gap-2 rounded-xl border border-ui-gold/10 bg-black/20 p-1.5"
       >
         <NavigationIconButton
           label={t("navigation.character")}
+          hotkey="C"
           active={activePanel === "character"}
           disabled={!onCharacter}
           onClick={onCharacter}
@@ -140,6 +141,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.inventory")}
+          hotkey="I"
           active={activePanel === "inventory"}
           disabled={!onInventory}
           onClick={onInventory}
@@ -201,6 +203,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.settings")}
+          hotkey="Esc"
           disabled={!onSettings}
           onClick={onSettings}
         >

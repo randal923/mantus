@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import type {
   CharacterCreationOptions,
   CharacterSummary,
+  CombatTarget,
   CreatureState,
   CreateCharacterInput,
   Direction,
+  FightState,
   InventoryState,
   OwnCharacterState,
   ServerErrorCode,
@@ -63,6 +65,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [visibleCreatures, setVisibleCreatures] = useState<
     ReadonlyArray<CreatureState>
   >([]);
+  const [fightState, setFightState] = useState<FightState | null>(null);
+  const [combatLog, setCombatLog] = useState<ReadonlyArray<string>>([]);
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
@@ -81,6 +85,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setOwnCharacter(null);
     setInventory(null);
     setVisibleCreatures([]);
+    setFightState(null);
+    setCombatLog([]);
     setCharacterBusy(characterId !== null);
     setInventoryOpen(false);
     setCharacterStatsOpen(false);
@@ -101,8 +107,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       setInventoryOpen((open) => !open);
       return;
     }
-    if (action === "openCharacterStats") {
+    if (action === "toggleCharacterStats") {
       setGameMenuOpen(false);
+      if (characterStatsOpen) {
+        setCharacterStatsOpen(false);
+        setInventoryOpen(false);
+        return;
+      }
       setInventoryOpen(true);
       setCharacterStatsOpen(true);
       return;
@@ -141,6 +152,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
 
       const worldRenderer = new WorldRenderer({
         useMap: (position) => client?.useMap(position),
+        attackTarget: (creatureId) => client?.attackTarget(creatureId),
+        cancelAttack: () => client?.cancelAttack(),
         pickupMapItem: (item, position) =>
           client?.pickupMapItem(item, position),
       });
@@ -182,12 +195,33 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             resumeCharacterIdRef.current = null;
             setOwnCharacter(message.character);
             setInventory(message.inventory);
+            setFightState(message.fightState);
             setCharacterBusy(false);
             setServerError(null);
           }
           if (message.type === "inventory-updated") {
             setInventory(message.inventory);
             return;
+          }
+          if (message.type === "attack-target-changed") {
+            setFightState((current) =>
+              current
+                ? { ...current, attackTargetId: message.creatureId }
+                : current,
+            );
+          }
+          if (message.type === "fight-state") {
+            setFightState(message.fightState);
+          }
+          if (message.type === "combat-log") {
+            setCombatLog((current) => [...current, message.text].slice(-6));
+          }
+          if (message.type === "creature-left") {
+            setFightState((current) =>
+              current?.attackTargetId === message.creatureId
+                ? { ...current, attackTargetId: null }
+                : current,
+            );
           }
           if (message.type === "progression-updated") {
             setOwnCharacter((current) =>
@@ -229,6 +263,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (disposed) return;
           if (nextStatus === "disconnected") joinedRef.current = false;
           if (nextStatus === "disconnected") setVisibleCreatures([]);
+          if (nextStatus === "disconnected") setFightState(null);
+          if (nextStatus === "disconnected") setCombatLog([]);
           setStatus(nextStatus);
         },
         onLanguage: (nextLanguage) => {
@@ -414,11 +450,21 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               })}
             </button>
           )}
-          <GameHud
-            spellHotkeysEnabled={!gameMenuOpen && !characterStatsOpen}
-            visibleCreatures={visibleCreatures}
-            ownPlayerId={ownCharacter.id}
-          />
+          {fightState && (
+            <GameHud
+              spellHotkeysEnabled={!gameMenuOpen && !characterStatsOpen}
+              visibleCreatures={visibleCreatures}
+              ownCharacter={ownCharacter}
+              fightState={fightState}
+              combatLog={combatLog}
+              onFightModeChange={(mode) =>
+                clientRef.current?.setFightMode(mode)
+              }
+              onCast={(spellId, target) =>
+                clientRef.current?.castSpell(spellId, target)
+              }
+            />
+          )}
           {inventoryOpen && inventory && (
             <div
               className={`absolute top-24 right-4 bottom-4 z-30 w-[calc(100vw-2rem)] transition-[max-width] duration-300 ease-in-out motion-reduce:transition-none ${
@@ -441,6 +487,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 onUnequip={(item, slot) =>
                   clientRef.current?.unequipItem(item, slot)
                 }
+                onUseRune={(item) => {
+                  const target: CombatTarget =
+                    item.typeId === 3160
+                      ? { kind: "self" }
+                      : { kind: "attack-target" };
+                  clientRef.current?.useRune(item, target);
+                }}
                 onDrop={(item) =>
                   clientRef.current?.dropItem(item, ownCharacter.position)
                 }

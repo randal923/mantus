@@ -1,4 +1,6 @@
 import {
+  type DamageType,
+  type HitBlock,
   PROTOCOL_LIMITS,
   type CreatureState,
   type Position,
@@ -47,10 +49,9 @@ export class Visibility {
 
   /** Introduces a spawning player and returns only creatures in their view. */
   announceSpawn(joiner: Session, player: Player): CreatureState[] {
-    const visibleCreatures = this.world.creaturesVisibleFrom(
-      player.position,
-      joiner.viewRange,
-    );
+    const visibleCreatures = this.world
+      .creaturesVisibleFrom(player.position, joiner.viewRange)
+      .filter((creature) => this.canObserve(joiner, player, creature));
     for (const creature of visibleCreatures) {
       joiner.knownCreatureIds.add(creature.id);
     }
@@ -103,6 +104,115 @@ export class Visibility {
     for (const session of this.viewerSessionsFor(creature.position, 0)) {
       if (!session.knownCreatureIds.has(creature.id)) continue;
       session.send(message);
+    }
+  }
+
+  broadcastHealth(creature: Creature): void {
+    const message = {
+      type: "creature-health" as const,
+      creatureId: creature.id,
+      healthPercent: creature.healthPercent,
+    };
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      if (!session.knownCreatureIds.has(creature.id)) continue;
+      session.send(message);
+    }
+  }
+
+  onCreatureStateChanged(creature: Creature): void {
+    for (const session of this.registry.all()) {
+      if (!session.playerId) continue;
+      const viewer = this.world.getPlayer(session.playerId);
+      if (!viewer) continue;
+      const visible =
+        this.world.canSee(
+          viewer.position,
+          creature.position,
+          session.viewRange,
+        ) && this.canObserve(session, viewer, creature);
+      const known = session.knownCreatureIds.has(creature.id);
+      if (visible && known) {
+        session.send({
+          type: "creature-state-changed",
+          creature: creature.toState(),
+        });
+      } else if (visible) {
+        this.introduce(session, creature);
+      } else if (known && creature.id !== viewer.id) {
+        this.forget(session, creature.id);
+      }
+    }
+  }
+
+  broadcastCombatText(
+    creature: Creature,
+    value: number,
+    damageType: DamageType,
+    block: HitBlock,
+  ): void {
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      if (!session.knownCreatureIds.has(creature.id)) continue;
+      session.send({
+        type: "combat-text",
+        position: { ...creature.position },
+        value,
+        damageType,
+        block,
+      });
+    }
+  }
+
+  broadcastMagicEffect(
+    position: Position,
+    effectId: number,
+    relatedCreatureId?: string,
+  ): void {
+    for (const session of this.viewerSessionsFor(position, 0)) {
+      if (
+        relatedCreatureId &&
+        !session.knownCreatureIds.has(relatedCreatureId)
+      ) {
+        continue;
+      }
+      session.send({
+        type: "magic-effect",
+        position: { ...position },
+        effectId,
+      });
+    }
+  }
+
+  broadcastDistanceMissile(
+    from: Position,
+    to: Position,
+    missileId: number,
+    durationMs: number,
+    relatedCreatureIds: ReadonlyArray<string> = [],
+  ): void {
+    const nearby = new Set([
+      ...this.viewerSessionsFor(from, 0),
+      ...this.viewerSessionsFor(to, 0),
+    ]);
+    for (const session of nearby) {
+      if (!session.playerId) continue;
+      const viewer = this.world.getPlayer(session.playerId);
+      if (
+        !viewer ||
+        !this.world.canSee(viewer.position, from, session.viewRange) ||
+        !this.world.canSee(viewer.position, to, session.viewRange) ||
+        relatedCreatureIds.some(
+          (creatureId) => !session.knownCreatureIds.has(creatureId),
+        )
+      ) {
+        continue;
+      }
+      session.send({
+        type: "distance-missile",
+        from: { ...from },
+        to: { ...to },
+        missileId,
+        durationMs,
+      });
     }
   }
 
@@ -194,7 +304,7 @@ export class Visibility {
       viewer.position,
       moved.position,
       viewerSession.viewRange,
-    );
+    ) && this.canObserve(viewerSession, viewer, moved);
     const known = viewerSession.knownCreatureIds.has(moved.id);
     if (visible && known) {
       viewerSession.send(this.movedMessage(moved, from, durationMs));
@@ -213,7 +323,8 @@ export class Visibility {
       const other = this.world.getCreature(knownId);
       if (
         other &&
-        this.world.canSee(player.position, other.position, mover.viewRange)
+        this.world.canSee(player.position, other.position, mover.viewRange) &&
+        this.canObserve(mover, player, other)
       ) {
         continue;
       }
@@ -223,6 +334,7 @@ export class Visibility {
       player.position,
       mover.viewRange,
     )) {
+      if (!this.canObserve(mover, player, other)) continue;
       if (mover.knownCreatureIds.has(other.id)) continue;
       this.introduce(mover, other);
     }
@@ -230,12 +342,19 @@ export class Visibility {
 
   private introduce(session: Session, creature: Creature): void {
     if (session.knownCreatureIds.has(creature.id)) return;
+    if (!session.playerId) return;
+    const viewer = this.world.getPlayer(session.playerId);
+    if (!viewer || !this.canObserve(session, viewer, creature)) return;
     session.knownCreatureIds.add(creature.id);
     session.send({ type: "creature-joined", creature: creature.toState() });
   }
 
   private forget(session: Session, creatureId: string): void {
     if (!session.knownCreatureIds.delete(creatureId)) return;
+    if (session.attackTargetId === creatureId) {
+      session.attackTargetId = null;
+      session.send({ type: "attack-target-changed", creatureId: null });
+    }
     session.send({ type: "creature-left", creatureId });
   }
 
@@ -257,5 +376,13 @@ export class Visibility {
 
   private rangeWithMargin(range: ViewRange, margin: number): ViewRange {
     return { x: range.x + margin, y: range.y + margin };
+  }
+
+  private canObserve(
+    _session: Session,
+    viewer: Player,
+    creature: Creature,
+  ): boolean {
+    return creature.id === viewer.id || !creature.conditions.has("invisible");
   }
 }

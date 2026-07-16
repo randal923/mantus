@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
 import type { EquipmentSlot, Position } from "@tibia/protocol";
 import type { Item } from "./Item";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
+import type { LootItemCreation } from "./LootItemCreation";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
 
@@ -137,6 +139,60 @@ export class MemoryItemStore implements ItemStore {
     _expectedVersion: number,
   ): Promise<ItemMutation> {
     return Promise.reject(new Error("memory rotate is not configured"));
+  }
+
+  async consume(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+    count: number,
+    _reason: "rune" | "ammunition" | "break",
+  ): Promise<ItemMutation> {
+    const before = this.requireOwned(characterId, itemId, expectedVersion);
+    if (!Number.isInteger(count) || count < 1 || count > before.count) {
+      throw new Error("invalid consume count");
+    }
+    if (count === before.count) {
+      this.items.delete(itemId);
+      return { before, after: [], removedItemIds: [itemId] };
+    }
+    const after = {
+      ...before,
+      count: before.count - count,
+      version: before.version + 1,
+    };
+    this.items.set(itemId, after);
+    return { before, after: [after] };
+  }
+
+  async createCorpse(
+    _characterId: string | null,
+    _eventId: string,
+    position: Position,
+    stackIndex: number,
+    corpseTypeId: number,
+    loot: ReadonlyArray<LootItemCreation>,
+  ): Promise<ReadonlyArray<Item>> {
+    const corpseId = randomUUID();
+    const corpse: Item = {
+      id: corpseId,
+      typeId: corpseTypeId,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "world", position: { ...position }, stackIndex },
+    };
+    const contents = loot.map<Item>((entry, slot) => ({
+      id: randomUUID(),
+      typeId: entry.typeId,
+      count: entry.count,
+      attributes: {},
+      version: 1,
+      location: { kind: "corpse", containerId: corpseId, slot },
+    }));
+    this.items.set(corpse.id, corpse);
+    for (const item of contents) this.items.set(item.id, item);
+    return [corpse, ...contents];
   }
 
   async loadWorldDeltas(

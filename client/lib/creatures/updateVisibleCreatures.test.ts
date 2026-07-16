@@ -42,4 +42,23 @@ describe("updateVisibleCreatures", () => {
 
     expect(next).toEqual(current);
   });
+
+  it("applies server health and full creature-state changes", () => {
+    const damaged = updateVisibleCreatures([creature], {
+      type: "creature-health",
+      creatureId: creature.id,
+      healthPercent: 20,
+    });
+    const changed = updateVisibleCreatures(damaged, {
+      type: "creature-state-changed",
+      creature: {
+        ...creature,
+        healthPercent: 20,
+        light: { intensity: 7, color: 215 },
+      },
+    });
+
+    expect(damaged[0]?.healthPercent).toBe(20);
+    expect(changed[0]?.light).toEqual({ intensity: 7, color: 215 });
+  });
 });

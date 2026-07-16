@@ -1,5 +1,6 @@
 import { MonsterBrain } from "../ai/MonsterBrain";
 import { NpcBrain } from "../ai/NpcBrain";
+import type { Combat } from "../combat/Combat";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import { Npc } from "../creature/Npc";
@@ -37,8 +38,11 @@ export class SpawnManager {
   private readonly brains = new Map<string, Brain>();
   private readonly aiOrder: string[] = [];
   private readonly aiIndices = new Map<string, number>();
+  private readonly summonOwnerByCreature = new Map<string, string>();
+  private readonly summonsByOwner = new Map<string, Set<string>>();
   private spawnSectorCursor = 0;
   private aiCursor = 0;
+  private summonGeneration = 0;
 
   constructor(
     private readonly world: World,
@@ -60,6 +64,7 @@ export class SpawnManager {
         seed: number;
       };
     },
+    private readonly combat?: Combat,
   ) {
     for (const definition of content.slots) {
       if (
@@ -156,7 +161,7 @@ export class SpawnManager {
 
   removeCreature(creatureId: string, now: number): boolean {
     const slot = this.creatureToSlot.get(creatureId);
-    if (!slot) return false;
+    if (!slot) return this.removeSummon(creatureId);
     return this.detachCreature(
       creatureId,
       now + slot.definition.respawnMs,
@@ -172,6 +177,7 @@ export class SpawnManager {
     const slot = this.creatureToSlot.get(creatureId);
     if (!slot || slot.creatureId !== creatureId) return false;
     const creature = this.world.getCreature(creatureId);
+    this.removeOwnedSummons(creatureId);
     if (creature) {
       this.world.removeCreature(creatureId);
       this.visibility.announceCreatureLeave(creature);
@@ -212,12 +218,7 @@ export class SpawnManager {
     slot.dormantCreature = null;
     slot.creatureId = creature.id;
     this.creatureToSlot.set(creature.id, slot);
-    const brain: Brain = creature instanceof Monster
-      ? new MonsterBrain(creature, now, this.config.ai.seed, this.config.ai)
-      : new NpcBrain(creature as Npc, now, this.config.ai.seed);
-    this.brains.set(creature.id, brain);
-    this.aiIndices.set(creature.id, this.aiOrder.length);
-    this.aiOrder.push(creature.id);
+    this.addBrain(creature, now);
     this.visibility.announceCreatureSpawn(creature);
   }
 
@@ -350,5 +351,95 @@ export class SpawnManager {
     }
     if (index < this.aiCursor) this.aiCursor--;
     if (this.aiCursor >= this.aiOrder.length) this.aiCursor = 0;
+  }
+
+  private addBrain(creature: Creature, now: number): void {
+    const brain: Brain =
+      creature instanceof Monster
+        ? new MonsterBrain(
+            creature,
+            now,
+            this.config.ai.seed,
+            this.config.ai,
+            this.combat
+              ? {
+                  combat: this.combat,
+                  summon: (owner, typeId, maxCount, summonAt) =>
+                    this.summon(owner, typeId, maxCount, summonAt),
+                }
+              : undefined,
+          )
+        : new NpcBrain(creature as Npc, now, this.config.ai.seed);
+    this.brains.set(creature.id, brain);
+    this.aiIndices.set(creature.id, this.aiOrder.length);
+    this.aiOrder.push(creature.id);
+  }
+
+  private summon(
+    owner: Monster,
+    typeId: string,
+    maxCount: number,
+    now: number,
+  ): boolean {
+    if (this.world.getCreature(owner.id) !== owner) return false;
+    const type = this.content.monsterTypes.get(typeId);
+    if (!type || !type.flags.summonable) return false;
+    const owned = this.summonsByOwner.get(owner.id) ?? new Set<string>();
+    for (const summonId of [...owned]) {
+      if (!this.world.getCreature(summonId)) owned.delete(summonId);
+    }
+    if (owned.size >= maxCount) return false;
+    const positions = [
+      { x: owner.position.x, y: owner.position.y - 1, z: owner.position.z },
+      { x: owner.position.x + 1, y: owner.position.y, z: owner.position.z },
+      { x: owner.position.x, y: owner.position.y + 1, z: owner.position.z },
+      { x: owner.position.x - 1, y: owner.position.y, z: owner.position.z },
+    ];
+    const position = positions.find(
+      (candidate) =>
+        Math.max(
+          Math.abs(candidate.x - owner.home.x),
+          Math.abs(candidate.y - owner.home.y),
+        ) <= owner.spawnRadius &&
+        this.world.isPathable(candidate) &&
+        !this.world.isOccupied(candidate),
+    );
+    if (!position) return false;
+    const summon = new Monster({
+      id: `monster-summon:${owner.id}:${this.summonGeneration++}`,
+      type,
+      position,
+      direction: owner.direction,
+      home: owner.home,
+      spawnRadius: owner.spawnRadius,
+    });
+    this.world.addCreature(summon);
+    this.summonOwnerByCreature.set(summon.id, owner.id);
+    owned.add(summon.id);
+    this.summonsByOwner.set(owner.id, owned);
+    this.addBrain(summon, now);
+    this.visibility.announceCreatureSpawn(summon);
+    return true;
+  }
+
+  private removeSummon(creatureId: string): boolean {
+    const ownerId = this.summonOwnerByCreature.get(creatureId);
+    if (!ownerId) return false;
+    this.removeOwnedSummons(creatureId);
+    const creature = this.world.removeCreature(creatureId);
+    if (creature) this.visibility.announceCreatureLeave(creature);
+    this.summonOwnerByCreature.delete(creatureId);
+    const owned = this.summonsByOwner.get(ownerId);
+    owned?.delete(creatureId);
+    if (owned?.size === 0) this.summonsByOwner.delete(ownerId);
+    this.removeBrain(creatureId);
+    return true;
+  }
+
+  private removeOwnedSummons(ownerId: string): void {
+    const owned = this.summonsByOwner.get(ownerId);
+    if (!owned) return;
+    for (const summonId of [...owned]) this.removeSummon(summonId);
+    this.summonsByOwner.delete(ownerId);
   }
 }

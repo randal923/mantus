@@ -5,6 +5,7 @@ import type {
   Direction,
   Position,
 } from "@tibia/protocol";
+import { ConditionManager } from "../combat/ConditionManager";
 
 export abstract class Creature<
   TOutfit extends CreatureOutfit = CreatureOutfit,
@@ -16,7 +17,9 @@ export abstract class Creature<
   readonly kind: CreatureKind;
   readonly name: string;
   readonly outfit: TOutfit;
+  readonly conditions = new ConditionManager();
   private readonly activeConditions = new Set<string>();
+  private deathHandled = false;
   private currentHealth: number;
   private currentMaxHealth: number;
   private currentPosition: Position;
@@ -60,9 +63,27 @@ export abstract class Creature<
     this.positionRevision++;
   }
 
+  get healthPercent(): number {
+    return Math.min(
+      100,
+      Math.max(0, Math.round((this.health / this.maxHealth) * 100)),
+    );
+  }
+
   setHealth(health: number): void {
     if (!Number.isInteger(health)) throw new Error("health must be an integer");
     this.currentHealth = Math.max(0, Math.min(this.maxHealth, health));
+  }
+
+  claimDeath(): boolean {
+    if (this.health > 0 || this.deathHandled) return false;
+    this.deathHandled = true;
+    return true;
+  }
+
+  revive(health = this.maxHealth): void {
+    this.deathHandled = false;
+    this.setHealth(health);
   }
 
   setMaxHealth(maxHealth: number): void {
@@ -82,10 +103,14 @@ export abstract class Creature<
   }
 
   hasCondition(condition: string): boolean {
-    return this.activeConditions.has(condition);
+    return (
+      this.activeConditions.has(condition) ||
+      this.conditions.has(condition)
+    );
   }
 
   toState(): CreatureState {
+    const light = this.conditions.light;
     return {
       id: this.id,
       kind: this.kind,
@@ -93,11 +118,9 @@ export abstract class Creature<
       position: { ...this.position },
       positionRevision: this.positionRevision,
       direction: this.direction,
-      outfit: this.outfit,
-      healthPercent: Math.min(
-        100,
-        Math.max(0, Math.round((this.health / this.maxHealth) * 100)),
-      ),
+      outfit: (this.conditions.outfit ?? this.outfit) as TOutfit,
+      healthPercent: this.healthPercent,
+      ...(light.intensity > 0 ? { light } : {}),
     };
   }
 }

@@ -61,4 +61,20 @@ describe("MemoryItemStore", () => {
       }),
     ]);
   });
+
+  it("allows exactly one concurrent combat consumption of a revision", async () => {
+    const store = new MemoryItemStore();
+    store.seed({ ...makeInventoryItem(), count: 2 });
+
+    const results = await Promise.allSettled([
+      store.consume(CHARACTER_ID, ITEM_ID, 1, 1, "rune"),
+      store.consume(CHARACTER_ID, ITEM_ID, 1, 1, "rune"),
+    ]);
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual([
+      expect.objectContaining({ id: ITEM_ID, count: 1, version: 2 }),
+    ]);
+  });
 });

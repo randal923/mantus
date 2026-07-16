@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import type { OwnCharacterState } from "@tibia/protocol";
+import { fn } from "storybook/test";
 
 import { GameHud } from "../components/GameHud";
 
@@ -10,7 +12,22 @@ const meta = {
   },
   args: {
     visibleCreatures: [],
-    ownPlayerId: "player",
+    ownCharacter: {
+      id: "player",
+      vocation: "Knight",
+      level: 20,
+    } as OwnCharacterState,
+    fightState: {
+      attackTargetId: null,
+      mode: { attack: "balanced", chase: true, secure: true },
+      conditions: [
+        { type: "combat-lock", remainingMs: 24_000, stacks: 1 },
+      ],
+      cooldowns: [],
+    },
+    combatLog: ["You gained 5 experience."],
+    onFightModeChange: fn(),
+    onCast: fn(),
   },
   decorators: [
     (Story) => (

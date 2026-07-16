@@ -22,8 +22,8 @@ describe("resolveHotkey", () => {
     expect(resolveHotkey(press("Escape"))).toBe("toggleGameMenu");
   });
 
-  it("maps KeyC to openCharacterStats", () => {
-    expect(resolveHotkey(press("KeyC"))).toBe("openCharacterStats");
+  it("maps KeyC to toggleCharacterStats", () => {
+    expect(resolveHotkey(press("KeyC"))).toBe("toggleCharacterStats");
   });
 
   it("returns null for unbound keys", () => {

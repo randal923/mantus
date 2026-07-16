@@ -167,5 +167,10 @@ interface CreatureState {
     [`observability and operations`](16-operations-and-security.md), and known
     [`authentication gaps`](17-auth-follow-ups.md) continuously.
 
+The larger feature files (08, 10, 11, 12, 13, 15, 16) are split into lettered
+one-session units (for example `11a-currency-and-bank.md`); each parent file is
+a short index giving the order within that feature. Implement one lettered unit
+per session/PR — never more than one economy-relevant system in a single PR.
+
 Do not bulk-enable the whole global content pack until spawn loading, AI,
 visibility filtering, and server tick/load benchmarks pass.

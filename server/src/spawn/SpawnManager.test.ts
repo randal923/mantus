@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Combat } from "../combat/Combat";
 import type { MonsterType } from "../creature/MonsterType";
 import { gridMapData } from "../gridMapData";
 import { Player } from "../Player";
@@ -200,5 +201,65 @@ describe("SpawnManager", () => {
 
     expect(manager.activeCreatureId("monster:slot-1")).toBe(first);
     expect(world.getCreature(first)?.health).toBe(7);
+  });
+
+  it("enforces summon limits and removes owned summons with their owner", () => {
+    const summonType: MonsterType = {
+      ...monsterType,
+      flags: { ...monsterType.flags, summonable: true },
+    };
+    const ownerType: MonsterType = {
+      ...monsterType,
+      id: "summoner",
+      name: "Summoner",
+      summons: [
+        { typeId: summonType.id, intervalMs: 100, chance: 100, maxCount: 1 },
+      ],
+    };
+    const content: CreatureContent = {
+      monsterTypes: new Map([
+        [ownerType.id, ownerType],
+        [summonType.id, summonType],
+      ]),
+      npcTypes: new Map(),
+      slots: [
+        {
+          id: "monster:summoner",
+          kind: "monster",
+          typeId: ownerType.id,
+          home: { x: 3, y: 3, z: 7 },
+          radius: 3,
+          respawnMs: 1_000,
+          direction: "south",
+          enabled: true,
+        },
+      ],
+    };
+    const world = makeWorld();
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      content,
+      config,
+      {} as Combat,
+    );
+    manager.tick(1_000);
+    const ownerId = manager.activeCreatureId("monster:summoner");
+    if (!ownerId) throw new Error("expected summoner");
+
+    manager.tick(1_500);
+    manager.tick(2_000);
+
+    expect(
+      [...world.allCreatures()].filter(
+        (creature) => creature.kind === "monster",
+      ),
+    ).toHaveLength(2);
+    expect(manager.removeCreature(ownerId, 2_500)).toBe(true);
+    expect(
+      [...world.allCreatures()].filter(
+        (creature) => creature.kind === "monster",
+      ),
+    ).toHaveLength(0);
   });
 });

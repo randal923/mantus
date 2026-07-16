@@ -24,6 +24,9 @@ export class CreatureView {
   readonly plate = new Container();
 
   private readonly sprite = new Sprite();
+  private readonly light = new Graphics();
+  private readonly attackTarget = new Graphics();
+  private readonly health = new Graphics();
   private readonly frames = new Map<string, Texture>();
   private direction: Direction;
   private walkDirection: Direction;
@@ -61,7 +64,13 @@ export class CreatureView {
         -(outfit.height - 1) * TILE_SIZE - 8,
       );
     }
-    this.container.addChild(this.sprite);
+    this.attackTarget
+      .rect(-7, -7, TILE_SIZE - 2, TILE_SIZE - 2)
+      .stroke({ color: 0xff2222, width: 2 });
+    this.attackTarget.visible = false;
+    this.container.sortableChildren = true;
+    this.light.zIndex = -1;
+    this.container.addChild(this.sprite, this.attackTarget, this.light);
 
     const name = new Text({
       text: state.name,
@@ -76,12 +85,9 @@ export class CreatureView {
     name.resolution = 2;
     name.anchor.set(0.5, 1);
     name.position.y = -5;
-    const health = new Graphics();
-    health.rect(-15, -3, 30, 4).fill({ color: 0x111111, alpha: 0.9 });
-    health
-      .rect(-14, -2, 28 * (state.healthPercent / 100), 2)
-      .fill({ color: 0x33cc44 });
-    this.plate.addChild(name, health);
+    this.plate.addChild(name, this.health);
+    this.updateHealth(state.healthPercent);
+    this.updateLight(state.light);
     this.updateFrame();
   }
 
@@ -91,6 +97,41 @@ export class CreatureView {
 
   get position(): Position {
     return { x: this.tileX, y: this.tileY, z: this.tileZ };
+  }
+
+  setAttackTarget(targeted: boolean): void {
+    this.attackTarget.visible = targeted;
+  }
+
+  updateHealth(healthPercent: number): void {
+    const bounded = Math.min(100, Math.max(0, healthPercent));
+    const color =
+      bounded > 60 ? 0x33cc44 : bounded > 30 ? 0xffbb33 : 0xee4444;
+    this.health.clear();
+    this.health.rect(-15, -3, 30, 4).fill({ color: 0x111111, alpha: 0.9 });
+    this.health
+      .rect(-14, -2, 28 * (bounded / 100), 2)
+      .fill({ color });
+  }
+
+  updateLight(light: CreatureState["light"]): void {
+    this.light.clear();
+    if (!light || light.intensity <= 0) return;
+    this.light
+      .circle(
+        TILE_SIZE / 2,
+        TILE_SIZE / 2,
+        Math.min(48, 10 + light.intensity * 2),
+      )
+      .fill({ color: 0xffd37a, alpha: Math.min(0.35, light.intensity / 100) });
+  }
+
+  containsScreenPoint(x: number, y: number): boolean {
+    return (
+      (this.container.visible &&
+        this.container.getBounds().containsPoint(x, y)) ||
+      (this.plate.visible && this.plate.getBounds().containsPoint(x, y))
+    );
   }
 
   /** Applies only a fresh authoritative position revision. */

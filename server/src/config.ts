@@ -48,6 +48,7 @@ export interface ServerConfig {
   maxSessions: number;
   maxPendingIntents: number;
   maxProtocolViolations: number;
+  combatSeed: number;
   starterTownId: number;
   characterSaveIntervalMs: number;
   maxCharacterSaveRetries: number;
@@ -83,6 +84,7 @@ export const serverConfig: ServerConfig = {
   maxSessions: 100,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
+  combatSeed: 0x434f4d42,
   starterTownId: 1,
   characterSaveIntervalMs: 30_000,
   maxCharacterSaveRetries: 3,

@@ -16,6 +16,7 @@ import type { World } from "./World";
 import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { LoadedInventory } from "./item/LoadedInventory";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
+import { projectFightState } from "./combat/projectFightState";
 
 export class CharacterHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -221,6 +222,7 @@ export class CharacterHandler {
       map: { name: this.world.mapName },
       creatures,
       inventory,
+      fightState: projectFightState(session, this.world, now),
     });
     this.visibility.syncMapItems(session, player);
     void this.service
@@ -246,6 +248,7 @@ export class CharacterHandler {
     existing.playerId = null;
     existing.movementDirection = null;
     existing.bufferedMovementDirection = null;
+    existing.attackTargetId = null;
     existing.itemOperationPending = false;
     existing.knownCreatureIds.clear();
     existing.knownMapItemTiles.clear();

@@ -48,6 +48,7 @@ export const inventoryItemSchema = z
     count: z.number().int().positive().max(100),
     revision: z.number().int().positive(),
     equipmentSlot: equipmentSlotSchema.optional(),
+    useKind: z.literal("rune").optional(),
     tooltip: itemTooltipSchema,
   })
   .strict();

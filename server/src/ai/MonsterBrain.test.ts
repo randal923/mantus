@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { Combat } from "../combat/Combat";
 import { Monster } from "../creature/Monster";
 import type { MonsterType } from "../creature/MonsterType";
 import { gridMapData } from "../gridMapData";
@@ -136,5 +137,81 @@ describe("MonsterBrain", () => {
 
     expect(result.work).toBeLessThanOrEqual(2);
     expect(monster.position).toEqual({ x: 2, y: 2, z: 7 });
+  });
+
+  it("schedules attacks and summons inside the granted AI budget", () => {
+    const attack = {
+      kind: "damage",
+      intervalMs: 100,
+      chance: 100,
+      target: "target",
+      range: 4,
+      area: { shape: "single" },
+      damageType: "physical",
+      minimum: 1,
+      maximum: 1,
+    } as const;
+    const summon = {
+      typeId: "rat",
+      intervalMs: 100,
+      chance: 100,
+      maxCount: 2,
+    } as const;
+    const type: MonsterType = {
+      ...baseType,
+      attacks: [attack],
+      summons: [summon],
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const player = new Player(makeCharacter("target"), { x: 3, y: 2, z: 7 });
+    const executeMonsterAbility = vi.fn(() => true);
+    const summonMonster = vi.fn(() => true);
+    world.addCreature(monster);
+    world.addPlayer(player);
+    const brain = new MonsterBrain(monster, 0, 7, config, {
+      combat: { executeMonsterAbility } as unknown as Combat,
+      summon: summonMonster,
+    });
+
+    const result = brain.tick(world, 1_000, 3);
+
+    expect(result.work).toBeLessThanOrEqual(3);
+    expect(executeMonsterAbility).toHaveBeenCalledWith(
+      monster,
+      player,
+      attack,
+      1_000,
+    );
+    expect(summonMonster).toHaveBeenCalledWith(monster, "rat", 2, 1_000);
+  });
+
+  it("retargets using current damage scores and flees at low health", () => {
+    const type: MonsterType = {
+      ...baseType,
+      flags: { ...baseType.flags, runHealth: 50 },
+      targetStrategy: { nearest: 1, health: 0, damage: 100, random: 0 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const nearby = new Player(makeCharacter("nearby"), { x: 3, y: 2, z: 7 });
+    const damager = new Player(makeCharacter("damager"), { x: 4, y: 2, z: 7 });
+    monster.recordPlayerDamage(damager.id, 10);
+    monster.setHealth(5);
+    world.addCreature(monster);
+    world.addPlayer(nearby);
+    world.addPlayer(damager);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 1_000, 32);
+
+    expect(brain.targetCreatureId).toBe(damager.id);
+    expect(brain.state).toBe("flee");
+    expect(
+      Math.max(
+        Math.abs(monster.position.x - damager.position.x),
+        Math.abs(monster.position.y - damager.position.y),
+      ),
+    ).toBeGreaterThanOrEqual(2);
   });
 });

@@ -79,6 +79,7 @@ describe("Visibility creature projections", () => {
       viewRange: { x: 2, y: 2 },
       knownCreatureIds: new Set<string>(),
       knownMapItemTiles: new Map(),
+      attackTargetId: null,
       send: (message: ServerMessage) => sent.push(message),
     } as unknown as Session;
     const registry = {
@@ -101,5 +102,111 @@ describe("Visibility creature projections", () => {
 
     visibility.announceCreatureSpawn(wrongFloor);
     expect(sent).toEqual([]);
+  });
+
+  it("clears a target before forgetting a creature that leaves view", () => {
+    const world = new World(
+      gridMapData({
+        name: "test",
+        width: 12,
+        height: 12,
+        blocked: [],
+      }),
+      25,
+    );
+    const viewer = new Player(makeCharacter("viewer"), { x: 5, y: 5, z: 7 });
+    const visible = makeMonster("monster-instance:visible:0", 6, 5, 7);
+    world.addPlayer(viewer);
+    world.addCreature(visible);
+    const sent: ServerMessage[] = [];
+    const session = {
+      id: "session",
+      playerId: viewer.id,
+      viewRange: { x: 2, y: 2 },
+      knownCreatureIds: new Set<string>(),
+      knownMapItemTiles: new Map(),
+      attackTargetId: null,
+      send: (message: ServerMessage) => sent.push(message),
+    } as unknown as Session;
+    const registry = {
+      sessionFor: (playerId: string) =>
+        playerId === viewer.id ? session : undefined,
+      all: () => [session],
+    } as unknown as SessionRegistry;
+    const visibility = new Visibility(world, registry);
+    visibility.announceSpawn(session, viewer);
+    session.attackTargetId = visible.id;
+
+    visibility.announceCreatureLeave(visible);
+
+    expect(session.attackTargetId).toBeNull();
+    expect(sent).toEqual([
+      { type: "attack-target-changed", creatureId: null },
+      { type: "creature-left", creatureId: visible.id },
+    ]);
+  });
+
+  it("does not reveal combat events for unknown, invisible, or wrong-floor creatures", () => {
+    const world = new World(
+      gridMapData({
+        name: "test",
+        width: 12,
+        height: 12,
+        blocked: [],
+        floors: [7, 8],
+      }),
+      25,
+    );
+    const viewer = new Player(makeCharacter("viewer"), { x: 5, y: 5, z: 7 });
+    const visible = makeMonster("monster-instance:visible:0", 6, 5, 7);
+    const hidden = makeMonster("monster-instance:hidden:0", 7, 5, 7);
+    const wrongFloor = makeMonster("monster-instance:upper:0", 6, 5, 8);
+    hidden.conditions.apply(
+      { type: "invisible", sourceId: hidden.id, durationMs: 5_000 },
+      0,
+    );
+    world.addPlayer(viewer);
+    world.addCreature(visible);
+    world.addCreature(hidden);
+    world.addCreature(wrongFloor);
+    const sent: ServerMessage[] = [];
+    const session = {
+      id: "session",
+      playerId: viewer.id,
+      viewRange: { x: 4, y: 4 },
+      knownCreatureIds: new Set<string>(),
+      knownMapItemTiles: new Map(),
+      attackTargetId: null,
+      send: (message: ServerMessage) => sent.push(message),
+    } as unknown as Session;
+    const registry = {
+      sessionFor: (playerId: string) =>
+        playerId === viewer.id ? session : undefined,
+      all: () => [session],
+    } as unknown as SessionRegistry;
+    const visibility = new Visibility(world, registry);
+    visibility.announceSpawn(session, viewer);
+
+    visibility.broadcastCombatText(visible, 5, "physical", "none");
+    visibility.broadcastCombatText(hidden, 5, "physical", "none");
+    visibility.broadcastCombatText(wrongFloor, 5, "physical", "none");
+    visibility.broadcastMagicEffect(hidden.position, 1, hidden.id);
+    visibility.broadcastDistanceMissile(
+      visible.position,
+      hidden.position,
+      1,
+      250,
+      [visible.id, hidden.id],
+    );
+
+    expect(sent).toEqual([
+      {
+        type: "combat-text",
+        position: visible.position,
+        value: 5,
+        damageType: "physical",
+        block: "none",
+      },
+    ]);
   });
 });

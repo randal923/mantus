@@ -4,6 +4,11 @@ import {
   characterSummarySchema,
   ownCharacterStateSchema,
 } from "./character";
+import {
+  damageTypeSchema,
+  fightStateSchema,
+  hitBlockSchema,
+} from "./combat";
 import { creatureStateSchema } from "./creature";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
@@ -46,6 +51,7 @@ export const welcomeMessageSchema = z.object({
   map: mapInfoSchema,
   creatures: z.array(creatureStateSchema),
   inventory: inventoryStateSchema,
+  fightState: fightStateSchema,
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -89,6 +95,62 @@ export const positionCorrectionMessageSchema = z.object({
   reason: z.enum(["cooldown", "blocked", "occupied", "invalid-transition"]),
 });
 
+export const attackTargetChangedMessageSchema = z.object({
+  type: z.literal("attack-target-changed"),
+  creatureId: z.string().min(1).max(192).nullable(),
+});
+
+export const fightStateMessageSchema = z.object({
+  type: z.literal("fight-state"),
+  fightState: fightStateSchema,
+});
+
+export const creatureHealthMessageSchema = z.object({
+  type: z.literal("creature-health"),
+  creatureId: z.string().min(1).max(192),
+  healthPercent: z.number().int().min(0).max(100),
+});
+
+export const creatureStateChangedMessageSchema = z.object({
+  type: z.literal("creature-state-changed"),
+  creature: creatureStateSchema,
+});
+
+export const combatTextMessageSchema = z.object({
+  type: z.literal("combat-text"),
+  position: positionSchema,
+  value: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+  damageType: damageTypeSchema,
+  block: hitBlockSchema,
+});
+
+export const magicEffectMessageSchema = z.object({
+  type: z.literal("magic-effect"),
+  position: positionSchema,
+  effectId: z.number().int().positive().max(255),
+});
+
+export const distanceMissileMessageSchema = z.object({
+  type: z.literal("distance-missile"),
+  from: positionSchema,
+  to: positionSchema,
+  missileId: z.number().int().positive().max(255),
+  durationMs: z.number().int().positive().max(5_000),
+});
+
+export const combatLogMessageSchema = z.object({
+  type: z.literal("combat-log"),
+  kind: z.enum([
+    "damage",
+    "healing",
+    "experience",
+    "death",
+    "miss",
+    "condition",
+  ]),
+  text: z.string().min(1).max(160),
+});
+
 export const mapItemStateSchema = z.object({
   instanceId: z.string().min(1).max(128),
   itemId: z.number().int().positive().max(65_535),
@@ -127,6 +189,7 @@ export const serverErrorCodeSchema = z.enum([
   "join-required",
   "language-update-failed",
   "language-update-pending",
+  "combat-action-failed",
   "item-action-failed",
   "logged-in-elsewhere",
   "rate-limited",
@@ -149,6 +212,14 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   creatureLeftMessageSchema,
   creatureMovedMessageSchema,
   positionCorrectionMessageSchema,
+  attackTargetChangedMessageSchema,
+  fightStateMessageSchema,
+  creatureHealthMessageSchema,
+  creatureStateChangedMessageSchema,
+  combatTextMessageSchema,
+  magicEffectMessageSchema,
+  distanceMissileMessageSchema,
+  combatLogMessageSchema,
   tileStatesMessageSchema,
   errorMessageSchema,
 ]);

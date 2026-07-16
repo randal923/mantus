@@ -30,6 +30,12 @@ export const creatureStateSchema = z.object({
   direction: z.enum(DIRECTIONS),
   outfit: creatureOutfitSchema,
   healthPercent: z.number().int().min(0).max(100),
+  light: z
+    .object({
+      intensity: z.number().int().min(0).max(255),
+      color: z.number().int().min(0).max(255),
+    })
+    .optional(),
 });
 
 export type CreatureKind = z.infer<typeof creatureStateSchema>["kind"];

@@ -2,12 +2,12 @@
 // separate system in GameWindow and does not go through these bindings.
 export type HotkeyAction =
   | "toggleInventory"
-  | "openCharacterStats"
+  | "toggleCharacterStats"
   | "toggleGameMenu";
 
 /** Keyed by KeyboardEvent.code so bindings are keyboard-layout independent. */
 export const HOTKEY_BINDINGS: Readonly<Record<string, HotkeyAction>> = {
   KeyI: "toggleInventory",
-  KeyC: "openCharacterStats",
+  KeyC: "toggleCharacterStats",
   Escape: "toggleGameMenu",
 };

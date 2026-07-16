@@ -4,6 +4,7 @@ import {
   PROTOCOL_LIMITS,
   type ClientMessage,
   type Direction,
+  type FightMode,
   type Position,
   type ServerErrorCode,
   type ServerMessage,
@@ -28,6 +29,16 @@ export class Session {
   playerId: string | null = null;
   movementDirection: Direction | null = null;
   bufferedMovementDirection: Direction | null = null;
+  attackTargetId: string | null = null;
+  fightMode: FightMode = {
+    attack: "balanced",
+    chase: true,
+    secure: true,
+  };
+  readonly combatCooldowns = new Map<
+    string,
+    { readyAt: number; totalMs: number }
+  >();
   isAlive = true;
   readonly knownCreatureIds = new Set<string>();
   readonly knownMapItemTiles = new Map<string, Position>();

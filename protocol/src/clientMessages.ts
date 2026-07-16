@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createCharacterInputSchema } from "./character";
+import { combatTargetSchema, fightModeSchema } from "./combat";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { PROTOCOL_LIMITS } from "./limits";
@@ -67,10 +68,54 @@ export const useMapMessageSchema = z
   })
   .strict();
 
+/** Selects one server-known creature; normal clients send on right-click. */
+export const attackTargetMessageSchema = z
+  .object({
+    type: z.literal("attack-target"),
+    creatureId: z.string().min(1).max(192),
+  })
+  .strict();
+
+/** Clears the current attack target without supplying any replacement state. */
+export const cancelAttackMessageSchema = z
+  .object({
+    type: z.literal("cancel-attack"),
+  })
+  .strict();
+
+/** Updates server-owned stance, chase preference, and secure PVP mode. */
+export const setFightModeMessageSchema = z
+  .object({
+    type: z.literal("set-fight-mode"),
+    mode: fightModeSchema,
+  })
+  .strict();
+
+/** Requests one registered spell; requirements and outcomes remain server-owned. */
+export const castSpellMessageSchema = z
+  .object({
+    type: z.literal("cast-spell"),
+    spellId: z
+      .string()
+      .min(1)
+      .max(64)
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    target: combatTargetSchema,
+  })
+  .strict();
+
 const ownedItemIntentSchema = z.object({
   itemId: z.string().uuid(),
   revision: z.number().int().positive(),
 });
+
+/** Consumes one owned rune only after its revision and target are revalidated. */
+export const useRuneMessageSchema = ownedItemIntentSchema
+  .extend({
+    type: z.literal("use-rune"),
+    target: combatTargetSchema,
+  })
+  .strict();
 
 /** Equips one owned item; the server verifies its catalog slot and requirements. */
 export const equipItemMessageSchema = ownedItemIntentSchema
@@ -152,6 +197,11 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   stopMoveMessageSchema,
   setViewportMessageSchema,
   useMapMessageSchema,
+  attackTargetMessageSchema,
+  cancelAttackMessageSchema,
+  setFightModeMessageSchema,
+  castSpellMessageSchema,
+  useRuneMessageSchema,
   equipItemMessageSchema,
   unequipItemMessageSchema,
   pickupItemMessageSchema,
@@ -179,6 +229,11 @@ export type MoveMessage = z.infer<typeof moveMessageSchema>;
 export type StopMoveMessage = z.infer<typeof stopMoveMessageSchema>;
 export type SetViewportMessage = z.infer<typeof setViewportMessageSchema>;
 export type UseMapMessage = z.infer<typeof useMapMessageSchema>;
+export type AttackTargetMessage = z.infer<typeof attackTargetMessageSchema>;
+export type CancelAttackMessage = z.infer<typeof cancelAttackMessageSchema>;
+export type SetFightModeMessage = z.infer<typeof setFightModeMessageSchema>;
+export type CastSpellMessage = z.infer<typeof castSpellMessageSchema>;
+export type UseRuneMessage = z.infer<typeof useRuneMessageSchema>;
 export type EquipItemMessage = z.infer<typeof equipItemMessageSchema>;
 export type UnequipItemMessage = z.infer<typeof unequipItemMessageSchema>;
 export type PickupItemMessage = z.infer<typeof pickupItemMessageSchema>;

@@ -13,8 +13,8 @@ const SPELLS = [
     glyph: "✦",
     shortcut: "4",
     manaCost: 85,
-    cooldownRemaining: 3,
-    cooldownTotal: 6,
+    cooldownReadyAt: Date.now() + 3_000,
+    cooldownTotalMs: 6_000,
   },
   { id: "haste", name: "Haste", glyph: "»", shortcut: "5", manaCost: 60 },
   { id: "shield", name: "Magic Shield", glyph: "◇", shortcut: "6", manaCost: 50 },
@@ -56,8 +56,8 @@ export const Ready: Story = {
   args: {
     spells: SPELLS.map((spell) => ({
       ...spell,
-      cooldownRemaining: 0,
-      cooldownTotal: 0,
+      cooldownReadyAt: 0,
+      cooldownTotalMs: 0,
     })),
   },
 };

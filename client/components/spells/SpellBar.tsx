@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { isEditableTarget } from "../../lib/hotkeys/isEditableTarget";
 
@@ -10,8 +10,8 @@ interface SpellBarSpell {
   glyph: string;
   shortcut: string;
   manaCost?: number;
-  cooldownRemaining?: number;
-  cooldownTotal?: number;
+  cooldownReadyAt?: number;
+  cooldownTotalMs?: number;
   disabled?: boolean;
 }
 
@@ -28,6 +28,16 @@ export function SpellBar({
 }: SpellBarProps) {
   const { t } = useAppTranslation();
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const [now, setNow] = useState(0);
+  const hasCooldown = spells.some(
+    (spell) => (spell.cooldownReadyAt ?? 0) > now,
+  );
+
+  useEffect(() => {
+    if (!hasCooldown) return;
+    const interval = window.setInterval(() => setNow(Date.now()), 100);
+    return () => window.clearInterval(interval);
+  }, [hasCooldown]);
 
   useEffect(() => {
     if (!hotkeysEnabled) return;
@@ -64,13 +74,15 @@ export function SpellBar({
       className="ui-panel-frame pointer-events-auto relative isolate flex max-w-[calc(100vw-2rem)] gap-1.5 overflow-x-auto p-2"
     >
       {spells.map((spell) => {
-        const cooldownTotal = Math.max(0, spell.cooldownTotal ?? 0);
-        const cooldownRemaining = Math.min(
-          Math.max(0, spell.cooldownRemaining ?? 0),
-          cooldownTotal,
+        const cooldownTotalMs = Math.max(0, spell.cooldownTotalMs ?? 0);
+        const cooldownRemainingMs = Math.min(
+          Math.max(0, (spell.cooldownReadyAt ?? 0) - now),
+          cooldownTotalMs,
         );
         const cooldownPercent =
-          cooldownTotal > 0 ? (cooldownRemaining / cooldownTotal) * 100 : 0;
+          cooldownTotalMs > 0
+            ? (cooldownRemainingMs / cooldownTotalMs) * 100
+            : 0;
 
         return (
           <button
@@ -110,7 +122,7 @@ export function SpellBar({
                 className="absolute inset-x-0 bottom-0 z-10 flex items-start justify-center bg-black/75 pt-1 text-xs font-bold tabular-nums text-white backdrop-grayscale"
                 style={{ height: `${cooldownPercent}%` }}
               >
-                {Math.ceil(cooldownRemaining)}
+                {Math.ceil(cooldownRemainingMs / 1_000)}
               </span>
             )}
           </button>

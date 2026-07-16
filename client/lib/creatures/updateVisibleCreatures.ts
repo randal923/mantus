@@ -15,6 +15,16 @@ export function updateVisibleCreatures(
       ];
     case "creature-left":
       return current.filter((creature) => creature.id !== message.creatureId);
+    case "creature-health":
+      return current.map((creature) =>
+        creature.id === message.creatureId
+          ? { ...creature, healthPercent: message.healthPercent }
+          : creature,
+      );
+    case "creature-state-changed":
+      return current.map((creature) =>
+        creature.id === message.creature.id ? message.creature : creature,
+      );
     case "creature-moved":
       return current.map((creature) =>
         creature.id === message.creatureId &&

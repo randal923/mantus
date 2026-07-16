@@ -4,12 +4,14 @@ interface BattleListProps {
   title: string;
   creatures: ReadonlyArray<CreatureState>;
   ownPlayerId: string;
+  attackTargetId: string | null;
 }
 
 export function BattleList({
   title,
   creatures,
   ownPlayerId,
+  attackTargetId,
 }: BattleListProps) {
   const visible = creatures
     .filter((creature) => creature.id !== ownPlayerId)
@@ -29,7 +31,14 @@ export function BattleList({
       </h2>
       <ul className="max-h-64 space-y-2 overflow-hidden">
         {visible.map((creature) => (
-          <li key={creature.id} className="min-w-0">
+          <li
+            key={creature.id}
+            className={
+              creature.id === attackTargetId
+                ? "min-w-0 bg-red-950/70 px-1 outline outline-1 outline-red-500"
+                : "min-w-0 px-1"
+            }
+          >
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="truncate text-ui-text">{creature.name}</span>
               <span className="text-ui-muted">{creature.healthPercent}%</span>

@@ -5,6 +5,8 @@ import { CharacterProgression } from "./progression/CharacterProgression";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
 
 export class Player extends Creature<Character["outfit"]> {
+  nextAttackAt = 0;
+  invulnerableUntil = 0;
   readonly vocation: Character["vocation"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
@@ -72,12 +74,38 @@ export class Player extends Creature<Character["outfit"]> {
     return this.progression.maxMana;
   }
 
+  spendMana(amount: number): boolean {
+    return this.progression.spendMana(amount);
+  }
+
+  restoreMana(amount: number): number {
+    return this.progression.restoreMana(amount);
+  }
+
+  spendSoul(amount: number): boolean {
+    return this.progression.spendSoul(amount);
+  }
+
+  skillLevel(skill: Skill): number {
+    return (
+      this.progression.skills.find((state) => state.skill === skill)?.level ?? 10
+    );
+  }
+
+  restoreAfterDeath(): void {
+    this.revive(this.maxHealth);
+    this.restoreMana(this.maxMana);
+  }
+
   get capacity(): number {
     return this.progression.capacity;
   }
 
   override get stepSpeed(): number {
-    return Math.max(10, this.progression.speed + this.speedModifier);
+    return Math.max(
+      10,
+      this.progression.speed + this.speedModifier + this.conditions.speedModifier,
+    );
   }
 
   setSpeedModifier(modifier: number): void {
@@ -106,7 +134,8 @@ export class Player extends Creature<Character["outfit"]> {
   tickProgression(now: number): boolean {
     const tick = this.progression.tick(
       now,
-      this.hasCondition("no-regeneration"),
+      this.hasCondition("no-regeneration") ||
+        this.conditions.has("combat-lock"),
     );
     const healthBefore = this.health;
     if (tick.healthGain > 0) this.setHealth(this.health + tick.healthGain);

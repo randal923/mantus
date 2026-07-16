@@ -236,6 +236,34 @@ export class CharacterProgression {
     return this.sessionEvents;
   }
 
+  spendMana(amount: number): boolean {
+    this.assertResourceAmount(amount);
+    if (this.currentMana < amount) return false;
+    this.currentMana -= amount;
+    return true;
+  }
+
+  restoreMana(amount: number): number {
+    this.assertResourceAmount(amount);
+    const before = this.currentMana;
+    this.currentMana = Math.min(this.maxMana, this.currentMana + amount);
+    return this.currentMana - before;
+  }
+
+  spendSoul(amount: number): boolean {
+    this.assertResourceAmount(amount);
+    if (this.currentSoul < amount) return false;
+    this.currentSoul -= amount;
+    return true;
+  }
+
+  restoreSoul(amount: number): number {
+    this.assertResourceAmount(amount);
+    const before = this.currentSoul;
+    this.currentSoul = Math.min(this.maxSoul, this.currentSoul + amount);
+    return this.currentSoul - before;
+  }
+
   awardExperience(eventId: string, amount: number): ProgressionMutation {
     this.assertAward(eventId, amount);
     if (!this.recordEvent(eventId, "experience")) {
@@ -477,6 +505,12 @@ export class CharacterProgression {
   private assertEventId(eventId: string): void {
     if (!EVENT_ID_PATTERN.test(eventId)) {
       throw new Error("progression event id is invalid");
+    }
+  }
+
+  private assertResourceAmount(amount: number): void {
+    if (!Number.isInteger(amount) || amount < 0 || amount > MAX_AWARD_AMOUNT) {
+      throw new Error("resource amount is out of range");
     }
   }
 }

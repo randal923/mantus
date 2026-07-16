@@ -19,6 +19,7 @@ function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
     count: item.count,
     revision: item.version,
     ...(type.equipmentSlot ? { equipmentSlot: type.equipmentSlot } : {}),
+    ...(type.kind === "rune" ? { useKind: "rune" as const } : {}),
     tooltip: toItemTooltip(type),
   };
 }

@@ -194,4 +194,22 @@ describe("CreatureView", () => {
     expect(view.plate.children).toHaveLength(2);
     view.destroy();
   });
+
+  it("shows the attack marker only for the server-confirmed target", () => {
+    const view = new CreatureView(
+      store,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    const marker = view.container.children[1];
+
+    expect(marker?.visible).toBe(false);
+    view.setAttackTarget(true);
+    expect(marker?.visible).toBe(true);
+    view.setAttackTarget(false);
+    expect(marker?.visible).toBe(false);
+    view.destroy();
+  });
 });

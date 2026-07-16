@@ -8,6 +8,8 @@ import { CharacterHandler } from "./CharacterHandler";
 import { CharacterPersistence } from "./character/CharacterPersistence";
 import { CharacterService } from "./character/CharacterService";
 import type { CharacterStore } from "./character/CharacterStore";
+import { Combat } from "./combat/Combat";
+import { CombatIntentHandler } from "./combat/CombatIntentHandler";
 import type { ServerConfig } from "./config";
 import { LanguageHandler } from "./LanguageHandler";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
@@ -45,6 +47,8 @@ export class GameServer {
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
+  private readonly combat: CombatIntentHandler;
+  private readonly combatSystem: Combat;
   private readonly progression: ProgressionSystem;
   private readonly items: ItemIntentHandler;
   private readonly spawns: SpawnManager | null;
@@ -108,15 +112,29 @@ export class GameServer {
       this.persistence,
       this.items,
     );
-    this.spawns =
+    let spawns: SpawnManager | null = null;
+    this.combatSystem = new Combat(
+      this.world,
+      this.visibility,
+      this.registry,
+      this.persistence,
+      this.progression,
+      this.items,
+      config.combatSeed,
+      (monster, now) => spawns?.removeCreature(monster.id, now) ?? false,
+    );
+    this.combat = new CombatIntentHandler(this.combatSystem);
+    spawns =
       config.creatures && config.map.source === "data"
         ? new SpawnManager(
             this.world,
             this.visibility,
             loadCreatureContent(config.creatures.contentName, config.map.name),
             config.creatures,
+            this.combatSystem,
           )
         : null;
+    this.spawns = spawns;
     this.wss = new WebSocketServer({
       port: config.port,
       maxPayload: PROTOCOL_LIMITS.maxMessageBytes,
@@ -185,7 +203,7 @@ export class GameServer {
     this.processDisconnects(now);
     this.auth.applyResolvedOutcomes();
     this.characters.applyResolvedOutcomes();
-    this.items.applyResolvedOutcomes();
+    this.items.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -194,6 +212,7 @@ export class GameServer {
       }
       this.movement.continueMovement(session, now);
     }
+    this.combatSystem.tick(now);
     this.spawns?.tick(now);
     this.progression.tick(now);
     this.persistence.tick(now);
@@ -255,6 +274,13 @@ export class GameServer {
       }
       case "use-map":
         this.movement.handleUseMap(session, intent, now);
+        return;
+      case "attack-target":
+      case "cancel-attack":
+      case "set-fight-mode":
+      case "cast-spell":
+      case "use-rune":
+        this.combat.handle(session, intent, now);
         return;
       case "equip-item":
       case "unequip-item":

@@ -118,6 +118,14 @@ is atomic.
 - `use`/`use-with` currently covers rotate transforms. Read/write, doors,
   switches, fields, decay, beds, depots, corpses, and quest actions still need
   typed server behaviors and exploit tests.
+- The client never sends `use-item`/`use-item-with`/`rotate-item`, so the
+  server's rotate-transform support is unreachable from the UI. Expose an
+  item-use control (context menu or double-click) when the next use behavior
+  lands.
+- Food and drink have no use behavior: eating for regeneration is
+  unimplemented and was previously unlisted. Needs a typed consume action on
+  the use-item path feeding the regeneration schedule in
+  [`06-progression`](06-progression.md), with server-side exhaust.
 - Add PostgreSQL fault-injection coverage for capacity, ancestry cycles,
   persistence rollback, disconnect/crash boundaries, and audit atomicity. The
   integration suite runs only when `TEST_DATABASE_URL` is configured.

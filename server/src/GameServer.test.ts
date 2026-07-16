@@ -30,6 +30,7 @@ const testConfig: ServerConfig = {
   maxSessions: 10,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
+  combatSeed: 12345,
   starterTownId: 1,
   characterSaveIntervalMs: 30_000,
   maxCharacterSaveRetries: 3,
