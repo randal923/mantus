@@ -1,6 +1,3 @@
-# Game server image. Build with the REPO ROOT as context (see fly.toml):
-# the server workspace consumes @tibia/protocol as TypeScript source (tsx
-# runtime), so both workspaces and the root manifest must be present.
 FROM node:24-alpine
 
 WORKDIR /app
