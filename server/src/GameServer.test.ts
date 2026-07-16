@@ -252,7 +252,7 @@ const connect = (
         return;
       }
       if (message.type !== "welcome") return;
-      const self = message.players.find((p) => p.id === message.playerId);
+      const self = message.creatures.find((p) => p.id === message.playerId);
       if (!self) {
         reject(new Error("welcome without own player state"));
         return;
@@ -306,7 +306,7 @@ const waitFor = async (
 
 const sawLeave = (client: TestClient, playerId: string) =>
   client.messages.some(
-    (m) => m.type === "player-left" && m.playerId === playerId,
+    (m) => m.type === "creature-left" && m.creatureId === playerId,
   );
 
 describe("view-range broadcast", () => {
@@ -341,7 +341,7 @@ describe("view-range broadcast", () => {
     await waitFor(
       () =>
         alice.messages.some(
-          (m) => m.type === "player-joined" && m.player.id === bob.playerId,
+          (m) => m.type === "creature-joined" && m.creature.id === bob.playerId,
         ),
       "Alice to learn about Bob",
     );
@@ -358,11 +358,11 @@ describe("view-range broadcast", () => {
     );
 
     const updatesAboutBob = alice.messages.filter(
-      (m) => m.type === "player-moved" && m.playerId === bob.playerId,
+      (m) => m.type === "creature-moved" && m.creatureId === bob.playerId,
     );
     expect(updatesAboutBob.length).toBeGreaterThan(0);
     for (const update of updatesAboutBob) {
-      if (update.type !== "player-moved") continue;
+      if (update.type !== "creature-moved") continue;
       expect(Math.abs(update.position.x - alice.spawn.x)).toBeLessThanOrEqual(
         VIEW_RANGE.x,
       );
@@ -372,15 +372,15 @@ describe("view-range broadcast", () => {
     }
 
     const leaveIndex = alice.messages.findIndex(
-      (m) => m.type === "player-left" && m.playerId === bob.playerId,
+      (m) => m.type === "creature-left" && m.creatureId === bob.playerId,
     );
     await new Promise((resolve) => setTimeout(resolve, 150));
     const leakedAfterLeave = alice.messages
       .slice(leaveIndex + 1)
       .filter(
         (m) =>
-          (m.type === "player-moved" && m.playerId === bob.playerId) ||
-          (m.type === "player-joined" && m.player.id === bob.playerId),
+          (m.type === "creature-moved" && m.creatureId === bob.playerId) ||
+          (m.type === "creature-joined" && m.creature.id === bob.playerId),
       );
     expect(leakedAfterLeave).toEqual([]);
   });
@@ -397,7 +397,7 @@ describe("view-range broadcast", () => {
     );
 
     const leaveIndex = alice.messages.findIndex(
-      (m) => m.type === "player-left" && m.playerId === bob.playerId,
+      (m) => m.type === "creature-left" && m.creatureId === bob.playerId,
     );
     bob.socket.send(JSON.stringify({ type: "move", direction: "west" }));
 
@@ -406,22 +406,22 @@ describe("view-range broadcast", () => {
         alice.messages
           .slice(leaveIndex + 1)
           .some(
-            (m) => m.type === "player-joined" && m.player.id === bob.playerId,
+            (m) => m.type === "creature-joined" && m.creature.id === bob.playerId,
           ),
       "Alice to see Bob re-enter view",
     );
 
     const reentry = alice.messages
       .slice(leaveIndex + 1)
-      .find((m) => m.type === "player-joined" && m.player.id === bob.playerId);
-    if (reentry?.type !== "player-joined") throw new Error("unreachable");
+      .find((m) => m.type === "creature-joined" && m.creature.id === bob.playerId);
+    if (reentry?.type !== "creature-joined") throw new Error("unreachable");
     expect(
-      Math.abs(reentry.player.position.x - alice.spawn.x),
+      Math.abs(reentry.creature.position.x - alice.spawn.x),
     ).toBeLessThanOrEqual(
       VIEW_RANGE.x,
     );
     expect(
-      Math.abs(reentry.player.position.y - alice.spawn.y),
+      Math.abs(reentry.creature.position.y - alice.spawn.y),
     ).toBeLessThanOrEqual(
       VIEW_RANGE.y,
     );
@@ -435,8 +435,8 @@ describe("view-range broadcast", () => {
       () =>
         alice.messages.some(
           (m) =>
-            m.type === "player-moved" &&
-            m.playerId === alice.playerId &&
+            m.type === "creature-moved" &&
+            m.creatureId === alice.playerId &&
             m.position.x === GRID.width - 1,
         ),
       "Alice to reach the east edge",
@@ -445,7 +445,7 @@ describe("view-range broadcast", () => {
     const bob = await join("Bob");
     const welcome = bob.messages.find((m) => m.type === "welcome");
     if (welcome?.type !== "welcome") throw new Error("unreachable");
-    expect(welcome.players.map((p) => p.id)).toEqual([bob.playerId]);
+    expect(welcome.creatures.map((p) => p.id)).toEqual([bob.playerId]);
   });
 
   it("reconciles visible players when the viewer resizes", async () => {
@@ -473,8 +473,8 @@ describe("view-range broadcast", () => {
           .slice(leaveIndex)
           .some(
             (message) =>
-              message.type === "player-joined" &&
-              message.player.id === bob.playerId,
+              message.type === "creature-joined" &&
+              message.creature.id === bob.playerId,
           ),
       "Bob to enter Alice's expanded viewport",
     );
@@ -488,14 +488,13 @@ describe("view-range broadcast", () => {
           .slice(leaveIndex)
           .filter(
             (message) =>
-              message.type === "player-left" &&
-              message.playerId === bob.playerId,
+              message.type === "creature-left" &&
+              message.creatureId === bob.playerId,
           ).length === 1,
       "Bob to leave Alice's shrunken viewport",
     );
   });
 });
-
 describe("auth gate", () => {
   let server: GameServer;
   const sockets: WebSocket[] = [];
@@ -702,8 +701,8 @@ describe("auth gate", () => {
       () =>
         client.messages.some(
           (message) =>
-            message.type === "player-moved" &&
-            message.playerId === client.playerId &&
+            message.type === "creature-moved" &&
+            message.creatureId === client.playerId &&
             message.positionRevision === 1,
         ),
       "initial north step",
@@ -719,8 +718,8 @@ describe("auth gate", () => {
       () =>
         client.messages.some(
           (message) =>
-            message.type === "player-moved" &&
-            message.playerId === client.playerId &&
+            message.type === "creature-moved" &&
+            message.creatureId === client.playerId &&
             message.positionRevision === 2 &&
             message.direction === "east" &&
             message.position.x === client.spawn.x + 1 &&
@@ -732,8 +731,8 @@ describe("auth gate", () => {
       () =>
         client.messages.some(
           (message) =>
-            message.type === "player-moved" &&
-            message.playerId === client.playerId &&
+            message.type === "creature-moved" &&
+            message.creatureId === client.playerId &&
             message.positionRevision === 3 &&
             message.direction === "north" &&
             message.position.x === client.spawn.x + 1 &&
@@ -885,8 +884,8 @@ describe("auth gate", () => {
       () =>
         first.messages.some(
           (message) =>
-            message.type === "player-moved" &&
-            message.playerId === first.playerId &&
+            message.type === "creature-moved" &&
+            message.creatureId === first.playerId &&
             message.position.x === first.spawn.x + 1,
         ),
       "eastward step",
@@ -957,8 +956,8 @@ describe("auth gate", () => {
       () =>
         first.messages.some(
           (message) =>
-            message.type === "player-moved" &&
-            message.playerId === first.playerId &&
+            message.type === "creature-moved" &&
+            message.creatureId === first.playerId &&
             message.position.z === destination.z,
         ),
       "floor transition",
@@ -1025,10 +1024,10 @@ describe("auth gate", () => {
       () =>
         watcher.messages.some(
           (message) =>
-            (message.type === "player-joined" &&
-              message.player.id === climber.playerId) ||
+            (message.type === "creature-joined" &&
+              message.creature.id === climber.playerId) ||
             (message.type === "welcome" &&
-              message.players.some((player) => player.id === climber.playerId)),
+              message.creatures.some((player) => player.id === climber.playerId)),
         ),
       "watcher to see climber before stairs",
     );
@@ -1043,8 +1042,8 @@ describe("auth gate", () => {
       () =>
         upper.messages.some(
           (message) =>
-            message.type === "player-joined" &&
-            message.player.id === climber.playerId,
+            message.type === "creature-joined" &&
+            message.creature.id === climber.playerId,
         ),
       "destination-floor player to see climber",
     );
@@ -1052,8 +1051,8 @@ describe("auth gate", () => {
       () =>
         climber.messages.some(
           (message) =>
-            message.type === "player-joined" &&
-            message.player.id === upper.playerId,
+            message.type === "creature-joined" &&
+            message.creature.id === upper.playerId,
         ),
       "climber to see destination-floor player",
     );

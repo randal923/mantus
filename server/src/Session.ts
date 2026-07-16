@@ -28,7 +28,7 @@ export class Session {
   movementDirection: Direction | null = null;
   bufferedMovementDirection: Direction | null = null;
   isAlive = true;
-  readonly knownPlayerIds = new Set<string>();
+  readonly knownCreatureIds = new Set<string>();
   readonly knownMapItemTiles = new Map<string, Position>();
   viewRange: ViewRange;
 

@@ -1,30 +1,30 @@
 # Creatures, world spawns, respawns, and AI
 
 Depends on z-aware [`map/movement`](02-map-and-movement.md) and correct
-[`rendering`](03-rendering-and-animation.md). Start with a small starter region;
-the audited datapack is far too large to enable without load testing.
+[`rendering`](03-rendering-and-animation.md). The full audited datapack is
+enabled through bounded spatial activation after load and tick benchmarks.
 
 ## Content import
 
-- [ ] Read the external spawn filenames from the OTBM map-data node. Import
+- [x] Read the external spawn filenames from the OTBM map-data node. Import
   monster positions from `otservbr-monster.xml` and NPC positions from
   `otservbr-npc.xml`; they are not embedded in the tile tree.
-- [ ] Resolve each spawn group's `centerx`, `centery`, `centerz`, and `radius`;
+- [x] Resolve each spawn group's `centerx`, `centery`, `centerz`, and `radius`;
   resolve child x/y offsets to absolute positions and preserve spawn time,
   direction, and other supported placement fields.
-- [ ] Normalize names consistently and fail imports when a placement cannot be
+- [x] Normalize names consistently and fail imports when a placement cannot be
   matched to a static type. Produce a report for aliases, duplicates,
   out-of-map positions, blocked tiles, and unsupported definitions.
-- [ ] Define a project-native, typed JSON/TypeScript `MonsterType` format
+- [x] Define a project-native, typed JSON/TypeScript `MonsterType` format
   containing outfit, health, speed, flags, target strategy, attacks, defenses,
   elements, immunities, summons, voices, loot references, experience, and
   corpse id.
-- [ ] Never execute Canary Lua. Parse only a whitelisted literal subset offline;
+- [x] Never execute Canary Lua. Parse only a whitelisted literal subset offline;
   procedural callbacks must be manually implemented as reviewed TypeScript
   behavior.
-- [ ] Import a curated starter-region slice first. Keep the full roughly
-  135,000 monster and 2,000 NPC placement output disabled until memory, spawn,
-  AI, pathfinding, and tick benchmarks pass.
+- [x] Import a curated starter-region slice first, then enable all 84,294
+  imported world placements after memory, spawn, AI, pathfinding, and tick
+  benchmarks pass.
 
 ```ts
 interface SpawnSlotDefinition {
@@ -50,52 +50,52 @@ interface MonsterType {
 
 ## Shared creature runtime
 
-- [ ] Introduce a server-only `Creature` base/domain shape now and make
+- [x] Introduce a server-only `Creature` base/domain shape now and make
   `Player`, `Monster`, and `Npc` share id, name, position, direction, speed,
   outfit, health, conditions, and public projection behavior.
-- [ ] Generalize world occupancy, spatial queries, visibility enter/move/leave,
+- [x] Generalize world occupancy, spatial queries, visibility enter/move/leave,
   and protocol ids from players-only to `Creature`.
-- [ ] Keep exact health, mana, cooldowns, target, AI state, inventory, and loot
+- [x] Keep exact health, mana, cooldowns, target, AI state, inventory, and loot
   server-only. Other viewers receive only allowed public state such as health
   percentage.
-- [ ] Use one id namespace or an explicit kind/id pair so player, monster, and
+- [x] Use one id namespace or an explicit kind/id pair so player, monster, and
   NPC ids cannot collide on the client.
 
 ## Spawn and respawn runtime
 
-- [ ] Add `SpawnManager` owned by the game tick. It creates/removes creatures
+- [x] Add `SpawnManager` owned by the game tick. It creates/removes creatures
   synchronously and never mutates world state from a timer callback.
-- [ ] Track a stable spawn-slot id separately from each live creature instance.
+- [x] Track a stable spawn-slot id separately from each live creature instance.
   A slot may have zero or one active creature and a server-clock next-spawn
   deadline.
-- [ ] At spawn execution time re-check tile existence, walkability, occupancy,
+- [x] At spawn execution time re-check tile existence, walkability, occupancy,
   region activation, and any nearby-player suppression policy.
-- [ ] Choose and document restart semantics: ephemeral respawn timers may reset,
+- [x] Choose and document restart semantics: ephemeral respawn timers may reset,
   while persistent bosses/world events need durable state and idempotent jobs.
-- [ ] If using region activation, define it semantically: deactivation must not
+- [x] If using region activation, define it semantically: deactivation must not
   heal, duplicate, reroll loot, or let players exploit despawn boundaries.
-- [ ] Emit ordinary visibility deltas rather than broadcasting every spawn to
+- [x] Emit ordinary visibility deltas rather than broadcasting every spawn to
   every connection.
 
 ## Minimal AI before combat
 
-- [ ] Run AI decisions on bounded tick schedules with a per-tick work budget;
+- [x] Run AI decisions on bounded tick schedules with a per-tick work budget;
   do not give each monster its own timer.
-- [ ] Implement idle, walk-home/random-walk, acquire visible target, chase,
+- [x] Implement idle, walk-home/random-walk, acquire visible target, chase,
   lose target, and return-home states before advanced combat behavior.
-- [ ] Pathfind on the server's authoritative z-aware walkability grid. Cache or
+- [x] Pathfind on the server's authoritative z-aware walkability grid. Cache or
   bound A* searches, reject paths outside leash/floor rules, and recover when a
   destination becomes occupied.
-- [ ] Keep target selection and RNG server-owned and deterministic under a test
+- [x] Keep target selection and RNG server-owned and deterministic under a test
   seed. Add combat actions only after [`07-combat.md`](07-combat.md).
 
 ## Client
 
-- [ ] Render a generic `CreatureView` by creature kind/outfit/direction and
+- [x] Render a generic `CreatureView` by creature kind/outfit/direction and
   animate movement from server transitions.
-- [ ] Add names/health percentages without exposing exact monster stats or any
+- [x] Add names/health percentages without exposing exact monster stats or any
   creature outside visibility.
-- [ ] Add a battle list later using only visible creature projections and stable
+- [x] Add a battle list later using only visible creature projections and stable
   domain ids.
 
 ## Planned file surface
@@ -110,15 +110,15 @@ interface MonsterType {
 
 ## Required tests
 
-- [ ] Spawn offsets and `centerz` resolve correctly and invalid references fail.
-- [ ] One spawn slot never creates duplicate live creatures under repeated ticks.
-- [ ] Death schedules one respawn; restart semantics match the documented policy.
-- [ ] Occupied/blocked spawn tiles are retried safely without teleporting a
+- [x] Spawn offsets and `centerz` resolve correctly and invalid references fail.
+- [x] One spawn slot never creates duplicate live creatures under repeated ticks.
+- [x] Death schedules one respawn; restart semantics match the documented policy.
+- [x] Occupied/blocked spawn tiles are retried safely without teleporting a
   creature onto another entity.
-- [ ] AI cannot walk through blockers, cross floors illegally, or exceed its
+- [x] AI cannot walk through blockers, cross floors illegally, or exceed its
   tick work budget/leash.
-- [ ] Hidden or wrong-floor creatures are absent from packets and battle lists.
-- [ ] Starter-region load/tick/pathfinding benchmarks have explicit budgets
-  before expanding imported content.
+- [x] Hidden or wrong-floor creatures are absent from packets and battle lists.
+- [x] Full-world load/tick/pathfinding benchmarks enforce explicit placement,
+  spatial scan, AI work, and timing budgets.
 
 [Back to overview](README.md)

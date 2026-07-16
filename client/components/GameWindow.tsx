@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type {
   CharacterCreationOptions,
   CharacterSummary,
+  CreatureState,
   CreateCharacterInput,
   Direction,
   OwnCharacterState,
@@ -13,6 +14,7 @@ import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
+import { updateVisibleCreatures } from "../lib/creatures/updateVisibleCreatures";
 import { useLanguageStore } from "../stores/useLanguageStore";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
@@ -58,6 +60,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     useState<CharacterCreationOptions | null>(null);
   const [ownCharacter, setOwnCharacter] =
     useState<OwnCharacterState | null>(null);
+  const [visibleCreatures, setVisibleCreatures] = useState<
+    ReadonlyArray<CreatureState>
+  >([]);
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
@@ -75,6 +80,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setCharacters(null);
     setCreationOptions(null);
     setOwnCharacter(null);
+    setVisibleCreatures([]);
     setCharacterBusy(characterId !== null);
     setInventoryOpen(false);
     setGameMenuOpen(false);
@@ -136,6 +142,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       client = new GameClient(WS_URL, {
         onMessage: (message) => {
           if (disposed) return;
+          setVisibleCreatures((current) =>
+            updateVisibleCreatures(current, message),
+          );
           if (message.type === "character-list") {
             setCharacters(message.characters);
             setCreationOptions(message.creationOptions);
@@ -167,6 +176,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         onStatus: (nextStatus) => {
           if (disposed) return;
           if (nextStatus === "disconnected") joinedRef.current = false;
+          if (nextStatus === "disconnected") setVisibleCreatures([]);
           setStatus(nextStatus);
         },
         onLanguage: (nextLanguage) => {
@@ -331,7 +341,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               })}
             </button>
           )}
-          <GameHud spellHotkeysEnabled={!gameMenuOpen} />
+          <GameHud
+            spellHotkeysEnabled={!gameMenuOpen}
+            visibleCreatures={visibleCreatures}
+            ownPlayerId={ownCharacter.id}
+          />
           {inventoryOpen && placeholderInventory && (
             <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
               <InventoryPanel

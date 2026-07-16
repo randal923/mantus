@@ -168,7 +168,8 @@
     "emptySlot": "Empty Slot"
   },
   "hud": {
-    "controls": "WASD to move · I for inventory · Esc for menu"
+    "controls": "WASD to move · I for inventory · Esc for menu",
+    "battleList": "Battle List"
   },
   "modal": {
     "close": "Close dialog"

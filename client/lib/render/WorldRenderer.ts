@@ -1,8 +1,8 @@
 import { Application, Container } from "pixi.js";
 import {
   CHARACTER_OUTFIT_LOOK_TYPES,
-  type CharacterOutfit,
-  type PlayerState,
+  type CreatureOutfit,
+  type CreatureState,
   type ServerMessage,
   type ViewRange,
 } from "@tibia/protocol";
@@ -12,11 +12,15 @@ import { getMapObjectZ } from "./getMapObjectZ";
 import { getViewportRange } from "./getViewportRange";
 import { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
-import { PlayerView } from "./PlayerView";
+import { CreatureView } from "./CreatureView";
 import { TILE_SIZE } from "./tileSize";
 
 const ZOOM = 3;
-const NAME_COLOR = 0x44dd44;
+const NAME_COLORS: Record<CreatureState["kind"], number> = {
+  player: 0x44dd44,
+  monster: 0xff7777,
+  npc: 0x66ccff,
+};
 
 /**
  * Pure renderer: draws whatever the server says using the Tibia sprite
@@ -29,7 +33,9 @@ export class WorldRenderer {
   private readonly world = new Container();
   private readonly overlay = new Container();
   private readonly mapView = new MapView(this.store);
-  private readonly playerViews = new Map<string, PlayerView>();
+  private readonly creatureViews = new Map<string, CreatureView>();
+  private readonly pendingCreatures = new Map<string, CreatureState>();
+  private readonly loadingCreatureIds = new Set<string>();
   private ownPlayerId = "";
   private cameraFallback = { x: 0, y: 0 };
   private destroyed = false;
@@ -68,8 +74,10 @@ export class WorldRenderer {
       case "welcome": {
         this.ownPlayerId = message.playerId;
         void this.mapView.setMap(message.map.name);
-        for (const player of message.players) this.addPlayer(player);
-        const own = message.players.find((p) => p.id === message.playerId);
+        for (const creature of message.creatures) this.addCreature(creature);
+        const own = message.creatures.find(
+          (creature) => creature.id === message.playerId,
+        );
         if (own) {
           this.cameraFallback = {
             x: own.position.x * TILE_SIZE,
@@ -83,15 +91,15 @@ export class WorldRenderer {
         }
         return;
       }
-      case "player-joined":
-        this.addPlayer(message.player);
+      case "creature-joined":
+        this.addCreature(message.creature);
         return;
-      case "player-left":
-        this.removePlayer(message.playerId);
+      case "creature-left":
+        this.removeCreature(message.creatureId);
         return;
-      case "player-moved":
-        this.applyPlayerMove(
-          message.playerId,
+      case "creature-moved":
+        this.applyCreatureMove(
+          message.creatureId,
           message.position,
           message.direction,
           message.positionRevision,
@@ -99,8 +107,19 @@ export class WorldRenderer {
         );
         return;
       case "position-correction": {
-        const view = this.playerViews.get(message.playerId);
-        if (!view) return;
+        const view = this.creatureViews.get(message.playerId);
+        if (!view) {
+          this.updatePendingCreature(
+            message.playerId,
+            message.position,
+            message.direction,
+            message.positionRevision,
+          );
+          if (message.playerId === this.ownPlayerId) {
+            this.applyOwnPlayerCenter(message.position);
+          }
+          return;
+        }
         const previousFloor = view.floor;
         view.applyCorrection(
           message.position,
@@ -134,45 +153,98 @@ export class WorldRenderer {
     if (this.app.renderer) this.app.destroy(true, { children: true });
   }
 
-  private addPlayer(player: PlayerState): void {
-    if (this.playerViews.has(player.id)) return;
-    const view = new PlayerView(
-      this.store,
-      this.store.outfit(player.outfit.lookType),
-      player,
-      this.outfitColorsFor(player.outfit),
-      NAME_COLOR,
+  private addCreature(creature: CreatureState): void {
+    if (this.creatureViews.has(creature.id)) return;
+    this.pendingCreatures.set(creature.id, creature);
+    if (this.loadingCreatureIds.has(creature.id)) return;
+    this.loadingCreatureIds.add(creature.id);
+    void this.loadCreature(creature.id, creature.outfit).catch(
+      (cause: unknown) => {
+        this.pendingCreatures.delete(creature.id);
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(`failed to render creature ${creature.id}: ${reason}`);
+      },
     );
-    this.mapView.creatureLayer(player.position.z).addChild(view.container);
-    this.overlay.addChild(view.plate);
-    this.playerViews.set(player.id, view);
   }
 
-  private removePlayer(playerId: string): void {
-    const view = this.playerViews.get(playerId);
+  private async loadCreature(
+    creatureId: string,
+    appearance: CreatureOutfit,
+  ): Promise<void> {
+    try {
+      const object = appearance.lookTypeEx
+        ? this.store.item(appearance.lookTypeEx)
+        : appearance.lookType > 0
+          ? this.store.outfit(appearance.lookType)
+          : null;
+      if (object) await this.store.preload(object.sprites);
+      if (this.destroyed || this.creatureViews.has(creatureId)) return;
+      const creature = this.pendingCreatures.get(creatureId);
+      if (!creature) return;
+      const view = new CreatureView(
+        this.store,
+        object,
+        creature,
+        object?.category === "outfit"
+          ? this.outfitColorsFor(creature.outfit)
+          : undefined,
+        NAME_COLORS[creature.kind],
+      );
+      this.mapView.creatureLayer(creature.position.z).addChild(view.container);
+      this.overlay.addChild(view.plate);
+      this.creatureViews.set(creature.id, view);
+      this.pendingCreatures.delete(creature.id);
+    } finally {
+      this.loadingCreatureIds.delete(creatureId);
+    }
+  }
+
+  private removeCreature(creatureId: string): void {
+    this.pendingCreatures.delete(creatureId);
+    const view = this.creatureViews.get(creatureId);
     if (!view) return;
     view.destroy();
-    this.playerViews.delete(playerId);
+    this.creatureViews.delete(creatureId);
   }
 
-  private applyPlayerMove(
-    playerId: string,
-    position: PlayerState["position"],
-    direction: PlayerState["direction"],
+  private applyCreatureMove(
+    creatureId: string,
+    position: CreatureState["position"],
+    direction: CreatureState["direction"],
     revision: number,
     durationMs: number,
   ): void {
-    const view = this.playerViews.get(playerId);
-    if (!view) return;
+    const view = this.creatureViews.get(creatureId);
+    if (!view) {
+      this.updatePendingCreature(creatureId, position, direction, revision);
+      if (creatureId === this.ownPlayerId) this.applyOwnPlayerCenter(position);
+      return;
+    }
     const previousFloor = view.floor;
     view.applyMove(position, direction, revision, durationMs);
     if (view.floor !== previousFloor) {
       this.mapView.creatureLayer(view.floor).addChild(view.container);
     }
-    if (playerId === this.ownPlayerId) this.applyOwnPlayerCenter(position);
+    if (creatureId === this.ownPlayerId) this.applyOwnPlayerCenter(position);
   }
 
-  private applyOwnPlayerCenter(position: PlayerState["position"]): void {
+  private updatePendingCreature(
+    creatureId: string,
+    position: CreatureState["position"],
+    direction: CreatureState["direction"],
+    revision: number,
+  ): void {
+    const current = this.pendingCreatures.get(creatureId);
+    if (!current || revision < current.positionRevision) return;
+    this.pendingCreatures.set(creatureId, {
+      ...current,
+      position: { ...position },
+      direction,
+      positionRevision: revision,
+    });
+  }
+
+  private applyOwnPlayerCenter(position: CreatureState["position"]): void {
     this.cameraFallback = {
       x: position.x * TILE_SIZE,
       y: position.y * TILE_SIZE,
@@ -180,7 +252,7 @@ export class WorldRenderer {
     this.mapView.setCenter(position.x, position.y, position.z);
   }
 
-  private outfitColorsFor(outfit: CharacterOutfit): OutfitColors {
+  private outfitColorsFor(outfit: CreatureOutfit): OutfitColors {
     const palette = this.store.outfitPalette;
     return {
       head: palette[outfit.head] ?? [255, 255, 255],
@@ -192,7 +264,7 @@ export class WorldRenderer {
 
   private tick(dtMs: number): void {
     this.mapView.tick(dtMs);
-    const orderedViews = [...this.playerViews.entries()].sort(([left], [right]) =>
+    const orderedViews = [...this.creatureViews.entries()].sort(([left], [right]) =>
       left.localeCompare(right),
     );
     const visualPositions = new Map<string, { x: number; y: number }>();

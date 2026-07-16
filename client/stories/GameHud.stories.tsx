@@ -8,6 +8,10 @@ const meta = {
   parameters: {
     layout: "fullscreen",
   },
+  args: {
+    visibleCreatures: [],
+    ownPlayerId: "player",
+  },
   decorators: [
     (Story) => (
       <div className="ui-backdrop relative h-dvh overflow-hidden">

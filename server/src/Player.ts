@@ -1,56 +1,42 @@
-import type { PlayerState, Position } from "@tibia/protocol";
+import type { Position } from "@tibia/protocol";
 import type { Character } from "./character/Character";
+import { Creature } from "./creature/Creature";
 
-export class Player {
-  nextStepAt = 0;
-  positionRevision = 0;
-  readonly id: string;
-  readonly name: string;
+export class Player extends Creature<Character["outfit"]> {
   readonly vocation: Character["vocation"];
   readonly level: number;
   readonly experience: number;
-  readonly health: number;
-  readonly maxHealth: number;
   readonly mana: number;
   readonly maxMana: number;
   readonly capacity: number;
-  readonly outfit: Character["outfit"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
   readonly version: number;
   private speedModifier = 0;
-  private currentPosition: Position;
-  direction: Character["direction"];
 
   constructor(character: Character, position: Position) {
-    this.id = character.id;
-    this.name = character.displayName;
+    super({
+      id: character.id,
+      kind: "player",
+      name: character.displayName,
+      position,
+      direction: character.direction,
+      outfit: character.outfit,
+      health: character.health,
+      maxHealth: character.maxHealth,
+    });
     this.vocation = character.vocation;
     this.level = character.level;
     this.experience = Number(character.experience);
-    this.health = character.health;
-    this.maxHealth = character.maxHealth;
     this.mana = character.mana;
     this.maxMana = character.maxMana;
     this.capacity = character.capacity;
-    this.currentPosition = { ...position };
-    this.direction = character.direction;
-    this.outfit = character.outfit;
     this.townId = character.townId;
     this.lastLoginAt = character.lastLoginAt;
     this.version = character.version;
   }
 
-  get position(): Position {
-    return this.currentPosition;
-  }
-
-  moveTo(position: Position): void {
-    this.currentPosition = { ...position };
-    this.positionRevision++;
-  }
-
-  get stepSpeed(): number {
+  override get stepSpeed(): number {
     return Math.max(10, 110 + (this.level - 1) + this.speedModifier);
   }
 
@@ -59,18 +45,4 @@ export class Player {
     this.speedModifier = modifier;
   }
 
-  toState(): PlayerState {
-    return {
-      id: this.id,
-      name: this.name,
-      position: { ...this.position },
-      positionRevision: this.positionRevision,
-      direction: this.direction,
-      outfit: this.outfit,
-      healthPercent: Math.min(
-        100,
-        Math.max(0, Math.round((this.health / this.maxHealth) * 100)),
-      ),
-    };
-  }
 }

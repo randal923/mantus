@@ -1,0 +1,733 @@
+{
+  "formatVersion": 1,
+  "source": {
+    "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
+    "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
+    "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9",
+    "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a"
+  },
+  "mapExternalFiles": {
+    "monsters": "otservbr-monster.xml",
+    "npcs": "otservbr-npc.xml"
+  },
+  "bounds": {
+    "centerX": 32369,
+    "centerY": 32241,
+    "z": 7,
+    "radius": 48
+  },
+  "fullPlacementCounts": {
+    "monsters": 83286,
+    "npcs": 1008
+  },
+  "curatedPlacementCounts": {
+    "monsters": 15,
+    "npcs": 21
+  },
+  "aliases": [],
+  "duplicates": [],
+  "duplicateDefinitions": [
+    {
+      "kind": "npc",
+      "typeId": "a-dead-bureaucrat",
+      "paths": [
+        "data-otservbr-global/npc/a_dead_bureaucrat1.lua",
+        "data-otservbr-global/npc/a_dead_bureaucrat2.lua",
+        "data-otservbr-global/npc/a_dead_bureaucrat3.lua",
+        "data-otservbr-global/npc/a_dead_bureaucrat4.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "a-ghostly-woman",
+      "paths": [
+        "data-otservbr-global/npc/a_ghostly_woman_ghostland.lua",
+        "data-otservbr-global/npc/a_ghostly_woman.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "buddel",
+      "paths": [
+        "data-otservbr-global/npc/buddel_helheim.lua",
+        "data-otservbr-global/npc/buddel_okolnir.lua",
+        "data-otservbr-global/npc/buddel_raider_camp.lua",
+        "data-otservbr-global/npc/buddel_tyrsung.lua",
+        "data-otservbr-global/npc/buddel.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "captain-haba",
+      "paths": [
+        "data-otservbr-global/npc/captain_haba_open_sea.lua",
+        "data-otservbr-global/npc/captain_haba.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "captain-max",
+      "paths": [
+        "data-otservbr-global/npc/captain_max_calassa.lua",
+        "data-otservbr-global/npc/captain_max.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "captain-waverider",
+      "paths": [
+        "data-otservbr-global/npc/captain_waverider_island.lua",
+        "data-otservbr-global/npc/captain_waverider.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "corym-worker",
+      "paths": [
+        "data-otservbr-global/npc/corym_worker_01.lua",
+        "data-otservbr-global/npc/corym_worker_02.lua",
+        "data-otservbr-global/npc/corym_worker_03.lua",
+        "data-otservbr-global/npc/corym_worker_04.lua",
+        "data-otservbr-global/npc/corym_worker_05.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "ferryman-kamil",
+      "paths": [
+        "data-otservbr-global/npc/ferryman_kamil_meluna.lua",
+        "data-otservbr-global/npc/ferryman_kamil.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "gnomish-operative",
+      "paths": [
+        "data-otservbr-global/npc/gnomish_operative_cathing.lua",
+        "data-otservbr-global/npc/gnomish_operative_gt-m-01.lua",
+        "data-otservbr-global/npc/gnomish_operative_raiders.lua",
+        "data-otservbr-global/npc/gnomish_operative_resonating.lua",
+        "data-otservbr-global/npc/gnomish_operative_volcano.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "harlow",
+      "paths": [
+        "data-otservbr-global/npc/harlow_trade.lua",
+        "data-otservbr-global/npc/harlow_vengoth.lua",
+        "data-otservbr-global/npc/harlow.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "hawkhurst",
+      "paths": [
+        "data-otservbr-global/npc/hawkhurst_ingol.lua",
+        "data-otservbr-global/npc/hawkhurst.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "hemor-the-guard",
+      "paths": [
+        "data-otservbr-global/npc/heavenly_messenger.lua",
+        "data-otservbr-global/npc/hemor_the_guard.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "jack-fate",
+      "paths": [
+        "data-otservbr-global/npc/jack_fate_goroma.lua",
+        "data-otservbr-global/npc/jack_fate.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "junkar",
+      "paths": [
+        "data-otservbr-global/npc/junkar_mines.lua",
+        "data-otservbr-global/npc/junkar_robsons.lua",
+        "data-otservbr-global/npc/junkar_thais.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "kendra",
+      "paths": [
+        "data-otservbr-global/npc/kendra_thais.lua",
+        "data-otservbr-global/npc/kendra.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "maris",
+      "paths": [
+        "data-otservbr-global/npc/maris_fenrock.lua",
+        "data-otservbr-global/npc/maris_mistrock.lua",
+        "data-otservbr-global/npc/maris.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "messenger-of-heaven",
+      "paths": [
+        "data-otservbr-global/npc/lesser_messenger_of_heaven.lua",
+        "data-otservbr-global/npc/messenger_of_heaven.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "oberon",
+      "paths": [
+        "data-otservbr-global/npc/oberon's_bile.lua",
+        "data-otservbr-global/npc/oberon's_hate.lua",
+        "data-otservbr-global/npc/oberon's_ire.lua",
+        "data-otservbr-global/npc/oberon's_spite.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "rapanaio",
+      "paths": [
+        "data-otservbr-global/npc/rapanaio_boat.lua",
+        "data-otservbr-global/npc/rapanaio_isle_of_evil.lua",
+        "data-otservbr-global/npc/rapanaio.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "rock-in-a-hard-place",
+      "paths": [
+        "data-otservbr-global/npc/rock_in_a_hard_place.lua",
+        "data-otservbr-global/npc/rock_with_a_soft_spot.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "sebastian",
+      "paths": [
+        "data-otservbr-global/npc/sebastian_nargor.lua",
+        "data-otservbr-global/npc/sebastian.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "strange-pipe",
+      "paths": [
+        "data-otservbr-global/npc/strange_pipe.lua",
+        "data-otservbr-global/npc/strange_pipe1.lua",
+        "data-otservbr-global/npc/strange_pipe2.lua",
+        "data-otservbr-global/npc/strange_pipe3.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "tarak",
+      "paths": [
+        "data-otservbr-global/npc/tarak_inner.lua",
+        "data-otservbr-global/npc/tarak_sunken.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "tonar",
+      "paths": [
+        "data-otservbr-global/npc/tonar_oskayaat.lua",
+        "data-otservbr-global/npc/tonar.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "uzon",
+      "paths": [
+        "data-otservbr-global/npc/uzon_back.lua",
+        "data-otservbr-global/npc/uzon.lua"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "zurak",
+      "paths": [
+        "data-otservbr-global/npc/zurak_arena.lua",
+        "data-otservbr-global/npc/zurak.lua"
+      ]
+    }
+  ],
+  "outOfMap": [],
+  "blocked": [],
+  "unsupportedDefinitions": [
+    {
+      "kind": "monster",
+      "typeId": "dog",
+      "sourcePath": "data-otservbr-global/monster/mammals/dog.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "changeTarget",
+        "light",
+        "manaCost",
+        "race",
+        "raceId"
+      ],
+      "proceduralCallbacks": []
+    },
+    {
+      "kind": "monster",
+      "typeId": "pig",
+      "sourcePath": "data-otservbr-global/monster/mammals/pig.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "changeTarget",
+        "light",
+        "manaCost",
+        "race",
+        "raceId"
+      ],
+      "proceduralCallbacks": []
+    },
+    {
+      "kind": "monster",
+      "typeId": "sheep",
+      "sourcePath": "data-otservbr-global/monster/mammals/sheep.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "changeTarget",
+        "light",
+        "manaCost",
+        "race",
+        "raceId"
+      ],
+      "proceduralCallbacks": []
+    },
+    {
+      "kind": "monster",
+      "typeId": "chicken",
+      "sourcePath": "data-otservbr-global/monster/birds/chicken.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "changeTarget",
+        "light",
+        "manaCost",
+        "race",
+        "raceId"
+      ],
+      "proceduralCallbacks": []
+    },
+    {
+      "kind": "monster",
+      "typeId": "snake",
+      "sourcePath": "data-otservbr-global/monster/reptiles/snake.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "changeTarget",
+        "light",
+        "manaCost",
+        "race",
+        "raceId"
+      ],
+      "proceduralCallbacks": []
+    },
+    {
+      "kind": "npc",
+      "typeId": "sam",
+      "sourcePath": "data-otservbr-global/npc/sam.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "lynda",
+      "sourcePath": "data-otservbr-global/npc/lynda.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "gorn",
+      "sourcePath": "data-otservbr-global/npc/gorn.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "walter-jaeger",
+      "sourcePath": "data-otservbr-global/npc/walter_jaeger.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "frodo",
+      "sourcePath": "data-otservbr-global/npc/frodo.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "aruda",
+      "sourcePath": "data-otservbr-global/npc/aruda.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "towncryer",
+      "sourcePath": "data-otservbr-global/npc/towncryer.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": []
+    },
+    {
+      "kind": "npc",
+      "typeId": "benjamin",
+      "sourcePath": "data-otservbr-global/npc/benjamin.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "quero",
+      "sourcePath": "data-otservbr-global/npc/quero.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "oswald",
+      "sourcePath": "data-otservbr-global/npc/oswald.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "hanna",
+      "sourcePath": "data-otservbr-global/npc/hanna.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "xodet",
+      "sourcePath": "data-otservbr-global/npc/xodet.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "naji",
+      "sourcePath": "data-otservbr-global/npc/naji.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "donald-mcronald",
+      "sourcePath": "data-otservbr-global/npc/donald_mcronald.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "pig",
+      "sourcePath": "data-otservbr-global/npc/pig.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "elane",
+      "sourcePath": "data-otservbr-global/npc/elane.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "sherry-mcronald",
+      "sourcePath": "data-otservbr-global/npc/sherry_mcronald.lua",
+      "ignoredAssignments": [
+        "flags",
+        "shop",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel",
+        "onBuyItem",
+        "onSellItem",
+        "onCheckItem"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "quentin",
+      "sourcePath": "data-otservbr-global/npc/quentin.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "suzy",
+      "sourcePath": "data-otservbr-global/npc/suzy.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble",
+        "voices"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "wyat",
+      "sourcePath": "data-otservbr-global/npc/wyat.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    },
+    {
+      "kind": "npc",
+      "typeId": "walter-the-guard",
+      "sourcePath": "data-otservbr-global/npc/walter_the_guard.lua",
+      "ignoredAssignments": [
+        "flags",
+        "speechBubble"
+      ],
+      "proceduralCallbacks": [
+        "onThink",
+        "onAppear",
+        "onDisappear",
+        "onMove",
+        "onSay",
+        "onCloseChannel"
+      ]
+    }
+  ],
+  "fullPlacementsEnabled": false
+}

@@ -189,13 +189,13 @@ export class CharacterHandler {
     }
     session.playerId = player.id;
     this.registry.bindPlayer(session);
-    const players = this.visibility.announceSpawn(session, player);
+    const creatures = this.visibility.announceSpawn(session, player);
     session.send({
       type: "welcome",
       playerId: player.id,
       character: this.service.ownState(player),
       map: { name: this.world.mapName },
-      players,
+      creatures,
     });
     this.visibility.syncMapItems(session, player);
     void this.service
@@ -220,7 +220,7 @@ export class CharacterHandler {
     existing.playerId = null;
     existing.movementDirection = null;
     existing.bufferedMovementDirection = null;
-    existing.knownPlayerIds.clear();
+    existing.knownCreatureIds.clear();
     existing.knownMapItemTiles.clear();
     this.registry.unbindPlayer(characterId, existing);
     existing.sendError("logged-in-elsewhere");

@@ -55,6 +55,23 @@ export interface ServerConfig {
   /** Fallback used until an authenticated client reports its bounded viewport. */
   defaultViewRange: ViewRange;
   map: MapConfig;
+  creatures?: {
+    contentName: string;
+    activationRange: { x: number; y: number };
+    retryMs: number;
+    maxSpawnChecksPerTick: number;
+    maxSpawnAttemptsPerTick: number;
+    maxAiScansPerTick: number;
+    maxAiWorkPerTick: number;
+    ai: {
+      thinkIntervalMs: number;
+      acquisitionRange: number;
+      loseRange: number;
+      maxPathNodes: number;
+      wanderChance: number;
+      seed: number;
+    };
+  };
 }
 
 export const serverConfig: ServerConfig = {
@@ -76,4 +93,24 @@ export const serverConfig: ServerConfig = {
     name: mapName,
     spawnTown: process.env.SPAWN_TOWN ?? "Thais",
   },
+  creatures:
+    process.env.CREATURES_ENABLED === "0" || mapName !== "otservbr"
+      ? undefined
+      : {
+          contentName: "world",
+          activationRange: { x: 32, y: 32 },
+          retryMs: 1000,
+          maxSpawnChecksPerTick: 512,
+          maxSpawnAttemptsPerTick: 8,
+          maxAiScansPerTick: 512,
+          maxAiWorkPerTick: 512,
+          ai: {
+            thinkIntervalMs: 250,
+            acquisitionRange: 8,
+            loseRange: 12,
+            maxPathNodes: 96,
+            wanderChance: 0.2,
+            seed: 0x4d414e54,
+          },
+        },
 };

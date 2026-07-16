@@ -1,5 +1,6 @@
 export * from "./direction";
 export * from "./character";
+export * from "./creature";
 export * from "./item";
 export * from "./limits";
 export * from "./language";

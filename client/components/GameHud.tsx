@@ -1,11 +1,19 @@
 import { SpellBar } from "./spells/SpellBar";
 import { useAppTranslation } from "../i18n/useAppTranslation";
+import type { CreatureState } from "@tibia/protocol";
+import { BattleList } from "./creatures/BattleList";
 
 interface GameHudProps {
   spellHotkeysEnabled?: boolean;
+  visibleCreatures: ReadonlyArray<CreatureState>;
+  ownPlayerId: string;
 }
 
-export function GameHud({ spellHotkeysEnabled = true }: GameHudProps) {
+export function GameHud({
+  spellHotkeysEnabled = true,
+  visibleCreatures,
+  ownPlayerId,
+}: GameHudProps) {
   const { t } = useAppTranslation();
   const spells = [
     {
@@ -70,6 +78,11 @@ export function GameHud({ spellHotkeysEnabled = true }: GameHudProps) {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 font-tibia text-ui-text select-none">
+      <BattleList
+        title={t("hud.battleList")}
+        creatures={visibleCreatures}
+        ownPlayerId={ownPlayerId}
+      />
       <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
         <SpellBar
           spells={spells}

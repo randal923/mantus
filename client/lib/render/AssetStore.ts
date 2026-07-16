@@ -98,6 +98,7 @@ export class AssetStore {
   private missiles = new Map<number, TibiaObject>();
   private sheetImages: (HTMLImageElement | undefined)[] = [];
   private sheetTextures: (Texture | undefined)[] = [];
+  private sheetLoads = new Map<number, Promise<void>>();
   private spriteTexCache = new Map<number, Texture>();
 
   async load(): Promise<void> {
@@ -194,23 +195,38 @@ export class AssetStore {
     }
     for (const s of [...sheets].sort((a, b) => a - b)) {
       if (this.sheetImages[s]) continue;
-      const img = new Image();
-      img.src = `${ASSET_BASE}/${this.index.sheets[s]}`;
-      try {
-        await img.decode();
-      } catch {
-        // decode() can fail under memory pressure; fall back to load events
-        await new Promise<void>((resolve, reject) => {
-          if (img.complete && img.naturalWidth > 0) return resolve();
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error(`failed to load ${img.src}`));
-        });
+      let pending = this.sheetLoads.get(s);
+      if (!pending) {
+        pending = this.loadSheet(s);
+        this.sheetLoads.set(s, pending);
       }
-      this.sheetImages[s] = img;
-      const tex = Texture.from(img);
-      tex.source.scaleMode = "nearest";
-      this.sheetTextures[s] = tex;
+      try {
+        await pending;
+      } catch (cause) {
+        this.sheetLoads.delete(s);
+        throw cause;
+      }
     }
+  }
+
+  private async loadSheet(sheet: number): Promise<void> {
+    const filename = this.index.sheets[sheet];
+    if (!filename) throw new Error(`unknown atlas sheet ${sheet}`);
+    const img = new Image();
+    img.src = `${ASSET_BASE}/${filename}`;
+    try {
+      await img.decode();
+    } catch {
+      await new Promise<void>((resolve, reject) => {
+        if (img.complete && img.naturalWidth > 0) return resolve();
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error(`failed to load ${img.src}`));
+      });
+    }
+    this.sheetImages[sheet] = img;
+    const texture = Texture.from(img);
+    texture.source.scaleMode = "nearest";
+    this.sheetTextures[sheet] = texture;
   }
 
   spriteTexture(spriteId: number): Texture {

@@ -1,23 +1,13 @@
 import { z } from "zod";
 import {
   characterCreationOptionsSchema,
-  characterOutfitSchema,
   characterSummarySchema,
   ownCharacterStateSchema,
 } from "./character";
+import { creatureStateSchema } from "./creature";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { positionSchema } from "./position";
-
-export const playerStateSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  position: positionSchema,
-  positionRevision: z.number().int().nonnegative(),
-  direction: z.enum(DIRECTIONS),
-  outfit: characterOutfitSchema,
-  healthPercent: z.number().int().min(0).max(100),
-});
 
 /**
  * Static terrain is public data served over HTTP from
@@ -52,22 +42,22 @@ export const welcomeMessageSchema = z.object({
   playerId: z.string(),
   character: ownCharacterStateSchema,
   map: mapInfoSchema,
-  players: z.array(playerStateSchema),
+  creatures: z.array(creatureStateSchema),
 });
 
-export const playerJoinedMessageSchema = z.object({
-  type: z.literal("player-joined"),
-  player: playerStateSchema,
+export const creatureJoinedMessageSchema = z.object({
+  type: z.literal("creature-joined"),
+  creature: creatureStateSchema,
 });
 
-export const playerLeftMessageSchema = z.object({
-  type: z.literal("player-left"),
-  playerId: z.string(),
+export const creatureLeftMessageSchema = z.object({
+  type: z.literal("creature-left"),
+  creatureId: z.string(),
 });
 
-export const playerMovedMessageSchema = z.object({
-  type: z.literal("player-moved"),
-  playerId: z.string(),
+export const creatureMovedMessageSchema = z.object({
+  type: z.literal("creature-moved"),
+  creatureId: z.string(),
   from: positionSchema,
   position: positionSchema,
   direction: z.enum(DIRECTIONS),
@@ -136,15 +126,14 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   languageUpdatedMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,
-  playerJoinedMessageSchema,
-  playerLeftMessageSchema,
-  playerMovedMessageSchema,
+  creatureJoinedMessageSchema,
+  creatureLeftMessageSchema,
+  creatureMovedMessageSchema,
   positionCorrectionMessageSchema,
   tileStatesMessageSchema,
   errorMessageSchema,
 ]);
 
-export type PlayerState = z.infer<typeof playerStateSchema>;
 export type MapInfo = z.infer<typeof mapInfoSchema>;
 export type MapItemState = z.infer<typeof mapItemStateSchema>;
 export type TileState = z.infer<typeof tileStateSchema>;

@@ -1,22 +1,19 @@
 import {
   PROTOCOL_LIMITS,
-  type PlayerState,
+  type CreatureState,
   type Position,
   type ServerMessage,
   type TileState,
   type ViewRange,
 } from "@tibia/protocol";
+import type { Creature } from "./creature/Creature";
 import type { Player } from "./Player";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { World } from "./World";
 import { positionKey } from "./positionKey";
 
-/**
- * Owns who-knows-about-whom. Every message about a player entering, leaving,
- * or moving goes through here so no path can leak state beyond view range
- * (charter rule 6).
- */
+/** Owns every view-filtered creature introduction, movement, and removal. */
 export class Visibility {
   constructor(
     private readonly world: World,
@@ -48,34 +45,37 @@ export class Visibility {
     }
   }
 
-  /**
-   * Introduces a spawning player and their neighbors to each other; returns
-   * the states the joiner is allowed to see.
-   */
-  announceSpawn(joiner: Session, player: Player): PlayerState[] {
-    joiner.knownPlayerIds.add(player.id);
-    const visiblePlayers = [player.toState()];
-    for (const other of this.visibleSessionsFrom(joiner, player.position, 0)) {
-      if (other.id === joiner.id || !other.playerId) continue;
-      const otherPlayer = this.world.getPlayer(other.playerId);
-      if (!otherPlayer) continue;
-      joiner.knownPlayerIds.add(otherPlayer.id);
-      visiblePlayers.push(otherPlayer.toState());
+  /** Introduces a spawning player and returns only creatures in their view. */
+  announceSpawn(joiner: Session, player: Player): CreatureState[] {
+    const visibleCreatures = this.world.creaturesVisibleFrom(
+      player.position,
+      joiner.viewRange,
+    );
+    for (const creature of visibleCreatures) {
+      joiner.knownCreatureIds.add(creature.id);
     }
     for (const other of this.viewerSessionsFor(player.position, 0)) {
-      if (other.id === joiner.id || !other.playerId) continue;
-      other.knownPlayerIds.add(player.id);
-      other.send({ type: "player-joined", player: player.toState() });
+      if (other.id === joiner.id) continue;
+      this.introduce(other, player);
     }
-    return visiblePlayers;
+    return visibleCreatures.map((creature) => creature.toState());
   }
 
-  announceLeave(leaver: Session, player: Player): void {
+  announceCreatureSpawn(creature: Creature): void {
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      this.introduce(session, creature);
+    }
+  }
+
+  announceLeave(leaver: Session, creature: Creature): void {
     for (const near of this.registry.all()) {
       if (near.id === leaver.id) continue;
-      if (!near.knownPlayerIds.delete(player.id)) continue;
-      near.send({ type: "player-left", playerId: player.id });
+      this.forget(near, creature.id);
     }
+  }
+
+  announceCreatureLeave(creature: Creature): void {
+    for (const session of this.registry.all()) this.forget(session, creature.id);
   }
 
   onPlayerStepped(
@@ -87,23 +87,21 @@ export class Visibility {
     mover.send(this.movedMessage(player, from, durationMs));
     this.reconcileMoverView(mover, player);
     this.syncMapItems(mover, player);
-    // margin 1 covers viewers the one-tile step just left behind; larger
-    // jumps (teleports, when they exist) must reconcile visibility themselves
-    const nearby = new Set([
-      ...this.viewerSessionsFor(from, 1),
-      ...this.viewerSessionsFor(player.position, 1),
-    ]);
-    for (const session of nearby) {
-      if (session.id === mover.id || !session.playerId) continue;
-      const viewer = this.world.getPlayer(session.playerId);
-      if (viewer) this.updateViewOfMover(session, viewer, player, from, durationMs);
-    }
+    this.updateObservers(player, from, durationMs, mover.id);
   }
 
-  broadcastPose(player: Player): void {
-    const message = this.movedMessage(player, player.position, 0);
-    for (const session of this.viewerSessionsFor(player.position, 0)) {
-      if (!session.knownPlayerIds.has(player.id)) continue;
+  onCreatureStepped(
+    creature: Creature,
+    from: Position,
+    durationMs: number,
+  ): void {
+    this.updateObservers(creature, from, durationMs);
+  }
+
+  broadcastPose(creature: Creature): void {
+    const message = this.movedMessage(creature, creature.position, 0);
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      if (!session.knownCreatureIds.has(creature.id)) continue;
       session.send(message);
     }
   }
@@ -118,9 +116,7 @@ export class Visibility {
       player.position,
       session.viewRange,
     );
-    const currentKeys = new Set(
-      current.map((tile) => positionKey(tile.position)),
-    );
+    const currentKeys = new Set(current.map((tile) => positionKey(tile.position)));
     const hidden: Position[] = [];
     for (const [key, position] of session.knownMapItemTiles) {
       if (currentKeys.has(key)) continue;
@@ -158,10 +154,29 @@ export class Visibility {
     }
   }
 
-  private updateViewOfMover(
+  private updateObservers(
+    creature: Creature,
+    from: Position,
+    durationMs: number,
+    excludedSessionId?: string,
+  ): void {
+    const nearby = new Set([
+      ...this.viewerSessionsFor(from, 1),
+      ...this.viewerSessionsFor(creature.position, 1),
+    ]);
+    for (const session of nearby) {
+      if (session.id === excludedSessionId || !session.playerId) continue;
+      const viewer = this.world.getPlayer(session.playerId);
+      if (viewer) {
+        this.updateViewOfCreature(session, viewer, creature, from, durationMs);
+      }
+    }
+  }
+
+  private updateViewOfCreature(
     viewerSession: Session,
     viewer: Player,
-    moved: Player,
+    moved: Creature,
     from: Position,
     durationMs: number,
   ): void {
@@ -170,61 +185,62 @@ export class Visibility {
       moved.position,
       viewerSession.viewRange,
     );
-    const known = viewerSession.knownPlayerIds.has(moved.id);
+    const known = viewerSession.knownCreatureIds.has(moved.id);
     if (visible && known) {
       viewerSession.send(this.movedMessage(moved, from, durationMs));
       return;
     }
     if (visible) {
-      viewerSession.knownPlayerIds.add(moved.id);
-      viewerSession.send({ type: "player-joined", player: moved.toState() });
+      this.introduce(viewerSession, moved);
       return;
     }
-    if (known) {
-      viewerSession.knownPlayerIds.delete(moved.id);
-      viewerSession.send({ type: "player-left", playerId: moved.id });
-    }
+    if (known) this.forget(viewerSession, moved.id);
   }
 
   private reconcileMoverView(mover: Session, player: Player): void {
-    // known players no longer visible → left view (known ⊆ near old position)
-    for (const knownId of [...mover.knownPlayerIds]) {
+    for (const knownId of [...mover.knownCreatureIds]) {
       if (knownId === player.id) continue;
-      const other = this.world.getPlayer(knownId);
+      const other = this.world.getCreature(knownId);
       if (
         other &&
         this.world.canSee(player.position, other.position, mover.viewRange)
       ) {
         continue;
       }
-      mover.knownPlayerIds.delete(knownId);
-      mover.send({ type: "player-left", playerId: knownId });
+      this.forget(mover, knownId);
     }
-    // nearby players not yet known → entered view
-    for (const other of this.world.playersVisibleFrom(
+    for (const other of this.world.creaturesVisibleFrom(
       player.position,
       mover.viewRange,
     )) {
-      if (other.id === player.id || mover.knownPlayerIds.has(other.id)) {
-        continue;
-      }
-      mover.knownPlayerIds.add(other.id);
-      mover.send({ type: "player-joined", player: other.toState() });
+      if (mover.knownCreatureIds.has(other.id)) continue;
+      this.introduce(mover, other);
     }
   }
 
+  private introduce(session: Session, creature: Creature): void {
+    if (session.knownCreatureIds.has(creature.id)) return;
+    session.knownCreatureIds.add(creature.id);
+    session.send({ type: "creature-joined", creature: creature.toState() });
+  }
+
+  private forget(session: Session, creatureId: string): void {
+    if (!session.knownCreatureIds.delete(creatureId)) return;
+    session.send({ type: "creature-left", creatureId });
+  }
+
   private movedMessage(
-    player: Player,
+    creature: Creature,
     from: Position,
     durationMs: number,
   ): ServerMessage {
     return {
-      type: "player-moved",
-      playerId: player.id,
+      type: "creature-moved",
+      creatureId: creature.id,
       from: { ...from },
-      position: { ...player.position },
-      direction: player.direction,
-      positionRevision: player.positionRevision,
+      position: { ...creature.position },
+      direction: creature.direction,
+      positionRevision: creature.positionRevision,
       durationMs,
     };
   }

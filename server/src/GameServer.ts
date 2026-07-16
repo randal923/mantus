@@ -14,6 +14,8 @@ import { MovementHandler } from "./MovementHandler";
 import { resolveMapData } from "./resolveMapData";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
+import { loadCreatureContent } from "./spawn/loadCreatureContent";
+import { SpawnManager } from "./spawn/SpawnManager";
 import { TickLoop } from "./TickLoop";
 import type { TokenVerifier } from "./TokenVerifier";
 import { Visibility } from "./Visibility";
@@ -35,6 +37,7 @@ export class GameServer {
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
+  private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
   private heartbeat: NodeJS.Timeout | undefined;
@@ -78,6 +81,15 @@ export class GameServer {
       this.visibility,
       this.persistence,
     );
+    this.spawns =
+      config.creatures && config.map.source === "data"
+        ? new SpawnManager(
+            this.world,
+            this.visibility,
+            loadCreatureContent(config.creatures.contentName, config.map.name),
+            config.creatures,
+          )
+        : null;
     this.wss = new WebSocketServer({
       port: config.port,
       maxPayload: PROTOCOL_LIMITS.maxMessageBytes,
@@ -154,6 +166,7 @@ export class GameServer {
       }
       this.movement.continueMovement(session, now);
     }
+    this.spawns?.tick(now);
     this.persistence.tick(now);
   }
 

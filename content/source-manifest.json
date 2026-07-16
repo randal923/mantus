@@ -16,11 +16,17 @@
     "canaryItems": {
       "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
       "sha256": "f7f60d81a7b7b613b32328b0cd921cb222b45ec49d31b0d01af6a67a74a687ed"
+    },
+    "canaryCreatures": {
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+      "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
+      "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9"
     }
   },
   "converters": {
     "assets": 2,
     "canaryItems": 2,
-    "map": 3
+    "map": 3,
+    "creatures": 1
   }
 }

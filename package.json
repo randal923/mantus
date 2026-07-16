@@ -13,6 +13,7 @@
     "assets:import": "node tools/importTibiaAssets.mjs",
     "items:convert": "node tools/convertCanaryItems.mjs",
     "map:convert": "node tools/convertOtbm.mjs",
+    "creatures:import": "node tools/importCanaryCreatures.mjs",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
     "test": "yarn test:tools && yarn workspace client test && yarn workspace server test",
     "test:tools": "node --test tools/*.test.mjs",

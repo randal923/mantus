@@ -1,0 +1,368 @@
+{
+  "formatVersion": 1,
+  "source": {
+    "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
+    "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
+    "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9",
+    "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a"
+  },
+  "types": [
+    {
+      "id": "aruda",
+      "name": "Aruda",
+      "outfit": {
+        "lookType": 140,
+        "head": 96,
+        "body": 81,
+        "legs": 79,
+        "feet": 95,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "benjamin",
+      "name": "Benjamin",
+      "outfit": {
+        "lookType": 128,
+        "head": 116,
+        "body": 79,
+        "legs": 117,
+        "feet": 76,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "donald-mcronald",
+      "name": "Donald McRonald",
+      "outfit": {
+        "lookType": 128,
+        "head": 22,
+        "body": 94,
+        "legs": 79,
+        "feet": 117,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "elane",
+      "name": "Elane",
+      "outfit": {
+        "lookType": 137,
+        "head": 96,
+        "body": 101,
+        "legs": 120,
+        "feet": 120,
+        "addons": 3
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "frodo",
+      "name": "Frodo",
+      "outfit": {
+        "lookType": 128,
+        "head": 58,
+        "body": 68,
+        "legs": 109,
+        "feet": 115,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "gorn",
+      "name": "Gorn",
+      "outfit": {
+        "lookType": 129,
+        "head": 58,
+        "body": 68,
+        "legs": 101,
+        "feet": 95,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "hanna",
+      "name": "Hanna",
+      "outfit": {
+        "lookType": 136,
+        "head": 96,
+        "body": 65,
+        "legs": 0,
+        "feet": 96,
+        "addons": 2
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "lynda",
+      "name": "Lynda",
+      "outfit": {
+        "lookType": 138,
+        "head": 79,
+        "body": 81,
+        "legs": 67,
+        "feet": 95,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "naji",
+      "name": "Naji",
+      "outfit": {
+        "lookType": 129,
+        "head": 57,
+        "body": 113,
+        "legs": 95,
+        "feet": 113,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "oswald",
+      "name": "Oswald",
+      "outfit": {
+        "lookType": 128,
+        "head": 115,
+        "body": 0,
+        "legs": 67,
+        "feet": 114,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "pig",
+      "name": "Pig",
+      "outfit": {
+        "lookType": 60,
+        "head": 0,
+        "body": 0,
+        "legs": 0,
+        "feet": 0,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "quentin",
+      "name": "Quentin",
+      "outfit": {
+        "lookType": 57,
+        "head": 0,
+        "body": 0,
+        "legs": 0,
+        "feet": 0,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "quero",
+      "name": "Quero",
+      "outfit": {
+        "lookType": 128,
+        "head": 55,
+        "body": 30,
+        "legs": 24,
+        "feet": 115,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "sam",
+      "name": "Sam",
+      "outfit": {
+        "lookType": 131,
+        "head": 38,
+        "body": 113,
+        "legs": 67,
+        "feet": 95,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "sherry-mcronald",
+      "name": "Sherry McRonald",
+      "outfit": {
+        "lookType": 136,
+        "head": 78,
+        "body": 94,
+        "legs": 19,
+        "feet": 97,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "suzy",
+      "name": "Suzy",
+      "outfit": {
+        "lookType": 136,
+        "head": 78,
+        "body": 10,
+        "legs": 115,
+        "feet": 95,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "towncryer",
+      "name": "Towncryer",
+      "outfit": {
+        "lookType": 131,
+        "head": 95,
+        "body": 86,
+        "legs": 10,
+        "feet": 114,
+        "addons": 1
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "walter-jaeger",
+      "name": "Walter Jaeger",
+      "outfit": {
+        "lookType": 957,
+        "head": 78,
+        "body": 5,
+        "legs": 5,
+        "feet": 115,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "walter-the-guard",
+      "name": "Walter, The Guard",
+      "outfit": {
+        "lookType": 131,
+        "head": 19,
+        "body": 19,
+        "legs": 38,
+        "feet": 38,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "wyat",
+      "name": "Wyat",
+      "outfit": {
+        "lookType": 129,
+        "head": 98,
+        "body": 96,
+        "legs": 95,
+        "feet": 116,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    },
+    {
+      "id": "xodet",
+      "name": "Xodet",
+      "outfit": {
+        "lookType": 130,
+        "head": 19,
+        "body": 86,
+        "legs": 87,
+        "feet": 95,
+        "addons": 0
+      },
+      "health": 100,
+      "maxHealth": 100,
+      "speed": 100,
+      "walkIntervalMs": 2000,
+      "walkRadius": 2
+    }
+  ]
+}

@@ -1,0 +1,524 @@
+{
+  "formatVersion": 1,
+  "source": {
+    "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
+    "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
+    "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9",
+    "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a"
+  },
+  "map": "otservbr",
+  "bounds": {
+    "centerX": 32369,
+    "centerY": 32241,
+    "z": 7,
+    "radius": 48
+  },
+  "restartSemantics": "Ordinary spawn deadlines are ephemeral and reset when the process restarts.",
+  "activationSemantics": "A nearby player activates empty slots; deactivation never despawns or changes a live creature.",
+  "slots": [
+    {
+      "id": "monster:011395:000",
+      "kind": "monster",
+      "typeId": "dog",
+      "home": {
+        "x": 32363,
+        "y": 32215,
+        "z": 7
+      },
+      "radius": 8,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011491:000",
+      "kind": "monster",
+      "typeId": "pig",
+      "home": {
+        "x": 32401,
+        "y": 32229,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011491:001",
+      "kind": "monster",
+      "typeId": "pig",
+      "home": {
+        "x": 32399,
+        "y": 32232,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011491:002",
+      "kind": "monster",
+      "typeId": "pig",
+      "home": {
+        "x": 32402,
+        "y": 32233,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011523:000",
+      "kind": "monster",
+      "typeId": "sheep",
+      "home": {
+        "x": 32405,
+        "y": 32236,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011523:001",
+      "kind": "monster",
+      "typeId": "sheep",
+      "home": {
+        "x": 32407,
+        "y": 32236,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011523:002",
+      "kind": "monster",
+      "typeId": "sheep",
+      "home": {
+        "x": 32405,
+        "y": 32238,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011523:003",
+      "kind": "monster",
+      "typeId": "sheep",
+      "home": {
+        "x": 32408,
+        "y": 32238,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011547:000",
+      "kind": "monster",
+      "typeId": "chicken",
+      "home": {
+        "x": 32400,
+        "y": 32238,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011547:001",
+      "kind": "monster",
+      "typeId": "chicken",
+      "home": {
+        "x": 32399,
+        "y": 32239,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011547:002",
+      "kind": "monster",
+      "typeId": "chicken",
+      "home": {
+        "x": 32400,
+        "y": 32242,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011701:000",
+      "kind": "monster",
+      "typeId": "snake",
+      "home": {
+        "x": 32362,
+        "y": 32281,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011701:001",
+      "kind": "monster",
+      "typeId": "snake",
+      "home": {
+        "x": 32365,
+        "y": 32284,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011720:000",
+      "kind": "monster",
+      "typeId": "snake",
+      "home": {
+        "x": 32356,
+        "y": 32285,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "monster:011720:001",
+      "kind": "monster",
+      "typeId": "snake",
+      "home": {
+        "x": 32359,
+        "y": 32288,
+        "z": 7
+      },
+      "radius": 2,
+      "respawnMs": 90000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000565:000",
+      "kind": "npc",
+      "typeId": "sam",
+      "home": {
+        "x": 32361,
+        "y": 32198,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000567:000",
+      "kind": "npc",
+      "typeId": "lynda",
+      "home": {
+        "x": 32331,
+        "y": 32199,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000568:000",
+      "kind": "npc",
+      "typeId": "gorn",
+      "home": {
+        "x": 32377,
+        "y": 32200,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000573:000",
+      "kind": "npc",
+      "typeId": "walter-jaeger",
+      "home": {
+        "x": 32379,
+        "y": 32207,
+        "z": 7
+      },
+      "radius": 3,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000574:000",
+      "kind": "npc",
+      "typeId": "frodo",
+      "home": {
+        "x": 32358,
+        "y": 32209,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000576:000",
+      "kind": "npc",
+      "typeId": "aruda",
+      "home": {
+        "x": 32368,
+        "y": 32214,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000577:000",
+      "kind": "npc",
+      "typeId": "towncryer",
+      "home": {
+        "x": 32329,
+        "y": 32216,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000579:000",
+      "kind": "npc",
+      "typeId": "benjamin",
+      "home": {
+        "x": 32349,
+        "y": 32219,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000580:000",
+      "kind": "npc",
+      "typeId": "quero",
+      "home": {
+        "x": 32390,
+        "y": 32219,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000581:000",
+      "kind": "npc",
+      "typeId": "oswald",
+      "home": {
+        "x": 32381,
+        "y": 32220,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000582:000",
+      "kind": "npc",
+      "typeId": "hanna",
+      "home": {
+        "x": 32408,
+        "y": 32220,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000583:000",
+      "kind": "npc",
+      "typeId": "xodet",
+      "home": {
+        "x": 32398,
+        "y": 32222,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000587:000",
+      "kind": "npc",
+      "typeId": "naji",
+      "home": {
+        "x": 32342,
+        "y": 32229,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000588:000",
+      "kind": "npc",
+      "typeId": "donald-mcronald",
+      "home": {
+        "x": 32389,
+        "y": 32229,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000589:000",
+      "kind": "npc",
+      "typeId": "pig",
+      "home": {
+        "x": 32401,
+        "y": 32232,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000590:000",
+      "kind": "npc",
+      "typeId": "elane",
+      "home": {
+        "x": 32342,
+        "y": 32235,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000592:000",
+      "kind": "npc",
+      "typeId": "sherry-mcronald",
+      "home": {
+        "x": 32391,
+        "y": 32237,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000594:000",
+      "kind": "npc",
+      "typeId": "quentin",
+      "home": {
+        "x": 32368,
+        "y": 32240,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000596:000",
+      "kind": "npc",
+      "typeId": "suzy",
+      "home": {
+        "x": 32321,
+        "y": 32258,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000604:000",
+      "kind": "npc",
+      "typeId": "wyat",
+      "home": {
+        "x": 32325,
+        "y": 32276,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    },
+    {
+      "id": "npc:000605:000",
+      "kind": "npc",
+      "typeId": "walter-the-guard",
+      "home": {
+        "x": 32338,
+        "y": 32277,
+        "z": 7
+      },
+      "radius": 1,
+      "respawnMs": 60000,
+      "direction": "south",
+      "enabled": true
+    }
+  ]
+}

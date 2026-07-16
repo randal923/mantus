@@ -1,0 +1,204 @@
+import { describe, expect, it } from "vitest";
+import type { MonsterType } from "../creature/MonsterType";
+import { gridMapData } from "../gridMapData";
+import { Player } from "../Player";
+import { makeCharacter } from "../test/makeCharacter";
+import type { Visibility } from "../Visibility";
+import { World } from "../World";
+import type { CreatureContent } from "./CreatureContent";
+import { SpawnManager } from "./SpawnManager";
+
+const monsterType: MonsterType = {
+  id: "rat",
+  name: "Rat",
+  description: "a rat",
+  outfit: { lookType: 21, head: 0, body: 0, legs: 0, feet: 0, addons: 0 },
+  health: 20,
+  maxHealth: 20,
+  speed: 67,
+  experience: 5,
+  corpseItemTypeId: 5964,
+  flags: {
+    attackable: true,
+    hostile: false,
+    pushable: true,
+    summonable: false,
+    convinceable: false,
+    illusionable: false,
+    canPushItems: false,
+    canPushCreatures: false,
+    targetDistance: 1,
+    runHealth: 5,
+  },
+  targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
+  attacks: [],
+  defenses: [],
+  elements: {},
+  immunities: [],
+  summons: [],
+  voices: [],
+  loot: [],
+};
+
+const visibility = {
+  announceCreatureSpawn: () => undefined,
+  announceCreatureLeave: () => undefined,
+  onCreatureStepped: () => undefined,
+  broadcastPose: () => undefined,
+} as unknown as Visibility;
+
+const config = {
+  activationRange: { x: 10, y: 10 },
+  retryMs: 100,
+  maxSpawnChecksPerTick: 32,
+  maxSpawnAttemptsPerTick: 8,
+  maxAiScansPerTick: 32,
+  maxAiWorkPerTick: 32,
+  ai: {
+    thinkIntervalMs: 250,
+    acquisitionRange: 8,
+    loseRange: 12,
+    maxPathNodes: 16,
+    wanderChance: 0,
+    seed: 123,
+  },
+};
+
+const makeContent = (enabled = true): CreatureContent => ({
+  monsterTypes: new Map([[monsterType.id, monsterType]]),
+  npcTypes: new Map(),
+  slots: [
+    {
+      id: "monster:slot-1",
+      kind: "monster",
+      typeId: "rat",
+      home: { x: 3, y: 3, z: 7 },
+      radius: 0,
+      respawnMs: 1_000,
+      direction: "south",
+      enabled,
+    },
+  ],
+});
+
+const makeWorld = (blocked: ReadonlyArray<readonly [number, number]> = []) => {
+  const world = new World(
+    gridMapData({ name: "test", width: 8, height: 8, blocked }),
+    25,
+  );
+  world.addPlayer(new Player(makeCharacter("viewer"), { x: 1, y: 1, z: 7 }));
+  return world;
+};
+
+describe("SpawnManager", () => {
+  it("never creates two live creatures for one slot under repeated ticks", () => {
+    const world = makeWorld();
+    const manager = new SpawnManager(world, visibility, makeContent(), config);
+
+    manager.tick(1_000);
+    const first = manager.activeCreatureId("monster:slot-1");
+    manager.tick(1_000);
+    manager.tick(2_000);
+
+    expect(first).not.toBeNull();
+    expect(manager.activeCreatureId("monster:slot-1")).toBe(first);
+    expect([...world.allCreatures()].filter((creature) => creature.kind === "monster"))
+      .toHaveLength(1);
+  });
+
+  it("schedules exactly one respawn and uses a fresh instance id", () => {
+    const world = makeWorld();
+    const manager = new SpawnManager(world, visibility, makeContent(), config);
+    manager.tick(1_000);
+    const first = manager.activeCreatureId("monster:slot-1");
+    if (!first) throw new Error("expected initial creature");
+
+    expect(manager.removeCreature(first, 2_000)).toBe(true);
+    expect(manager.removeCreature(first, 2_000)).toBe(false);
+    expect(manager.nextSpawnDeadline("monster:slot-1")).toBe(3_000);
+    manager.tick(2_999);
+    expect(manager.activeCreatureId("monster:slot-1")).toBeNull();
+    manager.tick(3_000);
+
+    const second = manager.activeCreatureId("monster:slot-1");
+    expect(second).not.toBeNull();
+    expect(second).not.toBe(first);
+  });
+
+  it("retries occupied and blocked homes without teleporting or overlapping", () => {
+    const occupiedWorld = makeWorld();
+    const blocker = new Player(makeCharacter("blocker"), { x: 3, y: 3, z: 7 });
+    occupiedWorld.addPlayer(blocker);
+    const occupied = new SpawnManager(
+      occupiedWorld,
+      visibility,
+      makeContent(),
+      config,
+    );
+    occupied.tick(1_000);
+    expect(occupied.activeCreatureId("monster:slot-1")).toBeNull();
+    expect(occupied.nextSpawnDeadline("monster:slot-1")).toBe(1_100);
+
+    occupiedWorld.removePlayer(blocker.id);
+    occupied.tick(1_100);
+    expect(occupied.activeCreatureId("monster:slot-1")).not.toBeNull();
+
+    const blockedWorld = makeWorld([[3, 3]]);
+    const blocked = new SpawnManager(blockedWorld, visibility, makeContent(), config);
+    blocked.tick(1_000);
+    blocked.tick(1_100);
+    expect(blocked.activeCreatureId("monster:slot-1")).toBeNull();
+    expect([...blockedWorld.allCreatures()].filter((creature) => creature.kind === "monster"))
+      .toHaveLength(0);
+  });
+
+  it("resets ordinary ephemeral deadlines after a process restart", () => {
+    const firstWorld = makeWorld();
+    const firstManager = new SpawnManager(
+      firstWorld,
+      visibility,
+      makeContent(),
+      config,
+    );
+    firstManager.tick(1_000);
+    const first = firstManager.activeCreatureId("monster:slot-1");
+    if (!first) throw new Error("expected initial creature");
+    firstManager.removeCreature(first, 2_000);
+    expect(firstManager.nextSpawnDeadline("monster:slot-1")).toBe(3_000);
+
+    const restartedWorld = makeWorld();
+    const restarted = new SpawnManager(
+      restartedWorld,
+      visibility,
+      makeContent(),
+      config,
+    );
+    restarted.tick(2_001);
+
+    expect(restarted.activeCreatureId("monster:slot-1")).not.toBeNull();
+  });
+
+  it("preserves creature identity and health while its region is inactive", () => {
+    const world = makeWorld();
+    const manager = new SpawnManager(world, visibility, makeContent(), config);
+    manager.tick(1_000);
+    const first = manager.activeCreatureId("monster:slot-1");
+    if (!first) throw new Error("expected initial creature");
+    const creature = world.getCreature(first);
+    if (!creature) throw new Error("expected creature in world");
+    creature.setHealth(7);
+
+    world.removePlayer("viewer");
+    manager.tick(1_250);
+    expect(manager.activeCreatureId("monster:slot-1")).toBeNull();
+    expect(world.getCreature(first)).toBeUndefined();
+
+    world.addPlayer(
+      new Player(makeCharacter("viewer"), { x: 1, y: 1, z: 7 }),
+    );
+    manager.tick(1_500);
+
+    expect(manager.activeCreatureId("monster:slot-1")).toBe(first);
+    expect(world.getCreature(first)?.health).toBe(7);
+  });
+});
