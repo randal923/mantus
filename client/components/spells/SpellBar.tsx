@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { isEditableTarget } from "../../lib/hotkeys/isEditableTarget";
+import { EffectArtwork } from "./EffectArtwork";
+import { SPELL_ARTWORK_BY_EFFECT } from "./spellArtwork";
 
 interface SpellBarSpell {
   id: string;
   name: string;
+  effectId: number;
   glyph: string;
   shortcut: string;
   manaCost?: number;
@@ -106,7 +109,14 @@ export function SpellBar({
             className="ui-button ui-button-secondary group relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-stone-light/25 text-ui-text outline-none transition-[border-color,filter,transform] duration-150 hover:-translate-y-px hover:border-ui-gold/55 hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-35 sm:size-14"
           >
             <span className="font-display text-xl font-bold text-ui-text-bright [text-shadow:0_2px_6px_rgba(0,0,0,0.9)] sm:text-2xl">
-              {spell.glyph}
+              {SPELL_ARTWORK_BY_EFFECT[spell.effectId] ? (
+                <EffectArtwork
+                  {...SPELL_ARTWORK_BY_EFFECT[spell.effectId]}
+                  size={32}
+                />
+              ) : (
+                spell.glyph
+              )}
             </span>
             <kbd className="absolute top-0.5 left-1 z-20 text-[9px] font-bold text-ui-muted">
               {spell.shortcut}

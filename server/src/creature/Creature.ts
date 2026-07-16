@@ -20,6 +20,8 @@ export abstract class Creature<
   readonly conditions = new ConditionManager();
   private readonly activeConditions = new Set<string>();
   private deathHandled = false;
+  private defenseBlockCount = 0;
+  private lastDefenseTickAt: number | null = null;
   private currentHealth: number;
   private currentMaxHealth: number;
   private currentPosition: Position;
@@ -107,6 +109,25 @@ export abstract class Creature<
       this.activeConditions.has(condition) ||
       this.conditions.has(condition)
     );
+  }
+
+  tickDefense(now: number): void {
+    if (this.lastDefenseTickAt === null) {
+      this.lastDefenseTickAt = now;
+      return;
+    }
+    const elapsed = now - this.lastDefenseTickAt;
+    if (elapsed < 1_000) return;
+    const gained = Math.floor(elapsed / 1_000);
+    this.defenseBlockCount = Math.min(2, this.defenseBlockCount + gained);
+    this.lastDefenseTickAt += gained * 1_000;
+  }
+
+  consumeDefenseBlock(now: number): boolean {
+    this.tickDefense(now);
+    if (this.defenseBlockCount === 0) return false;
+    this.defenseBlockCount--;
+    return true;
   }
 
   toState(): CreatureState {

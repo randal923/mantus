@@ -17,6 +17,7 @@ import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { LoadedInventory } from "./item/LoadedInventory";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
 import { projectFightState } from "./combat/projectFightState";
+import type { SpellRegistry } from "./combat/SpellRegistry";
 
 export class CharacterHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -28,6 +29,7 @@ export class CharacterHandler {
     private readonly visibility: Visibility,
     private readonly persistence: CharacterPersistence,
     private readonly items: ItemIntentHandler,
+    private readonly spells: SpellRegistry,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -223,6 +225,7 @@ export class CharacterHandler {
       creatures,
       inventory,
       fightState: projectFightState(session, this.world, now),
+      spells: this.spells.projectFor(player),
     });
     this.visibility.syncMapItems(session, player);
     void this.service

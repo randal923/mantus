@@ -49,9 +49,11 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
   require it.
 - [x] Treat ladder, hole, rope, shovel, and teleport activation as server-side
   world actions, not arbitrary client z changes.
-- [x] Decide diagonal movement deliberately. It is disabled: the protocol only
-  accepts cardinal directions, while the duration helper retains the diagonal
-  multiplier for a future explicit protocol change.
+- [x] Keep the initial protocol cardinal-only while the authoritative movement
+  and correction path is established.
+- [ ] Add Canary-compatible diagonal movement and bounded auto-walk/path
+  intents. Revalidate every step, use the correct diagonal duration, and stop
+  on the first stale, blocked, occupied, or otherwise invalid step.
 - [x] Calculate walk duration from server speed, ground speed, diagonal factor,
   and conditions. Client animation may predict that duration but cannot decide
   when another step is legal.
@@ -97,5 +99,8 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
 - [x] Equal x/y on different floors does not collide or leak visibility.
 - [x] Reconnect after a floor change restores the authoritative position.
 - [x] Static and dynamic map outputs are deterministic for the same manifest.
+- [ ] The map/action parity audit resolves every disabled transition, movement
+  action, zone behavior, and invalid placement from the pinned source; no
+  player-visible map behavior remains silently classified as unsupported.
 
 [Back to overview](README.md)

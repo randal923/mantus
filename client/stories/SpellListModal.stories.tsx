@@ -11,6 +11,48 @@ const meta = {
   },
   args: {
     vocation: "Knight",
+    spells: [
+      {
+        id: "exura-infir-ico",
+        origin: "spell",
+        runeItemTypeId: null,
+        name: "Bruise Bane",
+        words: "exura infir ico",
+        damageType: "healing",
+        effectId: 13,
+        manaCost: 10,
+        soulCost: 0,
+        requiredLevel: 1,
+        requiredMagicLevel: 0,
+        needWeapon: false,
+        cooldownMs: 1_000,
+        cooldownGroups: [
+          "spell:exura-infir-ico",
+          "group:healing",
+        ],
+        targetKind: "self",
+      },
+      {
+        id: "exori-infir-min",
+        origin: "spell",
+        runeItemTypeId: null,
+        name: "Lesser Front Sweep",
+        words: "exori infir min",
+        damageType: "physical",
+        effectId: 10,
+        manaCost: 6,
+        soulCost: 0,
+        requiredLevel: 1,
+        requiredMagicLevel: 0,
+        needWeapon: true,
+        cooldownMs: 6_000,
+        cooldownGroups: [
+          "spell:exori-infir-min",
+          "group:attack",
+        ],
+        targetKind: "direction",
+      },
+    ],
     onClose: fn(),
   },
 } satisfies Meta<typeof SpellListModal>;
@@ -27,11 +69,8 @@ export const Knight: Story = {
       canvas.getByRole("dialog", { name: "Knight Spells" }),
     ).toBeInTheDocument();
     await expect(canvas.getByText("Wound Cleansing")).toBeInTheDocument();
-    await expect(canvas.getAllByRole("listitem")).toHaveLength(37);
+    await expect(canvas.getAllByRole("listitem")).toHaveLength(2);
     await expect(scrollRegion).not.toBeNull();
-    await expect(scrollRegion?.scrollHeight).toBeGreaterThan(
-      scrollRegion?.clientHeight ?? 0,
-    );
   },
 };
 
@@ -39,31 +78,16 @@ export const Paladin: Story = {
   args: {
     vocation: "Paladin",
   },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getAllByRole("listitem")).toHaveLength(
-      49,
-    );
-  },
 };
 
 export const Sorcerer: Story = {
   args: {
     vocation: "Sorcerer",
   },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getAllByRole("listitem")).toHaveLength(
-      79,
-    );
-  },
 };
 
 export const Druid: Story = {
   args: {
     vocation: "Druid",
-  },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getAllByRole("listitem")).toHaveLength(
-      83,
-    );
   },
 };

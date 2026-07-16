@@ -133,4 +133,17 @@ is atomic.
   Stable seed keys currently make an unplanned content-version replacement fail
   safely instead of silently duplicating or resetting moved world items.
 
+## Pinned Canary parity gate
+
+- [ ] Inventory every registered item/move/action behavior from the pinned
+  sources and implement all player-visible semantics, including containers,
+  fluids, food, readable/writeable items, doors, keys, beds, fields,
+  decay/transforms, reward containers, stash/mail/depot rules, equipment
+  modifiers, charges, imbuement slots, forge tiers, quick-loot/loot-container
+  configuration, browse-field/seek/parent-container actions, inspection,
+  wrapping, hotkey equip, show-off sockets, and special-use callbacks.
+- [ ] Generated item reports and tests must distinguish non-content/reserved
+  ids from gameplay items and reach zero silently ignored gameplay attributes
+  or registered item actions.
+
 [Back to overview](README.md)

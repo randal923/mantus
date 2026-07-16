@@ -15,6 +15,9 @@ Depends on the [`creature/spawn runtime`](04-creatures-spawns-and-ai.md) and
   process startup or a daily global save as the event trigger.
 - [ ] Add operator controls and audit entries for starting/canceling high-impact
   events.
+- [ ] Import every pinned raid, global event, startup/daily schedule, boosted
+  creature/boss rotation, announcement, spawn wave, and completion callback as
+  durable typed state.
 
 ## Planned file surface
 
@@ -26,5 +29,7 @@ Depends on the [`creature/spawn runtime`](04-creatures-spawns-and-ai.md) and
 - [ ] Crossing a daily boundary while the server remains continuously online
   produces the same result as crossing it during a restart.
 - [ ] Operator event controls are authorized and audited.
+- [ ] Event parity tests account for every registered raid/global event and
+  prove continuously running and restarted worlds produce equivalent results.
 
 [Back to overview](README.md)

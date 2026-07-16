@@ -56,12 +56,24 @@ only.
   balance changes add a version instead of editing existing characters'
   derived rules in place.
 - Current health, mana, and soul persist. Max health, max mana, capacity, and
-  speed are pure derived values. Stamina remains absent until a mechanic uses
-  it.
+  speed are pure derived values. Stamina is not implemented yet and remains a
+  required Canary parity item rather than an optional omission.
 - Regeneration and scheduled training are online-only and process at most five
   overdue intervals per server tick. Exact progression is sent only to the
   owning session; the public creature projection exposes none of it.
 - The inventory has a collapsible character-details pane. Inventory opens with
   it closed; the edge arrow, top-nav Character button, or `C` hotkey opens it.
+
+## Remaining pinned Canary parity
+
+- [ ] Support every pinned vocation and promotion, including Monk/Exalted Monk,
+  with exact gains, skill/magic curves, regeneration, attack speed, formulas,
+  requirements, and public/private projections.
+- [ ] Implement stamina, soul rules, offline and exercise training, blessings,
+  skill stages/rates, death-loss interaction, and every persistent progression
+  modifier used by pinned Canary content.
+- [ ] Add formula fixtures and aggregate definition checks so every pinned
+  progression coefficient is either matched or identified as non-gameplay
+  configuration; no balance field may be silently ignored.
 
 [Back to overview](README.md)

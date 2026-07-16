@@ -1,6 +1,6 @@
 # Playable-world backlog overview
 
-Audit completed 2026-07-14 against the current repository and these pinned
+Parity audit refreshed 2026-07-16 against the current repository and these pinned
 upstream snapshots:
 
 - [Canary `a879c931`](https://github.com/opentibiabr/canary/tree/a879c9312e34381e8eedf397b8ed44510698b689)
@@ -8,8 +8,12 @@ upstream snapshots:
 - [OpenTibiaBR OTClient `bdea0b23`](https://github.com/opentibiabr/otclient/tree/bdea0b23b4a738809d698cb7e4f88a299dd6bffc)
   (rendering and client behavior; MIT).
 
-This is an implementation backlog, not a promise to reproduce every modern
-Tibia feature immediately. `AGENTS.md` and the project security charter are
+This is an implementation backlog for full player- and operator-visible
+gameplay and content parity with the pinned Canary baseline. Features may land
+incrementally in dependency order, but “later” and “unsupported” describe
+scheduling, not a reduced final scope. The
+[`pinned Canary parity ledger`](00a-canary-parity.md) is the cross-cutting
+completion contract. `AGENTS.md` and the project security charter are
 mandatory for every feature below.
 
 ## Rewrite boundary
@@ -24,14 +28,31 @@ translate and refactor the useful parts into this project's use case.
 - Do not preserve Canary's C++ class hierarchy, file layout, binary packets,
   Lua runtime, database schema, global mutable architecture, or synchronous I/O
   merely because the reference implementation uses them.
-- Re-express selected mechanics and data in small typed structures that satisfy
-  this repository's server-authoritative tick, visibility, security, and atomic
-  ownership rules.
+- Re-express all player- and operator-visible mechanics and content from the
+  pinned baseline in small typed structures that satisfy this repository's
+  server-authoritative tick, visibility, security, and atomic ownership rules.
 - Treat converted static data as validated, versioned build input. Canary and
   OTClient must never be runtime dependencies of the game.
-- Match Tibia behavior where it serves the game, but prefer this project's
-  architecture and product decisions when exact compatibility would conflict
-  with the use case.
+- Match pinned Canary gameplay behavior and content. Prefer this project's
+  architecture and stricter security when exact internal compatibility would
+  conflict with the authoritative tick, visibility, atomicity, or operational
+  model; do not use architectural differences to omit player- or
+  operator-visible features.
+
+## Full parity contract
+
+- Importers and audits must inventory every registered gameplay definition,
+  placement, callback, persistent system, and content action in the pinned
+  sources. Every entry has an owner TODO and a testable status.
+- A starter-region rollout, dependency blocker, or temporary importer
+  limitation may delay enablement, but cannot remove the entry from the parity
+  ledger.
+- Completion requires zero unreviewed callbacks, ignored gameplay fields, or
+  unsupported registered content. Examples and internal implementation files
+  may be classified as non-content with an explicit stable reason.
+- Canary's C++/Lua runtime, binary protocol, schema, unsafe trust boundaries,
+  and global-save architecture remain outside scope; their player- and
+  operator-visible outcomes remain in scope.
 
 ## What exists now
 
@@ -51,14 +72,18 @@ translate and refactor the useful parts into this project's use case.
   inventory projections, canonical tooltips, and an authoritative first slice
   of equip, pickup/drop, stack, and rotate operations.
 
-Everything else is absent or partial: correct creature elevation, the deeper
-container and map-use UI, item special behaviors, combat, loot, chat, shops,
-quests, and the long-tail social/economy systems.
+Remaining systems are absent or partial: deeper container/map-use behavior,
+the disabled spell/rune catalog entries, complete creature/NPC callbacks and
+fields, loot/death, chat, shops, quests, and the long-tail social, economy, and
+modern progression systems.
 
 ## Reference implementation map
 
 Use these locations to understand behavior and data, then implement the result
-in the project-native architecture above.
+in the project-native architecture above. This table is a starting map, not an
+exhaustive feature inventory; the parity ledger must also inventory registered
+protocol actions, scripts, XML systems, persistence tables, and player
+components from the pinned source.
 
 | Need | Canary / OTClient reference locations |
 |---|---|
@@ -75,11 +100,13 @@ in the project-native architecture above.
 | Tile stack and creature draw order | [`src/client/thing.cpp`](https://github.com/opentibiabr/otclient/blob/bdea0b23b4a738809d698cb7e4f88a299dd6bffc/src/client/thing.cpp), [`src/client/tile.cpp`](https://github.com/opentibiabr/otclient/blob/bdea0b23b4a738809d698cb7e4f88a299dd6bffc/src/client/tile.cpp) |
 | Visible-floor and cover rules | [`src/client/mapview.cpp`](https://github.com/opentibiabr/otclient/blob/bdea0b23b4a738809d698cb7e4f88a299dd6bffc/src/client/mapview.cpp), [`src/client/position.cpp`](https://github.com/opentibiabr/otclient/blob/bdea0b23b4a738809d698cb7e4f88a299dd6bffc/src/client/position.cpp) |
 
-The audited global pack contains approximately 135,000 monster placements,
-2,000 NPC placements, 1,650 monster definition files, and 1,000 NPC definition
-files. The positions are not inside `otservbr.otbm`: the OTBM map-data node
-names the external spawn XML files. Each XML spawn has a center/radius and
-children with x/y offsets; the absolute floor is the spawn's `centerz`.
+The current generated world pack contains 83,286 monster placements, 1,008 NPC
+placements, 897 monster types, and 956 NPC types. The positions are not inside
+`otservbr.otbm`: the OTBM map-data node names the external spawn XML files.
+Each XML spawn has a center/radius and children with x/y offsets; the absolute
+floor is the spawn's `centerz`. The parity ledger separately tracks ignored
+fields, callbacks, ambiguous definitions, and invalid placements; importing a
+placement count does not by itself prove behavioral parity.
 
 ## Cross-cutting target model
 
@@ -155,14 +182,15 @@ interface CreatureState {
 3. Complete [`map semantics and multi-floor movement`](02-map-and-movement.md).
 4. Fix [`rendering, animation, floors, and occlusion`](03-rendering-and-animation.md).
 5. Add the shared [`creature and spawn runtime`](04-creatures-spawns-and-ai.md),
-   then enable only a small starter region.
+   enable a small starter region for rollout, then retain full-world parity as
+   the required completion target.
 6. Build the [`item ownership core`](05-items-and-inventory.md).
 7. Add [`progression`](06-progression.md), [`combat`](07-combat.md), and
    [`death/loot`](08-death-loot-and-decay.md).
 8. Add [`chat`](09-chat.md), [`NPCs`](10-npcs.md), and
    [`economy`](11-economy.md).
 9. Add [`quests/world actions`](12-quests-and-world-actions.md), then social
-   and optional systems.
+   and remaining Canary parity systems.
 10. Harden [`resilience`](15-client-resilience.md),
     [`observability and operations`](16-operations-and-security.md), and known
     [`authentication gaps`](17-auth-follow-ups.md) continuously.

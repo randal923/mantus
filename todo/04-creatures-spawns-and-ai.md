@@ -121,4 +121,19 @@ interface MonsterType {
 - [x] Full-world load/tick/pathfinding benchmarks enforce explicit placement,
   spatial scan, AI work, and timing budgets.
 
+## Remaining pinned Canary parity
+
+- [ ] Extend `MonsterType`, `NpcType`, and the importers until every ignored
+  gameplay assignment and procedural callback in the world import report is
+  represented as typed data or reviewed TypeScript behavior. This includes
+  race/bestiary/bosstiary metadata, light/mana, target changes, forge and
+  reward-boss classifications, event hooks, and special summon/death behavior.
+- [ ] Resolve every duplicate/ambiguous definition, blocked/out-of-map
+  placement, appearance correction, and intentionally invisible creature
+  individually. Keep valid variants addressable instead of choosing one by
+  filename accident.
+- [ ] Add aggregate parity tests for definition and placement counts and require
+  zero unreviewed creature/NPC gameplay fields or callbacks before marking the
+  pinned creature workstream complete.
+
 [Back to overview](README.md)

@@ -94,22 +94,25 @@ Rules:
 - Use `SELECT … FOR UPDATE` / unique constraints as the last line of defense;
   the DB should *reject* a dupe even if server logic is buggy.
 
-## 5. Phase 4 — reimplementing Canary features
+## 5. Phase 4 — full pinned Canary feature parity
 
-Mine Canary for: damage/skill/regen **formulas**, monster stats and loot
-tables, spell definitions, NPC dialog system, the OTBM map format, and
-`items.otb`/`items.xml` (item attributes keyed by ids that match this asset
-pack’s clientIds era). Priority order that keeps the game playable at every
-step:
+Inventory and reimplement every player- and operator-visible feature and
+content definition from the pinned Canary baseline. Use Canary for damage/skill/regen
+**formulas**, monster stats and loot tables, spell definitions, NPC dialogue,
+the OTBM map format, `items.otb`/`items.xml`, persistent systems, and registered
+player actions. The priority order keeps the game playable at every step; it
+does not reduce the final parity scope:
 
 1. Items & containers (pick up, drop, move, stack, equip) — this is also where
    dupe-safety is designed, see §6.2.
 2. Vocations, skills, experience/level, death penalties.
 3. Loot + corpses, NPC shops (buy/sell), depot.
-4. More spells, runes, conditions (poison, haste, protection…).
-5. Player trade window; later: market.
-6. Map: import a real OTBM map or grow the hand-authored city; multi-floor.
-7. Houses, guilds, quests, raids — long tail, in whatever order is fun.
+4. Every spell, rune, condition, conjuring action, and procedural callback.
+5. Player trade window; then market and the remaining pinned economy systems.
+6. Map: import the pinned OTBM map, all floors, movements, and world actions.
+7. Houses, guilds, quests, raids, modern progression systems, and every other
+   player- or operator-visible pinned Canary feature. Implement in dependency
+   order; do not silently reduce the parity target.
 
 ## 6. Security — preventing dupes and other exploits
 
@@ -222,7 +225,7 @@ signals server-side (never tell the client why it was flagged).
 | DB | Postgres 16 | ACID is the anti-dupe weapon |
 | DB access | Drizzle or Kysely (typed SQL) | transactions stay visible, no ORM magic |
 | Password hashing | argon2id (`argon2` package) | current best practice |
-| Monorepo | npm workspaces: `client/`, `server/`, `protocol/` | shared message types |
+| Monorepo | Yarn workspaces: `client/`, `server/`, `protocol/` | shared message types |
 
 ## 8. Milestone checklist
 
@@ -233,5 +236,6 @@ signals server-side (never tell the client why it was flagged).
 - [ ] Items & containers with transactional moves + audit log
 - [ ] NPC shop + player trade (both fully transactional)
 - [ ] Rate limiting, session hardening, TLS, backups + restore drill
-- [ ] First Canary content import (monsters/loot/spell numbers)
+- [ ] Full pinned Canary feature/content inventory and zero-unsupported parity
+      gate (see `todo/00a-canary-parity.md`)
 - [ ] Playtest with friends; watch `audit_log` and metrics for surprises

@@ -6,8 +6,9 @@ every other economy unit builds on its currency decisions and ledger rules.
 
 ## Currency and accounting
 
-- [ ] Decide whether carried gold is item stacks, an account balance, or both;
-  define one canonical conversion path and never let client totals drive it.
+- [ ] Match Canary's carried-money and bank behavior using project-native item
+  and ledger models; define one canonical conversion path and never let client
+  totals drive it.
 - [ ] Add constrained bank balances with nonnegative checks and ledger/audit
   entries committed in the same transaction as every credit/debit.
 - [ ] Use exact integer units only. Prices, fees, counts, and balances are

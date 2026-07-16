@@ -15,6 +15,9 @@ Depends on atomic [`items`](05-items-and-inventory.md) and NPC action hooks.
 - [ ] Make reward claims and storage transitions idempotent and transactional
   with item/gold changes and audit entries.
 - [ ] Send only quest-log state intended for the owning player.
+- [ ] Inventory and implement every pinned quest/mission/storage definition,
+  quest-log line, prerequisite, transition, and reward. Aliased/shared storage
+  keys must retain their exact cross-quest behavior.
 
 ## Planned file surface
 
@@ -28,5 +31,7 @@ Depends on atomic [`items`](05-items-and-inventory.md) and NPC action hooks.
   and reconnects.
 - [ ] Forged storage values, completed flags, and reward claims are rejected.
 - [ ] Private quest state is not exposed to other players.
+- [ ] Quest parity reports contain zero missing mission definitions, storage
+  transitions, or reward callbacks.
 
 [Back to overview](README.md)

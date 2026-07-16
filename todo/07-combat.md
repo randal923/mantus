@@ -78,4 +78,41 @@ roll is computed by the server.
 - [x] Combat events reveal nothing about out-of-view or wrong-floor creatures.
 - [x] Seeded formulas, resistance, condition refresh, and expiry are deterministic.
 
+## Pinned Canary parity follow-ups
+
+The generated catalog at `content/spells/canary-spells.json` retains every
+definition from Canary commit
+`a879c9312e34381e8eedf397b8ed44510698b689`. Direct combat/healing definitions
+are enabled only when their formula, target, area, resources, cooldowns, and
+visual ids can be represented without executing Lua. The catalog report lists
+every disabled definition and reason. Disabled registered content is a
+temporary backlog state: pinned parity requires every registered spell and
+rune to become executable.
+
+- [ ] Import and implement condition-backed player spells such as haste,
+  strong haste, paralyze, and magic shield. Preserve Canary speed formulas,
+  magic-shield capacity/depletion, refresh rules, and dispels before enabling
+  them.
+- [ ] Implement field/item-creation spells and runes only after field ownership,
+  decay, damage ticks, and item creation are atomic and audited where relevant.
+- [ ] Implement procedural summon, party, chain, focus, familiar, named-player,
+  and vocation-specific callbacks as reviewed server-side TypeScript before
+  enabling their imported definitions.
+- [ ] Match pinned attack/follow, challenge/taunt, aim-at-target, boss
+  difficulty, hazard, encounter, and combat-analyzer interactions through
+  bounded intents and server-owned state.
+- [ ] Implement conjuring, ammunition/enchantment, cure/dispel, house, levitate,
+  rope, find-person/find-fiend, creature illusion, challenge, food, light, and
+  every other support callback represented by the pinned spell registrations.
+- [ ] Support every static and dynamic combat area, including custom tile
+  matrices and direction-dependent areas, without evaluating Lua at runtime.
+- [ ] Add an explicit ground-targeting cursor for position runes. The current
+  client safely targets the selected creature's tile, or the caster's tile when
+  no creature is selected.
+- [ ] Add Monk/Exalted Monk only after those vocations exist in the shared
+  protocol, progression definitions, character creation, and client UI.
+- [ ] Make the generated spell report distinguish examples/non-content from
+  registered gameplay definitions and reach zero disabled registered spells,
+  runes, ignored formula fields, or unreviewed callbacks.
+
 [Back to overview](README.md)

@@ -26,6 +26,10 @@
       "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
       "vocationsSha256": "d3ecc1319710012265e8225649d9cae3dbb6d1f90036310a8b81f6e40a8a3a14",
       "vocationImplementationSha256": "a3930265d68ccf188a0aeddebfd4bd19fcc257bfb3865e5ee8e429f043be83b3"
+    },
+    "canarySpells": {
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+      "definitionsSha256": "835255c876350bd56f5853005f3e3888074e3f71b345ebd6b0a4312142a8546d"
     }
   },
   "balanceDefinitions": {
@@ -36,6 +40,7 @@
     "canaryItems": 2,
     "itemCatalog": 1,
     "map": 3,
-    "creatures": 1
+    "creatures": 1,
+    "spells": 1
   }
 }

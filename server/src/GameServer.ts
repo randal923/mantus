@@ -10,6 +10,7 @@ import { CharacterService } from "./character/CharacterService";
 import type { CharacterStore } from "./character/CharacterStore";
 import { Combat } from "./combat/Combat";
 import { CombatIntentHandler } from "./combat/CombatIntentHandler";
+import { SpellRegistry } from "./combat/SpellRegistry";
 import type { ServerConfig } from "./config";
 import { LanguageHandler } from "./LanguageHandler";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
@@ -50,6 +51,7 @@ export class GameServer {
   private readonly combat: CombatIntentHandler;
   private readonly combatSystem: Combat;
   private readonly progression: ProgressionSystem;
+  private readonly spells = new SpellRegistry();
   private readonly items: ItemIntentHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -99,6 +101,7 @@ export class GameServer {
       this.visibility,
       this.persistence,
       this.items,
+      this.spells,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.movement = new MovementHandler(
@@ -122,6 +125,7 @@ export class GameServer {
       this.items,
       config.combatSeed,
       (monster, now) => spawns?.removeCreature(monster.id, now) ?? false,
+      this.spells,
     );
     this.combat = new CombatIntentHandler(this.combatSystem);
     spawns =

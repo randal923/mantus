@@ -17,6 +17,9 @@ privacy rules differ from NPC dialogue.
   Do not broadcast local chat to the world or reveal hidden recipients.
 - [ ] Define private/channel availability, online/offline behavior, moderation
   channels, and system-message categories explicitly.
+- [ ] Match every pinned Canary speech mode, channel type, NPC/private routing,
+  mute/ignore rule, guild/party/help channel permission, and player/admin
+  talkaction. Commands execute typed server actions rather than Lua.
 
 ## Safety and persistence
 
@@ -50,5 +53,7 @@ privacy rules differ from NPC dialogue.
   server-side.
 - [ ] Private content does not appear in unrelated packets or ordinary logs.
 - [ ] HTML/script-like text is rendered inert.
+- [ ] Channel/speech/talkaction parity inventory has no unowned or unsupported
+  registered player-visible entry.
 
 [Back to overview](README.md)

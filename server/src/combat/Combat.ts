@@ -14,6 +14,7 @@ import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { MonsterAbility } from "../creature/MonsterType";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import type { Item } from "../item/Item";
 import type { ItemType } from "../item/ItemType";
 import type { LootItemCreation } from "../item/LootItemCreation";
 import { findPath } from "../pathfinding/findPath";
@@ -32,6 +33,7 @@ import { getMissileId } from "./getMissileId";
 import { projectFightState } from "./projectFightState";
 import type { SpellDefinition } from "./Spell";
 import { SpellRegistry } from "./SpellRegistry";
+import { evaluateSpellExpression } from "./evaluateSpellExpression";
 
 type CatalogDamageType = keyof NonNullable<ItemType["absorbPercent"]>;
 
@@ -45,8 +47,18 @@ interface PlayerAttackPlan {
   readonly range: number;
   readonly lineOfSight: boolean;
   readonly requests: ReadonlyArray<DamageRequest>;
-  readonly skill: Skill;
+  readonly training: {
+    readonly skill: Skill;
+    readonly kind: "melee" | "distance";
+  } | null;
   readonly manaCost: number;
+  readonly weaponRoll?: {
+    readonly minimum: number;
+    readonly maximum: number;
+    readonly shares: ReadonlyArray<number>;
+    readonly hitChance: number;
+    readonly specials: PlayerSpecials;
+  };
   readonly consume?: {
     readonly itemId: string;
     readonly revision: number;
@@ -75,7 +87,7 @@ interface PlayerSpecials {
 
 export class Combat {
   private readonly formula: CombatFormula;
-  private readonly spells = new SpellRegistry();
+  private readonly spells: SpellRegistry;
   private eventSequence = 0;
 
   constructor(
@@ -87,8 +99,10 @@ export class Combat {
     private readonly items: ItemIntentHandler,
     seed: number,
     private readonly onMonsterDeath: (monster: Monster, now: number) => boolean,
+    spells = new SpellRegistry(),
   ) {
     this.formula = new CombatFormula(seed);
+    this.spells = spells;
   }
 
   selectTarget(session: Session, creatureId: string, now: number): void {
@@ -187,6 +201,9 @@ export class Combat {
   }
 
   tick(now: number): void {
+    for (const creature of this.world.allCreatures()) {
+      creature.tickDefense(now);
+    }
     this.tickConditions(now);
     for (const session of this.registry.all()) {
       this.tickPlayerAttack(session, now);
@@ -398,20 +415,76 @@ export class Combat {
       this.reject(session, now);
       return;
     }
-    let landed = false;
-    for (const request of plan.requests) {
-      const result = this.applyDamage(target, request, now);
-      landed = result.amount > 0 || landed;
-      if (target.health <= 0) break;
+    let attackBlock: DamageResult["block"] = "none";
+    let requests = plan.requests;
+    let totalDamage = 0;
+    if (plan.weaponRoll) {
+      const request = requests[0];
+      if (!request || !this.formula.chance(plan.weaponRoll.hitChance)) {
+        if (request) this.publishDamageResult(target, request, 0, "miss");
+        attackBlock = "miss";
+      } else {
+        let total = this.formula.normalInteger(
+          plan.weaponRoll.minimum,
+          plan.weaponRoll.maximum,
+        );
+        if (this.formula.chance(plan.weaponRoll.specials.criticalChance)) {
+          total = Math.floor(
+            total *
+              (1 +
+                plan.weaponRoll.specials.criticalDamagePercent /
+                  100),
+          );
+        }
+        requests = requests.map((entry, index) => {
+          const amount = Math.max(
+            0,
+            Math.floor(total * (plan.weaponRoll?.shares[index] ?? 0)),
+          );
+          return {
+            ...entry,
+            minimum: amount,
+            maximum: amount,
+            hitChance: undefined,
+          };
+        });
+      }
     }
-    const eventId = this.nextEventId(`attack:${player.id}`);
-    this.progression.awardSkillTries(
-      player.id,
-      eventId,
-      plan.skill,
-      landed ? 2 : 1,
-      now,
-    );
+    let first = true;
+    if (attackBlock !== "miss") {
+      for (const request of requests) {
+        const result = this.applyDamage(target, request, now);
+        totalDamage += result.amount;
+        if (first) attackBlock = result.block;
+        first = false;
+        if (result.block === "miss") break;
+        if (target.health <= 0) break;
+      }
+    }
+    if (plan.weaponRoll && totalDamage > 0) {
+      this.applyPlayerLeech(
+        player,
+        totalDamage,
+        plan.weaponRoll.specials,
+        now,
+      );
+    }
+    if (plan.training) {
+      player.recordAttackBlock(attackBlock);
+      const tries = player.attackSkillTries(
+        plan.training.kind,
+        attackBlock,
+      );
+      if (tries > 0) {
+        this.progression.awardSkillTries(
+          player.id,
+          this.nextEventId(`attack:${player.id}`),
+          plan.training.skill,
+          tries,
+          now,
+        );
+      }
+    }
     this.sendFightState(session, now);
   }
 
@@ -427,7 +500,6 @@ export class Combat {
         entry.item.location.slot === "weapon",
     );
     const specials = this.playerSpecials(equipment);
-    const fightMultiplier = this.attackMultiplier(session.fightMode);
     if (weapon && !this.meetsItemRequirements(player, weapon.type)) {
       return null;
     }
@@ -438,7 +510,7 @@ export class Combat {
         targetId: target.id,
         range: type.range ?? 1,
         lineOfSight: true,
-        skill: "fist",
+        training: null,
         manaCost: type.manaCost ?? 0,
         requests: [
           {
@@ -465,9 +537,8 @@ export class Combat {
     );
     let attack = weapon?.type.attack ?? 7;
     const range = distance ? (weapon?.type.range ?? 3) : 1;
-    let hitChance = distance
-      ? (weapon?.type.maxHitChance ?? weapon?.type.hitChance ?? 75)
-      : 100;
+    let hitChanceType = weapon?.type;
+    let hitChanceBonus = 0;
     let missileId = distance ? this.missileForItem(weapon?.type) : undefined;
     let consume: PlayerAttackPlan["consume"];
     if (distance && weapon?.type.ammoType) {
@@ -482,7 +553,8 @@ export class Combat {
         return null;
       }
       attack += ammunition.type.attack ?? 0;
-      hitChance = ammunition.type.hitChance ?? hitChance;
+      hitChanceType = ammunition.type;
+      hitChanceBonus = weapon.type.hitChance ?? 0;
       missileId = this.missileForItem(ammunition.type) ?? missileId;
       consume = {
         itemId: ammunition.item.id,
@@ -490,39 +562,78 @@ export class Combat {
         reason: "ammunition",
       };
     }
-    const rolled = this.formula.playerDamage({
-      level: player.level,
-      skill: player.skillLevel(skill),
-      attack,
-      vocationMultiplier: distance
-        ? vocation.formulas.distanceDamage
-        : vocation.formulas.meleeDamage,
-      fightMultiplier,
-    });
+    const elementEntries = Object.entries(
+      weapon?.type.elementDamage ?? {},
+    ).filter((entry): entry is [CatalogDamageType, number] =>
+      typeof entry[1] === "number" && entry[1] > 0
+    );
+    const elementAttack = elementEntries.reduce(
+      (total, [, amount]) => total + amount,
+      0,
+    );
+    const totalAttack = attack + elementAttack;
+    const skillLevel = this.playerCombatSkill(player, equipment, skill);
+    const rolled = distance
+      ? this.formula.playerDistanceDamage({
+          level: player.level,
+          skill: skillLevel,
+          attack: totalAttack,
+          vocationMultiplier: vocation.formulas.distanceDamage,
+          fightMode: session.fightMode.attack,
+          targetIsPlayer: target instanceof Player,
+          hasElement: elementAttack > 0,
+        })
+      : this.formula.playerMeleeDamage({
+          level: player.level,
+          skill: skillLevel,
+          attack: totalAttack,
+          vocationMultiplier: vocation.formulas.meleeDamage,
+          fightMode: session.fightMode.attack,
+          fist: !weapon,
+        });
+    const physicalRatio = totalAttack > 0 ? attack / totalAttack : 1;
+    const hitChance = distance
+      ? Math.min(
+          100,
+          this.formula.distanceHitChance({
+            skill: skillLevel,
+            distance: Math.max(
+              Math.abs(player.position.x - target.position.x),
+              Math.abs(player.position.y - target.position.y),
+            ),
+            ...(hitChanceType?.hitChance !== undefined
+              ? { hitChance: hitChanceType.hitChance }
+              : {}),
+            ...(hitChanceType?.maxHitChance !== undefined
+              ? { maxHitChance: hitChanceType.maxHitChance }
+              : weapon?.type.ammoType
+                ? { maxHitChance: 90 }
+                : {}),
+          }) + hitChanceBonus,
+        )
+      : 100;
     const requests: DamageRequest[] = [
       {
         sourceId: player.id,
         origin: distance ? "distance" : "melee",
         type: "physical",
-        minimum: rolled.minimum,
-        maximum: rolled.maximum,
+        minimum: 0,
+        maximum: 0,
         ...(missileId ? { missileId } : {}),
         effectId: 1,
-        ...specials,
-        hitChance,
       },
     ];
-    for (const [type, amount] of Object.entries(
-      weapon?.type.elementDamage ?? {},
-    )) {
-      if (!amount || amount <= 0) continue;
+    const shares = [physicalRatio];
+    for (const [type, amount] of elementEntries) {
       const damageType = this.protocolDamageType(type as CatalogDamageType);
+      const ratio = totalAttack > 0 ? amount / totalAttack : 0;
+      shares.push(ratio);
       requests.push({
         sourceId: player.id,
         origin: distance ? "distance" : "melee",
         type: damageType,
-        minimum: amount,
-        maximum: amount,
+        minimum: 0,
+        maximum: 0,
         effectId: this.effectForDamage(damageType),
         ignoreArmor: true,
         ignoreShield: true,
@@ -533,7 +644,17 @@ export class Combat {
       range,
       lineOfSight: distance,
       requests,
-      skill,
+      weaponRoll: {
+        minimum: rolled.minimum,
+        maximum: rolled.maximum,
+        shares,
+        hitChance,
+        specials,
+      },
+      training: {
+        skill,
+        kind: distance ? "distance" : "melee",
+      },
       manaCost: 0,
       ...(consume ? { consume } : {}),
       ...(distance && weapon?.type.breakChance
@@ -568,15 +689,30 @@ export class Combat {
       this.reject(session, now);
       return;
     }
-    if (
-      spendResources &&
-      (!player.spendMana(spell.manaCost) ||
-        !player.spendSoul(spell.soulCost))
-    ) {
-      this.reject(session, now);
-      return;
+    if (spendResources) {
+      if (!player.spendMana(spell.manaCost)) {
+        this.reject(session, now);
+        return;
+      }
+      if (!player.spendSoul(spell.soulCost)) {
+        player.restoreMana(spell.manaCost);
+        this.reject(session, now);
+        return;
+      }
     }
-    this.setCooldown(session, spell.cooldownGroup, spell.cooldownMs, now);
+    this.setCooldown(
+      session,
+      `spell:${spell.id}`,
+      spell.cooldownMs,
+      now,
+    );
+    for (let index = 0; index < spell.groups.length; index++) {
+      const group = spell.groups[index];
+      const totalMs = spell.groupCooldownMs[index] ?? 0;
+      if (group && totalMs > 0) {
+        this.setCooldown(session, `group:${group}`, totalMs, now);
+      }
+    }
     if (spendResources && spell.manaCost > 0) {
       this.progression.awardMagicProgress(
         player.id,
@@ -596,11 +732,47 @@ export class Combat {
         [player.id, target.creature.id],
       );
     }
-    const values = this.formula.spellDamage({
+    const equipment = this.items.combatEquipment(player.id);
+    const weapon = equipment.find(
+      (entry) =>
+        entry.item.location.kind === "equipment" &&
+        entry.item.location.slot === "weapon",
+    );
+    const ammunition = equipment.find(
+      (entry) =>
+        entry.item.location.kind === "equipment" &&
+        entry.item.location.slot === "ammo",
+    );
+    const variables = {
       level: player.level,
-      magicLevel: player.progression.magicLevel,
-      ...spell.formula,
-    });
+      magicLevel: this.playerMagicLevel(player, equipment),
+      skill: this.playerCombatSkill(
+        player,
+        equipment,
+        this.skillForWeapon(weapon?.type.weaponType),
+      ),
+      attack:
+        (weapon?.type.attack ?? 7) +
+        (weapon?.type.weaponType === "distance"
+          ? (ammunition?.type.attack ?? 0)
+          : 0),
+    };
+    const minimum = Math.max(
+      0,
+      Math.floor(
+        Math.abs(
+          evaluateSpellExpression(spell.formula.minimum, variables),
+        ),
+      ),
+    );
+    const maximum = Math.max(
+      minimum,
+      Math.floor(
+        Math.abs(
+          evaluateSpellExpression(spell.formula.maximum, variables),
+        ),
+      ),
+    );
     const affected = this.creaturesInArea(
       player.position,
       target.position,
@@ -609,10 +781,8 @@ export class Combat {
     if (spell.area.shape === "single" && target.creature && affected.length === 0) {
       affected.push(target.creature);
     }
-    const specials = this.playerSpecials(
-      this.items.combatEquipment(player.id),
-    );
-    if (values.maximum > 0) {
+    const specials = this.playerSpecials(equipment);
+    if (maximum > 0) {
       for (const creature of affected) {
         if (
           spell.damageType !== "healing" &&
@@ -620,18 +790,17 @@ export class Combat {
         ) {
           continue;
         }
-        if (spell.damageType === "healing" && creature !== player) continue;
         this.applyDamage(
           creature,
           {
             sourceId: player.id,
             origin: spell.origin,
             type: spell.damageType,
-            minimum: values.minimum,
-            maximum: values.maximum,
+            minimum,
+            maximum,
             effectId: spell.effectId,
-            ignoreArmor: spell.damageType !== "physical",
-            ignoreShield: spell.damageType !== "physical",
+            ignoreArmor: !spell.blockArmor,
+            ignoreShield: !spell.blockShield,
             ...specials,
           },
           now,
@@ -644,26 +813,9 @@ export class Combat {
         target.creature?.id,
       );
     }
-    if (spell.condition) {
+    if (spell.dispel) {
       for (const creature of affected.length > 0 ? affected : [player]) {
-        if (
-          spell.condition.type !== "haste" &&
-          spell.condition.type !== "magic-shield" &&
-          spell.condition.type !== "light" &&
-          spell.condition.type !== "regeneration" &&
-          spell.condition.type !== "invisible" &&
-          !this.canPlayerHarm(session, player, creature)
-        ) {
-          continue;
-        }
-        this.applyCondition(
-          creature,
-          {
-            ...spell.condition,
-            sourceId: player.id,
-          },
-          now,
-        );
+        creature.conditions.remove(spell.dispel);
       }
     }
     this.sendFightState(session, now);
@@ -676,30 +828,35 @@ export class Combat {
     target: CombatTarget,
     now: number,
   ): boolean {
+    const equipment = this.items.combatEquipment(player.id);
     if (
       player.conditions.has("mute") ||
       !spell.vocations.includes(player.vocation) ||
       player.level < spell.requiredLevel ||
-      player.progression.magicLevel < spell.requiredMagicLevel ||
+      this.playerMagicLevel(player, equipment) <
+        spell.requiredMagicLevel ||
       player.mana < spell.manaCost ||
       player.progression.soul < spell.soulCost ||
-      !spell.targetKinds.includes(target.kind) ||
-      (session.combatCooldowns.get(spell.cooldownGroup)?.readyAt ?? 0) > now
+      !this.matchesSpellTarget(spell, target) ||
+      (session.combatCooldowns.get(`spell:${spell.id}`)?.readyAt ?? 0) > now ||
+      spell.groups.some(
+        (group) =>
+          (session.combatCooldowns.get(`group:${group}`)?.readyAt ?? 0) > now,
+      ) ||
+      (spell.needWeapon &&
+        !equipment.some(
+          (entry) =>
+            entry.item.location.kind === "equipment" &&
+            entry.item.location.slot === "weapon" &&
+            entry.type.weaponType !== undefined &&
+            entry.type.weaponType !== "shield",
+        ))
     ) {
       return false;
     }
     const resolved = this.resolveSpellTarget(session, player, target);
     if (!resolved) return false;
-    const harmful =
-      spell.damageType !== "healing" ||
-      (spell.condition !== undefined &&
-        ![
-          "haste",
-          "magic-shield",
-          "light",
-          "regeneration",
-          "invisible",
-        ].includes(spell.condition.type));
+    const harmful = spell.damageType !== "healing";
     if (
       harmful &&
       (this.world.isProtectionZone(player.position) ||
@@ -715,7 +872,8 @@ export class Combat {
       return false;
     }
     return (
-      this.isInRange(player.position, resolved.position, spell.range) &&
+      (target.kind === "direction" ||
+        this.isInRange(player.position, resolved.position, spell.range)) &&
       (!spell.lineOfSight ||
         this.world.hasLineOfSight(player.position, resolved.position))
     );
@@ -728,6 +886,17 @@ export class Combat {
   ): ResolvedSpellTarget | null {
     if (target.kind === "self") {
       return { position: player.position, creature: player };
+    }
+    if (target.kind === "direction") {
+      const [x, y] = this.directionDelta(player.direction);
+      return {
+        position: {
+          x: player.position.x + x,
+          y: player.position.y + y,
+          z: player.position.z,
+        },
+        creature: null,
+      };
     }
     if (target.kind === "position") {
       if (
@@ -754,6 +923,23 @@ export class Combat {
       return null;
     }
     return { position: creature.position, creature };
+  }
+
+  private matchesSpellTarget(
+    spell: SpellDefinition,
+    target: CombatTarget,
+  ): boolean {
+    if (spell.targetKind === "self") return target.kind === "self";
+    if (spell.targetKind === "position") return target.kind === "position";
+    if (spell.targetKind === "direction") return target.kind === "direction";
+    if (spell.targetKind === "target-or-direction") {
+      return (
+        target.kind === "attack-target" ||
+        target.kind === "creature" ||
+        target.kind === "direction"
+      );
+    }
+    return target.kind === "attack-target" || target.kind === "creature";
   }
 
   private applyDamage(
@@ -786,12 +972,25 @@ export class Combat {
         manaChanged: false,
       };
     }
-    let amount = this.formula.integer(request.minimum, request.maximum);
+    let amount = this.formula.normalInteger(
+      request.minimum,
+      request.maximum,
+    );
     const critical = this.formula.chance(request.criticalChance ?? 0);
     if (critical) {
       amount = Math.floor(
         amount * (1 + (request.criticalDamagePercent ?? 50) / 100),
       );
+    }
+    const source = request.sourceId
+      ? this.world.getCreature(request.sourceId)
+      : undefined;
+    if (
+      source instanceof Player &&
+      target instanceof Player &&
+      request.type !== "healing"
+    ) {
+      amount = Math.round(amount / 2);
     }
     if (request.type === "healing") {
       const before = target.health;
@@ -809,7 +1008,7 @@ export class Combat {
         manaChanged: false,
       };
     }
-    const mitigated = this.mitigate(target, request, amount);
+    const mitigated = this.mitigate(target, request, amount, now);
     amount = mitigated.amount;
     let manaChanged = false;
     let healthChanged = false;
@@ -838,9 +1037,6 @@ export class Combat {
       }
     }
     this.publishDamageResult(target, request, amount, mitigated.block);
-    const source = request.sourceId
-      ? this.world.getCreature(request.sourceId)
-      : undefined;
     if (target instanceof Monster && source instanceof Player && amount > 0) {
       target.recordPlayerDamage(source.id, amount);
     }
@@ -854,14 +1050,14 @@ export class Combat {
       );
     }
     if (source instanceof Player && amount > 0) {
-      const healthLeech = Math.floor(
+      const healthLeech = Math.round(
         amount *
           (this.formula.chance(request.lifeLeechChance ?? 0)
             ? (request.lifeLeechPercent ?? 0)
             : 0) /
           100,
       );
-      const manaLeech = Math.floor(
+      const manaLeech = Math.round(
         amount *
           (this.formula.chance(request.manaLeechChance ?? 0)
             ? (request.manaLeechPercent ?? 0)
@@ -891,30 +1087,53 @@ export class Combat {
     target: Creature,
     request: DamageRequest,
     rawAmount: number,
+    now: number,
   ): { amount: number; block: DamageResult["block"] } {
     let amount = rawAmount;
     let block: DamageResult["block"] = "none";
     if (target instanceof Monster) {
       const resistance = target.type.elements[request.type] ?? 0;
       if (resistance >= 100) return { amount: 0, block: "immunity" };
-      amount = Math.max(0, Math.floor(amount * (1 - resistance / 100)));
       const stats = target.type.defenses.find(
         (ability) => ability.kind === "stats",
       );
+      amount = this.formula.applyAbsorbPercent(amount, resistance);
+      const checksPhysical =
+        request.type === "physical" &&
+        (!request.ignoreShield || !request.ignoreArmor);
+      const usedDefenseBlock =
+        checksPhysical && target.consumeDefenseBlock(now);
       if (request.type === "physical") {
-        if (!request.ignoreShield && (stats?.defense ?? 0) > 0) {
-          amount -= this.formula.integer(0, stats?.defense ?? 0);
-          if (amount <= 0) block = "shield";
+        if (
+          !request.ignoreShield &&
+          usedDefenseBlock &&
+          (stats?.defense ?? 0) > 0
+        ) {
+          amount -= this.formula.defenseReduction(stats?.defense ?? 0);
+          if (amount <= 0) {
+            amount = 0;
+            block = "shield";
+          }
         }
         if (!request.ignoreArmor && amount > 0 && (stats?.armor ?? 0) > 0) {
-          amount -= this.formula.integer(
-            Math.floor((stats?.armor ?? 0) / 2),
-            stats?.armor ?? 0,
-          );
-          if (amount <= 0) block = "armor";
+          amount -= this.formula.armorReduction(stats?.armor ?? 0);
+          if (amount <= 0) {
+            amount = 0;
+            block = "armor";
+          }
         }
       }
-      amount -= Math.floor(stats?.mitigation ?? 0);
+      if (
+        request.type !== "life-drain" &&
+        request.type !== "mana-drain" &&
+        amount > 0
+      ) {
+        amount = Math.max(
+          0,
+          Math.floor(amount * (1 - (stats?.mitigation ?? 0) / 100)),
+        );
+        if (amount === 0) block = "armor";
+      }
       return { amount: Math.max(0, amount), block };
     }
     if (target instanceof Player) {
@@ -926,42 +1145,74 @@ export class Combat {
         0,
       );
       if (absorb >= 100) return { amount: 0, block: "immunity" };
-      amount = Math.max(0, Math.floor(amount * (1 - absorb / 100)));
+      amount = this.formula.applyAbsorbPercent(amount, absorb);
       if (request.type === "physical") {
         const session = this.registry.sessionFor(target.id);
-        const defenseMultiplier = this.defenseMultiplier(
-          session?.fightMode ?? {
-            attack: "balanced",
-            chase: true,
-            secure: true,
-          },
-        );
         const shield = equipment.find(
           (entry) =>
             entry.item.location.kind === "equipment" &&
             entry.item.location.slot === "shield",
         );
-        if (
-          !request.ignoreShield &&
-          shield &&
-          this.formula.chance(30 * defenseMultiplier)
-        ) {
-          amount -= this.formula.integer(
-            0,
-            Math.floor((shield.type.defense ?? 0) * defenseMultiplier),
+        const checksPhysical =
+          !request.ignoreShield || !request.ignoreArmor;
+        const usedDefenseBlock =
+          checksPhysical && target.consumeDefenseBlock(now);
+        if (!request.ignoreShield && usedDefenseBlock) {
+          amount -= this.formula.defenseReduction(
+            this.playerDefense(
+              target,
+              equipment,
+              session?.fightMode.attack ?? "offensive",
+              now,
+            ),
           );
-          if (amount <= 0) block = "shield";
+          if (amount <= 0) {
+            amount = 0;
+            block = "shield";
+          }
         }
-        const armor = equipment.reduce(
-          (total, entry) => total + (entry.type.armor ?? 0),
-          0,
+        const vocation = getVocation(
+          target.vocation,
+          target.progression.definitionVersion,
+        );
+        const armor = Math.floor(
+          equipment.reduce(
+            (total, entry) =>
+              entry.item.location.kind === "equipment" &&
+              [
+                "helmet",
+                "amulet",
+                "armor",
+                "legs",
+                "boots",
+                "ring",
+                "ammo",
+              ].includes(entry.item.location.slot)
+                ? total + (entry.type.armor ?? 0)
+                : total,
+            0,
+          ) * vocation.formulas.armor,
         );
         if (!request.ignoreArmor && amount > 0 && armor > 0) {
-          amount -= this.formula.integer(
-            Math.floor(armor / 2),
-            Math.floor(armor * defenseMultiplier),
+          amount -= this.formula.armorReduction(armor);
+          if (amount <= 0) {
+            amount = 0;
+            block = "armor";
+          }
+        }
+        if (
+          usedDefenseBlock &&
+          block !== "none" &&
+          shield?.type.weaponType === "shield" &&
+          target.consumeShieldTrainingBlock()
+        ) {
+          this.progression.awardSkillTries(
+            target.id,
+            this.nextEventId(`shield:${target.id}`),
+            "shielding",
+            1,
+            now,
           );
-          if (amount <= 0) block = "armor";
         }
       }
     }
@@ -1241,6 +1492,24 @@ export class Combat {
     area: SpellDefinition["area"] | MonsterAbility["area"],
   ): Position[] {
     if (area.shape === "single") return [{ ...center }];
+    if (area.shape === "tiles" && "offsets" in area && area.offsets) {
+      const anchor = area.directional ? origin : center;
+      const direction = area.directional
+        ? this.directionToward(origin, center)
+        : "north";
+      return area.offsets.map((offset) => {
+        const [x, y] = this.rotateAreaOffset(
+          offset.x,
+          offset.y,
+          direction,
+        );
+        return {
+          x: anchor.x + x,
+          y: anchor.y + y,
+          z: anchor.z,
+        };
+      });
+    }
     if (area.shape === "circle") {
       const radius = area.radius ?? 1;
       const positions: Position[] = [];
@@ -1449,6 +1718,73 @@ export class Combat {
     );
   }
 
+  private playerDefense(
+    player: Player,
+    equipment: ReadonlyArray<{ item: Item; type: ItemType }>,
+    mode: FightMode["attack"],
+    now: number,
+  ): number {
+    const weapon = equipment.find(
+      (entry) =>
+        entry.item.location.kind === "equipment" &&
+        entry.item.location.slot === "weapon",
+    );
+    const shield = equipment.find(
+      (entry) =>
+        entry.item.location.kind === "equipment" &&
+        entry.item.location.slot === "shield",
+    );
+    let defenseSkill = this.playerCombatSkill(
+      player,
+      equipment,
+      "fist",
+    );
+    let defenseValue = 7;
+    let scaling = 0.15;
+    if (weapon) {
+      defenseSkill = this.playerCombatSkill(
+        player,
+        equipment,
+        this.skillForWeapon(weapon.type.weaponType),
+      );
+      defenseValue =
+        (weapon.type.defense ?? 0) + (weapon.type.extraDefense ?? 0);
+      scaling = weapon.type.defense && weapon.type.defense > 0 ? 0.146 : 0.15;
+    }
+    if (shield) {
+      defenseSkill = this.playerCombatSkill(
+        player,
+        equipment,
+        "shielding",
+      );
+      defenseValue =
+        (shield.type.defense ?? 0) + (weapon?.type.extraDefense ?? 0);
+      scaling = 0.16;
+    }
+    const recentlyAttacked = now < player.nextAttackAt;
+    const defenseFactor = recentlyAttacked
+      ? mode === "offensive"
+        ? 0.5
+        : mode === "balanced"
+          ? 0.75
+          : 1
+      : 1;
+    const vocation = getVocation(
+      player.vocation,
+      player.progression.definitionVersion,
+    );
+    return Math.max(
+      0,
+      Math.floor(
+        (defenseSkill / 4 + 2.23) *
+          defenseValue *
+          defenseFactor *
+          scaling *
+          vocation.formulas.defense,
+      ),
+    );
+  }
+
   private playerSpecials(
     equipment: ReadonlyArray<{ item: unknown; type: ItemType }>,
   ): PlayerSpecials {
@@ -1488,6 +1824,69 @@ export class Combat {
       ),
       manaLeechPercent,
     };
+  }
+
+  private applyPlayerLeech(
+    player: Player,
+    damage: number,
+    specials: PlayerSpecials,
+    now: number,
+  ): void {
+    const health = Math.round(
+      damage *
+        (this.formula.chance(specials.lifeLeechChance)
+          ? specials.lifeLeechPercent
+          : 0) /
+        100,
+    );
+    const mana = Math.round(
+      damage *
+        (this.formula.chance(specials.manaLeechChance)
+          ? specials.manaLeechPercent
+          : 0) /
+        100,
+    );
+    if (health > 0) player.setHealth(player.health + health);
+    if (mana > 0) player.restoreMana(mana);
+    if (health > 0 || mana > 0) {
+      this.progression.syncPlayer(player, now);
+    }
+  }
+
+  private playerCombatSkill(
+    player: Player,
+    equipment: ReadonlyArray<{ item: unknown; type: ItemType }>,
+    skill: Skill,
+  ): number {
+    const modifierKey =
+      skill === "distance"
+        ? "dist"
+        : skill === "shielding"
+          ? "shield"
+          : skill;
+    const modifier = equipment.reduce(
+      (total, entry) =>
+        total +
+        (modifierKey === "fishing"
+          ? 0
+          : (entry.type.skillModifiers?.[modifierKey] ?? 0)),
+      0,
+    );
+    return Math.max(0, player.skillLevel(skill) + modifier);
+  }
+
+  private playerMagicLevel(
+    player: Player,
+    equipment: ReadonlyArray<{ item: unknown; type: ItemType }>,
+  ): number {
+    return Math.max(
+      0,
+      player.progression.magicLevel +
+        equipment.reduce(
+          (total, entry) => total + (entry.type.magicLevelPoints ?? 0),
+          0,
+        ),
+    );
   }
 
   private skillForWeapon(weaponType: string | undefined): Skill {
@@ -1538,18 +1937,6 @@ export class Combat {
     return getMissileId(`CONST_ANI_${type.shootType.toUpperCase()}`);
   }
 
-  private attackMultiplier(mode: FightMode): number {
-    if (mode.attack === "offensive") return 1.15;
-    if (mode.attack === "defensive") return 0.8;
-    return 1;
-  }
-
-  private defenseMultiplier(mode: FightMode): number {
-    if (mode.attack === "defensive") return 1.2;
-    if (mode.attack === "offensive") return 0.85;
-    return 1;
-  }
-
   private directionToward(from: Position, to: Position): Direction {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -1562,6 +1949,17 @@ export class Combat {
     if (direction === "east") return [1, 0];
     if (direction === "south") return [0, 1];
     return [-1, 0];
+  }
+
+  private rotateAreaOffset(
+    x: number,
+    y: number,
+    direction: Direction,
+  ): readonly [number, number] {
+    if (direction === "east") return [-y, x];
+    if (direction === "south") return [-x, -y];
+    if (direction === "west") return [y, -x];
+    return [x, y];
   }
 
   private nextEventId(prefix: string): string {

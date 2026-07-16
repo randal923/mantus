@@ -5,6 +5,11 @@ under [`todo/`](todo/README.md). Start with the overview for the reference
 repositories, shared architecture, dependencies, and recommended implementation
 order.
 
+Cross-cutting completion is tracked in the
+[pinned Canary feature-parity ledger](todo/00a-canary-parity.md). A feature
+slice may ship incrementally, but the pinned parity target is not complete
+until that ledger has no unsupported player- or operator-visible content.
+
 ## Backlog index
 
 1. [Foundations: generated content and migrations](todo/00-foundations.md)
@@ -21,7 +26,7 @@ order.
 12. [Shops, banking, depot, trade, and market](todo/11-economy.md)
 13. [Quests and world interactions](todo/12-quests-and-world-actions.md)
 14. [Parties, guilds, houses, and social systems](todo/13-social-and-houses.md)
-15. [Optional content and client polish](todo/14-optional-features.md)
+15. [Remaining Canary systems and client polish](todo/14-optional-features.md)
 16. [Client and session resilience](todo/15-client-resilience.md)
 17. [Production observability, operations, error handling, and security](todo/16-operations-and-security.md)
 18. [Known authentication follow-ups](todo/17-auth-follow-ups.md)

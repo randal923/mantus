@@ -26,6 +26,9 @@ executed at runtime.
   coupled durable outcome atomically. Do not await between validation and
   mutation.
 - [ ] Filter resulting tile/effect messages through ordinary visibility.
+- [ ] Inventory and implement every pinned action, move event, use callback,
+  step-in/out, equip/de-equip hook, creature event, and map-scripted
+  interaction as typed project-native behavior.
 
 ## Planned file surface
 
@@ -39,5 +42,7 @@ executed at runtime.
   and reconnects.
 - [ ] Forged action id, target, position, and destination are rejected.
 - [ ] Door/lever/teleport state remains coherent for simultaneous users.
+- [ ] The action parity report reaches zero unsupported registered actions or
+  silently ignored action/movement fields.
 
 [Back to overview](README.md)

@@ -8,7 +8,9 @@ the [audit overview](README.md) for pinned source versions.
 - [ ] Pin the exact map, DAT/SPR, Canary commit, OTClient commit, converter
   version, and hashes in `content/source-manifest.json`. Conversion must fail
   when the assets/map/content eras do not match.
-- [ ] Convert only the selected static data into project-native, typed formats.
+- [ ] Inventory and convert every pinned player-visible static definition into
+  project-native, typed formats. Staged importers may enable a subset first,
+  but their reports must retain every omitted entry and its owning parity TODO.
   Generated output must not require Canary or OTClient code at runtime.
 - [ ] Never execute downloaded Lua during an import. If bulk importing is
   approved, parse only a whitelisted literal subset offline; reject callbacks,
@@ -41,4 +43,7 @@ the [audit overview](README.md) for pinned source versions.
 ## Completion gate
 
 - [ ] Generated content has a reproducible provenance manifest.
+- [ ] A machine-readable parity inventory covers every pinned gameplay/content
+  source and fails CI when a registered entry is missing, silently ignored, or
+  lacks an owner in [`00a-canary-parity`](00a-canary-parity.md).
 - [x] Migrations are serialized, transactional, checksummed, and covered by CI.

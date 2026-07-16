@@ -16,4 +16,9 @@ One rule spans all five: never touch more than one of these systems in a
 single PR, and every commit that moves money or items carries its audit entry
 in the same transaction.
 
+Pinned parity spans all five plus the advanced-system ledger: carried money,
+banking, NPC catalogs, depot/inbox/mail/stash, player trade, market/escrow,
+store currency/content, and every associated history or delivery rule must
+match Canary behavior without adopting its schema or trusting its client.
+
 [Back to overview](README.md)

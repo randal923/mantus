@@ -6,18 +6,22 @@ import type {
   FightMode,
   FightState,
   OwnCharacterState,
+  SpellCatalogEntry,
 } from "@tibia/protocol";
-import { getCombatSpells } from "../lib/combat/getCombatSpells";
 import { CombatLog } from "./combat/CombatLog";
 import { ConditionBar } from "./combat/ConditionBar";
 import { FightControls } from "./combat/FightControls";
 import { BattleList } from "./creatures/BattleList";
+import { getSpellCombatTarget } from "../lib/combat/getSpellCombatTarget";
+import { getSpellGlyph } from "../lib/combat/getSpellGlyph";
 
 interface GameHudProps {
   spellHotkeysEnabled?: boolean;
   visibleCreatures: ReadonlyArray<CreatureState>;
   ownCharacter: OwnCharacterState;
   fightState: FightState;
+  spells: ReadonlyArray<SpellCatalogEntry>;
+  hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
   onFightModeChange: (mode: FightMode) => void;
   onCast: (spellId: string, target: CombatTarget) => void;
@@ -28,23 +32,34 @@ export function GameHud({
   visibleCreatures,
   ownCharacter,
   fightState,
+  spells: spellCatalog,
+  hasWeapon,
   combatLog,
   onFightModeChange,
   onCast,
 }: GameHudProps) {
   const { t } = useAppTranslation();
-  const combatSpells = getCombatSpells(ownCharacter.vocation);
-  const spells = combatSpells.map((spell) => {
-    const cooldown = fightState.cooldowns.find(
-      (entry) => entry.group === spell.cooldownGroup,
-    );
+  const combatSpells = spellCatalog
+    .filter((spell) => spell.origin === "spell")
+    .slice(0, 9);
+  const spells = combatSpells.map((spell, index) => {
+    const cooldown = fightState.cooldowns
+      .filter((entry) => spell.cooldownGroups.includes(entry.group))
+      .sort((left, right) => right.readyAt - left.readyAt)[0];
     return {
       id: spell.id,
-      name: t(`spells.${spell.nameKey}`),
-      glyph: spell.glyph,
-      shortcut: spell.shortcut,
+      name: spell.name,
+      effectId: spell.effectId,
+      glyph: getSpellGlyph(spell.damageType),
+      shortcut: String(index + 1),
       manaCost: spell.manaCost,
-      disabled: ownCharacter.level < spell.requiredLevel,
+      disabled:
+        ownCharacter.level < spell.requiredLevel ||
+        ownCharacter.magicLevel < spell.requiredMagicLevel ||
+        ownCharacter.mana < spell.manaCost ||
+        ownCharacter.soul < spell.soulCost ||
+        (spell.needWeapon && !hasWeapon) ||
+        spell.targetKind === "position",
       ...(cooldown
         ? {
             cooldownReadyAt: cooldown.readyAt,
@@ -76,7 +91,10 @@ export function GameHud({
               (candidate) => candidate.id === spellId,
             );
             if (!spell) return;
-            onCast(spell.id, { kind: spell.target });
+            onCast(
+              spell.id,
+              getSpellCombatTarget(spell, fightState.attackTargetId),
+            );
           }}
         />
         <p className="text-[10px] tracking-wider text-ui-muted/70 uppercase">

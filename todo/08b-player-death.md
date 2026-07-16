@@ -6,9 +6,9 @@ shared death transaction from
 
 ## Player death
 
-- [ ] Decide and document death penalties: temple position, health/mana restore,
-  experience/skill loss, blessings, item/container loss, unfair-fight/PVP rules,
-  and protection behavior.
+- [ ] Import and document pinned Canary death penalties: temple position,
+  health/mana restore, experience/skill loss, blessings, item/container loss,
+  unfair-fight/PVP rules, protection behavior, and all vocation/level modifiers.
 - [ ] Apply penalties, item ownership changes, and audit events atomically before
   acknowledging the respawn/login state.
 - [ ] Never let a reconnect or duplicate death packet skip or apply a penalty

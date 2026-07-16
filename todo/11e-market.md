@@ -13,6 +13,8 @@ Treat every operation as concurrent by default.
   deterministic price/amount math, fees, idempotency keys, and audit records.
 - [ ] Bound active orders, query sizes, history, and request rates. Never expose
   seller inventory or other private state.
+- [ ] Match pinned market browse/detail, create/accept/cancel, vocation/level
+  restrictions, fees, history, depot delivery, and item classification rules.
 
 ## Planned file surface
 

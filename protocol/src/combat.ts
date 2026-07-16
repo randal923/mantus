@@ -25,7 +25,13 @@ export const COMBAT_ORIGINS = [
   "monster",
 ] as const;
 
-export const AREA_SHAPES = ["single", "circle", "beam", "cone"] as const;
+export const AREA_SHAPES = [
+  "single",
+  "circle",
+  "beam",
+  "cone",
+  "tiles",
+] as const;
 
 export const HIT_BLOCKS = [
   "none",
@@ -68,6 +74,7 @@ export const fightAttackModeSchema = z.enum(FIGHT_ATTACK_MODES);
 export const combatTargetSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("self") }).strict(),
   z.object({ kind: z.literal("attack-target") }).strict(),
+  z.object({ kind: z.literal("direction") }).strict(),
   z
     .object({
       kind: z.literal("creature"),
@@ -81,6 +88,34 @@ export const combatTargetSchema = z.discriminatedUnion("kind", [
     })
     .strict(),
 ]);
+
+export const spellTargetKindSchema = z.enum([
+  "self",
+  "target",
+  "target-or-direction",
+  "direction",
+  "position",
+]);
+
+export const spellCatalogEntrySchema = z
+  .object({
+    id: z.string().min(1).max(96),
+    origin: z.enum(["spell", "rune"]),
+    runeItemTypeId: z.number().int().positive().max(65_535).nullable(),
+    name: z.string().min(1).max(96),
+    words: z.string().min(1).max(96).nullable(),
+    damageType: damageTypeSchema,
+    effectId: z.number().int().positive().max(65_535),
+    manaCost: z.number().int().min(0).max(100_000),
+    soulCost: z.number().int().min(0).max(200),
+    requiredLevel: z.number().int().min(0).max(10_000),
+    requiredMagicLevel: z.number().int().min(0).max(1_000),
+    needWeapon: z.boolean(),
+    cooldownMs: z.number().int().min(0).max(60 * 60 * 1000),
+    cooldownGroups: z.array(z.string().min(1).max(128)).min(1).max(8),
+    targetKind: spellTargetKindSchema,
+  })
+  .strict();
 
 export const fightModeSchema = z
   .object({
@@ -121,6 +156,7 @@ export type AreaShape = z.infer<typeof areaShapeSchema>;
 export type HitBlock = z.infer<typeof hitBlockSchema>;
 export type ConditionType = z.infer<typeof conditionTypeSchema>;
 export type CombatTarget = z.infer<typeof combatTargetSchema>;
+export type SpellCatalogEntry = z.infer<typeof spellCatalogEntrySchema>;
 export type FightMode = z.infer<typeof fightModeSchema>;
 export type CombatConditionState = z.infer<
   typeof combatConditionStateSchema

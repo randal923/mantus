@@ -17,6 +17,8 @@ inputs.
 - [ ] Audit ownership, rent, auction, and mass item movement.
 - [ ] Run rent, auction expiry, and eviction from durable idempotent schedules;
   do not depend on a daily server save or restart to advance them.
+- [ ] Match pinned house auctions/transfers, access-list syntax, door/guest/
+  subowner spells, beds, rent warnings, town ownership, and item eviction.
 
 ## Planned file surface
 

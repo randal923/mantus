@@ -8,6 +8,7 @@ import {
   damageTypeSchema,
   fightStateSchema,
   hitBlockSchema,
+  spellCatalogEntrySchema,
 } from "./combat";
 import { creatureStateSchema } from "./creature";
 import { DIRECTIONS } from "./direction";
@@ -52,6 +53,7 @@ export const welcomeMessageSchema = z.object({
   creatures: z.array(creatureStateSchema),
   inventory: inventoryStateSchema,
   fightState: fightStateSchema,
+  spells: z.array(spellCatalogEntrySchema).max(256),
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -127,7 +129,7 @@ export const combatTextMessageSchema = z.object({
 export const magicEffectMessageSchema = z.object({
   type: z.literal("magic-effect"),
   position: positionSchema,
-  effectId: z.number().int().positive().max(255),
+  effectId: z.number().int().positive().max(65_535),
 });
 
 export const distanceMissileMessageSchema = z.object({

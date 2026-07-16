@@ -31,7 +31,7 @@ export class Session {
   bufferedMovementDirection: Direction | null = null;
   attackTargetId: string | null = null;
   fightMode: FightMode = {
-    attack: "balanced",
+    attack: "offensive",
     chase: true,
     secure: true,
   };

@@ -15,6 +15,8 @@
     "items:catalog": "node tools/buildItemCatalog.mjs",
     "map:convert": "node tools/convertOtbm.mjs",
     "creatures:import": "node tools/importCanaryCreatures.mjs",
+    "spells:import": "node tools/importCanarySpells.mjs",
+    "character:set-level": "node --env-file-if-exists=.env tools/setCharacterLevel.mjs",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
     "test": "yarn test:tools && yarn workspace client test && yarn workspace server test",
     "test:tools": "node --test tools/*.test.mjs",

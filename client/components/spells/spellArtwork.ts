@@ -1,6 +1,6 @@
 import type { SpellArtwork } from "./spellTypes";
 
-export const SPELL_ARTWORK_BY_EFFECT = {
+export const SPELL_ARTWORK_BY_EFFECT: Readonly<Record<number, SpellArtwork>> = {
   1: {"width":1,"height":1,"spriteIds":[2641]},
   5: {"width":1,"height":1,"spriteIds":[2679]},
   7: {"width":2,"height":2,"spriteIds":[480598,480597,480596,480595]},
@@ -21,10 +21,11 @@ export const SPELL_ARTWORK_BY_EFFECT = {
   42: {"width":2,"height":2,"spriteIds":[480848,480847,480846,480845]},
   43: {"width":2,"height":2,"spriteIds":[480885,480884,480883,480882]},
   44: {"width":2,"height":2,"spriteIds":[480954,480953,480952,480951]},
+  45: {"width":2,"height":2,"spriteIds":[480976,0,480975,480974]},
   46: {"width":2,"height":2,"spriteIds":[481038,481037,481036,481035]},
   47: {"width":1,"height":2,"spriteIds":[46209,46208]},
   50: {"width":2,"height":2,"spriteIds":[481072,481071,481070,481069]},
   219: {"width":1,"height":1,"spriteIds":[3277]},
   220: {"width":1,"height":1,"spriteIds":[3285]},
   244: {"width":2,"height":2,"spriteIds":[482299,482298,482297,482296]},
-} as const satisfies Readonly<Record<number, SpellArtwork>>;
+};

@@ -351,7 +351,7 @@ describe("Combat", () => {
       harness.session,
       {
         type: "cast-spell",
-        spellId: "light-healing",
+        spellId: "exura-infir-ico",
         target: { kind: "self" },
       },
       1_000,
@@ -362,14 +362,14 @@ describe("Combat", () => {
       harness.session,
       {
         type: "cast-spell",
-        spellId: "light-healing",
+        spellId: "exura-infir-ico",
         target: { kind: "self" },
       },
       1_000,
     );
 
     expect(healthAfterFirst).toBeGreaterThan(harness.player.maxHealth - 50);
-    expect(manaAfterFirst).toBe(manaBefore - 20);
+    expect(manaAfterFirst).toBe(manaBefore - 10);
     expect(harness.player.health).toBe(healthAfterFirst);
     expect(harness.player.mana).toBe(manaAfterFirst);
     expect(
@@ -379,7 +379,44 @@ describe("Combat", () => {
           message.code === "combat-action-failed",
       ),
     ).toBe(true);
-    expect(harness.session.combatCooldowns.get("healing")?.readyAt).toBe(2_000);
+    expect(
+      harness.session.combatCooldowns.get("group:healing")?.readyAt,
+    ).toBe(2_000);
+  });
+
+  it("casts the level-one Canary directional spell with its imported area", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(1, "Druid", 0),
+    });
+    const target = makeMonster(
+      "monster-instance:chill-out:0",
+      { x: 1, y: 2, z: 7 },
+    );
+    harness.world.addCreature(target);
+    harness.session.knownCreatureIds.add(target.id);
+    const manaBefore = harness.player.mana;
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-infir-frigo-hur",
+        target: { kind: "direction" },
+      },
+      1_000,
+    );
+
+    expect(target.health).toBeLessThan(target.maxHealth);
+    expect(target.health).toBeGreaterThanOrEqual(target.maxHealth - 4);
+    expect(harness.player.mana).toBe(manaBefore - 8);
+    expect(
+      harness.session.combatCooldowns.get(
+        "spell:exevo-infir-frigo-hur",
+      )?.readyAt,
+    ).toBe(5_000);
+    expect(
+      harness.session.combatCooldowns.get("group:attack")?.readyAt,
+    ).toBe(3_000);
   });
 
   it("does not let rapid ticks bypass the authoritative attack speed", async () => {
@@ -413,6 +450,56 @@ describe("Combat", () => {
       1_000 + harness.player.progression.attackSpeedMs,
     );
     expect(monster.health).toBeLessThan(healthAfterFirst);
+  });
+
+  it("lets a level-one Knight damage Canary's dog with the starter sabre", async () => {
+    const harness = await makeHarness({
+      inventory: [
+        ownedItem(WEAPON_ID, 3273, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+    });
+    harness.session.fightMode.attack = "offensive";
+    const dog = makeMonster(
+      "monster-instance:dog:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({
+        id: "dog",
+        name: "Dog",
+        description: "a dog",
+        health: 500,
+        maxHealth: 500,
+        experience: 0,
+        defenses: [
+          {
+            kind: "stats",
+            intervalMs: 0,
+            chance: 100,
+            target: "self",
+            range: 0,
+            area: { shape: "single" },
+            defense: 5,
+            armor: 5,
+          },
+        ],
+      }),
+    );
+    dog.tickDefense(0);
+    dog.tickDefense(1_000);
+    harness.world.addCreature(dog);
+    harness.session.knownCreatureIds.add(dog.id);
+    harness.combat.selectTarget(harness.session, dog.id, 1_000);
+
+    for (let attack = 0; attack < 20; attack++) {
+      harness.combat.tick(
+        1_000 + attack * harness.player.progression.attackSpeedMs,
+      );
+    }
+
+    expect(dog.health).toBeLessThanOrEqual(488);
   });
 
   it("revalidates projectile blockers and protection zones at execution", async () => {

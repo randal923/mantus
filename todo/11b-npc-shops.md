@@ -14,6 +14,8 @@ operation as concurrent by default.
   at execution.
 - [ ] Purchase/sale item and money legs plus audit entry commit in one database
   transaction before success is sent.
+- [ ] Import every pinned NPC buy/sell catalog, subtype, price, stock,
+  requirement, and shop callback; no shop offer may be silently dropped.
 
 ## Planned file surface
 

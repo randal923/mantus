@@ -11,6 +11,9 @@ character ids, [`combat`](07-combat.md) kill attribution, and
 - [ ] Define visibility/status sharing and experience eligibility by range,
   floor, level spread, combat contribution, and activity.
 - [ ] Re-check party membership/eligibility when a kill reward executes.
+- [ ] Match pinned party analyzer, shared-experience activation, status icons,
+  vocation boosts, spell interactions, leader/member finder flows, and
+  invite/leadership edge cases.
 
 ## Planned file surface
 

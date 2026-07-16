@@ -1,4 +1,4 @@
-import type { Position, Skill } from "@tibia/protocol";
+import type { HitBlock, Position, Skill } from "@tibia/protocol";
 import type { Character } from "./character/Character";
 import { Creature } from "./creature/Creature";
 import { CharacterProgression } from "./progression/CharacterProgression";
@@ -12,6 +12,9 @@ export class Player extends Creature<Character["outfit"]> {
   readonly lastLoginAt: Date | null;
   readonly version: number;
   readonly progression: CharacterProgression;
+  private addAttackSkillPoint = false;
+  private bloodHitCount = 0;
+  private shieldBlockCount = 0;
   private speedModifier = 0;
 
   constructor(character: Character, position: Position, now = Date.now()) {
@@ -90,6 +93,39 @@ export class Player extends Creature<Character["outfit"]> {
     return (
       this.progression.skills.find((state) => state.skill === skill)?.level ?? 10
     );
+  }
+
+  recordAttackBlock(block: HitBlock): void {
+    if (block === "none") {
+      this.addAttackSkillPoint = true;
+      this.bloodHitCount = 30;
+      this.shieldBlockCount = 30;
+      return;
+    }
+    if (block === "shield" || block === "armor") {
+      if (this.bloodHitCount > 0) {
+        this.addAttackSkillPoint = true;
+        this.bloodHitCount--;
+        return;
+      }
+    }
+    this.addAttackSkillPoint = false;
+  }
+
+  attackSkillTries(
+    kind: "melee" | "distance",
+    block: HitBlock,
+  ): number {
+    if (!this.addAttackSkillPoint) return 0;
+    if (kind === "melee") return block === "immunity" ? 0 : 1;
+    if (block === "none") return 2;
+    return block === "shield" || block === "armor" ? 1 : 0;
+  }
+
+  consumeShieldTrainingBlock(): boolean {
+    if (this.shieldBlockCount === 0) return false;
+    this.shieldBlockCount--;
+    return true;
   }
 
   restoreAfterDeath(): void {

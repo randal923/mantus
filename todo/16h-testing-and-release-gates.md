@@ -23,6 +23,10 @@ the final gate before public access; it assumes 16a–16g are in place.
 - [ ] Add tests for tick exceptions, WebSocket emitter/send failures, dependency
   timeouts, DB pool exhaustion, telemetry exporter failure/backpressure,
   redaction, metric cardinality, alert rules, and fatal shutdown deadlines.
+- [ ] Generate and verify the pinned Canary parity inventory in CI. Fail when a
+  registered gameplay definition, callback, placement, persistent system, or
+  player/operator-facing action is absent from the ledger, regresses to
+  unsupported, or loses aggregate/fixture coverage.
 
 ## Production checklist
 
@@ -39,5 +43,8 @@ the final gate before public access; it assumes 16a–16g are in place.
   admin authorization, and audit review are live and exercised by an incident
   drill.
 - [ ] No known character/item/economy race is missing its regression test.
+- [ ] [`00a-canary-parity`](00a-canary-parity.md) has zero unsupported
+  registered gameplay entries, zero unreviewed callbacks/ignored gameplay
+  fields, and no stale dependency blockers.
 
 [Back to overview](README.md)

@@ -17,6 +17,9 @@ idempotent across races and restarts.
   party rights, boss contribution, and timeout rules before exposing contents.
 - [ ] Persist enough state that restart cannot reroll loot, duplicate a corpse,
   or lose an already committed rare.
+- [ ] Import and match every pinned monster loot table, corpse id/container
+  behavior, reward-boss/reward-chest rule, quick-loot eligibility, bestiary/
+  bosstiary kill update, and special death/loot callback.
 
 ## Planned file surface
 
@@ -33,5 +36,8 @@ idempotent across races and restarts.
 - [ ] Restart/retry cannot reroll or duplicate committed loot.
 - [ ] Two players racing for protected loot produce one valid owner/move.
 - [ ] Corpse/loot packets are visibility- and permission-filtered.
+- [ ] Aggregate parity tests cover every loot-bearing monster and fail when an
+  imported loot entry, condition, count/chance, child container, or death
+  callback is missing.
 
 [Back to overview](README.md)

@@ -5,14 +5,14 @@ Part of [`10-npcs`](10-npcs.md). Depends on the shared
 
 ## NPC content
 
-- [ ] Import allowed NPC placements from the OTBM-referenced external NPC spawn
+- [ ] Import every NPC placement from the OTBM-referenced external NPC spawn
   XML: center/radius, x/y offsets, `centerz`, direction, and matched type id.
 - [ ] Define typed `NpcType` data for name/outfit/speed, home/leash behavior,
   speech triggers, dialogue graph, travel offers, shop id, quest/storage gates,
   and scripted action references.
-- [ ] Never execute imported Lua. Represent supported dialogues/actions in a
-  small reviewed data model; implement procedural behavior as explicit
-  TypeScript commands.
+- [ ] Never execute imported Lua. Represent every dialogue/action in a small
+  reviewed data model; implement procedural behavior as explicit TypeScript
+  commands.
 - [ ] Validate missing definitions, aliases, blocked positions, duplicate ids,
   unavailable destinations, and unsupported callbacks during import.
 
@@ -27,5 +27,7 @@ Part of [`10-npcs`](10-npcs.md). Depends on the shared
 - [ ] Spawn positions and definitions resolve without executing Lua.
 - [ ] Import fails closed on missing definitions, duplicate ids, blocked
   positions, and unsupported callbacks.
+- [ ] The NPC parity report reaches zero unreviewed callbacks, ignored gameplay
+  assignments, ambiguous variants, or silently omitted placements.
 
 [Back to overview](README.md)

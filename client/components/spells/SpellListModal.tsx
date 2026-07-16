@@ -1,20 +1,26 @@
-"use client";
-
-import type { CharacterVocation } from "@tibia/protocol";
+import type {
+  CharacterVocation,
+  SpellCatalogEntry,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { getSpellGlyph } from "../../lib/combat/getSpellGlyph";
 import { Modal } from "../ui/Modal";
 import { EffectArtwork } from "./EffectArtwork";
-import { SPELL_LISTS } from "./spellLists";
+import { SPELL_ARTWORK_BY_EFFECT } from "./spellArtwork";
 
 interface SpellListModalProps {
   vocation: CharacterVocation;
+  spells: ReadonlyArray<SpellCatalogEntry>;
   onClose: () => void;
 }
 
-export function SpellListModal({ vocation, onClose }: SpellListModalProps) {
+export function SpellListModal({
+  vocation,
+  spells,
+  onClose,
+}: SpellListModalProps) {
   const { t } = useAppTranslation();
   const vocationName = t(`vocations.${vocation}.name`);
-  const spells = SPELL_LISTS[vocation];
 
   return (
     <Modal
@@ -38,7 +44,15 @@ export function SpellListModal({ vocation, onClose }: SpellListModalProps) {
               className="flex items-center gap-3 rounded-lg border border-ui-stone-light/15 bg-ui-panel-deep/55 p-3 shadow-inner shadow-black/35"
             >
               <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-accent-light/35 bg-ui-accent-deep/55 shadow-inner shadow-black/60">
-                <EffectArtwork {...spell.artwork} />
+                {SPELL_ARTWORK_BY_EFFECT[spell.effectId] ? (
+                  <EffectArtwork
+                    {...SPELL_ARTWORK_BY_EFFECT[spell.effectId]}
+                  />
+                ) : (
+                  <span className="font-display text-xl text-ui-text-bright">
+                    {getSpellGlyph(spell.damageType)}
+                  </span>
+                )}
               </div>
 
               <div className="min-w-0 flex-1">
@@ -46,7 +60,7 @@ export function SpellListModal({ vocation, onClose }: SpellListModalProps) {
                   {spell.name}
                 </h3>
                 <p className="truncate text-xs italic text-ui-muted">
-                  {spell.words}
+                  {spell.words ?? "—"}
                 </p>
               </div>
 
@@ -64,7 +78,7 @@ export function SpellListModal({ vocation, onClose }: SpellListModalProps) {
                     {t("spells.list.mana")}
                   </dt>
                   <dd className="text-xs font-semibold tabular-nums text-ui-mana-light">
-                    {spell.manaCost ?? t("spells.list.variable")}
+                    {spell.manaCost}
                   </dd>
                 </div>
               </dl>

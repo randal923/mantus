@@ -12,6 +12,8 @@ already exist in the schema.
   move still validates session, container revision, slots, capacity, and owner.
 - [ ] Define inbox/mail delivery ownership, limits, expiry/return rules, and
   offline transactional behavior without loading an offline live aggregate.
+- [ ] Match pinned depot search/retrieval, inbox, mailbox, supply stash, reward
+  delivery, and town/depot behavior with bounded authorized projections.
 
 ## Planned file surface
 

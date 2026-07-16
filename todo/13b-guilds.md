@@ -10,6 +10,8 @@ character ids and [`chat`](09-chat.md) channel membership.
 - [ ] Implement create/invite/accept/remove/promote/disband as authorized
   transactions; handle concurrent membership/name races in the database.
 - [ ] Add guild channels only through the chat membership/permission path.
+- [ ] Implement pinned guild wars, war invitations/ends, kill accounting,
+  emblems, online/member lists, rank permissions, and guild message behavior.
 
 ## Planned file surface
 

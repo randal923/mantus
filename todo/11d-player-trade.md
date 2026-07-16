@@ -15,6 +15,9 @@ concurrent by default; write the exploit test first.
   players immediately before commit.
 - [ ] Transfer both item legs in one transaction and append the audit record in
   that transaction; then publish committed state.
+- [ ] Match pinned trade inspection, container-content display, distance,
+  capacity, cancellation, and configuration behavior through typed intents and
+  projections.
 
 ## Planned file surface
 

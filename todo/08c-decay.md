@@ -12,6 +12,9 @@ atomic [`items`](05-items-and-inventory.md) and the corpse lifecycle from
   semantics. Corpse container access must close/reconcile when it transforms.
 - [ ] Re-check item identity, version, and location at execution so moving an
   item cannot cause a stale decay job to destroy its replacement.
+- [ ] Import every pinned decay duration, transform chain, stop condition,
+  field/corpse lifecycle, and special decay callback; no gameplay item with
+  decay metadata may remain display-only.
 
 ## Planned file surface
 

@@ -17,7 +17,9 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
 - [ ] Route hello/goodbye/local NPC speech through the visibility-aware chat
   system; private dialogue state is sent only to that player.
 - [ ] Implement greeting, keyword branching, information, quest hooks, and
-  travel first; shops call the atomic economy service.
+  travel first; shops call the atomic economy service. Continue until every
+  pinned NPC dialogue branch, focus rule, action, travel offer, shop link, and
+  storage gate is represented.
 
 ## Travel safety
 
@@ -42,5 +44,7 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
   ignored/rejected.
 - [ ] Concurrent travel/payment cannot double-charge or travel without payment.
 - [ ] NPC private state and offers are delivered only to the relevant player.
+- [ ] NPC parity fixtures prove every imported dialogue/action has an executable
+  typed path or an explicit non-content classification.
 
 [Back to overview](README.md)

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import type {
   CharacterCreationOptions,
   CharacterSummary,
-  CombatTarget,
   CreatureState,
   CreateCharacterInput,
   Direction,
@@ -12,6 +11,7 @@ import type {
   InventoryState,
   OwnCharacterState,
   ServerErrorCode,
+  SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
@@ -19,6 +19,7 @@ import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { updateVisibleCreatures } from "../lib/creatures/updateVisibleCreatures";
 import { useLanguageStore } from "../stores/useLanguageStore";
+import { getRuneCombatTarget } from "../lib/combat/getRuneCombatTarget";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
@@ -66,6 +67,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     ReadonlyArray<CreatureState>
   >([]);
   const [fightState, setFightState] = useState<FightState | null>(null);
+  const [spells, setSpells] = useState<ReadonlyArray<SpellCatalogEntry>>([]);
   const [combatLog, setCombatLog] = useState<ReadonlyArray<string>>([]);
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -86,6 +88,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setInventory(null);
     setVisibleCreatures([]);
     setFightState(null);
+    setSpells([]);
     setCombatLog([]);
     setCharacterBusy(characterId !== null);
     setInventoryOpen(false);
@@ -196,6 +199,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setOwnCharacter(message.character);
             setInventory(message.inventory);
             setFightState(message.fightState);
+            setSpells(message.spells);
             setCharacterBusy(false);
             setServerError(null);
           }
@@ -264,6 +268,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") joinedRef.current = false;
           if (nextStatus === "disconnected") setVisibleCreatures([]);
           if (nextStatus === "disconnected") setFightState(null);
+          if (nextStatus === "disconnected") setSpells([]);
           if (nextStatus === "disconnected") setCombatLog([]);
           setStatus(nextStatus);
         },
@@ -456,6 +461,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               visibleCreatures={visibleCreatures}
               ownCharacter={ownCharacter}
               fightState={fightState}
+              spells={spells}
+              hasWeapon={Boolean(inventory?.equipment.weapon)}
               combatLog={combatLog}
               onFightModeChange={(mode) =>
                 clientRef.current?.setFightMode(mode)
@@ -488,10 +495,17 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   clientRef.current?.unequipItem(item, slot)
                 }
                 onUseRune={(item) => {
-                  const target: CombatTarget =
-                    item.typeId === 3160
-                      ? { kind: "self" }
-                      : { kind: "attack-target" };
+                  const rune = spells.find(
+                    (spell) =>
+                      spell.origin === "rune" &&
+                      spell.runeItemTypeId === item.typeId,
+                  );
+                  const target = getRuneCombatTarget(
+                    rune,
+                    fightState?.attackTargetId ?? null,
+                    visibleCreatures,
+                    ownCharacter.position,
+                  );
                   clientRef.current?.useRune(item, target);
                 }}
                 onDrop={(item) =>

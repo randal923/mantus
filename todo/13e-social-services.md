@@ -5,11 +5,17 @@ services; each can be its own PR.
 
 ## Other social services
 
-- [ ] VIP/friends and presence with privacy/ignore rules.
-- [ ] Highscores from bounded read models, not unrestricted game-state queries.
+- [ ] Match pinned VIP/friends, VIP groups/icons/descriptions, presence, and
+  privacy/ignore rules, friend-system actions, typing state, leader/member
+  finder visibility, and exiva restrictions.
+- [ ] Match pinned highscore categories and filters through bounded read models,
+  not unrestricted game-state queries.
 - [ ] Mail/inbox integrated with the item ownership model.
 - [ ] Player reports, moderation notes/actions, mutes, kicks, and bans with
   authorization and audit logging.
+- [ ] Include pinned achievements, titles, badges, namelocks, and public
+  character-information projections, livestream/casting, reports, and bug
+  reports in the appropriate social/profile model.
 
 ## Planned file surface
 
