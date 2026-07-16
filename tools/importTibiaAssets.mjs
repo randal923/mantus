@@ -79,6 +79,11 @@ class BinaryReader {
     return this.buffer[this.offset++];
   }
 
+  i8() {
+    const value = this.u8();
+    return value > 127 ? value - 256 : value;
+  }
+
   u16() {
     this.require(2);
     const value = this.buffer.readUInt16LE(this.offset);
@@ -89,6 +94,13 @@ class BinaryReader {
   u32() {
     this.require(4);
     const value = this.buffer.readUInt32LE(this.offset);
+    this.offset += 4;
+    return value;
+  }
+
+  i32() {
+    this.require(4);
+    const value = this.buffer.readInt32LE(this.offset);
     this.offset += 4;
     return value;
   }
@@ -134,6 +146,9 @@ function createFlags() {
     elevation: 0,
     lyingCorpse: false,
     animateAlways: false,
+    topEffect: false,
+    lightIntensity: 0,
+    lightColor: 0,
     floorChange: false,
   };
 }
@@ -210,6 +225,9 @@ function readFlags(reader) {
       case ATTR.animateAlways:
         flags.animateAlways = true;
         break;
+      case ATTR.topEffect:
+        flags.topEffect = true;
+        break;
       case ATTR.fullGround:
         flags.fullGround = true;
         break;
@@ -225,8 +243,8 @@ function readFlags(reader) {
         reader.u16();
         break;
       case ATTR.light:
-        reader.u16();
-        reader.u16();
+        flags.lightIntensity = reader.u16();
+        flags.lightColor = reader.u16();
         break;
       case ATTR.market:
         reader.u16();
@@ -244,7 +262,6 @@ function readFlags(reader) {
       case ATTR.usable:
       case ATTR.wrapable:
       case ATTR.unwrapable:
-      case ATTR.topEffect:
       case ATTR.upgradeClassification:
       case ATTR.wearOut:
       case ATTR.clockExpire:
@@ -261,7 +278,36 @@ function readFlags(reader) {
   }
 }
 
-function readObject(reader, category, clientId) {
+function readAnimation(reader, phases, enhancedAnimations) {
+  if (phases <= 1) return null;
+  if (!enhancedAnimations) return null;
+
+  const timingMode = reader.u8() === 0 ? "asynchronous" : "synchronized";
+  const loopCount = reader.i32();
+  const rawStartPhase = reader.i8();
+  if (rawStartPhase < -1 || rawStartPhase >= phases) {
+    throw new Error(`animation start phase ${rawStartPhase} is invalid for ${phases} phases`);
+  }
+  const phaseMetadata = Array.from({ length: phases }, () => {
+    const minimumDurationMs = reader.u32();
+    const maximumDurationMs = reader.u32();
+    if (maximumDurationMs < minimumDurationMs) {
+      throw new Error("animation maximum duration is below its minimum");
+    }
+    return { minimumDurationMs, maximumDurationMs };
+  });
+  return {
+    source: "enhanced",
+    timingMode,
+    loopType:
+      loopCount < 0 ? "ping-pong" : loopCount === 0 ? "infinite" : "counted",
+    loopCount,
+    startPhase: rawStartPhase === -1 ? null : rawStartPhase,
+    phases: phaseMetadata,
+  };
+}
+
+function readObject(reader, category, clientId, enhancedAnimations) {
   const flags = readFlags(reader);
   const width = reader.u8();
   const height = reader.u8();
@@ -274,12 +320,13 @@ function readObject(reader, category, clientId) {
   const py = reader.u8();
   const pz = reader.u8();
   const phases = reader.u8();
+  const animation = readAnimation(reader, phases, enhancedAnimations);
   const spriteCount = width * height * layers * px * py * pz * phases;
   if (spriteCount <= 0 || spriteCount > MAX_SPRITES_PER_OBJECT) {
     throw new Error(`${category} ${clientId} declares ${spriteCount} sprites`);
   }
   const sprites = Array.from({ length: spriteCount }, () => reader.u32());
-  return {
+  const object = {
     category,
     clientId,
     width,
@@ -292,9 +339,10 @@ function readObject(reader, category, clientId) {
     flags,
     sprites,
   };
+  return animation ? { ...object, animation } : object;
 }
 
-function parseDat(buffer) {
+function parseDat(buffer, enhancedAnimations) {
   const reader = new BinaryReader(buffer);
   const datSignature = reader.u32();
   const counts = {
@@ -305,11 +353,11 @@ function parseDat(buffer) {
   };
   const objects = [];
   for (let id = 100; id <= counts.item; id++) {
-    objects.push(readObject(reader, "item", id));
+    objects.push(readObject(reader, "item", id, enhancedAnimations));
   }
   for (const category of ["outfit", "effect", "missile"]) {
     for (let id = 1; id <= counts[category]; id++) {
-      objects.push(readObject(reader, category, id));
+      objects.push(readObject(reader, category, id, enhancedAnimations));
     }
   }
   if (reader.offset !== buffer.length) {
@@ -333,11 +381,29 @@ function validateObjects(objects, spriteCount) {
   const items = new Map(
     objects.filter((object) => object.category === "item").map((object) => [object.clientId, object]),
   );
-  for (const id of [106, 429, 1281, 2109, 50340]) {
+  for (const id of [106, 290, 429, 776, 1281, 2109, 50340]) {
     if (!items.has(id)) throw new Error(`required map item ${id} is missing from DAT`);
   }
-  if (!items.get(106).flags.ground || !items.get(1281).flags.onBottom) {
+  if (
+    !items.get(106).flags.ground ||
+    !items.get(290).flags.groundBorder ||
+    !items.get(776).flags.onTop ||
+    !items.get(1281).flags.onBottom
+  ) {
     throw new Error("landmark flags do not match the expected Tibia client-id layout");
+  }
+  if (
+    items.get(622)?.phases !== 8 ||
+    items.get(629)?.phases !== 14 ||
+    items.get(4597)?.phases !== 14
+  ) {
+    throw new Error("animated-water phase counts do not match the expected DAT");
+  }
+  if (
+    items.get(100)?.flags.lightIntensity !== 3 ||
+    items.get(100)?.flags.lightColor !== 156
+  ) {
+    throw new Error("light metadata does not match the expected DAT");
   }
   return maxSpriteId;
 }
@@ -430,6 +496,7 @@ const repoRoot = resolve(import.meta.dirname, "..");
 const args = process.argv.slice(2);
 const validateOnly = args.includes("--validate-only");
 const metadataOnly = args.includes("--metadata-only");
+const enhancedAnimations = args.includes("--enhanced-animations");
 if (validateOnly && metadataOnly) {
   throw new Error("--validate-only and --metadata-only cannot be combined");
 }
@@ -447,7 +514,7 @@ if (!validateOnly) {
 }
 
 const dat = await readFile(datPath);
-const parsed = parseDat(dat);
+const parsed = parseDat(dat, enhancedAnimations);
 console.log(
   `objects: items through ${parsed.counts.item}, ${parsed.counts.outfit} outfits, ${parsed.counts.effect} effects, ${parsed.counts.missile} missiles`,
 );
@@ -464,7 +531,7 @@ if (validateOnly) {
 }
 
 const objectsFile = {
-  formatVersion: 1,
+  formatVersion: 2,
   source: {
     datSha256: createHash("sha256").update(dat).digest("hex"),
     sprSha256: createHash("sha256").update(spr).digest("hex"),
@@ -474,7 +541,7 @@ const objectsFile = {
   counts: parsed.counts,
   profile: {
     attrShift: false,
-    enhancedAnim: false,
+    enhancedAnim: enhancedAnimations,
     frameGroups: false,
     spritesU32: true,
   },

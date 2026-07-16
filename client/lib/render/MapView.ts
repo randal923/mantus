@@ -1,19 +1,25 @@
-import { Container, Sprite } from "pixi.js";
+import { Container, Sprite, Texture } from "pixi.js";
 import type { Position, TileState, ViewRange } from "@tibia/protocol";
 import type { AssetStore, TibiaObject } from "./AssetStore";
+import { AnimatedMapItemRegistry } from "./AnimatedMapItemRegistry";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
+import { getItemInstanceSeed } from "./getItemInstanceSeed";
 import { getMapItemPattern } from "./getMapItemPattern";
-import { getMapObjectZ } from "./getMapObjectZ";
-import { getOrderedTileObjects } from "./getOrderedTileObjects";
+import { getMapSpritePosition } from "./getMapSpritePosition";
+import { getMergedTileItems } from "./getMergedTileItems";
+import {
+  getTileRenderLayers,
+  type LayeredTileObject,
+  type TileRenderItem,
+} from "./getTileRenderLayers";
 import { getVisibleFloors } from "./getVisibleFloors";
-import { TILE_SIZE } from "./tileSize";
+import { projectFloorPosition } from "./projectFloorPosition";
 
 const GROUND_FLOOR = 7;
 /** Draw deeper floors first so physically higher floors can cover them. */
 const FLOORS = Array.from({ length: 16 }, (_, index) => 15 - index);
 const STATIC_TILE_MARGIN = 2;
 const MAX_CACHED_REGIONS = 48;
-const MAX_ELEVATION = 24;
 
 interface MapManifest {
   regionSize: number;
@@ -21,7 +27,7 @@ interface MapManifest {
 }
 
 interface Region {
-  /** (dy * regionSize + dx) -> draw ids in stack order (converter output). */
+  /** (dy * regionSize + dx) -> immutable ids in source stack order. */
   tiles: Map<number, number[]>;
 }
 
@@ -31,17 +37,19 @@ interface FloorLayers {
   objects: Container;
 }
 
+interface RenderedTile {
+  sprites: Sprite[];
+  animatedItemIds: string[];
+}
+
 /**
- * Streams converted map regions (see tools/convertOtbm.mjs) over HTTP and
- * keeps a sliding window of tiles drawn around the own player. Terrain is
- * public, static data; everything dynamic still arrives over the socket.
- *
- * Floors above ground draw offset one tile up-left per level (Tibia's
- * height perspective) and are hidden while the player stands under a roof.
+ * Streams the public static map, merges server-authorized mutable items, and
+ * renders only the floor windows visible from the authoritative camera tile.
  */
 export class MapView {
   readonly container = new Container();
   private readonly floors = new Map<number, FloorLayers>();
+  private readonly animatedItems = new AnimatedMapItemRegistry();
   private manifest: MapManifest | null = null;
   private mapName = "";
   /** z -> region keys that exist on disk for that floor. */
@@ -49,10 +57,10 @@ export class MapView {
   private readonly regions = new Map<string, Promise<Region | null>>();
   private readonly loaded = new Map<string, Region | null>();
   private readonly regionUse = new Map<string, number>();
-  private readonly drawnTiles = new Map<string, Sprite[]>();
-  private readonly dynamicTiles = new Map<string, Sprite[]>();
+  private readonly drawnTiles = new Map<string, RenderedTile>();
+  private readonly tileElevations = new Map<string, number>();
   private readonly dynamicRequests = new Map<string, TileState>();
-  private center: { x: number; y: number; z: number } | null = null;
+  private center: Position | null = null;
   private viewRange: ViewRange = { x: 1, y: 1 };
   private generation = 0;
   private useTick = 0;
@@ -77,13 +85,58 @@ export class MapView {
     return floor.objects;
   }
 
-  async setMap(name: string): Promise<void> {
-    this.mapName = name;
-    for (const sprites of this.dynamicTiles.values()) {
-      for (const sprite of sprites) sprite.destroy();
-    }
-    this.dynamicTiles.clear();
+  isFloorVisible(z: number): boolean {
+    return this.floors.get(z)?.container.visible ?? false;
+  }
+
+  isDynamicFloorVisible(z: number): boolean {
+    if (!this.center || !this.isFloorVisible(z)) return false;
+    return this.center.z > GROUND_FLOOR ? z === this.center.z : z <= this.center.z;
+  }
+
+  projectPosition(x: number, y: number, z: number): { x: number; y: number } {
+    return projectFloorPosition(x, y, this.center?.z ?? z, z);
+  }
+
+  /** Interpolates visual elevation while a creature crosses a tile boundary. */
+  elevationAt(z: number, x: number, y: number): number {
+    const left = Math.floor(x);
+    const top = Math.floor(y);
+    const fractionX = x - left;
+    const fractionY = y - top;
+    const topLeft = this.tileElevation(z, left, top);
+    const topRight = this.tileElevation(z, left + 1, top);
+    const bottomLeft = this.tileElevation(z, left, top + 1);
+    const bottomRight = this.tileElevation(z, left + 1, top + 1);
+    const upper = topLeft + (topRight - topLeft) * fractionX;
+    const lower = bottomLeft + (bottomRight - bottomLeft) * fractionX;
+    return upper + (lower - upper) * fractionY;
+  }
+
+  tick(deltaMs: number): void {
+    this.animatedItems.tick(deltaMs);
+  }
+
+  destroy(): void {
+    this.clearRenderedTiles();
+    this.animatedItems.clear();
     this.dynamicRequests.clear();
+    this.regions.clear();
+    this.loaded.clear();
+    this.tileElevations.clear();
+  }
+
+  async setMap(name: string): Promise<void> {
+    this.generation++;
+    this.clearRenderedTiles();
+    this.animatedItems.clear();
+    this.dynamicRequests.clear();
+    this.available.clear();
+    this.regions.clear();
+    this.loaded.clear();
+    this.regionUse.clear();
+    this.tileElevations.clear();
+    this.mapName = name;
     const response = await fetch(`/assets/map/${name}/manifest.json`);
     if (!response.ok) throw new Error(`missing map manifest for ${name}`);
     this.manifest = (await response.json()) as MapManifest;
@@ -98,11 +151,23 @@ export class MapView {
   }
 
   setCenter(x: number, y: number, z: number): void {
+    const previousFloor = this.center?.z;
     this.center = { x, y, z };
     for (const [floorZ, floor] of this.floors) {
-      const shift = (z - floorZ) * TILE_SIZE;
-      floor.container.position.set(-shift, -shift);
+      const projected = projectFloorPosition(0, 0, z, floorZ);
+      floor.container.position.set(projected.x, projected.y);
     }
+    if (previousFloor !== undefined && previousFloor !== z) {
+      for (const [key, state] of [...this.dynamicRequests]) {
+        const authorized = z > GROUND_FLOOR
+          ? state.position.z === z
+          : state.position.z <= z;
+        if (authorized) continue;
+        this.dynamicRequests.delete(key);
+        if (this.drawnTiles.has(key)) this.redrawTileKey(key);
+      }
+    }
+    this.applyCover();
     this.refresh();
   }
 
@@ -116,16 +181,22 @@ export class MapView {
     visible: ReadonlyArray<TileState>,
     hidden: ReadonlyArray<Position>,
   ): Promise<void> {
+    const changed = new Set<string>();
     for (const position of hidden) {
-      const key = `${position.z}:${position.x},${position.y}`;
+      const key = this.tileKey(position.z, position.x, position.y);
       this.dynamicRequests.delete(key);
-      for (const sprite of this.dynamicTiles.get(key) ?? []) sprite.destroy();
-      this.dynamicTiles.delete(key);
+      changed.add(key);
     }
     for (const state of visible) {
-      const key = `${state.position.z}:${state.position.x},${state.position.y}`;
+      const key = this.tileKey(
+        state.position.z,
+        state.position.x,
+        state.position.y,
+      );
       this.dynamicRequests.set(key, state);
+      changed.add(key);
     }
+
     const appearances = new Map<number, TibiaObject>();
     for (const state of visible) {
       for (const item of state.items) {
@@ -135,42 +206,14 @@ export class MapView {
     await this.store.preload(
       [...appearances.values()].flatMap((object) => object.sprites),
     );
-    for (const state of visible) {
-      const key = `${state.position.z}:${state.position.x},${state.position.y}`;
-      const objects = state.items.map((item) => this.store.item(item.itemId));
-      if (this.dynamicRequests.get(key) !== state) continue;
-      for (const sprite of this.dynamicTiles.get(key) ?? []) sprite.destroy();
-      const floor = this.floors.get(state.position.z);
-      if (!floor) continue;
-      const sprites: Sprite[] = [];
-      const hooks = {
-        south: objects.some((object) => object.flags.hookSouth),
-        east: objects.some((object) => object.flags.hookEast),
-      };
-      let elevation = 0;
-      for (const ordered of getOrderedTileObjects(objects)) {
-        this.drawPieces(
-          ordered.object,
-          state.position.x,
-          state.position.y,
-          state.position.z,
-          ordered.ground ? floor.ground : floor.objects,
-          sprites,
-          getMapObjectZ(state.position.x, state.position.y, ordered.stack),
-          elevation,
-          hooks,
-        );
-        elevation = Math.min(
-          MAX_ELEVATION,
-          elevation + ordered.object.flags.elevation,
-        );
-      }
-      this.dynamicTiles.set(key, sprites);
+    for (const key of changed) {
+      if (!this.drawnTiles.has(key) && !this.isTileInWindow(key)) continue;
+      this.redrawTileKey(key);
     }
+    this.applyCover();
   }
 
-  /** Window center on a floor: higher floors draw shifted up-left, so the
-   * tiles that appear over the viewport lie down-right of the camera. */
+  /** Higher floors are projected up-left, so their source window shifts down-right. */
   private floorCenter(z: number): { x: number; y: number } {
     const shift = (this.center?.z ?? GROUND_FLOOR) - z;
     return { x: (this.center?.x ?? 0) + shift, y: (this.center?.y ?? 0) + shift };
@@ -184,7 +227,6 @@ export class MapView {
     if (!this.manifest || !this.center) return;
     const generation = ++this.generation;
     const size = this.manifest.regionSize;
-
     const needed = new Set<string>();
     const loads: Array<Promise<Region | null>> = [];
     const visibleFloors = this.visibleFloors();
@@ -225,12 +267,16 @@ export class MapView {
       return Promise.resolve(null);
     }
     const promise = this.fetchRegion(Number(z), regionKey)
-      .catch(() => {
-        this.regions.delete(key);
-        return null;
-      })
+      .catch(() => null)
       .then((region) => {
+        if (this.regions.get(key) !== promise) return region;
+        if (!region) {
+          this.regions.delete(key);
+          this.loaded.delete(key);
+          return null;
+        }
         this.loaded.set(key, region);
+        this.invalidateRegion(key);
         return region;
       });
     this.regions.set(key, promise);
@@ -259,146 +305,264 @@ export class MapView {
   }
 
   private drawFloorWindow(z: number): void {
-    const { x: cx, y: cy } = this.floorCenter(z);
+    const { x: centerX, y: centerY } = this.floorCenter(z);
     const windowX = this.viewRange.x + STATIC_TILE_MARGIN;
     const windowY = this.viewRange.y + STATIC_TILE_MARGIN;
     const wanted = new Set<string>();
-    for (let y = cy - windowY; y <= cy + windowY; y++) {
-      for (let x = cx - windowX; x <= cx + windowX; x++) {
-        const key = `${z}:${x},${y}`;
+    for (let y = centerY - windowY; y <= centerY + windowY; y++) {
+      for (let x = centerX - windowX; x <= centerX + windowX; x++) {
+        const key = this.tileKey(z, x, y);
         wanted.add(key);
         if (!this.drawnTiles.has(key)) this.drawTile(z, x, y);
       }
     }
-    for (const [key, sprites] of this.drawnTiles) {
+    for (const key of this.drawnTiles.keys()) {
       if (!key.startsWith(`${z}:`) || wanted.has(key)) continue;
-      for (const sprite of sprites) sprite.destroy();
-      this.drawnTiles.delete(key);
+      this.destroyRenderedTile(key);
     }
   }
 
   private clearFloorWindow(z: number): void {
-    for (const [key, sprites] of this.drawnTiles) {
-      if (!key.startsWith(`${z}:`)) continue;
-      for (const sprite of sprites) sprite.destroy();
-      this.drawnTiles.delete(key);
+    for (const key of this.drawnTiles.keys()) {
+      if (key.startsWith(`${z}:`)) this.destroyRenderedTile(key);
     }
   }
 
-  private tileIds(z: number, x: number, y: number): number[] | undefined {
+  private staticItemIds(z: number, x: number, y: number): number[] {
     const size = this.manifest?.regionSize ?? 0;
+    if (size === 0) return [];
     const region = this.loaded.get(
       `${z}:${Math.floor(x / size)},${Math.floor(y / size)}`,
     );
-    return region?.tiles.get((y % size) * size + (x % size));
+    const localX = ((x % size) + size) % size;
+    const localY = ((y % size) + size) % size;
+    return region?.tiles.get(localY * size + localX) ?? [];
+  }
+
+  private tileItems(z: number, x: number, y: number): TileRenderItem<TibiaObject>[] {
+    const key = this.tileKey(z, x, y);
+    const dynamicItems =
+      !this.center ||
+      (this.center.z > GROUND_FLOOR ? z === this.center.z : z <= this.center.z)
+        ? this.dynamicRequests.get(key)?.items ?? []
+        : [];
+    return getMergedTileItems(
+      this.staticItemIds(z, x, y),
+      dynamicItems,
+      (itemId) => this.store.item(itemId),
+      `${this.mapName}:${key}`,
+    );
+  }
+
+  private tileElevation(z: number, x: number, y: number): number {
+    const key = this.tileKey(z, x, y);
+    const cached = this.tileElevations.get(key);
+    if (cached !== undefined) return cached;
+    const elevation = getTileRenderLayers(this.tileItems(z, x, y)).creatureElevation;
+    this.tileElevations.set(key, elevation);
+    return elevation;
   }
 
   private drawTile(z: number, x: number, y: number): void {
     const floor = this.floors.get(z);
-    const size = this.manifest?.regionSize ?? 0;
-    const regionKey = `${z}:${Math.floor(x / size)},${Math.floor(y / size)}`;
-    if (!floor || !this.loaded.has(regionKey)) return;
-    const ids = this.tileIds(z, x, y);
-    if (!ids) {
-      this.drawnTiles.set(`${z}:${x},${y}`, []);
+    if (!floor) return;
+    const key = this.tileKey(z, x, y);
+    const items = this.tileItems(z, x, y);
+    if (items.length === 0) {
+      this.tileElevations.set(key, 0);
+      this.drawnTiles.set(key, { sprites: [], animatedItemIds: [] });
       return;
     }
-    const sprites: Sprite[] = [];
-    const objects = ids.map((id) => this.store.item(id));
+
+    const rendered: RenderedTile = { sprites: [], animatedItemIds: [] };
+    const objects = items.map(({ object }) => object);
     const hooks = {
       south: objects.some((object) => object.flags.hookSouth),
       east: objects.some((object) => object.flags.hookEast),
     };
-    let elevation = 0;
-    for (const ordered of getOrderedTileObjects(objects)) {
-      this.drawPieces(
-        ordered.object,
+    const layers = getTileRenderLayers(items);
+    this.tileElevations.set(key, layers.creatureElevation);
+    for (const item of [...layers.beforeCreature, ...layers.topItems]) {
+      this.drawItem(
+        item,
         x,
         y,
         z,
-        ordered.ground ? floor.ground : floor.objects,
-        sprites,
-        getMapObjectZ(x, y, ordered.stack),
-        elevation,
+        item.layer === "ground" ? floor.ground : floor.objects,
+        rendered,
         hooks,
       );
-      elevation = Math.min(
-        MAX_ELEVATION,
-        elevation + ordered.object.flags.elevation,
-      );
     }
-    this.drawnTiles.set(`${z}:${x},${y}`, sprites);
+    this.drawnTiles.set(key, rendered);
   }
 
-  private drawPieces(
-    o: TibiaObject,
+  private drawItem(
+    item: LayeredTileObject<TibiaObject>,
     tileX: number,
     tileY: number,
     floor: number,
     layer: Container,
-    sprites: Sprite[],
-    zIndex: number,
-    elevation: number,
+    rendered: RenderedTile,
     hooks: { south: boolean; east: boolean },
   ): void {
-    const pattern = getMapItemPattern(o, tileX, tileY, floor, hooks);
-    for (let itemLayer = 0; itemLayer < o.layers; itemLayer++) {
-      for (let h = 0; h < o.height; h++) {
-        for (let w = 0; w < o.width; w++) {
-          const spriteId = this.store.spriteId(o, {
-            ...pattern,
+    const object = item.object;
+    const pattern = getMapItemPattern(object, tileX, tileY, floor, hooks);
+    const pieces: Array<{
+      sprite: Sprite;
+      w: number;
+      h: number;
+      itemLayer: number;
+    }> = [];
+    for (let itemLayer = 0; itemLayer < object.layers; itemLayer++) {
+      for (let h = 0; h < object.height; h++) {
+        for (let w = 0; w < object.width; w++) {
+          const phaseIds = Array.from({ length: object.phases }, (_, phase) =>
+            this.store.spriteId(object, {
+              ...pattern,
+              w,
+              h,
+              l: itemLayer,
+              phase,
+            }),
+          );
+          if (!phaseIds.some((spriteId) => spriteId > 0)) continue;
+          const firstTexture = phaseIds[0]
+            ? this.store.spriteTexture(phaseIds[0])
+            : Texture.EMPTY;
+          const sprite = new Sprite(firstTexture);
+          const placement = getMapSpritePosition(
+            tileX,
+            tileY,
             w,
             h,
-            l: itemLayer,
-          });
-          if (!spriteId) continue;
-          const sprite = new Sprite(this.store.spriteTexture(spriteId));
-          sprite.position.set(
-            (tileX - w) * TILE_SIZE - o.flags.displacementX - elevation,
-            (tileY - h) * TILE_SIZE - o.flags.displacementY - elevation,
+            object.flags.displacementX,
+            object.flags.displacementY,
+            item.elevationBefore,
+            item.depth + itemLayer,
           );
-          sprite.zIndex = zIndex;
+          sprite.position.set(placement.x, placement.y);
+          sprite.zIndex = placement.zIndex;
           layer.addChild(sprite);
-          sprites.push(sprite);
+          rendered.sprites.push(sprite);
+          pieces.push({ sprite, w, h, itemLayer });
         }
       }
     }
+    if (object.phases <= 1 || pieces.length === 0) return;
+
+    rendered.animatedItemIds.push(item.instanceId);
+    this.animatedItems.register({
+      id: item.instanceId,
+      floor,
+      appearance: object,
+      instanceSeed: getItemInstanceSeed(item.instanceId),
+      applyPhase: (phase) => {
+        for (const piece of pieces) {
+          const spriteId = this.store.spriteId(object, {
+            ...pattern,
+            w: piece.w,
+            h: piece.h,
+            l: piece.itemLayer,
+            phase,
+          });
+          piece.sprite.texture = spriteId
+            ? this.store.spriteTexture(spriteId)
+            : Texture.EMPTY;
+        }
+      },
+    });
   }
 
   /** Hide only the floors blocked by a roof/wall over or beside the player. */
   private applyCover(): void {
     if (!this.center) return;
     const { x, y, z: playerFloor } = this.center;
+    let visible: Set<number>;
     if (playerFloor > GROUND_FLOOR) {
-      const visible = new Set(this.visibleFloors());
-      for (const [z, floor] of this.floors) {
-        floor.container.visible = visible.has(z);
-      }
-      return;
-    }
-    const firstVisibleFloor = getFirstVisibleFloor(
-      x,
-      y,
-      playerFloor,
-      (floor, tileX, tileY) => {
-        const ids = this.tileIds(floor, tileX, tileY);
-        return (
-          ids !== undefined &&
-          !ids.some((id) => this.store.item(id).flags.blockProjectile)
-        );
-      },
-      (floor, tileX, tileY, freeView) =>
-        this.tileIds(floor, tileX, tileY)?.some((id) => {
-          const flags = this.store.item(id).flags;
-          if (flags.dontHide) return false;
+      visible = new Set(this.visibleFloors());
+    } else {
+      const firstVisibleFloor = getFirstVisibleFloor(
+        x,
+        y,
+        playerFloor,
+        (floor, tileX, tileY) => {
+          const items = this.tileItems(floor, tileX, tileY);
           return (
-            flags.ground ||
-            (flags.onBottom && (freeView || flags.blockProjectile))
+            items.length > 0 &&
+            !items.some(({ object }) => object.flags.blockProjectile)
           );
-        }) ?? false,
-    );
+        },
+        (floor, tileX, tileY, freeView) =>
+          this.tileItems(floor, tileX, tileY).some(({ object }) => {
+            const flags = object.flags;
+            if (flags.dontHide) return false;
+            return (
+              flags.ground ||
+              (flags.onBottom && (freeView || flags.blockProjectile))
+            );
+          }),
+      );
+      visible = new Set(
+        this.visibleFloors().filter(
+          (floor) => floor >= firstVisibleFloor && floor <= GROUND_FLOOR,
+        ),
+      );
+    }
     for (const [z, floor] of this.floors) {
-      floor.container.visible = z >= firstVisibleFloor && z <= GROUND_FLOOR;
+      floor.container.visible = visible.has(z);
+    }
+    this.animatedItems.setVisibleFloors(visible);
+  }
+
+  private isTileInWindow(key: string): boolean {
+    if (!this.center) return false;
+    const [floorText, coordinates] = key.split(":") as [string, string];
+    const [x, y] = coordinates.split(",").map(Number);
+    const floor = Number(floorText);
+    if (!this.visibleFloors().includes(floor)) return false;
+    const center = this.floorCenter(floor);
+    return (
+      Math.abs(x - center.x) <= this.viewRange.x + STATIC_TILE_MARGIN &&
+      Math.abs(y - center.y) <= this.viewRange.y + STATIC_TILE_MARGIN
+    );
+  }
+
+  private redrawTileKey(key: string): void {
+    this.destroyRenderedTile(key);
+    if (!this.isTileInWindow(key)) return;
+    const [floorText, coordinates] = key.split(":") as [string, string];
+    const [x, y] = coordinates.split(",").map(Number);
+    this.drawTile(Number(floorText), x, y);
+  }
+
+  private destroyRenderedTile(key: string): void {
+    this.tileElevations.delete(key);
+    const rendered = this.drawnTiles.get(key);
+    if (!rendered) return;
+    for (const id of rendered.animatedItemIds) this.animatedItems.unregister(id);
+    for (const sprite of rendered.sprites) sprite.destroy();
+    this.drawnTiles.delete(key);
+  }
+
+  private clearRenderedTiles(): void {
+    for (const key of [...this.drawnTiles.keys()]) this.destroyRenderedTile(key);
+  }
+
+  private invalidateRegion(regionKey: string): void {
+    const size = this.manifest?.regionSize ?? 0;
+    if (size === 0) return;
+    const [floorText, coordinates] = regionKey.split(":") as [string, string];
+    const [regionX, regionY] = coordinates.split(",").map(Number);
+    for (const key of [...this.drawnTiles.keys()]) {
+      const [tileFloor, tileCoordinates] = key.split(":") as [string, string];
+      if (tileFloor !== floorText) continue;
+      const [x, y] = tileCoordinates.split(",").map(Number);
+      if (
+        Math.floor(x / size) === regionX &&
+        Math.floor(y / size) === regionY
+      ) {
+        this.destroyRenderedTile(key);
+      }
     }
   }
 
@@ -406,11 +570,17 @@ export class MapView {
     if (this.regions.size <= MAX_CACHED_REGIONS) return;
     const byAge = [...this.regions.keys()]
       .filter((key) => !needed.has(key))
-      .sort((a, b) => (this.regionUse.get(a) ?? 0) - (this.regionUse.get(b) ?? 0));
+      .sort((left, right) =>
+        (this.regionUse.get(left) ?? 0) - (this.regionUse.get(right) ?? 0),
+      );
     for (const key of byAge.slice(0, this.regions.size - MAX_CACHED_REGIONS)) {
       this.regions.delete(key);
       this.loaded.delete(key);
       this.regionUse.delete(key);
     }
+  }
+
+  private tileKey(z: number, x: number, y: number): string {
+    return `${z}:${x},${y}`;
   }
 }

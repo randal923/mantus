@@ -7,6 +7,7 @@ import {
   type ViewRange,
 } from "@tibia/protocol";
 import { AssetStore, type OutfitColors } from "./AssetStore";
+import { getCreatureSortPosition } from "./getCreatureSortPosition";
 import { getMapObjectZ } from "./getMapObjectZ";
 import { getViewportRange } from "./getViewportRange";
 import { MapView } from "./MapView";
@@ -53,6 +54,7 @@ export class WorldRenderer {
     if (this.destroyed) return;
 
     this.world.scale.set(ZOOM);
+    this.overlay.sortableChildren = true;
     this.world.addChild(this.mapView.container);
     this.app.stage.addChild(this.world, this.overlay);
     this.app.ticker.add(() => this.tick(this.app.ticker.deltaMS));
@@ -95,13 +97,6 @@ export class WorldRenderer {
           message.positionRevision,
           message.durationMs,
         );
-        if (message.playerId === this.ownPlayerId) {
-          this.mapView.setCenter(
-            message.position.x,
-            message.position.y,
-            message.position.z,
-          );
-        }
         return;
       case "position-correction": {
         const view = this.playerViews.get(message.playerId);
@@ -115,13 +110,8 @@ export class WorldRenderer {
         if (view.floor !== previousFloor) {
           this.mapView.creatureLayer(view.floor).addChild(view.container);
         }
-        if (message.playerId === this.ownPlayerId) {
-          this.mapView.setCenter(
-            message.position.x,
-            message.position.y,
-            message.position.z,
-          );
-        }
+        if (message.playerId === this.ownPlayerId)
+          this.applyOwnPlayerCenter(message.position);
         return;
       }
       case "tile-states":
@@ -140,6 +130,7 @@ export class WorldRenderer {
 
   destroy(): void {
     this.destroyed = true;
+    this.mapView.destroy();
     if (this.app.renderer) this.app.destroy(true, { children: true });
   }
 
@@ -178,6 +169,15 @@ export class WorldRenderer {
     if (view.floor !== previousFloor) {
       this.mapView.creatureLayer(view.floor).addChild(view.container);
     }
+    if (playerId === this.ownPlayerId) this.applyOwnPlayerCenter(position);
+  }
+
+  private applyOwnPlayerCenter(position: PlayerState["position"]): void {
+    this.cameraFallback = {
+      x: position.x * TILE_SIZE,
+      y: position.y * TILE_SIZE,
+    };
+    this.mapView.setCenter(position.x, position.y, position.z);
   }
 
   private outfitColorsFor(outfit: CharacterOutfit): OutfitColors {
@@ -191,19 +191,40 @@ export class WorldRenderer {
   }
 
   private tick(dtMs: number): void {
-    for (const view of this.playerViews.values()) {
+    this.mapView.tick(dtMs);
+    const orderedViews = [...this.playerViews.entries()].sort(([left], [right]) =>
+      left.localeCompare(right),
+    );
+    const visualPositions = new Map<string, { x: number; y: number }>();
+    for (let index = 0; index < orderedViews.length; index++) {
+      const [id, view] = orderedViews[index];
       view.tick(dtMs);
-      const pos = view.pixelPosition();
-      view.container.position.set(pos.x, pos.y);
-      view.container.zIndex = getMapObjectZ(
-        pos.x / TILE_SIZE,
-        pos.y / TILE_SIZE,
-        MAP_DEPTH.creature,
+      const position = view.pixelPosition();
+      const elevation = this.mapView.elevationAt(
+        view.floor,
+        position.x / TILE_SIZE,
+        position.y / TILE_SIZE,
       );
+      const visual = view.visualPosition(elevation);
+      visualPositions.set(id, visual);
+      view.container.position.set(visual.x, visual.y);
+      const creatureOrder =
+        ((index + 1) * (MAP_DEPTH.effect - MAP_DEPTH.creature)) /
+        (orderedViews.length + 1);
+      const sortPosition = getCreatureSortPosition(
+        position.x / TILE_SIZE,
+        position.y / TILE_SIZE,
+      );
+      view.container.zIndex = getMapObjectZ(
+        sortPosition.x,
+        sortPosition.y,
+        MAP_DEPTH.creature + creatureOrder,
+      );
+      view.container.visible = this.mapView.isDynamicFloorVisible(view.floor);
     }
 
     const focus =
-      this.playerViews.get(this.ownPlayerId)?.pixelPosition() ??
+      visualPositions.get(this.ownPlayerId) ??
       this.cameraFallback;
     const cameraX = Math.round(
       this.app.screen.width / 2 - (focus.x + TILE_SIZE / 2) * ZOOM,
@@ -213,12 +234,20 @@ export class WorldRenderer {
     );
     this.world.position.set(cameraX, cameraY);
 
-    for (const view of this.playerViews.values()) {
-      const pos = view.pixelPosition();
-      view.plate.position.set(
-        cameraX + (pos.x + TILE_SIZE / 2 - 8) * ZOOM,
-        cameraY + (pos.y - 8) * ZOOM - 26,
+    for (const [id, view] of orderedViews) {
+      const visual = visualPositions.get(id);
+      if (!visual) continue;
+      const projected = this.mapView.projectPosition(
+        visual.x,
+        visual.y,
+        view.floor,
       );
+      view.plate.position.set(
+        cameraX + (projected.x + TILE_SIZE / 2 - 8) * ZOOM,
+        cameraY + (projected.y - 8) * ZOOM - 26,
+      );
+      view.plate.visible = this.mapView.isDynamicFloorVisible(view.floor);
+      view.plate.zIndex = view.container.zIndex;
     }
   }
 }

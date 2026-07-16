@@ -24,6 +24,24 @@ export interface TibiaFlags {
   elevation: number;
   lyingCorpse: boolean;
   animateAlways: boolean;
+  topEffect: boolean;
+  lightIntensity: number;
+  lightColor: number;
+}
+
+export interface TibiaAnimationPhase {
+  minimumDurationMs: number;
+  maximumDurationMs: number;
+}
+
+export interface TibiaAnimation {
+  source: "legacy" | "enhanced";
+  timingMode: "asynchronous" | "synchronized";
+  loopType: "infinite" | "counted" | "ping-pong";
+  loopCount: number;
+  /** null means the source format requests a stable random start phase. */
+  startPhase: number | null;
+  phases: TibiaAnimationPhase[];
 }
 
 export interface TibiaObject {
@@ -36,6 +54,7 @@ export interface TibiaObject {
   py: number;
   pz: number;
   phases: number;
+  animation: TibiaAnimation | null;
   flags: TibiaFlags;
   sprites: number[];
 }
@@ -76,6 +95,7 @@ export class AssetStore {
   private items = new Map<number, TibiaObject>();
   private outfits = new Map<number, TibiaObject>();
   private effects = new Map<number, TibiaObject>();
+  private missiles = new Map<number, TibiaObject>();
   private sheetImages: (HTMLImageElement | undefined)[] = [];
   private sheetTextures: (Texture | undefined)[] = [];
   private spriteTexCache = new Map<number, Texture>();
@@ -88,10 +108,42 @@ export class AssetStore {
     ]);
     this.index = index;
     this.outfitPalette = palette;
-    for (const o of objectsFile.objects as TibiaObject[]) {
+    for (const source of objectsFile.objects as Array<
+      Omit<TibiaObject, "animation" | "flags"> & {
+        animation?: TibiaAnimation;
+        flags: Omit<TibiaFlags, "lightIntensity" | "lightColor" | "topEffect"> &
+          Partial<Pick<TibiaFlags, "lightIntensity" | "lightColor" | "topEffect">>;
+      }
+    >) {
+      const animation =
+        source.animation ??
+        (source.category === "item" && source.phases > 1
+          ? {
+              source: "legacy" as const,
+              timingMode: "asynchronous" as const,
+              loopType: "infinite" as const,
+              loopCount: 0,
+              startPhase: 0,
+              phases: Array.from({ length: source.phases }, () => ({
+                minimumDurationMs: 500,
+                maximumDurationMs: 500,
+              })),
+            }
+          : null);
+      const o: TibiaObject = {
+        ...source,
+        animation,
+        flags: {
+          ...source.flags,
+          topEffect: source.flags.topEffect ?? false,
+          lightIntensity: source.flags.lightIntensity ?? 0,
+          lightColor: source.flags.lightColor ?? 0,
+        },
+      };
       if (o.category === "item") this.items.set(o.clientId, o);
       else if (o.category === "outfit") this.outfits.set(o.clientId, o);
       else if (o.category === "effect") this.effects.set(o.clientId, o);
+      else if (o.category === "missile") this.missiles.set(o.clientId, o);
     }
   }
 
@@ -110,6 +162,12 @@ export class AssetStore {
   effect(id: number): TibiaObject {
     const o = this.effects.get(id);
     if (!o) throw new Error(`unknown effect ${id}`);
+    return o;
+  }
+
+  missile(id: number): TibiaObject {
+    const o = this.missiles.get(id);
+    if (!o) throw new Error(`unknown missile ${id}`);
     return o;
   }
 

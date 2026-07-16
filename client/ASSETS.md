@@ -15,9 +15,11 @@ asset packs do **not** match. Everything below was verified with
 - `atlas-index.json` — the numbers above (`tile`, `pad`, `cell`, `cols`,
   `tilesPerSheet: 14400`, `sheets[]`).
 - `objects.json` — every object from the DAT: `{ category, clientId, width,
-  height, layers, px, py, pz, phases, flags, sprites[] }`, including ground
+  height, layers, px, py, pz, phases, animation?, flags, sprites[] }`, including ground
   border, container, pickup, projectile blocking, floor-change, stack/fluid,
-  hook, displacement, elevation, and corpse flags, plus source hashes.
+  hook, displacement, elevation, corpse, top-effect, and exact light flags,
+  plus source hashes. Format version 2 stores enhanced animator metadata when
+  the input DAT contains it.
 - `outfit-colors.json` — the 133-entry RGB palette for outfit colorization.
 
 ## Atlas addressing
@@ -62,6 +64,11 @@ offset `(-w*32, -h*32)`. Creatures additionally draw displaced `(-8, -8)`.
   cycle. `layers = 2` means layer 1 is the color mask: yellow→head, red→body,
   green→legs, blue→feet; multiply layer-0 RGB by `palette[i]/255`.
 - **Effects**: play phases 0..n-1 once (~90ms each).
+- **Map-item animation**: this pinned classic-container DAT has no enhanced
+  animator block (`profile.enhancedAnim: false`). The runtime therefore exposes
+  its exact legacy behavior as an asynchronous 500 ms cycle, with a stable
+  per-instance start offset. Enhanced DAT imports preserve timing mode, loop
+  count/type, start phase, and every minimum/maximum phase duration.
 
 ## Verified client IDs
 
@@ -142,3 +149,7 @@ To replace only `objects.json` while preserving the existing atlases:
 ```bash
 node tools/importTibiaAssets.mjs --metadata-only
 ```
+
+For a DAT that actually contains OTClient enhanced animator blocks, pass
+`--enhanced-animations`; using that flag with a legacy DAT deliberately fails
+validation rather than guessing the binary layout.

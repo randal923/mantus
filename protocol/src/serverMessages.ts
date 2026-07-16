@@ -16,6 +16,7 @@ export const playerStateSchema = z.object({
   positionRevision: z.number().int().nonnegative(),
   direction: z.enum(DIRECTIONS),
   outfit: characterOutfitSchema,
+  healthPercent: z.number().int().min(0).max(100),
 });
 
 /**

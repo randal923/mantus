@@ -15,6 +15,7 @@ const state: PlayerState = {
   position: { x: 10, y: 10, z: 7 },
   positionRevision: 0,
   direction: "east",
+  healthPercent: 100,
   outfit: {
     lookType: 128,
     head: 0,
@@ -35,6 +36,7 @@ const outfit: TibiaObject = {
   py: 1,
   pz: 1,
   phases: 3,
+  animation: null,
   flags: {
     ground: false,
     groundSpeed: 0,
@@ -58,6 +60,9 @@ const outfit: TibiaObject = {
     elevation: 0,
     lyingCorpse: false,
     animateAlways: false,
+    topEffect: false,
+    lightIntensity: 0,
+    lightColor: 0,
   },
   sprites: [],
 };
@@ -154,6 +159,38 @@ describe("PlayerView", () => {
 
     expect(view.pixelPosition().x).toBe(11 * TILE_SIZE);
     expect(sprite.texture).toBe(animationTextures[0]);
+    view.destroy();
+  });
+
+  it("snaps an authoritative floor transition without a wrong-floor walk frame", () => {
+    const view = new PlayerView(
+      animationStore,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    view.applyMove({ x: 11, y: 10, z: 6 }, "east", 1, 1_000);
+
+    expect(view.floor).toBe(6);
+    expect(view.pixelPosition()).toEqual({ x: 11 * TILE_SIZE, y: 10 * TILE_SIZE });
+    view.destroy();
+  });
+
+  it("anchors the outfit, health bar, and nameplate to one elevated position", () => {
+    const view = new PlayerView(
+      store,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+
+    expect(view.visualPosition(16)).toEqual({
+      x: 10 * TILE_SIZE - 16,
+      y: 10 * TILE_SIZE - 16,
+    });
+    expect(view.plate.children).toHaveLength(2);
     view.destroy();
   });
 });

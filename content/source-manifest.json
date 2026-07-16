@@ -19,7 +19,7 @@
     }
   },
   "converters": {
-    "assets": 1,
+    "assets": 2,
     "canaryItems": 2,
     "map": 3
   }

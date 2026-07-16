@@ -67,6 +67,10 @@ export class Player {
       positionRevision: this.positionRevision,
       direction: this.direction,
       outfit: this.outfit,
+      healthPercent: Math.min(
+        100,
+        Math.max(0, Math.round((this.health / this.maxHealth) * 100)),
+      ),
     };
   }
 }

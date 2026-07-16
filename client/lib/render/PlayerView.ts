@@ -1,4 +1,4 @@
-import { Container, Sprite, Text, Texture } from "pixi.js";
+import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import type { Direction, PlayerState, Position } from "@tibia/protocol";
 import type { AssetStore, OutfitColors, TibiaObject } from "./AssetStore";
 import { TILE_SIZE } from "./tileSize";
@@ -21,7 +21,7 @@ const DIR_INDEX: Record<Direction, number> = {
  */
 export class PlayerView {
   readonly container = new Container();
-  readonly plate: Text;
+  readonly plate = new Container();
 
   private readonly sprite = new Sprite();
   private readonly frames = new Map<string, Texture>();
@@ -61,7 +61,7 @@ export class PlayerView {
     );
     this.container.addChild(this.sprite);
 
-    this.plate = new Text({
+    const name = new Text({
       text: state.name,
       style: {
         fontFamily: "Verdana, sans-serif",
@@ -71,13 +71,24 @@ export class PlayerView {
         stroke: { color: 0x000000, width: 3 },
       },
     });
-    this.plate.resolution = 2;
-    this.plate.anchor.set(0.5, 1);
+    name.resolution = 2;
+    name.anchor.set(0.5, 1);
+    name.position.y = -5;
+    const health = new Graphics();
+    health.rect(-15, -3, 30, 4).fill({ color: 0x111111, alpha: 0.9 });
+    health
+      .rect(-14, -2, 28 * (state.healthPercent / 100), 2)
+      .fill({ color: 0x33cc44 });
+    this.plate.addChild(name, health);
     this.updateFrame();
   }
 
   get floor(): number {
     return this.tileZ;
+  }
+
+  get position(): Position {
+    return { x: this.tileX, y: this.tileY, z: this.tileZ };
   }
 
   /** Applies only a fresh authoritative position revision. */
@@ -102,6 +113,7 @@ export class PlayerView {
       position.y === this.tileY &&
       position.z === this.tileZ
     ) {
+      this.positionRevision = revision;
       this.updateFrame();
       return;
     }
@@ -205,9 +217,14 @@ export class PlayerView {
     };
   }
 
+  visualPosition(elevation: number): { x: number; y: number } {
+    const position = this.pixelPosition();
+    return { x: position.x - elevation, y: position.y - elevation };
+  }
+
   destroy(): void {
     this.container.destroy({ children: true });
-    this.plate.destroy();
+    this.plate.destroy({ children: true });
   }
 
   private updateFrame(): void {
