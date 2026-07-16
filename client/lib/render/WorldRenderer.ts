@@ -3,12 +3,15 @@ import {
   CHARACTER_OUTFIT_LOOK_TYPES,
   type CreatureOutfit,
   type CreatureState,
+  type MapItemState,
+  type Position,
   type ServerMessage,
   type ViewRange,
 } from "@tibia/protocol";
 import { AssetStore, type OutfitColors } from "./AssetStore";
 import { getCreatureSortPosition } from "./getCreatureSortPosition";
 import { getMapObjectZ } from "./getMapObjectZ";
+import { getMapPointerPosition } from "./getMapPointerPosition";
 import { getViewportRange } from "./getViewportRange";
 import { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
@@ -22,10 +25,14 @@ const NAME_COLORS: Record<CreatureState["kind"], number> = {
   npc: 0x66ccff,
 };
 
+interface WorldRendererActions {
+  useMap(position: Position): void;
+  pickupMapItem(item: MapItemState, position: Position): void;
+}
+
 /**
- * Pure renderer: draws whatever the server says using the Tibia sprite
- * atlas. Holds no game rules — movement, occupancy, and speed all come from
- * server messages.
+ * Draws server state and converts basic pointer gestures into intent targets.
+ * It holds no gameplay rules; the server validates every resulting action.
  */
 export class WorldRenderer {
   private readonly app = new Application();
@@ -37,8 +44,11 @@ export class WorldRenderer {
   private readonly pendingCreatures = new Map<string, CreatureState>();
   private readonly loadingCreatureIds = new Set<string>();
   private ownPlayerId = "";
+  private ownPosition: Position | null = null;
   private cameraFallback = { x: 0, y: 0 };
   private destroyed = false;
+
+  constructor(private readonly actions?: WorldRendererActions) {}
 
   async init(host: HTMLElement): Promise<void> {
     await this.app.init({
@@ -51,6 +61,7 @@ export class WorldRenderer {
       return;
     }
     host.appendChild(this.app.canvas);
+    this.app.canvas.addEventListener("dblclick", this.onMapDoubleClick);
 
     await this.store.load();
     if (this.destroyed) return;
@@ -70,6 +81,7 @@ export class WorldRenderer {
     if (this.destroyed) return;
     switch (message.type) {
       case "character-list":
+      case "inventory-updated":
         return;
       case "welcome": {
         this.ownPlayerId = message.playerId;
@@ -79,6 +91,7 @@ export class WorldRenderer {
           (creature) => creature.id === message.playerId,
         );
         if (own) {
+          this.ownPosition = { ...own.position };
           this.cameraFallback = {
             x: own.position.x * TILE_SIZE,
             y: own.position.y * TILE_SIZE,
@@ -116,6 +129,7 @@ export class WorldRenderer {
             message.positionRevision,
           );
           if (message.playerId === this.ownPlayerId) {
+            this.ownPosition = { ...message.position };
             this.applyOwnPlayerCenter(message.position);
           }
           return;
@@ -129,8 +143,10 @@ export class WorldRenderer {
         if (view.floor !== previousFloor) {
           this.mapView.creatureLayer(view.floor).addChild(view.container);
         }
-        if (message.playerId === this.ownPlayerId)
+        if (message.playerId === this.ownPlayerId) {
+          this.ownPosition = { ...message.position };
           this.applyOwnPlayerCenter(message.position);
+        }
         return;
       }
       case "tile-states":
@@ -149,6 +165,7 @@ export class WorldRenderer {
 
   destroy(): void {
     this.destroyed = true;
+    this.app.canvas.removeEventListener("dblclick", this.onMapDoubleClick);
     this.mapView.destroy();
     if (this.app.renderer) this.app.destroy(true, { children: true });
   }
@@ -217,7 +234,10 @@ export class WorldRenderer {
     const view = this.creatureViews.get(creatureId);
     if (!view) {
       this.updatePendingCreature(creatureId, position, direction, revision);
-      if (creatureId === this.ownPlayerId) this.applyOwnPlayerCenter(position);
+      if (creatureId === this.ownPlayerId) {
+        this.ownPosition = { ...position };
+        this.applyOwnPlayerCenter(position);
+      }
       return;
     }
     const previousFloor = view.floor;
@@ -225,8 +245,32 @@ export class WorldRenderer {
     if (view.floor !== previousFloor) {
       this.mapView.creatureLayer(view.floor).addChild(view.container);
     }
-    if (creatureId === this.ownPlayerId) this.applyOwnPlayerCenter(position);
+    if (creatureId === this.ownPlayerId) {
+      this.ownPosition = { ...position };
+      this.applyOwnPlayerCenter(position);
+    }
   }
+
+  private readonly onMapDoubleClick = (event: MouseEvent): void => {
+    if (!this.actions || !this.ownPosition) return;
+    const bounds = this.app.canvas.getBoundingClientRect();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    const position = getMapPointerPosition(
+      (event.clientX - bounds.left) * (this.app.screen.width / bounds.width),
+      (event.clientY - bounds.top) * (this.app.screen.height / bounds.height),
+      this.world.position.x,
+      this.world.position.y,
+      ZOOM,
+      TILE_SIZE,
+      this.ownPosition.z,
+    );
+    if (event.shiftKey) {
+      const item = this.mapView.topServerItem(position);
+      if (item) this.actions.pickupMapItem(item, position);
+      return;
+    }
+    this.actions.useMap(position);
+  };
 
   private updatePendingCreature(
     creatureId: string,

@@ -12,6 +12,8 @@ import { CharacterError } from "./character/CharacterError";
 import type { CharacterStore } from "./character/CharacterStore";
 import type { ServerConfig } from "./config";
 import { GameServer } from "./GameServer";
+import { ItemCatalog } from "./item/ItemCatalog";
+import { MemoryItemStore } from "./item/MemoryItemStore";
 import { makeCharacter } from "./test/makeCharacter";
 import type { TokenVerifier, VerifiedUser } from "./TokenVerifier";
 
@@ -323,6 +325,8 @@ describe("view-range broadcast", () => {
       verifier: fakeVerifier,
       accounts: new InMemoryAccountStore(),
       characters: new InMemoryCharacterStore(),
+      items: new MemoryItemStore(),
+      itemCatalog: new ItemCatalog([]),
     });
     server.start();
   };
@@ -511,7 +515,13 @@ describe("auth gate", () => {
   ) => {
     server = new GameServer(
       { ...testConfig, ...overrides },
-      { verifier: fakeVerifier, accounts, characters },
+      {
+        verifier: fakeVerifier,
+        accounts,
+        characters,
+        items: new MemoryItemStore(),
+        itemCatalog: new ItemCatalog([]),
+      },
     );
     server.start();
   };

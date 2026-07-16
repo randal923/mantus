@@ -144,9 +144,10 @@
   },
   "itemTooltip": {
     "requiresLevel": "Requer Nível {{level}}",
-    "accountBound": "Vinculado à Conta",
-    "sellValue": "Valor de Venda: {{value}}",
-    "durability": "Durabilidade: {{current}}/{{max}}"
+    "vocations": "Vocações: {{vocations}}",
+    "weight": "{{weight}} oz",
+    "charges": "Cargas: {{count}}",
+    "containerSlots": "Capacidade: {{count}} espaços"
   },
   "spells": {
     "bar": "Barra de magias",
@@ -231,6 +232,7 @@
     "character-not-found": "Esse personagem não pertence a esta conta.",
     "character-operation-pending": "Aguarde a conclusão da solicitação de personagem atual.",
     "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
+    "item-action-failed": "Não foi possível concluir essa ação de item.",
     "join-required": "Entre no mundo antes de realizar esta ação.",
     "language-update-failed": "Não foi possível salvar o idioma. Tente novamente.",
     "language-update-pending": "Uma atualização de idioma já está em andamento.",

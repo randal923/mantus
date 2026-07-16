@@ -7,6 +7,7 @@ import {
 import { creatureStateSchema } from "./creature";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
+import { inventoryStateSchema } from "./item";
 import { positionSchema } from "./position";
 
 /**
@@ -43,6 +44,12 @@ export const welcomeMessageSchema = z.object({
   character: ownCharacterStateSchema,
   map: mapInfoSchema,
   creatures: z.array(creatureStateSchema),
+  inventory: inventoryStateSchema,
+});
+
+export const inventoryUpdatedMessageSchema = z.object({
+  type: z.literal("inventory-updated"),
+  inventory: inventoryStateSchema,
 });
 
 export const creatureJoinedMessageSchema = z.object({
@@ -79,6 +86,8 @@ export const mapItemStateSchema = z.object({
   instanceId: z.string().min(1).max(128),
   itemId: z.number().int().positive().max(65_535),
   stackIndex: z.number().int().min(0).max(255),
+  revision: z.number().int().positive(),
+  count: z.number().int().positive().max(100),
 });
 
 export const tileStateSchema = z.object({
@@ -111,6 +120,7 @@ export const serverErrorCodeSchema = z.enum([
   "join-required",
   "language-update-failed",
   "language-update-pending",
+  "item-action-failed",
   "logged-in-elsewhere",
   "rate-limited",
   "world-full",
@@ -126,6 +136,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   languageUpdatedMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,
+  inventoryUpdatedMessageSchema,
   creatureJoinedMessageSchema,
   creatureLeftMessageSchema,
   creatureMovedMessageSchema,

@@ -26,6 +26,7 @@
   "converters": {
     "assets": 2,
     "canaryItems": 2,
+    "itemCatalog": 1,
     "map": 3,
     "creatures": 1
   }

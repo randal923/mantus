@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { getMapItemSemantics } from "./getMapItemSemantics.mjs";
 
 const appearance = (overrides = {}) => ({
+  sprites: [1],
   flags: {
     ground: false,
     groundBorder: false,
@@ -72,17 +73,20 @@ test("preserves border, elevation, stack, floor-change, and hangable semantics",
 });
 
 test("classifies movable, container, door, and field items as mutable", () => {
-  expectMutable(appearance({ notMoveable: false }));
-  expectMutable(appearance({ container: true }));
-  expectMutable(appearance(), { type: "door" });
-  expectMutable(appearance(), { type: "magicfield" });
+  expectMutable(appearance({ notMoveable: false }), { name: "parcel" });
+  expectMutable(appearance({ container: true }), { name: "backpack" });
+  expectMutable(appearance(), { name: "door", type: "door" });
+  expectMutable(appearance(), { name: "fire field", type: "magicfield" });
 
   assert.equal(
-    getMapItemSemantics(appearance(), { type: "door" }).door,
+    getMapItemSemantics(appearance(), { name: "door", type: "door" }).door,
     true,
   );
   assert.equal(
-    getMapItemSemantics(appearance(), { type: "magicfield" }).field,
+    getMapItemSemantics(appearance(), {
+      name: "fire field",
+      type: "magicfield",
+    }).field,
     true,
   );
 });
@@ -99,12 +103,31 @@ test("keeps immutable ladders and teleports interactive", () => {
 
 test("classifies subtype, action, and text attributes deliberately", () => {
   assert.equal(
-    getMapItemSemantics(appearance(), {}, { count: 20 }).mutable,
+    getMapItemSemantics(appearance(), { name: "coins" }, { count: 20 }).mutable,
     true,
   );
   const action = getMapItemSemantics(appearance(), {}, { actionId: 5000 });
   assert.equal(action.mutable, false);
   assert.equal(action.interactive, true);
+});
+
+test("keeps appearance-only ids immutable until catalog rules exist", () => {
+  const unknown = getMapItemSemantics(
+    appearance({ notMoveable: false, pickupable: true }),
+  );
+
+  assert.equal(unknown.mutable, false);
+  assert.equal(unknown.interactive, false);
+});
+
+test("keeps reserved zero-sprite ids out of mutable world state", () => {
+  const reserved = getMapItemSemantics(
+    { ...appearance({ notMoveable: false, pickupable: true }), sprites: [0] },
+    { name: "RESERVED SPRITE" },
+  );
+
+  assert.equal(reserved.mutable, false);
+  assert.equal(reserved.interactive, false);
 });
 
 function expectMutable(itemAppearance, staticItem = {}) {

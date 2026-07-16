@@ -13,6 +13,8 @@ import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { Visibility } from "./Visibility";
 import type { World } from "./World";
+import type { ItemIntentHandler } from "./item/ItemIntentHandler";
+import type { LoadedInventory } from "./item/LoadedInventory";
 
 export class CharacterHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -23,6 +25,7 @@ export class CharacterHandler {
     private readonly registry: SessionRegistry,
     private readonly visibility: Visibility,
     private readonly persistence: CharacterPersistence,
+    private readonly items: ItemIntentHandler,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -141,6 +144,9 @@ export class CharacterHandler {
         accountId,
         characterId,
       );
+      const inventory = character
+        ? await this.items.load(character.id, character.capacity)
+        : null;
       this.outcomes.push(() => {
         if (!this.isCurrentOperation(session, accountId)) return;
         if (!character) {
@@ -155,14 +161,22 @@ export class CharacterHandler {
           return;
         }
         if (!this.finishOperation(session, accountId)) return;
-        this.enterWorld(session, character);
+        if (!inventory) {
+          session.sendError("character-load-failed");
+          return;
+        }
+        this.enterWorld(session, character, inventory);
       });
     } catch (cause) {
       this.queueFailure(session, accountId, "character-load-failed", cause);
     }
   }
 
-  private enterWorld(session: Session, character: Character): void {
+  private enterWorld(
+    session: Session,
+    character: Character,
+    loadedInventory: LoadedInventory,
+  ): void {
     if (session.playerId) {
       session.sendError("already-joined");
       return;
@@ -189,6 +203,7 @@ export class CharacterHandler {
     }
     session.playerId = player.id;
     this.registry.bindPlayer(session);
+    const inventory = this.items.attach(loadedInventory);
     const creatures = this.visibility.announceSpawn(session, player);
     session.send({
       type: "welcome",
@@ -196,6 +211,7 @@ export class CharacterHandler {
       character: this.service.ownState(player),
       map: { name: this.world.mapName },
       creatures,
+      inventory,
     });
     this.visibility.syncMapItems(session, player);
     void this.service
@@ -214,12 +230,14 @@ export class CharacterHandler {
     const player = this.world.getPlayer(characterId);
     if (player) {
       this.persistence.untrack(player, Date.now());
+      this.items.detach(characterId);
       this.world.removePlayer(characterId);
       this.visibility.announceLeave(existing, player);
     }
     existing.playerId = null;
     existing.movementDirection = null;
     existing.bufferedMovementDirection = null;
+    existing.itemOperationPending = false;
     existing.knownCreatureIds.clear();
     existing.knownMapItemTiles.clear();
     this.registry.unbindPlayer(characterId, existing);

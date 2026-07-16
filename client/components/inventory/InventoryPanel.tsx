@@ -27,6 +27,9 @@ interface InventoryPanelProps {
   onClose?: () => void;
   onStack?: () => void;
   onSort?: () => void;
+  onEquip?: (item: InventoryItem) => void;
+  onUnequip?: (item: InventoryItem, slot: keyof Equipment) => void;
+  onDrop?: (item: InventoryItem) => void;
 }
 
 export function InventoryPanel({
@@ -41,6 +44,9 @@ export function InventoryPanel({
   onClose,
   onStack,
   onSort,
+  onEquip,
+  onUnequip,
+  onDrop,
 }: InventoryPanelProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
@@ -84,7 +90,7 @@ export function InventoryPanel({
       </header>
       <div aria-hidden className="ui-divider" />
 
-      <EquipmentPaperdoll equipment={equipment} />
+      <EquipmentPaperdoll equipment={equipment} onUnequip={onUnequip} />
 
       <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
         <div className="grid flex-1 grid-cols-2 gap-2 text-xs text-ui-text">
@@ -137,7 +143,14 @@ export function InventoryPanel({
       <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
         <div className="grid grid-cols-4 justify-items-center gap-2">
           {items.map((item) => (
-            <ItemSlot key={item.id} item={item} />
+            <ItemSlot
+              key={item.id}
+              item={item}
+              onActivate={
+                item.equipmentSlot && onEquip ? () => onEquip(item) : undefined
+              }
+              onContextAction={onDrop ? () => onDrop(item) : undefined}
+            />
           ))}
           {Array.from({ length: emptySlots }, (_, i) => (
             <ItemSlot key={`empty-${i}`} />

@@ -10,6 +10,10 @@ import { CharacterService } from "./character/CharacterService";
 import type { CharacterStore } from "./character/CharacterStore";
 import type { ServerConfig } from "./config";
 import { LanguageHandler } from "./LanguageHandler";
+import { ItemIntentHandler } from "./item/ItemIntentHandler";
+import type { ItemCatalog } from "./item/ItemCatalog";
+import type { ItemStore } from "./item/ItemStore";
+import type { WorldItemDeltas } from "./item/WorldItemDeltas";
 import { MovementHandler } from "./MovementHandler";
 import { resolveMapData } from "./resolveMapData";
 import { Session } from "./Session";
@@ -25,6 +29,9 @@ export interface GameServerDeps {
   verifier: TokenVerifier;
   accounts: AccountStore;
   characters: CharacterStore;
+  items: ItemStore;
+  itemCatalog: ItemCatalog;
+  worldItemDeltas?: WorldItemDeltas;
 }
 
 export class GameServer {
@@ -37,6 +44,7 @@ export class GameServer {
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
+  private readonly items: ItemIntentHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
@@ -47,7 +55,11 @@ export class GameServer {
     private readonly config: ServerConfig,
     deps: GameServerDeps,
   ) {
-    this.world = new World(resolveMapData(config.map), config.tickMs);
+    this.world = new World(
+      resolveMapData(config.map, deps.itemCatalog),
+      config.tickMs,
+      deps.worldItemDeltas,
+    );
     this.visibility = new Visibility(
       this.world,
       this.registry,
@@ -68,12 +80,19 @@ export class GameServer {
       config.maxCharacterSaveRetries,
       config.characterSaveRetryDelayMs,
     );
+    this.items = new ItemIntentHandler(
+      deps.items,
+      deps.itemCatalog,
+      this.world,
+      this.visibility,
+    );
     this.characters = new CharacterHandler(
       characterService,
       this.world,
       this.registry,
       this.visibility,
       this.persistence,
+      this.items,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.movement = new MovementHandler(
@@ -158,6 +177,7 @@ export class GameServer {
     this.processDisconnects(now);
     this.auth.applyResolvedOutcomes();
     this.characters.applyResolvedOutcomes();
+    this.items.applyResolvedOutcomes();
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -180,6 +200,7 @@ export class GameServer {
         this.registry.sessionFor(playerId) === session
       ) {
         this.persistence.untrack(player, now);
+        this.items.detach(playerId);
         this.world.removePlayer(playerId);
         this.visibility.announceLeave(session, player);
       }
@@ -225,6 +246,18 @@ export class GameServer {
       }
       case "use-map":
         this.movement.handleUseMap(session, intent, now);
+        return;
+      case "equip-item":
+      case "unequip-item":
+      case "pickup-item":
+      case "drop-item":
+      case "open-container":
+      case "close-container":
+      case "use-item":
+      case "use-item-with":
+      case "split-stack":
+      case "rotate-item":
+        this.items.handle(session, intent);
         return;
       case "set-language":
         this.language.handle(session, intent);

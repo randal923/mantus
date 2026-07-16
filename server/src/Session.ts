@@ -23,6 +23,7 @@ export class Session {
   authPending = false;
   characterOperationPending = false;
   languageUpdatePending = false;
+  itemOperationPending = false;
   readonly connectedAt = Date.now();
   playerId: string | null = null;
   movementDirection: Direction | null = null;

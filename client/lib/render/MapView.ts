@@ -1,5 +1,10 @@
 import { Container, Sprite, Texture } from "pixi.js";
-import type { Position, TileState, ViewRange } from "@tibia/protocol";
+import type {
+  MapItemState,
+  Position,
+  TileState,
+  ViewRange,
+} from "@tibia/protocol";
 import type { AssetStore, TibiaObject } from "./AssetStore";
 import { AnimatedMapItemRegistry } from "./AnimatedMapItemRegistry";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
@@ -96,6 +101,15 @@ export class MapView {
 
   projectPosition(x: number, y: number, z: number): { x: number; y: number } {
     return projectFloorPosition(x, y, this.center?.z ?? z, z);
+  }
+
+  topServerItem(position: Position): MapItemState | undefined {
+    return this.dynamicRequests
+      .get(this.tileKey(position.z, position.x, position.y))
+      ?.items.reduce<MapItemState | undefined>(
+        (top, item) => (!top || item.stackIndex > top.stackIndex ? item : top),
+        undefined,
+      );
   }
 
   /** Interpolates visual elevation while a creature crosses a tile boundary. */

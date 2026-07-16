@@ -154,6 +154,16 @@ export class Visibility {
     }
   }
 
+  onMapItemsChanged(positions: ReadonlyArray<Position>): void {
+    for (const position of positions) {
+      const tile = this.world.mapItemTileState(position);
+      for (const session of this.viewerSessionsFor(position, 0)) {
+        session.knownMapItemTiles.set(positionKey(position), position);
+        session.send({ type: "tile-states", visible: [tile], hidden: [] });
+      }
+    }
+  }
+
   private updateObservers(
     creature: Creature,
     from: Position,

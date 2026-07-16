@@ -1,9 +1,13 @@
 import { Pool } from "pg";
+import { fileURLToPath } from "node:url";
 import { serverConfig } from "./config";
 import { GameServer } from "./GameServer";
 import { PgCharacterStore } from "./character/PgCharacterStore";
 import { PgAccountStore } from "./PgAccountStore";
 import { SupabaseTokenVerifier } from "./SupabaseTokenVerifier";
+import { loadItemCatalog } from "./item/loadItemCatalog";
+import { PgItemStore } from "./item/PgItemStore";
+import { WorldItemSeeder } from "./item/WorldItemSeeder";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const databaseUrl = process.env.DATABASE_URL;
@@ -28,8 +32,25 @@ pool.on("error", (cause) => {
 });
 const accounts = new PgAccountStore(pool);
 const characters = new PgCharacterStore(pool);
+const itemCatalog = await loadItemCatalog();
+const items = new PgItemStore(pool, itemCatalog, serverConfig.map.name);
+const worldItemDeltas =
+  serverConfig.map.source === "data"
+    ? await new WorldItemSeeder(
+        items,
+        fileURLToPath(new URL("../data", import.meta.url)),
+        serverConfig.map.name,
+      ).prepare()
+    : undefined;
 
-const server = new GameServer(serverConfig, { verifier, accounts, characters });
+const server = new GameServer(serverConfig, {
+  verifier,
+  accounts,
+  characters,
+  items,
+  itemCatalog,
+  worldItemDeltas,
+});
 server.start();
 
 let shuttingDown = false;

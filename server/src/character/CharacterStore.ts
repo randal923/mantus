@@ -3,10 +3,15 @@ import type {
   CharacterSaveSnapshot,
   CharacterSummary,
 } from "./Character";
+import type { StarterSet } from "../item/StarterSet";
 
 export interface CharacterStore {
   listByAccountId(accountId: string): Promise<CharacterSummary[]>;
-  create(character: Character, maxCharacters: number): Promise<Character>;
+  create(
+    character: Character,
+    maxCharacters: number,
+    starterSet: StarterSet,
+  ): Promise<Character>;
   findByIdForAccount(
     accountId: string,
     characterId: string,

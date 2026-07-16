@@ -1,21 +1,9 @@
-export interface InventoryItem {
-  id: string;
-  clientId: number;
-  spriteId: number;
-  name: string;
-  count: number;
-}
+import type {
+  EquipmentSlot,
+  InventoryItem as ProtocolInventoryItem,
+  InventoryState,
+} from "@tibia/protocol";
 
-export type EquipmentSlotId =
-  | "helmet"
-  | "amulet"
-  | "backpack"
-  | "armor"
-  | "weapon"
-  | "shield"
-  | "legs"
-  | "boots"
-  | "ring"
-  | "ammo";
-
-export type Equipment = Partial<Record<EquipmentSlotId, InventoryItem>>;
+export type InventoryItem = ProtocolInventoryItem;
+export type EquipmentSlotId = EquipmentSlot;
+export type Equipment = InventoryState["equipment"];

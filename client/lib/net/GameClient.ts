@@ -3,7 +3,10 @@ import {
   type CreateCharacterInput,
   type ClientMessage,
   type Direction,
+  type EquipmentSlot,
+  type InventoryItem,
   type Language,
+  type MapItemState,
   type Position,
   type ServerErrorCode,
   type ServerMessage,
@@ -66,6 +69,43 @@ export class GameClient {
 
   useMap(position: Position): void {
     this.send({ type: "use-map", position });
+  }
+
+  pickupMapItem(item: MapItemState, position: Position): boolean {
+    return this.send({
+      type: "pickup-item",
+      itemId: item.instanceId,
+      revision: item.revision,
+      position,
+    });
+  }
+
+  dropItem(item: InventoryItem, position: Position): boolean {
+    return this.send({
+      type: "drop-item",
+      itemId: item.id,
+      revision: item.revision,
+      position,
+    });
+  }
+
+  equipItem(item: InventoryItem): boolean {
+    if (!item.equipmentSlot) return false;
+    return this.send({
+      type: "equip-item",
+      itemId: item.id,
+      revision: item.revision,
+      slot: item.equipmentSlot,
+    });
+  }
+
+  unequipItem(item: InventoryItem, slot: EquipmentSlot): boolean {
+    return this.send({
+      type: "unequip-item",
+      itemId: item.id,
+      revision: item.revision,
+      slot,
+    });
   }
 
   createCharacter(input: CreateCharacterInput): boolean {

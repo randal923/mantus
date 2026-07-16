@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Pool, type PoolClient } from "pg";
 import { CharacterError } from "./CharacterError";
 import type {
@@ -6,6 +7,7 @@ import type {
   CharacterSummary,
 } from "./Character";
 import type { CharacterStore } from "./CharacterStore";
+import type { StarterSet } from "../item/StarterSet";
 
 interface CharacterRow {
   id: string;
@@ -61,6 +63,7 @@ export class PgCharacterStore implements CharacterStore {
   async create(
     character: Character,
     maxCharacters: number,
+    starterSet: StarterSet,
   ): Promise<Character> {
     const client = await this.pool.connect();
     try {
@@ -117,6 +120,7 @@ export class PgCharacterStore implements CharacterStore {
       );
       const row = result.rows[0];
       if (!row) throw new Error("character insert returned no row");
+      await this.insertStarterSet(client, character.id, starterSet);
       await client.query("COMMIT");
       return this.toCharacter(row);
     } catch (cause) {
@@ -205,6 +209,69 @@ export class PgCharacterStore implements CharacterStore {
       [accountId],
     );
     if (account.rowCount !== 1) throw new Error("character account not found");
+  }
+
+  private async insertStarterSet(
+    client: PoolClient,
+    characterId: string,
+    starterSet: StarterSet,
+  ): Promise<void> {
+    let backpackId: string | undefined;
+    for (const item of starterSet.equipment) {
+      const itemId = randomUUID();
+      await client.query(
+        `INSERT INTO items (
+           id, item_type_id, count, location_type, character_id, equipment_slot
+         ) VALUES ($1, $2, $3, 'equipment', $4, $5)`,
+        [itemId, item.typeId, item.count ?? 1, characterId, item.slot],
+      );
+      await this.auditStarterItem(
+        client,
+        characterId,
+        itemId,
+        item.typeId,
+        item.count ?? 1,
+      );
+      if (item.slot === "backpack") backpackId = itemId;
+    }
+    if (!backpackId && starterSet.backpackContents.length > 0) {
+      throw new Error("starter supplies require an equipped backpack");
+    }
+    for (const [slot, item] of starterSet.backpackContents.entries()) {
+      const itemId = randomUUID();
+      await client.query(
+        `INSERT INTO items (
+           id, item_type_id, count, location_type, container_id, slot_index
+         ) VALUES ($1, $2, $3, 'container', $4, $5)`,
+        [itemId, item.typeId, item.count, backpackId, slot],
+      );
+      await this.auditStarterItem(
+        client,
+        characterId,
+        itemId,
+        item.typeId,
+        item.count,
+      );
+    }
+  }
+
+  private async auditStarterItem(
+    client: PoolClient,
+    characterId: string,
+    itemId: string,
+    itemTypeId: number,
+    count: number,
+  ): Promise<void> {
+    await client.query(
+      `INSERT INTO audit_log (
+         event_type, character_id, item_id, details
+       ) VALUES (
+         'item-created', $1, $2, jsonb_build_object(
+           'reason', 'starter-set', 'itemTypeId', $3::integer, 'count', $4::integer
+         )
+       )`,
+      [characterId, itemId, itemTypeId, count],
+    );
   }
 
   private isNormalizedNameConflict(cause: unknown): boolean {

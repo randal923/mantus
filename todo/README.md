@@ -47,12 +47,13 @@ translate and refactor the useful parts into this project's use case.
 - The client streams floor-aware static regions, reconciles visible mutable
   tile items and creatures, snaps authoritative corrections/floor changes, and
   animates accepted same-floor player steps.
-- Inventory and status components exist only as Storybook/mock UI. They are
-  not backed by protocol or server state.
+- A pinned Canary/DAT item catalog now backs durable starter equipment,
+  inventory projections, canonical tooltips, and an authoritative first slice
+  of equip, pickup/drop, stack, and rotate operations.
 
-Everything else is absent or partial: map-item animation, correct creature
-elevation, monster and NPC spawns, persistent item ownership, combat, loot,
-chat, shops, quests, and the long-tail social/economy systems.
+Everything else is absent or partial: correct creature elevation, the deeper
+container and map-use UI, item special behaviors, combat, loot, chat, shops,
+quests, and the long-tail social/economy systems.
 
 ## Reference implementation map
 

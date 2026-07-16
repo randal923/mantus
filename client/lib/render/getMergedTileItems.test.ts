@@ -11,7 +11,15 @@ describe("getMergedTileItems", () => {
     ]);
     const merged = getMergedTileItems(
       [100, 300],
-      [{ instanceId: "dynamic", itemId: 200, stackIndex: 1 }],
+      [
+        {
+          instanceId: "dynamic",
+          itemId: 200,
+          stackIndex: 1,
+          revision: 1,
+          count: 1,
+        },
+      ],
       (itemId) => {
         const object = objects.get(itemId);
         if (!object) throw new Error("missing fixture appearance");
@@ -38,8 +46,20 @@ describe("getMergedTileItems", () => {
     const merged = getMergedTileItems(
       [],
       [
-        { instanceId: "first", itemId: 100, stackIndex: 1 },
-        { instanceId: "duplicate", itemId: 100, stackIndex: 1 },
+        {
+          instanceId: "first",
+          itemId: 100,
+          stackIndex: 1,
+          revision: 1,
+          count: 1,
+        },
+        {
+          instanceId: "duplicate",
+          itemId: 100,
+          stackIndex: 1,
+          revision: 1,
+          count: 1,
+        },
       ],
       () => object,
       "static",

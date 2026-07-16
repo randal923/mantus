@@ -26,6 +26,11 @@ const STATEFUL_ATTRIBUTES = [
 ];
 
 export function getMapItemSemantics(appearance, staticItem = {}, attributes = {}) {
+  const spriteId = appearance.sprites?.[0];
+  const cataloged =
+    typeof staticItem.name === "string" &&
+    Number.isInteger(spriteId) &&
+    spriteId > 0;
   const movable = staticItem.movable ?? !appearance.flags.notMoveable;
   const pickupable = staticItem.pickupable ?? appearance.flags.pickupable;
   const stackOrder = appearance.flags.ground
@@ -41,11 +46,12 @@ export function getMapItemSemantics(appearance, staticItem = {}, attributes = {}
     (attribute) => attributes[attribute] !== undefined,
   );
   const mutable =
-    movable ||
-    pickupable ||
-    stateful ||
-    MUTABLE_TYPES.has(staticItem.type) ||
-    appearance.flags.container;
+    cataloged &&
+    (movable ||
+      pickupable ||
+      stateful ||
+      MUTABLE_TYPES.has(staticItem.type) ||
+      appearance.flags.container);
   const interactive =
     mutable ||
     staticItem.type === "ladder" ||

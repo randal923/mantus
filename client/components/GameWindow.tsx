@@ -7,6 +7,7 @@ import type {
   CreatureState,
   CreateCharacterInput,
   Direction,
+  InventoryState,
   OwnCharacterState,
   ServerErrorCode,
 } from "@tibia/protocol";
@@ -19,7 +20,6 @@ import { useLanguageStore } from "../stores/useLanguageStore";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
-import { getPlaceholderInventory } from "./inventory/getPlaceholderInventory";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
 
@@ -65,13 +65,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   >([]);
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [inventory, setInventory] = useState<InventoryState | null>(null);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState(false);
   const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
-  const placeholderInventory = ownCharacter
-    ? getPlaceholderInventory(t, ownCharacter.name, ownCharacter.capacity)
-    : null;
 
   const reconnect = (characterId: string | null) => {
     resumeCharacterIdRef.current = characterId;
@@ -80,6 +78,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setCharacters(null);
     setCreationOptions(null);
     setOwnCharacter(null);
+    setInventory(null);
     setVisibleCreatures([]);
     setCharacterBusy(characterId !== null);
     setInventoryOpen(false);
@@ -130,7 +129,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       ]);
       if (disposed) return;
 
-      const worldRenderer = new WorldRenderer();
+      const worldRenderer = new WorldRenderer({
+        useMap: (position) => client?.useMap(position),
+        pickupMapItem: (item, position) =>
+          client?.pickupMapItem(item, position),
+      });
       await worldRenderer.init(container);
       if (disposed) {
         worldRenderer.destroy();
@@ -168,8 +171,31 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             joinedRef.current = true;
             resumeCharacterIdRef.current = null;
             setOwnCharacter(message.character);
+            setInventory(message.inventory);
             setCharacterBusy(false);
             setServerError(null);
+          }
+          if (message.type === "inventory-updated") {
+            setInventory(message.inventory);
+            return;
+          }
+          if (
+            message.type === "creature-moved" ||
+            message.type === "position-correction"
+          ) {
+            const playerId =
+              message.type === "creature-moved"
+                ? message.creatureId
+                : message.playerId;
+            setOwnCharacter((current) =>
+              current?.id === playerId
+                ? {
+                    ...current,
+                    position: { ...message.position },
+                    direction: message.direction,
+                  }
+                : current,
+            );
           }
           worldRenderer.applyMessage(message);
         },
@@ -346,11 +372,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             visibleCreatures={visibleCreatures}
             ownPlayerId={ownCharacter.id}
           />
-          {inventoryOpen && placeholderInventory && (
+          {inventoryOpen && inventory && (
             <div className="absolute top-24 right-4 bottom-4 z-30 w-96">
               <InventoryPanel
-                {...placeholderInventory}
+                characterName={ownCharacter.name}
+                {...inventory}
                 onClose={() => setInventoryOpen(false)}
+                onEquip={(item) => clientRef.current?.equipItem(item)}
+                onUnequip={(item, slot) =>
+                  clientRef.current?.unequipItem(item, slot)
+                }
+                onDrop={(item) =>
+                  clientRef.current?.dropItem(item, ownCharacter.position)
+                }
               />
             </div>
           )}

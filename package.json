@@ -12,12 +12,14 @@
     "db:down": "docker compose down",
     "assets:import": "node tools/importTibiaAssets.mjs",
     "items:convert": "node tools/convertCanaryItems.mjs",
+    "items:catalog": "node tools/buildItemCatalog.mjs",
     "map:convert": "node tools/convertOtbm.mjs",
     "creatures:import": "node tools/importCanaryCreatures.mjs",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
     "test": "yarn test:tools && yarn workspace client test && yarn workspace server test",
     "test:tools": "node --test tools/*.test.mjs",
-    "db:migrate": "yarn workspace server db:migrate"
+    "db:migrate": "yarn workspace server db:migrate",
+    "db:cleanup-partial-world-seed": "yarn workspace server db:cleanup-partial-world-seed"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

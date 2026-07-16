@@ -184,7 +184,8 @@ describe("loadMapData", () => {
     item.writeUInt16LE(3003, 6);
     item.writeUInt8(1, 8);
     const items = Buffer.concat([itemHeader, item]);
-    const content = "{}";
+    const content = JSON.stringify({ worldItemAttributes: [] });
+    const sourceMapHash = "source-map";
     writeFileSync(join(directory, "fixture.map.bin"), navigation);
     writeFileSync(join(directory, "fixture.items.bin"), items);
     writeFileSync(join(directory, "fixture.content.json"), content);
@@ -193,6 +194,7 @@ describe("loadMapData", () => {
       JSON.stringify({
         formatVersion: 3,
         source: {
+          mapSha256: sourceMapHash,
           navigationSha256: hash(navigation),
           itemsSha256: hash(items),
           contentSha256: hash(content),
@@ -235,6 +237,18 @@ describe("loadMapData", () => {
         itemId: 3003,
         stackIndex: 3,
         mutable: true,
+        revision: 1,
+        count: 1,
+        source: {
+          seedKey: "fixture:1:2:7:3",
+          mapName: "fixture",
+          mapVersion: hash(`${sourceMapHash}:${hash(items)}`),
+          typeId: 3003,
+          attributes: {},
+          position: { x: 1, y: 2, z: 7 },
+          stackIndex: 3,
+          contents: [],
+        },
       },
     ]);
     expect(map.getAction({ x: 1, y: 2, z: 7 })).toEqual({

@@ -13,7 +13,6 @@ export function ItemAffixLine({ affix }: ItemAffixLineProps) {
       />
       <span>
         {affix.text}
-        {affix.range && <span className="text-ui-muted"> {affix.range}</span>}
       </span>
     </li>
   );

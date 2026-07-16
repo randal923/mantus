@@ -5,6 +5,8 @@ import { positionSchema, type Position } from "@tibia/protocol";
 import type { MapAction } from "./MapAction";
 import type { MapData, MapTile } from "./MapData";
 import type { MapTransition } from "./MapTransition";
+import type { ItemCatalog } from "./item/ItemCatalog";
+import { loadWorldItemSources } from "./item/loadWorldItemSources";
 import { loadMapItems } from "./loadMapItems";
 import { positionKey } from "./positionKey";
 
@@ -28,6 +30,7 @@ interface MapMeta {
     navigationSha256?: string;
     itemsSha256?: string;
     contentSha256?: string;
+    mapSha256?: string;
   };
   towns: Array<{ id?: number; name: string; x: number; y: number; z: number }>;
   spawn: { x: number; y: number; z: number };
@@ -125,6 +128,7 @@ export function loadMapData(
   dataDir: string,
   name: string,
   spawnTown?: string,
+  itemCatalog?: ItemCatalog,
 ): MapData {
   const meta = JSON.parse(
     readFileSync(join(dataDir, `${name}.map.json`), "utf8"),
@@ -149,7 +153,11 @@ export function loadMapData(
     ) {
       throw new Error(`${name} map metadata has an unsupported binary layout`);
     }
-    if (!source || source.navigationSha256 !== sha256(navigation)) {
+    if (
+      !source ||
+      source.navigationSha256 !== sha256(navigation) ||
+      typeof source.mapSha256 !== "string"
+    ) {
       throw new Error(`${name}.map.bin does not match its source hash`);
     }
     const items = readFileSync(join(dataDir, `${name}.items.bin`));
@@ -163,7 +171,15 @@ export function loadMapData(
     if (!Number.isInteger(meta.worldItemCount) || Number(meta.worldItemCount) < 0) {
       throw new Error(`${name} map metadata has an invalid world-item count`);
     }
-    getItems = loadMapItems(items, name, Number(meta.worldItemCount));
+    const mapVersion = sha256(`${source.mapSha256}:${source.itemsSha256}`);
+    getItems = loadMapItems(
+      items,
+      name,
+      Number(meta.worldItemCount),
+      mapVersion,
+      loadWorldItemSources(content, name),
+      itemCatalog,
+    );
   }
 
   const sectorSize = navigation.readUInt8(5);

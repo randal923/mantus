@@ -1,4 +1,6 @@
 import type { Position } from "@tibia/protocol";
+import type { ItemCatalog } from "./item/ItemCatalog";
+import type { WorldItemSourceData } from "./item/WorldItemSource";
 import type { MapItem } from "./MapItem";
 
 const HEADER_SIZE = 12;
@@ -29,10 +31,34 @@ function comparePosition(entry: ItemEntry, position: Position): number {
   return entry.z - position.z || entry.y - position.y || entry.x - position.x;
 }
 
+function mapItemCount(
+  itemId: number,
+  instanceId: string,
+  source: WorldItemSourceData | undefined,
+  catalog: ItemCatalog | undefined,
+): number {
+  if (!catalog) return 1;
+  const type = catalog.require(itemId);
+  if (!type.stackable) return 1;
+  const rawCount = source?.attributes.count;
+  if (rawCount === undefined || rawCount === 0) return 1;
+  if (
+    !Number.isInteger(rawCount) ||
+    Number(rawCount) < 1 ||
+    Number(rawCount) > type.maxCount
+  ) {
+    throw new Error(`world item ${instanceId} has an invalid stack count`);
+  }
+  return Number(rawCount);
+}
+
 export function loadMapItems(
   buffer: Buffer,
   mapName: string,
   expectedCount: number,
+  mapVersion: string,
+  sources: ReadonlyMap<string, WorldItemSourceData>,
+  catalog?: ItemCatalog,
 ): (position: Position) => ReadonlyArray<MapItem> {
   if (buffer.length < HEADER_SIZE || buffer.toString("ascii", 0, 4) !== "TITM") {
     throw new Error(`${mapName}.items.bin is not a TITM file`);
@@ -83,11 +109,25 @@ export function loadMapItems(
       const entry = readEntry(buffer, index);
       if (comparePosition(entry, position) !== 0) break;
       if (entry.classification !== 1) continue;
+      const instanceId = `${mapName}:${entry.x}:${entry.y}:${entry.z}:${entry.stackIndex}`;
+      const source = sources.get(instanceId);
       items.push({
-        instanceId: `${mapName}:${entry.x}:${entry.y}:${entry.z}:${entry.stackIndex}`,
+        instanceId,
         itemId: entry.itemId,
         stackIndex: entry.stackIndex,
         mutable: true,
+        revision: 1,
+        count: mapItemCount(entry.itemId, instanceId, source, catalog),
+        source: {
+          seedKey: instanceId,
+          mapName,
+          mapVersion,
+          typeId: entry.itemId,
+          attributes: source?.attributes ?? {},
+          position: { x: entry.x, y: entry.y, z: entry.z },
+          stackIndex: entry.stackIndex,
+          contents: source?.contents ?? [],
+        },
       });
     }
     return items;

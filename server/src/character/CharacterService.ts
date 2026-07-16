@@ -12,6 +12,7 @@ import type { Player } from "../Player";
 import type { Character, CreateCharacterInput } from "./Character";
 import { CharacterError } from "./CharacterError";
 import type { CharacterStore } from "./CharacterStore";
+import { getStarterSet } from "../item/getStarterSet";
 import { normalizeCharacterName } from "./normalizeCharacterName";
 
 interface StarterPosition extends Position {
@@ -97,7 +98,11 @@ export class CharacterService {
       lastLoginAt: null,
       version: 1,
     };
-    await this.store.create(character, MAX_CHARACTERS_PER_ACCOUNT);
+    await this.store.create(
+      character,
+      MAX_CHARACTERS_PER_ACCOUNT,
+      getStarterSet(character.vocation),
+    );
     return this.list(accountId);
   }
 

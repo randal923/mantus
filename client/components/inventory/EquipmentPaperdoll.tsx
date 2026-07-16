@@ -23,9 +23,10 @@ const SLOT_GRID: (EquipmentSlotId | null)[][] = [
 
 interface EquipmentPaperdollProps {
   equipment: Equipment;
+  onUnequip?: (item: NonNullable<Equipment[EquipmentSlotId]>, slot: EquipmentSlotId) => void;
 }
 
-export function EquipmentPaperdoll({ equipment }: EquipmentPaperdollProps) {
+export function EquipmentPaperdoll({ equipment, onUnequip }: EquipmentPaperdollProps) {
   const { t } = useAppTranslation();
 
   return (
@@ -49,6 +50,11 @@ export function EquipmentPaperdoll({ equipment }: EquipmentPaperdollProps) {
                     key={slot}
                     item={equipment[slot]}
                     placeholderSpriteId={SLOT_HINT_SPRITES[slot]}
+                    onActivate={
+                      equipment[slot] && onUnequip
+                        ? () => onUnequip(equipment[slot]!, slot)
+                        : undefined
+                    }
                   />
                 ),
             )}
