@@ -100,7 +100,7 @@ export function GameHud({
         ownPlayerId={ownCharacter.id}
         attackTargetId={fightState.attackTargetId}
       />
-      <div className="pointer-events-auto absolute bottom-24 left-4">
+      <div className="pointer-events-auto absolute bottom-4 left-4">
         <ChatPanel
           channels={visibleChatChannels}
           {...(chatSelectedChannelId
