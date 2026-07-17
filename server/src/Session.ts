@@ -25,6 +25,7 @@ export class Session {
   characterOperationPending = false;
   languageUpdatePending = false;
   itemOperationPending = false;
+  travelOperationPending = false;
   readonly connectedAt = Date.now();
   playerId: string | null = null;
   movementDirection: Direction | null = null;

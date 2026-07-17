@@ -91,6 +91,13 @@ export class Visibility {
     this.updateObservers(player, from, durationMs, mover.id);
   }
 
+  onPlayerTeleported(mover: Session, player: Player, from: Position): void {
+    mover.send(this.movedMessage(player, from, 0));
+    this.reconcileMoverView(mover, player);
+    this.syncMapItems(mover, player);
+    this.updateObservers(player, from, 0, mover.id);
+  }
+
   onCreatureStepped(
     creature: Creature,
     from: Position,

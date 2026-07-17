@@ -45,6 +45,7 @@ import type { ItemDragSource } from "./inventory/ItemDragSource";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
 import { useGameSettingsStore } from "../stores/useGameSettingsStore";
+import { NpcDialogue } from "./npc/NpcDialogue";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
 
@@ -112,6 +113,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [itemText, setItemText] = useState<
     Extract<ServerMessage, { type: "item-text" }> | null
   >(null);
+  const [npcDialogue, setNpcDialogue] = useState<
+    Extract<ServerMessage, { type: "npc-dialogue" }> | null
+  >(null);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState(false);
@@ -127,6 +131,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setOwnCharacter(null);
     resetInventory(null);
     setItemText(null);
+    setNpcDialogue(null);
     setVisibleCreatures([]);
     setFightState(null);
     setSpells([]);
@@ -310,6 +315,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setSpells(message.spells);
             setCharacterBusy(false);
             setServerError(null);
+            setNpcDialogue(null);
             dispatchChat({
               type: "reset",
               ownPlayerId: message.playerId,
@@ -325,6 +331,25 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               body: message.text,
               time: formatChatTime(),
             });
+          }
+          if (message.type === "npc-dialogue") {
+            setNpcDialogue(message);
+            dispatchChat({
+              type: "spoke",
+              creatureId: message.npcId,
+              name: message.npcName,
+              mode: "say",
+              body: message.text,
+              time: formatChatTime(),
+            });
+          }
+          if (message.type === "npc-dialogue-closed") {
+            setNpcDialogue((current) =>
+              current?.npcId === message.npcId &&
+              current.conversationId === message.conversationId
+                ? null
+                : current,
+            );
           }
           if (message.type === "private-chat-delivered") {
             dispatchChat({
@@ -415,6 +440,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setSpells([]);
           if (nextStatus === "disconnected") setCombatLog([]);
           if (nextStatus === "disconnected") setItemText(null);
+          if (nextStatus === "disconnected") setNpcDialogue(null);
           if (nextStatus === "disconnected") {
             dispatchChat({ type: "reset", ownPlayerId: null, ownName: null });
           }
@@ -712,6 +738,20 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 clientRef.current?.castSpell(spellId, target)
               }
             />
+          )}
+          {npcDialogue && (
+            <div className="absolute inset-x-4 bottom-24 z-30 flex justify-center">
+              <NpcDialogue
+                dialogue={npcDialogue}
+                onChoice={(choiceId) =>
+                  clientRef.current?.sendNpcDialogueChoice(
+                    npcDialogue.npcId,
+                    npcDialogue.conversationId,
+                    choiceId,
+                  )
+                }
+              />
+            </div>
           )}
           {inventoryOpen && inventory && (
             <div

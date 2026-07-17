@@ -19,6 +19,10 @@ import { creatureStateSchema } from "./creature";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { inventoryStateSchema } from "./item";
+import {
+  npcDialogueClosedMessageSchema,
+  npcDialogueMessageSchema,
+} from "./npc";
 import { positionSchema } from "./position";
 import { ownProgressionStateSchema } from "./progression";
 
@@ -246,6 +250,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   distanceMissileMessageSchema,
   combatLogMessageSchema,
   tileStatesMessageSchema,
+  npcDialogueMessageSchema,
+  npcDialogueClosedMessageSchema,
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,

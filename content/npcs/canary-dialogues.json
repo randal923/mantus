@@ -1,0 +1,520 @@
+{
+  "formatVersion": 1,
+  "source": {
+    "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
+    "reviewedPaths": [
+      "data/npclib/npc_system/keyword_handler.lua",
+      "data/npclib/npc_system/npc_handler.lua",
+      "data/npclib/npc_system/modules.lua",
+      "data/modules/scripts/npc/npc_dialog.lua",
+      "data-otservbr-global/npc/quentin.lua",
+      "data-otservbr-global/npc/captain_bluebear.lua"
+    ]
+  },
+  "dialogues": [
+    {
+      "typeId": "quentin",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": ["hi", "hello"],
+      "farewellKeywords": ["bye", "farewell"],
+      "greeting": [
+        "Welcome, young |PLAYERNAME|! If you are heavily wounded or poisoned, I can heal you for free."
+      ],
+      "farewell": ["May the gods bless you, |PLAYERNAME|!"],
+      "walkAway": [
+        "Remember: If you are heavily wounded or poisoned, I can heal you for free."
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "heal",
+            "pilgrimage",
+            "blessings",
+            "spiritual",
+            "phoenix",
+            "embrace",
+            "suns",
+            "solitude",
+            "twist-of-fate"
+          ],
+          "choices": [
+            { "nodeId": "heal", "label": "Heal" },
+            { "nodeId": "blessings", "label": "Blessings" },
+            { "nodeId": "pilgrimage", "label": "Pilgrimage" }
+          ]
+        },
+        {
+          "id": "heal",
+          "matches": [["heal"]],
+          "responses": [
+            "You aren't looking that bad. Sorry, I can't help you. You can ask me about the pilgrimage of ashes."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "pilgrimage",
+          "matches": [["pilgrimage"]],
+          "responses": [
+            "Whenever you receive a lethal wound, your vital force is damaged and there is a chance that you lose some of your equipment. Every blessing reduces that loss."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "blessings",
+          "matches": [["blessing"]],
+          "responses": [
+            "There are five blessings: spiritual shielding, the spark of the phoenix, the embrace of Tibia, the fire of the suns, and the wisdom of solitude."
+          ],
+          "children": [],
+          "choices": [
+            { "nodeId": "spiritual", "label": "Spiritual" },
+            { "nodeId": "phoenix", "label": "Phoenix" },
+            { "nodeId": "embrace", "label": "Embrace" },
+            { "nodeId": "suns", "label": "Suns" },
+            { "nodeId": "solitude", "label": "Solitude" }
+          ]
+        },
+        {
+          "id": "spiritual",
+          "matches": [["spiritual"], ["shield"]],
+          "responses": [
+            "You can ask for spiritual shielding in the whiteflower temple south of Thais."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "phoenix",
+          "matches": [["phoenix"], ["spark"]],
+          "responses": [
+            "The spark of the phoenix is given by the dwarven priests of earth and fire in Kazordoon."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "embrace",
+          "matches": [["embrace"]],
+          "responses": [
+            "The druids north of Carlin will provide you with the embrace of Tibia."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "suns",
+          "matches": [["suns"], ["fire"]],
+          "responses": [
+            "You can ask for the blessing of the two suns in the suntower near Ab'Dendriel."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "solitude",
+          "matches": [["solitude"], ["wisdom"]],
+          "responses": [
+            "Talk to the hermit Eremo on the isle of Cormaya about the wisdom of solitude."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "twist-of-fate",
+          "matches": [["twist", "fate"]],
+          "responses": [
+            "The twist of fate protects your other blessings when another adventurer kills you."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "captain-bluebear",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": ["hi", "hello"],
+      "farewellKeywords": ["bye", "farewell"],
+      "greeting": [
+        "Welcome on board, |PLAYERNAME|. Where can I sail you today?"
+      ],
+      "farewell": [
+        "Good bye. Recommend us if you were satisfied with our service."
+      ],
+      "walkAway": ["Good bye then."],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "sail",
+            "name",
+            "job",
+            "ship-line",
+            "goods",
+            "passenger",
+            "ice-islands",
+            "darashia",
+            "ghost-ship",
+            "thais",
+            "offer-carlin",
+            "offer-abdendriel",
+            "offer-edron",
+            "offer-venore",
+            "offer-port-hope",
+            "offer-roshamuul",
+            "offer-svargrond",
+            "offer-liberty-bay",
+            "offer-oramond",
+            "offer-krailos"
+          ],
+          "choices": [
+            { "nodeId": "sail", "label": "Sail" },
+            { "nodeId": "name", "label": "Name" },
+            { "nodeId": "job", "label": "Job" }
+          ]
+        },
+        {
+          "id": "sail",
+          "matches": [
+            ["sail"],
+            ["trip"],
+            ["route"],
+            ["passage"],
+            ["town"],
+            ["destination"],
+            ["go"]
+          ],
+          "responses": [
+            "Where do you want to go?"
+          ],
+          "children": [
+            "offer-carlin",
+            "offer-abdendriel",
+            "offer-edron",
+            "offer-venore",
+            "offer-port-hope",
+            "offer-roshamuul",
+            "offer-svargrond",
+            "offer-liberty-bay",
+            "offer-oramond",
+            "offer-krailos"
+          ],
+          "choices": [
+            { "nodeId": "offer-carlin", "label": "Carlin" },
+            { "nodeId": "offer-abdendriel", "label": "Ab'Dendriel" },
+            { "nodeId": "offer-edron", "label": "Edron" },
+            { "nodeId": "offer-venore", "label": "Venore" },
+            { "nodeId": "offer-port-hope", "label": "Port Hope" },
+            { "nodeId": "offer-roshamuul", "label": "Roshamuul" },
+            { "nodeId": "offer-svargrond", "label": "Svargrond" },
+            { "nodeId": "offer-liberty-bay", "label": "Liberty Bay" },
+            { "nodeId": "offer-oramond", "label": "Oramond" },
+            { "nodeId": "offer-krailos", "label": "Krailos" }
+          ]
+        },
+        {
+          "id": "name",
+          "matches": [["name"]],
+          "responses": ["My name is Captain Bluebear from the Royal Tibia Line."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "job",
+          "matches": [["job"], ["captain"]],
+          "responses": ["I am the captain of this sailing-ship."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "ship-line",
+          "matches": [["ship"], ["line"], ["company"], ["tibia"]],
+          "responses": ["The Royal Tibia Line connects all seaside towns of Tibia."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "goods",
+          "matches": [["good"]],
+          "responses": ["We can transport everything you want."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "passenger",
+          "matches": [["passenger"]],
+          "responses": ["We would like to welcome you on board."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "ice-islands",
+          "matches": [["ice"], ["senja"], ["folda"], ["vega"]],
+          "responses": ["I'm sorry, but we don't serve the routes to the Ice Islands."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "darashia",
+          "matches": [["darashia"], ["darama"]],
+          "responses": ["I'm not sailing there. This route is afflicted by a ghostship! However I've heard that Captain Fearless from Venore sails there."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "ghost-ship",
+          "matches": [["ghost"]],
+          "responses": ["Many people who sailed to Darashia never returned because they were attacked by a ghostship! I'll never sail there!"],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "thais",
+          "matches": [["thais"]],
+          "responses": ["This is Thais. Where do you want to go?"],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "offer-carlin",
+          "matches": [["carlin"]],
+          "responses": ["Do you seek a passage to Carlin for |TRAVELCOST|?"],
+          "children": ["confirm-carlin", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-carlin", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "carlin"
+        },
+        {
+          "id": "confirm-carlin",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "carlin" }
+        },
+        {
+          "id": "offer-abdendriel",
+          "matches": [["ab'dendriel"], ["abdendriel"]],
+          "responses": ["Do you seek a passage to Ab'Dendriel for |TRAVELCOST|?"],
+          "children": ["confirm-abdendriel", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-abdendriel", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "abdendriel"
+        },
+        {
+          "id": "confirm-abdendriel",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "abdendriel" }
+        },
+        {
+          "id": "offer-edron",
+          "matches": [["edron"]],
+          "responses": ["Do you seek a passage to Edron for |TRAVELCOST|?"],
+          "children": ["confirm-edron", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-edron", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "edron"
+        },
+        {
+          "id": "confirm-edron",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "edron" }
+        },
+        {
+          "id": "offer-venore",
+          "matches": [["venore"]],
+          "responses": ["Do you seek a passage to Venore for |TRAVELCOST|?"],
+          "children": ["confirm-venore", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-venore", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "venore"
+        },
+        {
+          "id": "confirm-venore",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "venore" }
+        },
+        {
+          "id": "offer-port-hope",
+          "matches": [["port", "hope"]],
+          "responses": ["Do you seek a passage to Port Hope for |TRAVELCOST|?"],
+          "children": ["confirm-port-hope", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-port-hope", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "port-hope"
+        },
+        {
+          "id": "confirm-port-hope",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "port-hope" }
+        },
+        {
+          "id": "offer-roshamuul",
+          "matches": [["roshamuul"]],
+          "responses": ["Do you seek a passage to Roshamuul for |TRAVELCOST|?"],
+          "children": ["confirm-roshamuul", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-roshamuul", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "roshamuul"
+        },
+        {
+          "id": "confirm-roshamuul",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "roshamuul" }
+        },
+        {
+          "id": "offer-svargrond",
+          "matches": [["svargrond"]],
+          "responses": ["Do you seek a passage to Svargrond for |TRAVELCOST|?"],
+          "children": ["confirm-svargrond", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-svargrond", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "svargrond"
+        },
+        {
+          "id": "confirm-svargrond",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "svargrond" }
+        },
+        {
+          "id": "offer-liberty-bay",
+          "matches": [["liberty", "bay"]],
+          "responses": ["Do you seek a passage to Liberty Bay for |TRAVELCOST|?"],
+          "children": ["confirm-liberty-bay", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-liberty-bay", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "liberty-bay"
+        },
+        {
+          "id": "confirm-liberty-bay",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "liberty-bay" }
+        },
+        {
+          "id": "offer-oramond",
+          "matches": [["oramond"]],
+          "responses": ["Do you seek a passage to Oramond for |TRAVELCOST|?"],
+          "children": ["confirm-oramond", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-oramond", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "oramond"
+        },
+        {
+          "id": "confirm-oramond",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "oramond" }
+        },
+        {
+          "id": "offer-krailos",
+          "matches": [["krailos"]],
+          "responses": ["Do you seek a passage to Krailos for |TRAVELCOST|?"],
+          "children": ["confirm-krailos", "decline-travel"],
+          "choices": [
+            { "nodeId": "confirm-krailos", "label": "Yes" },
+            { "nodeId": "decline-travel", "label": "No" }
+          ],
+          "offerId": "krailos"
+        },
+        {
+          "id": "confirm-krailos",
+          "matches": [["yes"]],
+          "responses": ["Set the sails!"],
+          "children": [],
+          "choices": [],
+          "action": { "kind": "travel", "offerId": "krailos" }
+        },
+        {
+          "id": "decline-travel",
+          "matches": [["no"]],
+          "responses": ["We would like to serve you some time."],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": [
+        { "id": "carlin", "cost": 110, "destination": { "x": 32387, "y": 31820, "z": 6 } },
+        { "id": "abdendriel", "cost": 130, "destination": { "x": 32734, "y": 31668, "z": 6 } },
+        { "id": "edron", "cost": 160, "destination": { "x": 33175, "y": 31764, "z": 6 } },
+        { "id": "venore", "cost": 170, "destination": { "x": 32954, "y": 32022, "z": 6 } },
+        { "id": "port-hope", "cost": 160, "destination": { "x": 32527, "y": 32784, "z": 6 } },
+        { "id": "roshamuul", "cost": 210, "destination": { "x": 33494, "y": 32567, "z": 7 } },
+        { "id": "svargrond", "cost": 180, "destination": { "x": 32341, "y": 31108, "z": 6 } },
+        { "id": "liberty-bay", "cost": 180, "destination": { "x": 32285, "y": 32892, "z": 6 } },
+        { "id": "oramond", "cost": 150, "destination": { "x": 33479, "y": 31985, "z": 7 } },
+        { "id": "krailos", "cost": 230, "destination": { "x": 33492, "y": 31712, "z": 6 } }
+      ]
+    }
+  ]
+}

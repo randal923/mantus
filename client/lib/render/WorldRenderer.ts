@@ -154,6 +154,15 @@ export class WorldRenderer {
           message.text,
         );
         return;
+      case "npc-dialogue":
+        this.speechTexts.showSpeech(
+          message.npcId,
+          message.position,
+          message.text,
+        );
+        return;
+      case "npc-dialogue-closed":
+        return;
       case "creature-moved":
         this.applyCreatureMove(
           message.creatureId,

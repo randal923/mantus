@@ -5,6 +5,7 @@ import { combatTargetSchema, fightModeSchema } from "./combat";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { PROTOCOL_LIMITS } from "./limits";
+import { npcDialogueChoiceMessageSchema } from "./npc";
 import { equipmentSlotSchema } from "./item";
 import { positionSchema } from "./position";
 import { viewRangeSchema } from "./viewRange";
@@ -277,6 +278,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   moveItemMessageSchema,
   writeItemMessageSchema,
   setLanguageMessageSchema,
+  npcDialogueChoiceMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,
 ]);

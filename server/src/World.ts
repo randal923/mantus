@@ -46,6 +46,7 @@ export class World {
   private readonly hiddenMapItemIds = new Set<string>();
   private readonly dynamicMapItems = new Map<string, MapItem[]>();
   private readonly tileItemRevisions = new Map<string, number>();
+  private readonly positionReservations = new Map<string, string>();
 
   constructor(
     private readonly map: MapData,
@@ -122,7 +123,44 @@ export class World {
   }
 
   isOccupied(position: Position): boolean {
-    return this.grid.query(position, 0, 0).length > 0;
+    return (
+      this.grid.query(position, 0, 0).length > 0 ||
+      this.positionReservations.has(positionKey(position))
+    );
+  }
+
+  reservePosition(position: Position, reservationId: string): boolean {
+    const key = positionKey(position);
+    if (!this.isWalkable(position) || this.isOccupied(position)) return false;
+    this.positionReservations.set(key, reservationId);
+    return true;
+  }
+
+  releasePosition(position: Position, reservationId: string): void {
+    const key = positionKey(position);
+    if (this.positionReservations.get(key) === reservationId) {
+      this.positionReservations.delete(key);
+    }
+  }
+
+  findUnoccupiedPosition(preferred: Position, maxRadius: number): Position | null {
+    for (let radius = 0; radius <= maxRadius; radius++) {
+      for (let y = preferred.y - radius; y <= preferred.y + radius; y++) {
+        for (let x = preferred.x - radius; x <= preferred.x + radius; x++) {
+          if (
+            Math.max(Math.abs(x - preferred.x), Math.abs(y - preferred.y)) !==
+            radius
+          ) {
+            continue;
+          }
+          const position = { x, y, z: preferred.z };
+          if (this.isWalkable(position) && !this.isOccupied(position)) {
+            return position;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   /** Players within the view box centered on (x, y). */

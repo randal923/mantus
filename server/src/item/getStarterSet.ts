@@ -8,7 +8,7 @@ const COMMON_EQUIPMENT = [
 ] as const;
 
 const COMMON_SUPPLIES = [
-  { typeId: 3031, count: 100 },
+  { typeId: 3035, count: 50 },
   { typeId: 266, count: 5 },
   { typeId: 3577, count: 3 },
 ] as const;

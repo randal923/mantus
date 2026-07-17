@@ -1,4 +1,5 @@
 import type { CreatureOutfit } from "@tibia/protocol";
+import type { DialogueGraph } from "../npc/DialogueGraph";
 
 export interface NpcType {
   id: string;
@@ -9,4 +10,5 @@ export interface NpcType {
   speed: number;
   walkIntervalMs: number;
   walkRadius: number;
+  dialogue?: DialogueGraph;
 }

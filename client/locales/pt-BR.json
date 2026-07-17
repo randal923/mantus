@@ -356,6 +356,10 @@
   "hud": {
     "battleList": "Lista de Batalha"
   },
+  "npc": {
+    "dialogueLabel": "Diálogo com {{name}}",
+    "responsesLabel": "Respostas"
+  },
   "modal": {
     "close": "Fechar janela"
   },

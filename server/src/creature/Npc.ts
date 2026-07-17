@@ -5,6 +5,7 @@ import type { NpcType } from "./NpcType";
 export class Npc extends Creature {
   readonly home: Position;
   readonly spawnRadius: number;
+  private readonly conversationPlayerIds = new Set<string>();
 
   constructor(options: {
     id: string;
@@ -33,5 +34,17 @@ export class Npc extends Creature {
 
   override get stepSpeed(): number {
     return Math.max(10, this.type.speed);
+  }
+
+  get isInConversation(): boolean {
+    return this.conversationPlayerIds.size > 0;
+  }
+
+  beginConversation(playerId: string): void {
+    this.conversationPlayerIds.add(playerId);
+  }
+
+  endConversation(playerId: string): void {
+    this.conversationPlayerIds.delete(playerId);
   }
 }

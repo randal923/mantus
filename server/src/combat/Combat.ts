@@ -1126,7 +1126,9 @@ export class Combat {
   ): DamageResult {
     if (
       target.health <= 0 ||
-      (target instanceof Player && now < target.invulnerableUntil)
+      (target instanceof Player &&
+        (now < target.invulnerableUntil ||
+          this.registry.sessionFor(target.id)?.travelOperationPending))
     ) {
       return {
         amount: 0,

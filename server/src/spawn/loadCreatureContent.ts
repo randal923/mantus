@@ -14,6 +14,7 @@ import type {
   MonsterType,
 } from "../creature/MonsterType";
 import type { NpcType } from "../creature/NpcType";
+import { loadNpcDialogueGraphs } from "../npc/loadNpcDialogueGraphs";
 import type { CreatureContent } from "./CreatureContent";
 import type { SpawnSlotDefinition } from "./SpawnDefinition";
 
@@ -63,10 +64,25 @@ export function loadCreatureContent(
     monsterTypes.set(type.id, type);
   }
   const npcTypes = new Map<string, NpcType>();
+  const canaryCommit = record(npcs.source, "NPC content source").canaryCommit;
+  if (typeof canaryCommit !== "string") {
+    throw new Error("NPC content source is missing its Canary commit");
+  }
+  const dialogueGraphs = loadNpcDialogueGraphs(canaryCommit);
   for (const value of npcs.types) {
     const type = parseNpcType(value);
     if (npcTypes.has(type.id)) throw new Error(`duplicate NPC type ${type.id}`);
-    npcTypes.set(type.id, type);
+    npcTypes.set(type.id, {
+      ...type,
+      ...(dialogueGraphs.has(type.id)
+        ? { dialogue: dialogueGraphs.get(type.id) }
+        : {}),
+    });
+  }
+  for (const typeId of dialogueGraphs.keys()) {
+    if (!npcTypes.has(typeId)) {
+      throw new Error(`NPC dialogue references unknown type ${typeId}`);
+    }
   }
   if (!Array.isArray(spawns.slots)) throw new Error(`${name} spawn list is invalid`);
   const slotIds = new Set<string>();

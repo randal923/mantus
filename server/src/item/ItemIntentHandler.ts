@@ -267,6 +267,30 @@ export class ItemIntentHandler {
     return true;
   }
 
+  applyCommittedMutation(
+    session: Session,
+    characterId: string,
+    mutation: ItemMutation,
+    now: number,
+  ): void {
+    const inventory = this.applyMutation(characterId, mutation, now);
+    if (inventory && session.playerId === characterId) {
+      session.send({ type: "inventory-updated", inventory });
+    }
+  }
+
+  trackExternalOperation(
+    characterId: string,
+    operation: Promise<void>,
+  ): void {
+    this.pendingOperations.set(characterId, operation);
+    void operation.finally(() => {
+      if (this.pendingOperations.get(characterId) === operation) {
+        this.pendingOperations.delete(characterId);
+      }
+    }).catch(() => undefined);
+  }
+
   private consumeForUse(
     session: Session,
     itemId: string,

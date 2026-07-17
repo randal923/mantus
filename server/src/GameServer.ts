@@ -20,6 +20,9 @@ import type { ItemCatalog } from "./item/ItemCatalog";
 import type { ItemStore } from "./item/ItemStore";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
 import { MovementHandler } from "./MovementHandler";
+import { NpcHandler } from "./npc/NpcHandler";
+import type { NpcTravelStore } from "./npc/NpcTravelStore";
+import { TravelService } from "./npc/TravelService";
 import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
 import { Session } from "./Session";
@@ -37,6 +40,7 @@ export interface GameServerDeps {
   characters: CharacterStore;
   items: ItemStore;
   itemCatalog: ItemCatalog;
+  npcTravel?: NpcTravelStore;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -56,6 +60,8 @@ export class GameServer {
   private readonly progression: ProgressionSystem;
   private readonly spells = new SpellRegistry();
   private readonly items: ItemIntentHandler;
+  private readonly travel: TravelService;
+  private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
@@ -112,7 +118,25 @@ export class GameServer {
       this.spells,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
-    this.chat = new ChatHandler(this.world, this.registry, this.visibility);
+    this.travel = new TravelService(
+      this.world,
+      this.visibility,
+      this.persistence,
+      this.items,
+      deps.npcTravel,
+    );
+    this.npcs = new NpcHandler(
+      this.world,
+      this.registry,
+      this.visibility,
+      this.travel,
+    );
+    this.chat = new ChatHandler(
+      this.world,
+      this.registry,
+      this.visibility,
+      this.npcs,
+    );
     this.movement = new MovementHandler(
       this.world,
       this.visibility,
@@ -217,6 +241,7 @@ export class GameServer {
     this.auth.applyResolvedOutcomes();
     this.characters.applyResolvedOutcomes();
     this.items.applyResolvedOutcomes(now);
+    this.travel.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -227,6 +252,7 @@ export class GameServer {
     }
     this.combatSystem.tick(now);
     this.spawns?.tick(now);
+    this.npcs.tick(now);
     this.items.tickDecay(now);
     this.progression.tick(now);
     this.persistence.tick(now);
@@ -241,6 +267,7 @@ export class GameServer {
         player &&
         this.registry.sessionFor(playerId) === session
       ) {
+        this.npcs.removePlayer(playerId);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
         this.world.removePlayer(playerId);
@@ -318,6 +345,9 @@ export class GameServer {
       case "private-chat":
         this.chat.handle(session, intent, now);
         return;
+      case "npc-dialogue-choice":
+        this.npcs.handleChoice(session, intent, now);
+        return;
       case "set-language":
         this.language.handle(session, intent);
         return;
@@ -335,6 +365,8 @@ export class GameServer {
   }
 
   private async finishStop(): Promise<void> {
+    await this.travel.stop();
+    this.travel.applyResolvedOutcomes(Date.now());
     await this.persistence.stop();
     if (this.persistence.unsavedPlayerCount > 0) {
       console.error(

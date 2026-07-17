@@ -19,7 +19,7 @@ describe("getStarterSet", () => {
       if (vocation !== "Monk") expect(weapon).toBeDefined();
       expect(starterSet.backpackContents).toEqual(
         expect.arrayContaining([
-          { typeId: 3031, count: 100 },
+          { typeId: 3035, count: 50 },
           { typeId: 266, count: 5 },
         ]),
       );

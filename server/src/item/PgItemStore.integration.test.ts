@@ -6,6 +6,7 @@ import { Client, Pool } from "pg";
 import type { EquipmentSlot } from "@tibia/protocol";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
+import { PgNpcTravelStore } from "../npc/PgNpcTravelStore";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { PgItemStore } from "./PgItemStore";
 
@@ -13,6 +14,7 @@ const TEST_SCHEMA = "item_store_integration";
 const MIGRATION_LOCK_KEY = 7_281_003;
 const BACKPACK_TYPE = 2854;
 const GOLD_TYPE = 3031;
+const PLATINUM_TYPE = 3035;
 const HELMET_TYPE = 3355;
 const BOOTS_TYPE = 3552;
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -23,6 +25,7 @@ let pool: Pool;
 let store: PgItemStore;
 let characterService: CharacterService;
 let characterStore: PgCharacterStore;
+let travelStore: PgNpcTravelStore;
 
 type TestItemLocation =
   | { kind: "equipment"; characterId: string; slot: EquipmentSlot }
@@ -160,6 +163,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "008_diagonal_direction.sql",
       "009_item_interactions.sql",
       "010_monk_vocations.sql",
+      "011_npc_travel.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -177,6 +181,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       townId: 1,
     });
     store = new PgItemStore(pool, await loadItemCatalog(), "test");
+    travelStore = new PgNpcTravelStore(pool);
   });
 
   beforeEach(async () => {
@@ -748,5 +753,223 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       results.filter((result) => result.status === "fulfilled"),
     ).toHaveLength(1);
     expect(await itemRow(corpse!.id)).toMatchObject({ version: 2 });
+  });
+
+  it("commits an NPC fare, destination, inventory mutation, and audits atomically", async () => {
+    await insertItem(GOLD_TYPE, 70, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    await insertItem(GOLD_TYPE, 50, {
+      kind: "container",
+      containerId: pouchId,
+      slot: 1,
+    });
+    const character = await pool.query<{ version: number }>(
+      "SELECT version FROM characters WHERE id = $1",
+      [characterId],
+    );
+    const expectedVersion = character.rows[0]?.version;
+    if (!expectedVersion) throw new Error("character version is missing");
+
+    const result = await travelStore.commit(
+      characterId,
+      expectedVersion,
+      { x: 120, y: 220, z: 6 },
+      100,
+      "captain-bluebear",
+      "carlin",
+    );
+
+    expect(result).toMatchObject({
+      status: "committed",
+      characterVersion: expectedVersion + 1,
+    });
+    const persisted = await pool.query<{
+      version: number;
+      position_x: number;
+      position_y: number;
+      position_z: number;
+    }>(
+      `SELECT version, position_x, position_y, position_z
+       FROM characters WHERE id = $1`,
+      [characterId],
+    );
+    expect(persisted.rows[0]).toEqual({
+      version: expectedVersion + 1,
+      position_x: 120,
+      position_y: 220,
+      position_z: 6,
+    });
+    const balance = await pool.query<{ total: string }>(
+      "SELECT coalesce(sum(count), 0)::text AS total FROM items WHERE item_type_id = $1",
+      [GOLD_TYPE],
+    );
+    expect(Number(balance.rows[0]?.total)).toBe(20);
+    expect(await auditRows("item-destroyed")).toHaveLength(2);
+    expect(await auditRows("npc-travel")).toMatchObject([
+      {
+        details: {
+          npcTypeId: "captain-bluebear",
+          offerId: "carlin",
+          cost: 100,
+          destination: { x: 120, y: 220, z: 6 },
+        },
+      },
+    ]);
+  });
+
+  it("pays an exact NPC fare from platinum and returns audited gold change", async () => {
+    await insertItem(PLATINUM_TYPE, 50, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const character = await pool.query<{ version: number }>(
+      "SELECT version FROM characters WHERE id = $1",
+      [characterId],
+    );
+    const expectedVersion = character.rows[0]?.version;
+    if (!expectedVersion) throw new Error("character version is missing");
+
+    const result = await travelStore.commit(
+      characterId,
+      expectedVersion,
+      { x: 120, y: 220, z: 6 },
+      110,
+      "captain-bluebear",
+      "carlin",
+    );
+
+    expect(result).toMatchObject({
+      status: "committed",
+      mutation: {
+        after: expect.arrayContaining([
+          expect.objectContaining({ typeId: PLATINUM_TYPE, count: 48 }),
+          expect.objectContaining({ typeId: GOLD_TYPE, count: 90 }),
+        ]),
+      },
+    });
+    const currency = await pool.query<{
+      item_type_id: number;
+      count: number;
+    }>(
+      `SELECT item_type_id, count FROM items
+       WHERE item_type_id IN ($1, $2)
+       ORDER BY item_type_id`,
+      [GOLD_TYPE, PLATINUM_TYPE],
+    );
+    expect(currency.rows).toEqual([
+      { item_type_id: GOLD_TYPE, count: 90 },
+      { item_type_id: PLATINUM_TYPE, count: 48 },
+    ]);
+    expect(await auditRows("item-destroyed")).toMatchObject([
+      {
+        details: {
+          itemTypeId: PLATINUM_TYPE,
+          count: 2,
+          reason: "npc-travel",
+        },
+      },
+    ]);
+    expect(await auditRows("item-created")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          details: expect.objectContaining({
+            itemTypeId: GOLD_TYPE,
+            count: 90,
+            reason: "npc-travel-change",
+          }),
+        }),
+      ]),
+    );
+  });
+
+  it("leaves money, position, version, and audit untouched when a fare is insufficient", async () => {
+    await insertItem(GOLD_TYPE, 20, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const before = await pool.query<{
+      version: number;
+      position_x: number;
+      position_y: number;
+      position_z: number;
+    }>(
+      `SELECT version, position_x, position_y, position_z
+       FROM characters WHERE id = $1`,
+      [characterId],
+    );
+    const expectedVersion = before.rows[0]?.version;
+    if (!expectedVersion) throw new Error("character version is missing");
+
+    await expect(
+      travelStore.commit(
+        characterId,
+        expectedVersion,
+        { x: 120, y: 220, z: 6 },
+        100,
+        "captain-bluebear",
+        "carlin",
+      ),
+    ).resolves.toEqual({ status: "insufficient-funds" });
+
+    const after = await pool.query(
+      `SELECT version, position_x, position_y, position_z
+       FROM characters WHERE id = $1`,
+      [characterId],
+    );
+    expect(after.rows[0]).toEqual(before.rows[0]);
+    expect(await auditRows("item-destroyed")).toEqual([]);
+    expect(await auditRows("npc-travel")).toEqual([]);
+  });
+
+  it("lets only one concurrent travel spend the same fare", async () => {
+    await insertItem(GOLD_TYPE, 80, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const character = await pool.query<{ version: number }>(
+      "SELECT version FROM characters WHERE id = $1",
+      [characterId],
+    );
+    const expectedVersion = character.rows[0]?.version;
+    if (!expectedVersion) throw new Error("character version is missing");
+
+    const results = await Promise.allSettled([
+      travelStore.commit(
+        characterId,
+        expectedVersion,
+        { x: 120, y: 220, z: 6 },
+        60,
+        "captain-bluebear",
+        "carlin",
+      ),
+      travelStore.commit(
+        characterId,
+        expectedVersion,
+        { x: 130, y: 230, z: 6 },
+        60,
+        "captain-bluebear",
+        "edron",
+      ),
+    ]);
+
+    expect(
+      results.filter(
+        (result) =>
+          result.status === "fulfilled" &&
+          result.value.status === "committed",
+      ),
+    ).toHaveLength(1);
+    const balance = await pool.query<{ total: string }>(
+      "SELECT coalesce(sum(count), 0)::text AS total FROM items WHERE item_type_id = $1",
+      [GOLD_TYPE],
+    );
+    expect(Number(balance.rows[0]?.total)).toBe(20);
+    expect(await auditRows("npc-travel")).toHaveLength(1);
   });
 });

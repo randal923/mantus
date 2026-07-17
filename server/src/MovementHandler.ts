@@ -24,6 +24,10 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
+    if (session.travelOperationPending) {
+      this.stop(session);
+      return;
+    }
     session.autoWalkDirections = [];
     session.movementDirection = intent.direction;
     if (!intent.queueStep) return;
@@ -45,6 +49,10 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
+    if (session.travelOperationPending) {
+      this.stop(session);
+      return;
+    }
     session.movementDirection = null;
     session.bufferedMovementDirection = null;
     session.autoWalkDirections = [];
@@ -63,6 +71,10 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
+    if (session.travelOperationPending) {
+      this.stop(session);
+      return;
+    }
     session.movementDirection = null;
     session.bufferedMovementDirection = null;
     session.autoWalkDirections = [];
@@ -81,6 +93,10 @@ export class MovementHandler {
   }
 
   continueMovement(session: Session, now: number): void {
+    if (session.travelOperationPending) {
+      this.stop(session);
+      return;
+    }
     const bufferedDirection = session.bufferedMovementDirection;
     const direction = bufferedDirection ?? session.movementDirection;
     if (!session.playerId) return;

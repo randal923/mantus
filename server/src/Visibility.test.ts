@@ -250,4 +250,87 @@ describe("Visibility creature projections", () => {
       },
     ]);
   });
+
+  it("fully reconciles the mover and old/new observers after a teleport", () => {
+    const world = new World(
+      gridMapData({
+        name: "teleport-test",
+        width: 40,
+        height: 40,
+        blocked: [],
+      }),
+      25,
+    );
+    const mover = new Player(makeCharacter("mover"), { x: 5, y: 5, z: 7 });
+    const oldObserver = new Player(makeCharacter("old-observer"), {
+      x: 6,
+      y: 5,
+      z: 7,
+    });
+    const newObserver = new Player(makeCharacter("new-observer"), {
+      x: 30,
+      y: 30,
+      z: 7,
+    });
+    const oldMonster = makeMonster("monster-instance:old:0", 5, 6, 7);
+    const newMonster = makeMonster("monster-instance:new:0", 31, 29, 7);
+    for (const player of [mover, oldObserver, newObserver]) {
+      world.addPlayer(player);
+    }
+    world.addCreature(oldMonster);
+    world.addCreature(newMonster);
+
+    const messages = new Map<string, ServerMessage[]>();
+    const sessions = [mover, oldObserver, newObserver].map((player) => {
+      const sent: ServerMessage[] = [];
+      messages.set(player.id, sent);
+      return {
+        id: `session-${player.id}`,
+        playerId: player.id,
+        viewRange: { x: 3, y: 3 },
+        knownCreatureIds: new Set<string>(),
+        knownMapItemTiles: new Map(),
+        attackTargetId: null,
+        send: (message: ServerMessage) => sent.push(message),
+      } as unknown as Session;
+    });
+    const registry = {
+      sessionFor: (playerId: string) =>
+        sessions.find((session) => session.playerId === playerId),
+      all: () => sessions,
+    } as unknown as SessionRegistry;
+    const visibility = new Visibility(world, registry);
+    for (const session of sessions) {
+      const player = world.getPlayer(session.playerId!);
+      if (player) visibility.announceSpawn(session, player);
+    }
+    for (const sent of messages.values()) sent.length = 0;
+
+    const from = world.relocateCreature(mover, { x: 30, y: 29, z: 7 });
+    visibility.onPlayerTeleported(sessions[0]!, mover, from);
+
+    expect(sessions[0]?.knownCreatureIds.has(oldObserver.id)).toBe(false);
+    expect(sessions[0]?.knownCreatureIds.has(oldMonster.id)).toBe(false);
+    expect(sessions[0]?.knownCreatureIds.has(newObserver.id)).toBe(true);
+    expect(sessions[0]?.knownCreatureIds.has(newMonster.id)).toBe(true);
+    expect(messages.get(mover.id)).toContainEqual(
+      expect.objectContaining({
+        type: "creature-moved",
+        creatureId: mover.id,
+        from: { x: 5, y: 5, z: 7 },
+        position: { x: 30, y: 29, z: 7 },
+        durationMs: 0,
+      }),
+    );
+    expect(messages.get(oldObserver.id)).toContainEqual({
+      type: "creature-left",
+      creatureId: mover.id,
+    });
+    expect(messages.get(newObserver.id)).toContainEqual(
+      expect.objectContaining({
+        type: "creature-joined",
+        creature: expect.objectContaining({ id: mover.id }),
+      }),
+    );
+  });
 });

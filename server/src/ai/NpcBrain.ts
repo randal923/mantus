@@ -31,6 +31,10 @@ export class NpcBrain {
     ) {
       return { work: 0, movement: null };
     }
+    if (this.npc.isInConversation) {
+      this.nextThinkAt = now + this.npc.type.walkIntervalMs;
+      return { work: 1, movement: null };
+    }
     this.nextThinkAt = Math.max(
       now + this.npc.type.walkIntervalMs,
       this.npc.nextStepAt,

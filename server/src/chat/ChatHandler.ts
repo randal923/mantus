@@ -4,6 +4,7 @@ import type {
   SpeakMessage,
 } from "@tibia/protocol";
 import type { Player } from "../Player";
+import type { NpcHandler } from "../npc/NpcHandler";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
@@ -36,6 +37,7 @@ export class ChatHandler {
     private readonly world: World,
     private readonly registry: SessionRegistry,
     private readonly visibility: Visibility,
+    private readonly npcs?: NpcHandler,
   ) {}
 
   handle(session: Session, intent: ChatIntent, now: number): void {
@@ -70,6 +72,7 @@ export class ChatHandler {
       return;
     }
     this.broadcastLocal(speaker, intent.mode, text);
+    this.npcs?.handleSpeech(speaker, text, now);
   }
 
   /** Say and whisper reach normal view range; whisper muffles beyond 1 tile. */

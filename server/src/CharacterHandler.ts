@@ -253,6 +253,7 @@ export class CharacterHandler {
     existing.bufferedMovementDirection = null;
     existing.attackTargetId = null;
     existing.itemOperationPending = false;
+    existing.travelOperationPending = false;
     existing.knownCreatureIds.clear();
     existing.knownMapItemTiles.clear();
     this.registry.unbindPlayer(characterId, existing);

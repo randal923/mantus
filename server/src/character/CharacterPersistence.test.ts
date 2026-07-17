@@ -174,6 +174,39 @@ describe("CharacterPersistence", () => {
     });
   });
 
+  it("does not let relog flushing pass an unfinished external mutation", async () => {
+    const persistence = new CharacterPersistence(
+      makeStore(async (snapshot) => snapshot.expectedVersion + 1),
+      30_000,
+      0,
+      0,
+    );
+    const player = new Player(makeCharacter("character-id"), {
+      x: 0,
+      y: 0,
+      z: 7,
+    });
+    persistence.track(player, 0);
+    const expectedVersion = await persistence.beginExternalMutation(player, 1);
+    persistence.untrack(player, 2);
+    let flushed = false;
+    const flush = persistence.flushCharacter(player.id).then(() => {
+      flushed = true;
+    });
+
+    await nextTurn();
+    expect(flushed).toBe(false);
+
+    persistence.completeExternalMutation(
+      player,
+      expectedVersion,
+      expectedVersion + 1,
+    );
+    await flush;
+    expect(flushed).toBe(true);
+    expect(persistence.unsavedPlayerCount).toBe(0);
+  });
+
   it("retains a failed save in the unsaved-player metric", async () => {
     const failure = new Error("database unavailable");
     const store = makeStore(async () => {

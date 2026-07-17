@@ -151,6 +151,19 @@ export class GameClient {
     return this.send({ type: "private-chat", to, text });
   }
 
+  sendNpcDialogueChoice(
+    npcId: string,
+    conversationId: string,
+    choiceId: string,
+  ): boolean {
+    return this.send({
+      type: "npc-dialogue-choice",
+      npcId,
+      conversationId,
+      choiceId,
+    });
+  }
+
   createCharacter(input: CreateCharacterInput): boolean {
     return this.send({ type: "create-character", ...input });
   }
