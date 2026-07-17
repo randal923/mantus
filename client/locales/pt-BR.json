@@ -345,6 +345,11 @@
     "readOnly": "Este canal é somente leitura",
     "systemDescription": "Combate, saque e avisos do servidor",
     "send": "Enviar mensagem",
+    "newPrivate": "Iniciar conversa privada",
+    "playerName": "Nome do jogador",
+    "playerNameRules": "Use de 3 a 20 letras com espaços simples.",
+    "openPrivate": "Abrir conversa privada",
+    "closeChannel": "Fechar {{channel}}",
     "minimize": "Minimizar chat",
     "restore": "Restaurar chat"
   },

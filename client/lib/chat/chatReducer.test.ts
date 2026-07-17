@@ -95,6 +95,23 @@ describe("chatReducer", () => {
     expect(channel?.unreadCount).toBe(0);
   });
 
+  it("closes private channels but keeps the local channel", () => {
+    const privateState = run(joinedState(), {
+      type: "open-private",
+      counterpart: "Aria",
+    });
+    const closedState = run(
+      privateState,
+      { type: "close", channelId: privateChannelId("Aria") },
+      { type: "close", channelId: LOCAL_CHANNEL_ID },
+    );
+
+    expect(closedState.activeChannelId).toBe(LOCAL_CHANNEL_ID);
+    expect(closedState.channels).toEqual([
+      expect.objectContaining({ id: LOCAL_CHANNEL_ID }),
+    ]);
+  });
+
   it("routes rejection notices to the active channel without unread", () => {
     const state = run(joinedState(), {
       type: "rejected",

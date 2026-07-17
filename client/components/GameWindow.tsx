@@ -692,6 +692,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   label: channel.counterpart ?? t("chat.channels.local"),
                   kind: channel.kind,
                   canSend: true,
+                  closable: channel.kind === "whisper",
                   unreadCount: channel.unreadCount,
                   messages: channel.entries.map((entry) =>
                     toChatMessage(entry, t),
@@ -713,6 +714,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               chatSelectedChannelId={chatState.activeChannelId}
               onChatChannelSelect={(channelId) =>
                 dispatchChat({ type: "select", channelId })
+              }
+              onChatChannelClose={(channelId) =>
+                dispatchChat({ type: "close", channelId })
               }
               onChatSenderSelect={(sender) => {
                 if (sender === ownCharacter.name) return;

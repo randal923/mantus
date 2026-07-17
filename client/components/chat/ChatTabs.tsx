@@ -11,7 +11,11 @@ interface ChatTabsProps {
   activeChannel: ChatChannel;
   minimized: boolean;
   totalUnread: number;
+  newPrivateChatId: string;
+  newPrivateChatOpen: boolean;
+  onNewPrivateChatToggle?: () => void;
   onChannelSelect: (channelId: string) => void;
+  onChannelClose?: (channelId: string) => void;
   onMinimizedChange: (minimized: boolean) => void;
 }
 
@@ -21,7 +25,11 @@ export function ChatTabs({
   activeChannel,
   minimized,
   totalUnread,
+  newPrivateChatId,
+  newPrivateChatOpen,
+  onNewPrivateChatToggle,
   onChannelSelect,
+  onChannelClose,
   onMinimizedChange,
 }: ChatTabsProps) {
   const { t } = useAppTranslation();
@@ -36,48 +44,101 @@ export function ChatTabs({
         {channels.map((channel, index) => {
           const active = channel.id === activeChannel.id;
           const unreadCount = active ? 0 : (channel.unreadCount ?? 0);
+          const closable = Boolean(channel.closable && onChannelClose);
 
           return (
-            <button
+            <div
               key={channel.id}
-              id={`${panelId}-tab-${index}`}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              aria-controls={`${panelId}-messages`}
-              aria-label={
-                unreadCount > 0
-                  ? t("chat.channelWithUnread", {
-                      channel: channel.label,
-                      count: unreadCount,
-                    })
-                  : channel.label
-              }
-              title={channel.description ?? channel.label}
-              onClick={() => onChannelSelect(channel.id)}
-              className={`relative flex h-10 shrink-0 items-center gap-1.5 border-b-2 px-3 font-medium outline-none transition-[color,background-color,border-color] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-gold/60 ${
-                active
-                  ? CHAT_ACTIVE_TAB_CLASS[channel.kind]
-                  : "border-transparent text-ui-muted hover:bg-white/5 hover:text-ui-text-bright"
-              }`}
+              role="presentation"
+              className="relative flex shrink-0"
             >
-              <span
-                aria-hidden
-                className={`size-1.5 rounded-full shadow-[0_0_7px_currentColor] ${CHAT_CHANNEL_DOT_CLASS[channel.kind]}`}
-              />
-              <span>{channel.label}</span>
-              {unreadCount > 0 && (
+              <button
+                id={`${panelId}-tab-${index}`}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                aria-controls={`${panelId}-messages`}
+                aria-label={
+                  unreadCount > 0
+                    ? t("chat.channelWithUnread", {
+                        channel: channel.label,
+                        count: unreadCount,
+                      })
+                    : channel.label
+                }
+                title={channel.description ?? channel.label}
+                onClick={() => onChannelSelect(channel.id)}
+                className={`relative flex h-10 items-center gap-1.5 border-b-2 pl-3 font-medium outline-none transition-[color,background-color,border-color] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-gold/60 ${closable ? "pr-9" : "pr-3"} ${
+                  active
+                    ? CHAT_ACTIVE_TAB_CLASS[channel.kind]
+                    : "border-transparent text-ui-muted hover:bg-white/5 hover:text-ui-text-bright"
+                }`}
+              >
                 <span
                   aria-hidden
-                  className="min-w-4 rounded-full bg-ui-accent px-1 text-center text-xs font-bold leading-4 text-white shadow-sm shadow-black"
+                  className={`size-1.5 rounded-full shadow-[0_0_7px_currentColor] ${CHAT_CHANNEL_DOT_CLASS[channel.kind]}`}
+                />
+                <span>{channel.label}</span>
+                {unreadCount > 0 && (
+                  <span
+                    aria-hidden
+                    className="min-w-4 rounded-full bg-ui-accent px-1 text-center text-xs font-bold leading-4 text-white shadow-sm shadow-black"
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {closable && (
+                <button
+                  type="button"
+                  aria-label={t("chat.closeChannel", {
+                    channel: channel.label,
+                  })}
+                  title={t("chat.closeChannel", { channel: channel.label })}
+                  onClick={() => onChannelClose?.(channel.id)}
+                  className="absolute top-1/2 right-1 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded text-ui-muted outline-none transition-colors hover:bg-white/10 hover:text-ui-text-bright focus-visible:ring-2 focus-visible:ring-ui-gold/60"
                 >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 20 20"
+                    className="size-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  >
+                    <path d="m5 5 10 10M15 5 5 15" />
+                  </svg>
+                </button>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
+
+      {onNewPrivateChatToggle && (
+        <button
+          type="button"
+          aria-expanded={newPrivateChatOpen}
+          aria-controls={newPrivateChatId}
+          aria-label={t("chat.newPrivate")}
+          title={t("chat.newPrivate")}
+          onClick={onNewPrivateChatToggle}
+          className="relative flex w-10 shrink-0 items-center justify-center border-l border-ui-stone-light/20 text-ui-muted outline-none transition-colors hover:bg-white/5 hover:text-ui-text-bright focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-gold/60"
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 20 20"
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          >
+            <path d="M10 4v12M4 10h12" />
+          </svg>
+        </button>
+      )}
 
       <button
         type="button"

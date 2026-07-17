@@ -345,6 +345,11 @@
     "readOnly": "This channel is read-only",
     "systemDescription": "Combat, loot, and server notices",
     "send": "Send message",
+    "newPrivate": "Start private conversation",
+    "playerName": "Player name",
+    "playerNameRules": "Use 3–20 letters with single spaces.",
+    "openPrivate": "Open private conversation",
+    "closeChannel": "Close {{channel}}",
     "minimize": "Minimize chat",
     "restore": "Restore chat"
   },

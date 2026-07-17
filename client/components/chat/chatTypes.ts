@@ -22,6 +22,7 @@ export interface ChatChannel {
   kind: ChatChannelKind;
   description?: string;
   canSend: boolean;
+  closable?: boolean;
   unreadCount?: number;
   messages: ReadonlyArray<ChatMessage>;
 }

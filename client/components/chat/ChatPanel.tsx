@@ -7,6 +7,7 @@ import { ChatComposer } from "./ChatComposer";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatTabs } from "./ChatTabs";
 import type { ChatChannel } from "./chatTypes";
+import { NewPrivateChat } from "./NewPrivateChat";
 
 interface ChatPanelProps {
   channels: ReadonlyArray<ChatChannel>;
@@ -17,6 +18,7 @@ interface ChatPanelProps {
   hotkeysEnabled?: boolean;
   maxMessageLength?: number;
   onChannelSelect?: (channelId: string) => void;
+  onChannelClose?: (channelId: string) => void;
   onSenderSelect?: (sender: string) => void;
   onSend?: (channelId: string, body: string) => void;
 }
@@ -29,6 +31,7 @@ export function ChatPanel({
   hotkeysEnabled = true,
   maxMessageLength = 280,
   onChannelSelect,
+  onChannelClose,
   onSenderSelect,
   onSend,
 }: ChatPanelProps) {
@@ -42,6 +45,8 @@ export function ChatPanel({
   const selectedChannelId = controlledChannelId ?? internalChannelId;
   const [drafts, setDrafts] = useState<Readonly<Record<string, string>>>({});
   const [minimized, setMinimized] = useState(initiallyMinimized);
+  const [newPrivateChatOpen, setNewPrivateChatOpen] = useState(false);
+  const newPrivateChatId = `${panelId}-new-private`;
   const activeChannel =
     channels.find((channel) => channel.id === selectedChannelId) ?? channels[0];
   const activeChannelIndex = activeChannel
@@ -91,10 +96,19 @@ export function ChatPanel({
   if (!activeChannel) return null;
 
   return (
-    <section
-      aria-label={t("chat.label")}
-      className="ui-panel-frame relative isolate w-[28rem] max-w-[calc(100vw-2rem)] overflow-hidden text-xs shadow-2xl"
-    >
+    <div className="relative w-[28rem] max-w-[calc(100vw-2rem)] text-xs">
+      {onSenderSelect && (
+        <NewPrivateChat
+          id={newPrivateChatId}
+          open={newPrivateChatOpen}
+          onClose={() => setNewPrivateChatOpen(false)}
+          onOpen={onSenderSelect}
+        />
+      )}
+      <section
+        aria-label={t("chat.label")}
+        className="ui-panel-frame relative isolate w-full overflow-hidden shadow-2xl"
+      >
       <div
         aria-hidden
         className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.025] mix-blend-soft-light"
@@ -105,6 +119,14 @@ export function ChatPanel({
         activeChannel={activeChannel}
         minimized={minimized}
         totalUnread={totalUnread}
+        newPrivateChatId={newPrivateChatId}
+        newPrivateChatOpen={newPrivateChatOpen}
+        onNewPrivateChatToggle={
+          onSenderSelect
+            ? () => setNewPrivateChatOpen((open) => !open)
+            : undefined
+        }
+        onChannelClose={onChannelClose}
         onChannelSelect={(channelId) => {
           setInternalChannelId(channelId);
           onChannelSelect?.(channelId);
@@ -152,6 +174,7 @@ export function ChatPanel({
           />
         </div>
       </div>
-    </section>
+      </section>
+    </div>
   );
 }

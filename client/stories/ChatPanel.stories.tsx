@@ -45,6 +45,7 @@ const CHANNELS: ReadonlyArray<ChatChannel> = [
     kind: "guild",
     description: "Iron Ravens · 12 members online",
     canSend: true,
+    closable: true,
     unreadCount: 3,
     messages: [
       {
@@ -67,6 +68,7 @@ const CHANNELS: ReadonlyArray<ChatChannel> = [
     kind: "whisper",
     description: "Private conversation · Online",
     canSend: true,
+    closable: true,
     unreadCount: 1,
     messages: [
       {
@@ -129,6 +131,7 @@ const meta = {
     channels: CHANNELS,
     initialChannelId: "world",
     onChannelSelect: fn(),
+    onChannelClose: fn(),
     onSenderSelect: fn(),
     onSend: fn(),
   },
@@ -176,6 +179,21 @@ export const MinimizedWithUnread: Story = {
   },
 };
 
+export const EnterReturnsFocusToGame: Story = {
+  args: {
+    channels: [CHANNELS[0]],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("textbox", { name: "Message World" });
+
+    await userEvent.click(input);
+    await expect(input).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await expect(input).not.toHaveFocus();
+  },
+};
+
 export const EmptyWhisper: Story = {
   args: {
     channels: [
@@ -188,6 +206,59 @@ export const EmptyWhisper: Story = {
         messages: [],
       },
     ],
+  },
+};
+
+export const OpenPrivateConversation: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Start private conversation" }),
+    );
+    const chat = canvas.getByRole("region", { name: "Game chat" });
+    const playerNameInput = canvas.getByRole("textbox", {
+      name: "Player name",
+    });
+    const playerNamePanel = playerNameInput.closest("form");
+    await expect(playerNamePanel).not.toBeNull();
+    await expect(
+      Math.abs(
+        (playerNamePanel?.getBoundingClientRect().bottom ?? 0) -
+          chat.getBoundingClientRect().top,
+      ),
+    ).toBeLessThanOrEqual(1);
+    await expect(playerNameInput).toHaveAttribute(
+      "data-1p-ignore",
+      "true",
+    );
+    await userEvent.type(playerNameInput, "Cassian Vale");
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Open private conversation" }),
+    );
+
+    await expect(args.onSenderSelect).toHaveBeenCalledWith("Cassian Vale");
+  },
+};
+
+export const CloseConversation: Story = {
+  args: {
+    initialChannelId: "whisper:aria",
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      canvas.queryByRole("button", { name: "Close World" }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole("button", { name: "Close System" }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Close Aria Vale" }),
+    );
+
+    await expect(args.onChannelClose).toHaveBeenCalledWith("whisper:aria");
   },
 };
 

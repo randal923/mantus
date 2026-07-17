@@ -36,10 +36,14 @@ export function ChatComposer({
       onSubmit={(event) => {
         event.preventDefault();
         const body = draft.trim();
-        if (!canSend || body.length === 0 || body.length > maxMessageLength) {
+        if (!canSend) return;
+        if (body.length === 0) {
+          inputRef.current?.blur();
           return;
         }
+        if (body.length > maxMessageLength) return;
         onSubmit(body);
+        inputRef.current?.blur();
       }}
     >
       <span
@@ -66,6 +70,11 @@ export function ChatComposer({
         }
         onChange={(event) => onDraftChange(event.target.value)}
         onKeyDown={(event) => {
+          if (event.key === "Enter" && draft.trim().length === 0) {
+            event.preventDefault();
+            event.currentTarget.blur();
+            return;
+          }
           if (event.key !== "Escape") return;
           event.preventDefault();
           event.currentTarget.blur();

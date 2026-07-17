@@ -29,6 +29,7 @@ interface GameHudProps {
   onFightModeChange: (mode: FightMode) => void;
   onCast: (spellId: string, target: CombatTarget) => void;
   onChatChannelSelect?: (channelId: string) => void;
+  onChatChannelClose?: (channelId: string) => void;
   onChatSenderSelect?: (sender: string) => void;
   onSendChat?: (channelId: string, body: string) => void;
 }
@@ -46,6 +47,7 @@ export function GameHud({
   onFightModeChange,
   onCast,
   onChatChannelSelect,
+  onChatChannelClose,
   onChatSenderSelect,
   onSendChat,
 }: GameHudProps) {
@@ -109,6 +111,7 @@ export function GameHud({
           hotkeysEnabled={spellHotkeysEnabled}
           maxMessageLength={PROTOCOL_LIMITS.maxChatTextLength}
           onChannelSelect={onChatChannelSelect}
+          onChannelClose={onChatChannelClose}
           onSenderSelect={onChatSenderSelect}
           onSend={onSendChat}
         />

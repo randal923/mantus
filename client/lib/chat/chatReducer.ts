@@ -57,6 +57,7 @@ export type ChatAction =
       time: string;
     }
   | { type: "select"; channelId: string }
+  | { type: "close"; channelId: string }
   | { type: "open-private"; counterpart: string };
 
 export const LOCAL_CHANNEL_ID = "local";
@@ -101,6 +102,26 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
             ? { ...channel, unreadCount: 0 }
             : channel,
         ),
+      };
+    }
+    case "close": {
+      const channelIndex = state.channels.findIndex(
+        (channel) =>
+          channel.id === action.channelId && channel.kind === "whisper",
+      );
+      if (channelIndex === -1) return state;
+      const channels = state.channels.filter(
+        (channel) => channel.id !== action.channelId,
+      );
+      if (state.activeChannelId !== action.channelId) {
+        return { ...state, channels };
+      }
+      return {
+        ...state,
+        activeChannelId:
+          channels[Math.min(channelIndex, channels.length - 1)]?.id ??
+          LOCAL_CHANNEL_ID,
+        channels,
       };
     }
     case "spoke": {
