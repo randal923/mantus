@@ -5,6 +5,11 @@ import {
   ownCharacterStateSchema,
 } from "./character";
 import {
+  chatRejectedMessageSchema,
+  creatureSpokeMessageSchema,
+  privateChatDeliveredMessageSchema,
+} from "./chat";
+import {
   damageTypeSchema,
   fightStateSchema,
   hitBlockSchema,
@@ -241,6 +246,9 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   distanceMissileMessageSchema,
   combatLogMessageSchema,
   tileStatesMessageSchema,
+  creatureSpokeMessageSchema,
+  privateChatDeliveredMessageSchema,
+  chatRejectedMessageSchema,
   errorMessageSchema,
 ]);
 

@@ -19,6 +19,7 @@ import { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
 import { CreatureView } from "./CreatureView";
 import { CombatEffectRenderer } from "./CombatEffectRenderer";
+import { SpeechTextRenderer } from "./SpeechTextRenderer";
 import { TILE_SIZE } from "./tileSize";
 
 const ZOOM = 3;
@@ -54,6 +55,7 @@ export class WorldRenderer {
     this.store,
     this.mapView,
   );
+  private readonly speechTexts = new SpeechTextRenderer(this.mapView);
   private readonly creatureViews = new Map<string, CreatureView>();
   private readonly pendingCreatures = new Map<string, CreatureState>();
   private readonly loadingCreatureIds = new Set<string>();
@@ -143,6 +145,14 @@ export class WorldRenderer {
         return;
       case "creature-left":
         this.removeCreature(message.creatureId);
+        this.speechTexts.removeSpeaker(message.creatureId);
+        return;
+      case "creature-spoke":
+        this.speechTexts.showSpeech(
+          message.creatureId,
+          message.position,
+          message.text,
+        );
         return;
       case "creature-moved":
         this.applyCreatureMove(
@@ -259,6 +269,7 @@ export class WorldRenderer {
     this.app.canvas.removeEventListener("dblclick", this.onMapDoubleClick);
     this.app.canvas.removeEventListener("contextmenu", this.onMapContextMenu);
     this.combatEffects.destroy();
+    this.speechTexts.destroy();
     this.mapView.destroy();
     if (this.app.renderer) this.app.destroy(true, { children: true });
   }
@@ -643,6 +654,7 @@ export class WorldRenderer {
   private tick(dtMs: number): void {
     this.mapView.tick(dtMs);
     this.combatEffects.tick(dtMs);
+    this.speechTexts.tick(dtMs);
     const orderedViews = [...this.creatureViews.entries()].sort(([left], [right]) =>
       left.localeCompare(right),
     );

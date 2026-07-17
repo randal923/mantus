@@ -1,12 +1,13 @@
 import { SpellBar } from "./spells/SpellBar";
 import { useAppTranslation } from "../i18n/useAppTranslation";
-import type {
-  CombatTarget,
-  CreatureState,
-  FightMode,
-  FightState,
-  OwnCharacterState,
-  SpellCatalogEntry,
+import {
+  PROTOCOL_LIMITS,
+  type CombatTarget,
+  type CreatureState,
+  type FightMode,
+  type FightState,
+  type OwnCharacterState,
+  type SpellCatalogEntry,
 } from "@tibia/protocol";
 import { ChatPanel } from "./chat/ChatPanel";
 import type { ChatChannel } from "./chat/chatTypes";
@@ -24,6 +25,7 @@ interface GameHudProps {
   hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
   chatChannels?: ReadonlyArray<ChatChannel>;
+  chatSelectedChannelId?: string;
   onFightModeChange: (mode: FightMode) => void;
   onCast: (spellId: string, target: CombatTarget) => void;
   onChatChannelSelect?: (channelId: string) => void;
@@ -40,6 +42,7 @@ export function GameHud({
   hasWeapon,
   combatLog,
   chatChannels,
+  chatSelectedChannelId,
   onFightModeChange,
   onCast,
   onChatChannelSelect,
@@ -100,7 +103,11 @@ export function GameHud({
       <div className="pointer-events-auto absolute bottom-24 left-4">
         <ChatPanel
           channels={visibleChatChannels}
+          {...(chatSelectedChannelId
+            ? { selectedChannelId: chatSelectedChannelId }
+            : {})}
           hotkeysEnabled={spellHotkeysEnabled}
+          maxMessageLength={PROTOCOL_LIMITS.maxChatTextLength}
           onChannelSelect={onChatChannelSelect}
           onSenderSelect={onChatSenderSelect}
           onSend={onSendChat}

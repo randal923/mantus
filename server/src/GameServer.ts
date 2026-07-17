@@ -8,6 +8,7 @@ import { CharacterHandler } from "./CharacterHandler";
 import { CharacterPersistence } from "./character/CharacterPersistence";
 import { CharacterService } from "./character/CharacterService";
 import type { CharacterStore } from "./character/CharacterStore";
+import { ChatHandler } from "./chat/ChatHandler";
 import { Combat } from "./combat/Combat";
 import { CombatIntentHandler } from "./combat/CombatIntentHandler";
 import { SpellRegistry } from "./combat/SpellRegistry";
@@ -49,6 +50,7 @@ export class GameServer {
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
+  private readonly chat: ChatHandler;
   private readonly combat: CombatIntentHandler;
   private readonly combatSystem: Combat;
   private readonly progression: ProgressionSystem;
@@ -110,6 +112,7 @@ export class GameServer {
       this.spells,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
+    this.chat = new ChatHandler(this.world, this.registry, this.visibility);
     this.movement = new MovementHandler(
       this.world,
       this.visibility,
@@ -310,6 +313,10 @@ export class GameServer {
       case "move-item":
       case "write-item":
         this.items.handle(session, intent, now);
+        return;
+      case "speak":
+      case "private-chat":
+        this.chat.handle(session, intent, now);
         return;
       case "set-language":
         this.language.handle(session, intent);

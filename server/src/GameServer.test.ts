@@ -505,6 +505,80 @@ describe("view-range broadcast", () => {
     );
   });
 });
+describe("chat routing", () => {
+  let server: GameServer;
+  const sockets: WebSocket[] = [];
+
+  afterEach(async () => {
+    for (const socket of sockets.splice(0)) socket.terminate();
+    await server.stop();
+  });
+
+  it("routes say to nearby players and private messages end to end", async () => {
+    server = new GameServer(testConfig, {
+      verifier: fakeVerifier,
+      accounts: new InMemoryAccountStore(),
+      characters: new InMemoryCharacterStore(),
+      items: new MemoryItemStore(),
+      itemCatalog: new ItemCatalog([]),
+    });
+    server.start();
+    const alice = await connect(server.port, "Alice");
+    const bob = await connect(server.port, "Bob");
+    sockets.push(alice.socket, bob.socket);
+    await waitFor(
+      () =>
+        bob.messages.some(
+          (m) =>
+            (m.type === "creature-joined" && m.creature.id === alice.playerId) ||
+            (m.type === "welcome" &&
+              m.creatures.some((c) => c.id === alice.playerId)),
+        ),
+      "Bob to know Alice",
+    );
+
+    alice.socket.send(
+      JSON.stringify({ type: "speak", mode: "say", text: "hello bob" }),
+    );
+    await waitFor(
+      () =>
+        bob.messages.some(
+          (m) =>
+            m.type === "creature-spoke" &&
+            m.name === "Alice" &&
+            m.mode === "say" &&
+            m.text === "hello bob",
+        ),
+      "Bob to hear Alice",
+    );
+
+    alice.socket.send(
+      JSON.stringify({ type: "private-chat", to: "bob", text: "psst" }),
+    );
+    await waitFor(
+      () =>
+        bob.messages.some(
+          (m) =>
+            m.type === "private-chat-delivered" &&
+            m.direction === "incoming" &&
+            m.counterpart === "Alice" &&
+            m.text === "psst",
+        ),
+      "Bob to receive the private message",
+    );
+    await waitFor(
+      () =>
+        alice.messages.some(
+          (m) =>
+            m.type === "private-chat-delivered" &&
+            m.direction === "outgoing" &&
+            m.counterpart === "Bob",
+        ),
+      "Alice to receive the outgoing echo",
+    );
+  });
+});
+
 describe("auth gate", () => {
   let server: GameServer;
   const sockets: WebSocket[] = [];

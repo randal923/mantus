@@ -11,6 +11,8 @@ import type { ChatChannel } from "./chatTypes";
 interface ChatPanelProps {
   channels: ReadonlyArray<ChatChannel>;
   initialChannelId?: string;
+  /** Provide to control the active tab from the parent. */
+  selectedChannelId?: string;
   initiallyMinimized?: boolean;
   hotkeysEnabled?: boolean;
   maxMessageLength?: number;
@@ -22,6 +24,7 @@ interface ChatPanelProps {
 export function ChatPanel({
   channels,
   initialChannelId,
+  selectedChannelId: controlledChannelId,
   initiallyMinimized = false,
   hotkeysEnabled = true,
   maxMessageLength = 280,
@@ -33,9 +36,10 @@ export function ChatPanel({
   const panelId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const messageListRef = useRef<HTMLOListElement>(null);
-  const [selectedChannelId, setSelectedChannelId] = useState(
+  const [internalChannelId, setInternalChannelId] = useState(
     initialChannelId ?? channels[0]?.id ?? "",
   );
+  const selectedChannelId = controlledChannelId ?? internalChannelId;
   const [drafts, setDrafts] = useState<Readonly<Record<string, string>>>({});
   const [minimized, setMinimized] = useState(initiallyMinimized);
   const activeChannel =
@@ -102,7 +106,7 @@ export function ChatPanel({
         minimized={minimized}
         totalUnread={totalUnread}
         onChannelSelect={(channelId) => {
-          setSelectedChannelId(channelId);
+          setInternalChannelId(channelId);
           onChannelSelect?.(channelId);
         }}
         onMinimizedChange={setMinimized}

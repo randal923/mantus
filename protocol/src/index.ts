@@ -1,5 +1,6 @@
 export * from "./direction";
 export * from "./character";
+export * from "./chat";
 export * from "./combat";
 export * from "./creature";
 export * from "./item";

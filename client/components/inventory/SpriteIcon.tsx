@@ -1,4 +1,4 @@
-import { TILE_SIZE } from "@/lib/render/tileSize";
+import { TILE_SIZE } from "../../lib/render/tileSize";
 
 const PAD = 1;
 const CELL = 34;

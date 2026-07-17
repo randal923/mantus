@@ -12,4 +12,6 @@ export const PROTOCOL_LIMITS = {
   maxViewRangeX: 32,
   maxViewRangeY: 24,
   maxAutoWalkSteps: 128,
+  /** UTF-16 length cap for one chat line (Tibia caps speech at 255). */
+  maxChatTextLength: 255,
 } as const;

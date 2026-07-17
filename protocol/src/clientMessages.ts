@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { privateChatMessageSchema, speakMessageSchema } from "./chat";
 import { createCharacterInputSchema } from "./character";
 import { combatTargetSchema, fightModeSchema } from "./combat";
 import { DIRECTIONS } from "./direction";
@@ -276,6 +277,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   moveItemMessageSchema,
   writeItemMessageSchema,
   setLanguageMessageSchema,
+  speakMessageSchema,
+  privateChatMessageSchema,
 ]);
 
 export type AuthMessage = z.infer<typeof authMessageSchema>;

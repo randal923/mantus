@@ -1,5 +1,6 @@
 import {
   serverMessageSchema,
+  type ChatSpeechMode,
   type CreateCharacterInput,
   type ClientMessage,
   type CombatTarget,
@@ -140,6 +141,14 @@ export class GameClient {
       revision,
       text,
     });
+  }
+
+  speak(mode: ChatSpeechMode, text: string): boolean {
+    return this.send({ type: "speak", mode, text });
+  }
+
+  sendPrivateChat(to: string, text: string): boolean {
+    return this.send({ type: "private-chat", to, text });
   }
 
   createCharacter(input: CreateCharacterInput): boolean {

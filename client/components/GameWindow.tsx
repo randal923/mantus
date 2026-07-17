@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
   CharacterCreationOptions,
   CharacterSummary,
@@ -21,6 +21,16 @@ import type {
   PendingItemOp,
   PendingItemOpIntent,
 } from "../lib/inventory/PendingItemOp";
+import {
+  chatReducer,
+  initialChatState,
+  LOCAL_CHANNEL_ID,
+  SYSTEM_CHANNEL_ID,
+} from "../lib/chat/chatReducer";
+import { formatChatTime } from "../lib/chat/formatChatTime";
+import { parseChatInput } from "../lib/chat/parseChatInput";
+import { sanitizeChatText } from "../lib/chat/sanitizeChatText";
+import { toChatMessage } from "../lib/chat/toChatMessage";
 import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { updateVisibleCreatures } from "../lib/creatures/updateVisibleCreatures";
@@ -114,6 +124,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [fightState, setFightState] = useState<FightState | null>(null);
   const [spells, setSpells] = useState<ReadonlyArray<SpellCatalogEntry>>([]);
   const [combatLog, setCombatLog] = useState<ReadonlyArray<string>>([]);
+  const [chatState, dispatchChat] = useReducer(chatReducer, initialChatState);
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
@@ -157,6 +168,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setFightState(null);
     setSpells([]);
     setCombatLog([]);
+    dispatchChat({ type: "reset", ownPlayerId: null, ownName: null });
     setCharacterBusy(characterId !== null);
     setInventoryOpen(false);
     setCharacterStatsOpen(false);
@@ -334,6 +346,42 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setSpells(message.spells);
             setCharacterBusy(false);
             setServerError(null);
+            dispatchChat({
+              type: "reset",
+              ownPlayerId: message.playerId,
+              ownName: message.character.name,
+            });
+          }
+          if (message.type === "creature-spoke") {
+            dispatchChat({
+              type: "spoke",
+              creatureId: message.creatureId,
+              name: message.name,
+              mode: message.mode,
+              body: message.text,
+              time: formatChatTime(),
+            });
+          }
+          if (message.type === "private-chat-delivered") {
+            dispatchChat({
+              type: "private",
+              direction: message.direction,
+              counterpart: message.counterpart,
+              body: message.text,
+              time: formatChatTime(),
+            });
+            return;
+          }
+          if (message.type === "chat-rejected") {
+            dispatchChat({
+              type: "rejected",
+              reason: message.reason,
+              time: formatChatTime(),
+              ...(message.retryAfterMs === undefined
+                ? {}
+                : { retryAfterMs: message.retryAfterMs }),
+            });
+            return;
           }
           if (message.type === "inventory-updated") {
             confirmInventory(message.inventory);
@@ -403,6 +451,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setSpells([]);
           if (nextStatus === "disconnected") setCombatLog([]);
           if (nextStatus === "disconnected") setItemText(null);
+          if (nextStatus === "disconnected") {
+            dispatchChat({ type: "reset", ownPlayerId: null, ownName: null });
+          }
           setStatus(nextStatus);
         },
         onLanguage: (nextLanguage) => {
@@ -635,6 +686,52 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               spells={spells}
               hasWeapon={Boolean(inventory?.equipment.weapon)}
               combatLog={combatLog}
+              chatChannels={[
+                ...chatState.channels.map((channel) => ({
+                  id: channel.id,
+                  label: channel.counterpart ?? t("chat.channels.local"),
+                  kind: channel.kind,
+                  canSend: true,
+                  unreadCount: channel.unreadCount,
+                  messages: channel.entries.map((entry) =>
+                    toChatMessage(entry, t),
+                  ),
+                })),
+                {
+                  id: SYSTEM_CHANNEL_ID,
+                  label: t("chat.channels.system"),
+                  kind: "system",
+                  description: t("chat.systemDescription"),
+                  canSend: false,
+                  messages: combatLog.map((body, index) => ({
+                    id: `combat:${index}:${body}`,
+                    body,
+                    tone: "combat" as const,
+                  })),
+                },
+              ]}
+              chatSelectedChannelId={chatState.activeChannelId}
+              onChatChannelSelect={(channelId) =>
+                dispatchChat({ type: "select", channelId })
+              }
+              onChatSenderSelect={(sender) => {
+                if (sender === ownCharacter.name) return;
+                dispatchChat({ type: "open-private", counterpart: sender });
+              }}
+              onSendChat={(channelId, body) => {
+                if (channelId === LOCAL_CHANNEL_ID) {
+                  const { mode, text } = parseChatInput(body);
+                  if (text.length > 0) clientRef.current?.speak(mode, text);
+                  return;
+                }
+                const channel = chatState.channels.find(
+                  (candidate) => candidate.id === channelId,
+                );
+                if (!channel?.counterpart) return;
+                const text = sanitizeChatText(body);
+                if (text.length === 0) return;
+                clientRef.current?.sendPrivateChat(channel.counterpart, text);
+              }}
               onFightModeChange={(mode) =>
                 clientRef.current?.setFightMode(mode)
               }
