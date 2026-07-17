@@ -1547,7 +1547,7 @@ export class PgItemStore implements ItemStore {
         `INSERT INTO items (
            id, item_type_id, count, attributes, location_type,
            world_map_name, world_x, world_y, world_z, world_stack_index
-         ) VALUES ($1, $2, 1, '{}'::jsonb, 'world', $3, $4, $5, $6, $7)
+         ) VALUES ($1, $2, 1, $8::jsonb, 'world', $3, $4, $5, $6, $7)
          RETURNING ${ITEM_COLUMNS}`,
         [
           corpseId,
@@ -1557,6 +1557,9 @@ export class PgItemStore implements ItemStore {
           position.y,
           position.z,
           stackIndex,
+          JSON.stringify(
+            characterId ? { ownerCharacterId: characterId } : {},
+          ),
         ],
       );
       const created = [this.requireReturnedItem(corpseResult.rows[0])];
@@ -1587,6 +1590,63 @@ export class PgItemStore implements ItemStore {
         );
       }
       return created;
+    });
+  }
+
+  decayWorldItem(
+    itemId: string,
+    expectedVersion: number,
+  ): Promise<ItemMutation> {
+    return this.transaction(async (client) => {
+      const row = await this.lockItem(client, itemId);
+      this.requireVersion(row, expectedVersion);
+      if (row.location_type !== "world") {
+        throw new Error("item is not on the map");
+      }
+      const decay = this.catalog.require(row.item_type_id).decay;
+      if (!decay || decay.durationSeconds === undefined) {
+        throw new Error("item does not decay");
+      }
+      const before = itemFromRow(row);
+      const targetTypeId = decay.targetId || undefined;
+      if (targetTypeId === undefined) {
+        const removed = await this.destroyContainedItems(client, row.id, 0);
+        await client.query("DELETE FROM items WHERE id = $1", [row.id]);
+        await this.auditDecayDestruction(client, before);
+        return {
+          before,
+          after: [],
+          removedItemIds: [row.id, ...removed],
+        };
+      }
+      const capacity =
+        this.catalog.require(targetTypeId).containerCapacity ?? 0;
+      const removedItemIds = await this.destroyContainedItems(
+        client,
+        row.id,
+        capacity,
+      );
+      const result = await client.query<ItemRow>(
+        `UPDATE items
+         SET item_type_id = $2, attributes = '{}'::jsonb,
+             version = version + 1, updated_at = now()
+         WHERE id = $1
+         RETURNING ${ITEM_COLUMNS}`,
+        [row.id, targetTypeId],
+      );
+      const after = this.requireReturnedItem(result.rows[0]);
+      await client.query(
+        `INSERT INTO audit_log(event_type, character_id, item_id, details)
+         VALUES (
+           'item-transformed', null, $1,
+           jsonb_build_object(
+             'reason', 'decay',
+             'fromTypeId', $2::integer, 'toTypeId', $3::integer
+           )
+         )`,
+        [row.id, row.item_type_id, targetTypeId],
+      );
+      return { before, after: [after], removedItemIds };
     });
   }
 
@@ -2387,6 +2447,70 @@ export class PgItemStore implements ItemStore {
     if (Number(result.rows[0]?.count ?? 0) >= 500) {
       throw new Error("character has excessive items");
     }
+  }
+
+  /**
+   * Deletes and audits the contents a decayed container can no longer hold:
+   * direct children in slots >= keepSlots and their entire subtrees.
+   */
+  private async destroyContainedItems(
+    client: PoolClient,
+    containerId: string,
+    keepSlots: number,
+  ): Promise<string[]> {
+    const doomed = await client.query<{
+      id: string;
+      item_type_id: number;
+      count: number;
+    }>(
+      `WITH RECURSIVE doomed AS (
+         SELECT id, item_type_id, count, 1 AS depth
+         FROM items
+         WHERE location_type IN ('container', 'corpse')
+           AND container_id = $1 AND slot_index >= $2
+         UNION ALL
+         SELECT child.id, child.item_type_id, child.count, doomed.depth + 1
+         FROM items child
+         JOIN doomed ON child.container_id = doomed.id
+         WHERE child.location_type IN ('container', 'corpse')
+           AND doomed.depth < 8
+       )
+       SELECT id, item_type_id, count FROM doomed`,
+      [containerId, keepSlots],
+    );
+    if (doomed.rows.length === 0) return [];
+    await client.query(`DELETE FROM items WHERE id = ANY($1::uuid[])`, [
+      doomed.rows.map((row) => row.id),
+    ]);
+    for (const row of doomed.rows) {
+      await client.query(
+        `INSERT INTO audit_log(event_type, character_id, item_id, details)
+         VALUES (
+           'item-destroyed', null, $1,
+           jsonb_build_object(
+             'itemTypeId', $2::integer, 'count', $3::integer, 'reason', 'decay'
+           )
+         )`,
+        [row.id, row.item_type_id, row.count],
+      );
+    }
+    return doomed.rows.map((row) => row.id);
+  }
+
+  private async auditDecayDestruction(
+    client: PoolClient,
+    item: Item,
+  ): Promise<void> {
+    await client.query(
+      `INSERT INTO audit_log(event_type, character_id, item_id, details)
+       VALUES (
+         'item-destroyed', null, $1,
+         jsonb_build_object(
+           'itemTypeId', $2::integer, 'count', $3::integer, 'reason', 'decay'
+         )
+       )`,
+      [item.id, item.typeId, item.count],
+    );
   }
 
   private async auditTransfer(

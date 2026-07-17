@@ -1046,6 +1046,50 @@ describe("Combat", () => {
     expect(leech.player.mana).toBeGreaterThan(manaBefore);
   });
 
+  it("applies the experience death penalty exactly once per death", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(8),
+    });
+    const attacker = makeMonster(
+      "monster-instance:executioner:0",
+      { x: 2, y: 1, z: 7 },
+    );
+    harness.world.addCreature(attacker);
+    harness.session.knownCreatureIds.add(attacker.id);
+    const experienceBefore = harness.player.experience;
+    const expectedLoss = Math.floor(experienceBefore / 10);
+    const lethal: MonsterAbility = {
+      kind: "damage",
+      intervalMs: 1_000,
+      chance: 100,
+      target: "target",
+      range: 32,
+      area: { shape: "single" },
+      damageType: "physical",
+      minimum: 100_000,
+      maximum: 100_000,
+    };
+
+    harness.combat.executeMonsterAbility(attacker, harness.player, lethal, 1_000);
+    harness.combat.executeMonsterAbility(attacker, harness.player, lethal, 1_000);
+
+    expect(harness.player.experience).toBe(experienceBefore - expectedLoss);
+    expect(harness.player.level).toBeLessThan(8);
+    expect(harness.player.health).toBe(harness.player.maxHealth);
+    expect(harness.player.maxHealth).toBe(
+      harness.player.progression.maxHealth,
+    );
+    expect(harness.player.position).toEqual(harness.world.templePosition);
+    expect(
+      harness.sent.filter(
+        (message) =>
+          message.type === "combat-log" &&
+          message.kind === "experience" &&
+          message.text.startsWith("You lost"),
+      ),
+    ).toHaveLength(1);
+  });
+
   it("resolves direct, damage-over-time, and disconnected death paths once", async () => {
     const direct = await makeHarness();
     const attacker = makeMonster(

@@ -32,7 +32,7 @@ privacy rules differ from NPC dialogue.
 
 ## Client
 
-- [ ] Add an accessible tabbed chat panel for default, private, and subscribed
+- [x] Add an accessible tabbed chat panel for default, private, and subscribed
   channels with bounded local history.
 - [ ] Render speech bubbles/text only for server-delivered visible speakers and
   handle creature removal/floor change cleanly.

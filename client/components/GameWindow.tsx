@@ -24,6 +24,7 @@ import type {
 import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { updateVisibleCreatures } from "../lib/creatures/updateVisibleCreatures";
+import { isEditableTarget } from "../lib/hotkeys/isEditableTarget";
 import { useLanguageStore } from "../stores/useLanguageStore";
 import { getRuneCombatTarget } from "../lib/combat/getRuneCombatTarget";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
@@ -448,7 +449,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
 
     const onKeyDown = (event: KeyboardEvent) => {
       const direction = KEY_DIRECTIONS[event.code];
-      if (!direction || !joinedRef.current) return;
+      if (
+        !direction ||
+        !joinedRef.current ||
+        isEditableTarget(event.target)
+      ) {
+        return;
+      }
       event.preventDefault();
       if (heldMovementKeys.includes(event.code)) return;
       heldMovementKeys = [...heldMovementKeys, event.code];
@@ -458,6 +465,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     const onKeyUp = (event: KeyboardEvent) => {
       if (!KEY_DIRECTIONS[event.code]) return;
       if (!joinedRef.current) return;
+      if (
+        isEditableTarget(event.target) &&
+        !heldMovementKeys.includes(event.code)
+      ) {
+        return;
+      }
       event.preventDefault();
       const wasActive =
         heldMovementKeys[heldMovementKeys.length - 1] === event.code;

@@ -6,6 +6,7 @@ import type {
 } from "@tibia/protocol";
 import type { Item } from "./Item";
 import type { ConjureItemResult } from "./ConjureItemResult";
+import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
 import type { LootItemCreation } from "./LootItemCreation";
@@ -17,6 +18,8 @@ export class MemoryItemStore implements ItemStore {
   private readonly characterVersions = new Map<string, number>();
   private readonly characterMana = new Map<string, number>();
   private readonly characterSoul = new Map<string, number>();
+
+  constructor(private readonly catalog?: ItemCatalog) {}
 
   seed(item: Item): void {
     this.items.set(item.id, item);
@@ -525,7 +528,7 @@ export class MemoryItemStore implements ItemStore {
   }
 
   async createCorpse(
-    _characterId: string | null,
+    characterId: string | null,
     _eventId: string,
     position: Position,
     stackIndex: number,
@@ -537,7 +540,7 @@ export class MemoryItemStore implements ItemStore {
       id: corpseId,
       typeId: corpseTypeId,
       count: 1,
-      attributes: {},
+      attributes: characterId ? { ownerCharacterId: characterId } : {},
       version: 1,
       location: { kind: "world", position: { ...position }, stackIndex },
     };
@@ -554,11 +557,75 @@ export class MemoryItemStore implements ItemStore {
     return [corpse, ...contents];
   }
 
+  async decayWorldItem(
+    itemId: string,
+    expectedVersion: number,
+  ): Promise<ItemMutation> {
+    if (!this.catalog) throw new Error("memory decay is not configured");
+    const before = this.items.get(itemId);
+    if (!before || before.version !== expectedVersion) {
+      throw new Error("item is missing or stale");
+    }
+    if (before.location.kind !== "world") {
+      throw new Error("item is not on the map");
+    }
+    const decay = this.catalog.require(before.typeId).decay;
+    if (!decay || decay.durationSeconds === undefined) {
+      throw new Error("item does not decay");
+    }
+    const targetTypeId = decay.targetId || undefined;
+    if (targetTypeId === undefined) {
+      const removedItemIds = [before.id, ...this.descendantIds(before.id)];
+      for (const id of removedItemIds) this.items.delete(id);
+      return { before, after: [], removedItemIds };
+    }
+    const capacity = this.catalog.require(targetTypeId).containerCapacity ?? 0;
+    const removedItemIds = this.descendantIds(before.id, capacity);
+    for (const id of removedItemIds) this.items.delete(id);
+    const after = {
+      ...before,
+      typeId: targetTypeId,
+      attributes: {},
+      version: before.version + 1,
+    };
+    this.items.set(after.id, after);
+    return { before, after: [after], removedItemIds };
+  }
+
   async loadWorldDeltas(
     _mapName: string,
     _mapVersion: string,
   ): Promise<WorldItemDeltas> {
     return { hiddenSeedKeys: [], items: [] };
+  }
+
+  /** Children in slots >= keepSlots plus their whole subtrees, depth-capped at 8. */
+  private descendantIds(rootId: string, keepSlots = 0): string[] {
+    const removed: string[] = [];
+    let parents = new Set([rootId]);
+    for (let depth = 0; depth < 8 && parents.size > 0; depth++) {
+      const next = new Set<string>();
+      for (const item of this.items.values()) {
+        if (
+          item.location.kind !== "container" &&
+          item.location.kind !== "corpse"
+        ) {
+          continue;
+        }
+        if (!parents.has(item.location.containerId)) continue;
+        if (
+          depth === 0 &&
+          item.location.containerId === rootId &&
+          item.location.slot < keepSlots
+        ) {
+          continue;
+        }
+        removed.push(item.id);
+        next.add(item.id);
+      }
+      parents = next;
+    }
+    return removed;
   }
 
   private requireOwned(

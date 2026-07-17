@@ -4,23 +4,21 @@ import { expect, fn, userEvent } from "storybook/test";
 import { SpellBar } from "../components/spells/SpellBar";
 
 const SPELLS = [
-  { id: "heal", name: "Light Healing", effectId: 13, glyph: "✚", shortcut: "1", manaCost: 20 },
-  { id: "energy", name: "Energy Strike", effectId: 38, glyph: "ϟ", shortcut: "2", manaCost: 35 },
-  { id: "ice", name: "Ice Wave", effectId: 42, glyph: "❄", shortcut: "3", manaCost: 55 },
+  { id: "exura", name: "Light Healing", shortcut: "1", manaCost: 20 },
+  { id: "exori-vis", name: "Energy Strike", shortcut: "2", manaCost: 35 },
+  { id: "exevo-frigo-hur", name: "Ice Wave", shortcut: "3", manaCost: 55 },
   {
-    id: "fire",
+    id: "adevo-mas-flam",
     name: "Fire Bomb",
-    effectId: 7,
-    glyph: "✦",
     shortcut: "4",
     manaCost: 85,
     cooldownReadyAt: Date.now() + 3_000,
     cooldownTotalMs: 6_000,
   },
-  { id: "haste", name: "Haste", effectId: 15, glyph: "»", shortcut: "5", manaCost: 60 },
-  { id: "shield", name: "Magic Shield", effectId: 13, glyph: "◇", shortcut: "6", manaCost: 50 },
-  { id: "ultimate", name: "Ultimate Healing", effectId: 13, glyph: "✥", shortcut: "7", manaCost: 160 },
-  { id: "empty", name: "Empty Slot", effectId: 3, glyph: "", shortcut: "8", disabled: true },
+  { id: "utani-hur", name: "Haste", shortcut: "5", manaCost: 60 },
+  { id: "utamo-vita", name: "Magic Shield", shortcut: "6", manaCost: 50 },
+  { id: "exura-vita", name: "Ultimate Healing", shortcut: "7", manaCost: 160 },
+  { id: "empty", name: "Empty Slot", shortcut: "8", disabled: true },
 ];
 
 const meta = {
@@ -49,7 +47,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ args }) => {
     await userEvent.keyboard("1");
-    await expect(args.onCast).toHaveBeenCalledWith("heal");
+    await expect(args.onCast).toHaveBeenCalledWith("exura");
   },
 };
 

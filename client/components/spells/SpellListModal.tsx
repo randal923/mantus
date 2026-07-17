@@ -3,10 +3,9 @@ import type {
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { getSpellGlyph } from "../../lib/combat/getSpellGlyph";
+import { getSpellIconArtwork } from "../../lib/combat/getSpellIconArtwork";
 import { Modal } from "../ui/Modal";
-import { EffectArtwork } from "./EffectArtwork";
-import { SPELL_ARTWORK_BY_EFFECT } from "./spellArtwork";
+import { SpellIcon } from "./SpellIcon";
 
 interface SpellListModalProps {
   vocation: CharacterVocation;
@@ -38,52 +37,48 @@ export function SpellListModal({
         </div>
 
         <ul className="flex flex-col gap-2">
-          {spells.map((spell) => (
-            <li
-              key={spell.id}
-              className="flex items-center gap-3 rounded-lg border border-ui-stone-light/15 bg-ui-panel-deep/55 p-3 shadow-inner shadow-black/35"
-            >
-              <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-accent-light/35 bg-ui-accent-deep/55 shadow-inner shadow-black/60">
-                {SPELL_ARTWORK_BY_EFFECT[spell.effectId] ? (
-                  <EffectArtwork
-                    {...SPELL_ARTWORK_BY_EFFECT[spell.effectId]}
-                  />
-                ) : (
-                  <span className="font-display text-xl text-ui-text-bright">
-                    {getSpellGlyph(spell.damageType)}
-                  </span>
-                )}
-              </div>
+          {spells.map((spell) => {
+            const iconArtwork = getSpellIconArtwork(spell.id);
 
-              <div className="min-w-0 flex-1">
-                <h3 className="truncate font-display text-sm font-medium tracking-wide text-ui-text-bright">
-                  {spell.name}
-                </h3>
-                <p className="truncate text-xs italic text-ui-muted">
-                  {spell.words ?? "—"}
-                </p>
-              </div>
+            return (
+              <li
+                key={spell.id}
+                className="flex items-center gap-3 rounded-lg border border-ui-stone-light/15 bg-ui-panel-deep/55 p-3 shadow-inner shadow-black/35"
+              >
+                <div className="flex size-12 shrink-0 items-center justify-center">
+                  {iconArtwork && <SpellIcon {...iconArtwork} />}
+                </div>
 
-              <dl className="grid shrink-0 grid-cols-2 gap-x-3 text-right text-[10px] leading-4">
-                <div>
-                  <dt className="tracking-wider text-ui-muted uppercase">
-                    {t("spells.list.level")}
-                  </dt>
-                  <dd className="text-xs font-semibold tabular-nums text-ui-text">
-                    {spell.requiredLevel}
-                  </dd>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-display text-sm font-medium tracking-wide text-ui-text-bright">
+                    {spell.name}
+                  </h3>
+                  <p className="truncate text-xs italic text-ui-muted">
+                    {spell.words ?? "—"}
+                  </p>
                 </div>
-                <div>
-                  <dt className="tracking-wider text-ui-muted uppercase">
-                    {t("spells.list.mana")}
-                  </dt>
-                  <dd className="text-xs font-semibold tabular-nums text-ui-mana-light">
-                    {spell.manaCost}
-                  </dd>
-                </div>
-              </dl>
-            </li>
-          ))}
+
+                <dl className="grid shrink-0 grid-cols-2 gap-x-3 text-right text-[10px] leading-4">
+                  <div>
+                    <dt className="tracking-wider text-ui-muted uppercase">
+                      {t("spells.list.level")}
+                    </dt>
+                    <dd className="text-xs font-semibold tabular-nums text-ui-text">
+                      {spell.requiredLevel}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="tracking-wider text-ui-muted uppercase">
+                      {t("spells.list.mana")}
+                    </dt>
+                    <dd className="text-xs font-semibold tabular-nums text-ui-mana-light">
+                      {spell.manaCost}
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </Modal>

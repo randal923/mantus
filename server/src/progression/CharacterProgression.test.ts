@@ -143,6 +143,59 @@ describe("CharacterProgression", () => {
     expect(player.mana).toBe(2);
   });
 
+  it("applies the death penalty once, levels down, and clamps derived stats", () => {
+    const player = new Player(
+      makeCharacter("victim"),
+      { x: 0, y: 0, z: 7 },
+      0,
+    );
+    player.awardExperience("kill:boss:1", getExperienceForLevel(8));
+    expect(player.level).toBe(8);
+    const experienceBefore = player.experience;
+    const expectedLoss = Math.floor(experienceBefore / 10);
+
+    expect(player.applyDeathPenalty("player-death:1")).toEqual({
+      lostExperience: expectedLoss,
+    });
+    expect(player.experience).toBe(experienceBefore - expectedLoss);
+    expect(player.level).toBeLessThan(8);
+    expect(player.maxHealth).toBe(player.progression.maxHealth);
+    expect(player.mana).toBeLessThanOrEqual(player.maxMana);
+
+    expect(player.applyDeathPenalty("player-death:1")).toEqual({
+      lostExperience: 0,
+    });
+    expect(player.experience).toBe(experienceBefore - expectedLoss);
+  });
+
+  it("cannot reapply a persisted death penalty after reconnect and never goes negative", () => {
+    const player = new Player(
+      makeCharacter("victim"),
+      { x: 0, y: 0, z: 7 },
+      0,
+    );
+    expect(player.applyDeathPenalty("player-death:broke")).toEqual({
+      lostExperience: 0,
+    });
+    expect(player.experience).toBe(0);
+    expect(player.level).toBe(1);
+
+    const reconnected = new Player(
+      {
+        ...makeCharacter("reconnected"),
+        progressionEventIds: ["player-death:2"],
+      },
+      { x: 0, y: 0, z: 7 },
+      0,
+    );
+    reconnected.awardExperience("kill:boss:2", getExperienceForLevel(8));
+    const experienceBefore = reconnected.experience;
+    expect(reconnected.applyDeathPenalty("player-death:2")).toEqual({
+      lostExperience: 0,
+    });
+    expect(reconnected.experience).toBe(experienceBefore);
+  });
+
   it("bounds scheduled training work and drops schedules on reconnect", () => {
     const character = makeCharacter("hero");
     const player = new Player(character, { x: 0, y: 0, z: 7 }, 0);

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type {
   CastSpellMessage,
   CombatTarget,
@@ -1520,6 +1521,9 @@ export class Combat {
     now: number,
   ): void {
     if (!target.claimDeath()) return;
+    // Unique per life/death transition: monster ids repeat across respawns
+    // and server restarts, so they cannot key persisted progression events.
+    const deathEventId = `death:${randomUUID()}`;
     if (target instanceof Monster) {
       const killerId =
         (sourceId && this.world.getPlayer(sourceId)?.id) ??
@@ -1527,7 +1531,7 @@ export class Combat {
       if (killerId && target.type.experience > 0) {
         this.progression.awardExperience(
           killerId,
-          `death:${target.id}`,
+          deathEventId,
           target.type.experience,
           now,
         );
@@ -1537,7 +1541,7 @@ export class Combat {
           text: `You gained ${target.type.experience} experience.`,
         });
       }
-      this.createMonsterCorpse(target, killerId, now);
+      this.createMonsterCorpse(target, killerId, deathEventId);
       if (!this.onMonsterDeath(target, now)) {
         this.world.removeCreature(target.id);
         this.visibility.announceCreatureLeave(target);
@@ -1547,6 +1551,7 @@ export class Combat {
     if (!(target instanceof Player)) return;
     const session = this.registry.sessionFor(target.id);
     target.conditions.clear();
+    const penalty = target.applyDeathPenalty(deathEventId);
     target.restoreAfterDeath();
     target.invulnerableUntil = now + PLAYER_DEATH_INVULNERABILITY_MS;
     target.nextAttackAt = target.invulnerableUntil;
@@ -1568,6 +1573,10 @@ export class Combat {
       this.sendFightState(other, now);
     }
     this.progression.syncPlayer(target, now, true);
+    const inventory = this.items.updateCapacity(target.id, target.capacity);
+    if (inventory && session) {
+      session.send({ type: "inventory-updated", inventory });
+    }
     this.visibility.broadcastHealth(target);
     this.visibility.onCreatureStateChanged(target);
     session?.send({
@@ -1575,13 +1584,20 @@ export class Combat {
       kind: "death",
       text: "You died and returned to the temple.",
     });
+    if (penalty.lostExperience > 0) {
+      session?.send({
+        type: "combat-log",
+        kind: "experience",
+        text: `You lost ${penalty.lostExperience} experience.`,
+      });
+    }
     if (session) this.sendFightState(session, now);
   }
 
   private createMonsterCorpse(
     monster: Monster,
     killerId: string | null,
-    _now: number,
+    deathEventId: string,
   ): void {
     const corpseType = this.items.itemType(monster.type.corpseItemTypeId);
     if (!corpseType || (corpseType.containerCapacity ?? 0) < 1) return;
@@ -1613,7 +1629,7 @@ export class Combat {
     );
     this.items.createCorpse(
       killerId,
-      `death:${monster.id}`,
+      deathEventId,
       monster.position,
       stackIndex,
       corpseType.id,

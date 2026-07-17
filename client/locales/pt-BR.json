@@ -259,6 +259,29 @@
       "pz-lock": "Bloqueio de zona de proteção"
     }
   },
+  "chat": {
+    "label": "Chat do jogo",
+    "channelsLabel": "Canais de chat",
+    "channels": {
+      "world": "Mundo",
+      "guild": "Guilda",
+      "whisper": "Sussurro",
+      "system": "Sistema"
+    },
+    "channelDescription": "Canal {{channel}}",
+    "channelWithUnread_one": "{{channel}}, {{count}} mensagem não lida",
+    "channelWithUnread_other": "{{channel}}, {{count}} mensagens não lidas",
+    "messageCount_one": "{{count}} mensagem",
+    "messageCount_other": "{{count}} mensagens",
+    "messageLabel": "Mensagem para {{channel}}",
+    "placeholder": "Mensagem para {{channel}}…",
+    "empty": "Ainda não há mensagens neste canal.",
+    "readOnly": "Este canal é somente leitura",
+    "systemDescription": "Combate, saque e avisos do servidor",
+    "send": "Enviar mensagem",
+    "minimize": "Minimizar chat",
+    "restore": "Restaurar chat"
+  },
   "hud": {
     "battleList": "Lista de Batalha"
   },

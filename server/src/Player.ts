@@ -3,6 +3,7 @@ import type { Character } from "./character/Character";
 import { Creature } from "./creature/Creature";
 import { CharacterProgression } from "./progression/CharacterProgression";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
+import { getDeathExperienceLoss } from "./progression/getDeathExperienceLoss";
 
 export class Player extends Creature<Character["outfit"]> {
   nextAttackAt = 0;
@@ -156,6 +157,19 @@ export class Player extends Creature<Character["outfit"]> {
   restoreAfterDeath(): void {
     this.revive(this.maxHealth);
     this.restoreMana(this.maxMana);
+  }
+
+  /** Applies the pinned death penalty once per eventId; see getDeathExperienceLoss. */
+  applyDeathPenalty(eventId: string): { lostExperience: number } {
+    const loss = getDeathExperienceLoss(this.experience);
+    if (loss < 1) return { lostExperience: 0 };
+    const previousLevel = this.level;
+    const result = this.progression.loseExperience(eventId, loss);
+    if (!result.processed) return { lostExperience: 0 };
+    if (this.level !== previousLevel) {
+      this.setMaxHealth(this.progression.maxHealth);
+    }
+    return { lostExperience: loss };
   }
 
   get capacity(): number {

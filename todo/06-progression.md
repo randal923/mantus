@@ -80,6 +80,11 @@ only.
   [`14-optional-features`](14-optional-features.md). Stamina, exact soul
   eligibility, offline training, exercise training, and configurable skill
   stages remain explicit TODO 6 implementation gaps.
+- [ ] Bound the persisted progression event id set. Every kill appends one
+  `death:{uuid}` id to `processedEventIds`/`progression_events` and nothing
+  prunes it, so the per-character set grows without bound. Recommended fix:
+  retain a bounded window (e.g. ids newer than the last committed snapshot
+  version) and prune older rows during snapshot saves.
 - [ ] Add formula fixtures and aggregate definition checks so every pinned
   progression coefficient is either matched or identified as non-gameplay
   configuration; no balance field may be silently ignored.

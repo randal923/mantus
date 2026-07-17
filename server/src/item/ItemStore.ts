@@ -100,6 +100,10 @@ export interface ItemStore {
     corpseTypeId: number,
     loot: ReadonlyArray<LootItemCreation>,
   ): Promise<ReadonlyArray<Item>>;
+  decayWorldItem(
+    itemId: string,
+    expectedVersion: number,
+  ): Promise<ItemMutation>;
   loadWorldDeltas(
     mapName: string,
     mapVersion: string,

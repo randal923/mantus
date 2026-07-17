@@ -49,8 +49,60 @@ const meta = {
       },
     ],
     combatLog: ["You gained 5 experience."],
+    chatChannels: [
+      {
+        id: "world",
+        label: "World",
+        kind: "world",
+        description: "Realm-wide · 1,284 adventurers online",
+        canSend: true,
+        messages: [
+          {
+            id: "world:1",
+            time: "18:42",
+            sender: "Rowan Blackthorn",
+            body: "Anyone heading into the Ashen Crypt?",
+          },
+        ],
+      },
+      {
+        id: "guild",
+        label: "Guild",
+        kind: "guild",
+        description: "Iron Ravens · 12 members online",
+        canSend: true,
+        unreadCount: 3,
+        messages: [],
+      },
+      {
+        id: "whisper:aria",
+        label: "Aria Vale",
+        kind: "whisper",
+        description: "Private conversation · Online",
+        canSend: true,
+        unreadCount: 1,
+        messages: [],
+      },
+      {
+        id: "system",
+        label: "System",
+        kind: "system",
+        description: "Combat, loot, and server notices",
+        canSend: false,
+        messages: [
+          {
+            id: "system:1",
+            body: "You gained 5 experience.",
+            tone: "notice",
+          },
+        ],
+      },
+    ],
     onFightModeChange: fn(),
     onCast: fn(),
+    onChatChannelSelect: fn(),
+    onChatSenderSelect: fn(),
+    onSendChat: fn(),
   },
   decorators: [
     (Story) => (

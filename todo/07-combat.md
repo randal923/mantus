@@ -56,6 +56,9 @@ roll is computed by the server.
   condition icons, cooldown decoration, and creature health changes.
 - [x] Clear confirmed target display when the server forgets the creature.
 - [x] Reconcile predicted cooldown display after rejection or resync.
+- [ ] Add spell artwork for Blank Rune and Conjure Royal Star once the pinned
+  OTClient data assigns valid icon indices. Keep their artwork slots empty so
+  missing mappings stay visible rather than displaying unrelated artwork.
 
 ## Planned file surface
 

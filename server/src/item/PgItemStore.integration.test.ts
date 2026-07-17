@@ -657,4 +657,96 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     expect(Number(count.rows[0]?.count)).toBe(1);
     expect(await itemRow(helmetId)).toMatchObject({ version: 2 });
   });
+
+  it("stamps loot ownership on a corpse and clears it on the first decay stage", async () => {
+    // Dead chicken chain: 6042 -(10s)-> 4330 -(300s)-> 4331.
+    const created = await store.createCorpse(
+      characterId,
+      "death:integration-1",
+      { x: 100, y: 105, z: 7 },
+      0,
+      6042,
+      [{ typeId: GOLD_TYPE, count: 10 }],
+    );
+    const corpse = created[0];
+    expect(corpse?.attributes).toEqual({ ownerCharacterId: characterId });
+
+    const mutation = await store.decayWorldItem(corpse!.id, corpse!.version);
+    expect(mutation.after).toMatchObject([
+      { id: corpse!.id, typeId: 4330, attributes: {} },
+    ]);
+    expect(mutation.removedItemIds ?? []).toHaveLength(0);
+    expect(await auditRows("item-transformed")).toMatchObject([
+      {
+        item_id: corpse!.id,
+        details: { reason: "decay", fromTypeId: 6042, toTypeId: 4330 },
+      },
+    ]);
+  });
+
+  it("destroys and audits contents a decayed corpse can no longer hold", async () => {
+    const created = await store.createCorpse(
+      characterId,
+      "death:integration-2",
+      { x: 100, y: 106, z: 7 },
+      0,
+      4330,
+      [
+        { typeId: GOLD_TYPE, count: 10 },
+        { typeId: GOLD_TYPE, count: 5 },
+      ],
+    );
+    const corpse = created[0];
+
+    // 4330 -> 4331 drops container capacity to zero.
+    const mutation = await store.decayWorldItem(corpse!.id, corpse!.version);
+    expect(mutation.after).toMatchObject([{ typeId: 4331 }]);
+    expect(mutation.removedItemIds).toHaveLength(2);
+    const remaining = await pool.query<{ count: string }>(
+      "SELECT count(*) FROM items WHERE container_id = $1",
+      [corpse!.id],
+    );
+    expect(Number(remaining.rows[0]?.count)).toBe(0);
+    expect(await auditRows("item-destroyed")).toHaveLength(2);
+
+    // 4331 -> 4332 -> removed; the removal is audited too.
+    await store.decayWorldItem(corpse!.id, corpse!.version + 1);
+    const removal = await store.decayWorldItem(
+      corpse!.id,
+      corpse!.version + 2,
+    );
+    expect(removal.after).toEqual([]);
+    expect(removal.removedItemIds).toEqual([corpse!.id]);
+    expect(await auditRows("item-destroyed")).toHaveLength(3);
+    const gone = await pool.query<{ count: string }>(
+      "SELECT count(*) FROM items WHERE id = $1",
+      [corpse!.id],
+    );
+    expect(Number(gone.rows[0]?.count)).toBe(0);
+  });
+
+  it("rejects a stale decay transaction and lets exactly one of two racing decays succeed", async () => {
+    const created = await store.createCorpse(
+      characterId,
+      "death:integration-3",
+      { x: 100, y: 107, z: 7 },
+      0,
+      6042,
+      [],
+    );
+    const corpse = created[0];
+
+    await expect(
+      store.decayWorldItem(corpse!.id, corpse!.version + 1),
+    ).rejects.toThrow();
+
+    const results = await Promise.allSettled([
+      store.decayWorldItem(corpse!.id, corpse!.version),
+      store.decayWorldItem(corpse!.id, corpse!.version),
+    ]);
+    expect(
+      results.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(await itemRow(corpse!.id)).toMatchObject({ version: 2 });
+  });
 });

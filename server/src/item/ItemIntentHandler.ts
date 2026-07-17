@@ -7,6 +7,7 @@ import type {
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import type { DecayManager, DecayRecord } from "./DecayManager";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
@@ -57,6 +58,7 @@ export class ItemIntentHandler {
   private readonly inventories = new Map<string, InventoryCache>();
   private readonly pendingOperations = new Map<string, Promise<void>>();
   private readonly pendingCorpseOperations = new Map<string, Promise<void>>();
+  private readonly pendingDecayOperations = new Map<string, Promise<void>>();
   private readonly outcomes: Array<(now: number) => void> = [];
 
   constructor(
@@ -64,6 +66,7 @@ export class ItemIntentHandler {
     private readonly catalog: ItemCatalog,
     private readonly world: World,
     private readonly visibility: Visibility,
+    private readonly decay?: DecayManager,
   ) {}
 
   async load(characterId: string, capacityMax: number): Promise<LoadedInventory> {
@@ -235,6 +238,7 @@ export class ItemIntentHandler {
           const inventory = this.applyMutation(
             characterId,
             result.mutation,
+            now,
           );
           if (inventory && session.playerId === characterId) {
             session.send({ type: "inventory-updated", inventory });
@@ -315,9 +319,10 @@ export class ItemIntentHandler {
     );
     const resolution = operation
       .then((items) => {
-        this.outcomes.push(() => {
+        this.outcomes.push((now) => {
           const positions = this.world.applyCreatedWorldItems(items);
           this.visibility.onMapItemsChanged(positions);
+          this.decay?.observeCreated(items, now);
         });
       })
       .catch((cause: unknown) => {
@@ -328,6 +333,57 @@ export class ItemIntentHandler {
     void resolution.finally(() => {
       if (this.pendingCorpseOperations.get(eventId) === resolution) {
         this.pendingCorpseOperations.delete(eventId);
+      }
+    });
+  }
+
+  /** Arms decay deadlines for world items loaded or created outside intents. */
+  scheduleWorldDecay(items: ReadonlyArray<Item>, now: number): void {
+    this.decay?.observeCreated(items, now);
+  }
+
+  tickDecay(now: number): void {
+    if (!this.decay) return;
+    for (const record of this.decay.collectDue(now)) {
+      this.startDecay(record, now);
+    }
+  }
+
+  private startDecay(record: DecayRecord, now: number): void {
+    if (this.pendingDecayOperations.has(record.itemId)) return;
+    const current = this.world
+      .getMapItems(record.position)
+      .find((candidate) => candidate.instanceId === record.instanceId);
+    // Identity re-check at execution: a moved or transformed item carries its
+    // own rescheduled deadline, so a record for an older version is stale and
+    // must not touch the item now living under this instance id.
+    if (
+      !current ||
+      (current.revision ?? 1) !== record.version ||
+      current.itemId !== record.typeId
+    ) {
+      return;
+    }
+    const operation = this.store.decayWorldItem(record.itemId, record.version);
+    const resolution = operation
+      .then((mutation) => {
+        this.outcomes.push((appliedAt) => {
+          const changedWorldTiles = this.world.applyItemMutation(mutation);
+          this.visibility.onMapItemsChanged(changedWorldTiles);
+          this.decay?.observeMutation(mutation, appliedAt);
+        });
+      })
+      .catch((cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(`decay failed for item ${record.itemId}: ${reason}`);
+        this.outcomes.push((appliedAt) => {
+          this.decay?.restore(record, appliedAt);
+        });
+      });
+    this.pendingDecayOperations.set(record.itemId, resolution);
+    void resolution.finally(() => {
+      if (this.pendingDecayOperations.get(record.itemId) === resolution) {
+        this.pendingDecayOperations.delete(record.itemId);
       }
     });
   }
@@ -644,9 +700,9 @@ export class ItemIntentHandler {
   ): Promise<void> {
     try {
       const mutation = await operation;
-      this.outcomes.push(() => {
+      this.outcomes.push((now) => {
         session.itemOperationPending = false;
-        const inventory = this.applyMutation(characterId, mutation);
+        const inventory = this.applyMutation(characterId, mutation, now);
         if (inventory && session.playerId === characterId) {
           session.send({ type: "inventory-updated", inventory });
         }
@@ -673,7 +729,7 @@ export class ItemIntentHandler {
       const mutation = await operation;
       this.outcomes.push((now) => {
         session.itemOperationPending = false;
-        const inventory = this.applyMutation(characterId, mutation);
+        const inventory = this.applyMutation(characterId, mutation, now);
         if (inventory && session.playerId === characterId) {
           session.send({ type: "inventory-updated", inventory });
         }
@@ -704,7 +760,7 @@ export class ItemIntentHandler {
       const mutation = await operation;
       this.outcomes.push((now) => {
         session.itemOperationPending = false;
-        const inventory = this.applyMutation(characterId, mutation);
+        const inventory = this.applyMutation(characterId, mutation, now);
         if (inventory && session.playerId === characterId) {
           session.send({ type: "inventory-updated", inventory });
         }
@@ -727,9 +783,11 @@ export class ItemIntentHandler {
   private applyMutation(
     characterId: string,
     mutation: ItemMutation,
+    now: number,
   ): InventoryState | null {
     const changedWorldTiles = this.world.applyItemMutation(mutation);
     this.visibility.onMapItemsChanged(changedWorldTiles);
+    this.decay?.observeMutation(mutation, now);
     const current = this.inventories.get(characterId);
     if (!current) return null;
     const afterById = new Map(mutation.after.map((item) => [item.id, item]));

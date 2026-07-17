@@ -13,6 +13,7 @@ import { CombatIntentHandler } from "./combat/CombatIntentHandler";
 import { SpellRegistry } from "./combat/SpellRegistry";
 import type { ServerConfig } from "./config";
 import { LanguageHandler } from "./LanguageHandler";
+import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { ItemCatalog } from "./item/ItemCatalog";
 import type { ItemStore } from "./item/ItemStore";
@@ -93,6 +94,11 @@ export class GameServer {
       deps.itemCatalog,
       this.world,
       this.visibility,
+      new DecayManager(deps.itemCatalog),
+    );
+    this.items.scheduleWorldDecay(
+      deps.worldItemDeltas?.items ?? [],
+      Date.now(),
     );
     this.characters = new CharacterHandler(
       characterService,
@@ -218,6 +224,7 @@ export class GameServer {
     }
     this.combatSystem.tick(now);
     this.spawns?.tick(now);
+    this.items.tickDecay(now);
     this.progression.tick(now);
     this.persistence.tick(now);
   }

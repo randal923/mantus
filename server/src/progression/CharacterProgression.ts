@@ -282,6 +282,23 @@ export class CharacterProgression {
     return { processed: true, changed };
   }
 
+  loseExperience(eventId: string, amount: number): ProgressionMutation {
+    this.assertAward(eventId, amount);
+    if (!this.recordEvent(eventId, "experience")) {
+      return { processed: false, changed: false };
+    }
+    const experience = Math.max(0, this.currentExperience - amount);
+    const level = getLevelForExperience(experience);
+    const changed =
+      experience !== this.currentExperience || level !== this.currentLevel;
+    this.currentExperience = experience;
+    if (level !== this.currentLevel) {
+      this.currentLevel = level;
+      this.currentMana = Math.min(this.currentMana, this.maxMana);
+    }
+    return { processed: true, changed };
+  }
+
   awardMagicProgress(eventId: string, amount: number): ProgressionMutation {
     this.assertAward(eventId, amount);
     if (!this.recordEvent(eventId, "magic")) {

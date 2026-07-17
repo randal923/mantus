@@ -259,6 +259,29 @@
       "pz-lock": "Protection-zone lock"
     }
   },
+  "chat": {
+    "label": "Game chat",
+    "channelsLabel": "Chat channels",
+    "channels": {
+      "world": "World",
+      "guild": "Guild",
+      "whisper": "Whisper",
+      "system": "System"
+    },
+    "channelDescription": "{{channel}} channel",
+    "channelWithUnread_one": "{{channel}}, {{count}} unread message",
+    "channelWithUnread_other": "{{channel}}, {{count}} unread messages",
+    "messageCount_one": "{{count}} message",
+    "messageCount_other": "{{count}} messages",
+    "messageLabel": "Message {{channel}}",
+    "placeholder": "Message {{channel}}…",
+    "empty": "No messages in this channel yet.",
+    "readOnly": "This channel is read-only",
+    "systemDescription": "Combat, loot, and server notices",
+    "send": "Send message",
+    "minimize": "Minimize chat",
+    "restore": "Restore chat"
+  },
   "hud": {
     "battleList": "Battle List"
   },
