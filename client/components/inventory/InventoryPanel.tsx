@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import type {
   ContainerState,
+  InventorySlotEntry,
   OwnCharacterState,
 } from "@tibia/protocol";
 import type { Equipment, InventoryItem } from "./inventoryTypes";
@@ -16,6 +16,7 @@ import { ItemSlot } from "./ItemSlot";
 import { SpriteIcon } from "./SpriteIcon";
 import { InventoryCharacterStats } from "./InventoryCharacterStats";
 import { ContainerInventorySection } from "./ContainerInventorySection";
+import type { ItemDragSource } from "./ItemDragSource";
 
 const GOLD_COIN_SPRITE = 7384;
 const PLATINUM_COIN_SPRITE = 7409;
@@ -26,7 +27,7 @@ interface InventoryPanelProps {
   characterStatsOpen?: boolean;
   equipment: Equipment;
   /** Backpack contents; display only — all mutations go through server intents. */
-  items: InventoryItem[];
+  items: InventorySlotEntry[];
   gold: number;
   platinum: number;
   capacityUsed: number;
@@ -44,8 +45,10 @@ interface InventoryPanelProps {
   onOpenContainer?: (item: InventoryItem) => void;
   onCloseContainer?: (containerId: string) => void;
   onUseItem?: (item: InventoryItem) => void;
-  onMove?: (item: InventoryItem, destination: InventoryItem) => void;
-  onDrop?: (item: InventoryItem) => void;
+  onDragStart?: (source: ItemDragSource) => void;
+  onDragEnd?: () => void;
+  onDropInContainer?: (destination: InventoryItem, slot: number) => void;
+  onDropInEquipment?: (slot: keyof Equipment) => void;
 }
 
 export function InventoryPanel({
@@ -70,13 +73,14 @@ export function InventoryPanel({
   onOpenContainer,
   onCloseContainer,
   onUseItem,
-  onMove,
-  onDrop,
+  onDragStart,
+  onDragEnd,
+  onDropInContainer,
+  onDropInEquipment,
 }: InventoryPanelProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
-  const [draggedItem, setDraggedItem] = useState<InventoryItem | null>(null);
-  const emptySlots = Math.max(0, slotCount - items.length);
+  const bySlot = new Map(items.map((entry) => [entry.slot, entry.item]));
   const activateItem = (item: InventoryItem) => {
     if (item.useKind === "rune" && onUseRune) {
       onUseRune(item);
@@ -189,7 +193,13 @@ export function InventoryPanel({
           </header>
           <div aria-hidden className="ui-divider" />
 
-          <EquipmentPaperdoll equipment={equipment} onUnequip={onUnequip} />
+          <EquipmentPaperdoll
+            equipment={equipment}
+            onUnequip={onUnequip}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDrop={onDropInEquipment}
+          />
 
           <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
             <div className="grid flex-1 grid-cols-2 gap-2 text-xs text-ui-text">
@@ -240,47 +250,51 @@ export function InventoryPanel({
           </div>
 
           <div className="ui-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
-            <div
-              onDragOver={(event) => {
-                if (!draggedItem || !equipment.backpack) return;
-                event.preventDefault();
-                event.dataTransfer.dropEffect = "move";
-              }}
-              onDrop={(event) => {
-                event.preventDefault();
-                if (!draggedItem || !equipment.backpack || !onMove) return;
-                onMove(draggedItem, equipment.backpack);
-              }}
-              className="grid grid-cols-4 justify-items-center gap-2"
-            >
-              {items.map((item) => (
-                <ItemSlot
-                  key={item.id}
-                  item={item}
-                  onActivate={() => activateItem(item)}
-                  onContextAction={onDrop ? () => onDrop(item) : undefined}
-                  onDragStart={() => setDraggedItem(item)}
-                  onDragEnd={() => setDraggedItem(null)}
-                />
-              ))}
-              {Array.from({ length: emptySlots }, (_, i) => (
-                <ItemSlot key={`empty-${i}`} />
-              ))}
+            <div className="grid grid-cols-4 justify-items-center gap-2">
+              {Array.from({ length: slotCount }, (_, slot) => {
+                const item = bySlot.get(slot);
+                return (
+                  <ItemSlot
+                    key={item?.id ?? `empty-${slot}`}
+                    item={item}
+                    onActivate={item ? () => activateItem(item) : undefined}
+                    onDragStart={
+                      item &&
+                      equipment.backpack &&
+                      onDragStart
+                        ? () =>
+                            onDragStart({
+                              kind: "owned",
+                              item,
+                              location: {
+                                kind: "container",
+                                containerId: equipment.backpack!.id,
+                                slot,
+                              },
+                            })
+                        : undefined
+                    }
+                    onDragEnd={onDragEnd}
+                    onDrop={
+                      equipment.backpack && onDropInContainer
+                        ? () => onDropInContainer(equipment.backpack!, slot)
+                        : undefined
+                    }
+                  />
+                );
+              })}
             </div>
             {onCloseContainer &&
               containers.map((container) => (
                 <ContainerInventorySection
                   key={container.container.id}
                   state={container}
-                  draggedItem={draggedItem}
                   onActivate={activateItem}
-                  onContextAction={onDrop}
-                  onDragStart={setDraggedItem}
-                  onDragEnd={() => setDraggedItem(null)}
-                  onDrop={(item, destination) => {
-                    onMove?.(item, destination);
-                    setDraggedItem(null);
-                  }}
+                  onDragStart={onDragStart ?? (() => undefined)}
+                  onDragEnd={onDragEnd ?? (() => undefined)}
+                  onDrop={(destination, slot) =>
+                    onDropInContainer?.(destination, slot)
+                  }
                   onClose={onCloseContainer}
                 />
               ))}

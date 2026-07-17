@@ -7,6 +7,7 @@ import {
   type EquipmentSlot,
   type FightMode,
   type InventoryItem,
+  type ItemContainerDestination,
   type Language,
   type MapItemState,
   type Position,
@@ -109,12 +110,17 @@ export class GameClient {
     });
   }
 
-  pickupMapItem(item: MapItemState, position: Position): boolean {
+  pickupMapItem(
+    item: MapItemState,
+    position: Position,
+    destination?: ItemContainerDestination,
+  ): boolean {
     return this.send({
       type: "pickup-item",
       itemId: item.instanceId,
       revision: item.revision,
       position,
+      ...(destination ? { destination } : {}),
     });
   }
 
@@ -127,22 +133,27 @@ export class GameClient {
     });
   }
 
-  equipItem(item: InventoryItem): boolean {
-    if (!item.equipmentSlot) return false;
+  equipItem(item: InventoryItem, slot = item.equipmentSlot): boolean {
+    if (!slot || item.equipmentSlot !== slot) return false;
     return this.send({
       type: "equip-item",
       itemId: item.id,
       revision: item.revision,
-      slot: item.equipmentSlot,
+      slot,
     });
   }
 
-  unequipItem(item: InventoryItem, slot: EquipmentSlot): boolean {
+  unequipItem(
+    item: InventoryItem,
+    slot: EquipmentSlot,
+    destination?: ItemContainerDestination,
+  ): boolean {
     return this.send({
       type: "unequip-item",
       itemId: item.id,
       revision: item.revision,
       slot,
+      ...(destination ? { destination } : {}),
     });
   }
 
@@ -161,6 +172,7 @@ export class GameClient {
   moveItem(
     item: InventoryItem,
     destination: InventoryItem,
+    destinationSlot: number,
     count?: number,
   ): boolean {
     return this.send({
@@ -169,6 +181,7 @@ export class GameClient {
       revision: item.revision,
       destinationContainerId: destination.id,
       destinationRevision: destination.revision,
+      destinationSlot,
       ...(count !== undefined ? { count } : {}),
     });
   }

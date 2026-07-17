@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type {
   CharacterVocation,
   EquipmentSlot,
+  ItemContainerDestination,
   Position,
 } from "@tibia/protocol";
 import { Pool, type PoolClient } from "pg";
@@ -180,6 +181,12 @@ export class PgItemStore implements ItemStore {
       const row = await this.lockItem(client, itemId);
       this.requireVersion(row, expectedVersion);
       await this.requireOwned(client, row.id, characterId);
+      if (
+        row.location_type !== "inventory" &&
+        row.location_type !== "container"
+      ) {
+        throw new Error("item cannot be equipped from this location");
+      }
       const type = this.catalog.require(row.item_type_id);
       if (type.equipmentSlot !== slot) throw new Error("item does not fit slot");
       if (
@@ -194,10 +201,49 @@ export class PgItemStore implements ItemStore {
       ) {
         throw new Error("character vocation cannot equip item");
       }
-      await this.requireEquipmentSpace(client, characterId, row.id, slot, type.slotType);
       const before = itemFromRow(row);
       const transformedTypeId = type.transformEquipTo ?? row.item_type_id;
       this.catalog.require(transformedTypeId);
+      const occupied = await this.lockEquipmentSlot(
+        client,
+        characterId,
+        slot,
+        row.id,
+      );
+      let displacedBefore: Item | undefined;
+      let displacedTypeId: number | undefined;
+      if (occupied) {
+        if (row.slot_index === null) throw new Error("item source slot is missing");
+        if (row.location_type === "container") {
+          await this.requireContainerPlacement(
+            client,
+            occupied.id,
+            row.container_id ?? "",
+          );
+        }
+        displacedBefore = itemFromRow(occupied);
+        const occupiedType = this.catalog.require(occupied.item_type_id);
+        displacedTypeId =
+          occupiedType.transformDeEquipTo ?? occupied.item_type_id;
+        this.catalog.require(displacedTypeId);
+        const temporarySlot = await this.firstInventorySlot(client, characterId);
+        await client.query(
+          `UPDATE items
+           SET item_type_id = $2, location_type = 'inventory',
+               character_id = $3, equipment_slot = null,
+               container_id = null, slot_index = $4,
+               version = version + 1, updated_at = now()
+           WHERE id = $1`,
+          [occupied.id, displacedTypeId, characterId, temporarySlot],
+        );
+      }
+      await this.requireEquipmentCompatibility(
+        client,
+        characterId,
+        row.id,
+        slot,
+        type.slotType,
+      );
       const updated = await client.query<ItemRow>(
         `UPDATE items
          SET item_type_id = $3, location_type = 'equipment',
@@ -211,7 +257,39 @@ export class PgItemStore implements ItemStore {
         [characterId, row.id, transformedTypeId, slot],
       );
       const after = this.requireReturnedItem(updated.rows[0]);
+      let displaced: Item | undefined;
+      if (occupied && displacedTypeId !== undefined) {
+        const displacedResult =
+          row.location_type === "inventory"
+            ? await client.query<ItemRow>(
+                `UPDATE items
+                 SET location_type = 'inventory', character_id = $2,
+                     equipment_slot = null, container_id = null,
+                     slot_index = $3, updated_at = now()
+                 WHERE id = $1
+                 RETURNING ${ITEM_COLUMNS}`,
+                [occupied.id, characterId, row.slot_index],
+              )
+            : await client.query<ItemRow>(
+                `UPDATE items
+                 SET location_type = 'container', character_id = null,
+                     equipment_slot = null, container_id = $2,
+                     slot_index = $3, updated_at = now()
+                 WHERE id = $1
+                 RETURNING ${ITEM_COLUMNS}`,
+                [occupied.id, row.container_id, row.slot_index],
+              );
+        displaced = this.requireReturnedItem(displacedResult.rows[0]);
+      }
       await this.auditTransfer(client, characterId, before, after);
+      if (displacedBefore && displaced) {
+        await this.auditTransfer(
+          client,
+          characterId,
+          displacedBefore,
+          displaced,
+        );
+      }
       if (transformedTypeId !== row.item_type_id) {
         await this.auditTransform(
           client,
@@ -221,7 +299,20 @@ export class PgItemStore implements ItemStore {
           transformedTypeId,
         );
       }
-      return { before, after: [after] };
+      if (
+        occupied &&
+        displacedTypeId !== undefined &&
+        displacedTypeId !== occupied.item_type_id
+      ) {
+        await this.auditTransform(
+          client,
+          characterId,
+          occupied.id,
+          occupied.item_type_id,
+          displacedTypeId,
+        );
+      }
+      return { before, after: displaced ? [after, displaced] : [after] };
     });
   }
 
@@ -230,6 +321,7 @@ export class PgItemStore implements ItemStore {
     itemId: string,
     expectedVersion: number,
     slot: EquipmentSlot,
+    destination?: ItemContainerDestination,
   ): Promise<ItemMutation> {
     return this.transaction(async (client) => {
       await this.lockCharacter(client, characterId);
@@ -247,7 +339,31 @@ export class PgItemStore implements ItemStore {
       const transformedTypeId = type.transformDeEquipTo ?? row.item_type_id;
       this.catalog.require(transformedTypeId);
       let updated: ItemRow;
-      if (slot === "backpack") {
+      if (destination) {
+        const container = await this.lockItem(client, destination.containerId);
+        this.requireVersion(container, destination.containerRevision);
+        await this.requireOwned(client, container.id, characterId);
+        const capacity =
+          this.catalog.require(container.item_type_id).containerCapacity ?? 0;
+        if (destination.slot >= capacity) {
+          throw new Error("container slot is out of range");
+        }
+        await this.requireContainerPlacement(client, row.id, container.id);
+        if (await this.lockContainerSlot(client, container.id, destination.slot)) {
+          throw new Error("container slot is occupied");
+        }
+        const result = await client.query<ItemRow>(
+          `UPDATE items
+           SET item_type_id = $2, location_type = 'container',
+               character_id = null, equipment_slot = null,
+               container_id = $3, slot_index = $4,
+               version = version + 1, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}`,
+          [row.id, transformedTypeId, container.id, destination.slot],
+        );
+        updated = this.requireRow(result.rows[0]);
+      } else if (slot === "backpack") {
         const destinationSlot = await this.firstInventorySlot(client, characterId);
         const result = await client.query<ItemRow>(
           `UPDATE items
@@ -296,6 +412,7 @@ export class PgItemStore implements ItemStore {
     expectedVersion: number,
     position: Position,
     source?: WorldItemSource,
+    destination?: ItemContainerDestination,
   ): Promise<ItemMutation> {
     return this.transaction(async (client) => {
       const character = await this.lockCharacter(client, characterId);
@@ -325,11 +442,33 @@ export class PgItemStore implements ItemStore {
         character.capacity,
         row.id,
       );
-      const backpack = await this.lockBackpack(client, characterId);
+      const backpack = destination
+        ? await this.lockItem(client, destination.containerId)
+        : await this.lockBackpack(client, characterId);
+      if (destination) {
+        this.requireVersion(backpack, destination.containerRevision);
+        await this.requireOwned(client, backpack.id, characterId);
+        const capacity =
+          this.catalog.require(backpack.item_type_id).containerCapacity ?? 0;
+        if (destination.slot >= capacity) {
+          throw new Error("container slot is out of range");
+        }
+        await this.requireContainerPlacement(client, row.id, backpack.id);
+      }
       const before = itemFromRow(row);
-      const mergeTarget = type.stackable
-        ? await this.lockContainerMergeTarget(client, backpack.id, row)
+      const slotTarget = destination
+        ? await this.lockContainerSlot(client, backpack.id, destination.slot)
         : undefined;
+      const mergeTarget = type.stackable
+        ? destination
+          ? this.canMergeRows(row, slotTarget, row.count)
+            ? slotTarget
+            : undefined
+          : await this.lockContainerMergeTarget(client, backpack.id, row)
+        : undefined;
+      if (slotTarget && !mergeTarget) {
+        throw new Error("container slot is occupied");
+      }
       if (mergeTarget) {
         await client.query("DELETE FROM items WHERE id = $1", [mergeTarget.id]);
         const result = await client.query<ItemRow>(
@@ -360,7 +499,8 @@ export class PgItemStore implements ItemStore {
           removedItemIds: [mergeTarget.id],
         };
       }
-      const destinationSlot = await this.firstContainerSlot(client, backpack);
+      const destinationSlot =
+        destination?.slot ?? (await this.firstContainerSlot(client, backpack));
       const result = await client.query<ItemRow>(
         `UPDATE items
          SET location_type = 'container', container_id = $2, slot_index = $3,
@@ -603,6 +743,7 @@ export class PgItemStore implements ItemStore {
     expectedVersion: number,
     destinationContainerId: string,
     destinationVersion: number,
+    destinationSlot: number,
     requestedCount?: number,
   ): Promise<ItemMutation> {
     return this.transaction(async (client) => {
@@ -628,8 +769,16 @@ export class PgItemStore implements ItemStore {
       }
       const type = this.catalog.require(row.item_type_id);
       const destinationType = this.catalog.require(destination.item_type_id);
-      if ((destinationType.containerCapacity ?? 0) < 1) {
+      const destinationCapacity = destinationType.containerCapacity ?? 0;
+      if (destinationCapacity < 1) {
         throw new Error("destination is not a container");
+      }
+      if (
+        !Number.isInteger(destinationSlot) ||
+        destinationSlot < 0 ||
+        destinationSlot >= destinationCapacity
+      ) {
+        throw new Error("container slot is out of range");
       }
       const count = requestedCount ?? row.count;
       if (
@@ -646,20 +795,87 @@ export class PgItemStore implements ItemStore {
       if (
         row.location_type === "container" &&
         row.container_id === destination.id &&
-        count === row.count
+        row.slot_index === destinationSlot
       ) {
-        throw new Error("item is already in destination container");
+        throw new Error("item is already in destination slot");
       }
       await this.requireContainerPlacement(client, row.id, destination.id);
       const before = itemFromRow(row);
+      const slotTarget = await this.lockContainerSlot(
+        client,
+        destination.id,
+        destinationSlot,
+      );
       const mergeTarget = type.stackable
-        ? await this.lockContainerMergeTarget(
-            client,
-            destination.id,
-            row,
-            count,
-          )
+        ? this.canMergeRows(row, slotTarget, count)
+          ? slotTarget
+          : undefined
         : undefined;
+      if (slotTarget && !mergeTarget) {
+        if (count !== row.count) {
+          throw new Error("cannot split into an occupied slot");
+        }
+        if (row.slot_index === null) {
+          throw new Error("item source slot is missing");
+        }
+        if (row.location_type === "container") {
+          await this.requireContainerPlacement(
+            client,
+            slotTarget.id,
+            row.container_id ?? "",
+          );
+        }
+        const displacedBefore = itemFromRow(slotTarget);
+        const temporarySlot = await this.firstInventorySlot(client, characterId);
+        await client.query(
+          `UPDATE items
+           SET location_type = 'inventory', character_id = $2,
+               container_id = null, slot_index = $3,
+               equipment_slot = null, version = version + 1,
+               updated_at = now()
+           WHERE id = $1`,
+          [slotTarget.id, characterId, temporarySlot],
+        );
+        const sourceResult = await client.query<ItemRow>(
+          `UPDATE items
+           SET location_type = 'container', character_id = null,
+               equipment_slot = null, container_id = $2, slot_index = $3,
+               version = version + 1, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}`,
+          [row.id, destination.id, destinationSlot],
+        );
+        const displacedResult =
+          row.location_type === "inventory"
+            ? await client.query<ItemRow>(
+                `UPDATE items
+                 SET location_type = 'inventory', character_id = $2,
+                     container_id = null, slot_index = $3,
+                     equipment_slot = null, updated_at = now()
+                 WHERE id = $1
+                 RETURNING ${ITEM_COLUMNS}`,
+                [slotTarget.id, characterId, row.slot_index],
+              )
+            : await client.query<ItemRow>(
+                `UPDATE items
+                 SET location_type = 'container', character_id = null,
+                     container_id = $2, slot_index = $3,
+                     equipment_slot = null, updated_at = now()
+                 WHERE id = $1
+                 RETURNING ${ITEM_COLUMNS}`,
+                [slotTarget.id, row.container_id, row.slot_index],
+              );
+        const after = this.requireReturnedItem(sourceResult.rows[0]);
+        const displaced = this.requireReturnedItem(displacedResult.rows[0]);
+        await this.auditTransfer(client, characterId, before, after);
+        await this.auditTransfer(
+          client,
+          characterId,
+          displacedBefore,
+          displaced,
+        );
+        return { before, after: [after, displaced] };
+      }
       if (mergeTarget) {
         if (count === row.count && row.seed_key) {
           await client.query("DELETE FROM items WHERE id = $1", [
@@ -738,10 +954,6 @@ export class PgItemStore implements ItemStore {
         );
         return { before, after: [sourceAfter, merged] };
       }
-      const destinationSlot = await this.firstContainerSlot(
-        client,
-        destination,
-      );
       if (count === row.count) {
         const result = await client.query<ItemRow>(
           `UPDATE items
@@ -1450,21 +1662,13 @@ export class PgItemStore implements ItemStore {
     }
   }
 
-  private async requireEquipmentSpace(
+  private async requireEquipmentCompatibility(
     client: PoolClient,
     characterId: string,
     itemId: string,
     slot: EquipmentSlot,
     slotType?: string,
   ): Promise<void> {
-    const occupied = await client.query<{ id: string }>(
-      `SELECT id FROM items
-       WHERE character_id = $1 AND location_type = 'equipment'
-         AND equipment_slot = $2 AND id <> $3
-       FOR UPDATE`,
-      [characterId, slot, itemId],
-    );
-    if (occupied.rowCount) throw new Error("equipment slot is occupied");
     if (slotType === "two-handed") {
       const shield = await client.query(
         `SELECT id FROM items
@@ -1490,6 +1694,23 @@ export class PgItemStore implements ItemStore {
         throw new Error("shield conflicts with two-handed weapon");
       }
     }
+  }
+
+  private async lockEquipmentSlot(
+    client: PoolClient,
+    characterId: string,
+    slot: EquipmentSlot,
+    excludedItemId: string,
+  ): Promise<ItemRow | undefined> {
+    const result = await client.query<ItemRow>(
+      `SELECT ${ITEM_COLUMNS}
+       FROM items
+       WHERE character_id = $1 AND location_type = 'equipment'
+         AND equipment_slot = $2 AND id <> $3
+       FOR UPDATE`,
+      [characterId, slot, excludedItemId],
+    );
+    return result.rows[0];
   }
 
   private async lockBackpack(
@@ -1528,6 +1749,38 @@ export class PgItemStore implements ItemStore {
     );
     if (slot === undefined) throw new Error("container is full");
     return slot;
+  }
+
+  private async lockContainerSlot(
+    client: PoolClient,
+    containerId: string,
+    slot: number,
+  ): Promise<ItemRow | undefined> {
+    const result = await client.query<ItemRow>(
+      `SELECT ${ITEM_COLUMNS}
+       FROM items
+       WHERE container_id = $1
+         AND location_type IN ('container', 'corpse')
+         AND slot_index = $2
+       FOR UPDATE`,
+      [containerId, slot],
+    );
+    return result.rows[0];
+  }
+
+  private canMergeRows(
+    source: ItemRow,
+    target: ItemRow | undefined,
+    count: number,
+  ): target is ItemRow {
+    if (!target || target.id === source.id || target.seed_key) return false;
+    const type = this.catalog.require(source.item_type_id);
+    return (
+      type.stackable &&
+      target.item_type_id === source.item_type_id &&
+      JSON.stringify(target.attributes) === JSON.stringify(source.attributes) &&
+      target.count + count <= type.maxCount
+    );
   }
 
   private async lockContainerMergeTarget(

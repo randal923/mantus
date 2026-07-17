@@ -402,6 +402,7 @@ databaseDescribe("PgCharacterStore integration", () => {
         item.version,
         bagId,
         1,
+        0,
       ),
       itemStore.moveToContainer(
         character.id,
@@ -409,6 +410,7 @@ databaseDescribe("PgCharacterStore integration", () => {
         item.version,
         bagId,
         1,
+        0,
       ),
     ]);
     const persisted = await pool.query<{
@@ -431,6 +433,67 @@ databaseDescribe("PgCharacterStore integration", () => {
       { container_id: bagId, count: 100 },
     ]);
     expect(Number(audits.rows[0]?.count)).toBe(1);
+  });
+
+  it("swaps occupied container slots and audit entries in one transaction", async () => {
+    const accountId = await createAccount("container-swap");
+    const characters = await service.create(accountId, {
+      displayName: "Swap Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const character = characters[0];
+    if (!character) throw new Error("character was not created");
+    const backpack = await pool.query<{ id: string; version: number }>(
+      `SELECT id, version FROM items
+       WHERE character_id = $1 AND location_type = 'equipment'
+         AND equipment_slot = 'backpack'`,
+      [character.id],
+    );
+    const container = backpack.rows[0];
+    if (!container) throw new Error("starter backpack was not created");
+    const sourceId = randomUUID();
+    const displacedId = randomUUID();
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, location_type, container_id, slot_index
+       ) VALUES
+         ($1, 3273, 'container', $3, 18),
+         ($2, 3274, 'container', $3, 19)`,
+      [sourceId, displacedId, container.id],
+    );
+
+    await itemStore.moveToContainer(
+      character.id,
+      sourceId,
+      1,
+      container.id,
+      container.version,
+      19,
+    );
+
+    const persisted = await pool.query<{
+      id: string;
+      slot_index: number;
+      version: number;
+    }>(
+      `SELECT id, slot_index, version FROM items
+       WHERE id = ANY($1::uuid[])
+       ORDER BY id`,
+      [[sourceId, displacedId]],
+    );
+    expect(persisted.rows).toEqual(
+      [
+        { id: sourceId, slot_index: 19, version: 2 },
+        { id: displacedId, slot_index: 18, version: 2 },
+      ].sort((left, right) => left.id.localeCompare(right.id)),
+    );
+    const audits = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM audit_log
+       WHERE item_id = ANY($1::uuid[]) AND event_type = 'item-transferred'`,
+      [[sourceId, displacedId]],
+    );
+    expect(Number(audits.rows[0]?.count)).toBe(2);
   });
 
   it("rejects over-capacity pickup, container cycles, and excessive nesting", async () => {
@@ -489,6 +552,7 @@ databaseDescribe("PgCharacterStore integration", () => {
         1,
         deepestId,
         1,
+        0,
       ),
     ).rejects.toThrow("cycle");
 
@@ -512,6 +576,7 @@ databaseDescribe("PgCharacterStore integration", () => {
         subtreeId,
         1,
         deepestId,
+        1,
         1,
       ),
     ).rejects.toThrow("nesting");
@@ -576,6 +641,7 @@ databaseDescribe("PgCharacterStore integration", () => {
           item.version,
           bagId,
           1,
+          0,
         ),
       ).rejects.toThrow("injected audit failure");
     } finally {

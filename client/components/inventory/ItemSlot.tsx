@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { InventoryItem } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -11,9 +11,9 @@ interface ItemSlotProps {
   item?: InventoryItem;
   placeholderSpriteId?: number;
   onActivate?: () => void;
-  onContextAction?: () => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  onDrop?: () => void;
 }
 
 /** One recessed inventory cell; owned item details are shown from server data. */
@@ -21,18 +21,23 @@ export function ItemSlot({
   item,
   placeholderSpriteId,
   onActivate,
-  onContextAction,
   onDragStart,
   onDragEnd,
+  onDrop,
 }: ItemSlotProps) {
   const { t } = useAppTranslation();
   const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
+  const [dragPosition, setDragPosition] = useState<{
+    left: number;
+    top: number;
+  } | null>(null);
+  const emptyDragImageRef = useRef<HTMLSpanElement>(null);
 
   return (
     <>
       <button
         type="button"
-        disabled={!item}
+        disabled={!item && !onDrop}
         draggable={Boolean(item && onDragStart)}
         title={
           item
@@ -42,11 +47,10 @@ export function ItemSlot({
               })
             : undefined
         }
-        onClick={onActivate}
         onContextMenu={(event) => {
-          if (!item || !onContextAction) return;
+          if (!item || !onActivate) return;
           event.preventDefault();
-          onContextAction();
+          onActivate();
         }}
         onDragStart={(event) => {
           if (!item || !onDragStart) {
@@ -55,9 +59,38 @@ export function ItemSlot({
           }
           event.dataTransfer.effectAllowed = "move";
           event.dataTransfer.setData("text/plain", item.id);
+          if (emptyDragImageRef.current) {
+            event.dataTransfer.setDragImage(emptyDragImageRef.current, 0, 0);
+          }
+          setAnchor(null);
+          setDragPosition({ left: event.clientX, top: event.clientY });
           onDragStart();
         }}
-        onDragEnd={onDragEnd}
+        onDrag={(event) => {
+          if (!dragPosition || (event.clientX === 0 && event.clientY === 0)) {
+            return;
+          }
+          setDragPosition({ left: event.clientX, top: event.clientY });
+        }}
+        onDragEnd={() => {
+          setDragPosition(null);
+          onDragEnd?.();
+        }}
+        onDragOver={(event) => {
+          if (!onDrop) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+        }}
+        onDrop={(event) => {
+          if (!onDrop) return;
+          event.preventDefault();
+          event.stopPropagation();
+          onDrop();
+        }}
+        onPointerUp={(event) => {
+          if (event.button !== 0 || !onDrop) return;
+          onDrop();
+        }}
         onMouseEnter={(event) => {
           if (!item) return;
           const bounds = event.currentTarget.getBoundingClientRect();
@@ -94,6 +127,22 @@ export function ItemSlot({
           </span>
         )}
       </button>
+      <span
+        ref={emptyDragImageRef}
+        aria-hidden
+        className="pointer-events-none fixed size-px opacity-0"
+      />
+      {item && dragPosition &&
+        createPortal(
+          <div
+            aria-hidden
+            className="pointer-events-none fixed z-[100]"
+            style={{ left: dragPosition.left, top: dragPosition.top }}
+          >
+            <SpriteIcon spriteId={item.spriteId} scale={1} />
+          </div>,
+          document.body,
+        )}
       {item && anchor &&
         createPortal(
           <div

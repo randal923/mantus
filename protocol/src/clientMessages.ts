@@ -124,6 +124,14 @@ const ownedItemIntentSchema = z.object({
   revision: z.number().int().positive(),
 });
 
+export const itemContainerDestinationSchema = z
+  .object({
+    containerId: z.string().uuid(),
+    containerRevision: z.number().int().positive(),
+    slot: z.number().int().min(0).max(99),
+  })
+  .strict();
+
 /** Consumes one owned rune only after its revision and target are revalidated. */
 export const useRuneMessageSchema = ownedItemIntentSchema
   .extend({
@@ -140,21 +148,23 @@ export const equipItemMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
-/** Moves equipped gear into the currently equipped backpack. */
+/** Moves equipped gear into a bounded owned container slot or the backpack. */
 export const unequipItemMessageSchema = ownedItemIntentSchema
   .extend({
     type: z.literal("unequip-item"),
     slot: equipmentSlotSchema,
+    destination: itemContainerDestinationSchema.optional(),
   })
   .strict();
 
-/** Picks up a visible map instance; position prevents acting on stale view state. */
+/** Picks up a visible map instance into an optional bounded owned container slot. */
 export const pickupItemMessageSchema = z
   .object({
     type: z.literal("pickup-item"),
     itemId: z.string().min(1).max(128),
     revision: z.number().int().positive(),
     position: positionSchema,
+    destination: itemContainerDestinationSchema.optional(),
   })
   .strict();
 
@@ -197,12 +207,13 @@ export const rotateItemMessageSchema = ownedItemIntentSchema
   .extend({ type: z.literal("rotate-item") })
   .strict();
 
-/** Moves an owned item into an owned revisioned container; the server picks a slot. */
+/** Moves an owned item into one bounded slot of an owned revisioned container. */
 export const moveItemMessageSchema = ownedItemIntentSchema
   .extend({
     type: z.literal("move-item"),
     destinationContainerId: z.string().uuid(),
     destinationRevision: z.number().int().positive(),
+    destinationSlot: z.number().int().min(0).max(99),
     count: z.number().int().positive().max(100).optional(),
   })
   .strict();
@@ -271,6 +282,9 @@ export type CancelAttackMessage = z.infer<typeof cancelAttackMessageSchema>;
 export type SetFightModeMessage = z.infer<typeof setFightModeMessageSchema>;
 export type CastSpellMessage = z.infer<typeof castSpellMessageSchema>;
 export type UseRuneMessage = z.infer<typeof useRuneMessageSchema>;
+export type ItemContainerDestination = z.infer<
+  typeof itemContainerDestinationSchema
+>;
 export type EquipItemMessage = z.infer<typeof equipItemMessageSchema>;
 export type UnequipItemMessage = z.infer<typeof unequipItemMessageSchema>;
 export type PickupItemMessage = z.infer<typeof pickupItemMessageSchema>;

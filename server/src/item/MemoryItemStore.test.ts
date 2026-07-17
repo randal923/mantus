@@ -115,6 +115,7 @@ describe("MemoryItemStore", () => {
         1,
         POUCH_ID,
         1,
+        0,
       ),
       store.moveToContainer(
         CHARACTER_ID,
@@ -122,6 +123,7 @@ describe("MemoryItemStore", () => {
         1,
         POUCH_ID,
         1,
+        0,
       ),
     ]);
 
@@ -174,8 +176,91 @@ describe("MemoryItemStore", () => {
         1,
         POUCH_ID,
         1,
+        0,
       ),
     ).rejects.toThrow("cycle");
+  });
+
+  it("atomically swaps two occupied slots in the same container", async () => {
+    const store = new MemoryItemStore();
+    store.seed({
+      id: BACKPACK_ID,
+      typeId: 2854,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "equipment",
+        characterId: CHARACTER_ID,
+        slot: "backpack",
+      },
+    });
+    store.seed({
+      ...makeInventoryItem(),
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+    });
+    store.seed({
+      id: POUCH_ID,
+      typeId: 2853,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 1 },
+    });
+
+    await expect(
+      store.moveToContainer(
+        CHARACTER_ID,
+        ITEM_ID,
+        1,
+        BACKPACK_ID,
+        1,
+        1,
+      ),
+    ).resolves.toMatchObject({
+      after: [
+        { id: ITEM_ID, version: 2, location: { slot: 1 } },
+        { id: POUCH_ID, version: 2, location: { slot: 0 } },
+      ],
+    });
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: ITEM_ID,
+          location: expect.objectContaining({ slot: 1 }),
+        }),
+        expect.objectContaining({
+          id: POUCH_ID,
+          location: expect.objectContaining({ slot: 0 }),
+        }),
+      ]),
+    );
+  });
+
+  it("atomically swaps replacement equipment into the source slot", async () => {
+    const store = new MemoryItemStore();
+    store.seed(makeInventoryItem());
+    store.seed({
+      id: POUCH_ID,
+      typeId: 3273,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "equipment",
+        characterId: CHARACTER_ID,
+        slot: "weapon",
+      },
+    });
+
+    await expect(
+      store.equip(CHARACTER_ID, ITEM_ID, 1, "weapon"),
+    ).resolves.toMatchObject({
+      after: [
+        { id: ITEM_ID, location: { kind: "equipment", slot: "weapon" } },
+        { id: POUCH_ID, location: { kind: "inventory", slot: 0 } },
+      ],
+    });
   });
 
   it("atomically consumes a conjuring source and creates the result", async () => {

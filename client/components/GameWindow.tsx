@@ -26,6 +26,7 @@ import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
 import { ItemTextModal } from "./inventory/ItemTextModal";
+import type { ItemDragSource } from "./inventory/ItemDragSource";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
 
@@ -91,6 +92,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const joinedRef = useRef(false);
   const resumeCharacterIdRef = useRef<string | null>(null);
   const pendingRuneRef = useRef<InventoryItem | null>(null);
+  const itemDragRef = useRef<ItemDragSource | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [characters, setCharacters] = useState<
@@ -136,6 +138,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setInventoryOpen(false);
     setCharacterStatsOpen(false);
     setGameMenuOpen(false);
+    itemDragRef.current = null;
     setServerError(null);
     setConnectionAttempt((attempt) => attempt + 1);
   };
@@ -201,6 +204,20 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         cancelAttack: () => client?.cancelAttack(),
         pickupMapItem: (item, position) =>
           client?.pickupMapItem(item, position),
+        beginMapItemDrag: (item, position) => {
+          const source = { kind: "world", item, position } as const;
+          itemDragRef.current = source;
+        },
+        endItemDrag: () => {
+          itemDragRef.current = null;
+        },
+        dropDraggedItem: (position) => {
+          const source = itemDragRef.current;
+          if (source?.kind === "owned") {
+            client?.dropItem(source.item, position);
+          }
+          itemDragRef.current = null;
+        },
         autoWalk: (directions) => client?.autoWalk(directions),
         targetPosition: (position) => {
           const rune = pendingRuneRef.current;
@@ -589,12 +606,64 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   clientRef.current?.closeContainer(containerId)
                 }
                 onUseItem={(item) => clientRef.current?.useItem(item)}
-                onMove={(item, destination) =>
-                  clientRef.current?.moveItem(item, destination)
-                }
-                onDrop={(item) =>
-                  clientRef.current?.dropItem(item, ownCharacter.position)
-                }
+                onDragStart={(source) => {
+                  itemDragRef.current = source;
+                }}
+                onDragEnd={() => {
+                  itemDragRef.current = null;
+                }}
+                onDropInContainer={(destination, slot) => {
+                  const source = itemDragRef.current;
+                  if (!source) return;
+                  if (
+                    source.kind === "owned" &&
+                    source.location.kind === "container" &&
+                    source.location.containerId === destination.id &&
+                    source.location.slot === slot
+                  ) {
+                    itemDragRef.current = null;
+                    return;
+                  }
+                  const target = {
+                    containerId: destination.id,
+                    containerRevision: destination.revision,
+                    slot,
+                  };
+                  if (source.kind === "world") {
+                    clientRef.current?.pickupMapItem(
+                      source.item,
+                      source.position,
+                      target,
+                    );
+                  } else if (source.location.kind === "equipment") {
+                    clientRef.current?.unequipItem(
+                      source.item,
+                      source.location.slot,
+                      target,
+                    );
+                  } else {
+                    clientRef.current?.moveItem(
+                      source.item,
+                      destination,
+                      slot,
+                    );
+                  }
+                  itemDragRef.current = null;
+                }}
+                onDropInEquipment={(slot) => {
+                  const source = itemDragRef.current;
+                  if (
+                    source?.kind === "owned" &&
+                    source.item.equipmentSlot === slot &&
+                    !(
+                      source.location.kind === "equipment" &&
+                      source.location.slot === slot
+                    )
+                  ) {
+                    clientRef.current?.equipItem(source.item, slot);
+                  }
+                  itemDragRef.current = null;
+                }}
               />
             </div>
           )}

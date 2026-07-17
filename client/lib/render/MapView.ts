@@ -112,6 +112,27 @@ export class MapView {
       );
   }
 
+  createItemDragCanvas(
+    item: MapItemState,
+    position: Position,
+  ): HTMLCanvasElement {
+    const object = this.store.item(item.itemId);
+    const objects = this.tileItems(position.z, position.x, position.y).map(
+      (tileItem) => tileItem.object,
+    );
+    const pattern = getMapItemPattern(
+      object,
+      position.x,
+      position.y,
+      position.z,
+      {
+        south: objects.some((tileObject) => tileObject.flags.hookSouth),
+        east: objects.some((tileObject) => tileObject.flags.hookEast),
+      },
+    );
+    return this.store.bakeFrame(object, { ...pattern, phase: 0 });
+  }
+
   /** Interpolates visual elevation while a creature crosses a tile boundary. */
   elevationAt(z: number, x: number, y: number): number {
     const left = Math.floor(x);

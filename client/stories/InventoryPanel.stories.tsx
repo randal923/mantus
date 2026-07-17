@@ -25,20 +25,26 @@ const equipment: Equipment = {
 };
 
 const items = [
-  makeInventoryItem({
-    id: "00000000-0000-4000-8000-000000000003",
-    clientId: 3031,
-    spriteId: 7384,
-    name: "Gold Coin",
-    count: 100,
-  }),
-  makeInventoryItem({
-    id: "00000000-0000-4000-8000-000000000004",
-    clientId: 266,
-    spriteId: 4358,
-    name: "Health Potion",
-    count: 5,
-  }),
+  {
+    slot: 0,
+    item: makeInventoryItem({
+      id: "00000000-0000-4000-8000-000000000003",
+      clientId: 3031,
+      spriteId: 7384,
+      name: "Gold Coin",
+      count: 100,
+    }),
+  },
+  {
+    slot: 1,
+    item: makeInventoryItem({
+      id: "00000000-0000-4000-8000-000000000004",
+      clientId: 266,
+      spriteId: 4358,
+      name: "Health Potion",
+      count: 5,
+    }),
+  },
 ];
 
 const character: OwnCharacterState = {

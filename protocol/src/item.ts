@@ -56,6 +56,13 @@ export const inventoryItemSchema = z
   })
   .strict();
 
+export const inventorySlotEntrySchema = z
+  .object({
+    slot: z.number().int().min(0).max(99),
+    item: inventoryItemSchema,
+  })
+  .strict();
+
 const equipmentSchema = z
   .object({
     helmet: inventoryItemSchema.optional(),
@@ -77,14 +84,7 @@ export const containerStateSchema = z
     parentContainerId: z.string().uuid().nullable(),
     capacity: z.number().int().min(0).max(100),
     items: z
-      .array(
-        z
-          .object({
-            slot: z.number().int().min(0).max(99),
-            item: inventoryItemSchema,
-          })
-          .strict(),
-      )
+      .array(inventorySlotEntrySchema)
       .max(100),
   })
   .strict();
@@ -93,7 +93,7 @@ export const inventoryStateSchema = z
   .object({
     revision: z.number().int().nonnegative(),
     equipment: equipmentSchema,
-    items: z.array(inventoryItemSchema).max(100),
+    items: z.array(inventorySlotEntrySchema).max(100),
     gold: z.number().int().nonnegative(),
     platinum: z.number().int().nonnegative(),
     capacityUsed: z.number().int().nonnegative(),
@@ -107,5 +107,6 @@ export type EquipmentSlot = z.infer<typeof equipmentSlotSchema>;
 export type ItemAffix = z.infer<typeof itemAffixSchema>;
 export type ItemTooltipData = z.infer<typeof itemTooltipSchema>;
 export type InventoryItem = z.infer<typeof inventoryItemSchema>;
+export type InventorySlotEntry = z.infer<typeof inventorySlotEntrySchema>;
 export type ContainerState = z.infer<typeof containerStateSchema>;
 export type InventoryState = z.infer<typeof inventoryStateSchema>;

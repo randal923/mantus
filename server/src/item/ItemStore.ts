@@ -1,4 +1,8 @@
-import type { EquipmentSlot, Position } from "@tibia/protocol";
+import type {
+  EquipmentSlot,
+  ItemContainerDestination,
+  Position,
+} from "@tibia/protocol";
 import type { Item } from "./Item";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemMutation } from "./ItemMutation";
@@ -19,6 +23,7 @@ export interface ItemStore {
     itemId: string,
     expectedVersion: number,
     slot: EquipmentSlot,
+    destination?: ItemContainerDestination,
   ): Promise<ItemMutation>;
   pickup(
     characterId: string,
@@ -26,6 +31,7 @@ export interface ItemStore {
     expectedVersion: number,
     position: Position,
     source?: WorldItemSource,
+    destination?: ItemContainerDestination,
   ): Promise<ItemMutation>;
   drop(
     characterId: string,
@@ -51,6 +57,7 @@ export interface ItemStore {
     expectedVersion: number,
     destinationContainerId: string,
     destinationVersion: number,
+    destinationSlot: number,
     count?: number,
   ): Promise<ItemMutation>;
   writeText(

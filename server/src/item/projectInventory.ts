@@ -138,7 +138,14 @@ export function projectInventory(
   return {
     revision,
     equipment,
-    items: contents.map((item) => projectItem(item, catalog)),
+    items: contents.map((item) => ({
+      slot:
+        item.location.kind === "container" ||
+        item.location.kind === "inventory"
+          ? item.location.slot
+          : 0,
+      item: projectItem(item, catalog),
+    })),
     gold: countCurrency(3031),
     platinum: countCurrency(3035),
     capacityUsed: Math.ceil(usedWeight / 100),

@@ -1,6 +1,7 @@
 import type { Equipment, EquipmentSlotId } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { ItemSlot } from "./ItemSlot";
+import type { ItemDragSource } from "./ItemDragSource";
 
 const SLOT_HINT_SPRITES: Record<EquipmentSlotId, number> = {
   helmet: 7837,
@@ -24,9 +25,18 @@ const SLOT_GRID: (EquipmentSlotId | null)[][] = [
 interface EquipmentPaperdollProps {
   equipment: Equipment;
   onUnequip?: (item: NonNullable<Equipment[EquipmentSlotId]>, slot: EquipmentSlotId) => void;
+  onDragStart?(source: ItemDragSource): void;
+  onDragEnd?(): void;
+  onDrop?(slot: EquipmentSlotId): void;
 }
 
-export function EquipmentPaperdoll({ equipment, onUnequip }: EquipmentPaperdollProps) {
+export function EquipmentPaperdoll({
+  equipment,
+  onUnequip,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+}: EquipmentPaperdollProps) {
   const { t } = useAppTranslation();
 
   return (
@@ -53,6 +63,22 @@ export function EquipmentPaperdoll({ equipment, onUnequip }: EquipmentPaperdollP
                     onActivate={
                       equipment[slot] && onUnequip
                         ? () => onUnequip(equipment[slot]!, slot)
+                        : undefined
+                    }
+                    onDragStart={
+                      equipment[slot] && onDragStart
+                        ? () =>
+                            onDragStart({
+                              kind: "owned",
+                              item: equipment[slot]!,
+                              location: { kind: "equipment", slot },
+                            })
+                        : undefined
+                    }
+                    onDragEnd={onDragEnd}
+                    onDrop={
+                      onDrop
+                        ? () => onDrop(slot)
                         : undefined
                     }
                   />

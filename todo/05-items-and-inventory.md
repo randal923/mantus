@@ -68,10 +68,15 @@ is atomic.
   - [x] Persist and project the equipped backpack, pickup/drop, bounded stack
     merge/split, equipment, capacity/weight checks, and rotate transforms.
   - [x] Expose basic client controls: double-click map use,
-    Shift-double-click pickup, and right-click backpack drop-at-feet.
+    Shift-double-click pickup, right-click item use/open/equip, and drag owned
+    items onto visible map tiles.
   - [x] Project nested container windows and parent ancestry, support revisioned
     container-to-container drag/drop, readable/writeable items, rotate, and the
     pinned food/regeneration consume path.
+  - [x] Support Tibia-style ground, inventory, nested-container, and equipment
+    drag sources with explicit bounded destination slots. Empty-slot moves,
+    occupied container-slot swaps, equipment replacement, pickup, drop,
+    equip, and unequip remain server-authoritative and transactionally durable.
 - [ ] Implement doors, switches, fields, decay/transforms, beds, depots, and
   quest/world actions as typed server behaviors. Do not execute imported Lua.
 - [x] Keep inventory/equipment UI as projections of committed server

@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
-import type { EquipmentSlot, Position } from "@tibia/protocol";
+import type {
+  EquipmentSlot,
+  ItemContainerDestination,
+  Position,
+} from "@tibia/protocol";
 import type { Item } from "./Item";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemMutation } from "./ItemMutation";
@@ -58,23 +62,36 @@ export class MemoryItemStore implements ItemStore {
   ): Promise<ItemMutation> {
     const before = this.requireOwned(characterId, itemId, expectedVersion);
     if (
-      [...this.items.values()].some(
-        (item) =>
-          item.id !== itemId &&
-          item.location.kind === "equipment" &&
-          item.location.characterId === characterId &&
-          item.location.slot === slot,
-      )
+      before.location.kind !== "inventory" &&
+      before.location.kind !== "container"
     ) {
-      throw new Error("equipment slot is occupied");
+      throw new Error("item cannot be equipped from this location");
+    }
+    const occupied = [...this.items.values()].find(
+      (item) =>
+        item.id !== itemId &&
+        item.location.kind === "equipment" &&
+        item.location.characterId === characterId &&
+        item.location.slot === slot,
+    );
+    if (occupied && before.location.kind === "container") {
+      this.requireContainerPlacement(occupied.id, before.location.containerId);
     }
     const after = {
       ...before,
       version: before.version + 1,
       location: { kind: "equipment", characterId, slot } as const,
     };
+    const displaced = occupied
+      ? {
+          ...occupied,
+          version: occupied.version + 1,
+          location: before.location,
+        }
+      : undefined;
     this.items.set(itemId, after);
-    return { before, after: [after] };
+    if (displaced) this.items.set(displaced.id, displaced);
+    return { before, after: displaced ? [after, displaced] : [after] };
   }
 
   async unequip(
@@ -82,6 +99,7 @@ export class MemoryItemStore implements ItemStore {
     itemId: string,
     expectedVersion: number,
     slot: EquipmentSlot,
+    destination?: ItemContainerDestination,
   ): Promise<ItemMutation> {
     const before = this.requireOwned(characterId, itemId, expectedVersion);
     if (
@@ -89,6 +107,38 @@ export class MemoryItemStore implements ItemStore {
       before.location.slot !== slot
     ) {
       throw new Error("item is not equipped in slot");
+    }
+    if (destination) {
+      const container = this.requireOwned(
+        characterId,
+        destination.containerId,
+        destination.containerRevision,
+      );
+      if (destination.slot < 0 || destination.slot >= 100) {
+        throw new Error("container slot is out of range");
+      }
+      if (
+        [...this.items.values()].some(
+          (item) =>
+            item.location.kind === "container" &&
+            item.location.containerId === container.id &&
+            item.location.slot === destination.slot,
+        )
+      ) {
+        throw new Error("container slot is occupied");
+      }
+      this.requireContainerPlacement(before.id, container.id);
+      const after = {
+        ...before,
+        version: before.version + 1,
+        location: {
+          kind: "container",
+          containerId: container.id,
+          slot: destination.slot,
+        } as const,
+      };
+      this.items.set(itemId, after);
+      return { before, after: [after] };
     }
     const destinationSlot = [...this.items.values()].filter(
       (item) =>
@@ -114,6 +164,7 @@ export class MemoryItemStore implements ItemStore {
     _expectedVersion: number,
     _position: Position,
     _source?: WorldItemSource,
+    _destination?: ItemContainerDestination,
   ): Promise<ItemMutation> {
     return Promise.reject(new Error("memory pickup is not configured"));
   }
@@ -151,6 +202,7 @@ export class MemoryItemStore implements ItemStore {
     expectedVersion: number,
     destinationContainerId: string,
     destinationVersion: number,
+    destinationSlot: number,
     count?: number,
   ): Promise<ItemMutation> {
     const before = this.requireOwned(characterId, itemId, expectedVersion);
@@ -162,15 +214,13 @@ export class MemoryItemStore implements ItemStore {
     if (before.id === destination.id) {
       throw new Error("an item cannot contain itself");
     }
-    let parent: Item | undefined = destination;
-    for (let depth = 0; parent && depth < 8; depth++) {
-      if (parent.id === before.id) throw new Error("item container cycle detected");
-      parent =
-        parent.location.kind === "container" ||
-        parent.location.kind === "corpse"
-          ? this.items.get(parent.location.containerId)
-          : undefined;
+    if (
+      before.location.kind !== "inventory" &&
+      before.location.kind !== "container"
+    ) {
+      throw new Error("item cannot move from this location");
     }
+    this.requireContainerPlacement(before.id, destination.id);
     const movingCount = count ?? before.count;
     if (
       !Number.isInteger(movingCount) ||
@@ -179,20 +229,30 @@ export class MemoryItemStore implements ItemStore {
     ) {
       throw new Error("invalid move count");
     }
-    const occupiedSlots = new Set(
-      [...this.items.values()]
-        .flatMap((item) =>
-          (item.location.kind === "container" ||
-            item.location.kind === "corpse") &&
-          item.location.containerId === destination.id
-            ? [item.location.slot]
-            : [],
-        ),
+    if (!Number.isInteger(destinationSlot) || destinationSlot < 0 || destinationSlot >= 100) {
+      throw new Error("container slot is out of range");
+    }
+    if (
+      before.location.kind === "container" &&
+      before.location.containerId === destination.id &&
+      before.location.slot === destinationSlot
+    ) {
+      throw new Error("item is already in destination slot");
+    }
+    const occupied = [...this.items.values()].find(
+      (item) =>
+        item.id !== before.id &&
+        (item.location.kind === "container" ||
+          item.location.kind === "corpse") &&
+        item.location.containerId === destination.id &&
+        item.location.slot === destinationSlot,
     );
-    const slot = Array.from({ length: 100 }, (_, index) => index).find(
-      (index) => !occupiedSlots.has(index),
-    );
-    if (slot === undefined) throw new Error("container is full");
+    if (occupied && movingCount !== before.count) {
+      throw new Error("cannot split into an occupied slot");
+    }
+    if (occupied && before.location.kind === "container") {
+      this.requireContainerPlacement(occupied.id, before.location.containerId);
+    }
     if (movingCount === before.count) {
       const after = {
         ...before,
@@ -200,11 +260,18 @@ export class MemoryItemStore implements ItemStore {
         location: {
           kind: "container",
           containerId: destination.id,
-          slot,
+          slot: destinationSlot,
         } as const,
       };
       this.items.set(after.id, after);
-      return { before, after: [after] };
+      if (!occupied) return { before, after: [after] };
+      const displaced = {
+        ...occupied,
+        version: occupied.version + 1,
+        location: before.location,
+      };
+      this.items.set(displaced.id, displaced);
+      return { before, after: [after, displaced] };
     }
     const sourceAfter = {
       ...before,
@@ -220,7 +287,7 @@ export class MemoryItemStore implements ItemStore {
       location: {
         kind: "container",
         containerId: destination.id,
-        slot,
+        slot: destinationSlot,
       },
     };
     this.items.set(sourceAfter.id, sourceAfter);
@@ -470,5 +537,21 @@ export class MemoryItemStore implements ItemStore {
       root = parent;
     }
     throw new Error("item is not owned by character");
+  }
+
+  private requireContainerPlacement(
+    itemId: string,
+    destinationContainerId: string,
+  ): void {
+    let parent = this.items.get(destinationContainerId);
+    for (let depth = 0; parent && depth < 8; depth++) {
+      if (parent.id === itemId) throw new Error("item container cycle detected");
+      parent =
+        parent.location.kind === "container" ||
+        parent.location.kind === "corpse"
+          ? this.items.get(parent.location.containerId)
+          : undefined;
+    }
+    if (parent) throw new Error("item container nesting exceeds 8 levels");
   }
 }

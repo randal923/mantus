@@ -5,6 +5,32 @@ const ITEM_ID = "6dc6d063-1c32-4b4b-bf90-279ef9c5d403";
 const CONTAINER_ID = "e7e85634-b626-47d1-b467-5383e292cb81";
 
 describe("item intent schemas", () => {
+  it("accepts one explicit bounded container destination", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "pickup-item",
+        itemId: "map:100:100:7:1",
+        revision: 1,
+        position: { x: 100, y: 100, z: 7 },
+        destination: {
+          containerId: CONTAINER_ID,
+          containerRevision: 2,
+          slot: 3,
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move-item",
+        itemId: ITEM_ID,
+        revision: 1,
+        destinationContainerId: CONTAINER_ID,
+        destinationRevision: 2,
+        destinationSlot: 3,
+      }).success,
+    ).toBe(true);
+  });
+
   it.each([0, -1, 100, 101])("rejects invalid split count %s", (count) => {
     expect(
       clientMessageSchema.safeParse({
@@ -28,7 +54,7 @@ describe("item intent schemas", () => {
     ).toBe(false);
   });
 
-  it("rejects raw destination indexes and invalid item ids", () => {
+  it("bounds destination slots and rejects invalid item ids", () => {
     expect(
       clientMessageSchema.safeParse({
         type: "move-item",
@@ -36,7 +62,7 @@ describe("item intent schemas", () => {
         revision: 1,
         destinationContainerId: CONTAINER_ID,
         destinationRevision: 1,
-        destinationSlot: 0,
+        destinationSlot: 100,
       }).success,
     ).toBe(false);
     expect(
@@ -66,6 +92,7 @@ describe("item intent schemas", () => {
         revision: 1,
         destinationContainerId: CONTAINER_ID,
         destinationRevision: 1,
+        destinationSlot: 0,
         count: 101,
       }).success,
     ).toBe(false);

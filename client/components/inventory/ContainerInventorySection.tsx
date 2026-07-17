@@ -7,23 +7,20 @@ import type {
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { CloseButton } from "../ui/CloseButton";
 import { ItemSlot } from "./ItemSlot";
+import type { ItemDragSource } from "./ItemDragSource";
 
 interface ContainerInventorySectionProps {
   state: ContainerState;
-  draggedItem: InventoryItem | null;
   onActivate(item: InventoryItem): void;
-  onContextAction?(item: InventoryItem): void;
-  onDragStart(item: InventoryItem): void;
+  onDragStart(source: ItemDragSource): void;
   onDragEnd(): void;
-  onDrop(item: InventoryItem, destination: InventoryItem): void;
+  onDrop(destination: InventoryItem, slot: number): void;
   onClose(containerId: string): void;
 }
 
 export function ContainerInventorySection({
   state,
-  draggedItem,
   onActivate,
-  onContextAction,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -35,16 +32,6 @@ export function ContainerInventorySection({
   return (
     <section
       aria-label={state.container.name}
-      onDragOver={(event) => {
-        if (!draggedItem) return;
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-      }}
-      onDrop={(event) => {
-        event.preventDefault();
-        if (!draggedItem) return;
-        onDrop(draggedItem, state.container);
-      }}
       className="rounded-xl border border-ui-gold/15 bg-black/20 p-2.5"
     >
       <header className="mb-2 flex items-center gap-2 border-b border-ui-gold/10 pb-2">
@@ -69,13 +56,22 @@ export function ContainerInventorySection({
               key={item?.id ?? `empty-${state.container.id}-${slot}`}
               item={item}
               onActivate={item ? () => onActivate(item) : undefined}
-              onContextAction={
-                item && onContextAction
-                  ? () => onContextAction(item)
+              onDragStart={
+                item
+                  ? () =>
+                      onDragStart({
+                        kind: "owned",
+                        item,
+                        location: {
+                          kind: "container",
+                          containerId: state.container.id,
+                          slot,
+                        },
+                      })
                   : undefined
               }
-              onDragStart={item ? () => onDragStart(item) : undefined}
               onDragEnd={onDragEnd}
+              onDrop={() => onDrop(state.container, slot)}
             />
           );
         })}

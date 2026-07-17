@@ -33,6 +33,9 @@ interface WorldRendererActions {
   attackTarget(creatureId: string): void;
   cancelAttack(): void;
   pickupMapItem(item: MapItemState, position: Position): void;
+  beginMapItemDrag(item: MapItemState, position: Position): void;
+  endItemDrag(): void;
+  dropDraggedItem(position: Position): void;
   autoWalk(directions: ReadonlyArray<Direction>): void;
   targetPosition(position: Position): void;
 }
@@ -58,6 +61,17 @@ export class WorldRenderer {
   private ownPosition: Position | null = null;
   private attackTargetId: string | null = null;
   private cameraFallback = { x: 0, y: 0 };
+  private mapDragCandidate: {
+    item: MapItemState;
+    position: Position;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    active: boolean;
+  } | null = null;
+  private mapDragIcon: HTMLCanvasElement | null = null;
+  private previousBodyCursor = "";
+  private suppressNextMapClick = false;
   private destroyed = false;
 
   constructor(private readonly actions?: WorldRendererActions) {}
@@ -73,6 +87,12 @@ export class WorldRenderer {
       return;
     }
     host.appendChild(this.app.canvas);
+    this.app.canvas.addEventListener("pointerdown", this.onMapPointerDown);
+    window.addEventListener("pointermove", this.onMapPointerMove);
+    window.addEventListener("pointerup", this.onMapPointerUp);
+    window.addEventListener("pointercancel", this.onMapPointerCancel);
+    this.app.canvas.addEventListener("dragover", this.onMapDragOver);
+    this.app.canvas.addEventListener("drop", this.onMapDrop);
     this.app.canvas.addEventListener("click", this.onMapClick);
     this.app.canvas.addEventListener("dblclick", this.onMapDoubleClick);
     this.app.canvas.addEventListener("contextmenu", this.onMapContextMenu);
@@ -210,6 +230,13 @@ export class WorldRenderer {
 
   destroy(): void {
     this.destroyed = true;
+    this.hideMapDragIcon();
+    this.app.canvas.removeEventListener("pointerdown", this.onMapPointerDown);
+    window.removeEventListener("pointermove", this.onMapPointerMove);
+    window.removeEventListener("pointerup", this.onMapPointerUp);
+    window.removeEventListener("pointercancel", this.onMapPointerCancel);
+    this.app.canvas.removeEventListener("dragover", this.onMapDragOver);
+    this.app.canvas.removeEventListener("drop", this.onMapDrop);
     this.app.canvas.removeEventListener("click", this.onMapClick);
     this.app.canvas.removeEventListener("dblclick", this.onMapDoubleClick);
     this.app.canvas.removeEventListener("contextmenu", this.onMapContextMenu);
@@ -343,7 +370,85 @@ export class WorldRenderer {
     this.actions.useMap(position);
   };
 
+  private readonly onMapPointerDown = (event: PointerEvent): void => {
+    this.mapDragCandidate = null;
+    if (event.button !== 0 || !this.actions || !this.ownPosition) return;
+    const position = this.mapPositionForEvent(event);
+    if (!position) return;
+    const item = this.mapView.topServerItem(position);
+    if (!item) return;
+    this.mapDragCandidate = {
+      item,
+      position,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      active: false,
+    };
+  };
+
+  private readonly onMapPointerMove = (event: PointerEvent): void => {
+    const candidate = this.mapDragCandidate;
+    if (
+      !this.actions ||
+      !candidate ||
+      candidate.pointerId !== event.pointerId
+    ) {
+      return;
+    }
+    if (candidate.active) {
+      event.preventDefault();
+      this.positionMapDragIcon(event.clientX, event.clientY);
+      return;
+    }
+    if (
+      Math.hypot(
+        event.clientX - candidate.startX,
+        event.clientY - candidate.startY,
+      ) < 4
+    ) return;
+    candidate.active = true;
+    event.preventDefault();
+    this.actions.beginMapItemDrag(candidate.item, candidate.position);
+    this.showMapDragIcon(candidate.item, candidate.position);
+    this.positionMapDragIcon(event.clientX, event.clientY);
+  };
+
+  private readonly onMapPointerUp = (event: PointerEvent): void => {
+    if (this.mapDragCandidate?.pointerId !== event.pointerId) return;
+    if (this.mapDragCandidate.active) {
+      this.suppressNextMapClick = event.target === this.app.canvas;
+      this.actions?.endItemDrag();
+    }
+    this.mapDragCandidate = null;
+    this.hideMapDragIcon();
+  };
+
+  private readonly onMapPointerCancel = (event: PointerEvent): void => {
+    if (this.mapDragCandidate?.pointerId !== event.pointerId) return;
+    if (this.mapDragCandidate.active) this.actions?.endItemDrag();
+    this.mapDragCandidate = null;
+    this.hideMapDragIcon();
+  };
+
+  private readonly onMapDragOver = (event: DragEvent): void => {
+    if (!this.actions) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  };
+
+  private readonly onMapDrop = (event: DragEvent): void => {
+    event.preventDefault();
+    if (!this.actions) return;
+    const position = this.mapPositionForEvent(event);
+    if (position) this.actions.dropDraggedItem(position);
+  };
+
   private readonly onMapClick = (event: MouseEvent): void => {
+    if (this.suppressNextMapClick) {
+      this.suppressNextMapClick = false;
+      return;
+    }
     if (!this.actions || !this.ownPosition) return;
     const point = this.canvasPoint(event);
     if (!point) return;
@@ -399,6 +504,52 @@ export class WorldRenderer {
       x: (event.clientX - bounds.left) * (this.app.screen.width / bounds.width),
       y: (event.clientY - bounds.top) * (this.app.screen.height / bounds.height),
     };
+  }
+
+  private mapPositionForEvent(event: MouseEvent): Position | null {
+    if (!this.ownPosition) return null;
+    const point = this.canvasPoint(event);
+    if (!point) return null;
+    return getMapPointerPosition(
+      point.x,
+      point.y,
+      this.world.position.x,
+      this.world.position.y,
+      ZOOM,
+      TILE_SIZE,
+      this.ownPosition.z,
+    );
+  }
+
+  private showMapDragIcon(item: MapItemState, position: Position): void {
+    this.hideMapDragIcon();
+    const icon = this.mapView.createItemDragCanvas(item, position);
+    const longestSide = Math.max(icon.width, icon.height);
+    icon.style.position = "fixed";
+    icon.style.zIndex = "100";
+    icon.style.pointerEvents = "none";
+    icon.style.imageRendering = "pixelated";
+    icon.style.width = `${(icon.width / longestSide) * TILE_SIZE}px`;
+    icon.style.height = `${(icon.height / longestSide) * TILE_SIZE}px`;
+    icon.setAttribute("aria-hidden", "true");
+    document.body.appendChild(icon);
+    this.mapDragIcon = icon;
+    this.previousBodyCursor = document.body.style.cursor;
+    document.body.style.cursor = "crosshair";
+  }
+
+  private positionMapDragIcon(clientX: number, clientY: number): void {
+    if (!this.mapDragIcon) return;
+    this.mapDragIcon.style.left = `${clientX}px`;
+    this.mapDragIcon.style.top = `${clientY}px`;
+  }
+
+  private hideMapDragIcon(): void {
+    if (!this.mapDragIcon) return;
+    this.mapDragIcon.remove();
+    this.mapDragIcon = null;
+    document.body.style.cursor = this.previousBodyCursor;
+    this.previousBodyCursor = "";
   }
 
   private creatureIdAt(screenX: number, screenY: number): string | null {

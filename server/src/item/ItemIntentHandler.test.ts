@@ -82,6 +82,7 @@ describe("ItemIntentHandler", () => {
       revision: 1,
       destinationContainerId: BACKPACK_ID,
       destinationRevision: 1,
+      destinationSlot: 1,
     });
     await handler.load(CHARACTER_ID, 400);
     handler.applyResolvedOutcomes(1_000);
@@ -90,7 +91,10 @@ describe("ItemIntentHandler", () => {
       type: "inventory-updated",
       inventory: {
         items: expect.arrayContaining([
-          expect.objectContaining({ id: ITEM_ID, revision: 2 }),
+          expect.objectContaining({
+            slot: 1,
+            item: expect.objectContaining({ id: ITEM_ID, revision: 2 }),
+          }),
         ]),
         containers: [
           expect.objectContaining({
@@ -167,6 +171,7 @@ describe("ItemIntentHandler", () => {
       revision: 1,
       destinationContainerId: BACKPACK_ID,
       destinationRevision: 1,
+      destinationSlot: 1,
     });
     handler.detach(CHARACTER_ID);
     session.playerId = null;

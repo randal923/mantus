@@ -441,7 +441,9 @@ export class ItemIntentHandler {
       if (
         !destination ||
         destination.version !== intent.destinationRevision ||
-        this.catalog.require(destination.typeId).containerCapacity === undefined
+        this.catalog.require(destination.typeId).containerCapacity === undefined ||
+        intent.destinationSlot >=
+          (this.catalog.require(destination.typeId).containerCapacity ?? 0)
       ) {
         session.sendError("item-action-failed");
         return;
@@ -450,6 +452,23 @@ export class ItemIntentHandler {
       if (
         intent.count !== undefined &&
         (!type.stackable || intent.count > item!.count)
+      ) {
+        session.sendError("item-action-failed");
+        return;
+      }
+    }
+    if (
+      (intent.type === "pickup-item" || intent.type === "unequip-item") &&
+      intent.destination
+    ) {
+      const destination = cache.items.find(
+        (candidate) => candidate.id === intent.destination!.containerId,
+      );
+      if (
+        !destination ||
+        destination.version !== intent.destination.containerRevision ||
+        intent.destination.slot >=
+          (this.catalog.require(destination.typeId).containerCapacity ?? 0)
       ) {
         session.sendError("item-action-failed");
         return;
@@ -522,6 +541,7 @@ export class ItemIntentHandler {
           intent.itemId,
           intent.revision,
           intent.slot,
+          intent.destination,
         );
       case "pickup-item":
         return this.store.pickup(
@@ -532,6 +552,7 @@ export class ItemIntentHandler {
           this.world
             .getMapItems(intent.position)
             .find((candidate) => candidate.instanceId === intent.itemId)?.source,
+          intent.destination,
         );
       case "drop-item":
         return this.store.drop(
@@ -557,6 +578,7 @@ export class ItemIntentHandler {
           intent.revision,
           intent.destinationContainerId,
           intent.destinationRevision,
+          intent.destinationSlot,
           intent.count,
         );
       case "write-item":
