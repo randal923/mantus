@@ -10,6 +10,7 @@ COPY protocol/package.json protocol/
 RUN yarn install --frozen-lockfile --production && yarn cache clean
 
 COPY protocol protocol
+COPY content content
 COPY server server
 
 EXPOSE 4000
