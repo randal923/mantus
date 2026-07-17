@@ -38,9 +38,13 @@ type ItemIntent = Extract<
       | "split-stack"
       | "rotate-item"
       | "move-item"
+      | "move-map-item"
       | "write-item";
   }
 >;
+
+/** Furthest tile a map item may be thrown to, in tiles from the player. */
+const THROW_RANGE = 7;
 
 function isNear(left: Position, right: Position): boolean {
   return (
@@ -361,10 +365,14 @@ export class ItemIntentHandler {
       return;
     }
     const item =
-      intent.type === "pickup-item"
+      intent.type === "pickup-item" || intent.type === "move-map-item"
         ? undefined
         : cache.items.find((candidate) => candidate.id === intent.itemId);
-    if (intent.type !== "pickup-item" && !item) {
+    if (
+      intent.type !== "pickup-item" &&
+      intent.type !== "move-map-item" &&
+      !item
+    ) {
       session.sendError("item-action-failed");
       return;
     }
@@ -507,6 +515,25 @@ export class ItemIntentHandler {
         return;
       }
     }
+    if (intent.type === "move-map-item") {
+      const visible = this.world
+        .getMapItems(intent.fromPosition)
+        .find((candidate) => candidate.instanceId === intent.itemId);
+      if (
+        !isNear(player.position, intent.fromPosition) ||
+        !visible ||
+        (visible.revision ?? 1) !== intent.revision ||
+        intent.toPosition.z !== player.position.z ||
+        Math.max(
+          Math.abs(intent.toPosition.x - player.position.x),
+          Math.abs(intent.toPosition.y - player.position.y),
+        ) > THROW_RANGE ||
+        !this.world.getTile(intent.toPosition)
+      ) {
+        session.sendError("item-action-failed");
+        return;
+      }
+    }
     const operation = this.operationFor(playerId, intent, item);
     if (!operation) {
       session.sendError("item-action-failed");
@@ -561,6 +588,18 @@ export class ItemIntentHandler {
           intent.revision,
           intent.position,
           intent.count,
+        );
+      case "move-map-item":
+        return this.store.moveWorldItem(
+          characterId,
+          intent.itemId,
+          intent.revision,
+          intent.fromPosition,
+          intent.toPosition,
+          this.world
+            .getMapItems(intent.fromPosition)
+            .find((candidate) => candidate.instanceId === intent.itemId)
+            ?.source,
         );
       case "split-stack":
         return this.store.split(

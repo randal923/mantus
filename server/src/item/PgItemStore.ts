@@ -48,6 +48,23 @@ interface CharacterItemRow {
   soul: number;
 }
 
+interface MoveAncestryEntry {
+  originId: string;
+  id: string;
+  characterId: string | null;
+  locationType: string;
+  depth: number;
+}
+
+interface MoveReadState {
+  characterCount: number;
+  items: ItemRow[];
+  slotTarget: ItemRow | null;
+  ancestry: MoveAncestryEntry[];
+  itemDepth: number | null;
+  ownedCount: number | null;
+}
+
 const ITEM_COLUMNS = `
   id, item_type_id, count, attributes, version, location_type,
   character_id, container_id, slot_index, equipment_slot,
@@ -642,6 +659,149 @@ export class PgItemStore implements ItemStore {
     });
   }
 
+  moveWorldItem(
+    characterId: string,
+    itemReference: string,
+    expectedVersion: number,
+    fromPosition: Position,
+    toPosition: Position,
+    source?: WorldItemSource,
+  ): Promise<ItemMutation> {
+    return this.transaction(async (client) => {
+      const row = await this.lockOrMaterializeWorldItem(
+        client,
+        itemReference,
+        source,
+      );
+      this.requireVersion(row, expectedVersion);
+      if (
+        row.location_type !== "world" ||
+        row.world_x !== fromPosition.x ||
+        row.world_y !== fromPosition.y ||
+        row.world_z !== fromPosition.z
+      ) {
+        throw new Error("item is not at the expected position");
+      }
+      if (samePosition(fromPosition, toPosition)) {
+        throw new Error("item is already on the destination tile");
+      }
+      const type = this.catalog.require(row.item_type_id);
+      if (!type.movable) throw new Error("item is not movable");
+      const before = itemFromRow(row);
+      const mergeTarget = type.stackable
+        ? await this.lockWorldMergeTarget(client, toPosition, row)
+        : undefined;
+      if (mergeTarget && row.seed_key) {
+        await client.query("DELETE FROM items WHERE id = $1", [mergeTarget.id]);
+        const result = await client.query<ItemRow>(
+          `WITH moved AS (
+             UPDATE items
+             SET count = count + $2, world_x = $3, world_y = $4,
+                 world_z = $5, world_stack_index = $6,
+                 version = version + 1, updated_at = now()
+             WHERE id = $1
+             RETURNING ${ITEM_COLUMNS}
+           ), audit_merge AS (
+             INSERT INTO audit_log(event_type, character_id, item_id, details)
+             SELECT 'item-merged', $7, moved.id,
+               jsonb_build_object(
+                 'sourceItemId', $8::text, 'movedCount', $2::integer,
+                 'sourceRemaining', 0, 'resultCount', moved.count
+               )
+             FROM moved
+           ), audit_transfer AS (
+             INSERT INTO audit_log(event_type, character_id, item_id, details)
+             SELECT 'item-transferred', $7, moved.id,
+               jsonb_build_object(
+                 'from', $9::jsonb,
+                 'to', jsonb_build_object(
+                   'kind', 'world', 'position', $10::jsonb,
+                   'stackIndex', $6::integer
+                 ),
+                 'count', moved.count
+               )
+             FROM moved
+           )
+           SELECT ${ITEM_COLUMNS} FROM moved`,
+          [
+            row.id,
+            mergeTarget.count,
+            toPosition.x,
+            toPosition.y,
+            toPosition.z,
+            mergeTarget.world_stack_index,
+            characterId,
+            mergeTarget.id,
+            JSON.stringify(before.location),
+            JSON.stringify(toPosition),
+          ],
+        );
+        const after = this.requireReturnedItem(result.rows[0]);
+        return { before, after: [after], removedItemIds: [mergeTarget.id] };
+      }
+      if (mergeTarget) {
+        const result = await client.query<ItemRow>(
+          `WITH merged AS (
+             UPDATE items
+             SET count = count + $2, version = version + 1, updated_at = now()
+             WHERE id = $1
+             RETURNING ${ITEM_COLUMNS}
+           ), removed AS (
+             DELETE FROM items WHERE id = $3
+           ), audit AS (
+             INSERT INTO audit_log(event_type, character_id, item_id, details)
+             SELECT 'item-merged', $4, merged.id,
+               jsonb_build_object(
+                 'sourceItemId', $3::text, 'movedCount', $2::integer,
+                 'sourceRemaining', 0, 'resultCount', merged.count
+               )
+             FROM merged
+           )
+           SELECT ${ITEM_COLUMNS} FROM merged`,
+          [mergeTarget.id, row.count, row.id, characterId],
+        );
+        const merged = this.requireReturnedItem(result.rows[0]);
+        return { before, after: [merged], removedItemIds: [row.id] };
+      }
+      const stackIndex = await this.firstWorldSlot(client, toPosition);
+      const result = await client.query<ItemRow>(
+        `WITH moved AS (
+           UPDATE items
+           SET world_x = $2, world_y = $3, world_z = $4,
+               world_stack_index = $5, version = version + 1,
+               updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}
+         ), audit AS (
+           INSERT INTO audit_log(event_type, character_id, item_id, details)
+           SELECT 'item-transferred', $6, moved.id,
+             jsonb_build_object(
+               'from', $7::jsonb,
+               'to', jsonb_build_object(
+                 'kind', 'world', 'position', $8::jsonb,
+                 'stackIndex', $5::integer
+               ),
+               'count', moved.count
+             )
+           FROM moved
+         )
+         SELECT ${ITEM_COLUMNS} FROM moved`,
+        [
+          row.id,
+          toPosition.x,
+          toPosition.y,
+          toPosition.z,
+          stackIndex,
+          characterId,
+          JSON.stringify(before.location),
+          JSON.stringify(toPosition),
+        ],
+      );
+      const after = this.requireReturnedItem(result.rows[0]);
+      return { before, after: [after] };
+    });
+  }
+
   split(
     characterId: string,
     itemId: string,
@@ -747,17 +907,22 @@ export class PgItemStore implements ItemStore {
     requestedCount?: number,
   ): Promise<ItemMutation> {
     return this.transaction(async (client) => {
-      await this.lockCharacter(client, characterId);
-      const locked = await this.lockItems(
+      const read = await this.readMoveState(
         client,
-        [itemId, destinationContainerId],
+        characterId,
+        itemId,
+        destinationContainerId,
+        destinationSlot,
+        requestedCount !== undefined,
       );
-      const row = this.requireRow(locked.get(itemId));
-      const destination = this.requireRow(locked.get(destinationContainerId));
+      if (read.characterCount < 1) throw new Error("character not found");
+      const rowsById = new Map(read.items.map((item) => [item.id, item]));
+      const row = this.requireRow(rowsById.get(itemId));
+      const destination = this.requireRow(rowsById.get(destinationContainerId));
       this.requireVersion(row, expectedVersion);
       this.requireVersion(destination, destinationVersion);
-      await this.requireOwned(client, row.id, characterId);
-      await this.requireOwned(client, destination.id, characterId);
+      this.requireOwnedInAncestry(read.ancestry, row.id, characterId);
+      this.requireOwnedInAncestry(read.ancestry, destination.id, characterId);
       if (
         row.location_type !== "inventory" &&
         row.location_type !== "container"
@@ -789,8 +954,8 @@ export class PgItemStore implements ItemStore {
       ) {
         throw new Error("invalid container move count");
       }
-      if (count < row.count) {
-        await this.requireOwnedItemSpace(client, characterId);
+      if (count < row.count && (read.ownedCount ?? 0) >= 500) {
+        throw new Error("character has excessive items");
       }
       if (
         row.location_type === "container" &&
@@ -799,13 +964,14 @@ export class PgItemStore implements ItemStore {
       ) {
         throw new Error("item is already in destination slot");
       }
-      await this.requireContainerPlacement(client, row.id, destination.id);
-      const before = itemFromRow(row);
-      const slotTarget = await this.lockContainerSlot(
-        client,
+      this.requirePlacementInAncestry(
+        read.ancestry,
+        row.id,
         destination.id,
-        destinationSlot,
+        read.itemDepth,
       );
+      const before = itemFromRow(row);
+      const slotTarget = read.slotTarget ?? undefined;
       const mergeTarget = type.stackable
         ? this.canMergeRows(row, slotTarget, count)
           ? slotTarget
@@ -882,117 +1048,200 @@ export class PgItemStore implements ItemStore {
             mergeTarget.id,
           ]);
           const result = await client.query<ItemRow>(
-            `UPDATE items
-             SET count = count + $2, location_type = 'container',
-                 character_id = null, equipment_slot = null,
-                 container_id = $3, slot_index = $4,
-                 version = version + 1, updated_at = now()
-             WHERE id = $1
-             RETURNING ${ITEM_COLUMNS}`,
+            `WITH moved AS (
+               UPDATE items
+               SET count = count + $2, location_type = 'container',
+                   character_id = null, equipment_slot = null,
+                   container_id = $3, slot_index = $4,
+                   version = version + 1, updated_at = now()
+               WHERE id = $1
+               RETURNING ${ITEM_COLUMNS}
+             ), audit_merge AS (
+               INSERT INTO audit_log(event_type, character_id, item_id, details)
+               SELECT 'item-merged', $5, moved.id,
+                 jsonb_build_object(
+                   'sourceItemId', $6::text, 'movedCount', $2::integer,
+                   'sourceRemaining', 0, 'resultCount', moved.count
+                 )
+               FROM moved
+             ), audit_transfer AS (
+               INSERT INTO audit_log(event_type, character_id, item_id, details)
+               SELECT 'item-transferred', $5, moved.id,
+                 jsonb_build_object(
+                   'from', $7::jsonb,
+                   'to', jsonb_build_object(
+                     'kind', 'container', 'containerId', $3::text,
+                     'slot', $4::integer
+                   ),
+                   'count', moved.count
+                 )
+               FROM moved
+             )
+             SELECT ${ITEM_COLUMNS} FROM moved`,
             [
               row.id,
               mergeTarget.count,
               destination.id,
               mergeTarget.slot_index,
+              characterId,
+              mergeTarget.id,
+              JSON.stringify(before.location),
             ],
           );
           const after = this.requireReturnedItem(result.rows[0]);
-          await this.auditMerge(
-            client,
-            characterId,
-            after,
-            mergeTarget.id,
-            mergeTarget.count,
-            0,
-          );
-          await this.auditTransfer(client, characterId, before, after);
           return {
             before,
             after: [after],
             removedItemIds: [mergeTarget.id],
           };
         }
-        const mergedResult = await client.query<ItemRow>(
-          `UPDATE items
-           SET count = count + $2, version = version + 1, updated_at = now()
-           WHERE id = $1
-           RETURNING ${ITEM_COLUMNS}`,
-          [mergeTarget.id, count],
-        );
-        const merged = this.requireReturnedItem(mergedResult.rows[0]);
         if (count === row.count) {
-          await client.query("DELETE FROM items WHERE id = $1", [row.id]);
-          await this.auditMerge(
-            client,
-            characterId,
-            merged,
-            row.id,
-            count,
-            0,
+          const result = await client.query<ItemRow>(
+            `WITH merged AS (
+               UPDATE items
+               SET count = count + $2, version = version + 1, updated_at = now()
+               WHERE id = $1
+               RETURNING ${ITEM_COLUMNS}
+             ), removed AS (
+               DELETE FROM items WHERE id = $3
+             ), audit AS (
+               INSERT INTO audit_log(event_type, character_id, item_id, details)
+               SELECT 'item-merged', $4, merged.id,
+                 jsonb_build_object(
+                   'sourceItemId', $3::text, 'movedCount', $2::integer,
+                   'sourceRemaining', 0, 'resultCount', merged.count
+                 )
+               FROM merged
+             )
+             SELECT ${ITEM_COLUMNS} FROM merged`,
+            [mergeTarget.id, count, row.id, characterId],
           );
+          const merged = this.requireReturnedItem(result.rows[0]);
           return {
             before,
             after: [merged],
             removedItemIds: [row.id],
           };
         }
-        const sourceResult = await client.query<ItemRow>(
-          `UPDATE items
-           SET count = count - $2, version = version + 1, updated_at = now()
-           WHERE id = $1
-           RETURNING ${ITEM_COLUMNS}`,
-          [row.id, count],
+        const result = await client.query<{
+          merged: ItemRow | null;
+          source: ItemRow | null;
+        }>(
+          `WITH merged AS (
+             UPDATE items
+             SET count = count + $2, version = version + 1, updated_at = now()
+             WHERE id = $1
+             RETURNING ${ITEM_COLUMNS}
+           ), source AS (
+             UPDATE items
+             SET count = count - $2, version = version + 1, updated_at = now()
+             WHERE id = $3
+             RETURNING ${ITEM_COLUMNS}
+           ), audit AS (
+             INSERT INTO audit_log(event_type, character_id, item_id, details)
+             SELECT 'item-merged', $4, merged.id,
+               jsonb_build_object(
+                 'sourceItemId', $3::text, 'movedCount', $2::integer,
+                 'sourceRemaining', source.count, 'resultCount', merged.count
+               )
+             FROM merged, source
+           )
+           SELECT
+             (SELECT row_to_json(merged) FROM merged) AS merged,
+             (SELECT row_to_json(source) FROM source) AS source`,
+          [mergeTarget.id, count, row.id, characterId],
         );
-        const sourceAfter = this.requireReturnedItem(sourceResult.rows[0]);
-        await this.auditMerge(
-          client,
-          characterId,
-          merged,
-          row.id,
-          count,
-          sourceAfter.count,
+        const merged = this.requireReturnedItem(
+          result.rows[0]?.merged ?? undefined,
+        );
+        const sourceAfter = this.requireReturnedItem(
+          result.rows[0]?.source ?? undefined,
         );
         return { before, after: [sourceAfter, merged] };
       }
       if (count === row.count) {
         const result = await client.query<ItemRow>(
-          `UPDATE items
-           SET location_type = 'container', character_id = null,
-               equipment_slot = null, container_id = $2, slot_index = $3,
-               version = version + 1, updated_at = now()
-           WHERE id = $1
-           RETURNING ${ITEM_COLUMNS}`,
-          [row.id, destination.id, destinationSlot],
+          `WITH moved AS (
+             UPDATE items
+             SET location_type = 'container', character_id = null,
+                 equipment_slot = null, container_id = $2, slot_index = $3,
+                 version = version + 1, updated_at = now()
+             WHERE id = $1
+             RETURNING ${ITEM_COLUMNS}
+           ), audit AS (
+             INSERT INTO audit_log(event_type, character_id, item_id, details)
+             SELECT 'item-transferred', $4, moved.id,
+               jsonb_build_object(
+                 'from', $5::jsonb,
+                 'to', jsonb_build_object(
+                   'kind', 'container', 'containerId', $2::text,
+                   'slot', $3::integer
+                 ),
+                 'count', moved.count
+               )
+             FROM moved
+           )
+           SELECT ${ITEM_COLUMNS} FROM moved`,
+          [
+            row.id,
+            destination.id,
+            destinationSlot,
+            characterId,
+            JSON.stringify(before.location),
+          ],
         );
         const after = this.requireReturnedItem(result.rows[0]);
-        await this.auditTransfer(client, characterId, before, after);
         return { before, after: [after] };
       }
-      const sourceResult = await client.query<ItemRow>(
-        `UPDATE items
-         SET count = count - $2, version = version + 1, updated_at = now()
-         WHERE id = $1
-         RETURNING ${ITEM_COLUMNS}`,
-        [row.id, count],
-      );
-      const createdResult = await client.query<ItemRow>(
-        `INSERT INTO items (
-           id, item_type_id, count, attributes, location_type,
-           container_id, slot_index
-         ) VALUES ($1, $2, $3, $4::jsonb, 'container', $5, $6)
-         RETURNING ${ITEM_COLUMNS}`,
+      const result = await client.query<{
+        source: ItemRow | null;
+        created: ItemRow | null;
+      }>(
+        `WITH source AS (
+           UPDATE items
+           SET count = count - $2, version = version + 1, updated_at = now()
+           WHERE id = $1
+           RETURNING ${ITEM_COLUMNS}
+         ), created AS (
+           INSERT INTO items (
+             id, item_type_id, count, attributes, location_type,
+             container_id, slot_index
+           ) VALUES ($3, $4, $2, $5::jsonb, 'container', $6, $7)
+           RETURNING ${ITEM_COLUMNS}
+         ), audit AS (
+           INSERT INTO audit_log(event_type, character_id, item_id, details)
+           SELECT 'item-split', $8, source.id,
+             jsonb_build_object(
+               'originalCount', $9::integer, 'remainingCount', source.count,
+               'createdItemId', created.id, 'createdCount', created.count,
+               'destination', jsonb_build_object(
+                 'kind', 'container', 'containerId', $6::text,
+                 'slot', $7::integer
+               )
+             )
+           FROM source, created
+         )
+         SELECT
+           (SELECT row_to_json(source) FROM source) AS source,
+           (SELECT row_to_json(created) FROM created) AS created`,
         [
+          row.id,
+          count,
           randomUUID(),
           row.item_type_id,
-          count,
           JSON.stringify(row.attributes),
           destination.id,
           destinationSlot,
+          characterId,
+          before.count,
         ],
       );
-      const sourceAfter = this.requireReturnedItem(sourceResult.rows[0]);
-      const created = this.requireReturnedItem(createdResult.rows[0]);
-      await this.auditSplit(client, characterId, before, sourceAfter, created);
+      const sourceAfter = this.requireReturnedItem(
+        result.rows[0]?.source ?? undefined,
+      );
+      const created = this.requireReturnedItem(
+        result.rows[0]?.created ?? undefined,
+      );
       return { before, after: [sourceAfter, created] };
     });
   }
@@ -1471,6 +1720,152 @@ export class PgItemStore implements ItemStore {
       [uniqueIds],
     );
     return new Map(result.rows.map((row) => [row.id, row]));
+  }
+
+  /**
+   * Gathers every lock and precondition for moveToContainer in one
+   * round-trip: locks the character, both item rows, and the destination
+   * slot occupant, and reads the ownership/nesting ancestry needed for
+   * validation. Lock order (character, items sorted by id, slot occupant)
+   * is enforced by chaining the materialized CTEs.
+   */
+  private async readMoveState(
+    client: PoolClient,
+    characterId: string,
+    itemId: string,
+    destinationContainerId: string,
+    destinationSlot: number,
+    needOwnedCount: boolean,
+  ): Promise<MoveReadState> {
+    const result = await client.query<{
+      character_count: number;
+      items: ItemRow[];
+      slot_target: ItemRow | null;
+      ancestry: Array<{
+        originId: string;
+        id: string;
+        characterId: string | null;
+        locationType: string;
+        depth: number;
+      }>;
+      item_depth: number | null;
+      owned_count: number | null;
+    }>(
+      `WITH RECURSIVE locked_character AS MATERIALIZED (
+         SELECT id FROM characters WHERE id = $1 FOR UPDATE
+       ), locked_items AS MATERIALIZED (
+         SELECT ${ITEM_COLUMNS}
+         FROM items
+         WHERE id = ANY($2::uuid[])
+           AND EXISTS (SELECT 1 FROM locked_character)
+         ORDER BY id
+         FOR UPDATE
+       ), slot_target AS MATERIALIZED (
+         SELECT ${ITEM_COLUMNS}
+         FROM items
+         WHERE container_id = $3
+           AND location_type IN ('container', 'corpse')
+           AND slot_index = $4
+           AND EXISTS (SELECT 1 FROM locked_items)
+         FOR UPDATE
+       ), ancestry AS (
+         SELECT li.id AS origin_id, li.id, li.container_id, li.character_id,
+           li.location_type, 1 AS depth
+         FROM locked_items li
+         UNION ALL
+         SELECT ancestry.origin_id, parent.id, parent.container_id,
+           parent.character_id, parent.location_type, ancestry.depth + 1
+         FROM items parent
+         JOIN ancestry ON parent.id = ancestry.container_id
+         WHERE ancestry.depth < 9
+       ), item_contents AS (
+         SELECT $5::uuid AS id, 1 AS depth
+         UNION ALL
+         SELECT child.id, item_contents.depth + 1
+         FROM items child
+         JOIN item_contents ON child.container_id = item_contents.id
+         WHERE child.location_type IN ('container', 'corpse')
+           AND item_contents.depth < 9
+       ), owned AS (
+         SELECT id FROM items
+         WHERE character_id = $1
+           AND location_type IN ('equipment', 'inventory')
+         UNION ALL
+         SELECT child.id FROM items child
+         JOIN owned ON child.container_id = owned.id
+         WHERE child.location_type IN ('container', 'corpse')
+       )
+       SELECT
+         (SELECT count(*)::integer FROM locked_character) AS character_count,
+         (SELECT coalesce(json_agg(row_to_json(locked_items)), '[]'::json)
+          FROM locked_items) AS items,
+         (SELECT row_to_json(slot_target) FROM slot_target LIMIT 1)
+           AS slot_target,
+         (SELECT coalesce(json_agg(json_build_object(
+            'originId', origin_id, 'id', id, 'characterId', character_id,
+            'locationType', location_type, 'depth', depth)), '[]'::json)
+          FROM ancestry) AS ancestry,
+         (SELECT max(depth)::integer FROM item_contents) AS item_depth,
+         (SELECT CASE WHEN $6::boolean
+            THEN (SELECT count(*)::integer FROM owned) END) AS owned_count`,
+      [
+        characterId,
+        [...new Set([itemId, destinationContainerId])].sort(),
+        destinationContainerId,
+        destinationSlot,
+        itemId,
+        needOwnedCount,
+      ],
+    );
+    const read = result.rows[0];
+    if (!read) throw new Error("item move state query returned no row");
+    return {
+      characterCount: read.character_count,
+      items: read.items,
+      slotTarget: read.slot_target,
+      ancestry: read.ancestry,
+      itemDepth: read.item_depth,
+      ownedCount: read.owned_count,
+    };
+  }
+
+  private requireOwnedInAncestry(
+    ancestry: ReadonlyArray<MoveAncestryEntry>,
+    itemId: string,
+    characterId: string,
+  ): void {
+    let root: MoveAncestryEntry | undefined;
+    for (const entry of ancestry) {
+      if (entry.originId !== itemId || entry.characterId === null) continue;
+      if (!root || entry.depth > root.depth) root = entry;
+    }
+    if (
+      root?.characterId !== characterId ||
+      !["equipment", "inventory"].includes(root.locationType)
+    ) {
+      throw new Error("item is not owned by character");
+    }
+  }
+
+  private requirePlacementInAncestry(
+    ancestry: ReadonlyArray<MoveAncestryEntry>,
+    itemId: string,
+    destinationContainerId: string,
+    itemDepth: number | null,
+  ): void {
+    const destinationAncestry = ancestry.filter(
+      (entry) => entry.originId === destinationContainerId,
+    );
+    if (destinationAncestry.some((entry) => entry.id === itemId)) {
+      throw new Error("item container cycle detected");
+    }
+    const destinationDepth = Math.max(
+      0,
+      ...destinationAncestry.map((entry) => entry.depth),
+    );
+    if (destinationDepth + (itemDepth ?? 1) > 8) {
+      throw new Error("item container nesting exceeds 8 levels");
+    }
   }
 
   private async findLockedItem(

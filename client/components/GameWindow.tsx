@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   CharacterCreationOptions,
   CharacterSummary,
@@ -9,7 +9,6 @@ import type {
   Direction,
   FightState,
   InventoryItem,
-  InventoryState,
   OwnCharacterState,
   ServerErrorCode,
   ServerMessage,
@@ -17,6 +16,11 @@ import type {
 } from "@tibia/protocol";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
+import { useOptimisticInventory } from "../hooks/useOptimisticInventory";
+import type {
+  PendingItemOp,
+  PendingItemOpIntent,
+} from "../lib/inventory/PendingItemOp";
 import type { ConnectionStatus, GameClient } from "../lib/net/GameClient";
 import type { WorldRenderer } from "../lib/render/WorldRenderer";
 import { updateVisibleCreatures } from "../lib/creatures/updateVisibleCreatures";
@@ -87,6 +91,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const containerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<GameClient | null>(null);
+  const rendererRef = useRef<WorldRenderer | null>(null);
   const languageRef = useRef(language);
   const confirmedLanguageRef = useRef(language);
   const joinedRef = useRef(false);
@@ -111,7 +116,24 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
-  const [inventory, setInventory] = useState<InventoryState | null>(null);
+  const sendItemIntent = useCallback(
+    (intent: PendingItemOpIntent) =>
+      clientRef.current?.sendItemIntent(intent) ?? false,
+    [],
+  );
+  const discardStaleMapPreviews = useCallback((op: PendingItemOp) => {
+    if (op.kind === "drop" || op.kind === "pickup" || op.kind === "move-map") {
+      rendererRef.current?.clearMapItemPreviews();
+    }
+  }, []);
+  const {
+    inventory,
+    reset: resetInventory,
+    confirm: confirmInventory,
+    rollback: rollbackInventory,
+    patch: patchInventory,
+    dispatch: dispatchItemOp,
+  } = useOptimisticInventory(sendItemIntent, discardStaleMapPreviews);
   const [itemText, setItemText] = useState<
     Extract<ServerMessage, { type: "item-text" }> | null
   >(null);
@@ -128,7 +150,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setCharacters(null);
     setCreationOptions(null);
     setOwnCharacter(null);
-    setInventory(null);
+    resetInventory(null);
     setItemText(null);
     setVisibleCreatures([]);
     setFightState(null);
@@ -202,8 +224,18 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         useMap: (position) => client?.useMap(position),
         attackTarget: (creatureId) => client?.attackTarget(creatureId),
         cancelAttack: () => client?.cancelAttack(),
-        pickupMapItem: (item, position) =>
-          client?.pickupMapItem(item, position),
+        pickupMapItem: (item, position) => {
+          dispatchItemOp({
+            kind: "pickup",
+            itemId: item.instanceId,
+            revision: item.revision,
+            position,
+          });
+          rendererRef.current?.previewMapItemRemoval(
+            position,
+            item.instanceId,
+          );
+        },
         beginMapItemDrag: (item, position) => {
           const source = { kind: "world", item, position } as const;
           itemDragRef.current = source;
@@ -214,7 +246,38 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         dropDraggedItem: (position) => {
           const source = itemDragRef.current;
           if (source?.kind === "owned") {
-            client?.dropItem(source.item, position);
+            dispatchItemOp({
+              kind: "drop",
+              itemId: source.item.id,
+              position,
+            });
+            rendererRef.current?.previewMapItemAddition(position, {
+              instanceId: source.item.id,
+              itemId: source.item.clientId,
+              revision: source.item.revision,
+              count: source.item.count,
+            });
+          } else if (
+            source?.kind === "world" &&
+            (source.position.x !== position.x ||
+              source.position.y !== position.y ||
+              source.position.z !== position.z)
+          ) {
+            dispatchItemOp({
+              kind: "move-map",
+              itemId: source.item.instanceId,
+              revision: source.item.revision,
+              fromPosition: source.position,
+              toPosition: position,
+            });
+            rendererRef.current?.previewMapItemRemoval(
+              source.position,
+              source.item.instanceId,
+            );
+            rendererRef.current?.previewMapItemAddition(
+              position,
+              source.item,
+            );
           }
           itemDragRef.current = null;
         },
@@ -233,6 +296,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         return;
       }
       renderer = worldRenderer;
+      rendererRef.current = worldRenderer;
       syncViewport();
 
       client = new GameClient(WS_URL, {
@@ -264,14 +328,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             joinedRef.current = true;
             resumeCharacterIdRef.current = null;
             setOwnCharacter(message.character);
-            setInventory(message.inventory);
+            resetInventory(message.inventory);
             setFightState(message.fightState);
             setSpells(message.spells);
             setCharacterBusy(false);
             setServerError(null);
           }
           if (message.type === "inventory-updated") {
-            setInventory(message.inventory);
+            confirmInventory(message.inventory);
             return;
           }
           if (message.type === "item-text") {
@@ -304,14 +368,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 ? { ...current, ...message.progression }
                 : current,
             );
-            setInventory((current) =>
-              current
-                ? {
-                    ...current,
-                    capacityMax: message.progression.capacity,
-                  }
-                : current,
-            );
+            patchInventory((current) => ({
+              ...current,
+              capacityMax: message.progression.capacity,
+            }));
             return;
           }
           if (
@@ -353,6 +413,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         },
         onError: (code) => {
           if (disposed) return;
+          if (code === "item-action-failed") {
+            rollbackInventory();
+            worldRenderer.clearMapItemPreviews();
+          }
           if (code === "language-update-failed") {
             setLanguage(confirmedLanguageRef.current);
             setLanguageSaving(false);
@@ -427,9 +491,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       client?.disconnect();
       clientRef.current = null;
       renderer?.destroy();
+      rendererRef.current = null;
       joinedRef.current = false;
     };
-  }, [accessToken, connectionAttempt, setLanguage]);
+  }, [
+    accessToken,
+    connectionAttempt,
+    setLanguage,
+    resetInventory,
+    confirmInventory,
+    patchInventory,
+    rollbackInventory,
+    dispatchItemOp,
+  ]);
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-black">
@@ -574,9 +648,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 onToggleCharacterStats={() =>
                   setCharacterStatsOpen((open) => !open)
                 }
-                onEquip={(item) => clientRef.current?.equipItem(item)}
+                onEquip={(item) => {
+                  if (!item.equipmentSlot) return;
+                  dispatchItemOp({
+                    kind: "equip",
+                    itemId: item.id,
+                    slot: item.equipmentSlot,
+                  });
+                }}
                 onUnequip={(item, slot) =>
-                  clientRef.current?.unequipItem(item, slot)
+                  dispatchItemOp({ kind: "unequip", itemId: item.id, slot })
                 }
                 onUseRune={(item) => {
                   const rune = spells.find(
@@ -624,29 +705,32 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     itemDragRef.current = null;
                     return;
                   }
-                  const target = {
-                    containerId: destination.id,
-                    containerRevision: destination.revision,
-                    slot,
-                  };
                   if (source.kind === "world") {
-                    clientRef.current?.pickupMapItem(
-                      source.item,
+                    dispatchItemOp({
+                      kind: "pickup",
+                      itemId: source.item.instanceId,
+                      revision: source.item.revision,
+                      position: source.position,
+                      destination: { containerId: destination.id, slot },
+                    });
+                    rendererRef.current?.previewMapItemRemoval(
                       source.position,
-                      target,
+                      source.item.instanceId,
                     );
                   } else if (source.location.kind === "equipment") {
-                    clientRef.current?.unequipItem(
-                      source.item,
-                      source.location.slot,
-                      target,
-                    );
+                    dispatchItemOp({
+                      kind: "unequip",
+                      itemId: source.item.id,
+                      slot: source.location.slot,
+                      destination: { containerId: destination.id, slot },
+                    });
                   } else {
-                    clientRef.current?.moveItem(
-                      source.item,
-                      destination,
-                      slot,
-                    );
+                    dispatchItemOp({
+                      kind: "move",
+                      itemId: source.item.id,
+                      destinationContainerId: destination.id,
+                      destinationSlot: slot,
+                    });
                   }
                   itemDragRef.current = null;
                 }}
@@ -660,7 +744,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                       source.location.slot === slot
                     )
                   ) {
-                    clientRef.current?.equipItem(source.item, slot);
+                    dispatchItemOp({
+                      kind: "equip",
+                      itemId: source.item.id,
+                      slot,
+                    });
                   }
                   itemDragRef.current = null;
                 }}

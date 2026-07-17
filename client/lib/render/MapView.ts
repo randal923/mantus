@@ -65,6 +65,8 @@ export class MapView {
   private readonly drawnTiles = new Map<string, RenderedTile>();
   private readonly tileElevations = new Map<string, number>();
   private readonly dynamicRequests = new Map<string, TileState>();
+  /** Optimistic per-tile projections; every authoritative tile state wins. */
+  private readonly tileOverrides = new Map<string, TileState>();
   private center: Position | null = null;
   private viewRange: ViewRange = { x: 1, y: 1 };
   private generation = 0;
@@ -104,12 +106,66 @@ export class MapView {
   }
 
   topServerItem(position: Position): MapItemState | undefined {
-    return this.dynamicRequests
-      .get(this.tileKey(position.z, position.x, position.y))
+    const key = this.tileKey(position.z, position.x, position.y);
+    return (this.tileOverrides.get(key) ?? this.dynamicRequests.get(key))
       ?.items.reduce<MapItemState | undefined>(
         (top, item) => (!top || item.stackIndex > top.stackIndex ? item : top),
         undefined,
       );
+  }
+
+  /** Optimistically hides a map item until the server confirms or rejects. */
+  previewMapItemRemoval(position: Position, instanceId: string): void {
+    const key = this.tileKey(position.z, position.x, position.y);
+    const base = this.tileOverrides.get(key) ?? this.dynamicRequests.get(key);
+    if (!base) return;
+    this.tileOverrides.set(key, {
+      ...base,
+      items: base.items.filter((item) => item.instanceId !== instanceId),
+    });
+    this.redrawTileKey(key);
+    this.applyCover();
+  }
+
+  /** Optimistically shows a map item until the server confirms or rejects. */
+  async previewMapItemAddition(
+    position: Position,
+    item: Omit<MapItemState, "stackIndex">,
+  ): Promise<void> {
+    const key = this.tileKey(position.z, position.x, position.y);
+    const base = this.tileOverrides.get(key) ??
+      this.dynamicRequests.get(key) ?? {
+        position: { ...position },
+        revision: 0,
+        items: [],
+      };
+    const stackIndex = base.items.reduce(
+      (top, existing) => Math.max(top, existing.stackIndex + 1),
+      0,
+    );
+    this.tileOverrides.set(key, {
+      ...base,
+      items: [
+        ...base.items.filter(
+          (existing) => existing.instanceId !== item.instanceId,
+        ),
+        { ...item, stackIndex },
+      ],
+    });
+    await this.store.preload(this.store.item(item.itemId).sprites);
+    if (this.tileOverrides.has(key)) {
+      this.redrawTileKey(key);
+      this.applyCover();
+    }
+  }
+
+  /** Reverts every optimistic tile projection to the last server state. */
+  clearMapItemPreviews(): void {
+    if (this.tileOverrides.size === 0) return;
+    const keys = [...this.tileOverrides.keys()];
+    this.tileOverrides.clear();
+    for (const key of keys) this.redrawTileKey(key);
+    this.applyCover();
   }
 
   createItemDragCanvas(
@@ -156,6 +212,7 @@ export class MapView {
     this.clearRenderedTiles();
     this.animatedItems.clear();
     this.dynamicRequests.clear();
+    this.tileOverrides.clear();
     this.regions.clear();
     this.loaded.clear();
     this.tileElevations.clear();
@@ -166,6 +223,7 @@ export class MapView {
     this.clearRenderedTiles();
     this.animatedItems.clear();
     this.dynamicRequests.clear();
+    this.tileOverrides.clear();
     this.available.clear();
     this.regions.clear();
     this.loaded.clear();
@@ -199,6 +257,7 @@ export class MapView {
           : state.position.z <= z;
         if (authorized) continue;
         this.dynamicRequests.delete(key);
+        this.tileOverrides.delete(key);
         if (this.drawnTiles.has(key)) this.redrawTileKey(key);
       }
     }
@@ -220,6 +279,7 @@ export class MapView {
     for (const position of hidden) {
       const key = this.tileKey(position.z, position.x, position.y);
       this.dynamicRequests.delete(key);
+      this.tileOverrides.delete(key);
       changed.add(key);
     }
     for (const state of visible) {
@@ -229,6 +289,7 @@ export class MapView {
         state.position.y,
       );
       this.dynamicRequests.set(key, state);
+      this.tileOverrides.delete(key);
       changed.add(key);
     }
 
@@ -379,7 +440,8 @@ export class MapView {
     const dynamicItems =
       !this.center ||
       (this.center.z > GROUND_FLOOR ? z === this.center.z : z <= this.center.z)
-        ? this.dynamicRequests.get(key)?.items ?? []
+        ? (this.tileOverrides.get(key) ?? this.dynamicRequests.get(key))
+            ?.items ?? []
         : [];
     return getMergedTileItems(
       this.staticItemIds(z, x, y),

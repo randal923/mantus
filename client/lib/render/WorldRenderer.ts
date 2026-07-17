@@ -228,6 +228,24 @@ export class WorldRenderer {
     return range;
   }
 
+  previewMapItemRemoval(position: Position, instanceId: string): void {
+    if (this.destroyed) return;
+    this.mapView.previewMapItemRemoval(position, instanceId);
+  }
+
+  previewMapItemAddition(
+    position: Position,
+    item: Omit<MapItemState, "stackIndex">,
+  ): void {
+    if (this.destroyed) return;
+    void this.mapView.previewMapItemAddition(position, item);
+  }
+
+  clearMapItemPreviews(): void {
+    if (this.destroyed) return;
+    this.mapView.clearMapItemPreviews();
+  }
+
   destroy(): void {
     this.destroyed = true;
     this.hideMapDragIcon();
@@ -417,7 +435,13 @@ export class WorldRenderer {
   private readonly onMapPointerUp = (event: PointerEvent): void => {
     if (this.mapDragCandidate?.pointerId !== event.pointerId) return;
     if (this.mapDragCandidate.active) {
-      this.suppressNextMapClick = event.target === this.app.canvas;
+      if (event.target === this.app.canvas) {
+        this.suppressNextMapClick = true;
+        const position = this.mapPositionForEvent(event);
+        if (position) this.actions?.dropDraggedItem(position);
+      } else {
+        this.suppressNextMapClick = false;
+      }
       this.actions?.endItemDrag();
     }
     this.mapDragCandidate = null;

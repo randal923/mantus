@@ -40,6 +40,14 @@ export interface ItemStore {
     position: Position,
     count?: number,
   ): Promise<ItemMutation>;
+  moveWorldItem(
+    characterId: string,
+    itemReference: string,
+    expectedVersion: number,
+    fromPosition: Position,
+    toPosition: Position,
+    source?: WorldItemSource,
+  ): Promise<ItemMutation>;
   split(
     characterId: string,
     itemId: string,

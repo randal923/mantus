@@ -179,6 +179,59 @@ export class MemoryItemStore implements ItemStore {
     return Promise.reject(new Error("memory drop is not configured"));
   }
 
+  async moveWorldItem(
+    _characterId: string,
+    itemReference: string,
+    expectedVersion: number,
+    fromPosition: Position,
+    toPosition: Position,
+    _source?: WorldItemSource,
+  ): Promise<ItemMutation> {
+    const before = this.items.get(itemReference);
+    if (!before) throw new Error("item not found");
+    if (before.version !== expectedVersion) {
+      throw new Error("stale item revision");
+    }
+    if (
+      before.location.kind !== "world" ||
+      before.location.position.x !== fromPosition.x ||
+      before.location.position.y !== fromPosition.y ||
+      before.location.position.z !== fromPosition.z
+    ) {
+      throw new Error("item is not at the expected position");
+    }
+    const occupiedSlots = new Set(
+      [...this.items.values()]
+        .filter(
+          (item) =>
+            item.location.kind === "world" &&
+            item.location.position.x === toPosition.x &&
+            item.location.position.y === toPosition.y &&
+            item.location.position.z === toPosition.z,
+        )
+        .map((item) =>
+          item.location.kind === "world" ? item.location.stackIndex : 0,
+        ),
+    );
+    const stackIndex = Array.from({ length: 16 }, (_, index) => index).find(
+      (index) => !occupiedSlots.has(index),
+    );
+    if (stackIndex === undefined) {
+      throw new Error("world tile has too many items");
+    }
+    const after = {
+      ...before,
+      version: before.version + 1,
+      location: {
+        kind: "world",
+        position: { ...toPosition },
+        stackIndex,
+      } as const,
+    };
+    this.items.set(after.id, after);
+    return { before, after: [after] };
+  }
+
   split(
     _characterId: string,
     _itemId: string,

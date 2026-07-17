@@ -105,4 +105,42 @@ describe("item intent schemas", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("bounds map item moves to well-formed positions and references", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move-map-item",
+        itemId: "map:100:100:7:1",
+        revision: 1,
+        fromPosition: { x: 100, y: 100, z: 7 },
+        toPosition: { x: 102, y: 101, z: 7 },
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move-map-item",
+        itemId: "map:100:100:7:1",
+        revision: 1,
+        fromPosition: { x: 100, y: 100, z: 7 },
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move-map-item",
+        itemId: "x".repeat(129),
+        revision: 1,
+        fromPosition: { x: 100, y: 100, z: 7 },
+        toPosition: { x: 102, y: 101, z: 7 },
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move-map-item",
+        itemId: "map:100:100:7:1",
+        revision: 0,
+        fromPosition: { x: 100, y: 100, z: 7 },
+        toPosition: { x: 102, y: 101, z: 7 },
+      }).success,
+    ).toBe(false);
+  });
 });

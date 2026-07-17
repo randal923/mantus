@@ -177,6 +177,21 @@ export const dropItemMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
+/**
+ * Throws a visible map item from an adjacent tile onto another nearby tile.
+ * Same fixed size and rate expectations as the other item intents; the
+ * server re-validates reach, target range, and the tile at execution time.
+ */
+export const moveMapItemMessageSchema = z
+  .object({
+    type: z.literal("move-map-item"),
+    itemId: z.string().min(1).max(128),
+    revision: z.number().int().positive(),
+    fromPosition: positionSchema,
+    toPosition: positionSchema,
+  })
+  .strict();
+
 export const openContainerMessageSchema = ownedItemIntentSchema
   .extend({ type: z.literal("open-container") })
   .strict();
@@ -251,6 +266,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   unequipItemMessageSchema,
   pickupItemMessageSchema,
   dropItemMessageSchema,
+  moveMapItemMessageSchema,
   openContainerMessageSchema,
   closeContainerMessageSchema,
   useItemMessageSchema,

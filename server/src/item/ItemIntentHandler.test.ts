@@ -20,6 +20,7 @@ const POUCH_ID = "db85bce3-0fc9-49f4-87ff-dda53f3cc8c1";
 const ITEM_ID = "434b8502-04e2-4e3b-875d-f9be2153016c";
 const LETTER_ID = "b676077c-f53f-49cc-89a7-ab4c7ca196ef";
 const FOOD_ID = "97f88f8b-1ac2-4bf5-9272-906666c7d870";
+const WORLD_GOLD_ID = "5b9660ec-56c6-4f57-9c58-2b16dfbe1b8d";
 
 let catalog: ItemCatalog;
 
@@ -104,6 +105,86 @@ describe("ItemIntentHandler", () => {
         ],
       },
     });
+  });
+
+  it("throws a visible map item onto a nearby tile", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const worldGold: Item = {
+      id: WORLD_GOLD_ID,
+      typeId: 3031,
+      count: 10,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "world",
+        position: { x: 1, y: 2, z: 7 },
+        stackIndex: 1,
+      },
+    };
+    store.seed(worldGold);
+    const { handler, session, sent, world } = makeHarness(store);
+    world.applyCreatedWorldItems([worldGold]);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "move-map-item",
+      itemId: WORLD_GOLD_ID,
+      revision: 1,
+      fromPosition: { x: 1, y: 2, z: 7 },
+      toPosition: { x: 2, y: 2, z: 7 },
+    });
+    await handler.load(CHARACTER_ID, 400);
+    handler.applyResolvedOutcomes(1_000);
+
+    expect(sent.some((message) => message.type === "error")).toBe(false);
+    expect(world.getMapItems({ x: 1, y: 2, z: 7 })).toHaveLength(0);
+    expect(world.getMapItems({ x: 2, y: 2, z: 7 })).toMatchObject([
+      { instanceId: WORLD_GOLD_ID, count: 10 },
+    ]);
+  });
+
+  it("rejects throws to missing tiles, other floors, or stale revisions", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const worldGold: Item = {
+      id: WORLD_GOLD_ID,
+      typeId: 3031,
+      count: 10,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "world",
+        position: { x: 1, y: 2, z: 7 },
+        stackIndex: 1,
+      },
+    };
+    store.seed(worldGold);
+    const { handler, session, sent, world } = makeHarness(store);
+    world.applyCreatedWorldItems([worldGold]);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    const attempts = [
+      { toPosition: { x: 5, y: 2, z: 7 }, revision: 1 },
+      { toPosition: { x: 2, y: 2, z: 6 }, revision: 1 },
+      { toPosition: { x: 2, y: 2, z: 7 }, revision: 9 },
+    ];
+    for (const attempt of attempts) {
+      handler.handle(session, {
+        type: "move-map-item",
+        itemId: WORLD_GOLD_ID,
+        revision: attempt.revision,
+        fromPosition: { x: 1, y: 2, z: 7 },
+        toPosition: attempt.toPosition,
+      });
+      expect(sent.at(-1)).toMatchObject({
+        type: "error",
+        code: "item-action-failed",
+      });
+    }
+    expect(world.getMapItems({ x: 1, y: 2, z: 7 })).toMatchObject([
+      { instanceId: WORLD_GOLD_ID },
+    ]);
   });
 
   it("reads and atomically writes bounded owned item text", async () => {
@@ -302,6 +383,7 @@ function makeHarness(store: MemoryItemStore): {
   player: Player;
   session: Session;
   sent: ServerMessage[];
+  world: World;
 } {
   const world = new World(
     gridMapData({
@@ -346,5 +428,6 @@ function makeHarness(store: MemoryItemStore): {
     player,
     session,
     sent,
+    world,
   };
 }

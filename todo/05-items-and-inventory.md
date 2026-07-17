@@ -139,6 +139,37 @@ is atomic.
   Stable seed keys currently make an unplanned content-version replacement fail
   safely instead of silently duplicating or resetting moved world items.
 
+## Known gaps: optimistic drag queue and move batching (2026-07-16)
+
+- `move-item`, `equip-item`, `unequip-item`, `drop-item`, `pickup-item`, and
+  `move-map-item` flow through the client's optimistic op queue
+  (`useOptimisticInventory`); drops/pickups/throws also render optimistic tile
+  previews (`MapView.tileOverrides`). `use-item` and `open-container` still
+  send immediately and get `item-action-failed` if they race a queued drag.
+- A picked-up item appears in the backpack only when the server confirms —
+  the client cannot predict the created item id (seeded items materialize a
+  new uuid) and has no clientId→spriteId/tooltip catalog for placeholders.
+  The tile-side removal is instant; the inventory-side appearance still costs
+  the full `pickup` transaction (~8-10 sequential queries).
+- The queue treats any `inventory-updated` as confirmation of the in-flight
+  op. An unsolicited update (currently only the capacity patch on level-up)
+  arriving mid-flight can advance the queue one op early; the mistaken send is
+  rejected by the server and the queue rolls back to server state, so it
+  self-heals with a brief visual snap. Fix: tag item intents with a client
+  nonce echoed in `inventory-updated`.
+- Merge prediction guesses stackability client-side (no prediction when both
+  stacks are count 1; assumes a max stack of 100), and tile previews never
+  predict world-stack merges — a thrown/dropped stack briefly renders beside
+  the stack it merges into. Mispredictions reconcile on the next snapshot.
+- `move-map-item` allows throws to any existing tile within `THROW_RANGE` (7)
+  on the player's floor — no line-of-sight or walkability check yet (Canary
+  uses `canThrowObjectTo`; `World.hasLineOfSight`-style check exists for
+  combat and could be reused). Same laxness as `drop-item` today.
+- Only `PgItemStore.moveToContainer` and the new `moveWorldItem` write paths
+  use the combined-CTE pattern. `equip`, `unequip`, `pickup`, and `drop`
+  still run ~8 sequential queries per call; apply the same pattern if their
+  confirm latency matters now that drags render optimistically.
+
 ## Pinned Canary parity gate
 
 - [ ] Inventory every registered item/move/action behavior from the pinned

@@ -4,17 +4,15 @@ import {
   type ClientMessage,
   type CombatTarget,
   type Direction,
-  type EquipmentSlot,
   type FightMode,
   type InventoryItem,
-  type ItemContainerDestination,
   type Language,
-  type MapItemState,
   type Position,
   type ServerErrorCode,
   type ServerMessage,
   type ViewRange,
 } from "@tibia/protocol";
+import type { PendingItemOpIntent } from "../inventory/PendingItemOp";
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
@@ -110,51 +108,9 @@ export class GameClient {
     });
   }
 
-  pickupMapItem(
-    item: MapItemState,
-    position: Position,
-    destination?: ItemContainerDestination,
-  ): boolean {
-    return this.send({
-      type: "pickup-item",
-      itemId: item.instanceId,
-      revision: item.revision,
-      position,
-      ...(destination ? { destination } : {}),
-    });
-  }
-
-  dropItem(item: InventoryItem, position: Position): boolean {
-    return this.send({
-      type: "drop-item",
-      itemId: item.id,
-      revision: item.revision,
-      position,
-    });
-  }
-
-  equipItem(item: InventoryItem, slot = item.equipmentSlot): boolean {
-    if (!slot || item.equipmentSlot !== slot) return false;
-    return this.send({
-      type: "equip-item",
-      itemId: item.id,
-      revision: item.revision,
-      slot,
-    });
-  }
-
-  unequipItem(
-    item: InventoryItem,
-    slot: EquipmentSlot,
-    destination?: ItemContainerDestination,
-  ): boolean {
-    return this.send({
-      type: "unequip-item",
-      itemId: item.id,
-      revision: item.revision,
-      slot,
-      ...(destination ? { destination } : {}),
-    });
+  /** Sends a pre-built item drag intent (see useOptimisticInventory). */
+  sendItemIntent(intent: PendingItemOpIntent): boolean {
+    return this.send(intent);
   }
 
   openContainer(item: InventoryItem): boolean {
@@ -167,23 +123,6 @@ export class GameClient {
 
   closeContainer(containerId: string): boolean {
     return this.send({ type: "close-container", containerId });
-  }
-
-  moveItem(
-    item: InventoryItem,
-    destination: InventoryItem,
-    destinationSlot: number,
-    count?: number,
-  ): boolean {
-    return this.send({
-      type: "move-item",
-      itemId: item.id,
-      revision: item.revision,
-      destinationContainerId: destination.id,
-      destinationRevision: destination.revision,
-      destinationSlot,
-      ...(count !== undefined ? { count } : {}),
-    });
   }
 
   useItem(item: InventoryItem): boolean {

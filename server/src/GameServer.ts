@@ -293,6 +293,7 @@ export class GameServer {
       case "unequip-item":
       case "pickup-item":
       case "drop-item":
+      case "move-map-item":
       case "open-container":
       case "close-container":
       case "use-item":
