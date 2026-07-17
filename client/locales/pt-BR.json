@@ -229,6 +229,30 @@
     "createSellOffer": "Criar Oferta de Venda",
     "createBuyOffer": "Criar Oferta de Compra"
   },
+  "bank": {
+    "title": "Banco — {{npcName}}",
+    "balance": "Saldo da Conta",
+    "carried": "Dinheiro Carregado",
+    "deposit": "Depositar",
+    "withdraw": "Sacar",
+    "transfer": "Transferir",
+    "amount": "Quantia",
+    "all": "Tudo",
+    "recipient": "Destinatário",
+    "recipientPlaceholder": "Nome do personagem…",
+    "errors": {
+      "insufficient-funds": "Você não está carregando tanto dinheiro.",
+      "insufficient-balance": "O saldo da sua conta não cobre essa quantia.",
+      "no-space": "Você não tem espaço suficiente para as moedas.",
+      "no-capacity": "Você não consegue carregar tanto peso.",
+      "recipient-not-found": "Não existe personagem com esse nome.",
+      "invalid-recipient": "Você não pode transferir dinheiro para esse personagem.",
+      "balance-limit": "Isso excederia o limite de saldo da conta.",
+      "busy": "Aguarde sua outra ação terminar.",
+      "out-of-range": "Você está longe demais do bancário.",
+      "failed": "O banco não conseguiu concluir essa ação."
+    }
+  },
   "characterStats": {
     "label": "Atributos do personagem {{name}}",
     "title": "Detalhes do Personagem",

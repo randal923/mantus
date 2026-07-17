@@ -8,7 +8,9 @@
       "data/npclib/npc_system/modules.lua",
       "data/modules/scripts/npc/npc_dialog.lua",
       "data-otservbr-global/npc/quentin.lua",
-      "data-otservbr-global/npc/captain_bluebear.lua"
+      "data-otservbr-global/npc/captain_bluebear.lua",
+      "data/npclib/npc_system/bank_system.lua",
+      "data-otservbr-global/npc/naji.lua"
     ]
   },
   "dialogues": [
@@ -515,6 +517,71 @@
         { "id": "oramond", "cost": 150, "destination": { "x": 33479, "y": 31985, "z": 7 } },
         { "id": "krailos", "cost": 230, "destination": { "x": 33492, "y": 31712, "z": 6 } }
       ]
+    },
+    {
+      "typeId": "naji",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": ["hi", "hello"],
+      "farewellKeywords": ["bye", "farewell"],
+      "greeting": [
+        "Welcome to the Tibian Bank, |PLAYERNAME|! Say bank to manage your account, or ask about my job."
+      ],
+      "farewell": ["Have a nice day, |PLAYERNAME|!"],
+      "walkAway": ["Come back whenever you want to manage your money."],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": ["bank", "job", "help"],
+          "choices": [
+            { "nodeId": "bank", "label": "Bank" },
+            { "nodeId": "job", "label": "Job" }
+          ]
+        },
+        {
+          "id": "bank",
+          "matches": [
+            ["bank"],
+            ["account"],
+            ["balance"],
+            ["deposit"],
+            ["withdraw"],
+            ["transfer"],
+            ["money"]
+          ],
+          "responses": [
+            "Here is your account, |PLAYERNAME|. You can deposit, withdraw, or transfer your money."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": { "kind": "bank" }
+        },
+        {
+          "id": "job",
+          "matches": [["job"]],
+          "responses": [
+            "I am the bank clerk. I can look after your money; just say bank."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        },
+        {
+          "id": "help",
+          "matches": [["help"]],
+          "responses": [
+            "Your bank account keeps your money safe. Say bank and I will show it to you."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
     }
   ]
 }

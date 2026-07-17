@@ -39,6 +39,7 @@ const STATE: InventoryState = {
   items: [{ slot: 1, item: HELMET }],
   gold: 0,
   platinum: 0,
+  crystal: 0,
   capacityUsed: 5,
   capacityMax: 100,
   slotCount: 20,

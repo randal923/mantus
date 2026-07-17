@@ -96,6 +96,7 @@ export const inventoryStateSchema = z
     items: z.array(inventorySlotEntrySchema).max(100),
     gold: z.number().int().nonnegative(),
     platinum: z.number().int().nonnegative(),
+    crystal: z.number().int().nonnegative(),
     capacityUsed: z.number().int().nonnegative(),
     capacityMax: z.number().int().nonnegative(),
     slotCount: z.number().int().min(0).max(100),

@@ -7,6 +7,7 @@ import { PgAccountStore } from "./PgAccountStore";
 import { SupabaseTokenVerifier } from "./SupabaseTokenVerifier";
 import { loadItemCatalog } from "./item/loadItemCatalog";
 import { PgItemStore } from "./item/PgItemStore";
+import { PgBankStore } from "./economy/PgBankStore";
 import { PgNpcTravelStore } from "./npc/PgNpcTravelStore";
 import { WorldItemSeeder } from "./item/WorldItemSeeder";
 
@@ -36,6 +37,7 @@ const characters = new PgCharacterStore(pool);
 const itemCatalog = await loadItemCatalog();
 const items = new PgItemStore(pool, itemCatalog, serverConfig.map.name);
 const npcTravel = new PgNpcTravelStore(pool);
+const bank = new PgBankStore(pool);
 const worldItemDeltas =
   serverConfig.map.source === "data"
     ? await new WorldItemSeeder(
@@ -52,6 +54,7 @@ const server = new GameServer(serverConfig, {
   items,
   itemCatalog,
   npcTravel,
+  bank,
   worldItemDeltas,
 });
 server.start();

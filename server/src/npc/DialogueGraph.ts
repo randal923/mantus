@@ -17,7 +17,8 @@ export interface DialogueNode {
   readonly offerId?: string;
   readonly action?:
     | { readonly kind: "travel"; readonly offerId: string }
-    | { readonly kind: "shop"; readonly shopId: string };
+    | { readonly kind: "shop"; readonly shopId: string }
+    | { readonly kind: "bank" };
 }
 
 export interface NpcTravelOffer {

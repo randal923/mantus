@@ -164,6 +164,27 @@ export class GameClient {
     });
   }
 
+  bankDeposit(npcId: string, amount: number): boolean {
+    return this.send({ type: "bank-deposit", npcId, amount });
+  }
+
+  bankWithdraw(npcId: string, amount: number): boolean {
+    return this.send({ type: "bank-withdraw", npcId, amount });
+  }
+
+  bankTransfer(
+    npcId: string,
+    toCharacterName: string,
+    amount: number,
+  ): boolean {
+    return this.send({
+      type: "bank-transfer",
+      npcId,
+      toCharacterName,
+      amount,
+    });
+  }
+
   createCharacter(input: CreateCharacterInput): boolean {
     return this.send({ type: "create-character", ...input });
   }

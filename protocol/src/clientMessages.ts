@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  bankDepositMessageSchema,
+  bankTransferMessageSchema,
+  bankWithdrawMessageSchema,
+} from "./bank";
 import { privateChatMessageSchema, speakMessageSchema } from "./chat";
 import { createCharacterInputSchema } from "./character";
 import { combatTargetSchema, fightModeSchema } from "./combat";
@@ -279,6 +284,9 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   writeItemMessageSchema,
   setLanguageMessageSchema,
   npcDialogueChoiceMessageSchema,
+  bankDepositMessageSchema,
+  bankWithdrawMessageSchema,
+  bankTransferMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,
 ]);

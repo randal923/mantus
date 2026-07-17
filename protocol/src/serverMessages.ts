@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  bankActionFailedMessageSchema,
+  bankOpenedMessageSchema,
+  bankUpdatedMessageSchema,
+} from "./bank";
+import {
   characterCreationOptionsSchema,
   characterSummarySchema,
   ownCharacterStateSchema,
@@ -252,6 +257,9 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   tileStatesMessageSchema,
   npcDialogueMessageSchema,
   npcDialogueClosedMessageSchema,
+  bankOpenedMessageSchema,
+  bankUpdatedMessageSchema,
+  bankActionFailedMessageSchema,
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,

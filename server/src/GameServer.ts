@@ -13,6 +13,8 @@ import { Combat } from "./combat/Combat";
 import { CombatIntentHandler } from "./combat/CombatIntentHandler";
 import { SpellRegistry } from "./combat/SpellRegistry";
 import type { ServerConfig } from "./config";
+import { BankService } from "./economy/BankService";
+import type { BankStore } from "./economy/BankStore";
 import { LanguageHandler } from "./LanguageHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
@@ -41,6 +43,7 @@ export interface GameServerDeps {
   items: ItemStore;
   itemCatalog: ItemCatalog;
   npcTravel?: NpcTravelStore;
+  bank?: BankStore;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -61,6 +64,7 @@ export class GameServer {
   private readonly spells = new SpellRegistry();
   private readonly items: ItemIntentHandler;
   private readonly travel: TravelService;
+  private readonly bank: BankService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -125,11 +129,13 @@ export class GameServer {
       this.items,
       deps.npcTravel,
     );
+    this.bank = new BankService(this.world, this.items, deps.bank);
     this.npcs = new NpcHandler(
       this.world,
       this.registry,
       this.visibility,
       this.travel,
+      this.bank,
     );
     this.chat = new ChatHandler(
       this.world,
@@ -242,6 +248,7 @@ export class GameServer {
     this.characters.applyResolvedOutcomes();
     this.items.applyResolvedOutcomes(now);
     this.travel.applyResolvedOutcomes(now);
+    this.bank.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -348,6 +355,11 @@ export class GameServer {
       case "npc-dialogue-choice":
         this.npcs.handleChoice(session, intent, now);
         return;
+      case "bank-deposit":
+      case "bank-withdraw":
+      case "bank-transfer":
+        this.bank.handle(session, intent);
+        return;
       case "set-language":
         this.language.handle(session, intent);
         return;
@@ -367,6 +379,8 @@ export class GameServer {
   private async finishStop(): Promise<void> {
     await this.travel.stop();
     this.travel.applyResolvedOutcomes(Date.now());
+    await this.bank.stop();
+    this.bank.applyResolvedOutcomes(Date.now());
     await this.persistence.stop();
     if (this.persistence.unsavedPlayerCount > 0) {
       console.error(

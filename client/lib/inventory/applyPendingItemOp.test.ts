@@ -58,6 +58,7 @@ const makeState = (
   ],
   gold: 40,
   platinum: 0,
+  crystal: 0,
   capacityUsed: 5,
   capacityMax: 100,
   slotCount: 20,

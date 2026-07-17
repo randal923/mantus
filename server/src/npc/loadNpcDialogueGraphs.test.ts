@@ -13,8 +13,14 @@ describe("loadNpcDialogueGraphs", () => {
 
     expect([...graphs.keys()].sort()).toEqual([
       "captain-bluebear",
+      "naji",
       "quentin",
     ]);
+    expect(
+      graphs
+        .get("naji")
+        ?.nodes.find((node) => node.action?.kind === "bank"),
+    ).toBeDefined();
     expect(captain?.travelOffers).toHaveLength(10);
     expect(captain?.travelOffers.find((offer) => offer.id === "carlin")).toEqual({
       id: "carlin",

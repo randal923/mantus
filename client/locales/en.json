@@ -229,6 +229,30 @@
     "createSellOffer": "Create Sell Offer",
     "createBuyOffer": "Create Buy Offer"
   },
+  "bank": {
+    "title": "Bank — {{npcName}}",
+    "balance": "Account Balance",
+    "carried": "Carried Money",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "transfer": "Transfer",
+    "amount": "Amount",
+    "all": "All",
+    "recipient": "Recipient",
+    "recipientPlaceholder": "Character name…",
+    "errors": {
+      "insufficient-funds": "You are not carrying that much money.",
+      "insufficient-balance": "Your account balance cannot cover that amount.",
+      "no-space": "You do not have enough room for the coins.",
+      "no-capacity": "You cannot carry that much weight.",
+      "recipient-not-found": "There is no character with that name.",
+      "invalid-recipient": "You cannot transfer money to that character.",
+      "balance-limit": "That would exceed the account balance limit.",
+      "busy": "Please wait for your other action to finish.",
+      "out-of-range": "You are too far away from the bank clerk.",
+      "failed": "The bank could not complete that action."
+    }
+  },
   "characterStats": {
     "label": "{{name}}'s character stats",
     "title": "Character Details",

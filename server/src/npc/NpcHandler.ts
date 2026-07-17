@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { NpcDialogueChoiceMessage } from "@tibia/protocol";
 import { Npc } from "../creature/Npc";
+import type { BankService } from "../economy/BankService";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -22,6 +23,7 @@ export class NpcHandler {
     private readonly registry: SessionRegistry,
     private readonly visibility: Visibility,
     private readonly travel: TravelService,
+    private readonly bank: BankService,
   ) {}
 
   handleSpeech(player: Player, text: string, now: number): void {
@@ -302,6 +304,52 @@ export class NpcHandler {
         graph,
         conversation,
         [response],
+      );
+      return;
+    }
+    if (action?.kind === "bank") {
+      conversation.pendingAction = true;
+      const result = this.bank.open(
+        session,
+        npc,
+        () => {
+          conversation.pendingAction = false;
+          if (!this.isCurrent(conversation)) return;
+          conversation.currentNodeId = node.nextNodeId ?? graph.rootNodeId;
+          conversation.expiresAt = now + graph.timeoutMs;
+          this.sendResponses(
+            session,
+            player,
+            npc,
+            graph,
+            conversation,
+            node.responses,
+            node,
+          );
+        },
+        () => {
+          conversation.pendingAction = false;
+          if (!this.isCurrent(conversation)) return;
+          conversation.expiresAt = now + graph.timeoutMs;
+          this.sendResponses(
+            session,
+            player,
+            npc,
+            graph,
+            conversation,
+            ["The bank is unavailable right now."],
+          );
+        },
+      );
+      if (result === "started") return;
+      conversation.pendingAction = false;
+      this.sendResponses(
+        session,
+        player,
+        npc,
+        graph,
+        conversation,
+        ["The bank is unavailable right now."],
       );
       return;
     }

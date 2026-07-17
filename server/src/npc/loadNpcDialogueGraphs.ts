@@ -160,6 +160,9 @@ function parseAction(value: unknown): DialogueNode["action"] {
       shopId: identifier(action.shopId, "NPC shop action id"),
     };
   }
+  if (action.kind === "bank") {
+    return { kind: "bank" };
+  }
   throw new Error("NPC dialogue action is unsupported");
 }
 

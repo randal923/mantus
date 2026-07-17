@@ -148,6 +148,7 @@ export function projectInventory(
     })),
     gold: countCurrency(3031),
     platinum: countCurrency(3035),
+    crystal: countCurrency(3043),
     capacityUsed: Math.ceil(usedWeight / 100),
     capacityMax,
     slotCount: backpack

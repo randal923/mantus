@@ -93,6 +93,15 @@ export class ItemIntentHandler {
     this.inventories.delete(characterId);
   }
 
+  inventorySnapshot(
+    characterId: string,
+  ): { items: ReadonlyArray<Item>; capacityMax: number } | null {
+    const cache = this.inventories.get(characterId);
+    return cache
+      ? { items: cache.items, capacityMax: cache.capacityMax }
+      : null;
+  }
+
   updateCapacity(
     characterId: string,
     capacityMax: number,

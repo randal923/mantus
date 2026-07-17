@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
+  BankActionFailedReason,
   CharacterCreationOptions,
   CharacterSummary,
   CreatureState,
@@ -46,6 +47,15 @@ import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
 import { useGameSettingsStore } from "../stores/useGameSettingsStore";
 import { NpcDialogue } from "./npc/NpcDialogue";
+import { BankPanel } from "./bank/BankPanel";
+
+interface BankSessionState {
+  npcId: string;
+  npcName: string;
+  balance: number;
+  pending: boolean;
+  error: BankActionFailedReason | null;
+}
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
 
@@ -116,6 +126,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [npcDialogue, setNpcDialogue] = useState<
     Extract<ServerMessage, { type: "npc-dialogue" }> | null
   >(null);
+  const [bankSession, setBankSession] = useState<BankSessionState | null>(
+    null,
+  );
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState(false);
@@ -316,6 +329,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setCharacterBusy(false);
             setServerError(null);
             setNpcDialogue(null);
+            setBankSession(null);
             dispatchChat({
               type: "reset",
               ownPlayerId: message.playerId,
@@ -350,6 +364,37 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 ? null
                 : current,
             );
+          }
+          if (message.type === "bank-opened") {
+            setBankSession({
+              npcId: message.npcId,
+              npcName: message.npcName,
+              balance: message.balance,
+              pending: false,
+              error: null,
+            });
+            return;
+          }
+          if (message.type === "bank-updated") {
+            setBankSession((current) =>
+              current
+                ? {
+                    ...current,
+                    balance: message.balance,
+                    pending: false,
+                    error: null,
+                  }
+                : current,
+            );
+            return;
+          }
+          if (message.type === "bank-action-failed") {
+            setBankSession((current) => {
+              if (!current) return current;
+              if (message.reason === "out-of-range") return null;
+              return { ...current, pending: false, error: message.reason };
+            });
+            return;
           }
           if (message.type === "private-chat-delivered") {
             dispatchChat({
@@ -752,6 +797,40 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 }
               />
             </div>
+          )}
+          {bankSession && inventory && (
+            <BankPanel
+              npcName={bankSession.npcName}
+              balance={bankSession.balance}
+              carriedGold={inventory.gold}
+              carriedPlatinum={inventory.platinum}
+              carriedCrystal={inventory.crystal}
+              pending={bankSession.pending}
+              error={bankSession.error}
+              onDeposit={(amount) => {
+                setBankSession((current) =>
+                  current ? { ...current, pending: true, error: null } : current,
+                );
+                clientRef.current?.bankDeposit(bankSession.npcId, amount);
+              }}
+              onWithdraw={(amount) => {
+                setBankSession((current) =>
+                  current ? { ...current, pending: true, error: null } : current,
+                );
+                clientRef.current?.bankWithdraw(bankSession.npcId, amount);
+              }}
+              onTransfer={(toCharacterName, amount) => {
+                setBankSession((current) =>
+                  current ? { ...current, pending: true, error: null } : current,
+                );
+                clientRef.current?.bankTransfer(
+                  bankSession.npcId,
+                  toCharacterName,
+                  amount,
+                );
+              }}
+              onClose={() => setBankSession(null)}
+            />
           )}
           {inventoryOpen && inventory && (
             <div
