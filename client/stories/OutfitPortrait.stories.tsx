@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { OutfitPortrait } from "../components/characters/OutfitPortrait";
 
 const meta = {
-  title: "Game/Characters/OutfitPortrait",
+  title: "OutfitPortrait",
   component: OutfitPortrait,
   parameters: { layout: "centered" },
   decorators: [

@@ -50,7 +50,7 @@ const CHARACTER: OwnCharacterState = {
 };
 
 const meta = {
-  title: "Game/InventoryCharacterStats",
+  title: "InventoryCharacterStats",
   component: InventoryCharacterStats,
   parameters: { layout: "fullscreen" },
   decorators: [

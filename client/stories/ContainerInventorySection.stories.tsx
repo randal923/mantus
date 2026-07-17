@@ -50,7 +50,7 @@ const BACKPACK: ContainerState = {
 };
 
 const meta = {
-  title: "Game/ContainerInventorySection",
+  title: "ContainerInventorySection",
   component: ContainerInventorySection,
   parameters: { layout: "centered" },
   decorators: [

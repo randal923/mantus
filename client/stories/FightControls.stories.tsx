@@ -4,7 +4,7 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import { FightControls } from "../components/combat/FightControls";
 
 const meta = {
-  title: "Game/Combat/FightControls",
+  title: "FightControls",
   component: FightControls,
   parameters: {
     layout: "centered",

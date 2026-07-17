@@ -6,7 +6,7 @@ import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
 
 const meta = {
-  title: "Game/Modal",
+  title: "Modal",
   component: Modal,
   parameters: {
     layout: "fullscreen",

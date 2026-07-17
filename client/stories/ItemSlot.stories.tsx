@@ -3,7 +3,7 @@ import { ItemSlot } from "../components/inventory/ItemSlot";
 import { makeInventoryItem } from "./makeInventoryItem";
 
 const meta = {
-  title: "Game/ItemSlot",
+  title: "ItemSlot",
   component: ItemSlot,
   parameters: { layout: "centered" },
 } satisfies Meta<typeof ItemSlot>;

@@ -13,7 +13,7 @@ const CHARACTER: CharacterSummary = {
 };
 
 const meta = {
-  title: "Game/Characters/CharacterListItem",
+  title: "CharacterListItem",
   component: CharacterListItem,
   parameters: { layout: "centered" },
   decorators: [

@@ -39,7 +39,7 @@ const equipment: Equipment = {
 };
 
 const meta = {
-  title: "Game/EquipmentPaperdoll",
+  title: "EquipmentPaperdoll",
   component: EquipmentPaperdoll,
   parameters: { layout: "centered" },
 } satisfies Meta<typeof EquipmentPaperdoll>;

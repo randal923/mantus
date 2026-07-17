@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { CharacterPortrait } from "../components/navigation/CharacterPortrait";
 
 const meta = {
-  title: "Game/Navigation/CharacterPortrait",
+  title: "CharacterPortrait",
   component: CharacterPortrait,
   parameters: {
     layout: "centered",

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { WeightIcon } from "../components/inventory/WeightIcon";
 
 const meta = {
-  title: "Game/WeightIcon",
+  title: "WeightIcon",
   component: WeightIcon,
   parameters: { layout: "centered" },
   decorators: [

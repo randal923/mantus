@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { HealthManaBars } from "../components/navigation/HealthManaBars";
 
 const meta = {
-  title: "Game/Navigation/HealthManaBars",
+  title: "HealthManaBars",
   component: HealthManaBars,
   parameters: {
     layout: "centered",

@@ -260,7 +260,6 @@
     }
   },
   "hud": {
-    "controls": "WASD to move · I for inventory · C for character · Esc for menu",
     "battleList": "Battle List"
   },
   "modal": {

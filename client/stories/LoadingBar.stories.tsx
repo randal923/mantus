@@ -17,7 +17,7 @@ function AnimatedLoadingBar() {
 }
 
 const meta = {
-  title: "Game/LoadingBar",
+  title: "LoadingBar",
   component: LoadingBar,
   parameters: {
     layout: "centered",

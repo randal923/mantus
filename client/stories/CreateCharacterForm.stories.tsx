@@ -13,7 +13,7 @@ const CREATION_OPTIONS: CharacterCreationOptions = {
 };
 
 const meta = {
-  title: "Game/Characters/CreateCharacterForm",
+  title: "CreateCharacterForm",
   component: CreateCharacterForm,
   parameters: { layout: "fullscreen" },
   decorators: [

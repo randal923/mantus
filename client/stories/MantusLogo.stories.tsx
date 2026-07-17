@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MantusLogo } from "../components/ui/MantusLogo";
 
 const meta = {
-  title: "Game/MantusLogo",
+  title: "MantusLogo",
   component: MantusLogo,
   parameters: {
     layout: "centered",

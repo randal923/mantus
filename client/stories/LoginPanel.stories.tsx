@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { LoginPanel } from "../components/auth/LoginPanel";
 
 const meta = {
-  title: "Game/LoginPanel",
+  title: "LoginPanel",
   component: LoginPanel,
   parameters: {
     layout: "centered",

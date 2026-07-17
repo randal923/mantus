@@ -95,7 +95,7 @@ const character: OwnCharacterState = {
 };
 
 const meta = {
-  title: "Game/InventoryPanel",
+  title: "InventoryPanel",
   component: InventoryPanel,
   parameters: { layout: "fullscreen" },
   decorators: [

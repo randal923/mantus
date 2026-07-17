@@ -4,7 +4,7 @@ import { expect, fn, within } from "storybook/test";
 import { SpellListModal } from "../components/spells/SpellListModal";
 
 const meta = {
-  title: "Game/Spells/SpellListModal",
+  title: "SpellListModal",
   component: SpellListModal,
   parameters: {
     layout: "fullscreen",

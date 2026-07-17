@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ConditionBar } from "../components/combat/ConditionBar";
 
 const meta = {
-  title: "Game/Combat/ConditionBar",
+  title: "ConditionBar",
   component: ConditionBar,
   parameters: {
     layout: "centered",

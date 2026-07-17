@@ -3,7 +3,7 @@ import { fn } from "storybook/test";
 import { ItemTextModal } from "../components/inventory/ItemTextModal";
 
 const meta = {
-  title: "Game/ItemTextModal",
+  title: "ItemTextModal",
   component: ItemTextModal,
   parameters: { layout: "fullscreen" },
   args: {

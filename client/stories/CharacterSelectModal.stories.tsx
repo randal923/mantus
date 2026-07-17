@@ -64,7 +64,7 @@ const FULL_ROSTER: ReadonlyArray<CharacterSummary> = [
 ];
 
 const meta = {
-  title: "Game/Characters/CharacterSelectModal",
+  title: "CharacterSelectModal",
   component: CharacterSelectModal,
   parameters: {
     layout: "fullscreen",

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { SpriteIcon } from "../components/inventory/SpriteIcon";
 
 const meta = {
-  title: "Game/SpriteIcon",
+  title: "SpriteIcon",
   component: SpriteIcon,
   parameters: { layout: "centered" },
   decorators: [

@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { CloseButton } from "../components/ui/CloseButton";
 
 const meta = {
-  title: "Game/CloseButton",
+  title: "CloseButton",
   component: CloseButton,
   parameters: {
     layout: "centered",

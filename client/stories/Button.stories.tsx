@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { Button } from "../components/ui/Button";
 
 const meta = {
-  title: "Game/Button",
+  title: "Button",
   component: Button,
   parameters: {
     layout: "centered",

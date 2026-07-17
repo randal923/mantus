@@ -19,7 +19,7 @@ function InteractiveRangeSlider() {
 }
 
 const meta = {
-  title: "Game/RangeSlider",
+  title: "RangeSlider",
   component: RangeSlider,
   parameters: {
     layout: "centered",

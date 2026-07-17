@@ -19,7 +19,7 @@ const inventoryIcon = (
 );
 
 const meta = {
-  title: "Game/Navigation/NavigationIconButton",
+  title: "NavigationIconButton",
   component: NavigationIconButton,
   parameters: {
     layout: "centered",

@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { GameMenuModal } from "../components/settings/GameMenuModal";
 
 const meta = {
-  title: "Game/Settings/GameMenuModal",
+  title: "GameMenuModal",
   component: GameMenuModal,
   parameters: {
     layout: "fullscreen",

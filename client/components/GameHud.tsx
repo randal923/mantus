@@ -97,9 +97,6 @@ export function GameHud({
             );
           }}
         />
-        <p className="text-[10px] tracking-wider text-ui-muted/70 uppercase">
-          {t("hud.controls")}
-        </p>
       </div>
     </div>
   );

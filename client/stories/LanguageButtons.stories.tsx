@@ -3,7 +3,7 @@ import { fn } from "storybook/test";
 import { LanguageButtons } from "../components/auth/LanguageButtons";
 
 const meta = {
-  title: "Game/LanguageButtons",
+  title: "LanguageButtons",
   component: LanguageButtons,
   parameters: { layout: "centered" },
   args: {

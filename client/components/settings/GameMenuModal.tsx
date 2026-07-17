@@ -179,7 +179,10 @@ export function GameMenuModal({
             {actionBusy ? t("menu.loggingOut") : t("menu.logout")}
           </Button>
           {actionError && (
-            <p role="alert" className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200">
+            <p
+              role="alert"
+              className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200"
+            >
               {t("menu.logoutFailed")}
             </p>
           )}
@@ -223,14 +226,9 @@ export function GameMenuModal({
             onChange={setVolume}
           />
 
-          <section className="flex flex-col gap-2">
-            <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
-              {t("settings.controls")}
-            </h3>
-            <Button className="w-full" onClick={() => setView("hotkeys")}>
-              {t("settings.hotkeyMapping")}
-            </Button>
-          </section>
+          <Button className="w-full" onClick={() => setView("hotkeys")}>
+            {t("settings.hotkeyMapping")}
+          </Button>
 
           <section className="flex flex-col gap-2">
             <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
@@ -246,7 +244,11 @@ export function GameMenuModal({
             </div>
           </section>
 
-          <Button size="sm" className="self-start" onClick={() => setView("menu")}>
+          <Button
+            size="sm"
+            className="self-start"
+            onClick={() => setView("menu")}
+          >
             ‹ {t("common.back")}
           </Button>
           <p className="text-[10px] leading-4 text-ui-muted">
@@ -263,7 +265,9 @@ export function GameMenuModal({
                 key={row.id}
                 className="flex items-center justify-between gap-4 border-b border-ui-stone-light/10 px-3 py-2.5 last:border-b-0"
               >
-                <span className="text-xs font-medium text-ui-text">{row.label}</span>
+                <span className="text-xs font-medium text-ui-text">
+                  {row.label}
+                </span>
                 <Dropdown
                   ariaLabel={t("hotkeys.inputLabel", { action: row.label })}
                   value={hotkeys[row.id]}

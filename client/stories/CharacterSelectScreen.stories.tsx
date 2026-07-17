@@ -35,7 +35,7 @@ const CHARACTERS: ReadonlyArray<CharacterSummary> = [
 ];
 
 const meta = {
-  title: "Game/Characters/CharacterSelectScreen",
+  title: "CharacterSelectScreen",
   component: CharacterSelectScreen,
   parameters: { layout: "fullscreen" },
   args: {

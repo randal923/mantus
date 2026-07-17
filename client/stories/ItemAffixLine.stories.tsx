@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ItemAffixLine } from "../components/inventory/ItemAffixLine";
 
 const meta = {
-  title: "Game/ItemAffixLine",
+  title: "ItemAffixLine",
   component: ItemAffixLine,
   parameters: { layout: "centered" },
   decorators: [

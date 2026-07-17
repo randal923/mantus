@@ -5,7 +5,7 @@ import { fn } from "storybook/test";
 import { GameHud } from "../components/GameHud";
 
 const meta = {
-  title: "Game/GameHud",
+  title: "GameHud",
   component: GameHud,
   parameters: {
     layout: "fullscreen",

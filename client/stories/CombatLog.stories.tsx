@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { CombatLog } from "../components/combat/CombatLog";
 
 const meta = {
-  title: "Game/Combat/CombatLog",
+  title: "CombatLog",
   component: CombatLog,
   parameters: {
     layout: "fullscreen",

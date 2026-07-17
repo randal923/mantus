@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { DurabilityIcon } from "../components/inventory/DurabilityIcon";
 
 const meta = {
-  title: "Game/DurabilityIcon",
+  title: "DurabilityIcon",
   component: DurabilityIcon,
   parameters: { layout: "centered" },
   decorators: [

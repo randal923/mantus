@@ -4,7 +4,7 @@ import { ItemTooltip } from "../components/inventory/ItemTooltip";
 import { TIBIA_TOOLTIP_ITEMS } from "../components/inventory/tibiaTooltipItems";
 
 const meta = {
-  title: "Game/ItemTooltip",
+  title: "ItemTooltip",
   component: ItemTooltip,
   parameters: {
     layout: "centered",

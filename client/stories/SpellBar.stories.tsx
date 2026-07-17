@@ -24,7 +24,7 @@ const SPELLS = [
 ];
 
 const meta = {
-  title: "Game/Spells/SpellBar",
+  title: "SpellBar",
   component: SpellBar,
   parameters: {
     layout: "centered",

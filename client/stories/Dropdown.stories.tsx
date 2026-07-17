@@ -23,7 +23,7 @@ function InteractiveDropdown() {
 }
 
 const meta = {
-  title: "Game/Dropdown",
+  title: "Dropdown",
   component: Dropdown,
   parameters: {
     layout: "centered",

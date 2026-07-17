@@ -28,7 +28,7 @@ const CREATURES: ReadonlyArray<CreatureState> = [
 ];
 
 const meta = {
-  title: "Game/Creatures/BattleList",
+  title: "BattleList",
   component: BattleList,
   parameters: { layout: "fullscreen" },
   decorators: [

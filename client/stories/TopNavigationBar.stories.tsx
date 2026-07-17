@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { TopNavigationBar } from "../components/navigation/TopNavigationBar";
 
 const meta = {
-  title: "Game/TopNavigationBar",
+  title: "TopNavigationBar",
   component: TopNavigationBar,
   parameters: {
     layout: "fullscreen",

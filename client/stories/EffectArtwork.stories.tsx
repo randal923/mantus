@@ -3,7 +3,7 @@ import { EffectArtwork } from "../components/spells/EffectArtwork";
 import { SPELL_ARTWORK_BY_EFFECT } from "../components/spells/spellArtwork";
 
 const meta = {
-  title: "Game/Spells/EffectArtwork",
+  title: "EffectArtwork",
   component: EffectArtwork,
   parameters: { layout: "centered" },
   decorators: [
