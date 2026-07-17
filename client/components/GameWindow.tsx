@@ -6,7 +6,6 @@ import type {
   CharacterSummary,
   CreatureState,
   CreateCharacterInput,
-  Direction,
   FightState,
   InventoryItem,
   OwnCharacterState,
@@ -37,6 +36,7 @@ import { updateVisibleCreatures } from "../lib/creatures/updateVisibleCreatures"
 import { isEditableTarget } from "../lib/hotkeys/isEditableTarget";
 import { useLanguageStore } from "../stores/useLanguageStore";
 import { getRuneCombatTarget } from "../lib/combat/getRuneCombatTarget";
+import { getHeldMovementDirection } from "../lib/movement/getHeldMovementDirection";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
@@ -44,52 +44,9 @@ import { ItemTextModal } from "./inventory/ItemTextModal";
 import type { ItemDragSource } from "./inventory/ItemDragSource";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
 import { GameMenuModal } from "./settings/GameMenuModal";
+import { useGameSettingsStore } from "../stores/useGameSettingsStore";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
-
-const KEY_DIRECTIONS: Record<string, Direction> = {
-  ArrowUp: "north",
-  ArrowRight: "east",
-  ArrowDown: "south",
-  ArrowLeft: "west",
-  KeyW: "north",
-  KeyD: "east",
-  KeyS: "south",
-  KeyA: "west",
-  Numpad7: "northwest",
-  Numpad9: "northeast",
-  Numpad1: "southwest",
-  Numpad3: "southeast",
-};
-
-const KEY_VECTORS: Readonly<Record<string, readonly [number, number]>> = {
-  ArrowUp: [0, -1],
-  ArrowRight: [1, 0],
-  ArrowDown: [0, 1],
-  ArrowLeft: [-1, 0],
-  KeyW: [0, -1],
-  KeyD: [1, 0],
-  KeyS: [0, 1],
-  KeyA: [-1, 0],
-};
-
-function combinedHeldDirection(
-  heldMovementKeys: ReadonlyArray<string>,
-): Direction | null {
-  let horizontal = 0;
-  let vertical = 0;
-  for (const key of heldMovementKeys) {
-    const vector = KEY_VECTORS[key];
-    if (!vector) continue;
-    if (vector[0] !== 0) horizontal = vector[0];
-    if (vector[1] !== 0) vertical = vector[1];
-  }
-  if (horizontal === 1 && vertical === -1) return "northeast";
-  if (horizontal === 1 && vertical === 1) return "southeast";
-  if (horizontal === -1 && vertical === 1) return "southwest";
-  if (horizontal === -1 && vertical === -1) return "northwest";
-  return null;
-}
 
 interface GameWindowProps {
   accessToken: string;
@@ -100,6 +57,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const diagonalWalking = useGameSettingsStore(
+    (state) => state.diagonalWalking,
+  );
+  const setDiagonalWalking = useGameSettingsStore(
+    (state) => state.setDiagonalWalking,
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<GameClient | null>(null);
   const rendererRef = useRef<WorldRenderer | null>(null);
@@ -297,10 +260,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         autoWalk: (directions) => client?.autoWalk(directions),
         targetPosition: (position) => {
           const rune = pendingRuneRef.current;
-          if (!rune) return;
+          if (!rune) return false;
           pendingRuneRef.current = null;
           setRuneTargeting(false);
           client?.useRune(rune, { kind: "position", position });
+          return true;
         },
       });
       await worldRenderer.init(container);
@@ -487,19 +451,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     })();
 
     const sendHeldDirection = (queueStep: boolean) => {
-      const activeKey = heldMovementKeys[heldMovementKeys.length - 1];
-      if (!activeKey) return;
-      const direction =
-        (KEY_VECTORS[activeKey]
-          ? combinedHeldDirection(heldMovementKeys)
-          : null) ??
-        KEY_DIRECTIONS[activeKey];
+      const direction = getHeldMovementDirection(
+        heldMovementKeys,
+        useGameSettingsStore.getState().diagonalWalking,
+      );
       if (!direction) return;
       client?.sendMove(direction, queueStep);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      const direction = KEY_DIRECTIONS[event.code];
+      const direction = getHeldMovementDirection(
+        [event.code],
+        useGameSettingsStore.getState().diagonalWalking,
+      );
       if (
         !direction ||
         !joinedRef.current ||
@@ -514,7 +478,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
-      if (!KEY_DIRECTIONS[event.code]) return;
+      if (!getHeldMovementDirection([event.code], true)) return;
       if (!joinedRef.current) return;
       if (
         isEditableTarget(event.target) &&
@@ -627,6 +591,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               }
               onCharacter={() => {
                 setGameMenuOpen(false);
+                if (characterStatsOpen) {
+                  setCharacterStatsOpen(false);
+                  setInventoryOpen(false);
+                  return;
+                }
                 setInventoryOpen(true);
                 setCharacterStatsOpen(true);
               }}
@@ -893,6 +862,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               onLogout={onLogout}
               languageSaving={languageSaving}
               languageError={languageError}
+              diagonalWalking={diagonalWalking}
+              onDiagonalWalkingChange={setDiagonalWalking}
               onChangeLanguage={(nextLanguage) => {
                 setLanguage(nextLanguage);
                 setLanguageSaving(true);

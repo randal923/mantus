@@ -38,7 +38,7 @@ interface WorldRendererActions {
   endItemDrag(): void;
   dropDraggedItem(position: Position): void;
   autoWalk(directions: ReadonlyArray<Direction>): void;
-  targetPosition(position: Position): void;
+  targetPosition(position: Position): boolean;
 }
 
 /**
@@ -496,13 +496,9 @@ export class WorldRenderer {
       TILE_SIZE,
       this.ownPosition.z,
     );
-    if (event.ctrlKey) {
-      this.actions.autoWalk(
-        getAutoWalkDirections(this.ownPosition, target),
-      );
-      return;
-    }
-    this.actions.targetPosition(target);
+    if (this.actions.targetPosition(target)) return;
+    const directions = getAutoWalkDirections(this.ownPosition, target);
+    if (directions.length > 0) this.actions.autoWalk(directions);
   };
 
   private readonly onMapContextMenu = (event: MouseEvent): void => {

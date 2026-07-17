@@ -12,6 +12,15 @@ describe("getAutoWalkDirections", () => {
     ).toEqual(["northeast", "northeast", "east"]);
   });
 
+  it("keeps diagonal steps available to click-to-walk", () => {
+    expect(
+      getAutoWalkDirections(
+        { x: 10, y: 10, z: 7 },
+        { x: 11, y: 11, z: 7 },
+      ),
+    ).toEqual(["southeast"]);
+  });
+
   it("rejects floor changes and caps oversized paths", () => {
     expect(
       getAutoWalkDirections(

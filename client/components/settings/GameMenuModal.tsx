@@ -8,7 +8,6 @@ import { Button } from "../ui/Button";
 import { Dropdown } from "../ui/Dropdown";
 import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
-import { RangeSlider } from "../ui/RangeSlider";
 
 type MenuView = "menu" | "settings" | "hotkeys" | "email" | "password";
 type HotkeyId =
@@ -40,6 +39,8 @@ interface GameMenuModalProps {
   onChangeEmail?: (email: string) => void;
   onChangePassword?: (currentPassword: string, newPassword: string) => void;
   onChangeLanguage?: (language: Language) => void;
+  diagonalWalking?: boolean;
+  onDiagonalWalkingChange?: (enabled: boolean) => void;
   languageSaving?: boolean;
   languageError?: boolean;
   initialView?: MenuView;
@@ -72,6 +73,8 @@ export function GameMenuModal({
   onChangeEmail,
   onChangePassword,
   onChangeLanguage,
+  diagonalWalking = true,
+  onDiagonalWalkingChange,
   languageSaving = false,
   languageError = false,
   initialView = "menu",
@@ -80,7 +83,6 @@ export function GameMenuModal({
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const [view, setView] = useState<MenuView>(initialView);
-  const [volume, setVolume] = useState(65);
   const [hotkeys, setHotkeys] = useState(DEFAULT_HOTKEYS);
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -217,14 +219,30 @@ export function GameMenuModal({
             </p>
           )}
 
-          <RangeSlider
-            label={t("settings.masterVolume")}
-            value={volume}
-            min={0}
-            max={100}
-            unit="%"
-            onChange={setVolume}
-          />
+          <section className="flex flex-col gap-2">
+            <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
+              {t("settings.controls")}
+            </h3>
+            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-3 has-disabled:cursor-not-allowed has-disabled:opacity-45">
+              <span className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-ui-text">
+                  {t("settings.diagonalWalking")}
+                </span>
+                <span className="text-xs leading-5 text-ui-muted">
+                  {t("settings.diagonalWalkingDescription")}
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={diagonalWalking}
+                disabled={!onDiagonalWalkingChange}
+                onChange={(event) =>
+                  onDiagonalWalkingChange?.(event.currentTarget.checked)
+                }
+                className="size-4 shrink-0 accent-ui-accent-light"
+              />
+            </label>
+          </section>
 
           <Button className="w-full" onClick={() => setView("hotkeys")}>
             {t("settings.hotkeyMapping")}
@@ -251,9 +269,6 @@ export function GameMenuModal({
           >
             ‹ {t("common.back")}
           </Button>
-          <p className="text-[10px] leading-4 text-ui-muted">
-            {t("settings.previewNotice")}
-          </p>
         </div>
       )}
 
