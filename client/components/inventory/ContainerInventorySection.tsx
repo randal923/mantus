@@ -11,6 +11,8 @@ import type { ItemDragSource } from "./ItemDragSource";
 
 interface ContainerInventorySectionProps {
   state: ContainerState;
+  /** "loot" marks a world container (corpse): drags loot instead of moving. */
+  dragSourceKind?: "owned" | "loot";
   onActivate(item: InventoryItem): void;
   onDragStart(source: ItemDragSource): void;
   onDragEnd(): void;
@@ -20,6 +22,7 @@ interface ContainerInventorySectionProps {
 
 export function ContainerInventorySection({
   state,
+  dragSourceKind = "owned",
   onActivate,
   onDragStart,
   onDragEnd,
@@ -59,15 +62,23 @@ export function ContainerInventorySection({
               onDragStart={
                 item
                   ? () =>
-                      onDragStart({
-                        kind: "owned",
-                        item,
-                        location: {
-                          kind: "container",
-                          containerId: state.container.id,
-                          slot,
-                        },
-                      })
+                      onDragStart(
+                        dragSourceKind === "loot"
+                          ? {
+                              kind: "loot",
+                              item,
+                              containerId: state.container.id,
+                            }
+                          : {
+                              kind: "owned",
+                              item,
+                              location: {
+                                kind: "container",
+                                containerId: state.container.id,
+                                slot,
+                              },
+                            },
+                      )
                   : undefined
               }
               onDragEnd={onDragEnd}

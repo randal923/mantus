@@ -12,7 +12,16 @@ executed at runtime.
   handlers and schemas. Unknown actions fail closed.
 - [ ] Implement in increments: doors/key doors/level doors, levers/switches,
   one-time/repeatable chests, pressure plates, teleports, fields, readable and
-  writeable objects, rope spots, holes/shovel, and decay/transforms.
+  writeable objects (including map signs via use-map), rope spots,
+  holes/shovel, and decay/transforms.
+- [ ] Implement use-with tool actions from the 2026-07-18 Canary use-surface
+  audit: fishing rod (water whitelist, worm consume, skill-based catch roll,
+  fishing skill advance — all server RNG), machete/jungle grass,
+  scythe/wheat, pick, crowbar, and the watch (game-time reply). Same
+  registry, same execution-time re-checks.
+- [ ] Support map-item rotation and generic transform-on-use for world items
+  (Canary `m_transformOnUse`; ~1007 catalog types carry `rotateTo`) — the
+  carried-item rotate path exists, map furniture has no handler.
 - [x] Implement use-activated dropdowns (sewer grates, closed trapdoors, large
   holes, grilles): use moves the player one floor down after server-side
   destination checks, mirroring the ladder action in reverse. Identify them in

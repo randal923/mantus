@@ -5,6 +5,7 @@ import type { ItemIntent } from "../ItemIntent";
 import type { CarriedPlan } from "./CarriedPlan";
 import { planDrop } from "./planDrop";
 import { planEquip } from "./planEquip";
+import { planLoot } from "./planLoot";
 import { planMoveMapItem } from "./planMoveMapItem";
 import { planMoveToContainer } from "./planMoveToContainer";
 import { planPickup } from "./planPickup";
@@ -108,6 +109,19 @@ export function planCarriedIntent(input: {
           itemId: intent.itemId,
           expectedVersion: intent.revision,
           text: intent.text,
+        }),
+      );
+    case "loot-item":
+      return planned(
+        planLoot({
+          characterId,
+          catalog,
+          carried: { items, capacityMax: input.capacityMax },
+          world,
+          containerId: intent.containerId,
+          itemId: intent.itemId,
+          expectedVersion: intent.revision,
+          destination: intent.destination,
         }),
       );
     case "pickup-item":

@@ -62,6 +62,7 @@ import { toAuctionOwnOffer } from "../lib/market/toAuctionOwnOffer";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
+import { LootPanel } from "./inventory/LootPanel";
 import { ItemTextModal } from "./inventory/ItemTextModal";
 import type { ItemDragSource } from "./inventory/ItemDragSource";
 import { TopNavigationBar } from "./navigation/TopNavigationBar";
@@ -285,6 +286,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   );
   const [mailboxSession, setMailboxSession] =
     useState<MailboxSessionState | null>(null);
+  const [lootSession, setLootSession] = useState<
+    Extract<ServerMessage, { type: "world-container-state" }> | null
+  >(null);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState(false);
@@ -505,6 +509,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             resetDepot();
             closeMarket();
             setMailboxSession(null);
+            setLootSession(null);
             dispatchChat({
               type: "reset",
               ownPlayerId: message.playerId,
@@ -783,6 +788,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 ? {}
                 : { retryAfterMs: message.retryAfterMs }),
             });
+            return;
+          }
+          if (message.type === "world-container-state") {
+            setLootSession(message);
+            setInventoryOpen(true);
+            return;
+          }
+          if (message.type === "world-container-closed") {
+            setLootSession((current) =>
+              current?.state.container.id === message.containerId
+                ? null
+                : current,
+            );
             return;
           }
           if (message.type === "inventory-updated") {
@@ -1527,6 +1545,37 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               }}
             />
           )}
+          {lootSession && (
+            <div
+              className={`absolute top-24 z-30 ${
+                inventoryOpen ? "right-[26rem]" : "right-4"
+              }`}
+            >
+              <LootPanel
+                state={lootSession.state}
+                onLootItem={(item) =>
+                  clientRef.current?.lootItem(
+                    item,
+                    lootSession.state.container.id,
+                  )
+                }
+                onDragStart={(source) => {
+                  itemDragRef.current = source;
+                }}
+                onDragEnd={() => {
+                  itemDragRef.current = null;
+                }}
+                onClose={(containerId) => {
+                  clientRef.current?.closeWorldContainer(containerId);
+                  setLootSession((current) =>
+                    current?.state.container.id === containerId
+                      ? null
+                      : current,
+                  );
+                }}
+              />
+            </div>
+          )}
           {inventoryOpen && inventory && (
             <div
               className={`absolute top-24 right-4 bottom-4 z-30 w-[calc(100vw-2rem)] transition-[max-width] duration-300 ease-in-out motion-reduce:transition-none ${
@@ -1623,6 +1672,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                         source.item.instanceId,
                       );
                     }
+                  } else if (source.kind === "loot") {
+                    clientRef.current?.lootItem(
+                      source.item,
+                      source.containerId,
+                      {
+                        containerId: destination.id,
+                        containerRevision: destination.revision,
+                        slot,
+                      },
+                    );
                   } else if (source.location.kind === "equipment") {
                     dispatchItemOpChecked({
                       kind: "unequip",

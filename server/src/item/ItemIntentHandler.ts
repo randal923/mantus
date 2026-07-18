@@ -22,6 +22,7 @@ import type { LootItemCreation } from "./LootItemCreation";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
 import { planEquip } from "./plan/planEquip";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
+import { WorldContainerViews } from "./WorldContainerViews";
 import { WorldItemDecayRunner } from "./WorldItemDecayRunner";
 
 export class ItemIntentHandler {
@@ -30,6 +31,7 @@ export class ItemIntentHandler {
   private readonly operations: ItemOperationRunner;
   private readonly corpses: CorpseCreator;
   private readonly decayRunner: WorldItemDecayRunner;
+  private readonly worldContainers: WorldContainerViews;
   /**
    * One global write lane: world items pass between characters (drop, then
    * another player's pickup), so persist order must be total across the
@@ -61,6 +63,7 @@ export class ItemIntentHandler {
       this.outcomes,
       decay,
     );
+    this.worldContainers = new WorldContainerViews(world, catalog);
     this.decayRunner = new WorldItemDecayRunner(
       store,
       world,
@@ -405,6 +408,19 @@ export class ItemIntentHandler {
     this.decayRunner.tick(now);
   }
 
+  /** Opens a world container (corpse) at the tile if one is present. */
+  handleMapOpen(session: Session, position: Position): boolean {
+    return this.worldContainers.open(session, position);
+  }
+
+  tickWorldContainers(): void {
+    this.worldContainers.tick();
+  }
+
+  detachSession(session: Session): void {
+    this.worldContainers.detach(session);
+  }
+
   handle(session: Session, intent: ItemIntent, now = Date.now()): void {
     const playerId = session.playerId;
     const player = playerId ? this.world.getPlayer(playerId) : undefined;
@@ -413,9 +429,25 @@ export class ItemIntentHandler {
       session.sendError("join-required");
       return;
     }
+    if (intent.type === "close-world-container") {
+      this.worldContainers.close(session, intent.containerId);
+      return;
+    }
     if (session.itemOperationPending) {
       session.sendError("item-action-failed");
       return;
+    }
+    if (intent.type === "loot-item") {
+      const owner = this.world.getWorldItem(intent.containerId)?.attributes
+        .ownerCharacterId;
+      if (typeof owner === "string" && owner !== playerId) {
+        session.sendError("loot-protected");
+        return;
+      }
+      if (!this.worldContainers.has(session, intent.containerId)) {
+        session.sendError("item-action-failed");
+        return;
+      }
     }
     if (intent.type === "close-container") {
       const inventory = this.inventories.closeContainer(
@@ -430,12 +462,15 @@ export class ItemIntentHandler {
       return;
     }
     const item =
-      intent.type === "pickup-item" || intent.type === "move-map-item"
+      intent.type === "pickup-item" ||
+      intent.type === "move-map-item" ||
+      intent.type === "loot-item"
         ? undefined
         : cache.items.find((candidate) => candidate.id === intent.itemId);
     if (
       intent.type !== "pickup-item" &&
       intent.type !== "move-map-item" &&
+      intent.type !== "loot-item" &&
       !item
     ) {
       session.sendError("item-action-failed");

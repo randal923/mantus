@@ -590,6 +590,7 @@
     "invalid-message": "The game server rejected an invalid request.",
     "combat-action-failed": "That combat action could not be completed.",
     "item-action-failed": "That item action could not be completed.",
+    "loot-protected": "You may not open or loot this corpse yet; its loot is protected for the killer.",
     "player-full": "You are full.",
     "join-required": "Enter the world before performing this action.",
     "language-update-failed": "Language could not be saved. Please try again.",

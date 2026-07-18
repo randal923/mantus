@@ -31,7 +31,7 @@ import {
 import { DIRECTIONS } from "./direction";
 import { gmResponseMessageSchema } from "./gm";
 import { languageSchema } from "./language";
-import { inventoryStateSchema } from "./item";
+import { containerStateSchema, inventoryStateSchema } from "./item";
 import {
   npcDialogueClosedMessageSchema,
   npcDialogueMessageSchema,
@@ -226,6 +226,21 @@ export const tileStatesMessageSchema = z.object({
   hidden: z.array(positionSchema).max(1_024),
 });
 
+/**
+ * One open world container (corpse) view. Sent on open and re-sent whenever
+ * the contents change; carries only what the viewing player may see.
+ */
+export const worldContainerStateMessageSchema = z.object({
+  type: z.literal("world-container-state"),
+  position: positionSchema,
+  state: containerStateSchema,
+});
+
+export const worldContainerClosedMessageSchema = z.object({
+  type: z.literal("world-container-closed"),
+  containerId: z.string().uuid(),
+});
+
 export const serverErrorCodeSchema = z.enum([
   "account-banned",
   "already-authenticated",
@@ -246,6 +261,7 @@ export const serverErrorCodeSchema = z.enum([
   "language-update-pending",
   "combat-action-failed",
   "item-action-failed",
+  "loot-protected",
   "player-full",
   "logged-in-elsewhere",
   "rate-limited",
@@ -278,6 +294,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   distanceMissileMessageSchema,
   combatLogMessageSchema,
   tileStatesMessageSchema,
+  worldContainerStateMessageSchema,
+  worldContainerClosedMessageSchema,
   npcDialogueMessageSchema,
   npcDialogueClosedMessageSchema,
   bankOpenedMessageSchema,
@@ -309,5 +327,11 @@ export type MapItemState = z.infer<typeof mapItemStateSchema>;
 export type TileState = z.infer<typeof tileStateSchema>;
 export type CharacterListMessage = z.infer<typeof characterListMessageSchema>;
 export type WelcomeMessage = z.infer<typeof welcomeMessageSchema>;
+export type WorldContainerStateMessage = z.infer<
+  typeof worldContainerStateMessageSchema
+>;
+export type WorldContainerClosedMessage = z.infer<
+  typeof worldContainerClosedMessageSchema
+>;
 export type ServerErrorCode = z.infer<typeof serverErrorCodeSchema>;
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

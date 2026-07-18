@@ -21,4 +21,9 @@ export type ItemDragSource =
       readonly kind: "world";
       readonly item: MapItemState;
       readonly position: Position;
+    }
+  | {
+      readonly kind: "loot";
+      readonly item: InventoryItem;
+      readonly containerId: string;
     };

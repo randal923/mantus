@@ -235,6 +235,28 @@ export const closeContainerMessageSchema = z
   .object({ type: z.literal("close-container"), containerId: z.string().uuid() })
   .strict();
 
+/**
+ * Takes one item out of an open world container (corpse) into the carried
+ * inventory. The server re-validates at execution time that the container is
+ * open for this session, adjacent, and loot-unprotected; fixed size, covered
+ * by the shared rate caps.
+ */
+export const lootItemMessageSchema = ownedItemIntentSchema
+  .extend({
+    type: z.literal("loot-item"),
+    containerId: z.string().uuid(),
+    destination: itemContainerDestinationSchema.optional(),
+  })
+  .strict();
+
+/** Closes this session's open world container view (corpse). */
+export const closeWorldContainerMessageSchema = z
+  .object({
+    type: z.literal("close-world-container"),
+    containerId: z.string().uuid(),
+  })
+  .strict();
+
 export const useItemMessageSchema = ownedItemIntentSchema
   .extend({ type: z.literal("use-item") })
   .strict();
@@ -304,6 +326,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   moveMapItemMessageSchema,
   openContainerMessageSchema,
   closeContainerMessageSchema,
+  lootItemMessageSchema,
+  closeWorldContainerMessageSchema,
   useItemMessageSchema,
   useItemWithMessageSchema,
   splitStackMessageSchema,
@@ -365,6 +389,10 @@ export type PickupItemMessage = z.infer<typeof pickupItemMessageSchema>;
 export type DropItemMessage = z.infer<typeof dropItemMessageSchema>;
 export type OpenContainerMessage = z.infer<typeof openContainerMessageSchema>;
 export type CloseContainerMessage = z.infer<typeof closeContainerMessageSchema>;
+export type LootItemMessage = z.infer<typeof lootItemMessageSchema>;
+export type CloseWorldContainerMessage = z.infer<
+  typeof closeWorldContainerMessageSchema
+>;
 export type UseItemMessage = z.infer<typeof useItemMessageSchema>;
 export type UseItemWithMessage = z.infer<typeof useItemWithMessageSchema>;
 export type SplitStackMessage = z.infer<typeof splitStackMessageSchema>;

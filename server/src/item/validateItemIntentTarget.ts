@@ -43,8 +43,20 @@ export function validateItemIntentTarget(
       return false;
     }
   }
+  if (intent.type === "loot-item") {
+    const root = world.getWorldItem(intent.containerId);
+    if (
+      !root ||
+      root.location.kind !== "world" ||
+      !isNear(playerPosition, root.location.position)
+    ) {
+      return false;
+    }
+  }
   if (
-    (intent.type === "pickup-item" || intent.type === "unequip-item") &&
+    (intent.type === "pickup-item" ||
+      intent.type === "unequip-item" ||
+      intent.type === "loot-item") &&
     intent.destination
   ) {
     const destination = cache.items.find(

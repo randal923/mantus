@@ -35,6 +35,15 @@ roll is computed by the server.
 - [x] Implement conditions such as haste/paralyze, poison/fire/energy damage,
   regeneration, invisibility, light, outfit, drunk, mute, and combat/PZ lock
   with server-clock expirations.
+- [ ] Implement potions (health/mana/spirit): consumed via use-with on a
+  player target (usually self), level/vocation gates with polite refusal,
+  server-rolled restore amounts, empty-flask return in the same atomic
+  mutation, and a 1 s potion exhaust separate from spell cooldowns (Canary
+  `timeBetweenExActions`). Protocol gap: `use-item-with` targets only a
+  position today — either add a creature target or mirror the `use-rune`
+  intent shape. Found in the 2026-07-18 Canary use-surface audit; fluid
+  containers (vials, casks, drunk/poison fluids) stay with
+  [`05-items-and-inventory`](05-items-and-inventory.md).
 - [x] Make condition application/refresh/stack rules explicit and persistent
   only where logout/restart behavior requires it.
 

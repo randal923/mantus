@@ -590,6 +590,7 @@
     "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
     "combat-action-failed": "Não foi possível concluir essa ação de combate.",
     "item-action-failed": "Não foi possível concluir essa ação de item.",
+    "loot-protected": "Você ainda não pode abrir ou saquear este corpo; o espólio está protegido para quem o matou.",
     "player-full": "Você está cheio.",
     "join-required": "Entre no mundo antes de realizar esta ação.",
     "language-update-failed": "Não foi possível salvar o idioma. Tente novamente.",

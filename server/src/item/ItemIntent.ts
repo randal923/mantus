@@ -10,6 +10,8 @@ export type ItemIntent = Extract<
       | "drop-item"
       | "open-container"
       | "close-container"
+      | "loot-item"
+      | "close-world-container"
       | "use-item"
       | "use-item-with"
       | "split-stack"

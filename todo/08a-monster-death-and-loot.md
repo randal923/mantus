@@ -34,11 +34,23 @@ idempotent across races and restarts.
 - [ ] Import and match every pinned monster loot table, corpse id/container
   behavior, reward-boss/reward-chest rule, quick-loot eligibility, bestiary/
   bosstiary kill update, and special death/loot callback.
-- [ ] Expose corpse contents to players: an open-corpse protocol message,
-  distance/visibility checks, a loot-take item path that enforces
-  `ownerCharacterId` protection until it expires, and the client loot UI.
-  Contents exist in the store today but are not reachable by any client
-  intent.
+- [x] Expose corpse contents to players. `use-map` (right-click) on a tile
+  holding a materialized world container opens a per-session view
+  (`WorldContainerViews`), reach-checked and re-validated every tick;
+  contents go out as `world-container-state` and viewers are reconciled on
+  any mutation (loot, decay, another player). The `loot-item` intent moves a
+  direct child into the carried inventory (`planLoot`): memory-first atomic
+  mutation, expected-version guard, `ownerCharacterId` protection re-checked
+  at execution, transfer/merge audits in the same persist transaction. The
+  client renders the corpse as a loot section in the inventory panel
+  (drag-out or right-click to take; drops into the corpse are not allowed).
+  Deferred (v1 scope):
+  - nested world containers open only by taking the whole bag; browsing a
+    bag inside a corpse in place is not supported,
+  - pristine seeded map chests (never-materialized world items) are not
+    openable via use-map,
+  - one open world container per session (opening another closes the first),
+  - no quick-loot / loot-all affordance.
 
 ## Planned file surface
 
@@ -56,11 +68,14 @@ idempotent across races and restarts.
 - [x] Restart/retry cannot reroll or duplicate committed loot (single
   transaction by design; boot-time rescheduling covered in
   `ItemIntentHandler.decay.test.ts`).
-- [ ] Two players racing for protected loot produce one valid owner/move
-  (blocked on the loot-take path above).
+- [x] Two players racing for protected loot produce one valid owner/move
+  (`ItemIntentHandler.loot.test.ts`: race leaves exactly one item in one
+  backpack; stale-revision replays, out-of-reach opens/takes, and non-owner
+  opens/takes are rejected).
 - [x] Corpse/loot packets are visibility- and permission-filtered. Corpse tile
   updates go only to sessions that can see the tile (`Visibility`
-  `tile-states`); corpse contents are never sent to any client today.
+  `tile-states`); corpse contents are sent only to adjacent viewers who pass
+  the loot-protection check, and views auto-close on walk-away.
 - [ ] Aggregate parity tests cover every loot-bearing monster and fail when an
   imported loot entry, condition, count/chance, child container, or death
   callback is missing.

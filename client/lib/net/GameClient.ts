@@ -10,6 +10,7 @@ import {
   type DepotStateMessage,
   type FightMode,
   type InventoryItem,
+  type ItemContainerDestination,
   type Language,
   type MarketSide,
   type Position,
@@ -128,6 +129,24 @@ export class GameClient {
 
   closeContainer(containerId: string): boolean {
     return this.send({ type: "close-container", containerId });
+  }
+
+  lootItem(
+    item: InventoryItem,
+    containerId: string,
+    destination?: ItemContainerDestination,
+  ): boolean {
+    return this.send({
+      type: "loot-item",
+      itemId: item.id,
+      revision: item.revision,
+      containerId,
+      ...(destination ? { destination } : {}),
+    });
+  }
+
+  closeWorldContainer(containerId: string): boolean {
+    return this.send({ type: "close-world-container", containerId });
   }
 
   useItem(item: InventoryItem): boolean {

@@ -59,6 +59,11 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
   when another step is legal.
 - [x] On rejection, send a bounded correction containing the authoritative
   position/revision. Never accept a client coordinate to resynchronize.
+- [ ] `MovementRules.tryUseMap` (ladders/sewers) does not apply the pz-lock
+  destination check that `tryMoveInternal` enforces, so a pz-locked player can
+  enter a protection zone through a ladder/hole transition. Add the same
+  `conditions.has("pz-lock")` + destination `protectionZone` rejection there
+  (found during the Canary use-surface audit).
 
 ## Visibility and security
 

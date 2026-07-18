@@ -313,6 +313,7 @@ export class GameServer {
     this.spawns?.tick(now);
     this.npcs.tick(now);
     this.items.tickDecay(now);
+    this.items.tickWorldContainers();
     this.depot.tick(now);
     this.market.tick(now);
     this.progression.tick(now);
@@ -337,6 +338,7 @@ export class GameServer {
       }
       this.depot.detach(session);
       this.market.detach(session);
+      this.items.detachSession(session);
       this.registry.remove(session);
     }
   }
@@ -382,6 +384,7 @@ export class GameServer {
       }
       case "use-map":
         if (this.depot.handleMapUse(session, intent.position)) return;
+        if (this.items.handleMapOpen(session, intent.position)) return;
         this.movement.handleUseMap(session, intent, now);
         return;
       case "attack-target":
@@ -398,6 +401,8 @@ export class GameServer {
       case "move-map-item":
       case "open-container":
       case "close-container":
+      case "loot-item":
+      case "close-world-container":
       case "use-item":
       case "use-item-with":
       case "split-stack":
