@@ -13,13 +13,17 @@ executed at runtime.
 - [ ] Implement in increments: doors/key doors/level doors, levers/switches,
   one-time/repeatable chests, pressure plates, teleports, fields, readable and
   writeable objects, rope spots, holes/shovel, and decay/transforms.
-- [ ] Implement use-activated dropdowns (sewer grates, closed trapdoors, large
+- [x] Implement use-activated dropdowns (sewer grates, closed trapdoors, large
   holes, grilles): use moves the player one floor down after server-side
   destination checks, mirroring the ladder action in reverse. Identify them in
   the converter as `primaryType === "dropdowns"` without `floorChange`
   (ids 435/7750/21298, 475/8708/21374, 867/7523/7524, 22750) rather than by
   name matching, and emit them as enabled `use` world actions alongside
-  ladders.
+  ladders. Known deviations from Canary, revisit with the action registry:
+  the Oramond sewer grate 21298 drops one floor here but two floors and one
+  tile east in Canary's quest script, and dropdowns over a blocked or missing
+  tile are disabled at conversion instead of force-teleporting the player the
+  way Canary's `FLAG_NOLIMIT` teleport does.
 - [ ] At execution re-check current item/version, position, reach, floor/LOS,
   requirements, cooldown, target, destination, and resulting capacity/state.
 - [ ] Apply tile/item/quest changes synchronously in the tick and persist every

@@ -106,7 +106,7 @@ function parseAction(value: unknown): MapAction {
   const source = positionSchema.safeParse(action.source);
   const destination = positionSchema.safeParse(action.destination);
   if (
-    action.kind !== "ladder" ||
+    (action.kind !== "ladder" && action.kind !== "dropdown") ||
     action.activation !== "use" ||
     !source.success ||
     !destination.success ||
@@ -116,7 +116,7 @@ function parseAction(value: unknown): MapAction {
     throw new Error("invalid map action metadata");
   }
   return {
-    kind: "ladder",
+    kind: action.kind,
     activation: "use",
     source: source.data,
     destination: destination.data,

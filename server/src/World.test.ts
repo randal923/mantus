@@ -292,6 +292,36 @@ describe("World.tryMove", () => {
     expect(player.position).toEqual(destination);
   });
 
+  it("executes an adjacent server-authored dropdown action", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 4, z: 8 };
+    const world = new World(
+      gridMapData({
+        name: "dropdown",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [7, 8],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "dropdown",
+            activation: "use",
+            source,
+            destination,
+            itemId: 435,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.tryUseMap(player, source, 1000).moved).toBe(true);
+    expect(player.position).toEqual(destination);
+  });
+
   it("rejects remote map use and packets that forge movement coordinates", () => {
     const world = makeWorld();
     const player = makePlayer(5, 5);

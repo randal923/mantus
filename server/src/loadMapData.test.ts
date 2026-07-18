@@ -213,6 +213,13 @@ describe("loadMapData", () => {
             destination: { x: 1, y: 2, z: 7 },
             itemId: 1948,
           },
+          {
+            kind: "dropdown",
+            activation: "use",
+            source: { x: 2, y: 2, z: 7 },
+            destination: { x: 1, y: 2, z: 7 },
+            itemId: 435,
+          },
         ],
       }),
     );
@@ -257,6 +264,13 @@ describe("loadMapData", () => {
       source: { x: 1, y: 2, z: 7 },
       destination: { x: 1, y: 2, z: 7 },
       itemId: 1948,
+    });
+    expect(map.getAction({ x: 2, y: 2, z: 7 })).toEqual({
+      kind: "dropdown",
+      activation: "use",
+      source: { x: 2, y: 2, z: 7 },
+      destination: { x: 1, y: 2, z: 7 },
+      itemId: 435,
     });
   });
 });

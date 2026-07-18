@@ -501,6 +501,23 @@ function finishTile(tile) {
         ...(restricted ? { reason: "requires-content-action" } : {}),
       });
     }
+    // Use-activated dropdowns (sewer grates, closed trapdoors, large holes,
+    // grilles): "dropdowns" without an automatic step floor change move the
+    // player one floor straight down on use, like Canary's sewer grate.
+    if (staticItem.primaryType === "dropdowns" && !staticItem.floorChange) {
+      const restricted =
+        placedItem.attributes.actionId !== undefined ||
+        placedItem.attributes.uniqueId !== undefined;
+      worldActions.push({
+        kind: "dropdown",
+        activation: "use",
+        source: { x, y, z },
+        destination: z < 15 ? { x, y, z: z + 1 } : null,
+        itemId: placedItem.id,
+        enabled: z < 15 && !restricted,
+        ...(restricted ? { reason: "requires-content-action" } : {}),
+      });
+    }
     if (
       staticItem.name?.toLowerCase().includes("hole") &&
       !itemFloorChange
@@ -823,14 +840,42 @@ for (const teleport of teleports.values()) {
   const { restricted: _restricted, ...enabledTeleport } = teleport;
   transitions.push(enabledTeleport);
 }
+// Canary's Position:moveUpstairs tries the tile south of the ladder first,
+// then the remaining neighbours in this order. Dropdowns drop straight
+// down with no scan, so they only get the primary destination.
+const LADDER_FALLBACK_OFFSETS = [
+  [0, -1],
+  [1, 0],
+  [-1, 0],
+  [-1, 1],
+  [1, 1],
+  [-1, -1],
+  [1, -1],
+];
 for (const action of worldActions) {
-  if (action.kind !== "ladder" || !action.enabled || !action.destination) continue;
-  if (!isWalkable(action.destination)) {
-    action.enabled = false;
-    action.reason = hasTile(action.destination)
-      ? "blocked-destination"
-      : "missing-destination";
+  if (
+    (action.kind !== "ladder" && action.kind !== "dropdown") ||
+    !action.enabled ||
+    !action.destination
+  ) {
+    continue;
   }
+  if (isWalkable(action.destination)) continue;
+  if (action.kind === "ladder") {
+    const fallback = LADDER_FALLBACK_OFFSETS.map(([dx, dy]) => ({
+      x: action.source.x + dx,
+      y: action.source.y + dy,
+      z: action.destination.z,
+    })).find(isWalkable);
+    if (fallback) {
+      action.destination = fallback;
+      continue;
+    }
+  }
+  action.enabled = false;
+  action.reason = hasTile(action.destination)
+    ? "blocked-destination"
+    : "missing-destination";
 }
 const byPosition = (a, b) => {
   const first = a.source ?? a.position;

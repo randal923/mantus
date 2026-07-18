@@ -101,7 +101,7 @@
     },
     {
       "path": "tools/convertOtbm.mjs",
-      "sha256": "e9537ccc67f5a4bc07bd3bc8565310c9a77fb767466601049871399e96ee3aa2"
+      "sha256": "122587968f22e21a851bbf69a96f461c5869756868c93392beeba53715fa4ae4"
     },
     {
       "path": "tools/importCanaryCreatures.mjs",
