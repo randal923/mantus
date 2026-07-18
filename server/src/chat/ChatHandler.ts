@@ -3,6 +3,7 @@ import type {
   PrivateChatMessage,
   SpeakMessage,
 } from "@tibia/protocol";
+import type { GmCommandHandler } from "../gm/GmCommandHandler";
 import type { Player } from "../Player";
 import type { NpcHandler } from "../npc/NpcHandler";
 import type { Session } from "../Session";
@@ -38,6 +39,7 @@ export class ChatHandler {
     private readonly registry: SessionRegistry,
     private readonly visibility: Visibility,
     private readonly npcs?: NpcHandler,
+    private readonly gm?: GmCommandHandler,
   ) {}
 
   handle(session: Session, intent: ChatIntent, now: number): void {
@@ -52,6 +54,14 @@ export class ChatHandler {
     }
     const text = intent.text.trim();
     if (text.length === 0) return;
+    // Dev-only GM commands are consumed before the chat pipeline so they are
+    // never broadcast; on production servers `gm` is never constructed.
+    if (
+      intent.type === "speak" &&
+      this.gm?.tryHandle(session, speaker, text, now)
+    ) {
+      return;
+    }
     // Muted players consume no buffer; probing offline names still does,
     // so the rate limit also caps online-status scanning.
     const mutedForMs = this.rateLimiter.consume(speaker.id, now);

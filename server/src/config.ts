@@ -36,6 +36,15 @@ export type MapConfig =
 
 export interface ServerConfig {
   port: number;
+  /**
+   * Development-only switches, both default-off. `auth` swaps Supabase token
+   * verification for DevTokenVerifier; `commands` enables in-game GM chat
+   * commands. Neither may ever be enabled on a production deployment.
+   */
+  dev: {
+    auth: boolean;
+    commands: boolean;
+  };
   tickMs: number;
   heartbeatMs: number;
   /** Unauthenticated sockets are dropped after this long. */
@@ -78,6 +87,10 @@ export interface ServerConfig {
 
 export const serverConfig: ServerConfig = {
   port: Number(process.env.SERVER_PORT ?? 4000),
+  dev: {
+    auth: process.env.DEV_AUTH === "1",
+    commands: process.env.DEV_COMMANDS === "1",
+  },
   tickMs: 25,
   heartbeatMs: 30_000,
   authTimeoutMs: 10_000,

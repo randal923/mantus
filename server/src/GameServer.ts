@@ -19,6 +19,7 @@ import type { DepotStore } from "./depot/DepotStore";
 import type { BankStore } from "./economy/BankStore";
 import { ShopService } from "./economy/ShopService";
 import type { ShopStore } from "./economy/ShopStore";
+import { GmCommandHandler } from "./gm/GmCommandHandler";
 import { LanguageHandler } from "./LanguageHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
@@ -164,12 +165,6 @@ export class GameServer {
       this.bank,
       this.shops,
     );
-    this.chat = new ChatHandler(
-      this.world,
-      this.registry,
-      this.visibility,
-      this.npcs,
-    );
     this.movement = new MovementHandler(
       this.world,
       this.visibility,
@@ -205,6 +200,23 @@ export class GameServer {
           )
         : null;
     this.spawns = spawns;
+    const gm = config.dev.commands
+      ? new GmCommandHandler(
+          this.world,
+          this.visibility,
+          this.persistence,
+          this.progression,
+          this.items,
+          spawns,
+        )
+      : undefined;
+    this.chat = new ChatHandler(
+      this.world,
+      this.registry,
+      this.visibility,
+      this.npcs,
+      gm,
+    );
     this.wss = new WebSocketServer({
       port: config.port,
       maxPayload: PROTOCOL_LIMITS.maxMessageBytes,

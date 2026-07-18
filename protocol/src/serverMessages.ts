@@ -29,6 +29,7 @@ import {
   mailSentMessageSchema,
 } from "./depot";
 import { DIRECTIONS } from "./direction";
+import { gmResponseMessageSchema } from "./gm";
 import { languageSchema } from "./language";
 import { inventoryStateSchema } from "./item";
 import {
@@ -285,6 +286,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,
+  gmResponseMessageSchema,
   errorMessageSchema,
 ]);
 

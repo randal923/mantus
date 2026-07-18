@@ -4,6 +4,7 @@ import { serverConfig } from "./config";
 import { GameServer } from "./GameServer";
 import { PgCharacterStore } from "./character/PgCharacterStore";
 import { PgAccountStore } from "./PgAccountStore";
+import { DevTokenVerifier } from "./DevTokenVerifier";
 import { SupabaseTokenVerifier } from "./SupabaseTokenVerifier";
 import { loadItemCatalog } from "./item/loadItemCatalog";
 import { PgItemStore } from "./item/PgItemStore";
@@ -16,7 +17,7 @@ import { WorldItemSeeder } from "./item/WorldItemSeeder";
 const supabaseUrl = process.env.SUPABASE_URL;
 const databaseUrl = process.env.DATABASE_URL;
 
-if (!supabaseUrl || !databaseUrl) {
+if (!databaseUrl || (!supabaseUrl && !serverConfig.dev.auth)) {
   console.error(
     "Missing required env: set SUPABASE_URL and DATABASE_URL in the root .env " +
       "(see .env.example). SUPABASE_JWT_SECRET is only needed for legacy " +
@@ -25,10 +26,19 @@ if (!supabaseUrl || !databaseUrl) {
   process.exit(1);
 }
 
-const verifier = new SupabaseTokenVerifier({
-  supabaseUrl,
-  jwtSecret: process.env.SUPABASE_JWT_SECRET,
-});
+const verifier = serverConfig.dev.auth
+  ? new DevTokenVerifier()
+  : new SupabaseTokenVerifier({
+      supabaseUrl: supabaseUrl!,
+      jwtSecret: process.env.SUPABASE_JWT_SECRET,
+    });
+if (serverConfig.dev.auth || serverConfig.dev.commands) {
+  console.warn(
+    `DEV MODE: dev auth ${serverConfig.dev.auth ? "ON" : "off"}, ` +
+      `GM commands ${serverConfig.dev.commands ? "ON" : "off"} — ` +
+      "never enable these in production",
+  );
+}
 const pool = new Pool({ connectionString: databaseUrl });
 // idle pooled connections dropped by the pooler must not crash the process
 pool.on("error", (cause) => {

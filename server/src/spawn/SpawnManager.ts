@@ -12,6 +12,8 @@ import type { CreatureContent } from "./CreatureContent";
 import type { SpawnSlotDefinition } from "./SpawnDefinition";
 
 const SPAWN_SECTOR_SIZE = 32;
+/** Synthetic summon owner for GM-spawned monsters; never a real creature id. */
+const GM_SPAWN_OWNER_ID = "gm:spawns";
 
 interface SlotState {
   definition: SpawnSlotDefinition;
@@ -157,6 +159,38 @@ export class SpawnManager {
     }
     this.spawnSectorCursor = sectorIndex;
     return { spawnChecks, spawnAttempts };
+  }
+
+  /**
+   * Dev-only ad-hoc spawn (GM "/spawn"). Registered under a synthetic summon
+   * owner (never a real creature id, so the recursive owned-summon cleanup
+   * can't loop) so death and removal reuse the summon lifecycle.
+   */
+  spawnMonsterNear(
+    typeId: string,
+    near: { x: number; y: number; z: number },
+    now: number,
+  ): "spawned" | "unknown-type" | "no-space" {
+    const type = this.content.monsterTypes.get(typeId);
+    if (!type) return "unknown-type";
+    const position = this.world.findUnoccupiedPosition(near, 3);
+    if (!position) return "no-space";
+    const monster = new Monster({
+      id: `monster-gm:${typeId}:${this.summonGeneration++}`,
+      type,
+      position,
+      direction: "south",
+      home: position,
+      spawnRadius: 3,
+    });
+    this.world.addCreature(monster);
+    this.summonOwnerByCreature.set(monster.id, GM_SPAWN_OWNER_ID);
+    const owned = this.summonsByOwner.get(GM_SPAWN_OWNER_ID) ?? new Set<string>();
+    owned.add(monster.id);
+    this.summonsByOwner.set(GM_SPAWN_OWNER_ID, owned);
+    this.addBrain(monster, now);
+    this.visibility.announceCreatureSpawn(monster);
+    return "spawned";
   }
 
   removeCreature(creatureId: string, now: number): boolean {

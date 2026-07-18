@@ -30,6 +30,7 @@ until that ledger has no unsupported player- or operator-visible content.
 16. [Client and session resilience](todo/15-client-resilience.md)
 17. [Production observability, operations, error handling, and security](todo/16-operations-and-security.md)
 18. [Known authentication follow-ups](todo/17-auth-follow-ups.md)
+19. [Dev tooling: GM commands and playtest harness](todo/18-dev-tooling.md)
 
 Add a newly discovered gap to the narrowest matching feature file. Add it here
 only when it needs a new feature file or changes the implementation order.
