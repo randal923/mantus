@@ -1,12 +1,13 @@
 "use client";
 
-import type { CharacterOutfit } from "@tibia/protocol";
+import type { CharacterOutfit, FightMode } from "@tibia/protocol";
+import { FightControls } from "../combat/FightControls";
 import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
 
-type NavigationPanel = "character" | "inventory" | "quests" | "map" | "market";
+type NavigationPanel = "character" | "inventory" | "quests" | "market";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 const STATUS_CLASS: Record<ConnectionStatus, string> = {
@@ -25,11 +26,14 @@ interface TopNavigationBarProps {
   mana: number;
   maxMana: number;
   connectionStatus: ConnectionStatus;
+  fightMode: FightMode | null;
+  battleListVisible: boolean;
   activePanel?: NavigationPanel;
   onCharacter?: () => void;
   onInventory?: () => void;
   onQuests?: () => void;
-  onMap?: () => void;
+  onFightModeChange: (mode: FightMode) => void;
+  onBattleList: () => void;
   onMarket?: () => void;
   onSettings?: () => void;
 }
@@ -44,11 +48,14 @@ export function TopNavigationBar({
   mana,
   maxMana,
   connectionStatus,
+  fightMode,
+  battleListVisible,
   activePanel,
   onCharacter,
   onInventory,
   onQuests,
-  onMap,
+  onFightModeChange,
+  onBattleList,
   onMarket,
   onSettings,
 }: TopNavigationBarProps) {
@@ -81,7 +88,7 @@ export function TopNavigationBar({
           onClick={onCharacter}
         />
 
-        <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2 px-0.5">
             <span
               aria-hidden
@@ -98,12 +105,19 @@ export function TopNavigationBar({
             </span>
           </div>
 
-          <HealthManaBars
-            health={health}
-            maxHealth={maxHealth}
-            mana={mana}
-            maxMana={maxMana}
-          />
+          <div className="mt-1 flex min-w-0 items-center gap-2 pl-3">
+            {fightMode && (
+              <FightControls mode={fightMode} onChange={onFightModeChange} />
+            )}
+            <div className="min-w-0 flex-1">
+              <HealthManaBars
+                health={health}
+                maxHealth={maxHealth}
+                mana={mana}
+                maxMana={maxMana}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -117,7 +131,7 @@ export function TopNavigationBar({
 
       <nav
         aria-label={t("navigation.gamePanels")}
-        className="ml-auto flex gap-2 rounded-xl border border-ui-gold/10 bg-black/20 p-1.5"
+        className="ml-auto flex gap-1 rounded-lg border border-ui-gold/10 bg-black/20 p-1"
       >
         <NavigationIconButton
           label={t("navigation.character")}
@@ -129,7 +143,7 @@ export function TopNavigationBar({
           <svg
             aria-hidden
             viewBox="0 0 24 24"
-            className="size-5 sm:size-6"
+            className="size-4 sm:size-5"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.7"
@@ -151,7 +165,7 @@ export function TopNavigationBar({
           <svg
             aria-hidden
             viewBox="0 0 24 24"
-            className="size-5 sm:size-6"
+            className="size-4 sm:size-5"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.7"
@@ -171,7 +185,7 @@ export function TopNavigationBar({
           <svg
             aria-hidden
             viewBox="0 0 24 24"
-            className="size-5 sm:size-6"
+            className="size-4 sm:size-5"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.7"
@@ -184,22 +198,24 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
-          label={t("navigation.worldMap")}
-          active={activePanel === "map"}
-          disabled={!onMap}
-          onClick={onMap}
+          label={t("navigation.battleList")}
+          active={battleListVisible}
+          onClick={onBattleList}
         >
           <svg
             aria-hidden
             viewBox="0 0 24 24"
-            className="size-5 sm:size-6"
+            className="size-4 sm:size-5"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.7"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="m4 6 5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14M15 6v14" />
+            <circle cx="5.5" cy="6.5" r="1.5" />
+            <circle cx="5.5" cy="12" r="1.5" />
+            <circle cx="5.5" cy="17.5" r="1.5" />
+            <path d="M9.5 6.5H20M9.5 12H20M9.5 17.5H20" />
           </svg>
         </NavigationIconButton>
 
@@ -212,7 +228,7 @@ export function TopNavigationBar({
           <svg
             aria-hidden
             viewBox="0 0 24 24"
-            className="size-5 sm:size-6"
+            className="size-4 sm:size-5"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.7"
@@ -234,7 +250,7 @@ export function TopNavigationBar({
           <svg
             aria-hidden
             viewBox="0 0 24 24"
-            className="size-5 sm:size-6"
+            className="size-4 sm:size-5"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.7"

@@ -24,7 +24,7 @@ export function BattleList({
   return (
     <section
       aria-label={title}
-      className="ui-panel-frame pointer-events-none absolute top-24 left-4 w-56 p-3"
+      className="ui-panel-frame pointer-events-none absolute top-24 right-4 w-56 p-3"
     >
       <h2 className="mb-2 text-sm font-medium tracking-wide text-ui-text-bright uppercase">
         {title}

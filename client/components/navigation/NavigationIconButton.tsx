@@ -13,7 +13,7 @@ interface NavigationIconButtonProps extends Pick<
 }
 
 const BUTTON_CLASS =
-  "ui-button group inline-flex size-10 shrink-0 items-center justify-center rounded-md border text-ui-muted outline-none transition-[color,border-color,filter,transform] duration-150 hover:-translate-y-px hover:text-ui-text hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-30 disabled:hover:translate-y-0 sm:size-11 lg:h-10 lg:w-auto lg:gap-2 lg:px-3";
+  "ui-button group inline-flex size-9 shrink-0 items-center justify-center rounded-md border text-ui-muted outline-none transition-[color,border-color,filter,transform] duration-150 hover:-translate-y-px hover:text-ui-text hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:text-ui-muted disabled:hover:brightness-100";
 
 const INACTIVE_BUTTON_CLASS =
   "ui-button-secondary border-ui-stone-light/15 hover:border-ui-gold/40";
@@ -32,24 +32,18 @@ export function NavigationIconButton({
   return (
     <button
       type="button"
-      title={title}
       aria-label={title}
       aria-pressed={active}
       className={`${BUTTON_CLASS} ${active ? ACTIVE_BUTTON_CLASS : INACTIVE_BUTTON_CLASS}`}
       {...buttonProps}
     >
       {children}
-      <span className="hidden font-button text-xs font-normal tracking-wide uppercase lg:inline">
-        {label}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute top-full right-0 z-50 mt-2 translate-y-1 whitespace-nowrap rounded border border-ui-gold/25 bg-ui-panel-deep px-2 py-1 font-button text-xs font-normal tracking-wide text-ui-text-bright uppercase opacity-0 shadow-lg transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+      >
+        {title}
       </span>
-      {hotkey && (
-        <span
-          aria-hidden
-          className="hidden font-button text-sm font-normal tracking-wide uppercase lg:inline"
-        >
-          ( {hotkey} )
-        </span>
-      )}
     </button>
   );
 }

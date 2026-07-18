@@ -4,7 +4,6 @@ import {
   PROTOCOL_LIMITS,
   type CombatTarget,
   type CreatureState,
-  type FightMode,
   type FightState,
   type OwnCharacterState,
   type SpellCatalogEntry,
@@ -12,12 +11,12 @@ import {
 import { ChatPanel } from "./chat/ChatPanel";
 import type { ChatChannel } from "./chat/chatTypes";
 import { ConditionBar } from "./combat/ConditionBar";
-import { FightControls } from "./combat/FightControls";
 import { BattleList } from "./creatures/BattleList";
 import { getSpellCombatTarget } from "../lib/combat/getSpellCombatTarget";
 
 interface GameHudProps {
   spellHotkeysEnabled?: boolean;
+  battleListVisible: boolean;
   visibleCreatures: ReadonlyArray<CreatureState>;
   ownCharacter: OwnCharacterState;
   fightState: FightState;
@@ -26,7 +25,6 @@ interface GameHudProps {
   combatLog: ReadonlyArray<string>;
   chatChannels?: ReadonlyArray<ChatChannel>;
   chatSelectedChannelId?: string;
-  onFightModeChange: (mode: FightMode) => void;
   onCast: (spellId: string, target: CombatTarget) => void;
   onChatChannelSelect?: (channelId: string) => void;
   onChatChannelClose?: (channelId: string) => void;
@@ -36,6 +34,7 @@ interface GameHudProps {
 
 export function GameHud({
   spellHotkeysEnabled = true,
+  battleListVisible,
   visibleCreatures,
   ownCharacter,
   fightState,
@@ -44,7 +43,6 @@ export function GameHud({
   combatLog,
   chatChannels,
   chatSelectedChannelId,
-  onFightModeChange,
   onCast,
   onChatChannelSelect,
   onChatChannelClose,
@@ -96,12 +94,14 @@ export function GameHud({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 font-tibia text-ui-text select-none">
-      <BattleList
-        title={t("hud.battleList")}
-        creatures={visibleCreatures}
-        ownPlayerId={ownCharacter.id}
-        attackTargetId={fightState.attackTargetId}
-      />
+      {battleListVisible && (
+        <BattleList
+          title={t("hud.battleList")}
+          creatures={visibleCreatures}
+          ownPlayerId={ownCharacter.id}
+          attackTargetId={fightState.attackTargetId}
+        />
+      )}
       <div className="pointer-events-auto absolute bottom-4 left-4">
         <ChatPanel
           channels={visibleChatChannels}
@@ -116,9 +116,8 @@ export function GameHud({
           onSend={onSendChat}
         />
       </div>
-      <div className="absolute top-24 left-4 flex flex-col items-start gap-2">
+      <div className="absolute top-24 left-4">
         <ConditionBar conditions={fightState.conditions} />
-        <FightControls mode={fightState.mode} onChange={onFightModeChange} />
       </div>
       <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
         <SpellBar

@@ -11,6 +11,7 @@ const meta = {
     layout: "fullscreen",
   },
   args: {
+    battleListVisible: true,
     visibleCreatures: [],
     ownCharacter: {
       id: "player",
@@ -99,7 +100,6 @@ const meta = {
         ],
       },
     ],
-    onFightModeChange: fn(),
     onCast: fn(),
     onChatChannelSelect: fn(),
     onChatChannelClose: fn(),

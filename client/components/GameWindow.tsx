@@ -154,6 +154,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
+  const [battleListVisible, setBattleListVisible] = useState(true);
   const sendItemIntent = useCallback(
     (intent: PendingItemOpIntent) =>
       clientRef.current?.sendItemIntent(intent) ?? false,
@@ -1042,6 +1043,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               mana={ownCharacter.mana}
               maxMana={ownCharacter.maxMana}
               connectionStatus={status}
+              fightMode={fightState?.mode ?? null}
+              battleListVisible={battleListVisible}
               activePanel={
                 marketSession
                   ? "market"
@@ -1071,6 +1074,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 setCharacterStatsOpen(false);
                 setInventoryOpen((open) => !open);
               }}
+              onBattleList={() =>
+                setBattleListVisible((visible) => !visible)
+              }
+              onFightModeChange={(mode) =>
+                clientRef.current?.setFightMode(mode)
+              }
               onMarket={() => {
                 setGameMenuOpen(false);
                 setInventoryOpen(false);
@@ -1127,6 +1136,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           {fightState && (
             <GameHud
               spellHotkeysEnabled={!gameMenuOpen && !characterStatsOpen}
+              battleListVisible={battleListVisible}
               visibleCreatures={visibleCreatures}
               ownCharacter={ownCharacter}
               fightState={fightState}
@@ -1183,9 +1193,6 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 if (text.length === 0) return;
                 clientRef.current?.sendPrivateChat(channel.counterpart, text);
               }}
-              onFightModeChange={(mode) =>
-                clientRef.current?.setFightMode(mode)
-              }
               onCast={(spellId, target) =>
                 clientRef.current?.castSpell(spellId, target)
               }
