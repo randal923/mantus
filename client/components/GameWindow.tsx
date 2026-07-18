@@ -14,11 +14,13 @@ import type {
   CreateCharacterInput,
   FightState,
   InventoryItem,
+  InventoryState,
   OwnCharacterState,
   ServerErrorCode,
   ServerMessage,
   SpellCatalogEntry,
 } from "@tibia/protocol";
+import { i18n } from "../i18n/i18n";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import { useOptimisticDepot } from "../hooks/useOptimisticDepot";
@@ -45,7 +47,9 @@ import { isEditableTarget } from "../lib/hotkeys/isEditableTarget";
 import { useLanguageStore } from "../stores/useLanguageStore";
 import { getRuneCombatTarget } from "../lib/combat/getRuneCombatTarget";
 import { getHeldMovementDirection } from "../lib/movement/getHeldMovementDirection";
+import { exceedsCapacity } from "../lib/inventory/exceedsCapacity";
 import { toInventoryItemPresentation } from "../lib/inventory/toInventoryItemPresentation";
+import { validateItemOp } from "../lib/inventory/validateItemOp";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
@@ -148,6 +152,17 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       rendererRef.current?.clearMapItemPreviews();
     }
   }, []);
+  const ownCharacterRef = useRef<OwnCharacterState | null>(null);
+  useEffect(() => {
+    ownCharacterRef.current = ownCharacter;
+  }, [ownCharacter]);
+  const validateItemOpLocally = useCallback(
+    (op: PendingItemOp, projected: InventoryState) => {
+      const character = ownCharacterRef.current;
+      return character ? validateItemOp(op, projected, character) : null;
+    },
+    [],
+  );
   const {
     inventory,
     reset: resetInventory,
@@ -159,7 +174,22 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     clearPreviews: clearInventoryPreviews,
     getConfirmedItem,
     dispatch: dispatchItemOp,
-  } = useOptimisticInventory(sendItemIntent, discardStaleMapPreviews);
+  } = useOptimisticInventory(
+    sendItemIntent,
+    discardStaleMapPreviews,
+    validateItemOpLocally,
+  );
+  const dispatchItemOpChecked = useCallback(
+    (op: PendingItemOp): boolean => {
+      const rejection = dispatchItemOp(op);
+      if (!rejection) return true;
+      setCombatLog((current) =>
+        [...current, i18n.t(`inventory.rejections.${rejection}`)].slice(-6),
+      );
+      return false;
+    },
+    [dispatchItemOp],
+  );
   const sendDepotAction = useCallback(
     (action: QueuedDepotAction, state: DepotStateMessage): boolean => {
       const prediction = action.depotPrediction;
@@ -200,6 +230,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     fail: failDepot,
     beginBrowse: beginDepotBrowse,
     enqueue: enqueueDepotAction,
+    reject: rejectDepotAction,
     close: closeDepot,
     reset: resetDepot,
   } = useOptimisticDepot(
@@ -316,16 +347,18 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         attackTarget: (creatureId) => client?.attackTarget(creatureId),
         cancelAttack: () => client?.cancelAttack(),
         pickupMapItem: (item, position) => {
-          dispatchItemOp({
+          const queued = dispatchItemOpChecked({
             kind: "pickup",
             itemId: item.instanceId,
             revision: item.revision,
             position,
           });
-          rendererRef.current?.previewMapItemRemoval(
-            position,
-            item.instanceId,
-          );
+          if (queued) {
+            rendererRef.current?.previewMapItemRemoval(
+              position,
+              item.instanceId,
+            );
+          }
         },
         beginMapItemDrag: (item, position) => {
           const source = { kind: "world", item, position } as const;
@@ -337,38 +370,42 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         dropDraggedItem: (position) => {
           const source = itemDragRef.current;
           if (source?.kind === "owned") {
-            dispatchItemOp({
+            const queued = dispatchItemOpChecked({
               kind: "drop",
               itemId: source.item.id,
               position,
             });
-            rendererRef.current?.previewMapItemAddition(position, {
-              instanceId: source.item.id,
-              itemId: source.item.clientId,
-              revision: source.item.revision,
-              count: source.item.count,
-            });
+            if (queued) {
+              rendererRef.current?.previewMapItemAddition(position, {
+                instanceId: source.item.id,
+                itemId: source.item.clientId,
+                revision: source.item.revision,
+                count: source.item.count,
+              });
+            }
           } else if (
             source?.kind === "world" &&
             (source.position.x !== position.x ||
               source.position.y !== position.y ||
               source.position.z !== position.z)
           ) {
-            dispatchItemOp({
+            const queued = dispatchItemOpChecked({
               kind: "move-map",
               itemId: source.item.instanceId,
               revision: source.item.revision,
               fromPosition: source.position,
               toPosition: position,
             });
-            rendererRef.current?.previewMapItemRemoval(
-              source.position,
-              source.item.instanceId,
-            );
-            rendererRef.current?.previewMapItemAddition(
-              position,
-              source.item,
-            );
+            if (queued) {
+              rendererRef.current?.previewMapItemRemoval(
+                source.position,
+                source.item.instanceId,
+              );
+              rendererRef.current?.previewMapItemAddition(
+                position,
+                source.item,
+              );
+            }
           }
           itemDragRef.current = null;
         },
@@ -845,6 +882,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     rejectInventoryPreview,
     rollbackInventory,
     dispatchItemOp,
+    dispatchItemOpChecked,
     resetDepot,
     confirmDepot,
     failDepot,
@@ -1103,6 +1141,30 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   (candidate) => candidate.offerId === offerId,
                 );
                 if (!entry || entry.buyPrice === undefined) return;
+                const totalCost = entry.buyPrice * amount;
+                const funds =
+                  shopSession.currencyItemTypeId === GOLD_COIN_TYPE_ID
+                    ? inventory.gold +
+                      inventory.platinum * 100 +
+                      inventory.crystal * 10_000
+                    : shopSession.currencyAmount;
+                // Payment coins leave the inventory, by a weight the client
+                // cannot compute, so only a certainly-too-heavy purchase is
+                // rejected here; the server does the exact capacity check.
+                const rejection: ShopActionFailedReason | null =
+                  totalCost > funds - shopSession.pendingPurchaseCost
+                    ? "insufficient-funds"
+                    : entry.weight * amount > inventory.capacityMax * 100
+                      ? "no-capacity"
+                      : null;
+                if (rejection) {
+                  setShopSession((current) =>
+                    current?.shopSessionId === shopSession.shopSessionId
+                      ? { ...current, error: rejection }
+                      : current,
+                  );
+                  return;
+                }
                 const predicted = previewInventory({
                   kind: "add",
                   item: toInventoryItemPresentation(entry),
@@ -1184,6 +1246,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 beginDepotBrowse(sent);
               }}
               onDeposit={(item) => {
+                if (
+                  depotSession.state.depotCount >=
+                  depotSession.state.depotCapacity
+                ) {
+                  rejectDepotAction("depot-full");
+                  return;
+                }
                 enqueueDepotAction({
                   depotPrediction: { kind: "deposit", item },
                   inventoryPrediction: {
@@ -1194,6 +1263,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 });
               }}
               onWithdraw={(item) => {
+                if (exceedsCapacity(inventory, item.weight * item.count)) {
+                  rejectDepotAction("no-capacity");
+                  return;
+                }
                 enqueueDepotAction({
                   depotPrediction: { kind: "withdraw", item },
                   inventoryPrediction: {
@@ -1215,6 +1288,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 });
               }}
               onStashWithdraw={(item, count) => {
+                if (exceedsCapacity(inventory, item.weight * count)) {
+                  rejectDepotAction("no-capacity");
+                  return;
+                }
                 enqueueDepotAction({
                   depotPrediction: { kind: "stash-withdraw", item, count },
                   inventoryPrediction: {
@@ -1289,14 +1366,18 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 }
                 onEquip={(item) => {
                   if (!item.equipmentSlot) return;
-                  dispatchItemOp({
+                  dispatchItemOpChecked({
                     kind: "equip",
                     itemId: item.id,
                     slot: item.equipmentSlot,
                   });
                 }}
                 onUnequip={(item, slot) =>
-                  dispatchItemOp({ kind: "unequip", itemId: item.id, slot })
+                  dispatchItemOpChecked({
+                    kind: "unequip",
+                    itemId: item.id,
+                    slot,
+                  })
                 }
                 onUseRune={(item) => {
                   const rune = spells.find(
@@ -1345,26 +1426,28 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     return;
                   }
                   if (source.kind === "world") {
-                    dispatchItemOp({
+                    const queued = dispatchItemOpChecked({
                       kind: "pickup",
                       itemId: source.item.instanceId,
                       revision: source.item.revision,
                       position: source.position,
                       destination: { containerId: destination.id, slot },
                     });
-                    rendererRef.current?.previewMapItemRemoval(
-                      source.position,
-                      source.item.instanceId,
-                    );
+                    if (queued) {
+                      rendererRef.current?.previewMapItemRemoval(
+                        source.position,
+                        source.item.instanceId,
+                      );
+                    }
                   } else if (source.location.kind === "equipment") {
-                    dispatchItemOp({
+                    dispatchItemOpChecked({
                       kind: "unequip",
                       itemId: source.item.id,
                       slot: source.location.slot,
                       destination: { containerId: destination.id, slot },
                     });
                   } else {
-                    dispatchItemOp({
+                    dispatchItemOpChecked({
                       kind: "move",
                       itemId: source.item.id,
                       destinationContainerId: destination.id,
@@ -1375,21 +1458,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 }}
                 onDropInEquipment={(slot) => {
                   const source = itemDragRef.current;
-                  if (
-                    source?.kind === "owned" &&
-                    source.item.equipmentSlot === slot &&
-                    !(
-                      source.location.kind === "equipment" &&
-                      source.location.slot === slot
-                    )
-                  ) {
-                    dispatchItemOp({
-                      kind: "equip",
-                      itemId: source.item.id,
-                      slot,
-                    });
-                  }
                   itemDragRef.current = null;
+                  if (source?.kind !== "owned") return;
+                  if (
+                    source.location.kind === "equipment" &&
+                    source.location.slot === slot
+                  ) {
+                    return;
+                  }
+                  dispatchItemOpChecked({
+                    kind: "equip",
+                    itemId: source.item.id,
+                    slot,
+                  });
                 }}
               />
             </div>

@@ -168,7 +168,17 @@
     "equipped": "Equipado",
     "itemTitle": "{{count}}{{name}}",
     "closeContainer": "Fechar {{name}}",
-    "saveText": "Salvar"
+    "saveText": "Salvar",
+    "rejections": {
+      "wrong-slot": "Você não pode equipar esse item aí.",
+      "level-too-low": "Seu nível é baixo demais para equipar este item.",
+      "wrong-vocation": "Sua vocação não pode usar este item.",
+      "two-handed-conflict": "Desequipe seu escudo antes de empunhar uma arma de duas mãos.",
+      "shield-conflict": "Você não pode equipar um escudo enquanto empunha uma arma de duas mãos.",
+      "invalid-destination": "Você não pode colocar esse item aí.",
+      "out-of-range": "Você está longe demais.",
+      "too-far": "Você não pode jogar o item tão longe."
+    }
   },
   "auction": {
     "title": "Casa de Leilões",

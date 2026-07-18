@@ -20,6 +20,8 @@ export interface OptimisticDepot {
   readonly fail: (reason: DepotActionFailedReason) => void;
   readonly beginBrowse: (sent: boolean) => void;
   readonly enqueue: (action: QueuedDepotAction) => boolean;
+  /** Surfaces a client-side pre-check failure without touching the queue. */
+  readonly reject: (reason: DepotActionFailedReason) => void;
   readonly close: () => void;
   readonly reset: () => void;
 }
@@ -166,6 +168,14 @@ export function useOptimisticDepot(
     [previewInventory, publish, sendNext],
   );
 
+  const reject = useCallback(
+    (reason: DepotActionFailedReason) => {
+      errorRef.current = reason;
+      publish();
+    },
+    [publish],
+  );
+
   const close = useCallback(() => {
     reset();
   }, [reset]);
@@ -176,6 +186,7 @@ export function useOptimisticDepot(
     fail,
     beginBrowse,
     enqueue,
+    reject,
     close,
     reset,
   };

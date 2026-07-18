@@ -9,6 +9,7 @@ import type {
   PendingItemOp,
   PendingItemOpIntent,
 } from "../lib/inventory/PendingItemOp";
+import type { ItemOpRejection } from "../lib/inventory/validateItemOp";
 
 export interface OptimisticInventory {
   readonly inventory: InventoryState | null;
@@ -28,8 +29,12 @@ export interface OptimisticInventory {
   readonly clearPreviews: () => void;
   /** Reads one item from the latest authoritative inventory snapshot. */
   readonly getConfirmedItem: (itemId: string) => InventoryItem | null;
-  /** Queues an item op: renders it immediately, sends it when its turn comes. */
-  readonly dispatch: (op: PendingItemOp) => void;
+  /**
+   * Queues an item op: renders it immediately, sends it when its turn comes.
+   * Returns the client-side pre-check rejection instead of queueing when the
+   * server would certainly refuse the op.
+   */
+  readonly dispatch: (op: PendingItemOp) => ItemOpRejection | null;
 }
 
 /**
@@ -42,6 +47,10 @@ export interface OptimisticInventory {
 export function useOptimisticInventory(
   send: (intent: PendingItemOpIntent) => boolean,
   onDiscarded?: (op: PendingItemOp) => void,
+  validate?: (
+    op: PendingItemOp,
+    projected: InventoryState,
+  ) => ItemOpRejection | null,
 ): OptimisticInventory {
   const [inventory, setInventory] = useState<InventoryState | null>(null);
   const serverStateRef = useRef<InventoryState | null>(null);
@@ -173,17 +182,23 @@ export function useOptimisticInventory(
   );
 
   const dispatch = useCallback(
-    (op: PendingItemOp) => {
-      if (!serverStateRef.current) return;
+    (op: PendingItemOp): ItemOpRejection | null => {
+      if (!serverStateRef.current) return null;
       if (previewRef.current.length > 0) {
         onDiscarded?.(op);
-        return;
+        return null;
+      }
+      const projected = projectedState();
+      if (projected && validate) {
+        const rejection = validate(op, projected);
+        if (rejection) return rejection;
       }
       pendingRef.current = [...pendingRef.current, op];
       sendNext();
       project();
+      return null;
     },
-    [onDiscarded, project, sendNext],
+    [onDiscarded, project, projectedState, sendNext, validate],
   );
 
   return {

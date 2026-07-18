@@ -33,6 +33,7 @@ function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
     count: item.count,
     revision: item.version,
     ...(type.equipmentSlot ? { equipmentSlot: type.equipmentSlot } : {}),
+    ...(type.slotType === "two-handed" ? { twoHanded: true } : {}),
     ...(type.containerCapacity !== undefined
       ? { containerCapacity: type.containerCapacity }
       : {}),

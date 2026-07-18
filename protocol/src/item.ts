@@ -47,6 +47,7 @@ export const inventoryItemPresentationSchema = z
     stackable: z.boolean(),
     maxCount: z.number().int().min(1).max(100),
     equipmentSlot: equipmentSlotSchema.optional(),
+    twoHanded: z.boolean().optional(),
     containerCapacity: z.number().int().min(0).max(100).optional(),
     useKind: z
       .enum(["rune", "container", "rotate", "read", "food"])

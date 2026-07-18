@@ -168,7 +168,17 @@
     "equipped": "Equipped",
     "itemTitle": "{{count}}{{name}}",
     "closeContainer": "Close {{name}}",
-    "saveText": "Save"
+    "saveText": "Save",
+    "rejections": {
+      "wrong-slot": "You cannot equip that item there.",
+      "level-too-low": "Your level is too low to equip this item.",
+      "wrong-vocation": "Your vocation cannot use this item.",
+      "two-handed-conflict": "Unequip your shield before wielding a two-handed weapon.",
+      "shield-conflict": "You cannot equip a shield while wielding a two-handed weapon.",
+      "invalid-destination": "You cannot put that item there.",
+      "out-of-range": "You are too far away.",
+      "too-far": "You cannot throw the item that far."
+    }
   },
   "auction": {
     "title": "Auction House",
