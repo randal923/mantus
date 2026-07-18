@@ -8,6 +8,7 @@ export * from "./depot";
 export * from "./item";
 export * from "./limits";
 export * from "./language";
+export * from "./money";
 export * from "./npc";
 export * from "./position";
 export * from "./progression";

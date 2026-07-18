@@ -88,6 +88,7 @@ export class GameServer {
       resolveMapData(config.map, deps.itemCatalog),
       config.tickMs,
       deps.worldItemDeltas,
+      (itemId) => deps.itemCatalog.get(itemId)?.weight,
     );
     this.visibility = new Visibility(
       this.world,

@@ -73,6 +73,7 @@ const makeState = (overrides: Partial<InventoryState> = {}): InventoryState => (
   platinum: 0,
   crystal: 0,
   capacityUsed: 5,
+  usedWeight: 500,
   capacityMax: 100,
   slotCount: 20,
   containers: [
@@ -261,6 +262,38 @@ describe("validateItemOp", () => {
         KNIGHT,
       ),
     ).toBe("out-of-range");
+  });
+
+  it("rejects picking up more weight than the capacity budget", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "pickup",
+          itemId: crypto.randomUUID(),
+          revision: 1,
+          position: { x: 100, y: 101, z: 7 },
+          weight: 9_501,
+        },
+        makeState(),
+        KNIGHT,
+      ),
+    ).toBe("too-heavy");
+  });
+
+  it("allows picking up weight that fits the capacity budget", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "pickup",
+          itemId: crypto.randomUUID(),
+          revision: 1,
+          position: { x: 100, y: 101, z: 7 },
+          weight: 9_500,
+        },
+        makeState(),
+        KNIGHT,
+      ),
+    ).toBeNull();
   });
 
   it("rejects throwing a map item beyond the throw range", () => {

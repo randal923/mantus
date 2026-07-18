@@ -3,6 +3,7 @@ import type {
   OwnCharacterState,
   Position,
 } from "@tibia/protocol";
+import { exceedsCapacity } from "./exceedsCapacity";
 import { findInventoryItem } from "./findInventoryItem";
 import type { PendingItemOp } from "./PendingItemOp";
 
@@ -17,7 +18,8 @@ export type ItemOpRejection =
   | "shield-conflict"
   | "invalid-destination"
   | "out-of-range"
-  | "too-far";
+  | "too-far"
+  | "too-heavy";
 
 function isNear(left: Position, right: Position): boolean {
   return (
@@ -138,6 +140,9 @@ export function validateItemOp(
   }
   if (op.kind === "pickup") {
     if (!isNear(character.position, op.position)) return "out-of-range";
+    if (op.weight !== undefined && exceedsCapacity(inventory, op.weight)) {
+      return "too-heavy";
+    }
     if (op.destination) {
       const capacity = containerCapacity(inventory, op.destination.containerId);
       if (capacity !== null && op.destination.slot >= capacity) {

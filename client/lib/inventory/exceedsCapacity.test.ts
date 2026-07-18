@@ -2,23 +2,23 @@ import { describe, expect, it } from "vitest";
 import { exceedsCapacity } from "./exceedsCapacity";
 
 describe("exceedsCapacity", () => {
-  it("rejects weight that cannot fit even at the lowest real usage", () => {
+  it("rejects weight that goes over the remaining budget", () => {
     expect(
-      exceedsCapacity({ capacityUsed: 90, capacityMax: 100 }, 1_100),
+      exceedsCapacity({ usedWeight: 8_950, capacityMax: 100 }, 1_051),
     ).toBe(true);
   });
 
-  it("allows weight that may fit because usage is rounded up", () => {
+  it("allows weight that exactly fills the remaining budget", () => {
     expect(
-      exceedsCapacity({ capacityUsed: 90, capacityMax: 100 }, 1_099),
+      exceedsCapacity({ usedWeight: 8_950, capacityMax: 100 }, 1_050),
     ).toBe(false);
   });
 
   it("uses the full budget when nothing is carried", () => {
-    expect(exceedsCapacity({ capacityUsed: 0, capacityMax: 10 }, 1_000)).toBe(
+    expect(exceedsCapacity({ usedWeight: 0, capacityMax: 10 }, 1_000)).toBe(
       false,
     );
-    expect(exceedsCapacity({ capacityUsed: 0, capacityMax: 10 }, 1_001)).toBe(
+    expect(exceedsCapacity({ usedWeight: 0, capacityMax: 10 }, 1_001)).toBe(
       true,
     );
   });

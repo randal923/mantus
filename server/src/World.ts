@@ -26,8 +26,9 @@ export class World {
     private readonly map: MapData,
     tickMs: number,
     worldItemDeltas: WorldItemDeltas = { hiddenSeedKeys: [], items: [] },
+    itemWeightForId: (itemId: number) => number | undefined = () => undefined,
   ) {
-    this.mapItems = new DynamicMapItems(map);
+    this.mapItems = new DynamicMapItems(map, itemWeightForId);
     this.occupancy = new TileOccupancy(map, this.grid);
     this.movement = new MovementRules(map, tickMs, this.grid, this.occupancy);
     for (const seedKey of worldItemDeltas.hiddenSeedKeys) {

@@ -201,6 +201,8 @@ export const mapItemStateSchema = z.object({
   stackIndex: z.number().int().min(0).max(255),
   revision: z.number().int().positive(),
   count: z.number().int().positive().max(100),
+  /** Unit weight in hundredths of oz, for client capacity pre-checks. */
+  weight: z.number().int().nonnegative().optional(),
 });
 
 export const tileStateSchema = z.object({

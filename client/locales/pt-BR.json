@@ -177,7 +177,8 @@
       "shield-conflict": "Você não pode equipar um escudo enquanto empunha uma arma de duas mãos.",
       "invalid-destination": "Você não pode colocar esse item aí.",
       "out-of-range": "Você está longe demais.",
-      "too-far": "Você não pode jogar o item tão longe."
+      "too-far": "Você não pode jogar o item tão longe.",
+      "too-heavy": "Você não pode carregar tanto peso."
     }
   },
   "auction": {

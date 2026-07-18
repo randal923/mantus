@@ -20,6 +20,7 @@ import type {
   ServerMessage,
   SpellCatalogEntry,
 } from "@tibia/protocol";
+import { GOLD_COIN_TYPE_ID } from "@tibia/protocol";
 import { i18n } from "../i18n/i18n";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
@@ -50,6 +51,9 @@ import { getHeldMovementDirection } from "../lib/movement/getHeldMovementDirecti
 import { exceedsCapacity } from "../lib/inventory/exceedsCapacity";
 import { toInventoryItemPresentation } from "../lib/inventory/toInventoryItemPresentation";
 import { validateItemOp } from "../lib/inventory/validateItemOp";
+import type { ShopCoinWeights } from "../lib/shop/ShopCoinWeights";
+import { precheckShopPurchase } from "../lib/shop/precheckShopPurchase";
+import { precheckShopSale } from "../lib/shop/precheckShopSale";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
@@ -80,6 +84,8 @@ interface ShopSessionState {
   currencySpriteId: number;
   currencyName: string;
   currencyAmount: number;
+  currencyWeight: number;
+  coinWeights: ShopCoinWeights;
   pageCount: number;
   nextPage: number;
   entries: ReadonlyArray<ShopEntryProjection>;
@@ -97,7 +103,6 @@ interface MailboxSessionState {
 }
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
-const GOLD_COIN_TYPE_ID = 3031;
 
 interface GameWindowProps {
   accessToken: string;
@@ -352,6 +357,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             itemId: item.instanceId,
             revision: item.revision,
             position,
+            ...(item.weight !== undefined
+              ? { weight: item.weight * item.count }
+              : {}),
           });
           if (queued) {
             rendererRef.current?.previewMapItemRemoval(
@@ -553,6 +561,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   currencySpriteId: message.currencySpriteId,
                   currencyName: message.currencyName,
                   currencyAmount: message.currencyAmount,
+                  currencyWeight: message.currencyWeight,
+                  coinWeights: message.coinWeights,
                   pageCount: message.pageCount,
                   nextPage: 2,
                   entries: message.entries,
@@ -1141,22 +1151,17 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   (candidate) => candidate.offerId === offerId,
                 );
                 if (!entry || entry.buyPrice === undefined) return;
-                const totalCost = entry.buyPrice * amount;
-                const funds =
-                  shopSession.currencyItemTypeId === GOLD_COIN_TYPE_ID
-                    ? inventory.gold +
-                      inventory.platinum * 100 +
-                      inventory.crystal * 10_000
-                    : shopSession.currencyAmount;
-                // Payment coins leave the inventory, by a weight the client
-                // cannot compute, so only a certainly-too-heavy purchase is
-                // rejected here; the server does the exact capacity check.
-                const rejection: ShopActionFailedReason | null =
-                  totalCost > funds - shopSession.pendingPurchaseCost
-                    ? "insufficient-funds"
-                    : entry.weight * amount > inventory.capacityMax * 100
-                      ? "no-capacity"
-                      : null;
+                const rejection = precheckShopPurchase({
+                  unitWeight: entry.weight,
+                  amount,
+                  totalCost: entry.buyPrice * amount,
+                  currencyItemTypeId: shopSession.currencyItemTypeId,
+                  currencyAmount: shopSession.currencyAmount,
+                  currencyWeight: shopSession.currencyWeight,
+                  coinWeights: shopSession.coinWeights,
+                  pendingPurchaseCost: shopSession.pendingPurchaseCost,
+                  inventory,
+                });
                 if (rejection) {
                   setShopSession((current) =>
                     current?.shopSessionId === shopSession.shopSessionId
@@ -1210,6 +1215,27 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 );
               }}
               onSell={(offerId, amount) => {
+                const entry = shopSession.entries.find(
+                  (candidate) => candidate.offerId === offerId,
+                );
+                if (!entry || entry.sellPrice === undefined) return;
+                const rejection = precheckShopSale({
+                  unitWeight: entry.weight,
+                  amount,
+                  totalProceeds: entry.sellPrice * amount,
+                  currencyItemTypeId: shopSession.currencyItemTypeId,
+                  currencyWeight: shopSession.currencyWeight,
+                  coinWeights: shopSession.coinWeights,
+                  inventory,
+                });
+                if (rejection) {
+                  setShopSession((current) =>
+                    current?.shopSessionId === shopSession.shopSessionId
+                      ? { ...current, error: rejection }
+                      : current,
+                  );
+                  return;
+                }
                 const sent =
                   clientRef.current?.shopSell(
                     shopSession.npcId,
@@ -1431,6 +1457,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                       itemId: source.item.instanceId,
                       revision: source.item.revision,
                       position: source.position,
+                      ...(source.item.weight !== undefined
+                        ? { weight: source.item.weight * source.item.count }
+                        : {}),
                       destination: { containerId: destination.id, slot },
                     });
                     if (queued) {

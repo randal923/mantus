@@ -62,6 +62,7 @@ const makeState = (
   platinum: 0,
   crystal: 0,
   capacityUsed: 1,
+  usedWeight: 100,
   capacityMax: 100,
   slotCount: 4,
   containers: [],

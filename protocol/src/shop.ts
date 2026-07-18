@@ -70,6 +70,16 @@ export const shopOpenedMessageSchema = z
     currencySpriteId: z.number().int().positive(),
     currencyName: z.string().min(1).max(120),
     currencyAmount: z.number().int().min(0).max(100_000_000_000),
+    /** Unit weight of the shop's currency item, hundredths of oz. */
+    currencyWeight: z.number().int().nonnegative(),
+    /** Coin unit weights so the client can mirror payment-weight math. */
+    coinWeights: z
+      .object({
+        gold: z.number().int().nonnegative(),
+        platinum: z.number().int().nonnegative(),
+        crystal: z.number().int().nonnegative(),
+      })
+      .strict(),
     page: z.number().int().min(1).max(256),
     pageCount: z.number().int().min(1).max(256),
     entries: z.array(shopEntrySchema).max(256),

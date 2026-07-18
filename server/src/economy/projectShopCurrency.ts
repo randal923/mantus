@@ -3,7 +3,11 @@ import type { Player } from "../Player";
 import { countCarriedCoins } from "./countCarriedCoins";
 import { countItemsOfType } from "./countItemsOfType";
 import { countMoneyWorth } from "./countMoneyWorth";
-import { GOLD_COIN_TYPE_ID } from "./CurrencyBalance";
+import {
+  CRYSTAL_COIN_TYPE_ID,
+  GOLD_COIN_TYPE_ID,
+  PLATINUM_COIN_TYPE_ID,
+} from "./CurrencyBalance";
 import type { ShopCatalog } from "./ShopCatalog";
 import type { ShopCurrencyProjection } from "./ShopCurrencyProjection";
 
@@ -30,5 +34,11 @@ export function projectShopCurrency(
     currencyAmount: catalog.currencyItemTypeId !== undefined
       ? countItemsOfType(snapshot.items, currencyItemTypeId)
       : countMoneyWorth(countCarriedCoins(snapshot.items)),
+    currencyWeight: type.weight,
+    coinWeights: {
+      gold: items.itemType(GOLD_COIN_TYPE_ID)?.weight ?? 0,
+      platinum: items.itemType(PLATINUM_COIN_TYPE_ID)?.weight ?? 0,
+      crystal: items.itemType(CRYSTAL_COIN_TYPE_ID)?.weight ?? 0,
+    },
   };
 }

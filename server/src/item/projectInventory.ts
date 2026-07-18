@@ -158,6 +158,7 @@ export function projectInventory(
     platinum: countCurrency(3035),
     crystal: countCurrency(3043),
     capacityUsed: Math.ceil(usedWeight / 100),
+    usedWeight,
     capacityMax,
     slotCount: backpack
       ? (catalog.require(backpack.typeId).containerCapacity ?? 0)

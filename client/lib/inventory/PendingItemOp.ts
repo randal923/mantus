@@ -37,6 +37,8 @@ export type PendingItemOp =
       readonly itemId: string;
       readonly revision: number;
       readonly position: Position;
+      /** Total stack weight captured from the tile, for capacity pre-checks. */
+      readonly weight?: number;
       readonly destination?: {
         readonly containerId: string;
         readonly slot: number;

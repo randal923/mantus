@@ -43,6 +43,7 @@ const STATE: InventoryState = {
   platinum: 0,
   crystal: 0,
   capacityUsed: 5,
+  usedWeight: 500,
   capacityMax: 100,
   slotCount: 20,
   containers: [],

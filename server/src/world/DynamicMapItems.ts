@@ -11,7 +11,12 @@ export class DynamicMapItems {
   private readonly dynamicMapItems = new Map<string, MapItem[]>();
   private readonly tileItemRevisions = new Map<string, number>();
 
-  constructor(private readonly map: MapData) {}
+  constructor(
+    private readonly map: MapData,
+    private readonly weightForItemId: (
+      itemId: number,
+    ) => number | undefined = () => undefined,
+  ) {}
 
   hideSeed(seedKey: string): void {
     this.hiddenMapItemIds.add(seedKey);
@@ -49,13 +54,7 @@ export class DynamicMapItems {
           tiles.push({
             position: tilePosition,
             revision: this.tileItemRevisions.get(positionKey(tilePosition)) ?? 0,
-            items: items.map((item) => ({
-              instanceId: item.instanceId,
-              itemId: item.itemId,
-              stackIndex: item.stackIndex,
-              revision: item.revision ?? 1,
-              count: item.count ?? 1,
-            })),
+            items: items.map((item) => this.toMapItemState(item)),
           });
         }
       }
@@ -68,13 +67,19 @@ export class DynamicMapItems {
     return {
       position: { ...position },
       revision: this.tileItemRevisions.get(positionKey(position)) ?? 0,
-      items: items.map((item) => ({
-        instanceId: item.instanceId,
-        itemId: item.itemId,
-        stackIndex: item.stackIndex,
-        revision: item.revision ?? 1,
-        count: item.count ?? 1,
-      })),
+      items: items.map((item) => this.toMapItemState(item)),
+    };
+  }
+
+  private toMapItemState(item: MapItem) {
+    const weight = this.weightForItemId(item.itemId);
+    return {
+      instanceId: item.instanceId,
+      itemId: item.itemId,
+      stackIndex: item.stackIndex,
+      revision: item.revision ?? 1,
+      count: item.count ?? 1,
+      ...(weight !== undefined ? { weight } : {}),
     };
   }
 

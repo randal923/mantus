@@ -107,6 +107,8 @@ export const inventoryStateSchema = z
     platinum: z.number().int().nonnegative(),
     crystal: z.number().int().nonnegative(),
     capacityUsed: z.number().int().nonnegative(),
+    /** Exact carried weight in hundredths of oz (capacityUsed is rounded). */
+    usedWeight: z.number().int().nonnegative(),
     capacityMax: z.number().int().nonnegative(),
     slotCount: z.number().int().min(0).max(100),
     containers: z.array(containerStateSchema).max(16).optional(),

@@ -180,23 +180,24 @@ is atomic.
 
 `client/lib/inventory/validateItemOp.ts` (plus the shop/depot handlers in
 `GameWindow.tsx`) pre-rejects ops the server would certainly refuse, before
-the optimistic send. It deliberately only rejects *certain* failures — the
-server stays authoritative — which leaves these accepted limitations:
+the optimistic send. `InventoryState.usedWeight` (exact, hundredths),
+`shop-opened.currencyWeight`/`coinWeights`, the shared money planners in
+`protocol/src/money.ts`, and per-item `weight` on tile-state map items let
+the client mirror capacity math exactly (`exceedsCapacity.ts`,
+`precheckShopPurchase.ts`, `precheckShopSale.ts`). Remaining accepted
+limitations:
 
-- Shop **buy** capacity uses the weak bound `unitWeight * amount >
-  capacityMax * 100` because the client cannot compute the weight of the
-  coins leaving the inventory; near-full buys still round-trip to the
-  server's `precheckPurchase`. Fix: have the server include coin weights (or
-  a projected `usedWeightExact`) in the inventory state.
 - Shop **sell** has no ownership precheck: `countSellable` needs items inside
   closed containers, which the client cannot see, so any client count would
-  falsely reject legitimate sales.
-- **Pickup** has no capacity precheck: map items do not carry weight in
-  `MapItem`, only owned-item tooltips do. Fix: add unit weight to the map
-  item payload if the round-trip proves annoying.
-- Capacity mirrors use a lower bound derived from `capacityUsed`, which the
-  server rounds up to whole oz (`exceedsCapacity.ts`); exact mirroring needs
-  the un-rounded used weight in `InventoryState`.
+  falsely reject legitimate sales. Fixing it would need the server to push
+  live per-type owned counts with the shop session; not worth the traffic
+  while the server precheck answers quickly with `not-owned`.
+- **Pickup** capacity uses the map item's unit weight × count; contents of a
+  picked-up container on the ground are not included (the server counts
+  them), so those pickups may still round-trip before failing.
+- `usedWeight` is not adjusted by optimistic previews/queued ops, so
+  back-to-back heavy withdraws may pass the client check and be rejected by
+  the server — the safe direction (no false client rejections).
 
 ## Pinned Canary parity gate
 
