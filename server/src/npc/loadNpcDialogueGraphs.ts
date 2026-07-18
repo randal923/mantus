@@ -8,7 +8,13 @@ import type {
   NpcTravelOffer,
 } from "./DialogueGraph";
 
-const CONTENT_FILE = fileURLToPath(
+const BASELINE_CONTENT_FILE = fileURLToPath(
+  new URL(
+    "../../../content/npcs/canary-dialogue-baseline.json",
+    import.meta.url,
+  ),
+);
+const REVIEWED_CONTENT_FILE = fileURLToPath(
   new URL("../../../content/npcs/canary-dialogues.json", import.meta.url),
 );
 const IDENTIFIER = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -16,28 +22,32 @@ const IDENTIFIER = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export function loadNpcDialogueGraphs(
   expectedCanaryCommit: string,
 ): ReadonlyMap<string, DialogueGraph> {
-  const document = record(
-    JSON.parse(readFileSync(CONTENT_FILE, "utf8")),
-    "NPC dialogue document",
-  );
-  if (document.formatVersion !== 1) {
-    throw new Error("NPC dialogue content has an unsupported version");
-  }
-  const source = record(document.source, "NPC dialogue source");
-  if (source.canaryCommit !== expectedCanaryCommit) {
-    throw new Error("NPC dialogue content does not match creature content");
-  }
-  if (!Array.isArray(document.dialogues)) {
-    throw new Error("NPC dialogue definitions must be an array");
-  }
   const graphs = new Map<string, DialogueGraph>();
-  for (const value of document.dialogues) {
-    const definition = record(value, "NPC dialogue definition");
-    const typeId = identifier(definition.typeId, "NPC dialogue type id");
-    if (graphs.has(typeId)) {
-      throw new Error(`duplicate NPC dialogue definition ${typeId}`);
+  for (const contentFile of [BASELINE_CONTENT_FILE, REVIEWED_CONTENT_FILE]) {
+    const document = record(
+      JSON.parse(readFileSync(contentFile, "utf8")),
+      "NPC dialogue document",
+    );
+    if (document.formatVersion !== 1) {
+      throw new Error("NPC dialogue content has an unsupported version");
     }
-    graphs.set(typeId, parseGraph(definition));
+    const source = record(document.source, "NPC dialogue source");
+    if (source.canaryCommit !== expectedCanaryCommit) {
+      throw new Error("NPC dialogue content does not match creature content");
+    }
+    if (!Array.isArray(document.dialogues)) {
+      throw new Error("NPC dialogue definitions must be an array");
+    }
+    const documentTypeIds = new Set<string>();
+    for (const value of document.dialogues) {
+      const definition = record(value, "NPC dialogue definition");
+      const typeId = identifier(definition.typeId, "NPC dialogue type id");
+      if (documentTypeIds.has(typeId)) {
+        throw new Error(`duplicate NPC dialogue definition ${typeId}`);
+      }
+      documentTypeIds.add(typeId);
+      graphs.set(typeId, parseGraph(definition));
+    }
   }
   return graphs;
 }
@@ -104,7 +114,9 @@ function parseGraph(value: Record<string, unknown>): DialogueGraph {
     ),
     greeting: strings(value.greeting, "NPC greeting", 1, 8, 1_000),
     farewell: strings(value.farewell, "NPC farewell", 1, 8, 1_000),
-    walkAway: strings(value.walkAway, "NPC walk-away", 1, 8, 1_000),
+    walkAway: array(value.walkAway, "NPC walk-away", 0, 8)
+      .filter((entry) => entry !== "")
+      .map((entry) => text(entry, "NPC walk-away", 1_000)),
     rootNodeId,
     nodes,
     travelOffers: offers,
@@ -125,7 +137,7 @@ function parseNode(value: unknown): DialogueNode {
   return {
     id: identifier(node.id, "NPC dialogue node id"),
     matches,
-    responses: strings(node.responses, "NPC dialogue responses", 0, 8, 1_000),
+    responses: strings(node.responses, "NPC dialogue responses", 0, 16, 1_000),
     children: identifiers(node.children, "NPC dialogue children", 0, 512),
     choices,
     ...(node.nextNodeId === undefined

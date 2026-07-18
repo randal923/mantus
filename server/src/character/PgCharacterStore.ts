@@ -49,6 +49,7 @@ interface LoadedCharacterRow extends CharacterRow {
     tries: string;
   }>;
   progression_event_ids: string[];
+  storage_values: Record<string, unknown>;
 }
 
 const CHARACTER_COLUMNS = `
@@ -176,7 +177,7 @@ export class PgCharacterStore implements CharacterStore {
       await this.insertSkills(client, character.id, character.skills);
       await this.insertStarterSet(client, character.id, starterSet);
       await client.query("COMMIT");
-      return this.toCharacter(row, character.skills, []);
+      return this.toCharacter(row, character.skills, [], {});
     } catch (cause) {
       await client.query("ROLLBACK");
       if (this.isNormalizedNameConflict(cause)) {
@@ -216,7 +217,15 @@ export class PgCharacterStore implements CharacterStore {
              WHERE character_id = characters.id
            ),
            ARRAY[]::varchar[]
-         ) AS progression_event_ids
+         ) AS progression_event_ids,
+         coalesce(
+           (
+             SELECT jsonb_object_agg(storage_key, storage_value)
+             FROM character_storages
+             WHERE character_id = characters.id
+           ),
+           '{}'::jsonb
+         ) AS storage_values
        FROM characters
        WHERE id = $1 AND account_id = $2`,
       [characterId, accountId],
@@ -231,6 +240,7 @@ export class PgCharacterStore implements CharacterStore {
         tries: Number(skill.tries),
       })),
       row.progression_event_ids,
+      this.parseStorageValues(row.storage_values),
     );
   }
 
@@ -430,6 +440,7 @@ export class PgCharacterStore implements CharacterStore {
     row: CharacterRow,
     skills: ReadonlyArray<CharacterSkill>,
     progressionEventIds: ReadonlyArray<string>,
+    storageValues: Readonly<Record<string, number>>,
   ): Character {
     return {
       id: row.id,
@@ -447,6 +458,7 @@ export class PgCharacterStore implements CharacterStore {
       skills,
       progressionDefinitionVersion: row.progression_definition_version,
       progressionEventIds,
+      storageValues,
       positionX: row.position_x,
       positionY: row.position_y,
       positionZ: row.position_z,
@@ -465,5 +477,26 @@ export class PgCharacterStore implements CharacterStore {
       lastLoginAt: row.last_login_at,
       version: row.version,
     };
+  }
+
+  private parseStorageValues(value: unknown): Record<string, number> {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("character storage values are invalid");
+    }
+    const parsed: Record<string, number> = {};
+    for (const [key, storageValue] of Object.entries(value)) {
+      if (
+        key.length < 1 ||
+        key.length > 192 ||
+        typeof storageValue !== "number" ||
+        !Number.isInteger(storageValue) ||
+        storageValue < -2_147_483_648 ||
+        storageValue > 2_147_483_647
+      ) {
+        throw new Error("character storage value is invalid");
+      }
+      parsed[key] = storageValue;
+    }
+    return parsed;
   }
 }

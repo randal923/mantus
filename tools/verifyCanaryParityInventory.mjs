@@ -10,6 +10,11 @@ const creatureReport = readJson("content/spawns/world-import-report.json");
 const itemSemantics = readJson("content/canary-item-semantics.json");
 const monsterTypes = readJson("content/monsters/world-monsters.json");
 const npcTypes = readJson("content/npcs/world-npcs.json");
+const npcImportReport = readJson("content/npcs/canary-npc-import-report.json");
+const npcDialogueBaseline = readJson(
+  "content/npcs/canary-dialogue-baseline.json",
+);
+const npcShops = readJson("content/npcs/canary-shops.json");
 const spawnDefinitions = readJson("content/spawns/world-spawns.json");
 const foodDefinitions = readJson("content/items/canary-foods.json");
 
@@ -116,6 +121,31 @@ for (const definition of creatureReport.unsupportedDefinitions ?? []) {
   ) {
     throw new Error(`creature ${definition.typeId} has unowned ignored fields`);
   }
+}
+
+const importedShopOffers = npcShops.shops.flatMap(
+  (shop) => shop.entries,
+).length;
+if (
+  npcImportReport.source?.canaryCommit !== manifest.canary?.commit ||
+  npcDialogueBaseline.source?.definitionsSha256 !==
+    npcImportReport.source?.definitionsSha256 ||
+  npcShops.source?.definitionsSha256 !==
+    npcImportReport.source?.definitionsSha256 ||
+  npcImportReport.dialogues?.sourceDefinitions !== 956 ||
+  npcImportReport.dialogues?.interactiveDefinitions !== 949 ||
+  npcImportReport.dialogues?.definitions?.length !== 956 ||
+  npcDialogueBaseline.dialogues?.length !== 949 ||
+  npcImportReport.shops?.catalogs !== 284 ||
+  npcShops.shops?.length !== 284 ||
+  npcImportReport.shops?.importedOffers !== 8_368 ||
+  importedShopOffers !== 8_368 ||
+  npcImportReport.shops?.declaredRows !==
+    npcImportReport.shops?.importedOffers +
+      npcImportReport.shops?.unsupportedRows ||
+  npcImportReport.shops?.unsupportedCallbacks !== 0
+) {
+  throw new Error("generated NPC import coverage is stale or incomplete");
 }
 
 const expectedCounts = {

@@ -27,6 +27,7 @@ export function makeCharacter(id: string, displayName = id): Character {
     skills: createInitialSkills(),
     progressionDefinitionVersion: PROGRESSION_DEFINITION_VERSION,
     progressionEventIds: [],
+    storageValues: {},
     positionX: 0,
     positionY: 0,
     positionZ: 7,

@@ -16,6 +16,7 @@
     "items:catalog": "node tools/buildItemCatalog.mjs",
     "map:convert": "node tools/convertOtbm.mjs",
     "creatures:import": "node tools/importCanaryCreatures.mjs",
+    "npcs:import": "node tools/importCanaryNpcs.mjs",
     "spells:import": "node tools/importCanarySpells.mjs",
     "parity:inventory": "node tools/buildCanaryParityInventory.mjs",
     "parity:check": "node tools/verifyCanaryParityInventory.mjs",

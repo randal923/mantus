@@ -103,6 +103,7 @@ export class CharacterService {
       skills: createInitialSkills(),
       progressionDefinitionVersion: PROGRESSION_DEFINITION_VERSION,
       progressionEventIds: [],
+      storageValues: {},
       positionX: this.starter.x,
       positionY: this.starter.y,
       positionZ: this.starter.z,

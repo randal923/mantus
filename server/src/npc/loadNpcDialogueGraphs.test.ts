@@ -7,15 +7,30 @@ import { loadNpcDialogueGraphs } from "./loadNpcDialogueGraphs";
 const CANARY_COMMIT = "a879c9312e34381e8eedf397b8ed44510698b689";
 
 describe("loadNpcDialogueGraphs", () => {
-  it("loads reviewed graphs and server-owned travel offers", () => {
+  it("loads generated baselines with reviewed server-owned overrides", () => {
     const graphs = loadNpcDialogueGraphs(CANARY_COMMIT);
     const captain = graphs.get("captain-bluebear");
 
-    expect([...graphs.keys()].sort()).toEqual([
-      "captain-bluebear",
-      "naji",
-      "quentin",
+    expect(graphs.size).toBe(949);
+    expect(graphs.get("rudolph")?.greeting).toEqual([
+      "Oh, a customer. Hello |PLAYERNAME|. If you'd like to see my wonderful self-tailored clothes, ask me for a {trade}.",
     ]);
+    expect(
+      graphs
+        .get("rudolph")
+        ?.nodes.some(
+          (node) =>
+            node.action?.kind === "shop" && node.action.shopId === "rudolph",
+        ),
+    ).toBe(true);
+    expect(
+      graphs
+        .get("sam")
+        ?.nodes.find(
+          (node) =>
+            node.action?.kind === "shop" && node.action.shopId === "sam",
+        ),
+    ).toBeDefined();
     expect(
       graphs
         .get("naji")
@@ -41,7 +56,9 @@ describe("loadNpcDialogueGraphs", () => {
     expect(content.npcTypes.size).toBe(956);
     expect(content.npcTypes.get("captain-bluebear")?.dialogue).toBeDefined();
     expect(content.npcTypes.get("quentin")?.dialogue).toBeDefined();
-    expect(content.npcTypes.get("a-bearded-woman")?.dialogue).toBeUndefined();
+    expect(content.npcTypes.get("a-bearded-woman")?.dialogue).toBeDefined();
+    expect(content.npcTypes.get("rudolph")?.dialogue).toBeDefined();
+    expect(content.npcTypes.get("an-orc-guard")?.dialogue).toBeUndefined();
   });
 
   it("resolves every reviewed travel destination on the converted world map", () => {

@@ -13,6 +13,7 @@ export class Player extends Creature<Character["outfit"]> {
   readonly lastLoginAt: Date | null;
   readonly version: number;
   readonly progression: CharacterProgression;
+  private readonly storageValues: Readonly<Record<string, number>>;
   private addAttackSkillPoint = false;
   private bloodHitCount = 0;
   private shieldBlockCount = 0;
@@ -45,6 +46,7 @@ export class Player extends Creature<Character["outfit"]> {
     this.townId = character.townId;
     this.lastLoginAt = character.lastLoginAt;
     this.version = character.version;
+    this.storageValues = { ...character.storageValues };
     this.progression = new CharacterProgression(
       character.vocation,
       character.progressionDefinitionVersion,
@@ -64,6 +66,10 @@ export class Player extends Creature<Character["outfit"]> {
 
   get level(): number {
     return this.progression.level;
+  }
+
+  storageValue(key: string): number {
+    return this.storageValues[key] ?? -1;
   }
 
   get experience(): number {

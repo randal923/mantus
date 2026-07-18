@@ -82,6 +82,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       "009_item_interactions.sql",
       "010_monk_vocations.sql",
       "011_npc_travel.sql",
+      "014_character_storages.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -178,6 +179,29 @@ databaseDescribe("PgCharacterStore integration", () => {
       [accountId],
     );
     expect(Number(count.rows[0]?.count)).toBe(5);
+  });
+
+  it("loads server-owned quest storage values used by NPC availability", async () => {
+    const accountId = await createAccount("npc-storage");
+    await service.create(accountId, {
+      displayName: "Quest Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const summary = (await store.listByAccountId(accountId))[0];
+    if (!summary) throw new Error("character was not created");
+    await pool.query(
+      `INSERT INTO character_storages (
+         character_id, storage_key, storage_value
+       ) VALUES ($1, $2, $3)`,
+      [summary.id, "Storage.Quest.Example", 4],
+    );
+
+    const character = await store.findByIdForAccount(accountId, summary.id);
+
+    expect(character?.storageValues).toEqual({
+      "Storage.Quest.Example": 4,
+    });
   });
 
   it("rejects a stale snapshot without overwriting the newer save", async () => {

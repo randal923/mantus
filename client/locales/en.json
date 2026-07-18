@@ -253,6 +253,34 @@
       "failed": "The bank could not complete that action."
     }
   },
+  "shop": {
+    "title": "Shop — {{npcName}}",
+    "search": "Search",
+    "searchPlaceholder": "Search by item name…",
+    "amount": "Amount",
+    "carried": "Carried {{currency}}:",
+    "buy": "Buy",
+    "sell": "Sell",
+    "buyItem": "Buy {{name}}",
+    "sellItem": "Sell {{name}}",
+    "buyFor": "Buy for {{price}} {{currency}}",
+    "sellFor": "Sell for {{price}} {{currency}}",
+    "bought": "You bought {{count}}x {{name}} for {{price}} {{currency}}.",
+    "sold": "You sold {{count}}x {{name}} for {{price}} {{currency}}.",
+    "noItems": "No items match this search.",
+    "errors": {
+      "out-of-range": "You are too far away from the shopkeeper.",
+      "busy": "Please wait for your other action to finish.",
+      "unavailable": "This shop is not available right now.",
+      "invalid-item": "The shop does not trade that item.",
+      "out-of-stock": "That offer is out of stock.",
+      "insufficient-funds": "You do not have enough money.",
+      "not-owned": "You do not have that many to sell.",
+      "no-space": "You do not have enough room.",
+      "no-capacity": "You cannot carry that much weight.",
+      "failed": "The shop could not complete that action."
+    }
+  },
   "characterStats": {
     "label": "{{name}}'s character stats",
     "title": "Character Details",

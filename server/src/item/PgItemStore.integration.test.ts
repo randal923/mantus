@@ -164,6 +164,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "009_item_interactions.sql",
       "010_monk_vocations.sql",
       "011_npc_travel.sql",
+      "014_character_storages.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -180,8 +181,9 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       z: 7,
       townId: 1,
     });
-    store = new PgItemStore(pool, await loadItemCatalog(), "test");
-    travelStore = new PgNpcTravelStore(pool);
+    const catalog = await loadItemCatalog();
+    store = new PgItemStore(pool, catalog, "test");
+    travelStore = new PgNpcTravelStore(pool, catalog);
   });
 
   beforeEach(async () => {

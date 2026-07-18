@@ -73,6 +73,7 @@ const config = {
 const makeContent = (enabled = true): CreatureContent => ({
   monsterTypes: new Map([[monsterType.id, monsterType]]),
   npcTypes: new Map(),
+  shopCatalogs: new Map(),
   slots: [
     {
       id: "monster:slot-1",
@@ -227,6 +228,7 @@ describe("SpawnManager", () => {
         [summonType.id, summonType],
       ]),
       npcTypes: new Map(),
+      shopCatalogs: new Map(),
       slots: [
         {
           id: "monster:summoner",

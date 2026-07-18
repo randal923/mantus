@@ -3,7 +3,8 @@ import type { ItemMutation } from "../item/ItemMutation";
 export type BankDepositResult =
   | { status: "committed"; balance: number; mutation: ItemMutation }
   | { status: "insufficient-funds" }
-  | { status: "balance-limit" };
+  | { status: "balance-limit" }
+  | { status: "no-space" };
 
 export type BankWithdrawResult =
   | { status: "committed"; balance: number; mutation: ItemMutation }

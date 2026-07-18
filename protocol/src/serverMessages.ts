@@ -30,6 +30,11 @@ import {
 } from "./npc";
 import { positionSchema } from "./position";
 import { ownProgressionStateSchema } from "./progression";
+import {
+  shopActionFailedMessageSchema,
+  shopOpenedMessageSchema,
+  shopTransactedMessageSchema,
+} from "./shop";
 
 /**
  * Static terrain is public data served over HTTP from
@@ -260,6 +265,9 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   bankOpenedMessageSchema,
   bankUpdatedMessageSchema,
   bankActionFailedMessageSchema,
+  shopOpenedMessageSchema,
+  shopTransactedMessageSchema,
+  shopActionFailedMessageSchema,
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,

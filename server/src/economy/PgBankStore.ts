@@ -1,9 +1,7 @@
-import { randomUUID } from "node:crypto";
-import type { EquipmentSlot } from "@tibia/protocol";
 import { BANK_LIMITS } from "@tibia/protocol";
 import type { Pool, PoolClient } from "pg";
 import type { Item } from "../item/Item";
-import type { ItemLocation } from "../item/ItemLocation";
+import type { ItemCatalog } from "../item/ItemCatalog";
 import type {
   BankDepositResult,
   BankTransferResult,
@@ -15,46 +13,18 @@ import {
   GOLD_COIN_TYPE_ID,
   PLATINUM_COIN_TYPE_ID,
 } from "./CurrencyBalance";
+import { PgCoinOperations } from "./PgCoinOperations";
 import { planMoneyGrant } from "./planMoneyGrant";
 import { planMoneySpend } from "./planMoneySpend";
-
-interface BankItemRow {
-  id: string;
-  item_type_id: number;
-  count: number;
-  attributes: unknown;
-  version: number;
-  location_type: ItemLocation["kind"];
-  character_id: string | null;
-  container_id: string | null;
-  slot_index: number | null;
-  equipment_slot: EquipmentSlot | null;
-  seed_key: string | null;
-}
-
-const OWNED_ITEMS_QUERY = `
-  WITH RECURSIVE owned AS (
-    SELECT i.*, 1 AS item_depth
-    FROM items i
-    WHERE i.character_id = $1
-      AND i.location_type IN ('equipment', 'inventory')
-    UNION ALL
-    SELECT child.*, owned.item_depth + 1
-    FROM items child
-    JOIN owned ON child.container_id = owned.id
-    WHERE child.location_type IN ('container', 'corpse')
-      AND owned.item_depth < 8
-  )
-  SELECT id, item_type_id, count, attributes, version, location_type,
-         character_id, container_id, slot_index, equipment_slot, seed_key
-  FROM owned
-  ORDER BY item_depth, location_type, equipment_slot, slot_index
-  LIMIT 501`;
+import { TransactionRollback } from "./TransactionRollback";
 
 const COIN_STACK_LIMIT = 100;
 
 export class PgBankStore implements BankStore {
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly pool: Pool,
+    private readonly catalog: ItemCatalog,
+  ) {}
 
   async balance(characterId: string): Promise<number> {
     this.validateCharacterId(characterId);
@@ -77,13 +47,14 @@ export class PgBankStore implements BankStore {
       if (balance + amount > BANK_LIMITS.maxBalance) {
         return { status: "balance-limit" };
       }
-      const owned = await this.loadOwnedItems(client, characterId);
-      const coins = this.coinRows(owned);
+      const coinOps = new PgCoinOperations(client, characterId, this.catalog);
+      const owned = await coinOps.loadOwnedItems();
+      const coins = coinOps.coinRows(owned);
       const plan = planMoneySpend(
         {
-          gold: this.countCoins(coins.gold),
-          platinum: this.countCoins(coins.platinum),
-          crystal: this.countCoins(coins.crystal),
+          gold: coinOps.countRows(coins.gold),
+          platinum: coinOps.countRows(coins.platinum),
+          crystal: coinOps.countRows(coins.crystal),
         },
         amount,
       );
@@ -105,9 +76,7 @@ export class PgBankStore implements BankStore {
         },
       ];
       for (const spend of spends) {
-        await this.spendCoins(
-          client,
-          characterId,
+        await coinOps.destroyItems(
           spend.rows,
           spend.count,
           spend.typeId,
@@ -115,6 +84,12 @@ export class PgBankStore implements BankStore {
           after,
           removedItemIds,
         );
+      }
+      const backpack = await coinOps.lockBackpackSlots(after);
+      if (!backpack) {
+        throw new TransactionRollback<BankDepositResult>({
+          status: "no-space",
+        });
       }
       const grants = [
         { rows: coins.gold, count: plan.goldChange, typeId: GOLD_COIN_TYPE_ID },
@@ -124,27 +99,31 @@ export class PgBankStore implements BankStore {
           typeId: PLATINUM_COIN_TYPE_ID,
         },
       ];
-      const occupiedSlots = await this.lockInventorySlots(client, characterId);
       for (const grant of grants) {
-        const granted = await this.grantCoins(
-          client,
-          characterId,
+        const granted = await coinOps.grantStackable(
           grant.rows,
           grant.count,
           grant.typeId,
+          COIN_STACK_LIMIT,
           "bank-deposit-change",
           after,
           removedItemIds,
-          occupiedSlots,
+          backpack,
         );
-        if (!granted) throw new Error("no slot is available for bank change");
+        if (!granted) {
+          throw new TransactionRollback<BankDepositResult>({
+            status: "no-space",
+          });
+        }
       }
-      const balanceAfter = await this.creditBalance(
+      const balanceAfter = await this.creditBalance(client, characterId, amount);
+      await this.appendLedger(
         client,
         characterId,
+        "deposit",
         amount,
+        balanceAfter,
       );
-      await this.appendLedger(client, characterId, "deposit", amount, balanceAfter);
       await client.query(
         `INSERT INTO audit_log(event_type, character_id, details)
          VALUES (
@@ -171,11 +150,17 @@ export class PgBankStore implements BankStore {
       const balance = await this.lockBalance(client, characterId);
       if (balance < amount) return { status: "insufficient-balance" };
       const grant = planMoneyGrant(amount);
-      const owned = await this.loadOwnedItems(client, characterId);
-      const coins = this.coinRows(owned);
-      const occupiedSlots = await this.lockInventorySlots(client, characterId);
+      const coinOps = new PgCoinOperations(client, characterId, this.catalog);
+      const owned = await coinOps.loadOwnedItems();
+      const coins = coinOps.coinRows(owned);
 
       const after = new Map<string, Item>();
+      const backpack = await coinOps.lockBackpackSlots(after);
+      if (!backpack) {
+        throw new TransactionRollback<BankWithdrawResult>({
+          status: "no-space",
+        });
+      }
       const grants = [
         {
           rows: coins.crystal,
@@ -190,18 +175,22 @@ export class PgBankStore implements BankStore {
         { rows: coins.gold, count: grant.gold, typeId: GOLD_COIN_TYPE_ID },
       ];
       for (const entry of grants) {
-        const granted = await this.grantCoins(
-          client,
-          characterId,
+        const granted = await coinOps.grantStackable(
           entry.rows,
           entry.count,
           entry.typeId,
+          COIN_STACK_LIMIT,
           "bank-withdraw",
           after,
           [],
-          occupiedSlots,
+          backpack,
         );
-        if (!granted) return { status: "no-space" };
+        if (!granted) {
+          // a partial grant may already be written; roll everything back
+          throw new TransactionRollback<BankWithdrawResult>({
+            status: "no-space",
+          });
+        }
       }
       const balanceAfter = await this.debitBalance(client, characterId, amount);
       await this.appendLedger(
@@ -326,6 +315,7 @@ export class PgBankStore implements BankStore {
       return result;
     } catch (cause) {
       await client.query("ROLLBACK");
+      if (cause instanceof TransactionRollback) return cause.result as T;
       throw cause;
     } finally {
       client.release();
@@ -408,217 +398,6 @@ export class PgBankStore implements BankStore {
     );
   }
 
-  private async loadOwnedItems(
-    client: PoolClient,
-    characterId: string,
-  ): Promise<BankItemRow[]> {
-    const owned = await client.query<BankItemRow>(OWNED_ITEMS_QUERY, [
-      characterId,
-    ]);
-    if (owned.rows.length > 500) {
-      throw new Error("character has excessive items");
-    }
-    return owned.rows;
-  }
-
-  private coinRows(rows: ReadonlyArray<BankItemRow>): {
-    gold: BankItemRow[];
-    platinum: BankItemRow[];
-    crystal: BankItemRow[];
-  } {
-    const ofType = (typeId: number) =>
-      rows
-        .filter((row) => row.item_type_id === typeId)
-        .sort((left, right) => left.id.localeCompare(right.id));
-    return {
-      gold: ofType(GOLD_COIN_TYPE_ID),
-      platinum: ofType(PLATINUM_COIN_TYPE_ID),
-      crystal: ofType(CRYSTAL_COIN_TYPE_ID),
-    };
-  }
-
-  private countCoins(rows: ReadonlyArray<BankItemRow>): number {
-    return rows.reduce((total, row) => total + row.count, 0);
-  }
-
-  private async spendCoins(
-    client: PoolClient,
-    characterId: string,
-    rows: ReadonlyArray<BankItemRow>,
-    count: number,
-    itemTypeId: number,
-    reason: string,
-    after: Map<string, Item>,
-    removedItemIds: string[],
-  ): Promise<void> {
-    let remaining = count;
-    for (const row of rows) {
-      if (remaining === 0) break;
-      const spent = Math.min(row.count, remaining);
-      remaining -= spent;
-      if (spent === row.count) {
-        const deleted = await client.query<{ id: string }>(
-          "DELETE FROM items WHERE id = $1 AND version = $2 RETURNING id",
-          [row.id, row.version],
-        );
-        if (deleted.rows[0]?.id !== row.id) {
-          throw new Error("bank currency version is stale");
-        }
-        removedItemIds.push(row.id);
-      } else {
-        const updated = await client.query<{ version: number }>(
-          `UPDATE items
-           SET count = count - $2, version = version + 1, updated_at = now()
-           WHERE id = $1 AND version = $3
-           RETURNING version`,
-          [row.id, spent, row.version],
-        );
-        if (updated.rows[0]?.version !== row.version + 1) {
-          throw new Error("bank currency version is stale");
-        }
-        after.set(row.id, {
-          ...this.itemFromRow(row),
-          count: row.count - spent,
-          version: row.version + 1,
-        });
-      }
-      await client.query(
-        `INSERT INTO audit_log(event_type, character_id, item_id, details)
-         VALUES (
-           'item-destroyed', $1, $2,
-           jsonb_build_object(
-             'itemTypeId', $3::integer, 'count', $4::integer, 'reason', $5::text
-           )
-         )`,
-        [characterId, row.id, itemTypeId, spent, reason],
-      );
-    }
-    if (remaining !== 0) throw new Error("bank currency balance is stale");
-  }
-
-  /**
-   * Tops up existing stacks of the denomination, then creates new stacks in
-   * free inventory slots. Returns false when the slots run out; the caller
-   * must roll the transaction back (nothing may be half-granted).
-   */
-  private async grantCoins(
-    client: PoolClient,
-    characterId: string,
-    rows: ReadonlyArray<BankItemRow>,
-    count: number,
-    itemTypeId: number,
-    reason: string,
-    after: Map<string, Item>,
-    removedItemIds: ReadonlyArray<string>,
-    occupiedSlots: Set<number>,
-  ): Promise<boolean> {
-    let remaining = count;
-    for (const row of rows) {
-      if (remaining === 0) return true;
-      if (removedItemIds.includes(row.id)) continue;
-      const current = after.get(row.id) ?? this.itemFromRow(row);
-      const added = Math.min(COIN_STACK_LIMIT - current.count, remaining);
-      if (added === 0) continue;
-      const updated = await client.query<{ version: number }>(
-        `UPDATE items
-         SET count = count + $2, version = version + 1, updated_at = now()
-         WHERE id = $1 AND version = $3
-         RETURNING version`,
-        [row.id, added, current.version],
-      );
-      if (updated.rows[0]?.version !== current.version + 1) {
-        throw new Error("bank currency version is stale");
-      }
-      after.set(row.id, {
-        ...current,
-        count: current.count + added,
-        version: current.version + 1,
-      });
-      await this.auditCoinCreation(
-        client,
-        characterId,
-        row.id,
-        itemTypeId,
-        added,
-        reason,
-      );
-      remaining -= added;
-    }
-    while (remaining > 0) {
-      const slot = this.takeFreeSlot(occupiedSlots);
-      if (slot === null) return false;
-      const stack = Math.min(COIN_STACK_LIMIT, remaining);
-      const itemId = randomUUID();
-      await client.query(
-        `INSERT INTO items (
-           id, item_type_id, count, location_type, character_id, slot_index
-         ) VALUES ($1, $2, $3, 'inventory', $4, $5)`,
-        [itemId, itemTypeId, stack, characterId, slot],
-      );
-      after.set(itemId, {
-        id: itemId,
-        typeId: itemTypeId,
-        count: stack,
-        attributes: {},
-        version: 1,
-        location: { kind: "inventory", characterId, slot },
-      });
-      await this.auditCoinCreation(
-        client,
-        characterId,
-        itemId,
-        itemTypeId,
-        stack,
-        reason,
-      );
-      remaining -= stack;
-    }
-    return true;
-  }
-
-  private async lockInventorySlots(
-    client: PoolClient,
-    characterId: string,
-  ): Promise<Set<number>> {
-    const occupied = await client.query<{ slot_index: number }>(
-      `SELECT slot_index FROM items
-       WHERE character_id = $1 AND location_type = 'inventory'
-       FOR UPDATE`,
-      [characterId],
-    );
-    return new Set(occupied.rows.map((row) => row.slot_index));
-  }
-
-  private takeFreeSlot(occupiedSlots: Set<number>): number | null {
-    for (let slot = 0; slot < 100; slot++) {
-      if (!occupiedSlots.has(slot)) {
-        occupiedSlots.add(slot);
-        return slot;
-      }
-    }
-    return null;
-  }
-
-  private async auditCoinCreation(
-    client: PoolClient,
-    characterId: string,
-    itemId: string,
-    itemTypeId: number,
-    count: number,
-    reason: string,
-  ): Promise<void> {
-    await client.query(
-      `INSERT INTO audit_log(event_type, character_id, item_id, details)
-       VALUES (
-         'item-created', $1, $2,
-         jsonb_build_object(
-           'itemTypeId', $3::integer, 'count', $4::integer, 'reason', $5::text
-         )
-       )`,
-      [characterId, itemId, itemTypeId, count, reason],
-    );
-  }
-
   private parseBalance(value: string | number): number {
     const parsed = typeof value === "number" ? value : Number(value);
     if (!Number.isSafeInteger(parsed) || parsed < 0) {
@@ -641,61 +420,5 @@ export class PgBankStore implements BankStore {
     ) {
       throw new Error("invalid bank amount");
     }
-  }
-
-  private itemFromRow(row: BankItemRow): Item {
-    if (
-      !row.attributes ||
-      typeof row.attributes !== "object" ||
-      Array.isArray(row.attributes)
-    ) {
-      throw new Error(`item ${row.id} has invalid attributes`);
-    }
-    return {
-      id: row.id,
-      typeId: row.item_type_id,
-      count: row.count,
-      attributes: row.attributes as Record<string, unknown>,
-      version: row.version,
-      location: this.locationFromRow(row),
-      ...(row.seed_key ? { seedKey: row.seed_key } : {}),
-    };
-  }
-
-  private locationFromRow(row: BankItemRow): ItemLocation {
-    if (
-      row.location_type === "equipment" &&
-      row.character_id &&
-      row.equipment_slot
-    ) {
-      return {
-        kind: "equipment",
-        characterId: row.character_id,
-        slot: row.equipment_slot,
-      };
-    }
-    if (
-      row.location_type === "inventory" &&
-      row.character_id &&
-      row.slot_index !== null
-    ) {
-      return {
-        kind: "inventory",
-        characterId: row.character_id,
-        slot: row.slot_index,
-      };
-    }
-    if (
-      (row.location_type === "container" || row.location_type === "corpse") &&
-      row.container_id &&
-      row.slot_index !== null
-    ) {
-      return {
-        kind: row.location_type,
-        containerId: row.container_id,
-        slot: row.slot_index,
-      };
-    }
-    throw new Error(`item ${row.id} has an invalid bank location`);
   }
 }

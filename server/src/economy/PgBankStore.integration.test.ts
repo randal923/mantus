@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
+import { loadItemCatalog } from "../item/loadItemCatalog";
 import { PgBankStore } from "./PgBankStore";
 
 const TEST_SCHEMA = "bank_store_integration";
@@ -13,6 +14,7 @@ const GOLD_TYPE = 3031;
 const PLATINUM_TYPE = 3035;
 const CRYSTAL_TYPE = 3043;
 const HELMET_TYPE = 3355;
+const BACKPACK_TYPE = 2854;
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const databaseDescribe = databaseUrl ? describe : describe.skip;
 
@@ -63,6 +65,13 @@ const createCharacter = async (label: string): Promise<string> => {
      DELETE FROM items WHERE id IN (SELECT id FROM owned)`,
     [summary.id],
   );
+  await pool.query("DELETE FROM audit_log WHERE character_id = $1", [summary.id]);
+  await pool.query(
+    `INSERT INTO items (
+       id, item_type_id, location_type, character_id, equipment_slot
+     ) VALUES ($1, $2, 'equipment', $3, 'backpack')`,
+    [randomUUID(), BACKPACK_TYPE, summary.id],
+  );
   return summary.id;
 };
 
@@ -81,9 +90,15 @@ const setBalance = async (
 
 const carriedWorth = async (characterId: string): Promise<number> => {
   const result = await pool.query<{ item_type_id: number; total: string }>(
-    `SELECT item_type_id, SUM(count) AS total
-     FROM items
-     WHERE character_id = $1 AND item_type_id IN ($2, $3, $4)
+    `WITH RECURSIVE owned AS (
+       SELECT id, item_type_id, count FROM items
+       WHERE character_id = $1
+       UNION ALL
+       SELECT child.id, child.item_type_id, child.count
+       FROM items child JOIN owned ON child.container_id = owned.id
+     )
+     SELECT item_type_id, SUM(count) AS total FROM owned
+     WHERE item_type_id IN ($2, $3, $4)
      GROUP BY item_type_id`,
     [characterId, GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
   );
@@ -150,6 +165,7 @@ databaseDescribe("PgBankStore integration", () => {
       "010_monk_vocations.sql",
       "011_npc_travel.sql",
       "012_bank.sql",
+      "014_character_storages.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -166,7 +182,7 @@ databaseDescribe("PgBankStore integration", () => {
       z: 7,
       townId: 1,
     });
-    store = new PgBankStore(pool);
+    store = new PgBankStore(pool, await loadItemCatalog());
   });
 
   beforeEach(async () => {
@@ -223,8 +239,15 @@ databaseDescribe("PgBankStore integration", () => {
     expect(await store.balance(characterId)).toBe(250);
     expect(await carriedWorth(characterId)).toBe(50);
     const coins = await pool.query<{ item_type_id: number; count: number }>(
-      `SELECT item_type_id, count FROM items WHERE character_id = $1`,
-      [characterId],
+      `WITH RECURSIVE owned AS (
+         SELECT id, item_type_id, count FROM items WHERE character_id = $1
+         UNION ALL
+         SELECT child.id, child.item_type_id, child.count
+         FROM items child JOIN owned ON child.container_id = owned.id
+       )
+       SELECT item_type_id, count FROM owned
+       WHERE item_type_id IN ($2, $3, $4)`,
+      [characterId, GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
     );
     expect(coins.rows).toEqual([{ item_type_id: GOLD_TYPE, count: 50 }]);
   });
@@ -252,9 +275,16 @@ databaseDescribe("PgBankStore integration", () => {
     expect(result.balance).toBe(7_655);
     expect(await carriedWorth(characterId)).toBe(12_345);
     const coins = await pool.query<{ item_type_id: number; count: number }>(
-      `SELECT item_type_id, count FROM items
-       WHERE character_id = $1 ORDER BY item_type_id`,
-      [characterId],
+      `WITH RECURSIVE owned AS (
+         SELECT id, item_type_id, count FROM items WHERE character_id = $1
+         UNION ALL
+         SELECT child.id, child.item_type_id, child.count
+         FROM items child JOIN owned ON child.container_id = owned.id
+       )
+       SELECT item_type_id, count FROM owned
+       WHERE item_type_id IN ($2, $3, $4)
+       ORDER BY item_type_id`,
+      [characterId, GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
     );
     expect(coins.rows).toEqual([
       { item_type_id: GOLD_TYPE, count: 45 },

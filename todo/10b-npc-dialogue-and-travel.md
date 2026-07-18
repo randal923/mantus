@@ -61,6 +61,10 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
   blessing information. Stateful healing, blessings, stake/adventurer-stone
   quests, and item grants remain unimplemented rather than being approximated
   client-side.
+- All 949 interactive world NPC types now have a safe generated greeting,
+  farewell, walk-away, literal keyword-tree baseline, and typed shop/bank link
+  where declared. For example, Rudolph responds to `hi` with his pinned text
+  and opens his nine-offer clothing catalog from `trade`.
 
 ## Known remaining gaps
 
@@ -74,9 +78,11 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
   side effect, and `kick` action require typed quest/action support. Add those
   with [`12a-quest-state`](12a-quest-state.md); do not expose raw storage ids to
   the client.
-- Full Canary parent-node fallback, delayed multi-line speech, profession
-  greetings, shops, and the remaining 954 NPC type graphs/actions are still
-  parity work. Keep the broad runtime/dialogue and parity checkboxes above open
-  until all 1,061 pinned NPC source files are reviewed and classified.
+- The generated baseline covers literal parent/child keyword trees, shop links,
+  and bank links, but the import report still owns 2,307 procedural keyword
+  actions, 21 dynamically composed messages, and 601 custom callbacks. Delayed
+  speech, dynamic profession/quest greetings, quest rewards, blessings, and
+  remaining travel/state mutations need explicit TypeScript commands before
+  the broad parity boxes can close.
 
 [Back to overview](README.md)

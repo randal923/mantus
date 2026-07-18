@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
   BankActionFailedReason,
+  ShopActionFailedReason,
+  ShopEntryProjection,
+  ShopTransactedMessage,
   CharacterCreationOptions,
   CharacterSummary,
   CreatureState,
@@ -48,6 +51,7 @@ import { GameMenuModal } from "./settings/GameMenuModal";
 import { useGameSettingsStore } from "../stores/useGameSettingsStore";
 import { NpcDialogue } from "./npc/NpcDialogue";
 import { BankPanel } from "./bank/BankPanel";
+import { ShopPanel } from "./shop/ShopPanel";
 
 interface BankSessionState {
   npcId: string;
@@ -57,7 +61,24 @@ interface BankSessionState {
   error: BankActionFailedReason | null;
 }
 
+interface ShopSessionState {
+  npcId: string;
+  npcName: string;
+  shopSessionId: string;
+  currencyItemTypeId: number;
+  currencySpriteId: number;
+  currencyName: string;
+  currencyAmount: number;
+  pageCount: number;
+  nextPage: number;
+  entries: ReadonlyArray<ShopEntryProjection>;
+  pending: boolean;
+  error: ShopActionFailedReason | null;
+  lastTransaction: ShopTransactedMessage | null;
+}
+
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
+const GOLD_COIN_TYPE_ID = 3031;
 
 interface GameWindowProps {
   accessToken: string;
@@ -127,6 +148,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     Extract<ServerMessage, { type: "npc-dialogue" }> | null
   >(null);
   const [bankSession, setBankSession] = useState<BankSessionState | null>(
+    null,
+  );
+  const [shopSession, setShopSession] = useState<ShopSessionState | null>(
     null,
   );
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
@@ -330,6 +354,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setServerError(null);
             setNpcDialogue(null);
             setBankSession(null);
+            setShopSession(null);
             dispatchChat({
               type: "reset",
               ownPlayerId: message.playerId,
@@ -364,8 +389,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 ? null
                 : current,
             );
+            setShopSession((current) =>
+              current?.npcId === message.npcId ? null : current,
+            );
           }
           if (message.type === "bank-opened") {
+            setShopSession(null);
             setBankSession({
               npcId: message.npcId,
               npcName: message.npcName,
@@ -392,6 +421,79 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setBankSession((current) => {
               if (!current) return current;
               if (message.reason === "out-of-range") return null;
+              return { ...current, pending: false, error: message.reason };
+            });
+            return;
+          }
+          if (message.type === "shop-opened") {
+            setBankSession(null);
+            setShopSession((current) => {
+              if (message.page === 1) {
+                return {
+                  npcId: message.npcId,
+                  npcName: message.npcName,
+                  shopSessionId: message.shopSessionId,
+                  currencyItemTypeId: message.currencyItemTypeId,
+                  currencySpriteId: message.currencySpriteId,
+                  currencyName: message.currencyName,
+                  currencyAmount: message.currencyAmount,
+                  pageCount: message.pageCount,
+                  nextPage: 2,
+                  entries: message.entries,
+                  pending: false,
+                  error: null,
+                  lastTransaction: null,
+                };
+              }
+              if (
+                !current ||
+                current.shopSessionId !== message.shopSessionId ||
+                current.pageCount !== message.pageCount ||
+                current.nextPage !== message.page ||
+                current.currencyItemTypeId !== message.currencyItemTypeId
+              ) {
+                return current;
+              }
+              return {
+                ...current,
+                entries: [...current.entries, ...message.entries],
+                nextPage: current.nextPage + 1,
+              };
+            });
+            return;
+          }
+          if (message.type === "shop-transacted") {
+            setShopSession((current) =>
+              current
+                ? {
+                    ...current,
+                    pending: false,
+                    error: null,
+                    lastTransaction: message,
+                    currencyAmount:
+                      current.currencyItemTypeId === GOLD_COIN_TYPE_ID
+                        ? current.currencyAmount
+                        : Math.max(
+                            0,
+                            current.currencyAmount +
+                              (message.kind === "sale"
+                                ? message.totalPrice
+                                : -message.totalPrice),
+                          ),
+                  }
+                : current,
+            );
+            return;
+          }
+          if (message.type === "shop-action-failed") {
+            setShopSession((current) => {
+              if (!current) return current;
+              if (
+                message.reason === "out-of-range" ||
+                message.reason === "unavailable"
+              ) {
+                return null;
+              }
               return { ...current, pending: false, error: message.reason };
             });
             return;
@@ -830,6 +932,55 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 );
               }}
               onClose={() => setBankSession(null)}
+            />
+          )}
+          {shopSession && inventory && (
+            <ShopPanel
+              npcName={shopSession.npcName}
+              entries={shopSession.entries}
+              carriedTotal={
+                shopSession.currencyItemTypeId === GOLD_COIN_TYPE_ID
+                  ? inventory.gold +
+                    inventory.platinum * 100 +
+                    inventory.crystal * 10_000
+                  : shopSession.currencyAmount
+              }
+              currencyName={shopSession.currencyName}
+              currencySpriteId={shopSession.currencySpriteId}
+              pending={shopSession.pending}
+              error={shopSession.error}
+              lastTransaction={shopSession.lastTransaction}
+              onBuy={(offerId, amount) => {
+                const sent =
+                  clientRef.current?.shopBuy(
+                    shopSession.npcId,
+                    shopSession.shopSessionId,
+                    offerId,
+                    amount,
+                  ) ?? false;
+                if (!sent) return;
+                setShopSession((current) =>
+                  current?.shopSessionId === shopSession.shopSessionId
+                    ? { ...current, pending: true, error: null }
+                    : current,
+                );
+              }}
+              onSell={(offerId, amount) => {
+                const sent =
+                  clientRef.current?.shopSell(
+                    shopSession.npcId,
+                    shopSession.shopSessionId,
+                    offerId,
+                    amount,
+                  ) ?? false;
+                if (!sent) return;
+                setShopSession((current) =>
+                  current?.shopSessionId === shopSession.shopSessionId
+                    ? { ...current, pending: true, error: null }
+                    : current,
+                );
+              }}
+              onClose={() => setShopSession(null)}
             />
           )}
           {inventoryOpen && inventory && (

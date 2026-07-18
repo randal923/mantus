@@ -253,6 +253,34 @@
       "failed": "O banco não conseguiu concluir essa ação."
     }
   },
+  "shop": {
+    "title": "Loja — {{npcName}}",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar pelo nome do item…",
+    "amount": "Quantia",
+    "carried": "{{currency}} carregado:",
+    "buy": "Comprar",
+    "sell": "Vender",
+    "buyItem": "Comprar {{name}}",
+    "sellItem": "Vender {{name}}",
+    "buyFor": "Comprar por {{price}} {{currency}}",
+    "sellFor": "Vender por {{price}} {{currency}}",
+    "bought": "Você comprou {{count}}x {{name}} por {{price}} {{currency}}.",
+    "sold": "Você vendeu {{count}}x {{name}} por {{price}} {{currency}}.",
+    "noItems": "Nenhum item corresponde à busca.",
+    "errors": {
+      "out-of-range": "Você está longe demais do vendedor.",
+      "busy": "Aguarde sua outra ação terminar.",
+      "unavailable": "Esta loja não está disponível agora.",
+      "invalid-item": "A loja não negocia esse item.",
+      "out-of-stock": "Essa oferta está sem estoque.",
+      "insufficient-funds": "Você não tem dinheiro suficiente.",
+      "not-owned": "Você não tem tantos para vender.",
+      "no-space": "Você não tem espaço suficiente.",
+      "no-capacity": "Você não consegue carregar tanto peso.",
+      "failed": "A loja não conseguiu concluir essa ação."
+    }
+  },
   "characterStats": {
     "label": "Atributos do personagem {{name}}",
     "title": "Detalhes do Personagem",

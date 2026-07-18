@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { NpcDialogueChoiceMessage } from "@tibia/protocol";
 import { Npc } from "../creature/Npc";
 import type { BankService } from "../economy/BankService";
+import type { ShopService } from "../economy/ShopService";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -24,6 +25,7 @@ export class NpcHandler {
     private readonly visibility: Visibility,
     private readonly travel: TravelService,
     private readonly bank: BankService,
+    private readonly shops: ShopService,
   ) {}
 
   handleSpeech(player: Player, text: string, now: number): void {
@@ -145,6 +147,7 @@ export class NpcHandler {
         continue;
       }
       if (!player || !session) {
+        if (session) this.shops.close(session, conversation.npcId);
         this.remove(conversation, creature);
         continue;
       }
@@ -159,8 +162,10 @@ export class NpcHandler {
   }
 
   removePlayer(playerId: string): void {
+    const session = this.registry.sessionFor(playerId);
     for (const conversation of [...this.conversations.values()]) {
       if (conversation.playerId !== playerId) continue;
+      if (session) this.shops.close(session, conversation.npcId);
       const creature = this.world.getCreature(conversation.npcId);
       this.remove(
         conversation,
@@ -354,7 +359,8 @@ export class NpcHandler {
       return;
     }
     if (action?.kind === "shop") {
-      conversation.currentNodeId = graph.rootNodeId;
+      const result = this.shops.open(session, npc, action.shopId, now);
+      conversation.currentNodeId = node.nextNodeId ?? graph.rootNodeId;
       conversation.expiresAt = now + graph.timeoutMs;
       this.sendResponses(
         session,
@@ -362,7 +368,10 @@ export class NpcHandler {
         npc,
         graph,
         conversation,
-        ["Trade is not available yet."],
+        result === "opened"
+          ? node.responses
+          : ["Trade is not available right now."],
+        node,
       );
       return;
     }
@@ -463,6 +472,7 @@ export class NpcHandler {
       | "npc-removed"
       | "travelled",
   ): void {
+    this.shops.close(session, conversation.npcId);
     this.remove(conversation, npc);
     session.send({
       type: "npc-dialogue-closed",

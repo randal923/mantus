@@ -5,6 +5,7 @@ import type { WebSocket } from "ws";
 import { Npc } from "../creature/Npc";
 import type { NpcType } from "../creature/NpcType";
 import type { BankService } from "../economy/BankService";
+import type { ShopService } from "../economy/ShopService";
 import { gridMapData } from "../gridMapData";
 import { Player } from "../Player";
 import { Session } from "../Session";
@@ -82,7 +83,18 @@ const makeHarness = () => {
   const bank = {
     open: vi.fn(() => "unavailable" as const),
   } as unknown as BankService;
-  const handler = new NpcHandler(world, registry, visibility, travel, bank);
+  const shops = {
+    open: vi.fn(() => "unavailable" as const),
+    close: vi.fn(),
+  } as unknown as ShopService;
+  const handler = new NpcHandler(
+    world,
+    registry,
+    visibility,
+    travel,
+    bank,
+    shops,
+  );
 
   const join = (id: string, position: Position): TestPeer => {
     const player = new Player(makeCharacter(id, id), position);

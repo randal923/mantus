@@ -15,6 +15,8 @@ import { SpellRegistry } from "./combat/SpellRegistry";
 import type { ServerConfig } from "./config";
 import { BankService } from "./economy/BankService";
 import type { BankStore } from "./economy/BankStore";
+import { ShopService } from "./economy/ShopService";
+import type { ShopStore } from "./economy/ShopStore";
 import { LanguageHandler } from "./LanguageHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
@@ -44,6 +46,7 @@ export interface GameServerDeps {
   itemCatalog: ItemCatalog;
   npcTravel?: NpcTravelStore;
   bank?: BankStore;
+  shop?: ShopStore;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -65,6 +68,7 @@ export class GameServer {
   private readonly items: ItemIntentHandler;
   private readonly travel: TravelService;
   private readonly bank: BankService;
+  private readonly shops: ShopService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -129,13 +133,24 @@ export class GameServer {
       this.items,
       deps.npcTravel,
     );
+    const creatureContent =
+      config.creatures && config.map.source === "data"
+        ? loadCreatureContent(config.creatures.contentName, config.map.name)
+        : null;
     this.bank = new BankService(this.world, this.items, deps.bank);
+    this.shops = new ShopService(
+      this.world,
+      this.items,
+      creatureContent?.shopCatalogs ?? new Map(),
+      deps.shop,
+    );
     this.npcs = new NpcHandler(
       this.world,
       this.registry,
       this.visibility,
       this.travel,
       this.bank,
+      this.shops,
     );
     this.chat = new ChatHandler(
       this.world,
@@ -168,11 +183,11 @@ export class GameServer {
     );
     this.combat = new CombatIntentHandler(this.combatSystem);
     spawns =
-      config.creatures && config.map.source === "data"
+      creatureContent && config.creatures
         ? new SpawnManager(
             this.world,
             this.visibility,
-            loadCreatureContent(config.creatures.contentName, config.map.name),
+            creatureContent,
             config.creatures,
             this.combatSystem,
           )
@@ -249,6 +264,7 @@ export class GameServer {
     this.items.applyResolvedOutcomes(now);
     this.travel.applyResolvedOutcomes(now);
     this.bank.applyResolvedOutcomes(now);
+    this.shops.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -360,6 +376,10 @@ export class GameServer {
       case "bank-transfer":
         this.bank.handle(session, intent);
         return;
+      case "shop-buy":
+      case "shop-sell":
+        this.shops.handle(session, intent, now);
+        return;
       case "set-language":
         this.language.handle(session, intent);
         return;
@@ -381,6 +401,8 @@ export class GameServer {
     this.travel.applyResolvedOutcomes(Date.now());
     await this.bank.stop();
     this.bank.applyResolvedOutcomes(Date.now());
+    await this.shops.stop();
+    this.shops.applyResolvedOutcomes(Date.now());
     await this.persistence.stop();
     if (this.persistence.unsavedPlayerCount > 0) {
       console.error(

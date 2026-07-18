@@ -33,6 +33,7 @@ const itemSemantics = readJson("content/canary-item-semantics.json");
 const foodDefinitions = readJson("content/items/canary-foods.json");
 const monsterTypes = readJson("content/monsters/world-monsters.json");
 const npcTypes = readJson("content/npcs/world-npcs.json");
+const npcImportReport = readJson("content/npcs/canary-npc-import-report.json");
 const spawnDefinitions = readJson("content/spawns/world-spawns.json");
 const spellByPath = new Map(
   spellCatalog.spells.map((spell) => [spell.sourcePath, spell]),
@@ -42,6 +43,21 @@ const creatureGapByPath = new Map(
     definition.sourcePath,
     definition,
   ]),
+);
+const npcDialogueByPath = new Map(
+  npcImportReport.dialogues.definitions.map((definition) => [
+    definition.sourcePath,
+    definition,
+  ]),
+);
+const npcShopByPath = new Map(
+  npcImportReport.shops.definitions.map((definition) => [
+    definition.sourcePath,
+    definition,
+  ]),
+);
+const unselectedNpcPaths = new Set(
+  npcImportReport.unselectedSources.map((source) => source.sourcePath),
 );
 const treeEntries = parseTree(
   execFileSync(
@@ -53,7 +69,14 @@ const treeEntries = parseTree(
 const sourceFiles = treeEntries.map((entry) => ({
   path: entry.path,
   blob: entry.blob,
-  ...classifySource(entry.path, spellByPath, creatureGapByPath),
+  ...classifySource(
+    entry.path,
+    spellByPath,
+    creatureGapByPath,
+    npcDialogueByPath,
+    npcShopByPath,
+    unselectedNpcPaths,
+  ),
 }));
 const callbacks = sourceFiles.flatMap((source) =>
   source.path.endsWith(".lua") && shouldInspectCallbacks(source.path)
@@ -168,7 +191,14 @@ function parseTree(value) {
     });
 }
 
-function classifySource(path, spells, creatureGaps) {
+function classifySource(
+  path,
+  spells,
+  creatureGaps,
+  npcDialogues,
+  npcShops,
+  unselectedNpcs,
+) {
   if (isNonContent(path)) {
     return {
       ownerTodo: "00a-canary-parity",
@@ -222,11 +252,32 @@ function classifySource(path, spells, creatureGaps) {
     };
   }
   if (path.startsWith("data-otservbr-global/npc/")) {
+    const dialogue = npcDialogues.get(path);
+    const shop = npcShops.get(path);
+    if (dialogue) {
+      const remaining =
+        dialogue.unsupportedKeywordActions.length +
+        (dialogue.unsupportedMessages?.length ?? 0) +
+        dialogue.proceduralCallbacks.length +
+        (shop?.unsupportedRows.length ?? 0) +
+        (shop?.unsupportedCallbacks.length ?? 0);
+      return {
+        ownerTodo: "10-npcs",
+        status: "blocked",
+        blockedBy: "10-npcs",
+        reason:
+          `Generated baseline imports ${dialogue.staticNodes} static nodes` +
+          `${shop ? ` and ${shop.importedOffers} shop offers` : ""}; ` +
+          `${remaining} procedural or source-invalid gaps remain explicit in the NPC import report.`,
+      };
+    }
     return {
       ownerTodo: "10-npcs",
       status: "blocked",
       blockedBy: "10-npcs",
-      reason: "NPC dialogue, shop, and procedural callbacks require the NPC runtime.",
+      reason: unselectedNpcs.has(path)
+        ? "NPC source is not referenced by the pinned world spawn selection."
+        : "NPC source is missing from the generated import report.",
     };
   }
   const ownerTodo = ownerFor(path);

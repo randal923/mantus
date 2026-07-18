@@ -11,6 +11,7 @@ import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { PROTOCOL_LIMITS } from "./limits";
 import { npcDialogueChoiceMessageSchema } from "./npc";
+import { shopBuyMessageSchema, shopSellMessageSchema } from "./shop";
 import { equipmentSlotSchema } from "./item";
 import { positionSchema } from "./position";
 import { viewRangeSchema } from "./viewRange";
@@ -287,6 +288,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   bankDepositMessageSchema,
   bankWithdrawMessageSchema,
   bankTransferMessageSchema,
+  shopBuyMessageSchema,
+  shopSellMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,
 ]);

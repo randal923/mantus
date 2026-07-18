@@ -61,6 +61,13 @@
       "areasPath": "data/scripts/lib/register_spells.lua",
       "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
       "definitionsSha256": "835255c876350bd56f5853005f3e3888074e3f71b345ebd6b0a4312142a8546d"
+    },
+    "canaryNpcs": {
+      "definitionsPath": "data-otservbr-global/npc",
+      "selectionReportPath": "content/spawns/world-import-report.json",
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+      "definitionCount": 956,
+      "definitionsSha256": "19d71eea2e76931129adf52e7c0b5a921570a86f44096d158c82c28b00d41385"
     }
   },
   "balanceDefinitions": {
@@ -104,12 +111,28 @@
       "sha256": "1409a3326d909a2142f30b26616da2939cdcf8c09043d9ec369f74d59ba3213f"
     },
     {
+      "path": "tools/importCanaryNpcs.mjs",
+      "sha256": "86850ced5bbec98f6b2790c0c857baa564a256dcb9caff6d1b5a0e8e76d811bf"
+    },
+    {
+      "path": "tools/importCanaryShops.mjs",
+      "sha256": "b615e65f051b8b23376017042d22d520debb806f6e18efe645775c66970ab3e1"
+    },
+    {
+      "path": "tools/parseCanaryNpcShops.mjs",
+      "sha256": "79076ab141e6d247d583b1c7b38394838c70910d86564ca9afe2586034e78cfb"
+    },
+    {
+      "path": "tools/parseCanaryNpcDialogues.mjs",
+      "sha256": "e70fbe0adf7e9914ec32292344f10129a658e72713b43a97077dedffb1c854ab"
+    },
+    {
       "path": "tools/buildCanaryParityInventory.mjs",
-      "sha256": "2381fdb31645dbf47e0cd0a6b6c2804da000f9bbb8c608870ee3d4b918a23fc9"
+      "sha256": "59eb80001238baeeac2eeeffdfdee20bc9f6345bfa75902dee51c4a74c4494cf"
     },
     {
       "path": "tools/verifyCanaryParityInventory.mjs",
-      "sha256": "cd5934232826de4170139a4a8cc03cb1f48206f152dbcfd56e808eedb29f1b62"
+      "sha256": "8d1c633a84fbc76714b3f95e79cd04ed5919001ac9238dd56c7caffedc679407"
     }
   ],
   "converters": {
@@ -119,6 +142,8 @@
     "itemCatalog": 2,
     "map": 3,
     "creatures": 2,
-    "spells": 2
+    "spells": 2,
+    "shops": 2,
+    "npcDialogues": 1
   }
 }

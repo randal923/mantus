@@ -10,7 +10,17 @@
       "data-otservbr-global/npc/quentin.lua",
       "data-otservbr-global/npc/captain_bluebear.lua",
       "data/npclib/npc_system/bank_system.lua",
-      "data-otservbr-global/npc/naji.lua"
+      "data-otservbr-global/npc/naji.lua",
+      "data-otservbr-global/npc/benjamin.lua",
+      "data-otservbr-global/npc/donald_mcronald.lua",
+      "data-otservbr-global/npc/elane.lua",
+      "data-otservbr-global/npc/frodo.lua",
+      "data-otservbr-global/npc/gorn.lua",
+      "data-otservbr-global/npc/hanna.lua",
+      "data-otservbr-global/npc/quero.lua",
+      "data-otservbr-global/npc/sam.lua",
+      "data-otservbr-global/npc/sherry_mcronald.lua",
+      "data-otservbr-global/npc/xodet.lua"
     ]
   },
   "dialogues": [
@@ -575,6 +585,926 @@
           "matches": [["help"]],
           "responses": [
             "Your bank account keeps your money safe. Say bank and I will show it to you."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "benjamin",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Hello, |PLAYERNAME|! I run the post office. Say trade to buy labels, letters, and parcels."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "benjamin"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I am the post officer. Say trade and I will show you my letters and parcels."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "donald-mcronald",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Welcome to our farm, |PLAYERNAME|! Say trade if you need fresh produce."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "donald-mcronald"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "We grow vegetables and cheese on this farm. Say trade to have a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "elane",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Greetings, |PLAYERNAME|. Say trade if you have something for the guild."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "elane"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I lead the paladins here. Say trade if you have equipment to offer."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "frodo",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Welcome to my inn, |PLAYERNAME|! Say trade if you are hungry."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "frodo"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I keep this inn stocked with food and drink. Say trade to see the menu."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "gorn",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Welcome, |PLAYERNAME|! Say trade to browse my equipment and tools."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "gorn"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I sell adventuring gear: ropes, shovels, torches and more. Just say trade."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "hanna",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Welcome, dear |PLAYERNAME|! Say trade to see my jewellery."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "hanna"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I buy and sell gems, pearls, and fine jewellery. Say trade to have a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "quero",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Hello hello, |PLAYERNAME|! Say trade to see my instruments."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "quero"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I sell musical instruments. Say trade and make some music!"
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "sam",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Welcome to my smithy, |PLAYERNAME|! Say trade to see my weapons and armor."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "sam"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I am the blacksmith. I buy and sell weapons, armor, and shields. Say trade."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "sherry-mcronald",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Welcome to our farm, |PLAYERNAME|! Say trade if you need fruit or cheese."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "sherry-mcronald"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "We sell what the farm produces. Say trade to have a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": []
+    },
+    {
+      "typeId": "xodet",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Greetings, |PLAYERNAME|! Say trade for wands, rods, runes, and potions."
+      ],
+      "farewell": [
+        "Good bye, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "Come back soon!"
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "job"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "job",
+              "label": "Job"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "shop"
+            ],
+            [
+              "buy"
+            ],
+            [
+              "sell"
+            ],
+            [
+              "wares"
+            ],
+            [
+              "offer"
+            ]
+          ],
+          "responses": [
+            "Take a look."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "xodet"
+          }
+        },
+        {
+          "id": "job",
+          "matches": [
+            [
+              "job"
+            ]
+          ],
+          "responses": [
+            "I deal in magical supplies: wands, rods, runes, and potions. Say trade."
           ],
           "children": [],
           "choices": [],

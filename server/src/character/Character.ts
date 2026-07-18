@@ -32,6 +32,7 @@ export interface Character {
   readonly skills: ReadonlyArray<CharacterSkill>;
   readonly progressionDefinitionVersion: number;
   readonly progressionEventIds: ReadonlyArray<string>;
+  readonly storageValues: Readonly<Record<string, number>>;
   readonly positionX: number;
   readonly positionY: number;
   readonly positionZ: number;

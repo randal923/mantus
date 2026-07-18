@@ -14,6 +14,7 @@ import type {
   MonsterType,
 } from "../creature/MonsterType";
 import type { NpcType } from "../creature/NpcType";
+import { loadShopCatalogs } from "../economy/loadShopCatalogs";
 import { loadNpcDialogueGraphs } from "../npc/loadNpcDialogueGraphs";
 import type { CreatureContent } from "./CreatureContent";
 import type { SpawnSlotDefinition } from "./SpawnDefinition";
@@ -84,6 +85,24 @@ export function loadCreatureContent(
       throw new Error(`NPC dialogue references unknown type ${typeId}`);
     }
   }
+  const shopCatalogs = loadShopCatalogs(canaryCommit);
+  for (const catalog of shopCatalogs.values()) {
+    if (!npcTypes.has(catalog.npcTypeId)) {
+      throw new Error(`shop ${catalog.id} references unknown type ${catalog.npcTypeId}`);
+    }
+  }
+  for (const [typeId, graph] of dialogueGraphs) {
+    for (const node of graph.nodes) {
+      if (node.action?.kind !== "shop") continue;
+      const catalog = shopCatalogs.get(node.action.shopId);
+      if (!catalog) {
+        throw new Error(`dialogue references unknown shop ${node.action.shopId}`);
+      }
+      if (catalog.npcTypeId !== typeId) {
+        throw new Error(`dialogue ${typeId} references another NPC's shop`);
+      }
+    }
+  }
   if (!Array.isArray(spawns.slots)) throw new Error(`${name} spawn list is invalid`);
   const slotIds = new Set<string>();
   const slots = spawns.slots.map((value) => {
@@ -96,7 +115,7 @@ export function loadCreatureContent(
     if (!known) throw new Error(`${slot.id} references unknown type ${slot.typeId}`);
     return slot;
   });
-  return { monsterTypes, npcTypes, slots };
+  return { monsterTypes, npcTypes, slots, shopCatalogs };
 }
 
 function readDocument(relativePath: string): Record<string, unknown> {

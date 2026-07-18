@@ -185,6 +185,36 @@ export class GameClient {
     });
   }
 
+  shopBuy(
+    npcId: string,
+    shopSessionId: string,
+    offerId: string,
+    amount: number,
+  ): boolean {
+    return this.send({
+      type: "shop-buy",
+      npcId,
+      shopSessionId,
+      offerId,
+      amount,
+    });
+  }
+
+  shopSell(
+    npcId: string,
+    shopSessionId: string,
+    offerId: string,
+    amount: number,
+  ): boolean {
+    return this.send({
+      type: "shop-sell",
+      npcId,
+      shopSessionId,
+      offerId,
+      amount,
+    });
+  }
+
   createCharacter(input: CreateCharacterInput): boolean {
     return this.send({ type: "create-character", ...input });
   }

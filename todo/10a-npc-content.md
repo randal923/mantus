@@ -30,26 +30,34 @@ Part of [`10-npcs`](10-npcs.md). Depends on the shared
 - [ ] The NPC parity report reaches zero unreviewed callbacks, ignored gameplay
   assignments, ambiguous variants, or silently omitted placements.
 
-## Implemented vertical slice (2026-07-17)
+## Implemented baseline (2026-07-17)
 
 - The existing pinned world import contains all 1,008 external NPC placements
   and 956 resolved NPC types without executing Lua. Ambiguous script variants
   remain explicitly disabled in `content/spawns/world-import-report.json`.
-- `content/npcs/canary-dialogues.json` contains reviewed typed content for
-  Quentin and Captain Bluebear, pinned to the same Canary commit as the
-  creature import. The loader rejects mismatched commits, duplicate node/offer
-  ids, duplicate child/choice references, missing references, unknown NPC
-  types, unsupported actions, and out-of-range content. A world-map fixture
-  also proves all ten reviewed travel destinations currently resolve to a
-  walkable tile.
+- `tools/importCanaryNpcs.mjs` statically parses the exact 956 world-selected
+  definitions without running Lua. It generates conversational baselines for
+  all 949 interactive types, including 6,745 literal keyword/shop/bank nodes,
+  and classifies the seven deliberately non-interactive types. Reviewed graphs
+  in `content/npcs/canary-dialogues.json` override this baseline.
+- `content/npcs/canary-npc-import-report.json` records every selected source,
+  all shop rows/callbacks, all 80 unselected global NPC sources, and every
+  procedural dialogue gap. Source commit, definition count, and aggregate hash
+  are pinned in the manifest.
+- The loader rejects mismatched commits, duplicate node/offer ids, duplicate
+  child/choice references, missing references, unknown NPC types, unsupported
+  actions, and out-of-range content. A world-map fixture proves all ten reviewed
+  travel destinations currently resolve to a walkable tile.
 
 ## Known remaining gaps
 
-- Canary's 1,061 NPC Lua source files are not yet converted. The parity
-  inventory therefore correctly remains blocked for 954 additional NPC types
-  and for the unconverted branches/actions of Quentin and Captain Bluebear.
-  Add reviewed typed graphs and explicit TypeScript actions incrementally; do
-  not execute or embed a general Lua evaluator.
+- The baseline intentionally does not execute or approximate 2,307 procedural
+  keyword actions, 21 dynamically composed messages, or the 601 custom dialogue
+  callbacks present in 494 selected definitions. Add reviewed typed
+  quest/travel/blessing/action commands until the report reaches zero; do not
+  execute or embed a general Lua evaluator.
+- Three Black Bert shop rows reference item ids absent from the pinned Canary
+  item catalog. They remain explicit source-invalid exclusions in the report.
 - Destination walkability is checked against the live map at action execution,
   but the content import does not yet emit a whole-world unavailable-destination
   report. Add that report when the full NPC content importer is built.

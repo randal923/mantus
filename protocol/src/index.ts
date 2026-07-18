@@ -10,6 +10,7 @@ export * from "./language";
 export * from "./npc";
 export * from "./position";
 export * from "./progression";
+export * from "./shop";
 export * from "./viewRange";
 export * from "./clientMessages";
 export * from "./serverMessages";

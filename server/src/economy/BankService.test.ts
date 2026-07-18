@@ -106,11 +106,30 @@ const makeHarness = (store: Partial<BankStore>, carried: Item[] = []) => {
   session.knownCreatureIds.add(npc.id);
   const applyCommittedMutation = vi.fn();
   const trackExternalOperation = vi.fn();
+  const backpack: Item = {
+    id: "test-backpack",
+    typeId: 2854,
+    count: 1,
+    attributes: {},
+    version: 1,
+    location: {
+      kind: "equipment",
+      characterId: player.id,
+      slot: "backpack",
+    },
+  };
   const items = {
     applyCommittedMutation,
     trackExternalOperation,
-    inventorySnapshot: vi.fn(() => ({ items: carried, capacityMax: 400 })),
-    itemType: vi.fn(() => ({ weight: 10 })),
+    inventorySnapshot: vi.fn(() => ({
+      items: [backpack, ...carried],
+      capacityMax: 400,
+    })),
+    itemType: vi.fn((typeId: number) =>
+      typeId === backpack.typeId
+        ? { weight: 1800, containerCapacity: 20 }
+        : { weight: 10 },
+    ),
   } as unknown as ItemIntentHandler;
   const bank = new BankService(world, items, store as BankStore);
   return {

@@ -27,7 +27,6 @@ type BankIntent =
   | BankTransferMessage;
 
 const COIN_STACK_LIMIT = 100;
-const INVENTORY_SLOT_LIMIT = 100;
 
 export class BankService {
   private readonly outcomes: Array<(now: number) => void> = [];
@@ -216,10 +215,22 @@ export class BankService {
     items: ReadonlyArray<Item>,
     grant: CurrencyBalance,
   ): boolean {
+    const backpack = items.find(
+      (item) =>
+        item.location.kind === "equipment" &&
+        item.location.slot === "backpack",
+    );
+    if (!backpack) return false;
+    const capacity = this.items.itemType(backpack.typeId)?.containerCapacity;
+    if (capacity === undefined) return false;
     const occupied = items.filter(
-      (item) => item.location.kind === "inventory",
+      (item) =>
+        item.location.kind === "inventory" ||
+        (item.location.kind === "container" &&
+          item.location.containerId === backpack.id),
     ).length;
-    const freeSlots = INVENTORY_SLOT_LIMIT - occupied;
+    const freeSlots = capacity - occupied;
+    if (freeSlots < 0) return false;
     const newStacks = (typeId: number, count: number) => {
       const topUp = items
         .filter((item) => item.typeId === typeId)
