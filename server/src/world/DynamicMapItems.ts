@@ -1,5 +1,6 @@
 import type { Position, ViewRange } from "@tibia/protocol";
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
+import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
 import type { WorldItemDeltas } from "../item/WorldItemDeltas";
 import type { MapData } from "../MapData";
@@ -10,6 +11,9 @@ export class DynamicMapItems {
   private readonly hiddenMapItemIds = new Set<string>();
   private readonly dynamicMapItems = new Map<string, MapItem[]>();
   private readonly tileItemRevisions = new Map<string, number>();
+  /** Full item state for world roots and their container subtrees. */
+  private readonly worldItems = new Map<string, Item>();
+  private readonly seedKeyToId = new Map<string, string>();
 
   constructor(
     private readonly map: MapData,
@@ -20,6 +24,62 @@ export class DynamicMapItems {
 
   hideSeed(seedKey: string): void {
     this.hiddenMapItemIds.add(seedKey);
+  }
+
+  /** The materialized item behind a tile instance id (id or seed key). */
+  getWorldItem(instanceId: string): Item | undefined {
+    return this.worldItems.get(this.seedKeyToId.get(instanceId) ?? instanceId);
+  }
+
+  /** A world root plus its contained subtree, parents before children. */
+  getWorldSubtree(rootId: string): Item[] {
+    const root = this.worldItems.get(rootId);
+    if (!root) return [];
+    const byContainer = new Map<string, Item[]>();
+    for (const item of this.worldItems.values()) {
+      if (
+        item.location.kind !== "container" &&
+        item.location.kind !== "corpse"
+      ) {
+        continue;
+      }
+      const children = byContainer.get(item.location.containerId) ?? [];
+      children.push(item);
+      byContainer.set(item.location.containerId, children);
+    }
+    const subtree: Item[] = [root];
+    let frontier = [root.id];
+    for (let depth = 0; depth < 8 && frontier.length > 0; depth++) {
+      const next: string[] = [];
+      for (const containerId of frontier) {
+        for (const child of byContainer.get(containerId) ?? []) {
+          subtree.push(child);
+          next.push(child.id);
+        }
+      }
+      frontier = next;
+    }
+    return subtree;
+  }
+
+  /** Registers boot-loaded world trees (parents arrive before children). */
+  registerLoadedWorldItems(items: ReadonlyArray<Item>): void {
+    for (const item of items) {
+      this.trackWorldItem(item);
+      if (item.location.kind === "world") this.addDynamicWorldItem(item);
+    }
+  }
+
+  private trackWorldItem(item: Item): void {
+    this.worldItems.set(item.id, item);
+    if (item.seedKey) this.seedKeyToId.set(item.seedKey, item.id);
+  }
+
+  private untrackWorldItem(itemId: string): void {
+    const item = this.worldItems.get(itemId);
+    if (!item) return;
+    this.worldItems.delete(itemId);
+    if (item.seedKey) this.seedKeyToId.delete(item.seedKey);
   }
 
   getMapItems(position: Position) {
@@ -98,15 +158,42 @@ export class DynamicMapItems {
         this.removeDynamicWorldItem(mutation.before.id, position);
       }
     }
-    for (const item of mutation.after) {
-      if (item.location.kind !== "world") continue;
-      if (item.seedKey) this.hiddenMapItemIds.add(item.seedKey);
-      this.removeDynamicWorldItem(item.id, item.location.position);
-      if (item.seedKey) {
-        this.removeDynamicWorldItem(item.seedKey, item.location.position);
+    for (const removedId of mutation.removedItemIds ?? []) {
+      const removed = this.worldItems.get(removedId);
+      if (removed?.location.kind === "world") {
+        this.removeDynamicWorldItem(
+          removed.seedKey ?? removed.id,
+          removed.location.position,
+        );
+        changed.set(
+          positionKey(removed.location.position),
+          removed.location.position,
+        );
       }
-      this.addDynamicWorldItem(item);
-      changed.set(positionKey(item.location.position), item.location.position);
+      this.untrackWorldItem(removedId);
+    }
+    for (const item of mutation.after) {
+      if (item.location.kind === "world") {
+        if (item.seedKey) this.hiddenMapItemIds.add(item.seedKey);
+        this.removeDynamicWorldItem(item.id, item.location.position);
+        if (item.seedKey) {
+          this.removeDynamicWorldItem(item.seedKey, item.location.position);
+        }
+        this.addDynamicWorldItem(item);
+        changed.set(positionKey(item.location.position), item.location.position);
+        continue;
+      }
+      if (
+        (item.location.kind === "container" ||
+          item.location.kind === "corpse") &&
+        this.worldItems.has(item.location.containerId)
+      ) {
+        // Contained under a world root (parents precede children in `after`).
+        this.trackWorldItem(item);
+        continue;
+      }
+      // The item left the world (picked up, equipped, consumed).
+      this.untrackWorldItem(item.id);
     }
     for (const key of changed.keys()) {
       this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
@@ -117,7 +204,16 @@ export class DynamicMapItems {
   applyCreatedWorldItems(items: ReadonlyArray<ItemMutation["after"][number]>): Position[] {
     const changed = new Map<string, Position>();
     for (const item of items) {
-      if (item.location.kind !== "world") continue;
+      if (item.location.kind !== "world") {
+        if (
+          (item.location.kind === "container" ||
+            item.location.kind === "corpse") &&
+          this.worldItems.has(item.location.containerId)
+        ) {
+          this.trackWorldItem(item);
+        }
+        continue;
+      }
       this.addDynamicWorldItem(item);
       const key = positionKey(item.location.position);
       changed.set(key, item.location.position);
@@ -128,6 +224,7 @@ export class DynamicMapItems {
 
   addDynamicWorldItem(item: WorldItemDeltas["items"][number]): void {
     if (item.location.kind !== "world") return;
+    this.trackWorldItem(item);
     const key = positionKey(item.location.position);
     const current = this.dynamicMapItems.get(key) ?? [];
     const instanceId = item.seedKey ?? item.id;

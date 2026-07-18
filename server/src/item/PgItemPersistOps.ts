@@ -13,6 +13,7 @@ import { lockCharacterQuery } from "./sql/lockCharacterQuery";
 import { persistCarriedDelete } from "./sql/persistCarriedDelete";
 import { persistCarriedInsert } from "./sql/persistCarriedInsert";
 import { persistCarriedWriteUpdate } from "./sql/persistCarriedWriteUpdate";
+import { persistSeededInsert } from "./sql/persistSeededInsert";
 import { withSerializableTransaction } from "./withSerializableTransaction";
 
 /**
@@ -21,14 +22,44 @@ import { withSerializableTransaction } from "./withSerializableTransaction";
  * diverged and the caller must resync the character from the DB.
  */
 export class PgItemPersistOps {
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly pool: Pool,
+    private readonly mapName: string,
+  ) {}
 
   persist(plan: CarriedPersistPlan): Promise<void> {
     return withSerializableTransaction(this.pool, async (client) => {
       await client.query(lockCharacterQuery, [plan.characterId]);
       for (const op of plan.rowOps) {
         if (op.kind === "insert") {
-          const columns = itemLocationColumns(op.item);
+          const columns = itemLocationColumns(op.item, this.mapName);
+          if (op.seed) {
+            await client.query(persistSeededInsert, [
+              op.item.id,
+              op.item.typeId,
+              op.item.count,
+              JSON.stringify(op.item.attributes),
+              op.item.version,
+              columns.locationType,
+              columns.characterId,
+              columns.containerId,
+              columns.slotIndex,
+              columns.equipmentSlot,
+              columns.worldMapName,
+              columns.worldX,
+              columns.worldY,
+              columns.worldZ,
+              columns.worldStackIndex,
+              op.item.seedKey ?? null,
+              op.seed.mapName,
+              op.seed.mapVersion,
+              op.seed.x,
+              op.seed.y,
+              op.seed.z,
+              op.seed.stackIndex,
+            ]);
+            continue;
+          }
           await client.query(persistCarriedInsert, [
             op.item.id,
             op.item.typeId,
@@ -40,6 +71,11 @@ export class PgItemPersistOps {
             columns.containerId,
             columns.slotIndex,
             columns.equipmentSlot,
+            columns.worldMapName,
+            columns.worldX,
+            columns.worldY,
+            columns.worldZ,
+            columns.worldStackIndex,
           ]);
           continue;
         }
@@ -55,7 +91,7 @@ export class PgItemPersistOps {
           }
           continue;
         }
-        const columns = itemLocationColumns(op.item);
+        const columns = itemLocationColumns(op.item, this.mapName);
         const written = await client.query(persistCarriedWriteUpdate, [
           op.item.id,
           op.item.typeId,
@@ -67,6 +103,11 @@ export class PgItemPersistOps {
           columns.containerId,
           columns.slotIndex,
           columns.equipmentSlot,
+          columns.worldMapName,
+          columns.worldX,
+          columns.worldY,
+          columns.worldZ,
+          columns.worldStackIndex,
           op.expectedVersion,
         ]);
         if (written.rowCount !== 1) {

@@ -72,7 +72,7 @@ export class PgItemStore implements ItemStore {
       audit,
     );
     this.decays = new PgDecayOps(pool, catalog, locks, audit);
-    this.persists = new PgItemPersistOps(pool);
+    this.persists = new PgItemPersistOps(pool, mapName);
   }
 
   loadForCharacter(characterId: string): Promise<ReadonlyArray<Item>> {

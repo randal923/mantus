@@ -1,13 +1,23 @@
 import type { Item } from "./Item";
 import type { ItemLocation } from "./ItemLocation";
 
+/** Seed provenance for rows materialized in memory from pristine map items. */
+export interface PersistSeedData {
+  readonly mapName: string;
+  readonly mapVersion: string;
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly stackIndex: number;
+}
+
 export type CarriedPersistRowOp =
   | {
       readonly kind: "write";
       readonly expectedVersion: number;
       readonly item: Item;
     }
-  | { readonly kind: "insert"; readonly item: Item }
+  | { readonly kind: "insert"; readonly item: Item; readonly seed?: PersistSeedData }
   | {
       readonly kind: "delete";
       readonly itemId: string;

@@ -8,28 +8,46 @@ interface ItemLocationColumnValues {
   readonly slotIndex: number | null;
   readonly equipmentSlot: EquipmentSlot | null;
   readonly depotId: number | null;
+  readonly worldMapName: string | null;
+  readonly worldX: number | null;
+  readonly worldY: number | null;
+  readonly worldZ: number | null;
+  readonly worldStackIndex: number | null;
 }
 
+const EMPTY_COLUMNS = {
+  characterId: null,
+  containerId: null,
+  slotIndex: null,
+  equipmentSlot: null,
+  depotId: null,
+  worldMapName: null,
+  worldX: null,
+  worldY: null,
+  worldZ: null,
+  worldStackIndex: null,
+};
+
 /** Maps an item's location to the items-table column values that encode it. */
-export function itemLocationColumns(item: Item): ItemLocationColumnValues {
+export function itemLocationColumns(
+  item: Item,
+  mapName?: string,
+): ItemLocationColumnValues {
   const location = item.location;
   if (location.kind === "equipment") {
     return {
+      ...EMPTY_COLUMNS,
       locationType: "equipment",
       characterId: location.characterId,
-      containerId: null,
-      slotIndex: null,
       equipmentSlot: location.slot,
-      depotId: null,
     };
   }
   if (location.kind === "depot") {
     return {
+      ...EMPTY_COLUMNS,
       locationType: "depot",
       characterId: location.characterId,
-      containerId: null,
       slotIndex: location.slot,
-      equipmentSlot: null,
       depotId: location.depotId,
     };
   }
@@ -40,25 +58,32 @@ export function itemLocationColumns(item: Item): ItemLocationColumnValues {
     location.kind === "market-escrow"
   ) {
     return {
+      ...EMPTY_COLUMNS,
       locationType: location.kind,
       characterId: location.characterId,
-      containerId: null,
       slotIndex: location.slot,
-      equipmentSlot: null,
-      depotId: null,
     };
   }
   if (location.kind === "container" || location.kind === "corpse") {
     return {
+      ...EMPTY_COLUMNS,
       locationType: location.kind,
-      characterId: null,
       containerId: location.containerId,
       slotIndex: location.slot,
-      equipmentSlot: null,
-      depotId: null,
+    };
+  }
+  if (location.kind === "world" && mapName !== undefined) {
+    return {
+      ...EMPTY_COLUMNS,
+      locationType: "world",
+      worldMapName: mapName,
+      worldX: location.position.x,
+      worldY: location.position.y,
+      worldZ: location.position.z,
+      worldStackIndex: location.stackIndex,
     };
   }
   throw new Error(
-    `item ${item.id} has a location kind depot persistence cannot encode`,
+    `item ${item.id} has a location kind item persistence cannot encode`,
   );
 }

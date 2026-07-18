@@ -15,6 +15,8 @@ export class WorldItemDecayRunner {
     private readonly world: World,
     private readonly visibility: Visibility,
     private readonly outcomes: ItemOutcomeQueue,
+    /** Serializes the decay write behind pending memory-first persists. */
+    private readonly runOrdered: <T>(operation: () => Promise<T>) => Promise<T>,
     private readonly decay?: DecayManager,
   ) {}
 
@@ -45,7 +47,9 @@ export class WorldItemDecayRunner {
     ) {
       return;
     }
-    const operation = this.store.decayWorldItem(record.itemId, record.version);
+    const operation = this.runOrdered(() =>
+      this.store.decayWorldItem(record.itemId, record.version),
+    );
     const resolution = operation
       .then((mutation) => {
         this.outcomes.push((appliedAt) => {

@@ -3,12 +3,16 @@ import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { ItemIntent } from "../ItemIntent";
 import type { CarriedPlan } from "./CarriedPlan";
+import { planDrop } from "./planDrop";
 import { planEquip } from "./planEquip";
+import { planMoveMapItem } from "./planMoveMapItem";
 import { planMoveToContainer } from "./planMoveToContainer";
+import { planPickup } from "./planPickup";
 import { planRotate } from "./planRotate";
 import { planSplitStack } from "./planSplitStack";
 import { planUnequip } from "./planUnequip";
 import { planWriteText } from "./planWriteText";
+import type { WorldItemsView } from "./WorldItemsView";
 
 export type CarriedIntentPlanResult =
   | { readonly kind: "planned"; readonly plan: CarriedPlan }
@@ -17,19 +21,21 @@ export type CarriedIntentPlanResult =
 
 /**
  * Routes an intent to its memory-first planner. "unsupported" falls through
- * to the DB-first path (world interactions, consumption); "rejected" mirrors
- * the retired DB ops' validation throws.
+ * to the DB-first path (consumption); "rejected" mirrors the retired DB ops'
+ * validation throws.
  */
 export function planCarriedIntent(input: {
   readonly intent: ItemIntent;
   readonly item: Item | undefined;
   readonly items: ReadonlyArray<Item>;
+  readonly capacityMax: number;
+  readonly world: WorldItemsView;
   readonly catalog: ItemCatalog;
   readonly characterId: string;
   readonly level: number;
   readonly vocation: Character["vocation"];
 }): CarriedIntentPlanResult {
-  const { intent, catalog, characterId, items } = input;
+  const { intent, catalog, characterId, items, world } = input;
   const planned = (plan: CarriedPlan | null): CarriedIntentPlanResult =>
     plan ? { kind: "planned", plan } : { kind: "rejected" };
   switch (intent.type) {
@@ -102,6 +108,45 @@ export function planCarriedIntent(input: {
           itemId: intent.itemId,
           expectedVersion: intent.revision,
           text: intent.text,
+        }),
+      );
+    case "pickup-item":
+      return planned(
+        planPickup({
+          characterId,
+          catalog,
+          carried: { items, capacityMax: input.capacityMax },
+          world,
+          itemInstanceId: intent.itemId,
+          expectedVersion: intent.revision,
+          position: intent.position,
+          destination: intent.destination,
+          stageInInventory: intent.equipSlot !== undefined,
+        }),
+      );
+    case "drop-item":
+      return planned(
+        planDrop({
+          characterId,
+          catalog,
+          carried: { items },
+          world,
+          itemId: intent.itemId,
+          expectedVersion: intent.revision,
+          position: intent.position,
+          requestedCount: intent.count,
+        }),
+      );
+    case "move-map-item":
+      return planned(
+        planMoveMapItem({
+          characterId,
+          catalog,
+          world,
+          itemInstanceId: intent.itemId,
+          expectedVersion: intent.revision,
+          fromPosition: intent.fromPosition,
+          toPosition: intent.toPosition,
         }),
       );
     case "use-item":

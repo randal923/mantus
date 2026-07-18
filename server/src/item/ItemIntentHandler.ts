@@ -19,17 +19,10 @@ import type { ItemStore } from "./ItemStore";
 import type { ItemType } from "./ItemType";
 import type { LoadedInventory } from "./LoadedInventory";
 import type { LootItemCreation } from "./LootItemCreation";
-import { operationForItemIntent } from "./operationForItemIntent";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
 import { planEquip } from "./plan/planEquip";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
 import { WorldItemDecayRunner } from "./WorldItemDecayRunner";
-
-interface PersistQueueState {
-  chain: Promise<void>;
-  depth: number;
-  poisoned: boolean;
-}
 
 export class ItemIntentHandler {
   private readonly outcomes = new ItemOutcomeQueue();
@@ -37,7 +30,13 @@ export class ItemIntentHandler {
   private readonly operations: ItemOperationRunner;
   private readonly corpses: CorpseCreator;
   private readonly decayRunner: WorldItemDecayRunner;
-  private readonly persistQueues = new Map<string, PersistQueueState>();
+  /**
+   * One global write lane: world items pass between characters (drop, then
+   * another player's pickup), so persist order must be total across the
+   * server, not just per character.
+   */
+  private persistChain: Promise<void> = Promise.resolve();
+  private readonly poisonedPersistCharacters = new Set<string>();
   private readonly pendingPersistOperations = new Set<Promise<void>>();
 
   constructor(
@@ -67,6 +66,7 @@ export class ItemIntentHandler {
       world,
       visibility,
       this.outcomes,
+      (operation) => this.runOrderedInternalOperation(operation),
       decay,
     );
   }
@@ -278,39 +278,30 @@ export class ItemIntentHandler {
 
   /**
    * Queues the DB write behind an already-applied memory mutation (depot or
-   * carried). Writes for one character run strictly in order; a failed write
-   * poisons the queue, skips the rest, and disconnects the session so the
-   * next login reloads authoritative state from the DB.
+   * carried or world). Writes run strictly in enqueue order; a failed write
+   * poisons the character, skips their remaining writes, and disconnects the
+   * session so the next login reloads authoritative state from the DB.
    */
   enqueuePersist(
     session: Session,
     characterId: string,
     persist: () => Promise<void>,
   ): void {
-    const state = this.persistQueues.get(characterId) ?? {
-      chain: Promise.resolve(),
-      depth: 0,
-      poisoned: false,
-    };
-    this.persistQueues.set(characterId, state);
-    state.depth += 1;
     session.itemPersistsPending += 1;
-    state.chain = state.chain
+    const settled = this.persistChain
       .then(async () => {
-        if (state.poisoned) return;
+        if (this.poisonedPersistCharacters.has(characterId)) return;
         await persist();
       })
       .then(
         () => {
-          this.outcomes.push(() =>
-            this.finishPersist(session, characterId, state),
-          );
+          this.outcomes.push(() => this.finishPersist(session));
         },
         (cause: unknown) => {
-          state.poisoned = true;
+          this.poisonedPersistCharacters.add(characterId);
           const reason = cause instanceof Error ? cause.message : "unknown";
           this.outcomes.push(() => {
-            this.finishPersist(session, characterId, state);
+            this.finishPersist(session);
             console.error(
               `item persist failed for ${characterId}: ${reason}; disconnecting to resync from DB`,
             );
@@ -318,38 +309,43 @@ export class ItemIntentHandler {
           });
         },
       );
-    const settled = state.chain;
+    this.persistChain = settled;
     this.operations.pending.trackSwallowingErrors(characterId, settled);
     this.pendingPersistOperations.add(settled);
     void settled.finally(() => this.pendingPersistOperations.delete(settled));
   }
 
+  /**
+   * Serializes a server-internal DB op (world decay) through the same write
+   * lane so it cannot interleave with pending memory-first writes. Failures
+   * are the caller's to observe on the returned promise.
+   */
+  runOrderedInternalOperation<T>(operation: () => Promise<T>): Promise<T> {
+    const ordered = this.persistChain.then(operation);
+    this.persistChain = ordered.then(
+      () => undefined,
+      () => undefined,
+    );
+    this.pendingPersistOperations.add(this.persistChain);
+    const settled = this.persistChain;
+    void settled.finally(() => this.pendingPersistOperations.delete(settled));
+    return ordered;
+  }
+
   isPersistPoisoned(characterId: string): boolean {
-    return this.persistQueues.get(characterId)?.poisoned ?? false;
+    return this.poisonedPersistCharacters.has(characterId);
   }
 
   clearPersistState(characterId: string): void {
-    this.persistQueues.delete(characterId);
+    this.poisonedPersistCharacters.delete(characterId);
   }
 
   async stopPersists(): Promise<void> {
     await Promise.allSettled([...this.pendingPersistOperations]);
   }
 
-  private finishPersist(
-    session: Session,
-    characterId: string,
-    state: PersistQueueState,
-  ): void {
-    state.depth -= 1;
+  private finishPersist(session: Session): void {
     session.itemPersistsPending = Math.max(0, session.itemPersistsPending - 1);
-    if (
-      state.depth === 0 &&
-      !state.poisoned &&
-      this.persistQueues.get(characterId) === state
-    ) {
-      this.persistQueues.delete(characterId);
-    }
   }
 
   private consumeForUse(
@@ -511,63 +507,36 @@ export class ItemIntentHandler {
       intent,
       item,
       items: cache.items,
+      capacityMax: cache.capacityMax,
+      world: this.world,
       catalog: this.catalog,
       characterId: playerId,
       level: player.level,
       vocation: player.vocation,
     });
-    if (planned.kind === "rejected") {
+    if (planned.kind !== "planned") {
       session.sendError("item-action-failed");
       return;
     }
-    if (planned.kind === "planned") {
-      const inventory = this.operations.applyMutation(
+    const inventory = this.operations.applyMutation(
+      playerId,
+      planned.plan.mutation,
+      now,
+    );
+    if (inventory && session.playerId === playerId) {
+      session.send({ type: "inventory-updated", inventory });
+    }
+    const persist = planned.plan.persist;
+    this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+    if (intent.type === "pickup-item" && intent.equipSlot) {
+      this.equipPickedItem(
+        session,
         playerId,
         planned.plan.mutation,
+        intent.equipSlot,
         now,
       );
-      if (inventory && session.playerId === playerId) {
-        session.send({ type: "inventory-updated", inventory });
-      }
-      const persist = planned.plan.persist;
-      this.enqueuePersist(session, playerId, () => this.store.persist(persist));
-      return;
     }
-    // DB-first ops (world interactions) must stay ordered behind any
-    // memory-first writes still flushing for this character.
-    if (session.itemPersistsPending > 0) {
-      session.sendError("item-action-failed");
-      return;
-    }
-    const operation = operationForItemIntent(
-      this.store,
-      this.world,
-      playerId,
-      intent,
-    );
-    if (!operation) {
-      session.sendError("item-action-failed");
-      return;
-    }
-    session.itemOperationPending = true;
-    const equipSlot =
-      intent.type === "pickup-item" ? intent.equipSlot : undefined;
-    this.operations.run(session, playerId, operation, {
-      errorCode: "item-action-failed",
-      logLabel: "item operation failed",
-      ...(equipSlot
-        ? {
-            onMutationApplied: (mutation: ItemMutation, appliedAt: number) =>
-              this.equipPickedItem(
-                session,
-                playerId,
-                mutation,
-                equipSlot,
-                appliedAt,
-              ),
-          }
-        : {}),
-    });
   }
 
   /**

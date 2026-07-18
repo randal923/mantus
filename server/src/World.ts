@@ -34,9 +34,7 @@ export class World {
     for (const seedKey of worldItemDeltas.hiddenSeedKeys) {
       this.mapItems.hideSeed(seedKey);
     }
-    for (const item of worldItemDeltas.items) {
-      this.mapItems.addDynamicWorldItem(item);
-    }
+    this.mapItems.registerLoadedWorldItems(worldItemDeltas.items);
   }
 
   get mapName(): string {
@@ -98,6 +96,14 @@ export class World {
 
   getMapItems(position: Position) {
     return this.mapItems.getMapItems(position);
+  }
+
+  getWorldItem(instanceId: string) {
+    return this.mapItems.getWorldItem(instanceId);
+  }
+
+  getWorldSubtree(rootId: string) {
+    return this.mapItems.getWorldSubtree(rootId);
   }
 
   isOccupied(position: Position): boolean {

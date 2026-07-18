@@ -199,34 +199,42 @@ limitations:
   back-to-back heavy withdraws may pass the client check and be rejected by
   the server — the safe direction (no false client rejections).
 
-## Known gaps (memory-first carried ops, 2026-07)
+## Known gaps (memory-first item ops, 2026-07)
 
-Equip/unequip/move-item/split-stack/rotate-item/write-item (and use-item on
-rotatables) are memory-authoritative: planners in `server/src/item/plan/`
-validate against the `InventoryCache` in the tick, apply immediately, and
-flush a guarded single-transaction write (`PgItemPersistOps`) through the
-per-character persist FIFO shared with the depot
-(`ItemIntentHandler.enqueuePersist`, `session.itemPersistsPending`).
-Deliberate trade-offs:
+Every item intent is memory-authoritative: carried ops
+(equip/unequip/move-item/split/rotate/write, use-item on rotatables) and
+ground ops (pickup/drop/move-map-item) are planned in
+`server/src/item/plan/`, applied in the tick, and flushed as guarded
+single-transaction writes (`PgItemPersistOps`). World items — including the
+container subtrees inside dropped/seeded containers — are memory-resident
+(`DynamicMapItems.worldItems`, boot-loaded by `worldTreeItemsQuery`); pristine
+map seeds materialize in memory (`materializeWorldSource`) and persist with
+their seed provenance. Deliberate trade-offs:
 
-- **DB-first ops remain for world interactions and consumption** (pickup,
-  drop, move-map-item, food/rune/ammo consume, conjure, corpse, decay). They
-  gate on `itemPersistsPending` so per-character writes stay ordered. Phase 2
-  (converting these) needs per-item/world-tile write ordering, not just
-  per-character — design before attempting.
-- **The retired DB-first carried ops are still present**
-  (`PgEquipmentOps`, `PgContainerMoveOps`, `PgStackOps.split/rotate`,
-  `PgItemUseOps.writeText`, and their `MemoryItemStore` mirrors + tests) as
-  the reference implementation for planner parity. Nothing in the intent path
-  calls them; remove them once the memory-first path has soaked, and shrink
-  `ItemStore` accordingly. Until then, do not call them directly — they
-  bypass the memory-authoritative caches.
+- **One global persist lane.** World items pass between characters (A drops,
+  B picks up), so all memory-first writes serialize through a single FIFO
+  (`ItemIntentHandler.persistChain`); world decay runs through the same lane
+  (`runOrderedInternalOperation`). Throughput is one DB round trip per write
+  server-wide — fine co-located, a bottleneck against a remote DB with many
+  concurrent players. If it ever saturates, split into dependency-aware lanes
+  (per-character + per-world-item) rather than reverting to DB-first.
+- **Still DB-first:** food/rune/ammo consume, conjuring, corpse creation,
+  world decay, and the economy flows (shop/bank/travel/mail, charter-pinned).
+  Consumption gates on `session.itemPersistsPending`; corpse creation only
+  inserts fresh rows so it needs no ordering; decay rides the global lane.
+- **The retired DB-first ops are still present** (`PgEquipmentOps`,
+  `PgContainerMoveOps`, `PgStackOps`, `PgItemUseOps.writeText`,
+  `PgWorldItemOps.pickup/drop/moveWorldItem`, and `MemoryItemStore` mirrors +
+  their tests) as the parity reference. Nothing in the intent path calls
+  them; remove them once the memory-first path has soaked, and shrink
+  `ItemStore`. Until then do not call them directly — they bypass the caches.
 - **Persist failure disconnects the player** (same policy as the depot):
-  guarded write misses poison the queue and terminate the session so the next
-  login reloads DB state. Consider live resync if this becomes visible.
-- **Client prediction layer retained** (`useOptimisticInventory`): with
-  in-tick server responses it is now redundant for the six converted ops but
-  still masks DB-first ops (pickup/drop/shop). Simplify it only after phase 2.
+  a guard miss poisons that character's writes and terminates the session so
+  the next login reloads DB state. Consider live resync if visible.
+- **Client prediction layer retained** (`useOptimisticInventory`): now
+  redundant for all converted ops (it masks only shop previews and the
+  network RTT). Removing it is a client-only simplification, best done as its
+  own change.
 
 ## Pinned Canary parity gate
 

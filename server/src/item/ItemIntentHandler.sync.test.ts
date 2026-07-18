@@ -239,9 +239,18 @@ describe("ItemIntentHandler memory-first carried ops", () => {
     ).toBe(50);
   });
 
-  it("rejects DB-first ops while memory-first writes are still flushing", async () => {
+  it("rejects DB-first consumption while memory-first writes are flushing", async () => {
+    const FOOD_TYPE = 3577;
+    const food: Item = {
+      id: "dddd1111-1111-4111-8111-111111111111",
+      typeId: FOOD_TYPE,
+      count: 2,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 5 },
+    };
     const store = new MemoryItemStore(catalog);
-    for (const item of carriedFixture()) store.seed(item);
+    for (const item of [...carriedFixture(), food]) store.seed(item);
     let release: (() => void) | undefined;
     const originalPersist = store.persist.bind(store);
     store.persist = (plan) =>
@@ -260,10 +269,9 @@ describe("ItemIntentHandler memory-first carried ops", () => {
       destinationSlot: 0,
     });
     handler.handle(session, {
-      type: "drop-item",
-      itemId: AXE_B_ID,
+      type: "use-item",
+      itemId: food.id,
       revision: 1,
-      position: { x: 1, y: 1, z: 7 },
     });
 
     expect(session.itemPersistsPending).toBe(1);
@@ -275,6 +283,103 @@ describe("ItemIntentHandler memory-first carried ops", () => {
     release?.();
     await nextTurn();
     handler.applyResolvedOutcomes(Date.now());
+    expect(session.itemPersistsPending).toBe(0);
+  });
+
+  it("drops and picks up a container preserving its contents", async () => {
+    const store = new MemoryItemStore(catalog);
+    const POUCH_TYPE = 2853;
+    const pouch: Item = {
+      id: "eeee1111-1111-4111-8111-111111111111",
+      typeId: POUCH_TYPE,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 5 },
+    };
+    const keepsake: Item = {
+      id: "ffff1111-1111-4111-8111-111111111111",
+      typeId: AXE_TYPE,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: pouch.id, slot: 0 },
+    };
+    for (const item of [...carriedFixture(), pouch, keepsake]) store.seed(item);
+    const { handler, session, world } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "drop-item",
+      itemId: pouch.id,
+      revision: 1,
+      position: { x: 1, y: 2, z: 7 },
+    });
+
+    expect(
+      world.getMapItems({ x: 1, y: 2, z: 7 }).map((entry) => entry.instanceId),
+    ).toContain(pouch.id);
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.some((entry) => entry.id === keepsake.id),
+    ).toBe(false);
+
+    handler.handle(session, {
+      type: "pickup-item",
+      itemId: pouch.id,
+      revision: 2,
+      position: { x: 1, y: 2, z: 7 },
+    });
+
+    expect(world.getMapItems({ x: 1, y: 2, z: 7 })).toHaveLength(0);
+    const snapshot = handler.inventorySnapshot(CHARACTER_ID);
+    expect(snapshot?.items.some((entry) => entry.id === keepsake.id)).toBe(
+      true,
+    );
+    handler.detach(CHARACTER_ID);
+    const durable = await handler.load(CHARACTER_ID, 400);
+    expect(durable.items.map((entry) => entry.id)).toContain(keepsake.id);
+  });
+
+  it("keeps cross-character world writes in enqueue order", async () => {
+    const store = new MemoryItemStore(catalog);
+    for (const item of carriedFixture()) store.seed(item);
+    const order: string[] = [];
+    const originalPersist = store.persist.bind(store);
+    const gates: Array<() => void> = [];
+    store.persist = (plan) =>
+      new Promise<void>((resolve) => {
+        gates.push(() => {
+          order.push(plan.rowOps[0]?.kind ?? "none");
+          resolve(originalPersist(plan));
+        });
+      });
+    const { handler, session } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "drop-item",
+      itemId: AXE_A_ID,
+      revision: 1,
+      position: { x: 1, y: 2, z: 7 },
+    });
+    handler.handle(session, {
+      type: "pickup-item",
+      itemId: AXE_A_ID,
+      revision: 2,
+      position: { x: 1, y: 2, z: 7 },
+    });
+    await nextTurn();
+    // Only the first write may be running; the second waits in the lane.
+    expect(gates).toHaveLength(1);
+    gates.shift()?.();
+    await nextTurn();
+    expect(gates).toHaveLength(1);
+    gates.shift()?.();
+    await nextTurn();
+    handler.applyResolvedOutcomes(Date.now());
+    expect(order).toEqual(["write", "write"]);
     expect(session.itemPersistsPending).toBe(0);
   });
 
