@@ -1,26 +1,35 @@
-import { DEPOT_LIMITS, type DepotLocation } from "@tibia/protocol";
+import { DEPOT_LIMITS } from "@tibia/protocol";
 import { normalizeCharacterName } from "../character/normalizeCharacterName";
+import type { Item } from "../item/Item";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { DepotAccessTracker } from "./DepotAccessTracker";
+import type { DepotCacheManager } from "./DepotCacheManager";
 import type { DepotIntent } from "./DepotIntent";
-import type {
-  DepotStore,
-  DepotTransferResult,
-  StashTransferResult,
-} from "./DepotStore";
-import { failDepot } from "./failDepot";
+import type { DepotPersistPlan } from "./DepotPersistPlan";
+import type { DepotStore } from "./DepotStore";
 import { failMail } from "./failMail";
-import { projectDepotState } from "./projectDepotState";
-import type { StorageAccess } from "./StorageAccess";
 
+interface PersistQueueState {
+  chain: Promise<void>;
+  depth: number;
+  poisoned: boolean;
+}
+
+/**
+ * Owns every async edge of the depot system: the per-character FIFO of persist
+ * transactions behind the in-memory mutations, mail delivery, and the
+ * tick-outcome queue that applies async results to game state.
+ */
 export class DepotOperationRunner {
   private readonly outcomes: Array<() => void> = [];
   private readonly pendingOperations = new Set<Promise<void>>();
+  private readonly persistQueues = new Map<string, PersistQueueState>();
 
   constructor(
     private readonly items: ItemIntentHandler,
     private readonly tracker: DepotAccessTracker,
+    private readonly caches: DepotCacheManager,
     private readonly store?: DepotStore,
   ) {}
 
@@ -28,168 +37,81 @@ export class DepotOperationRunner {
     for (const outcome of this.outcomes.splice(0)) outcome();
   }
 
-  beginBrowse(
+  pushOutcome(outcome: () => void): void {
+    this.outcomes.push(outcome);
+  }
+
+  isPersistPoisoned(characterId: string): boolean {
+    return this.persistQueues.get(characterId)?.poisoned ?? false;
+  }
+
+  clearPersistState(characterId: string): void {
+    this.persistQueues.delete(characterId);
+  }
+
+  /**
+   * Queues the DB write behind an already-applied memory mutation. Writes for
+   * one character run strictly in order; a failed write poisons the queue,
+   * skips the rest, and disconnects the session so the next login reloads
+   * authoritative state from the DB.
+   */
+  enqueuePersist(
     session: Session,
-    access: Extract<StorageAccess, { kind: "depot" }>,
-    location: DepotLocation,
-    page: number,
-    query: string,
+    characterId: string,
+    plan: DepotPersistPlan,
   ): void {
-    if (!this.store || !session.playerId) {
-      failDepot(session, "failed");
-      return;
-    }
-    if (session.depotOperationPending) {
-      failDepot(session, "busy");
-      return;
-    }
-    if (!this.tracker.isAccessCurrent(session, access)) {
-      this.tracker.closeOutOfRange(session, "depot");
-      return;
-    }
-    session.depotOperationPending = true;
-    const matchingItemTypeIds =
-      query.length === 0
-        ? null
-        : this.items.itemTypesByName(query).map((type) => type.id);
-    const operation = this.store.browse(
-      session.playerId,
-      access.depotId,
-      location,
-      page,
-      matchingItemTypeIds,
+    const store = this.store;
+    if (!store) return;
+    const state = this.persistQueues.get(characterId) ?? {
+      chain: Promise.resolve(),
+      depth: 0,
+      poisoned: false,
+    };
+    this.persistQueues.set(characterId, state);
+    state.depth += 1;
+    session.depotPersistsPending += 1;
+    state.chain = state.chain
+      .then(async () => {
+        if (state.poisoned) return;
+        await store.persist(plan);
+      })
+      .then(
+        () => {
+          this.outcomes.push(() => this.finishPersist(session, characterId, state));
+        },
+        (cause: unknown) => {
+          state.poisoned = true;
+          const reason = cause instanceof Error ? cause.message : "unknown";
+          this.outcomes.push(() => {
+            this.finishPersist(session, characterId, state);
+            console.error(
+              `depot persist failed for ${characterId}: ${reason}; disconnecting to resync from DB`,
+            );
+            session.terminate();
+          });
+        },
+      );
+    this.items.trackExternalOperation(characterId, state.chain);
+    this.track(state.chain);
+  }
+
+  private finishPersist(
+    session: Session,
+    characterId: string,
+    state: PersistQueueState,
+  ): void {
+    state.depth -= 1;
+    session.depotPersistsPending = Math.max(
+      0,
+      session.depotPersistsPending - 1,
     );
-    const resolution = operation
-      .then((result) => {
-        this.outcomes.push(() => {
-          session.depotOperationPending = false;
-          if (!this.tracker.isAccessCurrent(session, access)) {
-            this.tracker.closeOutOfRange(session, "depot");
-            return;
-          }
-          session.send(
-            projectDepotState(this.items, access, location, query, page, result),
-          );
-        });
-      })
-      .catch((cause: unknown) => {
-        const reason = cause instanceof Error ? cause.message : "unknown";
-        console.warn(`depot browse failed for ${session.playerId}: ${reason}`);
-        this.outcomes.push(() => {
-          session.depotOperationPending = false;
-          failDepot(session, "failed");
-        });
-      });
-    this.track(resolution);
-  }
-
-  beginDepotMutation(
-    session: Session,
-    access: Extract<StorageAccess, { kind: "depot" }>,
-    refreshLocation: "depot" | "inbox",
-    operation: Promise<DepotTransferResult>,
-  ): void {
-    const characterId = session.playerId;
-    if (!characterId) {
-      failDepot(session, "failed");
-      return;
+    if (
+      state.depth === 0 &&
+      !state.poisoned &&
+      this.persistQueues.get(characterId) === state
+    ) {
+      this.persistQueues.delete(characterId);
     }
-    session.itemOperationPending = true;
-    session.depotOperationPending = true;
-    const resolution = operation
-      .then((result) => {
-        this.outcomes.push(() => {
-          session.itemOperationPending = false;
-          session.depotOperationPending = false;
-          if (result.status !== "committed") {
-            if (!this.tracker.isAccessCurrent(session, access)) {
-              this.tracker.closeOutOfRange(session, "depot");
-              return;
-            }
-            failDepot(session, result.status);
-            if (result.status === "stale") {
-              this.beginBrowse(session, access, refreshLocation, 1, "");
-            }
-            return;
-          }
-          this.items.applyCommittedMutation(
-            session,
-            characterId,
-            result.mutation,
-            Date.now(),
-          );
-          if (!this.tracker.isAccessCurrent(session, access)) {
-            this.tracker.closeOutOfRange(session, "depot");
-            return;
-          }
-          this.beginBrowse(session, access, refreshLocation, 1, "");
-        });
-      })
-      .catch((cause: unknown) => {
-        const reason = cause instanceof Error ? cause.message : "unknown";
-        console.warn(`depot transfer failed for ${characterId}: ${reason}`);
-        this.outcomes.push(() => {
-          session.itemOperationPending = false;
-          session.depotOperationPending = false;
-          failDepot(session, "failed");
-        });
-      });
-    this.items.trackExternalOperation(characterId, resolution);
-    this.track(resolution);
-  }
-
-  beginStashMutation(
-    session: Session,
-    access: Extract<StorageAccess, { kind: "depot" }>,
-    operation: Promise<StashTransferResult>,
-  ): void {
-    const characterId = session.playerId;
-    if (!characterId) {
-      failDepot(session, "failed");
-      return;
-    }
-    session.itemOperationPending = true;
-    session.depotOperationPending = true;
-    const resolution = operation
-      .then((result) => {
-        this.outcomes.push(() => {
-          session.itemOperationPending = false;
-          session.depotOperationPending = false;
-          if (result.status !== "committed") {
-            if (!this.tracker.isAccessCurrent(session, access)) {
-              this.tracker.closeOutOfRange(session, "depot");
-              return;
-            }
-            failDepot(session, result.status);
-            if (result.status === "stale") {
-              this.beginBrowse(session, access, "stash", 1, "");
-            }
-            return;
-          }
-          this.items.applyCommittedMutation(
-            session,
-            characterId,
-            result.mutation,
-            Date.now(),
-          );
-          if (!this.tracker.isAccessCurrent(session, access)) {
-            this.tracker.closeOutOfRange(session, "depot");
-            return;
-          }
-          this.beginBrowse(session, access, "stash", 1, "");
-        });
-      })
-      .catch((cause: unknown) => {
-        const reason = cause instanceof Error ? cause.message : "unknown";
-        console.warn(`stash transfer failed for ${characterId}: ${reason}`);
-        this.outcomes.push(() => {
-          session.itemOperationPending = false;
-          session.depotOperationPending = false;
-          failDepot(session, "failed");
-        });
-      });
-    this.items.trackExternalOperation(characterId, resolution);
-    this.track(resolution);
   }
 
   handleSendMail(
@@ -211,7 +133,11 @@ export class DepotOperationRunner {
       this.tracker.closeOutOfRange(session, "mailbox");
       return;
     }
-    if (session.itemOperationPending || session.depotOperationPending) {
+    if (
+      session.itemOperationPending ||
+      session.depotOperationPending ||
+      session.depotPersistsPending > 0
+    ) {
       failMail(session, "busy");
       return;
     }
@@ -254,6 +180,10 @@ export class DepotOperationRunner {
               result.mutation,
               Date.now(),
             );
+            this.caches.applyExternal(result.recipientCharacterId, {
+              upserts: result.deliveredItems,
+              bumps: [{ kind: "inbox" }],
+            });
           }
           if (!this.tracker.isAccessCurrent(session, access)) {
             this.tracker.closeOutOfRange(session, "mailbox");
@@ -276,6 +206,25 @@ export class DepotOperationRunner {
         });
       });
     this.items.trackExternalOperation(characterId, resolution);
+    this.track(resolution);
+  }
+
+  trackRewardInjection(
+    recipientCharacterId: string,
+    operation: Promise<{ item: Item | null; idempotent: boolean }>,
+  ): void {
+    const resolution = operation
+      .then((result) => {
+        if (result.idempotent || !result.item) return;
+        const item = result.item;
+        this.outcomes.push(() => {
+          this.caches.applyExternal(recipientCharacterId, {
+            upserts: [item],
+            bumps: [{ kind: "inbox" }],
+          });
+        });
+      })
+      .catch(() => undefined);
     this.track(resolution);
   }
 

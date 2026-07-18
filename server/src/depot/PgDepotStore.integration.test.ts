@@ -5,8 +5,19 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
+import type { Item } from "../item/Item";
+import type { ItemCatalog } from "../item/ItemCatalog";
 import { loadItemCatalog } from "../item/loadItemCatalog";
+import type { DepotCache } from "./DepotCache";
+import type { DepotItemRow } from "./DepotItemRow";
+import { itemFromRow } from "./itemFromRow";
+import type { LoadedDepot } from "./LoadedDepot";
 import { PgDepotStore } from "./PgDepotStore";
+import { planDepotDeposit } from "./planDepotDeposit";
+import { planDepotWithdraw } from "./planDepotWithdraw";
+import { planStashDeposit } from "./planStashDeposit";
+import { planStashWithdraw } from "./planStashWithdraw";
+import { depotItemColumns } from "./sql/depotItemColumns";
 
 const TEST_SCHEMA = "depot_store_integration";
 const MIGRATION_LOCK_KEY = 7_281_006;
@@ -14,13 +25,13 @@ const DEPOT_ID = 7;
 const AXE_TYPE = 3274;
 const BACKPACK_TYPE = 2854;
 const GOLD_COIN_TYPE = 3031;
-const HEALTH_POTION_TYPE = 266;
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const databaseDescribe = databaseUrl ? describe : describe.skip;
 
 let setupClient: Client;
 let pool: Pool;
 let store: PgDepotStore;
+let catalog: ItemCatalog;
 let characterService: CharacterService;
 let characterStore: PgCharacterStore;
 
@@ -84,6 +95,48 @@ const insertBackpackItem = async (
   return itemId;
 };
 
+const insertDepotItem = async (
+  characterId: string,
+  itemTypeId: number,
+  count: number,
+  slot: number,
+): Promise<string> => {
+  const itemId = randomUUID();
+  await pool.query(
+    `INSERT INTO items (
+       id, item_type_id, count, location_type, character_id, slot_index, depot_id
+     ) VALUES ($1, $2, $3, 'depot', $4, $5, $6)`,
+    [itemId, itemTypeId, count, characterId, slot, DEPOT_ID],
+  );
+  return itemId;
+};
+
+const loadCarried = async (characterId: string): Promise<Item[]> => {
+  const result = await pool.query<DepotItemRow>(
+    `WITH RECURSIVE owned AS (
+       SELECT i.*, 1 AS item_depth FROM items i
+       WHERE i.character_id = $1
+         AND i.location_type IN ('equipment', 'inventory')
+       UNION ALL
+       SELECT child.*, owned.item_depth + 1 FROM items child
+       JOIN owned ON child.container_id = owned.id
+       WHERE child.location_type IN ('container', 'corpse')
+         AND owned.item_depth < 8
+     )
+     SELECT ${depotItemColumns} FROM owned ORDER BY item_depth, id`,
+    [characterId],
+  );
+  return result.rows.map(itemFromRow);
+};
+
+const cacheOf = (loaded: LoadedDepot): DepotCache => ({
+  items: loaded.items,
+  stash: loaded.stash,
+  depotRevisions: loaded.depotRevisions,
+  inboxRevision: loaded.inboxRevision,
+  stashRevision: loaded.stashRevision,
+});
+
 const auditCount = async (
   operation: string,
   eventType = "item-transferred",
@@ -140,7 +193,8 @@ databaseDescribe("PgDepotStore integration", () => {
       z: 7,
       townId: 1,
     });
-    store = new PgDepotStore(pool, await loadItemCatalog());
+    catalog = await loadItemCatalog();
+    store = new PgDepotStore(pool, catalog);
   });
 
   beforeEach(async () => {
@@ -168,478 +222,315 @@ databaseDescribe("PgDepotStore integration", () => {
     await setupClient.end();
   });
 
-  it("serializes competing deposits and never shares a depot slot", async () => {
-    const characterId = await createCharacter("Alpha");
-    const firstItemId = await insertBackpackItem(
-      characterId,
-      AXE_TYPE,
-      1,
-      0,
+  it("loads depot, inbox, and stash state in one snapshot", async () => {
+    const characterId = await createCharacter("Loader");
+    await insertDepotItem(characterId, AXE_TYPE, 1, 0);
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, count, location_type, character_id, slot_index
+       ) VALUES ($1, $2, 1, 'inbox', $3, 0)`,
+      [randomUUID(), AXE_TYPE, characterId],
     );
-    const secondItemId = await insertBackpackItem(
-      characterId,
-      AXE_TYPE,
-      1,
-      1,
-    );
-    const initial = await store.browse(
-      characterId,
-      DEPOT_ID,
-      "depot",
-      1,
-      null,
-    );
-
-    const attempts = await Promise.allSettled([
-      store.deposit(
-        characterId,
-        DEPOT_ID,
-        initial.snapshot.depotRevision,
-        firstItemId,
-        1,
-      ),
-      store.deposit(
-        characterId,
-        DEPOT_ID,
-        initial.snapshot.depotRevision,
-        secondItemId,
-        1,
-      ),
-    ]);
-    const committed = attempts.filter(
-      (attempt) =>
-        attempt.status === "fulfilled" && attempt.value.status === "committed",
-    );
-    expect(committed).toHaveLength(1);
-    const afterRace = await pool.query<{
-      id: string;
-      slot_index: number;
-    }>(
-      `SELECT id, slot_index FROM items
-       WHERE character_id = $1 AND location_type = 'depot' AND depot_id = $2`,
-      [characterId, DEPOT_ID],
-    );
-    expect(afterRace.rows).toHaveLength(1);
-    expect(afterRace.rows[0]?.slot_index).toBe(0);
-
-    const remainingItemId =
-      afterRace.rows[0]?.id === firstItemId ? secondItemId : firstItemId;
-    const refreshed = await store.browse(
-      characterId,
-      DEPOT_ID,
-      "depot",
-      1,
-      null,
-    );
-    const retry = await store.deposit(
-      characterId,
-      DEPOT_ID,
-      refreshed.snapshot.depotRevision,
-      remainingItemId,
-      1,
-    );
-    expect(retry.status).toBe("committed");
-    const stored = await pool.query<{ id: string; slot_index: number }>(
-      `SELECT id, slot_index FROM items
-       WHERE character_id = $1 AND location_type = 'depot' AND depot_id = $2
-       ORDER BY slot_index`,
-      [characterId, DEPOT_ID],
-    );
-    expect(stored.rows).toEqual([
-      expect.objectContaining({ slot_index: 0 }),
-      expect.objectContaining({ slot_index: 1 }),
-    ]);
-    expect(new Set(stored.rows.map((row) => row.slot_index)).size).toBe(2);
-    expect(new Set(stored.rows.map((row) => row.id))).toEqual(
-      new Set([firstItemId, secondItemId]),
-    );
-    expect(await auditCount("depot-deposit")).toBe(2);
-  });
-
-  it("merges a stackable depot withdrawal into a carried stack", async () => {
-    const characterId = await createCharacter("Merge");
-    const depotItemId = await insertBackpackItem(
-      characterId,
-      GOLD_COIN_TYPE,
-      20,
-      0,
-    );
-    const initial = await store.browse(
-      characterId,
-      DEPOT_ID,
-      "depot",
-      1,
-      null,
-    );
-    const deposited = await store.deposit(
-      characterId,
-      DEPOT_ID,
-      initial.snapshot.depotRevision,
-      depotItemId,
-      1,
-    );
-    expect(deposited.status).toBe("committed");
-    if (deposited.status !== "committed") return;
-    const depositedItem = deposited.mutation.after.find(
-      (item) => item.id === depotItemId,
-    );
-    if (!depositedItem) throw new Error("depot mutation omitted its item");
-    const carriedItemId = await insertBackpackItem(
-      characterId,
-      GOLD_COIN_TYPE,
-      30,
-      0,
-    );
-
-    const withdrawn = await store.withdraw(
-      characterId,
-      DEPOT_ID,
-      "depot",
-      deposited.snapshot.depotRevision,
-      depotItemId,
-      depositedItem.version,
-      400,
-    );
-
-    expect(withdrawn.status).toBe("committed");
-    if (withdrawn.status !== "committed") return;
-    expect(withdrawn.mutation.removedItemIds).toEqual([depotItemId]);
-    const carried = await pool.query<{ id: string; count: number }>(
-      `SELECT item.id, item.count FROM items item
-       JOIN items backpack ON backpack.id = item.container_id
-       WHERE backpack.character_id = $1
-         AND backpack.equipment_slot = 'backpack'
-         AND item.item_type_id = $2`,
+    await pool.query(
+      `INSERT INTO supply_stash (character_id, item_type_id, count)
+       VALUES ($1, $2, 250)`,
       [characterId, GOLD_COIN_TYPE],
     );
-    expect(carried.rows).toEqual([{ id: carriedItemId, count: 50 }]);
-    expect(await auditCount("depot-withdrawal")).toBe(1);
-    expect(await auditCount("depot-withdrawal", "item-merged")).toBe(1);
+    await pool.query(
+      `INSERT INTO character_depots (character_id, depot_id, revision)
+       VALUES ($1, $2, 5)`,
+      [characterId, DEPOT_ID],
+    );
+
+    const loaded = await store.loadForCharacter(characterId);
+
+    expect(loaded.items).toHaveLength(2);
+    expect(loaded.stash.get(GOLD_COIN_TYPE)).toBe(250);
+    expect(loaded.depotRevisions.get(DEPOT_ID)).toBe(5);
+    expect(loaded.inboxRevision).toBe(1);
   });
 
-  it("fills a carried stack and moves only the depot remainder", async () => {
-    const characterId = await createCharacter("Partial Merge");
-    const depotItemId = await insertBackpackItem(
+  it("persists a planned deposit atomically with revision bump and audit", async () => {
+    const characterId = await createCharacter("Depositor");
+    const itemId = await insertBackpackItem(characterId, AXE_TYPE, 1, 0);
+    const carried = await loadCarried(characterId);
+    const depot = cacheOf(await store.loadForCharacter(characterId));
+    const plan = planDepotDeposit({
       characterId,
-      GOLD_COIN_TYPE,
-      30,
-      0,
+      catalog,
+      carried: { items: carried },
+      depot,
+      depotId: DEPOT_ID,
+      expectedDepotRevision: 1,
+      itemId,
+      expectedItemRevision: 1,
+    });
+    if (plan.status !== "ok") throw new Error(`plan failed: ${plan.status}`);
+
+    await store.persist(plan.persist);
+
+    const row = await pool.query<DepotItemRow>(
+      `SELECT ${depotItemColumns} FROM items WHERE id = $1`,
+      [itemId],
     );
-    const initial = await store.browse(
+    expect(row.rows[0]?.location_type).toBe("depot");
+    expect(row.rows[0]?.depot_id).toBe(DEPOT_ID);
+    expect(row.rows[0]?.version).toBe(2);
+    const revision = await pool.query<{ revision: number }>(
+      `SELECT revision FROM character_depots
+       WHERE character_id = $1 AND depot_id = $2`,
+      [characterId, DEPOT_ID],
+    );
+    expect(revision.rows[0]?.revision).toBe(2);
+    expect(await auditCount("depot-deposit")).toBe(1);
+    const reloaded = await store.loadForCharacter(characterId);
+    expect(reloaded.items.map((item) => item.id)).toContain(itemId);
+  });
+
+  it("rolls back a persist whose guarded write misses", async () => {
+    const characterId = await createCharacter("Guarded");
+    const itemId = await insertBackpackItem(characterId, AXE_TYPE, 1, 0);
+    const carried = await loadCarried(characterId);
+    const depot = cacheOf(await store.loadForCharacter(characterId));
+    const plan = planDepotDeposit({
       characterId,
-      DEPOT_ID,
-      "depot",
-      1,
-      null,
+      catalog,
+      carried: { items: carried },
+      depot,
+      depotId: DEPOT_ID,
+      expectedDepotRevision: 1,
+      itemId,
+      expectedItemRevision: 1,
+    });
+    if (plan.status !== "ok") throw new Error(`plan failed: ${plan.status}`);
+    await pool.query("UPDATE items SET version = version + 1 WHERE id = $1", [
+      itemId,
+    ]);
+
+    await expect(store.persist(plan.persist)).rejects.toThrow(
+      /persist write missed/,
     );
-    const deposited = await store.deposit(
-      characterId,
-      DEPOT_ID,
-      initial.snapshot.depotRevision,
-      depotItemId,
-      1,
+
+    const row = await pool.query<DepotItemRow>(
+      `SELECT ${depotItemColumns} FROM items WHERE id = $1`,
+      [itemId],
     );
-    expect(deposited.status).toBe("committed");
-    if (deposited.status !== "committed") return;
-    const depositedItem = deposited.mutation.after.find(
-      (item) => item.id === depotItemId,
+    expect(row.rows[0]?.location_type).toBe("container");
+    const revision = await pool.query(
+      `SELECT revision FROM character_depots
+       WHERE character_id = $1 AND depot_id = $2`,
+      [characterId, DEPOT_ID],
     );
-    if (!depositedItem) throw new Error("depot mutation omitted its item");
-    const carriedItemId = await insertBackpackItem(
+    expect(revision.rows).toHaveLength(0);
+    expect(await auditCount("depot-deposit")).toBe(0);
+  });
+
+  it("withdraws a stack by filling carried stacks before creating a remainder", async () => {
+    const characterId = await createCharacter("Merger");
+    await insertBackpackItem(characterId, GOLD_COIN_TYPE, 60, 0);
+    const storedId = await insertDepotItem(
       characterId,
       GOLD_COIN_TYPE,
       80,
       0,
     );
-
-    const withdrawn = await store.withdraw(
+    const carried = await loadCarried(characterId);
+    const depot = cacheOf(await store.loadForCharacter(characterId));
+    const plan = planDepotWithdraw({
       characterId,
-      DEPOT_ID,
-      "depot",
-      deposited.snapshot.depotRevision,
-      depotItemId,
-      depositedItem.version,
-      400,
-    );
+      catalog,
+      carried: { items: carried, capacityMax: 100_000 },
+      depot,
+      depotId: DEPOT_ID,
+      source: "depot",
+      expectedSourceRevision: 1,
+      itemId: storedId,
+      expectedItemRevision: 1,
+    });
+    if (plan.status !== "ok") throw new Error(`plan failed: ${plan.status}`);
 
-    expect(withdrawn.status).toBe("committed");
-    if (withdrawn.status !== "committed") return;
-    expect(withdrawn.mutation.removedItemIds).toBeUndefined();
-    const carried = await pool.query<{ id: string; count: number }>(
-      `SELECT item.id, item.count FROM items item
-       JOIN items backpack ON backpack.id = item.container_id
-       WHERE backpack.character_id = $1
-         AND backpack.equipment_slot = 'backpack'
-         AND item.item_type_id = $2`,
-      [characterId, GOLD_COIN_TYPE],
-    );
-    expect(carried.rows).toEqual(
-      expect.arrayContaining([
-        { id: carriedItemId, count: 100 },
-        { id: depotItemId, count: 10 },
-      ]),
-    );
-    expect(carried.rows).toHaveLength(2);
-    const mergeAudit = await pool.query<{
-      moved_count: string;
-      source_remaining: string;
-    }>(
-      `SELECT details->>'movedCount' AS moved_count,
-         details->>'sourceRemaining' AS source_remaining
-       FROM audit_log
-       WHERE event_type = 'item-merged'
-         AND details->>'operation' = 'depot-withdrawal'`,
-    );
-    expect(mergeAudit.rows).toEqual([
-      { moved_count: "20", source_remaining: "10" },
-    ]);
+    await store.persist(plan.persist);
+
+    const carriedAfter = await loadCarried(characterId);
+    const coinCounts = carriedAfter
+      .filter((item) => item.typeId === GOLD_COIN_TYPE)
+      .map((item) => item.count)
+      .sort((left, right) => left - right);
+    expect(coinCounts).toEqual([40, 100]);
+    const storedAfter = await store.loadForCharacter(characterId);
+    expect(storedAfter.items).toHaveLength(0);
+    expect(await auditCount("depot-withdrawal", "item-merged")).toBe(1);
+    expect(await auditCount("depot-withdrawal")).toBe(1);
   });
 
-  it("merges an inbox claim and completes its delivery record", async () => {
-    const characterId = await createCharacter("Inbox Merge");
-    const carriedItemId = await insertBackpackItem(
+  it("stows and retrieves through absolute stash writes", async () => {
+    const characterId = await createCharacter("Stasher");
+    const coinsId = await insertBackpackItem(characterId, GOLD_COIN_TYPE, 50, 0);
+    const carried = await loadCarried(characterId);
+    const depot = cacheOf(await store.loadForCharacter(characterId));
+    const depositPlan = planStashDeposit({
       characterId,
-      GOLD_COIN_TYPE,
-      30,
-      0,
-    );
-    const deliveryKey = "reward:merge:inbox";
-    const delivered = await store.deliverReward({
+      catalog,
+      carried: { items: carried },
+      depot,
+      expectedStashRevision: 1,
+      itemId: coinsId,
+      expectedItemRevision: 1,
+      count: 50,
+    });
+    if (depositPlan.status !== "ok") {
+      throw new Error(`plan failed: ${depositPlan.status}`);
+    }
+    await store.persist(depositPlan.persist);
+
+    const stashed = await store.loadForCharacter(characterId);
+    expect(stashed.stash.get(GOLD_COIN_TYPE)).toBe(50);
+    expect(stashed.stashRevision).toBe(2);
+
+    const withdrawPlan = planStashWithdraw({
+      characterId,
+      catalog,
+      carried: { items: await loadCarried(characterId), capacityMax: 100_000 },
+      depot: cacheOf(stashed),
+      expectedStashRevision: 2,
+      itemTypeId: GOLD_COIN_TYPE,
+      count: 30,
+    });
+    if (withdrawPlan.status !== "ok") {
+      throw new Error(`plan failed: ${withdrawPlan.status}`);
+    }
+    await store.persist(withdrawPlan.persist);
+
+    const after = await store.loadForCharacter(characterId);
+    expect(after.stash.get(GOLD_COIN_TYPE)).toBe(20);
+    const carriedAfter = await loadCarried(characterId);
+    expect(
+      carriedAfter
+        .filter((item) => item.typeId === GOLD_COIN_TYPE)
+        .reduce((total, item) => total + item.count, 0),
+    ).toBe(30);
+    expect(await auditCount("stash-withdrawal", "item-created")).toBe(1);
+  });
+
+  it("delivers mail with the recipient id and subtree for cache injection", async () => {
+    const senderId = await createCharacter("Sender");
+    const recipientId = await createCharacter("Recipient");
+    const parcelId = await insertBackpackItem(senderId, AXE_TYPE, 1, 0);
+
+    const result = await store.sendMail({
+      deliveryKey: `mail:${senderId}:${randomUUID()}`,
+      senderCharacterId: senderId,
+      itemId: parcelId,
+      itemRevision: 1,
+      normalizedRecipientName: "depot recipient",
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+
+    if (result.status !== "committed") {
+      throw new Error(`mail failed: ${result.status}`);
+    }
+    expect(result.recipientCharacterId).toBe(recipientId);
+    expect(result.deliveredItems).toHaveLength(1);
+    expect(result.deliveredItems[0]?.location).toEqual({
+      kind: "inbox",
+      characterId: recipientId,
+      slot: 0,
+    });
+    const recipientState = await store.loadForCharacter(recipientId);
+    expect(recipientState.items.map((item) => item.id)).toContain(parcelId);
+  });
+
+  it("delivers a reward exactly once and returns the created item", async () => {
+    const characterId = await createCharacter("Rewarded");
+    const deliveryKey = `reward:test:${randomUUID()}`;
+    const request = {
       deliveryKey,
       recipientCharacterId: characterId,
-      itemTypeId: GOLD_COIN_TYPE,
-      count: 20,
-    });
-    const initial = await store.browse(
-      characterId,
-      DEPOT_ID,
-      "inbox",
-      1,
-      null,
-    );
+      itemTypeId: AXE_TYPE,
+      count: 1,
+    };
 
-    const withdrawn = await store.withdraw(
-      characterId,
-      DEPOT_ID,
-      "inbox",
-      initial.snapshot.inboxRevision,
-      delivered.itemId,
-      1,
-      400,
-    );
+    const first = await store.deliverReward(request);
+    const second = await store.deliverReward(request);
 
-    expect(withdrawn.status).toBe("committed");
-    if (withdrawn.status !== "committed") return;
-    expect(withdrawn.mutation.removedItemIds).toEqual([delivered.itemId]);
-    const carried = await pool.query<{ id: string; count: number }>(
-      `SELECT item.id, item.count FROM items item
-       JOIN items backpack ON backpack.id = item.container_id
-       WHERE backpack.character_id = $1
-         AND backpack.equipment_slot = 'backpack'
-         AND item.item_type_id = $2`,
-      [characterId, GOLD_COIN_TYPE],
-    );
-    expect(carried.rows).toEqual([{ id: carriedItemId, count: 50 }]);
-    const delivery = await pool.query<{
-      item_id: string | null;
-      status: string;
-    }>(
-      `SELECT item_id, status FROM inbox_deliveries
-       WHERE delivery_key = $1`,
-      [deliveryKey],
-    );
-    expect(delivery.rows[0]).toEqual({ item_id: null, status: "claimed" });
-    expect(await auditCount("inbox-claim", "item-merged")).toBe(1);
+    expect(first.idempotent).toBe(false);
+    expect(first.item?.location.kind).toBe("inbox");
+    expect(second.idempotent).toBe(true);
+    expect(second.item).toBeNull();
+    const state = await store.loadForCharacter(characterId);
+    expect(state.items).toHaveLength(1);
   });
 
-  it("delivers one offline reward when the same delivery is retried", async () => {
-    const recipientCharacterId = await createCharacter("Recipient");
-
-    const results = await Promise.all([
-      store.deliverReward({
-        deliveryKey: "reward:quest-100:recipient",
-        recipientCharacterId,
-        itemTypeId: AXE_TYPE,
-        count: 1,
-      }),
-      store.deliverReward({
-        deliveryKey: "reward:quest-100:recipient",
-        recipientCharacterId,
-        itemTypeId: AXE_TYPE,
-        count: 1,
-      }),
-    ]);
-
-    expect(new Set(results.map((result) => result.itemId)).size).toBe(1);
-    expect(results.filter((result) => result.idempotent)).toHaveLength(1);
-    const inbox = await pool.query<{ id: string }>(
-      `SELECT id FROM items
-       WHERE character_id = $1 AND location_type = 'inbox'`,
-      [recipientCharacterId],
-    );
-    expect(inbox.rows).toHaveLength(1);
-    const deliveries = await pool.query<{ count: string }>(
-      `SELECT count(*)::text AS count FROM inbox_deliveries
-       WHERE delivery_key = 'reward:quest-100:recipient'`,
-    );
-    expect(deliveries.rows[0]?.count).toBe("1");
-    expect(await auditCount("reward-delivery", "item-created")).toBe(1);
-  });
-
-  it("returns expired offline mail to its original owner", async () => {
-    const senderCharacterId = await createCharacter("Sender");
-    const recipientCharacterId = await createCharacter("Receiver");
-    const itemId = await insertBackpackItem(
-      senderCharacterId,
-      AXE_TYPE,
-      1,
-      0,
-    );
-    const now = new Date("2026-07-18T00:00:00.000Z");
+  it("returns expired mail to the sender with subtree details", async () => {
+    const senderId = await createCharacter("Expired");
+    const recipientId = await createCharacter("Ghost");
+    const parcelId = await insertBackpackItem(senderId, AXE_TYPE, 1, 0);
     const sent = await store.sendMail({
-      deliveryKey: "mail:sender:expired",
-      senderCharacterId,
-      itemId,
+      deliveryKey: `mail:${senderId}:${randomUUID()}`,
+      senderCharacterId: senderId,
+      itemId: parcelId,
       itemRevision: 1,
-      normalizedRecipientName: "depot receiver",
-      expiresAt: new Date("2026-07-17T00:00:00.000Z"),
+      normalizedRecipientName: "depot ghost",
+      expiresAt: new Date(Date.now() - 1_000),
     });
-    expect(sent.status).toBe("committed");
+    if (sent.status !== "committed") throw new Error("mail failed");
+    expect(sent.recipientCharacterId).toBe(recipientId);
 
-    const returned = await store.returnExpired(now, 25);
+    const results = await store.returnExpired(new Date(), 10);
 
-    expect(returned).toEqual([
-      { itemId, recipientCharacterId, returnCharacterId: senderCharacterId },
-    ]);
-    const item = await pool.query<{
-      character_id: string;
-      location_type: string;
-    }>("SELECT character_id, location_type FROM items WHERE id = $1", [itemId]);
-    expect(item.rows[0]).toEqual({
-      character_id: senderCharacterId,
-      location_type: "inbox",
+    expect(results).toHaveLength(1);
+    expect(results[0]?.removedItemIds).toContain(parcelId);
+    expect(results[0]?.items[0]?.location).toEqual({
+      kind: "inbox",
+      characterId: senderId,
+      slot: 0,
     });
+    const recipientState = await store.loadForCharacter(recipientId);
+    expect(recipientState.items).toHaveLength(0);
+    const senderState = await store.loadForCharacter(senderId);
+    expect(senderState.items.map((item) => item.id)).toContain(parcelId);
+  });
+
+  it("claims the inbox delivery when a withdrawal persists", async () => {
+    const senderId = await createCharacter("Claimant");
+    const recipientId = await createCharacter("Collector");
+    const parcelId = await insertBackpackItem(senderId, AXE_TYPE, 1, 0);
+    const sent = await store.sendMail({
+      deliveryKey: `mail:${senderId}:${randomUUID()}`,
+      senderCharacterId: senderId,
+      itemId: parcelId,
+      itemRevision: 1,
+      normalizedRecipientName: "depot collector",
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    if (sent.status !== "committed") throw new Error("mail failed");
+    const loaded = await store.loadForCharacter(recipientId);
+    const stored = loaded.items.find((item) => item.id === parcelId);
+    if (!stored) throw new Error("mail item missing from inbox");
+    const plan = planDepotWithdraw({
+      characterId: recipientId,
+      catalog,
+      carried: {
+        items: await loadCarried(recipientId),
+        capacityMax: 100_000,
+      },
+      depot: cacheOf(loaded),
+      depotId: DEPOT_ID,
+      source: "inbox",
+      expectedSourceRevision: loaded.inboxRevision,
+      itemId: parcelId,
+      expectedItemRevision: stored.version,
+    });
+    if (plan.status !== "ok") throw new Error(`plan failed: ${plan.status}`);
+
+    await store.persist(plan.persist);
+
     const delivery = await pool.query<{ status: string }>(
-      "SELECT status FROM inbox_deliveries WHERE delivery_key = $1",
-      ["mail:sender:expired"],
+      `SELECT status FROM inbox_deliveries WHERE item_id = $1 OR original_item_id = $1`,
+      [parcelId],
     );
-    expect(delivery.rows[0]?.status).toBe("returned");
-    expect(await auditCount("mail-delivery")).toBe(1);
-    expect(await auditCount("inbox-return")).toBe(1);
-  });
-
-  it("stows and retrieves a pinned non-stackable Canary ware", async () => {
-    const characterId = await createCharacter("Stash");
-    const itemId = await insertBackpackItem(
-      characterId,
-      AXE_TYPE,
-      1,
-      0,
-    );
-    const initial = await store.browse(
-      characterId,
-      DEPOT_ID,
-      "stash",
-      1,
-      null,
-    );
-
-    const deposited = await store.depositStash(
-      characterId,
-      DEPOT_ID,
-      initial.snapshot.stashRevision,
-      itemId,
-      1,
-      1,
-    );
-    expect(deposited.status).toBe("committed");
-    if (deposited.status !== "committed") return;
-    expect(
-      await pool.query("SELECT id FROM items WHERE id = $1", [itemId]),
-    ).toMatchObject({ rowCount: 0 });
-
-    const withdrawn = await store.withdrawStash(
-      characterId,
-      DEPOT_ID,
-      deposited.snapshot.stashRevision,
-      AXE_TYPE,
-      1,
-      400,
-    );
-    expect(withdrawn.status).toBe("committed");
-    const stash = await pool.query(
-      "SELECT count FROM supply_stash WHERE character_id = $1",
-      [characterId],
-    );
-    expect(stash.rows).toEqual([]);
-    const carried = await pool.query<{ count: string }>(
-      `SELECT count(*)::text AS count FROM items item
-       JOIN items backpack ON backpack.id = item.container_id
-       WHERE backpack.character_id = $1
-         AND backpack.equipment_slot = 'backpack'
-         AND item.item_type_id = $2`,
-      [characterId, AXE_TYPE],
-    );
-    expect(carried.rows[0]?.count).toBe("1");
-  });
-
-  it("fills carried stacks before creating a stash-withdrawal remainder", async () => {
-    const characterId = await createCharacter("Stash Merge");
-    const carriedItemId = await insertBackpackItem(
-      characterId,
-      HEALTH_POTION_TYPE,
-      80,
-      0,
-    );
-    const stashedItemId = await insertBackpackItem(
-      characterId,
-      HEALTH_POTION_TYPE,
-      30,
-      1,
-    );
-    const initial = await store.browse(
-      characterId,
-      DEPOT_ID,
-      "stash",
-      1,
-      null,
-    );
-    const deposited = await store.depositStash(
-      characterId,
-      DEPOT_ID,
-      initial.snapshot.stashRevision,
-      stashedItemId,
-      1,
-      30,
-    );
-    expect(deposited.status).toBe("committed");
-    if (deposited.status !== "committed") return;
-
-    const withdrawn = await store.withdrawStash(
-      characterId,
-      DEPOT_ID,
-      deposited.snapshot.stashRevision,
-      HEALTH_POTION_TYPE,
-      30,
-      400,
-    );
-
-    expect(withdrawn.status).toBe("committed");
-    const carried = await pool.query<{ id: string; count: number }>(
-      `SELECT item.id, item.count FROM items item
-       JOIN items backpack ON backpack.id = item.container_id
-       WHERE backpack.character_id = $1
-         AND backpack.equipment_slot = 'backpack'
-         AND item.item_type_id = $2`,
-      [characterId, HEALTH_POTION_TYPE],
-    );
-    expect(carried.rows).toEqual(
-      expect.arrayContaining([
-        { id: carriedItemId, count: 100 },
-        expect.objectContaining({ count: 10 }),
-      ]),
-    );
-    expect(carried.rows).toHaveLength(2);
-    expect(await auditCount("stash-withdrawal", "item-created")).toBe(2);
+    expect(delivery.rows[0]?.status).toBe("claimed");
+    const carriedAfter = await loadCarried(recipientId);
+    expect(carriedAfter.map((item) => item.id)).toContain(parcelId);
   });
 });

@@ -121,7 +121,12 @@ export class GameServer {
       deps.worldItemDeltas?.items ?? [],
       Date.now(),
     );
-    this.depot = new DepotService(this.world, this.items, deps.depot);
+    this.depot = new DepotService(
+      this.world,
+      this.items,
+      deps.itemCatalog,
+      deps.depot,
+    );
     this.characters = new CharacterHandler(
       characterService,
       this.world,
@@ -129,6 +134,7 @@ export class GameServer {
       this.visibility,
       this.persistence,
       this.items,
+      this.depot,
       this.spells,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
@@ -301,6 +307,7 @@ export class GameServer {
         this.npcs.removePlayer(playerId);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
+        this.depot.detachCharacter(playerId);
         this.world.removePlayer(playerId);
         this.visibility.announceLeave(session, player);
       }

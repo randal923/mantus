@@ -102,6 +102,9 @@ export class DepotExpiryOps {
           return null;
         }
         const before = itemFromRow(itemRow);
+        const containedItems = subtree
+          .filter((member) => member.id !== itemRow.id)
+          .map(itemFromRow);
         const moved = await client.query<DepotItemRow>(
           returnItemToSenderUpdate,
           [itemRow.id, delivery.return_character_id, slot, now],
@@ -123,6 +126,8 @@ export class DepotExpiryOps {
           itemId: itemRow.id,
           recipientCharacterId: delivery.recipient_character_id,
           returnCharacterId: delivery.return_character_id,
+          removedItemIds: subtree.map((member) => member.id),
+          items: [after, ...containedItems],
         };
       });
       if (result) returned.push(result);

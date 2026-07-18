@@ -144,6 +144,7 @@ export class ItemIntentHandler {
       !characterId ||
       !combatItem ||
       session.itemOperationPending ||
+      session.depotPersistsPending > 0 ||
       combatItem.item.count < 1
     ) {
       session.sendError("combat-action-failed");
@@ -183,7 +184,11 @@ export class ItemIntentHandler {
     onFailed: (now: number) => void,
   ): boolean {
     const characterId = session.playerId;
-    if (!characterId || session.itemOperationPending) {
+    if (
+      !characterId ||
+      session.itemOperationPending ||
+      session.depotPersistsPending > 0
+    ) {
       session.sendError("combat-action-failed");
       return false;
     }
@@ -264,7 +269,11 @@ export class ItemIntentHandler {
     onCommitted: (now: number) => void,
   ): void {
     const characterId = session.playerId;
-    if (!characterId || session.itemOperationPending) {
+    if (
+      !characterId ||
+      session.itemOperationPending ||
+      session.depotPersistsPending > 0
+    ) {
       session.sendError("item-action-failed");
       return;
     }
@@ -319,6 +328,16 @@ export class ItemIntentHandler {
       return;
     }
     if (session.itemOperationPending) {
+      session.sendError("item-action-failed");
+      return;
+    }
+    // Depot writes still flushing: DB-backed item ops must stay ordered
+    // behind them. Container open/close is memory-only and may proceed.
+    if (
+      session.depotPersistsPending > 0 &&
+      intent.type !== "open-container" &&
+      intent.type !== "close-container"
+    ) {
       session.sendError("item-action-failed");
       return;
     }

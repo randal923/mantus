@@ -44,7 +44,9 @@ export class DepotMailOps {
         return {
           status: "committed",
           mutation: { after: [] },
+          recipientCharacterId: existing.recipient_character_id,
           recipientName: existing.recipient_name,
+          deliveredItems: [],
           idempotent: true,
         };
       }
@@ -134,10 +136,15 @@ export class DepotMailOps {
         after,
         "mail-delivery",
       );
+      const containedItems = subtree
+        .filter((member) => member.id !== row.id)
+        .map(itemFromRow);
       return {
         status: "committed",
         mutation: { before, after: [after] },
+        recipientCharacterId: recipientRow.id,
         recipientName: recipientRow.display_name,
+        deliveredItems: [after, ...containedItems],
         idempotent: false,
       };
     });

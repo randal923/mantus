@@ -21,7 +21,6 @@ interface DepotModalProps {
   state: DepotStateMessage;
   inventoryItems: ReadonlyArray<InventorySlotEntry>;
   pending: boolean;
-  actionsDisabled: boolean;
   error: DepotActionFailedReason | null;
   onBrowse(location: DepotLocation, page: number, query: string): void;
   onDeposit(item: InventoryItem): void;
@@ -35,7 +34,6 @@ export function DepotModal({
   state,
   inventoryItems,
   pending,
-  actionsDisabled,
   error,
   onBrowse,
   onDeposit,
@@ -165,7 +163,6 @@ export function DepotModal({
                     {state.location === "depot" && (
                       <Button
                         size="sm"
-                        disabled={actionsDisabled}
                         onClick={() => onDeposit(item)}
                       >
                         {t("depot.store")}
@@ -174,11 +171,7 @@ export function DepotModal({
                     {state.location === "stash" && (
                       <Button
                         size="sm"
-                        disabled={
-                          actionsDisabled ||
-                          !validAmount ||
-                          amount > item.count
-                        }
+                        disabled={!validAmount || amount > item.count}
                         onClick={() => onStashDeposit(item, amount)}
                       >
                         {t("depot.stow")}
@@ -218,7 +211,6 @@ export function DepotModal({
                   min={1}
                   max={100}
                   value={amount}
-                  disabled={actionsDisabled}
                   onChange={(event) =>
                     setAmount(Math.trunc(event.currentTarget.valueAsNumber || 0))
                   }
@@ -253,12 +245,7 @@ export function DepotModal({
                   {entry.location === "stash" ? (
                     <Button
                       size="sm"
-                      disabled={
-                        actionsDisabled ||
-                        ("optimistic" in entry && entry.optimistic === true) ||
-                        !validAmount ||
-                        amount > entry.count
-                      }
+                      disabled={!validAmount || amount > entry.count}
                       onClick={() => onStashWithdraw(entry, amount)}
                     >
                       {t("depot.withdraw")}
@@ -266,10 +253,6 @@ export function DepotModal({
                   ) : (
                     <Button
                       size="sm"
-                      disabled={
-                        actionsDisabled ||
-                        ("optimistic" in entry && entry.optimistic === true)
-                      }
                       onClick={() => onWithdraw(entry)}
                     >
                       {t("depot.withdraw")}

@@ -24,9 +24,9 @@ import { GOLD_COIN_TYPE_ID } from "@tibia/protocol";
 import { i18n } from "../i18n/i18n";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
-import { useOptimisticDepot } from "../hooks/useOptimisticDepot";
+import { useDepotSession } from "../hooks/useDepotSession";
 import { useOptimisticInventory } from "../hooks/useOptimisticInventory";
-import type { QueuedDepotAction } from "../lib/depot/QueuedDepotAction";
+import type { DepotAction } from "../lib/depot/DepotAction";
 import type {
   PendingItemOp,
   PendingItemOpIntent,
@@ -196,34 +196,30 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     [dispatchItemOp],
   );
   const sendDepotAction = useCallback(
-    (action: QueuedDepotAction, state: DepotStateMessage): boolean => {
-      const prediction = action.depotPrediction;
-      if (prediction.kind === "deposit") {
-        const item = getConfirmedItem(prediction.item.id);
+    (action: DepotAction, state: DepotStateMessage): boolean => {
+      if (action.kind === "deposit") {
+        const item = getConfirmedItem(action.item.id);
         return item
           ? (clientRef.current?.depositInDepot(state, item) ?? false)
           : false;
       }
-      if (prediction.kind === "withdraw") {
+      if (action.kind === "withdraw") {
         return (
-          clientRef.current?.withdrawFromDepot(state, prediction.item) ?? false
+          clientRef.current?.withdrawFromDepot(state, action.entry) ?? false
         );
       }
-      if (prediction.kind === "stash-deposit") {
-        const item = getConfirmedItem(prediction.item.id);
+      if (action.kind === "stash-deposit") {
+        const item = getConfirmedItem(action.item.id);
         return item
-          ? (clientRef.current?.depositInStash(
-              state,
-              item,
-              prediction.count,
-            ) ?? false)
+          ? (clientRef.current?.depositInStash(state, item, action.count) ??
+              false)
           : false;
       }
       return (
         clientRef.current?.withdrawFromStash(
           state,
-          prediction.item.itemTypeId,
-          prediction.count,
+          action.entry.itemTypeId,
+          action.count,
         ) ?? false
       );
     },
@@ -238,12 +234,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     reject: rejectDepotAction,
     close: closeDepot,
     reset: resetDepot,
-  } = useOptimisticDepot(
-    sendDepotAction,
-    previewInventory,
-    rejectInventoryPreview,
-    clearInventoryPreviews,
-  );
+  } = useDepotSession(sendDepotAction);
   const [itemText, setItemText] = useState<
     Extract<ServerMessage, { type: "item-text" }> | null
   >(null);
@@ -1258,8 +1249,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               key={depotSession.state.sessionId}
               state={depotSession.state}
               inventoryItems={inventory.items}
-              pending={depotSession.navigationPending}
-              actionsDisabled={depotSession.actionsDisabled}
+              pending={depotSession.pending}
               error={depotSession.error}
               onBrowse={(location, page, query) => {
                 const sent =
@@ -1279,61 +1269,24 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   rejectDepotAction("depot-full");
                   return;
                 }
-                enqueueDepotAction({
-                  depotPrediction: { kind: "deposit", item },
-                  inventoryPrediction: {
-                    kind: "remove",
-                    itemId: item.id,
-                    count: item.count,
-                  },
-                });
+                enqueueDepotAction({ kind: "deposit", item });
               }}
-              onWithdraw={(item) => {
-                if (exceedsCapacity(inventory, item.weight * item.count)) {
+              onWithdraw={(entry) => {
+                if (exceedsCapacity(inventory, entry.weight * entry.count)) {
                   rejectDepotAction("no-capacity");
                   return;
                 }
-                enqueueDepotAction({
-                  depotPrediction: { kind: "withdraw", item },
-                  inventoryPrediction: {
-                    kind: "add",
-                    item: toInventoryItemPresentation(item),
-                    count: item.count,
-                    itemIds: [item.itemId],
-                  },
-                });
+                enqueueDepotAction({ kind: "withdraw", entry });
               }}
               onStashDeposit={(item, count) => {
-                enqueueDepotAction({
-                  depotPrediction: { kind: "stash-deposit", item, count },
-                  inventoryPrediction: {
-                    kind: "remove",
-                    itemId: item.id,
-                    count,
-                  },
-                });
+                enqueueDepotAction({ kind: "stash-deposit", item, count });
               }}
-              onStashWithdraw={(item, count) => {
-                if (exceedsCapacity(inventory, item.weight * count)) {
+              onStashWithdraw={(entry, count) => {
+                if (exceedsCapacity(inventory, entry.weight * count)) {
                   rejectDepotAction("no-capacity");
                   return;
                 }
-                enqueueDepotAction({
-                  depotPrediction: { kind: "stash-withdraw", item, count },
-                  inventoryPrediction: {
-                    kind: "add",
-                    item: toInventoryItemPresentation(item),
-                    count,
-                    itemIds: Array.from(
-                      {
-                        length: item.stackable
-                          ? Math.ceil(count / item.maxCount)
-                          : count,
-                      },
-                      () => crypto.randomUUID(),
-                    ),
-                  },
-                });
+                enqueueDepotAction({ kind: "stash-withdraw", entry, count });
               }}
               onClose={() => {
                 clientRef.current?.closeDepot(depotSession.state.sessionId);

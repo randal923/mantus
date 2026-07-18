@@ -26,6 +26,12 @@ export class Session {
   languageUpdatePending = false;
   itemOperationPending = false;
   depotOperationPending = false;
+  /**
+   * Depot mutations apply to memory instantly; this counts their DB writes
+   * still in flight. While non-zero, other DB-backed item flows must wait so
+   * per-character writes stay strictly ordered.
+   */
+  depotPersistsPending = 0;
   travelOperationPending = false;
   readonly connectedAt = Date.now();
   playerId: string | null = null;

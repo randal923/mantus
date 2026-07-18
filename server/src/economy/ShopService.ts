@@ -70,6 +70,7 @@ export class ShopService {
       !player ||
       !catalog ||
       session.itemOperationPending ||
+      session.depotPersistsPending > 0 ||
       session.travelOperationPending ||
       this.world.getCreature(npc.id) !== npc ||
       !session.knownCreatureIds.has(npc.id) ||
@@ -166,7 +167,9 @@ export class ShopService {
       this.fail(session, "out-of-range");
       return;
     }
-    if (session.itemOperationPending || session.travelOperationPending) {
+    if (session.itemOperationPending ||
+      session.depotPersistsPending > 0 ||
+      session.travelOperationPending) {
       this.fail(session, "busy");
       return;
     }

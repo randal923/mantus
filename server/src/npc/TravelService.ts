@@ -62,7 +62,9 @@ export class TravelService {
     }
     if (player.conditions.has("pz-lock")) return "pz-locked";
     if (now < (this.nextTravelAt.get(player.id) ?? 0)) return "exhausted";
-    if (session.itemOperationPending || session.travelOperationPending) {
+    if (session.itemOperationPending ||
+      session.depotPersistsPending > 0 ||
+      session.travelOperationPending) {
       return "busy";
     }
     const destination = this.world.findUnoccupiedPosition(

@@ -3,8 +3,10 @@ import { DEPOT_LIMITS } from "@tibia/protocol";
 import type { Pool } from "pg";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { DeliveryRow } from "./DeliveryRow";
+import type { DepotItemRow } from "./DepotItemRow";
 import type { RewardDeliveryRequest, RewardDeliveryResult } from "./DepotStore";
 import type { DepotTxHelper } from "./DepotTxHelper";
+import { requireItem } from "./requireItem";
 import { runSerializableTransaction } from "./runSerializableTransaction";
 import { bumpInboxRevisionUpdate } from "./sql/bumpInboxRevisionUpdate";
 import { deliveryAdvisoryLock } from "./sql/deliveryAdvisoryLock";
@@ -39,7 +41,7 @@ export class DepotRewardOps {
         ) {
           throw new Error("reward delivery key was reused with different ownership");
         }
-        return { itemId: existing.original_item_id, idempotent: true };
+        return { itemId: existing.original_item_id, item: null, idempotent: true };
       }
       const type = this.catalog.require(request.itemTypeId);
       if (
@@ -79,7 +81,7 @@ export class DepotRewardOps {
       );
       if (slot === null) throw new Error("recipient inbox is full");
       const itemId = randomUUID();
-      await client.query(rewardItemInsert, [
+      const inserted = await client.query<DepotItemRow>(rewardItemInsert, [
         itemId,
         request.itemTypeId,
         request.count,
@@ -102,7 +104,7 @@ export class DepotRewardOps {
         request.itemTypeId,
         request.count,
       ]);
-      return { itemId, idempotent: false };
+      return { itemId, item: requireItem(inserted.rows[0]), idempotent: false };
     });
   }
 }

@@ -13,6 +13,8 @@ import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { Visibility } from "./Visibility";
 import type { World } from "./World";
+import type { DepotService } from "./depot/DepotService";
+import type { LoadedDepot } from "./depot/LoadedDepot";
 import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { LoadedInventory } from "./item/LoadedInventory";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
@@ -29,6 +31,7 @@ export class CharacterHandler {
     private readonly visibility: Visibility,
     private readonly persistence: CharacterPersistence,
     private readonly items: ItemIntentHandler,
+    private readonly depot: DepotService,
     private readonly spells: SpellRegistry,
   ) {}
 
@@ -158,6 +161,7 @@ export class CharacterHandler {
             }).capacity,
           )
         : null;
+      const depot = character ? await this.depot.load(character.id) : null;
       this.outcomes.push(() => {
         if (!this.isCurrentOperation(session, accountId)) return;
         if (!character) {
@@ -176,7 +180,7 @@ export class CharacterHandler {
           session.sendError("character-load-failed");
           return;
         }
-        this.enterWorld(session, character, inventory);
+        this.enterWorld(session, character, inventory, depot);
       });
     } catch (cause) {
       this.queueFailure(session, accountId, "character-load-failed", cause);
@@ -187,6 +191,7 @@ export class CharacterHandler {
     session: Session,
     character: Character,
     loadedInventory: LoadedInventory,
+    loadedDepot: LoadedDepot | null,
   ): void {
     if (session.playerId) {
       session.sendError("already-joined");
@@ -216,6 +221,7 @@ export class CharacterHandler {
     session.playerId = player.id;
     this.registry.bindPlayer(session);
     const inventory = this.items.attach(loadedInventory);
+    if (loadedDepot) this.depot.attach(loadedDepot);
     const creatures = this.visibility.announceSpawn(session, player);
     session.send({
       type: "welcome",
@@ -245,6 +251,7 @@ export class CharacterHandler {
     if (player) {
       this.persistence.untrack(player, Date.now());
       this.items.detach(characterId);
+      this.depot.detachCharacter(characterId);
       this.world.removePlayer(characterId);
       this.visibility.announceLeave(existing, player);
     }
@@ -253,6 +260,8 @@ export class CharacterHandler {
     existing.bufferedMovementDirection = null;
     existing.attackTargetId = null;
     existing.itemOperationPending = false;
+    existing.depotOperationPending = false;
+    existing.depotPersistsPending = 0;
     existing.travelOperationPending = false;
     existing.knownCreatureIds.clear();
     existing.knownMapItemTiles.clear();

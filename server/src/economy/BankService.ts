@@ -101,7 +101,9 @@ export class BankService {
       this.fail(session, "out-of-range");
       return;
     }
-    if (session.itemOperationPending || session.travelOperationPending) {
+    if (session.itemOperationPending ||
+      session.depotPersistsPending > 0 ||
+      session.travelOperationPending) {
       this.fail(session, "busy");
       return;
     }

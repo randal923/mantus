@@ -1,20 +1,38 @@
 import { randomUUID } from "node:crypto";
-import type { Position } from "@tibia/protocol";
+import type { DepotLocation, Position } from "@tibia/protocol";
+import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import { DepotAccessTracker } from "./DepotAccessTracker";
+import { DepotCacheManager } from "./DepotCacheManager";
 import type { DepotIntent } from "./DepotIntent";
+import type { DepotMutationPlan } from "./DepotMutationPlan";
 import { DepotOperationRunner } from "./DepotOperationRunner";
+import { depotPageOf } from "./depotPageOf";
 import type { DepotStore, RewardDeliveryRequest } from "./DepotStore";
 import { failDepot } from "./failDepot";
 import { failMail } from "./failMail";
+import type { LoadedDepot } from "./LoadedDepot";
+import { planDepotDeposit } from "./planDepotDeposit";
+import { planDepotWithdraw } from "./planDepotWithdraw";
+import { planStashDeposit } from "./planStashDeposit";
+import { planStashWithdraw } from "./planStashWithdraw";
+import { projectDepotState } from "./projectDepotState";
 import type { StorageAccess } from "./StorageAccess";
 
 const EXPIRY_SCAN_INTERVAL_MS = 60_000;
 
+/**
+ * Depot/inbox/stash storage. State for online characters lives in memory
+ * (loaded once at login, like carried items) so opening and using the depot
+ * answers within the same tick; each mutation's DB write runs behind it in a
+ * per-character FIFO. Cross-character flows (mail, rewards, expiry returns)
+ * stay commit-first and are injected into online caches after the fact.
+ */
 export class DepotService {
   private readonly tracker: DepotAccessTracker;
+  private readonly caches = new DepotCacheManager();
   private readonly runner: DepotOperationRunner;
   private expirationOperation: Promise<void> | null = null;
   private nextExpiryScanAt = 0;
@@ -22,10 +40,31 @@ export class DepotService {
   constructor(
     private readonly world: World,
     private readonly items: ItemIntentHandler,
+    private readonly catalog: ItemCatalog,
     private readonly store?: DepotStore,
   ) {
     this.tracker = new DepotAccessTracker(world, items);
-    this.runner = new DepotOperationRunner(items, this.tracker, store);
+    this.runner = new DepotOperationRunner(
+      items,
+      this.tracker,
+      this.caches,
+      store,
+    );
+  }
+
+  async load(characterId: string): Promise<LoadedDepot | null> {
+    if (!this.store) return null;
+    this.caches.beginLoad(characterId, Date.now());
+    return this.store.loadForCharacter(characterId);
+  }
+
+  attach(loaded: LoadedDepot): void {
+    this.caches.attach(loaded);
+  }
+
+  detachCharacter(characterId: string): void {
+    this.caches.detach(characterId);
+    this.runner.clearPersistState(characterId);
   }
 
   handleMapUse(session: Session, position: Position): boolean {
@@ -44,7 +83,7 @@ export class DepotService {
         failDepot(session, "out-of-range");
         return true;
       }
-      if (!this.store) {
+      if (!this.store || !session.playerId || !this.caches.get(session.playerId)) {
         failDepot(session, "failed");
         return true;
       }
@@ -56,7 +95,7 @@ export class DepotService {
         townName: this.world.townName(depotId) ?? `Depot ${depotId}`,
       };
       this.tracker.open(session, access);
-      this.runner.beginBrowse(session, access, "depot", 1, "");
+      this.sendState(session, access, "depot", 1, "");
       return true;
     }
     const mailbox = mapItems.some(
@@ -93,84 +132,143 @@ export class DepotService {
     const access = this.tracker.requireDepotAccess(session, intent.sessionId);
     if (!access) return;
     if (intent.type === "depot-browse") {
-      this.runner.beginBrowse(
-        session,
-        access,
-        intent.location,
-        intent.page,
-        intent.query,
-      );
+      this.sendState(session, access, intent.location, intent.page, intent.query);
       return;
     }
-    const snapshot = session.playerId
-      ? this.items.inventorySnapshot(session.playerId)
+    const characterId = session.playerId;
+    const carried = characterId
+      ? this.items.inventorySnapshot(characterId)
       : null;
-    if (!session.playerId || !snapshot || !this.store) {
+    const depot = characterId ? this.caches.get(characterId) : undefined;
+    if (!characterId || !carried || !depot || !this.store) {
       failDepot(session, "failed");
       return;
     }
+    if (this.runner.isPersistPoisoned(characterId)) {
+      failDepot(session, "failed");
+      return;
+    }
+    // A carried-item DB op or mail send is mid-flight; memory would race it.
     if (session.itemOperationPending || session.depotOperationPending) {
       failDepot(session, "busy");
       return;
     }
+    const planContext = { characterId, catalog: this.catalog, carried, depot };
     if (intent.type === "depot-deposit") {
-      this.runner.beginDepotMutation(
+      this.applyMutation(
         session,
         access,
         "depot",
-        this.store.deposit(
-          session.playerId,
-          access.depotId,
-          intent.depotRevision,
-          intent.itemId,
-          intent.itemRevision,
-        ),
+        planDepotDeposit({
+          ...planContext,
+          depotId: access.depotId,
+          expectedDepotRevision: intent.depotRevision,
+          itemId: intent.itemId,
+          expectedItemRevision: intent.itemRevision,
+        }),
       );
       return;
     }
     if (intent.type === "depot-withdraw") {
-      this.runner.beginDepotMutation(
+      this.applyMutation(
         session,
         access,
         intent.source,
-        this.store.withdraw(
-          session.playerId,
-          access.depotId,
-          intent.source,
-          intent.sourceRevision,
-          intent.itemId,
-          intent.itemRevision,
-          snapshot.capacityMax,
-        ),
+        planDepotWithdraw({
+          ...planContext,
+          depotId: access.depotId,
+          source: intent.source,
+          expectedSourceRevision: intent.sourceRevision,
+          itemId: intent.itemId,
+          expectedItemRevision: intent.itemRevision,
+        }),
       );
       return;
     }
     if (intent.type === "stash-deposit") {
-      this.runner.beginStashMutation(
+      this.applyMutation(
         session,
         access,
-        this.store.depositStash(
-          session.playerId,
-          access.depotId,
-          intent.stashRevision,
-          intent.itemId,
-          intent.itemRevision,
-          intent.count,
-        ),
+        "stash",
+        planStashDeposit({
+          ...planContext,
+          expectedStashRevision: intent.stashRevision,
+          itemId: intent.itemId,
+          expectedItemRevision: intent.itemRevision,
+          count: intent.count,
+        }),
       );
       return;
     }
-    this.runner.beginStashMutation(
+    this.applyMutation(
       session,
       access,
-      this.store.withdrawStash(
-        session.playerId,
-        access.depotId,
-        intent.stashRevision,
-        intent.itemTypeId,
-        intent.count,
-        snapshot.capacityMax,
-      ),
+      "stash",
+      planStashWithdraw({
+        ...planContext,
+        expectedStashRevision: intent.stashRevision,
+        itemTypeId: intent.itemTypeId,
+        count: intent.count,
+      }),
+    );
+  }
+
+  private applyMutation(
+    session: Session,
+    access: Extract<StorageAccess, { kind: "depot" }>,
+    refreshLocation: DepotLocation,
+    plan: DepotMutationPlan,
+  ): void {
+    const characterId = session.playerId;
+    if (!characterId) {
+      failDepot(session, "failed");
+      return;
+    }
+    if (plan.status !== "ok") {
+      failDepot(session, plan.status);
+      if (plan.status === "stale") {
+        this.sendState(session, access, refreshLocation, 1, "");
+      }
+      return;
+    }
+    this.items.applyCommittedMutation(
+      session,
+      characterId,
+      plan.inventoryMutation,
+      Date.now(),
+    );
+    this.caches.apply(characterId, plan.cacheEvent);
+    this.sendState(session, access, refreshLocation, 1, "");
+    this.runner.enqueuePersist(session, characterId, plan.persist);
+  }
+
+  private sendState(
+    session: Session,
+    access: Extract<StorageAccess, { kind: "depot" }>,
+    location: DepotLocation,
+    page: number,
+    query: string,
+  ): void {
+    const cache = session.playerId
+      ? this.caches.get(session.playerId)
+      : undefined;
+    if (!cache) {
+      failDepot(session, "failed");
+      return;
+    }
+    const matchingItemTypeIds =
+      query.length === 0
+        ? null
+        : this.items.itemTypesByName(query).map((type) => type.id);
+    const result = depotPageOf(
+      cache,
+      access.depotId,
+      location,
+      page,
+      matchingItemTypeIds,
+    );
+    session.send(
+      projectDepotState(this.items, access, location, query, page, result),
     );
   }
 
@@ -179,6 +277,7 @@ export class DepotService {
   }
 
   tick(now: number): void {
+    this.caches.expireLoadBuffers(now);
     if (
       !this.store ||
       this.expirationOperation ||
@@ -189,7 +288,20 @@ export class DepotService {
     this.nextExpiryScanAt = now + EXPIRY_SCAN_INTERVAL_MS;
     const operation = this.store
       .returnExpired(new Date(now), 25)
-      .then(() => undefined)
+      .then((results) => {
+        this.runner.pushOutcome(() => {
+          for (const result of results) {
+            this.caches.applyExternal(result.recipientCharacterId, {
+              removedItemIds: result.removedItemIds,
+              bumps: [{ kind: "inbox" }],
+            });
+            this.caches.applyExternal(result.returnCharacterId, {
+              upserts: result.items,
+              bumps: [{ kind: "inbox" }],
+            });
+          }
+        });
+      })
       .catch((cause: unknown) => {
         const reason = cause instanceof Error ? cause.message : "unknown";
         console.warn(`inbox expiry scan failed: ${reason}`);
@@ -207,7 +319,9 @@ export class DepotService {
 
   deliverReward(request: RewardDeliveryRequest) {
     if (!this.store) throw new Error("depot store is unavailable");
-    return this.store.deliverReward(request);
+    const operation = this.store.deliverReward(request);
+    this.runner.trackRewardInjection(request.recipientCharacterId, operation);
+    return operation;
   }
 
   async stop(): Promise<void> {
