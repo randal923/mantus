@@ -64,7 +64,7 @@ export class DepotService {
 
   detachCharacter(characterId: string): void {
     this.caches.detach(characterId);
-    this.runner.clearPersistState(characterId);
+    this.items.clearPersistState(characterId);
   }
 
   handleMapUse(session: Session, position: Position): boolean {
@@ -144,7 +144,7 @@ export class DepotService {
       failDepot(session, "failed");
       return;
     }
-    if (this.runner.isPersistPoisoned(characterId)) {
+    if (this.items.isPersistPoisoned(characterId)) {
       failDepot(session, "failed");
       return;
     }

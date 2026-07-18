@@ -4,14 +4,16 @@ import type { WebSocket } from "ws";
 import { gridMapData } from "../gridMapData";
 import type { Item } from "../item/Item";
 import { ItemCatalog } from "../item/ItemCatalog";
-import type { ItemIntentHandler } from "../item/ItemIntentHandler";
-import type { ItemMutation } from "../item/ItemMutation";
+import { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { ItemType } from "../item/ItemType";
+import { MemoryItemStore } from "../item/MemoryItemStore";
 import type { MapData } from "../MapData";
 import type { MapItem } from "../MapItem";
 import { Player } from "../Player";
 import { Session } from "../Session";
+import { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
+import { Visibility } from "../Visibility";
 import { World } from "../World";
 import { DepotService } from "./DepotService";
 import type { DepotStore } from "./DepotStore";
@@ -130,31 +132,17 @@ const makeHarness = (options: HarnessOptions = {}) => {
     initialViewRange: { x: 9, y: 7 },
   });
   session.playerId = player.id;
-  let carried: Item[] = [...(options.carried ?? [])];
-  const applyCommittedMutation = vi.fn(
-    (_session: Session, _characterId: string, mutation: ItemMutation) => {
-      const removed = new Set(mutation.removedItemIds ?? []);
-      carried = carried.filter(
-        (item) => item.id !== mutation.before?.id && !removed.has(item.id),
-      );
-      for (const item of mutation.after) {
-        if (
-          item.location.kind === "inventory" ||
-          item.location.kind === "equipment" ||
-          item.location.kind === "container"
-        ) {
-          carried.push(item);
-        }
-      }
-    },
+  const items = new ItemIntentHandler(
+    new MemoryItemStore(catalog),
+    catalog,
+    world,
+    new Visibility(world, new SessionRegistry()),
   );
-  const items = {
-    applyCommittedMutation,
-    trackExternalOperation: vi.fn(),
-    inventorySnapshot: vi.fn(() => ({ items: carried, capacityMax: 400 })),
-    itemType: (id: number) => catalog.get(id),
-    itemTypesByName: (query: string) => catalog.searchByName(query),
-  } as unknown as ItemIntentHandler;
+  items.attach({
+    characterId: player.id,
+    capacityMax: 400,
+    items: options.carried ?? [],
+  });
   const persist = vi.fn(options.persist ?? (async () => undefined));
   const store = {
     loadForCharacter: vi.fn(),
@@ -178,10 +166,11 @@ const makeHarness = (options: HarnessOptions = {}) => {
     session,
     messages,
     depot,
+    items,
     persist,
     terminate,
-    applyCommittedMutation,
-    carriedItems: () => carried,
+    carriedItems: () =>
+      items.inventorySnapshot(player.id)?.items ?? ([] as ReadonlyArray<Item>),
     replaceDepot(nextDepotId: number) {
       depotId = nextDepotId;
     },
@@ -355,7 +344,11 @@ describe("DepotService", () => {
     harness.depot.handle(harness.session, withdraw);
     harness.depot.handle(harness.session, withdraw);
 
-    expect(harness.applyCommittedMutation).toHaveBeenCalledTimes(1);
+    expect(
+      harness.messages.filter(
+        (message) => message.type === "inventory-updated",
+      ),
+    ).toHaveLength(1);
     await nextTurn();
     expect(harness.persist).toHaveBeenCalledTimes(1);
     expect(harness.messages).toContainEqual({
@@ -384,7 +377,7 @@ describe("DepotService", () => {
       itemRevision: 1,
     });
     await nextTurn();
-    harness.depot.applyResolvedOutcomes();
+    harness.items.applyResolvedOutcomes(Date.now());
 
     expect(harness.terminate).toHaveBeenCalled();
   });
@@ -451,8 +444,8 @@ describe("DepotService", () => {
     await nextTurn();
     await nextTurn();
     expect(order).toHaveLength(2);
-    expect(harness.session.depotPersistsPending).toBeGreaterThan(0);
-    harness.depot.applyResolvedOutcomes();
-    expect(harness.session.depotPersistsPending).toBe(0);
+    expect(harness.session.itemPersistsPending).toBeGreaterThan(0);
+    harness.items.applyResolvedOutcomes(Date.now());
+    expect(harness.session.itemPersistsPending).toBe(0);
   });
 });

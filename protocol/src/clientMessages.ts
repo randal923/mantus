@@ -175,14 +175,22 @@ export const unequipItemMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
-/** Picks up a visible map instance into an optional bounded owned container slot. */
+/**
+ * Picks up a visible map instance into an optional bounded owned container
+ * slot, or — with `equipSlot` — asks the server to equip it right after the
+ * pickup commits (the equip is re-validated like any equip intent; if it is
+ * not possible the item simply stays picked up).
+ */
 export const pickupItemMessageSchema = z
   .object({
     type: z.literal("pickup-item"),
     itemId: z.string().min(1).max(128),
     revision: z.number().int().positive(),
     position: positionSchema,
+    // destination and equipSlot are mutually exclusive; the server rejects
+    // intents carrying both (a refine here would break the discriminated union).
     destination: itemContainerDestinationSchema.optional(),
+    equipSlot: equipmentSlotSchema.optional(),
   })
   .strict();
 

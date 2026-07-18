@@ -239,12 +239,11 @@ describe("ItemIntentHandler", () => {
     });
   });
 
-  it("commits a move without publishing to a disconnected projection", async () => {
+  it("applies a move in the same tick and persists it across detach", async () => {
     const store = new MemoryItemStore();
     for (const item of nestedItems()) store.seed(item);
     const { handler, session, sent } = makeHarness(store);
     handler.attach(await handler.load(CHARACTER_ID, 400));
-    const sentBefore = sent.length;
 
     handler.handle(session, {
       type: "move-item",
@@ -254,12 +253,13 @@ describe("ItemIntentHandler", () => {
       destinationRevision: 1,
       destinationSlot: 1,
     });
+
+    expect(sent.at(-1)).toMatchObject({ type: "inventory-updated" });
     handler.detach(CHARACTER_ID);
     session.playerId = null;
+    // load() drains the persist queue, so the write must be durable by now.
     const durable = await handler.load(CHARACTER_ID, 400);
     handler.applyResolvedOutcomes(1_000);
-
-    expect(sent).toHaveLength(sentBefore);
     expect(durable.items).toContainEqual(
       expect.objectContaining({
         id: ITEM_ID,

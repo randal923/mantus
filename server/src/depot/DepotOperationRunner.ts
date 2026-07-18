@@ -10,21 +10,15 @@ import type { DepotPersistPlan } from "./DepotPersistPlan";
 import type { DepotStore } from "./DepotStore";
 import { failMail } from "./failMail";
 
-interface PersistQueueState {
-  chain: Promise<void>;
-  depth: number;
-  poisoned: boolean;
-}
-
 /**
- * Owns every async edge of the depot system: the per-character FIFO of persist
- * transactions behind the in-memory mutations, mail delivery, and the
- * tick-outcome queue that applies async results to game state.
+ * Owns the async edges of the depot system: mail delivery, reward injection,
+ * and the tick-outcome queue that applies async results to game state. The
+ * persist FIFO behind in-memory mutations lives in ItemIntentHandler and is
+ * shared with carried-item writes so per-character DB writes stay ordered.
  */
 export class DepotOperationRunner {
   private readonly outcomes: Array<() => void> = [];
   private readonly pendingOperations = new Set<Promise<void>>();
-  private readonly persistQueues = new Map<string, PersistQueueState>();
 
   constructor(
     private readonly items: ItemIntentHandler,
@@ -41,20 +35,6 @@ export class DepotOperationRunner {
     this.outcomes.push(outcome);
   }
 
-  isPersistPoisoned(characterId: string): boolean {
-    return this.persistQueues.get(characterId)?.poisoned ?? false;
-  }
-
-  clearPersistState(characterId: string): void {
-    this.persistQueues.delete(characterId);
-  }
-
-  /**
-   * Queues the DB write behind an already-applied memory mutation. Writes for
-   * one character run strictly in order; a failed write poisons the queue,
-   * skips the rest, and disconnects the session so the next login reloads
-   * authoritative state from the DB.
-   */
   enqueuePersist(
     session: Session,
     characterId: string,
@@ -62,56 +42,7 @@ export class DepotOperationRunner {
   ): void {
     const store = this.store;
     if (!store) return;
-    const state = this.persistQueues.get(characterId) ?? {
-      chain: Promise.resolve(),
-      depth: 0,
-      poisoned: false,
-    };
-    this.persistQueues.set(characterId, state);
-    state.depth += 1;
-    session.depotPersistsPending += 1;
-    state.chain = state.chain
-      .then(async () => {
-        if (state.poisoned) return;
-        await store.persist(plan);
-      })
-      .then(
-        () => {
-          this.outcomes.push(() => this.finishPersist(session, characterId, state));
-        },
-        (cause: unknown) => {
-          state.poisoned = true;
-          const reason = cause instanceof Error ? cause.message : "unknown";
-          this.outcomes.push(() => {
-            this.finishPersist(session, characterId, state);
-            console.error(
-              `depot persist failed for ${characterId}: ${reason}; disconnecting to resync from DB`,
-            );
-            session.terminate();
-          });
-        },
-      );
-    this.items.trackExternalOperation(characterId, state.chain);
-    this.track(state.chain);
-  }
-
-  private finishPersist(
-    session: Session,
-    characterId: string,
-    state: PersistQueueState,
-  ): void {
-    state.depth -= 1;
-    session.depotPersistsPending = Math.max(
-      0,
-      session.depotPersistsPending - 1,
-    );
-    if (
-      state.depth === 0 &&
-      !state.poisoned &&
-      this.persistQueues.get(characterId) === state
-    ) {
-      this.persistQueues.delete(characterId);
-    }
+    this.items.enqueuePersist(session, characterId, () => store.persist(plan));
   }
 
   handleSendMail(
@@ -136,7 +67,7 @@ export class DepotOperationRunner {
     if (
       session.itemOperationPending ||
       session.depotOperationPending ||
-      session.depotPersistsPending > 0
+      session.itemPersistsPending > 0
     ) {
       failMail(session, "busy");
       return;

@@ -432,6 +432,8 @@ export class GameServer {
     this.shops.applyResolvedOutcomes(Date.now());
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
+    await this.items.stopPersists();
+    this.items.applyResolvedOutcomes(Date.now());
     await this.persistence.stop();
     if (this.persistence.unsavedPlayerCount > 0) {
       console.error(

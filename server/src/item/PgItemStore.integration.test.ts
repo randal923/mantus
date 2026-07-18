@@ -9,6 +9,7 @@ import { PgCharacterStore } from "../character/PgCharacterStore";
 import { PgNpcTravelStore } from "../npc/PgNpcTravelStore";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { PgItemStore } from "./PgItemStore";
+import { planMoveToContainer } from "./plan/planMoveToContainer";
 
 const TEST_SCHEMA = "item_store_integration";
 const MIGRATION_LOCK_KEY = 7_281_003;
@@ -462,6 +463,73 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     await expect(
       store.moveToContainer(characterId, helmetId, 1, pouchId, 1, 99),
     ).rejects.toThrow("container slot is out of range");
+  });
+
+  it("persists a planned carried move atomically with its audit", async () => {
+    const goldId = await insertItem(GOLD_TYPE, 40, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const carried = await store.loadForCharacter(characterId);
+    const plan = planMoveToContainer({
+      characterId,
+      catalog: await loadItemCatalog(),
+      items: carried,
+      itemId: goldId,
+      expectedVersion: 1,
+      destinationContainerId: pouchId,
+      destinationVersion: 1,
+      destinationSlot: 0,
+    });
+    if (!plan) throw new Error("plan was rejected");
+
+    await store.persist(plan.persist);
+
+    expect(await itemRow(goldId)).toMatchObject({
+      location_type: "container",
+      container_id: pouchId,
+      slot_index: 0,
+      version: 2,
+    });
+    const audits = await auditRows("item-transferred");
+    expect(audits).toContainEqual(
+      expect.objectContaining({ item_id: goldId }),
+    );
+  });
+
+  it("rolls back a carried persist whose guard misses", async () => {
+    const goldId = await insertItem(GOLD_TYPE, 40, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const carried = await store.loadForCharacter(characterId);
+    const plan = planMoveToContainer({
+      characterId,
+      catalog: await loadItemCatalog(),
+      items: carried,
+      itemId: goldId,
+      expectedVersion: 1,
+      destinationContainerId: pouchId,
+      destinationVersion: 1,
+      destinationSlot: 0,
+    });
+    if (!plan) throw new Error("plan was rejected");
+    await pool.query("UPDATE items SET version = version + 1 WHERE id = $1", [
+      goldId,
+    ]);
+
+    await expect(store.persist(plan.persist)).rejects.toThrow(
+      /persist write missed/,
+    );
+
+    expect(await itemRow(goldId)).toMatchObject({
+      container_id: backpackId,
+      slot_index: 1,
+      version: 2,
+    });
+    expect(await auditRows("item-transferred")).toHaveLength(0);
   });
 
   it("rejects a destination owned by another character", async () => {

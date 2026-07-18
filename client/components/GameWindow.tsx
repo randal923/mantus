@@ -1441,6 +1441,25 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 onDropInEquipment={(slot) => {
                   const source = itemDragRef.current;
                   itemDragRef.current = null;
+                  if (source?.kind === "world") {
+                    const queued = dispatchItemOpChecked({
+                      kind: "pickup",
+                      itemId: source.item.instanceId,
+                      revision: source.item.revision,
+                      position: source.position,
+                      ...(source.item.weight !== undefined
+                        ? { weight: source.item.weight * source.item.count }
+                        : {}),
+                      equipSlot: slot,
+                    });
+                    if (queued) {
+                      rendererRef.current?.previewMapItemRemoval(
+                        source.position,
+                        source.item.instanceId,
+                      );
+                    }
+                    return;
+                  }
                   if (source?.kind !== "owned") return;
                   if (
                     source.location.kind === "equipment" &&

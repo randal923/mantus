@@ -199,6 +199,35 @@ limitations:
   back-to-back heavy withdraws may pass the client check and be rejected by
   the server — the safe direction (no false client rejections).
 
+## Known gaps (memory-first carried ops, 2026-07)
+
+Equip/unequip/move-item/split-stack/rotate-item/write-item (and use-item on
+rotatables) are memory-authoritative: planners in `server/src/item/plan/`
+validate against the `InventoryCache` in the tick, apply immediately, and
+flush a guarded single-transaction write (`PgItemPersistOps`) through the
+per-character persist FIFO shared with the depot
+(`ItemIntentHandler.enqueuePersist`, `session.itemPersistsPending`).
+Deliberate trade-offs:
+
+- **DB-first ops remain for world interactions and consumption** (pickup,
+  drop, move-map-item, food/rune/ammo consume, conjure, corpse, decay). They
+  gate on `itemPersistsPending` so per-character writes stay ordered. Phase 2
+  (converting these) needs per-item/world-tile write ordering, not just
+  per-character — design before attempting.
+- **The retired DB-first carried ops are still present**
+  (`PgEquipmentOps`, `PgContainerMoveOps`, `PgStackOps.split/rotate`,
+  `PgItemUseOps.writeText`, and their `MemoryItemStore` mirrors + tests) as
+  the reference implementation for planner parity. Nothing in the intent path
+  calls them; remove them once the memory-first path has soaked, and shrink
+  `ItemStore` accordingly. Until then, do not call them directly — they
+  bypass the memory-authoritative caches.
+- **Persist failure disconnects the player** (same policy as the depot):
+  guarded write misses poison the queue and terminate the session so the next
+  login reloads DB state. Consider live resync if this becomes visible.
+- **Client prediction layer retained** (`useOptimisticInventory`): with
+  in-tick server responses it is now redundant for the six converted ops but
+  still masks DB-first ops (pickup/drop/shop). Simplify it only after phase 2.
+
 ## Pinned Canary parity gate
 
 - [ ] Inventory every registered item/move/action behavior from the pinned

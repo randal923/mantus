@@ -1,5 +1,5 @@
 import type { EquipmentSlot } from "@tibia/protocol";
-import type { Item } from "../item/Item";
+import type { Item } from "./Item";
 
 interface ItemLocationColumnValues {
   readonly locationType: string;

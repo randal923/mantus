@@ -1,4 +1,8 @@
-import type { InventoryState, Position } from "@tibia/protocol";
+import type {
+  EquipmentSlot,
+  InventoryState,
+  Position,
+} from "@tibia/protocol";
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
@@ -16,8 +20,16 @@ import type { ItemType } from "./ItemType";
 import type { LoadedInventory } from "./LoadedInventory";
 import type { LootItemCreation } from "./LootItemCreation";
 import { operationForItemIntent } from "./operationForItemIntent";
+import { planCarriedIntent } from "./plan/planCarriedIntent";
+import { planEquip } from "./plan/planEquip";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
 import { WorldItemDecayRunner } from "./WorldItemDecayRunner";
+
+interface PersistQueueState {
+  chain: Promise<void>;
+  depth: number;
+  poisoned: boolean;
+}
 
 export class ItemIntentHandler {
   private readonly outcomes = new ItemOutcomeQueue();
@@ -25,6 +37,8 @@ export class ItemIntentHandler {
   private readonly operations: ItemOperationRunner;
   private readonly corpses: CorpseCreator;
   private readonly decayRunner: WorldItemDecayRunner;
+  private readonly persistQueues = new Map<string, PersistQueueState>();
+  private readonly pendingPersistOperations = new Set<Promise<void>>();
 
   constructor(
     private readonly store: ItemStore,
@@ -144,7 +158,7 @@ export class ItemIntentHandler {
       !characterId ||
       !combatItem ||
       session.itemOperationPending ||
-      session.depotPersistsPending > 0 ||
+      session.itemPersistsPending > 0 ||
       combatItem.item.count < 1
     ) {
       session.sendError("combat-action-failed");
@@ -187,7 +201,7 @@ export class ItemIntentHandler {
     if (
       !characterId ||
       session.itemOperationPending ||
-      session.depotPersistsPending > 0
+      session.itemPersistsPending > 0
     ) {
       session.sendError("combat-action-failed");
       return false;
@@ -262,6 +276,82 @@ export class ItemIntentHandler {
     this.operations.pending.trackSwallowingErrors(characterId, operation);
   }
 
+  /**
+   * Queues the DB write behind an already-applied memory mutation (depot or
+   * carried). Writes for one character run strictly in order; a failed write
+   * poisons the queue, skips the rest, and disconnects the session so the
+   * next login reloads authoritative state from the DB.
+   */
+  enqueuePersist(
+    session: Session,
+    characterId: string,
+    persist: () => Promise<void>,
+  ): void {
+    const state = this.persistQueues.get(characterId) ?? {
+      chain: Promise.resolve(),
+      depth: 0,
+      poisoned: false,
+    };
+    this.persistQueues.set(characterId, state);
+    state.depth += 1;
+    session.itemPersistsPending += 1;
+    state.chain = state.chain
+      .then(async () => {
+        if (state.poisoned) return;
+        await persist();
+      })
+      .then(
+        () => {
+          this.outcomes.push(() =>
+            this.finishPersist(session, characterId, state),
+          );
+        },
+        (cause: unknown) => {
+          state.poisoned = true;
+          const reason = cause instanceof Error ? cause.message : "unknown";
+          this.outcomes.push(() => {
+            this.finishPersist(session, characterId, state);
+            console.error(
+              `item persist failed for ${characterId}: ${reason}; disconnecting to resync from DB`,
+            );
+            session.terminate();
+          });
+        },
+      );
+    const settled = state.chain;
+    this.operations.pending.trackSwallowingErrors(characterId, settled);
+    this.pendingPersistOperations.add(settled);
+    void settled.finally(() => this.pendingPersistOperations.delete(settled));
+  }
+
+  isPersistPoisoned(characterId: string): boolean {
+    return this.persistQueues.get(characterId)?.poisoned ?? false;
+  }
+
+  clearPersistState(characterId: string): void {
+    this.persistQueues.delete(characterId);
+  }
+
+  async stopPersists(): Promise<void> {
+    await Promise.allSettled([...this.pendingPersistOperations]);
+  }
+
+  private finishPersist(
+    session: Session,
+    characterId: string,
+    state: PersistQueueState,
+  ): void {
+    state.depth -= 1;
+    session.itemPersistsPending = Math.max(0, session.itemPersistsPending - 1);
+    if (
+      state.depth === 0 &&
+      !state.poisoned &&
+      this.persistQueues.get(characterId) === state
+    ) {
+      this.persistQueues.delete(characterId);
+    }
+  }
+
   private consumeForUse(
     session: Session,
     itemId: string,
@@ -272,7 +362,7 @@ export class ItemIntentHandler {
     if (
       !characterId ||
       session.itemOperationPending ||
-      session.depotPersistsPending > 0
+      session.itemPersistsPending > 0
     ) {
       session.sendError("item-action-failed");
       return;
@@ -328,16 +418,6 @@ export class ItemIntentHandler {
       return;
     }
     if (session.itemOperationPending) {
-      session.sendError("item-action-failed");
-      return;
-    }
-    // Depot writes still flushing: DB-backed item ops must stay ordered
-    // behind them. Container open/close is memory-only and may proceed.
-    if (
-      session.depotPersistsPending > 0 &&
-      intent.type !== "open-container" &&
-      intent.type !== "close-container"
-    ) {
       session.sendError("item-action-failed");
       return;
     }
@@ -427,22 +507,107 @@ export class ItemIntentHandler {
       session.sendError("item-action-failed");
       return;
     }
+    const planned = planCarriedIntent({
+      intent,
+      item,
+      items: cache.items,
+      catalog: this.catalog,
+      characterId: playerId,
+      level: player.level,
+      vocation: player.vocation,
+    });
+    if (planned.kind === "rejected") {
+      session.sendError("item-action-failed");
+      return;
+    }
+    if (planned.kind === "planned") {
+      const inventory = this.operations.applyMutation(
+        playerId,
+        planned.plan.mutation,
+        now,
+      );
+      if (inventory && session.playerId === playerId) {
+        session.send({ type: "inventory-updated", inventory });
+      }
+      const persist = planned.plan.persist;
+      this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+      return;
+    }
+    // DB-first ops (world interactions) must stay ordered behind any
+    // memory-first writes still flushing for this character.
+    if (session.itemPersistsPending > 0) {
+      session.sendError("item-action-failed");
+      return;
+    }
     const operation = operationForItemIntent(
       this.store,
-      this.catalog,
       this.world,
       playerId,
       intent,
-      item,
     );
     if (!operation) {
       session.sendError("item-action-failed");
       return;
     }
     session.itemOperationPending = true;
+    const equipSlot =
+      intent.type === "pickup-item" ? intent.equipSlot : undefined;
     this.operations.run(session, playerId, operation, {
       errorCode: "item-action-failed",
       logLabel: "item operation failed",
+      ...(equipSlot
+        ? {
+            onMutationApplied: (mutation: ItemMutation, appliedAt: number) =>
+              this.equipPickedItem(
+                session,
+                playerId,
+                mutation,
+                equipSlot,
+                appliedAt,
+              ),
+          }
+        : {}),
     });
+  }
+
+  /**
+   * Equip-after-pickup: once the pickup commit lands in memory, run the
+   * regular equip planner on the picked item. If the equip is not possible
+   * the item simply stays picked up.
+   */
+  private equipPickedItem(
+    session: Session,
+    characterId: string,
+    mutation: ItemMutation,
+    slot: EquipmentSlot,
+    now: number,
+  ): void {
+    const cache = this.inventories.get(characterId);
+    const player = this.world.getPlayer(characterId);
+    const rootId = mutation.before?.id;
+    if (!cache || !player || !rootId) return;
+    const item = cache.items.find((candidate) => candidate.id === rootId);
+    if (!item) return;
+    const plan = planEquip({
+      characterId,
+      catalog: this.catalog,
+      items: cache.items,
+      level: player.level,
+      vocation: player.vocation,
+      itemId: item.id,
+      expectedVersion: item.version,
+      slot,
+    });
+    if (!plan) return;
+    const inventory = this.operations.applyMutation(
+      characterId,
+      plan.mutation,
+      now,
+    );
+    if (inventory && session.playerId === characterId) {
+      session.send({ type: "inventory-updated", inventory });
+    }
+    const persist = plan.persist;
+    this.enqueuePersist(session, characterId, () => this.store.persist(persist));
   }
 }

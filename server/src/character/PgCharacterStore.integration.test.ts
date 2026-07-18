@@ -413,6 +413,13 @@ databaseDescribe("PgCharacterStore integration", () => {
        ) VALUES ($1, 2853, 'container', $2, 10)`,
       [bagId, backpackId],
     );
+    // Starter loadouts no longer include gold; seed the stack the moves need.
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, count, location_type, container_id, slot_index
+       ) VALUES ($1, 3031, 100, 'container', $2, 11)`,
+      [randomUUID(), backpackId],
+    );
     const source = await pool.query<{ id: string; version: number }>(
       `SELECT id, version FROM items
        WHERE container_id = $1 AND item_type_id = 3031`,
@@ -631,6 +638,13 @@ databaseDescribe("PgCharacterStore integration", () => {
          id, item_type_id, location_type, container_id, slot_index
        ) VALUES ($1, 2853, 'container', $2, 10)`,
       [bagId, backpackId],
+    );
+    // Starter loadouts no longer include gold; seed the stack the moves need.
+    await pool.query(
+      `INSERT INTO items (
+         id, item_type_id, count, location_type, container_id, slot_index
+       ) VALUES ($1, 3031, 100, 'container', $2, 11)`,
+      [randomUUID(), backpackId],
     );
     const source = await pool.query<{
       id: string;

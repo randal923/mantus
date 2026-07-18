@@ -43,6 +43,8 @@ export type PendingItemOp =
         readonly containerId: string;
         readonly slot: number;
       };
+      /** Asks the server to equip the item right after the pickup commits. */
+      readonly equipSlot?: EquipmentSlot;
     }
   | {
       readonly kind: "move-map";

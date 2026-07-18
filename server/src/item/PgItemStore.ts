@@ -5,6 +5,7 @@ import type {
 } from "@tibia/protocol";
 import type { Pool } from "pg";
 import type { Item } from "./Item";
+import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
@@ -17,6 +18,7 @@ import { PgItemAudit } from "./PgItemAudit";
 import { PgItemCreationOps } from "./PgItemCreationOps";
 import { PgItemGuards } from "./PgItemGuards";
 import { PgItemLocks } from "./PgItemLocks";
+import { PgItemPersistOps } from "./PgItemPersistOps";
 import { PgItemReads } from "./PgItemReads";
 import { PgItemUseOps } from "./PgItemUseOps";
 import { PgStackOps } from "./PgStackOps";
@@ -34,6 +36,7 @@ export class PgItemStore implements ItemStore {
   private readonly uses: PgItemUseOps;
   private readonly creations: PgItemCreationOps;
   private readonly decays: PgDecayOps;
+  private readonly persists: PgItemPersistOps;
 
   constructor(pool: Pool, catalog: ItemCatalog, mapName: string) {
     const locks = new PgItemLocks(catalog, mapName);
@@ -69,6 +72,7 @@ export class PgItemStore implements ItemStore {
       audit,
     );
     this.decays = new PgDecayOps(pool, catalog, locks, audit);
+    this.persists = new PgItemPersistOps(pool);
   }
 
   loadForCharacter(characterId: string): Promise<ReadonlyArray<Item>> {
@@ -107,6 +111,7 @@ export class PgItemStore implements ItemStore {
     position: Position,
     source?: WorldItemSource,
     destination?: ItemContainerDestination,
+    stageInInventory?: boolean,
   ): Promise<ItemMutation> {
     return this.world.pickup(
       characterId,
@@ -115,6 +120,7 @@ export class PgItemStore implements ItemStore {
       position,
       source,
       destination,
+      stageInInventory,
     );
   }
 
@@ -268,5 +274,9 @@ export class PgItemStore implements ItemStore {
     mapVersion: string,
   ): Promise<WorldItemDeltas> {
     return this.reads.loadWorldDeltas(mapName, mapVersion);
+  }
+
+  persist(plan: CarriedPersistPlan): Promise<void> {
+    return this.persists.persist(plan);
   }
 }

@@ -70,7 +70,7 @@ export class ShopService {
       !player ||
       !catalog ||
       session.itemOperationPending ||
-      session.depotPersistsPending > 0 ||
+      session.itemPersistsPending > 0 ||
       session.travelOperationPending ||
       this.world.getCreature(npc.id) !== npc ||
       !session.knownCreatureIds.has(npc.id) ||
@@ -168,7 +168,7 @@ export class ShopService {
       return;
     }
     if (session.itemOperationPending ||
-      session.depotPersistsPending > 0 ||
+      session.itemPersistsPending > 0 ||
       session.travelOperationPending) {
       this.fail(session, "busy");
       return;

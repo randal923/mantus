@@ -88,6 +88,13 @@ export function validateItemIntentTarget(
     ) {
       return false;
     }
+    if (intent.equipSlot) {
+      // Equip-after-pickup: the slot must match the catalog before the item
+      // is even lifted; the equip itself is re-validated after the pickup.
+      if (intent.destination) return false;
+      const type = catalog.get(visible.itemId);
+      if (!type || type.equipmentSlot !== intent.equipSlot) return false;
+    }
   }
   if (intent.type === "move-map-item") {
     const visible = world

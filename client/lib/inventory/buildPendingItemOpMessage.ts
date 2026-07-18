@@ -27,6 +27,7 @@ export function buildPendingItemOpMessage(
         itemId: op.itemId,
         revision: op.revision,
         position: op.position,
+        ...(op.equipSlot ? { equipSlot: op.equipSlot } : {}),
       };
     }
     const container = findInventoryItem(inventory, op.destination.containerId);

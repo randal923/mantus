@@ -6,6 +6,7 @@ import type {
 } from "@tibia/protocol";
 import { collectMemoryDescendantIds } from "./collectMemoryDescendantIds";
 import { collectReachableItemIds } from "./collectReachableItemIds";
+import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import type { Item } from "./Item";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemCatalog } from "./ItemCatalog";
@@ -145,15 +146,88 @@ export class MemoryItemStore implements ItemStore {
     return { before, after: [after] };
   }
 
-  pickup(
-    _characterId: string,
-    _itemReference: string,
-    _expectedVersion: number,
+  async pickup(
+    characterId: string,
+    itemReference: string,
+    expectedVersion: number,
     _position: Position,
     _source?: WorldItemSource,
-    _destination?: ItemContainerDestination,
+    destination?: ItemContainerDestination,
+    stageInInventory = false,
   ): Promise<ItemMutation> {
-    return Promise.reject(new Error("memory pickup is not configured"));
+    const before = this.items.get(itemReference);
+    if (!before) throw new Error("item not found");
+    if (before.version !== expectedVersion) {
+      throw new Error("stale item revision");
+    }
+    if (before.location.kind !== "world") {
+      throw new Error("item is not on the ground");
+    }
+    if (stageInInventory) {
+      const occupied = new Set(
+        [...this.items.values()].flatMap((item) =>
+          item.location.kind === "inventory" &&
+          item.location.characterId === characterId
+            ? [item.location.slot]
+            : [],
+        ),
+      );
+      const stagingSlot = Array.from({ length: 100 }, (_, index) => index).find(
+        (index) => !occupied.has(index),
+      );
+      if (stagingSlot === undefined) {
+        throw new Error("inventory staging area is full");
+      }
+      const after = {
+        ...before,
+        version: before.version + 1,
+        location: {
+          kind: "inventory",
+          characterId,
+          slot: stagingSlot,
+        } as const,
+      };
+      this.items.set(after.id, after);
+      return { before, after: [after] };
+    }
+    const container = destination
+      ? this.items.get(destination.containerId)
+      : [...this.items.values()].find(
+          (item) =>
+            item.location.kind === "equipment" &&
+            item.location.characterId === characterId &&
+            item.location.slot === "backpack",
+        );
+    if (!container) throw new Error("no pickup destination");
+    const capacity =
+      this.catalog?.require(container.typeId).containerCapacity ?? 0;
+    const occupied = new Set(
+      [...this.items.values()].flatMap((item) =>
+        item.location.kind === "container" &&
+        item.location.containerId === container.id
+          ? [item.location.slot]
+          : [],
+      ),
+    );
+    const slot =
+      destination?.slot ??
+      Array.from({ length: capacity }, (_, index) => index).find(
+        (index) => !occupied.has(index),
+      );
+    if (slot === undefined || slot >= capacity || occupied.has(slot)) {
+      throw new Error("container slot is unavailable");
+    }
+    const after = {
+      ...before,
+      version: before.version + 1,
+      location: {
+        kind: "container",
+        containerId: container.id,
+        slot,
+      } as const,
+    };
+    this.items.set(after.id, after);
+    return { before, after: [after] };
   }
 
   drop(
@@ -582,5 +656,31 @@ export class MemoryItemStore implements ItemStore {
     _mapVersion: string,
   ): Promise<WorldItemDeltas> {
     return { hiddenSeedKeys: [], items: [] };
+  }
+
+  async persist(plan: CarriedPersistPlan): Promise<void> {
+    for (const op of plan.rowOps) {
+      if (op.kind === "insert") {
+        this.items.set(op.item.id, op.item);
+        continue;
+      }
+      if (op.kind === "delete") {
+        const existing = this.items.get(op.itemId);
+        if (!existing || existing.version !== op.expectedVersion) {
+          throw new Error(
+            `carried persist delete missed item ${op.itemId}@${op.expectedVersion}`,
+          );
+        }
+        this.items.delete(op.itemId);
+        continue;
+      }
+      const existing = this.items.get(op.item.id);
+      if (!existing || existing.version !== op.expectedVersion) {
+        throw new Error(
+          `carried persist write missed item ${op.item.id}@${op.expectedVersion}`,
+        );
+      }
+      this.items.set(op.item.id, op.item);
+    }
   }
 }

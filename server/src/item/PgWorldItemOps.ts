@@ -28,6 +28,7 @@ import { moveWorldMergeQuery } from "./sql/moveWorldMergeQuery";
 import { moveWorldSeededMergeQuery } from "./sql/moveWorldSeededMergeQuery";
 import { pickupMergeIntoContainerUpdate } from "./sql/pickupMergeIntoContainerUpdate";
 import { pickupToContainerUpdate } from "./sql/pickupToContainerUpdate";
+import { pickupToInventoryUpdate } from "./sql/pickupToInventoryUpdate";
 import { withSerializableTransaction } from "./withSerializableTransaction";
 import type { WorldItemSource } from "./WorldItemSource";
 
@@ -49,6 +50,7 @@ export class PgWorldItemOps {
     position: Position,
     source?: WorldItemSource,
     destination?: ItemContainerDestination,
+    stageInInventory = false,
   ): Promise<ItemMutation> {
     return withSerializableTransaction(this.pool, async (client) => {
       const character = await this.locks.lockCharacter(client, characterId);
@@ -78,6 +80,23 @@ export class PgWorldItemOps {
         character.capacity,
         row.id,
       );
+      if (stageInInventory) {
+        // Equip-after-pickup staging: no equipped backpack is required — the
+        // item lands on a loose inventory slot and the equip runs from there.
+        const before = itemFromRow(row);
+        const stagingSlot = await this.locks.firstInventorySlot(
+          client,
+          characterId,
+        );
+        const result = await client.query<ItemRow>(pickupToInventoryUpdate, [
+          row.id,
+          characterId,
+          stagingSlot,
+        ]);
+        const after = requireReturnedItem(result.rows[0]);
+        await this.audit.transfer(client, characterId, before, after);
+        return { before, after: [after] };
+      }
       const backpack = destination
         ? await this.locks.lockItem(client, destination.containerId)
         : await this.locks.lockBackpack(client, characterId);

@@ -27,11 +27,11 @@ export class Session {
   itemOperationPending = false;
   depotOperationPending = false;
   /**
-   * Depot mutations apply to memory instantly; this counts their DB writes
-   * still in flight. While non-zero, other DB-backed item flows must wait so
-   * per-character writes stay strictly ordered.
+   * Memory-first item mutations (depot and carried ops) apply instantly; this
+   * counts their DB writes still in flight. While non-zero, DB-first item
+   * flows must wait so per-character writes stay strictly ordered.
    */
-  depotPersistsPending = 0;
+  itemPersistsPending = 0;
   travelOperationPending = false;
   readonly connectedAt = Date.now();
   playerId: string | null = null;

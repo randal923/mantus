@@ -261,7 +261,7 @@ export class CharacterHandler {
     existing.attackTargetId = null;
     existing.itemOperationPending = false;
     existing.depotOperationPending = false;
-    existing.depotPersistsPending = 0;
+    existing.itemPersistsPending = 0;
     existing.travelOperationPending = false;
     existing.knownCreatureIds.clear();
     existing.knownMapItemTiles.clear();

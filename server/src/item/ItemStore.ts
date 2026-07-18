@@ -4,6 +4,7 @@ import type {
   Position,
 } from "@tibia/protocol";
 import type { Item } from "./Item";
+import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemMutation } from "./ItemMutation";
 import type { LootItemCreation } from "./LootItemCreation";
@@ -32,6 +33,8 @@ export interface ItemStore {
     position: Position,
     source?: WorldItemSource,
     destination?: ItemContainerDestination,
+    /** Stage on a loose inventory slot (equip-after-pickup needs no backpack). */
+    stageInInventory?: boolean,
   ): Promise<ItemMutation>;
   drop(
     characterId: string,
@@ -108,4 +111,6 @@ export interface ItemStore {
     mapName: string,
     mapVersion: string,
   ): Promise<WorldItemDeltas>;
+  /** Flushes a committed in-memory carried mutation as one transaction. */
+  persist(plan: CarriedPersistPlan): Promise<void>;
 }

@@ -102,7 +102,7 @@ export class BankService {
       return;
     }
     if (session.itemOperationPending ||
-      session.depotPersistsPending > 0 ||
+      session.itemPersistsPending > 0 ||
       session.travelOperationPending) {
       this.fail(session, "busy");
       return;

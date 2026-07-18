@@ -25,6 +25,7 @@ const DEPOT_ID = 7;
 const AXE_TYPE = 3274;
 const BACKPACK_TYPE = 2854;
 const GOLD_COIN_TYPE = 3031;
+const HEALTH_POTION_TYPE = 266;
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const databaseDescribe = databaseUrl ? describe : describe.skip;
 
@@ -365,7 +366,7 @@ databaseDescribe("PgDepotStore integration", () => {
 
   it("stows and retrieves through absolute stash writes", async () => {
     const characterId = await createCharacter("Stasher");
-    const coinsId = await insertBackpackItem(characterId, GOLD_COIN_TYPE, 50, 0);
+    const potionsId = await insertBackpackItem(characterId, HEALTH_POTION_TYPE, 50, 0);
     const carried = await loadCarried(characterId);
     const depot = cacheOf(await store.loadForCharacter(characterId));
     const depositPlan = planStashDeposit({
@@ -374,7 +375,7 @@ databaseDescribe("PgDepotStore integration", () => {
       carried: { items: carried },
       depot,
       expectedStashRevision: 1,
-      itemId: coinsId,
+      itemId: potionsId,
       expectedItemRevision: 1,
       count: 50,
     });
@@ -384,7 +385,7 @@ databaseDescribe("PgDepotStore integration", () => {
     await store.persist(depositPlan.persist);
 
     const stashed = await store.loadForCharacter(characterId);
-    expect(stashed.stash.get(GOLD_COIN_TYPE)).toBe(50);
+    expect(stashed.stash.get(HEALTH_POTION_TYPE)).toBe(50);
     expect(stashed.stashRevision).toBe(2);
 
     const withdrawPlan = planStashWithdraw({
@@ -393,7 +394,7 @@ databaseDescribe("PgDepotStore integration", () => {
       carried: { items: await loadCarried(characterId), capacityMax: 100_000 },
       depot: cacheOf(stashed),
       expectedStashRevision: 2,
-      itemTypeId: GOLD_COIN_TYPE,
+      itemTypeId: HEALTH_POTION_TYPE,
       count: 30,
     });
     if (withdrawPlan.status !== "ok") {
@@ -402,11 +403,11 @@ databaseDescribe("PgDepotStore integration", () => {
     await store.persist(withdrawPlan.persist);
 
     const after = await store.loadForCharacter(characterId);
-    expect(after.stash.get(GOLD_COIN_TYPE)).toBe(20);
+    expect(after.stash.get(HEALTH_POTION_TYPE)).toBe(20);
     const carriedAfter = await loadCarried(characterId);
     expect(
       carriedAfter
-        .filter((item) => item.typeId === GOLD_COIN_TYPE)
+        .filter((item) => item.typeId === HEALTH_POTION_TYPE)
         .reduce((total, item) => total + item.count, 0),
     ).toBe(30);
     expect(await auditCount("stash-withdrawal", "item-created")).toBe(1);

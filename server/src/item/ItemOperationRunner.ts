@@ -12,6 +12,8 @@ export interface ItemOperationOptions {
   readonly errorCode: "item-action-failed" | "combat-action-failed";
   readonly logLabel: string;
   readonly onCommitted?: (now: number) => void;
+  /** Runs inside the tick right after the committed mutation hits memory. */
+  readonly onMutationApplied?: (mutation: ItemMutation, now: number) => void;
 }
 
 /**
@@ -65,6 +67,9 @@ export class ItemOperationRunner {
         const inventory = this.applyMutation(characterId, mutation, now);
         if (inventory && session.playerId === characterId) {
           session.send({ type: "inventory-updated", inventory });
+        }
+        if (options.onMutationApplied && session.playerId === characterId) {
+          options.onMutationApplied(mutation, now);
         }
         if (options.onCommitted && session.playerId === characterId) {
           options.onCommitted(now);
