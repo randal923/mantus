@@ -6,11 +6,15 @@ export function makeInventoryItem(input: {
   spriteId: number;
   name: string;
   count: number;
+  stackable?: boolean;
+  maxCount?: number;
   equipmentSlot?: EquipmentSlot;
 }): InventoryItem {
   return {
     ...input,
     typeId: input.clientId,
+    stackable: input.stackable ?? input.count > 1,
+    maxCount: input.maxCount ?? (input.stackable || input.count > 1 ? 100 : 1),
     revision: 1,
     tooltip: {
       name: input.name,

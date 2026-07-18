@@ -6,13 +6,13 @@ already exist in the schema.
 
 ## Depot and inbox
 
-- [ ] Add account/character depot ownership and bounded containers keyed by
+- [x] Add account/character depot ownership and bounded containers keyed by
   server-known town/depot ids.
-- [ ] Authorize opening at a visible/reachable depot object; once opened, every
+- [x] Authorize opening at a visible/reachable depot object; once opened, every
   move still validates session, container revision, slots, capacity, and owner.
-- [ ] Define inbox/mail delivery ownership, limits, expiry/return rules, and
+- [x] Define inbox/mail delivery ownership, limits, expiry/return rules, and
   offline transactional behavior without loading an offline live aggregate.
-- [ ] Match pinned depot search/retrieval, inbox, mailbox, supply stash, reward
+- [x] Match pinned depot search/retrieval, inbox, mailbox, supply stash, reward
   delivery, and town/depot behavior with bounded authorized projections.
 
 ## Planned file surface
@@ -23,10 +23,10 @@ already exist in the schema.
 
 ## Required exploit tests
 
-- [ ] Depot access from an unreachable/wrong-town depot object is rejected at
+- [x] Depot access from an unreachable/wrong-town depot object is rejected at
   execution time.
-- [ ] Concurrent moves against one depot slot leave exactly one item per slot.
-- [ ] Offline inbox delivery commits transactionally and cannot duplicate items
+- [x] Concurrent moves against one depot slot leave exactly one item per slot.
+- [x] Offline inbox delivery commits transactionally and cannot duplicate items
   when retried.
 
 [Back to overview](README.md)

@@ -29,4 +29,5 @@ export interface MapData {
   ): MapTransition | undefined;
   getAction(position: Position): MapAction | undefined;
   getItems(position: Position): ReadonlyArray<MapItem>;
+  getTownName?(townId: number): string | undefined;
 }

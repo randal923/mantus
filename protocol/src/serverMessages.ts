@@ -21,6 +21,13 @@ import {
   spellCatalogEntrySchema,
 } from "./combat";
 import { creatureStateSchema } from "./creature";
+import {
+  depotActionFailedMessageSchema,
+  depotStateMessageSchema,
+  mailboxOpenedMessageSchema,
+  mailActionFailedMessageSchema,
+  mailSentMessageSchema,
+} from "./depot";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { inventoryStateSchema } from "./item";
@@ -268,6 +275,11 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   shopOpenedMessageSchema,
   shopTransactedMessageSchema,
   shopActionFailedMessageSchema,
+  depotStateMessageSchema,
+  depotActionFailedMessageSchema,
+  mailboxOpenedMessageSchema,
+  mailSentMessageSchema,
+  mailActionFailedMessageSchema,
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,

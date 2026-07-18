@@ -165,6 +165,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "010_monk_vocations.sql",
       "011_npc_travel.sql",
       "014_character_storages.sql",
+      "015_depot_and_inbox.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

@@ -5,6 +5,9 @@ import {
   type ClientMessage,
   type CombatTarget,
   type Direction,
+  type DepotItemEntry,
+  type DepotLocation,
+  type DepotStateMessage,
   type FightMode,
   type InventoryItem,
   type Language,
@@ -213,6 +216,100 @@ export class GameClient {
       offerId,
       amount,
     });
+  }
+
+  browseDepot(
+    state: DepotStateMessage,
+    location: DepotLocation,
+    page: number,
+    query: string,
+  ): boolean {
+    return this.send({
+      type: "depot-browse",
+      sessionId: state.sessionId,
+      location,
+      page,
+      query,
+    });
+  }
+
+  depositInDepot(state: DepotStateMessage, item: InventoryItem): boolean {
+    return this.send({
+      type: "depot-deposit",
+      sessionId: state.sessionId,
+      depotRevision: state.depotRevision,
+      itemId: item.id,
+      itemRevision: item.revision,
+    });
+  }
+
+  withdrawFromDepot(
+    state: DepotStateMessage,
+    item: DepotItemEntry,
+  ): boolean {
+    return this.send({
+      type: "depot-withdraw",
+      sessionId: state.sessionId,
+      source: item.location,
+      sourceRevision:
+        item.location === "depot"
+          ? state.depotRevision
+          : state.inboxRevision,
+      itemId: item.itemId,
+      itemRevision: item.revision,
+    });
+  }
+
+  depositInStash(
+    state: DepotStateMessage,
+    item: InventoryItem,
+    count: number,
+  ): boolean {
+    return this.send({
+      type: "stash-deposit",
+      sessionId: state.sessionId,
+      stashRevision: state.stashRevision,
+      itemId: item.id,
+      itemRevision: item.revision,
+      count,
+    });
+  }
+
+  withdrawFromStash(
+    state: DepotStateMessage,
+    itemTypeId: number,
+    count: number,
+  ): boolean {
+    return this.send({
+      type: "stash-withdraw",
+      sessionId: state.sessionId,
+      stashRevision: state.stashRevision,
+      itemTypeId,
+      count,
+    });
+  }
+
+  closeDepot(sessionId: string): boolean {
+    return this.send({ type: "close-depot", sessionId });
+  }
+
+  sendMail(
+    sessionId: string,
+    item: InventoryItem,
+    recipientName: string,
+  ): boolean {
+    return this.send({
+      type: "send-mail",
+      sessionId,
+      requestId: crypto.randomUUID(),
+      itemId: item.id,
+      itemRevision: item.revision,
+      recipientName,
+    });
+  }
+
+  closeMailbox(sessionId: string): boolean {
+    return this.send({ type: "close-mailbox", sessionId });
   }
 
   createCharacter(input: CreateCharacterInput): boolean {

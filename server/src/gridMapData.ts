@@ -16,6 +16,7 @@ interface GridMapConfig {
   transitions?: ReadonlyArray<MapTransition>;
   actions?: ReadonlyArray<MapAction>;
   items?: ReadonlyArray<{ position: Position; item: MapItem }>;
+  towns?: ReadonlyArray<{ id: number; name: string }>;
 }
 
 export function gridMapData(config: GridMapConfig): MapData {
@@ -93,6 +94,9 @@ export function gridMapData(config: GridMapConfig): MapData {
     },
     getItems(position) {
       return items.get(positionKey(position)) ?? [];
+    },
+    getTownName(townId) {
+      return config.towns?.find((town) => town.id === townId)?.name;
     },
   };
 }

@@ -38,4 +38,10 @@ describe("loadItemCatalog", () => {
       message: "Munch.",
     });
   });
+
+  it("imports Canary's market-backed supply-stash eligibility", () => {
+    expect(catalog.require(236).stowable).toBe(true);
+    expect(catalog.require(3274).stowable).toBe(true);
+    expect(catalog.require(3031).stowable).toBeUndefined();
+  });
 });

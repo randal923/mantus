@@ -10,10 +10,17 @@ interface ModalProps {
   children: ReactNode;
   /** Optional action row rendered below a divider at the bottom of the panel. */
   footer?: ReactNode;
+  size?: "default" | "wide";
 }
 
 /** Centered dialog on a dimmed backdrop, styled like the game panels. */
-export function Modal({ title, onClose, children, footer }: ModalProps) {
+export function Modal({
+  title,
+  onClose,
+  children,
+  footer,
+  size = "default",
+}: ModalProps) {
   const { t } = useAppTranslation();
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -33,7 +40,9 @@ export function Modal({ title, onClose, children, footer }: ModalProps) {
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className="ui-panel-frame relative isolate flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-5 overflow-hidden p-6 font-tibia text-ui-text"
+        className={`ui-panel-frame relative isolate flex max-h-[calc(100dvh-2rem)] w-full flex-col gap-5 overflow-hidden p-6 font-tibia text-ui-text ${
+          size === "wide" ? "max-w-5xl" : "max-w-md"
+        }`}
       >
         <div
           aria-hidden

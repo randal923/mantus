@@ -14,6 +14,8 @@ import { CombatIntentHandler } from "./combat/CombatIntentHandler";
 import { SpellRegistry } from "./combat/SpellRegistry";
 import type { ServerConfig } from "./config";
 import { BankService } from "./economy/BankService";
+import { DepotService } from "./depot/DepotService";
+import type { DepotStore } from "./depot/DepotStore";
 import type { BankStore } from "./economy/BankStore";
 import { ShopService } from "./economy/ShopService";
 import type { ShopStore } from "./economy/ShopStore";
@@ -47,6 +49,7 @@ export interface GameServerDeps {
   npcTravel?: NpcTravelStore;
   bank?: BankStore;
   shop?: ShopStore;
+  depot?: DepotStore;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -69,6 +72,7 @@ export class GameServer {
   private readonly travel: TravelService;
   private readonly bank: BankService;
   private readonly shops: ShopService;
+  private readonly depot: DepotService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -116,6 +120,7 @@ export class GameServer {
       deps.worldItemDeltas?.items ?? [],
       Date.now(),
     );
+    this.depot = new DepotService(this.world, this.items, deps.depot);
     this.characters = new CharacterHandler(
       characterService,
       this.world,
@@ -265,6 +270,7 @@ export class GameServer {
     this.travel.applyResolvedOutcomes(now);
     this.bank.applyResolvedOutcomes(now);
     this.shops.applyResolvedOutcomes(now);
+    this.depot.applyResolvedOutcomes();
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -277,6 +283,7 @@ export class GameServer {
     this.spawns?.tick(now);
     this.npcs.tick(now);
     this.items.tickDecay(now);
+    this.depot.tick(now);
     this.progression.tick(now);
     this.persistence.tick(now);
   }
@@ -296,6 +303,7 @@ export class GameServer {
         this.world.removePlayer(playerId);
         this.visibility.announceLeave(session, player);
       }
+      this.depot.detach(session);
       this.registry.remove(session);
     }
   }
@@ -340,6 +348,7 @@ export class GameServer {
         return;
       }
       case "use-map":
+        if (this.depot.handleMapUse(session, intent.position)) return;
         this.movement.handleUseMap(session, intent, now);
         return;
       case "attack-target":
@@ -380,6 +389,16 @@ export class GameServer {
       case "shop-sell":
         this.shops.handle(session, intent, now);
         return;
+      case "depot-deposit":
+      case "depot-withdraw":
+      case "depot-browse":
+      case "stash-deposit":
+      case "stash-withdraw":
+      case "close-depot":
+      case "send-mail":
+      case "close-mailbox":
+        this.depot.handle(session, intent);
+        return;
       case "set-language":
         this.language.handle(session, intent);
         return;
@@ -403,6 +422,8 @@ export class GameServer {
     this.bank.applyResolvedOutcomes(Date.now());
     await this.shops.stop();
     this.shops.applyResolvedOutcomes(Date.now());
+    await this.depot.stop();
+    this.depot.applyResolvedOutcomes();
     await this.persistence.stop();
     if (this.persistence.unsavedPlayerCount > 0) {
       console.error(

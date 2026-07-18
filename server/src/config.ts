@@ -31,6 +31,7 @@ export type MapConfig =
         position: Position;
         item: MapItem;
       }>;
+      towns?: ReadonlyArray<{ id: number; name: string }>;
     };
 
 export interface ServerConfig {

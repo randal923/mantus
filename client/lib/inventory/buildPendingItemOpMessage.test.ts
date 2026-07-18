@@ -11,6 +11,8 @@ const makeItem = (
   clientId: 100,
   spriteId: 100,
   name: "thing",
+  stackable: false,
+  maxCount: 1,
   count: 1,
   revision: 1,
   tooltip: {

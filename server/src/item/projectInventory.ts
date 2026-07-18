@@ -17,17 +17,19 @@ function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
         ? "container"
         : type.food
           ? "food"
-        : type.text?.readable
-          ? "read"
-          : type.rotateTo
-            ? "rotate"
-            : undefined;
+          : type.text?.readable
+            ? "read"
+            : type.rotateTo
+              ? "rotate"
+              : undefined;
   return {
     id: item.id,
     typeId: type.id,
     clientId: type.clientId,
     spriteId: type.spriteId,
     name: type.name,
+    stackable: type.stackable,
+    maxCount: type.maxCount,
     count: item.count,
     revision: item.version,
     ...(type.equipmentSlot ? { equipmentSlot: type.equipmentSlot } : {}),
@@ -35,6 +37,11 @@ function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
       ? { containerCapacity: type.containerCapacity }
       : {}),
     ...(useKind ? { useKind } : {}),
+    ...(type.stowable &&
+    type.containerCapacity === undefined &&
+    Object.keys(item.attributes).length === 0
+      ? { stowable: true }
+      : {}),
     tooltip: toItemTooltip(type),
   };
 }

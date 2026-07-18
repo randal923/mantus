@@ -331,5 +331,8 @@ export function loadMapData(
       return actions.get(positionKey(position));
     },
     getItems,
+    getTownName(townId) {
+      return meta.towns.find((town) => town.id === townId)?.name;
+    },
   };
 }

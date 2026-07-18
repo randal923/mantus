@@ -4,6 +4,7 @@ export * from "./character";
 export * from "./chat";
 export * from "./combat";
 export * from "./creature";
+export * from "./depot";
 export * from "./item";
 export * from "./limits";
 export * from "./language";

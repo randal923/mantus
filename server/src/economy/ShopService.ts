@@ -460,6 +460,12 @@ export class ShopService {
         clientId: type.clientId,
         spriteId: type.spriteId,
         name: entry.name,
+        stackable: type.stackable,
+        maxCount: type.maxCount,
+        weight: type.weight,
+        ...(type.stowable && entry.subtype === undefined
+          ? { stowable: true }
+          : {}),
         minimumAmount: entry.minimumAmount,
         maximumAmount: entry.maximumAmount,
         ...(entry.subtype === undefined ? {} : { subtype: entry.subtype }),

@@ -50,6 +50,7 @@ export interface ItemType {
   readonly containerCapacity?: number;
   readonly pickupable: boolean;
   readonly movable: boolean;
+  readonly stowable?: boolean;
   readonly decay?: { readonly durationSeconds?: number; readonly targetId?: number };
   readonly transformEquipTo?: number;
   readonly transformDeEquipTo?: number;

@@ -30,4 +30,12 @@ export class ItemCatalog {
   findByName(name: string): ItemType | undefined {
     return this.itemsByName.get(name.trim().toLowerCase());
   }
+
+  searchByName(query: string): ReadonlyArray<ItemType> {
+    const normalized = query.trim().toLowerCase();
+    if (normalized.length === 0) return [];
+    return [...this.items.values()].filter((item) =>
+      item.name.toLowerCase().includes(normalized),
+    );
+  }
 }

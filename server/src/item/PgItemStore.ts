@@ -29,6 +29,7 @@ interface ItemRow {
   location_type: ItemLocation["kind"];
   character_id: string | null;
   container_id: string | null;
+  depot_id: number | null;
   slot_index: number | null;
   equipment_slot: EquipmentSlot | null;
   world_x: number | null;
@@ -68,7 +69,7 @@ interface MoveReadState {
 const ITEM_COLUMNS = `
   id, item_type_id, count, attributes, version, location_type,
   character_id, container_id, slot_index, equipment_slot,
-  world_x, world_y, world_z, world_stack_index, seed_key`;
+  world_x, world_y, world_z, world_stack_index, seed_key, depot_id`;
 
 const OWNED_ITEMS_QUERY = `
   WITH RECURSIVE owned AS (
@@ -105,20 +106,28 @@ function locationFromRow(row: ItemRow): ItemLocation {
     };
   }
   if (
-    [
-      "inventory",
-      "depot",
-      "inbox",
-      "trade-reservation",
-      "market-escrow",
-    ].includes(row.location_type) &&
+    row.location_type === "depot" &&
+    row.character_id &&
+    row.depot_id !== null &&
+    row.slot_index !== null
+  ) {
+    return {
+      kind: "depot",
+      characterId: row.character_id,
+      depotId: row.depot_id,
+      slot: row.slot_index,
+    };
+  }
+  if (
+    ["inventory", "inbox", "trade-reservation", "market-escrow"].includes(
+      row.location_type,
+    ) &&
     row.character_id &&
     row.slot_index !== null
   ) {
     return {
       kind: row.location_type as
         | "inventory"
-        | "depot"
         | "inbox"
         | "trade-reservation"
         | "market-escrow",

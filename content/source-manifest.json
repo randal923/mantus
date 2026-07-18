@@ -38,6 +38,11 @@
       "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
       "sha256": "d561ef0e3c583b7f08415e29b7da91cc6956ce2b2a99b87f27f18d0426b55cde"
     },
+    "canaryAppearances": {
+      "path": "data/items/appearances.dat",
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+      "sha256": "aa44a154f30c7ed59acc25f246286396e4043851ef0b54ef3cf3951e46d1ce50"
+    },
     "canaryCreatures": {
       "monsterDefinitionsPath": "data-otservbr-global/monster",
       "npcDefinitionsPath": "data-otservbr-global/npc",
@@ -91,6 +96,10 @@
       "sha256": "d34b4c6a2e629b6c131b3e053ef5f35104ed6ac838cc2f4b4d955780cc3989f8"
     },
     {
+      "path": "tools/importCanaryStowableItems.mjs",
+      "sha256": "dfe97a1a0bc3cead4ee5cb9c2688aa10faadf3ebf1bdf7ff9662a82595a305ad"
+    },
+    {
       "path": "tools/convertOtbm.mjs",
       "sha256": "e9537ccc67f5a4bc07bd3bc8565310c9a77fb767466601049871399e96ee3aa2"
     },
@@ -139,6 +148,7 @@
     "assets": 2,
     "canaryItems": 2,
     "foods": 1,
+    "stowableItems": 1,
     "itemCatalog": 2,
     "map": 3,
     "creatures": 2,

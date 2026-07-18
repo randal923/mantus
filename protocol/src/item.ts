@@ -38,21 +38,29 @@ export const itemTooltipSchema = z
   })
   .strict();
 
-export const inventoryItemSchema = z
+export const inventoryItemPresentationSchema = z
   .object({
-    id: z.string().uuid(),
     typeId: z.number().int().positive().max(65_535),
     clientId: z.number().int().positive().max(65_535),
     spriteId: z.number().int().positive(),
     name: z.string().min(1).max(120),
-    count: z.number().int().positive().max(100),
-    revision: z.number().int().positive(),
+    stackable: z.boolean(),
+    maxCount: z.number().int().min(1).max(100),
     equipmentSlot: equipmentSlotSchema.optional(),
     containerCapacity: z.number().int().min(0).max(100).optional(),
     useKind: z
       .enum(["rune", "container", "rotate", "read", "food"])
       .optional(),
+    stowable: z.boolean().optional(),
     tooltip: itemTooltipSchema,
+  })
+  .strict();
+
+export const inventoryItemSchema = inventoryItemPresentationSchema
+  .extend({
+    id: z.string().uuid(),
+    count: z.number().int().positive().max(100),
+    revision: z.number().int().positive(),
   })
   .strict();
 
@@ -107,6 +115,9 @@ export const inventoryStateSchema = z
 export type EquipmentSlot = z.infer<typeof equipmentSlotSchema>;
 export type ItemAffix = z.infer<typeof itemAffixSchema>;
 export type ItemTooltipData = z.infer<typeof itemTooltipSchema>;
+export type InventoryItemPresentation = z.infer<
+  typeof inventoryItemPresentationSchema
+>;
 export type InventoryItem = z.infer<typeof inventoryItemSchema>;
 export type InventorySlotEntry = z.infer<typeof inventorySlotEntrySchema>;
 export type ContainerState = z.infer<typeof containerStateSchema>;

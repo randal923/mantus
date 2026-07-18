@@ -141,6 +141,10 @@ export class ItemIntentHandler {
     return this.catalog.findByName(name);
   }
 
+  itemTypesByName(query: string): ReadonlyArray<ItemType> {
+    return this.catalog.searchByName(query);
+  }
+
   combatItem(
     characterId: string,
     itemId: string,
@@ -825,7 +829,7 @@ export class ItemIntentHandler {
     if (!current) return null;
     const afterById = new Map(mutation.after.map((item) => [item.id, item]));
     const removed = new Set(mutation.removedItemIds ?? []);
-    const items = current.items
+    const candidates = current.items
       .filter(
         (item) =>
           item.id !== mutation.before?.id && !removed.has(item.id),
@@ -834,12 +838,38 @@ export class ItemIntentHandler {
     for (const after of mutation.after) {
       if (
         after.location.kind === "world" ||
-        items.some((item) => item.id === after.id)
+        candidates.some((item) => item.id === after.id)
       ) {
         continue;
       }
-      items.push(after);
+      candidates.push(after);
     }
+    const reachable = new Set(
+      candidates
+        .filter(
+          (item) =>
+            (item.location.kind === "equipment" ||
+              item.location.kind === "inventory") &&
+            item.location.characterId === characterId,
+        )
+        .map((item) => item.id),
+    );
+    for (let depth = 0; depth < 8; depth++) {
+      let changed = false;
+      for (const item of candidates) {
+        if (
+          (item.location.kind === "container" ||
+            item.location.kind === "corpse") &&
+          reachable.has(item.location.containerId) &&
+          !reachable.has(item.id)
+        ) {
+          reachable.add(item.id);
+          changed = true;
+        }
+      }
+      if (!changed) break;
+    }
+    const items = candidates.filter((item) => reachable.has(item.id));
     const next = {
       ...current,
       items,

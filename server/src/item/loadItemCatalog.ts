@@ -7,6 +7,9 @@ import type { ItemType } from "./ItemType";
 const CATALOG_PATH = fileURLToPath(
   new URL("../../data/item-catalog.json", import.meta.url),
 );
+const STOWABLE_TYPES_PATH = fileURLToPath(
+  new URL("../../data/stowable-item-types.json", import.meta.url),
+);
 const EXPECTED_SOURCE = {
   assetEra: "Tibia 15.11 extended",
   canaryCommit: "a879c9312e34381e8eedf397b8ed44510698b689",
@@ -16,6 +19,11 @@ const EXPECTED_SOURCE = {
     "d561ef0e3c583b7f08415e29b7da91cc6956ce2b2a99b87f27f18d0426b55cde",
   datSha256: "e25fadcf0cd9140cff8c89fa94026438d7c42322c6e23a71b1da5471a317b057",
   sprSha256: "a7085447ddaa340ada42bfa71aed5f41582b1cd368f4a781b0464594f3c9b9ee",
+} as const;
+const EXPECTED_STOWABLE_SOURCE = {
+  canaryCommit: EXPECTED_SOURCE.canaryCommit,
+  path: "data/items/appearances.dat",
+  sha256: "aa44a154f30c7ed59acc25f246286396e4043851ef0b54ef3cf3951e46d1ce50",
 } as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -60,7 +68,11 @@ function parseItem(value: unknown, key: string): ItemType {
 }
 
 export async function loadItemCatalog(): Promise<ItemCatalog> {
-  const parsed: unknown = JSON.parse(await readFile(CATALOG_PATH, "utf8"));
+  const [catalogContents, stowableContents] = await Promise.all([
+    readFile(CATALOG_PATH, "utf8"),
+    readFile(STOWABLE_TYPES_PATH, "utf8"),
+  ]);
+  const parsed: unknown = JSON.parse(catalogContents);
   if (!isRecord(parsed) || parsed.formatVersion !== 2) {
     throw new Error("item catalog has an unsupported format version");
   }
@@ -76,7 +88,34 @@ export async function loadItemCatalog(): Promise<ItemCatalog> {
     throw new Error("item catalog does not match the pinned asset sources");
   }
   if (!isRecord(parsed.items)) throw new Error("item catalog has no item map");
+  const stowable: unknown = JSON.parse(stowableContents);
+  if (
+    !isRecord(stowable) ||
+    stowable.formatVersion !== 1 ||
+    !isRecord(stowable.source) ||
+    !Array.isArray(stowable.itemTypeIds)
+  ) {
+    throw new Error("stowable item types do not match the pinned Canary source");
+  }
+  const stowableSource = stowable.source;
+  if (
+    Object.entries(EXPECTED_STOWABLE_SOURCE).some(
+      ([key, expected]) => stowableSource[key] !== expected,
+    ) ||
+    stowable.itemTypeIds.some(
+      (id) => !Number.isInteger(id) || Number(id) < 1 || Number(id) > 65_535,
+    ) ||
+    new Set(stowable.itemTypeIds).size !== stowable.itemTypeIds.length
+  ) {
+    throw new Error("stowable item types do not match the pinned Canary source");
+  }
+  const stowableItemTypeIds = new Set<number>(stowable.itemTypeIds);
   return new ItemCatalog(
-    Object.entries(parsed.items).map(([key, item]) => parseItem(item, key)),
+    Object.entries(parsed.items).map(([key, item]) => {
+      const parsedItem = parseItem(item, key);
+      return stowableItemTypeIds.has(parsedItem.id)
+        ? { ...parsedItem, stowable: true }
+        : parsedItem;
+    }),
   );
 }

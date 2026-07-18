@@ -13,6 +13,7 @@
     "assets:import": "node tools/importTibiaAssets.mjs",
     "items:convert": "node tools/convertCanaryItems.mjs",
     "items:foods": "node tools/importCanaryFoods.mjs",
+    "items:stowable": "node tools/importCanaryStowableItems.mjs",
     "items:catalog": "node tools/buildItemCatalog.mjs",
     "map:convert": "node tools/convertOtbm.mjs",
     "creatures:import": "node tools/importCanaryCreatures.mjs",

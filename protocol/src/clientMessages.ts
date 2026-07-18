@@ -7,6 +7,16 @@ import {
 import { privateChatMessageSchema, speakMessageSchema } from "./chat";
 import { createCharacterInputSchema } from "./character";
 import { combatTargetSchema, fightModeSchema } from "./combat";
+import {
+  closeDepotMessageSchema,
+  closeMailboxMessageSchema,
+  depotBrowseMessageSchema,
+  depotDepositMessageSchema,
+  depotWithdrawMessageSchema,
+  sendMailMessageSchema,
+  stashDepositMessageSchema,
+  stashWithdrawMessageSchema,
+} from "./depot";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { PROTOCOL_LIMITS } from "./limits";
@@ -290,6 +300,14 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   bankTransferMessageSchema,
   shopBuyMessageSchema,
   shopSellMessageSchema,
+  depotDepositMessageSchema,
+  depotWithdrawMessageSchema,
+  depotBrowseMessageSchema,
+  stashDepositMessageSchema,
+  stashWithdrawMessageSchema,
+  closeDepotMessageSchema,
+  sendMailMessageSchema,
+  closeMailboxMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,
 ]);

@@ -281,6 +281,61 @@
       "failed": "A loja não conseguiu concluir essa ação."
     }
   },
+  "depot": {
+    "title": "Depósito — {{townName}}",
+    "locations": "Locais do depósito",
+    "depot": "Depósito",
+    "inbox": "Caixa de Entrada",
+    "stash": "Reserva de Suprimentos",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar pelo nome do item…",
+    "amount": "Quantidade",
+    "carriedItems": "Itens Carregados",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} itens",
+    "store": "Guardar",
+    "stow": "Armazenar",
+    "withdraw": "Retirar",
+    "noCarriedItems": "Você não está carregando itens que possam ser guardados.",
+    "searchResults": "Resultados para “{{query}}”",
+    "contains_one": "contém {{count}} item",
+    "contains_other": "contém {{count}} itens",
+    "noItems": "Nenhum item corresponde a esta visualização.",
+    "previous": "Anterior",
+    "next": "Próxima",
+    "page": "Página {{page}} de {{pageCount}}",
+    "errors": {
+      "out-of-range": "Você está longe demais do depósito.",
+      "busy": "Aguarde sua outra ação de item terminar.",
+      "stale": "O depósito mudou. O conteúdo foi atualizado.",
+      "not-owned": "Esse item não pertence mais a você.",
+      "invalid-item": "Esse item não pode ser guardado ali.",
+      "depot-full": "Este depósito atingiu o limite de itens.",
+      "inbox-full": "Sua caixa de entrada atingiu o limite de itens.",
+      "stash-only": "Somente suprimentos elegíveis podem ir para a reserva.",
+      "no-space": "Você não tem espaço suficiente no inventário.",
+      "no-capacity": "Você não consegue carregar tanto peso.",
+      "failed": "O depósito não conseguiu concluir essa ação."
+    }
+  },
+  "mail": {
+    "title": "Caixa de Correio",
+    "recipient": "Destinatário",
+    "recipientPlaceholder": "Nome do personagem…",
+    "item": "Item para Enviar",
+    "noItems": "Você não está carregando um item para enviar.",
+    "sent": "Seu pacote foi entregue à caixa de entrada de {{recipientName}}.",
+    "send": "Enviar à Caixa de Entrada",
+    "errors": {
+      "out-of-range": "Você está longe demais da caixa de correio.",
+      "busy": "Aguarde sua outra ação de item terminar.",
+      "recipient-not-found": "Não existe personagem com esse nome.",
+      "invalid-recipient": "Você não pode enviar correio para esse personagem.",
+      "not-owned": "Esse item não pertence mais a você.",
+      "inbox-full": "A caixa de entrada desse personagem está cheia.",
+      "failed": "A caixa de correio não conseguiu enviar esse item."
+    }
+  },
   "characterStats": {
     "label": "Atributos do personagem {{name}}",
     "title": "Detalhes do Personagem",

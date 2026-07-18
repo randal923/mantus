@@ -67,6 +67,10 @@ export class World {
     return { ...this.map.spawn };
   }
 
+  townName(townId: number): string | undefined {
+    return this.map.getTownName?.(townId);
+  }
+
   isWalkable(position: Position): boolean {
     return this.map.isWalkable(position);
   }

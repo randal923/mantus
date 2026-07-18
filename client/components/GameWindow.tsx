@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
   BankActionFailedReason,
+  DepotStateMessage,
+  MailActionFailedReason,
   ShopActionFailedReason,
   ShopEntryProjection,
   ShopTransactedMessage,
@@ -19,7 +21,9 @@ import type {
 } from "@tibia/protocol";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
+import { useOptimisticDepot } from "../hooks/useOptimisticDepot";
 import { useOptimisticInventory } from "../hooks/useOptimisticInventory";
+import type { QueuedDepotAction } from "../lib/depot/QueuedDepotAction";
 import type {
   PendingItemOp,
   PendingItemOpIntent,
@@ -41,6 +45,7 @@ import { isEditableTarget } from "../lib/hotkeys/isEditableTarget";
 import { useLanguageStore } from "../stores/useLanguageStore";
 import { getRuneCombatTarget } from "../lib/combat/getRuneCombatTarget";
 import { getHeldMovementDirection } from "../lib/movement/getHeldMovementDirection";
+import { toInventoryItemPresentation } from "../lib/inventory/toInventoryItemPresentation";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
@@ -52,6 +57,8 @@ import { useGameSettingsStore } from "../stores/useGameSettingsStore";
 import { NpcDialogue } from "./npc/NpcDialogue";
 import { BankPanel } from "./bank/BankPanel";
 import { ShopPanel } from "./shop/ShopPanel";
+import { DepotModal } from "./depot/DepotModal";
+import { MailboxModal } from "./depot/MailboxModal";
 
 interface BankSessionState {
   npcId: string;
@@ -75,6 +82,14 @@ interface ShopSessionState {
   pending: boolean;
   error: ShopActionFailedReason | null;
   lastTransaction: ShopTransactedMessage | null;
+  pendingPurchaseCost: number;
+}
+
+interface MailboxSessionState {
+  sessionId: string;
+  pending: boolean;
+  error: MailActionFailedReason | null;
+  sentRecipient: string | null;
 }
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
@@ -139,8 +154,60 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     confirm: confirmInventory,
     rollback: rollbackInventory,
     patch: patchInventory,
+    preview: previewInventory,
+    rejectPreview: rejectInventoryPreview,
+    clearPreviews: clearInventoryPreviews,
+    getConfirmedItem,
     dispatch: dispatchItemOp,
   } = useOptimisticInventory(sendItemIntent, discardStaleMapPreviews);
+  const sendDepotAction = useCallback(
+    (action: QueuedDepotAction, state: DepotStateMessage): boolean => {
+      const prediction = action.depotPrediction;
+      if (prediction.kind === "deposit") {
+        const item = getConfirmedItem(prediction.item.id);
+        return item
+          ? (clientRef.current?.depositInDepot(state, item) ?? false)
+          : false;
+      }
+      if (prediction.kind === "withdraw") {
+        return (
+          clientRef.current?.withdrawFromDepot(state, prediction.item) ?? false
+        );
+      }
+      if (prediction.kind === "stash-deposit") {
+        const item = getConfirmedItem(prediction.item.id);
+        return item
+          ? (clientRef.current?.depositInStash(
+              state,
+              item,
+              prediction.count,
+            ) ?? false)
+          : false;
+      }
+      return (
+        clientRef.current?.withdrawFromStash(
+          state,
+          prediction.item.itemTypeId,
+          prediction.count,
+        ) ?? false
+      );
+    },
+    [getConfirmedItem],
+  );
+  const {
+    session: depotSession,
+    confirm: confirmDepot,
+    fail: failDepot,
+    beginBrowse: beginDepotBrowse,
+    enqueue: enqueueDepotAction,
+    close: closeDepot,
+    reset: resetDepot,
+  } = useOptimisticDepot(
+    sendDepotAction,
+    previewInventory,
+    rejectInventoryPreview,
+    clearInventoryPreviews,
+  );
   const [itemText, setItemText] = useState<
     Extract<ServerMessage, { type: "item-text" }> | null
   >(null);
@@ -153,6 +220,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [shopSession, setShopSession] = useState<ShopSessionState | null>(
     null,
   );
+  const [mailboxSession, setMailboxSession] =
+    useState<MailboxSessionState | null>(null);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState(false);
@@ -169,6 +238,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     resetInventory(null);
     setItemText(null);
     setNpcDialogue(null);
+    setBankSession(null);
+    setShopSession(null);
+    resetDepot();
+    setMailboxSession(null);
     setVisibleCreatures([]);
     setFightState(null);
     setSpells([]);
@@ -355,6 +428,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setNpcDialogue(null);
             setBankSession(null);
             setShopSession(null);
+            resetDepot();
+            setMailboxSession(null);
             dispatchChat({
               type: "reset",
               ownPlayerId: message.playerId,
@@ -395,6 +470,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "bank-opened") {
             setShopSession(null);
+            resetDepot();
+            setMailboxSession(null);
             setBankSession({
               npcId: message.npcId,
               npcName: message.npcName,
@@ -427,6 +504,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "shop-opened") {
             setBankSession(null);
+            resetDepot();
+            setMailboxSession(null);
             setShopSession((current) => {
               if (message.page === 1) {
                 return {
@@ -443,6 +522,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   pending: false,
                   error: null,
                   lastTransaction: null,
+                  pendingPurchaseCost: 0,
                 };
               }
               if (
@@ -470,6 +550,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     pending: false,
                     error: null,
                     lastTransaction: message,
+                    pendingPurchaseCost: 0,
                     currencyAmount:
                       current.currencyItemTypeId === GOLD_COIN_TYPE_ID
                         ? current.currencyAmount
@@ -486,6 +567,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             return;
           }
           if (message.type === "shop-action-failed") {
+            rejectInventoryPreview();
             setShopSession((current) => {
               if (!current) return current;
               if (
@@ -494,6 +576,55 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               ) {
                 return null;
               }
+              return {
+                ...current,
+                pending: false,
+                error: message.reason,
+                pendingPurchaseCost: 0,
+              };
+            });
+            return;
+          }
+          if (message.type === "depot-state") {
+            setBankSession(null);
+            setShopSession(null);
+            setMailboxSession(null);
+            confirmDepot(message);
+            return;
+          }
+          if (message.type === "depot-action-failed") {
+            failDepot(message.reason);
+            return;
+          }
+          if (message.type === "mailbox-opened") {
+            setBankSession(null);
+            setShopSession(null);
+            resetDepot();
+            setMailboxSession({
+              sessionId: message.sessionId,
+              pending: false,
+              error: null,
+              sentRecipient: null,
+            });
+            return;
+          }
+          if (message.type === "mail-sent") {
+            setMailboxSession((current) =>
+              current
+                ? {
+                    ...current,
+                    pending: false,
+                    error: null,
+                    sentRecipient: message.recipientName,
+                  }
+                : current,
+            );
+            return;
+          }
+          if (message.type === "mail-action-failed") {
+            setMailboxSession((current) => {
+              if (!current) return current;
+              if (message.reason === "out-of-range") return null;
               return { ...current, pending: false, error: message.reason };
             });
             return;
@@ -521,6 +652,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "inventory-updated") {
             confirmInventory(message.inventory);
+            setShopSession((current) =>
+              current?.currencyItemTypeId === GOLD_COIN_TYPE_ID
+                ? { ...current, pendingPurchaseCost: 0 }
+                : current,
+            );
             return;
           }
           if (message.type === "item-text") {
@@ -588,6 +724,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setCombatLog([]);
           if (nextStatus === "disconnected") setItemText(null);
           if (nextStatus === "disconnected") setNpcDialogue(null);
+          if (nextStatus === "disconnected") resetDepot();
+          if (nextStatus === "disconnected") setMailboxSession(null);
+          if (nextStatus === "disconnected") clearInventoryPreviews();
           if (nextStatus === "disconnected") {
             dispatchChat({ type: "reset", ownPlayerId: null, ownName: null });
           }
@@ -702,8 +841,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     resetInventory,
     confirmInventory,
     patchInventory,
+    clearInventoryPreviews,
+    rejectInventoryPreview,
     rollbackInventory,
     dispatchItemOp,
+    resetDepot,
+    confirmDepot,
+    failDepot,
   ]);
 
   return (
@@ -939,11 +1083,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               npcName={shopSession.npcName}
               entries={shopSession.entries}
               carriedTotal={
-                shopSession.currencyItemTypeId === GOLD_COIN_TYPE_ID
-                  ? inventory.gold +
-                    inventory.platinum * 100 +
-                    inventory.crystal * 10_000
-                  : shopSession.currencyAmount
+                Math.max(
+                  0,
+                  (shopSession.currencyItemTypeId === GOLD_COIN_TYPE_ID
+                    ? inventory.gold +
+                      inventory.platinum * 100 +
+                      inventory.crystal * 10_000
+                    : shopSession.currencyAmount) -
+                    shopSession.pendingPurchaseCost,
+                )
               }
               currencyName={shopSession.currencyName}
               currencySpriteId={shopSession.currencySpriteId}
@@ -951,6 +1099,31 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               error={shopSession.error}
               lastTransaction={shopSession.lastTransaction}
               onBuy={(offerId, amount) => {
+                const entry = shopSession.entries.find(
+                  (candidate) => candidate.offerId === offerId,
+                );
+                if (!entry || entry.buyPrice === undefined) return;
+                const predicted = previewInventory({
+                  kind: "add",
+                  item: toInventoryItemPresentation(entry),
+                  count: amount,
+                  itemIds: Array.from(
+                    {
+                      length: entry.stackable
+                        ? Math.ceil(amount / entry.maxCount)
+                        : amount,
+                    },
+                    () => crypto.randomUUID(),
+                  ),
+                });
+                if (!predicted) {
+                  setShopSession((current) =>
+                    current?.shopSessionId === shopSession.shopSessionId
+                      ? { ...current, error: "busy" }
+                      : current,
+                  );
+                  return;
+                }
                 const sent =
                   clientRef.current?.shopBuy(
                     shopSession.npcId,
@@ -958,10 +1131,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     offerId,
                     amount,
                   ) ?? false;
-                if (!sent) return;
+                if (!sent) {
+                  rejectInventoryPreview();
+                }
                 setShopSession((current) =>
                   current?.shopSessionId === shopSession.shopSessionId
-                    ? { ...current, pending: true, error: null }
+                    ? {
+                        ...current,
+                        pending: sent,
+                        error: sent ? null : "failed",
+                        pendingPurchaseCost: sent
+                          ? entry.buyPrice! * amount
+                          : 0,
+                      }
                     : current,
                 );
               }}
@@ -981,6 +1163,110 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 );
               }}
               onClose={() => setShopSession(null)}
+            />
+          )}
+          {depotSession && inventory && (
+            <DepotModal
+              key={depotSession.state.sessionId}
+              state={depotSession.state}
+              inventoryItems={inventory.items}
+              pending={depotSession.navigationPending}
+              actionsDisabled={depotSession.actionsDisabled}
+              error={depotSession.error}
+              onBrowse={(location, page, query) => {
+                const sent =
+                  clientRef.current?.browseDepot(
+                    depotSession.state,
+                    location,
+                    page,
+                    query,
+                  ) ?? false;
+                beginDepotBrowse(sent);
+              }}
+              onDeposit={(item) => {
+                enqueueDepotAction({
+                  depotPrediction: { kind: "deposit", item },
+                  inventoryPrediction: {
+                    kind: "remove",
+                    itemId: item.id,
+                    count: item.count,
+                  },
+                });
+              }}
+              onWithdraw={(item) => {
+                enqueueDepotAction({
+                  depotPrediction: { kind: "withdraw", item },
+                  inventoryPrediction: {
+                    kind: "add",
+                    item: toInventoryItemPresentation(item),
+                    count: item.count,
+                    itemIds: [item.itemId],
+                  },
+                });
+              }}
+              onStashDeposit={(item, count) => {
+                enqueueDepotAction({
+                  depotPrediction: { kind: "stash-deposit", item, count },
+                  inventoryPrediction: {
+                    kind: "remove",
+                    itemId: item.id,
+                    count,
+                  },
+                });
+              }}
+              onStashWithdraw={(item, count) => {
+                enqueueDepotAction({
+                  depotPrediction: { kind: "stash-withdraw", item, count },
+                  inventoryPrediction: {
+                    kind: "add",
+                    item: toInventoryItemPresentation(item),
+                    count,
+                    itemIds: Array.from(
+                      {
+                        length: item.stackable
+                          ? Math.ceil(count / item.maxCount)
+                          : count,
+                      },
+                      () => crypto.randomUUID(),
+                    ),
+                  },
+                });
+              }}
+              onClose={() => {
+                clientRef.current?.closeDepot(depotSession.state.sessionId);
+                closeDepot();
+              }}
+            />
+          )}
+          {mailboxSession && inventory && (
+            <MailboxModal
+              key={mailboxSession.sessionId}
+              inventoryItems={inventory.items}
+              pending={mailboxSession.pending}
+              error={mailboxSession.error}
+              sentRecipient={mailboxSession.sentRecipient}
+              onSend={(item, recipientName) => {
+                const sent =
+                  clientRef.current?.sendMail(
+                    mailboxSession.sessionId,
+                    item,
+                    recipientName,
+                  ) ?? false;
+                setMailboxSession((current) =>
+                  current?.sessionId === mailboxSession.sessionId
+                    ? {
+                        ...current,
+                        pending: sent,
+                        error: sent ? null : "failed",
+                        sentRecipient: null,
+                      }
+                    : current,
+                );
+              }}
+              onClose={() => {
+                clientRef.current?.closeMailbox(mailboxSession.sessionId);
+                setMailboxSession(null);
+              }}
             />
           )}
           {inventoryOpen && inventory && (

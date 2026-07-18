@@ -26,6 +26,9 @@ export function ItemSlot({
   onDrop,
 }: ItemSlotProps) {
   const { t } = useAppTranslation();
+  const optimistic = Boolean(
+    item && "optimistic" in item && item.optimistic === true,
+  );
   const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
   const [dragPosition, setDragPosition] = useState<{
     left: number;
@@ -38,7 +41,7 @@ export function ItemSlot({
       <button
         type="button"
         disabled={!item && !onDrop}
-        draggable={Boolean(item && onDragStart)}
+        draggable={Boolean(item && onDragStart && !optimistic)}
         title={
           item
             ? t("inventory.itemTitle", {
@@ -48,12 +51,12 @@ export function ItemSlot({
             : undefined
         }
         onContextMenu={(event) => {
-          if (!item || !onActivate) return;
+          if (!item || !onActivate || optimistic) return;
           event.preventDefault();
           onActivate();
         }}
         onDragStart={(event) => {
-          if (!item || !onDragStart) {
+          if (!item || !onDragStart || optimistic) {
             event.preventDefault();
             return;
           }
@@ -92,7 +95,7 @@ export function ItemSlot({
           onDrop();
         }}
         onMouseEnter={(event) => {
-          if (!item) return;
+          if (!item || optimistic) return;
           const bounds = event.currentTarget.getBoundingClientRect();
           setAnchor({
             left: Math.max(8, bounds.left - 328),
@@ -101,7 +104,7 @@ export function ItemSlot({
         }}
         onMouseLeave={() => setAnchor(null)}
         onFocus={(event) => {
-          if (!item) return;
+          if (!item || optimistic) return;
           const bounds = event.currentTarget.getBoundingClientRect();
           setAnchor({
             left: Math.max(8, bounds.left - 328),
@@ -112,7 +115,10 @@ export function ItemSlot({
         className="group relative flex size-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] enabled:hover:border-ui-gold/40 enabled:hover:bg-white/5 disabled:cursor-default"
       >
         {item ? (
-          <SpriteIcon spriteId={item.spriteId} />
+          <SpriteIcon
+            spriteId={item.spriteId}
+            className={optimistic ? "animate-pulse opacity-60" : undefined}
+          />
         ) : (
           placeholderSpriteId !== undefined && (
             <SpriteIcon
@@ -143,7 +149,7 @@ export function ItemSlot({
           </div>,
           document.body,
         )}
-      {item && anchor &&
+      {item && !optimistic && anchor &&
         createPortal(
           <div
             className="pointer-events-none fixed z-[100]"
