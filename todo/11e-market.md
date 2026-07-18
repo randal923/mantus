@@ -58,10 +58,11 @@ All in `server/src/market/PgMarketStore.integration.test.ts` (gated on
   still validates ownership at execution time against the session's own
   character. Restore parity, if ever wanted, by re-adding an access check in
   `MarketService.handle`.
-- **Money legs are bank-only.** Canary pays fees/purchases from carried money
-  with bank fallback; here fees, buy escrow, and purchases debit the bank
-  balance only, and all proceeds/refunds credit the bank. Fix if wanted:
-  route spends through `planMoneySpend` inside the market transaction.
+- ~~Money legs are bank-only~~ — fixed 2026-07-18: fees, buy escrow, and
+  purchases now pay carried-coins-first with bank fallback
+  (`spendMarketFunds` inside the same transaction, Canary order); proceeds
+  and refunds still credit the bank (parity). The market shows and checks
+  the combined spendable balance (bank + carried).
 - **Sell stock comes from the opened depot only.** Canary also sells out of
   the supply stash (tier-0). Stash-sourced escrow needs stash-count
   decrements plus item-row minting in the same transaction.

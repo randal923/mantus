@@ -6,8 +6,9 @@ import { requireItem } from "../depot/requireItem";
 import { depositDepotRevisionUpdate } from "../depot/sql/depositDepotRevisionUpdate";
 import { appendBankLedger } from "../economy/appendBankLedger";
 import { debitBankBalance } from "../economy/debitBankBalance";
-import { lockBankBalance } from "../economy/lockBankBalance";
+import { parseBalance } from "../economy/parseBalance";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
+import { selectBankBalanceQuery } from "../economy/sql/selectBankBalanceQuery";
 import { TransactionRollback } from "../economy/TransactionRollback";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { marketCategoryOf } from "./marketCategoryOf";
@@ -29,6 +30,8 @@ import { moveItemToEscrowUpdate } from "./sql/moveItemToEscrowUpdate";
 import { reduceItemCountUpdate } from "./sql/reduceItemCountUpdate";
 import { randomUUID } from "node:crypto";
 import type { Item } from "../item/Item";
+import type { ItemMutation } from "../item/ItemMutation";
+import { spendMarketFunds } from "./spendMarketFunds";
 
 type Rollback = TransactionRollback<CreateOfferResult>;
 
@@ -58,7 +61,9 @@ export class PgMarketCreateOps {
       ) {
         throw this.fail("escrow-full");
       }
-      const balance = await this.chargeFee(client, request);
+      const payment = await this.pay(client, request.characterId, request.fee, [
+        { entryType: "market-fee", amount: request.fee },
+      ]);
 
       const sorted = [...request.sources].sort((a, b) =>
         a.itemId < b.itemId ? -1 : 1,
@@ -156,16 +161,19 @@ export class PgMarketCreateOps {
         unitPrice: request.unitPrice,
         totalPrice: request.totalPrice,
         fee: request.fee,
+        feeFromCarried: payment.carriedPaid,
+        feeFromBank: payment.bankPaid,
         escrowItems: lockedRows.length,
       });
       return {
         status: "committed",
         offerId: offerRow.id,
         expiresAt: offerRow.expires_at,
-        balance,
+        balance: payment.balance,
         depotUpserts,
         removedItemIds,
         sourceDepotIds,
+        ...(payment.mutation ? { mutation: payment.mutation } : {}),
       };
     });
   }
@@ -178,33 +186,16 @@ export class PgMarketCreateOps {
       if (!type || marketCategoryOf(type) === null) {
         throw this.fail("invalid-item");
       }
-      const balance = await lockBankBalance(client, request.characterId);
-      if (balance < request.fee + request.totalPrice) {
-        throw this.fail("insufficient-funds");
-      }
-      const afterFee = await debitBankBalance(
+      // Carried coins settle the fee first, then the escrow; bank ledger
+      // entries record only the bank-paid remainder of each.
+      const payment = await this.pay(
         client,
         request.characterId,
-        request.fee,
-      );
-      await appendBankLedger(
-        client,
-        request.characterId,
-        "market-fee",
-        request.fee,
-        afterFee,
-      );
-      const afterEscrow = await debitBankBalance(
-        client,
-        request.characterId,
-        request.totalPrice,
-      );
-      await appendBankLedger(
-        client,
-        request.characterId,
-        "market-escrow",
-        request.totalPrice,
-        afterEscrow,
+        request.fee + request.totalPrice,
+        [
+          { entryType: "market-fee", amount: request.fee },
+          { entryType: "market-escrow", amount: request.totalPrice },
+        ],
       );
       const offer = await client.query<{ id: string; expires_at: Date }>(
         insertMarketOfferQuery,
@@ -230,15 +221,18 @@ export class PgMarketCreateOps {
         unitPrice: request.unitPrice,
         totalPrice: request.totalPrice,
         fee: request.fee,
+        paidFromCarried: payment.carriedPaid,
+        paidFromBank: payment.bankPaid,
       });
       return {
         status: "committed",
         offerId: offerRow.id,
         expiresAt: offerRow.expires_at,
-        balance: afterEscrow,
+        balance: payment.balance,
         depotUpserts: [],
         removedItemIds: [],
         sourceDepotIds: [],
+        ...(payment.mutation ? { mutation: payment.mutation } : {}),
       };
     });
   }
@@ -275,26 +269,69 @@ export class PgMarketCreateOps {
     }
   }
 
-  /** Fee comes from the bank only; carried coins never enter market math. */
-  private async chargeFee(
+  /**
+   * Pays `total` carried-coins-first with bank fallback. Carried gold is
+   * attributed to the legs in order; each leg's bank remainder gets its own
+   * debit and ledger entry so balance_after stays exact.
+   */
+  private async pay(
     client: PoolClient,
-    request: CreateSellOfferRequest,
-  ): Promise<number> {
-    const balance = await lockBankBalance(client, request.characterId);
-    if (balance < request.fee) throw this.fail("insufficient-funds");
-    const after = await debitBankBalance(
+    characterId: string,
+    total: number,
+    legs: ReadonlyArray<{
+      entryType: "market-fee" | "market-escrow";
+      amount: number;
+    }>,
+  ): Promise<{
+    carriedPaid: number;
+    bankPaid: number;
+    balance: number;
+    mutation?: ItemMutation;
+  }> {
+    const spend = await spendMarketFunds(
       client,
-      request.characterId,
-      request.fee,
+      characterId,
+      this.catalog,
+      total,
     );
-    await appendBankLedger(
-      client,
-      request.characterId,
-      "market-fee",
-      request.fee,
-      after,
-    );
-    return after;
+    if (spend.status !== "ok") throw this.fail(spend.status);
+    let carriedLeft = spend.carriedPaid;
+    let balance: number | null = null;
+    for (const leg of legs) {
+      const carriedForLeg = Math.min(carriedLeft, leg.amount);
+      carriedLeft -= carriedForLeg;
+      const bankForLeg = leg.amount - carriedForLeg;
+      if (bankForLeg === 0) continue;
+      balance = await debitBankBalance(client, characterId, bankForLeg);
+      await appendBankLedger(
+        client,
+        characterId,
+        leg.entryType,
+        bankForLeg,
+        balance,
+      );
+    }
+    if (balance === null) {
+      const result = await client.query<{ balance: string }>(
+        selectBankBalanceQuery,
+        [characterId],
+      );
+      const row = result.rows[0];
+      balance = row ? parseBalance(row.balance) : 0;
+    }
+    const mutation =
+      spend.after.size > 0 || spend.removedItemIds.length > 0
+        ? {
+            after: [...spend.after.values()],
+            removedItemIds: spend.removedItemIds,
+          }
+        : undefined;
+    return {
+      carriedPaid: spend.carriedPaid,
+      bankPaid: spend.bankPaid,
+      balance,
+      ...(mutation ? { mutation } : {}),
+    };
   }
 
   private async escrowRow(

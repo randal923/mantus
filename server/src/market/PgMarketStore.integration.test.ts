@@ -16,6 +16,10 @@ const MIGRATION_LOCK_KEY = 7_281_006;
 const SAPPHIRE_TYPE = 675;
 /** Leather helmet: non-stackable, marketable (helmets). */
 const HELMET_TYPE = 3355;
+const BACKPACK_TYPE = 2854;
+const GOLD_TYPE = 3031;
+const PLATINUM_TYPE = 3035;
+const CRYSTAL_TYPE = 3043;
 const DEPOT_ID = 1;
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const databaseDescribe = databaseUrl ? describe : describe.skip;
@@ -77,7 +81,75 @@ const createCharacter = async (
   await pool.query("DELETE FROM audit_log WHERE character_id = $1", [
     summary.id,
   ]);
+  await pool.query(
+    `INSERT INTO items (
+       id, item_type_id, location_type, character_id, equipment_slot
+     ) VALUES ($1, $2, 'equipment', $3, 'backpack')`,
+    [randomUUID(), BACKPACK_TYPE, summary.id],
+  );
   return { characterId: summary.id, accountId: resolvedAccountId };
+};
+
+const insertInventoryItem = async (
+  characterId: string,
+  typeId: number,
+  count: number,
+  slot: number,
+): Promise<string> => {
+  const id = randomUUID();
+  await pool.query(
+    `INSERT INTO items (
+       id, item_type_id, count, location_type, character_id, slot_index
+     ) VALUES ($1, $2, $3, 'inventory', $4, $5)`,
+    [id, typeId, count, characterId, slot],
+  );
+  return id;
+};
+
+const carriedWorthOf = async (characterId: string): Promise<number> => {
+  const result = await pool.query<{ item_type_id: number; total: string }>(
+    `WITH RECURSIVE owned AS (
+       SELECT id, item_type_id, count FROM items
+       WHERE character_id = $1
+         AND location_type IN ('equipment', 'inventory')
+       UNION ALL
+       SELECT child.id, child.item_type_id, child.count
+       FROM items child JOIN owned ON child.container_id = owned.id
+     )
+     SELECT item_type_id, SUM(count) AS total FROM owned
+     WHERE item_type_id IN ($2, $3, $4)
+     GROUP BY item_type_id`,
+    [characterId, GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
+  );
+  return result.rows.reduce((total, row) => {
+    const worth =
+      row.item_type_id === GOLD_TYPE
+        ? 1
+        : row.item_type_id === PLATINUM_TYPE
+          ? 100
+          : 10_000;
+    return total + Number(row.total) * worth;
+  }, 0);
+};
+
+/** Gold in the whole system including carried coins, escrow, and banks. */
+const systemGoldTotal = async (): Promise<number> => {
+  const coins = await pool.query<{ item_type_id: number; total: string }>(
+    `SELECT item_type_id, SUM(count) AS total FROM items
+     WHERE item_type_id IN ($1, $2, $3)
+     GROUP BY item_type_id`,
+    [GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
+  );
+  const coinWorth = coins.rows.reduce((total, row) => {
+    const worth =
+      row.item_type_id === GOLD_TYPE
+        ? 1
+        : row.item_type_id === PLATINUM_TYPE
+          ? 100
+          : 10_000;
+    return total + Number(row.total) * worth;
+  }, 0);
+  return coinWorth + (await globalGoldTotal());
 };
 
 const setBalance = async (
@@ -1229,6 +1301,141 @@ databaseDescribe("PgMarketStore integration", () => {
           offer.remaining_amount,
         );
       }
+    });
+  });
+
+  describe("carried-coin payments", () => {
+    it("pays the sell-offer fee from carried coins before the bank", async () => {
+      await insertDepotItem(sellerId, SAPPHIRE_TYPE, 100, 0);
+      await insertInventoryItem(sellerId, PLATINUM_TYPE, 6, 0); // 600 gp
+      await setBalance(sellerId, 1_000);
+      const goldBefore = await systemGoldTotal();
+
+      const result = await store.createSellOffer(
+        await sellRequest(sellerId, SAPPHIRE_TYPE, 100, 500), // fee 1_000
+      );
+
+      expect(result.status).toBe("committed");
+      if (result.status !== "committed") return;
+      expect(await carriedWorthOf(sellerId)).toBe(0);
+      expect(await balanceOf(sellerId)).toBe(600); // bank paid only 400
+      expect(await ledgerRows(sellerId)).toEqual([
+        { entry_type: "market-fee", amount: "400", balance_after: "600" },
+      ]);
+      expect(result.mutation).toBeDefined();
+      expect(await systemGoldTotal()).toBe(goldBefore - 1_000); // fee destroyed
+    });
+
+    it("escrows a buy offer from one large coin and grants exact change", async () => {
+      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 1, 0); // 10_000 gp
+      const goldBefore = await systemGoldTotal();
+
+      const result = await store.createBuyOffer(
+        buyRequest(buyerId, SAPPHIRE_TYPE, 10, 100), // total 1_000, fee 20
+      );
+
+      expect(result.status).toBe("committed");
+      if (result.status !== "committed") return;
+      expect(await carriedWorthOf(buyerId)).toBe(8_980);
+      expect(await balanceOf(buyerId)).toBe(0);
+      expect(await ledgerRows(buyerId)).toHaveLength(0); // bank untouched
+      expect((await offerRows())[0]?.escrow_balance).toBe("1000");
+      expect(result.mutation).toBeDefined();
+      expect(await systemGoldTotal()).toBe(goldBefore - 20);
+    });
+
+    it("lets a buyer without bank gold accept a sell offer with carried coins", async () => {
+      await insertDepotItem(sellerId, SAPPHIRE_TYPE, 100, 0);
+      await setBalance(sellerId, 10_000);
+      const listed = await store.createSellOffer(
+        await sellRequest(sellerId, SAPPHIRE_TYPE, 100, 500),
+      );
+      expect(listed.status).toBe("committed");
+      if (listed.status !== "committed") return;
+      const sellerBankAfterFee = await balanceOf(sellerId);
+      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 5, 0); // 50_000 gp
+      const goldBefore = await systemGoldTotal();
+
+      const result = await store.acceptSellOffer({
+        requestId: randomUUID(),
+        offerId: listed.offerId,
+        buyerCharacterId: buyerId,
+        amount: 100,
+      });
+
+      expect(result.status).toBe("committed");
+      if (result.status !== "committed") return;
+      expect(await carriedWorthOf(buyerId)).toBe(0);
+      expect(await balanceOf(buyerId)).toBe(0);
+      expect(await ledgerRows(buyerId)).toHaveLength(0); // no bank leg
+      expect(await balanceOf(sellerId)).toBe(sellerBankAfterFee + 50_000);
+      expect(await itemCountAt(buyerId, "inbox", SAPPHIRE_TYPE)).toBe(100);
+      expect(result.mutation).toBeDefined();
+      expect(await systemGoldTotal()).toBe(goldBefore);
+    });
+
+    it("two purchases racing the same carried coins spend them once", async () => {
+      const { characterId: rivalSellerId } = await createCharacter("coinrace");
+      await insertDepotItem(sellerId, SAPPHIRE_TYPE, 100, 0);
+      await insertDepotItem(rivalSellerId, SAPPHIRE_TYPE, 100, 0);
+      await setBalance(sellerId, 10_000);
+      await setBalance(rivalSellerId, 10_000);
+      const first = await store.createSellOffer(
+        await sellRequest(sellerId, SAPPHIRE_TYPE, 100, 500),
+      );
+      const second = await store.createSellOffer(
+        await sellRequest(rivalSellerId, SAPPHIRE_TYPE, 100, 500),
+      );
+      expect(first.status).toBe("committed");
+      expect(second.status).toBe("committed");
+      if (first.status !== "committed" || second.status !== "committed") return;
+      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 5, 0); // exactly one fill
+      const goldBefore = await systemGoldTotal();
+
+      const outcomes = await Promise.allSettled([
+        store.acceptSellOffer({
+          requestId: randomUUID(),
+          offerId: first.offerId,
+          buyerCharacterId: buyerId,
+          amount: 100,
+        }),
+        store.acceptSellOffer({
+          requestId: randomUUID(),
+          offerId: second.offerId,
+          buyerCharacterId: buyerId,
+          amount: 100,
+        }),
+      ]);
+
+      const committed = outcomes.filter(
+        (outcome) =>
+          outcome.status === "fulfilled" &&
+          outcome.value.status === "committed",
+      );
+      expect(committed).toHaveLength(1);
+      expect(await itemCountAt(buyerId, "inbox", SAPPHIRE_TYPE)).toBe(100);
+      expect((await carriedWorthOf(buyerId)) + (await balanceOf(buyerId))).toBe(
+        0,
+      );
+      expect(await systemGoldTotal()).toBe(goldBefore);
+    });
+
+    it("rolls back the whole payment when coin change cannot fit", async () => {
+      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 1, 0);
+      for (let slot = 1; slot < 100; slot++) {
+        await insertInventoryItem(buyerId, HELMET_TYPE, 1, slot);
+      }
+      const goldBefore = await systemGoldTotal();
+
+      const result = await store.createBuyOffer(
+        buyRequest(buyerId, SAPPHIRE_TYPE, 10, 100), // needs 8_980 change
+      );
+
+      expect(result.status).toBe("no-space");
+      expect(await carriedWorthOf(buyerId)).toBe(10_000);
+      expect(await offerRows()).toHaveLength(0);
+      expect(await ledgerRows(buyerId)).toHaveLength(0);
+      expect(await systemGoldTotal()).toBe(goldBefore);
     });
   });
 });

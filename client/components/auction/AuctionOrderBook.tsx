@@ -127,6 +127,11 @@ export function AuctionOrderBook({
                     <tbody>
                       {sellOffers.map((offer) => {
                         const total = offer.amount * offer.pricePerItem;
+                        const disabledReason = offer.mine
+                          ? t("auction.tooltips.ownOffer")
+                          : goldBalance < total
+                            ? t("auction.tooltips.insufficientGold")
+                            : undefined;
 
                         return (
                           <tr
@@ -155,28 +160,32 @@ export function AuctionOrderBook({
                                     {t("auction.yours")}
                                   </span>
                                 )}
-                                <Button
-                                  size="sm"
-                                  variant="primary"
-                                  disabled={
-                                    !onAcceptOffer ||
-                                    offer.mine === true ||
-                                    goldBalance < total
-                                  }
-                                  aria-label={t("auction.buyOfferAction", {
-                                    count: offer.amount,
-                                    item: item.name,
-                                    total: total.toLocaleString(language),
-                                  })}
-                                  onClick={() =>
-                                    onAcceptOffer?.({
-                                      offerId: offer.id,
-                                      amount: offer.amount,
-                                    })
-                                  }
-                                >
-                                  {t("auction.buy")}
-                                </Button>
+                                {/* Disabled buttons swallow pointer events, so
+                                    the tooltip lives on a wrapping span. */}
+                                <span title={disabledReason}>
+                                  <Button
+                                    size="sm"
+                                    variant="primary"
+                                    disabled={
+                                      !onAcceptOffer ||
+                                      offer.mine === true ||
+                                      goldBalance < total
+                                    }
+                                    aria-label={t("auction.buyOfferAction", {
+                                      count: offer.amount,
+                                      item: item.name,
+                                      total: total.toLocaleString(language),
+                                    })}
+                                    onClick={() =>
+                                      onAcceptOffer?.({
+                                        offerId: offer.id,
+                                        amount: offer.amount,
+                                      })
+                                    }
+                                  >
+                                    {t("auction.buy")}
+                                  </Button>
+                                </span>
                               </span>
                             </td>
                           </tr>
@@ -241,6 +250,11 @@ export function AuctionOrderBook({
                     <tbody>
                       {buyOffers.map((offer) => {
                         const total = offer.amount * offer.pricePerItem;
+                        const disabledReason = offer.mine
+                          ? t("auction.tooltips.ownOffer")
+                          : item.ownedCount < offer.amount
+                            ? t("auction.tooltips.insufficientItems")
+                            : undefined;
 
                         return (
                           <tr
@@ -269,27 +283,29 @@ export function AuctionOrderBook({
                                     {t("auction.yours")}
                                   </span>
                                 )}
-                                <Button
-                                  size="sm"
-                                  disabled={
-                                    !onAcceptOffer ||
-                                    offer.mine === true ||
-                                    item.ownedCount < offer.amount
-                                  }
-                                  aria-label={t("auction.sellOfferAction", {
-                                    count: offer.amount,
-                                    item: item.name,
-                                    total: total.toLocaleString(language),
-                                  })}
-                                  onClick={() =>
-                                    onAcceptOffer?.({
-                                      offerId: offer.id,
-                                      amount: offer.amount,
-                                    })
-                                  }
-                                >
-                                  {t("auction.sell")}
-                                </Button>
+                                <span title={disabledReason}>
+                                  <Button
+                                    size="sm"
+                                    disabled={
+                                      !onAcceptOffer ||
+                                      offer.mine === true ||
+                                      item.ownedCount < offer.amount
+                                    }
+                                    aria-label={t("auction.sellOfferAction", {
+                                      count: offer.amount,
+                                      item: item.name,
+                                      total: total.toLocaleString(language),
+                                    })}
+                                    onClick={() =>
+                                      onAcceptOffer?.({
+                                        offerId: offer.id,
+                                        amount: offer.amount,
+                                      })
+                                    }
+                                  >
+                                    {t("auction.sell")}
+                                  </Button>
+                                </span>
                               </span>
                             </td>
                           </tr>

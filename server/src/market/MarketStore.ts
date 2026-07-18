@@ -1,5 +1,6 @@
 import type { MarketSide } from "@tibia/protocol";
 import type { Item } from "../item/Item";
+import type { ItemMutation } from "../item/ItemMutation";
 
 export interface MarketOfferSummary {
   readonly id: string;
@@ -76,6 +77,7 @@ export interface CreateBuyOfferRequest {
 }
 
 export type MarketFailureStatus =
+  | "no-space"
   | "duplicate-request"
   | "offer-not-found"
   | "own-offer"
@@ -101,6 +103,8 @@ export type CreateOfferResult =
       readonly removedItemIds: ReadonlyArray<string>;
       /** Depots the escrowed rows came from (their revisions were bumped). */
       readonly sourceDepotIds: ReadonlyArray<number>;
+      /** Carried-coin legs of the payment (spends and change), if any. */
+      readonly mutation?: ItemMutation;
     }
   | { readonly status: MarketFailureStatus };
 
@@ -138,6 +142,8 @@ export type AcceptOfferResult =
       readonly removedItemIds: ReadonlyArray<string>;
       /** Depots the sold rows came from (their revisions were bumped). */
       readonly sourceDepotIds: ReadonlyArray<number>;
+      /** Carried-coin legs of the acceptor's payment, if any. */
+      readonly mutation?: ItemMutation;
     }
   | { readonly status: MarketFailureStatus };
 

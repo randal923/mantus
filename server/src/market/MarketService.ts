@@ -1,4 +1,5 @@
 import {
+  BANK_LIMITS,
   MARKET_LIMITS,
   type MarketAcceptOfferMessage,
   type MarketActionFailedReason,
@@ -10,6 +11,8 @@ import {
   type MarketOwnOffersStateMessage,
 } from "@tibia/protocol";
 import type { DepotService } from "../depot/DepotService";
+import { countCarriedCoins } from "../economy/countCarriedCoins";
+import { countMoneyWorth } from "../economy/countMoneyWorth";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
@@ -197,7 +200,7 @@ export class MarketService {
       this.outcomes.push(() => {
         session.send({
           type: "market-opened",
-          balance: data.balance,
+          balance: this.spendableBalance(characterId, data.balance),
           activeOfferCount: Math.min(
             MARKET_LIMITS.maxActiveOffersPerCharacter,
             data.activeOfferCount,
@@ -383,11 +386,19 @@ export class MarketService {
     session.itemOperationPending = true;
     const operation = commit().then(
       (result) => {
-        this.outcomes.push(() => {
+        this.outcomes.push((at) => {
           session.itemOperationPending = false;
           if (result.status !== "committed") {
             this.fail(session, this.reasonOf(result.status));
             return;
+          }
+          if (result.mutation) {
+            this.items.applyCommittedMutation(
+              session,
+              characterId,
+              result.mutation,
+              at,
+            );
           }
           if (intent.side === "sell") {
             this.depot.applyCacheEvent(characterId, {
@@ -409,7 +420,7 @@ export class MarketService {
             amount: intent.amount,
             totalPrice,
             fee,
-            balance: result.balance,
+            balance: this.spendableBalance(characterId, result.balance),
           });
         });
       },
@@ -502,11 +513,19 @@ export class MarketService {
   ): void {
     const operation = commit().then(
       (result) => {
-        this.outcomes.push(() => {
+        this.outcomes.push((at) => {
           session.itemOperationPending = false;
           if (result.status !== "committed") {
             this.fail(session, this.reasonOf(result.status));
             return;
+          }
+          if (result.mutation) {
+            this.items.applyCommittedMutation(
+              session,
+              characterId,
+              result.mutation,
+              at,
+            );
           }
           this.depot.applyExternalCacheEvent(result.deliveredCharacterId, {
             upserts: result.deliveredItems,
@@ -533,7 +552,7 @@ export class MarketService {
             amount: result.amount,
             totalPrice: result.totalPrice,
             fee: 0,
-            balance: result.balance,
+            balance: this.spendableBalance(characterId, result.balance),
           });
         });
       },
@@ -587,7 +606,7 @@ export class MarketService {
               amount: result.remainingAmount,
               totalPrice: result.refund,
               fee: 0,
-              balance: result.balance,
+              balance: this.spendableBalance(characterId, result.balance),
             });
           });
         },
@@ -620,6 +639,18 @@ export class MarketService {
       return "busy";
     }
     return null;
+  }
+
+  /**
+   * The gold a character can spend on the market right now: bank balance
+   * plus carried coins, read after any committed mutation was applied.
+   */
+  private spendableBalance(characterId: string, bankBalance: number): number {
+    const snapshot = this.items.inventorySnapshot(characterId);
+    const carried = snapshot
+      ? countMoneyWorth(countCarriedCoins(snapshot.items))
+      : 0;
+    return Math.min(BANK_LIMITS.maxBalance, bankBalance + carried);
   }
 
   private reasonOf(status: MarketFailureStatus): MarketActionFailedReason {

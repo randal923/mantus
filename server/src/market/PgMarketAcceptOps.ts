@@ -12,7 +12,9 @@ import { runSerializableTransaction } from "../economy/runSerializableTransactio
 import { insertBankAccountPairQuery } from "../economy/sql/insertBankAccountPairQuery";
 import { lockBankAccountPairQuery } from "../economy/sql/lockBankAccountPairQuery";
 import { TransactionRollback } from "../economy/TransactionRollback";
+import type { ItemCatalog } from "../item/ItemCatalog";
 import { marketTotalOf } from "./marketTotalOf";
+import { spendMarketFunds } from "./spendMarketFunds";
 import type { LockedMarketOffer, MarketTxHelper } from "./MarketTxHelper";
 import type {
   AcceptBuyOfferRequest,
@@ -30,6 +32,7 @@ type Rollback = TransactionRollback<AcceptOfferResult>;
 export class PgMarketAcceptOps {
   constructor(
     private readonly pool: Pool,
+    private readonly catalog: ItemCatalog,
     private readonly helper: MarketTxHelper,
   ) {}
 
@@ -64,10 +67,17 @@ export class PgMarketAcceptOps {
       if (buyerBalance === undefined || sellerBalance === undefined) {
         throw new Error("market accept accounts are missing");
       }
-      if (buyerBalance < totalPrice) throw this.fail("insufficient-funds");
       if (sellerBalance + totalPrice > BANK_LIMITS.maxBalance) {
         throw this.fail("balance-limit");
       }
+      // Buyer pays carried-coins-first with bank fallback (Canary order).
+      const spend = await spendMarketFunds(
+        client,
+        request.buyerCharacterId,
+        this.catalog,
+        totalPrice,
+      );
+      if (spend.status !== "ok") throw this.fail(spend.status);
 
       const escrowRows = await client.query<DepotItemRow>(
         lockEscrowRowsForOfferQuery,
@@ -99,19 +109,22 @@ export class PgMarketAcceptOps {
         await client.query(deleteMarketEscrowItemQuery, [itemId]);
       }
 
-      const buyerAfter = await debitBankBalance(
-        client,
-        request.buyerCharacterId,
-        totalPrice,
-      );
-      await appendBankLedger(
-        client,
-        request.buyerCharacterId,
-        "market-purchase",
-        totalPrice,
-        buyerAfter,
-        offer.characterId,
-      );
+      let buyerAfter = buyerBalance;
+      if (spend.bankPaid > 0) {
+        buyerAfter = await debitBankBalance(
+          client,
+          request.buyerCharacterId,
+          spend.bankPaid,
+        );
+        await appendBankLedger(
+          client,
+          request.buyerCharacterId,
+          "market-purchase",
+          spend.bankPaid,
+          buyerAfter,
+          offer.characterId,
+        );
+      }
       const sellerAfter = await creditBankBalance(
         client,
         offer.characterId,
@@ -135,6 +148,13 @@ export class PgMarketAcceptOps {
         request.amount,
         totalPrice,
       );
+      const coinMutation =
+        spend.after.size > 0 || spend.removedItemIds.length > 0
+          ? {
+              after: [...spend.after.values()],
+              removedItemIds: spend.removedItemIds,
+            }
+          : undefined;
       return {
         status: "committed",
         offerId: offer.id,
@@ -149,6 +169,7 @@ export class PgMarketAcceptOps {
         depotUpserts: [],
         removedItemIds: [],
         sourceDepotIds: [],
+        ...(coinMutation ? { mutation: coinMutation } : {}),
       };
     });
   }

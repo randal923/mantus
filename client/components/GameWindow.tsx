@@ -73,6 +73,7 @@ import { ShopPanel } from "./shop/ShopPanel";
 import { DepotModal } from "./depot/DepotModal";
 import { MailboxModal } from "./depot/MailboxModal";
 import { AuctionHouseModal } from "./auction/AuctionHouseModal";
+import { Toast } from "./ui/Toast";
 
 interface BankSessionState {
   npcId: string;
@@ -254,9 +255,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   } = useMarketSession();
   const marketOpenRef = useRef(false);
   const marketSelectedItemRef = useRef<number | null>(null);
+  // Mirrors marketSelectedItemRef for rendering; the ref stays because the
+  // socket onMessage closure reads the latest value synchronously.
+  const [marketSelectedItem, setMarketSelectedItem] = useState<string | null>(
+    null,
+  );
+  const [marketToast, setMarketToast] = useState<
+    "created" | "accepted" | "cancelled" | null
+  >(null);
+  const dismissMarketToast = useCallback(() => setMarketToast(null), []);
   const closeMarket = useCallback(() => {
     marketOpenRef.current = false;
     marketSelectedItemRef.current = null;
+    setMarketSelectedItem(null);
     resetMarket();
   }, [resetMarket]);
   const [itemText, setItemText] = useState<
@@ -664,16 +675,21 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             return;
           }
           if (message.type === "market-opened") {
+            const wasOpen = marketOpenRef.current;
             marketOpenRef.current = true;
             confirmMarketOpened(message);
             if (message.page < message.pageCount) {
               client?.openMarket(message.page + 1);
             }
-            if (message.page === 1) {
+            if (message.page === 1 && !wasOpen) {
               // Own offers and history arrive pushed alongside page 1.
+              // Refreshes while already open keep the current selection
+              // (including the deliberate "nothing selected" after creating
+              // an offer) instead of re-selecting the first item.
               const firstItem = message.items[0];
               if (marketSelectedItemRef.current === null && firstItem) {
                 marketSelectedItemRef.current = firstItem.itemTypeId;
+                setMarketSelectedItem(String(firstItem.itemTypeId));
                 client?.browseMarket(firstItem.itemTypeId);
               }
             }
@@ -693,6 +709,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "market-transacted") {
             confirmMarketTransacted(message);
+            setMarketToast(message.kind);
+            if (message.kind === "created") {
+              // Deselect after creating an offer so the ticket clears; skip
+              // the browse re-request for the cleared selection.
+              marketSelectedItemRef.current = null;
+              setMarketSelectedItem(null);
+            }
             if (marketOpenRef.current) {
               client?.openMarket(1);
               const selectedItemTypeId = marketSelectedItemRef.current;
@@ -1087,6 +1110,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               })}
             </button>
           )}
+          {marketToast && (
+            <Toast
+              message={t(`auction.toast.${marketToast}`)}
+              onDismiss={dismissMarketToast}
+            />
+          )}
           {runeTargeting && (
             <div
               role="status"
@@ -1398,6 +1427,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   : []
               }
               goldBalance={marketSession.balance}
+              selectedItemId={marketSelectedItem}
               ownOffers={marketSession.ownOffers.map(toAuctionOwnOffer)}
               history={marketSession.history.map(toAuctionHistoryEntry)}
               error={
@@ -1412,6 +1442,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 const itemTypeId = Number(itemId);
                 if (!Number.isInteger(itemTypeId)) return;
                 marketSelectedItemRef.current = itemTypeId;
+                setMarketSelectedItem(itemId);
                 clientRef.current?.browseMarket(itemTypeId);
               }}
               onAcceptOffer={

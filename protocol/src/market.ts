@@ -247,6 +247,7 @@ export const marketActionFailedMessageSchema = z
       "offer-limit",
       "escrow-full",
       "inbox-full",
+      "no-space",
       "amount-too-large",
       "price-limit",
       "duplicate-request",

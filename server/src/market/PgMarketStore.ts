@@ -33,7 +33,7 @@ export class PgMarketStore implements MarketStore {
     const helper = new MarketTxHelper();
     this.readOps = new PgMarketReadOps(pool, helper);
     this.createOps = new PgMarketCreateOps(pool, catalog, helper);
-    this.acceptOps = new PgMarketAcceptOps(pool, helper);
+    this.acceptOps = new PgMarketAcceptOps(pool, catalog, helper);
     this.cancelOps = new PgMarketCancelOps(pool, helper);
   }
 

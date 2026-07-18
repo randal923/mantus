@@ -256,6 +256,16 @@
       "cancelled": "Cancelled",
       "expired": "Expired"
     },
+    "toast": {
+      "created": "Offer created — items/gold moved to market escrow.",
+      "accepted": "Trade completed — delivery sent to your inbox.",
+      "cancelled": "Offer cancelled — remaining escrow returned."
+    },
+    "tooltips": {
+      "ownOffer": "You cannot accept your own offer.",
+      "insufficientGold": "You do not have enough gold for this purchase.",
+      "insufficientItems": "You do not own enough of this item to sell."
+    },
     "errors": {
       "out-of-range": "You are too far away from the depot.",
       "busy": "Please wait for your other market action to finish.",
@@ -271,6 +281,7 @@
       "offer-limit": "You have reached your active offer limit.",
       "escrow-full": "You have too many items held by the market.",
       "inbox-full": "Your inbox has reached its item limit.",
+      "no-space": "No room for change — free up backpack space.",
       "amount-too-large": "That amount is too large.",
       "price-limit": "That price exceeds the market limit.",
       "duplicate-request": "That request was already processed.",

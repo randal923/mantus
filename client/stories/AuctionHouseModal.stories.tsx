@@ -324,3 +324,17 @@ export const NoItems: Story = {
     initialItemId: undefined,
   },
 };
+
+export const ControlledNoSelection: Story = {
+  args: {
+    selectedItemId: null,
+    initialTab: "create",
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      canvas.getByText("Select an item before creating an offer."),
+    ).toBeInTheDocument();
+  },
+};

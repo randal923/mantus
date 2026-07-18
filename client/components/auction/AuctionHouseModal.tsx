@@ -35,6 +35,12 @@ interface AuctionHouseModalProps {
   offers: ReadonlyArray<AuctionOffer>;
   goldBalance: number;
   initialItemId?: string;
+  /**
+   * When provided, selection is controlled by the parent: `null` means no
+   * item is selected. When `undefined`, the modal manages selection
+   * internally, falling back to the first item.
+   */
+  selectedItemId?: string | null;
   initialTab?: AuctionHouseTab;
   ownOffers?: ReadonlyArray<AuctionOwnOffer>;
   history?: ReadonlyArray<AuctionHistoryEntry>;
@@ -51,6 +57,7 @@ export function AuctionHouseModal({
   offers,
   goldBalance,
   initialItemId,
+  selectedItemId,
   initialTab = "offers",
   ownOffers = [],
   history = [],
@@ -66,17 +73,21 @@ export function AuctionHouseModal({
   const [activeTab, setActiveTab] = useState<AuctionHouseTab>(initialTab);
   const [category, setCategory] = useState<AuctionCategoryFilter>("all");
   const [search, setSearch] = useState("");
-  const [selectedItemId, setSelectedItemId] = useState<string | undefined>(
-    items.find((item) => item.id === initialItemId)?.id ?? items[0]?.id,
-  );
+  const [internalSelectedItemId, setInternalSelectedItemId] = useState<
+    string | undefined
+  >(items.find((item) => item.id === initialItemId)?.id ?? items[0]?.id);
   const normalizedSearch = search.trim().toLocaleLowerCase(language);
   const filteredItems = items.filter(
     (item) =>
       (category === "all" || item.category === category) &&
       item.name.toLocaleLowerCase(language).includes(normalizedSearch),
   );
-  const selectedItem =
-    items.find((item) => item.id === selectedItemId) ?? items[0];
+  const selectionControlled = selectedItemId !== undefined;
+  const selectedItem = selectionControlled
+    ? selectedItemId === null
+      ? undefined
+      : items.find((item) => item.id === selectedItemId)
+    : (items.find((item) => item.id === internalSelectedItemId) ?? items[0]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -199,7 +210,7 @@ export function AuctionHouseModal({
             onCategoryChange={setCategory}
             onSearchChange={setSearch}
             onItemSelect={(itemId) => {
-              setSelectedItemId(itemId);
+              if (!selectionControlled) setInternalSelectedItemId(itemId);
               onSelectItem?.(itemId);
             }}
           />

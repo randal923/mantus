@@ -256,6 +256,16 @@
       "cancelled": "Cancelada",
       "expired": "Expirada"
     },
+    "toast": {
+      "created": "Oferta criada — itens/ouro movidos para a custódia do mercado.",
+      "accepted": "Negócio concluído — a entrega foi enviada para sua caixa de entrada.",
+      "cancelled": "Oferta cancelada — a custódia restante foi devolvida."
+    },
+    "tooltips": {
+      "ownOffer": "Você não pode aceitar sua própria oferta.",
+      "insufficientGold": "Você não tem ouro suficiente para esta compra.",
+      "insufficientItems": "Você não possui itens suficientes para vender."
+    },
     "errors": {
       "out-of-range": "Você está longe demais do depot.",
       "busy": "Aguarde sua outra ação no mercado terminar.",
@@ -271,6 +281,7 @@
       "offer-limit": "Você atingiu seu limite de ofertas ativas.",
       "escrow-full": "Você tem itens demais retidos pelo mercado.",
       "inbox-full": "Sua caixa de entrada atingiu o limite de itens.",
+      "no-space": "Sem espaço para o troco — libere espaço na mochila.",
       "amount-too-large": "Esta quantidade é grande demais.",
       "price-limit": "Este preço excede o limite do mercado.",
       "duplicate-request": "Esta solicitação já foi processada.",
