@@ -149,24 +149,35 @@ export function AuctionOrderBook({
                               )}
                             </td>
                             <td className="px-3 py-2 text-right">
-                              <Button
-                                size="sm"
-                                variant="primary"
-                                disabled={!onAcceptOffer || goldBalance < total}
-                                aria-label={t("auction.buyOfferAction", {
-                                  count: offer.amount,
-                                  item: item.name,
-                                  total: total.toLocaleString(language),
-                                })}
-                                onClick={() =>
-                                  onAcceptOffer?.({
-                                    offerId: offer.id,
-                                    amount: offer.amount,
-                                  })
-                                }
-                              >
-                                {t("auction.buy")}
-                              </Button>
+                              <span className="flex items-center justify-end gap-2">
+                                {offer.mine && (
+                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-[9px] tracking-wider text-ui-gold uppercase">
+                                    {t("auction.yours")}
+                                  </span>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="primary"
+                                  disabled={
+                                    !onAcceptOffer ||
+                                    offer.mine === true ||
+                                    goldBalance < total
+                                  }
+                                  aria-label={t("auction.buyOfferAction", {
+                                    count: offer.amount,
+                                    item: item.name,
+                                    total: total.toLocaleString(language),
+                                  })}
+                                  onClick={() =>
+                                    onAcceptOffer?.({
+                                      offerId: offer.id,
+                                      amount: offer.amount,
+                                    })
+                                  }
+                                >
+                                  {t("auction.buy")}
+                                </Button>
+                              </span>
                             </td>
                           </tr>
                         );
@@ -252,26 +263,34 @@ export function AuctionOrderBook({
                               )}
                             </td>
                             <td className="px-3 py-2 text-right">
-                              <Button
-                                size="sm"
-                                disabled={
-                                  !onAcceptOffer ||
-                                  item.ownedCount < offer.amount
-                                }
-                                aria-label={t("auction.sellOfferAction", {
-                                  count: offer.amount,
-                                  item: item.name,
-                                  total: total.toLocaleString(language),
-                                })}
-                                onClick={() =>
-                                  onAcceptOffer?.({
-                                    offerId: offer.id,
-                                    amount: offer.amount,
-                                  })
-                                }
-                              >
-                                {t("auction.sell")}
-                              </Button>
+                              <span className="flex items-center justify-end gap-2">
+                                {offer.mine && (
+                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-[9px] tracking-wider text-ui-gold uppercase">
+                                    {t("auction.yours")}
+                                  </span>
+                                )}
+                                <Button
+                                  size="sm"
+                                  disabled={
+                                    !onAcceptOffer ||
+                                    offer.mine === true ||
+                                    item.ownedCount < offer.amount
+                                  }
+                                  aria-label={t("auction.sellOfferAction", {
+                                    count: offer.amount,
+                                    item: item.name,
+                                    total: total.toLocaleString(language),
+                                  })}
+                                  onClick={() =>
+                                    onAcceptOffer?.({
+                                      offerId: offer.id,
+                                      amount: offer.amount,
+                                    })
+                                  }
+                                >
+                                  {t("auction.sell")}
+                                </Button>
+                              </span>
                             </td>
                           </tr>
                         );

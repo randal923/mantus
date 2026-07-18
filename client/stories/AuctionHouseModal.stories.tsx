@@ -2,8 +2,10 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { AuctionHouseModal } from "../components/auction/AuctionHouseModal";
 import type {
+  AuctionHistoryEntry,
   AuctionHouseItem,
   AuctionOffer,
+  AuctionOwnOffer,
 } from "../components/auction/auctionTypes";
 
 const items: ReadonlyArray<AuctionHouseItem> = [
@@ -154,6 +156,71 @@ const offers: ReadonlyArray<AuctionOffer> = [
     pricePerItem: 8_500,
     expiresAt: "2026-07-28T14:00:00.000Z",
   },
+  {
+    id: "dragon-sell-mine",
+    itemId: "dragon-shield",
+    side: "sell",
+    amount: 1,
+    pricePerItem: 45_500,
+    expiresAt: "2026-07-29T10:00:00.000Z",
+    mine: true,
+  },
+];
+
+const ownOffers: ReadonlyArray<AuctionOwnOffer> = [
+  {
+    id: "dragon-sell-mine",
+    itemId: "dragon-shield",
+    side: "sell",
+    name: "Dragon Shield",
+    spriteId: 7902,
+    amount: 1,
+    pricePerItem: 45_500,
+    expiresAt: "2026-07-29T10:00:00.000Z",
+  },
+  {
+    id: "rune-buy-mine",
+    itemId: "sudden-death-rune",
+    side: "buy",
+    name: "Sudden Death Rune",
+    spriteId: 7622,
+    amount: 50,
+    pricePerItem: 3_000,
+    expiresAt: "2026-08-02T08:30:00.000Z",
+  },
+];
+
+const history: ReadonlyArray<AuctionHistoryEntry> = [
+  {
+    itemId: "fire-sword",
+    side: "sell",
+    name: "Fire Sword",
+    spriteId: 7749,
+    amount: 1,
+    pricePerItem: 8_400,
+    state: "accepted",
+    occurredAt: "2026-07-15T19:20:00.000Z",
+  },
+  {
+    itemId: "great-health-potion",
+    side: "buy",
+    name: "Great Health Potion",
+    spriteId: 4344,
+    amount: 100,
+    pricePerItem: 180,
+    state: "cancelled",
+    occurredAt: "2026-07-12T11:05:00.000Z",
+  },
+  {
+    itemId: "spellbook",
+    side: "sell",
+    name: "Spellbook",
+    spriteId: 4970,
+    amount: 1,
+    pricePerItem: 850,
+    state: "expired",
+    occurredAt: "2026-06-30T09:00:00.000Z",
+  },
 ];
 
 const meta = {
@@ -174,9 +241,13 @@ const meta = {
     offers,
     goldBalance: 298_765,
     initialItemId: "dragon-shield",
+    ownOffers,
+    history,
     onClose: fn(),
+    onSelectItem: fn(),
     onAcceptOffer: fn(),
     onCreateOrder: fn(),
+    onCancelOffer: fn(),
   },
 } satisfies Meta<typeof AuctionHouseModal>;
 
@@ -231,6 +302,18 @@ export const CreateOffer: Story = {
   args: {
     initialItemId: "fire-sword",
     initialTab: "create",
+  },
+};
+
+export const MyOffers: Story = {
+  args: {
+    initialTab: "mine",
+  },
+};
+
+export const ActionFailed: Story = {
+  args: {
+    error: "Your bank balance cannot cover that amount.",
   },
 };
 

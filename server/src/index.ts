@@ -12,6 +12,7 @@ import { PgBankStore } from "./economy/PgBankStore";
 import { PgShopStore } from "./economy/PgShopStore";
 import { PgNpcTravelStore } from "./npc/PgNpcTravelStore";
 import { PgDepotStore } from "./depot/PgDepotStore";
+import { PgMarketStore } from "./market/PgMarketStore";
 import { WorldItemSeeder } from "./item/WorldItemSeeder";
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -52,6 +53,7 @@ const npcTravel = new PgNpcTravelStore(pool, itemCatalog);
 const bank = new PgBankStore(pool, itemCatalog);
 const shop = new PgShopStore(pool, itemCatalog);
 const depot = new PgDepotStore(pool, itemCatalog);
+const market = new PgMarketStore(pool, itemCatalog);
 const worldItemDeltas =
   serverConfig.map.source === "data"
     ? await new WorldItemSeeder(
@@ -71,6 +73,7 @@ const server = new GameServer(serverConfig, {
   bank,
   shop,
   depot,
+  market,
   worldItemDeltas,
 });
 server.start();

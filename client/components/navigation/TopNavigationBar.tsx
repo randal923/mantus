@@ -6,7 +6,7 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
 
-type NavigationPanel = "character" | "inventory" | "quests" | "map";
+type NavigationPanel = "character" | "inventory" | "quests" | "map" | "market";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 const STATUS_CLASS: Record<ConnectionStatus, string> = {
@@ -30,6 +30,7 @@ interface TopNavigationBarProps {
   onInventory?: () => void;
   onQuests?: () => void;
   onMap?: () => void;
+  onMarket?: () => void;
   onSettings?: () => void;
 }
 
@@ -48,6 +49,7 @@ export function TopNavigationBar({
   onInventory,
   onQuests,
   onMap,
+  onMarket,
   onSettings,
 }: TopNavigationBarProps) {
   const { t } = useAppTranslation();
@@ -198,6 +200,28 @@ export function TopNavigationBar({
             strokeLinejoin="round"
           >
             <path d="m4 6 5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14M15 6v14" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.market")}
+          active={activePanel === "market"}
+          disabled={!onMarket}
+          onClick={onMarket}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5 sm:size-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 9.5 5.5 4h13L20 9.5" />
+            <path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0" />
+            <path d="M5.5 12.5V20h13v-7.5M9.5 20v-4.5h5V20" />
           </svg>
         </NavigationIconButton>
 

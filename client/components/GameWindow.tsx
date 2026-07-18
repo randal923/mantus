@@ -25,6 +25,7 @@ import { i18n } from "../i18n/i18n";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import { useDepotSession } from "../hooks/useDepotSession";
+import { useMarketSession } from "../hooks/useMarketSession";
 import { useOptimisticInventory } from "../hooks/useOptimisticInventory";
 import type { DepotAction } from "../lib/depot/DepotAction";
 import type {
@@ -54,6 +55,10 @@ import { validateItemOp } from "../lib/inventory/validateItemOp";
 import type { ShopCoinWeights } from "../lib/shop/ShopCoinWeights";
 import { precheckShopPurchase } from "../lib/shop/precheckShopPurchase";
 import { precheckShopSale } from "../lib/shop/precheckShopSale";
+import { toAuctionHistoryEntry } from "../lib/market/toAuctionHistoryEntry";
+import { toAuctionHouseItem } from "../lib/market/toAuctionHouseItem";
+import { toAuctionOffer } from "../lib/market/toAuctionOffer";
+import { toAuctionOwnOffer } from "../lib/market/toAuctionOwnOffer";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { InventoryPanel } from "./inventory/InventoryPanel";
@@ -67,6 +72,7 @@ import { BankPanel } from "./bank/BankPanel";
 import { ShopPanel } from "./shop/ShopPanel";
 import { DepotModal } from "./depot/DepotModal";
 import { MailboxModal } from "./depot/MailboxModal";
+import { AuctionHouseModal } from "./auction/AuctionHouseModal";
 
 interface BankSessionState {
   npcId: string;
@@ -235,6 +241,24 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     close: closeDepot,
     reset: resetDepot,
   } = useDepotSession(sendDepotAction);
+  const {
+    session: marketSession,
+    opened: confirmMarketOpened,
+    offersReceived: confirmMarketOffers,
+    ownOffersReceived: confirmMarketOwnOffers,
+    historyReceived: confirmMarketHistory,
+    transacted: confirmMarketTransacted,
+    fail: failMarket,
+    begin: beginMarketAction,
+    reset: resetMarket,
+  } = useMarketSession();
+  const marketOpenRef = useRef(false);
+  const marketSelectedItemRef = useRef<number | null>(null);
+  const closeMarket = useCallback(() => {
+    marketOpenRef.current = false;
+    marketSelectedItemRef.current = null;
+    resetMarket();
+  }, [resetMarket]);
   const [itemText, setItemText] = useState<
     Extract<ServerMessage, { type: "item-text" }> | null
   >(null);
@@ -254,6 +278,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [languageError, setLanguageError] = useState(false);
   const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
   const [runeTargeting, setRuneTargeting] = useState(false);
+  const marketItemOffers = marketSession?.itemOffers ?? null;
 
   const reconnect = (characterId: string | null) => {
     resumeCharacterIdRef.current = characterId;
@@ -268,6 +293,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setBankSession(null);
     setShopSession(null);
     resetDepot();
+    closeMarket();
     setMailboxSession(null);
     setVisibleCreatures([]);
     setFightState(null);
@@ -465,6 +491,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setBankSession(null);
             setShopSession(null);
             resetDepot();
+            closeMarket();
             setMailboxSession(null);
             dispatchChat({
               type: "reset",
@@ -507,6 +534,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (message.type === "bank-opened") {
             setShopSession(null);
             resetDepot();
+            closeMarket();
             setMailboxSession(null);
             setBankSession({
               npcId: message.npcId,
@@ -541,6 +569,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (message.type === "shop-opened") {
             setBankSession(null);
             resetDepot();
+            closeMarket();
             setMailboxSession(null);
             setShopSession((current) => {
               if (message.page === 1) {
@@ -634,10 +663,54 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             failDepot(message.reason);
             return;
           }
+          if (message.type === "market-opened") {
+            marketOpenRef.current = true;
+            confirmMarketOpened(message);
+            if (message.page < message.pageCount) {
+              client?.openMarket(message.page + 1);
+            }
+            if (message.page === 1) {
+              // Own offers and history arrive pushed alongside page 1.
+              const firstItem = message.items[0];
+              if (marketSelectedItemRef.current === null && firstItem) {
+                marketSelectedItemRef.current = firstItem.itemTypeId;
+                client?.browseMarket(firstItem.itemTypeId);
+              }
+            }
+            return;
+          }
+          if (message.type === "market-offers") {
+            confirmMarketOffers(message);
+            return;
+          }
+          if (message.type === "market-own-offers-state") {
+            confirmMarketOwnOffers(message);
+            return;
+          }
+          if (message.type === "market-own-history-state") {
+            confirmMarketHistory(message);
+            return;
+          }
+          if (message.type === "market-transacted") {
+            confirmMarketTransacted(message);
+            if (marketOpenRef.current) {
+              client?.openMarket(1);
+              const selectedItemTypeId = marketSelectedItemRef.current;
+              if (selectedItemTypeId !== null) {
+                client?.browseMarket(selectedItemTypeId);
+              }
+            }
+            return;
+          }
+          if (message.type === "market-action-failed") {
+            failMarket(message.reason);
+            return;
+          }
           if (message.type === "mailbox-opened") {
             setBankSession(null);
             setShopSession(null);
             resetDepot();
+            closeMarket();
             setMailboxSession({
               sessionId: message.sessionId,
               pending: false,
@@ -763,6 +836,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setItemText(null);
           if (nextStatus === "disconnected") setNpcDialogue(null);
           if (nextStatus === "disconnected") resetDepot();
+          if (nextStatus === "disconnected") closeMarket();
           if (nextStatus === "disconnected") setMailboxSession(null);
           if (nextStatus === "disconnected") clearInventoryPreviews();
           if (nextStatus === "disconnected") {
@@ -887,6 +961,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     resetDepot,
     confirmDepot,
     failDepot,
+    closeMarket,
+    confirmMarketOpened,
+    confirmMarketOffers,
+    confirmMarketOwnOffers,
+    confirmMarketHistory,
+    confirmMarketTransacted,
+    failMarket,
   ]);
 
   return (
@@ -939,11 +1020,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               maxMana={ownCharacter.maxMana}
               connectionStatus={status}
               activePanel={
-                characterStatsOpen
-                  ? "character"
-                  : inventoryOpen
-                    ? "inventory"
-                    : undefined
+                marketSession
+                  ? "market"
+                  : characterStatsOpen
+                    ? "character"
+                    : inventoryOpen
+                      ? "inventory"
+                      : undefined
               }
               onCharacter={() => {
                 setGameMenuOpen(false);
@@ -964,6 +1047,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 }
                 setCharacterStatsOpen(false);
                 setInventoryOpen((open) => !open);
+              }}
+              onMarket={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(false);
+                setCharacterStatsOpen(false);
+                if (marketSession) {
+                  closeMarket();
+                  return;
+                }
+                clientRef.current?.openMarket(1);
               }}
               onSettings={() => {
                 setInventoryOpen(false);
@@ -1244,7 +1337,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               onClose={() => setShopSession(null)}
             />
           )}
-          {depotSession && inventory && (
+          {depotSession && inventory && !marketSession && (
             <DepotModal
               key={depotSession.state.sessionId}
               state={depotSession.state}
@@ -1292,6 +1385,77 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 clientRef.current?.closeDepot(depotSession.state.sessionId);
                 closeDepot();
               }}
+            />
+          )}
+          {marketSession && (
+            <AuctionHouseModal
+              items={marketSession.items.map(toAuctionHouseItem)}
+              offers={
+                marketItemOffers
+                  ? marketItemOffers.offers.map((offer) =>
+                      toAuctionOffer(offer, marketItemOffers.itemTypeId),
+                    )
+                  : []
+              }
+              goldBalance={marketSession.balance}
+              ownOffers={marketSession.ownOffers.map(toAuctionOwnOffer)}
+              history={marketSession.history.map(toAuctionHistoryEntry)}
+              error={
+                marketSession.error
+                  ? t(`auction.errors.${marketSession.error}`, {
+                      defaultValue: t("auction.errors.failed"),
+                    })
+                  : null
+              }
+              onClose={closeMarket}
+              onSelectItem={(itemId) => {
+                const itemTypeId = Number(itemId);
+                if (!Number.isInteger(itemTypeId)) return;
+                marketSelectedItemRef.current = itemTypeId;
+                clientRef.current?.browseMarket(itemTypeId);
+              }}
+              onAcceptOffer={
+                marketSession.pending
+                  ? undefined
+                  : (intent) => {
+                      const sent =
+                        clientRef.current?.acceptMarketOffer(
+                          crypto.randomUUID(),
+                          intent.offerId,
+                          intent.amount,
+                        ) ?? false;
+                      beginMarketAction(sent);
+                    }
+              }
+              onCreateOrder={
+                marketSession.pending
+                  ? undefined
+                  : (intent) => {
+                      const itemTypeId = Number(intent.itemId);
+                      if (!Number.isInteger(itemTypeId)) return;
+                      const sent =
+                        clientRef.current?.createMarketOffer(
+                          crypto.randomUUID(),
+                          intent.side,
+                          itemTypeId,
+                          intent.amount,
+                          intent.pricePerItem,
+                        ) ?? false;
+                      beginMarketAction(sent);
+                    }
+              }
+              onCancelOffer={
+                marketSession.pending
+                  ? undefined
+                  : (offerId) => {
+                      const sent =
+                        clientRef.current?.cancelMarketOffer(
+                          crypto.randomUUID(),
+                          offerId,
+                        ) ?? false;
+                      beginMarketAction(sent);
+                    }
+              }
             />
           )}
           {mailboxSession && inventory && (

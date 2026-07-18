@@ -130,6 +130,7 @@
     "inventory": "Inventário",
     "quests": "Missões",
     "worldMap": "Mapa-múndi",
+    "market": "Mercado",
     "settings": "Configurações"
   },
   "connection": {
@@ -238,7 +239,44 @@
     "insufficientItems": "Você não possui itens suficientes para esta oferta de venda.",
     "serverValidationNotice": "Disponibilidade, posse, saldo, taxas e preço são verificados novamente pelo servidor quando a ordem é executada.",
     "createSellOffer": "Criar Oferta de Venda",
-    "createBuyOffer": "Criar Oferta de Compra"
+    "createBuyOffer": "Criar Oferta de Compra",
+    "myOffersTab": "Minhas Ofertas",
+    "yours": "Sua",
+    "activeOffers": "Ofertas Ativas",
+    "noOwnOffers": "Você não tem ofertas ativas.",
+    "cancel": "Cancelar",
+    "cancelOfferAction": "Cancelar sua oferta de {{item}}",
+    "history": "Histórico",
+    "noHistory": "Ainda não há histórico de mercado.",
+    "item": "Item",
+    "status": "Situação",
+    "date": "Data",
+    "states": {
+      "accepted": "Aceita",
+      "cancelled": "Cancelada",
+      "expired": "Expirada"
+    },
+    "errors": {
+      "out-of-range": "Você está longe demais do depot.",
+      "busy": "Aguarde sua outra ação no mercado terminar.",
+      "cooldown": "Você está agindo rápido demais. Aguarde um momento e tente novamente.",
+      "unavailable": "O mercado não está disponível no momento.",
+      "invalid-item": "Este item não pode ser negociado aqui.",
+      "not-marketable": "Este item não pode ser negociado no mercado.",
+      "not-owned": "Você não possui mais este item.",
+      "own-offer": "Você não pode aceitar sua própria oferta.",
+      "offer-not-found": "Esta oferta não existe mais.",
+      "insufficient-funds": "Seu saldo bancário não cobre este valor.",
+      "insufficient-items": "Você não tem itens suficientes neste depot.",
+      "offer-limit": "Você atingiu seu limite de ofertas ativas.",
+      "escrow-full": "Você tem itens demais retidos pelo mercado.",
+      "inbox-full": "Sua caixa de entrada atingiu o limite de itens.",
+      "amount-too-large": "Esta quantidade é grande demais.",
+      "price-limit": "Este preço excede o limite do mercado.",
+      "duplicate-request": "Esta solicitação já foi processada.",
+      "balance-limit": "Isso excederia o limite de saldo bancário.",
+      "failed": "O mercado não pôde concluir esta ação."
+    }
   },
   "bank": {
     "title": "Banco — {{npcName}}",

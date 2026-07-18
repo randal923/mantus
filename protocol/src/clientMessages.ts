@@ -20,6 +20,15 @@ import {
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
 import { PROTOCOL_LIMITS } from "./limits";
+import {
+  marketAcceptOfferMessageSchema,
+  marketBrowseMessageSchema,
+  marketCancelOfferMessageSchema,
+  marketCreateOfferMessageSchema,
+  marketOpenMessageSchema,
+  marketOwnHistoryMessageSchema,
+  marketOwnOffersMessageSchema,
+} from "./market";
 import { npcDialogueChoiceMessageSchema } from "./npc";
 import { shopBuyMessageSchema, shopSellMessageSchema } from "./shop";
 import { equipmentSlotSchema } from "./item";
@@ -316,6 +325,13 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   closeDepotMessageSchema,
   sendMailMessageSchema,
   closeMailboxMessageSchema,
+  marketOpenMessageSchema,
+  marketBrowseMessageSchema,
+  marketCreateOfferMessageSchema,
+  marketAcceptOfferMessageSchema,
+  marketCancelOfferMessageSchema,
+  marketOwnOffersMessageSchema,
+  marketOwnHistoryMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,
 ]);

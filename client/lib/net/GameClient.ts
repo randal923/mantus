@@ -11,6 +11,7 @@ import {
   type FightMode,
   type InventoryItem,
   type Language,
+  type MarketSide,
   type Position,
   type ServerErrorCode,
   type ServerMessage,
@@ -291,6 +292,60 @@ export class GameClient {
 
   closeDepot(sessionId: string): boolean {
     return this.send({ type: "close-depot", sessionId });
+  }
+
+  openMarket(page: number): boolean {
+    return this.send({ type: "market-open", page });
+  }
+
+  browseMarket(itemTypeId: number): boolean {
+    return this.send({ type: "market-browse", itemTypeId });
+  }
+
+  createMarketOffer(
+    requestId: string,
+    side: MarketSide,
+    itemTypeId: number,
+    amount: number,
+    unitPrice: number,
+  ): boolean {
+    return this.send({
+      type: "market-create-offer",
+      requestId,
+      side,
+      itemTypeId,
+      amount,
+      unitPrice,
+    });
+  }
+
+  acceptMarketOffer(
+    requestId: string,
+    offerId: string,
+    amount: number,
+  ): boolean {
+    return this.send({
+      type: "market-accept-offer",
+      requestId,
+      offerId,
+      amount,
+    });
+  }
+
+  cancelMarketOffer(requestId: string, offerId: string): boolean {
+    return this.send({
+      type: "market-cancel-offer",
+      requestId,
+      offerId,
+    });
+  }
+
+  requestMarketOwnOffers(): boolean {
+    return this.send({ type: "market-own-offers" });
+  }
+
+  requestMarketOwnHistory(): boolean {
+    return this.send({ type: "market-own-history" });
   }
 
   sendMail(

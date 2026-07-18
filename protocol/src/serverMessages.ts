@@ -36,6 +36,14 @@ import {
   npcDialogueClosedMessageSchema,
   npcDialogueMessageSchema,
 } from "./npc";
+import {
+  marketActionFailedMessageSchema,
+  marketOffersMessageSchema,
+  marketOpenedMessageSchema,
+  marketOwnHistoryStateMessageSchema,
+  marketOwnOffersStateMessageSchema,
+  marketTransactedMessageSchema,
+} from "./market";
 import { positionSchema } from "./position";
 import { ownProgressionStateSchema } from "./progression";
 import {
@@ -283,6 +291,12 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   mailboxOpenedMessageSchema,
   mailSentMessageSchema,
   mailActionFailedMessageSchema,
+  marketOpenedMessageSchema,
+  marketOffersMessageSchema,
+  marketOwnOffersStateMessageSchema,
+  marketOwnHistoryStateMessageSchema,
+  marketTransactedMessageSchema,
+  marketActionFailedMessageSchema,
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,

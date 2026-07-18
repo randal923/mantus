@@ -9,6 +9,7 @@ export * from "./gm";
 export * from "./item";
 export * from "./limits";
 export * from "./language";
+export * from "./market";
 export * from "./money";
 export * from "./npc";
 export * from "./position";

@@ -5,7 +5,9 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import { DepotAccessTracker } from "./DepotAccessTracker";
+import type { DepotCache } from "./DepotCache";
 import { DepotCacheManager } from "./DepotCacheManager";
+import type { DepotCacheEvent } from "./DepotCacheEvent";
 import type { DepotIntent } from "./DepotIntent";
 import type { DepotMutationPlan } from "./DepotMutationPlan";
 import { DepotOperationRunner } from "./DepotOperationRunner";
@@ -270,6 +272,20 @@ export class DepotService {
     session.send(
       projectDepotState(this.items, access, location, query, page, result),
     );
+  }
+
+  cacheFor(characterId: string): DepotCache | undefined {
+    return this.caches.get(characterId);
+  }
+
+  /** Applies a committed market/system mutation to an online character's cache. */
+  applyCacheEvent(characterId: string, event: DepotCacheEvent): void {
+    this.caches.apply(characterId, event);
+  }
+
+  /** Delivery for a character that may be offline or mid-login. */
+  applyExternalCacheEvent(characterId: string, event: DepotCacheEvent): void {
+    this.caches.applyExternal(characterId, event);
   }
 
   applyResolvedOutcomes(): void {

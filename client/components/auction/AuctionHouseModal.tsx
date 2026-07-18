@@ -6,20 +6,29 @@ import { useLanguageStore } from "../../stores/useLanguageStore";
 import { SpriteIcon } from "../inventory/SpriteIcon";
 import { CloseButton } from "../ui/CloseButton";
 import { AuctionItemBrowser } from "./AuctionItemBrowser";
+import { AuctionMyOffers } from "./AuctionMyOffers";
 import { AuctionOrderBook } from "./AuctionOrderBook";
 import { AuctionOrderTicket } from "./AuctionOrderTicket";
 import type {
+  AuctionHistoryEntry,
   AuctionHouseItem,
   AuctionItemCategory,
   AuctionOffer,
   AuctionOfferAcceptanceIntent,
   AuctionOrderIntent,
+  AuctionOwnOffer,
 } from "./auctionTypes";
 
 const GOLD_COIN_SPRITE = 7384;
 
 type AuctionCategoryFilter = "all" | AuctionItemCategory;
-type AuctionHouseTab = "offers" | "create";
+type AuctionHouseTab = "offers" | "create" | "mine";
+
+const TAB_LABEL_KEYS: Record<AuctionHouseTab, string> = {
+  offers: "auction.offersTab",
+  create: "auction.createOfferTab",
+  mine: "auction.myOffersTab",
+};
 
 interface AuctionHouseModalProps {
   items: ReadonlyArray<AuctionHouseItem>;
@@ -27,9 +36,14 @@ interface AuctionHouseModalProps {
   goldBalance: number;
   initialItemId?: string;
   initialTab?: AuctionHouseTab;
+  ownOffers?: ReadonlyArray<AuctionOwnOffer>;
+  history?: ReadonlyArray<AuctionHistoryEntry>;
+  error?: string | null;
   onClose: () => void;
+  onSelectItem?: (itemId: string) => void;
   onAcceptOffer?: (intent: AuctionOfferAcceptanceIntent) => void;
   onCreateOrder?: (intent: AuctionOrderIntent) => void;
+  onCancelOffer?: (offerId: string) => void;
 }
 
 export function AuctionHouseModal({
@@ -38,9 +52,14 @@ export function AuctionHouseModal({
   goldBalance,
   initialItemId,
   initialTab = "offers",
+  ownOffers = [],
+  history = [],
+  error = null,
   onClose,
+  onSelectItem,
   onAcceptOffer,
   onCreateOrder,
+  onCancelOffer,
 }: AuctionHouseModalProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
@@ -140,11 +159,21 @@ export function AuctionHouseModal({
 
         <div aria-hidden className="ui-divider" />
 
+        {error && (
+          <p
+            role="alert"
+            aria-live="assertive"
+            className="shrink-0 border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-xs leading-5 text-red-200"
+          >
+            {error}
+          </p>
+        )}
+
         <nav
           aria-label={t("auction.viewsLabel")}
-          className="grid shrink-0 grid-cols-2 gap-1.5 self-center rounded-lg border border-ui-stone-light/15 bg-black/30 p-1.5"
+          className="grid shrink-0 grid-cols-3 gap-1.5 self-center rounded-lg border border-ui-stone-light/15 bg-black/30 p-1.5"
         >
-          {(["offers", "create"] as const).map((tab) => (
+          {(["offers", "create", "mine"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -156,11 +185,7 @@ export function AuctionHouseModal({
                   : "border-transparent text-ui-muted hover:border-ui-gold/25 hover:text-ui-text"
               }`}
             >
-              {t(
-                tab === "offers"
-                  ? "auction.offersTab"
-                  : "auction.createOfferTab",
-              )}
+              {t(TAB_LABEL_KEYS[tab])}
             </button>
           ))}
         </nav>
@@ -173,7 +198,10 @@ export function AuctionHouseModal({
             selectedItemId={selectedItem?.id}
             onCategoryChange={setCategory}
             onSearchChange={setSearch}
-            onItemSelect={setSelectedItemId}
+            onItemSelect={(itemId) => {
+              setSelectedItemId(itemId);
+              onSelectItem?.(itemId);
+            }}
           />
           <div
             aria-label={t("auction.offersTab")}
@@ -205,6 +233,21 @@ export function AuctionHouseModal({
               item={selectedItem}
               goldBalance={goldBalance}
               onCreateOrder={onCreateOrder}
+            />
+          </div>
+          <div
+            aria-label={t("auction.myOffersTab")}
+            className={
+              activeTab === "mine"
+                ? "min-h-0 lg:col-span-8"
+                : "hidden"
+            }
+            role="region"
+          >
+            <AuctionMyOffers
+              ownOffers={ownOffers}
+              history={history}
+              onCancelOffer={onCancelOffer}
             />
           </div>
         </div>

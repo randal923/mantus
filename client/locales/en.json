@@ -130,6 +130,7 @@
     "inventory": "Inventory",
     "quests": "Quests",
     "worldMap": "World map",
+    "market": "Market",
     "settings": "Settings"
   },
   "connection": {
@@ -238,7 +239,44 @@
     "insufficientItems": "You do not own enough of this item for this sell offer.",
     "serverValidationNotice": "Availability, ownership, balance, fees, and price are checked again by the server when the order executes.",
     "createSellOffer": "Create Sell Offer",
-    "createBuyOffer": "Create Buy Offer"
+    "createBuyOffer": "Create Buy Offer",
+    "myOffersTab": "My Offers",
+    "yours": "Yours",
+    "activeOffers": "Active Offers",
+    "noOwnOffers": "You have no active offers.",
+    "cancel": "Cancel",
+    "cancelOfferAction": "Cancel your offer for {{item}}",
+    "history": "History",
+    "noHistory": "No market history yet.",
+    "item": "Item",
+    "status": "Status",
+    "date": "Date",
+    "states": {
+      "accepted": "Accepted",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "errors": {
+      "out-of-range": "You are too far away from the depot.",
+      "busy": "Please wait for your other market action to finish.",
+      "cooldown": "You are acting too fast. Wait a moment and try again.",
+      "unavailable": "The market is not available right now.",
+      "invalid-item": "That item cannot be traded here.",
+      "not-marketable": "That item cannot be traded on the market.",
+      "not-owned": "You do not own that item anymore.",
+      "own-offer": "You cannot accept your own offer.",
+      "offer-not-found": "That offer no longer exists.",
+      "insufficient-funds": "Your bank balance cannot cover that amount.",
+      "insufficient-items": "You do not have enough of that item in this depot.",
+      "offer-limit": "You have reached your active offer limit.",
+      "escrow-full": "You have too many items held by the market.",
+      "inbox-full": "Your inbox has reached its item limit.",
+      "amount-too-large": "That amount is too large.",
+      "price-limit": "That price exceeds the market limit.",
+      "duplicate-request": "That request was already processed.",
+      "balance-limit": "That would exceed the bank balance limit.",
+      "failed": "The market could not complete that action."
+    }
   },
   "bank": {
     "title": "Bank — {{npcName}}",

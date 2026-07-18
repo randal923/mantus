@@ -38,6 +38,7 @@ const meta = {
     onInventory: fn(),
     onQuests: fn(),
     onMap: fn(),
+    onMarket: fn(),
     onSettings: fn(),
   },
 } satisfies Meta<typeof TopNavigationBar>;

@@ -25,6 +25,32 @@ export interface AuctionOffer {
   amount: number;
   pricePerItem: number;
   expiresAt: string;
+  /** True when the viewing character created this offer. */
+  mine?: boolean;
+}
+
+export interface AuctionOwnOffer {
+  id: string;
+  itemId: string;
+  side: AuctionOfferSide;
+  name: string;
+  spriteId: number;
+  amount: number;
+  pricePerItem: number;
+  expiresAt: string;
+}
+
+export type AuctionHistoryState = "accepted" | "cancelled" | "expired";
+
+export interface AuctionHistoryEntry {
+  itemId: string;
+  side: AuctionOfferSide;
+  name: string;
+  spriteId: number;
+  amount: number;
+  pricePerItem: number;
+  state: AuctionHistoryState;
+  occurredAt: string;
 }
 
 export interface AuctionOfferAcceptanceIntent {
