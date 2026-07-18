@@ -1,30 +1,25 @@
 import { randomUUID } from "node:crypto";
-import {
-  PROTOCOL_LIMITS,
-  type ShopActionFailedReason,
-  type ShopBuyMessage,
-  type ShopEntryProjection,
-  type ShopSellMessage,
+import type {
+  ShopActionFailedReason,
+  ShopBuyMessage,
+  ShopSellMessage,
 } from "@tibia/protocol";
 import { Npc } from "../creature/Npc";
-import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
-import type { ItemType } from "../item/ItemType";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { World } from "../World";
-import type { ShopCatalog, ShopEntry } from "./ShopCatalog";
-import { countMoneyWorth } from "./countMoneyWorth";
-import {
-  CRYSTAL_COIN_TYPE_ID,
-  GOLD_COIN_TYPE_ID,
-  PLATINUM_COIN_TYPE_ID,
-  type CurrencyBalance,
-} from "./CurrencyBalance";
-import { planMoneyGrant } from "./planMoneyGrant";
-import { planMoneySpend } from "./planMoneySpend";
-import type { ShopItemSubtype, ShopStore } from "./ShopStore";
+import { inNpcTalkRange } from "./inNpcTalkRange";
+import { isShopEntryAvailable } from "./isShopEntryAvailable";
+import { npcOwnsShop } from "./npcOwnsShop";
+import { projectShopCurrency } from "./projectShopCurrency";
+import { projectShopEntry } from "./projectShopEntry";
+import { projectShopPages } from "./projectShopPages";
+import { resolveShopSubtype } from "./resolveShopSubtype";
+import type { ShopCatalog } from "./ShopCatalog";
+import { ShopPrechecks } from "./ShopPrechecks";
+import type { ShopStore } from "./ShopStore";
 
 type ShopIntent = ShopBuyMessage | ShopSellMessage;
 
@@ -36,24 +31,20 @@ interface OpenShopAuthorization {
   readonly expiresAt: number;
 }
 
-interface ShopCurrencyProjection {
-  readonly currencyItemTypeId: number;
-  readonly currencySpriteId: number;
-  readonly currencyName: string;
-  readonly currencyAmount: number;
-}
-
 export class ShopService {
   private readonly outcomes: Array<(now: number) => void> = [];
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly openShops = new WeakMap<Session, OpenShopAuthorization>();
+  private readonly prechecks: ShopPrechecks;
 
   constructor(
     private readonly world: World,
     private readonly items: ItemIntentHandler,
     private readonly catalogs: ReadonlyMap<string, ShopCatalog>,
     private readonly store?: ShopStore,
-  ) {}
+  ) {
+    this.prechecks = new ShopPrechecks(items);
+  }
 
   applyResolvedOutcomes(now: number): void {
     for (const outcome of this.outcomes.splice(0)) outcome(now);
@@ -83,19 +74,21 @@ export class ShopService {
       this.world.getCreature(npc.id) !== npc ||
       !session.knownCreatureIds.has(npc.id) ||
       catalog.npcTypeId !== npc.type.id ||
-      !this.npcOwnsShop(npc, shopId) ||
-      !this.inTalkRange(player, npc)
+      !npcOwnsShop(npc, shopId) ||
+      !inNpcTalkRange(player, npc)
     ) {
       return "unavailable";
     }
     const entries = catalog.entries
-      .filter((entry) => this.isAvailable(player, entry))
-      .flatMap((entry) => this.projectEntry(entry));
+      .filter((entry) => isShopEntryAvailable(player, entry))
+      .flatMap((entry) =>
+        projectShopEntry(entry, this.items.itemType(entry.itemTypeId)),
+      );
     if (entries.length === 0) return "unavailable";
-    const currency = this.currencyProjection(player, catalog);
+    const currency = projectShopCurrency(this.items, player, catalog);
     if (!currency) return "unavailable";
     const shopSessionId = randomUUID();
-    const pages = this.projectPages(
+    const pages = projectShopPages(
       npc,
       shopId,
       shopSessionId,
@@ -162,13 +155,13 @@ export class ShopService {
       !session.knownCreatureIds.has(npc.id) ||
       !catalog ||
       catalog.npcTypeId !== npc.type.id ||
-      !this.npcOwnsShop(npc, open.shopId)
+      !npcOwnsShop(npc, open.shopId)
     ) {
       this.openShops.delete(session);
       this.fail(session, "unavailable");
       return;
     }
-    if (!this.inTalkRange(player, npc)) {
+    if (!inNpcTalkRange(player, npc)) {
       this.openShops.delete(session);
       this.fail(session, "out-of-range");
       return;
@@ -184,7 +177,7 @@ export class ShopService {
     const currencyType = catalog.currencyItemTypeId === undefined
       ? undefined
       : this.items.itemType(catalog.currencyItemTypeId);
-    const subtype = entry && type ? this.resolveSubtype(entry, type) : null;
+    const subtype = entry && type ? resolveShopSubtype(entry, type) : null;
     if (
       !entry ||
       !type ||
@@ -197,7 +190,7 @@ export class ShopService {
       this.fail(session, "invalid-item");
       return;
     }
-    if (!this.isAvailable(player, entry)) {
+    if (!isShopEntryAvailable(player, entry)) {
       this.fail(session, "unavailable");
       return;
     }
@@ -209,7 +202,7 @@ export class ShopService {
         return;
       }
       const totalCost = buyPrice * intent.amount;
-      const precheck = this.precheckPurchase(
+      const precheck = this.prechecks.precheckPurchase(
         player,
         type.weight,
         intent.amount,
@@ -255,11 +248,14 @@ export class ShopService {
       this.fail(session, "invalid-item");
       return;
     }
-    if (this.countSellable(player, entry.itemTypeId, subtype) < intent.amount) {
+    if (
+      this.prechecks.countSellable(player, entry.itemTypeId, subtype) <
+      intent.amount
+    ) {
       this.fail(session, "not-owned");
       return;
     }
-    const salePrecheck = this.precheckSale(
+    const salePrecheck = this.prechecks.precheckSale(
       player,
       type.weight,
       intent.amount,
@@ -357,286 +353,6 @@ export class ShopService {
     this.pendingOperations.add(resolution);
     void resolution.finally(() => this.pendingOperations.delete(resolution));
     this.items.trackExternalOperation(player.id, resolution);
-  }
-
-  /** Fast in-memory checks at execution time; the store re-validates in SQL. */
-  private precheckPurchase(
-    player: Player,
-    unitWeight: number,
-    amount: number,
-    totalCost: number,
-    currencyItemTypeId?: number,
-  ): ShopActionFailedReason | null {
-    const snapshot = this.items.inventorySnapshot(player.id);
-    if (!snapshot) return "failed";
-    if (currencyItemTypeId !== undefined) {
-      if (this.countType(snapshot.items, currencyItemTypeId) < totalCost) {
-        return "insufficient-funds";
-      }
-      const weightAfter =
-        this.usedWeight(snapshot.items) -
-        this.itemWeight(currencyItemTypeId) * totalCost +
-        unitWeight * amount;
-      return weightAfter > snapshot.capacityMax * 100 ? "no-capacity" : null;
-    }
-    const carried = this.countCarried(snapshot.items);
-    const plan = planMoneySpend(
-      carried,
-      Math.min(countMoneyWorth(carried), totalCost),
-    );
-    if (!plan) return "failed";
-    const paymentWeight =
-      plan.goldSpent * this.itemWeight(GOLD_COIN_TYPE_ID) +
-      plan.platinumSpent * this.itemWeight(PLATINUM_COIN_TYPE_ID) +
-      plan.crystalSpent * this.itemWeight(CRYSTAL_COIN_TYPE_ID) -
-      plan.goldChange * this.itemWeight(GOLD_COIN_TYPE_ID) -
-      plan.platinumChange * this.itemWeight(PLATINUM_COIN_TYPE_ID);
-    const weightAfter =
-      this.usedWeight(snapshot.items) - paymentWeight + unitWeight * amount;
-    if (weightAfter > snapshot.capacityMax * 100) {
-      return "no-capacity";
-    }
-    return null;
-  }
-
-  private precheckSale(
-    player: Player,
-    unitWeight: number,
-    amount: number,
-    totalProceeds: number,
-    currencyItemTypeId?: number,
-  ): ShopActionFailedReason | null {
-    const snapshot = this.items.inventorySnapshot(player.id);
-    if (!snapshot) return "failed";
-    if (currencyItemTypeId !== undefined) {
-      const weightAfter =
-        this.usedWeight(snapshot.items) -
-        unitWeight * amount +
-        this.itemWeight(currencyItemTypeId) * totalProceeds;
-      return weightAfter > snapshot.capacityMax * 100 ? "no-capacity" : null;
-    }
-    const grant = planMoneyGrant(totalProceeds);
-    const proceedsWeight =
-      grant.gold * this.itemWeight(GOLD_COIN_TYPE_ID) +
-      grant.platinum * this.itemWeight(PLATINUM_COIN_TYPE_ID) +
-      grant.crystal * this.itemWeight(CRYSTAL_COIN_TYPE_ID);
-    const weightAfter =
-      this.usedWeight(snapshot.items) - unitWeight * amount + proceedsWeight;
-    return weightAfter > snapshot.capacityMax * 100 ? "no-capacity" : null;
-  }
-
-  private countSellable(
-    player: Player,
-    itemTypeId: number,
-    subtype?: ShopItemSubtype,
-  ): number {
-    const snapshot = this.items.inventorySnapshot(player.id);
-    if (!snapshot) return 0;
-    const parentIds = new Set(
-      snapshot.items.flatMap((item) =>
-        item.location.kind === "container" || item.location.kind === "corpse"
-          ? [item.location.containerId]
-          : [],
-      ),
-    );
-    return snapshot.items
-      .filter(
-        (item) =>
-          item.typeId === itemTypeId &&
-          item.location.kind !== "equipment" &&
-          !parentIds.has(item.id) &&
-          this.itemHasSubtype(item, subtype),
-      )
-      .reduce((total, item) => total + item.count, 0);
-  }
-
-  private projectEntry(entry: ShopEntry): ShopEntryProjection[] {
-    const type = this.items.itemType(entry.itemTypeId);
-    if (!type || this.resolveSubtype(entry, type) === null) return [];
-    return [
-      {
-        offerId: entry.offerId,
-        itemTypeId: entry.itemTypeId,
-        clientId: type.clientId,
-        spriteId: type.spriteId,
-        name: entry.name,
-        stackable: type.stackable,
-        maxCount: type.maxCount,
-        weight: type.weight,
-        ...(type.stowable && entry.subtype === undefined
-          ? { stowable: true }
-          : {}),
-        minimumAmount: entry.minimumAmount,
-        maximumAmount: entry.maximumAmount,
-        ...(entry.subtype === undefined ? {} : { subtype: entry.subtype }),
-        ...(entry.buyPrice === undefined ? {} : { buyPrice: entry.buyPrice }),
-        ...(entry.sellPrice === undefined
-          ? {}
-          : { sellPrice: entry.sellPrice }),
-      },
-    ];
-  }
-
-  private projectPages(
-    npc: Npc,
-    shopId: string,
-    shopSessionId: string,
-    entries: ReadonlyArray<ShopEntryProjection>,
-    currency: ShopCurrencyProjection,
-  ): ShopEntryProjection[][] | null {
-    const pages: ShopEntryProjection[][] = [];
-    let current: ShopEntryProjection[] = [];
-    for (const entry of entries) {
-      const candidate = [...current, entry];
-      const bytes = Buffer.byteLength(
-        JSON.stringify({
-          type: "shop-opened",
-          npcId: npc.id,
-          npcName: npc.name,
-          shopId,
-          shopSessionId,
-          ...currency,
-          page: 256,
-          pageCount: 256,
-          entries: candidate,
-        }),
-      );
-      if (bytes <= PROTOCOL_LIMITS.maxMessageBytes) {
-        current = candidate;
-        continue;
-      }
-      if (current.length === 0) return null;
-      pages.push(current);
-      current = [entry];
-      const singleEntryBytes = Buffer.byteLength(
-        JSON.stringify({
-          type: "shop-opened",
-          npcId: npc.id,
-          npcName: npc.name,
-          shopId,
-          shopSessionId,
-          ...currency,
-          page: 256,
-          pageCount: 256,
-          entries: current,
-        }),
-      );
-      if (singleEntryBytes > PROTOCOL_LIMITS.maxMessageBytes) return null;
-    }
-    if (current.length > 0) pages.push(current);
-    return pages.length > 0 && pages.length <= 256 ? pages : null;
-  }
-
-  private resolveSubtype(
-    entry: ShopEntry,
-    type: ItemType,
-  ): ShopItemSubtype | null | undefined {
-    if (entry.subtype === undefined) return undefined;
-    if (type.stackable) return null;
-    if (type.charges !== undefined) {
-      return { kind: "charges", value: entry.subtype };
-    }
-    if (
-      (type.render.fluidContainer || type.render.splash) &&
-      entry.subtype <= 255
-    ) {
-      return { kind: "fluid", value: entry.subtype };
-    }
-    return null;
-  }
-
-  private isAvailable(player: Player, entry: ShopEntry): boolean {
-    if (entry.minimumLevel !== undefined && player.level < entry.minimumLevel) {
-      return false;
-    }
-    if (entry.vocations && !entry.vocations.includes(player.vocation)) {
-      return false;
-    }
-    return (
-      !entry.availability ||
-      entry.availability.every(
-        (rule) => player.storageValue(rule.key) >= rule.value,
-      )
-    );
-  }
-
-  private itemHasSubtype(item: Item, subtype?: ShopItemSubtype): boolean {
-    if (!subtype) return true;
-    const key = subtype.kind === "charges" ? "charges" : "fluidType";
-    return item.attributes[key] === subtype.value;
-  }
-
-  private countCarried(items: ReadonlyArray<Item>): CurrencyBalance {
-    const count = (typeId: number) =>
-      items
-        .filter((item) => item.typeId === typeId)
-        .reduce((total, item) => total + item.count, 0);
-    return {
-      gold: count(GOLD_COIN_TYPE_ID),
-      platinum: count(PLATINUM_COIN_TYPE_ID),
-      crystal: count(CRYSTAL_COIN_TYPE_ID),
-    };
-  }
-
-  private currencyProjection(
-    player: Player,
-    catalog: ShopCatalog,
-  ): ShopCurrencyProjection | null {
-    const snapshot = this.items.inventorySnapshot(player.id);
-    const currencyItemTypeId = catalog.currencyItemTypeId ?? GOLD_COIN_TYPE_ID;
-    const type = this.items.itemType(currencyItemTypeId);
-    if (
-      !snapshot ||
-      !type ||
-      (catalog.currencyItemTypeId !== undefined && !type.stackable)
-    ) {
-      return null;
-    }
-    return {
-      currencyItemTypeId,
-      currencySpriteId: type.spriteId,
-      currencyName: catalog.currencyName ?? "gold",
-      currencyAmount: catalog.currencyItemTypeId !== undefined
-        ? this.countType(snapshot.items, currencyItemTypeId)
-        : countMoneyWorth(this.countCarried(snapshot.items)),
-    };
-  }
-
-  private countType(items: ReadonlyArray<Item>, typeId: number): number {
-    return items
-      .filter((item) => item.typeId === typeId)
-      .reduce((total, item) => total + item.count, 0);
-  }
-
-  private usedWeight(items: ReadonlyArray<Item>): number {
-    return items.reduce(
-      (total, item) => total + this.itemWeight(item.typeId) * item.count,
-      0,
-    );
-  }
-
-  private itemWeight(typeId: number): number {
-    return this.items.itemType(typeId)?.weight ?? 0;
-  }
-
-  private npcOwnsShop(npc: Npc, shopId: string): boolean {
-    return Boolean(
-      npc.type.dialogue?.nodes.some(
-        (node) =>
-          node.action?.kind === "shop" && node.action.shopId === shopId,
-      ),
-    );
-  }
-
-  private inTalkRange(player: Player, npc: Npc): boolean {
-    const range = npc.type.dialogue?.talkRange ?? 0;
-    return (
-      player.position.z === npc.position.z &&
-      Math.max(
-        Math.abs(player.position.x - npc.position.x),
-        Math.abs(player.position.y - npc.position.y),
-      ) <= range
-    );
   }
 
   private fail(session: Session, reason: ShopActionFailedReason): void {

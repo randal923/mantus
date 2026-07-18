@@ -5,58 +5,37 @@ import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
 import type { MapData } from "./MapData";
 import type { ItemMutation } from "./item/ItemMutation";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
-import type { MapItem } from "./MapItem";
-import { getStepDurationMs } from "./getStepDurationMs";
-import { Player } from "./Player";
-import { positionKey } from "./positionKey";
+import type { Player } from "./Player";
 import { SpatialGrid } from "./SpatialGrid";
+import { DynamicMapItems } from "./world/DynamicMapItems";
+import { MovementRules } from "./world/MovementRules";
+import type { MoveResult } from "./world/MoveResult";
+import { TileOccupancy } from "./world/TileOccupancy";
 
-const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
-  north: [0, -1],
-  east: [1, 0],
-  south: [0, 1],
-  west: [-1, 0],
-  northeast: [1, -1],
-  southeast: [1, 1],
-  southwest: [-1, 1],
-  northwest: [-1, -1],
-};
-
-/** A full spawn ring this far out means the temple area is packed solid. */
-const SPAWN_SEARCH_RADIUS = 256;
-
-export type MoveResult =
-  | {
-      moved: false;
-      turned: boolean;
-      reason: "cooldown" | "blocked" | "occupied" | "invalid-transition";
-      retryAfterMs: number;
-    }
-  | {
-      moved: true;
-      turned: boolean;
-      from: Position;
-      durationMs: number;
-    };
+export type { MoveResult } from "./world/MoveResult";
 
 export class World {
   private readonly players = new Map<string, Player>();
   private readonly creatures = new Map<string, Creature>();
   private readonly grid = new SpatialGrid();
-  private readonly hiddenMapItemIds = new Set<string>();
-  private readonly dynamicMapItems = new Map<string, MapItem[]>();
-  private readonly tileItemRevisions = new Map<string, number>();
-  private readonly positionReservations = new Map<string, string>();
+  private readonly mapItems: DynamicMapItems;
+  private readonly occupancy: TileOccupancy;
+  private readonly movement: MovementRules;
 
   constructor(
     private readonly map: MapData,
-    private readonly tickMs: number,
+    tickMs: number,
     worldItemDeltas: WorldItemDeltas = { hiddenSeedKeys: [], items: [] },
   ) {
+    this.mapItems = new DynamicMapItems(map);
+    this.occupancy = new TileOccupancy(map, this.grid);
+    this.movement = new MovementRules(map, tickMs, this.grid, this.occupancy);
     for (const seedKey of worldItemDeltas.hiddenSeedKeys) {
-      this.hiddenMapItemIds.add(seedKey);
+      this.mapItems.hideSeed(seedKey);
     }
-    for (const item of worldItemDeltas.items) this.addDynamicWorldItem(item);
+    for (const item of worldItemDeltas.items) {
+      this.mapItems.addDynamicWorldItem(item);
+    }
   }
 
   get mapName(): string {
@@ -117,54 +96,23 @@ export class World {
   }
 
   getMapItems(position: Position) {
-    const key = positionKey(position);
-    return [
-      ...this.map
-        .getItems(position)
-        .filter((item) => !this.hiddenMapItemIds.has(item.instanceId)),
-      ...(this.dynamicMapItems.get(key) ?? []),
-    ].sort((left, right) => left.stackIndex - right.stackIndex);
+    return this.mapItems.getMapItems(position);
   }
 
   isOccupied(position: Position): boolean {
-    return (
-      this.grid.query(position, 0, 0).length > 0 ||
-      this.positionReservations.has(positionKey(position))
-    );
+    return this.occupancy.isOccupied(position);
   }
 
   reservePosition(position: Position, reservationId: string): boolean {
-    const key = positionKey(position);
-    if (!this.isWalkable(position) || this.isOccupied(position)) return false;
-    this.positionReservations.set(key, reservationId);
-    return true;
+    return this.occupancy.reservePosition(position, reservationId);
   }
 
   releasePosition(position: Position, reservationId: string): void {
-    const key = positionKey(position);
-    if (this.positionReservations.get(key) === reservationId) {
-      this.positionReservations.delete(key);
-    }
+    this.occupancy.releasePosition(position, reservationId);
   }
 
   findUnoccupiedPosition(preferred: Position, maxRadius: number): Position | null {
-    for (let radius = 0; radius <= maxRadius; radius++) {
-      for (let y = preferred.y - radius; y <= preferred.y + radius; y++) {
-        for (let x = preferred.x - radius; x <= preferred.x + radius; x++) {
-          if (
-            Math.max(Math.abs(x - preferred.x), Math.abs(y - preferred.y)) !==
-            radius
-          ) {
-            continue;
-          }
-          const position = { x, y, z: preferred.z };
-          if (this.isWalkable(position) && !this.isOccupied(position)) {
-            return position;
-          }
-        }
-      }
-    }
-    return null;
+    return this.occupancy.findUnoccupiedPosition(preferred, maxRadius);
   }
 
   /** Players within the view box centered on (x, y). */
@@ -226,97 +174,19 @@ export class World {
   }
 
   mapItemTilesVisibleFrom(position: Position, range: ViewRange) {
-    const firstFloor = getFirstVisibleFloor(position, this.map);
-    const floors =
-      position.z > 7
-        ? [position.z]
-        : Array.from(
-            { length: position.z - firstFloor + 1 },
-            (_, index) => firstFloor + index,
-          );
-    const tiles = [];
-    for (const z of floors) {
-      const shift = position.z - z;
-      const centerX = position.x + shift;
-      const centerY = position.y + shift;
-      for (let y = centerY - range.y; y <= centerY + range.y; y++) {
-        for (let x = centerX - range.x; x <= centerX + range.x; x++) {
-          const tilePosition = { x, y, z };
-          const items = this.getMapItems(tilePosition);
-          if (items.length === 0) continue;
-          tiles.push({
-            position: tilePosition,
-            revision: this.tileItemRevisions.get(positionKey(tilePosition)) ?? 0,
-            items: items.map((item) => ({
-              instanceId: item.instanceId,
-              itemId: item.itemId,
-              stackIndex: item.stackIndex,
-              revision: item.revision ?? 1,
-              count: item.count ?? 1,
-            })),
-          });
-        }
-      }
-    }
-    return tiles;
+    return this.mapItems.mapItemTilesVisibleFrom(position, range);
   }
 
   mapItemTileState(position: Position) {
-    const items = this.getMapItems(position);
-    return {
-      position: { ...position },
-      revision: this.tileItemRevisions.get(positionKey(position)) ?? 0,
-      items: items.map((item) => ({
-        instanceId: item.instanceId,
-        itemId: item.itemId,
-        stackIndex: item.stackIndex,
-        revision: item.revision ?? 1,
-        count: item.count ?? 1,
-      })),
-    };
+    return this.mapItems.mapItemTileState(position);
   }
 
   applyItemMutation(mutation: ItemMutation): Position[] {
-    const changed = new Map<string, Position>();
-    if (mutation.before?.location.kind === "world") {
-      const { position } = mutation.before.location;
-      changed.set(positionKey(position), position);
-      if (mutation.before.seedKey) {
-        this.hiddenMapItemIds.add(mutation.before.seedKey);
-        this.removeDynamicWorldItem(
-          mutation.before.seedKey,
-          mutation.before.location.position,
-        );
-      } else {
-        this.removeDynamicWorldItem(mutation.before.id, position);
-      }
-    }
-    for (const item of mutation.after) {
-      if (item.location.kind !== "world") continue;
-      if (item.seedKey) this.hiddenMapItemIds.add(item.seedKey);
-      this.removeDynamicWorldItem(item.id, item.location.position);
-      if (item.seedKey) {
-        this.removeDynamicWorldItem(item.seedKey, item.location.position);
-      }
-      this.addDynamicWorldItem(item);
-      changed.set(positionKey(item.location.position), item.location.position);
-    }
-    for (const key of changed.keys()) {
-      this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
-    }
-    return [...changed.values()];
+    return this.mapItems.applyItemMutation(mutation);
   }
 
   applyCreatedWorldItems(items: ReadonlyArray<ItemMutation["after"][number]>): Position[] {
-    const changed = new Map<string, Position>();
-    for (const item of items) {
-      if (item.location.kind !== "world") continue;
-      this.addDynamicWorldItem(item);
-      const key = positionKey(item.location.position);
-      changed.set(key, item.location.position);
-      this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
-    }
-    return [...changed.values()];
+    return this.mapItems.applyCreatedWorldItems(items);
   }
 
   playersWhoCanSee(position: Position, range: ViewRange): Player[] {
@@ -339,28 +209,7 @@ export class World {
 
   /** Spiral out from the map's spawn point until a free tile is found. */
   findSpawn(preferred?: Position): Position | null {
-    if (
-      preferred &&
-      this.isWalkable(preferred) &&
-      !this.isOccupied(preferred)
-    ) {
-      return { ...preferred };
-    }
-    const { x: cx, y: cy, z } = this.map.spawn;
-    for (let radius = 0; radius < SPAWN_SEARCH_RADIUS; radius++) {
-      for (let dy = -radius; dy <= radius; dy++) {
-        for (let dx = -radius; dx <= radius; dx++) {
-          if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
-          const x = cx + dx;
-          const y = cy + dy;
-          const position = { x, y, z };
-          if (this.isWalkable(position) && !this.isOccupied(position)) {
-            return position;
-          }
-        }
-      }
-    }
-    return null;
+    return this.occupancy.findSpawn(preferred);
   }
 
   addPlayer(player: Player): void {
@@ -431,7 +280,7 @@ export class World {
    * walk-speed cooldown, bounds, blocked tiles, occupancy (charter rules 4, 8).
    */
   tryMove(player: Player, direction: Direction, now: number): MoveResult {
-    return this.tryMoveInternal(player, direction, now, true);
+    return this.movement.tryMove(player, direction, now);
   }
 
   tryMoveCreature(
@@ -440,172 +289,10 @@ export class World {
     now: number,
     leash?: { home: Position; radius: number },
   ): MoveResult {
-    return this.tryMoveInternal(creature, direction, now, false, leash);
-  }
-
-  private tryMoveInternal(
-    creature: Creature,
-    requestedDirection: Direction,
-    now: number,
-    allowTransitions: boolean,
-    leash?: { home: Position; radius: number },
-  ): MoveResult {
-    const direction = creature.conditions.resolveDirection(
-      requestedDirection,
-      now,
-    );
-    const turned = creature.direction !== direction;
-    creature.direction = direction;
-
-    if (now < creature.nextStepAt) {
-      return {
-        moved: false,
-        turned,
-        reason: "cooldown",
-        retryAfterMs: creature.nextStepAt - now,
-      };
-    }
-    const [dx, dy] = DIRECTION_DELTAS[direction];
-    const from = creature.position;
-    const destination = {
-      x: from.x + dx,
-      y: from.y + dy,
-      z: from.z,
-    };
-    if (
-      creature instanceof Player &&
-      creature.conditions.has("pz-lock") &&
-      this.isProtectionZone(destination)
-    ) {
-      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
-    }
-    if (
-      leash &&
-      (destination.z !== leash.home.z ||
-        Math.max(
-          Math.abs(destination.x - leash.home.x),
-          Math.abs(destination.y - leash.home.y),
-        ) > leash.radius)
-    ) {
-      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
-    }
-    if (!this.isWalkable(destination)) {
-      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
-    }
-    if (this.isOccupied(destination)) {
-      return { moved: false, turned, reason: "occupied", retryAfterMs: 0 };
-    }
-    const transition = allowTransitions
-      ? this.map.getTransition(destination, direction)
-      : undefined;
-    const resolved = transition?.destination ?? destination;
-    if (!this.isWalkable(resolved)) {
-      return {
-        moved: false,
-        turned,
-        reason: transition ? "invalid-transition" : "blocked",
-        retryAfterMs: 0,
-      };
-    }
-    if (this.isOccupied(resolved)) {
-      return { moved: false, turned, reason: "occupied", retryAfterMs: 0 };
-    }
-    const groundSpeed = this.map.getGroundSpeed(resolved);
-    if (!groundSpeed) {
-      return {
-        moved: false,
-        turned,
-        reason: "invalid-transition",
-        retryAfterMs: 0,
-      };
-    }
-    const durationMs = getStepDurationMs(
-      creature.stepSpeed,
-      groundSpeed,
-      this.tickMs,
-      dx !== 0 && dy !== 0,
-    );
-    creature.moveTo(resolved);
-    creature.nextStepAt = now + durationMs;
-    this.grid.move(creature, from);
-    return { moved: true, turned, from, durationMs };
+    return this.movement.tryMoveCreature(creature, direction, now, leash);
   }
 
   tryUseMap(player: Player, target: Position, now: number): MoveResult {
-    const from = player.position;
-    const distance = Math.abs(target.x - from.x) + Math.abs(target.y - from.y);
-    if (target.z !== from.z || distance > 1) {
-      return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
-    }
-    if (now < player.nextStepAt) {
-      return {
-        moved: false,
-        turned: false,
-        reason: "cooldown",
-        retryAfterMs: player.nextStepAt - now,
-      };
-    }
-    const action = this.map.getAction(target);
-    if (!action || !this.isWalkable(action.destination)) {
-      return {
-        moved: false,
-        turned: false,
-        reason: "invalid-transition",
-        retryAfterMs: 0,
-      };
-    }
-    if (this.isOccupied(action.destination)) {
-      return { moved: false, turned: false, reason: "occupied", retryAfterMs: 0 };
-    }
-    const groundSpeed = this.map.getGroundSpeed(action.destination);
-    if (!groundSpeed) {
-      return {
-        moved: false,
-        turned: false,
-        reason: "invalid-transition",
-        retryAfterMs: 0,
-      };
-    }
-    const durationMs = getStepDurationMs(
-      player.stepSpeed,
-      groundSpeed,
-      this.tickMs,
-    );
-    player.moveTo(action.destination);
-    player.nextStepAt = now + durationMs;
-    this.grid.move(player, from);
-    return { moved: true, turned: false, from, durationMs };
-  }
-
-  private addDynamicWorldItem(item: WorldItemDeltas["items"][number]): void {
-    if (item.location.kind !== "world") return;
-    const key = positionKey(item.location.position);
-    const current = this.dynamicMapItems.get(key) ?? [];
-    const instanceId = item.seedKey ?? item.id;
-    this.dynamicMapItems.set(key, [
-      ...current.filter((candidate) => candidate.instanceId !== instanceId),
-      {
-        instanceId,
-        itemId: item.typeId,
-        stackIndex: item.location.stackIndex,
-        mutable: true,
-        revision: item.version,
-        count: item.count,
-      },
-    ]);
-  }
-
-  private removeDynamicWorldItem(itemId: string, position: Position): void {
-    const key = positionKey(position);
-    const current = this.dynamicMapItems.get(key);
-    if (!current) return;
-    const filtered = current.filter(
-      (candidate) => candidate.instanceId !== itemId,
-    );
-    if (filtered.length === 0) {
-      this.dynamicMapItems.delete(key);
-      return;
-    }
-    this.dynamicMapItems.set(key, filtered);
+    return this.movement.tryUseMap(player, target, now);
   }
 }

@@ -169,6 +169,12 @@ is atomic.
   use the combined-CTE pattern. `equip`, `unequip`, `pickup`, and `drop`
   still run ~8 sequential queries per call; apply the same pattern if their
   confirm latency matters now that drags render optimistically.
+- `itemFromRow`/`locationFromRow`/`isAttributes` and the item-row interface
+  exist in near-duplicate copies in `server/src/item/` and `server/src/depot/`
+  (a duplication that predates the 2026-07-18 structural refactor, now visible
+  as parallel files). Deduplicating means one module importing the other's row
+  mapping; do it deliberately in one pass, since the depot variant's location
+  handling differs subtly (depot/inbox kinds).
 
 ## Pinned Canary parity gate
 

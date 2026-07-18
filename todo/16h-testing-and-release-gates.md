@@ -27,6 +27,16 @@ the final gate before public access; it assumes 16a–16g are in place.
   registered gameplay definition, callback, placement, persistent system, or
   player/operator-facing action is absent from the ledger, regresses to
   unsupported, or loses aggregate/fixture coverage.
+- [ ] Fix 3 pre-existing pg integration failures (verified identical before
+  and after the 2026-07-18 structural refactor, so not refactor-caused):
+  `PgCharacterStore` "serializes generic container moves" and "rolls ownership
+  and audit back together" both abort early with "starter gold was not
+  created" (the tests expect a gold item in the starter set that the current
+  starter content no longer includes), and `PgDepotStore` "delivers one
+  offline reward when the same delivery is retried" surfaces "could not
+  serialize access due to concurrent update" instead of retrying/absorbing
+  the serialization conflict. The other 66 integration tests pass against the
+  local docker Postgres.
 
 ## Production checklist
 

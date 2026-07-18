@@ -4,12 +4,16 @@ import type {
   ItemContainerDestination,
   Position,
 } from "@tibia/protocol";
+import { collectMemoryDescendantIds } from "./collectMemoryDescendantIds";
+import { collectReachableItemIds } from "./collectReachableItemIds";
 import type { Item } from "./Item";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
 import type { LootItemCreation } from "./LootItemCreation";
+import { requireMemoryContainerPlacement } from "./requireMemoryContainerPlacement";
+import { requireOwnedMemoryItem } from "./requireOwnedMemoryItem";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
 
@@ -26,31 +30,10 @@ export class MemoryItemStore implements ItemStore {
   }
 
   async loadForCharacter(characterId: string): Promise<ReadonlyArray<Item>> {
-    const owned = new Set(
-      [...this.items.values()]
-        .filter(
-          (item) =>
-            (item.location.kind === "equipment" ||
-              item.location.kind === "inventory") &&
-            item.location.characterId === characterId,
-        )
-        .map((item) => item.id),
+    const owned = collectReachableItemIds(
+      [...this.items.values()],
+      characterId,
     );
-    for (let depth = 0; depth < 8; depth++) {
-      let changed = false;
-      for (const item of this.items.values()) {
-        if (
-          (item.location.kind === "container" ||
-            item.location.kind === "corpse") &&
-          owned.has(item.location.containerId) &&
-          !owned.has(item.id)
-        ) {
-          owned.add(item.id);
-          changed = true;
-        }
-      }
-      if (!changed) break;
-    }
     return [...owned].flatMap((id) => {
       const item = this.items.get(id);
       return item ? [item] : [];
@@ -63,7 +46,7 @@ export class MemoryItemStore implements ItemStore {
     expectedVersion: number,
     slot: EquipmentSlot,
   ): Promise<ItemMutation> {
-    const before = this.requireOwned(characterId, itemId, expectedVersion);
+    const before = requireOwnedMemoryItem(this.items, characterId, itemId, expectedVersion);
     if (
       before.location.kind !== "inventory" &&
       before.location.kind !== "container"
@@ -78,7 +61,7 @@ export class MemoryItemStore implements ItemStore {
         item.location.slot === slot,
     );
     if (occupied && before.location.kind === "container") {
-      this.requireContainerPlacement(occupied.id, before.location.containerId);
+      requireMemoryContainerPlacement(this.items, occupied.id, before.location.containerId);
     }
     const after = {
       ...before,
@@ -104,7 +87,7 @@ export class MemoryItemStore implements ItemStore {
     slot: EquipmentSlot,
     destination?: ItemContainerDestination,
   ): Promise<ItemMutation> {
-    const before = this.requireOwned(characterId, itemId, expectedVersion);
+    const before = requireOwnedMemoryItem(this.items, characterId, itemId, expectedVersion);
     if (
       before.location.kind !== "equipment" ||
       before.location.slot !== slot
@@ -112,7 +95,8 @@ export class MemoryItemStore implements ItemStore {
       throw new Error("item is not equipped in slot");
     }
     if (destination) {
-      const container = this.requireOwned(
+      const container = requireOwnedMemoryItem(
+        this.items,
         characterId,
         destination.containerId,
         destination.containerRevision,
@@ -130,7 +114,7 @@ export class MemoryItemStore implements ItemStore {
       ) {
         throw new Error("container slot is occupied");
       }
-      this.requireContainerPlacement(before.id, container.id);
+      requireMemoryContainerPlacement(this.items, before.id, container.id);
       const after = {
         ...before,
         version: before.version + 1,
@@ -261,8 +245,9 @@ export class MemoryItemStore implements ItemStore {
     destinationSlot: number,
     count?: number,
   ): Promise<ItemMutation> {
-    const before = this.requireOwned(characterId, itemId, expectedVersion);
-    const destination = this.requireOwned(
+    const before = requireOwnedMemoryItem(this.items, characterId, itemId, expectedVersion);
+    const destination = requireOwnedMemoryItem(
+      this.items,
       characterId,
       destinationContainerId,
       destinationVersion,
@@ -276,7 +261,7 @@ export class MemoryItemStore implements ItemStore {
     ) {
       throw new Error("item cannot move from this location");
     }
-    this.requireContainerPlacement(before.id, destination.id);
+    requireMemoryContainerPlacement(this.items, before.id, destination.id);
     const movingCount = count ?? before.count;
     if (
       !Number.isInteger(movingCount) ||
@@ -307,7 +292,7 @@ export class MemoryItemStore implements ItemStore {
       throw new Error("cannot split into an occupied slot");
     }
     if (occupied && before.location.kind === "container") {
-      this.requireContainerPlacement(occupied.id, before.location.containerId);
+      requireMemoryContainerPlacement(this.items, occupied.id, before.location.containerId);
     }
     if (movingCount === before.count) {
       const after = {
@@ -357,7 +342,7 @@ export class MemoryItemStore implements ItemStore {
     expectedVersion: number,
     text: string,
   ): Promise<ItemMutation> {
-    const before = this.requireOwned(characterId, itemId, expectedVersion);
+    const before = requireOwnedMemoryItem(this.items, characterId, itemId, expectedVersion);
     const after = {
       ...before,
       attributes: { ...before.attributes, text },
@@ -374,7 +359,7 @@ export class MemoryItemStore implements ItemStore {
     count: number,
     _reason: "rune" | "ammunition" | "break" | "food",
   ): Promise<ItemMutation> {
-    const before = this.requireOwned(characterId, itemId, expectedVersion);
+    const before = requireOwnedMemoryItem(this.items, characterId, itemId, expectedVersion);
     if (!Number.isInteger(count) || count < 1 || count > before.count) {
       throw new Error("invalid consume count");
     }
@@ -430,7 +415,7 @@ export class MemoryItemStore implements ItemStore {
         : [...this.items.values()].find((item) => {
             if (item.typeId !== sourceItemTypeId) return false;
             try {
-              this.requireOwned(characterId, item.id, item.version);
+              requireOwnedMemoryItem(this.items, characterId, item.id, item.version);
               return true;
             } catch {
               return false;
@@ -575,12 +560,12 @@ export class MemoryItemStore implements ItemStore {
     }
     const targetTypeId = decay.targetId || undefined;
     if (targetTypeId === undefined) {
-      const removedItemIds = [before.id, ...this.descendantIds(before.id)];
+      const removedItemIds = [before.id, ...collectMemoryDescendantIds(this.items, before.id)];
       for (const id of removedItemIds) this.items.delete(id);
       return { before, after: [], removedItemIds };
     }
     const capacity = this.catalog.require(targetTypeId).containerCapacity ?? 0;
-    const removedItemIds = this.descendantIds(before.id, capacity);
+    const removedItemIds = collectMemoryDescendantIds(this.items, before.id, capacity);
     for (const id of removedItemIds) this.items.delete(id);
     const after = {
       ...before,
@@ -597,81 +582,5 @@ export class MemoryItemStore implements ItemStore {
     _mapVersion: string,
   ): Promise<WorldItemDeltas> {
     return { hiddenSeedKeys: [], items: [] };
-  }
-
-  /** Children in slots >= keepSlots plus their whole subtrees, depth-capped at 8. */
-  private descendantIds(rootId: string, keepSlots = 0): string[] {
-    const removed: string[] = [];
-    let parents = new Set([rootId]);
-    for (let depth = 0; depth < 8 && parents.size > 0; depth++) {
-      const next = new Set<string>();
-      for (const item of this.items.values()) {
-        if (
-          item.location.kind !== "container" &&
-          item.location.kind !== "corpse"
-        ) {
-          continue;
-        }
-        if (!parents.has(item.location.containerId)) continue;
-        if (
-          depth === 0 &&
-          item.location.containerId === rootId &&
-          item.location.slot < keepSlots
-        ) {
-          continue;
-        }
-        removed.push(item.id);
-        next.add(item.id);
-      }
-      parents = next;
-    }
-    return removed;
-  }
-
-  private requireOwned(
-    characterId: string,
-    itemId: string,
-    expectedVersion: number,
-  ): Item {
-    const item = this.items.get(itemId);
-    if (!item || item.version !== expectedVersion) {
-      throw new Error("item is missing or stale");
-    }
-    let root = item;
-    for (let depth = 0; depth < 8; depth++) {
-      if (
-        (root.location.kind === "equipment" ||
-          root.location.kind === "inventory") &&
-        root.location.characterId === characterId
-      ) {
-        return item;
-      }
-      if (
-        root.location.kind !== "container" &&
-        root.location.kind !== "corpse"
-      ) {
-        break;
-      }
-      const parent = this.items.get(root.location.containerId);
-      if (!parent) break;
-      root = parent;
-    }
-    throw new Error("item is not owned by character");
-  }
-
-  private requireContainerPlacement(
-    itemId: string,
-    destinationContainerId: string,
-  ): void {
-    let parent = this.items.get(destinationContainerId);
-    for (let depth = 0; parent && depth < 8; depth++) {
-      if (parent.id === itemId) throw new Error("item container cycle detected");
-      parent =
-        parent.location.kind === "container" ||
-        parent.location.kind === "corpse"
-          ? this.items.get(parent.location.containerId)
-          : undefined;
-    }
-    if (parent) throw new Error("item container nesting exceeds 8 levels");
   }
 }

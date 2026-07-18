@@ -58,5 +58,9 @@ All four live in `server/src/economy/PgBankStore.integration.test.ts`
 - NPC travel fares still use `planNpcFarePayment` (gold+platinum only, no bank
   fallback); unify it with `planMoneySpend` when shops land so all payment
   paths share the canonical conversion.
+- `BankService` keeps private copies of `COIN_STACK_LIMIT`, `countCarried`,
+  and `inTalkRange` that duplicate the shared helpers extracted during the
+  2026-07-18 economy refactor (`coinStackLimit`, `countCarriedCoins`,
+  `inNpcTalkRange`); switch it to the shared ones in a follow-up.
 
 [Back to overview](README.md)

@@ -1,0 +1,179 @@
+import type { Direction, Position } from "@tibia/protocol";
+import type { Creature } from "../creature/Creature";
+import { getStepDurationMs } from "../getStepDurationMs";
+import type { MapData } from "../MapData";
+import { Player } from "../Player";
+import type { SpatialGrid } from "../SpatialGrid";
+import type { MoveResult } from "./MoveResult";
+import type { TileOccupancy } from "./TileOccupancy";
+
+const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
+  north: [0, -1],
+  east: [1, 0],
+  south: [0, 1],
+  west: [-1, 0],
+  northeast: [1, -1],
+  southeast: [1, 1],
+  southwest: [-1, 1],
+  northwest: [-1, -1],
+};
+
+export class MovementRules {
+  constructor(
+    private readonly map: MapData,
+    private readonly tickMs: number,
+    private readonly grid: SpatialGrid,
+    private readonly occupancy: TileOccupancy,
+  ) {}
+
+  /**
+   * Validates and applies one step. All rules live here, at execution time:
+   * walk-speed cooldown, bounds, blocked tiles, occupancy (charter rules 4, 8).
+   */
+  tryMove(player: Player, direction: Direction, now: number): MoveResult {
+    return this.tryMoveInternal(player, direction, now, true);
+  }
+
+  tryMoveCreature(
+    creature: Creature,
+    direction: Direction,
+    now: number,
+    leash?: { home: Position; radius: number },
+  ): MoveResult {
+    return this.tryMoveInternal(creature, direction, now, false, leash);
+  }
+
+  tryUseMap(player: Player, target: Position, now: number): MoveResult {
+    const from = player.position;
+    const distance = Math.abs(target.x - from.x) + Math.abs(target.y - from.y);
+    if (target.z !== from.z || distance > 1) {
+      return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
+    }
+    if (now < player.nextStepAt) {
+      return {
+        moved: false,
+        turned: false,
+        reason: "cooldown",
+        retryAfterMs: player.nextStepAt - now,
+      };
+    }
+    const action = this.map.getAction(target);
+    if (!action || !this.map.isWalkable(action.destination)) {
+      return {
+        moved: false,
+        turned: false,
+        reason: "invalid-transition",
+        retryAfterMs: 0,
+      };
+    }
+    if (this.occupancy.isOccupied(action.destination)) {
+      return { moved: false, turned: false, reason: "occupied", retryAfterMs: 0 };
+    }
+    const groundSpeed = this.map.getGroundSpeed(action.destination);
+    if (!groundSpeed) {
+      return {
+        moved: false,
+        turned: false,
+        reason: "invalid-transition",
+        retryAfterMs: 0,
+      };
+    }
+    const durationMs = getStepDurationMs(
+      player.stepSpeed,
+      groundSpeed,
+      this.tickMs,
+    );
+    player.moveTo(action.destination);
+    player.nextStepAt = now + durationMs;
+    this.grid.move(player, from);
+    return { moved: true, turned: false, from, durationMs };
+  }
+
+  private tryMoveInternal(
+    creature: Creature,
+    requestedDirection: Direction,
+    now: number,
+    allowTransitions: boolean,
+    leash?: { home: Position; radius: number },
+  ): MoveResult {
+    const direction = creature.conditions.resolveDirection(
+      requestedDirection,
+      now,
+    );
+    const turned = creature.direction !== direction;
+    creature.direction = direction;
+
+    if (now < creature.nextStepAt) {
+      return {
+        moved: false,
+        turned,
+        reason: "cooldown",
+        retryAfterMs: creature.nextStepAt - now,
+      };
+    }
+    const [dx, dy] = DIRECTION_DELTAS[direction];
+    const from = creature.position;
+    const destination = {
+      x: from.x + dx,
+      y: from.y + dy,
+      z: from.z,
+    };
+    if (
+      creature instanceof Player &&
+      creature.conditions.has("pz-lock") &&
+      (this.map.getTile(destination)?.protectionZone ?? false)
+    ) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
+    if (
+      leash &&
+      (destination.z !== leash.home.z ||
+        Math.max(
+          Math.abs(destination.x - leash.home.x),
+          Math.abs(destination.y - leash.home.y),
+        ) > leash.radius)
+    ) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
+    if (!this.map.isWalkable(destination)) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
+    if (this.occupancy.isOccupied(destination)) {
+      return { moved: false, turned, reason: "occupied", retryAfterMs: 0 };
+    }
+    const transition = allowTransitions
+      ? this.map.getTransition(destination, direction)
+      : undefined;
+    const resolved = transition?.destination ?? destination;
+    if (!this.map.isWalkable(resolved)) {
+      return {
+        moved: false,
+        turned,
+        reason: transition ? "invalid-transition" : "blocked",
+        retryAfterMs: 0,
+      };
+    }
+    if (this.occupancy.isOccupied(resolved)) {
+      return { moved: false, turned, reason: "occupied", retryAfterMs: 0 };
+    }
+    const groundSpeed = this.map.getGroundSpeed(resolved);
+    if (!groundSpeed) {
+      return {
+        moved: false,
+        turned,
+        reason: "invalid-transition",
+        retryAfterMs: 0,
+      };
+    }
+    const durationMs = getStepDurationMs(
+      creature.stepSpeed,
+      groundSpeed,
+      this.tickMs,
+      dx !== 0 && dy !== 0,
+    );
+    creature.moveTo(resolved);
+    creature.nextStepAt = now + durationMs;
+    this.grid.move(creature, from);
+    return { moved: true, turned, from, durationMs };
+  }
+}
