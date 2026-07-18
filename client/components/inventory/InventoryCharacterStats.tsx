@@ -2,6 +2,7 @@
 
 import type { OwnCharacterState } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { getProgressPercent } from "../../lib/inventory/getProgressPercent";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { ProgressionBar } from "./ProgressionBar";
 
@@ -71,7 +72,7 @@ export function InventoryCharacterStats({
             max={character.manaSpentForNextMagicLevel}
             valueLabel={
               character.manaSpentForNextMagicLevel > 0
-                ? `${character.manaSpent.toLocaleString(language)} / ${character.manaSpentForNextMagicLevel.toLocaleString(language)}`
+                ? `${getProgressPercent(character.manaSpent, character.manaSpentForNextMagicLevel)}/100`
                 : t("characterStats.maximum")
             }
             fillClassName="from-ui-mana-light to-ui-mana"
@@ -148,7 +149,7 @@ export function InventoryCharacterStats({
                 max={skill.triesForNextLevel}
                 valueLabel={
                   skill.triesForNextLevel > 0
-                    ? `${skill.tries.toLocaleString(language)} / ${skill.triesForNextLevel.toLocaleString(language)}`
+                    ? `${getProgressPercent(skill.tries, skill.triesForNextLevel)}/100`
                     : t("characterStats.maximum")
                 }
                 fillClassName="from-ui-accent-light to-ui-accent"
