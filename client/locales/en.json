@@ -166,8 +166,8 @@
     "vocation": "Vocation",
     "outfit": "Outfit",
     "outfits": {
-      "citizen-male": "Citizen I",
-      "citizen-female": "Citizen II"
+      "citizen-male": "Male",
+      "citizen-female": "Female"
     },
     "loading": "Loading your characters…",
     "creating": "Creating",

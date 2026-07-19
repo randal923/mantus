@@ -24,6 +24,7 @@
     "parity:inventory": "node tools/buildCanaryParityInventory.mjs",
     "parity:check": "node tools/verifyCanaryParityInventory.mjs",
     "character:set-level": "node --env-file-if-exists=.env tools/setCharacterLevel.mjs",
+    "character:delete": "node --env-file-if-exists=.env tools/deleteCharacter.mjs",
     "typecheck": "yarn workspace @tibia/protocol typecheck && yarn workspace server typecheck && yarn workspace client typecheck",
     "test": "yarn test:tools && yarn workspace client test && yarn workspace server test",
     "test:tools": "node --test tools/*.test.mjs && yarn parity:check",

@@ -166,8 +166,8 @@
     "vocation": "Vocação",
     "outfit": "Visual",
     "outfits": {
-      "citizen-male": "Cidadão I",
-      "citizen-female": "Cidadão II"
+      "citizen-male": "Masculino",
+      "citizen-female": "Feminino"
     },
     "loading": "Carregando seus personagens…",
     "creating": "Criando",

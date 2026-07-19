@@ -24,3 +24,9 @@ the real server against the local docker Postgres (`playtest` database).
   slotless creatures.
 - **`/level` can only raise a level**, because progression only supports
   awarding experience. Lowering would need a dev-only de-level path.
+- **`yarn character:delete` destroys bank gold without a dedicated audit
+  event.** The tool (`tools/deleteCharacter.mjs`) writes an `item-destroyed`
+  audit row per deleted item, but the deleted bank balance is only printed to
+  the console because `audit_log_event_type_check` has no fitting event type.
+  Fix: add a `character-deleted` event type migration and log the balance
+  there.
