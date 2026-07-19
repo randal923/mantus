@@ -49,6 +49,94 @@
       "unexpected": "Falha na autenticação. Tente novamente."
     }
   },
+  "landing": {
+    "nav": {
+      "sections": "Seções da página inicial",
+      "features": "Recursos",
+      "vocations": "Vocações",
+      "news": "Notícias",
+      "media": "Mídia",
+      "play": "Jogar Agora"
+    },
+    "hero": {
+      "tagline": "Um mundo implacável à moda antiga, forjado de novo",
+      "subtitle": "Mantus Online é um MMORPG 2D gratuito de estilo clássico: um mundo aberto persistente onde cada passo, cada troca e cada batalha é real — e tudo o que você conquista pode ser perdido.",
+      "cta": "Jogue Grátis",
+      "ctaSecondary": "Descubra o Mundo",
+      "note": "Gratuito — roda no seu navegador",
+      "artAlt": "Arte principal do mundo de Mantus",
+      "stats": {
+        "world": "Um mundo persistente",
+        "vocations": "Cinco vocações para dominar",
+        "economy": "Uma economia dirigida por jogadores"
+      }
+    },
+    "features": {
+      "title": "Forjado para os Destemidos",
+      "subtitle": "Tudo o que fez os MMORPGs clássicos importarem — reconstruído com técnica moderna e um servidor que nunca trapaceia.",
+      "world": {
+        "title": "Um Mundo Aberto Vivo",
+        "description": "Explore um reino feito à mão com cidades, masmorras e regiões selvagens. Os campos de caça são disputados, os recursos são finitos e o mapa lembra o que você fez."
+      },
+      "combat": {
+        "title": "Combate Tático Clássico",
+        "description": "Posicionamento, tempo e preparação decidem as lutas. Domine o corpo a corpo, o ataque à distância e a magia elemental — e respeite as criaturas mais fortes que você."
+      },
+      "economy": {
+        "title": "Economia Dirigida por Jogadores",
+        "description": "Cada item é conquistado, negociado ou criado por jogadores. Compre e venda no mercado, dê lances em leilões, guarde seu ouro no banco e tenha uma casa no mundo."
+      },
+      "social": {
+        "title": "Cresçam Juntos",
+        "description": "Funde guildas, monte grupos de caça, acompanhe amigos com sua lista VIP e grave seus nomes na história do reino — ou entre em guerra por ele."
+      }
+    },
+    "vocations": {
+      "title": "Escolha Seu Caminho",
+      "subtitle": "Cinco vocações, cada uma com suas próprias armas, magias e formas de sobreviver ao mundo. Escolha com sabedoria — a maestria é uma longa estrada."
+    },
+    "news": {
+      "title": "Crônicas de Mantus",
+      "subtitle": "Comunicados dos desenvolvedores e do próprio mundo.",
+      "items": {
+        "gatesOpen": {
+          "tag": "Anúncio",
+          "date": "12 de julho de 2026",
+          "title": "Os Portões de Mantus se Abrem",
+          "excerpt": "O primeiro mundo entra no ar. Crie sua conta gratuita, escolha uma vocação e dê seus primeiros passos no reino."
+        },
+        "marketAndHouses": {
+          "tag": "Atualização",
+          "date": "28 de junho de 2026",
+          "title": "Mercado & Escrituras de Casas",
+          "excerpt": "O grande mercado abre suas portas e as casas do reino agora podem ser leiloadas, possuídas e mobiliadas."
+        },
+        "roadToWar": {
+          "tag": "Desenvolvimento",
+          "date": "10 de junho de 2026",
+          "title": "O Caminho para as Guerras de Guilda",
+          "excerpt": "Uma prévia do que vem a seguir: estandartes de guilda, territórios disputados e os sistemas que decidirão quem domina as terras selvagens."
+        }
+      }
+    },
+    "media": {
+      "title": "Vislumbres do Mundo",
+      "subtitle": "Cenas do reino, capturadas por quem sobreviveu a elas.",
+      "screenshots": {
+        "combat": "Um grupo enfrenta um dragão em seu covil",
+        "city": "A praça da cidade ao entardecer",
+        "housing": "Uma casa de jogador mobiliada"
+      }
+    },
+    "callToAction": {
+      "title": "Sua Lenda Aguarda",
+      "subtitle": "Criar uma conta é grátis e leva menos de um minuto. O mundo, porém, levará anos para ser conquistado.",
+      "cta": "Criar Conta Grátis"
+    },
+    "footer": {
+      "copyright": "© {{year}} Mantus Online. Todos os direitos reservados."
+    }
+  },
   "character": {
     "hero": "Herói",
     "noVocation": "Nenhuma",

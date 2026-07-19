@@ -49,6 +49,94 @@
       "unexpected": "Authentication failed. Please try again."
     }
   },
+  "landing": {
+    "nav": {
+      "sections": "Landing page sections",
+      "features": "Features",
+      "vocations": "Vocations",
+      "news": "News",
+      "media": "Media",
+      "play": "Play Now"
+    },
+    "hero": {
+      "tagline": "A ruthless old-school world, forged anew",
+      "subtitle": "Mantus Online is a free classic-style 2D MMORPG: one persistent open world where every step, every trade, and every battle is real — and everything you earn can be lost.",
+      "cta": "Play Free",
+      "ctaSecondary": "Discover the World",
+      "note": "Free to play — runs in your browser",
+      "artAlt": "Key art of the world of Mantus",
+      "stats": {
+        "world": "One persistent world",
+        "vocations": "Five vocations to master",
+        "economy": "A player-driven economy"
+      }
+    },
+    "features": {
+      "title": "Forged for the Fearless",
+      "subtitle": "Everything that made classic MMORPGs matter — rebuilt with modern craft and a server that never cheats.",
+      "world": {
+        "title": "A Living Open World",
+        "description": "Explore a hand-crafted realm of cities, dungeons, and wilderness. Hunting grounds are contested, resources are finite, and the map remembers what you did."
+      },
+      "combat": {
+        "title": "Classic Tactical Combat",
+        "description": "Position, timing, and preparation decide fights. Master melee, ranged, and elemental magic — and respect the creatures that are stronger than you."
+      },
+      "economy": {
+        "title": "A Player-Driven Economy",
+        "description": "Every item is earned, traded, or crafted by players. Buy and sell on the market, bid at auctions, bank your gold, and own a house in the world."
+      },
+      "social": {
+        "title": "Rise Together",
+        "description": "Found guilds, form hunting parties, track friends with your VIP list, and carve your names into the history of the realm — or go to war over it."
+      }
+    },
+    "vocations": {
+      "title": "Choose Your Path",
+      "subtitle": "Five vocations, each with its own weapons, magic, and way of surviving the world. Choose wisely — mastery is a long road."
+    },
+    "news": {
+      "title": "Chronicles of Mantus",
+      "subtitle": "Dispatches from the developers and the world itself.",
+      "items": {
+        "gatesOpen": {
+          "tag": "Announcement",
+          "date": "July 12, 2026",
+          "title": "The Gates of Mantus Open",
+          "excerpt": "The first world goes live. Create your free account, choose a vocation, and take your first steps into the realm."
+        },
+        "marketAndHouses": {
+          "tag": "Update",
+          "date": "June 28, 2026",
+          "title": "Market Stalls & House Deeds",
+          "excerpt": "The great market opens its doors and houses across the realm can now be bid on, owned, and furnished."
+        },
+        "roadToWar": {
+          "tag": "Development",
+          "date": "June 10, 2026",
+          "title": "The Road to Guild Wars",
+          "excerpt": "A look at what is coming next: guild banners, contested territory, and the systems that will decide who rules the wilds."
+        }
+      }
+    },
+    "media": {
+      "title": "Glimpses of the World",
+      "subtitle": "Scenes from the realm, captured by those who survived them.",
+      "screenshots": {
+        "combat": "A party battles a dragon in its lair",
+        "city": "The city square at dusk",
+        "housing": "A furnished player house"
+      }
+    },
+    "callToAction": {
+      "title": "Your Legend Awaits",
+      "subtitle": "Creating an account is free and takes less than a minute. The world, however, will take years to conquer.",
+      "cta": "Create Free Account"
+    },
+    "footer": {
+      "copyright": "© {{year}} Mantus Online. All rights reserved."
+    }
+  },
   "character": {
     "hero": "Hero",
     "noVocation": "None",

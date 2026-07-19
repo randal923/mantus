@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import GameWindow from "../GameWindow";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { useLanguageInitialization } from "../../i18n/useLanguageInitialization";
 import { getSupabaseClient } from "../../lib/auth/getSupabaseClient";
 import { LoginScreen } from "./LoginScreen";
 
 export function AuthGate() {
   const { t } = useAppTranslation();
+  useLanguageInitialization();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [configError] = useState(() => {

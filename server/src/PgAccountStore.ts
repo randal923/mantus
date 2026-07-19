@@ -31,7 +31,7 @@ export class PgAccountStore implements AccountStore {
       `INSERT INTO accounts (supabase_user_id, email, language)
        VALUES ($1, $2, $3)
        ON CONFLICT (supabase_user_id)
-       DO UPDATE SET email = EXCLUDED.email, language = EXCLUDED.language
+       DO UPDATE SET email = EXCLUDED.email
        RETURNING id, supabase_user_id, email, banned_until, premium_until,
          language, ui_settings`,
       [supabaseUserId, email, language],

@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
+import Link from "next/link";
+import type { ComponentProps } from "react";
 import {
   BUTTON_BASE_CLASS,
   BUTTON_SIZE_CLASS,
@@ -7,25 +8,24 @@ import {
   type ButtonVariant,
 } from "./buttonStyles";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonLinkProps extends ComponentProps<typeof Link> {
   variant?: ButtonVariant;
   size?: ButtonSize;
 }
 
-export function Button({
+export function ButtonLink({
   variant = "secondary",
   size = "md",
   className,
   children,
   ...props
-}: ButtonProps) {
+}: ButtonLinkProps) {
   return (
-    <button
-      type="button"
+    <Link
       className={`${BUTTON_BASE_CLASS} ${BUTTON_VARIANT_CLASS[variant]} ${BUTTON_SIZE_CLASS[size]} ${className ?? ""}`}
       {...props}
     >
       {children}
-    </button>
+    </Link>
   );
 }

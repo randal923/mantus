@@ -28,7 +28,7 @@ export class InMemoryAccountStore implements AccountStore {
   ): Promise<Account> {
     const existing = this.accounts.get(supabaseUserId);
     if (existing) {
-      const account = { ...existing, email, language };
+      const account = { ...existing, email };
       this.accounts.set(supabaseUserId, account);
       return account;
     }

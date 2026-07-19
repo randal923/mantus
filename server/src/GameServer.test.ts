@@ -1227,6 +1227,24 @@ describe("auth gate", () => {
     expect(accounts.languageFor("sub-tok.language")).toBe("pt-BR");
   });
 
+  it("keeps the stored account language when a later login sends a different one", async () => {
+    const accounts = new InMemoryAccountStore();
+    startServer({}, accounts);
+    const first = await connect(server.port, "Alice", "tok.language", "pt-BR");
+    sockets.push(first.socket);
+    first.socket.close();
+
+    const second = await connect(server.port, "Alice", "tok.language", "en");
+    sockets.push(second.socket);
+
+    expect(accounts.languageFor("sub-tok.language")).toBe("pt-BR");
+    expect(
+      second.messages.some(
+        (message) => message.type === "auth-ok" && message.language === "pt-BR",
+      ),
+    ).toBe(true);
+  });
+
   it("rejects an unsupported language before it reaches the account store", async () => {
     const accounts = new InMemoryAccountStore();
     startServer({}, accounts);

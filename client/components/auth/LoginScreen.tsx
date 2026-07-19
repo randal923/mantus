@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { getSupabaseClient } from "../../lib/auth/getSupabaseClient";
 import { getAuthErrorTranslationKey } from "../../lib/auth/getAuthErrorTranslationKey";
-import { getBrowserLanguage } from "../../lib/i18n/getBrowserLanguage";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { LanguageButtons } from "./LanguageButtons";
 import { LoginPanel } from "./LoginPanel";
@@ -20,10 +19,6 @@ export function LoginScreen() {
     | null
   >(null);
   const [showConfirmationNotice, setShowConfirmationNotice] = useState(false);
-
-  useEffect(() => {
-    setLanguage(getBrowserLanguage(navigator.language));
-  }, [setLanguage]);
 
   const begin = () => {
     setBusy(true);
