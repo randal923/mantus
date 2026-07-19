@@ -8,6 +8,8 @@ export type ChatEntry =
       body: string;
       time: string;
       isOwn: boolean;
+      /** Amber highlight for privileged speakers (guild vice+/leader). */
+      highlighted?: boolean;
     }
   | {
       id: number;
@@ -19,7 +21,7 @@ export type ChatEntry =
 
 export interface ChatChannelState {
   id: string;
-  kind: "world" | "whisper";
+  kind: "world" | "whisper" | "party" | "guild";
   counterpart?: string;
   unreadCount: number;
   entries: ReadonlyArray<ChatEntry>;
@@ -51,6 +53,23 @@ export type ChatAction =
       time: string;
     }
   | {
+      type: "party";
+      speakerId: string;
+      name: string;
+      body: string;
+      time: string;
+    }
+  | { type: "party-closed" }
+  | {
+      type: "guild";
+      speakerId: string;
+      name: string;
+      body: string;
+      time: string;
+      highlighted: boolean;
+    }
+  | { type: "guild-closed" }
+  | {
       type: "rejected";
       reason: ChatRejectedReason;
       retryAfterMs?: number;
@@ -61,6 +80,8 @@ export type ChatAction =
   | { type: "open-private"; counterpart: string };
 
 export const LOCAL_CHANNEL_ID = "local";
+export const PARTY_CHANNEL_ID = "party";
+export const GUILD_CHANNEL_ID = "guild";
 export const SYSTEM_CHANNEL_ID = "system";
 const CHANNEL_HISTORY_LIMIT = 200;
 const MAX_PRIVATE_CHANNELS = 10;
@@ -181,6 +202,69 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         { countUnread: false },
       );
     }
+    case "party": {
+      const entry: ChatEntry = {
+        id: state.nextEntryId,
+        kind: "speech",
+        sender: action.name,
+        body: action.body,
+        time: action.time,
+        isOwn: action.speakerId === state.ownPlayerId,
+      };
+      return appendEntry(
+        ensurePartyChannel({ ...state, nextEntryId: state.nextEntryId + 1 }),
+        PARTY_CHANNEL_ID,
+        entry,
+      );
+    }
+    case "party-closed": {
+      if (!state.channels.some((channel) => channel.id === PARTY_CHANNEL_ID)) {
+        return state;
+      }
+      const channels = state.channels.filter(
+        (channel) => channel.id !== PARTY_CHANNEL_ID,
+      );
+      return {
+        ...state,
+        activeChannelId:
+          state.activeChannelId === PARTY_CHANNEL_ID
+            ? LOCAL_CHANNEL_ID
+            : state.activeChannelId,
+        channels,
+      };
+    }
+    case "guild": {
+      const entry: ChatEntry = {
+        id: state.nextEntryId,
+        kind: "speech",
+        sender: action.name,
+        body: action.body,
+        time: action.time,
+        isOwn: action.speakerId === state.ownPlayerId,
+        ...(action.highlighted ? { highlighted: true } : {}),
+      };
+      return appendEntry(
+        ensureGuildChannel({ ...state, nextEntryId: state.nextEntryId + 1 }),
+        GUILD_CHANNEL_ID,
+        entry,
+      );
+    }
+    case "guild-closed": {
+      if (!state.channels.some((channel) => channel.id === GUILD_CHANNEL_ID)) {
+        return state;
+      }
+      const channels = state.channels.filter(
+        (channel) => channel.id !== GUILD_CHANNEL_ID,
+      );
+      return {
+        ...state,
+        activeChannelId:
+          state.activeChannelId === GUILD_CHANNEL_ID
+            ? LOCAL_CHANNEL_ID
+            : state.activeChannelId,
+        channels,
+      };
+    }
     case "open-private": {
       const channelId = privateChannelId(action.counterpart);
       const withChannel = ensurePrivateChannel(
@@ -191,6 +275,42 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return chatReducer(withChannel, { type: "select", channelId });
     }
   }
+}
+
+function ensureGuildChannel(state: ChatState): ChatState {
+  if (state.channels.some((channel) => channel.id === GUILD_CHANNEL_ID)) {
+    return state;
+  }
+  return {
+    ...state,
+    channels: [
+      ...state.channels,
+      {
+        id: GUILD_CHANNEL_ID,
+        kind: "guild",
+        unreadCount: 0,
+        entries: [],
+      },
+    ],
+  };
+}
+
+function ensurePartyChannel(state: ChatState): ChatState {
+  if (state.channels.some((channel) => channel.id === PARTY_CHANNEL_ID)) {
+    return state;
+  }
+  return {
+    ...state,
+    channels: [
+      ...state.channels,
+      {
+        id: PARTY_CHANNEL_ID,
+        kind: "party",
+        unreadCount: 0,
+        entries: [],
+      },
+    ],
+  };
 }
 
 function appendEntry(

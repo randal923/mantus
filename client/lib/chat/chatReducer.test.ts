@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   chatReducer,
   initialChatState,
+  GUILD_CHANNEL_ID,
   LOCAL_CHANNEL_ID,
+  PARTY_CHANNEL_ID,
   privateChannelId,
   type ChatAction,
   type ChatState,
@@ -167,5 +169,110 @@ describe("chatReducer", () => {
         (channel) => channel.id === privateChannelId("Aria"),
       ),
     ).toBe(true);
+  });
+
+  it("creates the party channel lazily and flags own party lines", () => {
+    const state = run(
+      joinedState(),
+      {
+        type: "party",
+        speakerId: "player-2",
+        name: "Aria",
+        body: "pull the troll",
+        time: "18:00",
+      },
+      {
+        type: "party",
+        speakerId: "player-1",
+        name: "Hero",
+        body: "on it",
+        time: "18:01",
+      },
+    );
+
+    const party = state.channels.find(
+      (channel) => channel.id === PARTY_CHANNEL_ID,
+    );
+    expect(party?.kind).toBe("party");
+    expect(party?.entries).toHaveLength(2);
+    expect(party?.entries[0]).toMatchObject({ sender: "Aria", isOwn: false });
+    expect(party?.entries[1]).toMatchObject({ sender: "Hero", isOwn: true });
+    expect(party?.unreadCount).toBe(2);
+  });
+
+  it("removes the party channel and falls back to local when closed", () => {
+    const state = run(
+      joinedState(),
+      {
+        type: "party",
+        speakerId: "player-2",
+        name: "Aria",
+        body: "pull the troll",
+        time: "18:00",
+      },
+      { type: "select", channelId: PARTY_CHANNEL_ID },
+      { type: "party-closed" },
+    );
+
+    expect(
+      state.channels.some((channel) => channel.id === PARTY_CHANNEL_ID),
+    ).toBe(false);
+    expect(state.activeChannelId).toBe(LOCAL_CHANNEL_ID);
+  });
+
+  it("creates the guild channel lazily and flags own guild lines", () => {
+    const state = run(
+      joinedState(),
+      {
+        type: "guild",
+        speakerId: "player-2",
+        name: "Aria",
+        body: "war starts tonight",
+        time: "18:00",
+        highlighted: true,
+      },
+      {
+        type: "guild",
+        speakerId: "player-1",
+        name: "Hero",
+        body: "ready",
+        time: "18:01",
+        highlighted: false,
+      },
+    );
+
+    const guild = state.channels.find(
+      (channel) => channel.id === GUILD_CHANNEL_ID,
+    );
+    expect(guild?.kind).toBe("guild");
+    expect(guild?.entries).toHaveLength(2);
+    expect(guild?.entries[0]).toMatchObject({
+      sender: "Aria",
+      isOwn: false,
+      highlighted: true,
+    });
+    expect(guild?.entries[1]).toMatchObject({ sender: "Hero", isOwn: true });
+    expect(guild?.unreadCount).toBe(2);
+  });
+
+  it("removes the guild channel and falls back to local when closed", () => {
+    const state = run(
+      joinedState(),
+      {
+        type: "guild",
+        speakerId: "player-2",
+        name: "Aria",
+        body: "war starts tonight",
+        time: "18:00",
+        highlighted: true,
+      },
+      { type: "select", channelId: GUILD_CHANNEL_ID },
+      { type: "guild-closed" },
+    );
+
+    expect(
+      state.channels.some((channel) => channel.id === GUILD_CHANNEL_ID),
+    ).toBe(false);
+    expect(state.activeChannelId).toBe(LOCAL_CHANNEL_ID);
   });
 });

@@ -30,8 +30,30 @@ import {
 } from "./depot";
 import { DIRECTIONS } from "./direction";
 import { gmResponseMessageSchema } from "./gm";
+import {
+  highscoresActionFailedMessageSchema,
+  highscoresStateMessageSchema,
+} from "./highscores";
+import {
+  guildActionFailedMessageSchema,
+  guildChatDeliveredMessageSchema,
+  guildEventMessageSchema,
+  guildInvitationMessageSchema,
+  guildStateMessageSchema,
+} from "./guild";
+import {
+  houseActionFailedMessageSchema,
+  houseEventMessageSchema,
+  houseListMessageSchema,
+  houseStateMessageSchema,
+  houseTransferIncomingMessageSchema,
+} from "./house";
 import { languageSchema } from "./language";
 import { containerStateSchema, inventoryStateSchema } from "./item";
+import {
+  reportActionFailedMessageSchema,
+  reportReceivedMessageSchema,
+} from "./moderation";
 import {
   npcDialogueClosedMessageSchema,
   npcDialogueMessageSchema,
@@ -44,6 +66,13 @@ import {
   marketOwnOffersStateMessageSchema,
   marketTransactedMessageSchema,
 } from "./market";
+import {
+  partyActionFailedMessageSchema,
+  partyChatDeliveredMessageSchema,
+  partyInvitationMessageSchema,
+  partyInvitationRevokedMessageSchema,
+  partyStateMessageSchema,
+} from "./party";
 import { positionSchema } from "./position";
 import { ownProgressionStateSchema } from "./progression";
 import {
@@ -56,6 +85,11 @@ import {
   tradeClosedMessageSchema,
   tradeStateMessageSchema,
 } from "./trade";
+import {
+  vipActionFailedMessageSchema,
+  vipStateMessageSchema,
+  vipStatusChangedMessageSchema,
+} from "./vip";
 
 /**
  * Static terrain is public data served over HTTP from
@@ -270,6 +304,7 @@ export const serverErrorCodeSchema = z.enum([
   "loot-protected",
   "player-full",
   "logged-in-elsewhere",
+  "kicked",
   "rate-limited",
   "world-full",
 ]);
@@ -324,6 +359,28 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   tradeStateMessageSchema,
   tradeClosedMessageSchema,
   tradeActionFailedMessageSchema,
+  partyStateMessageSchema,
+  partyInvitationMessageSchema,
+  partyInvitationRevokedMessageSchema,
+  partyChatDeliveredMessageSchema,
+  partyActionFailedMessageSchema,
+  guildStateMessageSchema,
+  guildInvitationMessageSchema,
+  guildChatDeliveredMessageSchema,
+  guildEventMessageSchema,
+  guildActionFailedMessageSchema,
+  houseStateMessageSchema,
+  houseListMessageSchema,
+  houseTransferIncomingMessageSchema,
+  houseEventMessageSchema,
+  houseActionFailedMessageSchema,
+  vipStateMessageSchema,
+  vipStatusChangedMessageSchema,
+  vipActionFailedMessageSchema,
+  highscoresStateMessageSchema,
+  highscoresActionFailedMessageSchema,
+  reportReceivedMessageSchema,
+  reportActionFailedMessageSchema,
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,

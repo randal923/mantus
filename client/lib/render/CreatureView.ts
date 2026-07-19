@@ -7,6 +7,49 @@ const MIN_FOOT_ANIMATION_DELAY_MS = 20;
 const MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS = 205;
 const MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS = 80;
 
+export type PartyShieldKind =
+  | "none"
+  | "public-member"
+  | "member"
+  | "leader"
+  | "member-shared"
+  | "leader-shared";
+
+const PARTY_SHIELD_COLORS: Record<
+  Exclude<PartyShieldKind, "none">,
+  number
+> = {
+  "public-member": 0x8f959c,
+  member: 0x2f6fdb,
+  leader: 0xd9b826,
+  "member-shared": 0x2f6fdb,
+  "leader-shared": 0xd9b826,
+};
+
+export type WarEmblemKind = "none" | "ally" | "enemy" | "other-war";
+
+const WAR_EMBLEM_COLORS: Record<Exclude<WarEmblemKind, "none">, number> = {
+  ally: 0x2f8fdb,
+  enemy: 0xdd2f2f,
+  "other-war": 0xd9b826,
+};
+
+/**
+ * Skull mark colors (project-drawn vector glyphs, no ripped assets). The
+ * server already filtered which mark this viewer may see; this is display
+ * only.
+ */
+const SKULL_MARK_COLORS: Record<
+  NonNullable<CreatureState["skull"]>,
+  { fill: number; stroke: number; eyes: number }
+> = {
+  white: { fill: 0xf2f2f2, stroke: 0x000000, eyes: 0x000000 },
+  yellow: { fill: 0xe8d24a, stroke: 0x000000, eyes: 0x000000 },
+  orange: { fill: 0xe0862e, stroke: 0x000000, eyes: 0x000000 },
+  red: { fill: 0xd92c2c, stroke: 0x000000, eyes: 0x000000 },
+  black: { fill: 0x141414, stroke: 0xdadada, eyes: 0xffffff },
+};
+
 const DIR_INDEX: Record<Direction, number> = {
   north: 0,
   east: 1,
@@ -31,6 +74,13 @@ export class CreatureView {
   private readonly light = new Graphics();
   private readonly attackTarget = new Graphics();
   private readonly health = new Graphics();
+  private readonly partyShield = new Graphics();
+  private readonly warEmblem = new Graphics();
+  private readonly skullMark = new Graphics();
+  private readonly name: Text;
+  private readonly publicPartyMember: boolean;
+  private readonly publicGuildName: string | null;
+  private readonly publicAtWar: boolean;
   private readonly frames = new Map<string, Texture>();
   private direction: Direction;
   private walkDirection: Direction;
@@ -89,7 +139,18 @@ export class CreatureView {
     name.resolution = 2;
     name.anchor.set(0.5, 1);
     name.position.y = -5;
-    this.plate.addChild(name, this.health);
+    this.name = name;
+    this.publicPartyMember = state.partyStatus === "member";
+    this.publicGuildName = state.guildName ?? null;
+    this.publicAtWar = state.atWar ?? false;
+    this.plate.addChild(
+      name,
+      this.health,
+      this.partyShield,
+      this.warEmblem,
+      this.skullMark,
+    );
+    this.drawSkullMark(state.skull);
     this.updateHealth(state.healthPercent);
     this.updateLight(state.light);
     this.updateFrame();
@@ -105,6 +166,81 @@ export class CreatureView {
 
   setAttackTarget(targeted: boolean): void {
     this.attackTarget.visible = targeted;
+  }
+
+  /** True when the server flagged this creature as publicly partied. */
+  get isPublicPartyMember(): boolean {
+    return this.publicPartyMember;
+  }
+
+  /** Draws the party shield next to the name plate (display only). */
+  setPartyShield(kind: PartyShieldKind): void {
+    this.partyShield.clear();
+    if (kind === "none") return;
+    const x = -this.name.width / 2 - 9;
+    const y = -14;
+    this.partyShield
+      .poly([x - 4, y - 4, x + 4, y - 4, x + 4, y, x, y + 5, x - 4, y])
+      .fill({ color: PARTY_SHIELD_COLORS[kind] })
+      .stroke({
+        color:
+          kind === "member-shared" || kind === "leader-shared"
+            ? 0x9dff9d
+            : 0x000000,
+        width: 1,
+      });
+  }
+
+  /** Public guild affiliation the server broadcast for this creature. */
+  get guildName(): string | null {
+    return this.publicGuildName;
+  }
+
+  /** True while this creature's guild has an active war (public flag). */
+  get isAtWar(): boolean {
+    return this.publicAtWar;
+  }
+
+  /**
+   * Draws the viewer-relative war emblem opposite the party shield
+   * (display only — derived client-side from public creature flags plus
+   * the viewer's own guild-state).
+   */
+  setWarEmblem(kind: WarEmblemKind): void {
+    this.warEmblem.clear();
+    if (kind === "none") return;
+    const x = this.name.width / 2 + 9;
+    const y = -14;
+    this.warEmblem
+      .poly([x - 4, y - 4, x + 4, y - 4, x + 4, y + 4, x, y + 1, x - 4, y + 4])
+      .fill({ color: WAR_EMBLEM_COLORS[kind] })
+      .stroke({ color: 0x000000, width: 1 });
+  }
+
+  /**
+   * Draws the skull glyph beyond the war emblem slot on the right of the
+   * plate (coexists with the party shield on the left). The mark arrives
+   * pre-filtered per viewer in the creature state, so rebuilding the view
+   * on creature-state-changed keeps it current.
+   */
+  private drawSkullMark(kind: CreatureState["skull"]): void {
+    this.skullMark.clear();
+    if (!kind) return;
+    const colors = SKULL_MARK_COLORS[kind];
+    const x = this.name.width / 2 + 19;
+    const y = -15;
+    this.skullMark
+      .circle(x, y, 3.6)
+      .fill({ color: colors.fill })
+      .stroke({ color: colors.stroke, width: 1 });
+    this.skullMark
+      .rect(x - 2.2, y + 2.6, 4.4, 2.6)
+      .fill({ color: colors.fill })
+      .stroke({ color: colors.stroke, width: 1 });
+    this.skullMark
+      .circle(x - 1.4, y - 0.6, 0.8)
+      .circle(x + 1.4, y - 0.6, 0.8)
+      .fill({ color: colors.eyes });
   }
 
   updateHealth(healthPercent: number | null): void {

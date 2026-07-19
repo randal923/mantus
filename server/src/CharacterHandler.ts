@@ -21,6 +21,11 @@ import { deriveCharacterStats } from "./progression/deriveCharacterStats";
 import { projectFightState } from "./combat/projectFightState";
 import type { SpellRegistry } from "./combat/SpellRegistry";
 import type { TradeService } from "./trade/TradeService";
+import type { GuildService } from "./guild/GuildService";
+import type { ModerationService } from "./moderation/ModerationService";
+import type { PvpTracker } from "./pvp/PvpTracker";
+import type { PvpKillRecord } from "./pvp/PvpStore";
+import type { VipService } from "./social/VipService";
 
 export class CharacterHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -35,6 +40,10 @@ export class CharacterHandler {
     private readonly depot: DepotService,
     private readonly spells: SpellRegistry,
     private readonly trade: TradeService,
+    private readonly guilds: GuildService,
+    private readonly pvp: PvpTracker,
+    private readonly vips: VipService,
+    private readonly moderation: ModerationService,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -164,6 +173,7 @@ export class CharacterHandler {
           )
         : null;
       const depot = character ? await this.depot.load(character.id) : null;
+      const pvpFrags = character ? await this.pvp.load(character.id) : [];
       this.outcomes.push(() => {
         if (!this.isCurrentOperation(session, accountId)) return;
         if (!character) {
@@ -182,7 +192,7 @@ export class CharacterHandler {
           session.sendError("character-load-failed");
           return;
         }
-        this.enterWorld(session, character, inventory, depot);
+        this.enterWorld(session, character, inventory, depot, pvpFrags);
       });
     } catch (cause) {
       this.queueFailure(session, accountId, "character-load-failed", cause);
@@ -194,6 +204,7 @@ export class CharacterHandler {
     character: Character,
     loadedInventory: LoadedInventory,
     loadedDepot: LoadedDepot | null,
+    pvpFrags: ReadonlyArray<PvpKillRecord>,
   ): void {
     if (session.playerId) {
       session.sendError("already-joined");
@@ -225,6 +236,12 @@ export class CharacterHandler {
     const inventory = this.items.attach(loadedInventory);
     if (loadedDepot) this.depot.attach(loadedDepot);
     this.trade.recoverOrphans(session, player.id);
+    this.guilds.attachCharacter(session, player.id);
+    this.vips.attachCharacter(session, player.id);
+    this.moderation.attachCharacter(player.id);
+    // Attach before the spawn announcement so viewers already receive the
+    // correct (possibly restored) persistent skull in the creature state.
+    this.pvp.attach(player, pvpFrags, now);
     const creatures = this.visibility.announceSpawn(session, player);
     session.send({
       type: "welcome",
@@ -253,6 +270,10 @@ export class CharacterHandler {
     const player = this.world.getPlayer(characterId);
     if (player) {
       this.trade.detachCharacter(characterId, Date.now());
+      this.guilds.detachCharacter(characterId);
+      this.vips.detachCharacter(characterId);
+      this.moderation.detachCharacter(characterId);
+      this.pvp.detachCharacter(characterId);
       this.persistence.untrack(player, Date.now());
       this.items.detach(characterId);
       this.depot.detachCharacter(characterId);

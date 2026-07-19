@@ -81,6 +81,21 @@ export class World {
     return this.map.getTile(position)?.protectionZone ?? false;
   }
 
+  getHouseId(position: Position): number | undefined {
+    return this.map.getHouseId?.(position);
+  }
+
+  getHouseTiles(houseId: number): ReadonlyArray<Position> {
+    return this.map.getHouseTiles?.(houseId) ?? [];
+  }
+
+  /** Execution-time house-tile authorization consulted on every step. */
+  setHousePolicy(
+    policy: (player: Player, destination: Position) => boolean,
+  ): void {
+    this.movement.setHousePolicy(policy);
+  }
+
   isNoPvpZone(position: Position): boolean {
     return this.map.getTile(position)?.noPvpZone ?? false;
   }

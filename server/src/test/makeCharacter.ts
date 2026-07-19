@@ -41,6 +41,8 @@ export function makeCharacter(id: string, displayName = id): Character {
       addons: 0,
     },
     townId: 1,
+    skull: "none",
+    skullExpiresAt: null,
     createdAt: now,
     updatedAt: now,
     lastLoginAt: null,

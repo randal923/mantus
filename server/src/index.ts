@@ -14,6 +14,12 @@ import { PgNpcTravelStore } from "./npc/PgNpcTravelStore";
 import { PgDepotStore } from "./depot/PgDepotStore";
 import { PgMarketStore } from "./market/PgMarketStore";
 import { PgTradeStore } from "./trade/PgTradeStore";
+import { PgGuildStore } from "./guild/PgGuildStore";
+import { PgHouseStore } from "./house/PgHouseStore";
+import { PgModerationStore } from "./moderation/PgModerationStore";
+import { PgPvpStore } from "./pvp/PgPvpStore";
+import { PgHighscoreStore } from "./social/PgHighscoreStore";
+import { PgVipStore } from "./social/PgVipStore";
 import { WorldItemSeeder } from "./item/WorldItemSeeder";
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -56,6 +62,12 @@ const shop = new PgShopStore(pool, itemCatalog);
 const depot = new PgDepotStore(pool, itemCatalog);
 const market = new PgMarketStore(pool, itemCatalog);
 const trade = new PgTradeStore(pool, itemCatalog);
+const guild = new PgGuildStore(pool);
+const pvp = new PgPvpStore(pool);
+const house = new PgHouseStore(pool, itemCatalog);
+const vip = new PgVipStore(pool);
+const highscores = new PgHighscoreStore(pool);
+const moderation = new PgModerationStore(pool);
 const worldItemDeltas =
   serverConfig.map.source === "data"
     ? await new WorldItemSeeder(
@@ -77,6 +89,12 @@ const server = new GameServer(serverConfig, {
   depot,
   market,
   trade,
+  guild,
+  pvp,
+  house,
+  vip,
+  highscores,
+  moderation,
   worldItemDeltas,
 });
 server.start();

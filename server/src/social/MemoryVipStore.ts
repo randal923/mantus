@@ -1,0 +1,107 @@
+import { VIP_LIMITS } from "@tibia/protocol";
+import type {
+  AddVipResult,
+  VipEntryRecord,
+  VipOpResult,
+  VipStore,
+} from "./VipStore";
+
+interface MemoryVipRow {
+  description: string;
+  icon: number;
+  notifyLogin: boolean;
+}
+
+/**
+ * In-memory VipStore mirroring the Pg store's execution-time checks
+ * (name resolution, self/duplicate rejection, 100-entry cap) so service
+ * tests exercise the same failure paths.
+ */
+export class MemoryVipStore implements VipStore {
+  private readonly characterNames = new Map<string, string>();
+  private readonly listsByCharacter = new Map<
+    string,
+    Map<string, MemoryVipRow>
+  >();
+
+  registerCharacter(characterId: string, name: string): void {
+    this.characterNames.set(characterId, name);
+  }
+
+  async loadEntries(
+    characterId: string,
+  ): Promise<ReadonlyArray<VipEntryRecord>> {
+    const list = this.listsByCharacter.get(characterId);
+    if (!list) return [];
+    return [...list.entries()].map(([vipCharacterId, row]) => ({
+      vipCharacterId,
+      name: this.characterNames.get(vipCharacterId) ?? "?",
+      description: row.description,
+      icon: row.icon,
+      notifyLogin: row.notifyLogin,
+    }));
+  }
+
+  async addVip(input: {
+    characterId: string;
+    targetName: string;
+  }): Promise<AddVipResult> {
+    const wanted = input.targetName.trim().toLowerCase();
+    const target = [...this.characterNames.entries()].find(
+      ([, name]) => name.toLowerCase() === wanted,
+    );
+    if (!target) return { status: "failed", reason: "not-found" };
+    const [vipCharacterId, name] = target;
+    if (vipCharacterId === input.characterId) {
+      return { status: "failed", reason: "cannot-add-self" };
+    }
+    const list =
+      this.listsByCharacter.get(input.characterId) ??
+      new Map<string, MemoryVipRow>();
+    if (list.has(vipCharacterId)) {
+      return { status: "failed", reason: "already-added" };
+    }
+    if (list.size >= VIP_LIMITS.maxEntries) {
+      return { status: "failed", reason: "list-full" };
+    }
+    const row: MemoryVipRow = {
+      description: "",
+      icon: 0,
+      notifyLogin: false,
+    };
+    list.set(vipCharacterId, row);
+    this.listsByCharacter.set(input.characterId, list);
+    return {
+      status: "added",
+      entry: { vipCharacterId, name, ...row },
+    };
+  }
+
+  async removeVip(input: {
+    characterId: string;
+    vipCharacterId: string;
+  }): Promise<VipOpResult> {
+    const removed = this.listsByCharacter
+      .get(input.characterId)
+      ?.delete(input.vipCharacterId);
+    if (!removed) return { status: "failed", reason: "not-found" };
+    return { status: "ok" };
+  }
+
+  async editVip(input: {
+    characterId: string;
+    vipCharacterId: string;
+    description?: string;
+    icon?: number;
+    notifyLogin?: boolean;
+  }): Promise<VipOpResult> {
+    const row = this.listsByCharacter
+      .get(input.characterId)
+      ?.get(input.vipCharacterId);
+    if (!row) return { status: "failed", reason: "not-found" };
+    if (input.description !== undefined) row.description = input.description;
+    if (input.icon !== undefined) row.icon = input.icon;
+    if (input.notifyLogin !== undefined) row.notifyLogin = input.notifyLogin;
+    return { status: "ok" };
+  }
+}

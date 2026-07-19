@@ -11,6 +11,7 @@ import {
 import { ChatPanel } from "./chat/ChatPanel";
 import type { ChatChannel } from "./chat/chatTypes";
 import { ConditionBar } from "./combat/ConditionBar";
+import { OwnSkullIndicator } from "./pvp/OwnSkullIndicator";
 import { BattleList } from "./creatures/BattleList";
 import { getSpellCombatTarget } from "../lib/combat/getSpellCombatTarget";
 
@@ -116,8 +117,9 @@ export function GameHud({
           onSend={onSendChat}
         />
       </div>
-      <div className="absolute top-24 left-4">
+      <div className="absolute top-24 left-4 flex flex-col items-start gap-2">
         <ConditionBar conditions={fightState.conditions} />
+        {fightState.skull && <OwnSkullIndicator skull={fightState.skull} />}
       </div>
       <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
         <SpellBar

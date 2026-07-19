@@ -12,6 +12,15 @@ export class InMemoryAccountStore implements AccountStore {
     return this.accounts.get(supabaseUserId)?.language;
   }
 
+  setBannedUntil(accountId: string, bannedUntil: Date | null): void {
+    const entry = [...this.accounts.entries()].find(
+      ([, account]) => account.id === accountId,
+    );
+    if (!entry) return;
+    const [supabaseUserId, account] = entry;
+    this.accounts.set(supabaseUserId, { ...account, bannedUntil });
+  }
+
   async findOrCreateBySupabaseId(
     supabaseUserId: string,
     email: string | null,

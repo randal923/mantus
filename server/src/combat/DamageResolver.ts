@@ -1,8 +1,10 @@
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import { getVocation } from "../progression/getVocation";
+import type { PvpHooks } from "../pvp/PvpHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
@@ -28,6 +30,8 @@ export class DamageResolver {
     private readonly feedback: CombatFeedback,
     private readonly sequence: EventSequence,
     private readonly death: DeathHandler,
+    private readonly partyHooks?: PartyHooks,
+    private readonly pvpHooks?: PvpHooks,
   ) {}
 
   applyDamage(
@@ -40,6 +44,29 @@ export class DamageResolver {
       (target instanceof Player &&
         (now < target.invulnerableUntil ||
           this.registry.sessionFor(target.id)?.travelOperationPending))
+    ) {
+      return {
+        amount: 0,
+        block: "immunity",
+        critical: false,
+        healthChanged: false,
+        manaChanged: false,
+      };
+    }
+    // PVP consequences are applied at damage execution, before the roll:
+    // aggression (yellow mark, white skull, in-fight) registers even on a
+    // miss, and a black-skulled attacker's damage against an unmarked
+    // player is dropped outright.
+    const pvpSource = request.sourceId
+      ? this.world.getCreature(request.sourceId)
+      : undefined;
+    if (
+      this.pvpHooks &&
+      pvpSource instanceof Player &&
+      target instanceof Player &&
+      pvpSource.id !== target.id &&
+      request.type !== "healing" &&
+      this.pvpHooks.onPlayerAttack(pvpSource, target, now) === "blocked"
     ) {
       return {
         amount: 0,
@@ -89,6 +116,9 @@ export class DamageResolver {
       this.publishDamageResult(target, request, healed, "none");
       if (target instanceof Player && healed > 0) {
         this.progression.syncPlayer(target, now);
+        if (source instanceof Player) {
+          this.partyHooks?.recordPartnerHeal(source.id, target.id, now);
+        }
       }
       return {
         amount: healed,
@@ -136,14 +166,20 @@ export class DamageResolver {
     this.publishDamageResult(target, request, amount, mitigated.block);
     if (target instanceof Monster && source instanceof Player && amount > 0) {
       target.recordPlayerDamage(source.id, amount);
+      this.partyHooks?.recordMonsterDamage(source.id, now);
     }
     if (target instanceof Player && (healthChanged || manaChanged)) {
+      if (source instanceof Player && healthChanged) {
+        this.pvpHooks?.recordDamageTaken(target, source.id, amount, now);
+      }
       this.progression.syncPlayer(target, now);
+      // Canary parity: the victim gets in-fight but never a pz-lock —
+      // only the aggressor is protection-zone locked (leg below).
       applyCombatLocks(
         this.feedback,
         target,
         source?.id ?? null,
-        source instanceof Player,
+        false,
         now,
       );
     }

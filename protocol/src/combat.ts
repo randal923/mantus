@@ -144,12 +144,26 @@ export const combatCooldownStateSchema = z
   })
   .strict();
 
+/** The session player's own persistent skull, shown in the HUD with a timer. */
+export const ownSkullStateSchema = z
+  .object({
+    kind: z.enum(["white", "red", "black"]),
+    remainingMs: z
+      .number()
+      .int()
+      .min(0)
+      .max(30 * 24 * 60 * 60 * 1000)
+      .nullable(),
+  })
+  .strict();
+
 export const fightStateSchema = z
   .object({
     attackTargetId: z.string().min(1).max(192).nullable(),
     mode: fightModeSchema,
     conditions: z.array(combatConditionStateSchema).max(CONDITION_TYPES.length),
     cooldowns: z.array(combatCooldownStateSchema).max(16),
+    skull: ownSkullStateSchema.optional(),
   })
   .strict();
 
@@ -167,4 +181,5 @@ export type CombatConditionState = z.infer<
 export type CombatCooldownState = z.infer<
   typeof combatCooldownStateSchema
 >;
+export type OwnSkullState = z.infer<typeof ownSkullStateSchema>;
 export type FightState = z.infer<typeof fightStateSchema>;

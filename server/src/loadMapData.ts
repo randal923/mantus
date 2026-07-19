@@ -5,6 +5,10 @@ import { positionSchema, type Position } from "@tibia/protocol";
 import type { MapAction } from "./MapAction";
 import type { MapData, MapTile } from "./MapData";
 import type { MapTransition } from "./MapTransition";
+import {
+  houseTileIndexFrom,
+  type HouseTileIndex,
+} from "./house/houseTileIndexFrom";
 import type { ItemCatalog } from "./item/ItemCatalog";
 import { loadWorldItemSources } from "./item/loadWorldItemSources";
 import { loadMapItems } from "./loadMapItems";
@@ -145,6 +149,10 @@ export function loadMapData(
     throw new Error(`${name} map metadata does not match its navigation data`);
   }
   let getItems: MapData["getItems"] = () => [];
+  let houseTiles: HouseTileIndex = {
+    byPosition: new Map(),
+    byHouse: new Map(),
+  };
   if (version === 3) {
     const source = meta.source;
     if (
@@ -180,6 +188,10 @@ export function loadMapData(
       loadWorldItemSources(content, name),
       itemCatalog,
     );
+    const parsedContent = JSON.parse(content.toString("utf8")) as {
+      tileMetadata?: unknown;
+    };
+    houseTiles = houseTileIndexFrom(parsedContent.tileMetadata);
   }
 
   const sectorSize = navigation.readUInt8(5);
@@ -333,6 +345,12 @@ export function loadMapData(
     getItems,
     getTownName(townId) {
       return meta.towns.find((town) => town.id === townId)?.name;
+    },
+    getHouseId(position) {
+      return houseTiles.byPosition.get(positionKey(position));
+    },
+    getHouseTiles(houseId) {
+      return houseTiles.byHouse.get(houseId);
     },
   };
 }

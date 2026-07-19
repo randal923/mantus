@@ -1,13 +1,29 @@
-import type { HitBlock, Position, Skill } from "@tibia/protocol";
+import type {
+  CreatureState,
+  HitBlock,
+  Position,
+  Skill,
+} from "@tibia/protocol";
 import type { Character } from "./character/Character";
 import { Creature } from "./creature/Creature";
 import { CharacterProgression } from "./progression/CharacterProgression";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
 import { getDeathExperienceLoss } from "./progression/getDeathExperienceLoss";
+import type { SkullState } from "./pvp/SkullState";
 
 export class Player extends Creature<Character["outfit"]> {
   nextAttackAt = 0;
   invulnerableUntil = 0;
+  /** Maintained by the party system; drives the public gray party shield. */
+  partyMember = false;
+  /** Maintained by the guild system; guild affiliation is public in Tibia. */
+  guildName: string | null = null;
+  /** True while the guild has an active war (drives public war emblems). */
+  guildAtWar = false;
+  /** Persistent PVP skull; maintained by the PvpTracker inside the tick. */
+  skull: SkullState;
+  /** Epoch ms when the persistent skull expires (null while none). */
+  skullExpiresAt: number | null;
   readonly vocation: Character["vocation"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
@@ -44,6 +60,8 @@ export class Player extends Creature<Character["outfit"]> {
     });
     this.vocation = character.vocation;
     this.townId = character.townId;
+    this.skull = character.skull;
+    this.skullExpiresAt = character.skullExpiresAt?.getTime() ?? null;
     this.lastLoginAt = character.lastLoginAt;
     this.version = character.version;
     this.storageValues = { ...character.storageValues };
@@ -66,6 +84,17 @@ export class Player extends Creature<Character["outfit"]> {
 
   get level(): number {
     return this.progression.level;
+  }
+
+  override toState(): CreatureState {
+    const state = super.toState();
+    return {
+      ...state,
+      ...(this.partyMember ? { partyStatus: "member" as const } : {}),
+      ...(this.guildName
+        ? { guildName: this.guildName, atWar: this.guildAtWar }
+        : {}),
+    };
   }
 
   storageValue(key: string): number {

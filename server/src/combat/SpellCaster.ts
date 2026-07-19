@@ -25,6 +25,7 @@ import { resolveSpellTarget } from "./resolveSpellTarget";
 import { skillForWeapon } from "./skillForWeapon";
 import type { SpellDefinition } from "./Spell";
 import { spellCondition } from "./spellCondition";
+import type { PvpHooks } from "../pvp/PvpHooks";
 
 export class SpellCaster {
   constructor(
@@ -37,6 +38,7 @@ export class SpellCaster {
     private readonly sequence: EventSequence,
     private readonly damage: DamageResolver,
     private readonly conditions: ConditionSystem,
+    private readonly pvpHooks?: PvpHooks,
   ) {}
 
   executeSpell(
@@ -150,7 +152,7 @@ export class SpellCaster {
       for (const creature of affected) {
         if (
           spell.damageType !== "healing" &&
-          !canPlayerHarm(this.world, session, player, creature)
+          !canPlayerHarm(this.world, session, player, creature, this.pvpHooks)
         ) {
           continue;
         }
@@ -181,7 +183,7 @@ export class SpellCaster {
       for (const creature of affected.length > 0 ? affected : [player]) {
         if (
           spell.damageType !== "healing" &&
-          !canPlayerHarm(this.world, session, player, creature)
+          !canPlayerHarm(this.world, session, player, creature, this.pvpHooks)
         ) {
           continue;
         }
@@ -346,7 +348,7 @@ export class SpellCaster {
     if (
       harmful &&
       resolved.creature &&
-      !canPlayerHarm(this.world, session, player, resolved.creature)
+      !canPlayerHarm(this.world, session, player, resolved.creature, this.pvpHooks)
     ) {
       return false;
     }

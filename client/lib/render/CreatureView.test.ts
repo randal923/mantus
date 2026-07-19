@@ -191,8 +191,41 @@ describe("CreatureView", () => {
       x: 10 * TILE_SIZE - 16,
       y: 10 * TILE_SIZE - 16,
     });
-    expect(view.plate.children).toHaveLength(2);
+    // Name text, health bar, party shield, war emblem, and skull graphics.
+    expect(view.plate.children).toHaveLength(5);
     view.destroy();
+  });
+
+  it("marks publicly partied creatures from the server projection", () => {
+    const partied = new CreatureView(
+      store,
+      outfit,
+      { ...state, partyStatus: "member" },
+      undefined,
+      0xffffff,
+    );
+    const solo = new CreatureView(store, outfit, state, undefined, 0xffffff);
+    expect(partied.isPublicPartyMember).toBe(true);
+    expect(solo.isPublicPartyMember).toBe(false);
+    partied.destroy();
+    solo.destroy();
+  });
+
+  it("exposes the public guild flags from the server projection", () => {
+    const guilded = new CreatureView(
+      store,
+      outfit,
+      { ...state, guildName: "Iron Pact", atWar: true },
+      undefined,
+      0xffffff,
+    );
+    const solo = new CreatureView(store, outfit, state, undefined, 0xffffff);
+    expect(guilded.guildName).toBe("Iron Pact");
+    expect(guilded.isAtWar).toBe(true);
+    expect(solo.guildName).toBeNull();
+    expect(solo.isAtWar).toBe(false);
+    guilded.destroy();
+    solo.destroy();
   });
 
   it("shows the attack marker only for the server-confirmed target", () => {

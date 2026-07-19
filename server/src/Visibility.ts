@@ -15,12 +15,29 @@ import type { SessionRegistry } from "./SessionRegistry";
 import type { World } from "./World";
 import { positionKey } from "./positionKey";
 
+/**
+ * Per-recipient creature-state customization (e.g. viewer-relative PVP
+ * skull marks). Runs at send time for every creature projection so a
+ * message never carries marks its recipient may not see (charter rule 6).
+ */
+export type CreatureStateDecorator = (
+  viewer: Player,
+  creature: Creature,
+  state: CreatureState,
+) => CreatureState;
+
 /** Owns every view-filtered creature introduction, movement, and removal. */
 export class Visibility {
+  private stateDecorator: CreatureStateDecorator | null = null;
+
   constructor(
     private readonly world: World,
     private readonly registry: SessionRegistry,
   ) {}
+
+  setCreatureStateDecorator(decorator: CreatureStateDecorator): void {
+    this.stateDecorator = decorator;
+  }
 
   *visibleSessionsFrom(
     viewer: Session,
@@ -59,7 +76,7 @@ export class Visibility {
       if (other.id === joiner.id) continue;
       this.introduce(other, player);
     }
-    return visibleCreatures.map((creature) => creature.toState());
+    return visibleCreatures.map((creature) => this.stateFor(player, creature));
   }
 
   announceCreatureSpawn(creature: Creature): void {
@@ -142,7 +159,7 @@ export class Visibility {
       if (visible && known) {
         session.send({
           type: "creature-state-changed",
-          creature: creature.toState(),
+          creature: this.stateFor(viewer, creature),
         });
       } else if (visible) {
         this.introduce(session, creature);
@@ -354,7 +371,17 @@ export class Visibility {
     const viewer = this.world.getPlayer(session.playerId);
     if (!viewer || !this.canObserve(session, viewer, creature)) return;
     session.knownCreatureIds.add(creature.id);
-    session.send({ type: "creature-joined", creature: creature.toState() });
+    session.send({
+      type: "creature-joined",
+      creature: this.stateFor(viewer, creature),
+    });
+  }
+
+  private stateFor(viewer: Player, creature: Creature): CreatureState {
+    const state = creature.toState();
+    return this.stateDecorator
+      ? this.stateDecorator(viewer, creature, state)
+      : state;
   }
 
   private forget(session: Session, creatureId: string): void {

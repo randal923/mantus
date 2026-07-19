@@ -56,5 +56,11 @@ export function overrideMapData(
     getTownName: map.getTownName
       ? (townId) => map.getTownName!(townId)
       : undefined,
+    getHouseId: map.getHouseId
+      ? (position) => map.getHouseId!(position)
+      : undefined,
+    getHouseTiles: map.getHouseTiles
+      ? (houseId) => map.getHouseTiles!(houseId)
+      : undefined,
   };
 }

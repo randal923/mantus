@@ -9,11 +9,14 @@ import {
   type DepotLocation,
   type DepotStateMessage,
   type FightMode,
+  type HighscoreCategory,
+  type CharacterVocation,
   type InventoryItem,
   type ItemContainerDestination,
   type Language,
   type MarketSide,
   type Position,
+  type ReportReason,
   type ServerErrorCode,
   type ServerMessage,
   type ViewRange,
@@ -378,6 +381,206 @@ export class GameClient {
 
   cancelTrade(): boolean {
     return this.send({ type: "trade-cancel" });
+  }
+
+  inviteToParty(targetName: string): boolean {
+    return this.send({ type: "party-invite", targetName });
+  }
+
+  respondToPartyInvite(leaderId: string, accept: boolean): boolean {
+    return this.send({ type: "party-respond-invite", leaderId, accept });
+  }
+
+  revokePartyInvite(targetPlayerId: string): boolean {
+    return this.send({ type: "party-revoke-invite", targetPlayerId });
+  }
+
+  leaveParty(): boolean {
+    return this.send({ type: "party-leave" });
+  }
+
+  kickFromParty(targetPlayerId: string): boolean {
+    return this.send({ type: "party-kick", targetPlayerId });
+  }
+
+  passPartyLeadership(targetPlayerId: string): boolean {
+    return this.send({ type: "party-pass-leadership", targetPlayerId });
+  }
+
+  setPartySharedExp(enabled: boolean): boolean {
+    return this.send({ type: "party-set-shared-exp", enabled });
+  }
+
+  sendPartyChat(text: string): boolean {
+    return this.send({ type: "party-chat", text });
+  }
+
+  createGuild(name: string): boolean {
+    return this.send({ type: "guild-create", name });
+  }
+
+  inviteToGuild(targetName: string): boolean {
+    return this.send({ type: "guild-invite", targetName });
+  }
+
+  respondToGuildInvite(guildId: string, accept: boolean): boolean {
+    return this.send({ type: "guild-respond-invite", guildId, accept });
+  }
+
+  revokeGuildInvite(targetCharacterId: string): boolean {
+    return this.send({ type: "guild-revoke-invite", targetCharacterId });
+  }
+
+  kickFromGuild(targetCharacterId: string): boolean {
+    return this.send({ type: "guild-kick", targetCharacterId });
+  }
+
+  leaveGuild(): boolean {
+    return this.send({ type: "guild-leave" });
+  }
+
+  promoteGuildMember(targetCharacterId: string): boolean {
+    return this.send({ type: "guild-promote", targetCharacterId });
+  }
+
+  demoteGuildMember(targetCharacterId: string): boolean {
+    return this.send({ type: "guild-demote", targetCharacterId });
+  }
+
+  passGuildLeadership(targetCharacterId: string): boolean {
+    return this.send({ type: "guild-pass-leadership", targetCharacterId });
+  }
+
+  disbandGuild(): boolean {
+    return this.send({ type: "guild-disband" });
+  }
+
+  setGuildMotd(motd: string): boolean {
+    return this.send({ type: "guild-set-motd", motd });
+  }
+
+  setGuildNick(targetCharacterId: string, nick: string): boolean {
+    return this.send({ type: "guild-set-nick", targetCharacterId, nick });
+  }
+
+  setGuildRankName(level: number, name: string): boolean {
+    return this.send({ type: "guild-set-rank-name", level, name });
+  }
+
+  openGuild(): boolean {
+    return this.send({ type: "guild-open" });
+  }
+
+  sendGuildChat(text: string): boolean {
+    return this.send({ type: "guild-chat", text });
+  }
+
+  declareGuildWar(targetGuildName: string, fragLimit: number): boolean {
+    return this.send({ type: "guild-declare-war", targetGuildName, fragLimit });
+  }
+
+  respondToGuildWar(warId: string, accept: boolean): boolean {
+    return this.send({ type: "guild-respond-war", warId, accept });
+  }
+
+  endGuildWar(warId: string): boolean {
+    return this.send({ type: "guild-end-war", warId });
+  }
+
+  openHouse(houseId?: number): boolean {
+    return this.send({
+      type: "house-open",
+      ...(houseId !== undefined ? { houseId } : {}),
+    });
+  }
+
+  buyHouse(houseId: number): boolean {
+    return this.send({ type: "house-buy", houseId });
+  }
+
+  abandonHouse(): boolean {
+    return this.send({ type: "house-abandon" });
+  }
+
+  offerHouseTransfer(targetName: string, price: number): boolean {
+    return this.send({ type: "house-transfer-offer", targetName, price });
+  }
+
+  respondToHouseTransfer(houseId: number, accept: boolean): boolean {
+    return this.send({ type: "house-transfer-respond", houseId, accept });
+  }
+
+  cancelHouseTransfer(): boolean {
+    return this.send({ type: "house-transfer-cancel" });
+  }
+
+  setHouseAccess(
+    kind: "guest" | "subowner",
+    targetName: string,
+    grant: boolean,
+  ): boolean {
+    return this.send({ type: "house-set-access", kind, targetName, grant });
+  }
+
+  kickFromHouse(targetCharacterId?: string): boolean {
+    return this.send({
+      type: "house-kick",
+      ...(targetCharacterId !== undefined ? { targetCharacterId } : {}),
+    });
+  }
+
+  browseHouses(townId?: number, page?: number): boolean {
+    return this.send({
+      type: "house-browse",
+      ...(townId !== undefined ? { townId } : {}),
+      ...(page !== undefined ? { page } : {}),
+    });
+  }
+
+  addVip(name: string): boolean {
+    return this.send({ type: "vip-add", name });
+  }
+
+  removeVip(targetCharacterId: string): boolean {
+    return this.send({ type: "vip-remove", targetCharacterId });
+  }
+
+  editVip(
+    targetCharacterId: string,
+    edits: { description?: string; icon?: number; notifyLogin?: boolean },
+  ): boolean {
+    return this.send({
+      type: "vip-edit",
+      targetCharacterId,
+      ...(edits.description !== undefined
+        ? { description: edits.description }
+        : {}),
+      ...(edits.icon !== undefined ? { icon: edits.icon } : {}),
+      ...(edits.notifyLogin !== undefined
+        ? { notifyLogin: edits.notifyLogin }
+        : {}),
+    });
+  }
+
+  requestHighscores(
+    category: HighscoreCategory,
+    vocation: CharacterVocation | undefined,
+    page: number,
+  ): boolean {
+    return this.send({
+      type: "highscores-get",
+      category,
+      ...(vocation !== undefined ? { vocation } : {}),
+      page,
+    });
+  }
+
+  reportPlayer(
+    targetName: string,
+    reason: ReportReason,
+    comment: string,
+  ): boolean {
+    return this.send({ type: "report-player", targetName, reason, comment });
   }
 
   requestMarketOwnOffers(): boolean {

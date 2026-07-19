@@ -10,6 +10,7 @@ import type { LoadedCharacterRow } from "./LoadedCharacterRow";
 import type { CharacterStore } from "./CharacterStore";
 import type { StarterSet } from "../item/StarterSet";
 import { assertValidCharacterSaveSnapshot } from "../progression/assertValidCharacterSaveSnapshot";
+import { skullToCode } from "../pvp/skullToCode";
 import { insertCharacterSkills } from "./insertCharacterSkills";
 import { insertStarterSet } from "./insertStarterSet";
 import { isNormalizedNameConflict } from "./isNormalizedNameConflict";
@@ -76,6 +77,8 @@ export class PgCharacterStore implements CharacterStore {
       positionZ: character.positionZ,
       direction: character.direction,
       outfit: character.outfit,
+      skull: character.skull,
+      skullExpiresAt: character.skullExpiresAt,
     });
     const client = await this.pool.connect();
     try {
@@ -199,6 +202,8 @@ export class PgCharacterStore implements CharacterStore {
           snapshot.outfit.addons,
           snapshot.vocation,
           snapshot.progressionDefinitionVersion,
+          skullToCode(snapshot.skull),
+          snapshot.skullExpiresAt,
         ],
       );
       const version = result.rows[0]?.version;

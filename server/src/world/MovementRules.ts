@@ -19,12 +19,31 @@ const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
 };
 
 export class MovementRules {
+  /** House-tile authorization, re-checked at execution time on every step. */
+  private housePolicy:
+    | ((player: Player, destination: Position) => boolean)
+    | null = null;
+
   constructor(
     private readonly map: MapData,
     private readonly tickMs: number,
     private readonly grid: SpatialGrid,
     private readonly occupancy: TileOccupancy,
   ) {}
+
+  setHousePolicy(
+    policy: (player: Player, destination: Position) => boolean,
+  ): void {
+    this.housePolicy = policy;
+  }
+
+  private houseBlocked(creature: Creature, destination: Position): boolean {
+    return (
+      creature instanceof Player &&
+      this.housePolicy !== null &&
+      !this.housePolicy(creature, destination)
+    );
+  }
 
   /**
    * Validates and applies one step. All rules live here, at execution time:
@@ -65,6 +84,9 @@ export class MovementRules {
         reason: "invalid-transition",
         retryAfterMs: 0,
       };
+    }
+    if (this.houseBlocked(player, action.destination)) {
+      return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
     }
     if (this.occupancy.isOccupied(action.destination)) {
       return { moved: false, turned: false, reason: "occupied", retryAfterMs: 0 };
@@ -138,6 +160,9 @@ export class MovementRules {
     if (!this.map.isWalkable(destination)) {
       return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
     }
+    if (this.houseBlocked(creature, destination)) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
     if (this.occupancy.isOccupied(destination)) {
       return { moved: false, turned, reason: "occupied", retryAfterMs: 0 };
     }
@@ -145,6 +170,9 @@ export class MovementRules {
       ? this.map.getTransition(destination, direction)
       : undefined;
     const resolved = transition?.destination ?? destination;
+    if (this.houseBlocked(creature, resolved)) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
     if (!this.map.isWalkable(resolved)) {
       return {
         moved: false,

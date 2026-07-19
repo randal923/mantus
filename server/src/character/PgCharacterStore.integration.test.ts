@@ -54,6 +54,8 @@ const saveSnapshot = (
   positionZ: character.positionZ,
   direction: character.direction,
   outfit: character.outfit,
+  skull: character.skull,
+  skullExpiresAt: character.skullExpiresAt,
 });
 
 databaseDescribe("PgCharacterStore integration", () => {
@@ -84,6 +86,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       "011_npc_travel.sql",
       "014_character_storages.sql",
       "015_depot_and_inbox.sql",
+      "018_pvp.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

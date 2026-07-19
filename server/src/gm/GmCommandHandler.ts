@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { MAX_CHARACTER_LEVEL, type GmResponseMessage } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import type { ModerationService } from "../moderation/ModerationService";
 import type { Player } from "../Player";
 import { getExperienceForLevel } from "../progression/getExperienceForLevel";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
@@ -11,6 +12,9 @@ import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 
 const MAX_CREATE_COUNT = 100;
+const MAX_MUTE_MINUTES = 43_200;
+const MAX_BAN_DAYS = 3_650;
+const MAX_MODERATION_TEXT = 200;
 
 /**
  * Dev-only GM chat commands ("/i rope", "/goto x y z", ...). Constructed only
@@ -28,6 +32,7 @@ export class GmCommandHandler {
     private readonly progression: ProgressionSystem,
     private readonly items: ItemIntentHandler,
     private readonly spawns: SpawnManager | null,
+    private readonly moderation: ModerationService | null,
   ) {}
 
   /** Returns true when the text was a slash command and has been consumed. */
@@ -62,14 +67,99 @@ export class GmCommandHandler {
       case "pos":
         this.reply(session, true, this.describePosition(player));
         break;
+      case "mute":
+        this.mute(session, player, args);
+        break;
+      case "unmute":
+        this.moderationByName(session, player, args, "unmute");
+        break;
+      case "kick":
+        this.moderationByName(session, player, args, "kick");
+        break;
+      case "ban":
+        this.ban(session, player, args);
+        break;
+      case "unban":
+        this.moderationByName(session, player, args, "unban");
+        break;
+      case "note":
+        this.note(session, player, args);
+        break;
       default:
         this.reply(
           session,
           false,
-          "Commands: /i <item> [count], /spawn <monster>, /goto <x> <y> [z], /level <n>, /heal, /where",
+          "Commands: /i <item> [count], /spawn <monster>, /goto <x> <y> [z], /level <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note",
         );
     }
     return true;
+  }
+
+  private mute(session: Session, player: Player, args: string[]): void {
+    const moderation = this.requireModeration(session);
+    if (!moderation) return;
+    const [name, minutesRaw, ...reasonParts] = args;
+    const minutes = Number(minutesRaw);
+    if (
+      !name ||
+      !Number.isInteger(minutes) ||
+      minutes < 1 ||
+      minutes > MAX_MUTE_MINUTES
+    ) {
+      this.reply(session, false, "Usage: /mute <name> <minutes> [reason]");
+      return;
+    }
+    const reason = reasonParts.join(" ").slice(0, MAX_MODERATION_TEXT);
+    moderation.gmMute(session, player.id, name, minutes, reason);
+  }
+
+  private moderationByName(
+    session: Session,
+    player: Player,
+    args: string[],
+    kind: "unmute" | "kick" | "unban",
+  ): void {
+    const moderation = this.requireModeration(session);
+    if (!moderation) return;
+    const name = args.join(" ").trim();
+    if (name.length === 0) {
+      this.reply(session, false, `Usage: /${kind} <name>`);
+      return;
+    }
+    if (kind === "unmute") moderation.gmUnmute(session, player.id, name);
+    else if (kind === "kick") moderation.gmKick(session, player.id, name);
+    else moderation.gmUnban(session, player.id, name);
+  }
+
+  private ban(session: Session, player: Player, args: string[]): void {
+    const moderation = this.requireModeration(session);
+    if (!moderation) return;
+    const [name, daysRaw, ...reasonParts] = args;
+    const days = Number(daysRaw);
+    if (!name || !Number.isInteger(days) || days < 1 || days > MAX_BAN_DAYS) {
+      this.reply(session, false, "Usage: /ban <name> <days> [reason]");
+      return;
+    }
+    const reason = reasonParts.join(" ").slice(0, MAX_MODERATION_TEXT);
+    moderation.gmBan(session, player.id, name, days, reason);
+  }
+
+  private note(session: Session, player: Player, args: string[]): void {
+    const moderation = this.requireModeration(session);
+    if (!moderation) return;
+    const [name, ...textParts] = args;
+    const text = textParts.join(" ").trim().slice(0, MAX_MODERATION_TEXT);
+    if (!name || text.length === 0) {
+      this.reply(session, false, "Usage: /note <name> <text>");
+      return;
+    }
+    moderation.gmNote(session, player.id, name, text);
+  }
+
+  private requireModeration(session: Session): ModerationService | null {
+    if (this.moderation) return this.moderation;
+    this.reply(session, false, "Moderation is not available on this server.");
+    return null;
   }
 
   private createItem(

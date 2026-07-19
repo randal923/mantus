@@ -6,6 +6,7 @@ import type {
 } from "@tibia/protocol";
 import type { CharacterSkill } from "../progression/CharacterSkill";
 import type { ProgressionEvent } from "../progression/ProgressionEvent";
+import type { SkullState } from "../pvp/SkullState";
 
 export interface CharacterOutfit {
   readonly lookType: CharacterLookType;
@@ -39,6 +40,8 @@ export interface Character {
   readonly direction: Direction;
   readonly outfit: CharacterOutfit;
   readonly townId: number;
+  readonly skull: SkullState;
+  readonly skullExpiresAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly lastLoginAt: Date | null;
@@ -79,4 +82,6 @@ export interface CharacterSaveSnapshot {
   readonly positionZ: number;
   readonly direction: Direction;
   readonly outfit: CharacterOutfit;
+  readonly skull: SkullState;
+  readonly skullExpiresAt: Date | null;
 }

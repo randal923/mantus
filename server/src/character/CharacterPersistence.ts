@@ -272,6 +272,9 @@ export class CharacterPersistence {
       positionZ: player.position.z,
       direction: player.direction,
       outfit: player.outfit,
+      skull: player.skull,
+      skullExpiresAt:
+        player.skullExpiresAt === null ? null : new Date(player.skullExpiresAt),
     };
   }
 

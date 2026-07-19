@@ -29,6 +29,19 @@ export function handleDoorUse(
         toTypeId,
       }),
     );
+  // House doors stand on house tiles: only invited characters may operate
+  // them, checked against current owner/access state at execution time.
+  if (
+    context.world.getHouseId?.(position) !== undefined &&
+    !context.houseAccess(context.player.id, position)
+  ) {
+    session.send({
+      type: "combat-log",
+      kind: "condition",
+      text: "Only invited guests may enter this house.",
+    });
+    return;
+  }
   if (door.role === "locked") {
     session.send({ type: "combat-log", kind: "condition", text: "It is locked." });
     return;

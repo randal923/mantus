@@ -1,6 +1,7 @@
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { Player } from "../Player";
+import type { PvpHooks } from "../pvp/PvpHooks";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import { canPlayerTarget } from "./canPlayerTarget";
@@ -10,6 +11,7 @@ export function canPlayerHarm(
   session: Session,
   player: Player,
   target: Creature,
+  pvp?: PvpHooks,
 ): boolean {
   if (
     target === player ||
@@ -26,5 +28,5 @@ export function canPlayerHarm(
       !world.isProtectionZone(target.position)
     );
   }
-  return canPlayerTarget(world, session, player, target);
+  return canPlayerTarget(world, session, player, target, pvp);
 }

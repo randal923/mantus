@@ -13,7 +13,11 @@ export async function appendBankLedger(
     | "market-escrow"
     | "market-refund"
     | "market-sale"
-    | "market-purchase",
+    | "market-purchase"
+    | "house-purchase"
+    | "house-rent"
+    | "house-transfer-in"
+    | "house-transfer-out",
   amount: number,
   balanceAfter: number,
   counterpartyCharacterId?: string,

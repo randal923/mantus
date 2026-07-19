@@ -30,4 +30,8 @@ export interface MapData {
   getAction(position: Position): MapAction | undefined;
   getItems(position: Position): ReadonlyArray<MapItem>;
   getTownName?(townId: number): string | undefined;
+  /** House id owning this tile, when the map ships house metadata. */
+  getHouseId?(position: Position): number | undefined;
+  /** Every tile of one house, for eviction sweeps and occupant checks. */
+  getHouseTiles?(houseId: number): ReadonlyArray<Position> | undefined;
 }

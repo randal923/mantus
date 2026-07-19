@@ -1,6 +1,7 @@
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import { Player } from "../Player";
+import type { PvpHooks } from "../pvp/PvpHooks";
 import type { Session } from "../Session";
 import type { World } from "../World";
 
@@ -9,6 +10,7 @@ export function canPlayerTarget(
   session: Session,
   player: Player,
   target: Creature,
+  pvp?: PvpHooks,
 ): boolean {
   if (
     target.id === player.id ||
@@ -25,11 +27,21 @@ export function canPlayerTarget(
       !world.isProtectionZone(target.position)
     );
   }
+  if (
+    !(target instanceof Player) ||
+    world.isProtectionZone(player.position) ||
+    world.isProtectionZone(target.position)
+  ) {
+    return false;
+  }
+  if (pvp) {
+    // Re-evaluated at execution time: world type, no-pvp zones, protection
+    // level, black-skull restriction, and secure mode vs viewer-relative
+    // marks all live in the pvp gate.
+    return pvp.canTarget(session, player, target);
+  }
   return (
-    target instanceof Player &&
     !session.fightMode.secure &&
-    !world.isProtectionZone(player.position) &&
-    !world.isProtectionZone(target.position) &&
     !world.isNoPvpZone(player.position) &&
     !world.isNoPvpZone(target.position)
   );

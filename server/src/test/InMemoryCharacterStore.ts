@@ -104,6 +104,8 @@ export class InMemoryCharacterStore implements CharacterStore {
       positionZ: snapshot.positionZ,
       direction: snapshot.direction,
       outfit: snapshot.outfit,
+      skull: snapshot.skull,
+      skullExpiresAt: snapshot.skullExpiresAt,
       version,
       updatedAt: new Date(),
     });

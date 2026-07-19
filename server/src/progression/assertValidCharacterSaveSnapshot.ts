@@ -97,6 +97,11 @@ export function assertValidCharacterSaveSnapshot(
       throw new Error("character snapshot skill progress is invalid");
     }
   }
+  if (
+    (snapshot.skull === "none") !== (snapshot.skullExpiresAt === null)
+  ) {
+    throw new Error("character snapshot skull expiry is invalid");
+  }
   const eventIds = new Set<string>();
   for (const event of snapshot.progressionEvents) {
     if (eventIds.has(event.id) || !EVENT_ID_PATTERN.test(event.id)) {

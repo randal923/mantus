@@ -1,4 +1,9 @@
-export type ChatChannelKind = "world" | "whisper" | "guild" | "system";
+export type ChatChannelKind =
+  | "world"
+  | "whisper"
+  | "guild"
+  | "party"
+  | "system";
 
 export type ChatMessageTone =
   | "default"

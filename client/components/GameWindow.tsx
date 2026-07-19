@@ -5,6 +5,7 @@ import type {
   BankActionFailedReason,
   DepotStateMessage,
   MailActionFailedReason,
+  ReportActionFailedReason,
   ShopActionFailedReason,
   ShopEntryProjection,
   ShopTransactedMessage,
@@ -26,7 +27,12 @@ import { i18n } from "../i18n/i18n";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import { useDepotSession } from "../hooks/useDepotSession";
+import { useGuildSession } from "../hooks/useGuildSession";
+import { useHighscoresSession } from "../hooks/useHighscoresSession";
+import { useHouseSession } from "../hooks/useHouseSession";
 import { useMarketSession } from "../hooks/useMarketSession";
+import { usePartySession } from "../hooks/usePartySession";
+import { useVipSession } from "../hooks/useVipSession";
 import { useTradeSession } from "../hooks/useTradeSession";
 import { useOptimisticInventory } from "../hooks/useOptimisticInventory";
 import type { DepotAction } from "../lib/depot/DepotAction";
@@ -37,7 +43,9 @@ import type {
 import {
   chatReducer,
   initialChatState,
+  GUILD_CHANNEL_ID,
   LOCAL_CHANNEL_ID,
+  PARTY_CHANNEL_ID,
   SYSTEM_CHANNEL_ID,
 } from "../lib/chat/chatReducer";
 import { formatChatTime } from "../lib/chat/formatChatTime";
@@ -77,6 +85,13 @@ import { DepotModal } from "./depot/DepotModal";
 import { MailboxModal } from "./depot/MailboxModal";
 import { AuctionHouseModal } from "./auction/AuctionHouseModal";
 import { TradePanel } from "./trade/TradePanel";
+import { GuildModal } from "./guild/GuildModal";
+import { HouseModal } from "./house/HouseModal";
+import { HighscoresModal } from "./social/HighscoresModal";
+import { ReportPlayerModal } from "./social/ReportPlayerModal";
+import { VipPanel } from "./social/VipPanel";
+import { PartyPanel } from "./party/PartyPanel";
+import { PartyInvitationToast } from "./party/PartyInvitationToast";
 import { Toast } from "./ui/Toast";
 import { LevelUpBanner } from "./LevelUpBanner";
 
@@ -112,6 +127,13 @@ interface MailboxSessionState {
   pending: boolean;
   error: MailActionFailedReason | null;
   sentRecipient: string | null;
+}
+
+interface ReportSessionState {
+  targetName: string;
+  pending: boolean;
+  error: ReportActionFailedReason | null;
+  sent: boolean;
 }
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
@@ -295,6 +317,68 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     begin: beginTradeAction,
     reset: resetTrade,
   } = useTradeSession();
+  const {
+    state: partySession,
+    stateReceived: confirmPartyState,
+    invitationReceived: partyInvitationReceived,
+    invitationRevoked: partyInvitationRevoked,
+    fail: failParty,
+    reset: resetParty,
+  } = usePartySession();
+  const [partyPanelVisible, setPartyPanelVisible] = useState(false);
+  const hadPartyRef = useRef(false);
+  const {
+    state: guildSession,
+    stateReceived: confirmGuildState,
+    invitationReceived: guildInvitationReceived,
+    fail: failGuild,
+    reset: resetGuild,
+  } = useGuildSession();
+  const [guildModalOpen, setGuildModalOpen] = useState(false);
+  const hadGuildRef = useRef(false);
+  const [guildToast, setGuildToast] = useState<{
+    readonly kind: string;
+    readonly detail: string;
+  } | null>(null);
+  const dismissGuildToast = useCallback(() => setGuildToast(null), []);
+  const {
+    state: houseSession,
+    stateReceived: confirmHouseState,
+    listReceived: houseListReceived,
+    offerReceived: houseOfferReceived,
+    offerResolved: houseOfferResolved,
+    offerCancelledByName: houseOfferCancelledByName,
+    fail: failHouse,
+    reset: resetHouse,
+  } = useHouseSession();
+  const [houseModalOpen, setHouseModalOpen] = useState(false);
+  const {
+    state: vipSession,
+    stateReceived: confirmVipState,
+    statusChanged: vipStatusChanged,
+    fail: failVip,
+    reset: resetVip,
+  } = useVipSession();
+  const [vipPanelVisible, setVipPanelVisible] = useState(false);
+  const [vipToast, setVipToast] = useState<string | null>(null);
+  const dismissVipToast = useCallback(() => setVipToast(null), []);
+  const {
+    state: highscoresSession,
+    stateReceived: confirmHighscoresState,
+    begin: beginHighscores,
+    fail: failHighscores,
+    reset: resetHighscores,
+  } = useHighscoresSession();
+  const [highscoresOpen, setHighscoresOpen] = useState(false);
+  const [reportSession, setReportSession] =
+    useState<ReportSessionState | null>(null);
+  const [houseToast, setHouseToast] = useState<{
+    readonly kind: string;
+    readonly houseName: string;
+    readonly detail: string;
+    readonly warningsLeft?: number;
+  } | null>(null);
+  const dismissHouseToast = useCallback(() => setHouseToast(null), []);
   const [tradeToast, setTradeToast] = useState<TradeClosedReason | null>(null);
   const dismissTradeToast = useCallback(() => setTradeToast(null), []);
   const [itemText, setItemText] = useState<
@@ -335,6 +419,22 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setShopSession(null);
     resetDepot();
     closeMarket();
+    resetParty();
+    hadPartyRef.current = false;
+    setPartyPanelVisible(false);
+    resetGuild();
+    hadGuildRef.current = false;
+    setGuildModalOpen(false);
+    setGuildToast(null);
+    resetHouse();
+    setHouseModalOpen(false);
+    setHouseToast(null);
+    resetVip();
+    setVipPanelVisible(false);
+    setVipToast(null);
+    resetHighscores();
+    setHighscoresOpen(false);
+    setReportSession(null);
     setMailboxSession(null);
     setVisibleCreatures([]);
     setFightState(null);
@@ -360,6 +460,32 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       if (gameMenuOpen) return;
       setCharacterStatsOpen(false);
       setInventoryOpen((open) => !open);
+      return;
+    }
+    if (action === "togglePartyPanel") {
+      if (gameMenuOpen) return;
+      setPartyPanelVisible((visible) => !visible);
+      return;
+    }
+    if (action === "toggleGuildModal") {
+      if (gameMenuOpen) return;
+      setGuildModalOpen((open) => {
+        if (!open) clientRef.current?.openGuild();
+        return !open;
+      });
+      return;
+    }
+    if (action === "toggleVipPanel") {
+      if (gameMenuOpen) return;
+      setVipPanelVisible((visible) => !visible);
+      return;
+    }
+    if (action === "toggleHouseModal") {
+      if (gameMenuOpen) return;
+      setHouseModalOpen((open) => {
+        if (!open) clientRef.current?.openHouse();
+        return !open;
+      });
       return;
     }
     if (action === "toggleCharacterStats") {
@@ -556,6 +682,22 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             resetDepot();
             closeMarket();
             resetTrade();
+            resetParty();
+            hadPartyRef.current = false;
+            setPartyPanelVisible(false);
+            resetGuild();
+            hadGuildRef.current = false;
+            setGuildModalOpen(false);
+            setGuildToast(null);
+            resetHouse();
+            setHouseModalOpen(false);
+            setHouseToast(null);
+            resetVip();
+            setVipPanelVisible(false);
+            setVipToast(null);
+            resetHighscores();
+            setHighscoresOpen(false);
+            setReportSession(null);
             setMailboxSession(null);
             setLootSession(null);
             dispatchChat({
@@ -783,6 +925,159 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             failMarket(message.reason);
             return;
           }
+          if (message.type === "party-state") {
+            const hadParty = hadPartyRef.current;
+            hadPartyRef.current = message.party !== null;
+            if (message.party && !hadParty) setPartyPanelVisible(true);
+            if (!message.party && hadParty) {
+              dispatchChat({ type: "party-closed" });
+            }
+            confirmPartyState(message);
+            worldRenderer.setPartyView(
+              message.party
+                ? {
+                    leaderId: message.party.leaderId,
+                    memberIds: message.party.members.map(
+                      (member) => member.id,
+                    ),
+                    sharedExpActive: message.party.sharedExpActive,
+                  }
+                : null,
+            );
+            return;
+          }
+          if (message.type === "party-invitation") {
+            partyInvitationReceived(message);
+            return;
+          }
+          if (message.type === "party-invitation-revoked") {
+            partyInvitationRevoked(message.leaderId);
+            return;
+          }
+          if (message.type === "party-chat-delivered") {
+            dispatchChat({
+              type: "party",
+              speakerId: message.speakerId,
+              name: message.speakerName,
+              body: message.text,
+              time: formatChatTime(),
+            });
+            return;
+          }
+          if (message.type === "party-action-failed") {
+            failParty(message.reason);
+            return;
+          }
+          if (message.type === "guild-state") {
+            const hadGuild = hadGuildRef.current;
+            hadGuildRef.current = message.guild !== null;
+            if (!message.guild && hadGuild) {
+              dispatchChat({ type: "guild-closed" });
+            }
+            confirmGuildState(message);
+            worldRenderer.setGuildView(
+              message.guild
+                ? {
+                    ownGuildName: message.guild.name,
+                    enemyGuildNames: message.guild.wars
+                      .filter((war) => war.status === "active")
+                      .map((war) => war.enemyGuildName),
+                  }
+                : null,
+            );
+            return;
+          }
+          if (message.type === "guild-invitation") {
+            guildInvitationReceived(message);
+            return;
+          }
+          if (message.type === "guild-chat-delivered") {
+            dispatchChat({
+              type: "guild",
+              speakerId: message.speakerId,
+              name: message.speakerName,
+              body: message.text,
+              time: formatChatTime(),
+              // Canary-style highlight for vice-leader/leader lines.
+              highlighted: message.rankLevel >= 2,
+            });
+            return;
+          }
+          if (message.type === "guild-event") {
+            setGuildToast({ kind: message.kind, detail: message.detail ?? "" });
+            return;
+          }
+          if (message.type === "guild-action-failed") {
+            failGuild(message.reason);
+            return;
+          }
+          if (message.type === "house-state") {
+            confirmHouseState(message);
+            return;
+          }
+          if (message.type === "house-list") {
+            houseListReceived(message);
+            return;
+          }
+          if (message.type === "house-transfer-incoming") {
+            houseOfferReceived(message);
+            return;
+          }
+          if (message.type === "house-event") {
+            if (message.kind === "transfer-cancelled") {
+              houseOfferCancelledByName(message.houseName);
+            }
+            setHouseToast({
+              kind: message.kind,
+              houseName: message.houseName,
+              detail: message.detail ?? "",
+              ...(message.warningsLeft !== undefined
+                ? { warningsLeft: message.warningsLeft }
+                : {}),
+            });
+            return;
+          }
+          if (message.type === "house-action-failed") {
+            failHouse(message.reason);
+            return;
+          }
+          if (message.type === "vip-state") {
+            confirmVipState(message);
+            return;
+          }
+          if (message.type === "vip-status-changed") {
+            const entry = vipStatusChanged(message);
+            if (entry?.online && entry.notifyLogin) setVipToast(entry.name);
+            return;
+          }
+          if (message.type === "vip-action-failed") {
+            failVip(message.reason);
+            return;
+          }
+          if (message.type === "highscores-state") {
+            confirmHighscoresState(message);
+            return;
+          }
+          if (message.type === "highscores-action-failed") {
+            failHighscores(message.reason);
+            return;
+          }
+          if (message.type === "report-received") {
+            setReportSession((current) =>
+              current
+                ? { ...current, pending: false, error: null, sent: true }
+                : current,
+            );
+            return;
+          }
+          if (message.type === "report-action-failed") {
+            setReportSession((current) =>
+              current
+                ? { ...current, pending: false, error: message.reason }
+                : current,
+            );
+            return;
+          }
           if (message.type === "trade-state") {
             confirmTradeState(message);
             return;
@@ -957,6 +1252,29 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setNpcDialogue(null);
           if (nextStatus === "disconnected") resetDepot();
           if (nextStatus === "disconnected") closeMarket();
+          if (nextStatus === "disconnected") {
+            resetParty();
+            hadPartyRef.current = false;
+          }
+          if (nextStatus === "disconnected") {
+            resetGuild();
+            hadGuildRef.current = false;
+            setGuildModalOpen(false);
+            setGuildToast(null);
+          }
+          if (nextStatus === "disconnected") {
+            resetHouse();
+            setHouseModalOpen(false);
+            setHouseToast(null);
+          }
+          if (nextStatus === "disconnected") {
+            resetVip();
+            setVipPanelVisible(false);
+            setVipToast(null);
+            resetHighscores();
+            setHighscoresOpen(false);
+            setReportSession(null);
+          }
           if (nextStatus === "disconnected") setMailboxSession(null);
           if (nextStatus === "disconnected") clearInventoryPreviews();
           if (nextStatus === "disconnected") {
@@ -1091,6 +1409,28 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     confirmTradeState,
     failTrade,
     resetTrade,
+    confirmPartyState,
+    partyInvitationReceived,
+    partyInvitationRevoked,
+    failParty,
+    resetParty,
+    confirmGuildState,
+    guildInvitationReceived,
+    failGuild,
+    resetGuild,
+    confirmHouseState,
+    houseListReceived,
+    houseOfferReceived,
+    houseOfferCancelledByName,
+    failHouse,
+    resetHouse,
+    confirmVipState,
+    vipStatusChanged,
+    failVip,
+    resetVip,
+    confirmHighscoresState,
+    failHighscores,
+    resetHighscores,
   ]);
 
   return (
@@ -1147,11 +1487,17 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               activePanel={
                 marketSession
                   ? "market"
-                  : characterStatsOpen
-                    ? "character"
-                    : inventoryOpen
-                      ? "inventory"
-                      : undefined
+                  : guildModalOpen
+                    ? "guild"
+                    : houseModalOpen
+                      ? "house"
+                      : highscoresOpen
+                        ? "highscores"
+                        : characterStatsOpen
+                          ? "character"
+                          : inventoryOpen
+                            ? "inventory"
+                            : undefined
               }
               onCharacter={() => {
                 setGameMenuOpen(false);
@@ -1172,6 +1518,42 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 }
                 setCharacterStatsOpen(false);
                 setInventoryOpen((open) => !open);
+              }}
+              onGuild={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(false);
+                setCharacterStatsOpen(false);
+                setGuildModalOpen((open) => {
+                  if (!open) clientRef.current?.openGuild();
+                  return !open;
+                });
+              }}
+              onHouse={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(false);
+                setCharacterStatsOpen(false);
+                setGuildModalOpen(false);
+                setHouseModalOpen((open) => {
+                  if (!open) clientRef.current?.openHouse();
+                  return !open;
+                });
+              }}
+              onHighscores={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(false);
+                setCharacterStatsOpen(false);
+                setHighscoresOpen((open) => {
+                  if (!open) {
+                    const sent =
+                      clientRef.current?.requestHighscores(
+                        "experience",
+                        undefined,
+                        0,
+                      ) ?? false;
+                    beginHighscores(sent);
+                  }
+                  return !open;
+                });
               }}
               onBattleList={() =>
                 setBattleListVisible((visible) => !visible)
@@ -1230,6 +1612,33 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               onDismiss={dismissTradeToast}
             />
           )}
+          {houseToast && (
+            <Toast
+              message={t(`house.events.${houseToast.kind}`, {
+                house: houseToast.houseName,
+                detail: houseToast.detail,
+                warningsLeft: houseToast.warningsLeft ?? 0,
+              })}
+              onDismiss={dismissHouseToast}
+            />
+          )}
+          {guildToast && (
+            <Toast
+              message={t(`guild.events.${guildToast.kind}`, {
+                detail: guildToast.detail,
+                defaultValue: t("guild.events.member-joined", {
+                  detail: guildToast.detail,
+                }),
+              })}
+              onDismiss={dismissGuildToast}
+            />
+          )}
+          {vipToast && (
+            <Toast
+              message={t("vip.loggedIn", { name: vipToast })}
+              onDismiss={dismissVipToast}
+            />
+          )}
           {levelUpNotice && (
             <LevelUpBanner
               key={levelUpNotice.id}
@@ -1257,7 +1666,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               chatChannels={[
                 ...chatState.channels.map((channel) => ({
                   id: channel.id,
-                  label: channel.counterpart ?? t("chat.channels.local"),
+                  label:
+                    channel.kind === "party"
+                      ? t("chat.channels.party")
+                      : channel.kind === "guild"
+                        ? t("chat.channels.guild")
+                        : (channel.counterpart ?? t("chat.channels.local")),
                   kind: channel.kind,
                   canSend: true,
                   closable: channel.kind === "whisper",
@@ -1291,7 +1705,42 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 dispatchChat({ type: "open-private", counterpart: sender });
               }}
               onSendChat={(channelId, body) => {
+                if (channelId === PARTY_CHANNEL_ID) {
+                  const text = sanitizeChatText(body);
+                  if (text.length > 0) clientRef.current?.sendPartyChat(text);
+                  return;
+                }
+                if (channelId === GUILD_CHANNEL_ID) {
+                  const text = sanitizeChatText(body);
+                  if (text.length > 0) clientRef.current?.sendGuildChat(text);
+                  return;
+                }
                 if (channelId === LOCAL_CHANNEL_ID) {
+                  const sanitized = sanitizeChatText(body);
+                  if (sanitized.toLowerCase().startsWith("/p ")) {
+                    const partyText = sanitized.slice(3).trim();
+                    if (partyText.length > 0) {
+                      clientRef.current?.sendPartyChat(partyText);
+                    }
+                    return;
+                  }
+                  if (sanitized.toLowerCase().startsWith("/g ")) {
+                    const guildText = sanitized.slice(3).trim();
+                    if (guildText.length > 0) {
+                      clientRef.current?.sendGuildChat(guildText);
+                    }
+                    return;
+                  }
+                  if (sanitized.toLowerCase().startsWith("/report")) {
+                    const targetName = sanitized.slice(7).trim();
+                    setReportSession({
+                      targetName,
+                      pending: false,
+                      error: null,
+                      sent: false,
+                    });
+                    return;
+                  }
                   const { mode, text } = parseChatInput(body);
                   if (text.length > 0) clientRef.current?.speak(mode, text);
                   return;
@@ -1606,6 +2055,231 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     }
               }
             />
+          )}
+          {guildModalOpen && (
+            <GuildModal
+              session={guildSession}
+              ownPlayerId={ownCharacter.id}
+              error={
+                guildSession.error
+                  ? t(`guild.errors.${guildSession.error}`, {
+                      defaultValue: t("guild.errors.invalid-request"),
+                    })
+                  : null
+              }
+              onClose={() => setGuildModalOpen(false)}
+              onCreate={(name) => clientRef.current?.createGuild(name)}
+              onRespondInvitation={(guildId, accept) =>
+                clientRef.current?.respondToGuildInvite(guildId, accept)
+              }
+              onInvite={(targetName) =>
+                clientRef.current?.inviteToGuild(targetName)
+              }
+              onRevokeInvite={(characterId) =>
+                clientRef.current?.revokeGuildInvite(characterId)
+              }
+              onKick={(characterId) =>
+                clientRef.current?.kickFromGuild(characterId)
+              }
+              onPromote={(characterId) =>
+                clientRef.current?.promoteGuildMember(characterId)
+              }
+              onDemote={(characterId) =>
+                clientRef.current?.demoteGuildMember(characterId)
+              }
+              onSetNick={(characterId, nick) =>
+                clientRef.current?.setGuildNick(characterId, nick)
+              }
+              onSetMotd={(motd) => clientRef.current?.setGuildMotd(motd)}
+              onSetRankName={(level, name) =>
+                clientRef.current?.setGuildRankName(level, name)
+              }
+              onPassLeadership={(characterId) =>
+                clientRef.current?.passGuildLeadership(characterId)
+              }
+              onDisband={() => clientRef.current?.disbandGuild()}
+              onLeave={() => clientRef.current?.leaveGuild()}
+              onDeclareWar={(targetGuildName, fragLimit) =>
+                clientRef.current?.declareGuildWar(targetGuildName, fragLimit)
+              }
+              onRespondWar={(warId, accept) =>
+                clientRef.current?.respondToGuildWar(warId, accept)
+              }
+              onEndWar={(warId) => clientRef.current?.endGuildWar(warId)}
+            />
+          )}
+          {houseModalOpen && (
+            <HouseModal
+              session={houseSession}
+              error={
+                houseSession.error
+                  ? t(`house.errors.${houseSession.error}`, {
+                      defaultValue: t("house.errors.invalid-request"),
+                    })
+                  : null
+              }
+              onClose={() => setHouseModalOpen(false)}
+              onBuy={(houseId) => clientRef.current?.buyHouse(houseId)}
+              onAbandon={() => clientRef.current?.abandonHouse()}
+              onOfferTransfer={(targetName, price) =>
+                clientRef.current?.offerHouseTransfer(targetName, price)
+              }
+              onRespondOffer={(houseId, accept) => {
+                clientRef.current?.respondToHouseTransfer(houseId, accept);
+                houseOfferResolved(houseId);
+              }}
+              onCancelTransfer={() => clientRef.current?.cancelHouseTransfer()}
+              onSetAccess={(kind, targetName, grant) =>
+                clientRef.current?.setHouseAccess(kind, targetName, grant)
+              }
+              onKick={(targetCharacterId) =>
+                clientRef.current?.kickFromHouse(targetCharacterId)
+              }
+              onBrowse={(townId, page) =>
+                clientRef.current?.browseHouses(townId, page)
+              }
+              onOpenHouse={(houseId) => clientRef.current?.openHouse(houseId)}
+            />
+          )}
+          {partySession.invitation && (
+            <div className="absolute top-40 left-1/2 z-40 -translate-x-1/2">
+              <PartyInvitationToast
+                leaderName={partySession.invitation.leaderName}
+                onAccept={() => {
+                  const invitation = partySession.invitation;
+                  if (!invitation) return;
+                  clientRef.current?.respondToPartyInvite(
+                    invitation.leaderId,
+                    true,
+                  );
+                  partyInvitationRevoked(invitation.leaderId);
+                }}
+                onDecline={() => {
+                  const invitation = partySession.invitation;
+                  if (!invitation) return;
+                  clientRef.current?.respondToPartyInvite(
+                    invitation.leaderId,
+                    false,
+                  );
+                  partyInvitationRevoked(invitation.leaderId);
+                }}
+              />
+            </div>
+          )}
+          {vipPanelVisible && (
+            <div
+              className={`absolute top-40 z-30 ${
+                partyPanelVisible ? "left-72" : "left-4"
+              }`}
+            >
+              <VipPanel
+                entries={vipSession.entries}
+                error={
+                  vipSession.error
+                    ? t(`vip.errors.${vipSession.error}`, {
+                        defaultValue: t("vip.errors.invalid-request"),
+                      })
+                    : null
+                }
+                onAdd={(name) => clientRef.current?.addVip(name)}
+                onEdit={(targetCharacterId, edits) =>
+                  clientRef.current?.editVip(targetCharacterId, edits)
+                }
+                onRemove={(targetCharacterId) =>
+                  clientRef.current?.removeVip(targetCharacterId)
+                }
+                onClose={() => setVipPanelVisible(false)}
+              />
+            </div>
+          )}
+          {highscoresOpen && (
+            <HighscoresModal
+              page={highscoresSession.page}
+              pending={highscoresSession.pending}
+              error={
+                highscoresSession.error
+                  ? t(`highscores.errors.${highscoresSession.error}`, {
+                      defaultValue: t("highscores.errors.unavailable"),
+                    })
+                  : null
+              }
+              onRequest={(category, vocation, requestedPage) => {
+                const sent =
+                  clientRef.current?.requestHighscores(
+                    category,
+                    vocation,
+                    requestedPage,
+                  ) ?? false;
+                beginHighscores(sent);
+              }}
+              onClose={() => setHighscoresOpen(false)}
+            />
+          )}
+          {reportSession && (
+            <ReportPlayerModal
+              key={reportSession.targetName || "report"}
+              initialTargetName={reportSession.targetName}
+              pending={reportSession.pending}
+              error={
+                reportSession.error
+                  ? t(`report.errors.${reportSession.error}`, {
+                      defaultValue: t("report.errors.invalid-request"),
+                    })
+                  : null
+              }
+              sent={reportSession.sent}
+              onSubmit={(targetName, reason, comment) => {
+                const sent =
+                  clientRef.current?.reportPlayer(
+                    targetName,
+                    reason,
+                    comment,
+                  ) ?? false;
+                setReportSession((current) =>
+                  current
+                    ? {
+                        ...current,
+                        targetName,
+                        pending: sent,
+                        error: sent ? null : "invalid-request",
+                      }
+                    : current,
+                );
+              }}
+              onClose={() => setReportSession(null)}
+            />
+          )}
+          {partyPanelVisible && (
+            <div className="absolute top-40 left-4 z-30">
+              <PartyPanel
+                party={partySession.party}
+                ownPlayerId={ownCharacter.id}
+                error={
+                  partySession.error
+                    ? t(`party.errors.${partySession.error}`, {
+                        defaultValue: t("party.errors.invalid-target"),
+                      })
+                    : null
+                }
+                onInvite={(targetName) =>
+                  clientRef.current?.inviteToParty(targetName)
+                }
+                onRevokeInvite={(targetPlayerId) =>
+                  clientRef.current?.revokePartyInvite(targetPlayerId)
+                }
+                onKick={(targetPlayerId) =>
+                  clientRef.current?.kickFromParty(targetPlayerId)
+                }
+                onPassLeadership={(targetPlayerId) =>
+                  clientRef.current?.passPartyLeadership(targetPlayerId)
+                }
+                onSetSharedExp={(enabled) =>
+                  clientRef.current?.setPartySharedExp(enabled)
+                }
+                onLeave={() => clientRef.current?.leaveParty()}
+                onClose={() => setPartyPanelVisible(false)}
+              />
+            </div>
           )}
           {tradeSession && (
             <TradePanel

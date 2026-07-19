@@ -17,7 +17,11 @@ import { getMapPointerPosition } from "./getMapPointerPosition";
 import { getViewportRange } from "./getViewportRange";
 import { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
-import { CreatureView } from "./CreatureView";
+import {
+  CreatureView,
+  type PartyShieldKind,
+  type WarEmblemKind,
+} from "./CreatureView";
 import { CombatEffectRenderer } from "./CombatEffectRenderer";
 import { SpeechTextRenderer } from "./SpeechTextRenderer";
 import { TILE_SIZE } from "./tileSize";
@@ -28,6 +32,18 @@ const NAME_COLORS: Record<CreatureState["kind"], number> = {
   monster: 0xff7777,
   npc: 0x66ccff,
 };
+
+export interface PartyView {
+  leaderId: string;
+  memberIds: ReadonlyArray<string>;
+  sharedExpActive: boolean;
+}
+
+export interface GuildView {
+  ownGuildName: string;
+  /** Names of guilds the own guild currently has an active war with. */
+  enemyGuildNames: ReadonlyArray<string>;
+}
 
 interface WorldRendererActions {
   useMap(position: Position): void;
@@ -64,6 +80,8 @@ export class WorldRenderer {
   private ownPlayerId = "";
   private ownPosition: Position | null = null;
   private attackTargetId: string | null = null;
+  private partyView: PartyView | null = null;
+  private guildView: GuildView | null = null;
   private cameraFallback = { x: 0, y: 0 };
   private mapDragCandidate: {
     item: MapItemState;
@@ -243,6 +261,28 @@ export class WorldRenderer {
     }
   }
 
+  /** Applies own-party data from party-state to recolor member shields. */
+  setPartyView(view: PartyView | null): void {
+    if (this.destroyed) return;
+    this.partyView = view;
+    for (const [creatureId, creatureView] of this.creatureViews) {
+      creatureView.setPartyShield(
+        this.partyShieldKindFor(creatureId, creatureView.isPublicPartyMember),
+      );
+    }
+  }
+
+  /** Applies own-guild data from guild-state to redraw war emblems. */
+  setGuildView(view: GuildView | null): void {
+    if (this.destroyed) return;
+    this.guildView = view;
+    for (const creatureView of this.creatureViews.values()) {
+      creatureView.setWarEmblem(
+        this.warEmblemKindFor(creatureView.guildName, creatureView.isAtWar),
+      );
+    }
+  }
+
   setViewportSize(width: number, height: number): ViewRange {
     const range = getViewportRange(width, height, TILE_SIZE * ZOOM);
     this.mapView.setViewRange(range);
@@ -326,6 +366,10 @@ export class WorldRenderer {
       this.overlay.addChild(view.plate);
       this.creatureViews.set(creature.id, view);
       view.setAttackTarget(creature.id === this.attackTargetId);
+      view.setPartyShield(
+        this.partyShieldKindFor(creature.id, view.isPublicPartyMember),
+      );
+      view.setWarEmblem(this.warEmblemKindFor(view.guildName, view.isAtWar));
       this.pendingCreatures.delete(creature.id);
     } finally {
       this.loadingCreatureIds.delete(creatureId);
@@ -619,6 +663,42 @@ export class WorldRenderer {
       }
     }
     return selected?.id ?? null;
+  }
+
+  /**
+   * Viewer-relative war emblem from public creature flags: same guild while
+   * at war → ally; a guild the own guild wars with → enemy; any other
+   * at-war guild → neutral marker. Derived entirely client-side.
+   */
+  private warEmblemKindFor(
+    guildName: string | null,
+    atWar: boolean,
+  ): WarEmblemKind {
+    if (!guildName) return "none";
+    const guildView = this.guildView;
+    if (guildView) {
+      if (guildName === guildView.ownGuildName) {
+        return guildView.enemyGuildNames.length > 0 ? "ally" : "none";
+      }
+      if (guildView.enemyGuildNames.includes(guildName)) return "enemy";
+    }
+    return atWar ? "other-war" : "none";
+  }
+
+  private partyShieldKindFor(
+    creatureId: string,
+    publicPartyMember: boolean,
+  ): PartyShieldKind {
+    const partyView = this.partyView;
+    if (partyView) {
+      if (creatureId === partyView.leaderId) {
+        return partyView.sharedExpActive ? "leader-shared" : "leader";
+      }
+      if (partyView.memberIds.includes(creatureId)) {
+        return partyView.sharedExpActive ? "member-shared" : "member";
+      }
+    }
+    return publicPartyMember ? "public-member" : "none";
   }
 
   private applyAttackTarget(creatureId: string | null): void {

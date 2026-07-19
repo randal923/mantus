@@ -41,6 +41,16 @@ export class ItemIntentHandler {
   private persistChain: Promise<void> = Promise.resolve();
   private readonly poisonedPersistCharacters = new Set<string>();
   private readonly pendingPersistOperations = new Set<Promise<void>>();
+  /** House-tile authorization, consulted at execution time when set. */
+  private housePolicy:
+    | ((characterId: string, position: Position) => boolean)
+    | null = null;
+
+  setHousePolicy(
+    policy: (characterId: string, position: Position) => boolean,
+  ): void {
+    this.housePolicy = policy;
+  }
 
   constructor(
     private readonly store: ItemStore,
@@ -557,6 +567,7 @@ export class ItemIntentHandler {
         cache,
         this.catalog,
         this.world,
+        (position) => this.housePolicy?.(playerId, position) ?? true,
       )
     ) {
       session.sendError("item-action-failed");

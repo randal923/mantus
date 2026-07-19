@@ -4,6 +4,7 @@ export const updateCharacterSnapshotQuery = `UPDATE characters
              position_y = $11, position_z = $12, direction = $13,
              outfit_look_type = $14, outfit_head = $15, outfit_body = $16,
              outfit_legs = $17, outfit_feet = $18, outfit_addons = $19,
+             skull = $22, skull_expires_at = $23,
              updated_at = now(), version = version + 1
          WHERE id = $1 AND version = $2
            AND vocation = $20 AND progression_definition_version = $21

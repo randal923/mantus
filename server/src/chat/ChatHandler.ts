@@ -4,6 +4,7 @@ import type {
   SpeakMessage,
 } from "@tibia/protocol";
 import type { GmCommandHandler } from "../gm/GmCommandHandler";
+import type { ChatModerationHooks } from "../moderation/ChatModerationHooks";
 import type { Player } from "../Player";
 import type { NpcHandler } from "../npc/NpcHandler";
 import type { Session } from "../Session";
@@ -40,6 +41,7 @@ export class ChatHandler {
     private readonly visibility: Visibility,
     private readonly npcs?: NpcHandler,
     private readonly gm?: GmCommandHandler,
+    private readonly moderation?: ChatModerationHooks,
   ) {}
 
   handle(session: Session, intent: ChatIntent, now: number): void {
@@ -62,10 +64,24 @@ export class ChatHandler {
     ) {
       return;
     }
+    // GM mutes and cross-channel spam mutes are enforced at execution time,
+    // before the flood buffer, so muted players consume no buffer.
+    const moderationMuteMs =
+      this.moderation?.muteRemainingMs(speaker.id, now) ?? 0;
+    if (moderationMuteMs > 0) {
+      session.send({
+        type: "chat-rejected",
+        reason: "muted",
+        retryAfterMs: moderationMuteMs,
+      });
+      return;
+    }
     // Muted players consume no buffer; probing offline names still does,
     // so the rate limit also caps online-status scanning.
     const mutedForMs = this.rateLimiter.consume(speaker.id, now);
     if (mutedForMs > 0) {
+      // Report the flood mute so it applies across every chat kind.
+      this.moderation?.noteAutoMute(speaker.id, now + mutedForMs);
       session.send({
         type: "chat-rejected",
         reason: "muted",

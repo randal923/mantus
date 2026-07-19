@@ -1,6 +1,7 @@
 import type { Character } from "./Character";
 import type { CharacterRow } from "./CharacterRow";
 import type { CharacterSkill } from "../progression/CharacterSkill";
+import { skullFromCode } from "../pvp/skullFromCode";
 
 export function toCharacter(
   row: CharacterRow,
@@ -38,6 +39,8 @@ export function toCharacter(
       addons: row.outfit_addons,
     },
     townId: row.town_id,
+    skull: skullFromCode(row.skull),
+    skullExpiresAt: row.skull_expires_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lastLoginAt: row.last_login_at,

@@ -14,6 +14,7 @@ import { isInRange } from "./isInRange";
 import { playerAttackPlan, type PlayerAttackPlan } from "./playerAttackPlan";
 import { playerForSession } from "./playerForSession";
 import type { PlayerSpecials } from "./playerSpecials";
+import type { PvpHooks } from "../pvp/PvpHooks";
 
 export class PlayerAutoAttack {
   constructor(
@@ -25,6 +26,7 @@ export class PlayerAutoAttack {
     private readonly sequence: EventSequence,
     private readonly damage: DamageResolver,
     private readonly chase: ChaseController,
+    private readonly pvpHooks?: PvpHooks,
   ) {}
 
   tickPlayerAttack(session: Session, now: number): void {
@@ -36,7 +38,7 @@ export class PlayerAutoAttack {
       if (session.attackTargetId) this.feedback.setTarget(session, null, now);
       return;
     }
-    if (!canPlayerTarget(this.world, session, player, target)) {
+    if (!canPlayerTarget(this.world, session, player, target, this.pvpHooks)) {
       this.feedback.setTarget(session, null, now);
       return;
     }
@@ -118,7 +120,7 @@ export class PlayerAutoAttack {
       !target ||
       !session.knownCreatureIds.has(target.id) ||
       !this.world.canSee(player.position, target.position, session.viewRange) ||
-      !canPlayerTarget(this.world, session, player, target) ||
+      !canPlayerTarget(this.world, session, player, target, this.pvpHooks) ||
       !isInRange(player.position, target.position, plan.range) ||
       (plan.lineOfSight &&
         !this.world.hasLineOfSight(player.position, target.position))

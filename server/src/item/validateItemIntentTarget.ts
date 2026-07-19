@@ -21,6 +21,7 @@ export function validateItemIntentTarget(
   cache: InventoryCache,
   catalog: ItemCatalog,
   world: World,
+  canUseHouseTile: (position: Position) => boolean = () => true,
 ): boolean {
   if (intent.type === "move-item") {
     const destination = cache.items.find(
@@ -86,6 +87,21 @@ export function validateItemIntentTarget(
       !world.getTile(
         intent.type === "drop-item" ? intent.position : intent.targetPosition,
       ))
+  ) {
+    return false;
+  }
+  // Placing or removing items on house tiles requires guest+ access,
+  // re-checked here at execution time against current owner state.
+  if (intent.type === "drop-item" && !canUseHouseTile(intent.position)) {
+    return false;
+  }
+  if (intent.type === "pickup-item" && !canUseHouseTile(intent.position)) {
+    return false;
+  }
+  if (
+    intent.type === "move-map-item" &&
+    (!canUseHouseTile(intent.fromPosition) ||
+      !canUseHouseTile(intent.toPosition))
   ) {
     return false;
   }

@@ -7,7 +7,14 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
 
-type NavigationPanel = "character" | "inventory" | "quests" | "market";
+type NavigationPanel =
+  | "character"
+  | "inventory"
+  | "quests"
+  | "guild"
+  | "house"
+  | "highscores"
+  | "market";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 const STATUS_CLASS: Record<ConnectionStatus, string> = {
@@ -32,6 +39,9 @@ interface TopNavigationBarProps {
   onCharacter?: () => void;
   onInventory?: () => void;
   onQuests?: () => void;
+  onGuild?: () => void;
+  onHouse?: () => void;
+  onHighscores?: () => void;
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
   onMarket?: () => void;
@@ -54,6 +64,9 @@ export function TopNavigationBar({
   onCharacter,
   onInventory,
   onQuests,
+  onGuild,
+  onHouse,
+  onHighscores,
   onFightModeChange,
   onBattleList,
   onMarket,
@@ -194,6 +207,73 @@ export function TopNavigationBar({
           >
             <path d="M6 4.5h10.5A1.5 1.5 0 0 1 18 6v14H7.5A1.5 1.5 0 0 1 6 18.5z" />
             <path d="M6 18.5A1.5 1.5 0 0 1 7.5 17H18M9 8h6M9 11h4" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.guild")}
+          hotkey="G"
+          active={activePanel === "guild"}
+          disabled={!onGuild}
+          onClick={onGuild}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 3.5v17M6 4.5h11.5l-2.5 3.5 2.5 3.5H6" />
+            <path d="M4 20.5h4" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.house")}
+          hotkey="H"
+          active={activePanel === "house"}
+          disabled={!onHouse}
+          onClick={onHouse}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 11.5 12 4.5l8 7" />
+            <path d="M6.5 10v9.5h11V10" />
+            <path d="M10.5 19.5v-5h3v5" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.highscores")}
+          active={activePanel === "highscores"}
+          disabled={!onHighscores}
+          onClick={onHighscores}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
+            <path d="M8 5.5H5.5A3.5 3.5 0 0 0 9 9M16 5.5h2.5A3.5 3.5 0 0 1 15 9" />
+            <path d="M12 13v3.5M9 20.5h6M10 16.5h4v4h-4z" />
           </svg>
         </NavigationIconButton>
 

@@ -42,6 +42,10 @@ export class WorldActionRegistry {
     private readonly catalog: ItemCatalog,
     private readonly items: ItemIntentHandler,
     private readonly doorLevels: ReadonlyMap<string, number>,
+    private readonly houseAccess: (
+      characterId: string,
+      position: Position,
+    ) => boolean = () => true,
   ) {}
 
   /** True when the use was consumed here; false falls through to movement. */
@@ -132,6 +136,7 @@ export class WorldActionRegistry {
       world: this.world,
       catalog: this.catalog,
       doorLevels: this.doorLevels,
+      houseAccess: this.houseAccess,
       applyPlan: (plan) => {
         if (!plan) {
           session.sendError("item-action-failed");

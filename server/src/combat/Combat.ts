@@ -6,8 +6,11 @@ import type {
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { Monster } from "../creature/Monster";
 import type { MonsterAbility } from "../creature/MonsterType";
+import type { GuildHooks } from "../guild/GuildHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
+import type { PvpHooks } from "../pvp/PvpHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -51,6 +54,9 @@ export class Combat {
     seed: number,
     onMonsterDeath: (monster: Monster, now: number) => boolean,
     spells = new SpellRegistry(),
+    partyHooks?: PartyHooks,
+    guildHooks?: GuildHooks,
+    private readonly pvpHooks?: PvpHooks,
   ) {
     this.spells = spells;
     const formula = new CombatFormula(seed);
@@ -65,6 +71,9 @@ export class Combat {
       formula,
       this.feedback,
       onMonsterDeath,
+      partyHooks,
+      guildHooks,
+      pvpHooks,
     );
     this.damage = new DamageResolver(
       world,
@@ -76,6 +85,8 @@ export class Combat {
       this.feedback,
       sequence,
       death,
+      partyHooks,
+      pvpHooks,
     );
     this.conditionSystem = new ConditionSystem(
       world,
@@ -94,6 +105,7 @@ export class Combat {
       sequence,
       this.damage,
       this.conditionSystem,
+      pvpHooks,
     );
     const chase = new ChaseController(world, visibility, persistence);
     this.autoAttack = new PlayerAutoAttack(
@@ -105,6 +117,7 @@ export class Combat {
       sequence,
       this.damage,
       chase,
+      pvpHooks,
     );
   }
 
@@ -116,7 +129,7 @@ export class Combat {
       !target ||
       !session.knownCreatureIds.has(target.id) ||
       !this.world.canSee(player.position, target.position, session.viewRange) ||
-      !canPlayerTarget(this.world, session, player, target)
+      !canPlayerTarget(this.world, session, player, target, this.pvpHooks)
     ) {
       this.feedback.reject(session, now);
       return;
@@ -137,7 +150,8 @@ export class Combat {
     intent: SetFightModeMessage,
     now: number,
   ): void {
-    if (!playerForSession(this.world, session)) {
+    const player = playerForSession(this.world, session);
+    if (!player) {
       session.sendError("join-required");
       return;
     }
@@ -147,7 +161,8 @@ export class Combat {
       : undefined;
     if (
       target instanceof Player &&
-      session.fightMode.secure
+      session.fightMode.secure &&
+      !canPlayerTarget(this.world, session, player, target, this.pvpHooks)
     ) {
       session.attackTargetId = null;
       session.send({ type: "attack-target-changed", creatureId: null });

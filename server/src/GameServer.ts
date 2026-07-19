@@ -20,10 +20,21 @@ import type { BankStore } from "./economy/BankStore";
 import { ShopService } from "./economy/ShopService";
 import type { ShopStore } from "./economy/ShopStore";
 import { GmCommandHandler } from "./gm/GmCommandHandler";
+import { GuildService } from "./guild/GuildService";
+import type { GuildStore } from "./guild/GuildStore";
+import { HouseService } from "./house/HouseService";
+import type { HouseStore } from "./house/HouseStore";
+import { loadHouseContent } from "./house/loadHouseContent";
 import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
 import { WorldActionRegistry } from "./action/WorldActionRegistry";
 import { MarketService } from "./market/MarketService";
 import type { MarketStore } from "./market/MarketStore";
+import { ModerationService } from "./moderation/ModerationService";
+import type { ModerationStore } from "./moderation/ModerationStore";
+import { PartyHandler } from "./party/PartyHandler";
+import { PVP_POLICY } from "./pvp/PvpPolicy";
+import type { PvpStore } from "./pvp/PvpStore";
+import { PvpTracker } from "./pvp/PvpTracker";
 import { TradeService } from "./trade/TradeService";
 import type { TradeStore } from "./trade/TradeStore";
 import { LanguageHandler } from "./LanguageHandler";
@@ -40,6 +51,10 @@ import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
+import { HighscoreService } from "./social/HighscoreService";
+import type { HighscoreStore } from "./social/HighscoreStore";
+import { VipService } from "./social/VipService";
+import type { VipStore } from "./social/VipStore";
 import { loadCreatureContent } from "./spawn/loadCreatureContent";
 import { SpawnManager } from "./spawn/SpawnManager";
 import { TickLoop } from "./TickLoop";
@@ -59,6 +74,12 @@ export interface GameServerDeps {
   depot?: DepotStore;
   market?: MarketStore;
   trade?: TradeStore;
+  guild?: GuildStore;
+  pvp?: PvpStore;
+  house?: HouseStore;
+  vip?: VipStore;
+  highscores?: HighscoreStore;
+  moderation?: ModerationStore;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -85,6 +106,13 @@ export class GameServer {
   private readonly depot: DepotService;
   private readonly market: MarketService;
   private readonly trade: TradeService;
+  private readonly parties: PartyHandler;
+  private readonly guilds: GuildService;
+  private readonly pvp: PvpTracker;
+  private readonly houses: HouseService;
+  private readonly vips: VipService;
+  private readonly highscores: HighscoreService;
+  private readonly moderation: ModerationService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -157,6 +185,34 @@ export class GameServer {
       deps.itemCatalog,
       deps.trade,
     );
+    this.moderation = new ModerationService(this.registry, deps.moderation);
+    this.vips = new VipService(this.world, this.registry, deps.vip);
+    this.highscores = new HighscoreService(this.world, deps.highscores);
+    this.guilds = new GuildService(
+      this.world,
+      this.registry,
+      this.visibility,
+      deps.guild,
+      this.moderation,
+    );
+    // Relations are read through closures at combat execution time, so the
+    // party/guild services (constructed below) are always consulted live.
+    this.pvp = new PvpTracker(
+      PVP_POLICY,
+      this.world,
+      this.registry,
+      this.visibility,
+      this.persistence,
+      {
+        sameParty: (a, b) => this.parties.sameParty(a, b),
+        sameGuild: (a, b) => this.guilds.sameGuild(a, b),
+        atWar: (a, b) => this.guilds.areAtWar(a, b),
+      },
+      deps.pvp,
+    );
+    this.visibility.setCreatureStateDecorator((viewer, creature, state) =>
+      this.pvp.decorateCreatureState(viewer, creature, state),
+    );
     this.characters = new CharacterHandler(
       characterService,
       this.world,
@@ -167,6 +223,10 @@ export class GameServer {
       this.depot,
       this.spells,
       this.trade,
+      this.guilds,
+      this.pvp,
+      this.vips,
+      this.moderation,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.travel = new TravelService(
@@ -195,6 +255,23 @@ export class GameServer {
       this.bank,
       this.shops,
     );
+    this.houses = new HouseService(
+      this.world,
+      this.registry,
+      this.visibility,
+      this.persistence,
+      this.depot,
+      loadHouseContent(this.world.mapName),
+      deps.house,
+    );
+    // Every walk step, door use, and house-tile item move re-checks current
+    // owner/access state through these closures at execution time.
+    this.world.setHousePolicy((player, position) =>
+      this.houses.canUseHouseTile(player.id, position),
+    );
+    this.items.setHousePolicy((characterId, position) =>
+      this.houses.canUseHouseTile(characterId, position),
+    );
     this.movement = new MovementHandler(
       this.world,
       this.visibility,
@@ -207,12 +284,20 @@ export class GameServer {
       deps.itemCatalog,
       this.items,
       loadDoorLevelRequirements(this.world.mapName),
+      (characterId, position) =>
+        this.houses.canUseHouseTile(characterId, position),
     );
     this.progression = new ProgressionSystem(
       this.world,
       this.registry,
       this.persistence,
       this.items,
+    );
+    this.parties = new PartyHandler(
+      this.world,
+      this.registry,
+      this.visibility,
+      this.moderation,
     );
     let spawns: SpawnManager | null = null;
     this.combatSystem = new Combat(
@@ -225,6 +310,9 @@ export class GameServer {
       config.combatSeed,
       (monster, now) => spawns?.removeCreature(monster.id, now) ?? false,
       this.spells,
+      this.parties,
+      this.guilds,
+      this.pvp,
     );
     this.combat = new CombatIntentHandler(this.combatSystem);
     spawns =
@@ -246,6 +334,7 @@ export class GameServer {
           this.progression,
           this.items,
           spawns,
+          this.moderation,
         )
       : undefined;
     this.chat = new ChatHandler(
@@ -254,6 +343,7 @@ export class GameServer {
       this.visibility,
       this.npcs,
       gm,
+      this.moderation,
     );
     this.wss = new WebSocketServer({
       port: config.port,
@@ -330,6 +420,11 @@ export class GameServer {
     this.depot.applyResolvedOutcomes();
     this.market.applyResolvedOutcomes(now);
     this.trade.applyResolvedOutcomes(now);
+    this.guilds.applyResolvedOutcomes(now);
+    this.houses.applyResolvedOutcomes(now);
+    this.vips.applyResolvedOutcomes(now);
+    this.highscores.applyResolvedOutcomes(now);
+    this.moderation.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -346,6 +441,10 @@ export class GameServer {
     this.depot.tick(now);
     this.market.tick(now);
     this.trade.tick(now);
+    this.parties.tick(now);
+    this.guilds.tick(now);
+    this.houses.tick(now);
+    this.pvp.tick(now);
     this.progression.tick(now);
     this.persistence.tick(now);
   }
@@ -360,7 +459,13 @@ export class GameServer {
         this.registry.sessionFor(playerId) === session
       ) {
         this.npcs.removePlayer(playerId);
+        this.parties.detachCharacter(playerId, now);
         this.trade.detachCharacter(playerId, now);
+        this.guilds.detachCharacter(playerId);
+        this.houses.detachCharacter(playerId);
+        this.vips.detachCharacter(playerId);
+        this.moderation.detachCharacter(playerId);
+        this.pvp.detachCharacter(playerId);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
         this.depot.detachCharacter(playerId);
@@ -370,6 +475,12 @@ export class GameServer {
       this.depot.detach(session);
       this.market.detach(session);
       this.trade.detach(session);
+      this.parties.detach(session);
+      this.guilds.detach(session);
+      this.houses.detach(session);
+      this.vips.detach(session);
+      this.highscores.detach(session);
+      this.moderation.detach(session);
       this.items.detachSession(session);
       this.registry.remove(session);
     }
@@ -486,6 +597,58 @@ export class GameServer {
       case "trade-cancel":
         this.trade.handle(session, intent, now);
         return;
+      case "party-invite":
+      case "party-respond-invite":
+      case "party-revoke-invite":
+      case "party-leave":
+      case "party-kick":
+      case "party-pass-leadership":
+      case "party-set-shared-exp":
+      case "party-chat":
+        this.parties.handle(session, intent, now);
+        return;
+      case "guild-create":
+      case "guild-invite":
+      case "guild-respond-invite":
+      case "guild-revoke-invite":
+      case "guild-kick":
+      case "guild-leave":
+      case "guild-promote":
+      case "guild-demote":
+      case "guild-pass-leadership":
+      case "guild-disband":
+      case "guild-set-motd":
+      case "guild-set-nick":
+      case "guild-set-rank-name":
+      case "guild-open":
+      case "guild-chat":
+      case "guild-declare-war":
+      case "guild-respond-war":
+      case "guild-end-war":
+        this.guilds.handle(session, intent, now);
+        return;
+      case "house-open":
+      case "house-buy":
+      case "house-abandon":
+      case "house-transfer-offer":
+      case "house-transfer-respond":
+      case "house-transfer-cancel":
+      case "house-set-access":
+      case "house-kick":
+      case "house-browse":
+        this.houses.handle(session, intent, now);
+        return;
+      case "vip-add":
+      case "vip-remove":
+      case "vip-edit":
+        this.vips.handle(session, intent, now);
+        return;
+      case "highscores-get":
+        this.highscores.handle(session, intent, now);
+        return;
+      case "report-player":
+        this.moderation.handleReport(session, intent, now);
+        return;
       case "set-language":
         this.language.handle(session, intent);
         return;
@@ -513,6 +676,17 @@ export class GameServer {
     this.market.applyResolvedOutcomes(Date.now());
     await this.trade.stop();
     this.trade.applyResolvedOutcomes(Date.now());
+    await this.guilds.stop();
+    this.guilds.applyResolvedOutcomes(Date.now());
+    await this.houses.stop();
+    this.houses.applyResolvedOutcomes(Date.now());
+    await this.vips.stop();
+    this.vips.applyResolvedOutcomes(Date.now());
+    await this.highscores.stop();
+    this.highscores.applyResolvedOutcomes(Date.now());
+    await this.moderation.stop();
+    this.moderation.applyResolvedOutcomes(Date.now());
+    await this.pvp.stop();
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();

@@ -7,4 +7,5 @@ export interface WorldActionWorldView extends WorldItemsView {
   getMapAction(position: Position): MapAction | undefined;
   canSee(viewer: Position, target: Position, range: ViewRange): boolean;
   isOccupied(position: Position): boolean;
+  getHouseId?(position: Position): number | undefined;
 }

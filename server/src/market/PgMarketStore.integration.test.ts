@@ -364,6 +364,10 @@ databaseDescribe("PgMarketStore integration", () => {
       "014_character_storages.sql",
       "015_depot_and_inbox.sql",
       "016_market.sql",
+      "018_pvp.sql",
+      "019_houses.sql",
+      "020_social.sql",
+      "021_moderation.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

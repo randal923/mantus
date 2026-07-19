@@ -18,7 +18,7 @@ export function toChatMessage(entry: ChatEntry, t: TFunction): ChatMessage {
     id: `entry:${entry.id}`,
     body: entry.body,
     time: entry.time,
-    tone: "default",
+    tone: entry.highlighted ? "loot" : "default",
     ...(entry.sender ? { sender: entry.sender } : {}),
     ...(entry.isOwn ? { isOwn: true } : {}),
   };

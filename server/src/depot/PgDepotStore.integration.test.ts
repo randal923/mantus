@@ -178,6 +178,10 @@ databaseDescribe("PgDepotStore integration", () => {
       "013_shops.sql",
       "014_character_storages.sql",
       "015_depot_and_inbox.sql",
+      "018_pvp.sql",
+      "019_houses.sql",
+      "020_social.sql",
+      "021_moderation.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -533,5 +537,84 @@ databaseDescribe("PgDepotStore integration", () => {
     expect(delivery.rows[0]?.status).toBe("claimed");
     const carriedAfter = await loadCarried(recipientId);
     expect(carriedAfter.map((item) => item.id)).toContain(parcelId);
+  });
+
+  it("replays a mail delivery key idempotently without duplicating the item", async () => {
+    const senderId = await createCharacter("Replayer");
+    const recipientId = await createCharacter("Replayed");
+    const parcelId = await insertBackpackItem(senderId, AXE_TYPE, 1, 0);
+    const deliveryKey = `mail:${senderId}:${randomUUID()}`;
+    const request = {
+      deliveryKey,
+      senderCharacterId: senderId,
+      itemId: parcelId,
+      itemRevision: 1,
+      normalizedRecipientName: "depot replayed",
+      expiresAt: new Date(Date.now() + 60_000),
+    };
+
+    const first = await store.sendMail(request);
+    const replay = await store.sendMail(request);
+
+    if (first.status !== "committed" || replay.status !== "committed") {
+      throw new Error("mail send failed");
+    }
+    expect(first.idempotent).toBe(false);
+    expect(replay.idempotent).toBe(true);
+    expect(replay.deliveredItems).toHaveLength(0);
+    // Conservation: one item row, in exactly one inbox.
+    const rows = await pool.query<{ character_id: string; count: number }>(
+      `SELECT character_id, count FROM items
+       WHERE id = $1 AND location_type = 'inbox'`,
+      [parcelId],
+    );
+    expect(rows.rows).toEqual([{ character_id: recipientId, count: 1 }]);
+
+    // A key replay claiming a different sender is an integrity violation.
+    const intruderId = await createCharacter("Intruder");
+    await expect(
+      store.sendMail({ ...request, senderCharacterId: intruderId }),
+    ).rejects.toThrow(/reused with different ownership/);
+  });
+
+  it("resolves two racing sends of the same item to exactly one delivery", async () => {
+    const senderId = await createCharacter("Racer");
+    const recipientId = await createCharacter("Race Target");
+    const parcelId = await insertBackpackItem(senderId, AXE_TYPE, 1, 0);
+    const request = (suffix: string) => ({
+      deliveryKey: `mail:${senderId}:race-${suffix}`,
+      senderCharacterId: senderId,
+      itemId: parcelId,
+      itemRevision: 1,
+      normalizedRecipientName: "depot race target",
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+
+    const results = await Promise.allSettled([
+      store.sendMail(request("a")),
+      store.sendMail(request("b")),
+    ]);
+
+    const committed = results.filter(
+      (result) =>
+        result.status === "fulfilled" && result.value.status === "committed",
+    );
+    // Exactly one send wins; the loser sees not-owned (stale revision /
+    // moved item) or a serialization abort — never a second delivery.
+    expect(committed).toHaveLength(1);
+    const itemRows = await pool.query<{
+      location_type: string;
+      character_id: string;
+    }>("SELECT location_type, character_id FROM items WHERE id = $1", [
+      parcelId,
+    ]);
+    expect(itemRows.rows).toEqual([
+      { location_type: "inbox", character_id: recipientId },
+    ]);
+    const deliveries = await pool.query(
+      "SELECT delivery_key FROM inbox_deliveries WHERE item_id = $1",
+      [parcelId],
+    );
+    expect(deliveries.rows).toHaveLength(1);
   });
 });

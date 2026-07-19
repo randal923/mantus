@@ -83,6 +83,11 @@
    "path": "data-otservbr-global/startup/tables/door_level.lua",
    "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
    "sha256": "fceda5f3ce381324b5c88e7104bdd4f6eba6afec7ab2e5b9e1bcafd646f56bd1"
+  },
+  "canaryHouses": {
+   "path": "data-otservbr-global/world/otservbr-house.xml",
+   "commit": "691614c1a302aee776002ca3851eca399be1a82c",
+   "sha256": "904439f60fa1619f52ed17dad8ae1163a9801c07add7851b867bdf19e29350c4"
   }
  },
  "balanceDefinitions": {
@@ -160,6 +165,10 @@
   {
    "path": "tools/parseCanaryDoorTables.mjs",
    "sha256": "14f9273bace5e3ddc345ade4a8707c0b2404cde0c985a041140d0d5cb78076f2"
+  },
+  {
+   "path": "tools/importCanaryHouses.mjs",
+   "sha256": "fc6ed3050f1a5aa90611b468ed0fea4ef2f6936d5726eac59d71d77aa5b327e2"
   }
  ],
  "converters": {
@@ -173,6 +182,7 @@
   "spells": 2,
   "shops": 2,
   "npcDialogues": 1,
-  "doors": 1
+  "doors": 1,
+  "houses": 1
  }
 }

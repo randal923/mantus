@@ -201,6 +201,10 @@ databaseDescribe("PgShopStore integration", () => {
       "012_bank.sql",
       "013_shops.sql",
       "014_character_storages.sql",
+      "018_pvp.sql",
+      "019_houses.sql",
+      "020_social.sql",
+      "021_moderation.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

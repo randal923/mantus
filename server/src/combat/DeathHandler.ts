@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
+import type { GuildHooks } from "../guild/GuildHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
+import type { PvpHooks } from "../pvp/PvpHooks";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
@@ -23,6 +26,9 @@ export class DeathHandler {
     private readonly formula: CombatFormula,
     private readonly feedback: CombatFeedback,
     private readonly onMonsterDeath: (monster: Monster, now: number) => boolean,
+    private readonly partyHooks?: PartyHooks,
+    private readonly guildHooks?: GuildHooks,
+    private readonly pvpHooks?: PvpHooks,
   ) {}
 
   handleDeath(
@@ -39,17 +45,47 @@ export class DeathHandler {
         (sourceId && this.world.getPlayer(sourceId)?.id) ??
         target.topDamagerId();
       if (killerId && target.type.experience > 0) {
-        this.progression.awardExperience(
-          killerId,
-          deathEventId,
-          target.type.experience,
-          now,
-        );
-        this.registry.sessionFor(killerId)?.send({
-          type: "combat-log",
-          kind: "experience",
-          text: `You gained ${target.type.experience} experience.`,
-        });
+        // Party shares are recomputed at this instant — members who left or
+        // lost eligibility since dealing damage get nothing (charter rule 4).
+        const shares =
+          this.partyHooks?.getExperienceShares(
+            killerId,
+            target.type.experience,
+            now,
+          ) ?? null;
+        if (shares) {
+          for (const share of shares) {
+            // awardExperience is idempotent per player and eventId, so the
+            // shared deathEventId cannot double-award any member.
+            if (
+              !this.progression.awardExperience(
+                share.playerId,
+                deathEventId,
+                share.amount,
+                now,
+              )
+            ) {
+              continue;
+            }
+            this.registry.sessionFor(share.playerId)?.send({
+              type: "combat-log",
+              kind: "experience",
+              text: `You gained ${share.amount} experience (party share).`,
+            });
+          }
+        } else {
+          this.progression.awardExperience(
+            killerId,
+            deathEventId,
+            target.type.experience,
+            now,
+          );
+          this.registry.sessionFor(killerId)?.send({
+            type: "combat-log",
+            kind: "experience",
+            text: `You gained ${target.type.experience} experience.`,
+          });
+        }
       }
       createMonsterCorpse(
         this.world,
@@ -66,10 +102,22 @@ export class DeathHandler {
       return;
     }
     if (!(target instanceof Player)) return;
+    // War kill accounting: only counts when both guilds share a mutual
+    // active war; the insert plus the frag-limit check are one transaction.
+    const killer = sourceId ? this.world.getPlayer(sourceId) : undefined;
+    if (killer && killer.id !== target.id) {
+      this.guildHooks?.recordWarKill(killer.id, target.id, now);
+    }
+    // Frag charging reads the victim's skull, aggression set, and live
+    // relations at this instant — before death cleanup wipes them. The
+    // deathEventId keys the exactly-once guard (memory and durable row).
+    this.pvpHooks?.handlePlayerDeath(target, sourceId, deathEventId, now);
     const session = this.registry.sessionFor(target.id);
     target.conditions.clear();
     const penalty = target.applyDeathPenalty(deathEventId);
     target.restoreAfterDeath();
+    // Black-skulled players respawn crippled (40 hp / 0 mana).
+    this.pvpHooks?.applyRespawnState(target);
     target.invulnerableUntil = now + PLAYER_DEATH_INVULNERABILITY_MS;
     target.nextAttackAt = target.invulnerableUntil;
     const spawn = this.world.findSpawn(this.world.templePosition);

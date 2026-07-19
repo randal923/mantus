@@ -29,7 +29,50 @@ import {
   marketOwnHistoryMessageSchema,
   marketOwnOffersMessageSchema,
 } from "./market";
+import {
+  guildChatMessageSchema,
+  guildCreateMessageSchema,
+  guildDeclareWarMessageSchema,
+  guildDemoteMessageSchema,
+  guildDisbandMessageSchema,
+  guildEndWarMessageSchema,
+  guildInviteMessageSchema,
+  guildKickMessageSchema,
+  guildLeaveMessageSchema,
+  guildOpenMessageSchema,
+  guildPassLeadershipMessageSchema,
+  guildPromoteMessageSchema,
+  guildRespondInviteMessageSchema,
+  guildRespondWarMessageSchema,
+  guildRevokeInviteMessageSchema,
+  guildSetMotdMessageSchema,
+  guildSetNickMessageSchema,
+  guildSetRankNameMessageSchema,
+} from "./guild";
+import { highscoresGetMessageSchema } from "./highscores";
+import {
+  houseAbandonMessageSchema,
+  houseBrowseMessageSchema,
+  houseBuyMessageSchema,
+  houseKickMessageSchema,
+  houseOpenMessageSchema,
+  houseSetAccessMessageSchema,
+  houseTransferCancelMessageSchema,
+  houseTransferOfferMessageSchema,
+  houseTransferRespondMessageSchema,
+} from "./house";
+import { reportPlayerMessageSchema } from "./moderation";
 import { npcDialogueChoiceMessageSchema } from "./npc";
+import {
+  partyChatMessageSchema,
+  partyInviteMessageSchema,
+  partyKickMessageSchema,
+  partyLeaveMessageSchema,
+  partyPassLeadershipMessageSchema,
+  partyRespondInviteMessageSchema,
+  partyRevokeInviteMessageSchema,
+  partySetSharedExpMessageSchema,
+} from "./party";
 import { shopBuyMessageSchema, shopSellMessageSchema } from "./shop";
 import {
   tradeAcceptMessageSchema,
@@ -39,6 +82,11 @@ import {
 import { equipmentSlotSchema } from "./item";
 import { positionSchema } from "./position";
 import { viewRangeSchema } from "./viewRange";
+import {
+  vipAddMessageSchema,
+  vipEditMessageSchema,
+  vipRemoveMessageSchema,
+} from "./vip";
 
 export const authMessageSchema = z.object({
   type: z.literal("auth"),
@@ -364,6 +412,46 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   tradeRequestMessageSchema,
   tradeAcceptMessageSchema,
   tradeCancelMessageSchema,
+  partyInviteMessageSchema,
+  partyRespondInviteMessageSchema,
+  partyRevokeInviteMessageSchema,
+  partyLeaveMessageSchema,
+  partyKickMessageSchema,
+  partyPassLeadershipMessageSchema,
+  partySetSharedExpMessageSchema,
+  partyChatMessageSchema,
+  guildCreateMessageSchema,
+  guildInviteMessageSchema,
+  guildRespondInviteMessageSchema,
+  guildRevokeInviteMessageSchema,
+  guildKickMessageSchema,
+  guildLeaveMessageSchema,
+  guildPromoteMessageSchema,
+  guildDemoteMessageSchema,
+  guildPassLeadershipMessageSchema,
+  guildDisbandMessageSchema,
+  guildSetMotdMessageSchema,
+  guildSetNickMessageSchema,
+  guildSetRankNameMessageSchema,
+  guildOpenMessageSchema,
+  guildChatMessageSchema,
+  guildDeclareWarMessageSchema,
+  guildRespondWarMessageSchema,
+  guildEndWarMessageSchema,
+  houseOpenMessageSchema,
+  houseBuyMessageSchema,
+  houseAbandonMessageSchema,
+  houseTransferOfferMessageSchema,
+  houseTransferRespondMessageSchema,
+  houseTransferCancelMessageSchema,
+  houseSetAccessMessageSchema,
+  houseKickMessageSchema,
+  houseBrowseMessageSchema,
+  vipAddMessageSchema,
+  vipRemoveMessageSchema,
+  vipEditMessageSchema,
+  highscoresGetMessageSchema,
+  reportPlayerMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,
 ]);
