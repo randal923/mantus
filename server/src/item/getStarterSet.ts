@@ -70,12 +70,9 @@ const STARTER_SETS: Readonly<Record<StarterVocation, StarterSet>> = {
       ...COMMON_EQUIPMENT,
       { typeId: 50257, slot: "armor" },
       { typeId: 3362, slot: "legs" },
-      { typeId: 3412, slot: "shield" },
+      { typeId: 50166, slot: "weapon" },
     ],
-    backpackContents: [
-      ...COMMON_SUPPLIES,
-      { typeId: 50181, count: 1 },
-    ],
+    backpackContents: COMMON_SUPPLIES,
   },
 };
 
