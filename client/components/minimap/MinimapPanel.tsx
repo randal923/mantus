@@ -10,15 +10,15 @@ import {
   loadNpcShopCategories,
   type NpcShopCategories,
 } from "../../lib/minimap/loadNpcShopCategories";
+import {
+  resizeMinimapLayout,
+  type MinimapResizeDirection,
+} from "../../lib/minimap/resizeMinimapLayout";
 import { MinimapControlButton } from "./MinimapControlButton";
+import { MinimapResizeBorder } from "./MinimapResizeBorder";
 
 const DEFAULT_CANVAS_WIDTH = 360;
 const DEFAULT_CANVAS_HEIGHT = 264;
-/** Size bounds mirror minimapLayoutSchema in the protocol. */
-const MIN_CANVAS_WIDTH = 220;
-const MAX_CANVAS_WIDTH = 720;
-const MIN_CANVAS_HEIGHT = 180;
-const MAX_CANVAS_HEIGHT = 560;
 /** Chrome around the canvas: section padding + canvas and panel borders. */
 const PANEL_CHROME = 28;
 const MAX_TOOLTIP_CATEGORIES = 4;
@@ -49,7 +49,7 @@ interface PanelDrag {
   startClientX: number;
   startClientY: number;
   baseLayout: MinimapLayout;
-  resize: boolean;
+  resizeDirection: MinimapResizeDirection | null;
 }
 
 interface MinimapPanelProps {
@@ -204,7 +204,7 @@ export function MinimapPanel({
 
   const beginPanelDrag = (
     event: ReactPointerEvent<HTMLElement>,
-    resize: boolean,
+    resizeDirection: MinimapResizeDirection | null,
   ) => {
     const rect = sectionRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -219,7 +219,7 @@ export function MinimapPanel({
         width: canvasWidth,
         height: canvasHeight,
       },
-      resize,
+      resizeDirection,
     };
   };
 
@@ -228,18 +228,10 @@ export function MinimapPanel({
     if (!drag || drag.pointerId !== event.pointerId) return;
     const dx = event.clientX - drag.startClientX;
     const dy = event.clientY - drag.startClientY;
-    if (drag.resize) {
-      onLayoutChange({
-        ...drag.baseLayout,
-        width: Math.min(
-          MAX_CANVAS_WIDTH,
-          Math.max(MIN_CANVAS_WIDTH, Math.round(drag.baseLayout.width + dx)),
-        ),
-        height: Math.min(
-          MAX_CANVAS_HEIGHT,
-          Math.max(MIN_CANVAS_HEIGHT, Math.round(drag.baseLayout.height + dy)),
-        ),
-      });
+    if (drag.resizeDirection) {
+      onLayoutChange(
+        resizeMinimapLayout(drag.baseLayout, drag.resizeDirection, dx, dy),
+      );
       return;
     }
     onLayoutChange({
@@ -281,7 +273,7 @@ export function MinimapPanel({
       <div
         className="mb-2 flex cursor-move touch-none items-center justify-between gap-2"
         title={t("hud.minimap.move")}
-        onPointerDown={(event) => beginPanelDrag(event, false)}
+        onPointerDown={(event) => beginPanelDrag(event, null)}
         onPointerMove={onPanelDragMove}
         onPointerUp={endPanelDrag}
         onPointerCancel={endPanelDrag}
@@ -449,12 +441,8 @@ export function MinimapPanel({
         </span>
       </div>
       <div
-        title={t("hud.minimap.resize")}
-        className="absolute right-1 bottom-1 size-4 cursor-se-resize touch-none text-ui-muted hover:text-ui-text-bright"
-        onPointerDown={(event) => beginPanelDrag(event, true)}
-        onPointerMove={onPanelDragMove}
-        onPointerUp={endPanelDrag}
-        onPointerCancel={endPanelDrag}
+        aria-hidden
+        className="pointer-events-none absolute right-1 bottom-1 size-4 text-ui-muted"
       >
         <svg
           aria-hidden
@@ -468,6 +456,12 @@ export function MinimapPanel({
           <path d="M13 6.5 6.5 13M13 10.5 10.5 13" />
         </svg>
       </div>
+      <MinimapResizeBorder
+        label={t("hud.minimap.resize")}
+        onPointerDown={beginPanelDrag}
+        onPointerMove={onPanelDragMove}
+        onPointerEnd={endPanelDrag}
+      />
     </section>
   );
 }
