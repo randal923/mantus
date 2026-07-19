@@ -271,14 +271,6 @@ export class CreatureView {
       .fill({ color: 0xffd37a, alpha: Math.min(0.35, light.intensity / 100) });
   }
 
-  containsScreenPoint(x: number, y: number): boolean {
-    return (
-      (this.container.visible &&
-        this.container.getBounds().containsPoint(x, y)) ||
-      (this.plate.visible && this.plate.getBounds().containsPoint(x, y))
-    );
-  }
-
   /** Applies only a fresh authoritative position revision. */
   applyMove(
     position: Position,

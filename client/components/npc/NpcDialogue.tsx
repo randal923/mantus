@@ -16,7 +16,7 @@ export function NpcDialogue({ dialogue, onChoice }: NpcDialogueProps) {
     <section
       role="dialog"
       aria-label={t("npc.dialogueLabel", { name: dialogue.npcName })}
-      className="ui-panel-frame flex w-full max-w-xl flex-col gap-3 p-4 font-tibia text-ui-text shadow-2xl"
+      className="ui-panel-frame pointer-events-auto flex w-full max-w-xl flex-col gap-3 p-4 font-tibia text-ui-text shadow-2xl"
     >
       <h2 className="font-display text-lg font-semibold text-ui-text-bright">
         {dialogue.npcName}

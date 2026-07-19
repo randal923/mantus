@@ -645,12 +645,31 @@ export class WorldRenderer {
     this.previousBodyCursor = "";
   }
 
+  /**
+   * Resolves the creature standing on the clicked tile. Selection is
+   * tile-exact on purpose: sprite frames overlap neighbouring tiles
+   * (8px up-left displacement, name plates above), which made clicks
+   * pick adjacent creatures instead of the one on the clicked tile.
+   */
   private creatureIdAt(screenX: number, screenY: number): string | null {
+    if (!this.ownPosition) return null;
+    const tile = getMapPointerPosition(
+      screenX,
+      screenY,
+      this.world.position.x,
+      this.world.position.y,
+      ZOOM,
+      TILE_SIZE,
+      this.ownPosition.z,
+    );
     let selected: { id: string; zIndex: number } | null = null;
     for (const [id, view] of this.creatureViews) {
+      if (id === this.ownPlayerId || !view.container.visible) continue;
+      const position = view.position;
       if (
-        id === this.ownPlayerId ||
-        !view.containsScreenPoint(screenX, screenY)
+        position.x !== tile.x ||
+        position.y !== tile.y ||
+        position.z !== tile.z
       ) {
         continue;
       }

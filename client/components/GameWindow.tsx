@@ -1838,7 +1838,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             />
           )}
           {npcDialogue && (
-            <div className="absolute inset-x-4 bottom-24 z-30 flex justify-center">
+            <div className="pointer-events-none absolute inset-x-4 bottom-24 z-30 flex justify-center">
               <NpcDialogue
                 dialogue={npcDialogue}
                 onChoice={(choiceId) =>

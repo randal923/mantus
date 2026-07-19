@@ -27,11 +27,11 @@ combat:
 
 rates:
   # Non-negative up to 1000. Fractional progression is floored to whole units.
-  experience: 100
-  skill: 100
-  magic: 100
-  loot: 100
-  spawn: 100
+  experience: 10
+  skill: 10
+  magic: 10
+  loot: 10
+  spawn: 2
 
 characters:
   starterTownId: 1
