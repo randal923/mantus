@@ -49,6 +49,7 @@ const config = {
   thinkIntervalMs: 100,
   acquisitionRange: 8,
   loseRange: 12,
+  despawnRadius: 50,
   maxPathNodes: 32,
   wanderChance: 1,
 };
@@ -90,6 +91,58 @@ describe("MonsterBrain", () => {
     expect(brain.state).toBe("chase");
     expect(monster.position).not.toEqual({ x: 3, y: 2, z: 7 });
     expect(world.isPathable(monster.position)).toBe(true);
+  });
+
+  it("acquires and chases a player far outside a tight spawn radius", () => {
+    const world = makeWorld();
+    const monster = makeMonster(baseType, 1);
+    const player = new Player(makeCharacter("far"), { x: 6, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(player);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 1_000, 32);
+    expect(brain.targetCreatureId).toBe(player.id);
+    expect(brain.state).toBe("chase");
+
+    for (let now = 2_000; now <= 30_000; now += 500) {
+      brain.tick(world, now, 32);
+    }
+    expect(
+      Math.max(
+        Math.abs(monster.position.x - player.position.x),
+        Math.abs(monster.position.y - player.position.y),
+      ),
+    ).toBe(1);
+    expect(
+      Math.max(
+        Math.abs(monster.position.x - monster.home.x),
+        Math.abs(monster.position.y - monster.home.y),
+      ),
+    ).toBeGreaterThan(monster.spawnRadius);
+  });
+
+  it("does not acquire or chase a player beyond the despawn radius", () => {
+    const world = makeWorld();
+    const monster = makeMonster(baseType, 1);
+    const player = new Player(makeCharacter("far"), { x: 6, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(player);
+    const brain = new MonsterBrain(monster, 0, 7, {
+      ...config,
+      despawnRadius: 2,
+    });
+
+    for (let now = 1_000; now <= 10_000; now += 500) {
+      brain.tick(world, now, 32);
+      expect(brain.targetCreatureId).toBeNull();
+      expect(
+        Math.max(
+          Math.abs(monster.position.x - monster.home.x),
+          Math.abs(monster.position.y - monster.home.y),
+        ),
+      ).toBeLessThanOrEqual(2);
+    }
   });
 
   it("does not acquire or cross onto a player's different floor", () => {

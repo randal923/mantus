@@ -35,6 +35,7 @@ export class MonsterBrain {
       thinkIntervalMs: number;
       acquisitionRange: number;
       loseRange: number;
+      despawnRadius: number;
       maxPathNodes: number;
       wanderChance: number;
     },
@@ -300,7 +301,7 @@ export class MonsterBrain {
     for (const candidate of candidates) {
       if (
         this.distance(candidate.position, this.monster.home) >
-        this.monster.spawnRadius
+        this.config.despawnRadius
       ) {
         continue;
       }
@@ -308,10 +309,7 @@ export class MonsterBrain {
         this.monster,
         candidate.direction,
         now,
-        {
-          home: this.monster.home,
-          radius: this.monster.spawnRadius,
-        },
+        this.chaseLeash(),
       );
       if (movement.moved) return movement;
       if (movement.turned) turned = movement;
@@ -340,7 +338,7 @@ export class MonsterBrain {
         this.distance(position, target) !==
           this.monster.type.flags.targetDistance ||
         this.distance(position, this.monster.home) >
-          this.monster.spawnRadius
+          this.config.despawnRadius
       ) {
         continue;
       }
@@ -348,10 +346,7 @@ export class MonsterBrain {
         this.monster,
         direction,
         now,
-        {
-          home: this.monster.home,
-          radius: this.monster.spawnRadius,
-        },
+        this.chaseLeash(),
       );
       if (movement.moved) return movement;
       if (movement.turned) turned = movement;
@@ -366,7 +361,7 @@ export class MonsterBrain {
       position.z === this.monster.home.z &&
       !world.isProtectionZone(this.monster.position) &&
       !world.isProtectionZone(position) &&
-      this.distance(position, this.monster.home) <= this.monster.spawnRadius &&
+      this.distance(position, this.monster.home) <= this.config.despawnRadius &&
       world.canSee(this.monster.position, position, {
         x: this.config.acquisitionRange,
         y: this.config.acquisitionRange,
@@ -382,8 +377,7 @@ export class MonsterBrain {
       !world.isProtectionZone(this.monster.position) &&
       !world.isProtectionZone(position) &&
       this.distance(this.monster.position, position) <= this.config.loseRange &&
-      this.distance(position, this.monster.home) <=
-        this.monster.spawnRadius + this.monster.type.flags.targetDistance &&
+      this.distance(position, this.monster.home) <= this.config.despawnRadius &&
       world.canSee(this.monster.position, position, {
         x: this.config.loseRange,
         y: this.config.loseRange,
@@ -406,7 +400,8 @@ export class MonsterBrain {
         isGoal: (position) => this.distance(position, goal) <= goalDistance,
         canStep: (position) =>
           position.z === this.monster.home.z &&
-          this.distance(position, this.monster.home) <= this.monster.spawnRadius &&
+          this.distance(position, this.monster.home) <=
+            this.config.despawnRadius &&
           world.isPathable(position) &&
           !world.isOccupied(position),
         maxVisited: Math.min(this.config.maxPathNodes, availableWork),
@@ -425,12 +420,23 @@ export class MonsterBrain {
   private takeCachedStep(world: World, now: number): MoveResult | null {
     const direction = this.cachedPath.shift();
     if (!direction) return null;
-    const movement = world.tryMoveCreature(this.monster, direction, now, {
-      home: this.monster.home,
-      radius: this.monster.spawnRadius,
-    });
+    const movement = world.tryMoveCreature(
+      this.monster,
+      direction,
+      now,
+      this.chaseLeash(),
+    );
     if (!movement.moved) this.clearPath();
     return movement;
+  }
+
+  /**
+   * Canary parity: while engaging a target the only leash is the despawn
+   * radius around the spawn point; the spawn radius bounds idle wandering
+   * only.
+   */
+  private chaseLeash(): { home: Position; radius: number } {
+    return { home: this.monster.home, radius: this.config.despawnRadius };
   }
 
   private clearPath(): void {

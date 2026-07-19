@@ -58,6 +58,7 @@ describe("full-world creature performance budgets", () => {
         thinkIntervalMs: 250,
         acquisitionRange: 8,
         loseRange: 12,
+        despawnRadius: 50,
         maxPathNodes: 96,
         wanderChance: 0.2,
         seed: 123,

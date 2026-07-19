@@ -61,6 +61,7 @@ export class SpawnManager {
         thinkIntervalMs: number;
         acquisitionRange: number;
         loseRange: number;
+        despawnRadius: number;
         maxPathNodes: number;
         wanderChance: number;
         seed: number;
@@ -434,7 +435,7 @@ export class SpawnManager {
         Math.max(
           Math.abs(candidate.x - owner.home.x),
           Math.abs(candidate.y - owner.home.y),
-        ) <= owner.spawnRadius &&
+        ) <= this.config.ai.despawnRadius &&
         this.world.isPathable(candidate) &&
         !this.world.isOccupied(candidate),
     );

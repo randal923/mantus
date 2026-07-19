@@ -78,6 +78,7 @@ export interface ServerConfig {
       thinkIntervalMs: number;
       acquisitionRange: number;
       loseRange: number;
+      despawnRadius: number;
       maxPathNodes: number;
       wanderChance: number;
       seed: number;
@@ -124,6 +125,9 @@ export const serverConfig: ServerConfig = {
             thinkIntervalMs: 250,
             acquisitionRange: 8,
             loseRange: 12,
+            // Canary config.lua deSpawnRadius: chase leash around the spawn
+            // point; spawn radius only bounds idle wandering.
+            despawnRadius: 50,
             maxPathNodes: 96,
             wanderChance: 0.2,
             seed: 0x4d414e54,

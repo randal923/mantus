@@ -64,6 +64,7 @@ const config = {
     thinkIntervalMs: 250,
     acquisitionRange: 8,
     loseRange: 12,
+    despawnRadius: 50,
     maxPathNodes: 16,
     wanderChance: 0,
     seed: 123,
