@@ -38,6 +38,7 @@ import { PvpTracker } from "./pvp/PvpTracker";
 import { TradeService } from "./trade/TradeService";
 import type { TradeStore } from "./trade/TradeStore";
 import { LanguageHandler } from "./LanguageHandler";
+import { UiSettingsHandler } from "./UiSettingsHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { ItemCatalog } from "./item/ItemCatalog";
@@ -92,6 +93,7 @@ export class GameServer {
   private readonly characters: CharacterHandler;
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
+  private readonly uiSettings: UiSettingsHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
   private readonly chat: ChatHandler;
@@ -229,6 +231,7 @@ export class GameServer {
       this.moderation,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
+    this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
     this.travel = new TravelService(
       this.world,
       this.visibility,
@@ -426,6 +429,7 @@ export class GameServer {
     this.highscores.applyResolvedOutcomes(now);
     this.moderation.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
+    this.uiSettings.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
       for (const intent of session.drainIntents()) {
@@ -651,6 +655,9 @@ export class GameServer {
         return;
       case "set-language":
         this.language.handle(session, intent);
+        return;
+      case "update-ui-settings":
+        this.uiSettings.handle(session, intent);
         return;
     }
   }

@@ -1,0 +1,1182 @@
+{
+ "formatVersion": 1,
+ "npcs": {
+  "ahmet": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "al dee": [
+   "supplies",
+   "containers",
+   "weapons"
+  ],
+  "alaistar": [
+   "potions"
+  ],
+  "albinius": [
+   "supplies"
+  ],
+  "aldo": [
+   "helmets",
+   "legs",
+   "boots"
+  ],
+  "alesar": [
+   "weapons",
+   "armors",
+   "helmets",
+   "shields"
+  ],
+  "alexander": [
+   "wands",
+   "runes",
+   "supplies"
+  ],
+  "alissa": [
+   "food"
+  ],
+  "allen": [
+   "supplies"
+  ],
+  "amra": [
+   "supplies"
+  ],
+  "andrew lyze": [
+   "supplies"
+  ],
+  "anerui": [
+   "food"
+  ],
+  "angus": [
+   "supplies",
+   "containers"
+  ],
+  "ariella": [
+   "food",
+   "supplies"
+  ],
+  "arito": [
+   "food",
+   "supplies"
+  ],
+  "armenius": [
+   "food",
+   "supplies"
+  ],
+  "asima": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "asnarus": [
+   "ammunition",
+   "runes",
+   "potions",
+   "distance",
+   "supplies"
+  ],
+  "asphota": [
+   "supplies",
+   "weapons"
+  ],
+  "atrad": [
+   "distance"
+  ],
+  "augustin": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "auron": [
+   "supplies"
+  ],
+  "azil": [
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots"
+  ],
+  "baltim": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "distance"
+  ],
+  "bashira": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "baxter": [
+   "supplies"
+  ],
+  "beatrice": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "benjamin": [
+   "supplies"
+  ],
+  "berenice": [
+   "supplies"
+  ],
+  "bertha": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "bezil": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "billy": [
+   "food"
+  ],
+  "black bert": [
+   "supplies",
+   "rings",
+   "armors",
+   "food",
+   "potions",
+   "shields"
+  ],
+  "bolfona": [
+   "food",
+   "supplies"
+  ],
+  "bonifacius": [
+   "food"
+  ],
+  "boozer": [
+   "food",
+   "supplies"
+  ],
+  "borkas": [
+   "supplies"
+  ],
+  "brasith": [
+   "food",
+   "supplies"
+  ],
+  "brengus": [
+   "weapons",
+   "ammunition",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "distance",
+   "legs",
+   "boots"
+  ],
+  "briasol": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "cael": [
+   "supplies"
+  ],
+  "captain haba (open sea)": [
+   "supplies"
+  ],
+  "captain max": [
+   "helmets"
+  ],
+  "captain max (calassa)": [
+   "helmets"
+  ],
+  "carina": [
+   "amulets",
+   "rings",
+   "supplies"
+  ],
+  "cedrik": [
+   "weapons",
+   "ammunition",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "distance",
+   "legs",
+   "boots"
+  ],
+  "chantalle": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "chartan": [
+   "runes",
+   "potions",
+   "food"
+  ],
+  "chemar": [
+   "supplies"
+  ],
+  "chephan": [
+   "supplies"
+  ],
+  "christine": [
+   "food"
+  ],
+  "chrystal": [
+   "supplies"
+  ],
+  "chuckles": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "cledwyn": [
+   "armors",
+   "potions"
+  ],
+  "clyde": [
+   "food",
+   "supplies"
+  ],
+  "cornelia": [
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots"
+  ],
+  "dane": [
+   "supplies"
+  ],
+  "dankwart": [
+   "food",
+   "supplies"
+  ],
+  "dario": [
+   "distance",
+   "supplies",
+   "ammunition"
+  ],
+  "digger": [
+   "potions"
+  ],
+  "dixi": [
+   "armors",
+   "helmets",
+   "shields",
+   "legs"
+  ],
+  "donald mcronald": [
+   "food",
+   "supplies"
+  ],
+  "dorbin": [
+   "supplies"
+  ],
+  "dorian": [
+   "supplies"
+  ],
+  "dove": [
+   "supplies"
+  ],
+  "duncan": [
+   "supplies"
+  ],
+  "eddy": [
+   "supplies"
+  ],
+  "edmund": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "edoch": [
+   "ammunition",
+   "distance",
+   "supplies"
+  ],
+  "edvard": [
+   "supplies"
+  ],
+  "elgar": [
+   "supplies"
+  ],
+  "eliyas": [
+   "ammunition",
+   "distance",
+   "supplies"
+  ],
+  "elvith": [
+   "supplies"
+  ],
+  "eremo": [
+   "amulets"
+  ],
+  "esrik": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "distance"
+  ],
+  "evan": [
+   "supplies"
+  ],
+  "ezean": [
+   "supplies"
+  ],
+  "faloriel": [
+   "potions"
+  ],
+  "fayla": [
+   "supplies"
+  ],
+  "feizuhl": [
+   "supplies"
+  ],
+  "fenech": [
+   "runes",
+   "wands",
+   "supplies",
+   "shields"
+  ],
+  "flint": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "distance"
+  ],
+  "florentine": [
+   "supplies"
+  ],
+  "frans": [
+   "runes",
+   "wands",
+   "supplies",
+   "shields"
+  ],
+  "frederik": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "frodo": [
+   "food"
+  ],
+  "fyodor": [
+   "supplies"
+  ],
+  "gail": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "galuna": [
+   "distance",
+   "supplies",
+   "ammunition"
+  ],
+  "gamel": [
+   "weapons",
+   "supplies",
+   "helmets",
+   "distance"
+  ],
+  "gamon": [
+   "supplies"
+  ],
+  "ghorza": [
+   "runes",
+   "potions"
+  ],
+  "giri": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "gladys": [
+   "supplies",
+   "weapons"
+  ],
+  "gnomailion": [
+   "supplies"
+  ],
+  "gnomally": [
+   "supplies"
+  ],
+  "gnomegica": [
+   "runes",
+   "potions",
+   "wands",
+   "supplies",
+   "shields"
+  ],
+  "gnomejam": [
+   "food"
+  ],
+  "gnomerrow": [
+   "distance",
+   "supplies",
+   "ammunition"
+  ],
+  "gnomette": [
+   "supplies"
+  ],
+  "gnomission": [
+   "food"
+  ],
+  "gnomux": [
+   "supplies"
+  ],
+  "gorn": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "gree dee": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "grizzly adams": [
+   "containers",
+   "supplies"
+  ],
+  "haani": [
+   "supplies"
+  ],
+  "habdel": [
+   "weapons",
+   "supplies",
+   "distance"
+  ],
+  "hairycles": [
+   "supplies",
+   "food"
+  ],
+  "halif": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "hamish": [
+   "wands",
+   "potions",
+   "runes"
+  ],
+  "hanna": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "hardek": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "distance"
+  ],
+  "harog": [
+   "supplies"
+  ],
+  "haroun": [
+   "rings",
+   "amulets",
+   "supplies"
+  ],
+  "henricus": [
+   "supplies"
+  ],
+  "herbert": [
+   "supplies"
+  ],
+  "hofech": [
+   "supplies"
+  ],
+  "hyacinth": [
+   "potions"
+  ],
+  "imalas": [
+   "food"
+  ],
+  "inkaef": [
+   "supplies"
+  ],
+  "irea": [
+   "distance",
+   "supplies",
+   "ammunition"
+  ],
+  "iriana": [
+   "containers",
+   "supplies"
+  ],
+  "ishina": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "isika": [
+   "ammunition",
+   "distance",
+   "supplies"
+  ],
+  "iwan": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "iwar": [
+   "supplies"
+  ],
+  "jack springer": [
+   "supplies"
+  ],
+  "jakahr": [
+   "supplies"
+  ],
+  "james": [
+   "food"
+  ],
+  "janz": [
+   "supplies"
+  ],
+  "jessica": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "jezzara": [
+   "food"
+  ],
+  "john": [
+   "supplies",
+   "containers"
+  ],
+  "john (bounac)": [
+   "supplies"
+  ],
+  "julian": [
+   "supplies"
+  ],
+  "karl": [
+   "supplies"
+  ],
+  "khanna": [
+   "runes",
+   "wands",
+   "supplies",
+   "shields"
+  ],
+  "kroox": [
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "weapons"
+  ],
+  "lailene": [
+   "armors"
+  ],
+  "larek": [
+   "supplies",
+   "food"
+  ],
+  "lector": [
+   "food"
+  ],
+  "lee'delle": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "containers",
+   "shields",
+   "distance",
+   "legs"
+  ],
+  "liane": [
+   "supplies"
+  ],
+  "lily": [
+   "potions"
+  ],
+  "livielle": [
+   "food",
+   "supplies"
+  ],
+  "lubo": [
+   "supplies",
+   "weapons",
+   "containers",
+   "food"
+  ],
+  "luna": [
+   "supplies",
+   "food"
+  ],
+  "lurik": [
+   "supplies"
+  ],
+  "lyonel": [
+   "food",
+   "supplies"
+  ],
+  "maria": [
+   "food",
+   "supplies"
+  ],
+  "maro": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "maryza": [
+   "food"
+  ],
+  "maun": [
+   "supplies",
+   "ammunition",
+   "runes",
+   "potions",
+   "distance",
+   "weapons"
+  ],
+  "mehkesh": [
+   "potions",
+   "supplies"
+  ],
+  "memech": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "distance",
+   "boots"
+  ],
+  "mirabell": [
+   "food",
+   "supplies"
+  ],
+  "miraia": [
+   "food",
+   "supplies"
+  ],
+  "mordecai": [
+   "runes",
+   "wands",
+   "supplies"
+  ],
+  "morpel": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "distance"
+  ],
+  "mortimer": [
+   "supplies",
+   "containers"
+  ],
+  "mugluf": [
+   "food",
+   "supplies"
+  ],
+  "mugruu": [
+   "ammunition",
+   "distance",
+   "supplies"
+  ],
+  "murim": [
+   "supplies"
+  ],
+  "nah'bob": [
+   "weapons",
+   "armors",
+   "shields"
+  ],
+  "nelliem": [
+   "supplies",
+   "weapons"
+  ],
+  "nelly": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "nezil": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "nienna": [
+   "supplies",
+   "amulets"
+  ],
+  "ninos": [
+   "supplies"
+  ],
+  "nipuna": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies"
+  ],
+  "norbert": [
+   "armors",
+   "supplies"
+  ],
+  "norma": [
+   "supplies",
+   "food"
+  ],
+  "nydala": [
+   "supplies"
+  ],
+  "obi": [
+   "weapons",
+   "distance"
+  ],
+  "odemara": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "oiriz": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "olrik": [
+   "supplies"
+  ],
+  "omur": [
+   "food",
+   "supplies"
+  ],
+  "orockle": [
+   "supplies"
+  ],
+  "peggy": [
+   "supplies"
+  ],
+  "pemaret": [
+   "food"
+  ],
+  "penny": [
+   "food",
+   "supplies"
+  ],
+  "perac": [
+   "distance",
+   "supplies",
+   "ammunition"
+  ],
+  "perod": [
+   "supplies",
+   "ammunition",
+   "distance",
+   "weapons",
+   "containers"
+  ],
+  "pompan": [
+   "ammunition",
+   "supplies",
+   "containers",
+   "distance",
+   "weapons"
+  ],
+  "pugwah": [
+   "food",
+   "supplies"
+  ],
+  "quero": [
+   "supplies"
+  ],
+  "rabaz": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "rachel": [
+   "runes",
+   "potions",
+   "wands",
+   "supplies",
+   "shields"
+  ],
+  "rafzan": [
+   "supplies",
+   "containers",
+   "weapons"
+  ],
+  "ramina": [
+   "food",
+   "supplies"
+  ],
+  "ray": [
+   "supplies"
+  ],
+  "red lilly": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "redward": [
+   "supplies"
+  ],
+  "richard": [
+   "food",
+   "supplies",
+   "containers",
+   "weapons"
+  ],
+  "robert": [
+   "weapons",
+   "ammunition",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "distance",
+   "legs",
+   "boots"
+  ],
+  "rodney": [
+   "food",
+   "supplies"
+  ],
+  "romella": [
+   "weapons",
+   "supplies",
+   "distance"
+  ],
+  "romir": [
+   "wands",
+   "potions",
+   "supplies",
+   "runes",
+   "shields"
+  ],
+  "rose": [
+   "supplies"
+  ],
+  "rowenna": [
+   "weapons",
+   "supplies",
+   "distance"
+  ],
+  "rudolph": [
+   "armors",
+   "boots",
+   "amulets",
+   "legs"
+  ],
+  "sam": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "distance"
+  ],
+  "sandra": [
+   "potions",
+   "supplies"
+  ],
+  "sarina": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "satsu": [
+   "supplies"
+  ],
+  "scott": [
+   "food"
+  ],
+  "serafin": [
+   "food",
+   "supplies"
+  ],
+  "sessek": [
+   "food",
+   "supplies"
+  ],
+  "shanar": [
+   "supplies",
+   "weapons",
+   "armors",
+   "helmets",
+   "shields",
+   "distance",
+   "legs"
+  ],
+  "sherry mcronald": [
+   "food"
+  ],
+  "shiantis": [
+   "supplies",
+   "weapons",
+   "containers"
+  ],
+  "shiriel": [
+   "runes",
+   "potions",
+   "wands",
+   "supplies",
+   "shields"
+  ],
+  "siflind": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "sigurd": [
+   "runes",
+   "potions",
+   "wands",
+   "supplies",
+   "shields"
+  ],
+  "silas": [
+   "supplies",
+   "ammunition",
+   "distance"
+  ],
+  "snake eye": [
+   "supplies",
+   "food"
+  ],
+  "soilance": [
+   "food"
+  ],
+  "stan": [
+   "supplies",
+   "helmets"
+  ],
+  "sundara": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies"
+  ],
+  "swolt": [
+   "food",
+   "supplies"
+  ],
+  "taegen": [
+   "ammunition",
+   "distance",
+   "supplies"
+  ],
+  "talphion": [
+   "ammunition",
+   "distance"
+  ],
+  "tanaro": [
+   "food",
+   "supplies"
+  ],
+  "tandros": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "tarun": [
+   "potions"
+  ],
+  "tesha": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "tezila": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "the librarian": [
+   "supplies"
+  ],
+  "thomas": [
+   "supplies",
+   "shields"
+  ],
+  "timur": [
+   "supplies",
+   "weapons",
+   "ammunition",
+   "helmets"
+  ],
+  "tokel": [
+   "food"
+  ],
+  "topsy": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "turvy": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots",
+   "distance"
+  ],
+  "ukea": [
+   "supplies"
+  ],
+  "ulrik": [
+   "weapons",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "distance"
+  ],
+  "urkalio": [
+   "food",
+   "supplies"
+  ],
+  "uzgod": [
+   "weapons",
+   "supplies",
+   "distance",
+   "ammunition"
+  ],
+  "valentina": [
+   "supplies",
+   "containers",
+   "food",
+   "rings"
+  ],
+  "velvet": [
+   "supplies"
+  ],
+  "vera": [
+   "supplies"
+  ],
+  "victor": [
+   "potions"
+  ],
+  "vincent": [
+   "ammunition",
+   "distance",
+   "supplies"
+  ],
+  "wally": [
+   "supplies"
+  ],
+  "willard": [
+   "weapons",
+   "ammunition",
+   "supplies",
+   "armors",
+   "helmets",
+   "shields",
+   "distance",
+   "legs",
+   "boots"
+  ],
+  "xed": [
+   "distance",
+   "supplies",
+   "ammunition"
+  ],
+  "xelvar": [
+   "supplies"
+  ],
+  "xodet": [
+   "runes",
+   "wands",
+   "potions",
+   "supplies",
+   "shields"
+  ],
+  "yaman": [
+   "rings",
+   "amulets"
+  ],
+  "yana": [
+   "weapons",
+   "distance",
+   "wands"
+  ],
+  "yanni": [
+   "armors",
+   "helmets",
+   "shields",
+   "legs",
+   "boots"
+  ],
+  "yoem": [
+   "supplies"
+  ],
+  "yonan": [
+   "supplies",
+   "amulets",
+   "rings"
+  ],
+  "yulas": [
+   "supplies"
+  ],
+  "zaidal": [
+   "supplies"
+  ],
+  "zethra": [
+   "supplies",
+   "containers",
+   "weapons"
+  ],
+  "zora": [
+   "supplies",
+   "weapons",
+   "containers"
+  ]
+ }
+}

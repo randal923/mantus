@@ -19,6 +19,7 @@ import {
 } from "./depot";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
+import { uiSettingsSchema } from "./uiSettings";
 import { PROTOCOL_LIMITS } from "./limits";
 import {
   marketAcceptOfferMessageSchema,
@@ -357,6 +358,12 @@ export const setLanguageMessageSchema = z.object({
   language: languageSchema,
 });
 
+/** Bounded account setting intent; covered by the 4 KiB/30-per-second caps. */
+export const updateUiSettingsMessageSchema = z.object({
+  type: z.literal("update-ui-settings"),
+  settings: uiSettingsSchema,
+});
+
 export const clientMessageSchema = z.discriminatedUnion("type", [
   authMessageSchema,
   listCharactersMessageSchema,
@@ -388,6 +395,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   moveItemMessageSchema,
   writeItemMessageSchema,
   setLanguageMessageSchema,
+  updateUiSettingsMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,
   bankWithdrawMessageSchema,
@@ -496,4 +504,7 @@ export type RotateItemMessage = z.infer<typeof rotateItemMessageSchema>;
 export type MoveItemMessage = z.infer<typeof moveItemMessageSchema>;
 export type WriteItemMessage = z.infer<typeof writeItemMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;
+export type UpdateUiSettingsMessage = z.infer<
+  typeof updateUiSettingsMessageSchema
+>;
 export type ClientMessage = z.infer<typeof clientMessageSchema>;

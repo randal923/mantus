@@ -7,8 +7,30 @@ scope.
 
 ## World and character content
 
-- [ ] Minimap discovery, markers, floor navigation, and server/world-version
-  invalidation.
+- [x] Minimap panel: pre-baked terrain tiles in the classic Tibia automap
+  palette (`yarn minimap:build`, chained into `map:convert`), NPC/monster/
+  player markers from live visibility, NPC tooltips with sold-item categories
+  (`yarn npcs:shop-categories`, chained into `npcs:import`), floor
+  navigation, zoom, and drag-pan (2026-07-19). Deferred gaps:
+  - [ ] Click-to-autowalk from the minimap (needs a server-validated
+    walk-to/path intent; none exists yet).
+  - [ ] Server-pushed map markers (Canary `0xDD` `addMapMark` equivalent) and
+    player-placed waypoint flags with persistence.
+  - [ ] Server/world-version invalidation for the baked minimap tiles — the
+    client caches PNGs via normal HTTP caching; a map re-convert needs a
+    cache-busting version in the manifest.
+  - [ ] Town name labels at low zoom (manifest `towns[]` already has the
+    data).
+- [x] Account-wide UI settings (`accounts.ui_settings` jsonb, migration 022,
+  strict bounded `uiSettingsSchema`): minimap panel is draggable (header) and
+  resizable (corner grip); layout persists per account via
+  `update-ui-settings` with debounced saves (2026-07-19). Deferred gaps:
+  - [ ] No "reset layout to default" control; users must drag it back
+    (position is clamped on-screen on load, so it can't get lost).
+  - [ ] The `ui-settings-updated` ack is ignored by the client, so two live
+    sessions on one account don't sync layouts until relogin.
+  - [ ] Other panels (chat, battle list, spell bar) are still fixed; the
+    settings schema is ready for them.
 - [ ] Outfit/addon unlocks and outfit selection validated against server-owned
   entitlements.
 - [ ] Mount ownership/selection, speed, and rendering.

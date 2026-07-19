@@ -21,6 +21,8 @@ import type {
   ServerMessage,
   SpellCatalogEntry,
   TradeClosedReason,
+  MinimapLayout,
+  UiSettings,
 } from "@tibia/protocol";
 import { GOLD_COIN_TYPE_ID } from "@tibia/protocol";
 import { i18n } from "../i18n/i18n";
@@ -194,6 +196,27 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
   const [battleListVisible, setBattleListVisible] = useState(true);
+  const [minimapVisible, setMinimapVisible] = useState(true);
+  const [mapName, setMapName] = useState<string | null>(null);
+  const [uiSettings, setUiSettings] = useState<UiSettings>({});
+  const uiSettingsRef = useRef<UiSettings>({});
+  const uiSettingsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const handleMinimapLayoutChange = useCallback((layout: MinimapLayout) => {
+    setUiSettings((current) => {
+      const next = { ...current, minimap: layout };
+      uiSettingsRef.current = next;
+      return next;
+    });
+    if (uiSettingsSaveTimerRef.current) {
+      clearTimeout(uiSettingsSaveTimerRef.current);
+    }
+    uiSettingsSaveTimerRef.current = setTimeout(() => {
+      uiSettingsSaveTimerRef.current = null;
+      clientRef.current?.updateUiSettings(uiSettingsRef.current);
+    }, 800);
+  }, []);
   const sendItemIntent = useCallback(
     (intent: PendingItemOpIntent) =>
       clientRef.current?.sendItemIntent(intent) ?? false,
@@ -671,6 +694,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setLevelUpNotice(null);
             resumeCharacterIdRef.current = null;
             setOwnCharacter(message.character);
+            setMapName(message.map.name);
+            setUiSettings(message.uiSettings);
+            uiSettingsRef.current = message.uiSettings;
             resetInventory(message.inventory);
             setFightState(message.fightState);
             setSpells(message.spells);
@@ -1301,6 +1327,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setLanguageError(true);
             return;
           }
+          if (
+            code === "ui-settings-update-failed" ||
+            code === "ui-settings-update-pending"
+          ) {
+            // Layout saves are best-effort; never interrupt play over them.
+            return;
+          }
           resumeCharacterIdRef.current = null;
           if (code !== "language-update-pending") setLanguageSaving(false);
           setCharacterBusy(false);
@@ -1484,6 +1517,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               connectionStatus={status}
               fightMode={fightState?.mode ?? null}
               battleListVisible={battleListVisible}
+              minimapVisible={minimapVisible}
               activePanel={
                 marketSession
                   ? "market"
@@ -1558,6 +1592,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               onBattleList={() =>
                 setBattleListVisible((visible) => !visible)
               }
+              onMinimap={() => setMinimapVisible((visible) => !visible)}
               onFightModeChange={(mode) =>
                 clientRef.current?.setFightMode(mode)
               }
@@ -1657,6 +1692,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             <GameHud
               spellHotkeysEnabled={!gameMenuOpen && !characterStatsOpen}
               battleListVisible={battleListVisible}
+              minimapVisible={minimapVisible}
+              mapName={mapName}
+              inventoryOpen={inventoryOpen}
+              minimapLayout={uiSettings.minimap ?? null}
+              onMinimapLayoutChange={handleMinimapLayoutChange}
               visibleCreatures={visibleCreatures}
               ownCharacter={ownCharacter}
               fightState={fightState}

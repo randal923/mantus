@@ -5,6 +5,7 @@ import {
   type CombatTarget,
   type CreatureState,
   type FightState,
+  type MinimapLayout,
   type OwnCharacterState,
   type SpellCatalogEntry,
 } from "@tibia/protocol";
@@ -13,11 +14,17 @@ import type { ChatChannel } from "./chat/chatTypes";
 import { ConditionBar } from "./combat/ConditionBar";
 import { OwnSkullIndicator } from "./pvp/OwnSkullIndicator";
 import { BattleList } from "./creatures/BattleList";
+import { MinimapPanel } from "./minimap/MinimapPanel";
 import { getSpellCombatTarget } from "../lib/combat/getSpellCombatTarget";
 
 interface GameHudProps {
   spellHotkeysEnabled?: boolean;
   battleListVisible: boolean;
+  minimapVisible: boolean;
+  mapName: string | null;
+  inventoryOpen: boolean;
+  minimapLayout: MinimapLayout | null;
+  onMinimapLayoutChange: (layout: MinimapLayout) => void;
   visibleCreatures: ReadonlyArray<CreatureState>;
   ownCharacter: OwnCharacterState;
   fightState: FightState;
@@ -36,6 +43,11 @@ interface GameHudProps {
 export function GameHud({
   spellHotkeysEnabled = true,
   battleListVisible,
+  minimapVisible,
+  mapName,
+  inventoryOpen,
+  minimapLayout,
+  onMinimapLayoutChange,
   visibleCreatures,
   ownCharacter,
   fightState,
@@ -121,6 +133,45 @@ export function GameHud({
         <ConditionBar conditions={fightState.conditions} />
         {fightState.skull && <OwnSkullIndicator skull={fightState.skull} />}
       </div>
+      {minimapVisible && mapName && (
+        <div
+          className={
+            minimapLayout
+              ? "absolute"
+              : `absolute bottom-4 ${inventoryOpen ? "right-[26rem]" : "right-4"}`
+          }
+          style={
+            minimapLayout
+              ? {
+                  // Clamp so a layout saved on a larger screen stays reachable.
+                  left:
+                    typeof window === "undefined"
+                      ? minimapLayout.x
+                      : Math.min(
+                          minimapLayout.x,
+                          Math.max(0, window.innerWidth - 240),
+                        ),
+                  top:
+                    typeof window === "undefined"
+                      ? minimapLayout.y
+                      : Math.min(
+                          minimapLayout.y,
+                          Math.max(0, window.innerHeight - 160),
+                        ),
+                }
+              : undefined
+          }
+        >
+          <MinimapPanel
+            mapName={mapName}
+            ownPlayerId={ownCharacter.id}
+            ownPosition={ownCharacter.position}
+            creatures={visibleCreatures}
+            layout={minimapLayout}
+            onLayoutChange={onMinimapLayoutChange}
+          />
+        </div>
+      )}
       <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
         <SpellBar
           spells={spells}

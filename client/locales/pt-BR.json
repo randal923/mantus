@@ -130,6 +130,7 @@
     "inventory": "Inventário",
     "quests": "Missões",
     "battleList": "Lista de Batalha",
+    "map": "Mapa",
     "market": "Mercado",
     "settings": "Configurações",
     "guild": "Guilda",
@@ -789,7 +790,37 @@
   "hud": {
     "battleList": "Lista de Batalha",
     "levelUpTitle": "Nível {{level}}!",
-    "levelUpDescription": "Sua vida máxima, mana e capacidade aumentaram."
+    "levelUpDescription": "Sua vida máxima, mana e capacidade aumentaram.",
+    "minimap": {
+      "title": "Mapa",
+      "floor": "Andar",
+      "floorUp": "Andar acima",
+      "floorDown": "Andar abaixo",
+      "zoomIn": "Aproximar",
+      "zoomOut": "Afastar",
+      "recenter": "Centralizar em você",
+      "npcLegend": "NPC",
+      "move": "Arraste para mover o mapa",
+      "resize": "Arraste para redimensionar o mapa",
+      "categories": {
+        "food": "Comida",
+        "weapons": "Armas",
+        "distance": "Armas de distância",
+        "wands": "Varinhas e cajados",
+        "ammunition": "Munição",
+        "helmets": "Elmos",
+        "armors": "Armaduras",
+        "legs": "Calças",
+        "boots": "Botas",
+        "shields": "Escudos",
+        "rings": "Anéis",
+        "amulets": "Amuletos",
+        "containers": "Mochilas",
+        "runes": "Runas",
+        "potions": "Poções",
+        "supplies": "Suprimentos"
+      }
+    }
   },
   "npc": {
     "dialogueLabel": "Diálogo com {{name}}",

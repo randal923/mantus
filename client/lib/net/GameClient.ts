@@ -19,6 +19,7 @@ import {
   type ReportReason,
   type ServerErrorCode,
   type ServerMessage,
+  type UiSettings,
   type ViewRange,
 } from "@tibia/protocol";
 import type { PendingItemOpIntent } from "../inventory/PendingItemOp";
@@ -620,6 +621,10 @@ export class GameClient {
 
   updateLanguage(language: Language): boolean {
     return this.send({ type: "set-language", language });
+  }
+
+  updateUiSettings(settings: UiSettings): boolean {
+    return this.send({ type: "update-ui-settings", settings });
   }
 
   disconnect(): void {

@@ -35,6 +35,7 @@ interface TopNavigationBarProps {
   connectionStatus: ConnectionStatus;
   fightMode: FightMode | null;
   battleListVisible: boolean;
+  minimapVisible: boolean;
   activePanel?: NavigationPanel;
   onCharacter?: () => void;
   onInventory?: () => void;
@@ -44,6 +45,7 @@ interface TopNavigationBarProps {
   onHighscores?: () => void;
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
+  onMinimap: () => void;
   onMarket?: () => void;
   onSettings?: () => void;
 }
@@ -60,6 +62,7 @@ export function TopNavigationBar({
   connectionStatus,
   fightMode,
   battleListVisible,
+  minimapVisible,
   activePanel,
   onCharacter,
   onInventory,
@@ -69,6 +72,7 @@ export function TopNavigationBar({
   onHighscores,
   onFightModeChange,
   onBattleList,
+  onMinimap,
   onMarket,
   onSettings,
 }: TopNavigationBarProps) {
@@ -296,6 +300,26 @@ export function TopNavigationBar({
             <circle cx="5.5" cy="12" r="1.5" />
             <circle cx="5.5" cy="17.5" r="1.5" />
             <path d="M9.5 6.5H20M9.5 12H20M9.5 17.5H20" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.map")}
+          active={minimapVisible}
+          onClick={onMinimap}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 4.5 4 6.5v13l5-2 6 2 5-2v-13l-5 2z" />
+            <path d="M9 4.5v13M15 6.5v13" />
           </svg>
         </NavigationIconButton>
 

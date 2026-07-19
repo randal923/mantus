@@ -130,6 +130,7 @@
     "inventory": "Inventory",
     "quests": "Quests",
     "battleList": "Battle List",
+    "map": "Map",
     "market": "Market",
     "settings": "Settings",
     "guild": "Guild",
@@ -789,7 +790,37 @@
   "hud": {
     "battleList": "Battle List",
     "levelUpTitle": "Level {{level}}!",
-    "levelUpDescription": "Your maximum health, mana, and capacity increased."
+    "levelUpDescription": "Your maximum health, mana, and capacity increased.",
+    "minimap": {
+      "title": "Map",
+      "floor": "Floor",
+      "floorUp": "Floor up",
+      "floorDown": "Floor down",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "recenter": "Re-center on you",
+      "npcLegend": "NPC",
+      "move": "Drag to move the map",
+      "resize": "Drag to resize the map",
+      "categories": {
+        "food": "Food",
+        "weapons": "Weapons",
+        "distance": "Distance weapons",
+        "wands": "Wands & rods",
+        "ammunition": "Ammunition",
+        "helmets": "Helmets",
+        "armors": "Armors",
+        "legs": "Legs",
+        "boots": "Boots",
+        "shields": "Shields",
+        "rings": "Rings",
+        "amulets": "Amulets",
+        "containers": "Backpacks",
+        "runes": "Runes",
+        "potions": "Potions",
+        "supplies": "Supplies"
+      }
+    }
   },
   "npc": {
     "dialogueLabel": "Dialogue with {{name}}",

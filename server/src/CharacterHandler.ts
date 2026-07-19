@@ -252,6 +252,7 @@ export class CharacterHandler {
       inventory,
       fightState: projectFightState(session, this.world, now),
       spells: this.spells.projectFor(player),
+      uiSettings: session.account?.uiSettings ?? {},
     });
     this.visibility.syncMapItems(session, player);
     void this.service

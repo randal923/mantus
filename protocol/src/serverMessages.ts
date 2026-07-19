@@ -49,6 +49,7 @@ import {
   houseTransferIncomingMessageSchema,
 } from "./house";
 import { languageSchema } from "./language";
+import { uiSettingsSchema } from "./uiSettings";
 import { containerStateSchema, inventoryStateSchema } from "./item";
 import {
   reportActionFailedMessageSchema,
@@ -113,6 +114,11 @@ export const languageUpdatedMessageSchema = z.object({
   language: languageSchema,
 });
 
+export const uiSettingsUpdatedMessageSchema = z.object({
+  type: z.literal("ui-settings-updated"),
+  settings: uiSettingsSchema,
+});
+
 export const characterListMessageSchema = z.object({
   type: z.literal("character-list"),
   characters: z.array(characterSummarySchema),
@@ -128,6 +134,7 @@ export const welcomeMessageSchema = z.object({
   inventory: inventoryStateSchema,
   fightState: fightStateSchema,
   spells: z.array(spellCatalogEntrySchema).max(256),
+  uiSettings: uiSettingsSchema,
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -299,6 +306,8 @@ export const serverErrorCodeSchema = z.enum([
   "join-required",
   "language-update-failed",
   "language-update-pending",
+  "ui-settings-update-failed",
+  "ui-settings-update-pending",
   "combat-action-failed",
   "item-action-failed",
   "loot-protected",
@@ -317,6 +326,7 @@ export const errorMessageSchema = z.object({
 export const serverMessageSchema = z.discriminatedUnion("type", [
   authOkMessageSchema,
   languageUpdatedMessageSchema,
+  uiSettingsUpdatedMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,

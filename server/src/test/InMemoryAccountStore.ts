@@ -1,4 +1,4 @@
-import type { Language } from "@tibia/protocol";
+import type { Language, UiSettings } from "@tibia/protocol";
 import type { Account, AccountStore } from "../AccountStore";
 
 export class InMemoryAccountStore implements AccountStore {
@@ -38,6 +38,7 @@ export class InMemoryAccountStore implements AccountStore {
       email,
       bannedUntil: null,
       language,
+      uiSettings: {},
     };
     this.accounts.set(supabaseUserId, account);
     return account;
@@ -50,5 +51,17 @@ export class InMemoryAccountStore implements AccountStore {
     if (!entry) throw new Error("account not found");
     const [supabaseUserId, account] = entry;
     this.accounts.set(supabaseUserId, { ...account, language });
+  }
+
+  async updateUiSettings(
+    accountId: string,
+    settings: UiSettings,
+  ): Promise<void> {
+    const entry = [...this.accounts.entries()].find(
+      ([, account]) => account.id === accountId,
+    );
+    if (!entry) throw new Error("account not found");
+    const [supabaseUserId, account] = entry;
+    this.accounts.set(supabaseUserId, { ...account, uiSettings: settings });
   }
 }

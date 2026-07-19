@@ -12,6 +12,11 @@ const meta = {
   },
   args: {
     battleListVisible: true,
+    minimapVisible: false,
+    mapName: null,
+    inventoryOpen: false,
+    minimapLayout: null,
+    onMinimapLayoutChange: fn(),
     visibleCreatures: [],
     ownCharacter: {
       id: "player",

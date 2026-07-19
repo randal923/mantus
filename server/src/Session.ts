@@ -24,6 +24,7 @@ export class Session {
   authPending = false;
   characterOperationPending = false;
   languageUpdatePending = false;
+  uiSettingsUpdatePending = false;
   itemOperationPending = false;
   depotOperationPending = false;
   /**

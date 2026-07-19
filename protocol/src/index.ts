@@ -22,6 +22,7 @@ export * from "./position";
 export * from "./progression";
 export * from "./shop";
 export * from "./trade";
+export * from "./uiSettings";
 export * from "./viewRange";
 export * from "./clientMessages";
 export * from "./serverMessages";

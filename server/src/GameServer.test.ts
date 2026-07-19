@@ -1138,6 +1138,7 @@ describe("auth gate", () => {
       email: null,
       bannedUntil: new Date(Date.now() + 60_000),
       language: "en",
+      uiSettings: {},
     });
     startServer({}, accounts);
     const client = await openRaw(server.port);

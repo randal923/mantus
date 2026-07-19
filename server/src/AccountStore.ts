@@ -1,4 +1,4 @@
-import type { Language } from "@tibia/protocol";
+import type { Language, UiSettings } from "@tibia/protocol";
 
 export interface Account {
   id: string;
@@ -6,6 +6,7 @@ export interface Account {
   email: string | null;
   bannedUntil: Date | null;
   language: Language;
+  uiSettings: UiSettings;
 }
 
 export interface AccountStore {
@@ -15,4 +16,5 @@ export interface AccountStore {
     language: Language,
   ): Promise<Account>;
   updateLanguage(accountId: string, language: Language): Promise<void>;
+  updateUiSettings(accountId: string, settings: UiSettings): Promise<void>;
 }
