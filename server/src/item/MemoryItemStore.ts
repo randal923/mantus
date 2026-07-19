@@ -591,36 +591,6 @@ export class MemoryItemStore implements ItemStore {
     this.characterSoul.set(characterId, expectedSoul - soulCost);
   }
 
-  async createCorpse(
-    characterId: string | null,
-    _eventId: string,
-    position: Position,
-    stackIndex: number,
-    corpseTypeId: number,
-    loot: ReadonlyArray<LootItemCreation>,
-  ): Promise<ReadonlyArray<Item>> {
-    const corpseId = randomUUID();
-    const corpse: Item = {
-      id: corpseId,
-      typeId: corpseTypeId,
-      count: 1,
-      attributes: characterId ? { ownerCharacterId: characterId } : {},
-      version: 1,
-      location: { kind: "world", position: { ...position }, stackIndex },
-    };
-    const contents = loot.map<Item>((entry, slot) => ({
-      id: randomUUID(),
-      typeId: entry.typeId,
-      count: entry.count,
-      attributes: {},
-      version: 1,
-      location: { kind: "corpse", containerId: corpseId, slot },
-    }));
-    this.items.set(corpse.id, corpse);
-    for (const item of contents) this.items.set(item.id, item);
-    return [corpse, ...contents];
-  }
-
   async decayWorldItem(
     itemId: string,
     expectedVersion: number,

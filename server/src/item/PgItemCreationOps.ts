@@ -1,12 +1,10 @@
 import { randomUUID } from "node:crypto";
-import type { Position } from "@tibia/protocol";
 import type { Pool } from "pg";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemRow } from "./ItemRow";
 import { itemFromRow } from "./itemFromRow";
-import type { LootItemCreation } from "./LootItemCreation";
 import type { PgItemAudit } from "./PgItemAudit";
 import type { PgItemGuards } from "./PgItemGuards";
 import type { PgItemLocks } from "./PgItemLocks";
@@ -15,9 +13,6 @@ import { conjureCharacterResourcesUpdate } from "./sql/conjureCharacterResources
 import { conjureConsumeSourceUpdate } from "./sql/conjureConsumeSourceUpdate";
 import { conjureTransformSourceUpdate } from "./sql/conjureTransformSourceUpdate";
 import { insertConjuredItem } from "./sql/insertConjuredItem";
-import { insertCorpseItem } from "./sql/insertCorpseItem";
-import { insertCorpseLootItem } from "./sql/insertCorpseLootItem";
-import { insertLootCreatedAudit } from "./sql/insertLootCreatedAudit";
 import { ownedItemsQuery } from "./sql/ownedItemsQuery";
 import { withSerializableTransaction } from "./withSerializableTransaction";
 
@@ -182,72 +177,4 @@ export class PgItemCreationOps {
     });
   }
 
-  createCorpse(
-    characterId: string | null,
-    eventId: string,
-    position: Position,
-    stackIndex: number,
-    corpseTypeId: number,
-    loot: ReadonlyArray<LootItemCreation>,
-  ): Promise<ReadonlyArray<Item>> {
-    return withSerializableTransaction(this.pool, async (client) => {
-      if (!/^[A-Za-z0-9:_-]{1,128}$/.test(eventId)) {
-        throw new Error("loot event id is invalid");
-      }
-      if (!Number.isInteger(stackIndex) || stackIndex < 0 || stackIndex > 255) {
-        throw new Error("corpse stack index is invalid");
-      }
-      const corpseType = this.catalog.require(corpseTypeId);
-      const capacity = corpseType.containerCapacity ?? 0;
-      if (capacity < loot.length) {
-        throw new Error("corpse cannot contain rolled loot");
-      }
-      for (const entry of loot) {
-        const type = this.catalog.require(entry.typeId);
-        if (
-          !Number.isInteger(entry.count) ||
-          entry.count < 1 ||
-          entry.count > type.maxCount
-        ) {
-          throw new Error("loot count is invalid");
-        }
-      }
-      const corpseId = randomUUID();
-      const corpseResult = await client.query<ItemRow>(insertCorpseItem, [
-        corpseId,
-        corpseTypeId,
-        this.mapName,
-        position.x,
-        position.y,
-        position.z,
-        stackIndex,
-        JSON.stringify(
-          characterId ? { ownerCharacterId: characterId } : {},
-        ),
-      ]);
-      const created = [requireReturnedItem(corpseResult.rows[0])];
-      for (let slot = 0; slot < loot.length; slot++) {
-        const entry = loot[slot];
-        if (!entry) continue;
-        const result = await client.query<ItemRow>(insertCorpseLootItem, [
-          randomUUID(),
-          entry.typeId,
-          entry.count,
-          corpseId,
-          slot,
-        ]);
-        created.push(requireReturnedItem(result.rows[0]));
-      }
-      for (const item of created) {
-        await client.query(insertLootCreatedAudit, [
-          characterId,
-          item.id,
-          eventId,
-          item.typeId,
-          item.count,
-        ]);
-      }
-      return created;
-    });
-  }
 }

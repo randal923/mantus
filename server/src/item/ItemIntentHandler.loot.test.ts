@@ -21,6 +21,8 @@ const KILLER_BACKPACK_ID = "41868798-fc9b-43ac-bf28-4f52bf64c4eb";
 const RIVAL_BACKPACK_ID = "52979809-0dac-44bd-9c39-5063c075d5fc";
 /** Dead chicken: container corpse whose first decay clears loot protection. */
 const CORPSE_TYPE = 6042;
+/** First decay stage: movable and pickupable, still a container. */
+const CORPSE_STAGE_TWO = 4330;
 const GOLD_TYPE = 3031;
 const BACKPACK_TYPE = 2854;
 const CORPSE_POSITION = { x: 1, y: 2, z: 7 };
@@ -116,6 +118,7 @@ async function makeHarness(input: {
     0,
     CORPSE_TYPE,
     [{ typeId: GOLD_TYPE, count: input.lootCount ?? 10 }],
+    0,
   );
   await settle(items, 0);
   const killer = makeSession(KILLER_ID);
@@ -145,11 +148,17 @@ function corpseChildren(world: World, corpseId: string) {
   return world.getWorldSubtree(corpseId).slice(1);
 }
 
+function firstChild(world: World, corpseId: string): Item {
+  const [child] = corpseChildren(world, corpseId);
+  if (!child) throw new Error("corpse has no loot");
+  return child;
+}
+
 describe("world container (corpse) looting", () => {
   it("opens an adjacent corpse and loots into the backpack", async () => {
     const harness = await makeHarness({ killerId: KILLER_ID });
     const corpse = corpseAt(harness.world);
-    const [gold] = corpseChildren(harness.world, corpse.id);
+    const gold = firstChild(harness.world, corpse.id);
 
     expect(
       harness.items.handleMapOpen(harness.killer.session, CORPSE_POSITION),
@@ -205,7 +214,7 @@ describe("world container (corpse) looting", () => {
   it("blocks non-owners from opening or looting until protection expires", async () => {
     const harness = await makeHarness({ killerId: KILLER_ID });
     const corpse = corpseAt(harness.world);
-    const [gold] = corpseChildren(harness.world, corpse.id);
+    const gold = firstChild(harness.world, corpse.id);
 
     expect(
       harness.items.handleMapOpen(harness.rival.session, CORPSE_POSITION),
@@ -241,7 +250,7 @@ describe("world container (corpse) looting", () => {
   it("leaves exactly one item when two players race for the same loot", async () => {
     const harness = await makeHarness({ killerId: null });
     const corpse = corpseAt(harness.world);
-    const [gold] = corpseChildren(harness.world, corpse.id);
+    const gold = firstChild(harness.world, corpse.id);
 
     harness.items.handleMapOpen(harness.killer.session, CORPSE_POSITION);
     harness.items.handleMapOpen(harness.rival.session, CORPSE_POSITION);
@@ -280,7 +289,7 @@ describe("world container (corpse) looting", () => {
   it("rejects opening and looting out of reach, and closes on walk-away", async () => {
     const harness = await makeHarness({ killerId: KILLER_ID });
     const corpse = corpseAt(harness.world);
-    const [gold] = corpseChildren(harness.world, corpse.id);
+    const gold = firstChild(harness.world, corpse.id);
 
     // Out of reach: the tile is handled but only an error is sent.
     harness.killer.player.moveTo({ x: 6, y: 6, z: 7 });
@@ -316,10 +325,49 @@ describe("world container (corpse) looting", () => {
     });
   });
 
+  it("materializes a memory-only corpse and its loot when the corpse is moved", async () => {
+    const harness = await makeHarness({ killerId: KILLER_ID });
+    const corpse = corpseAt(harness.world);
+    const gold = firstChild(harness.world, corpse.id);
+
+    // The kill created no rows; the first decay stage is memory-only too.
+    harness.items.tickDecay(10_000);
+    await settle(harness.items, 10_000);
+    expect(
+      harness.store.allItems().some((item) => item.id === corpse.id),
+    ).toBe(false);
+
+    const target = { x: 2, y: 1, z: 7 };
+    harness.items.handle(harness.killer.session, {
+      type: "move-map-item",
+      itemId: corpse.id,
+      revision: 2,
+      fromPosition: CORPSE_POSITION,
+      toPosition: target,
+    });
+    expect(
+      harness.killer.sent.some((message) => message.type === "error"),
+    ).toBe(false);
+
+    // First touch inserted the whole subtree in one persist transaction.
+    await harness.items.stopPersists();
+    const persisted = new Map(
+      harness.store.allItems().map((item) => [item.id, item]),
+    );
+    expect(persisted.get(corpse.id)).toMatchObject({
+      typeId: CORPSE_STAGE_TWO,
+      location: { kind: "world", position: target },
+    });
+    expect(persisted.get(gold.id)).toMatchObject({
+      count: 10,
+      location: { kind: "corpse", containerId: corpse.id },
+    });
+  });
+
   it("rejects stale-revision loot replays", async () => {
     const harness = await makeHarness({ killerId: KILLER_ID });
     const corpse = corpseAt(harness.world);
-    const [gold] = corpseChildren(harness.world, corpse.id);
+    const gold = firstChild(harness.world, corpse.id);
     harness.items.handleMapOpen(harness.killer.session, CORPSE_POSITION);
 
     harness.items.handle(harness.killer.session, {

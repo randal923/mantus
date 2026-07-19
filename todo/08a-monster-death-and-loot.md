@@ -80,4 +80,42 @@ idempotent across races and restarts.
   imported loot entry, condition, count/chance, child container, or death
   callback is missing.
 
+## Known gaps (2026-07-19, memory-first corpses)
+
+Corpse creation is now memory-only on the death tick (Canary-style): no DB
+transaction at kill time. Rows plus `item-created` audits are inserted by the
+first plan that touches the corpse or its loot
+(`appendUnpersistedLootInserts`); decay of untouched corpses runs purely in
+memory (`WorldItemDecayRunner.decayInMemory`). Accepted limitations and
+follow-ups:
+
+- Untouched corpses and their loot vanish on server restart. This is the
+  intended volatility (matches Canary/real Tibia); anything a player has
+  moved or looted is durable from that first touch.
+- Invariant the plans rely on: unpersisted world items are only corpse roots
+  and loot still inside them — no op today leaves an unpersisted stackable
+  loose on the ground or moves a persisted item into an unpersisted
+  container. If a future feature breaks that, `planDrop` /
+  `findWorldMergeTarget` and the container planners need the same loot-origin
+  handling as `planLoot`/`planPickup`/`planMoveMapItem`; a guarded write or
+  delete that misses poisons the persist chain and disconnects the player.
+- ~~`withSerializableTransaction` does not retry SQLSTATE 40001~~ Fixed
+  2026-07-19: 5-attempt retry with growing backoff on
+  `isTransientDatabaseError`. The live collision is item persists locking
+  the character row (`lockCharacterQuery`) while character saves update it —
+  and kill-time experience awards call `persistence.saveNow` on EVERY kill
+  (`ProgressionSystem.persistAward`), so combat produces bursts of
+  back-to-back saves that defeated zero-backoff retries. Regression tests:
+  `withSerializableTransaction.test.ts` plus the "retries a persist that
+  collides" and "survives a kill-time burst" integration tests. The
+  character FOR UPDATE lock must stay — it is the per-character lock-order
+  convention that keeps persists deadlock-free against trade/consume/depot
+  flows. If bursts ever outlast 5 attempts, consider debouncing
+  `persistAward`'s saveNow (the exactly-once guard only needs the event
+  durable before the NEXT award, not instantly). Economy/depot/market/trade
+  transaction helpers still do not retry; guild does.
+- `PgItemStore.integration.test.ts` replays a hand-maintained migration list
+  and drifts silently when new migrations land (023 was missing until
+  2026-07-19). Consider replaying every file in `db/migrations/` instead.
+
 [Back to overview](README.md)

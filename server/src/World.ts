@@ -4,6 +4,7 @@ import type { Creature } from "./creature/Creature";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
 import type { MapData } from "./MapData";
 import type { ItemMutation } from "./item/ItemMutation";
+import type { LootOrigin } from "./item/LootOrigin";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
 import type { Player } from "./Player";
 import { SpatialGrid } from "./SpatialGrid";
@@ -135,6 +136,17 @@ export class World {
 
   getWorldSubtree(rootId: string) {
     return this.mapItems.getWorldSubtree(rootId);
+  }
+
+  lootOrigin(itemId: string) {
+    return this.mapItems.lootOrigin(itemId);
+  }
+
+  registerUnpersistedLootItems(
+    items: ReadonlyArray<ItemMutation["after"][number]>,
+    origin: LootOrigin,
+  ): void {
+    this.mapItems.registerUnpersistedLootItems(items, origin);
   }
 
   getMapAction(position: Position) {

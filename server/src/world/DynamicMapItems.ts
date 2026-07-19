@@ -2,6 +2,7 @@ import type { Position, ViewRange } from "@tibia/protocol";
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
 import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
+import type { LootOrigin } from "../item/LootOrigin";
 import type { WorldItemDeltas } from "../item/WorldItemDeltas";
 import type { MapData } from "../MapData";
 import type { MapItem } from "../MapItem";
@@ -19,6 +20,13 @@ export class DynamicMapItems {
   /** Full item state for world roots and their container subtrees. */
   private readonly worldItems = new Map<string, Item>();
   private readonly seedKeyToId = new Map<string, string>();
+  /**
+   * Corpse/loot items that exist only in memory: no DB row until a player
+   * first touches them (the plan then inserts the row and its creation
+   * audit). Cleared automatically when a mutation covers the item, so every
+   * unpersisted item a plan mutates MUST be materialized by that plan.
+   */
+  private readonly unpersistedLootOrigins = new Map<string, LootOrigin>();
   /**
    * Tiles whose passability is owned by a stateful item (a door): the static
    * navigation bitset baked the map's placed state, so open/closed changes
@@ -54,6 +62,19 @@ export class DynamicMapItems {
 
   hideSeed(seedKey: string): void {
     this.hiddenMapItemIds.add(seedKey);
+  }
+
+  /** Marks memory-only loot items awaiting their first-touch row insert. */
+  registerUnpersistedLootItems(
+    items: ReadonlyArray<Item>,
+    origin: LootOrigin,
+  ): void {
+    for (const item of items) this.unpersistedLootOrigins.set(item.id, origin);
+  }
+
+  /** The kill event behind an item that has no DB row yet, if any. */
+  lootOrigin(itemId: string): LootOrigin | undefined {
+    return this.unpersistedLootOrigins.get(itemId);
   }
 
   /** The materialized item behind a tile instance id (id or seed key). */
@@ -177,6 +198,14 @@ export class DynamicMapItems {
   }
 
   applyItemMutation(mutation: ItemMutation): Position[] {
+    // Any mutation of an unpersisted loot item carries its row insert in the
+    // same persist plan, so the item stops being memory-only right here.
+    for (const item of mutation.after) {
+      this.unpersistedLootOrigins.delete(item.id);
+    }
+    for (const removedId of mutation.removedItemIds ?? []) {
+      this.unpersistedLootOrigins.delete(removedId);
+    }
     const changed = new Map<string, Position>();
     if (mutation.before?.location.kind === "world") {
       const { position } = mutation.before.location;

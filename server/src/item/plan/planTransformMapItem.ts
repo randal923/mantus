@@ -1,7 +1,11 @@
 import type { Position } from "@tibia/protocol";
-import type { CarriedPersistRowOp } from "../CarriedPersistPlan";
+import type {
+  CarriedPersistAudit,
+  CarriedPersistRowOp,
+} from "../CarriedPersistPlan";
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
+import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import type { CarriedPlan } from "./CarriedPlan";
 import { materializeWorldSource } from "./materializeWorldSource";
 import type { WorldItemsView } from "./WorldItemsView";
@@ -52,27 +56,35 @@ export function planTransformMapItem(input: {
     version: root.version + 1,
   };
   const rowOps: CarriedPersistRowOp[] = [];
+  const audits: CarriedPersistAudit[] = [];
+  const origin = world.lootOrigin(root.id);
   if (pristine) {
     rowOps.push({ kind: "insert", item: final, seed: pristine.seed });
     for (const content of pristine.contents) {
       rowOps.push({ kind: "insert", item: content, seed: pristine.seed });
     }
+  } else if (origin) {
+    rowOps.push({ kind: "insert", item: final });
+    audits.push({
+      kind: "loot-created",
+      itemId: root.id,
+      eventId: origin.eventId,
+      killerCharacterId: origin.killerCharacterId,
+      typeId: root.typeId,
+      count: root.count,
+    });
+    appendUnpersistedLootInserts(world, children, rowOps, audits);
   } else {
     rowOps.push({ kind: "write", expectedVersion: root.version, item: final });
   }
+  audits.push({
+    kind: "transform",
+    itemId: root.id,
+    fromTypeId: root.typeId,
+    toTypeId: input.toTypeId,
+  });
   return {
     mutation: { before: root, after: [final, ...children] },
-    persist: {
-      characterId: input.characterId,
-      rowOps,
-      audits: [
-        {
-          kind: "transform",
-          itemId: root.id,
-          fromTypeId: root.typeId,
-          toTypeId: input.toTypeId,
-        },
-      ],
-    },
+    persist: { characterId: input.characterId, rowOps, audits },
   };
 }

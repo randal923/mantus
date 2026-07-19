@@ -5,6 +5,7 @@ import type {
 } from "../CarriedPersistPlan";
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
+import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
 import { firstFreeWorldStackIndex } from "./firstFreeWorldStackIndex";
@@ -119,33 +120,60 @@ export function planMoveMapItem(input: {
       count: mergeTarget.count + root.count,
       version: mergeTarget.version + 1,
     };
+    const mergeRowOps: CarriedPersistRowOp[] = [];
+    const mergeAudits: CarriedPersistAudit[] = [];
+    const targetOrigin = world.lootOrigin(mergeTarget.id);
+    if (targetOrigin) {
+      mergeRowOps.push({ kind: "insert", item: merged });
+      mergeAudits.push({
+        kind: "loot-created",
+        itemId: mergeTarget.id,
+        eventId: targetOrigin.eventId,
+        killerCharacterId: targetOrigin.killerCharacterId,
+        typeId: mergeTarget.typeId,
+        count: mergeTarget.count,
+      });
+    } else {
+      mergeRowOps.push({
+        kind: "write",
+        expectedVersion: mergeTarget.version,
+        item: merged,
+      });
+    }
+    const rootOrigin = world.lootOrigin(root.id);
+    if (rootOrigin) {
+      // The merged-away loot never had a row; its creation is audited so the
+      // survivor's count increase stays accounted for.
+      mergeAudits.push({
+        kind: "loot-created",
+        itemId: root.id,
+        eventId: rootOrigin.eventId,
+        killerCharacterId: rootOrigin.killerCharacterId,
+        typeId: root.typeId,
+        count: root.count,
+      });
+    } else {
+      mergeRowOps.push({
+        kind: "delete",
+        itemId: root.id,
+        expectedVersion: root.version,
+      });
+    }
+    mergeAudits.push({
+      kind: "merge",
+      survivorItemId: merged.id,
+      sourceItemId: root.id,
+      movedCount: root.count,
+      sourceRemaining: 0,
+      resultCount: merged.count,
+    });
     return {
       mutation: {
         before: root,
         after: [merged],
         removedItemIds: [root.id],
       },
-      persist: {
-        characterId,
-        rowOps: [
-          {
-            kind: "write",
-            expectedVersion: mergeTarget.version,
-            item: merged,
-          },
-          { kind: "delete", itemId: root.id, expectedVersion: root.version },
-        ],
-        audits: [
-          {
-            kind: "merge",
-            survivorItemId: merged.id,
-            sourceItemId: root.id,
-            movedCount: root.count,
-            sourceRemaining: 0,
-            resultCount: merged.count,
-          },
-        ],
-      },
+      persist: { characterId, rowOps: mergeRowOps, audits: mergeAudits },
     };
   }
   const stackIndex = firstFreeWorldStackIndex(world.getMapItems(toPosition));
@@ -155,11 +183,23 @@ export function planMoveMapItem(input: {
     location: { kind: "world", position: { ...toPosition }, stackIndex },
     version: root.version + 1,
   };
+  const origin = world.lootOrigin(root.id);
   if (pristine) {
     rowOps.push({ kind: "insert", item: final, seed: pristine.seed });
     for (const content of pristine.contents) {
       rowOps.push({ kind: "insert", item: content, seed: pristine.seed });
     }
+  } else if (origin) {
+    rowOps.push({ kind: "insert", item: final });
+    audits.push({
+      kind: "loot-created",
+      itemId: root.id,
+      eventId: origin.eventId,
+      killerCharacterId: origin.killerCharacterId,
+      typeId: root.typeId,
+      count: root.count,
+    });
+    appendUnpersistedLootInserts(world, children, rowOps, audits);
   } else {
     rowOps.push({ kind: "write", expectedVersion: root.version, item: final });
   }

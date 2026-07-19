@@ -7,6 +7,7 @@ import type {
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { ItemLocation } from "../ItemLocation";
+import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import { canMergeItems } from "./canMergeItems";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
@@ -150,7 +151,21 @@ export function planLoot(input: {
       resultCount: final.count,
     });
   }
-  rowOps.push({ kind: "write", expectedVersion: item.version, item: final });
+  const origin = world.lootOrigin(item.id);
+  if (origin) {
+    rowOps.push({ kind: "insert", item: final });
+    audits.push({
+      kind: "loot-created",
+      itemId: item.id,
+      eventId: origin.eventId,
+      killerCharacterId: origin.killerCharacterId,
+      typeId: item.typeId,
+      count: item.count,
+    });
+  } else {
+    rowOps.push({ kind: "write", expectedVersion: item.version, item: final });
+  }
+  appendUnpersistedLootInserts(world, children, rowOps, audits);
   audits.push({
     kind: "transfer",
     itemId: item.id,

@@ -9,6 +9,7 @@ import { insertItemSplitAudit } from "./sql/insertItemSplitAudit";
 import { insertItemTransferredAudit } from "./sql/insertItemTransferredAudit";
 import { insertItemTransformedAudit } from "./sql/insertItemTransformedAudit";
 import { insertItemWrittenAudit } from "./sql/insertItemWrittenAudit";
+import { insertLootCreatedAudit } from "./sql/insertLootCreatedAudit";
 import { lockCharacterQuery } from "./sql/lockCharacterQuery";
 import { persistCarriedDelete } from "./sql/persistCarriedDelete";
 import { persistCarriedInsert } from "./sql/persistCarriedInsert";
@@ -157,6 +158,16 @@ export class PgItemPersistOps {
           createdCount: audit.createdCount,
           destination: audit.destination,
         }),
+      ]);
+      return;
+    }
+    if (audit.kind === "loot-created") {
+      await client.query(insertLootCreatedAudit, [
+        audit.killerCharacterId,
+        audit.itemId,
+        audit.eventId,
+        audit.typeId,
+        audit.count,
       ]);
       return;
     }

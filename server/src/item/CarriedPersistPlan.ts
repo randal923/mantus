@@ -60,6 +60,16 @@ export type CarriedPersistAudit =
       readonly itemId: string;
       readonly previousLength: number;
       readonly length: number;
+    }
+  | {
+      /** First-touch materialization of memory-only kill loot: the row insert
+       * and this creation audit land in the same transaction. */
+      readonly kind: "loot-created";
+      readonly itemId: string;
+      readonly eventId: string;
+      readonly killerCharacterId: string | null;
+      readonly typeId: number;
+      readonly count: number;
     };
 
 /**

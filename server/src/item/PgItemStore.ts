@@ -244,24 +244,6 @@ export class PgItemStore implements ItemStore {
     );
   }
 
-  createCorpse(
-    characterId: string | null,
-    eventId: string,
-    position: Position,
-    stackIndex: number,
-    corpseTypeId: number,
-    loot: ReadonlyArray<LootItemCreation>,
-  ): Promise<ReadonlyArray<Item>> {
-    return this.creations.createCorpse(
-      characterId,
-      eventId,
-      position,
-      stackIndex,
-      corpseTypeId,
-      loot,
-    );
-  }
-
   decayWorldItem(
     itemId: string,
     expectedVersion: number,

@@ -66,6 +66,7 @@ describe("world item decay", () => {
       0,
       CORPSE_TYPE,
       [{ typeId: GOLD_TYPE, count: 10 }],
+      0,
     );
     await settle(harness, 0);
     expect(mapItemAt(harness)).toMatchObject([
@@ -168,20 +169,31 @@ describe("world item decay", () => {
 
   it("destroys contents the next stage cannot hold and clears loot ownership", async () => {
     const store = new MemoryItemStore(catalog);
-    const corpse = (
-      await store.createCorpse(
-        "killer-1",
-        "death:test-2",
-        POSITION,
-        0,
-        CORPSE_STAGE_TWO,
-        [
-          { typeId: GOLD_TYPE, count: 10 },
-          { typeId: GOLD_TYPE, count: 5 },
-        ],
-      )
-    )[0]!;
-    expect(corpse.attributes).toEqual({ ownerCharacterId: "killer-1" });
+    const corpse: Item = {
+      id: "00000000-0000-4000-8000-00000000d004",
+      typeId: CORPSE_STAGE_TWO,
+      count: 1,
+      attributes: { ownerCharacterId: "killer-1" },
+      version: 1,
+      location: { kind: "world", position: POSITION, stackIndex: 0 },
+    };
+    store.seed(corpse);
+    store.seed({
+      id: "00000000-0000-4000-8000-00000000d005",
+      typeId: GOLD_TYPE,
+      count: 10,
+      attributes: {},
+      version: 1,
+      location: { kind: "corpse", containerId: corpse.id, slot: 0 },
+    });
+    store.seed({
+      id: "00000000-0000-4000-8000-00000000d006",
+      typeId: GOLD_TYPE,
+      count: 5,
+      attributes: {},
+      version: 1,
+      location: { kind: "corpse", containerId: corpse.id, slot: 1 },
+    });
 
     // 4330 -> 4331 drops container capacity to zero: contents must go with it.
     const mutation = await store.decayWorldItem(corpse.id, corpse.version);

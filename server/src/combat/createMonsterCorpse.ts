@@ -11,6 +11,7 @@ export function createMonsterCorpse(
   monster: Monster,
   killerId: string | null,
   deathEventId: string,
+  now: number,
   lootRate = 1,
 ): void {
   const corpseType = items.itemType(monster.type.corpseItemTypeId);
@@ -49,5 +50,6 @@ export function createMonsterCorpse(
     stackIndex,
     corpseType.id,
     loot,
+    now,
   );
 }

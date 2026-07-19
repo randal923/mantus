@@ -35,6 +35,7 @@ describe("createMonsterCorpse loot rate", () => {
       monster,
       "killer",
       "death:test",
+      1_000,
       2,
     );
 
@@ -46,6 +47,7 @@ describe("createMonsterCorpse loot rate", () => {
       0,
       100,
       [{ typeId: 200, count: 4 }],
+      1_000,
     );
   });
 
@@ -78,6 +80,7 @@ describe("createMonsterCorpse loot rate", () => {
       monster,
       "killer",
       "death:test",
+      1_000,
       0,
     );
 
@@ -89,6 +92,7 @@ describe("createMonsterCorpse loot rate", () => {
       0,
       100,
       [],
+      1_000,
     );
   });
 });

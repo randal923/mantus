@@ -67,13 +67,7 @@ export class ItemIntentHandler {
       this.outcomes,
       decay,
     );
-    this.corpses = new CorpseCreator(
-      store,
-      world,
-      visibility,
-      this.outcomes,
-      decay,
-    );
+    this.corpses = new CorpseCreator(catalog, world, visibility, decay);
     this.worldContainers = new WorldContainerViews(world, catalog);
     this.decayRunner = new WorldItemDecayRunner(
       store,
@@ -81,6 +75,7 @@ export class ItemIntentHandler {
       visibility,
       this.outcomes,
       (operation) => this.runOrderedInternalOperation(operation),
+      catalog,
       decay,
     );
   }
@@ -392,6 +387,7 @@ export class ItemIntentHandler {
     });
   }
 
+  /** Creates the corpse in memory synchronously; rows appear on first touch. */
   createCorpse(
     characterId: string | null,
     eventId: string,
@@ -399,6 +395,7 @@ export class ItemIntentHandler {
     stackIndex: number,
     corpseTypeId: number,
     loot: ReadonlyArray<LootItemCreation>,
+    now: number,
   ): void {
     this.corpses.create(
       characterId,
@@ -407,6 +404,7 @@ export class ItemIntentHandler {
       stackIndex,
       corpseTypeId,
       loot,
+      now,
     );
   }
 

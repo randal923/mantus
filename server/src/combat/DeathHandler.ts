@@ -99,6 +99,7 @@ export class DeathHandler {
         target,
         killerId,
         deathEventId,
+        now,
         this.lootRate,
       );
       if (!this.onMonsterDeath(target, now)) {

@@ -7,6 +7,7 @@ import type { EquipmentSlot } from "@tibia/protocol";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
 import { PgNpcTravelStore } from "../npc/PgNpcTravelStore";
+import type { Item } from "./Item";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { PgItemStore } from "./PgItemStore";
 import { planMoveToContainer } from "./plan/planMoveToContainer";
@@ -142,6 +143,46 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
   let backpackId: string;
   let pouchId: string;
 
+  /** First-touch materialization of a memory-only corpse: row inserts plus
+   * loot-created audits in one persist transaction, as the plans emit it. */
+  const persistCorpse = async (
+    eventId: string,
+    position: { x: number; y: number; z: number },
+    corpseTypeId: number,
+    loot: ReadonlyArray<{ typeId: number; count: number }>,
+  ): Promise<{ corpse: Item; contents: Item[] }> => {
+    const corpse: Item = {
+      id: randomUUID(),
+      typeId: corpseTypeId,
+      count: 1,
+      attributes: { ownerCharacterId: characterId },
+      version: 1,
+      location: { kind: "world", position, stackIndex: 0 },
+    };
+    const contents = loot.map<Item>((entry, slot) => ({
+      id: randomUUID(),
+      typeId: entry.typeId,
+      count: entry.count,
+      attributes: {},
+      version: 1,
+      location: { kind: "corpse", containerId: corpse.id, slot },
+    }));
+    const created = [corpse, ...contents];
+    await store.persist({
+      characterId,
+      rowOps: created.map((item) => ({ kind: "insert" as const, item })),
+      audits: created.map((item) => ({
+        kind: "loot-created" as const,
+        itemId: item.id,
+        eventId,
+        killerCharacterId: characterId,
+        typeId: item.typeId,
+        count: item.count,
+      })),
+    });
+    return { corpse, contents };
+  };
+
   beforeAll(async () => {
     if (!databaseUrl) return;
     setupClient = new Client({ connectionString: databaseUrl });
@@ -168,6 +209,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "014_character_storages.sql",
       "015_depot_and_inbox.sql",
       "018_pvp.sql",
+      "023_character_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -735,96 +777,184 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     expect(await itemRow(helmetId)).toMatchObject({ version: 2 });
   });
 
-  it("stamps loot ownership on a corpse and clears it on the first decay stage", async () => {
+  it("materializes first-touch loot rows with creation audits and clears ownership on decay", async () => {
     // Dead chicken chain: 6042 -(10s)-> 4330 -(300s)-> 4331.
-    const created = await store.createCorpse(
-      characterId,
+    const { corpse } = await persistCorpse(
       "death:integration-1",
       { x: 100, y: 105, z: 7 },
-      0,
       6042,
       [{ typeId: GOLD_TYPE, count: 10 }],
     );
-    const corpse = created[0];
-    expect(corpse?.attributes).toEqual({ ownerCharacterId: characterId });
+    expect(await itemRow(corpse.id)).toMatchObject({ location_type: "world" });
+    const created = (await auditRows("item-created")).filter(
+      (row) =>
+        (row.details as { eventId?: string }).eventId ===
+        "death:integration-1",
+    );
+    expect(created).toHaveLength(2);
+    expect(created).toContainEqual(
+      expect.objectContaining({
+        item_id: corpse.id,
+        details: expect.objectContaining({
+          eventId: "death:integration-1",
+          reason: "monster-loot",
+        }),
+      }),
+    );
 
-    const mutation = await store.decayWorldItem(corpse!.id, corpse!.version);
+    const mutation = await store.decayWorldItem(corpse.id, corpse.version);
     expect(mutation.after).toMatchObject([
-      { id: corpse!.id, typeId: 4330, attributes: {} },
+      { id: corpse.id, typeId: 4330, attributes: {} },
     ]);
     expect(mutation.removedItemIds ?? []).toHaveLength(0);
     expect(await auditRows("item-transformed")).toMatchObject([
       {
-        item_id: corpse!.id,
+        item_id: corpse.id,
         details: { reason: "decay", fromTypeId: 6042, toTypeId: 4330 },
       },
     ]);
   });
 
   it("destroys and audits contents a decayed corpse can no longer hold", async () => {
-    const created = await store.createCorpse(
-      characterId,
+    const { corpse } = await persistCorpse(
       "death:integration-2",
       { x: 100, y: 106, z: 7 },
-      0,
       4330,
       [
         { typeId: GOLD_TYPE, count: 10 },
         { typeId: GOLD_TYPE, count: 5 },
       ],
     );
-    const corpse = created[0];
 
     // 4330 -> 4331 drops container capacity to zero.
-    const mutation = await store.decayWorldItem(corpse!.id, corpse!.version);
+    const mutation = await store.decayWorldItem(corpse.id, corpse.version);
     expect(mutation.after).toMatchObject([{ typeId: 4331 }]);
     expect(mutation.removedItemIds).toHaveLength(2);
     const remaining = await pool.query<{ count: string }>(
       "SELECT count(*) FROM items WHERE container_id = $1",
-      [corpse!.id],
+      [corpse.id],
     );
     expect(Number(remaining.rows[0]?.count)).toBe(0);
     expect(await auditRows("item-destroyed")).toHaveLength(2);
 
     // 4331 -> 4332 -> removed; the removal is audited too.
-    await store.decayWorldItem(corpse!.id, corpse!.version + 1);
+    await store.decayWorldItem(corpse.id, corpse.version + 1);
     const removal = await store.decayWorldItem(
-      corpse!.id,
-      corpse!.version + 2,
+      corpse.id,
+      corpse.version + 2,
     );
     expect(removal.after).toEqual([]);
-    expect(removal.removedItemIds).toEqual([corpse!.id]);
+    expect(removal.removedItemIds).toEqual([corpse.id]);
     expect(await auditRows("item-destroyed")).toHaveLength(3);
     const gone = await pool.query<{ count: string }>(
       "SELECT count(*) FROM items WHERE id = $1",
-      [corpse!.id],
+      [corpse.id],
     );
     expect(Number(gone.rows[0]?.count)).toBe(0);
   });
 
   it("rejects a stale decay transaction and lets exactly one of two racing decays succeed", async () => {
-    const created = await store.createCorpse(
-      characterId,
+    const { corpse } = await persistCorpse(
       "death:integration-3",
       { x: 100, y: 107, z: 7 },
-      0,
       6042,
       [],
     );
-    const corpse = created[0];
 
     await expect(
-      store.decayWorldItem(corpse!.id, corpse!.version + 1),
+      store.decayWorldItem(corpse.id, corpse.version + 1),
     ).rejects.toThrow();
 
     const results = await Promise.allSettled([
-      store.decayWorldItem(corpse!.id, corpse!.version),
-      store.decayWorldItem(corpse!.id, corpse!.version),
+      store.decayWorldItem(corpse.id, corpse.version),
+      store.decayWorldItem(corpse.id, corpse.version),
     ]);
     expect(
       results.filter((result) => result.status === "fulfilled"),
     ).toHaveLength(1);
-    expect(await itemRow(corpse!.id)).toMatchObject({ version: 2 });
+    expect(await itemRow(corpse.id)).toMatchObject({ version: 2 });
+  });
+
+  it("retries a persist that collides with a concurrent character update", async () => {
+    // The live scenario behind "could not serialize access due to concurrent
+    // update": the periodic character snapshot save updates the character row
+    // outside the item write lane while a persist waits to lock it.
+    const blocker = await pool.connect();
+    try {
+      await blocker.query("BEGIN");
+      await blocker.query(
+        "UPDATE characters SET version = version + 1 WHERE id = $1",
+        [characterId],
+      );
+      const persist = persistCorpse(
+        "death:integration-retry",
+        { x: 100, y: 108, z: 7 },
+        6042,
+        [{ typeId: GOLD_TYPE, count: 3 }],
+      );
+      // Let the persist reach the character row lock and block on it.
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await blocker.query("COMMIT");
+      const { corpse } = await persist;
+      expect(await itemRow(corpse.id)).toMatchObject({
+        location_type: "world",
+      });
+    } finally {
+      blocker.release();
+    }
+  });
+
+  it("survives a kill-time burst of character saves while moving a corpse", async () => {
+    // Attacking creates immediate character saves (experience awards flush on
+    // every kill), so combat produces back-to-back transactions on the
+    // character row. Two consecutive saves collide with the same persist;
+    // the retry with backoff must outlast the burst without duplicating rows
+    // or audits.
+    const sleep = (ms: number) =>
+      new Promise<void>((resolve) => setTimeout(resolve, ms));
+    const firstSave = await pool.connect();
+    const secondSave = await pool.connect();
+    try {
+      await firstSave.query("BEGIN");
+      await firstSave.query(
+        "UPDATE characters SET version = version + 1 WHERE id = $1",
+        [characterId],
+      );
+      const persist = persistCorpse(
+        "death:integration-burst",
+        { x: 100, y: 109, z: 7 },
+        6042,
+        [{ typeId: GOLD_TYPE, count: 7 }],
+      );
+      await sleep(200); // the persist is blocked on the character row lock
+      await secondSave.query("BEGIN");
+      await firstSave.query("COMMIT"); // aborts the persist's first attempt
+      await secondSave.query(
+        "UPDATE characters SET version = version + 1 WHERE id = $1",
+        [characterId],
+      );
+      await sleep(200); // the retry blocks on the second queued save
+      await secondSave.query("COMMIT"); // aborts again; the next attempt wins
+      const { corpse } = await persist;
+      expect(await itemRow(corpse.id)).toMatchObject({
+        location_type: "world",
+      });
+      // Rolled-back attempts must leave no duplicate rows or audits behind.
+      const rows = await pool.query<{ count: string }>(
+        "SELECT count(*) FROM items WHERE id = $1",
+        [corpse.id],
+      );
+      expect(Number(rows.rows[0]?.count)).toBe(1);
+      const created = (await auditRows("item-created")).filter(
+        (row) =>
+          (row.details as { eventId?: string }).eventId ===
+          "death:integration-burst",
+      );
+      expect(created).toHaveLength(2);
+    } finally {
+      firstSave.release();
+      secondSave.release();
+    }
   });
 
   it("commits an NPC fare, destination, inventory mutation, and audits atomically", async () => {

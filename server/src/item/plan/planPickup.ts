@@ -7,6 +7,7 @@ import type {
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { ItemLocation } from "../ItemLocation";
+import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import { canMergeItems } from "./canMergeItems";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
@@ -162,11 +163,23 @@ export function planPickup(input: {
     });
     removedItemIds.push(mergeTarget.id);
   }
+  const origin = world.lootOrigin(root.id);
   if (pristine) {
     rowOps.push({ kind: "insert", item: final, seed: pristine.seed });
     for (const content of pristine.contents) {
       rowOps.push({ kind: "insert", item: content, seed: pristine.seed });
     }
+  } else if (origin) {
+    rowOps.push({ kind: "insert", item: final });
+    audits.push({
+      kind: "loot-created",
+      itemId: root.id,
+      eventId: origin.eventId,
+      killerCharacterId: origin.killerCharacterId,
+      typeId: root.typeId,
+      count: root.count,
+    });
+    appendUnpersistedLootInserts(world, children, rowOps, audits);
   } else {
     rowOps.push({ kind: "write", expectedVersion: root.version, item: final });
   }

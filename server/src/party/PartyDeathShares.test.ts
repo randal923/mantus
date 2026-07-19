@@ -214,11 +214,14 @@ describe("party experience shares at death resolution", () => {
     // 100 base · 2 global · 1.2 party bonus / 2 members = 120 each.
     expect(harness.players.get(A)?.experience).toBe(120);
     expect(harness.players.get(B)?.experience).toBe(120);
-    expect(harness.sentByPlayer.get(A)?.at(-1)).toMatchObject({
-      type: "combat-log",
-      kind: "experience",
-      text: "You gained 120 experience (party share).",
-    });
+    // The synchronous corpse broadcast (tile-states) may follow the award.
+    expect(harness.sentByPlayer.get(A)).toContainEqual(
+      expect.objectContaining({
+        type: "combat-log",
+        kind: "experience",
+        text: "You gained 120 experience (party share).",
+      }),
+    );
   });
 
   it("floors fractional global experience awards to whole points", () => {
@@ -229,11 +232,13 @@ describe("party experience shares at death resolution", () => {
     harness.death.handleDeath(monster, A, 1_000_000);
 
     expect(harness.players.get(A)?.experience).toBe(7);
-    expect(harness.sentByPlayer.get(A)?.at(-1)).toMatchObject({
-      type: "combat-log",
-      kind: "experience",
-      text: "You gained 7 experience.",
-    });
+    expect(harness.sentByPlayer.get(A)).toContainEqual(
+      expect.objectContaining({
+        type: "combat-log",
+        kind: "experience",
+        text: "You gained 7 experience.",
+      }),
+    );
   });
 
   it("allows a zero rate to disable monster experience awards", () => {
@@ -243,7 +248,9 @@ describe("party experience shares at death resolution", () => {
 
     harness.death.handleDeath(monster, A, 1_000_000);
     expect(harness.players.get(A)?.experience).toBe(0);
-    expect(harness.sentByPlayer.get(A)).toEqual([]);
+    expect(harness.sentByPlayer.get(A) ?? []).not.toContainEqual(
+      expect.objectContaining({ type: "combat-log", kind: "experience" }),
+    );
   });
 
   it("is idempotent per member for a replayed award event id", () => {

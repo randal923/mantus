@@ -95,14 +95,6 @@ export interface ItemStore {
     targetItemTypeId: number,
     count: number,
   ): Promise<ConjureItemResult>;
-  createCorpse(
-    characterId: string | null,
-    eventId: string,
-    position: Position,
-    stackIndex: number,
-    corpseTypeId: number,
-    loot: ReadonlyArray<LootItemCreation>,
-  ): Promise<ReadonlyArray<Item>>;
   decayWorldItem(
     itemId: string,
     expectedVersion: number,
