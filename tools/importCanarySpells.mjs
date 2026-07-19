@@ -201,22 +201,22 @@ function spellDependency(path) {
   ) {
     return "08c-decay";
   }
-  if (path.includes("/party/")) return "13a-parties";
-  if (path.includes("/house/")) return "13d-houses";
+  if (path.includes("/party/")) return "14a-parties";
+  if (path.includes("/house/")) return "14d-houses";
   if (path.includes("/familiar/") || path.includes("/avatar_")) {
-    return "14-optional-features";
+    return "15-optional-features";
   }
   if (
     path.endsWith("/find_person.lua") ||
     path.endsWith("/find_fiend.lua")
   ) {
-    return "13e-social-services";
+    return "14e-social-services";
   }
   if (
     path.endsWith("/levitate.lua") ||
     path.endsWith("/magic_rope.lua")
   ) {
-    return "12b-world-actions";
+    return "12-world-actions";
   }
   return "07-combat";
 }

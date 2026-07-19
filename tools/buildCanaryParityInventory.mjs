@@ -397,7 +397,7 @@ function supportedCallbackDependency(path, name) {
       path.endsWith("/energy_wave.lua") ||
       path.endsWith("/great_energy_beam.lua"))
   ) {
-    return "14-optional-features";
+    return "15-optional-features";
   }
   return null;
 }
@@ -466,14 +466,15 @@ function ownerFor(path) {
   if (/market|shop|bank|depot|inbox|trade|mail|stash/i.test(path)) {
     return "11-economy";
   }
-  if (/quest|action|movement|raid|globalevent|event/i.test(path)) {
-    return "12-quests-and-world-actions";
-  }
+  if (/quest/i.test(path)) return "20-quests";
+  if (/raid|globalevent/i.test(path)) return "13-raids-and-world-events";
+  if (/action|movement/i.test(path)) return "12-world-actions";
+  if (/event/i.test(path)) return "13-raids-and-world-events";
   if (/party|guild|house|pvp|vip|friend/i.test(path)) {
-    return "13-social-and-houses";
+    return "14-social-and-houses";
   }
   if (/bestiary|bosstiary|charm|prey|wheel|forge|imbu|familiar|mount|outfit/i.test(path)) {
-    return "14-optional-features";
+    return "15-optional-features";
   }
   if (/monster|spawn|creature|pathfind/i.test(path)) {
     return "04-creatures-spawns-and-ai";
@@ -483,7 +484,7 @@ function ownerFor(path) {
     return "02-map-and-movement";
   }
   if (/protocol|network|server|config|database|schema/i.test(path)) {
-    return "16-operations-and-security";
+    return "17-operations-and-security";
   }
   return "00a-canary-parity";
 }

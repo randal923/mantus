@@ -243,7 +243,7 @@ function creatureGapOwner(kind, name) {
     name.startsWith("flags.isPrey") ||
     name.startsWith("flags.forge")
   ) {
-    return "14-optional-features";
+    return "15-optional-features";
   }
   if (name === "voices.runtime") return "09-chat";
   if (
@@ -259,7 +259,7 @@ function creatureGapOwner(kind, name) {
     return "11b-npc-shops";
   }
   if (kind === "npc") return "10-npcs";
-  if (["events"].includes(name)) return "12-quests-and-world-actions";
+  if (["events"].includes(name)) return "12-world-actions";
   if (
     [
       "enemyFactions",

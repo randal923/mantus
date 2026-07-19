@@ -118,11 +118,11 @@ rune to become executable.
   every other support callback represented by the pinned spell registrations.
   Conjuring, ammunition/enchantment, cure/dispel, light, and the inventory food
   path are now executable. The random food-creation spell remains a TODO 7
-  gap. House spells are blocked by [`13d-houses`](13d-houses.md);
-  levitate/rope by [`12b-world-actions`](12b-world-actions.md);
-  find-person/find-fiend by [`13e-social-services`](13e-social-services.md);
-  party spells by [`13a-parties`](13a-parties.md); familiar/avatar and
-  Wheel/animus branches by [`14-optional-features`](14-optional-features.md).
+  gap. House spells are blocked by [`14d-houses`](14d-houses.md);
+  levitate/rope by [`12-world-actions`](12-world-actions.md);
+  find-person/find-fiend by [`14e-social-services`](14e-social-services.md);
+  party spells by [`14a-parties`](14a-parties.md); familiar/avatar and
+  Wheel/animus branches by [`15-optional-features`](15-optional-features.md).
   Creature illusion, challenge/taunt, summons, chains, Monk harmony, focus/
   virtue, and remaining direct callbacks are explicit TODO 7 gaps.
 - [ ] Support every static and dynamic combat area, including custom tile

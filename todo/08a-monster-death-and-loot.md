@@ -25,7 +25,7 @@ idempotent across races and restarts.
   with `attributes.ownerCharacterId` and ownership expires when the corpse
   first decays (the attribute is cleared on the first decay transform). Party
   rights and boss contribution are deferred until parties exist (see
-  [`13-social-and-houses`](13-social-and-houses.md)).
+  [`14-social-and-houses`](14-social-and-houses.md)).
 - [x] Persist enough state that restart cannot reroll loot, duplicate a corpse,
   or lose an already committed rare. The roll and the corpse commit happen once
   per in-memory death; monsters are not persisted, so after a restart a prior

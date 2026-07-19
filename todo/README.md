@@ -189,13 +189,21 @@ interface CreatureState {
    [`death/loot`](08-death-loot-and-decay.md).
 8. Add [`chat`](09-chat.md), [`NPCs`](10-npcs.md), and
    [`economy`](11-economy.md).
-9. Add [`quests/world actions`](12-quests-and-world-actions.md), then social
-   and remaining Canary parity systems.
-10. Harden [`resilience`](15-client-resilience.md),
-    [`observability and operations`](16-operations-and-security.md), and known
-    [`authentication gaps`](17-auth-follow-ups.md) continuously.
+9. Add [`typed world actions`](12-world-actions.md) and
+   [`raids/world events`](13-raids-and-world-events.md). Storage-gated quest
+   variants (quest doors, one-time chests) are deferred to the quest phase.
+10. Add [`social and houses`](14-social-and-houses.md) and the
+    [`remaining Canary parity systems`](15-optional-features.md).
+11. Harden [`resilience`](16-client-resilience.md),
+    [`observability and operations`](17-operations-and-security.md), and known
+    [`authentication gaps`](18-auth-follow-ups.md) continuously.
+12. Implement quests last: [`quest state and storage`](20a-quest-state.md),
+    then the full quest-content inventory (definitions, missions, rewards,
+    quest log, storage-gated world actions, quest-gated NPC dialogue). Quest
+    content is the largest pure-content layer in the pinned baseline and only
+    consumes the platform built in steps 1–10; nothing else depends on it.
 
-The larger feature files (08, 10, 11, 12, 13, 15, 16) are split into lettered
+The larger feature files (08, 10, 11, 14, 16, 17, 20) are split into lettered
 one-session units (for example `11a-currency-and-bank.md`); each parent file is
 a short index giving the order within that feature. Implement one lettered unit
 per session/PR — never more than one economy-relevant system in a single PR.

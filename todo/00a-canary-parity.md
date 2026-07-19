@@ -53,7 +53,7 @@ callback, formula, placement, or content system is not.
 - [ ] Complete map, movement, zones, floor transitions, teleports, diagonal
   movement, pushing, and every registered movement/world action through
   [`02-map-and-movement`](02-map-and-movement.md) and
-  [`12b-world-actions`](12b-world-actions.md).
+  [`12-world-actions`](12-world-actions.md).
 - [ ] Complete every monster/NPC definition, placement field, behavior,
   callback, summon, voice, loot link, bestiary/bosstiary field, forge/reward
   classification, and spawn rule through
@@ -84,20 +84,22 @@ callback, formula, placement, or content system is not.
 - [ ] Complete bank, shops, depot/inbox/mail/stash, player trade, market,
   escrow, store currency/content, and all associated history through
   [`11-economy`](11-economy.md) and the advanced-systems backlog.
-- [ ] Complete all quest lines, storages, actions, movements, creature events,
-  global events, raids, daily schedules, rewards, and map-scripted content
-  through [`12-quests-and-world-actions`](12-quests-and-world-actions.md).
+- [ ] Complete all registered actions, movements, creature events, and
+  map-scripted interactions through [`12-world-actions`](12-world-actions.md);
+  global events, raids, and daily schedules through
+  [`13-raids-and-world-events`](13-raids-and-world-events.md); and all quest
+  lines, storages, and rewards through [`20-quests`](20-quests.md).
 - [ ] Complete parties/analyzers/shared experience, guilds/wars, PVP/skulls,
   houses/auctions/rent/access lists, VIP groups, highscores, reports, and
   moderation, friend/finder systems, typing/presence, and exiva privacy through
-  [`13-social-and-houses`](13-social-and-houses.md).
+  [`14-social-and-houses`](14-social-and-houses.md).
 - [ ] Complete outfits/addons, mounts, familiars, hirelings, achievements,
   titles, badges, attached effects, bestiary, bosstiary, charms, prey, hunting
   tasks, boosted creatures/bosses, daily rewards, Cyclopedia, supply stash,
   imbuements, forge, Wheel of Destiny/gems, weapon proficiency, animus mastery,
   hazards, concoctions, encounters/boss difficulty, podium/show-off systems,
   livestreaming, modal-driven interactions, and other pinned Canary systems
-  through [`14-optional-features`](14-optional-features.md).
+  through [`15-optional-features`](15-optional-features.md).
 - [ ] Provide project-native client controls and authorized projections for
   every implemented player-facing system. Absence of Canary's binary protocol
   or exact window layout does not excuse an unreachable server feature.
@@ -109,7 +111,7 @@ callback, formula, placement, or content system is not.
   gameplay fields. Every non-content classification includes a stable reason.
 - [ ] Each workstream has representative Canary fixtures plus aggregate count
   checks so a later import cannot silently reduce coverage.
-- [ ] [`16h-testing-and-release-gates`](16h-testing-and-release-gates.md)
+- [ ] [`17h-testing-and-release-gates`](17h-testing-and-release-gates.md)
   blocks a parity release while any ledger entry is unsupported, dependency
   links are stale, or the pinned source inventory and generated outputs differ.
 

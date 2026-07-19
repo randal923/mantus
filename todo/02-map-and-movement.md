@@ -108,8 +108,8 @@ world spawns so positions, collision, visibility, and pathfinding all agree.
   action, zone behavior, and invalid placement from the pinned source; no
   player-visible map behavior remains silently classified as unsupported.
   Remaining ladder/hole/rope/shovel and scripted movement actions belong to
-  [`12b-world-actions`](12b-world-actions.md); house/zone ownership belongs to
-  [`13d-houses`](13d-houses.md). They remain disabled rather than accepting a
+  [`12-world-actions`](12-world-actions.md); house/zone ownership belongs to
+  [`14d-houses`](14d-houses.md). They remain disabled rather than accepting a
   client-authored destination.
 
 [Back to overview](README.md)

@@ -8,7 +8,7 @@ privacy rules differ from NPC dialogue.
 
 - [x] Define bounded zod intents for say, whisper, yell, and private message
   (`protocol/src/chat.ts`). Channel-message intents are deferred until guild/
-  party/help channels exist (see [13-social-and-houses](13-social-and-houses.md)).
+  party/help channels exist (see [14-social-and-houses](14-social-and-houses.md)).
   Channel ids and recipients are references, never authority.
 - [x] Derive speaker character/name from the session; the schemas have no
   sender field to forge and extra fields are rejected (`.strict()`).

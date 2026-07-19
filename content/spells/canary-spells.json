@@ -16678,8 +16678,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -16723,8 +16723,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -16768,8 +16768,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -16813,8 +16813,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -16858,8 +16858,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -19627,8 +19627,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13d-houses",
-        "reason": "Requires 13d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "14d-houses",
+        "reason": "Requires 14d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -19680,8 +19680,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13d-houses",
-        "reason": "Requires 13d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "14d-houses",
+        "reason": "Requires 14d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -19733,8 +19733,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13d-houses",
-        "reason": "Requires 13d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "14d-houses",
+        "reason": "Requires 14d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -19786,8 +19786,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13d-houses",
-        "reason": "Requires 13d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "14d-houses",
+        "reason": "Requires 14d-houses before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -19832,8 +19832,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13a-parties",
-        "reason": "Requires 13a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "14a-parties",
+        "reason": "Requires 14a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -19878,8 +19878,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13a-parties",
-        "reason": "Requires 13a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "14a-parties",
+        "reason": "Requires 14a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -19924,8 +19924,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13a-parties",
-        "reason": "Requires 13a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "14a-parties",
+        "reason": "Requires 14a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -19970,8 +19970,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13a-parties",
-        "reason": "Requires 13a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "14a-parties",
+        "reason": "Requires 14a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -20016,8 +20016,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13a-parties",
-        "reason": "Requires 13a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "14a-parties",
+        "reason": "Requires 14a-parties before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -20062,8 +20062,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -20108,8 +20108,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -20154,8 +20154,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -20200,8 +20200,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -20246,8 +20246,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "14-optional-features",
-        "reason": "Requires 14-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "blockedBy": "15-optional-features",
+        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
       }
     },
     {
@@ -20992,8 +20992,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13e-social-services",
-        "reason": "Requires 13e-social-services before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "14e-social-services",
+        "reason": "Requires 14e-social-services before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -21045,8 +21045,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "13e-social-services",
-        "reason": "Requires 13e-social-services before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "14e-social-services",
+        "reason": "Requires 14e-social-services before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -21454,8 +21454,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "12b-world-actions",
-        "reason": "Requires 12b-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "12-world-actions",
+        "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {
@@ -21584,8 +21584,8 @@
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
-        "blockedBy": "12b-world-actions",
-        "reason": "Requires 12b-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "blockedBy": "12-world-actions",
+        "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
       }
     },
     {

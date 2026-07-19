@@ -141,9 +141,9 @@ is atomic.
   [`08-death-loot-and-decay`](08-death-loot-and-decay.md); depots, inbox,
   mail, stash, and market/trade reservations by [`11-economy`](11-economy.md);
   doors, keys, beds, switches, and quest actions by
-  [`12b-world-actions`](12b-world-actions.md); house items by
-  [`13d-houses`](13d-houses.md); forge, imbuements, show-off sockets, and
-  advanced equipment modifiers by [`14-optional-features`](14-optional-features.md).
+  [`12-world-actions`](12-world-actions.md); house items by
+  [`14d-houses`](14d-houses.md); forge, imbuements, show-off sockets, and
+  advanced equipment modifiers by [`15-optional-features`](15-optional-features.md).
 - PostgreSQL fault-injection coverage now includes capacity, ancestry,
   transaction rollback, audit atomicity, and conjuring. A true process-kill
   crash harness remains an implementation gap; the integration suite runs

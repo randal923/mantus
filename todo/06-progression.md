@@ -76,8 +76,8 @@ only.
   modifier used by pinned Canary content.
   Blessings and death loss are owned by
   [`08b-player-death`](08b-player-death.md). Party-shared training modifiers
-  belong to [`13a-parties`](13a-parties.md), and Wheel/animus modifiers to
-  [`14-optional-features`](14-optional-features.md). Stamina, exact soul
+  belong to [`14a-parties`](14a-parties.md), and Wheel/animus modifiers to
+  [`15-optional-features`](15-optional-features.md). Stamina, exact soul
   eligibility, offline training, exercise training, and configurable skill
   stages remain explicit TODO 6 implementation gaps.
 - [ ] Bound the persisted progression event id set. Every kill appends one
@@ -89,9 +89,9 @@ only.
   progression coefficient is either matched or identified as non-gameplay
   configuration; no balance field may be silently ignored.
   Aggregate vocation count and core Monk coefficient fixtures now exist.
-  Vocation PvP coefficients belong to [`13c-pvp-policy`](13c-pvp-policy.md)
+  Vocation PvP coefficients belong to [`14c-pvp-policy`](14c-pvp-policy.md)
   and gem/Wheel coefficients to
-  [`14-optional-features`](14-optional-features.md); remaining base
+  [`15-optional-features`](15-optional-features.md); remaining base
   coefficients still need an exhaustive generated fixture before this closes.
 
 [Back to overview](README.md)

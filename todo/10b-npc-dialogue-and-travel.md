@@ -76,7 +76,7 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
   through it without weakening the existing atomic transaction and audits.
 - Captain Bluebear's Yalahar storage gate, Postman discount, Carlin mission
   side effect, and `kick` action require typed quest/action support. Add those
-  with [`12a-quest-state`](12a-quest-state.md); do not expose raw storage ids to
+  with [`20a-quest-state`](20a-quest-state.md); do not expose raw storage ids to
   the client.
 - The generated baseline covers literal parent/child keyword trees, shop links,
   and bank links, but the import report still owns 2,307 procedural keyword

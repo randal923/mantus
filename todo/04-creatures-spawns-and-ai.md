@@ -132,9 +132,9 @@ interface MonsterType {
   chance are now typed. Loot/corpse/death/reward-boss callbacks are owned by
   [`08-death-loot-and-decay`](08-death-loot-and-decay.md), NPC behavior by
   [`10-npcs`](10-npcs.md), creature/world event hooks by
-  [`12-quests-and-world-actions`](12-quests-and-world-actions.md), and
+  [`12-world-actions`](12-world-actions.md), and
   bestiary/bosstiary/forge classifications by
-  [`14-optional-features`](14-optional-features.md).
+  [`15-optional-features`](15-optional-features.md).
 - [ ] Resolve every duplicate/ambiguous definition, blocked/out-of-map
   placement, appearance correction, and intentionally invisible creature
   individually. Keep valid variants addressable instead of choosing one by

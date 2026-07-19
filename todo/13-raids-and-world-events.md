@@ -1,0 +1,36 @@
+# Raids and world events
+
+Depends on the [`creature/spawn runtime`](04-creatures-spawns-and-ai.md) and
+[`12-world-actions`](12-world-actions.md) for event action steps. It does
+NOT wait for [`20a-quest-state`](20a-quest-state.md) (scheduled last): in the
+pinned Canary baseline, raid scripts use no player storage.
+
+## Raids and world events
+
+- [ ] Define scheduled/global events as typed state machines with stable event
+  ids, bounded work per tick, announcements, spawn/action steps, and completion.
+- [ ] Make durable events restart-safe and idempotent. A restart cannot create
+  rewards or bosses twice.
+- [ ] Drive daily resets, rewards, raids, and event start/end boundaries from
+  durable server-clock schedules with idempotency keys or leases. Never use
+  process startup or a daily global save as the event trigger.
+- [ ] Add operator controls and audit entries for starting/canceling high-impact
+  events.
+- [ ] Import every pinned raid, global event, startup/daily schedule, boosted
+  creature/boss rotation, announcement, spawn wave, and completion callback as
+  durable typed state.
+
+## Planned file surface
+
+- `server/src/event/WorldEventManager.ts` and durable schedule persistence.
+
+## Required exploit tests
+
+- [ ] World-event restart/retry does not duplicate spawns or rewards.
+- [ ] Crossing a daily boundary while the server remains continuously online
+  produces the same result as crossing it during a restart.
+- [ ] Operator event controls are authorized and audited.
+- [ ] Event parity tests account for every registered raid/global event and
+  prove continuously running and restarted worlds produce equivalent results.
+
+[Back to overview](README.md)
