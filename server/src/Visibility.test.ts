@@ -231,6 +231,9 @@ describe("Visibility creature projections", () => {
     visibility.broadcastCombatText(visible, 5, "physical", "none");
     visibility.broadcastCombatText(hidden, 5, "physical", "none");
     visibility.broadcastCombatText(wrongFloor, 5, "physical", "none");
+    visibility.sendExperienceText(viewer.id, visible, 5);
+    visibility.sendExperienceText(viewer.id, hidden, 5);
+    visibility.sendExperienceText(viewer.id, wrongFloor, 5);
     visibility.broadcastMagicEffect(hidden.position, 1, hidden.id);
     visibility.broadcastDistanceMissile(
       visible.position,
@@ -247,6 +250,11 @@ describe("Visibility creature projections", () => {
         value: 5,
         damageType: "physical",
         block: "none",
+      },
+      {
+        type: "experience-text",
+        position: visible.position,
+        value: 5,
       },
     ]);
   });

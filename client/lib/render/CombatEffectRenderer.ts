@@ -30,6 +30,7 @@ interface MissileView {
 interface CombatTextView {
   readonly text: Text;
   readonly position: Position;
+  readonly offsetY: number;
   elapsedMs: number;
 }
 
@@ -46,6 +47,8 @@ const TEXT_COLORS: Record<DamageType, number> = {
   death: 0xaa66cc,
   healing: 0x66ff88,
 };
+const EXPERIENCE_TEXT_COLOR = 0xffffff;
+const EXPERIENCE_TEXT_OFFSET_Y = -6;
 
 export class CombatEffectRenderer {
   private readonly effects: MagicEffectView[] = [];
@@ -88,16 +91,39 @@ export class CombatEffectRenderer {
           : damageType === "healing"
             ? `+${value}`
             : `-${value}`;
+    this.showFloatingText(
+      position,
+      label,
+      block === "miss" || block === "immunity"
+        ? 0xdddddd
+        : TEXT_COLORS[damageType],
+      0,
+    );
+  }
+
+  showExperienceText(position: Position, value: number): void {
+    if (this.destroyed) return;
+    this.showFloatingText(
+      position,
+      value.toString(),
+      EXPERIENCE_TEXT_COLOR,
+      EXPERIENCE_TEXT_OFFSET_Y,
+    );
+  }
+
+  private showFloatingText(
+    position: Position,
+    label: string,
+    color: number,
+    offsetY: number,
+  ): void {
     const text = new Text({
       text: label,
       style: {
         fontFamily: "Verdana, sans-serif",
         fontSize: 5,
         fontWeight: "bold",
-        fill:
-          block === "miss" || block === "immunity"
-            ? 0xdddddd
-            : TEXT_COLORS[damageType],
+        fill: color,
         stroke: { color: 0x000000, width: 1 },
       },
     });
@@ -105,11 +131,16 @@ export class CombatEffectRenderer {
     text.anchor.set(0.5, 1);
     text.position.set(
       position.x * TILE_SIZE + TILE_SIZE / 2,
-      position.y * TILE_SIZE,
+      position.y * TILE_SIZE + offsetY,
     );
     text.zIndex = getMapObjectZ(position.x, position.y, MAP_DEPTH.effect + 2);
     this.mapView.creatureLayer(position.z).addChild(text);
-    this.texts.push({ text, position: { ...position }, elapsedMs: 0 });
+    this.texts.push({
+      text,
+      position: { ...position },
+      offsetY,
+      elapsedMs: 0,
+    });
   }
 
   tick(deltaMs: number): void {
@@ -163,7 +194,9 @@ export class CombatEffectRenderer {
       entry.elapsedMs += deltaMs;
       const progress = Math.min(1, entry.elapsedMs / 900);
       entry.text.position.y =
-        entry.position.y * TILE_SIZE - progress * (TILE_SIZE / 2);
+        entry.position.y * TILE_SIZE +
+        entry.offsetY -
+        progress * (TILE_SIZE / 2);
       entry.text.alpha = 1 - progress;
       if (progress < 1) continue;
       entry.text.destroy();

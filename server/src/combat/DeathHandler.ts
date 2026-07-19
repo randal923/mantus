@@ -77,19 +77,28 @@ export class DeathHandler {
               kind: "experience",
               text: `You gained ${share.amount} experience (party share).`,
             });
+            this.visibility.sendExperienceText(
+              share.playerId,
+              target,
+              share.amount,
+            );
           }
         } else {
-          this.progression.awardExperience(
-            killerId,
-            deathEventId,
-            experience,
-            now,
-          );
-          this.registry.sessionFor(killerId)?.send({
-            type: "combat-log",
-            kind: "experience",
-            text: `You gained ${experience} experience.`,
-          });
+          if (
+            this.progression.awardExperience(
+              killerId,
+              deathEventId,
+              experience,
+              now,
+            )
+          ) {
+            this.registry.sessionFor(killerId)?.send({
+              type: "combat-log",
+              kind: "experience",
+              text: `You gained ${experience} experience.`,
+            });
+            this.visibility.sendExperienceText(killerId, target, experience);
+          }
         }
       }
       createMonsterCorpse(

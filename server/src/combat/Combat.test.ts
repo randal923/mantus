@@ -343,6 +343,17 @@ describe("Combat", () => {
     expect(harness.player.experience).toBe(5);
     expect(
       harness.sent.filter(
+        (message) => message.type === "experience-text",
+      ),
+    ).toEqual([
+      {
+        type: "experience-text",
+        position: monster.position,
+        value: 5,
+      },
+    ]);
+    expect(
+      harness.sent.filter(
         (message) =>
           message.type === "combat-log" &&
           message.kind === "experience",

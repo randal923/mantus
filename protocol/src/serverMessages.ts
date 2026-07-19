@@ -241,6 +241,18 @@ export const combatTextMessageSchema = z.object({
   block: hitBlockSchema,
 });
 
+/**
+ * Fixed-shape outbound payload under 128 bytes at its schema maxima. The
+ * server emits at most one per successful recipient award per monster death.
+ */
+export const experienceTextMessageSchema = z
+  .object({
+    type: z.literal("experience-text"),
+    position: positionSchema,
+    value: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  })
+  .strict();
+
 export const magicEffectMessageSchema = z.object({
   type: z.literal("magic-effect"),
   position: positionSchema,
@@ -362,6 +374,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   creatureHealthMessageSchema,
   creatureStateChangedMessageSchema,
   combatTextMessageSchema,
+  experienceTextMessageSchema,
   magicEffectMessageSchema,
   distanceMissileMessageSchema,
   combatLogMessageSchema,

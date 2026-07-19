@@ -239,6 +239,12 @@ export class WorldRenderer {
           message.block,
         );
         return;
+      case "experience-text":
+        this.combatEffects.showExperienceText(
+          message.position,
+          message.value,
+        );
+        return;
       case "magic-effect":
         this.combatEffects.showMagicEffect(
           message.position,

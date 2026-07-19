@@ -187,6 +187,32 @@ export class Visibility {
     }
   }
 
+  sendExperienceText(
+    recipientPlayerId: string,
+    creature: Creature,
+    value: number,
+  ): void {
+    const recipient = this.world.getPlayer(recipientPlayerId);
+    const session = this.registry.sessionFor(recipientPlayerId);
+    if (
+      !recipient ||
+      !session ||
+      !session.knownCreatureIds.has(creature.id) ||
+      !this.world.canSee(
+        recipient.position,
+        creature.position,
+        session.viewRange,
+      )
+    ) {
+      return;
+    }
+    session.send({
+      type: "experience-text",
+      position: { ...creature.position },
+      value,
+    });
+  }
+
   broadcastMagicEffect(
     position: Position,
     effectId: number,
