@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type {
+  AccountTier,
   CharacterCreationOptions,
   CharacterSummary,
   CreateCharacterInput,
@@ -17,6 +18,8 @@ type CharacterModalView = "select" | "create";
 interface CharacterSelectModalProps {
   characters: ReadonlyArray<CharacterSummary>;
   creationOptions: CharacterCreationOptions;
+  accountTier: AccountTier;
+  premiumDaysRemaining: number;
   onClose: () => void;
   onSelectCharacter: (characterId: string) => void;
   onCreateCharacter: (input: CreateCharacterInput) => void;
@@ -28,6 +31,8 @@ interface CharacterSelectModalProps {
 export function CharacterSelectModal({
   characters,
   creationOptions,
+  accountTier,
+  premiumDaysRemaining,
   onClose,
   onSelectCharacter,
   onCreateCharacter,
@@ -83,6 +88,18 @@ export function CharacterSelectModal({
       }
     >
       <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-2 text-sm">
+          <span className="font-medium text-ui-gold">
+            {t(`characters.accountTiers.${accountTier}`)}
+          </span>
+          {accountTier === "premium" && (
+            <span className="text-ui-muted">
+              {t("characters.premiumDaysRemaining", {
+                count: premiumDaysRemaining,
+              })}
+            </span>
+          )}
+        </div>
         {view === "select" ? (
           <>
             {characters.length === 0 ? (

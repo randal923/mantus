@@ -37,6 +37,7 @@ export class InMemoryAccountStore implements AccountStore {
       supabaseUserId,
       email,
       bannedUntil: null,
+      premiumUntil: null,
       language,
       uiSettings: {},
     };

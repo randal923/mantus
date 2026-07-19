@@ -236,6 +236,7 @@ export const marketActionFailedMessageSchema = z
     reason: z.enum([
       "busy",
       "cooldown",
+      "premium-required",
       "unavailable",
       "invalid-item",
       "not-marketable",

@@ -5,6 +5,7 @@ import {
   MAX_SKILL_LEVEL,
   MIN_SKILL_LEVEL,
   SKILLS,
+  type AccountTier,
   type CharacterVocation,
   type Skill,
 } from "@tibia/protocol";
@@ -12,6 +13,7 @@ import type { CharacterSkill } from "./CharacterSkill";
 import { deriveCharacterStats } from "./deriveCharacterStats";
 import { getExperienceForLevel } from "./getExperienceForLevel";
 import { getLevelForExperience } from "./getLevelForExperience";
+import { getAccountRegeneration } from "./getAccountRegeneration";
 import { getManaForNextMagicLevel } from "./getManaForNextMagicLevel";
 import { getSkillTriesForNextLevel } from "./getSkillTriesForNextLevel";
 import { getVocation } from "./getVocation";
@@ -60,10 +62,13 @@ export class CharacterProgression {
   private nextHealthAt: number;
   private nextManaAt: number;
   private nextSoulAt: number;
+  private accountTier: AccountTier;
+  private regeneration: ReturnType<typeof getAccountRegeneration>;
 
   constructor(
     readonly vocation: CharacterVocation,
     readonly definitionVersion: number,
+    accountTier: AccountTier,
     state: {
       level: number;
       experience: number;
@@ -77,6 +82,12 @@ export class CharacterProgression {
     now: number,
   ) {
     const definition = getVocation(vocation, definitionVersion);
+    this.accountTier = accountTier;
+    this.regeneration = getAccountRegeneration(
+      vocation,
+      definitionVersion,
+      accountTier,
+    );
     if (
       !Number.isSafeInteger(state.experience) ||
       state.experience < 0 ||
@@ -172,9 +183,9 @@ export class CharacterProgression {
     this.currentMana = state.mana;
     this.currentSoul = state.soul;
     this.processedEventIds = new Set(state.processedEventIds);
-    this.nextHealthAt = now + definition.regeneration.healthIntervalMs;
-    this.nextManaAt = now + definition.regeneration.manaIntervalMs;
-    this.nextSoulAt = now + definition.regeneration.soulIntervalMs;
+    this.nextHealthAt = now + this.regeneration.healthIntervalMs;
+    this.nextManaAt = now + this.regeneration.manaIntervalMs;
+    this.nextSoulAt = now + this.regeneration.soulIntervalMs;
   }
 
   get level(): number {
@@ -380,35 +391,36 @@ export class CharacterProgression {
     now: number,
     healthManaRegenerationBlocked: boolean,
     soulRegenerationBlocked = false,
+    accountTier = this.accountTier,
   ): ProgressionTick {
-    const vocation = getVocation(this.vocation, this.definitionVersion);
+    const regenerationChanged = this.syncRegeneration(accountTier, now);
     if (healthManaRegenerationBlocked) {
-      this.nextHealthAt = now + vocation.regeneration.healthIntervalMs;
-      this.nextManaAt = now + vocation.regeneration.manaIntervalMs;
+      this.nextHealthAt = now + this.regeneration.healthIntervalMs;
+      this.nextManaAt = now + this.regeneration.manaIntervalMs;
     }
     if (soulRegenerationBlocked) {
-      this.nextSoulAt = now + vocation.regeneration.soulIntervalMs;
+      this.nextSoulAt = now + this.regeneration.soulIntervalMs;
     }
     const health = healthManaRegenerationBlocked
       ? { count: 0, nextAt: this.nextHealthAt }
       : this.dueTicks(
           now,
           this.nextHealthAt,
-          vocation.regeneration.healthIntervalMs,
+          this.regeneration.healthIntervalMs,
         );
     const mana = healthManaRegenerationBlocked
       ? { count: 0, nextAt: this.nextManaAt }
       : this.dueTicks(
           now,
           this.nextManaAt,
-          vocation.regeneration.manaIntervalMs,
+          this.regeneration.manaIntervalMs,
         );
     const soul = soulRegenerationBlocked
       ? { count: 0, nextAt: this.nextSoulAt }
       : this.dueTicks(
           now,
           this.nextSoulAt,
-          vocation.regeneration.soulIntervalMs,
+          this.regeneration.soulIntervalMs,
         );
     this.nextHealthAt = health.nextAt;
     this.nextManaAt = mana.nextAt;
@@ -418,11 +430,11 @@ export class CharacterProgression {
     const soulBefore = this.currentSoul;
     this.currentMana = Math.min(
       this.maxMana,
-      this.currentMana + mana.count * vocation.regeneration.manaAmount,
+      this.currentMana + mana.count * this.regeneration.manaAmount,
     );
     this.currentSoul = Math.min(
       this.maxSoul,
-      this.currentSoul + soul.count * vocation.regeneration.soulAmount,
+      this.currentSoul + soul.count * this.regeneration.soulAmount,
     );
 
     let trained = false;
@@ -440,11 +452,26 @@ export class CharacterProgression {
     }
     return {
       changed:
+        regenerationChanged ||
         manaBefore !== this.currentMana ||
         soulBefore !== this.currentSoul ||
         trained,
-      healthGain: health.count * vocation.regeneration.healthAmount,
+      healthGain: health.count * this.regeneration.healthAmount,
     };
+  }
+
+  private syncRegeneration(accountTier: AccountTier, now: number): boolean {
+    if (accountTier === this.accountTier) return false;
+    this.accountTier = accountTier;
+    this.regeneration = getAccountRegeneration(
+      this.vocation,
+      this.definitionVersion,
+      accountTier,
+    );
+    this.nextHealthAt = now + this.regeneration.healthIntervalMs;
+    this.nextManaAt = now + this.regeneration.manaIntervalMs;
+    this.nextSoulAt = now + this.regeneration.soulIntervalMs;
+    return true;
   }
 
   private get stats() {

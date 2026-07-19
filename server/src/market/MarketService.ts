@@ -13,6 +13,7 @@ import {
 import type { DepotService } from "../depot/DepotService";
 import { countCarriedCoins } from "../economy/countCarriedCoins";
 import { countMoneyWorth } from "../economy/countMoneyWorth";
+import { getAccountStatus } from "../getAccountStatus";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
@@ -91,6 +92,14 @@ export class MarketService {
     }
     if (intent.type === "market-own-history") {
       this.sendOwnHistory(session, characterId);
+      return;
+    }
+    if (
+      intent.type === "market-create-offer" &&
+      (!session.account ||
+        getAccountStatus(session.account, now).accountTier !== "premium")
+    ) {
+      this.fail(session, "premium-required");
       return;
     }
     const gate = this.mutationGate(session, characterId, now);

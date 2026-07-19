@@ -141,12 +141,12 @@ export class CharacterService {
     return this.store.recordLogin(accountId, characterId, loggedInAt);
   }
 
-  ownState(player: Player): OwnCharacterState {
+  ownState(player: Player, now: number): OwnCharacterState {
     return {
       id: player.id,
       name: player.name,
       vocation: player.vocation,
-      ...projectOwnProgression(player),
+      ...projectOwnProgression(player, now),
       position: { ...player.position },
       direction: player.direction,
       outfit: player.outfit,

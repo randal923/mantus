@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Position, ServerMessage } from "@tibia/protocol";
+import type { AccountTier, Position, ServerMessage } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { DepotCacheEvent } from "../depot/DepotCacheEvent";
 import type { DepotService } from "../depot/DepotService";
@@ -86,7 +86,13 @@ interface Harness {
   readonly store: MemoryHouseStore;
   readonly service: HouseService;
   readonly depotEvents: Array<{ characterId: string; upserts: number }>;
-  join(id: string, name: string, position?: Position, level?: number): TestPlayer;
+  join(
+    id: string,
+    name: string,
+    position?: Position,
+    level?: number,
+    accountTier?: AccountTier,
+  ): TestPlayer;
   flush(now?: number): Promise<void>;
 }
 
@@ -141,7 +147,7 @@ function makeHarness(): Harness {
     store,
     service,
     depotEvents,
-    join(id, name, position, level = 100) {
+    join(id, name, position, level = 100, accountTier = "premium") {
       nextSpawnX += 2;
       const spawn = position ?? { x: nextSpawnX, y: 20, z: 7 };
       const character = {
@@ -149,7 +155,9 @@ function makeHarness(): Harness {
         level,
         experience: BigInt(getExperienceForLevel(level)),
       };
-      const player = new Player(character, spawn, 0);
+      const premiumUntil =
+        accountTier === "premium" ? new Date("2100-01-01T00:00:00.000Z") : null;
+      const player = new Player(character, spawn, 0, premiumUntil);
       world.addPlayer(player);
       store.registerCharacter(id, name);
       const sent: ServerMessage[] = [];
@@ -207,6 +215,27 @@ async function buyHouseOne(
 }
 
 describe("HouseService", () => {
+  it("rejects house purchases from free accounts", () => {
+    const harness = makeHarness();
+    const buyer = harness.join(
+      A,
+      "Alice",
+      { x: 50, y: 51, z: 7 },
+      100,
+      "free",
+    );
+    harness.store.setBalance(A, 1_000_000);
+
+    harness.service.handle(
+      buyer.session,
+      { type: "house-buy", houseId: 1 },
+      1_100,
+    );
+
+    expect(lastFailure(buyer)?.reason).toBe("premium-required");
+    expect(harness.store.balanceOf(A)).toBe(1_000_000);
+  });
+
   it("sells an unowned house only to a leveled buyer standing at it", async () => {
     const harness = makeHarness();
     const clock = { now: 0 };

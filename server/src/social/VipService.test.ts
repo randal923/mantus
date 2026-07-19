@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ServerMessage } from "@tibia/protocol";
+import type { AccountTier, ServerMessage } from "@tibia/protocol";
 import { gridMapData } from "../gridMapData";
 import { Player } from "../Player";
 import type { Session } from "../Session";
@@ -17,7 +17,7 @@ interface TestPlayer {
 interface Harness {
   readonly store: MemoryVipStore;
   readonly service: VipService;
-  join(id: string, name: string): TestPlayer;
+  join(id: string, name: string, accountTier?: AccountTier): TestPlayer;
   leave(playerId: string): void;
   flush(now?: number): Promise<void>;
 }
@@ -48,7 +48,7 @@ function makeHarness(): Harness {
   return {
     store,
     service,
-    join(id, name) {
+    join(id, name, accountTier = "free") {
       nextSpawnX += 2;
       const player = new Player(
         makeCharacter(id, name),
@@ -61,6 +61,18 @@ function makeHarness(): Harness {
       const session = {
         id: `session-${id}`,
         playerId: id,
+        account: {
+          id: `account-${id}`,
+          supabaseUserId: `user-${id}`,
+          email: null,
+          bannedUntil: null,
+          premiumUntil:
+            accountTier === "premium"
+              ? new Date("2100-01-01T00:00:00.000Z")
+              : null,
+          language: "en",
+          uiSettings: {},
+        },
         send: (message: ServerMessage) => sent.push(message),
         sendError: () => {},
       } as unknown as Session;
@@ -93,6 +105,47 @@ function messagesOf<TType extends ServerMessage["type"]>(
 }
 
 describe("VipService", () => {
+  it("enforces 20 free entries while premium accounts can add more", async () => {
+    const harness = makeHarness();
+    const alice = harness.join(A, "Alice");
+    await harness.flush();
+
+    for (let index = 0; index < 21; index += 1) {
+      const targetId = `target-${index}`;
+      const targetName = `Friend ${String.fromCharCode(65 + index)}`;
+      harness.store.registerCharacter(targetId, targetName);
+      harness.service.handle(
+        alice.session,
+        { type: "vip-add", name: targetName },
+        (index + 1) * 1_000,
+      );
+      await harness.flush((index + 1) * 1_000);
+    }
+
+    expect(messagesOf(alice, "vip-state").at(-1)?.entries).toHaveLength(20);
+    expect(messagesOf(alice, "vip-action-failed").at(-1)?.reason).toBe(
+      "list-full",
+    );
+
+    const premiumHarness = makeHarness();
+    const premiumAlice = premiumHarness.join(A, "Alice", "premium");
+    await premiumHarness.flush();
+    for (let index = 0; index < 21; index += 1) {
+      const targetId = `premium-target-${index}`;
+      const targetName = `Premium Friend ${String.fromCharCode(65 + index)}`;
+      premiumHarness.store.registerCharacter(targetId, targetName);
+      premiumHarness.service.handle(
+        premiumAlice.session,
+        { type: "vip-add", name: targetName },
+        (index + 1) * 1_000,
+      );
+      await premiumHarness.flush((index + 1) * 1_000);
+    }
+    expect(
+      messagesOf(premiumAlice, "vip-state").at(-1)?.entries,
+    ).toHaveLength(21);
+  });
+
   it("sends the private list only to its owner and adds entries", async () => {
     const harness = makeHarness();
     const alice = harness.join(A, "Alice");

@@ -5,6 +5,7 @@ export interface Account {
   supabaseUserId: string;
   email: string | null;
   bannedUntil: Date | null;
+  premiumUntil: Date | null;
   language: Language;
   uiSettings: UiSettings;
 }

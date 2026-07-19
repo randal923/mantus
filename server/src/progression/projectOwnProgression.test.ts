@@ -11,7 +11,7 @@ describe("projectOwnProgression", () => {
       { x: 0, y: 0, z: 7 },
       0,
     );
-    const own = projectOwnProgression(player);
+    const own = projectOwnProgression(player, 0);
     const visible = player.toState();
 
     expect(ownProgressionStateSchema.safeParse(own).success).toBe(true);
@@ -30,5 +30,20 @@ describe("projectOwnProgression", () => {
     expect(visible).not.toHaveProperty("skills");
     expect(visible).not.toHaveProperty("magicLevel");
     expect(visible).not.toHaveProperty("vocation");
+  });
+
+  it("projects the premium regeneration schedule", () => {
+    const player = new Player(
+      { ...makeCharacter("mage"), vocation: "Sorcerer" },
+      { x: 0, y: 0, z: 7 },
+      0,
+      new Date(24 * 60 * 60 * 1_000),
+    );
+
+    expect(projectOwnProgression(player, 0)).toMatchObject({
+      healthRegeneration: { amount: 1, intervalMs: 12_000 },
+      manaRegeneration: { amount: 2, intervalMs: 2_000 },
+      soulRegeneration: { amount: 1, intervalMs: 15_000 },
+    });
   });
 });

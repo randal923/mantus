@@ -64,6 +64,12 @@
     "entering": "Entering",
     "enterWorld": "Enter World",
     "empty": "No characters yet. Create your first hero to enter the world.",
+    "accountTiers": {
+      "free": "Free Account",
+      "premium": "Premium Account"
+    },
+    "premiumDaysRemaining_one": "{{count}} day remaining",
+    "premiumDaysRemaining_other": "{{count}} days remaining",
     "slotsUsed": "{{count}} of {{max}} character slots used",
     "level": "Level {{level}} · {{vocation}}",
     "name": "Character Name",
@@ -274,6 +280,7 @@
       "out-of-range": "You are too far away from the depot.",
       "busy": "Please wait for your other market action to finish.",
       "cooldown": "You are acting too fast. Wait a moment and try again.",
+      "premium-required": "Only premium accounts can create market offers.",
       "unavailable": "The market is not available right now.",
       "invalid-item": "That item cannot be traded here.",
       "not-marketable": "That item cannot be traded on the market.",
@@ -543,6 +550,7 @@
       "already-owned": "This house already has an owner.",
       "own-house-exists": "You already own a house.",
       "level-too-low": "You need level 100 to buy a house.",
+      "premium-required": "Only premium accounts can own a house.",
       "insufficient-funds": "Your bank account cannot cover this.",
       "not-at-entry": "Stand at the house to buy it.",
       "guildhall": "Guildhalls cannot be purchased.",
@@ -854,6 +862,13 @@
     "diagonalWalkingDescription": "Allow diagonal movement with held keys and the numpad. Click-to-walk can still use diagonals.",
     "hotkeyMapping": "Hotkey Mapping",
     "account": "Account",
+    "accountTier": "Account type",
+    "accountTiers": {
+      "free": "Free",
+      "premium": "Premium"
+    },
+    "premiumDaysRemaining_one": "Premium · {{count}} day remaining",
+    "premiumDaysRemaining_other": "Premium · {{count}} days remaining",
     "changeEmail": "Change Email",
     "changePassword": "Change Password",
     "newEmail": "New Email",
@@ -935,7 +950,7 @@
     "errors": {
       "not-found": "No character by that name exists.",
       "already-added": "That character is already on your list.",
-      "list-full": "Your VIP list is full.",
+      "list-full": "Your VIP list is full (20 entries for free accounts, 100 for premium).",
       "cannot-add-self": "You cannot add yourself.",
       "rate-limited": "Please wait a moment.",
       "invalid-request": "That VIP action is not possible."

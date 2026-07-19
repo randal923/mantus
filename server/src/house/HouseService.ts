@@ -165,7 +165,7 @@ export class HouseService {
         this.abandon(session, characterId);
         return;
       case "house-transfer-offer":
-        this.offerTransfer(session, characterId, player, intent);
+        this.offerTransfer(session, characterId, player, intent, now);
         return;
       case "house-transfer-respond":
         this.respondTransfer(session, characterId, player, intent, now);
@@ -278,6 +278,10 @@ export class HouseService {
     houseId: number,
     now: number,
   ): void {
+    if (!player.isPremiumAt(now)) {
+      this.fail(session, "premium-required");
+      return;
+    }
     const info = this.content.get(houseId);
     if (!info) {
       this.fail(session, "not-found");
@@ -357,6 +361,7 @@ export class HouseService {
     characterId: string,
     player: Player,
     intent: HouseTransferOfferMessage,
+    now: number,
   ): void {
     const houseId = this.houses.ownedBy(characterId);
     const info = houseId === undefined ? undefined : this.content.get(houseId);
@@ -379,6 +384,10 @@ export class HouseService {
     }
     if (this.houses.ownedBy(target.id) !== undefined) {
       this.fail(session, "target-has-house");
+      return;
+    }
+    if (!target.isPremiumAt(now)) {
+      this.fail(session, "premium-required");
       return;
     }
     this.pendingTransfers.set(houseId, {
@@ -423,6 +432,10 @@ export class HouseService {
         houseName: info.name,
         detail: player.name,
       });
+      return;
+    }
+    if (!player.isPremiumAt(now)) {
+      this.fail(session, "premium-required");
       return;
     }
     if (this.houses.ownedBy(characterId) !== undefined) {

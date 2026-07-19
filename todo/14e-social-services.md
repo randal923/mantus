@@ -8,8 +8,8 @@ services; each can be its own PR.
 - [ ] Match pinned VIP/friends, VIP groups/icons/descriptions, presence, and
   privacy/ignore rules, friend-system actions, typing state, leader/member
   finder visibility, and exiva restrictions.
-  - Done 2026-07-19: character-scoped VIP list (100 entries, description/
-    icon/notify-on-login per entry), live presence pushes via a reverse
+  - Done 2026-07-19: character-scoped VIP list (20 free / 100 premium entries,
+    description/icon/notify-on-login per entry), live presence pushes via a reverse
     watcher index, private lists (presence only revealed for names on your
     own list), VipPanel client UI. (Migration `020_social.sql`,
     `server/src/social/`, `protocol/src/vip.ts`.)

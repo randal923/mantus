@@ -22,7 +22,8 @@ Treat every operation as concurrent by default.
   item list, 1s per-session mutation cooldown; browse never exposes owner
   names or ids — only a `mine` flag on the receiving session's own offers.)
 - [x] Match pinned market fees, escrow-at-creation, 30-day expiry, partial
-  fills, same-account accept block, inbox delivery, and bank proceeds.
+  fills, same-account accept block, inbox delivery, bank proceeds, and the
+  premium requirement for creating offers.
 
 ## Shipped file surface
 
@@ -74,8 +75,8 @@ All in `server/src/market/PgMarketStore.integration.test.ts` (gated on
   (no full marketable-catalog browser; the DAT importer still discards
   `ATTR.market` metadata). Marketability is derived server-side from
   `primaryType` in `marketCategoryOf.ts`.
-- **No level/vocation display in detail view, no premium gate, no anonymous
-  flag** (names are never exposed at all, which is strictly tighter).
+- **No level/vocation display in detail view or anonymous flag** (names are
+  never exposed at all, which is strictly tighter).
 - **Counterparties are not notified live** (bank-transfer parity gap): an
   online seller learns of a fill on the next market/bank open; inbox
   deliveries do appear live via the depot cache.

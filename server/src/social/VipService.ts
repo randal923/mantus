@@ -6,6 +6,7 @@ import {
   type VipEntry,
   type VipRemoveMessage,
 } from "@tibia/protocol";
+import { getAccountStatus } from "../getAccountStatus";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
@@ -99,7 +100,7 @@ export class VipService {
     this.cooldownBySession.set(session.id, now + VIP_LIMITS.actionCooldownMs);
     switch (intent.type) {
       case "vip-add":
-        this.add(session, characterId, intent.name);
+        this.add(session, characterId, intent.name, now);
         return;
       case "vip-remove":
         this.remove(session, characterId, intent.targetCharacterId);
@@ -110,14 +111,28 @@ export class VipService {
     }
   }
 
-  private add(session: Session, characterId: string, name: string): void {
+  private add(
+    session: Session,
+    characterId: string,
+    name: string,
+    now: number,
+  ): void {
     const store = this.requireStore();
-    if ((this.entriesByCharacter.get(characterId)?.length ?? 0) >= VIP_LIMITS.maxEntries) {
+    const maxEntries =
+      session.account &&
+      getAccountStatus(session.account, now).accountTier === "premium"
+        ? VIP_LIMITS.maxEntries
+        : VIP_LIMITS.freeMaxEntries;
+    if ((this.entriesByCharacter.get(characterId)?.length ?? 0) >= maxEntries) {
       this.fail(session, "list-full");
       return;
     }
     this.enqueue(characterId, async () => {
-      const result = await store.addVip({ characterId, targetName: name });
+      const result = await store.addVip({
+        characterId,
+        targetName: name,
+        maxEntries,
+      });
       if (result.status === "failed") return this.failLater(session, result.reason);
       return () => {
         if (this.registry.sessionFor(characterId) !== session) return;

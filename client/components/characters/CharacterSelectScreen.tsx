@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type {
+  AccountTier,
   CharacterCreationOptions,
   CharacterSummary,
   CreateCharacterInput,
@@ -15,6 +16,8 @@ interface CharacterSelectScreenProps {
   status: ConnectionStatus;
   characters: ReadonlyArray<CharacterSummary> | null;
   creationOptions: CharacterCreationOptions | null;
+  accountTier: AccountTier;
+  premiumDaysRemaining: number;
   busy: boolean;
   error: string | null;
   onCreate: (input: CreateCharacterInput) => void;
@@ -27,6 +30,8 @@ export function CharacterSelectScreen({
   status,
   characters,
   creationOptions,
+  accountTier,
+  premiumDaysRemaining,
   busy,
   error,
   onCreate,
@@ -71,6 +76,8 @@ export function CharacterSelectScreen({
       key={characters.map((character) => character.id).join(":")}
       characters={characters}
       creationOptions={creationOptions}
+      accountTier={accountTier}
+      premiumDaysRemaining={premiumDaysRemaining}
       busy={busy}
       error={logoutFailed ? t("menu.logoutFailed") : error}
       onClose={logout}

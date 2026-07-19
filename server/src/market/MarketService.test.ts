@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { ServerMessage } from "@tibia/protocol";
+import type { AccountTier, ServerMessage } from "@tibia/protocol";
 import { describe, expect, it, vi } from "vitest";
 import type { WebSocket } from "ws";
 import { gridMapData } from "../gridMapData";
@@ -130,7 +130,9 @@ const makeMarketStore = (): MarketStore => ({
   resolveExpired: vi.fn(async () => []),
 });
 
-const makeHarness = (options: { stored?: Item[] } = {}) => {
+const makeHarness = (
+  options: { stored?: Item[]; accountTier?: AccountTier } = {},
+) => {
   const base = gridMapData({
     name: "market-test",
     width: 40,
@@ -150,11 +152,15 @@ const makeHarness = (options: { stored?: Item[] } = {}) => {
     },
   };
   const world = new World(map, 25);
-  const player = new Player(makeCharacter("market-player", "Market Player"), {
-    x: 10,
-    y: 10,
-    z: 7,
-  });
+  const accountTier = options.accountTier ?? "premium";
+  const premiumUntil =
+    accountTier === "premium" ? new Date("2100-01-01T00:00:00.000Z") : null;
+  const player = new Player(
+    makeCharacter("market-player", "Market Player"),
+    { x: 10, y: 10, z: 7 },
+    0,
+    premiumUntil,
+  );
   world.addPlayer(player);
   const messages: ServerMessage[] = [];
   const socket = {
@@ -170,6 +176,15 @@ const makeHarness = (options: { stored?: Item[] } = {}) => {
     initialViewRange: { x: 9, y: 7 },
   });
   session.playerId = player.id;
+  session.account = {
+    id: "market-account",
+    supabaseUserId: "market-user",
+    email: null,
+    bannedUntil: null,
+    premiumUntil,
+    language: "en",
+    uiSettings: {},
+  };
   const items = new ItemIntentHandler(
     new MemoryItemStore(catalog),
     catalog,
@@ -199,6 +214,29 @@ const makeHarness = (options: { stored?: Item[] } = {}) => {
 };
 
 describe("MarketService", () => {
+  it("rejects free-account offer creation before escrow changes", () => {
+    const harness = makeHarness({ accountTier: "free" });
+
+    harness.market.handle(
+      harness.session,
+      {
+        type: "market-create-offer",
+        requestId: randomUUID(),
+        side: "buy",
+        itemTypeId: GEM_TYPE,
+        amount: 1,
+        unitPrice: 100,
+      },
+      0,
+    );
+
+    expect(harness.store.createBuyOffer).not.toHaveBeenCalled();
+    expect(harness.messages).toContainEqual({
+      type: "market-action-failed",
+      reason: "premium-required",
+    });
+  });
+
   it("commits a buy offer anywhere, with no depot session open", async () => {
     const harness = makeHarness();
     harness.world.relocateCreature(harness.player, { x: 30, y: 30, z: 7 });

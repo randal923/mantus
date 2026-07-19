@@ -42,6 +42,8 @@ const meta = {
     status: "connected",
     characters: CHARACTERS,
     creationOptions: CREATION_OPTIONS,
+    accountTier: "premium",
+    premiumDaysRemaining: 30,
     busy: false,
     error: null,
     onCreate: fn(),

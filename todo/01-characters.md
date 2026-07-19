@@ -70,6 +70,8 @@ persisted character.
 
 - [x] Add a character selection screen after authentication with loading,
   empty, failure, reconnect, and selected states.
+- [x] Show the server-derived free/premium account status in character
+  selection, including rounded-up remaining premium days while active.
 - [x] Add a create-character form driven by server-provided vocation/outfit
   options and accessible validation messages.
 - [x] Remove hard-coded player outfit/name and random color choices from world

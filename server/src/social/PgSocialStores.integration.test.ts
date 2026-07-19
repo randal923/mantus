@@ -140,18 +140,31 @@ databaseDescribe("Pg social stores integration", () => {
     await insertCharacter("Bob");
 
     expect(
-      await vipStore.addVip({ characterId: alice, targetName: "Alice" }),
+      await vipStore.addVip({
+        characterId: alice,
+        targetName: "Alice",
+        maxEntries: VIP_LIMITS.maxEntries,
+      }),
     ).toEqual({ status: "failed", reason: "cannot-add-self" });
     expect(
-      await vipStore.addVip({ characterId: alice, targetName: "Nobody" }),
+      await vipStore.addVip({
+        characterId: alice,
+        targetName: "Nobody",
+        maxEntries: VIP_LIMITS.maxEntries,
+      }),
     ).toEqual({ status: "failed", reason: "not-found" });
     const first = await vipStore.addVip({
       characterId: alice,
       targetName: "  bob  ",
+      maxEntries: VIP_LIMITS.maxEntries,
     });
     expect(first.status).toBe("added");
     expect(
-      await vipStore.addVip({ characterId: alice, targetName: "Bob" }),
+      await vipStore.addVip({
+        characterId: alice,
+        targetName: "Bob",
+        maxEntries: VIP_LIMITS.maxEntries,
+      }),
     ).toEqual({ status: "failed", reason: "already-added" });
     expect(await vipRowCount(alice)).toBe(1);
   });
@@ -171,8 +184,16 @@ databaseDescribe("Pg social stores integration", () => {
     await insertCharacter("Last Two");
 
     const results = await Promise.all([
-      vipStore.addVip({ characterId: alice, targetName: "Last One" }),
-      vipStore.addVip({ characterId: alice, targetName: "Last Two" }),
+      vipStore.addVip({
+        characterId: alice,
+        targetName: "Last One",
+        maxEntries: VIP_LIMITS.maxEntries,
+      }),
+      vipStore.addVip({
+        characterId: alice,
+        targetName: "Last Two",
+        maxEntries: VIP_LIMITS.maxEntries,
+      }),
     ]);
     const added = results.filter((result) => result.status === "added");
     const failed = results.filter((result) => result.status === "failed");
@@ -186,8 +207,16 @@ databaseDescribe("Pg social stores integration", () => {
     const alice = await insertCharacter("Alice");
     const bob = await insertCharacter("Bob");
     await insertCharacter("Carol");
-    await vipStore.addVip({ characterId: alice, targetName: "Carol" });
-    await vipStore.addVip({ characterId: bob, targetName: "Alice" });
+    await vipStore.addVip({
+      characterId: alice,
+      targetName: "Carol",
+      maxEntries: VIP_LIMITS.maxEntries,
+    });
+    await vipStore.addVip({
+      characterId: bob,
+      targetName: "Alice",
+      maxEntries: VIP_LIMITS.maxEntries,
+    });
 
     const aliceEntries = await vipStore.loadEntries(alice);
     const bobEntries = await vipStore.loadEntries(bob);

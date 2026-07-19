@@ -63,6 +63,9 @@ only.
 - Food-backed regeneration and scheduled training are online-only and process at most five
   overdue intervals per server tick. Exact progression is sent only to the
   owning session; the public creature projection exposes none of it.
+- Active premium time applies the pinned promoted-vocation health, mana, and
+  soul regeneration schedule and falls back to the base schedule immediately
+  when premium expires online.
 - The inventory has a collapsible character-details pane. Inventory opens with
   it closed; the edge arrow, top-nav Character button, or `C` hotkey opens it.
 
@@ -71,6 +74,10 @@ only.
 - [x] Support every pinned vocation and promotion, including Monk/Exalted Monk,
   with exact gains, skill/magic curves, regeneration, attack speed, formulas,
   requirements, and public/private projections.
+- [ ] Implement the NPC promotion purchase and durable promoted-state flow.
+  Until then, premium applies the promoted regeneration profile without
+  changing the character's vocation; replace that stopgap with Canary's saved
+  promotion + login promotion/demotion behavior once promotion is purchasable.
 - [ ] Implement stamina, soul rules, offline and exercise training, blessings,
   skill stages/rates, death-loss interaction, and every persistent progression
   modifier used by pinned Canary content.

@@ -64,6 +64,12 @@
     "entering": "Entrando",
     "enterWorld": "Entrar no Mundo",
     "empty": "Você ainda não tem personagens. Crie seu primeiro herói para entrar no mundo.",
+    "accountTiers": {
+      "free": "Conta Gratuita",
+      "premium": "Conta Premium"
+    },
+    "premiumDaysRemaining_one": "{{count}} dia restante",
+    "premiumDaysRemaining_other": "{{count}} dias restantes",
     "slotsUsed": "{{count}} de {{max}} espaços de personagem ocupados",
     "level": "Nível {{level}} · {{vocation}}",
     "name": "Nome do Personagem",
@@ -274,6 +280,7 @@
       "out-of-range": "Você está longe demais do depot.",
       "busy": "Aguarde sua outra ação no mercado terminar.",
       "cooldown": "Você está agindo rápido demais. Aguarde um momento e tente novamente.",
+      "premium-required": "Somente contas premium podem criar ofertas no mercado.",
       "unavailable": "O mercado não está disponível no momento.",
       "invalid-item": "Este item não pode ser negociado aqui.",
       "not-marketable": "Este item não pode ser negociado no mercado.",
@@ -543,6 +550,7 @@
       "already-owned": "Esta casa já tem dono.",
       "own-house-exists": "Você já possui uma casa.",
       "level-too-low": "Você precisa do nível 100 para comprar uma casa.",
+      "premium-required": "Somente contas premium podem possuir uma casa.",
       "insufficient-funds": "Sua conta bancária não cobre este valor.",
       "not-at-entry": "Fique junto à casa para comprá-la.",
       "guildhall": "Sedes de guilda não podem ser compradas.",
@@ -854,6 +862,13 @@
     "diagonalWalkingDescription": "Permite movimento diagonal com teclas pressionadas e o teclado numérico. Caminhar por clique ainda pode usar diagonais.",
     "hotkeyMapping": "Mapeamento de Teclas",
     "account": "Conta",
+    "accountTier": "Tipo de conta",
+    "accountTiers": {
+      "free": "Gratuita",
+      "premium": "Premium"
+    },
+    "premiumDaysRemaining_one": "Premium · {{count}} dia restante",
+    "premiumDaysRemaining_other": "Premium · {{count}} dias restantes",
     "changeEmail": "Alterar E-mail",
     "changePassword": "Alterar Senha",
     "newEmail": "Novo E-mail",
@@ -935,7 +950,7 @@
     "errors": {
       "not-found": "Não existe personagem com esse nome.",
       "already-added": "Esse personagem já está na sua lista.",
-      "list-full": "Sua lista VIP está cheia.",
+      "list-full": "Sua lista VIP está cheia (20 entradas para contas gratuitas, 100 para premium).",
       "cannot-add-self": "Você não pode adicionar a si mesmo.",
       "rate-limited": "Aguarde um momento.",
       "invalid-request": "Essa ação VIP não é possível."

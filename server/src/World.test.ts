@@ -292,6 +292,36 @@ describe("World.tryMove", () => {
     expect(player.position).toEqual(destination);
   });
 
+  it("executes a ladder action from a diagonally adjacent tile", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "ladder-diagonal",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "ladder",
+            activation: "use",
+            source,
+            destination,
+            itemId: 1948,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(4, 5);
+    world.addPlayer(player);
+
+    expect(world.tryUseMap(player, source, 1000).moved).toBe(true);
+    expect(player.position).toEqual(destination);
+  });
+
   it("executes an adjacent server-authored dropdown action", () => {
     const source = { x: 5, y: 4, z: 7 };
     const destination = { x: 5, y: 4, z: 8 };

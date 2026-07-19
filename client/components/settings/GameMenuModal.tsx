@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import type { Language } from "@tibia/protocol";
+import type { AccountTier, Language } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
@@ -34,6 +34,8 @@ type HotkeyCode =
 
 interface GameMenuModalProps {
   onClose: () => void;
+  accountTier?: AccountTier;
+  premiumDaysRemaining?: number;
   onChangeCharacter?: () => void;
   onLogout?: () => void | Promise<void>;
   onChangeEmail?: (email: string) => void;
@@ -68,6 +70,8 @@ const DEFAULT_HOTKEYS: Readonly<Record<HotkeyId, HotkeyCode>> = {
 
 export function GameMenuModal({
   onClose,
+  accountTier = "free",
+  premiumDaysRemaining = 0,
   onChangeCharacter,
   onLogout,
   onChangeEmail,
@@ -252,6 +256,16 @@ export function GameMenuModal({
             <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
               {t("settings.account")}
             </h3>
+            <p className="flex items-center justify-between rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-2 text-sm text-ui-text">
+              <span>{t("settings.accountTier")}</span>
+              <span className="font-medium text-ui-gold">
+                {accountTier === "premium"
+                  ? t("settings.premiumDaysRemaining", {
+                      count: premiumDaysRemaining,
+                    })
+                  : t("settings.accountTiers.free")}
+              </span>
+            </p>
             <div className="grid grid-cols-2 gap-2">
               <Button size="sm" onClick={() => setView("email")}>
                 {t("settings.changeEmail")}

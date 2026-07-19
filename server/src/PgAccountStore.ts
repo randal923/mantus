@@ -8,6 +8,7 @@ interface AccountRow {
   supabase_user_id: string;
   email: string | null;
   banned_until: Date | null;
+  premium_until: Date | null;
   language: Language;
   ui_settings: unknown;
 }
@@ -31,7 +32,8 @@ export class PgAccountStore implements AccountStore {
        VALUES ($1, $2, $3)
        ON CONFLICT (supabase_user_id)
        DO UPDATE SET email = EXCLUDED.email, language = EXCLUDED.language
-       RETURNING id, supabase_user_id, email, banned_until, language, ui_settings`,
+       RETURNING id, supabase_user_id, email, banned_until, premium_until,
+         language, ui_settings`,
       [supabaseUserId, email, language],
     );
     const row = result.rows[0];
@@ -41,6 +43,7 @@ export class PgAccountStore implements AccountStore {
       supabaseUserId: row.supabase_user_id,
       email: row.email,
       bannedUntil: row.banned_until,
+      premiumUntil: row.premium_until,
       language: row.language,
       uiSettings: parseUiSettings(row.ui_settings),
     };

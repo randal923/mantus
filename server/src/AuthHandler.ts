@@ -3,6 +3,7 @@ import type { Account, AccountStore } from "./AccountStore";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { TokenVerifier } from "./TokenVerifier";
+import { getAccountStatus } from "./getAccountStatus";
 
 export class AuthHandler {
   /** Outcomes of async token checks, applied at the top of the next tick. */
@@ -81,6 +82,11 @@ export class AuthHandler {
       other.terminate();
     }
     session.account = account;
-    session.send({ type: "auth-ok", language: account.language });
+    const status = getAccountStatus(account, Date.now());
+    session.send({
+      type: "auth-ok",
+      language: account.language,
+      ...status,
+    });
   }
 }

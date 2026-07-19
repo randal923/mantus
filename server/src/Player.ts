@@ -1,4 +1,5 @@
 import type {
+  AccountTier,
   CreatureState,
   HitBlock,
   Position,
@@ -29,13 +30,19 @@ export class Player extends Creature<Character["outfit"]> {
   readonly lastLoginAt: Date | null;
   readonly version: number;
   readonly progression: CharacterProgression;
+  private readonly premiumUntil: number | null;
   private readonly storageValues: Readonly<Record<string, number>>;
   private addAttackSkillPoint = false;
   private bloodHitCount = 0;
   private shieldBlockCount = 0;
   private speedModifier = 0;
 
-  constructor(character: Character, position: Position, now = Date.now()) {
+  constructor(
+    character: Character,
+    position: Position,
+    now = Date.now(),
+    premiumUntil: Date | null = null,
+  ) {
     const stats = deriveCharacterStats({
       vocation: character.vocation,
       definitionVersion: character.progressionDefinitionVersion,
@@ -59,6 +66,7 @@ export class Player extends Creature<Character["outfit"]> {
       maxHealth: stats.maxHealth,
     });
     this.vocation = character.vocation;
+    this.premiumUntil = premiumUntil?.getTime() ?? null;
     this.townId = character.townId;
     this.skull = character.skull;
     this.skullExpiresAt = character.skullExpiresAt?.getTime() ?? null;
@@ -68,6 +76,7 @@ export class Player extends Creature<Character["outfit"]> {
     this.progression = new CharacterProgression(
       character.vocation,
       character.progressionDefinitionVersion,
+      this.accountTierAt(now),
       {
         level: character.level,
         experience: Number(character.experience),
@@ -84,6 +93,16 @@ export class Player extends Creature<Character["outfit"]> {
 
   get level(): number {
     return this.progression.level;
+  }
+
+  accountTierAt(now: number): AccountTier {
+    return this.premiumUntil !== null && this.premiumUntil > now
+      ? "premium"
+      : "free";
+  }
+
+  isPremiumAt(now: number): boolean {
+    return this.accountTierAt(now) === "premium";
   }
 
   override toState(): CreatureState {
@@ -250,6 +269,7 @@ export class Player extends Creature<Character["outfit"]> {
       regenerationBlocked,
       this.hasCondition("no-regeneration") ||
         this.conditions.has("combat-lock"),
+      this.accountTierAt(now),
     );
     const healthBefore = this.health;
     if (tick.healthGain > 0) this.setHealth(this.health + tick.healthGain);

@@ -99,7 +99,7 @@ export class ProgressionSystem {
   syncPlayer(player: Player, now: number, immediate = false): void {
     if (immediate) this.persistence.saveNow(player, now);
     else this.persistence.markDirty(player);
-    this.sendProgression(player);
+    this.sendProgression(player, now);
   }
 
   tick(now: number): void {
@@ -107,7 +107,7 @@ export class ProgressionSystem {
       if (this.persistence.isExternalMutationPending(player)) continue;
       if (!player.tickProgression(now)) continue;
       this.persistence.markDirty(player);
-      this.sendProgression(player);
+      this.sendProgression(player, now);
     }
   }
 
@@ -119,7 +119,7 @@ export class ProgressionSystem {
     if (!result.processed) return false;
     this.persistence.saveNow(player, now);
     if (result.changed) {
-      this.sendProgression(player);
+      this.sendProgression(player, now);
       const inventory = this.items.updateCapacity(player.id, player.capacity);
       if (inventory) {
         this.registry.sessionFor(player.id)?.send({
@@ -131,11 +131,11 @@ export class ProgressionSystem {
     return true;
   }
 
-  private sendProgression(player: Player): void {
+  private sendProgression(player: Player, now: number): void {
     this.registry.sessionFor(player.id)?.send({
       type: "progression-updated",
       playerId: player.id,
-      progression: projectOwnProgression(player),
+      progression: projectOwnProgression(player, now),
     });
   }
 

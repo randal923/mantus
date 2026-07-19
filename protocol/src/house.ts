@@ -247,6 +247,7 @@ export const houseActionFailedMessageSchema = z
       "already-owned",
       "own-house-exists",
       "level-too-low",
+      "premium-required",
       "insufficient-funds",
       "not-at-entry",
       "guildhall",

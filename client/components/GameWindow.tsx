@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
+  AccountTier,
   ActionBar,
   BankActionFailedReason,
   DepotStateMessage,
@@ -176,6 +177,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [characters, setCharacters] = useState<
     ReadonlyArray<CharacterSummary> | null
   >(null);
+  const [accountTier, setAccountTier] = useState<AccountTier>("free");
+  const [premiumDaysRemaining, setPremiumDaysRemaining] = useState(0);
   const [creationOptions, setCreationOptions] =
     useState<CharacterCreationOptions | null>(null);
   const [ownCharacter, setOwnCharacter] =
@@ -197,7 +200,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [characterStatsOpen, setCharacterStatsOpen] = useState(false);
-  const [battleListVisible, setBattleListVisible] = useState(true);
+  const [battleListVisible, setBattleListVisible] = useState(false);
   const [minimapVisible, setMinimapVisible] = useState(true);
   const [mapName, setMapName] = useState<string | null>(null);
   const [uiSettings, setUiSettings] = useState<UiSettings>({});
@@ -692,6 +695,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             return next;
           });
           if (message.type === "character-list") {
+            setAccountTier(message.accountTier);
+            setPremiumDaysRemaining(message.premiumDaysRemaining);
             setCharacters(message.characters);
             setCreationOptions(message.creationOptions);
             setServerError(null);
@@ -712,6 +717,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "welcome") {
             joinedRef.current = true;
+            setAccountTier(message.accountTier);
+            setPremiumDaysRemaining(message.premiumDaysRemaining);
             confirmedLevelRef.current = {
               playerId: message.playerId,
               level: message.character.level,
@@ -1508,6 +1515,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           status={status}
           characters={characters}
           creationOptions={creationOptions}
+          accountTier={accountTier}
+          premiumDaysRemaining={premiumDaysRemaining}
           busy={characterBusy}
           error={
             serverError
@@ -2631,6 +2640,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           {gameMenuOpen && (
             <GameMenuModal
               onClose={() => setGameMenuOpen(false)}
+              accountTier={accountTier}
+              premiumDaysRemaining={premiumDaysRemaining}
               onLogout={onLogout}
               languageSaving={languageSaving}
               languageError={languageError}

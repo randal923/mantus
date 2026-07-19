@@ -72,6 +72,8 @@ const meta = {
   args: {
     characters: STORY_CHARACTERS,
     creationOptions: CREATION_OPTIONS,
+    accountTier: "premium",
+    premiumDaysRemaining: 30,
     onClose: fn(),
     onSelectCharacter: fn(),
     onCreateCharacter: fn(),

@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  accountTierSchema,
+  premiumDaysRemainingSchema,
+} from "./account";
 import { actionBarSchema } from "./actionBar";
 import {
   bankActionFailedMessageSchema,
@@ -108,6 +112,8 @@ export const mapInfoSchema = z.object({
 export const authOkMessageSchema = z.object({
   type: z.literal("auth-ok"),
   language: languageSchema,
+  accountTier: accountTierSchema,
+  premiumDaysRemaining: premiumDaysRemainingSchema,
 });
 
 export const languageUpdatedMessageSchema = z.object({
@@ -127,6 +133,8 @@ export const actionBarUpdatedMessageSchema = z.object({
 
 export const characterListMessageSchema = z.object({
   type: z.literal("character-list"),
+  accountTier: accountTierSchema,
+  premiumDaysRemaining: premiumDaysRemainingSchema,
   characters: z.array(characterSummarySchema),
   creationOptions: characterCreationOptionsSchema,
 });
@@ -134,6 +142,8 @@ export const characterListMessageSchema = z.object({
 export const welcomeMessageSchema = z.object({
   type: z.literal("welcome"),
   playerId: z.string(),
+  accountTier: accountTierSchema,
+  premiumDaysRemaining: premiumDaysRemainingSchema,
   character: ownCharacterStateSchema,
   map: mapInfoSchema,
   creatures: z.array(creatureStateSchema),

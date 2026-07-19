@@ -491,6 +491,47 @@ describe("auth gate", () => {
     expect(second.closed()).toBe(false);
   });
 
+  it("projects premium status and remaining days in character selection", async () => {
+    const accounts = new InMemoryAccountStore();
+    accounts.seed({
+      id: "acc-sub-tok.premium",
+      supabaseUserId: "sub-tok.premium",
+      email: null,
+      bannedUntil: null,
+      premiumUntil: new Date(Date.now() + 3 * 24 * 60 * 60 * 1_000),
+      language: "en",
+      uiSettings: {},
+    });
+    startServer({}, accounts);
+    const client = await openRaw(server.port);
+    sockets.push(client.socket);
+    client.socket.send(
+      JSON.stringify({ type: "auth", token: "tok.premium", language: "en" }),
+    );
+    await waitFor(
+      () => client.messages.some((message) => message.type === "auth-ok"),
+      "premium authentication",
+    );
+    client.socket.send(JSON.stringify({ type: "list-characters" }));
+    await waitFor(
+      () => client.messages.some((message) => message.type === "character-list"),
+      "premium character list",
+    );
+
+    expect(
+      client.messages.find((message) => message.type === "auth-ok"),
+    ).toMatchObject({
+      accountTier: "premium",
+      premiumDaysRemaining: 3,
+    });
+    expect(
+      client.messages.find((message) => message.type === "character-list"),
+    ).toMatchObject({
+      accountTier: "premium",
+      premiumDaysRemaining: 3,
+    });
+  });
+
   it("does not list or select another account's character", async () => {
     const characters = new InMemoryCharacterStore();
     const owned = {
@@ -1138,6 +1179,7 @@ describe("auth gate", () => {
       supabaseUserId: "sub-tok.outlaw",
       email: null,
       bannedUntil: new Date(Date.now() + 60_000),
+      premiumUntil: null,
       language: "en",
       uiSettings: {},
     });

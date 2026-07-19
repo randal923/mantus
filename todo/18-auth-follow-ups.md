@@ -19,6 +19,19 @@ online player does nothing until they reconnect.
 - [ ] Do not build LISTEN/NOTIFY plumbing solely to support hand-edited account
   rows unless another durable event use case justifies it.
 
+## Premium entitlement operations
+
+`accounts.premium_until` is authoritative and defaults to free. Login captures
+the timestamp, while runtime checks use the server clock so an online premium
+account loses regeneration and gated actions immediately at expiry.
+
+- [ ] Add an authorized, audited purchase/grant/renewal path that updates
+  `premium_until`; do not make hand-edited production rows the normal account
+  workflow.
+- [ ] Propagate renewals to an online session. Expiry is live today, but added
+  time is not observed until the account reconnects because the session holds
+  the timestamp loaded at authentication.
+
 ## Accepted residual auth risks
 
 - [ ] Bearer-token replay window: a stolen access token works until expiry. Use

@@ -64,7 +64,12 @@ export class MovementRules {
 
   tryUseMap(player: Player, target: Position, now: number): MoveResult {
     const from = player.position;
-    const distance = Math.abs(target.x - from.x) + Math.abs(target.y - from.y);
+    // Chebyshev distance: transitions (ladders, sewers, holes) are usable
+    // from any of the eight surrounding tiles, or standing on them.
+    const distance = Math.max(
+      Math.abs(target.x - from.x),
+      Math.abs(target.y - from.y),
+    );
     if (target.z !== from.z || distance > 1) {
       return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
     }

@@ -1,4 +1,3 @@
-import { VIP_LIMITS } from "@tibia/protocol";
 import type {
   AddVipResult,
   VipEntryRecord,
@@ -14,7 +13,7 @@ interface MemoryVipRow {
 
 /**
  * In-memory VipStore mirroring the Pg store's execution-time checks
- * (name resolution, self/duplicate rejection, 100-entry cap) so service
+ * (name resolution, self/duplicate rejection, tier cap) so service
  * tests exercise the same failure paths.
  */
 export class MemoryVipStore implements VipStore {
@@ -45,6 +44,7 @@ export class MemoryVipStore implements VipStore {
   async addVip(input: {
     characterId: string;
     targetName: string;
+    maxEntries: number;
   }): Promise<AddVipResult> {
     const wanted = input.targetName.trim().toLowerCase();
     const target = [...this.characterNames.entries()].find(
@@ -61,7 +61,7 @@ export class MemoryVipStore implements VipStore {
     if (list.has(vipCharacterId)) {
       return { status: "failed", reason: "already-added" };
     }
-    if (list.size >= VIP_LIMITS.maxEntries) {
+    if (list.size >= input.maxEntries) {
       return { status: "failed", reason: "list-full" };
     }
     const row: MemoryVipRow = {

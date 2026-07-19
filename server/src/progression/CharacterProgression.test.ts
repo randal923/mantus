@@ -125,6 +125,59 @@ describe("CharacterProgression", () => {
     expect(reconnected.mana).toBe(0);
   });
 
+  it("gives premium accounts promotion-grade regeneration", () => {
+    const character = {
+      ...makeCharacter("mage"),
+      vocation: "Sorcerer" as const,
+      health: 100,
+      mana: 0,
+      soul: 0,
+    };
+    const free = new Player(character, { x: 0, y: 0, z: 7 }, 0, null);
+    const premium = new Player(
+      character,
+      { x: 0, y: 0, z: 7 },
+      0,
+      new Date(60_000),
+    );
+    free.feed(60, 0);
+    premium.feed(60, 0);
+
+    free.tickProgression(6_000);
+    premium.tickProgression(6_000);
+    expect(free.mana).toBe(4);
+    expect(premium.mana).toBe(6);
+
+    free.tickProgression(15_000);
+    premium.tickProgression(15_000);
+    expect(free.progression.soul).toBe(0);
+    expect(premium.progression.soul).toBe(1);
+  });
+
+  it("stops premium regeneration when premium time expires online", () => {
+    const player = new Player(
+      {
+        ...makeCharacter("expiring-mage"),
+        vocation: "Sorcerer",
+        health: 100,
+        mana: 0,
+      },
+      { x: 0, y: 0, z: 7 },
+      0,
+      new Date(10_000),
+    );
+    player.feed(60, 0);
+
+    player.tickProgression(6_000);
+    expect(player.mana).toBe(6);
+    player.tickProgression(10_000);
+    expect(player.mana).toBe(6);
+    player.tickProgression(12_999);
+    expect(player.mana).toBe(6);
+    player.tickProgression(13_000);
+    expect(player.mana).toBe(8);
+  });
+
   it("uses Canary food fullness and extends online regeneration", () => {
     const player = new Player(
       { ...makeCharacter("hero"), health: 100, mana: 0 },

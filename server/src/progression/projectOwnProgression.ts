@@ -4,15 +4,24 @@ import {
 } from "@tibia/protocol";
 import type { Player } from "../Player";
 import { getExperienceForLevel } from "./getExperienceForLevel";
+import { getAccountRegeneration } from "./getAccountRegeneration";
 import { getManaForNextMagicLevel } from "./getManaForNextMagicLevel";
 import { getSkillTriesForNextLevel } from "./getSkillTriesForNextLevel";
 import { getVocation } from "./getVocation";
 
-export function projectOwnProgression(player: Player): OwnProgressionState {
+export function projectOwnProgression(
+  player: Player,
+  now: number,
+): OwnProgressionState {
   const progression = player.progression;
   const vocation = getVocation(
     progression.vocation,
     progression.definitionVersion,
+  );
+  const regeneration = getAccountRegeneration(
+    progression.vocation,
+    progression.definitionVersion,
+    player.accountTierAt(now),
   );
   return {
     definitionVersion: progression.definitionVersion,
@@ -39,16 +48,16 @@ export function projectOwnProgression(player: Player): OwnProgressionState {
     speed: progression.speed,
     attackSpeedMs: progression.attackSpeedMs,
     healthRegeneration: {
-      amount: vocation.regeneration.healthAmount,
-      intervalMs: vocation.regeneration.healthIntervalMs,
+      amount: regeneration.healthAmount,
+      intervalMs: regeneration.healthIntervalMs,
     },
     manaRegeneration: {
-      amount: vocation.regeneration.manaAmount,
-      intervalMs: vocation.regeneration.manaIntervalMs,
+      amount: regeneration.manaAmount,
+      intervalMs: regeneration.manaIntervalMs,
     },
     soulRegeneration: {
-      amount: vocation.regeneration.soulAmount,
-      intervalMs: vocation.regeneration.soulIntervalMs,
+      amount: regeneration.soulAmount,
+      intervalMs: regeneration.soulIntervalMs,
     },
     skills: progression.skills.map((state) => ({
       ...state,

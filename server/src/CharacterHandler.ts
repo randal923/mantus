@@ -8,6 +8,7 @@ import type { Character } from "./character/Character";
 import { CharacterError } from "./character/CharacterError";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { CharacterService } from "./character/CharacterService";
+import { getAccountStatus } from "./getAccountStatus";
 import { Player } from "./Player";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
@@ -87,8 +88,11 @@ export class CharacterHandler {
       const characters = await this.service.list(accountId);
       this.outcomes.push(() => {
         if (!this.finishOperation(session, accountId)) return;
+        const account = session.account;
+        if (!account) return;
         session.send({
           type: "character-list",
+          ...getAccountStatus(account, Date.now()),
           characters,
           creationOptions: this.service.creationOptions(),
         });
@@ -111,8 +115,11 @@ export class CharacterHandler {
       });
       this.outcomes.push(() => {
         if (!this.finishOperation(session, accountId)) return;
+        const account = session.account;
+        if (!account) return;
         session.send({
           type: "character-list",
+          ...getAccountStatus(account, Date.now()),
           characters,
           creationOptions: this.service.creationOptions(),
         });
@@ -221,7 +228,10 @@ export class CharacterHandler {
       return;
     }
     const now = Date.now();
-    const player = new Player(character, spawn, now);
+    const account = session.account;
+    if (!account) return;
+    const accountStatus = getAccountStatus(account, now);
+    const player = new Player(character, spawn, now, account.premiumUntil);
     this.persistence.track(player, now);
     this.world.addPlayer(player);
     if (
@@ -246,7 +256,8 @@ export class CharacterHandler {
     session.send({
       type: "welcome",
       playerId: player.id,
-      character: this.service.ownState(player),
+      ...accountStatus,
+      character: this.service.ownState(player, now),
       map: { name: this.world.mapName },
       creatures,
       inventory,

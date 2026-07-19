@@ -2,7 +2,8 @@ import { z } from "zod";
 import { PROTOCOL_LIMITS } from "./limits";
 
 export const VIP_LIMITS = {
-  /** Flat per-character list (no premium tiers, no groups yet). */
+  freeMaxEntries: 20,
+  /** Protocol and premium-account maximum. */
   maxEntries: 100,
   /** One VIP mutation per half second per session. */
   actionCooldownMs: 500,

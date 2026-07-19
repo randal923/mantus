@@ -17,7 +17,8 @@ inputs.
   atomic ownership transfer/auction path.
   (Migration `019_houses.sql`; buy-at-house from bank (level 100,
   1000 gp/sqm), owner→player transfer offer/accept with both bank legs in
-  one serializable tx, abandon. Timed Cyclopedia-style auctions deferred.)
+  one serializable tx, premium checked for purchase/recipient/accept, abandon.
+  Timed Cyclopedia-style auctions deferred.)
 - [x] Authorize doors, beds, item placement/removal, invitations, and eviction
   server-side. Eviction moves items transactionally to a safe depot/inbox; it
   must never copy then delete them.

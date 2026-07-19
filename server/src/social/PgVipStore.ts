@@ -20,7 +20,7 @@ import type {
 
 /**
  * Postgres VipStore. Adds run in one SERIALIZABLE transaction that
- * resolves the target name and re-counts the list at execution time, so
+ * resolves the target name and re-counts the tier limit at execution time, so
  * racing adds cannot push a list past the cap; duplicates and self-adds
  * surface as constraint violations mapped to stable failure reasons.
  */
@@ -49,6 +49,7 @@ export class PgVipStore implements VipStore {
   async addVip(input: {
     characterId: string;
     targetName: string;
+    maxEntries: number;
   }): Promise<AddVipResult> {
     try {
       return await this.transact(async () => {
@@ -66,7 +67,7 @@ export class PgVipStore implements VipStore {
             countVipEntriesQuery,
             [input.characterId],
           );
-          if ((count.rows[0]?.total ?? 0) >= VIP_LIMITS.maxEntries) {
+          if ((count.rows[0]?.total ?? 0) >= input.maxEntries) {
             throw this.rollback("list-full");
           }
           await client.query(insertVipQuery, [

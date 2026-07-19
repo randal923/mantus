@@ -23,7 +23,7 @@ export type VipOpResult = { readonly status: "ok" } | VipOpFailure;
 /**
  * Durable per-character VIP storage. Every mutation re-validates inside
  * one transaction at execution time: the target name must resolve, the
- * 100-entry cap is counted under the same transaction, and duplicate or
+ * account-tier cap is counted under the same transaction, and duplicate or
  * self adds surface through database constraints (charter rules 1, 4).
  */
 export interface VipStore {
@@ -31,6 +31,7 @@ export interface VipStore {
   addVip(input: {
     characterId: string;
     targetName: string;
+    maxEntries: number;
   }): Promise<AddVipResult>;
   removeVip(input: {
     characterId: string;
