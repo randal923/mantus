@@ -31,6 +31,11 @@ import {
 } from "./market";
 import { npcDialogueChoiceMessageSchema } from "./npc";
 import { shopBuyMessageSchema, shopSellMessageSchema } from "./shop";
+import {
+  tradeAcceptMessageSchema,
+  tradeCancelMessageSchema,
+  tradeRequestMessageSchema,
+} from "./trade";
 import { equipmentSlotSchema } from "./item";
 import { positionSchema } from "./position";
 import { viewRangeSchema } from "./viewRange";
@@ -356,6 +361,9 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   marketCancelOfferMessageSchema,
   marketOwnOffersMessageSchema,
   marketOwnHistoryMessageSchema,
+  tradeRequestMessageSchema,
+  tradeAcceptMessageSchema,
+  tradeCancelMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,
 ]);

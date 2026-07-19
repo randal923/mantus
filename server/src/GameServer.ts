@@ -22,6 +22,8 @@ import type { ShopStore } from "./economy/ShopStore";
 import { GmCommandHandler } from "./gm/GmCommandHandler";
 import { MarketService } from "./market/MarketService";
 import type { MarketStore } from "./market/MarketStore";
+import { TradeService } from "./trade/TradeService";
+import type { TradeStore } from "./trade/TradeStore";
 import { LanguageHandler } from "./LanguageHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
@@ -54,6 +56,7 @@ export interface GameServerDeps {
   shop?: ShopStore;
   depot?: DepotStore;
   market?: MarketStore;
+  trade?: TradeStore;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -78,6 +81,7 @@ export class GameServer {
   private readonly shops: ShopService;
   private readonly depot: DepotService;
   private readonly market: MarketService;
+  private readonly trade: TradeService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -138,6 +142,14 @@ export class GameServer {
       this.depot,
       deps.market,
     );
+    this.trade = new TradeService(
+      this.world,
+      this.registry,
+      this.items,
+      deps.items,
+      deps.itemCatalog,
+      deps.trade,
+    );
     this.characters = new CharacterHandler(
       characterService,
       this.world,
@@ -147,6 +159,7 @@ export class GameServer {
       this.items,
       this.depot,
       this.spells,
+      this.trade,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.travel = new TravelService(
@@ -301,6 +314,7 @@ export class GameServer {
     this.shops.applyResolvedOutcomes(now);
     this.depot.applyResolvedOutcomes();
     this.market.applyResolvedOutcomes(now);
+    this.trade.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
@@ -316,6 +330,7 @@ export class GameServer {
     this.items.tickWorldContainers();
     this.depot.tick(now);
     this.market.tick(now);
+    this.trade.tick(now);
     this.progression.tick(now);
     this.persistence.tick(now);
   }
@@ -330,6 +345,7 @@ export class GameServer {
         this.registry.sessionFor(playerId) === session
       ) {
         this.npcs.removePlayer(playerId);
+        this.trade.detachCharacter(playerId, now);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
         this.depot.detachCharacter(playerId);
@@ -338,6 +354,7 @@ export class GameServer {
       }
       this.depot.detach(session);
       this.market.detach(session);
+      this.trade.detach(session);
       this.items.detachSession(session);
       this.registry.remove(session);
     }
@@ -446,6 +463,11 @@ export class GameServer {
       case "market-own-history":
         this.market.handle(session, intent, now);
         return;
+      case "trade-request":
+      case "trade-accept":
+      case "trade-cancel":
+        this.trade.handle(session, intent, now);
+        return;
       case "set-language":
         this.language.handle(session, intent);
         return;
@@ -471,6 +493,8 @@ export class GameServer {
     this.shops.applyResolvedOutcomes(Date.now());
     await this.market.stop();
     this.market.applyResolvedOutcomes(Date.now());
+    await this.trade.stop();
+    this.trade.applyResolvedOutcomes(Date.now());
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();

@@ -30,6 +30,11 @@ export class MemoryItemStore implements ItemStore {
     this.items.set(item.id, item);
   }
 
+  /** Every stored item regardless of owner; for tests and the memory trade store. */
+  allItems(): ReadonlyArray<Item> {
+    return [...this.items.values()];
+  }
+
   async loadForCharacter(characterId: string): Promise<ReadonlyArray<Item>> {
     const owned = collectReachableItemIds(
       [...this.items.values()],

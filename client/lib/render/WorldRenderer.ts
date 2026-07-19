@@ -37,6 +37,8 @@ interface WorldRendererActions {
   beginMapItemDrag(item: MapItemState, position: Position): void;
   endItemDrag(): void;
   dropDraggedItem(position: Position): void;
+  /** Drop landed on a creature; true consumes the drop (e.g. trade offer). */
+  dropDraggedItemOnCreature(creatureId: string): boolean;
   autoWalk(directions: ReadonlyArray<Direction>): void;
   targetPosition(position: Position): boolean;
 }
@@ -484,6 +486,13 @@ export class WorldRenderer {
   private readonly onMapDrop = (event: DragEvent): void => {
     event.preventDefault();
     if (!this.actions) return;
+    const point = this.canvasPoint(event);
+    if (point) {
+      const creatureId = this.creatureIdAt(point.x, point.y);
+      if (creatureId && this.actions.dropDraggedItemOnCreature(creatureId)) {
+        return;
+      }
+    }
     const position = this.mapPositionForEvent(event);
     if (position) this.actions.dropDraggedItem(position);
   };

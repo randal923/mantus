@@ -51,6 +51,11 @@ import {
   shopOpenedMessageSchema,
   shopTransactedMessageSchema,
 } from "./shop";
+import {
+  tradeActionFailedMessageSchema,
+  tradeClosedMessageSchema,
+  tradeStateMessageSchema,
+} from "./trade";
 
 /**
  * Static terrain is public data served over HTTP from
@@ -315,6 +320,9 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   marketOwnHistoryStateMessageSchema,
   marketTransactedMessageSchema,
   marketActionFailedMessageSchema,
+  tradeStateMessageSchema,
+  tradeClosedMessageSchema,
+  tradeActionFailedMessageSchema,
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,

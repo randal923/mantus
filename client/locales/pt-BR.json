@@ -289,6 +289,42 @@
       "failed": "O mercado não pôde concluir esta ação."
     }
   },
+  "trade": {
+    "title": "Negociar com {{name}}",
+    "ownOffer": "Sua oferta",
+    "partnerOffer": "Oferta de {{name}}",
+    "accepted": "Aceito",
+    "nestedItem": "{{name}} (dentro do contêiner oferecido)",
+    "waitingForOffer": "Nenhum item oferecido ainda.",
+    "counterOfferHint": "Arraste um dos seus itens até o parceiro de troca para fazer sua oferta.",
+    "readyHint": "Aceite para concluir a troca depois de conferir as duas ofertas.",
+    "waitingForPartnerAccept": "Aguardando {{name}} aceitar…",
+    "accept": "Aceitar",
+    "cancel": "Cancelar troca",
+    "errors": {
+      "busy": "Você não pode negociar agora.",
+      "cooldown": "Aguarde um momento antes de negociar novamente.",
+      "unavailable": "Negociação indisponível.",
+      "not-possible": "Desculpe, não é possível.",
+      "too-far-away": "Seu parceiro de troca está longe demais.",
+      "not-reachable": "A criatura não está alcançável.",
+      "already-trading": "Você já está negociando. Termine esta troca primeiro.",
+      "partner-already-trading": "Este jogador já está negociando.",
+      "too-many-items": "Você não pode negociar mais de 100 itens.",
+      "not-ready": "Os dois lados precisam oferecer um item primeiro.",
+      "failed": "A troca não pôde ser concluída."
+    },
+    "closed": {
+      "completed": "A troca foi concluída.",
+      "cancelled": "Troca cancelada.",
+      "moved-away": "Troca cancelada. Seu parceiro se afastou.",
+      "disconnected": "Troca cancelada. Seu parceiro saiu do jogo.",
+      "timeout": "Troca cancelada. Demorou demais.",
+      "no-capacity": "A troca não pôde ser concluída. Capacidade insuficiente para carregar os objetos.",
+      "no-room": "A troca não pôde ser concluída. Sem espaço para carregar os objetos.",
+      "failed": "A troca não pôde ser concluída."
+    }
+  },
   "bank": {
     "title": "Banco — {{npcName}}",
     "balance": "Saldo da Conta",
@@ -521,7 +557,9 @@
     "restore": "Restaurar chat"
   },
   "hud": {
-    "battleList": "Lista de Batalha"
+    "battleList": "Lista de Batalha",
+    "levelUpTitle": "Nível {{level}}!",
+    "levelUpDescription": "Sua vida máxima, mana e capacidade aumentaram."
   },
   "npc": {
     "dialogueLabel": "Diálogo com {{name}}",

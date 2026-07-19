@@ -289,6 +289,42 @@
       "failed": "The market could not complete that action."
     }
   },
+  "trade": {
+    "title": "Trade with {{name}}",
+    "ownOffer": "Your offer",
+    "partnerOffer": "{{name}}'s offer",
+    "accepted": "Accepted",
+    "nestedItem": "{{name}} (inside the offered container)",
+    "waitingForOffer": "No item offered yet.",
+    "counterOfferHint": "Drag one of your items onto your trade partner to make your offer.",
+    "readyHint": "Accept to complete the trade once you checked both offers.",
+    "waitingForPartnerAccept": "Waiting for {{name}} to accept…",
+    "accept": "Accept",
+    "cancel": "Cancel trade",
+    "errors": {
+      "busy": "You cannot trade right now.",
+      "cooldown": "Wait a moment before trading again.",
+      "unavailable": "Trading is not available.",
+      "not-possible": "Sorry, not possible.",
+      "too-far-away": "Your trade partner is too far away.",
+      "not-reachable": "Creature is not reachable.",
+      "already-trading": "You are already trading. Finish this trade first.",
+      "partner-already-trading": "This player is already trading.",
+      "too-many-items": "You can not trade more than 100 items.",
+      "not-ready": "Both sides must offer an item first.",
+      "failed": "Trade could not be completed."
+    },
+    "closed": {
+      "completed": "The trade was completed.",
+      "cancelled": "Trade cancelled.",
+      "moved-away": "Trade cancelled. Your partner moved away.",
+      "disconnected": "Trade cancelled. Your partner left the game.",
+      "timeout": "Trade cancelled. It took too long.",
+      "no-capacity": "Trade could not be completed. Not enough capacity to carry the objects.",
+      "no-room": "Trade could not be completed. Not enough room to carry the objects.",
+      "failed": "Trade could not be completed."
+    }
+  },
   "bank": {
     "title": "Bank — {{npcName}}",
     "balance": "Account Balance",
@@ -521,7 +557,9 @@
     "restore": "Restore chat"
   },
   "hud": {
-    "battleList": "Battle List"
+    "battleList": "Battle List",
+    "levelUpTitle": "Level {{level}}!",
+    "levelUpDescription": "Your maximum health, mana, and capacity increased."
   },
   "npc": {
     "dialogueLabel": "Dialogue with {{name}}",

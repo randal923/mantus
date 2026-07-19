@@ -20,6 +20,7 @@ import type { LoadedInventory } from "./item/LoadedInventory";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
 import { projectFightState } from "./combat/projectFightState";
 import type { SpellRegistry } from "./combat/SpellRegistry";
+import type { TradeService } from "./trade/TradeService";
 
 export class CharacterHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -33,6 +34,7 @@ export class CharacterHandler {
     private readonly items: ItemIntentHandler,
     private readonly depot: DepotService,
     private readonly spells: SpellRegistry,
+    private readonly trade: TradeService,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -222,6 +224,7 @@ export class CharacterHandler {
     this.registry.bindPlayer(session);
     const inventory = this.items.attach(loadedInventory);
     if (loadedDepot) this.depot.attach(loadedDepot);
+    this.trade.recoverOrphans(session, player.id);
     const creatures = this.visibility.announceSpawn(session, player);
     session.send({
       type: "welcome",
@@ -249,6 +252,7 @@ export class CharacterHandler {
     if (!existing || existing.id === replacement.id) return;
     const player = this.world.getPlayer(characterId);
     if (player) {
+      this.trade.detachCharacter(characterId, Date.now());
       this.persistence.untrack(player, Date.now());
       this.items.detach(characterId);
       this.depot.detachCharacter(characterId);

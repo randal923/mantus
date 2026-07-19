@@ -19,6 +19,7 @@ import type {
   ServerErrorCode,
   ServerMessage,
   SpellCatalogEntry,
+  TradeClosedReason,
 } from "@tibia/protocol";
 import { GOLD_COIN_TYPE_ID } from "@tibia/protocol";
 import { i18n } from "../i18n/i18n";
@@ -26,6 +27,7 @@ import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import { useDepotSession } from "../hooks/useDepotSession";
 import { useMarketSession } from "../hooks/useMarketSession";
+import { useTradeSession } from "../hooks/useTradeSession";
 import { useOptimisticInventory } from "../hooks/useOptimisticInventory";
 import type { DepotAction } from "../lib/depot/DepotAction";
 import type {
@@ -74,7 +76,9 @@ import { ShopPanel } from "./shop/ShopPanel";
 import { DepotModal } from "./depot/DepotModal";
 import { MailboxModal } from "./depot/MailboxModal";
 import { AuctionHouseModal } from "./auction/AuctionHouseModal";
+import { TradePanel } from "./trade/TradePanel";
 import { Toast } from "./ui/Toast";
+import { LevelUpBanner } from "./LevelUpBanner";
 
 interface BankSessionState {
   npcId: string;
@@ -133,6 +137,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const languageRef = useRef(language);
   const confirmedLanguageRef = useRef(language);
   const joinedRef = useRef(false);
+  const confirmedLevelRef = useRef<{
+    readonly playerId: string;
+    readonly level: number;
+  } | null>(null);
+  const levelUpSequenceRef = useRef(0);
   const resumeCharacterIdRef = useRef<string | null>(null);
   const pendingRuneRef = useRef<InventoryItem | null>(null);
   const itemDragRef = useRef<ItemDragSource | null>(null);
@@ -148,9 +157,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [visibleCreatures, setVisibleCreatures] = useState<
     ReadonlyArray<CreatureState>
   >([]);
+  // Mirror for closures that must read creature kinds synchronously
+  // (drag-onto-player trade initiation inside the renderer callbacks).
+  const visibleCreaturesRef = useRef<ReadonlyArray<CreatureState>>([]);
   const [fightState, setFightState] = useState<FightState | null>(null);
   const [spells, setSpells] = useState<ReadonlyArray<SpellCatalogEntry>>([]);
   const [combatLog, setCombatLog] = useState<ReadonlyArray<string>>([]);
+  const [levelUpNotice, setLevelUpNotice] = useState<{
+    readonly id: number;
+    readonly level: number;
+  } | null>(null);
   const [chatState, dispatchChat] = useReducer(chatReducer, initialChatState);
   const [characterBusy, setCharacterBusy] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -272,6 +288,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setMarketSelectedItem(null);
     resetMarket();
   }, [resetMarket]);
+  const {
+    session: tradeSession,
+    stateReceived: confirmTradeState,
+    fail: failTrade,
+    begin: beginTradeAction,
+    reset: resetTrade,
+  } = useTradeSession();
+  const [tradeToast, setTradeToast] = useState<TradeClosedReason | null>(null);
+  const dismissTradeToast = useCallback(() => setTradeToast(null), []);
   const [itemText, setItemText] = useState<
     Extract<ServerMessage, { type: "item-text" }> | null
   >(null);
@@ -408,6 +433,21 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         endItemDrag: () => {
           itemDragRef.current = null;
         },
+        dropDraggedItemOnCreature: (creatureId) => {
+          const source = itemDragRef.current;
+          if (source?.kind !== "owned") return false;
+          const creature = visibleCreaturesRef.current.find(
+            (candidate) => candidate.id === creatureId,
+          );
+          if (creature?.kind !== "player") return false;
+          return (
+            client?.requestTrade(
+              creatureId,
+              source.item.id,
+              source.item.revision,
+            ) ?? false
+          );
+        },
         dropDraggedItem: (position) => {
           const source = itemDragRef.current;
           if (source?.kind === "owned") {
@@ -472,9 +512,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       client = new GameClient(WS_URL, {
         onMessage: (message) => {
           if (disposed) return;
-          setVisibleCreatures((current) =>
-            updateVisibleCreatures(current, message),
-          );
+          setVisibleCreatures((current) => {
+            const next = updateVisibleCreatures(current, message);
+            visibleCreaturesRef.current = next;
+            return next;
+          });
           if (message.type === "character-list") {
             setCharacters(message.characters);
             setCreationOptions(message.creationOptions);
@@ -496,6 +538,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "welcome") {
             joinedRef.current = true;
+            confirmedLevelRef.current = {
+              playerId: message.playerId,
+              level: message.character.level,
+            };
+            setLevelUpNotice(null);
             resumeCharacterIdRef.current = null;
             setOwnCharacter(message.character);
             resetInventory(message.inventory);
@@ -508,6 +555,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setShopSession(null);
             resetDepot();
             closeMarket();
+            resetTrade();
             setMailboxSession(null);
             setLootSession(null);
             dispatchChat({
@@ -735,6 +783,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             failMarket(message.reason);
             return;
           }
+          if (message.type === "trade-state") {
+            confirmTradeState(message);
+            return;
+          }
+          if (message.type === "trade-closed") {
+            setTradeToast(message.reason);
+            resetTrade();
+            return;
+          }
+          if (message.type === "trade-action-failed") {
+            failTrade(message.reason);
+            return;
+          }
           if (message.type === "mailbox-opened") {
             setBankSession(null);
             setShopSession(null);
@@ -837,6 +898,21 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             );
           }
           if (message.type === "progression-updated") {
+            const previousLevel = confirmedLevelRef.current;
+            confirmedLevelRef.current = {
+              playerId: message.playerId,
+              level: message.progression.level,
+            };
+            if (
+              previousLevel?.playerId === message.playerId &&
+              message.progression.level > previousLevel.level
+            ) {
+              levelUpSequenceRef.current += 1;
+              setLevelUpNotice({
+                id: levelUpSequenceRef.current,
+                level: message.progression.level,
+              });
+            }
             setOwnCharacter((current) =>
               current?.id === message.playerId
                 ? { ...current, ...message.progression }
@@ -871,6 +947,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         onStatus: (nextStatus) => {
           if (disposed) return;
           if (nextStatus === "disconnected") joinedRef.current = false;
+          if (nextStatus === "disconnected") confirmedLevelRef.current = null;
+          if (nextStatus === "disconnected") setLevelUpNotice(null);
           if (nextStatus === "disconnected") setVisibleCreatures([]);
           if (nextStatus === "disconnected") setFightState(null);
           if (nextStatus === "disconnected") setSpells([]);
@@ -1010,6 +1088,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     confirmMarketHistory,
     confirmMarketTransacted,
     failMarket,
+    confirmTradeState,
+    failTrade,
+    resetTrade,
   ]);
 
   return (
@@ -1141,6 +1222,18 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             <Toast
               message={t(`auction.toast.${marketToast}`)}
               onDismiss={dismissMarketToast}
+            />
+          )}
+          {tradeToast && (
+            <Toast
+              message={t(`trade.closed.${tradeToast}`)}
+              onDismiss={dismissTradeToast}
+            />
+          )}
+          {levelUpNotice && (
+            <LevelUpBanner
+              key={levelUpNotice.id}
+              level={levelUpNotice.level}
             />
           )}
           {runeTargeting && (
@@ -1512,6 +1605,25 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                       beginMarketAction(sent);
                     }
               }
+            />
+          )}
+          {tradeSession && (
+            <TradePanel
+              session={tradeSession}
+              error={
+                tradeSession.error
+                  ? t(`trade.errors.${tradeSession.error}`, {
+                      defaultValue: t("trade.errors.failed"),
+                    })
+                  : null
+              }
+              onAccept={() => {
+                const sent = clientRef.current?.acceptTrade() ?? false;
+                beginTradeAction(sent);
+              }}
+              onCancel={() => {
+                clientRef.current?.cancelTrade();
+              }}
             />
           )}
           {mailboxSession && inventory && (

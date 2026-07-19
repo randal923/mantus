@@ -9,8 +9,8 @@ on its currency decisions and ledger rules):
 1. [Currency, accounting, and bank](11a-currency-and-bank.md)
 2. [NPC shops](11b-npc-shops.md)
 3. [Depot and inbox](11c-depot-and-inbox.md)
-4. [Player trade](11d-player-trade.md) — not started; the market (11e) shipped
-   first and does not depend on it
+4. [Player trade](11d-player-trade.md) — shipped 2026-07-18 (see its
+   known-gaps list)
 5. [Market](11e-market.md) — shipped 2026-07-18 (see its known-gaps list)
 
 One rule spans all five: never touch more than one of these systems in a

@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "playtest:banker-relogin": "tsx src/playtest/scenarios/bankerReloginModal.ts",
-    "test:integration": "TEST_DATABASE_URL=\"${TEST_DATABASE_URL:-postgres://tibia:tibia_dev_only@localhost:5432/tibia}\" vitest run --testTimeout=30000 --hookTimeout=60000 src/item/PgItemStore.integration.test.ts src/character/PgCharacterStore.integration.test.ts src/depot/PgDepotStore.integration.test.ts src/economy/PgShopStore.integration.test.ts src/economy/PgBankStore.integration.test.ts src/market/PgMarketStore.integration.test.ts",
+    "test:integration": "TEST_DATABASE_URL=\"${TEST_DATABASE_URL:-postgres://tibia:tibia_dev_only@localhost:5432/tibia}\" vitest run --testTimeout=30000 --hookTimeout=60000 src/item/PgItemStore.integration.test.ts src/character/PgCharacterStore.integration.test.ts src/depot/PgDepotStore.integration.test.ts src/economy/PgShopStore.integration.test.ts src/economy/PgBankStore.integration.test.ts src/market/PgMarketStore.integration.test.ts src/trade/PgTradeStore.integration.test.ts",
     "db:migrate": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/migrate.ts",
     "db:cleanup-partial-world-seed": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/cleanupPartialWorldSeed.ts"
   },

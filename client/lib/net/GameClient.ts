@@ -359,6 +359,27 @@ export class GameClient {
     });
   }
 
+  requestTrade(
+    targetPlayerId: string,
+    itemId: string,
+    revision: number,
+  ): boolean {
+    return this.send({
+      type: "trade-request",
+      targetPlayerId,
+      itemId,
+      revision,
+    });
+  }
+
+  acceptTrade(): boolean {
+    return this.send({ type: "trade-accept" });
+  }
+
+  cancelTrade(): boolean {
+    return this.send({ type: "trade-cancel" });
+  }
+
   requestMarketOwnOffers(): boolean {
     return this.send({ type: "market-own-offers" });
   }

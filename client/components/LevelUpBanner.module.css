@@ -1,0 +1,152 @@
+.banner {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(166 158 128 / 72%);
+  border-radius: 0.5rem;
+  background:
+    radial-gradient(circle at 18% 50%, rgb(185 161 86 / 24%), transparent 28%),
+    linear-gradient(90deg, rgb(9 10 10 / 94%), rgb(35 35 29 / 96%), rgb(9 10 10 / 94%)),
+    url('/assets/ui/forged-stone-texture.webp') center / 480px 480px;
+  box-shadow:
+    0 12px 36px rgb(0 0 0 / 62%),
+    0 0 24px rgb(185 161 86 / 18%),
+    inset 0 1px 0 rgb(255 240 188 / 12%);
+  animation: banner-lifecycle 4.2s ease-in-out both;
+}
+
+.banner::before,
+.banner::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a69e80 24%, #e0d29b 50%, #a69e80 76%, transparent);
+  content: '';
+}
+
+.banner::before {
+  top: 0.25rem;
+}
+
+.banner::after {
+  bottom: 0.25rem;
+}
+
+.content {
+  display: flex;
+  min-height: 5.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  animation: content-lifecycle 4.2s ease-in-out both;
+}
+
+.sigil {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  place-items: center;
+  border: 1px solid rgb(224 210 155 / 75%);
+  border-radius: 9999px;
+  color: #f0e4b8;
+  background: radial-gradient(circle, rgb(119 101 47 / 88%), rgb(42 38 25 / 96%) 68%);
+  box-shadow:
+    0 0 16px rgb(224 210 155 / 28%),
+    inset 0 0 0 3px rgb(8 9 9 / 48%);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  animation: sigil-lifecycle 4.2s ease-in-out both;
+}
+
+@keyframes banner-lifecycle {
+  0% {
+    visibility: visible;
+    clip-path: inset(0 50%);
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+
+  4% {
+    opacity: 1;
+  }
+
+  13%,
+  84% {
+    clip-path: inset(0);
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    visibility: hidden;
+    clip-path: inset(0);
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+@keyframes content-lifecycle {
+  0%,
+  11% {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+
+  22%,
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+@keyframes sigil-lifecycle {
+  0%,
+  13% {
+    filter: brightness(1);
+    transform: scale(0.8);
+  }
+
+  24% {
+    filter: brightness(1.4);
+    transform: scale(1.08);
+  }
+
+  34%,
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes reduced-lifecycle {
+  0% {
+    visibility: visible;
+    opacity: 0;
+  }
+
+  8%,
+  88% {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  100% {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner,
+  .content,
+  .sigil {
+    animation-name: reduced-lifecycle;
+  }
+}
