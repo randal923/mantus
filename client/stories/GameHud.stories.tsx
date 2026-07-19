@@ -14,7 +14,6 @@ const meta = {
     battleListVisible: true,
     minimapVisible: false,
     mapName: null,
-    inventoryOpen: false,
     minimapLayout: null,
     onMinimapLayoutChange: fn(),
     visibleCreatures: [],

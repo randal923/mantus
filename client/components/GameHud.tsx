@@ -24,7 +24,6 @@ interface GameHudProps {
   battleListVisible: boolean;
   minimapVisible: boolean;
   mapName: string | null;
-  inventoryOpen: boolean;
   minimapLayout: MinimapLayout | null;
   onMinimapLayoutChange: (layout: MinimapLayout) => void;
   visibleCreatures: ReadonlyArray<CreatureState>;
@@ -49,7 +48,6 @@ export function GameHud({
   battleListVisible,
   minimapVisible,
   mapName,
-  inventoryOpen,
   minimapLayout,
   onMinimapLayoutChange,
   visibleCreatures,
@@ -150,9 +148,7 @@ export function GameHud({
       {minimapVisible && mapName && (
         <div
           className={
-            minimapLayout
-              ? "absolute"
-              : `absolute bottom-4 ${inventoryOpen ? "right-[26rem]" : "right-4"}`
+            minimapLayout ? "absolute" : "absolute right-4 bottom-4"
           }
           style={
             minimapLayout

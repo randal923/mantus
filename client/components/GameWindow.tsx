@@ -1731,7 +1731,6 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               battleListVisible={battleListVisible}
               minimapVisible={minimapVisible}
               mapName={mapName}
-              inventoryOpen={inventoryOpen}
               minimapLayout={uiSettings.minimap ?? null}
               onMinimapLayoutChange={handleMinimapLayoutChange}
               visibleCreatures={visibleCreatures}
