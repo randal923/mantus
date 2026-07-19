@@ -57,6 +57,14 @@ export interface ItemType {
   readonly rotateTo?: number;
   readonly kind?: string;
   readonly levelDoor?: number;
+  /** Canary door pair this type belongs to, and this type's role within it. */
+  readonly door?: {
+    readonly variant: "key" | "custom" | "quest" | "level";
+    readonly role: "locked" | "closed" | "open";
+    readonly closedId: number;
+    readonly openId: number;
+    readonly lockedId?: number;
+  };
   readonly field?: string;
   readonly charges?: number;
   readonly food?: {

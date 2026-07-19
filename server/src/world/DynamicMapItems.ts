@@ -7,6 +7,11 @@ import type { MapData } from "../MapData";
 import type { MapItem } from "../MapItem";
 import { positionKey } from "../positionKey";
 
+export interface TilePassabilityOverride {
+  readonly walkable: boolean;
+  readonly blocksProjectile: boolean;
+}
+
 export class DynamicMapItems {
   private readonly hiddenMapItemIds = new Set<string>();
   private readonly dynamicMapItems = new Map<string, MapItem[]>();
@@ -14,13 +19,38 @@ export class DynamicMapItems {
   /** Full item state for world roots and their container subtrees. */
   private readonly worldItems = new Map<string, Item>();
   private readonly seedKeyToId = new Map<string, string>();
+  /**
+   * Tiles whose passability is owned by a stateful item (a door): the static
+   * navigation bitset baked the map's placed state, so open/closed changes
+   * are overlaid here.
+   */
+  private readonly tileOverrides = new Map<string, TilePassabilityOverride>();
 
   constructor(
     private readonly map: MapData,
     private readonly weightForItemId: (
       itemId: number,
     ) => number | undefined = () => undefined,
+    private readonly doorPassabilityForItemId: (
+      itemId: number,
+    ) => boolean | undefined = () => undefined,
   ) {}
+
+  getTileOverride(position: Position): TilePassabilityOverride | undefined {
+    return this.tileOverrides.get(positionKey(position));
+  }
+
+  private refreshTileOverride(position: Position): void {
+    let override: TilePassabilityOverride | undefined;
+    for (const item of this.getMapItems(position)) {
+      const passable = this.doorPassabilityForItemId(item.itemId);
+      if (passable === undefined) continue;
+      override = { walkable: passable, blocksProjectile: !passable };
+    }
+    const key = positionKey(position);
+    if (override) this.tileOverrides.set(key, override);
+    else this.tileOverrides.delete(key);
+  }
 
   hideSeed(seedKey: string): void {
     this.hiddenMapItemIds.add(seedKey);
@@ -66,7 +96,10 @@ export class DynamicMapItems {
   registerLoadedWorldItems(items: ReadonlyArray<Item>): void {
     for (const item of items) {
       this.trackWorldItem(item);
-      if (item.location.kind === "world") this.addDynamicWorldItem(item);
+      if (item.location.kind === "world") {
+        this.addDynamicWorldItem(item);
+        this.refreshTileOverride(item.location.position);
+      }
     }
   }
 
@@ -195,8 +228,9 @@ export class DynamicMapItems {
       // The item left the world (picked up, equipped, consumed).
       this.untrackWorldItem(item.id);
     }
-    for (const key of changed.keys()) {
+    for (const [key, position] of changed) {
       this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
+      this.refreshTileOverride(position);
     }
     return [...changed.values()];
   }
@@ -218,6 +252,7 @@ export class DynamicMapItems {
       const key = positionKey(item.location.position);
       changed.set(key, item.location.position);
       this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
+      this.refreshTileOverride(item.location.position);
     }
     return [...changed.values()];
   }

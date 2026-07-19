@@ -20,6 +20,8 @@ import type { BankStore } from "./economy/BankStore";
 import { ShopService } from "./economy/ShopService";
 import type { ShopStore } from "./economy/ShopStore";
 import { GmCommandHandler } from "./gm/GmCommandHandler";
+import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
+import { WorldActionRegistry } from "./action/WorldActionRegistry";
 import { MarketService } from "./market/MarketService";
 import type { MarketStore } from "./market/MarketStore";
 import { TradeService } from "./trade/TradeService";
@@ -70,6 +72,7 @@ export class GameServer {
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly movement: MovementHandler;
+  private readonly worldActions: WorldActionRegistry;
   private readonly chat: ChatHandler;
   private readonly combat: CombatIntentHandler;
   private readonly combatSystem: Combat;
@@ -98,6 +101,10 @@ export class GameServer {
       config.tickMs,
       deps.worldItemDeltas,
       (itemId) => deps.itemCatalog.get(itemId)?.weight,
+      (itemId) => {
+        const door = deps.itemCatalog.get(itemId)?.door;
+        return door ? door.role === "open" : undefined;
+      },
     );
     this.visibility = new Visibility(
       this.world,
@@ -192,6 +199,14 @@ export class GameServer {
       this.world,
       this.visibility,
       this.persistence,
+      (session, player, from, now) =>
+        this.worldActions.closeDoorBehind(session, player, from, now),
+    );
+    this.worldActions = new WorldActionRegistry(
+      this.world,
+      deps.itemCatalog,
+      this.items,
+      loadDoorLevelRequirements(this.world.mapName),
     );
     this.progression = new ProgressionSystem(
       this.world,
@@ -402,6 +417,9 @@ export class GameServer {
       case "use-map":
         if (this.depot.handleMapUse(session, intent.position)) return;
         if (this.items.handleMapOpen(session, intent.position)) return;
+        if (this.worldActions.handleUseMap(session, intent.position, now)) {
+          return;
+        }
         this.movement.handleUseMap(session, intent, now);
         return;
       case "attack-target":

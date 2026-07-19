@@ -19,6 +19,7 @@ import type { ItemStore } from "./ItemStore";
 import type { ItemType } from "./ItemType";
 import type { LoadedInventory } from "./LoadedInventory";
 import type { LootItemCreation } from "./LootItemCreation";
+import type { CarriedPlan } from "./plan/CarriedPlan";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
 import { planEquip } from "./plan/planEquip";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
@@ -406,6 +407,29 @@ export class ItemIntentHandler {
 
   tickDecay(now: number): void {
     this.decayRunner.tick(now);
+  }
+
+  /**
+   * Applies a validated world-action plan (door, lever, map rotation):
+   * memory mutation synchronously in the tick, DB write behind the ordered
+   * persist lane (charter rules 3, 5).
+   */
+  applyWorldPlan(
+    session: Session,
+    characterId: string,
+    plan: CarriedPlan,
+    now: number,
+  ): void {
+    const inventory = this.operations.applyMutation(
+      characterId,
+      plan.mutation,
+      now,
+    );
+    if (inventory && session.playerId === characterId) {
+      session.send({ type: "inventory-updated", inventory });
+    }
+    const persist = plan.persist;
+    this.enqueuePersist(session, characterId, () => this.store.persist(persist));
   }
 
   /** Opens a world container (corpse) at the tile if one is present. */

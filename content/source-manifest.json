@@ -1,159 +1,178 @@
 {
-  "formatVersion": 2,
-  "assetEra": "Tibia 15.11 extended",
-  "canary": {
-    "repository": "https://github.com/opentibiabr/canary.git",
-    "commit": "a879c9312e34381e8eedf397b8ed44510698b689"
+ "formatVersion": 2,
+ "assetEra": "Tibia 15.11 extended",
+ "canary": {
+  "repository": "https://github.com/opentibiabr/canary.git",
+  "commit": "a879c9312e34381e8eedf397b8ed44510698b689"
+ },
+ "otclient": {
+  "repository": "https://github.com/opentibiabr/otclient.git",
+  "commit": "bdea0b23b4a738809d698cb7e4f88a299dd6bffc"
+ },
+ "sources": {
+  "map": {
+   "name": "otservbr",
+   "filename": "otservbr.otbm",
+   "url": "https://github.com/opentibiabr/canary/releases/download/v3.6.1/otservbr.otbm",
+   "sha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2"
   },
-  "otclient": {
-    "repository": "https://github.com/opentibiabr/otclient.git",
-    "commit": "bdea0b23b4a738809d698cb7e4f88a299dd6bffc"
+  "dat": {
+   "filename": "Tibia.dat",
+   "release": "15.11.c9d1cf",
+   "url": "https://github.com/dudantas/tibia-client/releases/tag/15.11.c9d1cf",
+   "sha256": "e25fadcf0cd9140cff8c89fa94026438d7c42322c6e23a71b1da5471a317b057"
   },
-  "sources": {
-    "map": {
-      "name": "otservbr",
-      "filename": "otservbr.otbm",
-      "url": "https://github.com/opentibiabr/canary/releases/download/v3.6.1/otservbr.otbm",
-      "sha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2"
-    },
-    "dat": {
-      "filename": "Tibia.dat",
-      "release": "15.11.c9d1cf",
-      "url": "https://github.com/dudantas/tibia-client/releases/tag/15.11.c9d1cf",
-      "sha256": "e25fadcf0cd9140cff8c89fa94026438d7c42322c6e23a71b1da5471a317b057"
-    },
-    "spr": {
-      "filename": "Tibia.spr",
-      "release": "15.11.c9d1cf",
-      "url": "https://github.com/dudantas/tibia-client/releases/tag/15.11.c9d1cf",
-      "sha256": "a7085447ddaa340ada42bfa71aed5f41582b1cd368f4a781b0464594f3c9b9ee"
-    },
-    "canaryItems": {
-      "path": "data/items/items.xml",
-      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
-      "sha256": "f7f60d81a7b7b613b32328b0cd921cb222b45ec49d31b0d01af6a67a74a687ed"
-    },
-    "canaryFoods": {
-      "path": "data/scripts/actions/items/foods.lua",
-      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
-      "sha256": "d561ef0e3c583b7f08415e29b7da91cc6956ce2b2a99b87f27f18d0426b55cde"
-    },
-    "canaryAppearances": {
-      "path": "data/items/appearances.dat",
-      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
-      "sha256": "aa44a154f30c7ed59acc25f246286396e4043851ef0b54ef3cf3951e46d1ce50"
-    },
-    "canaryCreatures": {
-      "monsterDefinitionsPath": "data-otservbr-global/monster",
-      "npcDefinitionsPath": "data-otservbr-global/npc",
-      "monsterSpawnsPath": "data-otservbr-global/world/otservbr-monster.xml",
-      "npcSpawnsPath": "data-otservbr-global/world/otservbr-npc.xml",
-      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
-      "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
-      "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9"
-    },
-    "canaryProgression": {
-      "vocationsPath": "data/XML/vocations.xml",
-      "implementationPath": "src/creatures/players/vocations/vocation.cpp",
-      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
-      "vocationsSha256": "d3ecc1319710012265e8225649d9cae3dbb6d1f90036310a8b81f6e40a8a3a14",
-      "vocationImplementationSha256": "a3930265d68ccf188a0aeddebfd4bd19fcc257bfb3865e5ee8e429f043be83b3"
-    },
-    "canarySpells": {
-      "spellPath": "data/scripts/spells",
-      "runePath": "data/scripts/runes",
-      "constantsPath": "src/utils/utils_definitions.hpp",
-      "areasPath": "data/scripts/lib/register_spells.lua",
-      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
-      "definitionsSha256": "835255c876350bd56f5853005f3e3888074e3f71b345ebd6b0a4312142a8546d"
-    },
-    "canaryNpcs": {
-      "definitionsPath": "data-otservbr-global/npc",
-      "selectionReportPath": "content/spawns/world-import-report.json",
-      "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
-      "definitionCount": 956,
-      "definitionsSha256": "19d71eea2e76931129adf52e7c0b5a921570a86f44096d158c82c28b00d41385"
-    }
+  "spr": {
+   "filename": "Tibia.spr",
+   "release": "15.11.c9d1cf",
+   "url": "https://github.com/dudantas/tibia-client/releases/tag/15.11.c9d1cf",
+   "sha256": "a7085447ddaa340ada42bfa71aed5f41582b1cd368f4a781b0464594f3c9b9ee"
   },
-  "balanceDefinitions": {
-    "progression": 1
+  "canaryItems": {
+   "path": "data/items/items.xml",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "f7f60d81a7b7b613b32328b0cd921cb222b45ec49d31b0d01af6a67a74a687ed"
   },
-  "converterSources": [
-    {
-      "path": "tools/importTibiaAssets.mjs",
-      "sha256": "8bf8b13c3c5e74a8de9eb3337199e11aeb9608b916aa086f3d8415f09de2ecfb"
-    },
-    {
-      "path": "tools/convertCanaryItems.mjs",
-      "sha256": "2c79a0d8996b715c4358fa2635ae68ca1c95c41c79e79ac51b77284966e1e1fe"
-    },
-    {
-      "path": "tools/buildItemCatalog.mjs",
-      "sha256": "da181e5b3c65a8fa6a5fb3b8bfffdfdd669a232a6ca8cfb585772d981d3b6290"
-    },
-    {
-      "path": "tools/importCanaryFoods.mjs",
-      "sha256": "d34b4c6a2e629b6c131b3e053ef5f35104ed6ac838cc2f4b4d955780cc3989f8"
-    },
-    {
-      "path": "tools/importCanaryStowableItems.mjs",
-      "sha256": "dfe97a1a0bc3cead4ee5cb9c2688aa10faadf3ebf1bdf7ff9662a82595a305ad"
-    },
-    {
-      "path": "tools/convertOtbm.mjs",
-      "sha256": "122587968f22e21a851bbf69a96f461c5869756868c93392beeba53715fa4ae4"
-    },
-    {
-      "path": "tools/importCanaryCreatures.mjs",
-      "sha256": "f1c7f2ffdcc79a5437207f0060938c5d77699a876befec260de5f283966d6862"
-    },
-    {
-      "path": "tools/parseCanaryCreatureContent.mjs",
-      "sha256": "e67c3339bcf5056afb3f9fd7367f38a9e126122cb5307cc0343468d9012b5438"
-    },
-    {
-      "path": "tools/importCanarySpells.mjs",
-      "sha256": "4d9d736818021938b52f09d65deee3d36f525c6fa4e0dd2f50667664bda9683f"
-    },
-    {
-      "path": "tools/parseCanarySpells.mjs",
-      "sha256": "1409a3326d909a2142f30b26616da2939cdcf8c09043d9ec369f74d59ba3213f"
-    },
-    {
-      "path": "tools/importCanaryNpcs.mjs",
-      "sha256": "86850ced5bbec98f6b2790c0c857baa564a256dcb9caff6d1b5a0e8e76d811bf"
-    },
-    {
-      "path": "tools/importCanaryShops.mjs",
-      "sha256": "b615e65f051b8b23376017042d22d520debb806f6e18efe645775c66970ab3e1"
-    },
-    {
-      "path": "tools/parseCanaryNpcShops.mjs",
-      "sha256": "79076ab141e6d247d583b1c7b38394838c70910d86564ca9afe2586034e78cfb"
-    },
-    {
-      "path": "tools/parseCanaryNpcDialogues.mjs",
-      "sha256": "e70fbe0adf7e9914ec32292344f10129a658e72713b43a97077dedffb1c854ab"
-    },
-    {
-      "path": "tools/buildCanaryParityInventory.mjs",
-      "sha256": "59eb80001238baeeac2eeeffdfdee20bc9f6345bfa75902dee51c4a74c4494cf"
-    },
-    {
-      "path": "tools/verifyCanaryParityInventory.mjs",
-      "sha256": "8d1c633a84fbc76714b3f95e79cd04ed5919001ac9238dd56c7caffedc679407"
-    }
-  ],
-  "converters": {
-    "assets": 2,
-    "canaryItems": 2,
-    "foods": 1,
-    "stowableItems": 1,
-    "itemCatalog": 2,
-    "map": 3,
-    "creatures": 2,
-    "spells": 2,
-    "shops": 2,
-    "npcDialogues": 1
+  "canaryFoods": {
+   "path": "data/scripts/actions/items/foods.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "d561ef0e3c583b7f08415e29b7da91cc6956ce2b2a99b87f27f18d0426b55cde"
+  },
+  "canaryAppearances": {
+   "path": "data/items/appearances.dat",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "aa44a154f30c7ed59acc25f246286396e4043851ef0b54ef3cf3951e46d1ce50"
+  },
+  "canaryCreatures": {
+   "monsterDefinitionsPath": "data-otservbr-global/monster",
+   "npcDefinitionsPath": "data-otservbr-global/npc",
+   "monsterSpawnsPath": "data-otservbr-global/world/otservbr-monster.xml",
+   "npcSpawnsPath": "data-otservbr-global/world/otservbr-npc.xml",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
+   "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9"
+  },
+  "canaryProgression": {
+   "vocationsPath": "data/XML/vocations.xml",
+   "implementationPath": "src/creatures/players/vocations/vocation.cpp",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "vocationsSha256": "d3ecc1319710012265e8225649d9cae3dbb6d1f90036310a8b81f6e40a8a3a14",
+   "vocationImplementationSha256": "a3930265d68ccf188a0aeddebfd4bd19fcc257bfb3865e5ee8e429f043be83b3"
+  },
+  "canarySpells": {
+   "spellPath": "data/scripts/spells",
+   "runePath": "data/scripts/runes",
+   "constantsPath": "src/utils/utils_definitions.hpp",
+   "areasPath": "data/scripts/lib/register_spells.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "definitionsSha256": "835255c876350bd56f5853005f3e3888074e3f71b345ebd6b0a4312142a8546d"
+  },
+  "canaryNpcs": {
+   "definitionsPath": "data-otservbr-global/npc",
+   "selectionReportPath": "content/spawns/world-import-report.json",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "definitionCount": 956,
+   "definitionsSha256": "19d71eea2e76931129adf52e7c0b5a921570a86f44096d158c82c28b00d41385"
+  },
+  "canaryDoors": {
+   "path": "data/libs/tables/doors.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "03e1d4a7a5a2902bd748db9ca963d3947c7a60fb2a53358c999f259e28c7c614"
+  },
+  "canaryLevelDoors": {
+   "path": "data-otservbr-global/startup/tables/door_level.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "fceda5f3ce381324b5c88e7104bdd4f6eba6afec7ab2e5b9e1bcafd646f56bd1"
   }
+ },
+ "balanceDefinitions": {
+  "progression": 1
+ },
+ "converterSources": [
+  {
+   "path": "tools/importTibiaAssets.mjs",
+   "sha256": "8bf8b13c3c5e74a8de9eb3337199e11aeb9608b916aa086f3d8415f09de2ecfb"
+  },
+  {
+   "path": "tools/convertCanaryItems.mjs",
+   "sha256": "2c79a0d8996b715c4358fa2635ae68ca1c95c41c79e79ac51b77284966e1e1fe"
+  },
+  {
+   "path": "tools/buildItemCatalog.mjs",
+   "sha256": "eab842e20e99cb425b6b373c74d1aa5b8a114de59ef86612b467fe6c67b49e47"
+  },
+  {
+   "path": "tools/importCanaryFoods.mjs",
+   "sha256": "d34b4c6a2e629b6c131b3e053ef5f35104ed6ac838cc2f4b4d955780cc3989f8"
+  },
+  {
+   "path": "tools/importCanaryStowableItems.mjs",
+   "sha256": "dfe97a1a0bc3cead4ee5cb9c2688aa10faadf3ebf1bdf7ff9662a82595a305ad"
+  },
+  {
+   "path": "tools/convertOtbm.mjs",
+   "sha256": "122587968f22e21a851bbf69a96f461c5869756868c93392beeba53715fa4ae4"
+  },
+  {
+   "path": "tools/importCanaryCreatures.mjs",
+   "sha256": "f1c7f2ffdcc79a5437207f0060938c5d77699a876befec260de5f283966d6862"
+  },
+  {
+   "path": "tools/parseCanaryCreatureContent.mjs",
+   "sha256": "e67c3339bcf5056afb3f9fd7367f38a9e126122cb5307cc0343468d9012b5438"
+  },
+  {
+   "path": "tools/importCanarySpells.mjs",
+   "sha256": "4d9d736818021938b52f09d65deee3d36f525c6fa4e0dd2f50667664bda9683f"
+  },
+  {
+   "path": "tools/parseCanarySpells.mjs",
+   "sha256": "1409a3326d909a2142f30b26616da2939cdcf8c09043d9ec369f74d59ba3213f"
+  },
+  {
+   "path": "tools/importCanaryNpcs.mjs",
+   "sha256": "86850ced5bbec98f6b2790c0c857baa564a256dcb9caff6d1b5a0e8e76d811bf"
+  },
+  {
+   "path": "tools/importCanaryShops.mjs",
+   "sha256": "b615e65f051b8b23376017042d22d520debb806f6e18efe645775c66970ab3e1"
+  },
+  {
+   "path": "tools/parseCanaryNpcShops.mjs",
+   "sha256": "79076ab141e6d247d583b1c7b38394838c70910d86564ca9afe2586034e78cfb"
+  },
+  {
+   "path": "tools/parseCanaryNpcDialogues.mjs",
+   "sha256": "e70fbe0adf7e9914ec32292344f10129a658e72713b43a97077dedffb1c854ab"
+  },
+  {
+   "path": "tools/buildCanaryParityInventory.mjs",
+   "sha256": "59eb80001238baeeac2eeeffdfdee20bc9f6345bfa75902dee51c4a74c4494cf"
+  },
+  {
+   "path": "tools/verifyCanaryParityInventory.mjs",
+   "sha256": "8d1c633a84fbc76714b3f95e79cd04ed5919001ac9238dd56c7caffedc679407"
+  },
+  {
+   "path": "tools/importCanaryDoors.mjs",
+   "sha256": "9201912df2df0b3ede0db2f338ba338cb30c9b3dcb03d5dbb45a90cc6a15122e"
+  },
+  {
+   "path": "tools/parseCanaryDoorTables.mjs",
+   "sha256": "14f9273bace5e3ddc345ade4a8707c0b2404cde0c985a041140d0d5cb78076f2"
+  }
+ ],
+ "converters": {
+  "assets": 2,
+  "canaryItems": 2,
+  "foods": 1,
+  "stowableItems": 1,
+  "itemCatalog": 2,
+  "map": 3,
+  "creatures": 2,
+  "spells": 2,
+  "shops": 2,
+  "npcDialogues": 1,
+  "doors": 1
+ }
 }

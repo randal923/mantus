@@ -103,7 +103,8 @@ export const inventoryUpdatedMessageSchema = z.object({
 
 export const itemTextMessageSchema = z.object({
   type: z.literal("item-text"),
-  itemId: z.string().uuid(),
+  /** Carried item uuid or world map-item instance id (seed key). */
+  itemId: z.string().min(1).max(128),
   revision: z.number().int().positive(),
   name: z.string().min(1).max(120),
   text: z.string().max(3_997),

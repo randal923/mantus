@@ -10,6 +10,7 @@ import { SpatialGrid } from "./SpatialGrid";
 import { DynamicMapItems } from "./world/DynamicMapItems";
 import { MovementRules } from "./world/MovementRules";
 import type { MoveResult } from "./world/MoveResult";
+import { overrideMapData } from "./world/overrideMapData";
 import { TileOccupancy } from "./world/TileOccupancy";
 
 export type { MoveResult } from "./world/MoveResult";
@@ -21,16 +22,31 @@ export class World {
   private readonly mapItems: DynamicMapItems;
   private readonly occupancy: TileOccupancy;
   private readonly movement: MovementRules;
+  /** Static map data overlaid with door-owned passability overrides. */
+  private readonly map: MapData;
 
   constructor(
-    private readonly map: MapData,
+    baseMap: MapData,
     tickMs: number,
     worldItemDeltas: WorldItemDeltas = { hiddenSeedKeys: [], items: [] },
     itemWeightForId: (itemId: number) => number | undefined = () => undefined,
+    doorPassabilityForItemId: (
+      itemId: number,
+    ) => boolean | undefined = () => undefined,
   ) {
-    this.mapItems = new DynamicMapItems(map, itemWeightForId);
-    this.occupancy = new TileOccupancy(map, this.grid);
-    this.movement = new MovementRules(map, tickMs, this.grid, this.occupancy);
+    this.mapItems = new DynamicMapItems(
+      baseMap,
+      itemWeightForId,
+      doorPassabilityForItemId,
+    );
+    this.map = overrideMapData(baseMap, this.mapItems);
+    this.occupancy = new TileOccupancy(this.map, this.grid);
+    this.movement = new MovementRules(
+      this.map,
+      tickMs,
+      this.grid,
+      this.occupancy,
+    );
     for (const seedKey of worldItemDeltas.hiddenSeedKeys) {
       this.mapItems.hideSeed(seedKey);
     }
@@ -104,6 +120,14 @@ export class World {
 
   getWorldSubtree(rootId: string) {
     return this.mapItems.getWorldSubtree(rootId);
+  }
+
+  getMapAction(position: Position) {
+    return this.map.getAction(position);
+  }
+
+  getDoorOverride(position: Position) {
+    return this.mapItems.getTileOverride(position);
   }
 
   isOccupied(position: Position): boolean {

@@ -2,6 +2,7 @@ import type {
   AutoWalkMessage,
   Direction,
   MoveMessage,
+  Position,
   UseMapMessage,
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
@@ -15,6 +16,12 @@ export class MovementHandler {
     private readonly world: World,
     private readonly visibility: Visibility,
     private readonly persistence: CharacterPersistence,
+    private readonly onPlayerStepped?: (
+      session: Session,
+      player: Player,
+      from: Position,
+      now: number,
+    ) => void,
   ) {}
 
   handle(session: Session, intent: MoveMessage, now: number): void {
@@ -83,6 +90,7 @@ export class MovementHandler {
       player,
       this.world.tryUseMap(player, intent.position, now),
       true,
+      now,
     );
   }
 
@@ -140,7 +148,7 @@ export class MovementHandler {
     sendCorrection: boolean,
   ): ReturnType<World["tryMove"]> {
     const result = this.world.tryMove(player, direction, now);
-    this.publishResult(session, player, result, sendCorrection);
+    this.publishResult(session, player, result, sendCorrection, now);
     return result;
   }
 
@@ -149,6 +157,7 @@ export class MovementHandler {
     player: Player,
     result: ReturnType<World["tryMove"]>,
     sendCorrection: boolean,
+    now: number,
   ): void {
     if (result.moved || result.turned) this.persistence.markDirty(player);
     if (result.moved) {
@@ -158,6 +167,7 @@ export class MovementHandler {
         result.from,
         result.durationMs,
       );
+      this.onPlayerStepped?.(session, player, result.from, now);
     }
     else if (result.turned) this.visibility.broadcastPose(player);
     if (!result.moved && sendCorrection) {

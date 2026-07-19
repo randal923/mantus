@@ -15,6 +15,9 @@ const appearancesDocument = JSON.parse(
 const foodsDocument = JSON.parse(
   await readFile(join(repoRoot, "content/items/canary-foods.json"), "utf8"),
 );
+const doorsDocument = JSON.parse(
+  await readFile(join(repoRoot, "content/items/canary-doors.json"), "utf8"),
+);
 
 if (sourceManifest.converters.itemCatalog !== 2) {
   throw new Error("source manifest does not declare item catalog version 2");
@@ -41,6 +44,33 @@ if (
   foodsDocument.source?.sha256 !== sourceManifest.sources.canaryFoods.sha256
 ) {
   throw new Error("Canary foods do not match the pinned source manifest");
+}
+if (
+  doorsDocument.formatVersion !== sourceManifest.converters.doors ||
+  doorsDocument.source?.canaryCommit !==
+    sourceManifest.sources.canaryDoors.commit ||
+  doorsDocument.source?.sha256 !== sourceManifest.sources.canaryDoors.sha256
+) {
+  throw new Error("Canary doors do not match the pinned source manifest");
+}
+
+const doorInfoById = new Map();
+for (const pair of doorsDocument.doors) {
+  const info = {
+    variant: pair.variant,
+    closedId: pair.closedId,
+    openId: pair.openId,
+    ...(pair.lockedId !== undefined ? { lockedId: pair.lockedId } : {}),
+  };
+  if (pair.lockedId !== undefined) {
+    doorInfoById.set(pair.lockedId, { ...info, role: "locked" });
+  }
+  doorInfoById.set(pair.closedId, { ...info, role: "closed" });
+  // Shared open ids (double-wing doors) keep the first pair, like Canary's
+  // first-match table scan when closing.
+  if (!doorInfoById.has(pair.openId)) {
+    doorInfoById.set(pair.openId, { ...info, role: "open" });
+  }
 }
 
 const EQUIPMENT_SLOT_BY_SOURCE = {
@@ -175,6 +205,9 @@ for (const appearance of appearancesDocument.objects) {
     ...(semantics.levelDoor !== undefined
       ? { levelDoor: semantics.levelDoor }
       : {}),
+    ...(doorInfoById.has(appearance.clientId)
+      ? { door: doorInfoById.get(appearance.clientId) }
+      : {}),
     ...(semantics.field ? { field: semantics.field } : {}),
     ...(semantics.charges !== undefined ? { charges: semantics.charges } : {}),
     ...(foodsDocument.foods[appearance.clientId]
@@ -249,6 +282,7 @@ const output = {
     canaryCommit: sourceManifest.sources.canaryItems.commit,
     canaryItemsSha256: sourceManifest.sources.canaryItems.sha256,
     canaryFoodsSha256: sourceManifest.sources.canaryFoods.sha256,
+    canaryDoorsSha256: sourceManifest.sources.canaryDoors.sha256,
     datSha256: sourceManifest.sources.dat.sha256,
     sprSha256: sourceManifest.sources.spr.sha256,
   },
