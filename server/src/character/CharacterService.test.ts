@@ -94,6 +94,15 @@ class MemoryCharacterStore implements CharacterStore {
     });
     return version;
   }
+
+  async updateActionBar(
+    characterId: string,
+    actionBar: Character["actionBar"],
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, { ...character, actionBar });
+  }
 }
 
 const makeService = () =>

@@ -19,6 +19,7 @@ import {
   type ReportReason,
   type ServerErrorCode,
   type ServerMessage,
+  type ActionBar,
   type UiSettings,
   type ViewRange,
 } from "@tibia/protocol";
@@ -625,6 +626,10 @@ export class GameClient {
 
   updateUiSettings(settings: UiSettings): boolean {
     return this.send({ type: "update-ui-settings", settings });
+  }
+
+  updateActionBar(actionBar: ActionBar): boolean {
+    return this.send({ type: "update-action-bar", actionBar });
   }
 
   disconnect(): void {

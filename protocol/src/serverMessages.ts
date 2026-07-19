@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { actionBarSchema } from "./actionBar";
 import {
   bankActionFailedMessageSchema,
   bankOpenedMessageSchema,
@@ -119,6 +120,11 @@ export const uiSettingsUpdatedMessageSchema = z.object({
   settings: uiSettingsSchema,
 });
 
+export const actionBarUpdatedMessageSchema = z.object({
+  type: z.literal("action-bar-updated"),
+  actionBar: actionBarSchema,
+});
+
 export const characterListMessageSchema = z.object({
   type: z.literal("character-list"),
   characters: z.array(characterSummarySchema),
@@ -135,6 +141,7 @@ export const welcomeMessageSchema = z.object({
   fightState: fightStateSchema,
   spells: z.array(spellCatalogEntrySchema).max(256),
   uiSettings: uiSettingsSchema,
+  actionBar: actionBarSchema,
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -290,6 +297,9 @@ export const worldContainerClosedMessageSchema = z.object({
 
 export const serverErrorCodeSchema = z.enum([
   "account-banned",
+  "action-bar-invalid",
+  "action-bar-update-failed",
+  "action-bar-update-pending",
   "already-authenticated",
   "already-joined",
   "auth-failed",
@@ -327,6 +337,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   authOkMessageSchema,
   languageUpdatedMessageSchema,
   uiSettingsUpdatedMessageSchema,
+  actionBarUpdatedMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,

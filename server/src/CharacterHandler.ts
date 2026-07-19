@@ -253,6 +253,7 @@ export class CharacterHandler {
       fightState: projectFightState(session, this.world, now),
       spells: this.spells.projectFor(player),
       uiSettings: session.account?.uiSettings ?? {},
+      actionBar: character.actionBar,
     });
     this.visibility.syncMapItems(session, player);
     void this.service
@@ -287,6 +288,7 @@ export class CharacterHandler {
     existing.attackTargetId = null;
     existing.itemOperationPending = false;
     existing.depotOperationPending = false;
+    existing.actionBarUpdatePending = false;
     existing.itemPersistsPending = 0;
     existing.travelOperationPending = false;
     existing.knownCreatureIds.clear();

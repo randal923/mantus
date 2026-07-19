@@ -33,6 +33,7 @@ const config: ServerConfig = {
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
   combatSeed: 12345,
+  rates: { experience: 1, skill: 1, magic: 1, loot: 1, spawn: 1 },
   starterTownId: 1,
   characterSaveIntervalMs: 30_000,
   maxCharacterSaveRetries: 3,

@@ -1,6 +1,5 @@
 import { Pool } from "pg";
 import { fileURLToPath } from "node:url";
-import { serverConfig } from "./config";
 import { GameServer } from "./GameServer";
 import { PgCharacterStore } from "./character/PgCharacterStore";
 import { PgAccountStore } from "./PgAccountStore";
@@ -21,6 +20,9 @@ import { PgPvpStore } from "./pvp/PgPvpStore";
 import { PgHighscoreStore } from "./social/PgHighscoreStore";
 import { PgVipStore } from "./social/PgVipStore";
 import { WorldItemSeeder } from "./item/WorldItemSeeder";
+import { loadServerConfig } from "./loadServerConfig";
+
+const serverConfig = await loadServerConfig();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const databaseUrl = process.env.DATABASE_URL;

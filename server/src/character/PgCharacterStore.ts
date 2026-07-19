@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import type { ActionBar } from "@tibia/protocol";
 import { CharacterError } from "./CharacterError";
 import type {
   Character,
@@ -171,6 +172,21 @@ export class PgCharacterStore implements CharacterStore {
       loggedInAt,
     ]);
     if (result.rowCount !== 1) throw new CharacterError("not-found");
+  }
+
+  async updateActionBar(
+    characterId: string,
+    actionBar: ActionBar,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET action_bar = $2::jsonb
+       WHERE id = $1`,
+      [characterId, JSON.stringify(actionBar)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("character action bar update failed");
+    }
   }
 
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {

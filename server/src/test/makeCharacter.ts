@@ -41,6 +41,7 @@ export function makeCharacter(id: string, displayName = id): Character {
       addons: 0,
     },
     townId: 1,
+    actionBar: [],
     skull: "none",
     skullExpiresAt: null,
     createdAt: now,

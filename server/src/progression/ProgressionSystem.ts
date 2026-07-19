@@ -12,6 +12,10 @@ export class ProgressionSystem {
     private readonly registry: SessionRegistry,
     private readonly persistence: CharacterPersistence,
     private readonly items: ItemIntentHandler,
+    private readonly rates: Readonly<{ skill: number; magic: number }> = {
+      skill: 1,
+      magic: 1,
+    },
   ) {}
 
   awardExperience(
@@ -37,9 +41,14 @@ export class ProgressionSystem {
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
+    const progress = this.scaledProgress(manaSpent, this.rates.magic);
+    if (progress < 1) {
+      this.syncPlayer(player, now, true);
+      return true;
+    }
     return this.persistAward(
       player,
-      player.awardMagicProgress(eventId, manaSpent),
+      player.awardMagicProgress(eventId, progress),
       now,
     );
   }
@@ -53,9 +62,11 @@ export class ProgressionSystem {
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
+    const progress = this.scaledProgress(tries, this.rates.skill);
+    if (progress < 1) return false;
     return this.persistAward(
       player,
-      player.awardSkillTries(eventId, skill, tries),
+      player.awardSkillTries(eventId, skill, progress),
       now,
     );
   }
@@ -72,7 +83,9 @@ export class ProgressionSystem {
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
-    return player.progression.startTraining({ ...options, now });
+    const tries = this.scaledProgress(options.tries, this.rates.skill);
+    if (tries < 1) return false;
+    return player.progression.startTraining({ ...options, tries, now });
   }
 
   stopTraining(playerId: string, scheduleId: string): boolean {
@@ -124,5 +137,16 @@ export class ProgressionSystem {
       playerId: player.id,
       progression: projectOwnProgression(player),
     });
+  }
+
+  private scaledProgress(amount: number, rate: number): number {
+    if (!Number.isSafeInteger(amount) || amount < 1) {
+      throw new Error("progression award is out of range");
+    }
+    const progress = Math.floor(amount * rate);
+    if (!Number.isSafeInteger(progress) || progress < 0) {
+      throw new Error("scaled progression award is out of range");
+    }
+    return progress;
   }
 }

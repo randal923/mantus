@@ -25,6 +25,7 @@ export interface CharacterRow {
   outfit_feet: number;
   outfit_addons: number;
   town_id: number;
+  action_bar: unknown;
   skull: number;
   skull_expires_at: Date | null;
   created_at: Date;

@@ -87,6 +87,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       "014_character_storages.sql",
       "015_depot_and_inbox.sql",
       "018_pvp.sql",
+      "023_character_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -206,6 +207,24 @@ databaseDescribe("PgCharacterStore integration", () => {
     expect(character?.storageValues).toEqual({
       "Storage.Quest.Example": 4,
     });
+  });
+
+  it("persists the action bar and starts new characters with an empty one", async () => {
+    const accountId = await createAccount("action-bar");
+    await service.create(accountId, {
+      displayName: "Bar Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const summary = (await store.listByAccountId(accountId))[0];
+    if (!summary) throw new Error("character was not created");
+    const created = await store.findByIdForAccount(accountId, summary.id);
+    expect(created?.actionBar).toEqual([]);
+
+    const actionBar = ["exori", null, "exura ico"];
+    await store.updateActionBar(summary.id, actionBar);
+    const updated = await store.findByIdForAccount(accountId, summary.id);
+    expect(updated?.actionBar).toEqual(actionBar);
   });
 
   it("rejects a stale snapshot without overwriting the newer save", async () => {

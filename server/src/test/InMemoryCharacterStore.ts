@@ -1,3 +1,4 @@
+import type { ActionBar } from "@tibia/protocol";
 import type {
   Character,
   CharacterSaveSnapshot,
@@ -77,6 +78,19 @@ export class InMemoryCharacterStore implements CharacterStore {
       throw new CharacterError("not-found");
     }
     this.characters.set(characterId, { ...character, lastLoginAt: loggedInAt });
+  }
+
+  async updateActionBar(
+    characterId: string,
+    actionBar: ActionBar,
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, {
+      ...character,
+      actionBar,
+      updatedAt: new Date(),
+    });
   }
 
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {

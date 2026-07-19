@@ -136,4 +136,18 @@ rune to become executable.
   registered gameplay definitions and reach zero disabled registered spells,
   runes, ignored formula fields, or unreviewed callbacks.
 
+## Known gaps: customizable action bar (2026-07-19)
+
+The spell bar is per-character and player-configured (empty for new
+characters; the assignment modal validates and persists slot -> spell id via
+`update-action-bar`, stored in `characters.action_bar`). Accepted for now:
+
+- The `action-bar-updated` ack is ignored by the client (same pattern as
+  `ui-settings-updated`); saves are debounced 800 ms, so an edit made right
+  before closing the tab can be lost. Fix: flush the pending update on
+  `beforeunload`/disconnect, for the minimap layout too.
+- Only `origin: "spell"` entries can be slotted; runes still cast through the
+  inventory ground-targeting flow. Fix if wanted: allow rune slots that arm
+  the existing rune targeting using the carried item count as the badge.
+
 [Back to overview](README.md)

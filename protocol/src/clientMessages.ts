@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { actionBarSchema } from "./actionBar";
 import {
   bankDepositMessageSchema,
   bankTransferMessageSchema,
@@ -364,6 +365,15 @@ export const updateUiSettingsMessageSchema = z.object({
   settings: uiSettingsSchema,
 });
 
+/**
+ * Bounded per-character spell bar layout intent; spell ids are re-validated
+ * against the character's own spell list at execution time.
+ */
+export const updateActionBarMessageSchema = z.object({
+  type: z.literal("update-action-bar"),
+  actionBar: actionBarSchema,
+});
+
 export const clientMessageSchema = z.discriminatedUnion("type", [
   authMessageSchema,
   listCharactersMessageSchema,
@@ -396,6 +406,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   writeItemMessageSchema,
   setLanguageMessageSchema,
   updateUiSettingsMessageSchema,
+  updateActionBarMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,
   bankWithdrawMessageSchema,
@@ -506,5 +517,8 @@ export type WriteItemMessage = z.infer<typeof writeItemMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;
 export type UpdateUiSettingsMessage = z.infer<
   typeof updateUiSettingsMessageSchema
+>;
+export type UpdateActionBarMessage = z.infer<
+  typeof updateActionBarMessageSchema
 >;
 export type ClientMessage = z.infer<typeof clientMessageSchema>;

@@ -11,12 +11,14 @@ export function createMonsterCorpse(
   monster: Monster,
   killerId: string | null,
   deathEventId: string,
+  lootRate = 1,
 ): void {
   const corpseType = items.itemType(monster.type.corpseItemTypeId);
   if (!corpseType || (corpseType.containerCapacity ?? 0) < 1) return;
   const loot: LootItemCreation[] = [];
   for (const entry of monster.type.loot) {
-    if (!formula.chance(entry.chance / 1_000)) continue;
+    const chance = Math.min(100, (entry.chance / 1_000) * lootRate);
+    if (!formula.chance(chance)) continue;
     const type =
       (entry.itemTypeId
         ? items.itemType(entry.itemTypeId)

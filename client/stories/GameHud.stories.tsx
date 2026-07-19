@@ -54,6 +54,7 @@ const meta = {
         targetKind: "self",
       },
     ],
+    actionBar: ["exura-infir-ico"],
     combatLog: ["You gained 5 experience."],
     chatChannels: [
       {
@@ -106,6 +107,7 @@ const meta = {
       },
     ],
     onCast: fn(),
+    onConfigureActionBar: fn(),
     onChatChannelSelect: fn(),
     onChatChannelClose: fn(),
     onChatSenderSelect: fn(),

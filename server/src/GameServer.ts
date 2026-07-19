@@ -39,6 +39,7 @@ import { TradeService } from "./trade/TradeService";
 import type { TradeStore } from "./trade/TradeStore";
 import { LanguageHandler } from "./LanguageHandler";
 import { UiSettingsHandler } from "./UiSettingsHandler";
+import { ActionBarHandler } from "./ActionBarHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { ItemCatalog } from "./item/ItemCatalog";
@@ -94,6 +95,7 @@ export class GameServer {
   private readonly persistence: CharacterPersistence;
   private readonly language: LanguageHandler;
   private readonly uiSettings: UiSettingsHandler;
+  private readonly actionBar: ActionBarHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
   private readonly chat: ChatHandler;
@@ -232,6 +234,12 @@ export class GameServer {
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
+    this.actionBar = new ActionBarHandler(
+      this.registry,
+      this.world,
+      this.spells,
+      deps.characters,
+    );
     this.travel = new TravelService(
       this.world,
       this.visibility,
@@ -295,6 +303,7 @@ export class GameServer {
       this.registry,
       this.persistence,
       this.items,
+      config.rates,
     );
     this.parties = new PartyHandler(
       this.world,
@@ -316,6 +325,8 @@ export class GameServer {
       this.parties,
       this.guilds,
       this.pvp,
+      config.rates.experience,
+      config.rates.loot,
     );
     this.combat = new CombatIntentHandler(this.combatSystem);
     spawns =
@@ -326,6 +337,7 @@ export class GameServer {
             creatureContent,
             config.creatures,
             this.combatSystem,
+            config.rates.spawn,
           )
         : null;
     this.spawns = spawns;
@@ -430,6 +442,7 @@ export class GameServer {
     this.moderation.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     this.uiSettings.applyResolvedOutcomes();
+    this.actionBar.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
       for (const intent of session.drainIntents()) {
@@ -658,6 +671,9 @@ export class GameServer {
         return;
       case "update-ui-settings":
         this.uiSettings.handle(session, intent);
+        return;
+      case "update-action-bar":
+        this.actionBar.handle(session, intent);
         return;
     }
   }

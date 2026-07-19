@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/fly.yml
       - .dockerignore
+      - config.yml
       - package.json
       - yarn.lock
       - protocol/**

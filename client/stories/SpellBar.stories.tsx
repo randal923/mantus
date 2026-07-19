@@ -3,22 +3,43 @@ import { expect, fn, userEvent } from "storybook/test";
 
 import { SpellBar } from "../components/spells/SpellBar";
 
-const SPELLS = [
-  { id: "exura", name: "Light Healing", shortcut: "1", manaCost: 20 },
-  { id: "exori-vis", name: "Energy Strike", shortcut: "2", manaCost: 35 },
-  { id: "exevo-frigo-hur", name: "Ice Wave", shortcut: "3", manaCost: 55 },
+const SLOTS = [
   {
-    id: "adevo-mas-flam",
-    name: "Fire Bomb",
-    shortcut: "4",
-    manaCost: 85,
-    cooldownReadyAt: Date.now() + 3_000,
-    cooldownTotalMs: 6_000,
+    shortcut: "1",
+    spell: { id: "exura", name: "Light Healing", manaCost: 20 },
   },
-  { id: "utani-hur", name: "Haste", shortcut: "5", manaCost: 60 },
-  { id: "utamo-vita", name: "Magic Shield", shortcut: "6", manaCost: 50 },
-  { id: "exura-vita", name: "Ultimate Healing", shortcut: "7", manaCost: 160 },
-  { id: "empty", name: "Empty Slot", shortcut: "8", disabled: true },
+  {
+    shortcut: "2",
+    spell: { id: "exori-vis", name: "Energy Strike", manaCost: 35 },
+  },
+  {
+    shortcut: "3",
+    spell: { id: "exevo-frigo-hur", name: "Ice Wave", manaCost: 55 },
+  },
+  {
+    shortcut: "4",
+    spell: {
+      id: "adevo-mas-flam",
+      name: "Fire Bomb",
+      manaCost: 85,
+      cooldownReadyAt: Date.now() + 3_000,
+      cooldownTotalMs: 6_000,
+    },
+  },
+  {
+    shortcut: "5",
+    spell: { id: "utani-hur", name: "Haste", manaCost: 60 },
+  },
+  {
+    shortcut: "6",
+    spell: { id: "utamo-vita", name: "Magic Shield", manaCost: 50 },
+  },
+  {
+    shortcut: "7",
+    spell: { id: "exura-vita", name: "Ultimate Healing", manaCost: 160 },
+  },
+  { shortcut: "8", spell: null },
+  { shortcut: "9", spell: null },
 ];
 
 const meta = {
@@ -35,8 +56,9 @@ const meta = {
     ),
   ],
   args: {
-    spells: SPELLS,
+    slots: SLOTS,
     onCast: fn(),
+    onConfigure: fn(),
     hotkeysEnabled: true,
   },
 } satisfies Meta<typeof SpellBar>;
@@ -48,15 +70,32 @@ export const Default: Story = {
   play: async ({ args }) => {
     await userEvent.keyboard("1");
     await expect(args.onCast).toHaveBeenCalledWith("exura");
+    await userEvent.keyboard("8");
+    await expect(args.onCast).toHaveBeenCalledTimes(1);
   },
 };
 
 export const Ready: Story = {
   args: {
-    spells: SPELLS.map((spell) => ({
-      ...spell,
-      cooldownReadyAt: 0,
-      cooldownTotalMs: 0,
+    slots: SLOTS.map((slot) => ({
+      ...slot,
+      spell: slot.spell
+        ? { ...slot.spell, cooldownReadyAt: 0, cooldownTotalMs: 0 }
+        : null,
     })),
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    slots: Array.from({ length: 9 }, (_, index) => ({
+      shortcut: String(index + 1),
+      spell: null,
+    })),
+  },
+  play: async ({ args, canvas }) => {
+    const emptySlots = await canvas.findAllByRole("button");
+    await userEvent.click(emptySlots[0]!);
+    await expect(args.onConfigure).toHaveBeenCalledWith(0);
   },
 };

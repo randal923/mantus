@@ -3,11 +3,6 @@ import type { MapAction } from "./MapAction";
 import type { MapItem } from "./MapItem";
 import type { MapTransition } from "./MapTransition";
 
-const mapName = process.env.MAP_NAME ?? "otservbr";
-if (!/^[a-z0-9-]+$/.test(mapName)) {
-  throw new Error("MAP_NAME may contain only lowercase letters, numbers, and hyphens");
-}
-
 export type MapConfig =
   | {
       /** Converted map loaded from server/data/<name>.map.bin (see map/README.md). */
@@ -59,6 +54,13 @@ export interface ServerConfig {
   maxPendingIntents: number;
   maxProtocolViolations: number;
   combatSeed: number;
+  rates: {
+    experience: number;
+    skill: number;
+    magic: number;
+    loot: number;
+    spawn: number;
+  };
   starterTownId: number;
   characterSaveIntervalMs: number;
   maxCharacterSaveRetries: number;
@@ -85,52 +87,3 @@ export interface ServerConfig {
     };
   };
 }
-
-export const serverConfig: ServerConfig = {
-  port: Number(process.env.SERVER_PORT ?? 4000),
-  dev: {
-    auth: process.env.DEV_AUTH === "1",
-    commands: process.env.DEV_COMMANDS === "1",
-  },
-  tickMs: 25,
-  heartbeatMs: 30_000,
-  authTimeoutMs: 10_000,
-  trustProxyHeader: process.env.TRUST_PROXY === "1",
-  maxSessions: 100,
-  maxPendingIntents: 16,
-  maxProtocolViolations: 5,
-  combatSeed: 0x434f4d42,
-  starterTownId: 1,
-  characterSaveIntervalMs: 30_000,
-  maxCharacterSaveRetries: 3,
-  characterSaveRetryDelayMs: 100,
-  defaultViewRange: { x: 9, y: 7 },
-  map: {
-    source: "data",
-    name: mapName,
-    spawnTown: process.env.SPAWN_TOWN ?? "Thais",
-  },
-  creatures:
-    process.env.CREATURES_ENABLED === "0" || mapName !== "otservbr"
-      ? undefined
-      : {
-          contentName: "world",
-          activationRange: { x: 32, y: 32 },
-          retryMs: 1000,
-          maxSpawnChecksPerTick: 512,
-          maxSpawnAttemptsPerTick: 8,
-          maxAiScansPerTick: 512,
-          maxAiWorkPerTick: 512,
-          ai: {
-            thinkIntervalMs: 250,
-            acquisitionRange: 8,
-            loseRange: 12,
-            // Canary config.lua deSpawnRadius: chase leash around the spawn
-            // point; spawn radius only bounds idle wandering.
-            despawnRadius: 50,
-            maxPathNodes: 96,
-            wanderChance: 0.2,
-            seed: 0x4d414e54,
-          },
-        },
-};

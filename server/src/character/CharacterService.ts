@@ -110,6 +110,7 @@ export class CharacterService {
       direction: "south",
       outfit: { lookType: input.lookType, ...STARTER_OUTFIT_COLORS },
       townId: this.starter.townId,
+      actionBar: [],
       skull: "none",
       skullExpiresAt: null,
       createdAt: now,

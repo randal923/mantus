@@ -12,6 +12,7 @@ RUN yarn install --frozen-lockfile --production && yarn cache clean
 COPY protocol protocol
 COPY content content
 COPY server server
+COPY config.yml ./
 
 EXPOSE 4000
 CMD ["yarn", "workspace", "server", "start"]

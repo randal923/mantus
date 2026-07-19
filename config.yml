@@ -1,0 +1,65 @@
+# Non-secret game-server settings. Credentials and connection strings belong in
+# server/.env; browser-visible settings belong in client/.env.local.
+
+server:
+  port: 4000
+  tickMs: 25
+  heartbeatMs: 30000
+  authTimeoutMs: 10000
+
+development:
+  # Never enable either setting in production.
+  auth: false
+  commands: false
+
+network:
+  # Enable only behind a trusted proxy that replaces Fly-Client-IP.
+  trustProxyHeader: false
+  maxSessions: 100
+  maxPendingIntents: 16
+  maxProtocolViolations: 5
+  defaultViewRange:
+    x: 9
+    y: 7
+
+combat:
+  seed: 1129270594
+
+rates:
+  # Non-negative up to 1000. Fractional progression is floored to whole units.
+  experience: 100
+  skill: 100
+  magic: 100
+  loot: 100
+  spawn: 100
+
+characters:
+  starterTownId: 1
+  saveIntervalMs: 30000
+  maxSaveRetries: 3
+  saveRetryDelayMs: 100
+
+map:
+  name: otservbr
+  spawnTown: Thais
+
+creatures:
+  enabled: true
+  contentName: world
+  activationRange:
+    x: 32
+    y: 32
+  retryMs: 1000
+  maxSpawnChecksPerTick: 512
+  maxSpawnAttemptsPerTick: 8
+  maxAiScansPerTick: 512
+  maxAiWorkPerTick: 512
+  ai:
+    thinkIntervalMs: 250
+    acquisitionRange: 8
+    loseRange: 12
+    # Chase leash around the spawn point; spawn radius bounds idle wandering.
+    despawnRadius: 50
+    maxPathNodes: 96
+    wanderChance: 0.2
+    seed: 1296125524

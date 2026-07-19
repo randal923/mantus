@@ -57,6 +57,8 @@ export class Combat {
     partyHooks?: PartyHooks,
     guildHooks?: GuildHooks,
     private readonly pvpHooks?: PvpHooks,
+    experienceRate = 1,
+    lootRate = 1,
   ) {
     this.spells = spells;
     const formula = new CombatFormula(seed);
@@ -74,6 +76,8 @@ export class Combat {
       partyHooks,
       guildHooks,
       pvpHooks,
+      experienceRate,
+      lootRate,
     );
     this.damage = new DamageResolver(
       world,

@@ -1,7 +1,9 @@
 import { SpellBar } from "./spells/SpellBar";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import {
+  ACTION_BAR_SLOT_COUNT,
   PROTOCOL_LIMITS,
+  type ActionBar,
   type CombatTarget,
   type CreatureState,
   type FightState,
@@ -29,11 +31,13 @@ interface GameHudProps {
   ownCharacter: OwnCharacterState;
   fightState: FightState;
   spells: ReadonlyArray<SpellCatalogEntry>;
+  actionBar: ActionBar;
   hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
   chatChannels?: ReadonlyArray<ChatChannel>;
   chatSelectedChannelId?: string;
   onCast: (spellId: string, target: CombatTarget) => void;
+  onConfigureActionBar: (slotIndex: number) => void;
   onChatChannelSelect?: (channelId: string) => void;
   onChatChannelClose?: (channelId: string) => void;
   onChatSenderSelect?: (sender: string) => void;
@@ -52,42 +56,52 @@ export function GameHud({
   ownCharacter,
   fightState,
   spells: spellCatalog,
+  actionBar,
   hasWeapon,
   combatLog,
   chatChannels,
   chatSelectedChannelId,
   onCast,
+  onConfigureActionBar,
   onChatChannelSelect,
   onChatChannelClose,
   onChatSenderSelect,
   onSendChat,
 }: GameHudProps) {
   const { t } = useAppTranslation();
-  const combatSpells = spellCatalog
-    .filter((spell) => spell.origin === "spell")
-    .slice(0, 9);
-  const spells = combatSpells.map((spell, index) => {
+  const combatSpells = spellCatalog.filter(
+    (spell) => spell.origin === "spell",
+  );
+  const slots = Array.from({ length: ACTION_BAR_SLOT_COUNT }, (_, index) => {
+    const spellId = actionBar[index] ?? null;
+    const spell = spellId
+      ? combatSpells.find((candidate) => candidate.id === spellId)
+      : undefined;
+    const shortcut = String(index + 1);
+    if (!spell) return { shortcut, spell: null };
     const cooldown = fightState.cooldowns
       .filter((entry) => spell.cooldownGroups.includes(entry.group))
       .sort((left, right) => right.readyAt - left.readyAt)[0];
     return {
-      id: spell.id,
-      name: spell.name,
-      shortcut: String(index + 1),
-      manaCost: spell.manaCost,
-      disabled:
-        ownCharacter.level < spell.requiredLevel ||
-        ownCharacter.magicLevel < spell.requiredMagicLevel ||
-        ownCharacter.mana < spell.manaCost ||
-        ownCharacter.soul < spell.soulCost ||
-        (spell.needWeapon && !hasWeapon) ||
-        spell.targetKind === "position",
-      ...(cooldown
-        ? {
-            cooldownReadyAt: cooldown.readyAt,
-            cooldownTotalMs: cooldown.totalMs,
-          }
-        : {}),
+      shortcut,
+      spell: {
+        id: spell.id,
+        name: spell.name,
+        manaCost: spell.manaCost,
+        disabled:
+          ownCharacter.level < spell.requiredLevel ||
+          ownCharacter.magicLevel < spell.requiredMagicLevel ||
+          ownCharacter.mana < spell.manaCost ||
+          ownCharacter.soul < spell.soulCost ||
+          (spell.needWeapon && !hasWeapon) ||
+          spell.targetKind === "position",
+        ...(cooldown
+          ? {
+              cooldownReadyAt: cooldown.readyAt,
+              cooldownTotalMs: cooldown.totalMs,
+            }
+          : {}),
+      },
     };
   });
   const visibleChatChannels: ReadonlyArray<ChatChannel> = chatChannels ?? [
@@ -174,7 +188,7 @@ export function GameHud({
       )}
       <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
         <SpellBar
-          spells={spells}
+          slots={slots}
           hotkeysEnabled={spellHotkeysEnabled}
           onCast={(spellId) => {
             const spell = combatSpells.find(
@@ -186,6 +200,7 @@ export function GameHud({
               getSpellCombatTarget(spell, fightState.attackTargetId),
             );
           }}
+          onConfigure={onConfigureActionBar}
         />
       </div>
     </div>

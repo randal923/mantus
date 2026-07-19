@@ -25,6 +25,7 @@ export class Session {
   characterOperationPending = false;
   languageUpdatePending = false;
   uiSettingsUpdatePending = false;
+  actionBarUpdatePending = false;
   itemOperationPending = false;
   depotOperationPending = false;
   /**

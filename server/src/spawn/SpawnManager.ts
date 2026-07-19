@@ -21,6 +21,7 @@ interface SlotState {
   dormantCreature: Creature | null;
   generation: number;
   nextSpawnAt: number;
+  scaledRespawnMs: number;
 }
 
 interface Brain {
@@ -68,7 +69,11 @@ export class SpawnManager {
       };
     },
     private readonly combat?: Combat,
+    spawnRate = 1,
   ) {
+    if (!Number.isFinite(spawnRate) || spawnRate <= 0) {
+      throw new Error("spawn rate must be greater than zero");
+    }
     for (const definition of content.slots) {
       if (
         definition.radius > Math.min(
@@ -83,12 +88,20 @@ export class SpawnManager {
       if (this.slots.has(definition.id)) {
         throw new Error(`duplicate spawn slot ${definition.id}`);
       }
+      const scaledRespawnMs = Math.max(
+        1,
+        Math.floor(definition.respawnMs / spawnRate),
+      );
+      if (!Number.isSafeInteger(scaledRespawnMs)) {
+        throw new Error(`spawn slot ${definition.id} respawn is out of range`);
+      }
       const slot = {
         definition,
         creatureId: null,
         dormantCreature: null,
         generation: 0,
         nextSpawnAt: 0,
+        scaledRespawnMs,
       } satisfies SlotState;
       this.slots.set(definition.id, slot);
       if (!definition.enabled) continue;
@@ -199,7 +212,7 @@ export class SpawnManager {
     if (!slot) return this.removeSummon(creatureId);
     return this.detachCreature(
       creatureId,
-      now + slot.definition.respawnMs,
+      now + slot.scaledRespawnMs,
       false,
     );
   }

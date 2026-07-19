@@ -718,7 +718,15 @@
     "ultimateHealing": "Cura Suprema",
     "frontSweep": "Varredura Frontal",
     "holyStrike": "Golpe Sagrado",
-    "emptySlot": "Espaço Vazio"
+    "emptySlot": "Espaço Vazio",
+    "actionBar": {
+      "title": "Barra de Ações",
+      "description": "Selecione um espaço e clique em uma magia para atribuí-la. Clique novamente na magia atribuída para limpar o espaço.",
+      "emptySlot": "Espaço vazio {{shortcut}}",
+      "emptySlotHint": "Espaço vazio — clique para atribuir uma magia",
+      "clear": "Limpar",
+      "assign": "Atribuir {{name}} ao espaço {{slot}}"
+    }
   },
   "combat": {
     "fightModes": "Modos de combate",

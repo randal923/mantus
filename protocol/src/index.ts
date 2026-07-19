@@ -1,4 +1,5 @@
 export * from "./direction";
+export * from "./actionBar";
 export * from "./bank";
 export * from "./character";
 export * from "./chat";

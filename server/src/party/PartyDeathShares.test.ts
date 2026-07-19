@@ -77,7 +77,7 @@ interface Harness {
   readonly sentByPlayer: Map<string, ServerMessage[]>;
 }
 
-function makeHarness(): Harness {
+function makeHarness(experienceRate = 1): Harness {
   const world = new World(
     gridMapData({
       name: "party-death-test",
@@ -142,6 +142,9 @@ function makeHarness(): Harness {
     feedback,
     () => true,
     parties,
+    undefined,
+    undefined,
+    experienceRate,
   );
   return { world, parties, progression, death, players, sentByPlayer };
 }
@@ -197,6 +200,50 @@ describe("party experience shares at death resolution", () => {
     harness.death.handleDeath(monster, A, now + 1_001);
     expect(harness.players.get(A)?.experience).toBe(60);
     expect(harness.players.get(B)?.experience).toBe(60);
+  });
+
+  it("applies the global experience rate before splitting the party award", () => {
+    const harness = makeHarness(2);
+    const now = 1_000_000;
+    formParty(harness, now);
+    const monster = makeDeadMonster(100);
+    harness.world.addCreature(monster);
+
+    harness.death.handleDeath(monster, A, now + 1_000);
+
+    // 100 base · 2 global · 1.2 party bonus / 2 members = 120 each.
+    expect(harness.players.get(A)?.experience).toBe(120);
+    expect(harness.players.get(B)?.experience).toBe(120);
+    expect(harness.sentByPlayer.get(A)?.at(-1)).toMatchObject({
+      type: "combat-log",
+      kind: "experience",
+      text: "You gained 120 experience (party share).",
+    });
+  });
+
+  it("floors fractional global experience awards to whole points", () => {
+    const harness = makeHarness(1.5);
+    const monster = makeDeadMonster(5);
+    harness.world.addCreature(monster);
+
+    harness.death.handleDeath(monster, A, 1_000_000);
+
+    expect(harness.players.get(A)?.experience).toBe(7);
+    expect(harness.sentByPlayer.get(A)?.at(-1)).toMatchObject({
+      type: "combat-log",
+      kind: "experience",
+      text: "You gained 7 experience.",
+    });
+  });
+
+  it("allows a zero rate to disable monster experience awards", () => {
+    const harness = makeHarness(0);
+    const monster = makeDeadMonster(100);
+    harness.world.addCreature(monster);
+
+    harness.death.handleDeath(monster, A, 1_000_000);
+    expect(harness.players.get(A)?.experience).toBe(0);
+    expect(harness.sentByPlayer.get(A)).toEqual([]);
   });
 
   it("is idempotent per member for a replayed award event id", () => {

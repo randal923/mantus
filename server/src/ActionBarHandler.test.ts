@@ -1,0 +1,130 @@
+import { describe, expect, it } from "vitest";
+import type { ServerMessage } from "@tibia/protocol";
+import { ActionBarHandler } from "./ActionBarHandler";
+import type { SpellDefinition } from "./combat/Spell";
+import type { SpellRegistry } from "./combat/SpellRegistry";
+import type { Session } from "./Session";
+import type { SessionRegistry } from "./SessionRegistry";
+import type { World } from "./World";
+import { InMemoryCharacterStore } from "./test/InMemoryCharacterStore";
+import { makeCharacter } from "./test/makeCharacter";
+
+const KNIGHT_SPELLS = new Map<string, Partial<SpellDefinition>>([
+  ["exura ico", { origin: "spell", vocations: ["Knight"] }],
+  ["exori", { origin: "spell", vocations: ["Knight"] }],
+  ["exura vita", { origin: "spell", vocations: ["Druid"] }],
+  ["adori flam", { origin: "rune", vocations: ["Knight", "Sorcerer"] }],
+]);
+
+function makeHandler(store: InMemoryCharacterStore) {
+  const registry = { contains: () => true } as unknown as SessionRegistry;
+  const world = {
+    getPlayer: (id: string) =>
+      id === "char-1" ? { vocation: "Knight" } : undefined,
+  } as unknown as World;
+  const spells = {
+    get: (spellId: string) => KNIGHT_SPELLS.get(spellId),
+  } as unknown as SpellRegistry;
+  return new ActionBarHandler(registry, world, spells, store);
+}
+
+function makeSession(playerId: string | null) {
+  const sent: ServerMessage[] = [];
+  const errors: string[] = [];
+  const session = {
+    playerId,
+    actionBarUpdatePending: false,
+    send: (message: ServerMessage) => sent.push(message),
+    sendError: (code: string) => errors.push(code),
+  } as unknown as Session;
+  return { session, sent, errors };
+}
+
+function seededStore() {
+  const store = new InMemoryCharacterStore();
+  store.seed(makeCharacter("char-1"));
+  return store;
+}
+
+async function settle(handler: ActionBarHandler) {
+  await new Promise((resolve) => setImmediate(resolve));
+  handler.applyResolvedOutcomes();
+}
+
+describe("ActionBarHandler", () => {
+  it("rejects sessions without a joined character", () => {
+    const { session, errors } = makeSession(null);
+    makeHandler(seededStore()).handle(session, {
+      type: "update-action-bar",
+      actionBar: ["exura ico"],
+    });
+    expect(errors).toEqual(["join-required"]);
+  });
+
+  it("rejects spell ids that do not exist", () => {
+    const { session, errors } = makeSession("char-1");
+    makeHandler(seededStore()).handle(session, {
+      type: "update-action-bar",
+      actionBar: ["utori kort"],
+    });
+    expect(errors).toEqual(["action-bar-invalid"]);
+    expect(session.actionBarUpdatePending).toBe(false);
+  });
+
+  it("rejects spells of another vocation", () => {
+    const { session, errors } = makeSession("char-1");
+    makeHandler(seededStore()).handle(session, {
+      type: "update-action-bar",
+      actionBar: ["exura vita"],
+    });
+    expect(errors).toEqual(["action-bar-invalid"]);
+  });
+
+  it("rejects rune spells in bar slots", () => {
+    const { session, errors } = makeSession("char-1");
+    makeHandler(seededStore()).handle(session, {
+      type: "update-action-bar",
+      actionBar: ["adori flam"],
+    });
+    expect(errors).toEqual(["action-bar-invalid"]);
+  });
+
+  it("persists the layout and acks", async () => {
+    const store = seededStore();
+    const handler = makeHandler(store);
+    const { session, sent, errors } = makeSession("char-1");
+    const actionBar = ["exori", null, "exura ico"];
+    handler.handle(session, { type: "update-action-bar", actionBar });
+    await settle(handler);
+    expect(errors).toEqual([]);
+    expect(sent).toEqual([{ type: "action-bar-updated", actionBar }]);
+    expect(session.actionBarUpdatePending).toBe(false);
+    const character = await store.findByIdForAccount("account-id", "char-1");
+    expect(character?.actionBar).toEqual(actionBar);
+  });
+
+  it("rejects a second update while one is pending", async () => {
+    const handler = makeHandler(seededStore());
+    const { session, errors } = makeSession("char-1");
+    handler.handle(session, {
+      type: "update-action-bar",
+      actionBar: ["exori"],
+    });
+    handler.handle(session, { type: "update-action-bar", actionBar: [] });
+    expect(errors).toEqual(["action-bar-update-pending"]);
+    await settle(handler);
+  });
+
+  it("reports a storage failure and clears the pending flag", async () => {
+    const handler = makeHandler(new InMemoryCharacterStore());
+    const { session, sent, errors } = makeSession("char-1");
+    handler.handle(session, {
+      type: "update-action-bar",
+      actionBar: ["exori"],
+    });
+    await settle(handler);
+    expect(sent).toEqual([]);
+    expect(errors).toEqual(["action-bar-update-failed"]);
+    expect(session.actionBarUpdatePending).toBe(false);
+  });
+});

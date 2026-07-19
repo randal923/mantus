@@ -133,6 +133,28 @@ describe("SpawnManager", () => {
     expect(second).not.toBe(first);
   });
 
+  it("divides ordinary respawn delays by the global spawn rate", () => {
+    const world = makeWorld();
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      makeContent(),
+      config,
+      undefined,
+      2,
+    );
+    manager.tick(1_000);
+    const first = manager.activeCreatureId("monster:slot-1");
+    if (!first) throw new Error("expected initial creature");
+
+    expect(manager.removeCreature(first, 2_000)).toBe(true);
+    expect(manager.nextSpawnDeadline("monster:slot-1")).toBe(2_500);
+    manager.tick(2_499);
+    expect(manager.activeCreatureId("monster:slot-1")).toBeNull();
+    manager.tick(2_500);
+    expect(manager.activeCreatureId("monster:slot-1")).not.toBeNull();
+  });
+
   it("retries occupied and blocked homes without teleporting or overlapping", () => {
     const occupiedWorld = makeWorld();
     const blocker = new Player(makeCharacter("blocker"), { x: 3, y: 3, z: 7 });

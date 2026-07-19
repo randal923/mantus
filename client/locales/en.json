@@ -718,7 +718,15 @@
     "ultimateHealing": "Ultimate Healing",
     "frontSweep": "Front Sweep",
     "holyStrike": "Holy Strike",
-    "emptySlot": "Empty Slot"
+    "emptySlot": "Empty Slot",
+    "actionBar": {
+      "title": "Action Bar",
+      "description": "Select a slot, then click a spell to assign it. Click an assigned spell again to clear the slot.",
+      "emptySlot": "Empty slot {{shortcut}}",
+      "emptySlotHint": "Empty slot — click to assign a spell",
+      "clear": "Clear",
+      "assign": "Assign {{name}} to slot {{slot}}"
+    }
   },
   "combat": {
     "fightModes": "Fight modes",

@@ -29,6 +29,8 @@ export class DeathHandler {
     private readonly partyHooks?: PartyHooks,
     private readonly guildHooks?: GuildHooks,
     private readonly pvpHooks?: PvpHooks,
+    private readonly experienceRate = 1,
+    private readonly lootRate = 1,
   ) {}
 
   handleDeath(
@@ -44,13 +46,16 @@ export class DeathHandler {
       const killerId =
         (sourceId && this.world.getPlayer(sourceId)?.id) ??
         target.topDamagerId();
-      if (killerId && target.type.experience > 0) {
+      const experience = Math.floor(
+        target.type.experience * this.experienceRate,
+      );
+      if (killerId && experience > 0) {
         // Party shares are recomputed at this instant — members who left or
         // lost eligibility since dealing damage get nothing (charter rule 4).
         const shares =
           this.partyHooks?.getExperienceShares(
             killerId,
-            target.type.experience,
+            experience,
             now,
           ) ?? null;
         if (shares) {
@@ -77,13 +82,13 @@ export class DeathHandler {
           this.progression.awardExperience(
             killerId,
             deathEventId,
-            target.type.experience,
+            experience,
             now,
           );
           this.registry.sessionFor(killerId)?.send({
             type: "combat-log",
             kind: "experience",
-            text: `You gained ${target.type.experience} experience.`,
+            text: `You gained ${experience} experience.`,
           });
         }
       }
@@ -94,6 +99,7 @@ export class DeathHandler {
         target,
         killerId,
         deathEventId,
+        this.lootRate,
       );
       if (!this.onMonsterDeath(target, now)) {
         this.world.removeCreature(target.id);

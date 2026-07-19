@@ -1,4 +1,5 @@
 import type {
+  ActionBar,
   CharacterLookType,
   CharacterVocation,
   Direction,
@@ -40,6 +41,7 @@ export interface Character {
   readonly direction: Direction;
   readonly outfit: CharacterOutfit;
   readonly townId: number;
+  readonly actionBar: ActionBar;
   readonly skull: SkullState;
   readonly skullExpiresAt: Date | null;
   readonly createdAt: Date;

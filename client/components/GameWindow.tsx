@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
+  ActionBar,
   BankActionFailedReason,
   DepotStateMessage,
   MailActionFailedReason,
@@ -73,6 +74,7 @@ import { toAuctionOffer } from "../lib/market/toAuctionOffer";
 import { toAuctionOwnOffer } from "../lib/market/toAuctionOwnOffer";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
+import { ActionBarModal } from "./spells/ActionBarModal";
 import { InventoryPanel } from "./inventory/InventoryPanel";
 import { LootPanel } from "./inventory/LootPanel";
 import { ItemTextModal } from "./inventory/ItemTextModal";
@@ -203,6 +205,26 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const uiSettingsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const [actionBar, setActionBar] = useState<ActionBar>([]);
+  const actionBarRef = useRef<ActionBar>([]);
+  const actionBarSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  /** Slot preselected in the assignment modal; null = modal closed. */
+  const [actionBarConfigSlot, setActionBarConfigSlot] = useState<number | null>(
+    null,
+  );
+  const handleActionBarChange = useCallback((next: ActionBar) => {
+    setActionBar(next);
+    actionBarRef.current = next;
+    if (actionBarSaveTimerRef.current) {
+      clearTimeout(actionBarSaveTimerRef.current);
+    }
+    actionBarSaveTimerRef.current = setTimeout(() => {
+      actionBarSaveTimerRef.current = null;
+      clientRef.current?.updateActionBar(actionBarRef.current);
+    }, 800);
+  }, []);
   const handleMinimapLayoutChange = useCallback((layout: MinimapLayout) => {
     setUiSettings((current) => {
       const next = { ...current, minimap: layout };
@@ -462,6 +484,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setVisibleCreatures([]);
     setFightState(null);
     setSpells([]);
+    setActionBar([]);
+    actionBarRef.current = [];
+    setActionBarConfigSlot(null);
     setCombatLog([]);
     dispatchChat({ type: "reset", ownPlayerId: null, ownName: null });
     setCharacterBusy(characterId !== null);
@@ -700,6 +725,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             resetInventory(message.inventory);
             setFightState(message.fightState);
             setSpells(message.spells);
+            setActionBar(message.actionBar);
+            actionBarRef.current = message.actionBar;
+            setActionBarConfigSlot(null);
             setCharacterBusy(false);
             setServerError(null);
             setNpcDialogue(null);
@@ -1273,6 +1301,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setVisibleCreatures([]);
           if (nextStatus === "disconnected") setFightState(null);
           if (nextStatus === "disconnected") setSpells([]);
+          if (nextStatus === "disconnected") {
+            setActionBar([]);
+            actionBarRef.current = [];
+            setActionBarConfigSlot(null);
+          }
           if (nextStatus === "disconnected") setCombatLog([]);
           if (nextStatus === "disconnected") setItemText(null);
           if (nextStatus === "disconnected") setNpcDialogue(null);
@@ -1690,7 +1723,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           )}
           {fightState && (
             <GameHud
-              spellHotkeysEnabled={!gameMenuOpen && !characterStatsOpen}
+              spellHotkeysEnabled={
+                !gameMenuOpen &&
+                !characterStatsOpen &&
+                actionBarConfigSlot === null
+              }
               battleListVisible={battleListVisible}
               minimapVisible={minimapVisible}
               mapName={mapName}
@@ -1701,6 +1738,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               ownCharacter={ownCharacter}
               fightState={fightState}
               spells={spells}
+              actionBar={actionBar}
               hasWeapon={Boolean(inventory?.equipment.weapon)}
               combatLog={combatLog}
               chatChannels={[
@@ -1796,6 +1834,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               onCast={(spellId, target) =>
                 clientRef.current?.castSpell(spellId, target)
               }
+              onConfigureActionBar={setActionBarConfigSlot}
             />
           )}
           {npcDialogue && (
@@ -2094,6 +2133,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                       beginMarketAction(sent);
                     }
               }
+            />
+          )}
+          {actionBarConfigSlot !== null && (
+            <ActionBarModal
+              spells={spells}
+              actionBar={actionBar}
+              initialSlot={actionBarConfigSlot}
+              onChange={handleActionBarChange}
+              onClose={() => setActionBarConfigSlot(null)}
             />
           )}
           {guildModalOpen && (

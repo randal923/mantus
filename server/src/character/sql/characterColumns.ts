@@ -4,5 +4,5 @@ export const characterColumns = `
   progression_definition_version,
   position_x, position_y, position_z, direction, outfit_look_type,
   outfit_head, outfit_body, outfit_legs, outfit_feet, outfit_addons,
-  town_id, skull, skull_expires_at, created_at, updated_at, last_login_at,
-  version`;
+  town_id, action_bar, skull, skull_expires_at, created_at, updated_at,
+  last_login_at, version`;
