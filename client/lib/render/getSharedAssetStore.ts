@@ -1,12 +1,13 @@
 import { AssetStore } from "./AssetStore";
 
-let storePromise: Promise<AssetStore> | null = null;
+let store: AssetStore | null = null;
 
-/** One lazily-loaded AssetStore shared by all DOM sprite renderers. */
-export function getSharedAssetStore(): Promise<AssetStore> {
-  storePromise ??= (() => {
-    const store = new AssetStore();
-    return store.load().then(() => store);
-  })();
-  return storePromise;
+/**
+ * The one AssetStore shared by the world renderer and all DOM sprite
+ * renderers, so the ~37 MB object catalog is fetched and parsed once.
+ * Callers that need the catalog await `store.load()` (idempotent).
+ */
+export function getSharedAssetStore(): AssetStore {
+  store ??= new AssetStore();
+  return store;
 }

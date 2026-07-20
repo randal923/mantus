@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { damageTypeSchema } from "./combat";
 import { creatureOutfitSchema } from "./creature";
+import { itemTooltipSchema } from "./item";
 
 export const BESTIARY_LIMITS = {
   maxRaceId: 65_535,
@@ -125,6 +126,7 @@ export const bestiaryLootEntrySchema = z
     name: z.string().min(1).max(100).optional(),
     /** 0 common .. 4 very rare, derived from drop chance like Canary. */
     rarity: z.number().int().min(0).max(4),
+    tooltip: itemTooltipSchema,
   })
   .strict();
 

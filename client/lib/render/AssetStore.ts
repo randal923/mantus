@@ -96,12 +96,19 @@ export class AssetStore {
   private outfits = new Map<number, TibiaObject>();
   private effects = new Map<number, TibiaObject>();
   private missiles = new Map<number, TibiaObject>();
-  private sheetImages: (HTMLImageElement | undefined)[] = [];
+  private sheetImages: (ImageBitmap | undefined)[] = [];
   private sheetTextures: (Texture | undefined)[] = [];
   private sheetLoads = new Map<number, Promise<void>>();
   private spriteTexCache = new Map<number, Texture>();
+  private loadPromise: Promise<void> | null = null;
 
-  async load(): Promise<void> {
+  /** Idempotent: concurrent and repeat callers share one catalog fetch. */
+  load(): Promise<void> {
+    this.loadPromise ??= this.loadCatalog();
+    return this.loadPromise;
+  }
+
+  private async loadCatalog(): Promise<void> {
     const [index, objectsFile, palette] = await Promise.all([
       fetch(`${ASSET_BASE}/atlas-index.json`).then((r) => r.json()),
       fetch(`${ASSET_BASE}/objects.json`).then((r) => r.json()),
@@ -212,21 +219,22 @@ export class AssetStore {
   private async loadSheet(sheet: number): Promise<void> {
     const filename = this.index.sheets[sheet];
     if (!filename) throw new Error(`unknown atlas sheet ${sheet}`);
-    const img = new Image();
-    img.src = `${ASSET_BASE}/${filename}`;
-    try {
-      await img.decode();
-    } catch {
-      await new Promise<void>((resolve, reject) => {
-        if (img.complete && img.naturalWidth > 0) return resolve();
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error(`failed to load ${img.src}`));
-      });
-    }
-    this.sheetImages[sheet] = img;
-    const texture = Texture.from(img);
+    const response = await fetch(`${ASSET_BASE}/${filename}`);
+    if (!response.ok) throw new Error(`failed to load ${ASSET_BASE}/${filename}`);
+    // createImageBitmap decodes the 4096×4096 PNG off the main thread,
+    // unlike drawing an HTMLImageElement which can rasterize mid-frame.
+    const bitmap = await createImageBitmap(await response.blob());
+    this.sheetImages[sheet] = bitmap;
+    const texture = Texture.from(bitmap);
     texture.source.scaleMode = "nearest";
     this.sheetTextures[sheet] = texture;
+  }
+
+  /** Sheet textures already decoded, e.g. to pre-upload them to the GPU. */
+  loadedSheetTextures(): Texture[] {
+    return this.sheetTextures.filter(
+      (texture): texture is Texture => texture !== undefined,
+    );
   }
 
   spriteTexture(spriteId: number): Texture {
@@ -254,7 +262,7 @@ export class AssetStore {
     const canvas = document.createElement("canvas");
     canvas.width = o.width * t;
     canvas.height = o.height * t;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
 
     const drawLayer = (target: CanvasRenderingContext2D, layer: number) => {
       for (let h = 0; h < o.height; h++) {
@@ -285,7 +293,9 @@ export class AssetStore {
       const maskCanvas = document.createElement("canvas");
       maskCanvas.width = canvas.width;
       maskCanvas.height = canvas.height;
-      const maskCtx = maskCanvas.getContext("2d")!;
+      const maskCtx = maskCanvas.getContext("2d", {
+        willReadFrequently: true,
+      })!;
       drawLayer(maskCtx, 1);
 
       const base = ctx.getImageData(0, 0, canvas.width, canvas.height);

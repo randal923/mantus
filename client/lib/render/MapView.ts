@@ -71,6 +71,8 @@ export class MapView {
   private viewRange: ViewRange = { x: 1, y: 1 };
   private generation = 0;
   private useTick = 0;
+  /** Reports per-region completion of the current refresh batch. */
+  onLoadProgress: ((completed: number, total: number) => void) | null = null;
 
   constructor(private readonly store: AssetStore) {
     for (const z of FLOORS) {
@@ -240,7 +242,7 @@ export class MapView {
       }
       this.available.set(z, keys);
     }
-    this.refresh();
+    await this.refresh();
   }
 
   setCenter(x: number, y: number, z: number): void {
@@ -262,13 +264,13 @@ export class MapView {
       }
     }
     this.applyCover();
-    this.refresh();
+    void this.refresh();
   }
 
   setViewRange(range: ViewRange): void {
     if (range.x === this.viewRange.x && range.y === this.viewRange.y) return;
     this.viewRange = { ...range };
-    this.refresh();
+    void this.refresh();
   }
 
   async applyTileStates(
@@ -319,8 +321,9 @@ export class MapView {
     return getVisibleFloors(this.center?.z ?? GROUND_FLOOR);
   }
 
-  private refresh(): void {
-    if (!this.manifest || !this.center) return;
+  /** Resolves once the current window's regions (and their sheets) are drawn. */
+  private refresh(): Promise<void> {
+    if (!this.manifest || !this.center) return Promise.resolve();
     const generation = ++this.generation;
     const size = this.manifest.regionSize;
     const needed = new Set<string>();
@@ -343,7 +346,17 @@ export class MapView {
         }
       }
     }
-    void Promise.all(loads).then(() => {
+    if (this.onLoadProgress && loads.length > 0) {
+      let completed = 0;
+      this.onLoadProgress(0, loads.length);
+      for (const load of loads) {
+        void load.then(() => {
+          completed++;
+          this.onLoadProgress?.(completed, loads.length);
+        });
+      }
+    }
+    return Promise.all(loads).then(() => {
       if (generation !== this.generation) return;
       for (const z of visibleFloors) this.drawFloorWindow(z);
       for (const z of FLOORS) {

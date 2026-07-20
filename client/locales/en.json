@@ -239,7 +239,8 @@
     "connecting": "Connecting",
     "connected": "Connected",
     "disconnected": "Disconnected",
-    "reconnect": "Reconnect"
+    "reconnect": "Reconnect",
+    "enteringWorld": "Entering world…"
   },
   "stats": {
     "health": "Health",

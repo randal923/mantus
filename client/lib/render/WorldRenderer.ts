@@ -9,7 +9,8 @@ import {
   type ServerMessage,
   type ViewRange,
 } from "@tibia/protocol";
-import { AssetStore, type OutfitColors } from "./AssetStore";
+import type { OutfitColors } from "./AssetStore";
+import { getSharedAssetStore } from "./getSharedAssetStore";
 import { getCreatureSortPosition } from "./getCreatureSortPosition";
 import { getAutoWalkDirections } from "../movement/getAutoWalkDirections";
 import { getMapObjectZ } from "./getMapObjectZ";
@@ -57,6 +58,10 @@ interface WorldRendererActions {
   dropDraggedItemOnCreature(creatureId: string): boolean;
   autoWalk(directions: ReadonlyArray<Direction>): void;
   targetPosition(position: Position): boolean;
+  /** Reports spawn-area loading progress for the entering-world screen. */
+  worldLoadProgress(completed: number, total: number): void;
+  /** Fired once the spawn area's regions and atlas sheets are loaded. */
+  worldReady(): void;
 }
 
 /**
@@ -65,7 +70,7 @@ interface WorldRendererActions {
  */
 export class WorldRenderer {
   private readonly app = new Application();
-  private readonly store = new AssetStore();
+  private readonly store = getSharedAssetStore();
   private readonly world = new Container();
   private readonly overlay = new Container();
   private readonly mapView = new MapView(this.store);
@@ -121,9 +126,11 @@ export class WorldRenderer {
 
     await this.store.load();
     if (this.destroyed) return;
-    for (const lookType of CHARACTER_OUTFIT_LOOK_TYPES) {
-      await this.store.preload(this.store.outfit(lookType).sprites);
-    }
+    await Promise.all(
+      CHARACTER_OUTFIT_LOOK_TYPES.map((lookType) =>
+        this.store.preload(this.store.outfit(lookType).sprites),
+      ),
+    );
     if (this.destroyed) return;
 
     this.world.scale.set(ZOOM);
@@ -141,7 +148,7 @@ export class WorldRenderer {
         return;
       case "welcome": {
         this.ownPlayerId = message.playerId;
-        void this.mapView.setMap(message.map.name);
+        void this.enterWorld(message.map.name);
         for (const creature of message.creatures) this.addCreature(creature);
         const own = message.creatures.find(
           (creature) => creature.id === message.playerId,
@@ -264,6 +271,53 @@ export class WorldRenderer {
         return;
       case "error":
         return;
+    }
+  }
+
+  /**
+   * Loads the spawn area behind the entering-world screen: map manifest,
+   * visible regions (their atlas sheets stream in via region preloads), then
+   * eager GPU upload of every decoded sheet so the first frames don't hitch.
+   * Progress is one unit for the manifest plus one per region and per upload.
+   */
+  private async enterWorld(mapName: string): Promise<void> {
+    let manifestDone = 0;
+    let regionsDone = 0;
+    let regionsTotal = 0;
+    let uploadsDone = 0;
+    let uploadsTotal = 0;
+    const report = () => {
+      this.actions?.worldLoadProgress(
+        manifestDone + regionsDone + uploadsDone,
+        1 + regionsTotal + uploadsTotal,
+      );
+    };
+    this.mapView.onLoadProgress = (completed, total) => {
+      regionsDone = completed;
+      regionsTotal = total;
+      report();
+    };
+    report();
+    try {
+      await this.mapView.setMap(mapName);
+      manifestDone = 1;
+      if (this.destroyed) return;
+      const textures = this.store.loadedSheetTextures();
+      uploadsTotal = textures.length;
+      report();
+      for (const texture of textures) {
+        this.app.renderer.texture.initSource(texture.source);
+        uploadsDone++;
+        report();
+        await new Promise(requestAnimationFrame);
+        if (this.destroyed) return;
+      }
+    } catch (cause: unknown) {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(`failed to load map: ${reason}`);
+    } finally {
+      this.mapView.onLoadProgress = null;
+      if (!this.destroyed) this.actions?.worldReady();
     }
   }
 

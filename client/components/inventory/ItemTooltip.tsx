@@ -13,6 +13,13 @@ interface ItemTooltipProps {
 /** Hover card describing one item; purely presentational, stats come from the server. */
 export function ItemTooltip({ item }: ItemTooltipProps) {
   const { t } = useAppTranslation();
+  const hasDetails = Boolean(
+    item.primaryStat ||
+      item.affixes.length > 0 ||
+      item.requiredLevel !== undefined ||
+      item.vocations?.length ||
+      item.description,
+  );
 
   return (
     <div
@@ -43,7 +50,7 @@ export function ItemTooltip({ item }: ItemTooltipProps) {
         />
       </header>
 
-      <div aria-hidden className="ui-divider my-3" />
+      {hasDetails && <div aria-hidden className="ui-divider my-3" />}
 
       {item.primaryStat && (
         <p className="text-lg font-semibold text-ui-text-bright">
@@ -82,8 +89,10 @@ export function ItemTooltip({ item }: ItemTooltipProps) {
         </p>
       )}
 
-      <div aria-hidden className="ui-divider my-3" />
-      <div className="flex flex-col items-end gap-1 text-sm text-ui-muted">
+      {hasDetails && <div aria-hidden className="ui-divider my-3" />}
+      <div
+        className={`flex flex-col items-end gap-1 text-sm text-ui-muted ${hasDetails ? "" : "mt-3"}`}
+      >
         {item.containerCapacity !== undefined && (
           <p>
             {t("itemTooltip.containerSlots", {

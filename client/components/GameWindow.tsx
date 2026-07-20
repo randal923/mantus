@@ -148,6 +148,8 @@ interface ReportSessionState {
 }
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
+/** Bestiary/bosstiary outfit warming waits out the cold-start window. */
+const OUTFIT_WARM_DELAY_MS = 10_000;
 
 interface GameWindowProps {
   accessToken: string;
@@ -189,6 +191,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     useState<CharacterCreationOptions | null>(null);
   const [ownCharacter, setOwnCharacter] =
     useState<OwnCharacterState | null>(null);
+  const [worldLoading, setWorldLoading] = useState(false);
+  const [worldLoadProgress, setWorldLoadProgress] = useState<{
+    readonly completed: number;
+    readonly total: number;
+  } | null>(null);
   const [visibleCreatures, setVisibleCreatures] = useState<
     ReadonlyArray<CreatureState>
   >([]);
@@ -723,6 +730,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           itemDragRef.current = null;
         },
         autoWalk: (directions) => client?.autoWalk(directions),
+        worldLoadProgress: (completed, total) => {
+          if (!disposed) setWorldLoadProgress({ completed, total });
+        },
+        worldReady: () => {
+          if (!disposed) setWorldLoading(false);
+        },
         targetPosition: (position) => {
           const rune = pendingRuneRef.current;
           if (!rune) return false;
@@ -772,6 +785,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "welcome") {
             joinedRef.current = true;
+            // Cleared by the renderer's worldReady callback once the spawn
+            // area's map regions and atlas sheets finish loading.
+            setWorldLoading(true);
+            setWorldLoadProgress(null);
             setAccountTier(message.accountTier);
             setPremiumDaysRemaining(message.premiumDaysRemaining);
             confirmedLevelRef.current = {
@@ -1193,7 +1210,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "bestiary-creatures-state") {
             confirmBestiaryCreatures(message);
-            warmOutfitAnimationCache(message.entries.map((entry) => entry.outfit));
+            const outfits = message.entries.map((entry) => entry.outfit);
+            window.setTimeout(
+              () => warmOutfitAnimationCache(outfits),
+              OUTFIT_WARM_DELAY_MS,
+            );
             return;
           }
           if (message.type === "bestiary-monster-state") {
@@ -1202,7 +1223,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "bosstiary-state") {
             confirmBosstiaryState(message);
-            warmOutfitAnimationCache(message.entries.map((entry) => entry.outfit));
+            const outfits = message.entries.map((entry) => entry.outfit);
+            window.setTimeout(
+              () => warmOutfitAnimationCache(outfits),
+              OUTFIT_WARM_DELAY_MS,
+            );
             return;
           }
           if (message.type === "bosstiary-boss-state") {
@@ -1211,7 +1236,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "wiki-item-sources-state") {
             confirmWikiItemSources(message);
-            warmOutfitAnimationCache(message.sources.map((source) => source.outfit));
+            const outfits = message.sources.map((source) => source.outfit);
+            window.setTimeout(
+              () => warmOutfitAnimationCache(outfits),
+              OUTFIT_WARM_DELAY_MS,
+            );
             return;
           }
           if (message.type === "bestiary-entry-changed") {
@@ -1416,6 +1445,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         onStatus: (nextStatus) => {
           if (disposed) return;
           if (nextStatus === "disconnected") joinedRef.current = false;
+          if (nextStatus === "disconnected") setWorldLoading(false);
           if (nextStatus === "disconnected") confirmedLevelRef.current = null;
           if (nextStatus === "disconnected") setLevelUpNotice(null);
           if (nextStatus === "disconnected") setVisibleCreatures([]);
@@ -1636,6 +1666,16 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     resetWheel,
   ]);
 
+  const enteringWorldPercent =
+    worldLoadProgress && worldLoadProgress.total > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (worldLoadProgress.completed / worldLoadProgress.total) * 100,
+          ),
+        )
+      : 0;
+
   return (
     <div className="fixed inset-0 overflow-hidden bg-black">
       <div ref={containerRef} className="absolute inset-0" />
@@ -1676,6 +1716,26 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         />
       ) : (
         <>
+          {worldLoading ? (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black">
+              <p className="text-sm text-white/70">
+                {t("connection.enteringWorld")}
+              </p>
+              <div
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={enteringWorldPercent}
+                className="h-2 w-64 overflow-hidden rounded-full bg-white/10"
+              >
+                <div
+                  className="h-full rounded-full bg-white/60 transition-[width] duration-200"
+                  style={{ width: `${enteringWorldPercent}%` }}
+                />
+              </div>
+              <p className="text-xs text-white/50">{enteringWorldPercent}%</p>
+            </div>
+          ) : null}
           <div className="absolute inset-x-0 top-0 z-40">
             <TopNavigationBar
               characterName={ownCharacter.name}

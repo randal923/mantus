@@ -141,10 +141,22 @@ function makeHarness(): Harness {
       characterId === A ? session : undefined,
   } as unknown as SessionRegistry;
   const items = {
-    itemType: (id: number) => ({ id, spriteId: id + 1_000, name: `item ${id}` }),
+    itemType: (id: number) => ({
+      id,
+      spriteId: id + 1_000,
+      name: `item ${id}`,
+      primaryType: "test items",
+      weight: 100,
+    }),
     itemTypeByName: (name: string) =>
       name === "gold coin"
-        ? { id: 3_031, spriteId: 4_031, name }
+        ? {
+            id: 3_031,
+            spriteId: 4_031,
+            name,
+            primaryType: "test items",
+            weight: 10,
+          }
         : undefined,
   } as unknown as ItemIntentHandler;
   const store = new MemoryBestiaryStore();
@@ -299,8 +311,16 @@ describe("BestiaryService", () => {
       locations: "Sewers near towns.",
       stats: { maxHealth: 20, experience: 5 },
       loot: [
-        { itemTypeId: 3_031, spriteId: 4_031 },
-        { itemTypeId: 3_607, spriteId: 4_607 },
+        {
+          itemTypeId: 3_031,
+          spriteId: 4_031,
+          tooltip: { name: "Gold Coin", typeLine: "Test Items", weight: 10 },
+        },
+        {
+          itemTypeId: 3_607,
+          spriteId: 4_607,
+          tooltip: { name: "Item 3607", typeLine: "Test Items", weight: 100 },
+        },
       ],
     });
   });
@@ -337,6 +357,8 @@ describe("BestiaryService", () => {
       expect(entry.itemTypeId).toBeGreaterThan(0);
       expect(entry.spriteId).toBeGreaterThan(0);
       expect(entry.name).toBeTruthy();
+      expect(entry.tooltip.spriteId).toBe(entry.spriteId);
+      expect(entry.tooltip.weight).toBeGreaterThan(0);
     }
   });
 
@@ -399,8 +421,16 @@ describe("BestiaryService", () => {
       kills: 0,
       stats: { maxHealth: 20, armor: 1 },
       loot: [
-        { itemTypeId: 3_031, spriteId: 4_031 },
-        { itemTypeId: 3_607, spriteId: 4_607 },
+        {
+          itemTypeId: 3_031,
+          spriteId: 4_031,
+          tooltip: { name: "Gold Coin", typeLine: "Test Items", weight: 10 },
+        },
+        {
+          itemTypeId: 3_607,
+          spriteId: 4_607,
+          tooltip: { name: "Item 3607", typeLine: "Test Items", weight: 100 },
+        },
       ],
     });
   });

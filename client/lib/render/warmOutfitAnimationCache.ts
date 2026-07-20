@@ -1,5 +1,6 @@
 import type { CreatureOutfit } from "@tibia/protocol";
 import { getOutfitAnimationFrames } from "./getOutfitAnimationFrames";
+import { waitForIdle } from "./waitForIdle";
 
 const queue: CreatureOutfit[] = [];
 const queuedKeys = new Set<string>();
@@ -36,21 +37,11 @@ async function drain(): Promise<void> {
     const outfit = queue.shift();
     if (!outfit) break;
     try {
-      await getOutfitAnimationFrames(outfit);
+      await getOutfitAnimationFrames(outfit, "background");
     } catch {
       // A missing lookType only affects its own cell; keep warming the rest.
     }
-    await idle();
+    await waitForIdle();
   }
   running = false;
-}
-
-function idle(): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(() => resolve(), { timeout: 200 });
-      return;
-    }
-    setTimeout(resolve, 25);
-  });
 }

@@ -2,7 +2,7 @@
 
 import type { BestiaryLootEntry } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { SpriteIcon } from "../inventory/SpriteIcon";
+import { BestiaryLootItem } from "./BestiaryLootItem";
 
 const RARITY_KEYS = [
   "common",
@@ -59,14 +59,12 @@ export function BestiaryLootList({ loot }: BestiaryLootListProps) {
           </span>
           <ul className="mt-1 flex flex-wrap gap-1.5">
             {group.entries.map((entry, index) => (
-                <li
-                  key={`${entry.itemTypeId}-${index}`}
-                  title={entry.name ?? String(entry.itemTypeId)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-sm border bg-black/40 ${RARITY_BORDERS[group.rarity]}`}
-                >
-                  <SpriteIcon spriteId={entry.spriteId} scale={1} />
-                </li>
-              ))}
+              <BestiaryLootItem
+                key={`${entry.itemTypeId}-${index}`}
+                entry={entry}
+                borderClassName={RARITY_BORDERS[group.rarity]}
+              />
+            ))}
           </ul>
         </div>
       ))}

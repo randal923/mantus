@@ -1,6 +1,7 @@
 import type { CreatureOutfit } from "@tibia/protocol";
 import type { RGB, SpritePattern } from "./AssetStore";
 import { getSharedAssetStore } from "./getSharedAssetStore";
+import { waitForIdle } from "./waitForIdle";
 
 const FRAME_PADDING = 2;
 const WALK_FRAME_DURATION_MS = 150;
@@ -17,10 +18,12 @@ const bakedByOutfit = new Map<string, Promise<OutfitAnimationFrames>>();
  * Bakes a south-facing walk cycle (phases 1..n-1, falling back to the idle
  * phase) for DOM display, cropped like the static portrait but with one
  * shared bounding box across all frames. Results are memoized per outfit so
- * lazily mounted bestiary cells re-appear instantly.
+ * lazily mounted bestiary cells re-appear instantly. Pass "background" to
+ * yield to the browser between frames when warming ahead of time.
  */
 export function getOutfitAnimationFrames(
   outfitState: CreatureOutfit,
+  pace: "immediate" | "background" = "immediate",
 ): Promise<OutfitAnimationFrames> {
   const key = [
     outfitState.lookType,
@@ -32,7 +35,7 @@ export function getOutfitAnimationFrames(
   ].join(":");
   const cached = bakedByOutfit.get(key);
   if (cached) return cached;
-  const baking = bakeOutfitAnimationFrames(outfitState);
+  const baking = bakeOutfitAnimationFrames(outfitState, pace);
   bakedByOutfit.set(key, baking);
   baking.catch(() => bakedByOutfit.delete(key));
   return baking;
@@ -40,8 +43,10 @@ export function getOutfitAnimationFrames(
 
 async function bakeOutfitAnimationFrames(
   outfitState: CreatureOutfit,
+  pace: "immediate" | "background",
 ): Promise<OutfitAnimationFrames> {
-  const store = await getSharedAssetStore();
+  const store = getSharedAssetStore();
+  await store.load();
   const outfit = store.outfit(outfitState.lookType);
   const phases =
     outfit.phases > 1
@@ -72,25 +77,31 @@ async function bakeOutfitAnimationFrames(
     legs: paletteColor(outfitState.legs),
     feet: paletteColor(outfitState.feet),
   };
-  const baked = patterns.map((pattern) => store.bakeFrame(outfit, pattern, colors));
-
+  const baked: HTMLCanvasElement[] = [];
   let left = Number.POSITIVE_INFINITY;
   let top = Number.POSITIVE_INFINITY;
   let right = -1;
   let bottom = -1;
-  for (const frame of baked) {
+  for (const pattern of patterns) {
+    const frame = store.bakeFrame(outfit, pattern, colors);
     const context = frame.getContext("2d");
     if (!context) throw new Error("outfit animation canvas is unavailable");
-    const pixels = context.getImageData(0, 0, frame.width, frame.height).data;
+    // One 32-bit read per pixel; RGBA is little-endian, alpha is the high byte.
+    const pixels = new Uint32Array(
+      context.getImageData(0, 0, frame.width, frame.height).data.buffer,
+    );
+    let index = 0;
     for (let y = 0; y < frame.height; y++) {
-      for (let x = 0; x < frame.width; x++) {
-        if (pixels[(y * frame.width + x) * 4 + 3] === 0) continue;
+      for (let x = 0; x < frame.width; x++, index++) {
+        if (pixels[index] >>> 24 === 0) continue;
         left = Math.min(left, x);
         top = Math.min(top, y);
         right = Math.max(right, x);
         bottom = Math.max(bottom, y);
       }
     }
+    baked.push(frame);
+    if (pace === "background") await waitForIdle();
   }
   if (right < left || bottom < top) {
     return { frames: baked, frameDurationMs: WALK_FRAME_DURATION_MS };

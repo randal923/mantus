@@ -7,7 +7,8 @@ const PORTRAIT_PADDING = 2;
 export async function getOutfitPortraitCanvas(
   outfitState: CharacterOutfit,
 ): Promise<HTMLCanvasElement> {
-  const store = await getSharedAssetStore();
+  const store = getSharedAssetStore();
+  await store.load();
   const outfit = store.outfit(outfitState.lookType);
   const pattern = { x: 2, phase: 0 } as const;
   const spriteIds: number[] = [];
@@ -39,14 +40,18 @@ export async function getOutfitPortraitCanvas(
   });
   const context = frame.getContext("2d");
   if (!context) throw new Error("outfit portrait canvas is unavailable");
-  const pixels = context.getImageData(0, 0, frame.width, frame.height).data;
+  // One 32-bit read per pixel; RGBA is little-endian, alpha is the high byte.
+  const pixels = new Uint32Array(
+    context.getImageData(0, 0, frame.width, frame.height).data.buffer,
+  );
   let left = frame.width;
   let top = frame.height;
   let right = -1;
   let bottom = -1;
+  let index = 0;
   for (let y = 0; y < frame.height; y++) {
-    for (let x = 0; x < frame.width; x++) {
-      if (pixels[(y * frame.width + x) * 4 + 3] === 0) continue;
+    for (let x = 0; x < frame.width; x++, index++) {
+      if (pixels[index] >>> 24 === 0) continue;
       left = Math.min(left, x);
       top = Math.min(top, y);
       right = Math.max(right, x);

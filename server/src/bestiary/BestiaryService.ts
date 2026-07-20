@@ -14,6 +14,7 @@ import {
 } from "@tibia/protocol";
 import type { MonsterLoot, MonsterType } from "../creature/MonsterType";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import { toItemTooltip } from "../item/toItemTooltip";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import type { BestiaryCatalog } from "./BestiaryCatalog";
@@ -236,6 +237,7 @@ export class BestiaryService {
         spriteId: itemType.spriteId,
         name: itemType.name,
         rarity,
+        tooltip: toItemTooltip(itemType),
       });
     }
     return entries.sort((a, b) => a.rarity - b.rarity);

@@ -115,6 +115,16 @@ scope.
   and hotkey changes only for the lifetime of the open modal.
 - [ ] Performance budgets for region streaming, sprite count, animated items,
   effects, UI updates, and low-power/background behavior.
+- [ ] Spawn-area atlas sheets are GPU-uploaded eagerly behind the
+  entering-world screen (`WorldRenderer.enterWorld`), but sheets that stream
+  in later while walking still upload on first draw — a one-frame hitch per
+  new sheet. Fix: call `renderer.texture.initSource` inside
+  `AssetStore.loadSheet` (needs access to the renderer), or move sheets to
+  compressed textures.
+- [ ] The "Entering world…" gate waits only for the spawn window's map
+  regions and their atlas sheets. Re-entering a long-left area still re-pays
+  region fetch + sheet decode mid-walk (`MAX_CACHED_REGIONS = 48` eviction);
+  consider prefetching regions adjacent to the walk direction.
 
 ## Rules
 
