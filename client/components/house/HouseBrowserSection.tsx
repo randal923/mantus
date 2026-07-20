@@ -60,82 +60,56 @@ export function HouseBrowserSection({
       {!list || list.entries.length === 0 ? (
         <p className="text-xs text-ui-muted">{t("house.noHouses")}</p>
       ) : (
-        <>
-          <div className="max-h-72 overflow-y-auto ui-scrollbar">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="text-[10px] font-display tracking-widest text-ui-gold uppercase">
-                  <th className="py-1 pr-2">{t("house.nameColumn")}</th>
-                  <th className="py-1 pr-2">{t("house.town")}</th>
-                  <th className="py-1 pr-2">{t("house.size")}</th>
-                  <th className="py-1 pr-2">{t("house.rent")}</th>
-                  <th className="py-1 pr-2">{t("house.owner")}</th>
-                  <th className="py-1" />
+        <div className="max-h-72 overflow-y-auto ui-scrollbar">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-[10px] font-display tracking-widest text-ui-gold uppercase">
+                <th className="py-1 pr-2">{t("house.nameColumn")}</th>
+                <th className="py-1 pr-2">{t("house.town")}</th>
+                <th className="py-1 pr-2">{t("house.size")}</th>
+                <th className="py-1 pr-2">{t("house.rent")}</th>
+                <th className="py-1 pr-2">{t("house.owner")}</th>
+                <th className="py-1" />
+              </tr>
+            </thead>
+            <tbody>
+              {list.entries.map((entry) => (
+                <tr key={entry.houseId} className="border-t border-white/5">
+                  <td className="py-1 pr-2 text-ui-text-bright">
+                    {entry.name}
+                    {entry.guildhall && (
+                      <span className="ml-1 text-[10px] text-ui-gold uppercase">
+                        {t("house.guildhall")}
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-1 pr-2">
+                    {entry.townName ?? entry.townId}
+                  </td>
+                  <td className="py-1 pr-2">
+                    {t("house.sqm", { count: entry.size })}
+                  </td>
+                  <td className="py-1 pr-2">
+                    {entry.rent.toLocaleString(i18n.language)}
+                  </td>
+                  <td className="py-1 pr-2">
+                    {entry.ownerName ?? t("house.unowned")}
+                  </td>
+                  <td className="py-1 text-right">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={pending}
+                      onClick={() => onOpenHouse(entry.houseId)}
+                    >
+                      {t("house.view")}
+                    </Button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {list.entries.map((entry) => (
-                  <tr key={entry.houseId} className="border-t border-white/5">
-                    <td className="py-1 pr-2 text-ui-text-bright">
-                      {entry.name}
-                      {entry.guildhall && (
-                        <span className="ml-1 text-[10px] text-ui-gold uppercase">
-                          {t("house.guildhall")}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-1 pr-2">
-                      {entry.townName ?? entry.townId}
-                    </td>
-                    <td className="py-1 pr-2">
-                      {t("house.sqm", { count: entry.size })}
-                    </td>
-                    <td className="py-1 pr-2">
-                      {entry.rent.toLocaleString(i18n.language)}
-                    </td>
-                    <td className="py-1 pr-2">
-                      {entry.ownerName ?? t("house.unowned")}
-                    </td>
-                    <td className="py-1 text-right">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        disabled={pending}
-                        onClick={() => onOpenHouse(entry.houseId)}
-                      >
-                        {t("house.view")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex items-center justify-between">
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={pending || list.page <= 0}
-              onClick={() => onBrowse(townId, list.page - 1)}
-            >
-              {t("house.previousPage")}
-            </Button>
-            <span className="text-xs text-ui-muted">
-              {t("house.pageOf", {
-                page: list.page + 1,
-                total: Math.max(list.totalPages, 1),
-              })}
-            </span>
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={pending || list.page + 1 >= list.totalPages}
-              onClick={() => onBrowse(townId, list.page + 1)}
-            >
-              {t("house.nextPage")}
-            </Button>
-          </div>
-        </>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

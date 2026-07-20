@@ -39,6 +39,19 @@ export const WithFooter: Story = {
   },
 };
 
+export const Paginated: Story = {
+  args: {
+    title: "Browse Houses",
+    children: "Houses for the selected town appear above the page controls.",
+    pagination: {
+      currentPage: 2,
+      totalPages: 5,
+      onPrevious: fn(),
+      onNext: fn(),
+    },
+  },
+};
+
 export const WithInput: Story = {
   args: {
     title: "Create Character",

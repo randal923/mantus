@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { BosstiaryStateMessage } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { BosstiaryCard } from "./BosstiaryCard";
 
@@ -34,7 +33,22 @@ export function BosstiaryModal({
   );
 
   return (
-    <Modal title={t("bosstiary.title")} onClose={onClose} size="wide">
+    <Modal
+      title={t("bosstiary.title")}
+      onClose={onClose}
+      size="wide"
+      pagination={
+        totalPages > 1
+          ? {
+              currentPage: currentPage + 1,
+              totalPages,
+              disabled: pending,
+              onPrevious: () => setPage(currentPage - 1),
+              onNext: () => setPage(currentPage + 1),
+            }
+          : undefined
+      }
+    >
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs text-ui-muted">{t("bosstiary.subtitle")}</span>
         {bosses && (
@@ -59,30 +73,6 @@ export function BosstiaryModal({
               <p className="py-6 text-center text-xs text-ui-muted">
                 {t("bosstiary.empty")}
               </p>
-            )}
-            {totalPages > 1 && (
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <Button
-                  size="sm"
-                  disabled={currentPage <= 0}
-                  onClick={() => setPage(currentPage - 1)}
-                >
-                  {t("bestiary.previous")}
-                </Button>
-                <span className="text-xs text-ui-muted">
-                  {t("bestiary.pageOf", {
-                    page: currentPage + 1,
-                    total: totalPages,
-                  })}
-                </span>
-                <Button
-                  size="sm"
-                  disabled={currentPage + 1 >= totalPages}
-                  onClick={() => setPage(currentPage + 1)}
-                >
-                  {t("bestiary.next")}
-                </Button>
-              </div>
             )}
           </>
         ) : (

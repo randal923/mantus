@@ -2,12 +2,22 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { Button } from "./Button";
 import { CloseButton } from "./CloseButton";
+
+interface ModalPagination {
+  currentPage: number;
+  totalPages: number;
+  disabled?: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+}
 
 interface ModalProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  pagination?: ModalPagination;
   /** Optional action row rendered below a divider at the bottom of the panel. */
   footer?: ReactNode;
   size?: "default" | "wide";
@@ -18,6 +28,7 @@ export function Modal({
   title,
   onClose,
   children,
+  pagination,
   footer,
   size = "default",
 }: ModalProps) {
@@ -63,6 +74,40 @@ export function Modal({
         <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85">
           {children}
         </div>
+
+        {pagination && (
+          <>
+            <div aria-hidden className="ui-divider" />
+            <nav
+              aria-label={t("modal.pagination.label")}
+              className="flex shrink-0 items-center justify-between"
+            >
+              <Button
+                size="sm"
+                disabled={pagination.disabled || pagination.currentPage <= 1}
+                onClick={pagination.onPrevious}
+              >
+                {t("modal.pagination.previous")}
+              </Button>
+              <span className="text-xs text-ui-muted">
+                {t("modal.pagination.pageOf", {
+                  page: pagination.currentPage,
+                  total: pagination.totalPages,
+                })}
+              </span>
+              <Button
+                size="sm"
+                disabled={
+                  pagination.disabled ||
+                  pagination.currentPage >= pagination.totalPages
+                }
+                onClick={pagination.onNext}
+              >
+                {t("modal.pagination.next")}
+              </Button>
+            </nav>
+          </>
+        )}
 
         {footer && (
           <>

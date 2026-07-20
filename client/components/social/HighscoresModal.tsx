@@ -9,7 +9,6 @@ import {
   type HighscoresStateMessage,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { Button } from "../ui/Button";
 import { Dropdown } from "../ui/Dropdown";
 import { Modal } from "../ui/Modal";
 
@@ -50,7 +49,20 @@ export function HighscoresModal({
   const totalPages = page?.totalPages ?? 1;
 
   return (
-    <Modal title={t("highscores.title")} onClose={onClose} size="wide">
+    <Modal
+      title={t("highscores.title")}
+      onClose={onClose}
+      size="wide"
+      pagination={{
+        currentPage: currentPage + 1,
+        totalPages,
+        disabled: pending,
+        onPrevious: () =>
+          onRequest(category, selectedVocation, currentPage - 1),
+        onNext: () =>
+          onRequest(category, selectedVocation, currentPage + 1),
+      }}
+    >
       <div className="flex flex-wrap items-end gap-3">
         <Dropdown
           ariaLabel={t("highscores.category")}
@@ -87,32 +99,6 @@ export function HighscoresModal({
           }}
           className="w-48"
         />
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            size="sm"
-            disabled={pending || currentPage <= 0}
-            onClick={() =>
-              onRequest(category, selectedVocation, currentPage - 1)
-            }
-          >
-            {t("highscores.previous")}
-          </Button>
-          <span className="text-xs text-ui-muted">
-            {t("highscores.pageOf", {
-              page: currentPage + 1,
-              total: totalPages,
-            })}
-          </span>
-          <Button
-            size="sm"
-            disabled={pending || currentPage + 1 >= totalPages}
-            onClick={() =>
-              onRequest(category, selectedVocation, currentPage + 1)
-            }
-          >
-            {t("highscores.next")}
-          </Button>
-        </div>
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-left text-sm">

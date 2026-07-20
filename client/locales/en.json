@@ -624,9 +624,6 @@
     "noHouses": "No houses to show.",
     "nameColumn": "House",
     "view": "View",
-    "previousPage": "Previous",
-    "nextPage": "Next",
-    "pageOf": "Page {{page}} of {{total}}",
     "events": {
       "purchased": "You now own {{house}}.",
       "transferred": "{{house}} was transferred to {{detail}}.",
@@ -727,9 +724,6 @@
     "contains_one": "contains {{count}} item",
     "contains_other": "contains {{count}} items",
     "noItems": "No items match this view.",
-    "previous": "Previous",
-    "next": "Next",
-    "page": "Page {{page}} of {{pageCount}}",
     "errors": {
       "out-of-range": "You are too far away from the depot.",
       "busy": "Please wait for your other item action to finish.",
@@ -935,7 +929,13 @@
     "responsesLabel": "Responses"
   },
   "modal": {
-    "close": "Close dialog"
+    "close": "Close dialog",
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    }
   },
   "menu": {
     "title": "Game Menu",
@@ -1057,9 +1057,6 @@
     "name": "Name",
     "level": "Level",
     "value": "Points",
-    "previous": "Previous",
-    "next": "Next",
-    "pageOf": "Page {{page}} / {{total}}",
     "empty": "No entries on this page.",
     "loading": "Loading…",
     "categories": {
@@ -1110,9 +1107,6 @@
     "knownOfTotal": "Known: {{known}} / {{total}}",
     "unknown": "Unknown",
     "stageOf": "Stage {{stage}} of 4",
-    "previous": "Previous",
-    "next": "Next",
-    "pageOf": "Page {{page}} / {{total}}",
     "totalKills": "Total kills",
     "difficulty": "Difficulty",
     "occurrence": "Occurrence",

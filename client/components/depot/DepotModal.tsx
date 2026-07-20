@@ -62,6 +62,15 @@ export function DepotModal({
       title={t("depot.title", { townName: state.townName })}
       onClose={onClose}
       size="wide"
+      pagination={{
+        currentPage: state.page,
+        totalPages: state.pageCount,
+        disabled: pending,
+        onPrevious: () =>
+          onBrowse(state.location, state.page - 1, state.query),
+        onNext: () =>
+          onBrowse(state.location, state.page + 1, state.query),
+      }}
     >
       <div className="flex min-h-128 flex-col gap-4">
         <nav
@@ -266,32 +275,6 @@ export function DepotModal({
                 </li>
               )}
             </ul>
-            <footer className="mt-3 flex items-center justify-between border-t border-ui-gold/10 pt-3 text-xs text-ui-muted">
-              <Button
-                size="sm"
-                disabled={pending || state.page <= 1}
-                onClick={() =>
-                  onBrowse(state.location, state.page - 1, state.query)
-                }
-              >
-                {t("depot.previous")}
-              </Button>
-              <span>
-                {t("depot.page", {
-                  page: state.page,
-                  pageCount: state.pageCount,
-                })}
-              </span>
-              <Button
-                size="sm"
-                disabled={pending || state.page >= state.pageCount}
-                onClick={() =>
-                  onBrowse(state.location, state.page + 1, state.query)
-                }
-              >
-                {t("depot.next")}
-              </Button>
-            </footer>
           </section>
         </div>
       </div>

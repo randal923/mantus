@@ -55,6 +55,7 @@ export function HouseModal({
   const { t } = useAppTranslation();
   const [tab, setTab] = useState<HouseTab>("browse");
   const house = session.house;
+  const list = session.list;
   const canManage =
     house !== null &&
     (house.myAccess === "owner" || house.myAccess === "subowner");
@@ -65,6 +66,17 @@ export function HouseModal({
       size="wide"
       title={house ? house.name : t("house.title")}
       onClose={onClose}
+      pagination={
+        tab === "browse" && list && list.entries.length > 0
+          ? {
+              currentPage: list.page + 1,
+              totalPages: Math.max(list.totalPages, 1),
+              disabled: session.pending,
+              onPrevious: () => onBrowse(list.townId, list.page - 1),
+              onNext: () => onBrowse(list.townId, list.page + 1),
+            }
+          : undefined
+      }
     >
       <div className="flex flex-col gap-4">
         <HouseOffersList
@@ -130,7 +142,7 @@ export function HouseModal({
           ))}
         {tab === "browse" && (
           <HouseBrowserSection
-            list={session.list}
+            list={list}
             pending={session.pending}
             onBrowse={onBrowse}
             onOpenHouse={(houseId) => {

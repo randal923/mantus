@@ -624,9 +624,6 @@
     "noHouses": "Nenhuma casa para mostrar.",
     "nameColumn": "Casa",
     "view": "Ver",
-    "previousPage": "Anterior",
-    "nextPage": "Próxima",
-    "pageOf": "Página {{page}} de {{total}}",
     "events": {
       "purchased": "Agora você é dono de {{house}}.",
       "transferred": "{{house}} foi transferida para {{detail}}.",
@@ -727,9 +724,6 @@
     "contains_one": "contém {{count}} item",
     "contains_other": "contém {{count}} itens",
     "noItems": "Nenhum item corresponde a esta visualização.",
-    "previous": "Anterior",
-    "next": "Próxima",
-    "page": "Página {{page}} de {{pageCount}}",
     "errors": {
       "out-of-range": "Você está longe demais do depósito.",
       "busy": "Aguarde sua outra ação de item terminar.",
@@ -935,7 +929,13 @@
     "responsesLabel": "Respostas"
   },
   "modal": {
-    "close": "Fechar janela"
+    "close": "Fechar janela",
+    "pagination": {
+      "label": "Paginação",
+      "previous": "Anterior",
+      "next": "Próxima",
+      "pageOf": "Página {{page}} de {{total}}"
+    }
   },
   "menu": {
     "title": "Menu do Jogo",
@@ -1057,9 +1057,6 @@
     "name": "Nome",
     "level": "Nível",
     "value": "Pontos",
-    "previous": "Anterior",
-    "next": "Próxima",
-    "pageOf": "Página {{page}} / {{total}}",
     "empty": "Nenhuma entrada nesta página.",
     "loading": "Carregando…",
     "categories": {
@@ -1110,9 +1107,6 @@
     "knownOfTotal": "Conhecidas: {{known}} / {{total}}",
     "unknown": "Desconhecida",
     "stageOf": "Estágio {{stage}} de 4",
-    "previous": "Anterior",
-    "next": "Próxima",
-    "pageOf": "Página {{page}} / {{total}}",
     "totalKills": "Total de abates",
     "difficulty": "Dificuldade",
     "occurrence": "Ocorrência",
