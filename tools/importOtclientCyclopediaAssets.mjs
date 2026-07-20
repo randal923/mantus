@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import sharp from "sharp";
 
 const COMMIT = "465b7a217e87502bb7f9980bf6e099718d0a9a49";
 const SOURCE_ROOT = `https://raw.githubusercontent.com/opentibiabr/otclient/${COMMIT}`;
@@ -60,6 +61,52 @@ const classes = [
   "undead",
   "vermin",
 ];
+
+async function removeTabBackground(bytes) {
+  const { data, info } = await sharp(bytes)
+    .extract({ left: 1, top: 1, width: 48, height: 32 })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const transparent = new Uint8Array(info.width * info.height);
+  const pending = [];
+  const addBackgroundPixel = (x, y) => {
+    if (x < 0 || y < 0 || x >= info.width || y >= info.height) return;
+    const pixel = y * info.width + x;
+    if (transparent[pixel]) return;
+    const offset = pixel * 4;
+    const red = data[offset];
+    const green = data[offset + 1];
+    const blue = data[offset + 2];
+    const darkest = Math.min(red, green, blue);
+    const lightest = Math.max(red, green, blue);
+    if (lightest - darkest > 3 || darkest < 35 || lightest > 125) return;
+    transparent[pixel] = 1;
+    pending.push(pixel);
+  };
+
+  for (let x = 0; x < info.width; x += 1) {
+    addBackgroundPixel(x, 0);
+    addBackgroundPixel(x, info.height - 1);
+  }
+  for (let y = 0; y < info.height; y += 1) {
+    addBackgroundPixel(0, y);
+    addBackgroundPixel(info.width - 1, y);
+  }
+  for (let index = 0; index < pending.length; index += 1) {
+    const pixel = pending[index];
+    const x = pixel % info.width;
+    const y = Math.floor(pixel / info.width);
+    addBackgroundPixel(x - 1, y);
+    addBackgroundPixel(x + 1, y);
+    addBackgroundPixel(x, y - 1);
+    addBackgroundPixel(x, y + 1);
+  }
+  for (let pixel = 0; pixel < transparent.length; pixel += 1) {
+    if (transparent[pixel]) data[pixel * 4 + 3] = 0;
+  }
+  return sharp(data, { raw: info }).png().toBuffer();
+}
 for (const className of classes) {
   assets[`classes/${className}.png`] =
     `modules/game_cyclopedia/images/bestiary/creatures/${className}.png`;
@@ -82,7 +129,12 @@ for (const [outputPath, sourcePath] of Object.entries(assets)) {
   }
   const destination = join(outputRoot, outputPath);
   await mkdir(dirname(destination), { recursive: true });
-  await writeFile(destination, bytes);
+  await writeFile(
+    destination,
+    outputPath.startsWith("tabs/")
+      ? await removeTabBackground(bytes)
+      : bytes,
+  );
 }
 
 console.log(`imported ${Object.keys(assets).length} Cyclopedia assets`);

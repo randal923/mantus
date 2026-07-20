@@ -6,7 +6,6 @@ import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
-import { WikiNavigationIcon } from "./WikiNavigationIcon";
 
 type NavigationPanel =
   | "character"
@@ -294,7 +293,19 @@ export function TopNavigationBar({
           disabled={!onWiki}
           onClick={onWiki}
         >
-          <WikiNavigationIcon />
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 4.5h5.5A3.5 3.5 0 0 1 14 8v11.5H8.5A3.5 3.5 0 0 0 5 23z" />
+            <path d="M19 4.5h-5.5A3.5 3.5 0 0 0 10 8v11.5h5.5A3.5 3.5 0 0 1 19 23zM8 9h3M13 9h3M8 12h3M13 12h3" />
+          </svg>
         </NavigationIconButton>
 
         <NavigationIconButton

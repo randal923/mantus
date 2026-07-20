@@ -160,7 +160,9 @@ Cyclopedia tab, creature-class, stat, resistance, boss-category, and milestone
 icons are imported from OpenTibiaBR's OTClient at commit
 `465b7a217e87502bb7f9980bf6e099718d0a9a49`. These are third-party game UI
 assets, separate from the project's original `public/assets/ui/` art. Rebuild
-the pinned set with:
+the pinned set with the importer below. It crops the three tab icons and
+removes only their connected gray button background while preserving the
+original pixel artwork.
 
 ```bash
 yarn cyclopedia:assets

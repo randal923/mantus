@@ -8,14 +8,14 @@ interface WikiTabIconProps {
 
 export function WikiTabIcon({ name }: WikiTabIconProps) {
   return (
-    <span className="relative block h-9 w-12 shrink-0 overflow-hidden">
+    <span className="flex h-9 w-12 shrink-0 items-center justify-center">
       <Image
         src={`/assets/cyclopedia/tabs/${name}.png`}
         alt=""
         aria-hidden
-        width={150}
-        height={34}
-        className="absolute top-0 left-0 h-[34px] w-[150px] max-w-none [image-rendering:pixelated]"
+        width={48}
+        height={32}
+        className="h-8 w-12 object-contain [image-rendering:pixelated]"
       />
     </span>
   );
