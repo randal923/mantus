@@ -96,8 +96,7 @@ import { AuctionHouseModal } from "./auction/AuctionHouseModal";
 import { TradePanel } from "./trade/TradePanel";
 import { GuildModal } from "./guild/GuildModal";
 import { HouseModal } from "./house/HouseModal";
-import { BestiaryModal } from "./bestiary/BestiaryModal";
-import { BosstiaryModal } from "./bestiary/BosstiaryModal";
+import { WikiModal } from "./wiki/WikiModal";
 import { WheelModal } from "./wheel/WheelModal";
 import { HighscoresModal } from "./social/HighscoresModal";
 import { ReportPlayerModal } from "./social/ReportPlayerModal";
@@ -439,21 +438,23 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     state: bestiarySession,
     creaturesReceived: confirmBestiaryCreatures,
     monsterReceived: confirmBestiaryMonster,
+    itemSourcesReceived: confirmWikiItemSources,
     entryChanged: bestiaryEntryChanged,
     begin: beginBestiary,
+    beginSources: beginWikiItemSources,
     fail: failBestiary,
     reset: resetBestiary,
   } = useBestiarySession();
-  const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const {
     state: bosstiarySession,
     stateReceived: confirmBosstiaryState,
+    bossReceived: confirmBosstiaryBoss,
     entryChanged: bosstiaryEntryChanged,
     begin: beginBosstiary,
     fail: failBosstiary,
     reset: resetBosstiary,
   } = useBosstiarySession();
-  const [bosstiaryOpen, setBosstiaryOpen] = useState(false);
+  const [wikiOpen, setWikiOpen] = useState(false);
   const {
     state: wheelSession,
     stateReceived: confirmWheelState,
@@ -527,9 +528,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     resetHighscores();
     setHighscoresOpen(false);
     resetBestiary();
-    setBestiaryOpen(false);
     resetBosstiary();
-    setBosstiaryOpen(false);
+    setWikiOpen(false);
     resetWheel();
     setWheelOpen(false);
     setReportSession(null);
@@ -814,9 +814,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             resetHighscores();
             setHighscoresOpen(false);
             resetBestiary();
-            setBestiaryOpen(false);
             resetBosstiary();
-            setBosstiaryOpen(false);
+            setWikiOpen(false);
             resetWheel();
             setWheelOpen(false);
             // Preload the house browser and both codex projections so the
@@ -1206,6 +1205,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             warmOutfitAnimationCache(message.entries.map((entry) => entry.outfit));
             return;
           }
+          if (message.type === "bosstiary-boss-state") {
+            confirmBosstiaryBoss(message);
+            return;
+          }
+          if (message.type === "wiki-item-sources-state") {
+            confirmWikiItemSources(message);
+            warmOutfitAnimationCache(message.sources.map((source) => source.outfit));
+            return;
+          }
           if (message.type === "bestiary-entry-changed") {
             bestiaryEntryChanged(message);
             bosstiaryEntryChanged(message);
@@ -1445,9 +1453,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             resetHighscores();
             setHighscoresOpen(false);
             resetBestiary();
-            setBestiaryOpen(false);
             resetBosstiary();
-            setBosstiaryOpen(false);
+            setWikiOpen(false);
             setReportSession(null);
           }
           if (nextStatus === "disconnected") setMailboxSession(null);
@@ -1615,7 +1622,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     resetHighscores,
     confirmBestiaryCreatures,
     confirmBestiaryMonster,
+    confirmWikiItemSources,
     confirmBosstiaryState,
+    confirmBosstiaryBoss,
     bestiaryEntryChanged,
     bosstiaryEntryChanged,
     failBestiary,
@@ -1690,10 +1699,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                       ? "house"
                       : highscoresOpen
                         ? "highscores"
-                        : bestiaryOpen
-                          ? "bestiary"
-                          : bosstiaryOpen
-                            ? "bosstiary"
+                        : wikiOpen
+                          ? "wiki"
                             : wheelOpen
                               ? "wheel"
                               : characterStatsOpen
@@ -1763,12 +1770,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   return !open;
                 });
               }}
-              onBestiary={() => {
+              onWiki={() => {
                 setGameMenuOpen(false);
                 setInventoryOpen(false);
                 setCharacterStatsOpen(false);
-                setBosstiaryOpen(false);
-                setBestiaryOpen((open) => {
+                setWikiOpen((open) => {
                   // Data is preloaded at login; only refetch if that failed.
                   if (!open && !bestiarySession.creatures) {
                     const sent =
@@ -1778,25 +1784,11 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   return !open;
                 });
               }}
-              onBosstiary={() => {
-                setGameMenuOpen(false);
-                setInventoryOpen(false);
-                setCharacterStatsOpen(false);
-                setBestiaryOpen(false);
-                setBosstiaryOpen((open) => {
-                  if (!open && !bosstiarySession.bosses) {
-                    const sent = clientRef.current?.requestBosstiary() ?? false;
-                    beginBosstiary(sent);
-                  }
-                  return !open;
-                });
-              }}
               onWheel={() => {
                 setGameMenuOpen(false);
                 setInventoryOpen(false);
                 setCharacterStatsOpen(false);
-                setBestiaryOpen(false);
-                setBosstiaryOpen(false);
+                setWikiOpen(false);
                 setWheelOpen((open) => {
                   // Data is preloaded at login; only refetch if that failed.
                   if (!open && !wheelSession.wheel) {
@@ -2489,26 +2481,43 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               onClose={() => setHighscoresOpen(false)}
             />
           )}
-          {bestiaryOpen && (
-            <BestiaryModal
+          {wikiOpen && (
+            <WikiModal
               creatures={bestiarySession.creatures}
               monster={bestiarySession.monster}
-              pending={bestiarySession.pending}
-              error={bestiarySession.error}
+              bosses={bosstiarySession.bosses}
+              boss={bosstiarySession.boss}
+              itemSources={bestiarySession.itemSources}
+              bestiaryPending={bestiarySession.pending}
+              bosstiaryPending={bosstiarySession.pending}
+              itemSourcesPending={bestiarySession.sourcesPending}
+              bestiaryError={bestiarySession.error}
+              bosstiaryError={bosstiarySession.error}
+              onRequestBestiary={() => {
+                const sent =
+                  clientRef.current?.requestBestiaryCreatures() ?? false;
+                beginBestiary(sent);
+              }}
               onRequestMonster={(raceId) => {
                 const sent =
                   clientRef.current?.requestBestiaryMonster(raceId) ?? false;
                 beginBestiary(sent);
               }}
-              onClose={() => setBestiaryOpen(false)}
-            />
-          )}
-          {bosstiaryOpen && (
-            <BosstiaryModal
-              bosses={bosstiarySession.bosses}
-              pending={bosstiarySession.pending}
-              error={bosstiarySession.error}
-              onClose={() => setBosstiaryOpen(false)}
+              onRequestBosstiary={() => {
+                const sent = clientRef.current?.requestBosstiary() ?? false;
+                beginBosstiary(sent);
+              }}
+              onRequestBoss={(raceId) => {
+                const sent =
+                  clientRef.current?.requestBosstiaryBoss(raceId) ?? false;
+                beginBosstiary(sent);
+              }}
+              onRequestItemSources={(itemTypeId) => {
+                const sent =
+                  clientRef.current?.requestWikiItemSources(itemTypeId) ?? false;
+                beginWikiItemSources(sent);
+              }}
+              onClose={() => setWikiOpen(false)}
             />
           )}
           {wheelOpen && (

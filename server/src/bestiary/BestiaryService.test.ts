@@ -284,16 +284,24 @@ describe("BestiaryService", () => {
     expect(rat).toMatchObject({ className: "Mammal", stage: 4, kills: 250 });
   });
 
-  it("refuses the detail sheet of an undiscovered creature", () => {
+  it("serves the public detail sheet before charm progress begins", () => {
     const harness = makeHarness();
     harness.service.handleMonster(
       harness.session,
       { type: "bestiary-monster-get", raceId: 21 },
       1_000,
     );
-    expect(harness.sent.at(-1)).toEqual({
-      type: "bestiary-action-failed",
-      reason: "locked",
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "bestiary-monster-state",
+      raceId: 21,
+      stage: 0,
+      kills: 0,
+      locations: "Sewers near towns.",
+      stats: { maxHealth: 20, experience: 5 },
+      loot: [
+        { itemTypeId: 3_031, spriteId: 4_031 },
+        { itemTypeId: 3_607, spriteId: 4_607 },
+      ],
     });
   });
 
@@ -310,7 +318,7 @@ describe("BestiaryService", () => {
     });
   });
 
-  it("hides stats, resistances, locations, and loot ids at stage 1", () => {
+  it("keeps full catalog details visible while completion progresses", () => {
     const harness = makeHarness();
     kill(harness, ratType, 1);
     harness.service.handleMonster(
@@ -320,14 +328,15 @@ describe("BestiaryService", () => {
     );
     const state = harness.sent.at(-1);
     if (state?.type !== "bestiary-monster-state") throw new Error("missing");
-    expect(state.stats).toBeUndefined();
-    expect(state.resistances).toBeUndefined();
-    expect(state.locations).toBeUndefined();
+    expect(state.stage).toBe(1);
+    expect(state.stats.maxHealth).toBe(20);
+    expect(state.resistances).toContainEqual({ element: "earth", percent: 80 });
+    expect(state.locations).toBe("Sewers near towns.");
     expect(state.loot).toHaveLength(2);
     for (const entry of state.loot) {
-      expect(entry.itemTypeId).toBe(0);
-      expect(entry.spriteId).toBe(0);
-      expect(entry.name).toBeUndefined();
+      expect(entry.itemTypeId).toBeGreaterThan(0);
+      expect(entry.spriteId).toBeGreaterThan(0);
+      expect(entry.name).toBeTruthy();
     }
   });
 
@@ -371,6 +380,45 @@ describe("BestiaryService", () => {
       bossPoints: 5,
       entries: [
         { raceId: 46, name: "Black Knight", category: "bane", kills: 25 },
+      ],
+    });
+  });
+
+  it("serves public boss stats and loot before boss progress begins", () => {
+    const harness = makeHarness();
+    harness.service.handleBoss(
+      harness.session,
+      { type: "bosstiary-boss-get", raceId: 46 },
+      1_000,
+    );
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "bosstiary-boss-state",
+      raceId: 46,
+      name: "Black Knight",
+      category: "bane",
+      kills: 0,
+      stats: { maxHealth: 20, armor: 1 },
+      loot: [
+        { itemTypeId: 3_031, spriteId: 4_031 },
+        { itemTypeId: 3_607, spriteId: 4_607 },
+      ],
+    });
+  });
+
+  it("lists public bestiary and bosstiary sources for an item", () => {
+    const harness = makeHarness();
+    harness.service.handleItemSources(
+      harness.session,
+      { type: "wiki-item-sources-get", itemTypeId: 3_031 },
+      1_000,
+    );
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "wiki-item-sources-state",
+      itemTypeId: 3_031,
+      sources: [
+        { scope: "bosstiary", raceId: 46, name: "Black Knight" },
+        { scope: "bestiary", raceId: 213, name: "Butterfly" },
+        { scope: "bestiary", raceId: 21, name: "Rat" },
       ],
     });
   });

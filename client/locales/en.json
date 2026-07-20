@@ -230,6 +230,7 @@
     "guild": "Guild",
     "house": "House",
     "highscores": "Highscores",
+    "wiki": "Wiki",
     "bestiary": "Bestiary",
     "bosstiary": "Bosstiary",
     "wheel": "Wheel"
@@ -1100,13 +1101,91 @@
       "invalid-request": "The report could not be sent."
     }
   },
+  "wiki": {
+    "title": "World Wiki",
+    "sections": "Wiki sections",
+    "search": "Type to search…",
+    "tabs": {
+      "items": "Items",
+      "bestiary": "Bestiary",
+      "bosstiary": "Bosstiary"
+    },
+    "bestiary": {
+      "classes": "Creature Classes"
+    },
+    "bosstiary": {
+      "filters": "Boss categories",
+      "all": "All Bosses",
+      "prowess": "Prowess",
+      "expertise": "Expertise",
+      "mastery": "Mastery",
+      "complete": "Complete",
+      "noResults": "No bosses match your search."
+    },
+    "items": {
+      "title": "Items",
+      "count": "{{count}} items",
+      "loading": "Loading item catalog…",
+      "error": "The item catalog could not be loaded.",
+      "noResults": "No items match these filters.",
+      "filters": "Filters",
+      "level": "Usable at level",
+      "vocation": "Vocation",
+      "allVocations": "All vocations",
+      "weight": "Weight: {{weight}} oz",
+      "requirements": "Requirements",
+      "requiredLevel": "Required level {{level}}",
+      "droppedBy": "Dropped by",
+      "sourcesLoading": "Finding creatures that drop this item…",
+      "noSources": "No creature drops are listed for this item.",
+      "source": {
+        "bestiary": "Bestiary",
+        "bosstiary": "Bosstiary"
+      },
+      "categories": {
+        "title": "Categories",
+        "all": "All",
+        "helmets": "Helmets",
+        "armors": "Armors",
+        "legs": "Legs",
+        "boots": "Boots",
+        "weapons": "Weapons",
+        "shields": "Shields",
+        "ammunition": "Ammunition",
+        "backpacks": "Backpacks",
+        "amulets": "Amulets",
+        "rings": "Rings",
+        "containers": "Containers",
+        "food": "Food",
+        "creatureProducts": "Creature Products",
+        "valuables": "Valuables",
+        "tools": "Tools",
+        "other": "Other"
+      },
+      "stats": {
+        "attack": "Attack",
+        "defense": "Defense",
+        "extraDefense": "Extra Defense",
+        "armor": "Armor",
+        "range": "Range",
+        "hitChance": "Hit Chance",
+        "manaCost": "Mana Cost",
+        "damage": "Damage",
+        "imbuementSlots": "Imbuement Slots",
+        "capacity": "Capacity",
+        "charges": "Charges",
+        "speed": "Speed"
+      }
+    }
+  },
   "bestiary": {
     "title": "Bestiary",
-    "subtitle": "Hunt creatures to unlock their secrets.",
+    "subtitle": "Explore every creature and complete hunts for charm points.",
     "back": "Back",
     "loading": "Loading…",
     "charmPoints": "Charm Points: {{points}}",
     "knownOfTotal": "Known: {{known}} / {{total}}",
+    "completedOfTotal": "Completed: {{completed}} / {{total}}",
     "unknown": "Unknown",
     "stageOf": "Stage {{stage}} of 4",
     "totalKills": "Total kills",
@@ -1137,6 +1216,7 @@
     "lootHidden": "Unknown drop",
     "noLoot": "This creature drops no loot.",
     "locations": "Locations",
+    "noLocations": "No known locations are listed.",
     "errors": {
       "rate-limited": "Too many requests. Try again shortly.",
       "unknown-race": "Unknown creature.",
@@ -1162,7 +1242,7 @@
     "unknown": "Unknown",
     "milestones": "Milestones",
     "kills": "{{kills}} kills",
-    "empty": "No bosses discovered in this world.",
+    "empty": "No bosses are listed in this world.",
     "category": {
       "bane": "Bane",
       "archfoe": "Archfoe",

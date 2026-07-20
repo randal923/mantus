@@ -4,13 +4,16 @@ import type {
   BestiaryCreaturesStateMessage,
   BestiaryEntryChangedMessage,
   BestiaryMonsterStateMessage,
+  WikiItemSourcesStateMessage,
 } from "@tibia/protocol";
 
 export interface BestiarySessionState {
   /** Full preloaded bestiary; kept fresh by per-kill entry-changed pushes. */
   readonly creatures: BestiaryCreaturesStateMessage | null;
   readonly monster: BestiaryMonsterStateMessage | null;
+  readonly itemSources: WikiItemSourcesStateMessage | null;
   readonly pending: boolean;
+  readonly sourcesPending: boolean;
   readonly error: BestiaryActionFailedReason | null;
 }
 
@@ -18,10 +21,12 @@ export interface BestiarySession {
   readonly state: BestiarySessionState;
   readonly creaturesReceived: (message: BestiaryCreaturesStateMessage) => void;
   readonly monsterReceived: (message: BestiaryMonsterStateMessage) => void;
+  readonly itemSourcesReceived: (message: WikiItemSourcesStateMessage) => void;
   /** Patches cached rows from the server's per-kill pushes. */
   readonly entryChanged: (message: BestiaryEntryChangedMessage) => void;
   /** Marks a request as in flight (or failed to send). */
   readonly begin: (sent: boolean) => void;
+  readonly beginSources: (sent: boolean) => void;
   readonly fail: (reason: BestiaryActionFailedReason) => void;
   readonly reset: () => void;
 }
@@ -29,7 +34,9 @@ export interface BestiarySession {
 const initialState: BestiarySessionState = {
   creatures: null,
   monster: null,
+  itemSources: null,
   pending: false,
+  sourcesPending: false,
   error: null,
 };
 
@@ -61,15 +68,28 @@ export function useBestiarySession(): BestiarySession {
     [],
   );
 
+  const itemSourcesReceived = useCallback(
+    (message: WikiItemSourcesStateMessage) => {
+      setState((current) => ({
+        ...current,
+        itemSources: message,
+        sourcesPending: false,
+        error: null,
+      }));
+    },
+    [],
+  );
+
   const entryChanged = useCallback((message: BestiaryEntryChangedMessage) => {
     if (message.scope !== "bestiary") return;
     setState((current) => {
       const monster =
         current.monster?.raceId === message.raceId
-          ? current.monster.stage === message.stage
-            ? { ...current.monster, kills: message.kills }
-            : // Stage widened: drop the sheet so reopening refetches it.
-              null
+          ? {
+              ...current.monster,
+              kills: message.kills,
+              stage: message.stage,
+            }
           : current.monster;
       return {
         ...current,
@@ -96,8 +116,21 @@ export function useBestiarySession(): BestiarySession {
     }));
   }, []);
 
+  const beginSources = useCallback((sent: boolean) => {
+    setState((current) => ({
+      ...current,
+      sourcesPending: sent,
+      error: sent ? null : current.error,
+    }));
+  }, []);
+
   const fail = useCallback((reason: BestiaryActionFailedReason) => {
-    setState((current) => ({ ...current, pending: false, error: reason }));
+    setState((current) => ({
+      ...current,
+      pending: false,
+      sourcesPending: false,
+      error: reason,
+    }));
   }, []);
 
   const reset = useCallback(() => {
@@ -108,8 +141,10 @@ export function useBestiarySession(): BestiarySession {
     state,
     creaturesReceived,
     monsterReceived,
+    itemSourcesReceived,
     entryChanged,
     begin,
+    beginSources,
     fail,
     reset,
   };

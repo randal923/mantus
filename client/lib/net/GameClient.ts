@@ -576,6 +576,14 @@ export class GameClient {
     return this.send({ type: "bosstiary-get" });
   }
 
+  requestBosstiaryBoss(raceId: number): boolean {
+    return this.send({ type: "bosstiary-boss-get", raceId });
+  }
+
+  requestWikiItemSources(itemTypeId: number): boolean {
+    return this.send({ type: "wiki-item-sources-get", itemTypeId });
+  }
+
   requestWheel(): boolean {
     return this.send({ type: "wheel-get" });
   }

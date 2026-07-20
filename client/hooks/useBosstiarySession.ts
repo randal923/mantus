@@ -2,11 +2,13 @@ import { useCallback, useState } from "react";
 import type {
   BestiaryActionFailedReason,
   BestiaryEntryChangedMessage,
+  BosstiaryBossStateMessage,
   BosstiaryStateMessage,
 } from "@tibia/protocol";
 
 export interface BosstiarySessionState {
   readonly bosses: BosstiaryStateMessage | null;
+  readonly boss: BosstiaryBossStateMessage | null;
   readonly pending: boolean;
   readonly error: BestiaryActionFailedReason | null;
 }
@@ -14,6 +16,7 @@ export interface BosstiarySessionState {
 export interface BosstiarySession {
   readonly state: BosstiarySessionState;
   readonly stateReceived: (message: BosstiaryStateMessage) => void;
+  readonly bossReceived: (message: BosstiaryBossStateMessage) => void;
   /** Patches cached rows when the server pushes a milestone change. */
   readonly entryChanged: (message: BestiaryEntryChangedMessage) => void;
   /** Marks a request as in flight (or failed to send). */
@@ -24,6 +27,7 @@ export interface BosstiarySession {
 
 const initialState: BosstiarySessionState = {
   bosses: null,
+  boss: null,
   pending: false,
   error: null,
 };
@@ -33,7 +37,21 @@ export function useBosstiarySession(): BosstiarySession {
   const [state, setState] = useState<BosstiarySessionState>(initialState);
 
   const stateReceived = useCallback((message: BosstiaryStateMessage) => {
-    setState({ bosses: message, pending: false, error: null });
+    setState((current) => ({
+      ...current,
+      bosses: message,
+      pending: false,
+      error: null,
+    }));
+  }, []);
+
+  const bossReceived = useCallback((message: BosstiaryBossStateMessage) => {
+    setState((current) => ({
+      ...current,
+      boss: message,
+      pending: false,
+      error: null,
+    }));
   }, []);
 
   const entryChanged = useCallback((message: BestiaryEntryChangedMessage) => {
@@ -50,6 +68,10 @@ export function useBosstiarySession(): BosstiarySession {
             ),
           }
         : null,
+      boss:
+        current.boss?.raceId === message.raceId
+          ? { ...current.boss, kills: message.kills }
+          : current.boss,
     }));
   }, []);
 
@@ -69,5 +91,13 @@ export function useBosstiarySession(): BosstiarySession {
     setState(initialState);
   }, []);
 
-  return { state, stateReceived, entryChanged, begin, fail, reset };
+  return {
+    state,
+    stateReceived,
+    bossReceived,
+    entryChanged,
+    begin,
+    fail,
+    reset,
+  };
 }

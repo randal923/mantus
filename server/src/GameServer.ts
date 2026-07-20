@@ -717,6 +717,12 @@ export class GameServer {
       case "bosstiary-get":
         this.bestiary.handleBosstiary(session, now);
         return;
+      case "bosstiary-boss-get":
+        this.bestiary.handleBoss(session, intent, now);
+        return;
+      case "wiki-item-sources-get":
+        this.bestiary.handleItemSources(session, intent, now);
+        return;
       case "wheel-get":
         this.wheel.handleGet(session, now);
         return;

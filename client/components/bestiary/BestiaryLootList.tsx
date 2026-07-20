@@ -34,7 +34,7 @@ interface BestiaryLootListProps {
 
 /**
  * Drops grouped into Tibia's five rarity buckets, like the cyclopedia:
- * one labeled row per bucket, hidden drops render as "?" slots.
+ * one labeled row per bucket.
  */
 export function BestiaryLootList({ loot }: BestiaryLootListProps) {
   const { t } = useAppTranslation();
@@ -58,26 +58,15 @@ export function BestiaryLootList({ loot }: BestiaryLootListProps) {
             {t(`bestiary.rarity.${group.key}`)}
           </span>
           <ul className="mt-1 flex flex-wrap gap-1.5">
-            {group.entries.map((entry, index) => {
-              const hidden = entry.spriteId === 0;
-              return (
+            {group.entries.map((entry, index) => (
                 <li
                   key={`${entry.itemTypeId}-${index}`}
-                  title={
-                    hidden
-                      ? t("bestiary.lootHidden")
-                      : (entry.name ?? String(entry.itemTypeId))
-                  }
+                  title={entry.name ?? String(entry.itemTypeId)}
                   className={`flex h-10 w-10 items-center justify-center rounded-sm border bg-black/40 ${RARITY_BORDERS[group.rarity]}`}
                 >
-                  {hidden ? (
-                    <span className="text-sm text-ui-muted">?</span>
-                  ) : (
-                    <SpriteIcon spriteId={entry.spriteId} scale={1} />
-                  )}
+                  <SpriteIcon spriteId={entry.spriteId} scale={1} />
                 </li>
-              );
-            })}
+              ))}
           </ul>
         </div>
       ))}

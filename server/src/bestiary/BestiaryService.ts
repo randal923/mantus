@@ -6,9 +6,13 @@ import {
   type BestiaryMonsterGetMessage,
   type BestiaryMonsterStateMessage,
   type BestiaryResistance,
+  type BosstiaryBossGetMessage,
+  type BosstiaryBossStateMessage,
   type DamageType,
+  type WikiItemSource,
+  type WikiItemSourcesGetMessage,
 } from "@tibia/protocol";
-import type { MonsterLoot } from "../creature/MonsterType";
+import type { MonsterLoot, MonsterType } from "../creature/MonsterType";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { World } from "../World";
@@ -24,11 +28,12 @@ const RESISTANCE_ELEMENTS: ReadonlyArray<DamageType> = DAMAGE_TYPES.filter(
 
 /**
  * Serves bestiary/bosstiary reads from the in-memory catalog and the
- * requesting character's own kill counters. Detail payloads reveal only
- * what the character's unlock stage allows (charter rule 6).
+ * requesting character's own kill counters. Catalog details are public;
+ * kill counters only determine charm and boss-point completion.
  */
 export class BestiaryService {
   private readonly cooldownBySession = new Map<string, number>();
+  private readonly itemSourcesCooldownBySession = new Map<string, number>();
 
   constructor(
     private readonly world: World,
@@ -39,6 +44,7 @@ export class BestiaryService {
 
   detach(session: Session): void {
     this.cooldownBySession.delete(session.id);
+    this.itemSourcesCooldownBySession.delete(session.id);
   }
 
   handleCreatures(session: Session, now: number): void {
@@ -83,13 +89,7 @@ export class BestiaryService {
     }
     const kills = this.tracker.killsFor(characterId).get(entry.raceId) ?? 0;
     const stage = getBestiaryStage(entry, kills);
-    // Re-checked at execution time: an unknown creature's sheet stays closed.
-    if (stage < 1) {
-      this.fail(session, "locked");
-      return;
-    }
     const type = entry.monsterType;
-    const defenses = type.defenses.find((ability) => ability.kind === "stats");
     const message: BestiaryMonsterStateMessage = {
       type: "bestiary-monster-state",
       raceId: entry.raceId,
@@ -104,24 +104,10 @@ export class BestiaryService {
       stars: entry.stars,
       occurrence: entry.occurrence,
       charmPoints: entry.charmPoints,
-      loot: this.projectLoot(entry.monsterType.loot, stage),
-      ...(stage >= 2
-        ? {
-            stats: {
-              maxHealth: type.maxHealth,
-              experience: type.experience,
-              speed: type.speed,
-              armor: Math.min(1000, defenses?.armor ?? 0),
-              mitigation: defenses?.mitigation ?? 0,
-            },
-          }
-        : {}),
-      ...(stage >= 3
-        ? {
-            resistances: this.projectResistances(type.elements),
-            locations: entry.locations,
-          }
-        : {}),
+      loot: this.projectLoot(entry.monsterType.loot),
+      stats: this.projectStats(type),
+      resistances: this.projectResistances(type.elements),
+      locations: entry.locations,
     };
     session.send(message);
   }
@@ -148,16 +134,96 @@ export class BestiaryService {
     session.send({ type: "bosstiary-state", entries, bossPoints });
   }
 
-  private projectLoot(
-    loot: ReadonlyArray<MonsterLoot>,
-    stage: number,
-  ): BestiaryLootEntry[] {
+  handleBoss(
+    session: Session,
+    intent: BosstiaryBossGetMessage,
+    now: number,
+  ): void {
+    const characterId = this.guard(session, now);
+    if (!characterId) return;
+    const entry = this.catalog.bossesByRaceId.get(intent.raceId);
+    if (!entry) {
+      this.fail(session, "unknown-race");
+      return;
+    }
+    const type = entry.monsterType;
+    const message: BosstiaryBossStateMessage = {
+      type: "bosstiary-boss-state",
+      raceId: entry.raceId,
+      name: type.name,
+      outfit: type.outfit,
+      category: entry.category,
+      kills: this.tracker.killsFor(characterId).get(entry.raceId) ?? 0,
+      loot: this.projectLoot(type.loot),
+      stats: this.projectStats(type),
+      resistances: this.projectResistances(type.elements),
+    };
+    session.send(message);
+  }
+
+  handleItemSources(
+    session: Session,
+    intent: WikiItemSourcesGetMessage,
+    now: number,
+  ): void {
+    const characterId = session.playerId;
+    if (!characterId || !this.world.getPlayer(characterId)) {
+      session.sendError("join-required");
+      return;
+    }
+    const readyAt = this.itemSourcesCooldownBySession.get(session.id) ?? 0;
+    if (now < readyAt) {
+      this.fail(session, "rate-limited");
+      return;
+    }
+    this.itemSourcesCooldownBySession.set(
+      session.id,
+      now + BESTIARY_LIMITS.actionCooldownMs,
+    );
+    if (!this.items.itemType(intent.itemTypeId)) {
+      session.send({
+        type: "wiki-item-sources-state",
+        itemTypeId: intent.itemTypeId,
+        sources: [],
+      });
+      return;
+    }
+    const sources: WikiItemSource[] = [];
+    for (const entry of this.catalog.entriesByRaceId.values()) {
+      if (!this.dropsItem(entry.monsterType.loot, intent.itemTypeId)) continue;
+      sources.push({
+        scope: "bestiary",
+        raceId: entry.raceId,
+        name: entry.monsterType.name,
+        outfit: entry.monsterType.outfit,
+      });
+    }
+    for (const entry of this.catalog.bossesByRaceId.values()) {
+      if (!this.dropsItem(entry.monsterType.loot, intent.itemTypeId)) continue;
+      sources.push({
+        scope: "bosstiary",
+        raceId: entry.raceId,
+        name: entry.monsterType.name,
+        outfit: entry.monsterType.outfit,
+      });
+    }
+    session.send({
+      type: "wiki-item-sources-state",
+      itemTypeId: intent.itemTypeId,
+      sources: sources
+        .sort(
+          (left, right) =>
+            left.name.localeCompare(right.name) || left.raceId - right.raceId,
+        )
+        .slice(0, BESTIARY_LIMITS.maxItemSources),
+    });
+  }
+
+  private projectLoot(loot: ReadonlyArray<MonsterLoot>): BestiaryLootEntry[] {
     const entries: BestiaryLootEntry[] = [];
     for (const drop of loot) {
       if (entries.length >= BESTIARY_LIMITS.maxLootEntries) break;
       const rarity = getLootRarity(drop.chance);
-      // Canary's gate: stage 2 shows rarity <2, stage 3 <3, stage 4 all.
-      const visible = stage >= 4 || (stage >= 2 && rarity < stage);
       const itemType =
         drop.itemTypeId !== undefined
           ? this.items.itemType(drop.itemTypeId)
@@ -165,18 +231,40 @@ export class BestiaryService {
             ? this.items.itemTypeByName(drop.itemName)
             : undefined;
       if (!itemType) continue;
-      entries.push(
-        visible
-          ? {
-              itemTypeId: itemType.id,
-              spriteId: itemType.spriteId,
-              name: itemType.name,
-              rarity,
-            }
-          : { itemTypeId: 0, spriteId: 0, rarity },
-      );
+      entries.push({
+        itemTypeId: itemType.id,
+        spriteId: itemType.spriteId,
+        name: itemType.name,
+        rarity,
+      });
     }
     return entries.sort((a, b) => a.rarity - b.rarity);
+  }
+
+  private projectStats(type: MonsterType): BosstiaryBossStateMessage["stats"] {
+    const defenses = type.defenses.find((ability) => ability.kind === "stats");
+    return {
+      maxHealth: type.maxHealth,
+      experience: type.experience,
+      speed: type.speed,
+      armor: Math.min(1000, defenses?.armor ?? 0),
+      mitigation: defenses?.mitigation ?? 0,
+    };
+  }
+
+  private dropsItem(
+    loot: ReadonlyArray<MonsterLoot>,
+    itemTypeId: number,
+  ): boolean {
+    return loot.some((drop) => {
+      const itemType =
+        drop.itemTypeId !== undefined
+          ? this.items.itemType(drop.itemTypeId)
+          : drop.itemName
+            ? this.items.itemTypeByName(drop.itemName)
+            : undefined;
+      return itemType?.id === itemTypeId;
+    });
   }
 
   private projectResistances(

@@ -154,6 +154,18 @@ sheet clips, all transcribed from the otclient module's
 `wheelMenu.otui` / `buttons.lua` / `geometry.lua` / `icons.lua` /
 `wheelclass.lua` (source lines cited inline).
 
+## Cyclopedia art (`public/assets/cyclopedia/`)
+
+Cyclopedia tab, creature-class, stat, resistance, boss-category, and milestone
+icons are imported from OpenTibiaBR's OTClient at commit
+`465b7a217e87502bb7f9980bf6e099718d0a9a49`. These are third-party game UI
+assets, separate from the project's original `public/assets/ui/` art. Rebuild
+the pinned set with:
+
+```bash
+yarn cyclopedia:assets
+```
+
 ## Rebuilding the web assets
 
 Place the matching extended files at `map/Tibia.dat` and `map/Tibia.spr`, then

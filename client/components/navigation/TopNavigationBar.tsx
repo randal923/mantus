@@ -6,6 +6,7 @@ import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
+import { WikiNavigationIcon } from "./WikiNavigationIcon";
 
 type NavigationPanel =
   | "character"
@@ -14,8 +15,7 @@ type NavigationPanel =
   | "guild"
   | "house"
   | "highscores"
-  | "bestiary"
-  | "bosstiary"
+  | "wiki"
   | "wheel"
   | "market";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
@@ -46,8 +46,7 @@ interface TopNavigationBarProps {
   onGuild?: () => void;
   onHouse?: () => void;
   onHighscores?: () => void;
-  onBestiary?: () => void;
-  onBosstiary?: () => void;
+  onWiki?: () => void;
   onWheel?: () => void;
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
@@ -76,8 +75,7 @@ export function TopNavigationBar({
   onGuild,
   onHouse,
   onHighscores,
-  onBestiary,
-  onBosstiary,
+  onWiki,
   onWheel,
   onFightModeChange,
   onBattleList,
@@ -291,45 +289,12 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
-          label={t("navigation.bestiary")}
-          active={activePanel === "bestiary"}
-          disabled={!onBestiary}
-          onClick={onBestiary}
+          label={t("navigation.wiki")}
+          active={activePanel === "wiki"}
+          disabled={!onWiki}
+          onClick={onWiki}
         >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M7 4.5 5 8l2.5 1.5L6 13l3 4 3 2.5 3-2.5 3-4-1.5-3.5L19 8l-2-3.5-3 2h-4z" />
-            <path d="M9.5 11h.01M14.5 11h.01M10.5 15.5h3" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.bosstiary")}
-          active={activePanel === "bosstiary"}
-          disabled={!onBosstiary}
-          onClick={onBosstiary}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 6.5 3.5 3l4 1.5a6.5 6.5 0 0 1 9 0l4-1.5L19 6.5a7 7 0 0 1-1 8.5l-6 5.5-6-5.5a7 7 0 0 1-1-8.5z" />
-            <path d="M9 10.5h.01M15 10.5h.01M10 15l2-1 2 1" />
-          </svg>
+          <WikiNavigationIcon />
         </NavigationIconButton>
 
         <NavigationIconButton

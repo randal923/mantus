@@ -5,49 +5,70 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { AnimatedOutfit } from "./AnimatedOutfit";
 import { BestiaryKillProgressBar } from "./BestiaryKillProgressBar";
 import { BestiaryLootList } from "./BestiaryLootList";
+import { BestiaryResistanceIcon } from "./BestiaryResistanceIcon";
+import {
+  BestiaryStatIcon,
+  type BestiaryStatIconName,
+} from "./BestiaryStatIcon";
 
 interface BestiaryMonsterSheetProps {
   monster: BestiaryMonsterStateMessage;
 }
 
-/** Creature detail sheet; fields beyond the unlock stage arrive absent. */
+/** Public creature catalog detail; kills only drive charm completion. */
 export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
   const { t } = useAppTranslation();
-  const stats: ReadonlyArray<{ key: string; value: string | null }> = [
+  const stats: ReadonlyArray<{
+    key: string;
+    icon: BestiaryStatIconName;
+    value: string;
+  }> = [
     {
       key: "hitpoints",
-      value: monster.stats ? monster.stats.maxHealth.toLocaleString() : null,
+      icon: "hitpoints",
+      value: monster.stats.maxHealth.toLocaleString(),
     },
     {
       key: "experience",
-      value: monster.stats ? monster.stats.experience.toLocaleString() : null,
+      icon: "experience",
+      value: monster.stats.experience.toLocaleString(),
     },
     {
       key: "speed",
-      value: monster.stats ? monster.stats.speed.toLocaleString() : null,
+      icon: "speed",
+      value: monster.stats.speed.toLocaleString(),
     },
     {
       key: "armor",
-      value: monster.stats ? monster.stats.armor.toLocaleString() : null,
+      icon: "armor",
+      value: monster.stats.armor.toLocaleString(),
     },
     {
       key: "mitigation",
-      value: monster.stats ? `${monster.stats.mitigation.toFixed(2)}%` : null,
+      icon: "mitigation",
+      value: `${monster.stats.mitigation.toFixed(2)}%`,
     },
-    { key: "charmPoints", value: monster.charmPoints.toLocaleString() },
+    {
+      key: "charmPoints",
+      icon: "bonus-points",
+      value: monster.charmPoints.toLocaleString(),
+    },
   ];
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row">
-      <div className="ui-panel-inset flex w-full flex-col items-center gap-3 rounded-sm border border-ui-stone-light/20 p-4 md:w-56">
-        <span className="flex h-28 items-center justify-center">
-          <AnimatedOutfit outfit={monster.outfit} fit={112} />
-        </span>
-        <span className="text-center text-sm text-ui-text-bright">
-          {monster.name}
-        </span>
-        <span className="text-xs text-ui-muted">{monster.className}</span>
-        <div className="flex flex-col items-center gap-1 text-sm">
+    <div className="flex flex-col gap-4">
+      <section className="ui-panel-inset grid overflow-hidden rounded-sm border border-ui-stone-light/15 md:grid-cols-[15rem_minmax(0,1fr)]">
+        <div className="flex min-h-52 items-center justify-center border-b border-ui-stone-light/10 bg-black/20 p-5 md:border-r md:border-b-0">
+          <AnimatedOutfit outfit={monster.outfit} fit={168} />
+        </div>
+        <div className="flex min-w-0 flex-col justify-center p-5">
+          <span className="text-[10px] tracking-[0.2em] text-ui-gold uppercase">
+            {monster.className}
+          </span>
+          <h3 className="mt-1 font-display text-2xl font-bold tracking-wide text-ui-text-bright capitalize">
+            {monster.name}
+          </h3>
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <span
             title={t("bestiary.difficulty")}
             aria-label={t("bestiary.difficulty")}
@@ -68,43 +89,58 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
               {"◆".repeat(Math.max(0, 4 - monster.occurrence - 1))}
             </span>
           </span>
+            <span className="text-xs text-ui-muted">
+              {t("bestiary.stat.charmPoints")}: {monster.charmPoints.toLocaleString()}
+            </span>
+          </div>
+          <div className="mt-5 max-w-xl">
+            <BestiaryKillProgressBar
+              kills={monster.kills}
+              firstUnlock={monster.firstUnlock}
+              secondUnlock={monster.secondUnlock}
+              toKill={monster.toKill}
+            />
+          </div>
         </div>
-        <div className="w-full">
-          <BestiaryKillProgressBar
-            kills={monster.kills}
-            firstUnlock={monster.firstUnlock}
-            secondUnlock={monster.secondUnlock}
-            toKill={monster.toKill}
-          />
-        </div>
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <section>
-          <h3 className="text-[10px] tracking-widest text-ui-gold uppercase">
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="ui-panel-inset rounded-sm border border-ui-stone-light/15 p-4">
+          <h4 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
             {t("bestiary.stats")}
-          </h3>
-          <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
+          </h4>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {stats.map((stat) => (
-              <div key={stat.key} className="flex justify-between gap-2">
-                <dt className="text-ui-muted">{t(`bestiary.stat.${stat.key}`)}</dt>
-                <dd className="text-ui-text-bright">{stat.value ?? "?"}</dd>
+              <div
+                key={stat.key}
+                className="flex items-center gap-2 rounded-sm border border-ui-stone-light/10 bg-black/20 px-3 py-2"
+              >
+                <BestiaryStatIcon name={stat.icon} />
+                <span className="min-w-0">
+                  <span className="block truncate text-[9px] tracking-widest text-ui-muted uppercase">
+                    {t(`bestiary.stat.${stat.key}`)}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-ui-text-bright">
+                    {stat.value}
+                  </span>
+                </span>
               </div>
             ))}
-          </dl>
+          </div>
         </section>
-        <section>
-          <h3 className="text-[10px] tracking-widest text-ui-gold uppercase">
+        <section className="ui-panel-inset rounded-sm border border-ui-stone-light/15 p-4">
+          <h4 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
             {t("bestiary.resistances")}
-          </h3>
-          {monster.resistances ? (
-            <ul className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
+          </h4>
+          <ul className="mt-3 grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2">
               {monster.resistances.map((resistance) => (
                 <li
                   key={resistance.element}
                   title={`${resistance.percent}%`}
                   className="flex items-center gap-2 text-xs"
                 >
-                  <span className="w-16 shrink-0 text-ui-muted">
+                  <BestiaryResistanceIcon element={resistance.element} />
+                  <span className="w-14 shrink-0 truncate text-ui-muted">
                     {t(`bestiary.element.${resistance.element}`)}
                   </span>
                   <span className="h-1.5 flex-1 overflow-hidden rounded-xs bg-black/40">
@@ -128,27 +164,25 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
                   </span>
                 </li>
               ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-xs text-ui-muted">
-              {t("bestiary.lockedSection")}
-            </p>
-          )}
+          </ul>
         </section>
-        <section>
-          <h3 className="text-[10px] tracking-widest text-ui-gold uppercase">
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.6fr)]">
+        <section className="ui-panel-inset rounded-sm border border-ui-stone-light/15 p-4">
+          <h4 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
             {t("bestiary.loot")}
-          </h3>
-          <div className="mt-2">
+          </h4>
+          <div className="mt-3">
             <BestiaryLootList loot={monster.loot} />
           </div>
         </section>
-        <section>
-          <h3 className="text-[10px] tracking-widest text-ui-gold uppercase">
+        <section className="ui-panel-inset rounded-sm border border-ui-stone-light/15 p-4">
+          <h4 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
             {t("bestiary.locations")}
-          </h3>
-          <p className="mt-2 text-xs leading-relaxed text-ui-muted">
-            {monster.locations ?? t("bestiary.lockedSection")}
+          </h4>
+          <p className="mt-3 text-xs leading-relaxed text-ui-muted">
+            {monster.locations || t("bestiary.noLocations")}
           </p>
         </section>
       </div>

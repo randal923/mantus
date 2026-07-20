@@ -230,6 +230,7 @@
     "guild": "Guilda",
     "house": "Casa",
     "highscores": "Recordes",
+    "wiki": "Wiki",
     "bestiary": "Bestiário",
     "bosstiary": "Bosstiário",
     "wheel": "Roda"
@@ -1100,13 +1101,91 @@
       "invalid-request": "A denúncia não pôde ser enviada."
     }
   },
+  "wiki": {
+    "title": "Wiki do Mundo",
+    "sections": "Seções da wiki",
+    "search": "Digite para buscar…",
+    "tabs": {
+      "items": "Itens",
+      "bestiary": "Bestiário",
+      "bosstiary": "Bosstiário"
+    },
+    "bestiary": {
+      "classes": "Classes de Criaturas"
+    },
+    "bosstiary": {
+      "filters": "Categorias de chefes",
+      "all": "Todos os Chefes",
+      "prowess": "Proeza",
+      "expertise": "Especialidade",
+      "mastery": "Maestria",
+      "complete": "Concluído",
+      "noResults": "Nenhum chefe corresponde à sua busca."
+    },
+    "items": {
+      "title": "Itens",
+      "count": "{{count}} itens",
+      "loading": "Carregando catálogo de itens…",
+      "error": "Não foi possível carregar o catálogo de itens.",
+      "noResults": "Nenhum item corresponde a estes filtros.",
+      "filters": "Filtros",
+      "level": "Utilizável no nível",
+      "vocation": "Vocação",
+      "allVocations": "Todas as vocações",
+      "weight": "Peso: {{weight}} oz",
+      "requirements": "Requisitos",
+      "requiredLevel": "Nível necessário {{level}}",
+      "droppedBy": "Obtido de",
+      "sourcesLoading": "Buscando criaturas que deixam este item…",
+      "noSources": "Nenhuma criatura está listada para este item.",
+      "source": {
+        "bestiary": "Bestiário",
+        "bosstiary": "Bosstiário"
+      },
+      "categories": {
+        "title": "Categorias",
+        "all": "Todos",
+        "helmets": "Capacetes",
+        "armors": "Armaduras",
+        "legs": "Calças",
+        "boots": "Botas",
+        "weapons": "Armas",
+        "shields": "Escudos",
+        "ammunition": "Munição",
+        "backpacks": "Mochilas",
+        "amulets": "Amuletos",
+        "rings": "Anéis",
+        "containers": "Recipientes",
+        "food": "Comida",
+        "creatureProducts": "Produtos de Criaturas",
+        "valuables": "Valiosos",
+        "tools": "Ferramentas",
+        "other": "Outros"
+      },
+      "stats": {
+        "attack": "Ataque",
+        "defense": "Defesa",
+        "extraDefense": "Defesa Extra",
+        "armor": "Armadura",
+        "range": "Alcance",
+        "hitChance": "Chance de Acerto",
+        "manaCost": "Custo de Mana",
+        "damage": "Dano",
+        "imbuementSlots": "Espaços de Imbuimento",
+        "capacity": "Capacidade",
+        "charges": "Cargas",
+        "speed": "Velocidade"
+      }
+    }
+  },
   "bestiary": {
     "title": "Bestiário",
-    "subtitle": "Cace criaturas para desvendar seus segredos.",
+    "subtitle": "Explore todas as criaturas e conclua caçadas para ganhar pontos de encanto.",
     "back": "Voltar",
     "loading": "Carregando…",
     "charmPoints": "Pontos de Encanto: {{points}}",
     "knownOfTotal": "Conhecidas: {{known}} / {{total}}",
+    "completedOfTotal": "Concluídas: {{completed}} / {{total}}",
     "unknown": "Desconhecida",
     "stageOf": "Estágio {{stage}} de 4",
     "totalKills": "Total de abates",
@@ -1137,6 +1216,7 @@
     "lootHidden": "Item desconhecido",
     "noLoot": "Esta criatura não deixa espólios.",
     "locations": "Localizações",
+    "noLocations": "Nenhuma localização conhecida está listada.",
     "errors": {
       "rate-limited": "Muitas solicitações. Tente novamente em instantes.",
       "unknown-race": "Criatura desconhecida.",
@@ -1162,7 +1242,7 @@
     "unknown": "Desconhecido",
     "milestones": "Marcos",
     "kills": "{{kills}} abates",
-    "empty": "Nenhum chefe descoberto neste mundo.",
+    "empty": "Nenhum chefe está listado neste mundo.",
     "category": {
       "bane": "Bane",
       "archfoe": "Archfoe",

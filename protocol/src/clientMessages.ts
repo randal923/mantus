@@ -54,7 +54,9 @@ import {
 import {
   bestiaryCreaturesGetMessageSchema,
   bestiaryMonsterGetMessageSchema,
+  bosstiaryBossGetMessageSchema,
   bosstiaryGetMessageSchema,
+  wikiItemSourcesGetMessageSchema,
 } from "./bestiary";
 import { highscoresGetMessageSchema } from "./highscores";
 import { wheelGetMessageSchema, wheelSaveMessageSchema } from "./wheel";
@@ -479,6 +481,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   bestiaryCreaturesGetMessageSchema,
   bestiaryMonsterGetMessageSchema,
   bosstiaryGetMessageSchema,
+  bosstiaryBossGetMessageSchema,
+  wikiItemSourcesGetMessageSchema,
   wheelGetMessageSchema,
   wheelSaveMessageSchema,
   reportPlayerMessageSchema,

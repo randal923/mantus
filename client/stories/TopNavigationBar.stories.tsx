@@ -44,6 +44,7 @@ const meta = {
     onCharacter: fn(),
     onInventory: fn(),
     onQuests: fn(),
+    onWiki: fn(),
     onFightModeChange: fn(),
     onBattleList: fn(),
     onMinimap: fn(),
@@ -56,6 +57,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Connected: Story = {};
+
+export const WikiActive: Story = {
+  args: { activePanel: "wiki" },
+};
 
 export const Connecting: Story = {
   args: {

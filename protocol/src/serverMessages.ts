@@ -40,7 +40,9 @@ import {
   bestiaryCreaturesStateMessageSchema,
   bestiaryEntryChangedMessageSchema,
   bestiaryMonsterStateMessageSchema,
+  bosstiaryBossStateMessageSchema,
   bosstiaryStateMessageSchema,
+  wikiItemSourcesStateMessageSchema,
 } from "./bestiary";
 import {
   highscoresActionFailedMessageSchema,
@@ -438,6 +440,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   bestiaryCreaturesStateMessageSchema,
   bestiaryMonsterStateMessageSchema,
   bosstiaryStateMessageSchema,
+  bosstiaryBossStateMessageSchema,
+  wikiItemSourcesStateMessageSchema,
   bestiaryEntryChangedMessageSchema,
   bestiaryActionFailedMessageSchema,
   wheelStateMessageSchema,
