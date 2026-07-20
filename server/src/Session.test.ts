@@ -16,7 +16,7 @@ describe("Session", () => {
 
     expect(session.fightMode).toEqual({
       attack: "offensive",
-      chase: true,
+      chase: false,
       secure: true,
     });
   });

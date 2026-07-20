@@ -24,7 +24,7 @@ const meta = {
     } as OwnCharacterState,
     fightState: {
       attackTargetId: null,
-      mode: { attack: "balanced", chase: true, secure: true },
+      mode: { attack: "offensive", chase: false, secure: true },
       conditions: [
         { type: "combat-lock", remainingMs: 24_000, stacks: 1 },
       ],
@@ -55,6 +55,7 @@ const meta = {
     ],
     actionBar: ["exura-infir-ico"],
     combatLog: ["You gained 5 experience."],
+    chatPinnedOpen: false,
     chatChannels: [
       {
         id: "world",
@@ -111,6 +112,7 @@ const meta = {
     onChatChannelClose: fn(),
     onChatSenderSelect: fn(),
     onSendChat: fn(),
+    onChatPinnedOpenChange: fn(),
   },
   decorators: [
     (Story) => (

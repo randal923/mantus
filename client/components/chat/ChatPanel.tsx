@@ -14,26 +14,28 @@ interface ChatPanelProps {
   initialChannelId?: string;
   /** Provide to control the active tab from the parent. */
   selectedChannelId?: string;
-  initiallyMinimized?: boolean;
+  pinnedOpen: boolean;
   hotkeysEnabled?: boolean;
   maxMessageLength?: number;
   onChannelSelect?: (channelId: string) => void;
   onChannelClose?: (channelId: string) => void;
   onSenderSelect?: (sender: string) => void;
   onSend?: (channelId: string, body: string) => void;
+  onPinnedOpenChange: (pinnedOpen: boolean) => void;
 }
 
 export function ChatPanel({
   channels,
   initialChannelId,
   selectedChannelId: controlledChannelId,
-  initiallyMinimized = false,
+  pinnedOpen,
   hotkeysEnabled = true,
   maxMessageLength = 280,
   onChannelSelect,
   onChannelClose,
   onSenderSelect,
   onSend,
+  onPinnedOpenChange,
 }: ChatPanelProps) {
   const { t } = useAppTranslation();
   const panelId = useId();
@@ -44,7 +46,8 @@ export function ChatPanel({
   );
   const selectedChannelId = controlledChannelId ?? internalChannelId;
   const [drafts, setDrafts] = useState<Readonly<Record<string, string>>>({});
-  const [minimized, setMinimized] = useState(initiallyMinimized);
+  const [hovered, setHovered] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   const [newPrivateChatOpen, setNewPrivateChatOpen] = useState(false);
   const newPrivateChatId = `${panelId}-new-private`;
   const activeChannel =
@@ -54,6 +57,7 @@ export function ChatPanel({
     : -1;
   const draft = activeChannel ? (drafts[activeChannel.id] ?? "") : "";
   const canSend = Boolean(activeChannel?.canSend && onSend);
+  const expanded = pinnedOpen || hovered || inputFocused;
   const totalUnread = channels.reduce(
     (total, channel) =>
       channel.id === activeChannel?.id
@@ -63,11 +67,11 @@ export function ChatPanel({
   );
 
   useEffect(() => {
-    if (minimized) return;
+    if (!expanded) return;
     const messageList = messageListRef.current;
     if (!messageList) return;
     messageList.scrollTop = messageList.scrollHeight;
-  }, [activeChannel?.id, activeChannel?.messages.length, minimized]);
+  }, [activeChannel?.id, activeChannel?.messages.length, expanded]);
 
   useEffect(() => {
     if (!hotkeysEnabled || !canSend) return;
@@ -85,7 +89,7 @@ export function ChatPanel({
         return;
       }
       event.preventDefault();
-      setMinimized(false);
+      setInputFocused(true);
       window.requestAnimationFrame(() => inputRef.current?.focus());
     };
 
@@ -96,7 +100,17 @@ export function ChatPanel({
   if (!activeChannel) return null;
 
   return (
-    <div className="relative w-[28rem] max-w-[calc(100vw-2rem)] text-xs">
+    <div
+      className="relative w-[28rem] max-w-[calc(100vw-2rem)] text-xs"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={(event) => {
+        if (event.target instanceof HTMLInputElement) setInputFocused(true);
+      }}
+      onBlurCapture={(event) => {
+        if (event.target instanceof HTMLInputElement) setInputFocused(false);
+      }}
+    >
       {onSenderSelect && (
         <NewPrivateChat
           id={newPrivateChatId}
@@ -109,71 +123,72 @@ export function ChatPanel({
         aria-label={t("chat.label")}
         className="ui-panel-frame relative isolate w-full overflow-hidden shadow-2xl"
       >
-      <div
-        aria-hidden
-        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.025] mix-blend-soft-light"
-      />
-      <ChatTabs
-        panelId={panelId}
-        channels={channels}
-        activeChannel={activeChannel}
-        minimized={minimized}
-        totalUnread={totalUnread}
-        newPrivateChatId={newPrivateChatId}
-        newPrivateChatOpen={newPrivateChatOpen}
-        onNewPrivateChatToggle={
-          onSenderSelect
-            ? () => setNewPrivateChatOpen((open) => !open)
-            : undefined
-        }
-        onChannelClose={onChannelClose}
-        onChannelSelect={(channelId) => {
-          setInternalChannelId(channelId);
-          onChannelSelect?.(channelId);
-        }}
-        onMinimizedChange={setMinimized}
-      />
-      <div
-        id={`${panelId}-content`}
-        inert={minimized}
-        aria-hidden={minimized}
-        className={`grid transition-[grid-template-rows,opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-none ${
-          minimized
-            ? "grid-rows-[0fr] -translate-y-1 opacity-0"
-            : "grid-rows-[1fr] translate-y-0 opacity-100"
-        }`}
-      >
-        <div className="min-h-0 overflow-hidden">
-          <ChatMessageList
-            panelId={panelId}
-            activeTabIndex={activeChannelIndex}
-            channel={activeChannel}
-            messageListRef={messageListRef}
-            onSenderSelect={onSenderSelect}
-          />
-          <ChatComposer
-            panelId={panelId}
-            channel={activeChannel}
-            draft={draft}
-            canSend={canSend}
-            maxMessageLength={maxMessageLength}
-            inputRef={inputRef}
-            onDraftChange={(nextDraft) =>
-              setDrafts((current) => ({
-                ...current,
-                [activeChannel.id]: nextDraft,
-              }))
-            }
-            onSubmit={(body) => {
-              onSend?.(activeChannel.id, body);
-              setDrafts((current) => ({
-                ...current,
-                [activeChannel.id]: "",
-              }));
-            }}
-          />
+        <div
+          aria-hidden
+          className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.025] mix-blend-soft-light"
+        />
+        <ChatTabs
+          panelId={panelId}
+          channels={channels}
+          activeChannel={activeChannel}
+          expanded={expanded}
+          pinnedOpen={pinnedOpen}
+          totalUnread={totalUnread}
+          newPrivateChatId={newPrivateChatId}
+          newPrivateChatOpen={newPrivateChatOpen}
+          onNewPrivateChatToggle={
+            onSenderSelect
+              ? () => setNewPrivateChatOpen((open) => !open)
+              : undefined
+          }
+          onChannelClose={onChannelClose}
+          onChannelSelect={(channelId) => {
+            setInternalChannelId(channelId);
+            onChannelSelect?.(channelId);
+          }}
+          onPinnedOpenChange={onPinnedOpenChange}
+        />
+        <div
+          id={`${panelId}-content`}
+          inert={!expanded}
+          aria-hidden={!expanded}
+          className={`grid transition-[grid-template-rows,opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-none ${
+            expanded
+              ? "grid-rows-[1fr] translate-y-0 opacity-100"
+              : "grid-rows-[0fr] -translate-y-1 opacity-0"
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <ChatMessageList
+              panelId={panelId}
+              activeTabIndex={activeChannelIndex}
+              channel={activeChannel}
+              messageListRef={messageListRef}
+              onSenderSelect={onSenderSelect}
+            />
+            <ChatComposer
+              panelId={panelId}
+              channel={activeChannel}
+              draft={draft}
+              canSend={canSend}
+              maxMessageLength={maxMessageLength}
+              inputRef={inputRef}
+              onDraftChange={(nextDraft) =>
+                setDrafts((current) => ({
+                  ...current,
+                  [activeChannel.id]: nextDraft,
+                }))
+              }
+              onSubmit={(body) => {
+                onSend?.(activeChannel.id, body);
+                setDrafts((current) => ({
+                  ...current,
+                  [activeChannel.id]: "",
+                }));
+              }}
+            />
+          </div>
         </div>
-      </div>
       </section>
     </div>
   );

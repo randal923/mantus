@@ -10,6 +10,7 @@ const account = (premiumUntil: Date | null): Account => ({
   premiumUntil,
   language: "en",
   uiSettings: {},
+  fightMode: { attack: "offensive", chase: false, secure: true },
 });
 
 describe("getAccountStatus", () => {

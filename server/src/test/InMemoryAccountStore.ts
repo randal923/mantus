@@ -1,4 +1,5 @@
-import type { Language, UiSettings } from "@tibia/protocol";
+import { DEFAULT_FIGHT_MODE } from "@tibia/protocol";
+import type { FightMode, Language, UiSettings } from "@tibia/protocol";
 import type { Account, AccountStore } from "../AccountStore";
 
 export class InMemoryAccountStore implements AccountStore {
@@ -10,6 +11,10 @@ export class InMemoryAccountStore implements AccountStore {
 
   languageFor(supabaseUserId: string): Language | undefined {
     return this.accounts.get(supabaseUserId)?.language;
+  }
+
+  fightModeFor(supabaseUserId: string): FightMode | undefined {
+    return this.accounts.get(supabaseUserId)?.fightMode;
   }
 
   setBannedUntil(accountId: string, bannedUntil: Date | null): void {
@@ -40,6 +45,7 @@ export class InMemoryAccountStore implements AccountStore {
       premiumUntil: null,
       language,
       uiSettings: {},
+      fightMode: { ...DEFAULT_FIGHT_MODE },
     };
     this.accounts.set(supabaseUserId, account);
     return account;
@@ -64,5 +70,17 @@ export class InMemoryAccountStore implements AccountStore {
     if (!entry) throw new Error("account not found");
     const [supabaseUserId, account] = entry;
     this.accounts.set(supabaseUserId, { ...account, uiSettings: settings });
+  }
+
+  async updateFightMode(
+    accountId: string,
+    fightMode: FightMode,
+  ): Promise<void> {
+    const entry = [...this.accounts.entries()].find(
+      ([, account]) => account.id === accountId,
+    );
+    if (!entry) throw new Error("account not found");
+    const [supabaseUserId, account] = entry;
+    this.accounts.set(supabaseUserId, { ...account, fightMode });
   }
 }

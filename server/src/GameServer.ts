@@ -351,7 +351,11 @@ export class GameServer {
       config.rates.loot,
       this.bestiaryTracker,
     );
-    this.combat = new CombatIntentHandler(this.combatSystem);
+    this.combat = new CombatIntentHandler(
+      this.combatSystem,
+      deps.accounts,
+      this.registry,
+    );
     spawns =
       creatureContent && config.creatures
         ? new SpawnManager(
@@ -466,6 +470,7 @@ export class GameServer {
     this.language.applyResolvedOutcomes();
     this.uiSettings.applyResolvedOutcomes();
     this.actionBar.applyResolvedOutcomes();
+    this.combat.applyResolvedOutcomes();
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
       for (const intent of session.drainIntents()) {

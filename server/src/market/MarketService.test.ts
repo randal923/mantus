@@ -184,6 +184,7 @@ const makeHarness = (
     premiumUntil,
     language: "en",
     uiSettings: {},
+    fightMode: { attack: "offensive", chase: false, secure: true },
   };
   const items = new ItemIntentHandler(
     new MemoryItemStore(catalog),

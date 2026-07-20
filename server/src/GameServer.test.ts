@@ -491,6 +491,49 @@ describe("auth gate", () => {
     expect(second.closed()).toBe(false);
   });
 
+  it("restores account fight controls with safe defaults", async () => {
+    const accounts = new InMemoryAccountStore();
+    startServer({}, accounts);
+    const first = await connect(server.port, "Fighter", "tok.fighter");
+    sockets.push(first.socket);
+    const firstWelcome = first.messages.find(
+      (message) => message.type === "welcome",
+    );
+    if (firstWelcome?.type !== "welcome") {
+      throw new Error("missing first fighter welcome");
+    }
+    expect(firstWelcome.fightState.mode).toEqual({
+      attack: "offensive",
+      chase: false,
+      secure: true,
+    });
+
+    const persistedMode = {
+      attack: "defensive",
+      chase: true,
+      secure: false,
+    } as const;
+    first.socket.send(
+      JSON.stringify({ type: "set-fight-mode", mode: persistedMode }),
+    );
+    await waitFor(
+      () =>
+        accounts.fightModeFor("sub-tok.fighter")?.attack ===
+        persistedMode.attack,
+      "fight mode persistence",
+    );
+
+    const second = await connect(server.port, "Fighter", "tok.fighter");
+    sockets.push(second.socket);
+    const secondWelcome = second.messages.find(
+      (message) => message.type === "welcome",
+    );
+    if (secondWelcome?.type !== "welcome") {
+      throw new Error("missing second fighter welcome");
+    }
+    expect(secondWelcome.fightState.mode).toEqual(persistedMode);
+  });
+
   it("projects premium status and remaining days in character selection", async () => {
     const accounts = new InMemoryAccountStore();
     accounts.seed({
@@ -501,6 +544,7 @@ describe("auth gate", () => {
       premiumUntil: new Date(Date.now() + 3 * 24 * 60 * 60 * 1_000),
       language: "en",
       uiSettings: {},
+      fightMode: { attack: "offensive", chase: false, secure: true },
     });
     startServer({}, accounts);
     const client = await openRaw(server.port);
@@ -1182,6 +1226,7 @@ describe("auth gate", () => {
       premiumUntil: null,
       language: "en",
       uiSettings: {},
+      fightMode: { attack: "offensive", chase: false, secure: true },
     });
     startServer({}, accounts);
     const client = await openRaw(server.port);

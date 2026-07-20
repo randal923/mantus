@@ -156,11 +156,11 @@ export class Combat {
     session: Session,
     intent: SetFightModeMessage,
     now: number,
-  ): void {
+  ): boolean {
     const player = playerForSession(this.world, session);
     if (!player) {
       session.sendError("join-required");
-      return;
+      return false;
     }
     session.fightMode = { ...intent.mode };
     const target = session.attackTargetId
@@ -175,6 +175,7 @@ export class Combat {
       session.send({ type: "attack-target-changed", creatureId: null });
     }
     this.feedback.sendFightState(session, now);
+    return true;
   }
 
   castSpell(

@@ -18,6 +18,7 @@ export const minimapLayoutSchema = z
 export const uiSettingsSchema = z
   .object({
     minimap: minimapLayoutSchema.optional(),
+    chatPinnedOpen: z.boolean().optional(),
   })
   .strict();
 

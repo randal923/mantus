@@ -886,8 +886,8 @@
     "playerNameRules": "Use 3–20 letters with single spaces.",
     "openPrivate": "Open private conversation",
     "closeChannel": "Close {{channel}}",
-    "minimize": "Minimize chat",
-    "restore": "Restore chat"
+    "keepOpen": "Keep chat open",
+    "closeAutomatically": "Close chat automatically"
   },
   "hud": {
     "battleList": "Battle List",
@@ -1009,6 +1009,7 @@
     "join-required": "Enter the world before performing this action.",
     "language-update-failed": "Language could not be saved. Please try again.",
     "language-update-pending": "A language update is already in progress.",
+    "fight-mode-update-failed": "Fight controls are active for this session but could not be saved.",
     "logged-in-elsewhere": "This account signed in from another connection.",
     "rate-limited": "Too many requests were sent. Please reconnect.",
     "world-full": "The game world is currently full.",

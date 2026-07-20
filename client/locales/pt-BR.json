@@ -886,8 +886,8 @@
     "playerNameRules": "Use de 3 a 20 letras com espaços simples.",
     "openPrivate": "Abrir conversa privada",
     "closeChannel": "Fechar {{channel}}",
-    "minimize": "Minimizar chat",
-    "restore": "Restaurar chat"
+    "keepOpen": "Manter chat aberto",
+    "closeAutomatically": "Fechar chat automaticamente"
   },
   "hud": {
     "battleList": "Lista de Batalha",
@@ -1009,6 +1009,7 @@
     "join-required": "Entre no mundo antes de realizar esta ação.",
     "language-update-failed": "Não foi possível salvar o idioma. Tente novamente.",
     "language-update-pending": "Uma atualização de idioma já está em andamento.",
+    "fight-mode-update-failed": "Os controles de combate estão ativos nesta sessão, mas não puderam ser salvos.",
     "logged-in-elsewhere": "Esta conta entrou por outra conexão.",
     "rate-limited": "Foram enviadas solicitações demais. Reconecte-se.",
     "world-full": "O mundo do jogo está cheio no momento.",

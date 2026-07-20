@@ -128,6 +128,12 @@ export const fightModeSchema = z
   })
   .strict();
 
+export const DEFAULT_FIGHT_MODE = {
+  attack: "offensive",
+  chase: false,
+  secure: true,
+} as const satisfies z.infer<typeof fightModeSchema>;
+
 export const combatConditionStateSchema = z
   .object({
     type: conditionTypeSchema,

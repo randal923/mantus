@@ -18,8 +18,8 @@ const meta = {
   ],
   args: {
     mode: {
-      attack: "balanced",
-      chase: true,
+      attack: "offensive",
+      chase: false,
       secure: true,
     },
     onChange: fn(),
@@ -30,6 +30,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const BalancedSecure: Story = {
+  args: {
+    mode: {
+      attack: "balanced",
+      chase: true,
+      secure: true,
+    },
+  },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(

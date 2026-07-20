@@ -33,6 +33,7 @@ interface GameHudProps {
   actionBar: ActionBar;
   hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
+  chatPinnedOpen: boolean;
   chatChannels?: ReadonlyArray<ChatChannel>;
   chatSelectedChannelId?: string;
   onCast: (spellId: string, target: CombatTarget) => void;
@@ -41,6 +42,7 @@ interface GameHudProps {
   onChatChannelClose?: (channelId: string) => void;
   onChatSenderSelect?: (sender: string) => void;
   onSendChat?: (channelId: string, body: string) => void;
+  onChatPinnedOpenChange: (pinnedOpen: boolean) => void;
 }
 
 export function GameHud({
@@ -57,6 +59,7 @@ export function GameHud({
   actionBar,
   hasWeapon,
   combatLog,
+  chatPinnedOpen,
   chatChannels,
   chatSelectedChannelId,
   onCast,
@@ -65,6 +68,7 @@ export function GameHud({
   onChatChannelClose,
   onChatSenderSelect,
   onSendChat,
+  onChatPinnedOpenChange,
 }: GameHudProps) {
   const { t } = useAppTranslation();
   const combatSpells = spellCatalog.filter(
@@ -130,6 +134,7 @@ export function GameHud({
       <div className="pointer-events-auto absolute bottom-4 left-4">
         <ChatPanel
           channels={visibleChatChannels}
+          pinnedOpen={chatPinnedOpen}
           {...(chatSelectedChannelId
             ? { selectedChannelId: chatSelectedChannelId }
             : {})}
@@ -139,6 +144,7 @@ export function GameHud({
           onChannelClose={onChatChannelClose}
           onSenderSelect={onChatSenderSelect}
           onSend={onSendChat}
+          onPinnedOpenChange={onChatPinnedOpenChange}
         />
       </div>
       <div className="absolute top-24 left-4 flex flex-col items-start gap-2">

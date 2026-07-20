@@ -34,8 +34,8 @@ const meta = {
     maxMana: 620,
     connectionStatus: "connected",
     fightMode: {
-      attack: "balanced",
-      chase: true,
+      attack: "offensive",
+      chase: false,
       secure: true,
     },
     battleListVisible: true,

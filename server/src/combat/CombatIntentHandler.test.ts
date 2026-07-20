@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import type { AccountStore } from "../AccountStore";
 import type { Combat } from "./Combat";
 import { CombatIntentHandler } from "./CombatIntentHandler";
 import type { Session } from "../Session";
+import type { SessionRegistry } from "../SessionRegistry";
 
 describe("CombatIntentHandler", () => {
   it("routes every bounded combat intent to the tick-owned combat system", () => {
@@ -13,7 +15,9 @@ describe("CombatIntentHandler", () => {
       useRune: vi.fn(),
     } as unknown as Combat;
     const session = {} as Session;
-    const handler = new CombatIntentHandler(combat);
+    const accounts = {} as AccountStore;
+    const registry = {} as SessionRegistry;
+    const handler = new CombatIntentHandler(combat, accounts, registry);
 
     handler.handle(
       session,
@@ -54,5 +58,94 @@ describe("CombatIntentHandler", () => {
     expect(combat.setFightMode).toHaveBeenCalledOnce();
     expect(combat.castSpell).toHaveBeenCalledOnce();
     expect(combat.useRune).toHaveBeenCalledOnce();
+  });
+
+  it("persists accepted fight modes on the account", async () => {
+    const updateFightMode = vi.fn(async () => undefined);
+    const accounts = { updateFightMode } as unknown as AccountStore;
+    const registry = { contains: () => true } as unknown as SessionRegistry;
+    const combat = {
+      setFightMode: vi.fn(() => true),
+    } as unknown as Combat;
+    const session = {
+      account: {
+        id: "account-1",
+        supabaseUserId: "user-1",
+        email: null,
+        bannedUntil: null,
+        premiumUntil: null,
+        language: "en",
+        uiSettings: {},
+        fightMode: { attack: "balanced", chase: true, secure: false },
+      },
+      sendError: vi.fn(),
+    } as unknown as Session;
+    const handler = new CombatIntentHandler(combat, accounts, registry);
+    const mode = { attack: "offensive", chase: false, secure: true } as const;
+
+    handler.handle(session, { type: "set-fight-mode", mode }, 1_000);
+    await new Promise((resolve) => setImmediate(resolve));
+    handler.applyResolvedOutcomes();
+
+    expect(updateFightMode).toHaveBeenCalledWith("account-1", mode);
+    expect(session.account?.fightMode).toEqual(mode);
+  });
+
+  it("serializes rapid changes and persists the latest mode last", async () => {
+    let resolveFirst: (() => void) | undefined;
+    const updateFightMode = vi
+      .fn<() => Promise<void>>()
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveFirst = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(undefined);
+    const accounts = { updateFightMode } as unknown as AccountStore;
+    const registry = { contains: () => true } as unknown as SessionRegistry;
+    const combat = {
+      setFightMode: vi.fn(() => true),
+    } as unknown as Combat;
+    const session = {
+      account: {
+        id: "account-1",
+        supabaseUserId: "user-1",
+        email: null,
+        bannedUntil: null,
+        premiumUntil: null,
+        language: "en",
+        uiSettings: {},
+        fightMode: { attack: "offensive", chase: false, secure: true },
+      },
+      sendError: vi.fn(),
+    } as unknown as Session;
+    const handler = new CombatIntentHandler(combat, accounts, registry);
+    const first = { attack: "balanced", chase: true, secure: true } as const;
+    const latest = { attack: "defensive", chase: false, secure: false } as const;
+
+    handler.handle(
+      session,
+      { type: "set-fight-mode", mode: first },
+      1_000,
+    );
+    handler.handle(
+      session,
+      { type: "set-fight-mode", mode: latest },
+      1_001,
+    );
+
+    expect(updateFightMode).toHaveBeenCalledTimes(1);
+    resolveFirst?.();
+    await new Promise((resolve) => setImmediate(resolve));
+    handler.applyResolvedOutcomes();
+    await new Promise((resolve) => setImmediate(resolve));
+    handler.applyResolvedOutcomes();
+
+    expect(updateFightMode.mock.calls).toEqual([
+      ["account-1", first],
+      ["account-1", latest],
+    ]);
+    expect(session.account?.fightMode).toEqual(latest);
   });
 });

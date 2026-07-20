@@ -9,28 +9,30 @@ interface ChatTabsProps {
   panelId: string;
   channels: ReadonlyArray<ChatChannel>;
   activeChannel: ChatChannel;
-  minimized: boolean;
+  expanded: boolean;
+  pinnedOpen: boolean;
   totalUnread: number;
   newPrivateChatId: string;
   newPrivateChatOpen: boolean;
   onNewPrivateChatToggle?: () => void;
   onChannelSelect: (channelId: string) => void;
   onChannelClose?: (channelId: string) => void;
-  onMinimizedChange: (minimized: boolean) => void;
+  onPinnedOpenChange: (pinnedOpen: boolean) => void;
 }
 
 export function ChatTabs({
   panelId,
   channels,
   activeChannel,
-  minimized,
+  expanded,
+  pinnedOpen,
   totalUnread,
   newPrivateChatId,
   newPrivateChatOpen,
   onNewPrivateChatToggle,
   onChannelSelect,
   onChannelClose,
-  onMinimizedChange,
+  onPinnedOpenChange,
 }: ChatTabsProps) {
   const { t } = useAppTranslation();
 
@@ -142,17 +144,22 @@ export function ChatTabs({
 
       <button
         type="button"
-        aria-expanded={!minimized}
+        aria-expanded={expanded}
+        aria-pressed={pinnedOpen}
         aria-controls={`${panelId}-content`}
-        aria-label={minimized ? t("chat.restore") : t("chat.minimize")}
-        title={minimized ? t("chat.restore") : t("chat.minimize")}
-        onClick={() => onMinimizedChange(!minimized)}
+        aria-label={
+          pinnedOpen ? t("chat.closeAutomatically") : t("chat.keepOpen")
+        }
+        title={
+          pinnedOpen ? t("chat.closeAutomatically") : t("chat.keepOpen")
+        }
+        onClick={() => onPinnedOpenChange(!pinnedOpen)}
         className="relative flex w-10 shrink-0 items-center justify-center border-l border-ui-stone-light/20 text-ui-muted outline-none transition-colors hover:bg-white/5 hover:text-ui-text-bright focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-gold/60"
       >
         <svg
           aria-hidden
           viewBox="0 0 20 20"
-          className={`size-4 transition-transform motion-reduce:transition-none ${minimized ? "rotate-180" : ""}`}
+          className={`size-4 transition-transform motion-reduce:transition-none ${pinnedOpen ? "" : "rotate-180"}`}
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -161,7 +168,7 @@ export function ChatTabs({
         >
           <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
         </svg>
-        {minimized && totalUnread > 0 && (
+        {!expanded && totalUnread > 0 && (
           <span className="absolute top-1 right-1 size-1.5 rounded-full bg-ui-accent-light shadow-[0_0_6px_currentColor]" />
         )}
       </button>

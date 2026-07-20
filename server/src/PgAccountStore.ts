@@ -1,6 +1,10 @@
 import { Pool } from "pg";
-import { uiSettingsSchema } from "@tibia/protocol";
-import type { Language, UiSettings } from "@tibia/protocol";
+import {
+  DEFAULT_FIGHT_MODE,
+  fightModeSchema,
+  uiSettingsSchema,
+} from "@tibia/protocol";
+import type { FightMode, Language, UiSettings } from "@tibia/protocol";
 import type { Account, AccountStore } from "./AccountStore";
 
 interface AccountRow {
@@ -11,12 +15,18 @@ interface AccountRow {
   premium_until: Date | null;
   language: Language;
   ui_settings: unknown;
+  fight_mode: unknown;
 }
 
 /** Stored settings that no longer match the schema fall back to defaults. */
 function parseUiSettings(raw: unknown): UiSettings {
   const parsed = uiSettingsSchema.safeParse(raw);
   return parsed.success ? parsed.data : {};
+}
+
+function parseFightMode(raw: unknown): FightMode {
+  const parsed = fightModeSchema.safeParse(raw);
+  return parsed.success ? parsed.data : { ...DEFAULT_FIGHT_MODE };
 }
 
 export class PgAccountStore implements AccountStore {
@@ -33,7 +43,7 @@ export class PgAccountStore implements AccountStore {
        ON CONFLICT (supabase_user_id)
        DO UPDATE SET email = EXCLUDED.email
        RETURNING id, supabase_user_id, email, banned_until, premium_until,
-         language, ui_settings`,
+         language, ui_settings, fight_mode`,
       [supabaseUserId, email, language],
     );
     const row = result.rows[0];
@@ -46,6 +56,7 @@ export class PgAccountStore implements AccountStore {
       premiumUntil: row.premium_until,
       language: row.language,
       uiSettings: parseUiSettings(row.ui_settings),
+      fightMode: parseFightMode(row.fight_mode),
     };
   }
 
@@ -71,6 +82,21 @@ export class PgAccountStore implements AccountStore {
     );
     if (result.rowCount !== 1) {
       throw new Error("account ui settings update failed");
+    }
+  }
+
+  async updateFightMode(
+    accountId: string,
+    fightMode: FightMode,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE accounts
+       SET fight_mode = $2::jsonb
+       WHERE id = $1`,
+      [accountId, JSON.stringify(fightMode)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("account fight mode update failed");
     }
   }
 }

@@ -1,4 +1,4 @@
-import type { Language, UiSettings } from "@tibia/protocol";
+import type { FightMode, Language, UiSettings } from "@tibia/protocol";
 
 export interface Account {
   id: string;
@@ -8,6 +8,7 @@ export interface Account {
   premiumUntil: Date | null;
   language: Language;
   uiSettings: UiSettings;
+  fightMode: FightMode;
 }
 
 export interface AccountStore {
@@ -18,4 +19,5 @@ export interface AccountStore {
   ): Promise<Account>;
   updateLanguage(accountId: string, language: Language): Promise<void>;
   updateUiSettings(accountId: string, settings: UiSettings): Promise<void>;
+  updateFightMode(accountId: string, fightMode: FightMode): Promise<void>;
 }

@@ -50,7 +50,7 @@ describe("UiSettingsHandler", () => {
   it("persists settings, updates the session account, and acks", async () => {
     const { session, sent, errors } = makeSession(null);
     const { handler } = await seededHandler(session);
-    const settings: UiSettings = { minimap: LAYOUT };
+    const settings: UiSettings = { minimap: LAYOUT, chatPinnedOpen: true };
     handler.handle(session, { type: "update-ui-settings", settings });
     await settle(handler);
     expect(errors).toEqual([]);

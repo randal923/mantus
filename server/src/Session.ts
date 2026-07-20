@@ -1,6 +1,7 @@
 import type { RawData, WebSocket } from "ws";
 import {
   clientMessageSchema,
+  DEFAULT_FIGHT_MODE,
   PROTOCOL_LIMITS,
   type ClientMessage,
   type Direction,
@@ -41,11 +42,7 @@ export class Session {
   bufferedMovementDirection: Direction | null = null;
   autoWalkDirections: Direction[] = [];
   attackTargetId: string | null = null;
-  fightMode: FightMode = {
-    attack: "offensive",
-    chase: true,
-    secure: true,
-  };
+  fightMode: FightMode = { ...DEFAULT_FIGHT_MODE };
   readonly combatCooldowns = new Map<
     string,
     { readyAt: number; totalMs: number }

@@ -130,10 +130,12 @@ const meta = {
   args: {
     channels: CHANNELS,
     initialChannelId: "world",
+    pinnedOpen: false,
     onChannelSelect: fn(),
     onChannelClose: fn(),
     onSenderSelect: fn(),
     onSend: fn(),
+    onPinnedOpenChange: fn(),
   },
 } satisfies Meta<typeof ChatPanel>;
 
@@ -160,28 +162,30 @@ export const AllChannels: Story = {
   },
 };
 
-export const MinimizedWithUnread: Story = {
-  args: {
-    initiallyMinimized: true,
-  },
-  play: async ({ canvasElement }) => {
+export const ClosedWithUnread: Story = {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    const restoreButton = canvas.getByRole("button", {
-      name: "Restore chat",
+    const pinButton = canvas.getByRole("button", {
+      name: "Keep chat open",
     });
     const content = canvasElement.ownerDocument.getElementById(
-      restoreButton.getAttribute("aria-controls") ?? "",
+      pinButton.getAttribute("aria-controls") ?? "",
     );
 
     await expect(content).toHaveAttribute("aria-hidden", "true");
-    await userEvent.click(restoreButton);
+    await userEvent.hover(pinButton);
     await expect(content).toHaveAttribute("aria-hidden", "false");
+    await userEvent.unhover(pinButton);
+    await expect(content).toHaveAttribute("aria-hidden", "true");
+    await userEvent.click(pinButton);
+    await expect(args.onPinnedOpenChange).toHaveBeenCalledWith(true);
   },
 };
 
 export const EnterReturnsFocusToGame: Story = {
   args: {
     channels: [CHANNELS[0]],
+    pinnedOpen: true,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

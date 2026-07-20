@@ -82,6 +82,7 @@ export class AuthHandler {
       other.terminate();
     }
     session.account = account;
+    session.fightMode = { ...account.fightMode };
     const status = getAccountStatus(account, Date.now());
     session.send({
       type: "auth-ok",

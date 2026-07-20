@@ -234,11 +234,21 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     }, 800);
   }, []);
   const handleMinimapLayoutChange = useCallback((layout: MinimapLayout) => {
-    setUiSettings((current) => {
-      const next = { ...current, minimap: layout };
-      uiSettingsRef.current = next;
-      return next;
-    });
+    const next = { ...uiSettingsRef.current, minimap: layout };
+    uiSettingsRef.current = next;
+    setUiSettings(next);
+    if (uiSettingsSaveTimerRef.current) {
+      clearTimeout(uiSettingsSaveTimerRef.current);
+    }
+    uiSettingsSaveTimerRef.current = setTimeout(() => {
+      uiSettingsSaveTimerRef.current = null;
+      clientRef.current?.updateUiSettings(uiSettingsRef.current);
+    }, 800);
+  }, []);
+  const handleChatPinnedOpenChange = useCallback((chatPinnedOpen: boolean) => {
+    const next = { ...uiSettingsRef.current, chatPinnedOpen };
+    uiSettingsRef.current = next;
+    setUiSettings(next);
     if (uiSettingsSaveTimerRef.current) {
       clearTimeout(uiSettingsSaveTimerRef.current);
     }
@@ -1447,7 +1457,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             code === "ui-settings-update-failed" ||
             code === "ui-settings-update-pending"
           ) {
-            // Layout saves are best-effort; never interrupt play over them.
+            // UI preference saves are best-effort; never interrupt play over them.
             return;
           }
           resumeCharacterIdRef.current = null;
@@ -1871,6 +1881,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               actionBar={actionBar}
               hasWeapon={Boolean(inventory?.equipment.weapon)}
               combatLog={combatLog}
+              chatPinnedOpen={uiSettings.chatPinnedOpen ?? false}
               chatChannels={[
                 ...chatState.channels.map((channel) => ({
                   id: channel.id,
@@ -1912,6 +1923,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 if (sender === ownCharacter.name) return;
                 dispatchChat({ type: "open-private", counterpart: sender });
               }}
+              onChatPinnedOpenChange={handleChatPinnedOpenChange}
               onSendChat={(channelId, body) => {
                 if (channelId === PARTY_CHANNEL_ID) {
                   const text = sanitizeChatText(body);

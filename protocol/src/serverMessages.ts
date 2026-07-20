@@ -345,6 +345,7 @@ export const serverErrorCodeSchema = z.enum([
   "join-required",
   "language-update-failed",
   "language-update-pending",
+  "fight-mode-update-failed",
   "ui-settings-update-failed",
   "ui-settings-update-pending",
   "combat-action-failed",
