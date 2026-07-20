@@ -59,7 +59,7 @@ export function BestiaryModal({
           </span>
         )}
       </div>
-      <div className="min-h-64 overflow-y-auto">
+      <div>
         {view.kind === "list" &&
           (creatures ? (
             <BestiaryCreatureList

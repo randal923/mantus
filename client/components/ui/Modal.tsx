@@ -40,7 +40,7 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className={`ui-panel-frame relative isolate flex max-h-[calc(100dvh-2rem)] w-full flex-col gap-5 overflow-hidden p-6 font-tibia text-ui-text ${
+        className={`ui-panel-frame relative isolate flex h-3/4 max-h-[calc(100dvh-2rem)] w-full flex-col gap-5 overflow-hidden p-6 font-tibia text-ui-text ${
           size === "wide" ? "max-w-5xl" : "max-w-md"
         }`}
       >
@@ -60,7 +60,7 @@ export function Modal({
         </header>
         <div aria-hidden className="ui-divider" />
 
-        <div className="ui-scrollbar min-h-0 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85">
+        <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85">
           {children}
         </div>
 

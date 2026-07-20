@@ -45,7 +45,7 @@ export function BosstiaryModal({
           </span>
         )}
       </div>
-      <div className="min-h-64 overflow-y-auto">
+      <div>
         {bosses ? (
           <>
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
