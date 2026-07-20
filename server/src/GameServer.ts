@@ -57,6 +57,9 @@ import { BestiaryService } from "./bestiary/BestiaryService";
 import type { BestiaryStore } from "./bestiary/BestiaryStore";
 import { BestiaryTracker } from "./bestiary/BestiaryTracker";
 import { loadBestiaryCatalog } from "./bestiary/loadBestiaryCatalog";
+import { WheelService } from "./wheel/WheelService";
+import type { WheelStore } from "./wheel/WheelStore";
+import { WheelTracker } from "./wheel/WheelTracker";
 import { HighscoreService } from "./social/HighscoreService";
 import type { HighscoreStore } from "./social/HighscoreStore";
 import { VipService } from "./social/VipService";
@@ -86,6 +89,7 @@ export interface GameServerDeps {
   vip?: VipStore;
   highscores?: HighscoreStore;
   bestiary?: BestiaryStore;
+  wheel?: WheelStore;
   moderation?: ModerationStore;
   worldItemDeltas?: WorldItemDeltas;
 }
@@ -123,6 +127,8 @@ export class GameServer {
   private readonly highscores: HighscoreService;
   private readonly bestiary: BestiaryService;
   private readonly bestiaryTracker: BestiaryTracker;
+  private readonly wheel: WheelService;
+  private readonly wheelTracker: WheelTracker;
   private readonly moderation: ModerationService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
@@ -217,6 +223,12 @@ export class GameServer {
       this.bestiaryTracker,
       this.items,
     );
+    this.wheelTracker = new WheelTracker(deps.wheel);
+    this.wheel = new WheelService(
+      this.world,
+      this.wheelTracker,
+      this.persistence,
+    );
     this.guilds = new GuildService(
       this.world,
       this.registry,
@@ -257,6 +269,7 @@ export class GameServer {
       this.vips,
       this.moderation,
       this.bestiaryTracker,
+      this.wheelTracker,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
@@ -512,6 +525,7 @@ export class GameServer {
         this.moderation.detachCharacter(playerId);
         this.pvp.detachCharacter(playerId);
         this.bestiaryTracker.detachCharacter(playerId);
+        this.wheelTracker.detachCharacter(playerId);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
         this.depot.detachCharacter(playerId);
@@ -527,6 +541,7 @@ export class GameServer {
       this.vips.detach(session);
       this.highscores.detach(session);
       this.bestiary.detach(session);
+      this.wheel.detach(session);
       this.moderation.detach(session);
       this.items.detachSession(session);
       this.registry.remove(session);
@@ -702,6 +717,12 @@ export class GameServer {
       case "bosstiary-get":
         this.bestiary.handleBosstiary(session, now);
         return;
+      case "wheel-get":
+        this.wheel.handleGet(session, now);
+        return;
+      case "wheel-save":
+        this.wheel.handleSave(session, intent, now);
+        return;
       case "report-player":
         this.moderation.handleReport(session, intent, now);
         return;
@@ -750,6 +771,7 @@ export class GameServer {
     this.moderation.applyResolvedOutcomes(Date.now());
     await this.pvp.stop();
     await this.bestiaryTracker.stop();
+    await this.wheelTracker.stop();
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();

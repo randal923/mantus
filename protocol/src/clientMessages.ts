@@ -57,6 +57,7 @@ import {
   bosstiaryGetMessageSchema,
 } from "./bestiary";
 import { highscoresGetMessageSchema } from "./highscores";
+import { wheelGetMessageSchema, wheelSaveMessageSchema } from "./wheel";
 import {
   houseAbandonMessageSchema,
   houseBrowseMessageSchema,
@@ -478,6 +479,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   bestiaryCreaturesGetMessageSchema,
   bestiaryMonsterGetMessageSchema,
   bosstiaryGetMessageSchema,
+  wheelGetMessageSchema,
+  wheelSaveMessageSchema,
   reportPlayerMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,

@@ -54,7 +54,38 @@ scope.
 - [ ] Imbuements, item classification/tiering, Exaltation Forge, forge history,
   dust/slivers/cores, influenced/fiendish monsters, and all atomic resource
   conversions.
-- [ ] Wheel of Destiny, gems, revelation perks, vocation spell modifications,
+- [x] Wheel of Destiny core (2026-07-20): shared slice/adjacency/bonus tables
+  and `validateWheelAllocation`/`computeWheelBonuses` in `protocol/src/wheel*`,
+  server `WheelService`/`WheelTracker`/`PgWheelStore` (migration 027,
+  `character_wheel.slices smallint[]`), wheel HP/mana/capacity threaded through
+  `deriveCharacterStats` at login/runtime/save-snapshot, conviction skill
+  boosts applied in `Player.skillLevel`, exploit tests in
+  `server/src/wheel/*.test.ts`, and the Tibia-exact client modal
+  (`client/components/wheel/`, art + geometry in `client/public/assets/wheel/`
+  and `client/lib/wheel/wheelGeometry.ts`, ripped via the otclient wheel
+  module). Points are `level - 50`, gated on level 51+ and premium. Deferred
+  gaps:
+  - [ ] Promotion requirement is not enforced (promotion purchase itself is
+    still pending in todo/06); Canary additionally requires a promoted
+    vocation. Add the check to `WheelService.isUnlocked` once promotion ships.
+  - [ ] Combat application of mitigation multiplier, life/mana leech, magic
+    skill boost, revelation flat damage/healing, conviction instants (Battle
+    Instinct etc.), spell grants/augments, and the revelation abilities
+    (Gift of Life, Avatars, Beam Mastery, ...). All are computed in
+    `WheelBonuses` and shown in the UI but only max HP/mana, capacity, and
+    melee/distance/fist skill boosts affect gameplay today.
+  - [ ] Point removal is allowed anywhere; Canary restricts decreases to a
+    protection zone near a temple. Enforce a PZ/temple check in
+    `WheelService.handleSave` when the allocation shrinks.
+  - [ ] Promotion scrolls, Monk quest bonus, hunting-task points, and the gem
+    atelier (gems, fragments, mods, resonance effects) — resonance vessels
+    are rendered but grant nothing.
+  - [ ] Character-list/offline capacity (`PgItemLocks`) derives capacity
+    without the wheel bonus, so offline item-lock checks are slightly
+    conservative for wheel users.
+  - [ ] Boosted (green) skill display: wheel skill boosts apply in combat via
+    `Player.skillLevel` but the skills panel shows base levels only.
+- [ ] Wheel of Destiny gems, revelation perk combat abilities, vocation spell modifications,
   weapon proficiency, and animus mastery.
 - [ ] Cyclopedia character/map/house/item/monster views, achievements, titles,
   badges, attached effects, and authorized tracker projections.

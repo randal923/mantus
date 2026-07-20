@@ -231,7 +231,8 @@
     "house": "House",
     "highscores": "Highscores",
     "bestiary": "Bestiary",
-    "bosstiary": "Bosstiary"
+    "bosstiary": "Bosstiary",
+    "wheel": "Wheel"
   },
   "connection": {
     "connecting": "Connecting",
@@ -1166,6 +1167,71 @@
       "bane": "Bane",
       "archfoe": "Archfoe",
       "nemesis": "Nemesis"
+    }
+  },
+  "wheel": {
+    "title": "Wheel of Destiny",
+    "save": "Save",
+    "reset": "Reset",
+    "help": "Left-click a slice to select it. Right-click fills a slice, or clears it when full. Changes apply when you save.",
+    "locked": "Requires level {{level}} and a Premium account.",
+    "points": {
+      "title": "Available Promotion Points"
+    },
+    "selection": {
+      "title": "Selection",
+      "empty": "Hover or select a slice of the wheel to inspect its perks.",
+      "dedication": "Dedication",
+      "conviction": "Conviction",
+      "active": "(active)",
+      "fill": "Fill",
+      "clear": "Clear"
+    },
+    "domain": {
+      "green": "Green Domain",
+      "red": "Red Domain",
+      "blue": "Blue Domain",
+      "purple": "Purple Domain"
+    },
+    "dedication": {
+      "health": "+{{value}} Hit Points per point",
+      "mana": "+{{value}} Mana per point",
+      "capacity": "+{{value}} Capacity per point",
+      "mitigation": "+{{value}}% Mitigation Mult. per point",
+      "healthAndMana": "+{{health}} Hit Points and +{{mana}} Mana per point"
+    },
+    "conviction": {
+      "skill": {
+        "melee": "Melee Skill Boost +{{value}}",
+        "distance": "Distance Skill Boost +{{value}}",
+        "magic": "Magic Skill Boost +{{value}}",
+        "fist": "Fist Skill Boost +{{value}}"
+      },
+      "lifeLeech": "Life Leech +{{value}}%",
+      "manaLeech": "Mana Leech +{{value}}%",
+      "resonance": "Vessel Resonance"
+    },
+    "summary": {
+      "dedication": "Dedication Perks",
+      "conviction": "Conviction Perks",
+      "revelation": "Revelation Perks",
+      "hitPoints": "Hit Points",
+      "mana": "Mana",
+      "capacity": "Capacity",
+      "mitigation": "Mitigation Mult.",
+      "lifeLeech": "Life Leech",
+      "manaLeech": "Mana Leech",
+      "damage": "Damage",
+      "healing": "Healing",
+      "stage": "Stage {{stage}}",
+      "locked": "Locked",
+      "none": "No conviction perks active.",
+      "thresholds": "Stages unlock at {{thresholds}} points in a domain."
+    },
+    "errors": {
+      "rate-limited": "Too many requests; try again in a moment.",
+      "unavailable": "The Wheel of Destiny is not available for this character.",
+      "invalid-allocation": "That allocation was rejected by the server."
     }
   }
 }

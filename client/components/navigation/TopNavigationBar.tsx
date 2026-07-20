@@ -16,6 +16,7 @@ type NavigationPanel =
   | "highscores"
   | "bestiary"
   | "bosstiary"
+  | "wheel"
   | "market";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
@@ -47,6 +48,7 @@ interface TopNavigationBarProps {
   onHighscores?: () => void;
   onBestiary?: () => void;
   onBosstiary?: () => void;
+  onWheel?: () => void;
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
   onMinimap: () => void;
@@ -76,6 +78,7 @@ export function TopNavigationBar({
   onHighscores,
   onBestiary,
   onBosstiary,
+  onWheel,
   onFightModeChange,
   onBattleList,
   onMinimap,
@@ -326,6 +329,28 @@ export function TopNavigationBar({
           >
             <path d="M5 6.5 3.5 3l4 1.5a6.5 6.5 0 0 1 9 0l4-1.5L19 6.5a7 7 0 0 1-1 8.5l-6 5.5-6-5.5a7 7 0 0 1-1-8.5z" />
             <path d="M9 10.5h.01M15 10.5h.01M10 15l2-1 2 1" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.wheel")}
+          active={activePanel === "wheel"}
+          disabled={!onWheel}
+          onClick={onWheel}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="8.5" />
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5" />
           </svg>
         </NavigationIconButton>
 

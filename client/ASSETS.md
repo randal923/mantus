@@ -124,6 +124,36 @@ and be stored in a web-optimized format.
 - `forged-stone-texture.webp` — seamless warm-black forged stone used beneath
   the CSS gradients and borders on gothic panels and full-screen backdrops.
 
+## Wheel of Destiny art (`public/assets/wheel/`)
+
+Wheel of Destiny UI art ripped from the Tibia client, taken from the
+mehah/otclient `modules/game_wheel` data (`data/images/game/wheel/`). Like the
+sprite atlases — and unlike `public/assets/ui/` — this is third-party game
+art, not original work. Only the images the wheel itself needs were copied
+(no gem-atelier / fragment-workshop / preset chrome).
+
+- `backdrop_skillwheel.png` — 522×522 base wheel frame.
+- `wheel-vocations/backdrop_skillwheel_{knight,paladin,sorcerer,druid,monk}.png`
+  — per-vocation 522×522 overlay (quadrant symbols; perk icons are separate).
+- `wheel-colors/<quadrant>/slot1..9/<step>.png` — 522×522 partial-fill
+  overlays, one per 10 invested points (slot1: 5 steps … slot9: 20 steps).
+- `wheel-colors/<quadrant>/{TopLeft,TopRight,BottonLeft,BottonRight}_1..9.png`
+  — hover focus overlays ("Botton" typo is original).
+- `wheel-colors/<quadrant>/perkCircle/revelationBg.png` — 178×178 corner disc.
+- `wheel-border/<quadrant>/1..9.png` — 522×522 selection border overlays.
+- `backdrop_skillwheel_largebonus_*` + `marker_largeperk.png` +
+  `marker_skillwheelsocket.png` — corner medallion composition (socket
+  backgrounds, lights, front stages 0–3, markers).
+- `icons-skillwheel-{mediumperks,smallperks,largeperks,sockets}.png`,
+  `icon-skillwheel-vesselresonance-{basic,supreme}.png`,
+  `icon-skillwheel-selection.png` — icon sprite sheets.
+
+`lib/wheel/wheelGeometry.ts` is the companion data module: node slice/ring
+hit-test geometry, per-node overlay paths, icon positions and per-vocation
+sheet clips, all transcribed from the otclient module's
+`wheelMenu.otui` / `buttons.lua` / `geometry.lua` / `icons.lua` /
+`wheelclass.lua` (source lines cited inline).
+
 ## Rebuilding the web assets
 
 Place the matching extended files at `map/Tibia.dat` and `map/Tibia.spr`, then

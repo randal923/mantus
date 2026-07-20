@@ -33,6 +33,7 @@ import { useHotkeys } from "../hooks/useHotkeys";
 import { useDepotSession } from "../hooks/useDepotSession";
 import { useGuildSession } from "../hooks/useGuildSession";
 import { useBestiarySession } from "../hooks/useBestiarySession";
+import { useWheelSession } from "../hooks/useWheelSession";
 import { useBosstiarySession } from "../hooks/useBosstiarySession";
 import { useHighscoresSession } from "../hooks/useHighscoresSession";
 import { useHouseSession } from "../hooks/useHouseSession";
@@ -97,6 +98,7 @@ import { GuildModal } from "./guild/GuildModal";
 import { HouseModal } from "./house/HouseModal";
 import { BestiaryModal } from "./bestiary/BestiaryModal";
 import { BosstiaryModal } from "./bestiary/BosstiaryModal";
+import { WheelModal } from "./wheel/WheelModal";
 import { HighscoresModal } from "./social/HighscoresModal";
 import { ReportPlayerModal } from "./social/ReportPlayerModal";
 import { VipPanel } from "./social/VipPanel";
@@ -452,6 +454,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     reset: resetBosstiary,
   } = useBosstiarySession();
   const [bosstiaryOpen, setBosstiaryOpen] = useState(false);
+  const {
+    state: wheelSession,
+    stateReceived: confirmWheelState,
+    begin: beginWheel,
+    fail: failWheel,
+    reset: resetWheel,
+  } = useWheelSession();
+  const [wheelOpen, setWheelOpen] = useState(false);
   const [reportSession, setReportSession] =
     useState<ReportSessionState | null>(null);
   const [houseToast, setHouseToast] = useState<{
@@ -520,6 +530,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setBestiaryOpen(false);
     resetBosstiary();
     setBosstiaryOpen(false);
+    resetWheel();
+    setWheelOpen(false);
     setReportSession(null);
     setMailboxSession(null);
     setVisibleCreatures([]);
@@ -805,6 +817,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setBestiaryOpen(false);
             resetBosstiary();
             setBosstiaryOpen(false);
+            resetWheel();
+            setWheelOpen(false);
             // Preload the house browser and both codex projections so the
             // navbar modals open with their first view ready.
             window.setTimeout(
@@ -816,6 +830,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               100,
             );
             window.setTimeout(() => clientRef.current?.requestBosstiary(), 600);
+            window.setTimeout(() => clientRef.current?.requestWheel(), 900);
             setReportSession(null);
             setMailboxSession(null);
             setLootSession(null);
@@ -1194,6 +1209,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (message.type === "bestiary-entry-changed") {
             bestiaryEntryChanged(message);
             bosstiaryEntryChanged(message);
+            return;
+          }
+          if (message.type === "wheel-state") {
+            confirmWheelState(message);
+            return;
+          }
+          if (message.type === "wheel-action-failed") {
+            failWheel(message.reason);
             return;
           }
           if (message.type === "bestiary-action-failed") {
@@ -1599,6 +1622,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     failBosstiary,
     resetBestiary,
     resetBosstiary,
+    confirmWheelState,
+    failWheel,
+    resetWheel,
   ]);
 
   return (
@@ -1668,11 +1694,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                           ? "bestiary"
                           : bosstiaryOpen
                             ? "bosstiary"
-                            : characterStatsOpen
-                              ? "character"
-                              : inventoryOpen
-                                ? "inventory"
-                                : undefined
+                            : wheelOpen
+                              ? "wheel"
+                              : characterStatsOpen
+                                ? "character"
+                                : inventoryOpen
+                                  ? "inventory"
+                                  : undefined
               }
               onCharacter={() => {
                 setGameMenuOpen(false);
@@ -1759,6 +1787,21 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                   if (!open && !bosstiarySession.bosses) {
                     const sent = clientRef.current?.requestBosstiary() ?? false;
                     beginBosstiary(sent);
+                  }
+                  return !open;
+                });
+              }}
+              onWheel={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(false);
+                setCharacterStatsOpen(false);
+                setBestiaryOpen(false);
+                setBosstiaryOpen(false);
+                setWheelOpen((open) => {
+                  // Data is preloaded at login; only refetch if that failed.
+                  if (!open && !wheelSession.wheel) {
+                    const sent = clientRef.current?.requestWheel() ?? false;
+                    beginWheel(sent);
                   }
                   return !open;
                 });
@@ -2466,6 +2509,23 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               pending={bosstiarySession.pending}
               error={bosstiarySession.error}
               onClose={() => setBosstiaryOpen(false)}
+            />
+          )}
+          {wheelOpen && (
+            <WheelModal
+              wheel={wheelSession.wheel}
+              vocation={ownCharacter.vocation}
+              pending={wheelSession.pending}
+              error={wheelSession.error}
+              onSave={(slices) => {
+                const sent =
+                  clientRef.current?.saveWheel(
+                    crypto.randomUUID(),
+                    slices,
+                  ) ?? false;
+                beginWheel(sent);
+              }}
+              onClose={() => setWheelOpen(false)}
             />
           )}
           {reportSession && (

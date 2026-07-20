@@ -86,4 +86,10 @@ export interface CharacterSaveSnapshot {
   readonly outfit: CharacterOutfit;
   readonly skull: SkullState;
   readonly skullExpiresAt: Date | null;
+  /** Wheel contribution to max stats at snapshot time; absent = no wheel. */
+  readonly wheelBonus?: {
+    readonly maxHealth: number;
+    readonly maxMana: number;
+    readonly capacity: number;
+  };
 }

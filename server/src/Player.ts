@@ -1,9 +1,11 @@
-import type {
-  AccountTier,
-  CreatureState,
-  HitBlock,
-  Position,
-  Skill,
+import {
+  EMPTY_WHEEL_BONUSES,
+  type AccountTier,
+  type CreatureState,
+  type HitBlock,
+  type Position,
+  type Skill,
+  type WheelBonuses,
 } from "@tibia/protocol";
 import type { Character } from "./character/Character";
 import { Creature } from "./creature/Creature";
@@ -36,23 +38,22 @@ export class Player extends Creature<Character["outfit"]> {
   private bloodHitCount = 0;
   private shieldBlockCount = 0;
   private speedModifier = 0;
+  private currentWheelBonuses: WheelBonuses;
 
   constructor(
     character: Character,
     position: Position,
     now = Date.now(),
     premiumUntil: Date | null = null,
+    wheelBonuses: WheelBonuses = EMPTY_WHEEL_BONUSES,
   ) {
     const stats = deriveCharacterStats({
       vocation: character.vocation,
       definitionVersion: character.progressionDefinitionVersion,
       level: character.level,
+      wheel: wheelBonuses,
     });
-    if (
-      !Number.isInteger(character.health) ||
-      character.health < 0 ||
-      character.health > stats.maxHealth
-    ) {
+    if (!Number.isInteger(character.health) || character.health < 0) {
       throw new Error("persisted health is out of range");
     }
     super({
@@ -62,9 +63,13 @@ export class Player extends Creature<Character["outfit"]> {
       position,
       direction: character.direction,
       outfit: character.outfit,
-      health: character.health,
+      // Clamp instead of rejecting: wheel slices persist outside the
+      // character row, so a crash between the two writes may leave health
+      // above the currently-derivable maximum.
+      health: Math.min(character.health, stats.maxHealth),
       maxHealth: stats.maxHealth,
     });
+    this.currentWheelBonuses = wheelBonuses;
     this.vocation = character.vocation;
     this.premiumUntil = premiumUntil?.getTime() ?? null;
     this.townId = character.townId;
@@ -88,7 +93,35 @@ export class Player extends Creature<Character["outfit"]> {
         processedEventIds: character.progressionEventIds,
       },
       now,
+      wheelBonuses,
     );
+  }
+
+  get wheelBonuses(): WheelBonuses {
+    return this.currentWheelBonuses;
+  }
+
+  /** The wheel's contribution to derived stats, for save-snapshot checks. */
+  get wheelStatModifier(): {
+    readonly maxHealth: number;
+    readonly maxMana: number;
+    readonly capacity: number;
+  } {
+    return {
+      maxHealth: this.currentWheelBonuses.maxHealth,
+      maxMana: this.currentWheelBonuses.maxMana,
+      capacity: this.currentWheelBonuses.capacity,
+    };
+  }
+
+  setWheelBonuses(bonuses: WheelBonuses): void {
+    this.currentWheelBonuses = bonuses;
+    this.progression.setWheelModifier({
+      maxHealth: bonuses.maxHealth,
+      maxMana: bonuses.maxMana,
+      capacity: bonuses.capacity,
+    });
+    this.setMaxHealth(this.progression.maxHealth);
   }
 
   get level(): number {
@@ -170,9 +203,16 @@ export class Player extends Creature<Character["outfit"]> {
   }
 
   skillLevel(skill: Skill): number {
-    return (
-      this.progression.skills.find((state) => state.skill === skill)?.level ?? 10
-    );
+    const base =
+      this.progression.skills.find((state) => state.skill === skill)?.level ??
+      10;
+    const boosts = this.currentWheelBonuses.skillBoosts;
+    if (skill === "sword" || skill === "club" || skill === "axe") {
+      return base + boosts.melee;
+    }
+    if (skill === "distance") return base + boosts.distance;
+    if (skill === "fist") return base + boosts.fist;
+    return base;
   }
 
   recordAttackBlock(block: HitBlock): void {

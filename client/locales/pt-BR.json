@@ -231,7 +231,8 @@
     "house": "Casa",
     "highscores": "Recordes",
     "bestiary": "Bestiário",
-    "bosstiary": "Bosstiário"
+    "bosstiary": "Bosstiário",
+    "wheel": "Roda"
   },
   "connection": {
     "connecting": "Conectando",
@@ -1166,6 +1167,71 @@
       "bane": "Bane",
       "archfoe": "Archfoe",
       "nemesis": "Nemesis"
+    }
+  },
+  "wheel": {
+    "title": "Roda do Destino",
+    "save": "Salvar",
+    "reset": "Redefinir",
+    "help": "Clique em uma fatia para selecioná-la. Clique com o botão direito para preencher, ou limpar quando cheia. As mudanças valem ao salvar.",
+    "locked": "Requer nível {{level}} e uma conta Premium.",
+    "points": {
+      "title": "Pontos de Promoção Disponíveis"
+    },
+    "selection": {
+      "title": "Seleção",
+      "empty": "Passe o mouse ou selecione uma fatia da roda para ver seus benefícios.",
+      "dedication": "Dedicação",
+      "conviction": "Convicção",
+      "active": "(ativo)",
+      "fill": "Preencher",
+      "clear": "Limpar"
+    },
+    "domain": {
+      "green": "Domínio Verde",
+      "red": "Domínio Vermelho",
+      "blue": "Domínio Azul",
+      "purple": "Domínio Roxo"
+    },
+    "dedication": {
+      "health": "+{{value}} Pontos de Vida por ponto",
+      "mana": "+{{value}} Mana por ponto",
+      "capacity": "+{{value}} Capacidade por ponto",
+      "mitigation": "+{{value}}% Mult. de Mitigação por ponto",
+      "healthAndMana": "+{{health}} Pontos de Vida e +{{mana}} Mana por ponto"
+    },
+    "conviction": {
+      "skill": {
+        "melee": "Bônus de Habilidade Corpo a Corpo +{{value}}",
+        "distance": "Bônus de Habilidade à Distância +{{value}}",
+        "magic": "Bônus de Habilidade Mágica +{{value}}",
+        "fist": "Bônus de Habilidade de Punho +{{value}}"
+      },
+      "lifeLeech": "Roubo de Vida +{{value}}%",
+      "manaLeech": "Roubo de Mana +{{value}}%",
+      "resonance": "Ressonância de Receptáculo"
+    },
+    "summary": {
+      "dedication": "Benefícios de Dedicação",
+      "conviction": "Benefícios de Convicção",
+      "revelation": "Benefícios de Revelação",
+      "hitPoints": "Pontos de Vida",
+      "mana": "Mana",
+      "capacity": "Capacidade",
+      "mitigation": "Mult. de Mitigação",
+      "lifeLeech": "Roubo de Vida",
+      "manaLeech": "Roubo de Mana",
+      "damage": "Dano",
+      "healing": "Cura",
+      "stage": "Estágio {{stage}}",
+      "locked": "Bloqueado",
+      "none": "Nenhum benefício de convicção ativo.",
+      "thresholds": "Estágios desbloqueiam com {{thresholds}} pontos em um domínio."
+    },
+    "errors": {
+      "rate-limited": "Muitas requisições; tente novamente em instantes.",
+      "unavailable": "A Roda do Destino não está disponível para este personagem.",
+      "invalid-allocation": "Essa alocação foi rejeitada pelo servidor."
     }
   }
 }

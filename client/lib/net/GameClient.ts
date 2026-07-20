@@ -576,6 +576,14 @@ export class GameClient {
     return this.send({ type: "bosstiary-get" });
   }
 
+  requestWheel(): boolean {
+    return this.send({ type: "wheel-get" });
+  }
+
+  saveWheel(requestId: string, slices: ReadonlyArray<number>): boolean {
+    return this.send({ type: "wheel-save", requestId, slices: [...slices] });
+  }
+
   requestHighscores(
     category: HighscoreCategory,
     vocation: CharacterVocation | undefined,

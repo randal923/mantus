@@ -10,7 +10,10 @@ import {
   type Skill,
 } from "@tibia/protocol";
 import type { CharacterSkill } from "./CharacterSkill";
-import { deriveCharacterStats } from "./deriveCharacterStats";
+import {
+  deriveCharacterStats,
+  type DerivedStatModifier,
+} from "./deriveCharacterStats";
 import { getExperienceForLevel } from "./getExperienceForLevel";
 import { getLevelForExperience } from "./getLevelForExperience";
 import { getAccountRegeneration } from "./getAccountRegeneration";
@@ -64,6 +67,7 @@ export class CharacterProgression {
   private nextSoulAt: number;
   private accountTier: AccountTier;
   private regeneration: ReturnType<typeof getAccountRegeneration>;
+  private wheelModifier: DerivedStatModifier;
 
   constructor(
     readonly vocation: CharacterVocation,
@@ -80,7 +84,9 @@ export class CharacterProgression {
       processedEventIds: ReadonlyArray<string>;
     },
     now: number,
+    wheelModifier: DerivedStatModifier = {},
   ) {
+    this.wheelModifier = wheelModifier;
     const definition = getVocation(vocation, definitionVersion);
     this.accountTier = accountTier;
     this.regeneration = getAccountRegeneration(
@@ -119,14 +125,15 @@ export class CharacterProgression {
       vocation,
       definitionVersion,
       level: state.level,
+      wheel: wheelModifier,
     });
-    if (
-      !Number.isInteger(state.mana) ||
-      state.mana < 0 ||
-      state.mana > stats.maxMana
-    ) {
+    if (!Number.isInteger(state.mana) || state.mana < 0) {
       throw new Error("persisted mana is out of range");
     }
+    // Clamp instead of rejecting: wheel slices persist outside the character
+    // row, so a crash between the two writes may leave mana above the
+    // currently-derivable maximum.
+    state = { ...state, mana: Math.min(state.mana, stats.maxMana) };
     if (
       !Number.isInteger(state.soul) ||
       state.soul < 0 ||
@@ -479,7 +486,13 @@ export class CharacterProgression {
       vocation: this.vocation,
       definitionVersion: this.definitionVersion,
       level: this.currentLevel,
+      wheel: this.wheelModifier,
     });
+  }
+
+  setWheelModifier(modifier: DerivedStatModifier): void {
+    this.wheelModifier = modifier;
+    this.currentMana = Math.min(this.currentMana, this.maxMana);
   }
 
   private addSkillTries(skill: Skill, amount: number): boolean {

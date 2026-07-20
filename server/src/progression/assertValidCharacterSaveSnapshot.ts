@@ -55,6 +55,7 @@ export function assertValidCharacterSaveSnapshot(
     vocation: snapshot.vocation,
     definitionVersion: snapshot.progressionDefinitionVersion,
     level: snapshot.level,
+    wheel: snapshot.wheelBonus,
   });
   if (
     !Number.isInteger(snapshot.health) ||

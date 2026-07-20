@@ -47,6 +47,10 @@ import {
   highscoresStateMessageSchema,
 } from "./highscores";
 import {
+  wheelActionFailedMessageSchema,
+  wheelStateMessageSchema,
+} from "./wheel";
+import {
   guildActionFailedMessageSchema,
   guildChatDeliveredMessageSchema,
   guildEventMessageSchema,
@@ -436,6 +440,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   bosstiaryStateMessageSchema,
   bestiaryEntryChangedMessageSchema,
   bestiaryActionFailedMessageSchema,
+  wheelStateMessageSchema,
+  wheelActionFailedMessageSchema,
   reportReceivedMessageSchema,
   reportActionFailedMessageSchema,
   creatureSpokeMessageSchema,

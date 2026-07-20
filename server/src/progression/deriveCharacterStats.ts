@@ -25,6 +25,7 @@ export function deriveCharacterStats(options: {
   level: number;
   equipment?: ReadonlyArray<DerivedStatModifier>;
   conditions?: ReadonlyArray<DerivedStatModifier>;
+  wheel?: DerivedStatModifier;
 }): DerivedCharacterStats {
   if (!Number.isInteger(options.level) || options.level < 1) {
     throw new Error("character level is out of range");
@@ -36,6 +37,7 @@ export function deriveCharacterStats(options: {
   const modifiers = [
     ...(options.equipment ?? []),
     ...(options.conditions ?? []),
+    ...(options.wheel ? [options.wheel] : []),
   ];
   const bonus = modifiers.reduce<Required<DerivedStatModifier>>(
     (total, modifier) => ({

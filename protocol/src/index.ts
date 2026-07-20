@@ -27,5 +27,8 @@ export * from "./shop";
 export * from "./trade";
 export * from "./uiSettings";
 export * from "./viewRange";
+export * from "./wheel";
+export * from "./wheelBonuses";
+export * from "./wheelValidation";
 export * from "./clientMessages";
 export * from "./serverMessages";

@@ -275,6 +275,7 @@ export class CharacterPersistence {
       skull: player.skull,
       skullExpiresAt:
         player.skullExpiresAt === null ? null : new Date(player.skullExpiresAt),
+      wheelBonus: player.wheelStatModifier,
     };
   }
 

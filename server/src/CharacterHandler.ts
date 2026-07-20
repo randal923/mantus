@@ -1,8 +1,10 @@
-import type {
-  CreateCharacterMessage,
-  ListCharactersMessage,
-  SelectCharacterMessage,
-  ServerErrorCode,
+import {
+  computeWheelBonuses,
+  type CreateCharacterMessage,
+  type ListCharactersMessage,
+  type SelectCharacterMessage,
+  type ServerErrorCode,
+  type WheelBonuses,
 } from "@tibia/protocol";
 import type { BestiaryTracker } from "./bestiary/BestiaryTracker";
 import type { Character } from "./character/Character";
@@ -28,6 +30,7 @@ import type { ModerationService } from "./moderation/ModerationService";
 import type { PvpTracker } from "./pvp/PvpTracker";
 import type { PvpKillRecord } from "./pvp/PvpStore";
 import type { VipService } from "./social/VipService";
+import type { WheelTracker } from "./wheel/WheelTracker";
 
 export class CharacterHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -47,6 +50,7 @@ export class CharacterHandler {
     private readonly vips: VipService,
     private readonly moderation: ModerationService,
     private readonly bestiary: BestiaryTracker,
+    private readonly wheel: WheelTracker,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -171,6 +175,10 @@ export class CharacterHandler {
         accountId,
         characterId,
       );
+      const wheelSlices = character ? await this.wheel.load(character.id) : [];
+      const wheelBonuses = character
+        ? computeWheelBonuses(wheelSlices, character.vocation)
+        : null;
       const inventory = character
         ? await this.items.load(
             character.id,
@@ -178,6 +186,7 @@ export class CharacterHandler {
               vocation: character.vocation,
               definitionVersion: character.progressionDefinitionVersion,
               level: character.level,
+              wheel: wheelBonuses ?? undefined,
             }).capacity,
           )
         : null;
@@ -211,6 +220,8 @@ export class CharacterHandler {
           depot,
           pvpFrags,
           bestiaryKills,
+          wheelSlices,
+          wheelBonuses ?? computeWheelBonuses([], character.vocation),
         );
       });
     } catch (cause) {
@@ -225,6 +236,8 @@ export class CharacterHandler {
     loadedDepot: LoadedDepot | null,
     pvpFrags: ReadonlyArray<PvpKillRecord>,
     bestiaryKills: ReadonlyMap<number, number>,
+    wheelSlices: ReadonlyArray<number>,
+    wheelBonuses: WheelBonuses,
   ): void {
     if (session.playerId) {
       session.sendError("already-joined");
@@ -244,7 +257,13 @@ export class CharacterHandler {
     const account = session.account;
     if (!account) return;
     const accountStatus = getAccountStatus(account, now);
-    const player = new Player(character, spawn, now, account.premiumUntil);
+    const player = new Player(
+      character,
+      spawn,
+      now,
+      account.premiumUntil,
+      wheelBonuses,
+    );
     this.persistence.track(player, now);
     this.world.addPlayer(player);
     if (
@@ -263,6 +282,7 @@ export class CharacterHandler {
     this.vips.attachCharacter(session, player.id);
     this.moderation.attachCharacter(player.id);
     this.bestiary.attach(player.id, bestiaryKills);
+    this.wheel.attach(player.id, wheelSlices);
     // Attach before the spawn announcement so viewers already receive the
     // correct (possibly restored) persistent skull in the creature state.
     this.pvp.attach(player, pvpFrags, now);
