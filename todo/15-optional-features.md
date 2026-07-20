@@ -38,6 +38,19 @@ scope.
   with exact persistence and abuse-safe timing.
 - [ ] Bestiary, bosstiary, charms, prey, hunting tasks, boosted creatures/
   bosses, trackers, and their combat/loot/experience modifiers.
+  - [x] Bestiary + bosstiary core: per-player kill tracking
+    (`character_bestiary_kills`), stage-gated detail projections, per-kill
+    entry-changed pushes, navbar modals with animated sprites — one searchable
+    list preloaded at login, category headers as non-clickable dividers
+    (`server/src/bestiary/`, `client/components/bestiary/`,
+    `content/monsters/bestiary.json` via `yarn bestiary:import`). Remaining
+    from this line: charms (points are earned/displayed but unspendable),
+    prey, hunting tasks, boosted creatures/bosses, kill trackers, boss
+    slots/loot bonus. Accepted limitations: kill credit = damage participants
+    + last hit (Canary also credits no-damage party members under shared exp);
+    `bestiary-action-failed` is routed to both modals' sessions client-side;
+    opening two creature sheets within the 300ms request cooldown surfaces a
+    transient rate-limit error instead of queueing.
 - [ ] Imbuements, item classification/tiering, Exaltation Forge, forge history,
   dust/slivers/cores, influenced/fiendish monsters, and all atomic resource
   conversions.

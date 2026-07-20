@@ -564,6 +564,18 @@ export class GameClient {
     });
   }
 
+  requestBestiaryCreatures(): boolean {
+    return this.send({ type: "bestiary-creatures-get" });
+  }
+
+  requestBestiaryMonster(raceId: number): boolean {
+    return this.send({ type: "bestiary-monster-get", raceId });
+  }
+
+  requestBosstiary(): boolean {
+    return this.send({ type: "bosstiary-get" });
+  }
+
   requestHighscores(
     category: HighscoreCategory,
     vocation: CharacterVocation | undefined,

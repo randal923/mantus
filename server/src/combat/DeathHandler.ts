@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { BestiaryHooks } from "../bestiary/BestiaryHooks";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { GuildHooks } from "../guild/GuildHooks";
@@ -31,6 +32,7 @@ export class DeathHandler {
     private readonly pvpHooks?: PvpHooks,
     private readonly experienceRate = 1,
     private readonly lootRate = 1,
+    private readonly bestiaryHooks?: BestiaryHooks,
   ) {}
 
   handleDeath(
@@ -100,6 +102,15 @@ export class DeathHandler {
             this.visibility.sendExperienceText(killerId, target, experience);
           }
         }
+      }
+      // Bestiary credit follows Canary: every damage participant counts,
+      // not just the last hit; only players still online are credited.
+      const damagers = new Set(
+        target.damagerIds().filter((id) => this.world.getPlayer(id)),
+      );
+      if (killerId && this.world.getPlayer(killerId)) damagers.add(killerId);
+      if (damagers.size > 0) {
+        this.bestiaryHooks?.onMonsterKilled([...damagers], target, now);
       }
       createMonsterCorpse(
         this.world,

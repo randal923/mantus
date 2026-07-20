@@ -21,6 +21,7 @@
     "npcs:import": "node tools/importCanaryNpcs.mjs && node tools/buildNpcShopCategories.mjs",
     "npcs:shop-categories": "node tools/buildNpcShopCategories.mjs",
     "spells:import": "node tools/importCanarySpells.mjs",
+    "bestiary:import": "node tools/importCanaryBestiary.mjs",
     "parity:inventory": "node tools/buildCanaryParityInventory.mjs",
     "parity:check": "node tools/verifyCanaryParityInventory.mjs",
     "character:set-level": "node --env-file-if-exists=.env tools/setCharacterLevel.mjs",

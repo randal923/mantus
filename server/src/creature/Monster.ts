@@ -57,6 +57,10 @@ export class Monster extends Creature {
     return this.playerDamage.get(playerId) ?? 0;
   }
 
+  damagerIds(): string[] {
+    return [...this.playerDamage.keys()];
+  }
+
   topDamagerId(): string | null {
     return (
       [...this.playerDamage.entries()].sort(

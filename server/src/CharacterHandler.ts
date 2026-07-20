@@ -4,6 +4,7 @@ import type {
   SelectCharacterMessage,
   ServerErrorCode,
 } from "@tibia/protocol";
+import type { BestiaryTracker } from "./bestiary/BestiaryTracker";
 import type { Character } from "./character/Character";
 import { CharacterError } from "./character/CharacterError";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
@@ -45,6 +46,7 @@ export class CharacterHandler {
     private readonly pvp: PvpTracker,
     private readonly vips: VipService,
     private readonly moderation: ModerationService,
+    private readonly bestiary: BestiaryTracker,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -181,6 +183,9 @@ export class CharacterHandler {
         : null;
       const depot = character ? await this.depot.load(character.id) : null;
       const pvpFrags = character ? await this.pvp.load(character.id) : [];
+      const bestiaryKills = character
+        ? await this.bestiary.load(character.id)
+        : new Map<number, number>();
       this.outcomes.push(() => {
         if (!this.isCurrentOperation(session, accountId)) return;
         if (!character) {
@@ -199,7 +204,14 @@ export class CharacterHandler {
           session.sendError("character-load-failed");
           return;
         }
-        this.enterWorld(session, character, inventory, depot, pvpFrags);
+        this.enterWorld(
+          session,
+          character,
+          inventory,
+          depot,
+          pvpFrags,
+          bestiaryKills,
+        );
       });
     } catch (cause) {
       this.queueFailure(session, accountId, "character-load-failed", cause);
@@ -212,6 +224,7 @@ export class CharacterHandler {
     loadedInventory: LoadedInventory,
     loadedDepot: LoadedDepot | null,
     pvpFrags: ReadonlyArray<PvpKillRecord>,
+    bestiaryKills: ReadonlyMap<number, number>,
   ): void {
     if (session.playerId) {
       session.sendError("already-joined");
@@ -249,6 +262,7 @@ export class CharacterHandler {
     this.guilds.attachCharacter(session, player.id);
     this.vips.attachCharacter(session, player.id);
     this.moderation.attachCharacter(player.id);
+    this.bestiary.attach(player.id, bestiaryKills);
     // Attach before the spawn announcement so viewers already receive the
     // correct (possibly restored) persistent skull in the creature state.
     this.pvp.attach(player, pvpFrags, now);

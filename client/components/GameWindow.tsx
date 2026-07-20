@@ -32,6 +32,8 @@ import { useAppTranslation } from "../i18n/useAppTranslation";
 import { useHotkeys } from "../hooks/useHotkeys";
 import { useDepotSession } from "../hooks/useDepotSession";
 import { useGuildSession } from "../hooks/useGuildSession";
+import { useBestiarySession } from "../hooks/useBestiarySession";
+import { useBosstiarySession } from "../hooks/useBosstiarySession";
 import { useHighscoresSession } from "../hooks/useHighscoresSession";
 import { useHouseSession } from "../hooks/useHouseSession";
 import { useMarketSession } from "../hooks/useMarketSession";
@@ -53,6 +55,7 @@ import {
   SYSTEM_CHANNEL_ID,
 } from "../lib/chat/chatReducer";
 import { formatChatTime } from "../lib/chat/formatChatTime";
+import { warmOutfitAnimationCache } from "../lib/render/warmOutfitAnimationCache";
 import { parseChatInput } from "../lib/chat/parseChatInput";
 import { sanitizeChatText } from "../lib/chat/sanitizeChatText";
 import { toChatMessage } from "../lib/chat/toChatMessage";
@@ -92,6 +95,8 @@ import { AuctionHouseModal } from "./auction/AuctionHouseModal";
 import { TradePanel } from "./trade/TradePanel";
 import { GuildModal } from "./guild/GuildModal";
 import { HouseModal } from "./house/HouseModal";
+import { BestiaryModal } from "./bestiary/BestiaryModal";
+import { BosstiaryModal } from "./bestiary/BosstiaryModal";
 import { HighscoresModal } from "./social/HighscoresModal";
 import { ReportPlayerModal } from "./social/ReportPlayerModal";
 import { VipPanel } from "./social/VipPanel";
@@ -418,6 +423,25 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     reset: resetHighscores,
   } = useHighscoresSession();
   const [highscoresOpen, setHighscoresOpen] = useState(false);
+  const {
+    state: bestiarySession,
+    creaturesReceived: confirmBestiaryCreatures,
+    monsterReceived: confirmBestiaryMonster,
+    entryChanged: bestiaryEntryChanged,
+    begin: beginBestiary,
+    fail: failBestiary,
+    reset: resetBestiary,
+  } = useBestiarySession();
+  const [bestiaryOpen, setBestiaryOpen] = useState(false);
+  const {
+    state: bosstiarySession,
+    stateReceived: confirmBosstiaryState,
+    entryChanged: bosstiaryEntryChanged,
+    begin: beginBosstiary,
+    fail: failBosstiary,
+    reset: resetBosstiary,
+  } = useBosstiarySession();
+  const [bosstiaryOpen, setBosstiaryOpen] = useState(false);
   const [reportSession, setReportSession] =
     useState<ReportSessionState | null>(null);
   const [houseToast, setHouseToast] = useState<{
@@ -482,6 +506,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setVipToast(null);
     resetHighscores();
     setHighscoresOpen(false);
+    resetBestiary();
+    setBestiaryOpen(false);
+    resetBosstiary();
+    setBosstiaryOpen(false);
     setReportSession(null);
     setMailboxSession(null);
     setVisibleCreatures([]);
@@ -758,6 +786,17 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setVipToast(null);
             resetHighscores();
             setHighscoresOpen(false);
+            resetBestiary();
+            setBestiaryOpen(false);
+            resetBosstiary();
+            setBosstiaryOpen(false);
+            // Preload both codex projections (staggered past the shared
+            // request cooldown) so the navbar modals open instantly.
+            window.setTimeout(
+              () => clientRef.current?.requestBestiaryCreatures(),
+              100,
+            );
+            window.setTimeout(() => clientRef.current?.requestBosstiary(), 600);
             setReportSession(null);
             setMailboxSession(null);
             setLootSession(null);
@@ -1119,6 +1158,30 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             confirmHighscoresState(message);
             return;
           }
+          if (message.type === "bestiary-creatures-state") {
+            confirmBestiaryCreatures(message);
+            warmOutfitAnimationCache(message.entries.map((entry) => entry.outfit));
+            return;
+          }
+          if (message.type === "bestiary-monster-state") {
+            confirmBestiaryMonster(message);
+            return;
+          }
+          if (message.type === "bosstiary-state") {
+            confirmBosstiaryState(message);
+            warmOutfitAnimationCache(message.entries.map((entry) => entry.outfit));
+            return;
+          }
+          if (message.type === "bestiary-entry-changed") {
+            bestiaryEntryChanged(message);
+            bosstiaryEntryChanged(message);
+            return;
+          }
+          if (message.type === "bestiary-action-failed") {
+            failBestiary(message.reason);
+            failBosstiary(message.reason);
+            return;
+          }
           if (message.type === "highscores-action-failed") {
             failHighscores(message.reason);
             return;
@@ -1339,6 +1402,10 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setVipToast(null);
             resetHighscores();
             setHighscoresOpen(false);
+            resetBestiary();
+            setBestiaryOpen(false);
+            resetBosstiary();
+            setBosstiaryOpen(false);
             setReportSession(null);
           }
           if (nextStatus === "disconnected") setMailboxSession(null);
@@ -1504,6 +1571,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     confirmHighscoresState,
     failHighscores,
     resetHighscores,
+    confirmBestiaryCreatures,
+    confirmBestiaryMonster,
+    confirmBosstiaryState,
+    bestiaryEntryChanged,
+    bosstiaryEntryChanged,
+    failBestiary,
+    failBosstiary,
+    resetBestiary,
+    resetBosstiary,
   ]);
 
   return (
@@ -1569,11 +1645,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                       ? "house"
                       : highscoresOpen
                         ? "highscores"
-                        : characterStatsOpen
-                          ? "character"
-                          : inventoryOpen
-                            ? "inventory"
-                            : undefined
+                        : bestiaryOpen
+                          ? "bestiary"
+                          : bosstiaryOpen
+                            ? "bosstiary"
+                            : characterStatsOpen
+                              ? "character"
+                              : inventoryOpen
+                                ? "inventory"
+                                : undefined
               }
               onCharacter={() => {
                 setGameMenuOpen(false);
@@ -1627,6 +1707,34 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                         0,
                       ) ?? false;
                     beginHighscores(sent);
+                  }
+                  return !open;
+                });
+              }}
+              onBestiary={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(false);
+                setCharacterStatsOpen(false);
+                setBosstiaryOpen(false);
+                setBestiaryOpen((open) => {
+                  // Data is preloaded at login; only refetch if that failed.
+                  if (!open && !bestiarySession.creatures) {
+                    const sent =
+                      clientRef.current?.requestBestiaryCreatures() ?? false;
+                    beginBestiary(sent);
+                  }
+                  return !open;
+                });
+              }}
+              onBosstiary={() => {
+                setGameMenuOpen(false);
+                setInventoryOpen(false);
+                setCharacterStatsOpen(false);
+                setBestiaryOpen(false);
+                setBosstiaryOpen((open) => {
+                  if (!open && !bosstiarySession.bosses) {
+                    const sent = clientRef.current?.requestBosstiary() ?? false;
+                    beginBosstiary(sent);
                   }
                   return !open;
                 });
@@ -2309,6 +2417,28 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 beginHighscores(sent);
               }}
               onClose={() => setHighscoresOpen(false)}
+            />
+          )}
+          {bestiaryOpen && (
+            <BestiaryModal
+              creatures={bestiarySession.creatures}
+              monster={bestiarySession.monster}
+              pending={bestiarySession.pending}
+              error={bestiarySession.error}
+              onRequestMonster={(raceId) => {
+                const sent =
+                  clientRef.current?.requestBestiaryMonster(raceId) ?? false;
+                beginBestiary(sent);
+              }}
+              onClose={() => setBestiaryOpen(false)}
+            />
+          )}
+          {bosstiaryOpen && (
+            <BosstiaryModal
+              bosses={bosstiarySession.bosses}
+              pending={bosstiarySession.pending}
+              error={bosstiarySession.error}
+              onClose={() => setBosstiaryOpen(false)}
             />
           )}
           {reportSession && (

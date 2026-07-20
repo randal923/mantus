@@ -14,6 +14,8 @@ type NavigationPanel =
   | "guild"
   | "house"
   | "highscores"
+  | "bestiary"
+  | "bosstiary"
   | "market";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
@@ -43,6 +45,8 @@ interface TopNavigationBarProps {
   onGuild?: () => void;
   onHouse?: () => void;
   onHighscores?: () => void;
+  onBestiary?: () => void;
+  onBosstiary?: () => void;
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
   onMinimap: () => void;
@@ -70,6 +74,8 @@ export function TopNavigationBar({
   onGuild,
   onHouse,
   onHighscores,
+  onBestiary,
+  onBosstiary,
   onFightModeChange,
   onBattleList,
   onMinimap,
@@ -278,6 +284,48 @@ export function TopNavigationBar({
             <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
             <path d="M8 5.5H5.5A3.5 3.5 0 0 0 9 9M16 5.5h2.5A3.5 3.5 0 0 1 15 9" />
             <path d="M12 13v3.5M9 20.5h6M10 16.5h4v4h-4z" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.bestiary")}
+          active={activePanel === "bestiary"}
+          disabled={!onBestiary}
+          onClick={onBestiary}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M7 4.5 5 8l2.5 1.5L6 13l3 4 3 2.5 3-2.5 3-4-1.5-3.5L19 8l-2-3.5-3 2h-4z" />
+            <path d="M9.5 11h.01M14.5 11h.01M10.5 15.5h3" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.bosstiary")}
+          active={activePanel === "bosstiary"}
+          disabled={!onBosstiary}
+          onClick={onBosstiary}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 6.5 3.5 3l4 1.5a6.5 6.5 0 0 1 9 0l4-1.5L19 6.5a7 7 0 0 1-1 8.5l-6 5.5-6-5.5a7 7 0 0 1-1-8.5z" />
+            <path d="M9 10.5h.01M15 10.5h.01M10 15l2-1 2 1" />
           </svg>
         </NavigationIconButton>
 

@@ -51,6 +51,11 @@ import {
   guildSetNickMessageSchema,
   guildSetRankNameMessageSchema,
 } from "./guild";
+import {
+  bestiaryCreaturesGetMessageSchema,
+  bestiaryMonsterGetMessageSchema,
+  bosstiaryGetMessageSchema,
+} from "./bestiary";
 import { highscoresGetMessageSchema } from "./highscores";
 import {
   houseAbandonMessageSchema,
@@ -470,6 +475,9 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   vipRemoveMessageSchema,
   vipEditMessageSchema,
   highscoresGetMessageSchema,
+  bestiaryCreaturesGetMessageSchema,
+  bestiaryMonsterGetMessageSchema,
+  bosstiaryGetMessageSchema,
   reportPlayerMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,

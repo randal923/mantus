@@ -229,7 +229,9 @@
     "settings": "Settings",
     "guild": "Guild",
     "house": "House",
-    "highscores": "Highscores"
+    "highscores": "Highscores",
+    "bestiary": "Bestiary",
+    "bosstiary": "Bosstiary"
   },
   "connection": {
     "connecting": "Connecting",
@@ -1095,6 +1097,78 @@
       "rate-limited": "You are reporting too quickly. Try again later.",
       "target-not-found": "No character by that name exists.",
       "invalid-request": "The report could not be sent."
+    }
+  },
+  "bestiary": {
+    "title": "Bestiary",
+    "subtitle": "Hunt creatures to unlock their secrets.",
+    "back": "Back",
+    "loading": "Loading…",
+    "charmPoints": "Charm Points: {{points}}",
+    "knownOfTotal": "Known: {{known}} / {{total}}",
+    "unknown": "Unknown",
+    "stageOf": "Stage {{stage}} of 4",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} / {{total}}",
+    "totalKills": "Total kills",
+    "difficulty": "Difficulty",
+    "occurrence": "Occurrence",
+    "stats": "Stats",
+    "stat": {
+      "hitpoints": "Hitpoints",
+      "experience": "Experience",
+      "speed": "Speed",
+      "armor": "Armor",
+      "mitigation": "Mitigation",
+      "charmPoints": "Charm Points"
+    },
+    "resistances": "Sensitivity",
+    "element": {
+      "physical": "Physical",
+      "energy": "Energy",
+      "earth": "Earth",
+      "fire": "Fire",
+      "ice": "Ice",
+      "holy": "Holy",
+      "death": "Death",
+      "healing": "Healing"
+    },
+    "lockedSection": "Defeat more of these creatures to reveal this.",
+    "loot": "Loot",
+    "lootHidden": "Unknown drop",
+    "noLoot": "This creature drops no loot.",
+    "locations": "Locations",
+    "errors": {
+      "rate-limited": "Too many requests. Try again shortly.",
+      "unknown-race": "Unknown creature.",
+      "locked": "You have not discovered this creature yet.",
+      "unavailable": "The bestiary is unavailable right now."
+    },
+    "searchPlaceholder": "Search creatures…",
+    "noResults": "No creatures match your search.",
+    "nextUnlock": "{{current}} / {{kills}} kills to next unlock",
+    "completed": "Completed",
+    "rarity": {
+      "common": "Common",
+      "uncommon": "Uncommon",
+      "semiRare": "Semi-Rare",
+      "rare": "Rare",
+      "veryRare": "Very Rare"
+    }
+  },
+  "bosstiary": {
+    "title": "Bosstiary",
+    "subtitle": "Defeat bosses to earn boss points.",
+    "bossPoints": "Boss Points: {{points}}",
+    "unknown": "Unknown",
+    "milestones": "Milestones",
+    "kills": "{{kills}} kills",
+    "empty": "No bosses discovered in this world.",
+    "category": {
+      "bane": "Bane",
+      "archfoe": "Archfoe",
+      "nemesis": "Nemesis"
     }
   }
 }

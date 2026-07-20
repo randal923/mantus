@@ -1,17 +1,13 @@
 import type { CharacterOutfit } from "@tibia/protocol";
-import { AssetStore, type RGB } from "./AssetStore";
+import type { RGB } from "./AssetStore";
+import { getSharedAssetStore } from "./getSharedAssetStore";
 
-let storePromise: Promise<AssetStore> | null = null;
 const PORTRAIT_PADDING = 2;
 
 export async function getOutfitPortraitCanvas(
   outfitState: CharacterOutfit,
 ): Promise<HTMLCanvasElement> {
-  storePromise ??= (() => {
-    const store = new AssetStore();
-    return store.load().then(() => store);
-  })();
-  const store = await storePromise;
+  const store = await getSharedAssetStore();
   const outfit = store.outfit(outfitState.lookType);
   const pattern = { x: 2, phase: 0 } as const;
   const spriteIds: number[] = [];

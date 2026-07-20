@@ -2,6 +2,7 @@ export * from "./direction";
 export * from "./account";
 export * from "./actionBar";
 export * from "./bank";
+export * from "./bestiary";
 export * from "./character";
 export * from "./chat";
 export * from "./combat";

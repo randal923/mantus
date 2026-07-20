@@ -6,6 +6,7 @@ import type {
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { Monster } from "../creature/Monster";
 import type { MonsterAbility } from "../creature/MonsterType";
+import type { BestiaryHooks } from "../bestiary/BestiaryHooks";
 import type { GuildHooks } from "../guild/GuildHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
@@ -59,6 +60,7 @@ export class Combat {
     private readonly pvpHooks?: PvpHooks,
     experienceRate = 1,
     lootRate = 1,
+    bestiaryHooks?: BestiaryHooks,
   ) {
     this.spells = spells;
     const formula = new CombatFormula(seed);
@@ -78,6 +80,7 @@ export class Combat {
       pvpHooks,
       experienceRate,
       lootRate,
+      bestiaryHooks,
     );
     this.damage = new DamageResolver(
       world,

@@ -36,6 +36,13 @@ import {
 import { DIRECTIONS } from "./direction";
 import { gmResponseMessageSchema } from "./gm";
 import {
+  bestiaryActionFailedMessageSchema,
+  bestiaryCreaturesStateMessageSchema,
+  bestiaryEntryChangedMessageSchema,
+  bestiaryMonsterStateMessageSchema,
+  bosstiaryStateMessageSchema,
+} from "./bestiary";
+import {
   highscoresActionFailedMessageSchema,
   highscoresStateMessageSchema,
 } from "./highscores";
@@ -423,6 +430,11 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   vipActionFailedMessageSchema,
   highscoresStateMessageSchema,
   highscoresActionFailedMessageSchema,
+  bestiaryCreaturesStateMessageSchema,
+  bestiaryMonsterStateMessageSchema,
+  bosstiaryStateMessageSchema,
+  bestiaryEntryChangedMessageSchema,
+  bestiaryActionFailedMessageSchema,
   reportReceivedMessageSchema,
   reportActionFailedMessageSchema,
   creatureSpokeMessageSchema,

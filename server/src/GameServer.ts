@@ -53,6 +53,10 @@ import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
+import { BestiaryService } from "./bestiary/BestiaryService";
+import type { BestiaryStore } from "./bestiary/BestiaryStore";
+import { BestiaryTracker } from "./bestiary/BestiaryTracker";
+import { loadBestiaryCatalog } from "./bestiary/loadBestiaryCatalog";
 import { HighscoreService } from "./social/HighscoreService";
 import type { HighscoreStore } from "./social/HighscoreStore";
 import { VipService } from "./social/VipService";
@@ -81,6 +85,7 @@ export interface GameServerDeps {
   house?: HouseStore;
   vip?: VipStore;
   highscores?: HighscoreStore;
+  bestiary?: BestiaryStore;
   moderation?: ModerationStore;
   worldItemDeltas?: WorldItemDeltas;
 }
@@ -116,6 +121,8 @@ export class GameServer {
   private readonly houses: HouseService;
   private readonly vips: VipService;
   private readonly highscores: HighscoreService;
+  private readonly bestiary: BestiaryService;
+  private readonly bestiaryTracker: BestiaryTracker;
   private readonly moderation: ModerationService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
@@ -192,6 +199,24 @@ export class GameServer {
     this.moderation = new ModerationService(this.registry, deps.moderation);
     this.vips = new VipService(this.world, this.registry, deps.vip);
     this.highscores = new HighscoreService(this.world, deps.highscores);
+    const creatureContent =
+      config.creatures && config.map.source === "data"
+        ? loadCreatureContent(config.creatures.contentName, config.map.name)
+        : null;
+    const bestiaryCatalog = loadBestiaryCatalog(
+      creatureContent?.monsterTypes ?? new Map(),
+    );
+    this.bestiaryTracker = new BestiaryTracker(
+      bestiaryCatalog,
+      this.registry,
+      deps.bestiary,
+    );
+    this.bestiary = new BestiaryService(
+      this.world,
+      bestiaryCatalog,
+      this.bestiaryTracker,
+      this.items,
+    );
     this.guilds = new GuildService(
       this.world,
       this.registry,
@@ -231,6 +256,7 @@ export class GameServer {
       this.pvp,
       this.vips,
       this.moderation,
+      this.bestiaryTracker,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
@@ -247,10 +273,6 @@ export class GameServer {
       this.items,
       deps.npcTravel,
     );
-    const creatureContent =
-      config.creatures && config.map.source === "data"
-        ? loadCreatureContent(config.creatures.contentName, config.map.name)
-        : null;
     this.bank = new BankService(this.world, this.items, deps.bank);
     this.shops = new ShopService(
       this.world,
@@ -327,6 +349,7 @@ export class GameServer {
       this.pvp,
       config.rates.experience,
       config.rates.loot,
+      this.bestiaryTracker,
     );
     this.combat = new CombatIntentHandler(this.combatSystem);
     spawns =
@@ -483,6 +506,7 @@ export class GameServer {
         this.vips.detachCharacter(playerId);
         this.moderation.detachCharacter(playerId);
         this.pvp.detachCharacter(playerId);
+        this.bestiaryTracker.detachCharacter(playerId);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
         this.depot.detachCharacter(playerId);
@@ -497,6 +521,7 @@ export class GameServer {
       this.houses.detach(session);
       this.vips.detach(session);
       this.highscores.detach(session);
+      this.bestiary.detach(session);
       this.moderation.detach(session);
       this.items.detachSession(session);
       this.registry.remove(session);
@@ -663,6 +688,15 @@ export class GameServer {
       case "highscores-get":
         this.highscores.handle(session, intent, now);
         return;
+      case "bestiary-creatures-get":
+        this.bestiary.handleCreatures(session, now);
+        return;
+      case "bestiary-monster-get":
+        this.bestiary.handleMonster(session, intent, now);
+        return;
+      case "bosstiary-get":
+        this.bestiary.handleBosstiary(session, now);
+        return;
       case "report-player":
         this.moderation.handleReport(session, intent, now);
         return;
@@ -710,6 +744,7 @@ export class GameServer {
     await this.moderation.stop();
     this.moderation.applyResolvedOutcomes(Date.now());
     await this.pvp.stop();
+    await this.bestiaryTracker.stop();
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();

@@ -229,7 +229,9 @@
     "settings": "Configurações",
     "guild": "Guilda",
     "house": "Casa",
-    "highscores": "Recordes"
+    "highscores": "Recordes",
+    "bestiary": "Bestiário",
+    "bosstiary": "Bosstiário"
   },
   "connection": {
     "connecting": "Conectando",
@@ -1095,6 +1097,78 @@
       "rate-limited": "Você está denunciando rápido demais. Tente novamente mais tarde.",
       "target-not-found": "Não existe personagem com esse nome.",
       "invalid-request": "A denúncia não pôde ser enviada."
+    }
+  },
+  "bestiary": {
+    "title": "Bestiário",
+    "subtitle": "Cace criaturas para desvendar seus segredos.",
+    "back": "Voltar",
+    "loading": "Carregando…",
+    "charmPoints": "Pontos de Encanto: {{points}}",
+    "knownOfTotal": "Conhecidas: {{known}} / {{total}}",
+    "unknown": "Desconhecida",
+    "stageOf": "Estágio {{stage}} de 4",
+    "previous": "Anterior",
+    "next": "Próxima",
+    "pageOf": "Página {{page}} / {{total}}",
+    "totalKills": "Total de abates",
+    "difficulty": "Dificuldade",
+    "occurrence": "Ocorrência",
+    "stats": "Atributos",
+    "stat": {
+      "hitpoints": "Pontos de vida",
+      "experience": "Experiência",
+      "speed": "Velocidade",
+      "armor": "Armadura",
+      "mitigation": "Mitigação",
+      "charmPoints": "Pontos de Encanto"
+    },
+    "resistances": "Sensibilidade",
+    "element": {
+      "physical": "Físico",
+      "energy": "Energia",
+      "earth": "Terra",
+      "fire": "Fogo",
+      "ice": "Gelo",
+      "holy": "Sagrado",
+      "death": "Morte",
+      "healing": "Cura"
+    },
+    "lockedSection": "Derrote mais dessas criaturas para revelar isto.",
+    "loot": "Espólios",
+    "lootHidden": "Item desconhecido",
+    "noLoot": "Esta criatura não deixa espólios.",
+    "locations": "Localizações",
+    "errors": {
+      "rate-limited": "Muitas solicitações. Tente novamente em instantes.",
+      "unknown-race": "Criatura desconhecida.",
+      "locked": "Você ainda não descobriu esta criatura.",
+      "unavailable": "O bestiário está indisponível no momento."
+    },
+    "searchPlaceholder": "Buscar criaturas…",
+    "noResults": "Nenhuma criatura corresponde à sua busca.",
+    "nextUnlock": "{{current}} / {{kills}} abates para o próximo desbloqueio",
+    "completed": "Concluído",
+    "rarity": {
+      "common": "Comum",
+      "uncommon": "Incomum",
+      "semiRare": "Semirraro",
+      "rare": "Raro",
+      "veryRare": "Muito raro"
+    }
+  },
+  "bosstiary": {
+    "title": "Bosstiário",
+    "subtitle": "Derrote chefes para ganhar pontos de chefe.",
+    "bossPoints": "Pontos de Chefe: {{points}}",
+    "unknown": "Desconhecido",
+    "milestones": "Marcos",
+    "kills": "{{kills}} abates",
+    "empty": "Nenhum chefe descoberto neste mundo.",
+    "category": {
+      "bane": "Bane",
+      "archfoe": "Archfoe",
+      "nemesis": "Nemesis"
     }
   }
 }
