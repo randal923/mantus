@@ -242,9 +242,13 @@ export class HouseService {
 
   private browse(session: Session, intent: HouseBrowseMessage): void {
     const entries: HouseListEntry[] = [];
+    const towns = new Map<number, string | undefined>();
     for (const info of this.content.values()) {
-      if (intent.townId !== undefined && info.townId !== intent.townId) continue;
       const townName = this.world.townName(info.townId);
+      if (!towns.has(info.townId) || townName) {
+        towns.set(info.townId, townName);
+      }
+      if (intent.townId !== undefined && info.townId !== intent.townId) continue;
       entries.push({
         houseId: info.houseId,
         name: info.name,
@@ -265,6 +269,13 @@ export class HouseService {
         page * HOUSE_LIMITS.listPageSize,
         (page + 1) * HOUSE_LIMITS.listPageSize,
       ),
+      towns: [...towns.entries()]
+        .sort(([left], [right]) => left - right)
+        .slice(0, HOUSE_LIMITS.maxTownCount)
+        .map(([townId, townName]) => ({
+          townId,
+          ...(townName ? { townName } : {}),
+        })),
       page,
       totalPages,
       ...(intent.townId !== undefined ? { townId: intent.townId } : {}),

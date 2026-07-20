@@ -17,7 +17,7 @@ export interface MinimapDrawInput {
   pixelsPerTile: number;
   creatures: ReadonlyArray<CreatureState>;
   ownPlayerId: string;
-  ownPosition: Position;
+  ownPosition: Position | null;
 }
 
 /** Unexplored/absent terrain is black, like the classic automap. */
@@ -107,7 +107,7 @@ export function drawMinimap(input: MinimapDrawInput): MinimapMarker[] {
     markers.push({ x, y, creature });
   }
 
-  if (input.ownPosition.z === floor) {
+  if (input.ownPosition?.z === floor) {
     const x = (input.ownPosition.x + 0.5 - left) * pixelsPerTile;
     const y = (input.ownPosition.y + 0.5 - top) * pixelsPerTile;
     ctx.beginPath();

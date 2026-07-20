@@ -73,6 +73,19 @@ const CONTENT: ReadonlyMap<number, HouseInfo> = new Map([
       beds: 10,
     },
   ],
+  [
+    4,
+    {
+      houseId: 4,
+      name: "Harbour Flat",
+      entry: { x: 80, y: 50, z: 7 },
+      rent: 2_000,
+      townId: 9,
+      size: 15,
+      guildhall: false,
+      beds: 1,
+    },
+  ],
 ]);
 
 interface TestPlayer {
@@ -112,6 +125,8 @@ function makeHarness(): Harness {
     ...base,
     getHouseId: (position) => tileToHouse.get(positionKey(position)),
     getHouseTiles: (houseId) => HOUSE_TILES.get(houseId),
+    getTownName: (townId) =>
+      townId === 8 ? "Thais" : townId === 9 ? "Venore" : undefined,
   };
   const world = new World(map, 25);
   const sessions = new Map<string, Session>();
@@ -629,6 +644,11 @@ describe("HouseService", () => {
     );
     const list = messagesOf(stranger, "house-list").at(-1);
     expect(list?.entries).toHaveLength(3);
+    expect(list?.entries.every((entry) => entry.townId === 8)).toBe(true);
+    expect(list?.towns).toEqual([
+      { townId: 8, townName: "Thais" },
+      { townId: 9, townName: "Venore" },
+    ]);
     expect(
       list?.entries.find((entry) => entry.houseId === 1)?.ownerName,
     ).toBe("Alice");

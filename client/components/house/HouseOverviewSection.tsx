@@ -4,9 +4,11 @@ import { useState } from "react";
 import type { HouseState } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
+import { HouseLocationMap } from "./HouseLocationMap";
 
 interface HouseOverviewSectionProps {
   house: HouseState;
+  mapName: string | null;
   pending: boolean;
   onBuy: (houseId: number) => void;
   onAbandon: () => void;
@@ -19,6 +21,7 @@ interface HouseOverviewSectionProps {
  */
 export function HouseOverviewSection({
   house,
+  mapName,
   pending,
   onBuy,
   onAbandon,
@@ -29,13 +32,13 @@ export function HouseOverviewSection({
   const isOwner = house.myAccess === "owner";
   const rows: Array<[string, string]> = [
     [t("house.size"), t("house.sqm", { count: house.size })],
-    [t("house.rent"), t("house.gold", { amount: house.rent.toLocaleString(locale) })],
+    [
+      t("house.rent"),
+      t("house.gold", { amount: house.rent.toLocaleString(locale) }),
+    ],
     [t("house.town"), house.townName ?? String(house.townId)],
     [t("house.beds"), String(house.beds)],
-    [
-      t("house.owner"),
-      house.ownerName ?? t("house.unowned"),
-    ],
+    [t("house.owner"), house.ownerName ?? t("house.unowned")],
   ];
   return (
     <section className="flex flex-col gap-3">
@@ -60,6 +63,9 @@ export function HouseOverviewSection({
           </div>
         )}
       </dl>
+      {mapName && (
+        <HouseLocationMap mapName={mapName} position={house.entry} />
+      )}
       {house.guildhall && (
         <p className="text-xs text-ui-gold">{t("house.guildhallNote")}</p>
       )}

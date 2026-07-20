@@ -14,6 +14,7 @@ type HouseTab = "house" | "browse";
 
 interface HouseModalProps {
   session: HouseSessionState;
+  mapName: string | null;
   error: string | null;
   onClose: () => void;
   onBuy: (houseId: number) => void;
@@ -38,6 +39,7 @@ interface HouseModalProps {
  */
 export function HouseModal({
   session,
+  mapName,
   error,
   onClose,
   onBuy,
@@ -51,12 +53,12 @@ export function HouseModal({
   onOpenHouse,
 }: HouseModalProps) {
   const { t } = useAppTranslation();
-  const [tab, setTab] = useState<HouseTab>("house");
+  const [tab, setTab] = useState<HouseTab>("browse");
   const house = session.house;
   const canManage =
     house !== null &&
     (house.myAccess === "owner" || house.myAccess === "subowner");
-  const tabs: ReadonlyArray<HouseTab> = ["house", "browse"];
+  const tabs: ReadonlyArray<HouseTab> = ["browse", "house"];
 
   return (
     <Modal
@@ -95,6 +97,7 @@ export function HouseModal({
             <>
               <HouseOverviewSection
                 house={house}
+                mapName={mapName}
                 pending={session.pending}
                 onBuy={onBuy}
                 onAbandon={onAbandon}

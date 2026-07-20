@@ -25,18 +25,16 @@ export function HouseBrowserSection({
   const { t, i18n } = useAppTranslation();
   const [town, setTown] = useState<string>(ALL_TOWNS);
   const townOptions = useMemo(() => {
-    const towns = new Map<string, string>();
-    for (const entry of list?.entries ?? []) {
-      towns.set(String(entry.townId), entry.townName ?? String(entry.townId));
-    }
-    if (town !== ALL_TOWNS && !towns.has(town)) towns.set(town, town);
     return [
       { value: ALL_TOWNS, label: t("house.allTowns") },
-      ...[...towns.entries()]
-        .sort((a, b) => a[1].localeCompare(b[1]))
-        .map(([value, label]) => ({ value, label })),
+      ...(list?.towns ?? [])
+        .map(({ townId, townName }) => ({
+          value: String(townId),
+          label: townName ?? String(townId),
+        }))
+        .sort((left, right) => left.label.localeCompare(right.label)),
     ];
-  }, [list, town, t]);
+  }, [list, t]);
   const townId = town === ALL_TOWNS ? undefined : Number(town);
   return (
     <section className="flex flex-col gap-3">

@@ -18,6 +18,8 @@ export const HOUSE_LIMITS = {
   maxAccessEntries: 100,
   /** Rows per house-list page. */
   listPageSize: 50,
+  /** Distinct house towns returned with every browsed page. */
+  maxTownCount: 256,
   /** Transfers move at most one bank transaction of gold. */
   maxTransferPrice: BANK_LIMITS.maxTransactionAmount,
   maxHouseNameLength: 100,
@@ -193,10 +195,18 @@ export const houseListEntrySchema = z
   })
   .strict();
 
+export const houseTownSchema = z
+  .object({
+    townId: houseTownIdSchema,
+    townName: z.string().max(64).optional(),
+  })
+  .strict();
+
 export const houseListMessageSchema = z
   .object({
     type: z.literal("house-list"),
     entries: z.array(houseListEntrySchema).max(HOUSE_LIMITS.listPageSize),
+    towns: z.array(houseTownSchema).max(HOUSE_LIMITS.maxTownCount),
     page: z.number().int().min(0).max(10_000),
     totalPages: z.number().int().min(0).max(10_001),
     townId: houseTownIdSchema.optional(),
@@ -283,6 +293,7 @@ export type HousePendingTransfer = z.infer<typeof housePendingTransferSchema>;
 export type HouseState = z.infer<typeof houseStateSchema>;
 export type HouseStateMessage = z.infer<typeof houseStateMessageSchema>;
 export type HouseListEntry = z.infer<typeof houseListEntrySchema>;
+export type HouseTown = z.infer<typeof houseTownSchema>;
 export type HouseListMessage = z.infer<typeof houseListMessageSchema>;
 export type HouseTransferIncomingMessage = z.infer<
   typeof houseTransferIncomingMessageSchema

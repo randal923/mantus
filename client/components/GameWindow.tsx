@@ -562,7 +562,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     if (action === "toggleHouseModal") {
       if (gameMenuOpen) return;
       setHouseModalOpen((open) => {
-        if (!open) clientRef.current?.openHouse();
+        if (!open) {
+          clientRef.current?.openHouse();
+          if (!houseSession.list) {
+            clientRef.current?.browseHouses(undefined, 0);
+          }
+        }
         return !open;
       });
       return;
@@ -790,8 +795,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setBestiaryOpen(false);
             resetBosstiary();
             setBosstiaryOpen(false);
-            // Preload both codex projections (staggered past the shared
-            // request cooldown) so the navbar modals open instantly.
+            // Preload the house browser and both codex projections so the
+            // navbar modals open with their first view ready.
+            window.setTimeout(
+              () => clientRef.current?.browseHouses(undefined, 0),
+              50,
+            );
             window.setTimeout(
               () => clientRef.current?.requestBestiaryCreatures(),
               100,
@@ -1690,7 +1699,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 setCharacterStatsOpen(false);
                 setGuildModalOpen(false);
                 setHouseModalOpen((open) => {
-                  if (!open) clientRef.current?.openHouse();
+                  if (!open) {
+                    clientRef.current?.openHouse();
+                    if (!houseSession.list) {
+                      clientRef.current?.browseHouses(undefined, 0);
+                    }
+                  }
                   return !open;
                 });
               }}
@@ -2343,6 +2357,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                 clientRef.current?.browseHouses(townId, page)
               }
               onOpenHouse={(houseId) => clientRef.current?.openHouse(houseId)}
+              mapName={mapName}
             />
           )}
           {partySession.invitation && (

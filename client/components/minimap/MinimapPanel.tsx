@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { CreatureState, MinimapLayout, Position } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -75,8 +75,14 @@ export function MinimapPanel({
   const markersRef = useRef<MinimapMarker[]>([]);
   const dragRef = useRef<MinimapDrag | null>(null);
   const panelDragRef = useRef<PanelDrag | null>(null);
-  const [store, setStore] = useState<MinimapRegionStore | null>(null);
   const [regionVersion, setRegionVersion] = useState(0);
+  const store = useMemo(
+    () =>
+      new MinimapRegionStore(mapName, () =>
+        setRegionVersion((version) => version + 1),
+      ),
+    [mapName],
+  );
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [viewFloor, setViewFloor] = useState<number | null>(null);
   const [panCenter, setPanCenter] = useState<{ x: number; y: number } | null>(
@@ -86,20 +92,17 @@ export function MinimapPanel({
   const [shopCategories, setShopCategories] = useState<NpcShopCategories>({});
 
   const floor = viewFloor ?? ownPosition.z;
-  const center = panCenter ?? { x: ownPosition.x, y: ownPosition.y };
+  const centerX = panCenter?.x ?? ownPosition.x;
+  const centerY = panCenter?.y ?? ownPosition.y;
   const pixelsPerTile = ZOOM_LEVELS[zoomIndex] ?? 3;
   const detached = panCenter !== null || viewFloor !== null;
   const canvasWidth = layout?.width ?? DEFAULT_CANVAS_WIDTH;
   const canvasHeight = layout?.height ?? DEFAULT_CANVAS_HEIGHT;
 
   useEffect(() => {
-    const next = new MinimapRegionStore(mapName, () =>
-      setRegionVersion((version) => version + 1),
-    );
-    void next.load();
-    setStore(next);
-    return () => next.dispose();
-  }, [mapName]);
+    void store.load();
+    return () => store.dispose();
+  }, [store]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +123,7 @@ export function MinimapPanel({
     markersRef.current = drawMinimap({
       canvas,
       store,
-      center,
+      center: { x: centerX, y: centerY },
       floor,
       pixelsPerTile,
       creatures,
@@ -130,8 +133,8 @@ export function MinimapPanel({
   }, [
     store,
     regionVersion,
-    center.x,
-    center.y,
+    centerX,
+    centerY,
     floor,
     pixelsPerTile,
     creatures,
@@ -163,8 +166,8 @@ export function MinimapPanel({
       pointerId: event.pointerId,
       startClientX: event.clientX,
       startClientY: event.clientY,
-      centerX: center.x,
-      centerY: center.y,
+      centerX,
+      centerY,
       moved: false,
     };
   };
@@ -430,7 +433,7 @@ export function MinimapPanel({
       </div>
       <div className="mt-2 flex items-center justify-between pr-4 text-[10px] tracking-wide text-ui-muted">
         <span>
-          {Math.round(center.x)}, {Math.round(center.y)}, {floor}
+          {Math.round(centerX)}, {Math.round(centerY)}, {floor}
         </span>
         <span className="flex items-center gap-1.5 uppercase">
           <span

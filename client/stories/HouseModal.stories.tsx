@@ -60,6 +60,7 @@ const LIST: HouseListMessage = {
       ownerName: "Deceius",
     },
   ],
+  towns: [{ townId: 5, townName: "Ab'Dendriel" }],
   page: 0,
   totalPages: 1,
   townId: 5,
@@ -83,6 +84,7 @@ const meta = {
   component: HouseModal,
   parameters: { layout: "fullscreen" },
   args: {
+    mapName: "otservbr",
     error: null,
     ...handlers,
   },

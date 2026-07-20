@@ -26,19 +26,25 @@ export class MinimapRegionStore {
     private readonly onUpdate: () => void,
   ) {}
 
-  async load(): Promise<void> {
-    const response = await fetch(`/assets/map/${this.mapName}/manifest.json`);
-    if (!response.ok || this.disposed) return;
-    const manifest = (await response.json()) as MinimapManifest;
-    if (this.disposed) return;
-    this.regionSizeValue = manifest.regionSize;
-    for (const [z, regions] of Object.entries(manifest.regions)) {
-      this.available.set(
-        Number(z),
-        new Set(regions.map(([rx, ry]) => `${rx}.${ry}`)),
-      );
+  async load(): Promise<boolean> {
+    this.disposed = false;
+    try {
+      const response = await fetch(`/assets/map/${this.mapName}/manifest.json`);
+      if (!response.ok || this.disposed) return false;
+      const manifest = (await response.json()) as MinimapManifest;
+      if (this.disposed) return false;
+      this.regionSizeValue = manifest.regionSize;
+      for (const [z, regions] of Object.entries(manifest.regions)) {
+        this.available.set(
+          Number(z),
+          new Set(regions.map(([rx, ry]) => `${rx}.${ry}`)),
+        );
+      }
+      this.onUpdate();
+      return true;
+    } catch {
+      return false;
     }
-    this.onUpdate();
   }
 
   dispose(): void {

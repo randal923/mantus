@@ -10,6 +10,7 @@ interface RegionDraw {
 
 function stubCanvas(size: number) {
   const regionDraws: RegionDraw[] = [];
+  let arcCount = 0;
   const context = {
     setTransform: () => {},
     fillRect: () => {},
@@ -19,7 +20,9 @@ function stubCanvas(size: number) {
     moveTo: () => {},
     lineTo: () => {},
     closePath: () => {},
-    arc: () => {},
+    arc: () => {
+      arcCount += 1;
+    },
     fill: () => {},
     stroke: () => {},
     imageSmoothingEnabled: true,
@@ -33,7 +36,7 @@ function stubCanvas(size: number) {
     clientWidth: size,
     getContext: () => context,
   } as unknown as HTMLCanvasElement;
-  return { canvas, regionDraws };
+  return { canvas, regionDraws, arcCount: () => arcCount };
 }
 
 const store = {
@@ -104,5 +107,20 @@ describe("drawMinimap", () => {
       ownPosition,
     });
     expect(markers).toEqual([]);
+  });
+
+  it("can render terrain without an own-player marker", () => {
+    const { canvas, arcCount } = stubCanvas(200);
+    drawMinimap({
+      canvas,
+      store,
+      center: { x: ownPosition.x, y: ownPosition.y },
+      floor: 6,
+      pixelsPerTile: 4,
+      creatures: [],
+      ownPlayerId: "",
+      ownPosition: null,
+    });
+    expect(arcCount()).toBe(0);
   });
 });
