@@ -1,50 +1,83 @@
 "use client";
 
 import {
+  computeResonanceUnlocks,
   computeWheelBonuses,
   WHEEL_BASE_VOCATION,
   WHEEL_LIMITS,
   WHEEL_SLICES,
   type CharacterVocation,
+  type GemAction,
+  type GemActionFailedReason,
+  type GemStateMessage,
   type WheelActionFailedReason,
   type WheelStateMessage,
 } from "@tibia/protocol";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { trySetWheelSlice } from "../../lib/wheel/trySetWheelSlice";
 import { wheelBaseVocationKey } from "../../lib/wheel/wheelBaseVocationKey";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
+import { FragmentWorkshopTab } from "./FragmentWorkshopTab";
+import { GemAtelierTab } from "./GemAtelierTab";
 import { WheelCanvas } from "./WheelCanvas";
 import { WheelPerkSummary } from "./WheelPerkSummary";
 import { WheelSelectionPanel } from "./WheelSelectionPanel";
 
+type WheelTab = "wheel" | "atelier" | "workshop";
+
 interface WheelModalProps {
   wheel: WheelStateMessage | null;
+  gems: GemStateMessage | null;
   vocation: CharacterVocation;
   pending: boolean;
+  gemsPending: boolean;
   error: WheelActionFailedReason | null;
+  gemsError: GemActionFailedReason | null;
   onSave: (slices: ReadonlyArray<number>) => void;
+  onRequestGems: () => void;
+  onGemAction: (action: GemAction) => void;
   onClose: () => void;
 }
 
 const emptySlices = (): number[] =>
   new Array<number>(WHEEL_LIMITS.sliceCount).fill(0);
 
+function tabIcon(source: string): React.ReactNode {
+  return (
+    <Image
+      src={source}
+      alt=""
+      aria-hidden
+      width={24}
+      height={24}
+      className="h-6 w-6 object-contain [image-rendering:pixelated]"
+    />
+  );
+}
+
 /**
- * Wheel of Destiny window: the Tibia wheel in the center, allocation
- * controls on the left, live perk summary on the right. Edits are a local
- * draft; the server applies and re-validates on save.
+ * Wheel of Destiny window with three tabs: the wheel itself, the Gem
+ * Atelier, and the Fragment Workshop. Wheel edits are a local draft the
+ * server re-validates on save; gem actions apply immediately server-side.
  */
 export function WheelModal({
   wheel,
+  gems,
   vocation,
   pending,
+  gemsPending,
   error,
+  gemsError,
   onSave,
+  onRequestGems,
+  onGemAction,
   onClose,
 }: WheelModalProps) {
   const { t } = useAppTranslation();
+  const [tab, setTab] = useState<WheelTab>("wheel");
   const [draft, setDraft] = useState<number[]>(emptySlices);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -64,10 +97,20 @@ export function WheelModal({
   const allocated = draft.reduce((sum, points) => sum + points, 0);
   const available = Math.max(0, totalPoints - allocated);
 
+  const gemInputs = useMemo(() => {
+    if (!gems) return undefined;
+    const equipped = Object.values(gems.equipped)
+      .map((gemId) => gems.revealed.find((gem) => gem.id === gemId))
+      .filter((gem) => gem !== undefined);
+    return { equipped, grades: gems.grades };
+  }, [gems]);
+
   const bonuses = useMemo(
-    () => computeWheelBonuses(draft, vocation),
-    [draft, vocation],
+    () => computeWheelBonuses(draft, vocation, gemInputs),
+    [draft, vocation, gemInputs],
   );
+
+  const resonances = useMemo(() => computeResonanceUnlocks(draft), [draft]);
 
   const domainPoints = useMemo(() => {
     const totals = { green: 0, red: 0, blue: 0, purple: 0 };
@@ -135,96 +178,147 @@ export function WheelModal({
       title={t("wheel.title")}
       onClose={onClose}
       size="wide"
+      tabs={{
+        label: t("wheel.sections"),
+        selected: tab,
+        items: [
+          {
+            id: "wheel",
+            label: t("wheel.tabs.wheel"),
+            icon: tabIcon("/assets/wheel/icon-skillwheel-selection.png"),
+          },
+          {
+            id: "atelier",
+            label: t("wheel.tabs.atelier"),
+            icon: tabIcon("/assets/wheel/icon-gematelier.png"),
+          },
+          {
+            id: "workshop",
+            label: t("wheel.tabs.workshop"),
+            icon: tabIcon("/assets/wheel/icon-modgrade4.png"),
+          },
+        ],
+        onSelect: (id) => {
+          const next = id as WheelTab;
+          setTab(next);
+          if (next !== "wheel" && !gems && !gemsPending) onRequestGems();
+        },
+      }}
       footer={
-        <>
-          <span className="mr-auto self-center text-xs text-ui-muted">
-            {error && (
-              <span className="text-ui-accent-light">
-                {t(`wheel.errors.${error}`)}
-              </span>
-            )}
-          </span>
-          <Button
-            size="sm"
-            disabled={!editable || allocated === 0}
-            onClick={() => setDraft(emptySlices())}
-          >
-            {t("wheel.reset")}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            disabled={!editable || !dirty}
-            onClick={() => onSave(draft)}
-          >
-            {t("wheel.save")}
-          </Button>
-        </>
+        tab === "wheel" ? (
+          <>
+            <span className="mr-auto self-center text-xs text-ui-muted">
+              {error && (
+                <span className="text-ui-accent-light">
+                  {t(`wheel.errors.${error}`)}
+                </span>
+              )}
+            </span>
+            <Button
+              size="sm"
+              disabled={!editable || allocated === 0}
+              onClick={() => setDraft(emptySlices())}
+            >
+              {t("wheel.reset")}
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={!editable || !dirty}
+              onClick={() => onSave(draft)}
+            >
+              {t("wheel.save")}
+            </Button>
+          </>
+        ) : undefined
       }
     >
-      <div className="flex flex-wrap items-start justify-center gap-5 xl:flex-nowrap">
-        <div className="flex w-52 shrink-0 flex-col gap-4">
-          <section className="rounded border border-ui-gold/15 bg-black/25 p-3">
-            <h3 className="mb-1 font-display text-sm tracking-wide text-ui-text-bright">
-              {t("wheel.points.title")}
-            </h3>
-            <p className="text-center font-display text-lg text-ui-gold">
-              {available} / {totalPoints}
-            </p>
-            {!unlocked && (
-              <p className="mt-2 text-xs leading-5 text-ui-accent-light">
-                {t("wheel.locked", { level: WHEEL_LIMITS.minLevel })}
+      {tab === "wheel" && (
+        <div className="flex flex-wrap items-start justify-center gap-5 xl:flex-nowrap">
+          <div className="flex w-52 shrink-0 flex-col gap-4">
+            <section className="rounded border border-ui-gold/15 bg-black/25 p-3">
+              <h3 className="mb-1 font-display text-sm tracking-wide text-ui-text-bright">
+                {t("wheel.points.title")}
+              </h3>
+              <p className="text-center font-display text-lg text-ui-gold">
+                {available} / {totalPoints}
               </p>
-            )}
-          </section>
-          <section className="rounded border border-ui-gold/15 bg-black/25 p-3">
-            <h3 className="mb-2 font-display text-sm tracking-wide text-ui-text-bright">
-              {t("wheel.selection.title")}
-            </h3>
-            <WheelSelectionPanel
-              slice={infoSlice}
-              points={infoPoints}
-              baseVocation={baseVocation}
-              editable={editable && infoSlice?.id === selectedId}
-              canAdd={canAdd}
-              canRemove={canRemove}
-              onAddOne={() =>
-                selectedId !== null &&
-                applyChange(selectedId, selectedPoints + 1)
-              }
-              onAddMax={() => selectedId !== null && quickToggle(selectedId)}
-              onRemoveOne={() =>
-                selectedId !== null &&
-                applyChange(selectedId, selectedPoints - 1)
-              }
-              onClear={() => selectedId !== null && applyChange(selectedId, 0)}
-            />
-          </section>
-          <p className="px-1 text-[10px] leading-4 text-ui-muted">
-            {t("wheel.help")}
-          </p>
-        </div>
+              {!unlocked && (
+                <p className="mt-2 text-xs leading-5 text-ui-accent-light">
+                  {t("wheel.locked", { level: WHEEL_LIMITS.minLevel })}
+                </p>
+              )}
+            </section>
+            <section className="rounded border border-ui-gold/15 bg-black/25 p-3">
+              <h3 className="mb-2 font-display text-sm tracking-wide text-ui-text-bright">
+                {t("wheel.selection.title")}
+              </h3>
+              <WheelSelectionPanel
+                slice={infoSlice}
+                points={infoPoints}
+                baseVocation={baseVocation}
+                editable={editable && infoSlice?.id === selectedId}
+                canAdd={canAdd}
+                canRemove={canRemove}
+                onAddOne={() =>
+                  selectedId !== null &&
+                  applyChange(selectedId, selectedPoints + 1)
+                }
+                onAddMax={() => selectedId !== null && quickToggle(selectedId)}
+                onRemoveOne={() =>
+                  selectedId !== null &&
+                  applyChange(selectedId, selectedPoints - 1)
+                }
+                onClear={() =>
+                  selectedId !== null && applyChange(selectedId, 0)
+                }
+              />
+            </section>
+            <p className="px-1 text-[10px] leading-4 text-ui-muted">
+              {t("wheel.help")}
+            </p>
+          </div>
 
-        <WheelCanvas
-          vocation={vocationKey}
-          slices={draft}
-          unlockableIds={unlockableIds}
-          domainPoints={domainPoints}
-          selectedId={selectedId}
-          hoveredId={hoveredId}
-          onHover={setHoveredId}
-          onSelect={setSelectedId}
-          onQuickToggle={quickToggle}
-        />
-
-        <div className="w-52 shrink-0 rounded border border-ui-gold/15 bg-black/25 p-3">
-          <WheelPerkSummary
-            bonuses={bonuses}
+          <WheelCanvas
+            vocation={vocationKey}
             slices={draft}
-            baseVocation={baseVocation}
+            unlockableIds={unlockableIds}
+            domainPoints={domainPoints}
+            selectedId={selectedId}
+            hoveredId={hoveredId}
+            onHover={setHoveredId}
+            onSelect={setSelectedId}
+            onQuickToggle={quickToggle}
           />
+
+          <div className="w-52 shrink-0 rounded border border-ui-gold/15 bg-black/25 p-3">
+            <WheelPerkSummary
+              bonuses={bonuses}
+              slices={draft}
+              baseVocation={baseVocation}
+            />
+          </div>
         </div>
-      </div>
+      )}
+      {tab === "atelier" && (
+        <GemAtelierTab
+          gems={gems}
+          vocation={baseVocation}
+          resonances={resonances}
+          pending={gemsPending}
+          error={gemsError}
+          onAction={onGemAction}
+        />
+      )}
+      {tab === "workshop" && (
+        <FragmentWorkshopTab
+          gems={gems}
+          vocation={baseVocation}
+          pending={gemsPending}
+          error={gemsError}
+          onAction={onGemAction}
+        />
+      )}
     </Modal>
   );
 }

@@ -1,3 +1,4 @@
+import type { DamageType } from "@tibia/protocol";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
@@ -331,11 +332,14 @@ export class DamageResolver {
     if (target instanceof Player) {
       const equipment = this.items.combatEquipment(target.id);
       const absorbType = catalogDamageType(request.type);
-      const absorb = equipment.reduce(
-        (total, entry) =>
-          total + (entry.type.absorbPercent?.[absorbType] ?? 0),
-        0,
-      );
+      const gemResistances: Partial<Record<DamageType, number>> =
+        target.wheelBonuses.resistances;
+      const absorb =
+        equipment.reduce(
+          (total, entry) =>
+            total + (entry.type.absorbPercent?.[absorbType] ?? 0),
+          0,
+        ) + (request.type === "healing" ? 0 : (gemResistances[request.type] ?? 0));
       if (absorb >= 100) return { amount: 0, block: "immunity" };
       amount = this.formula.applyAbsorbPercent(amount, absorb);
       if (request.type === "physical") {

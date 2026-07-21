@@ -1,5 +1,12 @@
 import type { CharacterVocation } from "./character";
 import {
+  computeGemBonuses,
+  computeResonanceUnlocks,
+  EMPTY_GEM_RESISTANCES,
+} from "./computeGemBonuses";
+import type { GemResistElement } from "./gemAtelier";
+import type { GemGrades, RevealedGem } from "./gemAtelierMessages";
+import {
   WHEEL_BASE_VOCATION,
   WHEEL_CONVICTION_VALUES,
   WHEEL_DEDICATION_RATES,
@@ -29,6 +36,16 @@ export interface WheelBonuses {
   readonly revelationStages: Readonly<Record<WheelDomain, number>>;
   /** Flat damage and healing from revelation stages (future combat use). */
   readonly damageAndHealing: number;
+  /** Elemental resistances from equipped gems, in percent. */
+  readonly resistances: Readonly<Record<GemResistElement, number>>;
+  /** From gem supreme mods (display + future combat use). */
+  readonly criticalDamagePercent: number;
+  readonly dodgePercent: number;
+}
+
+export interface WheelGemInputs {
+  readonly equipped: ReadonlyArray<RevealedGem>;
+  readonly grades: GemGrades;
 }
 
 export const EMPTY_WHEEL_BONUSES: WheelBonuses = {
@@ -41,6 +58,9 @@ export const EMPTY_WHEEL_BONUSES: WheelBonuses = {
   manaLeechPercent: 0,
   revelationStages: { green: 0, red: 0, blue: 0, purple: 0 },
   damageAndHealing: 0,
+  resistances: EMPTY_GEM_RESISTANCES,
+  criticalDamagePercent: 0,
+  dodgePercent: 0,
 };
 
 /**
@@ -51,6 +71,7 @@ export const EMPTY_WHEEL_BONUSES: WheelBonuses = {
 export function computeWheelBonuses(
   slices: ReadonlyArray<number>,
   vocation: CharacterVocation,
+  gems?: WheelGemInputs,
 ): WheelBonuses {
   const base = WHEEL_BASE_VOCATION[vocation];
   const rates = WHEEL_DEDICATION_RATES[base];
@@ -105,6 +126,25 @@ export function computeWheelBonuses(
         break;
     }
   }
+  const gemBonuses = gems
+    ? computeGemBonuses(
+        gems.equipped,
+        gems.grades,
+        computeResonanceUnlocks(slices),
+        base,
+      )
+    : undefined;
+  if (gemBonuses) {
+    maxHealth += gemBonuses.maxHealth;
+    maxMana += gemBonuses.maxMana;
+    capacity += gemBonuses.capacity;
+    mitigationPercent += gemBonuses.mitigationPercent;
+    lifeLeechPercent += gemBonuses.lifeLeechPercent;
+    manaLeechPercent += gemBonuses.manaLeechPercent;
+    for (const domain of WHEEL_DOMAINS) {
+      domainPoints[domain] += gemBonuses.revelationPoints[domain];
+    }
+  }
   const revelationStages = { green: 0, red: 0, blue: 0, purple: 0 };
   let damageAndHealing = 0;
   for (const domain of WHEEL_DOMAINS) {
@@ -127,5 +167,8 @@ export function computeWheelBonuses(
     manaLeechPercent,
     revelationStages,
     damageAndHealing,
+    resistances: gemBonuses?.resistances ?? EMPTY_GEM_RESISTANCES,
+    criticalDamagePercent: gemBonuses?.criticalDamagePercent ?? 0,
+    dodgePercent: gemBonuses?.dodgePercent ?? 0,
   };
 }

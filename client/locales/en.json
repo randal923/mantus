@@ -1313,6 +1313,82 @@
       "rate-limited": "Too many requests; try again in a moment.",
       "unavailable": "The Wheel of Destiny is not available for this character.",
       "invalid-allocation": "That allocation was rejected by the server."
+    },
+    "sections": "Wheel sections",
+    "tabs": {
+      "wheel": "Wheel",
+      "atelier": "Gem Atelier",
+      "workshop": "Fragment Workshop"
+    },
+    "gems": {
+      "loading": "Loading gem data…",
+      "gold": "Bank gold",
+      "goldSuffix": "gold",
+      "lesserFragments": "Lesser Fragments",
+      "greaterFragments": "Greater Fragments",
+      "lesserFragmentsShort": "lesser fragments",
+      "greaterFragmentsShort": "greater fragments",
+      "vessels": "Vessels",
+      "resonanceCount": "Resonance {{count}}/3",
+      "quality": {
+        "lesser": "Lesser Gem",
+        "regular": "Regular Gem",
+        "greater": "Greater Gem"
+      },
+      "reveal": {
+        "title": "Gem Revelation",
+        "help": "Revealing a gem rolls random mods: lesser gems get one basic mod, regular gems two, greater gems two basic mods and one supreme mod. Costs are paid from your bank.",
+        "button": "Reveal"
+      },
+      "filters": {
+        "quality": "Filter by quality",
+        "domain": "Filter by domain",
+        "allQualities": "All Qualities",
+        "allDomains": "All Domains"
+      },
+      "count": "{{count}} gems",
+      "empty": "No gems match your filters. Reveal gems to grow your collection.",
+      "locked": "Locked",
+      "equipped": "Socketed",
+      "modSlot": "Basic mod {{slot}} ·",
+      "supremeMod": "Supreme mod ·",
+      "grade": "Grade {{grade}}",
+      "actions": {
+        "equip": "Place in Vessel",
+        "unequip": "Remove from Vessel",
+        "lock": "Lock",
+        "unlock": "Unlock",
+        "switch": "Switch Domain",
+        "switchTitle": "Rotate to the {{domain}} for {{cost}} gold.",
+        "destroy": "Destroy",
+        "destroyTitle": "Destroying returns {{min}}–{{max}} {{fragment}}."
+      },
+      "workshop": {
+        "kinds": "Mod kinds",
+        "basic": "Basic Mods",
+        "supreme": "Supreme Mods",
+        "onGems": "on {{count}} gems",
+        "socketed": "socketed",
+        "improve": "Improve",
+        "maxed": "Fully upgraded"
+      },
+      "errors": {
+        "rate-limited": "Too many requests; try again in a moment.",
+        "unavailable": "The Gem Atelier is not available for this character.",
+        "insufficient-gold": "Your bank balance cannot cover that.",
+        "insufficient-gems": "You have no unrevealed gems of that quality.",
+        "insufficient-fragments": "You do not have enough fragments.",
+        "gem-limit-reached": "You can hold at most 225 revealed gems. Destroy some first.",
+        "gem-locked": "That gem is locked.",
+        "gem-equipped": "Remove the gem from its vessel first.",
+        "gem-not-found": "That gem no longer exists.",
+        "max-grade": "That mod is already at its maximum grade."
+      },
+      "gemName": {
+        "lesser": "Lesser {{name}}",
+        "regular": "{{name}}",
+        "greater": "Greater {{name}}"
+      }
     }
   }
 }

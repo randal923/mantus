@@ -34,6 +34,7 @@ import { useDepotSession } from "../hooks/useDepotSession";
 import { useGuildSession } from "../hooks/useGuildSession";
 import { useBestiarySession } from "../hooks/useBestiarySession";
 import { useWheelSession } from "../hooks/useWheelSession";
+import { useGemSession } from "../hooks/useGemSession";
 import { useBosstiarySession } from "../hooks/useBosstiarySession";
 import { useHighscoresSession } from "../hooks/useHighscoresSession";
 import { useHouseSession } from "../hooks/useHouseSession";
@@ -469,6 +470,13 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     fail: failWheel,
     reset: resetWheel,
   } = useWheelSession();
+  const {
+    state: gemSession,
+    stateReceived: confirmGemState,
+    begin: beginGems,
+    fail: failGems,
+    reset: resetGems,
+  } = useGemSession();
   const [wheelOpen, setWheelOpen] = useState(false);
   const [reportSession, setReportSession] =
     useState<ReportSessionState | null>(null);
@@ -538,6 +546,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     resetBosstiary();
     setWikiOpen(false);
     resetWheel();
+    resetGems();
     setWheelOpen(false);
     setReportSession(null);
     setMailboxSession(null);
@@ -834,6 +843,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             resetBosstiary();
             setWikiOpen(false);
             resetWheel();
+            resetGems();
             setWheelOpen(false);
             // Preload the house browser and both codex projections so the
             // navbar modals open with their first view ready.
@@ -1254,6 +1264,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           }
           if (message.type === "wheel-action-failed") {
             failWheel(message.reason);
+            return;
+          }
+          if (message.type === "wheel-gems-state") {
+            confirmGemState(message);
+            return;
+          }
+          if (message.type === "wheel-gem-failed") {
+            failGems(message.reason);
             return;
           }
           if (message.type === "bestiary-action-failed") {
@@ -2583,9 +2601,12 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           {wheelOpen && (
             <WheelModal
               wheel={wheelSession.wheel}
+              gems={gemSession.gems}
               vocation={ownCharacter.vocation}
               pending={wheelSession.pending}
+              gemsPending={gemSession.pending}
               error={wheelSession.error}
+              gemsError={gemSession.error}
               onSave={(slices) => {
                 const sent =
                   clientRef.current?.saveWheel(
@@ -2593,6 +2614,18 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     slices,
                   ) ?? false;
                 beginWheel(sent);
+              }}
+              onRequestGems={() => {
+                const sent = clientRef.current?.requestGems() ?? false;
+                beginGems(sent);
+              }}
+              onGemAction={(action) => {
+                const sent =
+                  clientRef.current?.sendGemAction(
+                    crypto.randomUUID(),
+                    action,
+                  ) ?? false;
+                beginGems(sent);
               }}
               onClose={() => setWheelOpen(false)}
             />

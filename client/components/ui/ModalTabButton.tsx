@@ -2,19 +2,19 @@
 
 import type { ReactNode } from "react";
 
-interface WikiTabButtonProps {
+interface ModalTabButtonProps {
   label: string;
   selected: boolean;
-  children: ReactNode;
+  icon?: ReactNode;
   onClick: () => void;
 }
 
-export function WikiTabButton({
+export function ModalTabButton({
   label,
   selected,
-  children,
+  icon,
   onClick,
-}: WikiTabButtonProps) {
+}: ModalTabButtonProps) {
   return (
     <button
       type="button"
@@ -27,7 +27,7 @@ export function WikiTabButton({
           : "ui-button-secondary border-ui-stone-light/15 text-ui-muted hover:border-ui-gold/40 hover:text-ui-text"
       }`}
     >
-      <span className="text-ui-gold">{children}</span>
+      {icon && <span className="text-ui-gold">{icon}</span>}
       <span className="hidden sm:inline">{label}</span>
     </button>
   );

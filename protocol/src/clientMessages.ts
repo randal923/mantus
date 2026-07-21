@@ -61,6 +61,10 @@ import {
 import { highscoresGetMessageSchema } from "./highscores";
 import { wheelGetMessageSchema, wheelSaveMessageSchema } from "./wheel";
 import {
+  gemActionMessageSchema,
+  gemGetMessageSchema,
+} from "./gemAtelierMessages";
+import {
   houseAbandonMessageSchema,
   houseBrowseMessageSchema,
   houseBuyMessageSchema,
@@ -485,6 +489,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   wikiItemSourcesGetMessageSchema,
   wheelGetMessageSchema,
   wheelSaveMessageSchema,
+  gemGetMessageSchema,
+  gemActionMessageSchema,
   reportPlayerMessageSchema,
   speakMessageSchema,
   privateChatMessageSchema,

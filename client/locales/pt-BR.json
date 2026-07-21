@@ -1313,6 +1313,82 @@
       "rate-limited": "Muitas requisições; tente novamente em instantes.",
       "unavailable": "A Roda do Destino não está disponível para este personagem.",
       "invalid-allocation": "Essa alocação foi rejeitada pelo servidor."
+    },
+    "sections": "Seções da roda",
+    "tabs": {
+      "wheel": "Roda",
+      "atelier": "Ateliê de Gemas",
+      "workshop": "Oficina de Fragmentos"
+    },
+    "gems": {
+      "loading": "Carregando dados das gemas…",
+      "gold": "Ouro no banco",
+      "goldSuffix": "de ouro",
+      "lesserFragments": "Fragmentos Menores",
+      "greaterFragments": "Fragmentos Maiores",
+      "lesserFragmentsShort": "fragmentos menores",
+      "greaterFragmentsShort": "fragmentos maiores",
+      "vessels": "Recipientes",
+      "resonanceCount": "Ressonância {{count}}/3",
+      "quality": {
+        "lesser": "Gema Menor",
+        "regular": "Gema Comum",
+        "greater": "Gema Maior"
+      },
+      "reveal": {
+        "title": "Revelação de Gemas",
+        "help": "Revelar uma gema sorteia mods aleatórios: gemas menores recebem um mod básico, comuns dois, e maiores dois mods básicos e um supremo. Os custos saem do seu banco.",
+        "button": "Revelar"
+      },
+      "filters": {
+        "quality": "Filtrar por qualidade",
+        "domain": "Filtrar por domínio",
+        "allQualities": "Todas as Qualidades",
+        "allDomains": "Todos os Domínios"
+      },
+      "count": "{{count}} gemas",
+      "empty": "Nenhuma gema corresponde aos filtros. Revele gemas para aumentar sua coleção.",
+      "locked": "Travada",
+      "equipped": "Encaixada",
+      "modSlot": "Mod básico {{slot}} ·",
+      "supremeMod": "Mod supremo ·",
+      "grade": "Grau {{grade}}",
+      "actions": {
+        "equip": "Colocar no Recipiente",
+        "unequip": "Remover do Recipiente",
+        "lock": "Travar",
+        "unlock": "Destravar",
+        "switch": "Trocar Domínio",
+        "switchTitle": "Gira para o {{domain}} por {{cost}} de ouro.",
+        "destroy": "Destruir",
+        "destroyTitle": "Destruir devolve {{min}}–{{max}} {{fragment}}."
+      },
+      "workshop": {
+        "kinds": "Tipos de mod",
+        "basic": "Mods Básicos",
+        "supreme": "Mods Supremos",
+        "onGems": "em {{count}} gemas",
+        "socketed": "encaixado",
+        "improve": "Aprimorar",
+        "maxed": "Totalmente aprimorado"
+      },
+      "errors": {
+        "rate-limited": "Muitas solicitações; tente novamente em instantes.",
+        "unavailable": "O Ateliê de Gemas não está disponível para este personagem.",
+        "insufficient-gold": "Seu saldo bancário não cobre esse custo.",
+        "insufficient-gems": "Você não tem gemas não reveladas dessa qualidade.",
+        "insufficient-fragments": "Você não tem fragmentos suficientes.",
+        "gem-limit-reached": "Você pode ter no máximo 225 gemas reveladas. Destrua algumas primeiro.",
+        "gem-locked": "Essa gema está travada.",
+        "gem-equipped": "Remova a gema do recipiente primeiro.",
+        "gem-not-found": "Essa gema não existe mais.",
+        "max-grade": "Esse mod já está no grau máximo."
+      },
+      "gemName": {
+        "lesser": "{{name}} Menor",
+        "regular": "{{name}}",
+        "greater": "{{name}} Maior"
+      }
     }
   }
 }

@@ -12,6 +12,7 @@ import type { Player } from "../Player";
 import { projectOwnProgression } from "../progression/projectOwnProgression";
 import type { Session } from "../Session";
 import type { World } from "../World";
+import type { GemTracker } from "./GemTracker";
 import type { WheelTracker } from "./WheelTracker";
 
 const MAX_TRACKED_REQUEST_IDS = 64;
@@ -30,6 +31,7 @@ export class WheelService {
     private readonly world: World,
     private readonly tracker: WheelTracker,
     private readonly persistence: CharacterPersistence,
+    private readonly gems?: GemTracker,
   ) {}
 
   detach(session: Session): void {
@@ -71,7 +73,16 @@ export class WheelService {
     // Synchronous in-memory mutation inside the tick, then write-behind
     // persistence (charter rule 3).
     this.tracker.set(player.id, intent.slices);
-    player.setWheelBonuses(computeWheelBonuses(intent.slices, player.vocation));
+    player.setWheelBonuses(
+      computeWheelBonuses(
+        intent.slices,
+        player.vocation,
+        this.gems && {
+          equipped: this.gems.equippedGems(player.id),
+          grades: this.gems.dataFor(player.id).grades,
+        },
+      ),
+    );
     this.persistence.saveNow(player, now);
     session.send(this.projectState(player, now));
     session.send({

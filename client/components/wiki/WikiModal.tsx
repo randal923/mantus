@@ -14,7 +14,6 @@ import { Modal } from "../ui/Modal";
 import { WikiBestiary } from "./WikiBestiary";
 import { WikiBosstiary } from "./WikiBosstiary";
 import { WikiItems } from "./WikiItems";
-import { WikiTabButton } from "./WikiTabButton";
 import { WikiTabIcon } from "./WikiTabIcon";
 
 type WikiTab = "items" | "bestiary" | "bosstiary";
@@ -63,44 +62,43 @@ export function WikiModal({
   const [target, setTarget] = useState<WikiItemSource | null>(null);
 
   return (
-    <Modal title={t("wiki.title")} onClose={onClose} size="full">
-      <div
-        role="tablist"
-        aria-label={t("wiki.sections")}
-        className="grid grid-cols-3 gap-2"
-      >
-        <WikiTabButton
-          label={t("wiki.tabs.items")}
-          selected={tab === "items"}
-          onClick={() => setTab("items")}
-        >
-          <WikiTabIcon name="items" />
-        </WikiTabButton>
-        <WikiTabButton
-          label={t("wiki.tabs.bestiary")}
-          selected={tab === "bestiary"}
-          onClick={() => {
-            setTab("bestiary");
-            if (!creatures && !bestiaryPending) onRequestBestiary();
-          }}
-        >
-          <WikiTabIcon name="bestiary" />
-        </WikiTabButton>
-        <WikiTabButton
-          label={t("wiki.tabs.bosstiary")}
-          selected={tab === "bosstiary"}
-          onClick={() => {
-            setTab("bosstiary");
-            if (!bosses && !bosstiaryPending) onRequestBosstiary();
-          }}
-        >
-          <WikiTabIcon name="bosstiary" />
-        </WikiTabButton>
-      </div>
-
-      <div aria-hidden className="ui-divider my-4" />
-
-      <div role="tabpanel">
+    <Modal
+      title={t("wiki.title")}
+      onClose={onClose}
+      size="full"
+      tabs={{
+        label: t("wiki.sections"),
+        selected: tab,
+        items: [
+          {
+            id: "items",
+            label: t("wiki.tabs.items"),
+            icon: <WikiTabIcon name="items" />,
+          },
+          {
+            id: "bestiary",
+            label: t("wiki.tabs.bestiary"),
+            icon: <WikiTabIcon name="bestiary" />,
+          },
+          {
+            id: "bosstiary",
+            label: t("wiki.tabs.bosstiary"),
+            icon: <WikiTabIcon name="bosstiary" />,
+          },
+        ],
+        onSelect: (id) => {
+          const next = id as WikiTab;
+          setTab(next);
+          if (next === "bestiary" && !creatures && !bestiaryPending) {
+            onRequestBestiary();
+          }
+          if (next === "bosstiary" && !bosses && !bosstiaryPending) {
+            onRequestBosstiary();
+          }
+        },
+      }}
+    >
+      <>
         {tab === "items" && (
           <WikiItems
             itemSources={itemSources}
@@ -144,7 +142,7 @@ export function WikiModal({
             onRequestBoss={onRequestBoss}
           />
         )}
-      </div>
+      </>
     </Modal>
   );
 }

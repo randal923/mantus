@@ -30,6 +30,9 @@ import type { ModerationService } from "./moderation/ModerationService";
 import type { PvpTracker } from "./pvp/PvpTracker";
 import type { PvpKillRecord } from "./pvp/PvpStore";
 import type { VipService } from "./social/VipService";
+import { equippedGemsOf } from "./wheel/equippedGemsOf";
+import type { GemCharacterData } from "./wheel/GemStore";
+import type { GemTracker } from "./wheel/GemTracker";
 import type { WheelTracker } from "./wheel/WheelTracker";
 
 export class CharacterHandler {
@@ -51,6 +54,7 @@ export class CharacterHandler {
     private readonly moderation: ModerationService,
     private readonly bestiary: BestiaryTracker,
     private readonly wheel: WheelTracker,
+    private readonly gems: GemTracker,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -176,8 +180,18 @@ export class CharacterHandler {
         characterId,
       );
       const wheelSlices = character ? await this.wheel.load(character.id) : [];
+      const gemData = character ? await this.gems.load(character.id) : null;
       const wheelBonuses = character
-        ? computeWheelBonuses(wheelSlices, character.vocation)
+        ? computeWheelBonuses(
+            wheelSlices,
+            character.vocation,
+            gemData
+              ? {
+                  equipped: equippedGemsOf(gemData),
+                  grades: gemData.grades,
+                }
+              : undefined,
+          )
         : null;
       const inventory = character
         ? await this.items.load(
@@ -221,6 +235,7 @@ export class CharacterHandler {
           pvpFrags,
           bestiaryKills,
           wheelSlices,
+          gemData,
           wheelBonuses ?? computeWheelBonuses([], character.vocation),
         );
       });
@@ -237,6 +252,7 @@ export class CharacterHandler {
     pvpFrags: ReadonlyArray<PvpKillRecord>,
     bestiaryKills: ReadonlyMap<number, number>,
     wheelSlices: ReadonlyArray<number>,
+    gemData: GemCharacterData | null,
     wheelBonuses: WheelBonuses,
   ): void {
     if (session.playerId) {
@@ -283,6 +299,7 @@ export class CharacterHandler {
     this.moderation.attachCharacter(player.id);
     this.bestiary.attach(player.id, bestiaryKills);
     this.wheel.attach(player.id, wheelSlices);
+    if (gemData) this.gems.attach(player.id, gemData);
     // Attach before the spawn announcement so viewers already receive the
     // correct (possibly restored) persistent skull in the creature state.
     this.pvp.attach(player, pvpFrags, now);

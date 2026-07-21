@@ -53,6 +53,10 @@ import {
   wheelStateMessageSchema,
 } from "./wheel";
 import {
+  gemActionFailedMessageSchema,
+  gemStateMessageSchema,
+} from "./gemAtelierMessages";
+import {
   guildActionFailedMessageSchema,
   guildChatDeliveredMessageSchema,
   guildEventMessageSchema,
@@ -446,6 +450,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   bestiaryActionFailedMessageSchema,
   wheelStateMessageSchema,
   wheelActionFailedMessageSchema,
+  gemStateMessageSchema,
+  gemActionFailedMessageSchema,
   reportReceivedMessageSchema,
   reportActionFailedMessageSchema,
   creatureSpokeMessageSchema,

@@ -77,16 +77,33 @@ scope.
   - [ ] Point removal is allowed anywhere; Canary restricts decreases to a
     protection zone near a temple. Enforce a PZ/temple check in
     `WheelService.handleSave` when the allocation shrinks.
-  - [ ] Promotion scrolls, Monk quest bonus, hunting-task points, and the gem
-    atelier (gems, fragments, mods, resonance effects) — resonance vessels
-    are rendered but grant nothing.
+  - [ ] Promotion scrolls, Monk quest bonus, and hunting-task points.
+  - [x] Gem Atelier + Fragment Workshop (Canary-pinned): unrevealed gems drop
+    from bestiary/bosstiary kills, reveal/switch-domain/lock/destroy/equip
+    actions, global per-mod grades, and vessel resonance gating in
+    `server/src/wheel/Gem*` (migration `028_gem_atelier.sql`, protocol
+    `gemAtelier*`/`computeGemBonuses`, tabs in
+    `client/components/wheel/`). Equipped gems now grant real max HP/mana,
+    capacity, elemental resistances (applied in `DamageResolver`), and
+    revelation-mastery points; costs are ACID bank debits with ledger +
+    audit rows and exploit tests (`GemAtelierService.test.ts`,
+    `PgGemStore.integration.test.ts`). Remaining gem gaps:
+    - [ ] Supreme spell augments, dodge, crit damage, and gem leech/
+      mitigation mods are displayed but combat-inert (same deferred combat
+      wiring as the wheel's own leech/mitigation above).
+    - [ ] Gold is charged from the bank only (Canary also consumes carried
+      gold); gems/fragments are balances, not inventory items (no 8.6
+      sprites); drop classification uses bestiary stars/bosstiary in place
+      of forge influenced/fiendish/archfoe monsters; reveal has no temple
+      restriction; destroy yields roll uniformly instead of
+      `normal_random`.
   - [ ] Character-list/offline capacity (`PgItemLocks`) derives capacity
     without the wheel bonus, so offline item-lock checks are slightly
     conservative for wheel users.
   - [ ] Boosted (green) skill display: wheel skill boosts apply in combat via
     `Player.skillLevel` but the skills panel shows base levels only.
-- [ ] Wheel of Destiny gems, revelation perk combat abilities, vocation spell modifications,
-  weapon proficiency, and animus mastery.
+- [ ] Revelation perk combat abilities, vocation spell modifications,
+  weapon proficiency, and animus mastery (Wheel gems shipped above).
 - [ ] Cyclopedia character/map/house/item/monster views, achievements, titles,
   badges, attached effects, and authorized tracker projections.
 - [ ] Reward bosses/chests, quick loot and loot containers, supply stash,

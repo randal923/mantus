@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "./Button";
 import { CloseButton } from "./CloseButton";
+import { ModalTabButton } from "./ModalTabButton";
 
 interface ModalPagination {
   currentPage: number;
@@ -13,10 +14,26 @@ interface ModalPagination {
   onNext: () => void;
 }
 
+export interface ModalTab {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+}
+
+interface ModalTabs {
+  /** Accessible name for the tablist. */
+  label: string;
+  items: ModalTab[];
+  selected: string;
+  onSelect: (id: string) => void;
+}
+
 interface ModalProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** Controlled tab bar rendered above the content; children render the selected panel. */
+  tabs?: ModalTabs;
   pagination?: ModalPagination;
   /** Optional action row rendered below a divider at the bottom of the panel. */
   footer?: ReactNode;
@@ -28,6 +45,7 @@ export function Modal({
   title,
   onClose,
   children,
+  tabs,
   pagination,
   footer,
   size = "default",
@@ -75,7 +93,27 @@ export function Modal({
         </header>
         <div aria-hidden className="ui-divider" />
 
-        <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85">
+        {tabs && (
+          <>
+            <div role="tablist" aria-label={tabs.label} className="flex gap-2">
+              {tabs.items.map((tab) => (
+                <ModalTabButton
+                  key={tab.id}
+                  label={tab.label}
+                  icon={tab.icon}
+                  selected={tabs.selected === tab.id}
+                  onClick={() => tabs.onSelect(tab.id)}
+                />
+              ))}
+            </div>
+            <div aria-hidden className="ui-divider" />
+          </>
+        )}
+
+        <div
+          role={tabs ? "tabpanel" : undefined}
+          className="ui-scrollbar min-h-0 flex-1 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85"
+        >
           {children}
         </div>
 

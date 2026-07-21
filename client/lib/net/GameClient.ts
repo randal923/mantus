@@ -9,6 +9,7 @@ import {
   type DepotLocation,
   type DepotStateMessage,
   type FightMode,
+  type GemAction,
   type HighscoreCategory,
   type CharacterVocation,
   type InventoryItem,
@@ -590,6 +591,14 @@ export class GameClient {
 
   saveWheel(requestId: string, slices: ReadonlyArray<number>): boolean {
     return this.send({ type: "wheel-save", requestId, slices: [...slices] });
+  }
+
+  requestGems(): boolean {
+    return this.send({ type: "wheel-gems-get" });
+  }
+
+  sendGemAction(requestId: string, action: GemAction): boolean {
+    return this.send({ type: "wheel-gem-action", requestId, action });
   }
 
   requestHighscores(

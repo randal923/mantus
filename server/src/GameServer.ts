@@ -57,6 +57,10 @@ import { BestiaryService } from "./bestiary/BestiaryService";
 import type { BestiaryStore } from "./bestiary/BestiaryStore";
 import { BestiaryTracker } from "./bestiary/BestiaryTracker";
 import { loadBestiaryCatalog } from "./bestiary/loadBestiaryCatalog";
+import { GemAtelierService } from "./wheel/GemAtelierService";
+import { GemDropHooks } from "./wheel/GemDropHooks";
+import type { GemStore } from "./wheel/GemStore";
+import { GemTracker } from "./wheel/GemTracker";
 import { WheelService } from "./wheel/WheelService";
 import type { WheelStore } from "./wheel/WheelStore";
 import { WheelTracker } from "./wheel/WheelTracker";
@@ -90,6 +94,7 @@ export interface GameServerDeps {
   highscores?: HighscoreStore;
   bestiary?: BestiaryStore;
   wheel?: WheelStore;
+  gems?: GemStore;
   moderation?: ModerationStore;
   worldItemDeltas?: WorldItemDeltas;
 }
@@ -129,6 +134,9 @@ export class GameServer {
   private readonly bestiaryTracker: BestiaryTracker;
   private readonly wheel: WheelService;
   private readonly wheelTracker: WheelTracker;
+  private readonly gems: GemAtelierService;
+  private readonly gemTracker: GemTracker;
+  private readonly gemDrops: GemDropHooks;
   private readonly moderation: ModerationService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
@@ -224,10 +232,25 @@ export class GameServer {
       this.items,
     );
     this.wheelTracker = new WheelTracker(deps.wheel);
+    this.gemTracker = new GemTracker(deps.gems);
     this.wheel = new WheelService(
       this.world,
       this.wheelTracker,
       this.persistence,
+      this.gemTracker,
+    );
+    this.gems = new GemAtelierService(
+      this.world,
+      this.gemTracker,
+      this.wheelTracker,
+      this.persistence,
+      deps.gems,
+    );
+    this.gemDrops = new GemDropHooks(
+      bestiaryCatalog,
+      this.registry,
+      this.gemTracker,
+      this.gems,
     );
     this.guilds = new GuildService(
       this.world,
@@ -270,6 +293,7 @@ export class GameServer {
       this.moderation,
       this.bestiaryTracker,
       this.wheelTracker,
+      this.gemTracker,
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
@@ -362,7 +386,12 @@ export class GameServer {
       this.pvp,
       config.rates.experience,
       config.rates.loot,
-      this.bestiaryTracker,
+      {
+        onMonsterKilled: (damagerIds, monster, killedAt) => {
+          this.bestiaryTracker.onMonsterKilled(damagerIds, monster, killedAt);
+          this.gemDrops.onMonsterKilled(damagerIds, monster, killedAt);
+        },
+      },
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,
@@ -480,6 +509,7 @@ export class GameServer {
     this.vips.applyResolvedOutcomes(now);
     this.highscores.applyResolvedOutcomes(now);
     this.moderation.applyResolvedOutcomes(now);
+    this.gems.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     this.uiSettings.applyResolvedOutcomes();
     this.actionBar.applyResolvedOutcomes();
@@ -526,6 +556,7 @@ export class GameServer {
         this.pvp.detachCharacter(playerId);
         this.bestiaryTracker.detachCharacter(playerId);
         this.wheelTracker.detachCharacter(playerId);
+        this.gemTracker.detachCharacter(playerId);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
         this.depot.detachCharacter(playerId);
@@ -542,6 +573,7 @@ export class GameServer {
       this.highscores.detach(session);
       this.bestiary.detach(session);
       this.wheel.detach(session);
+      this.gems.detach(session);
       this.moderation.detach(session);
       this.items.detachSession(session);
       this.registry.remove(session);
@@ -729,6 +761,12 @@ export class GameServer {
       case "wheel-save":
         this.wheel.handleSave(session, intent, now);
         return;
+      case "wheel-gems-get":
+        this.gems.handleGet(session, now);
+        return;
+      case "wheel-gem-action":
+        this.gems.handleAction(session, intent, now);
+        return;
       case "report-player":
         this.moderation.handleReport(session, intent, now);
         return;
@@ -778,6 +816,9 @@ export class GameServer {
     await this.pvp.stop();
     await this.bestiaryTracker.stop();
     await this.wheelTracker.stop();
+    await this.gems.stop();
+    this.gems.applyResolvedOutcomes(Date.now());
+    await this.gemTracker.stop();
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();

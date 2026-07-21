@@ -18,6 +18,7 @@ import { PgHouseStore } from "./house/PgHouseStore";
 import { PgModerationStore } from "./moderation/PgModerationStore";
 import { PgPvpStore } from "./pvp/PgPvpStore";
 import { PgBestiaryStore } from "./bestiary/PgBestiaryStore";
+import { PgGemStore } from "./wheel/PgGemStore";
 import { PgWheelStore } from "./wheel/PgWheelStore";
 import { PgHighscoreStore } from "./social/PgHighscoreStore";
 import { PgVipStore } from "./social/PgVipStore";
@@ -73,6 +74,7 @@ const vip = new PgVipStore(pool);
 const highscores = new PgHighscoreStore(pool);
 const bestiary = new PgBestiaryStore(pool);
 const wheel = new PgWheelStore(pool);
+const gems = new PgGemStore(pool);
 const moderation = new PgModerationStore(pool);
 const worldItemDeltas =
   serverConfig.map.source === "data"
@@ -102,6 +104,7 @@ const server = new GameServer(serverConfig, {
   highscores,
   bestiary,
   wheel,
+  gems,
   moderation,
   worldItemDeltas,
 });
