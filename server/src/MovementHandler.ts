@@ -94,6 +94,57 @@ export class MovementHandler {
     );
   }
 
+  /**
+   * The digger falls through a hole they just opened (Canary's teleportTo in
+   * onUseShovel). Destination is re-validated; a blocked floor below simply
+   * leaves the hole open without moving anyone.
+   */
+  handleHoleFall(session: Session, holePosition: Position, now: number): void {
+    if (!session.playerId) return;
+    const player = this.world.getPlayer(session.playerId);
+    if (!player) return;
+    const below = {
+      x: holePosition.x,
+      y: holePosition.y,
+      z: holePosition.z + 1,
+    };
+    if (
+      below.z > 15 ||
+      !this.world.isWalkable(below) ||
+      this.world.isOccupied(below)
+    ) {
+      return;
+    }
+    this.stop(session);
+    const from = this.world.relocateCreature(player, below);
+    this.visibility.onPlayerTeleported(session, player, from);
+    this.persistence.markDirty(player);
+  }
+
+  /** Rope used on a rope-spot tile; the tool itself is validated upstream. */
+  handleRopeUse(session: Session, target: Position, now: number): void {
+    if (!session.playerId) {
+      session.sendError("join-required");
+      return;
+    }
+    const player = this.world.getPlayer(session.playerId);
+    if (!player) return;
+    if (session.travelOperationPending) {
+      this.stop(session);
+      return;
+    }
+    session.movementDirection = null;
+    session.bufferedMovementDirection = null;
+    session.autoWalkDirections = [];
+    this.publishResult(
+      session,
+      player,
+      this.world.tryUseRopeSpot(player, target, now),
+      true,
+      now,
+    );
+  }
+
   stop(session: Session): void {
     session.movementDirection = null;
     session.bufferedMovementDirection = null;

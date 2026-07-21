@@ -23,6 +23,7 @@ import type { ItemTextState } from "./ItemTextState";
 import type { LevelUpNotice } from "./LevelUpNotice";
 import type { LootSessionState } from "./LootSessionState";
 import type { MailboxSessionState } from "./MailboxSessionState";
+import type { MapContextMenuState } from "./MapContextMenuState";
 import type { NpcDialogueState } from "./NpcDialogueState";
 import type { ReportSessionState } from "./ReportSessionState";
 import type { ShopSessionState } from "./ShopSessionState";
@@ -92,6 +93,12 @@ export interface GameWindowStoreActions {
   setServerError: (value: SetStateAction<ServerErrorCode | null>) => void;
   setRuneTargeting: (value: SetStateAction<boolean>) => void;
   setPotionTargeting: (value: SetStateAction<boolean>) => void;
+  setUseWithTargeting: (value: SetStateAction<boolean>) => void;
+  setMapContextMenu: (
+    value: SetStateAction<MapContextMenuState | null>,
+  ) => void;
+  showScreenMessage: (text: string, tone: "look" | "status") => void;
+  clearScreenMessage: () => void;
   closeMarket: () => void;
   reconnect: (characterId: string | null) => void;
 }

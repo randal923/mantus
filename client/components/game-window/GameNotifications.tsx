@@ -1,7 +1,10 @@
+import { useEffect } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { LevelUpBanner } from "../LevelUpBanner";
 import { Toast } from "../ui/Toast";
 import { useGameWindowStore } from "./store/useGameWindowStore";
+
+const SCREEN_MESSAGE_MS = 3_500;
 
 export function GameNotifications() {
   const { t } = useAppTranslation();
@@ -20,6 +23,19 @@ export function GameNotifications() {
   const potionTargeting = useGameWindowStore(
     (state) => state.potionTargeting,
   );
+  const useWithTargeting = useGameWindowStore(
+    (state) => state.useWithTargeting,
+  );
+  const screenMessage = useGameWindowStore((state) => state.screenMessage);
+  const clearScreenMessage = useGameWindowStore(
+    (state) => state.clearScreenMessage,
+  );
+
+  useEffect(() => {
+    if (!screenMessage) return;
+    const timer = setTimeout(clearScreenMessage, SCREEN_MESSAGE_MS);
+    return () => clearTimeout(timer);
+  }, [screenMessage, clearScreenMessage]);
   const reconnect = useGameWindowStore((state) => state.reconnect);
   const setServerError = useGameWindowStore((state) => state.setServerError);
   const setMarketToast = useGameWindowStore((state) => state.setMarketToast);
@@ -118,6 +134,29 @@ export function GameNotifications() {
           className="ui-panel-frame pointer-events-none absolute top-24 left-1/2 z-40 -translate-x-1/2 px-4 py-2 font-tibia text-sm text-ui-text-bright"
         >
           {t("potions.selectTarget")}
+        </div>
+      )}
+      {useWithTargeting && (
+        <div
+          role="status"
+          className="ui-panel-frame pointer-events-none absolute top-24 left-1/2 z-40 -translate-x-1/2 px-4 py-2 font-tibia text-sm text-ui-text-bright"
+        >
+          {t("inventory.selectUseWithTarget")}
+        </div>
+      )}
+      {screenMessage && (
+        <div
+          key={screenMessage.id}
+          role="status"
+          className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center"
+        >
+          <span
+            className={`max-w-lg px-4 text-center font-tibia text-base font-bold sm:text-lg [text-shadow:-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000,0_2px_4px_rgba(0,0,0,0.9)] ${
+              screenMessage.tone === "look" ? "text-yellow-300" : "text-white"
+            }`}
+          >
+            {screenMessage.text}
+          </span>
         </div>
       )}
     </>

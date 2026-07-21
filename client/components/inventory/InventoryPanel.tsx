@@ -43,6 +43,7 @@ interface InventoryPanelProps {
   onUnequip?: (item: InventoryItem, slot: keyof Equipment) => void;
   onUseRune?: (item: InventoryItem) => void;
   onUsePotion?: (item: InventoryItem) => void;
+  onUseItemWith?: (item: InventoryItem) => void;
   onOpenContainer?: (item: InventoryItem) => void;
   onCloseContainer?: (containerId: string) => void;
   onUseItem?: (item: InventoryItem) => void;
@@ -72,6 +73,7 @@ export function InventoryPanel({
   onUnequip,
   onUseRune,
   onUsePotion,
+  onUseItemWith,
   onOpenContainer,
   onCloseContainer,
   onUseItem,
@@ -90,6 +92,10 @@ export function InventoryPanel({
     }
     if (item.useKind === "potion" && onUsePotion) {
       onUsePotion(item);
+      return;
+    }
+    if (item.useKind === "useWith" && onUseItemWith) {
+      onUseItemWith(item);
       return;
     }
     if (item.useKind === "container" && onOpenContainer) {

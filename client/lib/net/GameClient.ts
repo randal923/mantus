@@ -173,6 +173,15 @@ export class GameClient {
     });
   }
 
+  useItemWith(item: InventoryItem, targetPosition: Position): boolean {
+    return this.send({
+      type: "use-item-with",
+      itemId: item.id,
+      revision: item.revision,
+      targetPosition,
+    });
+  }
+
   writeItem(itemId: string, revision: number, text: string): boolean {
     return this.send({
       type: "write-item",

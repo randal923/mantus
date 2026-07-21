@@ -216,8 +216,8 @@ describe("WorldActionRegistry doors", () => {
       harness.worldActions.handleUseMap(quester.session, questTile, 1_000),
     ).toBe(true);
     expect(quester.sent.at(-1)).toMatchObject({
-      type: "error",
-      code: "item-action-failed",
+      type: "combat-log",
+      text: "The door seems to be sealed against unwanted intruders.",
     });
     expect(tileItemIds(harness, questTile)).toEqual([CLOSED_QUEST_DOOR]);
   });

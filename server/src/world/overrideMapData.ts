@@ -1,17 +1,19 @@
 import type { Position } from "@tibia/protocol";
 import type { MapData } from "../MapData";
+import type { MapTransition } from "../MapTransition";
 import type { TilePassabilityOverride } from "./DynamicMapItems";
 
 /**
  * Wraps static map data with per-tile passability overrides owned by
- * stateful map items (open/closed doors). Movement, occupancy, and line of
- * sight all read through this view so door state is authoritative at
- * execution time.
+ * stateful map items (open/closed doors, shovel holes). Movement, occupancy,
+ * and line of sight all read through this view so door and hole state is
+ * authoritative at execution time.
  */
 export function overrideMapData(
   map: MapData,
   overrides: {
     getTileOverride(position: Position): TilePassabilityOverride | undefined;
+    getHoleTransition(position: Position): MapTransition | undefined;
   },
 ): MapData {
   return {
@@ -45,7 +47,10 @@ export function overrideMapData(
         : map.blocksProjectile(position);
     },
     getTransition(position, direction) {
-      return map.getTransition(position, direction);
+      return (
+        overrides.getHoleTransition(position) ??
+        map.getTransition(position, direction)
+      );
     },
     getAction(position) {
       return map.getAction(position);

@@ -132,6 +132,23 @@ export function GameWindowConnectionController() {
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isEditableTarget(event.target)) {
+        const state = store.getState();
+        if (
+          state.runeTargeting ||
+          state.potionTargeting ||
+          state.useWithTargeting
+        ) {
+          runtime.pendingRuneRef.current = null;
+          runtime.pendingPotionRef.current = null;
+          runtime.pendingUseWithRef.current = null;
+          state.setRuneTargeting(false);
+          state.setPotionTargeting(false);
+          state.setUseWithTargeting(false);
+          event.preventDefault();
+          return;
+        }
+      }
       const direction = getHeldMovementDirection(
         [event.code],
         useGameSettingsStore.getState().diagonalWalking,

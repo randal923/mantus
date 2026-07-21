@@ -63,6 +63,20 @@ export class MovementRules {
   }
 
   tryUseMap(player: Player, target: Position, now: number): MoveResult {
+    return this.tryUseAction(player, target, now, "use");
+  }
+
+  /** Rope on a rope spot: same rules as a ladder, but only via use-with. */
+  tryUseRopeSpot(player: Player, target: Position, now: number): MoveResult {
+    return this.tryUseAction(player, target, now, "use-with");
+  }
+
+  private tryUseAction(
+    player: Player,
+    target: Position,
+    now: number,
+    activation: "use" | "use-with",
+  ): MoveResult {
     const from = player.position;
     // Chebyshev distance: transitions (ladders, sewers, holes) are usable
     // from any of the eight surrounding tiles, or standing on them.
@@ -82,7 +96,11 @@ export class MovementRules {
       };
     }
     const action = this.map.getAction(target);
-    if (!action || !this.map.isWalkable(action.destination)) {
+    if (
+      !action ||
+      action.activation !== activation ||
+      !this.map.isWalkable(action.destination)
+    ) {
       return {
         moved: false,
         turned: false,

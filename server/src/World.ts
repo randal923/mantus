@@ -355,4 +355,8 @@ export class World {
   tryUseMap(player: Player, target: Position, now: number): MoveResult {
     return this.movement.tryUseMap(player, target, now);
   }
+
+  tryUseRopeSpot(player: Player, target: Position, now: number): MoveResult {
+    return this.movement.tryUseRopeSpot(player, target, now);
+  }
 }

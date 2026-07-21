@@ -109,9 +109,15 @@ function parseAction(value: unknown): MapAction {
   const action = value as Record<string, unknown>;
   const source = positionSchema.safeParse(action.source);
   const destination = positionSchema.safeParse(action.destination);
+  const useKinds = action.kind === "ladder" || action.kind === "dropdown";
+  const useWithKinds = action.kind === "rope-spot";
   if (
-    (action.kind !== "ladder" && action.kind !== "dropdown") ||
-    action.activation !== "use" ||
+    !(useKinds && action.activation === "use") &&
+    !(useWithKinds && action.activation === "use-with")
+  ) {
+    throw new Error("invalid map action metadata");
+  }
+  if (
     !source.success ||
     !destination.success ||
     !Number.isInteger(action.itemId) ||
@@ -120,8 +126,8 @@ function parseAction(value: unknown): MapAction {
     throw new Error("invalid map action metadata");
   }
   return {
-    kind: action.kind,
-    activation: "use",
+    kind: action.kind as MapAction["kind"],
+    activation: action.activation as MapAction["activation"],
     source: source.data,
     destination: destination.data,
     itemId: Number(action.itemId),

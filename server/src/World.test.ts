@@ -292,6 +292,165 @@ describe("World.tryMove", () => {
     expect(player.position).toEqual(destination);
   });
 
+  it("never climbs a rope spot via a bare use-map (rope required)", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "rope-spot-use-map",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "rope-spot",
+            activation: "use-with",
+            source,
+            destination,
+            itemId: 386,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    const result = world.tryUseMap(player, source, 1000);
+
+    expect(result.moved).toBe(false);
+    if (result.moved) throw new Error("unreachable");
+    expect(result.reason).toBe("invalid-transition");
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("executes an adjacent rope-spot action through tryUseRopeSpot", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "rope-spot-use-with",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "rope-spot",
+            activation: "use-with",
+            source,
+            destination,
+            itemId: 386,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.tryUseRopeSpot(player, source, 1000).moved).toBe(true);
+    expect(player.position).toEqual(destination);
+  });
+
+  it("does not treat a ladder as a rope spot", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "ladder-not-rope",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "ladder",
+            activation: "use",
+            source,
+            destination,
+            itemId: 1948,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.tryUseRopeSpot(player, source, 1000).moved).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("rejects rope-spot use from more than one tile away", () => {
+    const source = { x: 5, y: 2, z: 7 };
+    const destination = { x: 5, y: 3, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "rope-spot-distance",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "rope-spot",
+            activation: "use-with",
+            source,
+            destination,
+            itemId: 386,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.tryUseRopeSpot(player, source, 1000).moved).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("rejects rope-spot use when the destination is occupied", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "rope-spot-occupied",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "rope-spot",
+            activation: "use-with",
+            source,
+            destination,
+            itemId: 386,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    const blocker = makePlayer(destination.x, destination.y, destination.z, "p2");
+    world.addPlayer(player);
+    world.addPlayer(blocker);
+
+    const result = world.tryUseRopeSpot(player, source, 1000);
+
+    expect(result.moved).toBe(false);
+    if (result.moved) throw new Error("unreachable");
+    expect(result.reason).toBe("occupied");
+  });
+
   it("executes a ladder action from a diagonally adjacent tile", () => {
     const source = { x: 5, y: 4, z: 7 };
     const destination = { x: 5, y: 5, z: 6 };

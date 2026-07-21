@@ -11,6 +11,15 @@ const MUTABLE_TYPES = new Set([
   "rewardchest",
 ]);
 
+// Ids the server must own so their use-action can transform them at
+// runtime: shovel-diggable closed piles (Canary's `holes`; sync with
+// SHOVEL_HOLE_PAIRS in server/src/action/shovelHolePairs.ts) and bare
+// on/off levers (sync with LEVER_TOGGLE_PAIRS in
+// server/src/action/leverTogglePairs.ts) — levers are neither movable nor
+// typed in MUTABLE_TYPES, so without this they stay baked draw-only and
+// the lever handler never sees them.
+const MUTABLE_ITEM_IDS = new Set([593, 606, 608, 2772, 2773, 9110, 9111]);
+
 const STATEFUL_ATTRIBUTES = [
   "charges",
   "count",
@@ -53,6 +62,7 @@ export function getMapItemSemantics(appearance, staticItem = {}, attributes = {}
       pickupable ||
       stateful ||
       MUTABLE_TYPES.has(staticItem.type) ||
+      MUTABLE_ITEM_IDS.has(appearance.clientId) ||
       appearance.flags.container);
   const interactive =
     mutable ||

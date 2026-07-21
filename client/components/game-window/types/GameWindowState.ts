@@ -23,8 +23,10 @@ import type { ItemTextState } from "./ItemTextState";
 import type { LevelUpNotice } from "./LevelUpNotice";
 import type { LootSessionState } from "./LootSessionState";
 import type { MailboxSessionState } from "./MailboxSessionState";
+import type { MapContextMenuState } from "./MapContextMenuState";
 import type { NpcDialogueState } from "./NpcDialogueState";
 import type { ReportSessionState } from "./ReportSessionState";
+import type { ScreenMessageState } from "./ScreenMessageState";
 import type { ShopSessionState } from "./ShopSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
 
@@ -86,4 +88,7 @@ export interface GameWindowState {
   serverError: ServerErrorCode | null;
   runeTargeting: boolean;
   potionTargeting: boolean;
+  useWithTargeting: boolean;
+  mapContextMenu: MapContextMenuState | null;
+  screenMessage: ScreenMessageState | null;
 }

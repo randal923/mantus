@@ -259,6 +259,7 @@
   "inventory": {
     "label": "Inventário de {{name}}",
     "title": "Inventário",
+    "selectUseWithTarget": "Selecione um alvo para o item",
     "close": "Fechar inventário",
     "openCharacterStats": "Abrir atributos do personagem",
     "closeCharacterStats": "Fechar atributos do personagem",
@@ -824,6 +825,12 @@
       "clear": "Limpar",
       "assign": "Atribuir {{name}} ao espaço {{slot}}"
     }
+  },
+  "contextMenu": {
+    "look": "Olhar",
+    "use": "Usar",
+    "attack": "Atacar",
+    "stopAttack": "Parar ataque"
   },
   "potions": {
     "bar": "Barra de poções",

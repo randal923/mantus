@@ -1,6 +1,7 @@
 import type { GameClient } from "../../../lib/net/GameClient";
 import { WorldRenderer } from "../../../lib/render/WorldRenderer";
 import type { GameWindowStore } from "../types/GameWindowStore";
+import { performMapLook } from "./performMapLook";
 
 export function createGameWindowRenderer(
   store: GameWindowStore,
@@ -126,6 +127,13 @@ export function createGameWindowRenderer(
       store.getState().setWorldLoading(false);
     },
     targetPosition: (position) => {
+      const tool = runtime.pendingUseWithRef.current;
+      if (tool) {
+        runtime.pendingUseWithRef.current = null;
+        store.getState().setUseWithTargeting(false);
+        getClient()?.useItemWith(tool, position);
+        return true;
+      }
       const rune = runtime.pendingRuneRef.current;
       if (!rune) return false;
       runtime.pendingRuneRef.current = null;
@@ -133,5 +141,17 @@ export function createGameWindowRenderer(
       getClient()?.useRune(rune, { kind: "position", position });
       return true;
     },
+    cancelUseWith: () => {
+      if (!runtime.pendingUseWithRef.current) return false;
+      runtime.pendingUseWithRef.current = null;
+      store.getState().setUseWithTargeting(false);
+      return true;
+    },
+    lookAt: (_position, creatureId, itemIds) =>
+      performMapLook(store, creatureId, itemIds),
+    openContextMenu: (screen, position, creatureId, itemIds) =>
+      store
+        .getState()
+        .setMapContextMenu({ screen, position, creatureId, itemIds }),
   });
 }

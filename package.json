@@ -14,7 +14,7 @@
     "items:convert": "node tools/convertCanaryItems.mjs",
     "items:foods": "node tools/importCanaryFoods.mjs",
     "items:stowable": "node tools/importCanaryStowableItems.mjs",
-    "items:catalog": "node tools/buildItemCatalog.mjs && node tools/buildWikiItemCatalog.mjs",
+    "items:catalog": "node tools/buildItemCatalog.mjs && node tools/buildWikiItemCatalog.mjs && node tools/buildLookCatalog.mjs",
     "map:convert": "node tools/convertOtbm.mjs && node tools/buildMinimapTiles.mjs",
     "minimap:build": "node tools/buildMinimapTiles.mjs",
     "creatures:import": "node tools/importCanaryCreatures.mjs",

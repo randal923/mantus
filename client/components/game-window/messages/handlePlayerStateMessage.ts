@@ -41,6 +41,11 @@ export function handlePlayerStateMessage(
 
   if (message.type === "combat-log") {
     state.setCombatLog((current) => [...current, message.text].slice(-6));
+    // Status texts ("It is locked.", "Only the worthy may pass.") show
+    // center-screen like Tibia, not only in the log.
+    if (message.kind === "condition") {
+      state.showScreenMessage(message.text, "status");
+    }
     return false;
   }
 

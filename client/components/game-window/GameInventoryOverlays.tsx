@@ -42,6 +42,9 @@ export function GameInventoryOverlays() {
   const setPotionTargeting = useGameWindowStore(
     (state) => state.setPotionTargeting,
   );
+  const setUseWithTargeting = useGameWindowStore(
+    (state) => state.setUseWithTargeting,
+  );
 
   if (!ownCharacter || !dispatchItemOp) return null;
 
@@ -164,8 +167,20 @@ export function GameInventoryOverlays() {
             onUsePotion={(item) => {
               runtime.pendingRuneRef.current = null;
               setRuneTargeting(false);
+              runtime.pendingUseWithRef.current = null;
+              setUseWithTargeting(false);
               runtime.pendingPotionRef.current = item;
               setPotionTargeting(true);
+              setInventoryOpen(false);
+              setCharacterStatsOpen(false);
+            }}
+            onUseItemWith={(item) => {
+              runtime.pendingRuneRef.current = null;
+              setRuneTargeting(false);
+              runtime.pendingPotionRef.current = null;
+              setPotionTargeting(false);
+              runtime.pendingUseWithRef.current = item;
+              setUseWithTargeting(true);
               setInventoryOpen(false);
               setCharacterStatsOpen(false);
             }}

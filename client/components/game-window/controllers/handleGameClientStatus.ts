@@ -14,6 +14,7 @@ export function handleGameClientStatus(
     runtime.confirmedLevelRef.current = null;
     runtime.pendingRuneRef.current = null;
     runtime.pendingPotionRef.current = null;
+    runtime.pendingUseWithRef.current = null;
     runtime.actionBarRef.current = [];
     runtime.potionActionBarRef.current = [];
     state.setWorldLoading(false);
@@ -23,6 +24,9 @@ export function handleGameClientStatus(
     state.setSpells([]);
     state.setRuneTargeting(false);
     state.setPotionTargeting(false);
+    state.setUseWithTargeting(false);
+    state.setMapContextMenu(null);
+    state.clearScreenMessage();
     state.setActionBar([]);
     state.setActionBarConfigSlot(null);
     state.setPotionActionBar([]);

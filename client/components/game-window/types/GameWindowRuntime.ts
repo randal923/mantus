@@ -26,6 +26,7 @@ export interface GameWindowRuntime {
   resumeCharacterIdRef: RefObject<string | null>;
   pendingRuneRef: RefObject<InventoryItem | null>;
   pendingPotionRef: RefObject<InventoryItem | null>;
+  pendingUseWithRef: RefObject<InventoryItem | null>;
   itemDragRef: RefObject<ItemDragSource | null>;
   visibleCreaturesRef: RefObject<ReadonlyArray<CreatureState>>;
   uiSettingsRef: RefObject<UiSettings>;

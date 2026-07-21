@@ -347,6 +347,16 @@ const stats = {
   maxY: -Infinity,
   floorTiles: new Map(),
 };
+/**
+ * Rope-spot grounds/items, from Canary's ropeSpots tables (data/global.lua
+ * and data-canary/scripts/lib/register_actions.lua). Using a rope on one
+ * teleports the player one floor up, landing one tile south like a ladder.
+ */
+const ROPE_SPOT_IDS = new Set([
+  386, 421, 7762, 12202, 12935, 12936, 14238, 17238, 21501, 21965, 21966,
+  21967, 21968, 23363,
+]);
+
 /** "rx,ry,z" -> array of pre-serialized "[dx,dy,ground,...items]" strings. */
 const regions = new Map();
 /** "sx,sy,z" -> tile-presence and walkability bitsets. */
@@ -520,6 +530,20 @@ function finishTile(tile) {
         destination: z < 15 ? { x, y, z: z + 1 } : null,
         itemId: placedItem.id,
         enabled: z < 15 && !restricted,
+        ...(restricted ? { reason: "requires-content-action" } : {}),
+      });
+    }
+    if (ROPE_SPOT_IDS.has(placedItem.id)) {
+      const restricted =
+        placedItem.attributes.actionId !== undefined ||
+        placedItem.attributes.uniqueId !== undefined;
+      worldActions.push({
+        kind: "rope-spot",
+        activation: "use-with",
+        source: { x, y, z },
+        destination: z > 0 ? { x, y: y + 1, z: z - 1 } : null,
+        itemId: placedItem.id,
+        enabled: z > 0 && !restricted,
         ...(restricted ? { reason: "requires-content-action" } : {}),
       });
     }
@@ -874,14 +898,17 @@ const LADDER_FALLBACK_OFFSETS = [
 ];
 for (const action of worldActions) {
   if (
-    (action.kind !== "ladder" && action.kind !== "dropdown") ||
+    (action.kind !== "ladder" &&
+      action.kind !== "dropdown" &&
+      action.kind !== "rope-spot") ||
     !action.enabled ||
     !action.destination
   ) {
     continue;
   }
   if (isWalkable(action.destination)) continue;
-  if (action.kind === "ladder") {
+  // Rope spots share Canary's moveUpstairs neighbour scan with ladders.
+  if (action.kind === "ladder" || action.kind === "rope-spot") {
     const fallback = LADDER_FALLBACK_OFFSETS.map(([dx, dy]) => ({
       x: action.source.x + dx,
       y: action.source.y + dy,
@@ -896,6 +923,29 @@ for (const action of worldActions) {
   action.reason = hasTile(action.destination)
     ? "blocked-destination"
     : "missing-destination";
+}
+// The server loads exactly one action per tile; when a rope spot collides
+// with a ladder/dropdown on the same tile, the use-activated one wins.
+{
+  const enabledBySource = new Set();
+  for (const action of worldActions) {
+    if (!action.enabled) continue;
+    if (action.kind !== "rope-spot") {
+      enabledBySource.add(
+        `${action.source.x},${action.source.y},${action.source.z}`,
+      );
+    }
+  }
+  for (const action of worldActions) {
+    if (!action.enabled || action.kind !== "rope-spot") continue;
+    const key = `${action.source.x},${action.source.y},${action.source.z}`;
+    if (enabledBySource.has(key)) {
+      action.enabled = false;
+      action.reason = "duplicate-action";
+    } else {
+      enabledBySource.add(key);
+    }
+  }
 }
 const byPosition = (a, b) => {
   const first = a.source ?? a.position;

@@ -1,4 +1,8 @@
 import type { Position, ViewRange } from "@tibia/protocol";
+import {
+  OPEN_SHOVEL_HOLE_IDS,
+  SHOVEL_HOLE_PAIRS,
+} from "../action/shovelHolePairs";
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
 import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
@@ -6,6 +10,7 @@ import type { LootOrigin } from "../item/LootOrigin";
 import type { WorldItemDeltas } from "../item/WorldItemDeltas";
 import type { MapData } from "../MapData";
 import type { MapItem } from "../MapItem";
+import type { MapTransition } from "../MapTransition";
 import { positionKey } from "../positionKey";
 
 const GROUND_FLOOR = 7;
@@ -50,10 +55,37 @@ export class DynamicMapItems {
     return this.tileOverrides.get(positionKey(position));
   }
 
+  /**
+   * A shovel-opened hole is a dynamic item, so its step-through fall cannot
+   * be baked into the static transition table; movement consults this before
+   * the static lookup. Statically-placed open holes keep their baked
+   * transitions and never appear in the dynamic layer.
+   */
+  getHoleTransition(position: Position): MapTransition | undefined {
+    if (position.z >= 15) return undefined;
+    for (const item of this.dynamicMapItems.get(positionKey(position)) ?? []) {
+      if (!OPEN_SHOVEL_HOLE_IDS.has(item.itemId)) continue;
+      return {
+        kind: "hole",
+        activation: "step",
+        source: { ...position },
+        destination: { x: position.x, y: position.y, z: position.z + 1 },
+        itemId: item.itemId,
+      };
+    }
+    return undefined;
+  }
+
+  private passabilityForItemId(itemId: number): boolean | undefined {
+    if (SHOVEL_HOLE_PAIRS.has(itemId)) return false;
+    if (OPEN_SHOVEL_HOLE_IDS.has(itemId)) return true;
+    return this.doorPassabilityForItemId(itemId);
+  }
+
   private refreshTileOverride(position: Position): void {
     let override: TilePassabilityOverride | undefined;
     for (const item of this.getMapItems(position)) {
-      const passable = this.doorPassabilityForItemId(item.itemId);
+      const passable = this.passabilityForItemId(item.itemId);
       if (passable === undefined) continue;
       override = { walkable: passable, blocksProjectile: !passable };
     }

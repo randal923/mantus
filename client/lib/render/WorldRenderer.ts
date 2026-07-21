@@ -59,6 +59,21 @@ interface WorldRendererActions {
   autoWalk(directions: ReadonlyArray<Direction>): void;
   targetPosition(position: Position): boolean;
   targetCreature(creatureId: string): boolean;
+  /** Right-click while use-with crosshair targeting: true cancels the mode. */
+  cancelUseWith(): boolean;
+  /** Left+right click: describe the top creature/item on the tile. */
+  lookAt(
+    position: Position,
+    creatureId: string | null,
+    itemIds: ReadonlyArray<number>,
+  ): void;
+  /** Ctrl+click: open the action menu for the clicked tile at screen x/y. */
+  openContextMenu(
+    screen: { x: number; y: number },
+    position: Position,
+    creatureId: string | null,
+    itemIds: ReadonlyArray<number>,
+  ): void;
   /** Reports spawn-area loading progress for the entering-world screen. */
   worldLoadProgress(completed: number, total: number): void;
   /** Fired once the spawn area's regions and atlas sheets are loaded. */
@@ -100,6 +115,7 @@ export class WorldRenderer {
   private mapDragIcon: HTMLCanvasElement | null = null;
   private previousBodyCursor = "";
   private suppressNextMapClick = false;
+  private suppressNextContextMenu = false;
   private lastPointerClientPosition: { x: number; y: number } | null = null;
   private destroyed = false;
 
@@ -520,12 +536,20 @@ export class WorldRenderer {
       if (item) this.actions.pickupMapItem(item, position);
       return;
     }
-    this.actions.useMap(position);
+    this.actions.useMap(this.mapView.interactiveTileFor(position));
   };
 
   private readonly onMapPointerDown = (event: PointerEvent): void => {
     this.mapDragCandidate = null;
-    if (event.button !== 0 || !this.actions || !this.ownPosition) return;
+    if (!this.actions || !this.ownPosition) return;
+    // Tibia's look gesture: both mouse buttons pressed together.
+    if ((event.buttons & 3) === 3) {
+      this.suppressNextMapClick = true;
+      this.suppressNextContextMenu = true;
+      this.lookAtEvent(event);
+      return;
+    }
+    if (event.button !== 0) return;
     const position = this.mapPositionForEvent(event);
     if (!position) return;
     const item = this.mapView.topServerItem(position);
@@ -629,15 +653,42 @@ export class WorldRenderer {
       this.ownPosition.z,
     );
     if (this.actions.targetPosition(target)) return;
+    if (event.ctrlKey) {
+      this.openContextMenuFor(event, point, target);
+      return;
+    }
     const directions = getAutoWalkDirections(this.ownPosition, target);
     if (directions.length > 0) this.actions.autoWalk(directions);
   };
 
   private readonly onMapContextMenu = (event: MouseEvent): void => {
     event.preventDefault();
+    if (this.suppressNextContextMenu) {
+      this.suppressNextContextMenu = false;
+      return;
+    }
     if (!this.actions || !this.ownPosition) return;
+    if (this.actions.cancelUseWith()) return;
     const point = this.canvasPoint(event);
     if (!point) return;
+    // macOS fires contextmenu for Ctrl+left-click, so this branch covers
+    // both Ctrl+right-click and the laptop Ctrl+click gesture.
+    if (event.ctrlKey) {
+      this.openContextMenuFor(
+        event,
+        point,
+        getMapPointerPosition(
+          point.x,
+          point.y,
+          this.world.position.x,
+          this.world.position.y,
+          ZOOM,
+          TILE_SIZE,
+          this.ownPosition.z,
+        ),
+      );
+      return;
+    }
     const targetCreatureId = this.creatureIdAt(point.x, point.y, true);
     if (
       targetCreatureId &&
@@ -655,6 +706,40 @@ export class WorldRenderer {
       return;
     }
     this.actions.useMap(
+      this.mapView.interactiveTileFor(
+        getMapPointerPosition(
+          point.x,
+          point.y,
+          this.world.position.x,
+          this.world.position.y,
+          ZOOM,
+          TILE_SIZE,
+          this.ownPosition.z,
+        ),
+      ),
+    );
+  };
+
+  private openContextMenuFor(
+    event: MouseEvent,
+    point: { x: number; y: number },
+    position: Position,
+  ): void {
+    if (!this.actions) return;
+    const target = this.mapView.interactiveTileFor(position);
+    this.actions.openContextMenu(
+      { x: event.clientX, y: event.clientY },
+      target,
+      this.creatureIdAt(point.x, point.y, true),
+      this.mapView.lookItemIds(target),
+    );
+  }
+
+  private lookAtEvent(event: MouseEvent): void {
+    if (!this.actions || !this.ownPosition) return;
+    const point = this.canvasPoint(event);
+    if (!point) return;
+    const position = this.mapView.interactiveTileFor(
       getMapPointerPosition(
         point.x,
         point.y,
@@ -665,7 +750,12 @@ export class WorldRenderer {
         this.ownPosition.z,
       ),
     );
-  };
+    this.actions.lookAt(
+      position,
+      this.creatureIdAt(point.x, point.y, true),
+      this.mapView.lookItemIds(position),
+    );
+  }
 
   private canvasPoint(event: MouseEvent): { x: number; y: number } | null {
     return this.canvasPointForClient(event.clientX, event.clientY);

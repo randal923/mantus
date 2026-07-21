@@ -29,6 +29,7 @@ export function createGameWindowStore({
     resumeCharacterIdRef: { current: null },
     pendingRuneRef: { current: null },
     pendingPotionRef: { current: null },
+    pendingUseWithRef: { current: null },
     itemDragRef: { current: null },
     visibleCreaturesRef: { current: [] },
     uiSettingsRef: { current: {} },
@@ -101,6 +102,9 @@ export function createGameWindowStore({
     serverError: null,
     runeTargeting: false,
     potionTargeting: false,
+    useWithTargeting: false,
+    mapContextMenu: null,
+    screenMessage: null,
     setConfig: (config) => set(config),
     bindSessions: (sessions, sessionActions) =>
       set({ sessions, sessionActions }),
@@ -315,6 +319,23 @@ export function createGameWindowStore({
       set((state) => ({
         potionTargeting: resolveStateAction(value, state.potionTargeting),
       })),
+    setUseWithTargeting: (value) =>
+      set((state) => ({
+        useWithTargeting: resolveStateAction(value, state.useWithTargeting),
+      })),
+    setMapContextMenu: (value) =>
+      set((state) => ({
+        mapContextMenu: resolveStateAction(value, state.mapContextMenu),
+      })),
+    showScreenMessage: (text, tone) =>
+      set((state) => ({
+        screenMessage: {
+          id: (state.screenMessage?.id ?? 0) + 1,
+          text,
+          tone,
+        },
+      })),
+    clearScreenMessage: () => set({ screenMessage: null }),
     closeMarket: () => {
       runtime.marketOpenRef.current = false;
       runtime.marketSelectedItemRef.current = null;
@@ -344,6 +365,7 @@ export function createGameWindowStore({
       runtime.potionActionBarRef.current = [];
       runtime.pendingRuneRef.current = null;
       runtime.pendingPotionRef.current = null;
+      runtime.pendingUseWithRef.current = null;
       runtime.itemDragRef.current = null;
       set((state) => ({
         status: "connecting",
@@ -385,6 +407,9 @@ export function createGameWindowStore({
         gameMenuOpen: false,
         runeTargeting: false,
         potionTargeting: false,
+        useWithTargeting: false,
+        mapContextMenu: null,
+        screenMessage: null,
         serverError: null,
         connectionAttempt: state.connectionAttempt + 1,
       }));

@@ -259,6 +259,7 @@
   "inventory": {
     "label": "{{name}}'s inventory",
     "title": "Inventory",
+    "selectUseWithTarget": "Select a target for the item",
     "close": "Close inventory",
     "openCharacterStats": "Open character stats",
     "closeCharacterStats": "Close character stats",
@@ -824,6 +825,12 @@
       "clear": "Clear",
       "assign": "Assign {{name}} to slot {{slot}}"
     }
+  },
+  "contextMenu": {
+    "look": "Look",
+    "use": "Use",
+    "attack": "Attack",
+    "stopAttack": "Stop Attack"
   },
   "potions": {
     "bar": "Potion bar",

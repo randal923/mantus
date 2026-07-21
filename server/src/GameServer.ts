@@ -26,6 +26,7 @@ import { HouseService } from "./house/HouseService";
 import type { HouseStore } from "./house/HouseStore";
 import { loadHouseContent } from "./house/loadHouseContent";
 import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
+import { ToolUseHandler } from "./action/ToolUseHandler";
 import { WorldActionRegistry } from "./action/WorldActionRegistry";
 import { MarketService } from "./market/MarketService";
 import type { MarketStore } from "./market/MarketStore";
@@ -112,6 +113,7 @@ export class GameServer {
   private readonly actionBar: ActionBarHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
+  private readonly toolUse: ToolUseHandler;
   private readonly chat: ChatHandler;
   private readonly combat: CombatIntentHandler;
   private readonly combatSystem: Combat;
@@ -356,6 +358,12 @@ export class GameServer {
       loadDoorLevelRequirements(this.world.mapName),
       (characterId, position) =>
         this.houses.canUseHouseTile(characterId, position),
+    );
+    this.toolUse = new ToolUseHandler(
+      this.world,
+      deps.itemCatalog,
+      this.items,
+      this.movement,
     );
     this.progression = new ProgressionSystem(
       this.world,
@@ -635,6 +643,10 @@ export class GameServer {
       case "use-potion":
         this.combat.handle(session, intent, now);
         return;
+      case "use-item-with":
+        if (this.toolUse.handle(session, intent, now)) return;
+        this.items.handle(session, intent, now);
+        return;
       case "equip-item":
       case "unequip-item":
       case "pickup-item":
@@ -645,7 +657,6 @@ export class GameServer {
       case "loot-item":
       case "close-world-container":
       case "use-item":
-      case "use-item-with":
       case "split-stack":
       case "rotate-item":
       case "move-item":

@@ -220,6 +220,8 @@ export function GameHudOverlay() {
         const runtime = store.getState().runtime;
         runtime.pendingRuneRef.current = null;
         setRuneTargeting(false);
+        runtime.pendingUseWithRef.current = null;
+        store.getState().setUseWithTargeting(false);
         runtime.pendingPotionRef.current = null;
         setPotionTargeting(false);
 

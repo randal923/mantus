@@ -88,7 +88,13 @@ export function handleDoorUse(
       return;
     }
     case "quest":
-      session.sendError("item-action-failed");
+      // Storage-gated content ships with 20a-quest-state; until then the
+      // door presents Tibia's sealed message instead of a generic failure.
+      session.send({
+        type: "combat-log",
+        kind: "condition",
+        text: "The door seems to be sealed against unwanted intruders.",
+      });
       return;
   }
 }

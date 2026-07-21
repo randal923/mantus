@@ -17,7 +17,11 @@ export function resolveWorldAction(
   catalog: ItemCatalog,
   position: Position,
 ): WorldAction | null {
-  if (world.getMapAction(position)) return { kind: "map-movement" };
+  // Use-with actions (rope spots) never resolve from a bare use-map: they
+  // require the authoritative tool check in ToolUseHandler.
+  if (world.getMapAction(position)?.activation === "use") {
+    return { kind: "map-movement" };
+  }
   const items = [...world.getMapItems(position)].sort(
     (left, right) => right.stackIndex - left.stackIndex,
   );

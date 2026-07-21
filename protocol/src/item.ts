@@ -50,7 +50,7 @@ export const inventoryItemPresentationSchema = z
     twoHanded: z.boolean().optional(),
     containerCapacity: z.number().int().min(0).max(100).optional(),
     useKind: z
-      .enum(["rune", "potion", "container", "rotate", "read", "food"])
+      .enum(["rune", "potion", "container", "rotate", "read", "food", "useWith"])
       .optional(),
     stowable: z.boolean().optional(),
     tooltip: itemTooltipSchema,

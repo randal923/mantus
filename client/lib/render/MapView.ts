@@ -20,6 +20,7 @@ import {
 } from "./getTileRenderLayers";
 import { getVisibleFloors } from "./getVisibleFloors";
 import { projectFloorPosition } from "./projectFloorPosition";
+import { resolveInteractiveTile } from "./resolveInteractiveTile";
 
 const GROUND_FLOOR = 7;
 const UNDERGROUND_FLOOR_AWARENESS = 2;
@@ -108,6 +109,26 @@ export class MapView {
 
   projectPosition(x: number, y: number, z: number): { x: number; y: number } {
     return projectFloorPosition(x, y, this.center?.z ?? z, z);
+  }
+
+  /** Item ids on the tile in source stack order (ground first), for look. */
+  lookItemIds(position: Position): number[] {
+    return this.tileItems(position.z, position.x, position.y).map(
+      (item) => item.object.clientId,
+    );
+  }
+
+  /** Redirects a clicked tile to the anchor of a covering multi-tile sprite. */
+  interactiveTileFor(position: Position): Position {
+    return resolveInteractiveTile(position, (candidate) =>
+      this.tileItems(candidate.z, candidate.x, candidate.y).map(
+        ({ object }) => ({
+          width: object.width,
+          height: object.height,
+          flags: object.flags,
+        }),
+      ),
+    );
   }
 
   topServerItem(position: Position): MapItemState | undefined {
