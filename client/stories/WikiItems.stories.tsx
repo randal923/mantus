@@ -6,13 +6,15 @@ import { WIKI_ITEM_SOURCES } from "./wikiFixtures";
 const meta = {
   title: "Game/Wiki/Items",
   component: WikiItems,
-  parameters: { layout: "padded" },
-  decorators: [(Story) => <div className="ui-panel-frame p-6"><Story /></div>],
+  parameters: { layout: "fullscreen" },
   args: {
+    activeTab: "items",
     itemSources: WIKI_ITEM_SOURCES,
     sourcesPending: false,
     onRequestItemSources: fn(),
     onSelectSource: fn(),
+    onSelectTab: fn(),
+    onClose: fn(),
   },
 } satisfies Meta<typeof WikiItems>;
 

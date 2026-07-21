@@ -6,14 +6,16 @@ import { WIKI_CREATURES, WIKI_MONSTER } from "./wikiFixtures";
 const meta = {
   title: "Game/Wiki/Bestiary",
   component: WikiBestiary,
-  parameters: { layout: "padded" },
-  decorators: [(Story) => <div className="ui-panel-frame p-6"><Story /></div>],
+  parameters: { layout: "fullscreen" },
   args: {
+    activeTab: "bestiary",
     creatures: WIKI_CREATURES,
     monster: WIKI_MONSTER,
     pending: false,
     error: null,
     onRequestMonster: fn(),
+    onSelectTab: fn(),
+    onClose: fn(),
   },
 } satisfies Meta<typeof WikiBestiary>;
 

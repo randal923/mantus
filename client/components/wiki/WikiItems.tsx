@@ -10,24 +10,30 @@ import {
   type WikiItemCategory,
 } from "../../lib/wiki/WikiItemCategory";
 import { getWikiItemCategory } from "../../lib/wiki/getWikiItemCategory";
-import { Button } from "../ui/Button";
 import { WikiItemDetails } from "./WikiItemDetails";
 import { WikiItemRow } from "./WikiItemRow";
+import { WikiModalFrame, type WikiTab } from "./WikiModalFrame";
 
 const PAGE_SIZE = 7;
 
 interface WikiItemsProps {
+  activeTab: WikiTab;
   itemSources: WikiItemSourcesStateMessage | null;
   sourcesPending: boolean;
   onRequestItemSources: (itemTypeId: number) => void;
   onSelectSource: (source: WikiItemSource) => void;
+  onSelectTab: (tab: WikiTab) => void;
+  onClose: () => void;
 }
 
 export function WikiItems({
+  activeTab,
   itemSources,
   sourcesPending,
   onRequestItemSources,
   onSelectSource,
+  onSelectTab,
+  onClose,
 }: WikiItemsProps) {
   const { t } = useAppTranslation();
   const { items, pending, error } = useWikiItems();
@@ -91,7 +97,19 @@ export function WikiItems({
   );
 
   return (
-    <div className="relative min-h-[32rem]">
+    <WikiModalFrame
+      activeTab={activeTab}
+      pagination={{
+        currentPage: currentPage + 1,
+        totalPages,
+        disabled: pending,
+        onPrevious: () => setPage(currentPage - 1),
+        onNext: () => setPage(currentPage + 1),
+      }}
+      onSelectTab={onSelectTab}
+      onClose={onClose}
+    >
+      <>
       <div className="grid min-h-0 gap-4 md:grid-cols-[14rem_minmax(0,1fr)]">
         <aside className="min-h-0">
           <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
@@ -158,15 +176,39 @@ export function WikiItems({
         </aside>
 
         <section className="min-w-0">
-          <div className="mb-2 flex items-baseline justify-between gap-3">
+          <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
               {t("wiki.items.title")}
+              <span className="ml-2 text-[10px] font-normal tracking-normal text-ui-muted normal-case">
+                {t("wiki.items.count", {
+                  count: filteredItems.length.toLocaleString(),
+                })}
+              </span>
             </h3>
-            <span className="text-[10px] text-ui-muted">
-              {t("wiki.items.count", {
-                count: filteredItems.length.toLocaleString(),
-              })}
-            </span>
+            <label className="relative block sm:w-72">
+              <span className="sr-only">{t("wiki.search")}</span>
+              <svg
+                aria-hidden
+                viewBox="0 0 20 20"
+                className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <circle cx="8.5" cy="8.5" r="5" />
+                <path d="m12.5 12.5 4 4" />
+              </svg>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setPage(0);
+                }}
+                placeholder={t("wiki.search")}
+                className="w-full rounded-sm border border-ui-stone-light/20 bg-black/35 py-2 pr-3 pl-9 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60"
+              />
+            </label>
           </div>
           {pending && (
             <p className="py-12 text-center text-xs text-ui-muted">
@@ -202,58 +244,6 @@ export function WikiItems({
         </section>
       </div>
 
-      <footer className="mt-4 flex flex-col gap-3 border-t border-ui-stone-light/15 pt-4 sm:flex-row sm:items-center">
-        <nav
-          aria-label={t("modal.pagination.label")}
-          className="flex items-center justify-center gap-3 sm:flex-1"
-        >
-          <Button
-            size="sm"
-            disabled={currentPage <= 0}
-            onClick={() => setPage(currentPage - 1)}
-          >
-            {t("modal.pagination.previous")}
-          </Button>
-          <span className="min-w-20 text-center text-xs text-ui-muted">
-            {t("modal.pagination.pageOf", {
-              page: currentPage + 1,
-              total: totalPages,
-            })}
-          </span>
-          <Button
-            size="sm"
-            disabled={currentPage >= totalPages - 1}
-            onClick={() => setPage(currentPage + 1)}
-          >
-            {t("modal.pagination.next")}
-          </Button>
-        </nav>
-        <label className="relative block sm:w-72">
-          <span className="sr-only">{t("wiki.search")}</span>
-          <svg
-            aria-hidden
-            viewBox="0 0 20 20"
-            className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <circle cx="8.5" cy="8.5" r="5" />
-            <path d="m12.5 12.5 4 4" />
-          </svg>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(0);
-            }}
-            placeholder={t("wiki.search")}
-            className="w-full rounded-sm border border-ui-stone-light/20 bg-black/35 py-2 pr-3 pl-9 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60"
-          />
-        </label>
-      </footer>
-
       {selectedItem && (
         <WikiItemDetails
           item={selectedItem}
@@ -267,6 +257,7 @@ export function WikiItems({
           onClose={() => setSelectedItem(null)}
         />
       )}
-    </div>
+      </>
+    </WikiModalFrame>
   );
 }

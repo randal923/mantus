@@ -9,14 +9,10 @@ import type {
   WikiItemSource,
   WikiItemSourcesStateMessage,
 } from "@tibia/protocol";
-import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { Modal } from "../ui/Modal";
 import { WikiBestiary } from "./WikiBestiary";
 import { WikiBosstiary } from "./WikiBosstiary";
 import { WikiItems } from "./WikiItems";
-import { WikiTabIcon } from "./WikiTabIcon";
-
-type WikiTab = "items" | "bestiary" | "bosstiary";
+import type { WikiTab } from "./WikiModalFrame";
 
 interface WikiModalProps {
   initialTab?: WikiTab;
@@ -57,92 +53,74 @@ export function WikiModal({
   onRequestItemSources,
   onClose,
 }: WikiModalProps) {
-  const { t } = useAppTranslation();
   const [tab, setTab] = useState<WikiTab>(initialTab);
   const [target, setTarget] = useState<WikiItemSource | null>(null);
+  const selectTab = (next: WikiTab) => {
+    setTab(next);
+    if (next === "bestiary" && !creatures && !bestiaryPending) {
+      onRequestBestiary();
+    }
+    if (next === "bosstiary" && !bosses && !bosstiaryPending) {
+      onRequestBosstiary();
+    }
+  };
+
+  if (tab === "items") {
+    return (
+      <WikiItems
+        activeTab={tab}
+        itemSources={itemSources}
+        sourcesPending={itemSourcesPending}
+        onRequestItemSources={onRequestItemSources}
+        onSelectSource={(source) => {
+          setTarget(source);
+          if (source.scope === "bestiary") {
+            onRequestMonster(source.raceId);
+            setTab("bestiary");
+            return;
+          }
+          onRequestBoss(source.raceId);
+          setTab("bosstiary");
+        }}
+        onSelectTab={selectTab}
+        onClose={onClose}
+      />
+    );
+  }
+
+  if (tab === "bestiary") {
+    return (
+      <WikiBestiary
+        key={target?.scope === "bestiary" ? target.raceId : "bestiary"}
+        activeTab={tab}
+        creatures={creatures}
+        monster={monster}
+        pending={bestiaryPending}
+        error={bestiaryError}
+        initialRaceId={
+          target?.scope === "bestiary" ? target.raceId : undefined
+        }
+        onRequestMonster={onRequestMonster}
+        onSelectTab={selectTab}
+        onClose={onClose}
+      />
+    );
+  }
 
   return (
-    <Modal
-      title={t("wiki.title")}
+    <WikiBosstiary
+      key={target?.scope === "bosstiary" ? target.raceId : "bosstiary"}
+      activeTab={tab}
+      bosses={bosses}
+      boss={boss}
+      pending={bosstiaryPending}
+      error={bosstiaryError}
+      initialRaceId={
+        target?.scope === "bosstiary" ? target.raceId : undefined
+      }
+      onRequestBoss={onRequestBoss}
+      onSelectTab={selectTab}
       onClose={onClose}
-      size="full"
-      tabs={{
-        label: t("wiki.sections"),
-        selected: tab,
-        items: [
-          {
-            id: "items",
-            label: t("wiki.tabs.items"),
-            icon: <WikiTabIcon name="items" />,
-          },
-          {
-            id: "bestiary",
-            label: t("wiki.tabs.bestiary"),
-            icon: <WikiTabIcon name="bestiary" />,
-          },
-          {
-            id: "bosstiary",
-            label: t("wiki.tabs.bosstiary"),
-            icon: <WikiTabIcon name="bosstiary" />,
-          },
-        ],
-        onSelect: (id) => {
-          const next = id as WikiTab;
-          setTab(next);
-          if (next === "bestiary" && !creatures && !bestiaryPending) {
-            onRequestBestiary();
-          }
-          if (next === "bosstiary" && !bosses && !bosstiaryPending) {
-            onRequestBosstiary();
-          }
-        },
-      }}
-    >
-      <>
-        {tab === "items" && (
-          <WikiItems
-            itemSources={itemSources}
-            sourcesPending={itemSourcesPending}
-            onRequestItemSources={onRequestItemSources}
-            onSelectSource={(source) => {
-              setTarget(source);
-              if (source.scope === "bestiary") {
-                onRequestMonster(source.raceId);
-                setTab("bestiary");
-                return;
-              }
-              onRequestBoss(source.raceId);
-              setTab("bosstiary");
-            }}
-          />
-        )}
-        {tab === "bestiary" && (
-          <WikiBestiary
-            key={target?.scope === "bestiary" ? target.raceId : "bestiary"}
-            creatures={creatures}
-            monster={monster}
-            pending={bestiaryPending}
-            error={bestiaryError}
-            initialRaceId={
-              target?.scope === "bestiary" ? target.raceId : undefined
-            }
-            onRequestMonster={onRequestMonster}
-          />
-        )}
-        {tab === "bosstiary" && (
-          <WikiBosstiary
-            key={target?.scope === "bosstiary" ? target.raceId : "bosstiary"}
-            bosses={bosses}
-            boss={boss}
-            pending={bosstiaryPending}
-            error={bosstiaryError}
-            initialRaceId={
-              target?.scope === "bosstiary" ? target.raceId : undefined
-            }
-            onRequestBoss={onRequestBoss}
-          />
-        )}
-      </>
-    </Modal>
+    />
   );
 }

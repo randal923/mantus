@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn } from "storybook/test";
+import { expect, fn, within } from "storybook/test";
 import {
   WHEEL_LIMITS,
   type GemStateMessage,
@@ -91,7 +91,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = {};
+export const Empty: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dialog = canvas.getByRole("dialog", { name: "Wheel of Destiny" });
+    const wheel = canvas.getByRole("img", { name: "Wheel of Destiny" });
+    const saveButton = canvas.getByRole("button", { name: "Save" });
+
+    await expect(dialog.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      window.innerHeight,
+    );
+    await expect(saveButton.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      dialog.getBoundingClientRect().bottom,
+    );
+    await expect(wheel.parentElement).toHaveClass("overflow-x-auto");
+  },
+};
 
 export const RedDomainBuild: Story = {
   args: { wheel: RED_BUILD },

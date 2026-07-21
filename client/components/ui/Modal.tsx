@@ -6,7 +6,7 @@ import { Button } from "./Button";
 import { CloseButton } from "./CloseButton";
 import { ModalTabButton } from "./ModalTabButton";
 
-interface ModalPagination {
+export interface ModalPagination {
   currentPage: number;
   totalPages: number;
   disabled?: boolean;
@@ -61,7 +61,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 backdrop-blur-xs sm:p-4"
       onClick={onClose}
     >
       <section
@@ -69,7 +69,11 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className={`ui-panel-frame relative isolate flex h-4/5 max-h-[calc(100dvh-2rem)] w-full flex-col gap-5 overflow-hidden p-6 font-tibia text-ui-text ${
+        className={`ui-panel-frame relative isolate flex min-w-0 w-full flex-col gap-3 overflow-hidden p-3 font-tibia text-ui-text sm:gap-5 sm:p-6 ${
+          size === "full"
+            ? "h-[calc(100dvh-1rem)] sm:h-[calc(100dvh-2rem)]"
+            : "h-[calc(100dvh-1rem)] sm:h-4/5 sm:max-h-[calc(100dvh-2rem)]"
+        } ${
           size === "full"
             ? "max-w-7xl"
             : size === "wide"
@@ -85,8 +89,8 @@ export function Modal({
           aria-hidden
           className="pointer-events-none absolute inset-x-10 top-0 -z-10 h-24 bg-radial from-ui-accent/12 to-transparent blur-xl"
         />
-        <header className="flex items-center gap-3">
-          <h2 className="min-w-0 flex-1 truncate font-display text-xl tracking-[0.1em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+        <header className="flex shrink-0 items-center gap-3">
+          <h2 className="min-w-0 flex-1 truncate font-display text-base tracking-[0.1em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)] sm:text-xl">
             {title}
           </h2>
           <CloseButton label={t("modal.close")} onClick={onClose} />
@@ -95,7 +99,11 @@ export function Modal({
 
         {tabs && (
           <>
-            <div role="tablist" aria-label={tabs.label} className="flex gap-2">
+            <div
+              role="tablist"
+              aria-label={tabs.label}
+              className="ui-scrollbar flex shrink-0 gap-2 overflow-x-auto pb-1"
+            >
               {tabs.items.map((tab) => (
                 <ModalTabButton
                   key={tab.id}
@@ -112,7 +120,7 @@ export function Modal({
 
         <div
           role={tabs ? "tabpanel" : undefined}
-          className="ui-scrollbar min-h-0 flex-1 overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85"
+          className="ui-scrollbar min-h-0 min-w-0 flex-1 overscroll-contain overflow-y-auto pr-1 text-sm leading-6 text-ui-text/85"
         >
           {children}
         </div>
@@ -154,7 +162,9 @@ export function Modal({
         {footer && (
           <>
             <div aria-hidden className="ui-divider" />
-            <footer className="flex justify-end gap-3">{footer}</footer>
+            <footer className="flex shrink-0 flex-wrap justify-end gap-3">
+              {footer}
+            </footer>
           </>
         )}
       </section>

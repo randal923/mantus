@@ -14,7 +14,7 @@ import {
   type WheelStateMessage,
 } from "@tibia/protocol";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { trySetWheelSlice } from "../../lib/wheel/trySetWheelSlice";
 import { wheelBaseVocationKey } from "../../lib/wheel/wheelBaseVocationKey";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -40,6 +40,11 @@ interface WheelModalProps {
   onRequestGems: () => void;
   onGemAction: (action: GemAction) => void;
   onClose: () => void;
+}
+
+interface WheelDraft {
+  source: ReadonlyArray<number> | undefined;
+  slices: number[];
 }
 
 const emptySlices = (): number[] =>
@@ -78,15 +83,23 @@ export function WheelModal({
 }: WheelModalProps) {
   const { t } = useAppTranslation();
   const [tab, setTab] = useState<WheelTab>("wheel");
-  const [draft, setDraft] = useState<number[]>(emptySlices);
+  const [draftState, setDraftState] = useState<WheelDraft | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   const serverSlices = wheel?.slices;
-  useEffect(() => {
-    // Sync the draft whenever the server acknowledges a new projection.
-    setDraft(serverSlices ? [...serverSlices] : emptySlices());
-  }, [serverSlices]);
+  const draft = useMemo(
+    () =>
+      draftState !== null && draftState.source === serverSlices
+        ? draftState.slices
+        : serverSlices
+          ? [...serverSlices]
+          : emptySlices(),
+    [draftState, serverSlices],
+  );
+  const setDraft = (slices: number[]) => {
+    setDraftState({ source: serverSlices, slices });
+  };
 
   const totalPoints = wheel?.totalPoints ?? 0;
   const unlocked = wheel?.unlocked ?? false;
@@ -177,7 +190,7 @@ export function WheelModal({
     <Modal
       title={t("wheel.title")}
       onClose={onClose}
-      size="wide"
+      size="full"
       tabs={{
         label: t("wheel.sections"),
         selected: tab,
@@ -279,17 +292,19 @@ export function WheelModal({
             </p>
           </div>
 
-          <WheelCanvas
-            vocation={vocationKey}
-            slices={draft}
-            unlockableIds={unlockableIds}
-            domainPoints={domainPoints}
-            selectedId={selectedId}
-            hoveredId={hoveredId}
-            onHover={setHoveredId}
-            onSelect={setSelectedId}
-            onQuickToggle={quickToggle}
-          />
+          <div className="ui-scrollbar flex w-full max-w-[522px] shrink-0 overflow-x-auto pb-2">
+            <WheelCanvas
+              vocation={vocationKey}
+              slices={draft}
+              unlockableIds={unlockableIds}
+              domainPoints={domainPoints}
+              selectedId={selectedId}
+              hoveredId={hoveredId}
+              onHover={setHoveredId}
+              onSelect={setSelectedId}
+              onQuickToggle={quickToggle}
+            />
+          </div>
 
           <div className="w-52 shrink-0 rounded border border-ui-gold/15 bg-black/25 p-3">
             <WheelPerkSummary

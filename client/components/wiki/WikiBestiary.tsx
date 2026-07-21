@@ -13,6 +13,7 @@ import { BestiaryMonsterSheet } from "../bestiary/BestiaryMonsterSheet";
 import { Button } from "../ui/Button";
 import { WikiBestiaryClassCard } from "./WikiBestiaryClassCard";
 import { WikiCurrencyIcon } from "./WikiCurrencyIcon";
+import { WikiModalFrame, type WikiTab } from "./WikiModalFrame";
 
 const PAGE_SIZE = 15;
 const EMPTY_ENTRIES: ReadonlyArray<BestiaryCreatureEntry> = [];
@@ -27,21 +28,27 @@ type BestiaryView =
     };
 
 interface WikiBestiaryProps {
+  activeTab: WikiTab;
   creatures: BestiaryCreaturesStateMessage | null;
   monster: BestiaryMonsterStateMessage | null;
   pending: boolean;
   error: string | null;
   initialRaceId?: number;
   onRequestMonster: (raceId: number) => void;
+  onSelectTab: (tab: WikiTab) => void;
+  onClose: () => void;
 }
 
 export function WikiBestiary({
+  activeTab,
   creatures,
   monster,
   pending,
   error,
   initialRaceId,
   onRequestMonster,
+  onSelectTab,
+  onClose,
 }: WikiBestiaryProps) {
   const { t } = useAppTranslation();
   const initialEntry = creatures?.entries.find(
@@ -98,28 +105,79 @@ export function WikiBestiary({
     view.kind === "monster" && monster?.raceId === view.raceId;
 
   return (
-    <div className="min-h-[32rem]">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h3 className="font-display text-sm font-bold tracking-widest text-ui-gold uppercase">
-            {view.kind === "classes"
-              ? t("wiki.bestiary.classes")
-              : view.kind === "class"
-                ? view.className
-                : (monsterReady ? monster.name : t("bestiary.loading"))}
-          </h3>
-          <p className="mt-1 text-xs text-ui-muted">
-            {t("bestiary.subtitle")}
-          </p>
-        </div>
-        {creatures && (
-          <span className="flex items-center gap-2 rounded-full border border-ui-gold/25 bg-black/25 px-3 py-1 text-xs text-ui-gold">
-            <WikiCurrencyIcon name="charm" />
-            {t("bestiary.charmPoints", {
-              points: creatures.charmPoints.toLocaleString(),
-            })}
+    <WikiModalFrame
+      activeTab={activeTab}
+      pagination={
+        view.kind === "monster"
+          ? undefined
+          : {
+              currentPage: currentPage + 1,
+              totalPages,
+              disabled: pending,
+              onPrevious: () => setPage(currentPage - 1),
+              onNext: () => setPage(currentPage + 1),
+            }
+      }
+      onSelectTab={onSelectTab}
+      onClose={onClose}
+    >
+      <>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          {view.kind !== "classes" && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setQuery("");
+                setPage(0);
+                setView(
+                  view.kind === "monster"
+                    ? { kind: "class", className: view.className }
+                    : { kind: "classes" },
+                );
+              }}
+            >
+              {t("bestiary.back")}
+            </Button>
+          )}
+          <span className="min-w-0">
+            <h3 className="font-display text-sm font-bold tracking-widest text-ui-gold uppercase">
+              {view.kind === "classes"
+                ? t("wiki.bestiary.classes")
+                : view.kind === "class"
+                  ? view.className
+                  : monsterReady
+                    ? monster.name
+                    : t("bestiary.loading")}
+            </h3>
+            <p className="mt-1 text-xs text-ui-muted">
+              {t("bestiary.subtitle")}
+            </p>
           </span>
-        )}
+        </div>
+        <div className="flex flex-col gap-2 sm:items-end">
+          {creatures && (
+            <span className="flex items-center gap-2 self-start rounded-full border border-ui-gold/25 bg-black/25 px-3 py-1 text-xs text-ui-gold sm:self-auto">
+              <WikiCurrencyIcon name="charm" />
+              {t("bestiary.charmPoints", {
+                points: creatures.charmPoints.toLocaleString(),
+              })}
+            </span>
+          )}
+          {view.kind !== "monster" && (
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(0);
+              }}
+              placeholder={t("bestiary.searchPlaceholder")}
+              aria-label={t("bestiary.searchPlaceholder")}
+              className="w-full rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 sm:w-64"
+            />
+          )}
+        </div>
       </div>
 
       {!creatures && (
@@ -189,66 +247,7 @@ export function WikiBestiary({
         </p>
       )}
 
-      <footer className="mt-4 flex flex-col gap-3 border-t border-ui-stone-light/15 pt-4 sm:flex-row sm:items-center">
-        <span className="sm:w-52">
-          {view.kind !== "classes" && (
-            <Button
-              size="sm"
-              onClick={() => {
-                setQuery("");
-                setPage(0);
-                setView(
-                  view.kind === "monster"
-                    ? { kind: "class", className: view.className }
-                    : { kind: "classes" },
-                );
-              }}
-            >
-              {t("bestiary.back")}
-            </Button>
-          )}
-        </span>
-        {view.kind !== "monster" && (
-          <>
-            <nav
-              aria-label={t("modal.pagination.label")}
-              className="flex items-center justify-center gap-3 sm:flex-1"
-            >
-              <Button
-                size="sm"
-                disabled={currentPage <= 0}
-                onClick={() => setPage(currentPage - 1)}
-              >
-                {t("modal.pagination.previous")}
-              </Button>
-              <span className="min-w-20 text-center text-xs text-ui-muted">
-                {t("modal.pagination.pageOf", {
-                  page: currentPage + 1,
-                  total: totalPages,
-                })}
-              </span>
-              <Button
-                size="sm"
-                disabled={currentPage >= totalPages - 1}
-                onClick={() => setPage(currentPage + 1)}
-              >
-                {t("modal.pagination.next")}
-              </Button>
-            </nav>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(0);
-              }}
-              placeholder={t("bestiary.searchPlaceholder")}
-              aria-label={t("bestiary.searchPlaceholder")}
-              className="rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 sm:w-52"
-            />
-          </>
-        )}
-      </footer>
-    </div>
+      </>
+    </WikiModalFrame>
   );
 }

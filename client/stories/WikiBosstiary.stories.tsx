@@ -6,14 +6,16 @@ import { WIKI_BOSS, WIKI_BOSSES } from "./wikiFixtures";
 const meta = {
   title: "Game/Wiki/Bosstiary",
   component: WikiBosstiary,
-  parameters: { layout: "padded" },
-  decorators: [(Story) => <div className="ui-panel-frame p-6"><Story /></div>],
+  parameters: { layout: "fullscreen" },
   args: {
+    activeTab: "bosstiary",
     bosses: WIKI_BOSSES,
     boss: WIKI_BOSS,
     pending: false,
     error: null,
     onRequestBoss: fn(),
+    onSelectTab: fn(),
+    onClose: fn(),
   },
 } satisfies Meta<typeof WikiBosstiary>;
 

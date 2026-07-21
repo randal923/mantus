@@ -14,26 +14,33 @@ import { BosstiaryBossSheet } from "../bestiary/BosstiaryBossSheet";
 import { BosstiaryCategoryIcon } from "../bestiary/BosstiaryCategoryIcon";
 import { BosstiaryMilestoneIcon } from "../bestiary/BosstiaryMilestoneIcon";
 import { Button } from "../ui/Button";
+import { WikiModalFrame, type WikiTab } from "./WikiModalFrame";
 
 const PAGE_SIZE = 8;
 const EMPTY_ENTRIES: ReadonlyArray<BosstiaryEntry> = [];
 
 interface WikiBosstiaryProps {
+  activeTab: WikiTab;
   bosses: BosstiaryStateMessage | null;
   boss: BosstiaryBossStateMessage | null;
   pending: boolean;
   error: string | null;
   initialRaceId?: number;
   onRequestBoss: (raceId: number) => void;
+  onSelectTab: (tab: WikiTab) => void;
+  onClose: () => void;
 }
 
 export function WikiBosstiary({
+  activeTab,
   bosses,
   boss,
   pending,
   error,
   initialRaceId,
   onRequestBoss,
+  onSelectTab,
+  onClose,
 }: WikiBosstiaryProps) {
   const { t } = useAppTranslation();
   const [category, setCategory] = useState<"all" | BossCategory>("all");
@@ -60,32 +67,47 @@ export function WikiBosstiary({
   const bossReady =
     selectedRaceId !== null && boss?.raceId === selectedRaceId;
 
-  if (selectedRaceId !== null) {
-    return (
-      <div className="min-h-[32rem]">
-        {bossReady ? (
-          <BosstiaryBossSheet boss={boss} />
-        ) : (
-          <p className="py-12 text-center text-xs text-ui-muted">
-            {t("bestiary.loading")}
-          </p>
-        )}
-        {error && !pending && (
-          <p role="alert" className="mt-4 text-xs text-red-300">
-            {t(`bestiary.errors.${error}`, { defaultValue: error })}
-          </p>
-        )}
-        <footer className="mt-4 border-t border-ui-stone-light/15 pt-4">
-          <Button size="sm" onClick={() => setSelectedRaceId(null)}>
+  return (
+    <WikiModalFrame
+      activeTab={activeTab}
+      pagination={
+        selectedRaceId === null
+          ? {
+              currentPage: currentPage + 1,
+              totalPages,
+              disabled: pending,
+              onPrevious: () => setPage(currentPage - 1),
+              onNext: () => setPage(currentPage + 1),
+            }
+          : undefined
+      }
+      onSelectTab={onSelectTab}
+      onClose={onClose}
+    >
+      {selectedRaceId !== null ? (
+        <div>
+          <Button
+            className="mb-4"
+            size="sm"
+            onClick={() => setSelectedRaceId(null)}
+          >
             {t("bestiary.back")}
           </Button>
-        </footer>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-[32rem]">
+          {bossReady ? (
+            <BosstiaryBossSheet boss={boss} />
+          ) : (
+            <p className="py-12 text-center text-xs text-ui-muted">
+              {t("bestiary.loading")}
+            </p>
+          )}
+          {error && !pending && (
+            <p role="alert" className="mt-4 text-xs text-red-300">
+              {t(`bestiary.errors.${error}`, { defaultValue: error })}
+            </p>
+          )}
+        </div>
+      ) : (
+      <>
       <section className="ui-panel-inset rounded-sm border border-ui-stone-light/15 p-4">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div>
@@ -131,6 +153,17 @@ export function WikiBosstiary({
                 </span>
               </button>
             ))}
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(0);
+              }}
+              placeholder={t("wiki.search")}
+              aria-label={t("wiki.search")}
+              className="min-w-48 flex-1 rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 lg:max-w-72"
+            />
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-ui-stone-light/10 pt-3 text-[10px] tracking-widest text-ui-muted uppercase">
@@ -187,44 +220,8 @@ export function WikiBosstiary({
         </p>
       )}
 
-      <footer className="mt-4 flex flex-col gap-3 border-t border-ui-stone-light/15 pt-4 sm:flex-row sm:items-center">
-        <nav
-          aria-label={t("modal.pagination.label")}
-          className="flex items-center justify-center gap-3 sm:flex-1"
-        >
-          <Button
-            size="sm"
-            disabled={currentPage <= 0}
-            onClick={() => setPage(currentPage - 1)}
-          >
-            {t("modal.pagination.previous")}
-          </Button>
-          <span className="min-w-20 text-center text-xs text-ui-muted">
-            {t("modal.pagination.pageOf", {
-              page: currentPage + 1,
-              total: totalPages,
-            })}
-          </span>
-          <Button
-            size="sm"
-            disabled={currentPage >= totalPages - 1}
-            onClick={() => setPage(currentPage + 1)}
-          >
-            {t("modal.pagination.next")}
-          </Button>
-        </nav>
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setPage(0);
-          }}
-          placeholder={t("wiki.search")}
-          aria-label={t("wiki.search")}
-          className="rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 sm:w-72"
-        />
-      </footer>
-    </div>
+      </>
+      )}
+    </WikiModalFrame>
   );
 }
