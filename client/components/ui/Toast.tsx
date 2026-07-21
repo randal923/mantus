@@ -7,13 +7,18 @@ const AUTO_DISMISS_MS = 4000;
 interface ToastProps {
   message: string;
   onDismiss: () => void;
+  autoDismissMs?: number;
 }
 
-export function Toast({ message, onDismiss }: ToastProps) {
+export function Toast({
+  message,
+  onDismiss,
+  autoDismissMs = AUTO_DISMISS_MS,
+}: ToastProps) {
   useEffect(() => {
-    const timer = window.setTimeout(onDismiss, AUTO_DISMISS_MS);
+    const timer = window.setTimeout(onDismiss, autoDismissMs);
     return () => window.clearTimeout(timer);
-  }, [message, onDismiss]);
+  }, [autoDismissMs, message, onDismiss]);
 
   return (
     <button
