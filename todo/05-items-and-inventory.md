@@ -79,16 +79,20 @@ is atomic.
     equip, and unequip remain server-authoritative and transactionally durable.
 - [ ] Implement doors, switches, fields, decay/transforms, beds, depots, and
   quest/world actions as typed server behaviors. Do not execute imported Lua.
-- [ ] Add a server-side use exhaust (Canary parity: 200 ms per generic use,
-  1 s on a separate timer for runes/potions). Today `use-item` is throttled
-  only by the single-in-flight `itemOperationPending` latch and `use-map`
-  reuses the walk cooldown; food and future potion/tool uses need an explicit
-  execution-time exhaust (charter rule 8). Found in the 2026-07-18 Canary
-  use-surface audit.
+- [ ] Add the remaining server-side use exhausts (Canary parity: 200 ms per
+  generic use). Potions now enforce their separate 1 s execution-time exhaust;
+  `use-item` is still throttled only by the single-in-flight
+  `itemOperationPending` latch, `use-map` reuses the walk cooldown, and food
+  and tool uses still need explicit timers (charter rule 8). Found in the
+  2026-07-18 Canary use-surface audit.
 - [ ] Implement trash holders (dustbins, sewer trash tiles; 79 catalog types
   with `kind: "trashholder"`): an item dropped or thrown onto the tile is
   destroyed with an effect and an audit entry instead of persisting as a
   world item. Hook: destination check in `planDrop`/`planMoveMapItem`.
+  Note (2026-07-20): trashholder-typed liquids (water/lava/tar grounds) are
+  now static map scenery — `getMapItemSemantics` no longer marks trashholders
+  mutable, so this behavior must key off the catalog type at throw time, not
+  off a world item on the tile.
 - [ ] Client QoL: when a use/pickup target is out of reach, auto-walk
   adjacent and retry once (Canary walks-then-uses; we hard-fail with an
   error today). Client-side convenience only — server reach checks stay.

@@ -1,4 +1,4 @@
-import type { ActionBar } from "@tibia/protocol";
+import type { ActionBar, PotionActionBar } from "@tibia/protocol";
 import type {
   Character,
   CharacterSaveSnapshot,
@@ -24,4 +24,8 @@ export interface CharacterStore {
   ): Promise<void>;
   saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number>;
   updateActionBar(characterId: string, actionBar: ActionBar): Promise<void>;
+  updatePotionActionBar(
+    characterId: string,
+    potionActionBar: PotionActionBar,
+  ): Promise<void>;
 }

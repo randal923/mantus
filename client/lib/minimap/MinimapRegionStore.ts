@@ -1,5 +1,6 @@
 interface MinimapManifest {
   regionSize: number;
+  version?: string;
   regions: Record<string, [number, number][]>;
 }
 
@@ -18,6 +19,7 @@ export class MinimapRegionStore {
   private readonly missing = new Set<string>();
   private readonly lastUse = new Map<string, number>();
   private regionSizeValue = 256;
+  private version = "";
   private useTick = 0;
   private disposed = false;
 
@@ -29,11 +31,16 @@ export class MinimapRegionStore {
   async load(): Promise<boolean> {
     this.disposed = false;
     try {
-      const response = await fetch(`/assets/map/${this.mapName}/manifest.json`);
+      // Revalidate the manifest so a rebuilt map busts the long-lived
+      // browser cache of the baked minimap tiles via its version.
+      const response = await fetch(`/assets/map/${this.mapName}/manifest.json`, {
+        cache: "no-cache",
+      });
       if (!response.ok || this.disposed) return false;
       const manifest = (await response.json()) as MinimapManifest;
       if (this.disposed) return false;
       this.regionSizeValue = manifest.regionSize;
+      this.version = manifest.version ?? "";
       for (const [z, regions] of Object.entries(manifest.regions)) {
         this.available.set(
           Number(z),
@@ -68,7 +75,9 @@ export class MinimapRegionStore {
     if (this.pending.has(key) || this.missing.has(key)) return null;
     this.pending.add(key);
     const loading = new Image();
-    loading.src = `/assets/map/${this.mapName}/minimap/z${z}/${region}.png`;
+    loading.src = `/assets/map/${this.mapName}/minimap/z${z}/${region}.png${
+      this.version ? `?v=${this.version}` : ""
+    }`;
     loading
       .decode()
       .then(() => {

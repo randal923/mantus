@@ -6,6 +6,7 @@ const CHARACTER_ID = "3d2af45f-e037-44f5-bd50-7bc655c6cd0e";
 const ITEM_ID = "434b8502-04e2-4e3b-875d-f9be2153016c";
 const BACKPACK_ID = "41868798-fc9b-43ac-bf28-4f52bf64c4eb";
 const POUCH_ID = "db85bce3-0fc9-49f4-87ff-dda53f3cc8c1";
+const POTION_ID = "9845c623-b959-4be1-a3da-5b93e83d61d1";
 
 function makeInventoryItem(): Item {
   return {
@@ -77,6 +78,51 @@ describe("MemoryItemStore", () => {
     expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
     await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual([
       expect.objectContaining({ id: ITEM_ID, count: 1, version: 2 }),
+    ]);
+  });
+
+  it("atomically restores a character and returns exactly one flask under replay", async () => {
+    const store = new MemoryItemStore();
+    store.seed({
+      id: POTION_ID,
+      typeId: 266,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "inventory",
+        characterId: CHARACTER_ID,
+        slot: 0,
+      },
+    });
+    const request = {
+      actorCharacterId: CHARACTER_ID,
+      targetCharacterId: CHARACTER_ID,
+      itemId: POTION_ID,
+      expectedItemVersion: 1,
+      expectedTargetCharacterVersion: 1,
+      expectedTargetHealth: 100,
+      expectedTargetMana: 50,
+      targetMaxHealth: 500,
+      targetMaxMana: 100,
+      healthRestore: 150,
+      manaRestore: 0,
+    } as const;
+
+    const results = await Promise.allSettled([
+      store.usePotion(request),
+      store.usePotion(request),
+    ]);
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual([
+      expect.objectContaining({
+        id: POTION_ID,
+        typeId: 285,
+        count: 1,
+        version: 2,
+      }),
     ]);
   });
 

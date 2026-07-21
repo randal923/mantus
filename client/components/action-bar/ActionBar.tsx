@@ -1,44 +1,51 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { isEditableTarget } from "../../lib/hotkeys/isEditableTarget";
-import { getSpellIconArtwork } from "../../lib/combat/getSpellIconArtwork";
-import { SpellIcon } from "./SpellIcon";
+import { resolveActionBarSlot } from "../../lib/hotkeys/resolveActionBarSlot";
 
-interface SpellBarSpell {
-  id: string;
-  name: string;
-  manaCost?: number;
-  cooldownReadyAt?: number;
-  cooldownTotalMs?: number;
-  disabled?: boolean;
+interface ActionBarItem {
+  readonly id: string;
+  readonly icon: ReactNode;
+  readonly title: string;
+  readonly ariaLabel: string;
+  readonly badge?: string | number;
+  readonly badgeTone?: "count" | "mana";
+  readonly cooldownReadyAt?: number;
+  readonly cooldownTotalMs?: number;
+  readonly disabled?: boolean;
 }
 
-interface SpellBarSlot {
-  shortcut: string;
-  spell: SpellBarSpell | null;
+interface ActionBarSlot {
+  readonly shortcut: string;
+  readonly shortcutLabel: string;
+  readonly emptyTitle: string;
+  readonly emptyAriaLabel: string;
+  readonly item: ActionBarItem | null;
 }
 
-interface SpellBarProps {
-  slots: ReadonlyArray<SpellBarSlot>;
-  onCast?: (spellId: string) => void;
-  /** Opens the assignment modal; empty slots on click, any slot on right-click. */
-  onConfigure?: (slotIndex: number) => void;
-  hotkeysEnabled?: boolean;
+interface ActionBarProps {
+  readonly ariaLabel: string;
+  readonly slots: ReadonlyArray<ActionBarSlot>;
+  readonly hotkeyModifier?: "shift";
+  readonly hotkeysEnabled?: boolean;
+  readonly onActivate?: (itemId: string, slotIndex: number) => void;
+  readonly onConfigure?: (slotIndex: number) => void;
 }
 
-export function SpellBar({
+export function ActionBar({
+  ariaLabel,
   slots,
-  onCast,
-  onConfigure,
+  hotkeyModifier,
   hotkeysEnabled = true,
-}: SpellBarProps) {
-  const { t } = useAppTranslation();
+  onActivate,
+  onConfigure,
+}: ActionBarProps) {
   const buttonRefs = useRef(new Map<number, HTMLButtonElement>());
   const [now, setNow] = useState(0);
   const hasCooldown = slots.some(
-    (slot) => (slot.spell?.cooldownReadyAt ?? 0) > now,
+    (slot) => (slot.item?.cooldownReadyAt ?? 0) > now,
   );
 
   useEffect(() => {
@@ -51,21 +58,9 @@ export function SpellBar({
     if (!hotkeysEnabled) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.repeat ||
-        event.ctrlKey ||
-        event.altKey ||
-        event.metaKey ||
-        event.shiftKey
-      ) {
-        return;
-      }
       if (isEditableTarget(event.target)) return;
-      const index = slots.findIndex(
-        ({ shortcut, spell }) =>
-          spell !== null && shortcut.toLowerCase() === event.key.toLowerCase(),
-      );
-      if (index === -1) return;
+      const index = resolveActionBarSlot(event, hotkeyModifier);
+      if (index === null) return;
       const button = buttonRefs.current.get(index);
       if (!button || button.disabled) return;
       event.preventDefault();
@@ -74,12 +69,12 @@ export function SpellBar({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [hotkeysEnabled, slots]);
+  }, [hotkeyModifier, hotkeysEnabled]);
 
   return (
     <div
       role="toolbar"
-      aria-label={t("spells.bar")}
+      aria-label={ariaLabel}
       onContextMenu={(event) => {
         if (!onConfigure) return;
         event.preventDefault();
@@ -88,32 +83,38 @@ export function SpellBar({
       className="ui-panel-frame pointer-events-auto relative isolate flex max-w-[calc(100vw-2rem)] gap-1.5 overflow-x-auto p-2"
     >
       {slots.map((slot, index) => {
-        const spell = slot.spell;
-        if (!spell) {
+        const item = slot.item;
+        if (!item) {
           return (
             <button
               key={index}
               type="button"
-              title={t("spells.actionBar.emptySlotHint")}
-              aria-label={t("spells.actionBar.emptySlot", {
-                shortcut: slot.shortcut,
-              })}
+              title={slot.emptyTitle}
+              aria-label={slot.emptyAriaLabel}
+              disabled={!onConfigure}
               onClick={() => onConfigure?.(index)}
-              className="group relative flex size-12 shrink-0 items-center justify-center rounded-md border border-dashed border-ui-stone-light/25 text-ui-muted outline-none transition-[border-color,color] duration-150 hover:border-ui-gold/55 hover:text-ui-gold focus-visible:ring-2 focus-visible:ring-ui-gold/60 sm:size-14"
+              onContextMenu={(event) => {
+                if (!onConfigure) return;
+                event.preventDefault();
+                event.stopPropagation();
+                onConfigure(index);
+              }}
+              className="group relative flex size-12 shrink-0 items-center justify-center rounded-md border border-dashed border-ui-stone-light/25 text-ui-muted outline-none transition-[border-color,color] duration-150 hover:border-ui-gold/55 hover:text-ui-gold focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-50 sm:size-14"
             >
-              <span aria-hidden className="text-lg leading-none opacity-45 group-hover:opacity-90">
-                +
-              </span>
-              <kbd className="absolute top-0.5 left-1 text-[9px] font-bold text-ui-muted">
-                {slot.shortcut}
+              {onConfigure && (
+                <span aria-hidden className="text-lg leading-none opacity-45 group-hover:opacity-90">
+                  +
+                </span>
+              )}
+              <kbd className="absolute top-0.5 left-1 text-xs font-bold text-ui-muted">
+                {slot.shortcutLabel}
               </kbd>
             </button>
           );
         }
-        const iconArtwork = getSpellIconArtwork(spell.id);
-        const cooldownTotalMs = Math.max(0, spell.cooldownTotalMs ?? 0);
+        const cooldownTotalMs = Math.max(0, item.cooldownTotalMs ?? 0);
         const cooldownRemainingMs = Math.min(
-          Math.max(0, (spell.cooldownReadyAt ?? 0) - now),
+          Math.max(0, (item.cooldownReadyAt ?? 0) - now),
           cooldownTotalMs,
         );
         const cooldownPercent =
@@ -125,14 +126,11 @@ export function SpellBar({
           <button
             key={index}
             type="button"
-            title={`${spell.name} (${slot.shortcut})`}
-            aria-label={t("spells.shortcut", {
-              name: spell.name,
-              shortcut: slot.shortcut,
-            })}
+            title={item.title}
+            aria-label={item.ariaLabel}
             aria-keyshortcuts={slot.shortcut}
-            disabled={spell.disabled}
-            onClick={() => onCast?.(spell.id)}
+            disabled={item.disabled || cooldownRemainingMs > 0}
+            onClick={() => onActivate?.(item.id, index)}
             onContextMenu={(event) => {
               if (!onConfigure) return;
               event.preventDefault();
@@ -148,13 +146,19 @@ export function SpellBar({
             }}
             className="ui-button ui-button-secondary group relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-stone-light/25 text-ui-text outline-none transition-[border-color,filter,transform] duration-150 hover:-translate-y-px hover:border-ui-gold/55 hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-35 sm:size-14"
           >
-            {iconArtwork && <SpellIcon {...iconArtwork} />}
-            <kbd className="absolute top-0.5 left-1 z-20 text-[9px] font-bold text-ui-muted">
-              {slot.shortcut}
+            {item.icon}
+            <kbd className="absolute top-0.5 left-1 z-20 text-xs font-bold text-ui-muted">
+              {slot.shortcutLabel}
             </kbd>
-            {spell.manaCost !== undefined && (
-              <span className="absolute right-1 bottom-0.5 z-20 text-[9px] font-semibold tabular-nums text-ui-mana-light">
-                {spell.manaCost}
+            {item.badge !== undefined && (
+              <span
+                className={`absolute right-1 bottom-0.5 z-20 font-semibold tabular-nums ${
+                  item.badgeTone === "mana"
+                    ? "text-xs text-ui-mana-light"
+                    : "text-xs text-ui-text-bright"
+                }`}
+              >
+                {item.badge}
               </span>
             )}
             {cooldownPercent > 0 && (

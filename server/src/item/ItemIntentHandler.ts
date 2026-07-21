@@ -19,12 +19,25 @@ import type { ItemStore } from "./ItemStore";
 import type { ItemType } from "./ItemType";
 import type { LoadedInventory } from "./LoadedInventory";
 import type { LootItemCreation } from "./LootItemCreation";
+import type { PotionUseResult } from "./PotionUseResult";
 import type { CarriedPlan } from "./plan/CarriedPlan";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
 import { planEquip } from "./plan/planEquip";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
 import { WorldContainerViews } from "./WorldContainerViews";
 import { WorldItemDecayRunner } from "./WorldItemDecayRunner";
+
+interface PendingPotionUse {
+  readonly targetCharacterId: string;
+  readonly itemId: string;
+  readonly expectedItemVersion: number;
+  readonly expectedTargetHealth: number;
+  readonly expectedTargetMana: number;
+  readonly targetMaxHealth: number;
+  readonly targetMaxMana: number;
+  readonly healthRestore: number;
+  readonly manaRestore: number;
+}
 
 export class ItemIntentHandler {
   private readonly outcomes = new ItemOutcomeQueue();
@@ -186,6 +199,86 @@ export class ItemIntentHandler {
       logLabel: "combat item consumption failed",
       onCommitted,
     });
+    return true;
+  }
+
+  usePotionForCombat(
+    session: Session,
+    request: PendingPotionUse,
+    expectedTargetCharacterVersion: Promise<number>,
+    onCommitted: (
+      expectedTargetVersion: number,
+      result: PotionUseResult,
+      now: number,
+    ) => void,
+    onFailed: (now: number) => void,
+  ): boolean {
+    const actorCharacterId = session.playerId;
+    const combatItem = actorCharacterId
+      ? this.combatItem(
+          actorCharacterId,
+          request.itemId,
+          request.expectedItemVersion,
+        )
+      : null;
+    if (
+      !actorCharacterId ||
+      !combatItem ||
+      session.itemOperationPending ||
+      session.itemPersistsPending > 0 ||
+      combatItem.item.count < 1
+    ) {
+      session.sendError("combat-action-failed");
+      return false;
+    }
+    session.itemOperationPending = true;
+    const operation = expectedTargetCharacterVersion.then(
+      async (expectedTargetVersion) => ({
+        expectedTargetVersion,
+        result: await this.store.usePotion({
+          actorCharacterId,
+          targetCharacterId: request.targetCharacterId,
+          itemId: request.itemId,
+          expectedItemVersion: request.expectedItemVersion,
+          expectedTargetCharacterVersion: expectedTargetVersion,
+          expectedTargetHealth: request.expectedTargetHealth,
+          expectedTargetMana: request.expectedTargetMana,
+          targetMaxHealth: request.targetMaxHealth,
+          targetMaxMana: request.targetMaxMana,
+          healthRestore: request.healthRestore,
+          manaRestore: request.manaRestore,
+        }),
+      }),
+    );
+    const resolution = operation
+      .then(({ expectedTargetVersion, result }) => {
+        this.outcomes.push((now) => {
+          session.itemOperationPending = false;
+          const inventory = this.operations.applyMutation(
+            actorCharacterId,
+            result.mutation,
+            now,
+          );
+          if (inventory && session.playerId === actorCharacterId) {
+            session.send({ type: "inventory-updated", inventory });
+          }
+          onCommitted(expectedTargetVersion, result, now);
+        });
+      })
+      .catch((cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(
+          `potion use failed for character ${actorCharacterId}: ${reason}`,
+        );
+        this.outcomes.push((now) => {
+          session.itemOperationPending = false;
+          onFailed(now);
+          if (session.playerId === actorCharacterId) {
+            session.sendError("combat-action-failed");
+          }
+        });
+      });
+    this.operations.pending.track(actorCharacterId, resolution);
     return true;
   }
 

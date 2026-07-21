@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import type { ActionBar } from "@tibia/protocol";
+import type { ActionBar, PotionActionBar } from "@tibia/protocol";
 import { CharacterError } from "./CharacterError";
 import type {
   Character,
@@ -186,6 +186,21 @@ export class PgCharacterStore implements CharacterStore {
     );
     if (result.rowCount !== 1) {
       throw new Error("character action bar update failed");
+    }
+  }
+
+  async updatePotionActionBar(
+    characterId: string,
+    potionActionBar: PotionActionBar,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET potion_action_bar = $2::jsonb
+       WHERE id = $1`,
+      [characterId, JSON.stringify(potionActionBar)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("character potion action bar update failed");
     }
   }
 

@@ -113,6 +113,7 @@ databaseDescribe("PgGemStore integration", () => {
       "020_social.sql",
       "021_moderation.sql",
       "023_character_action_bar.sql",
+      "029_character_potion_action_bar.sql",
       "028_gem_atelier.sql",
     ]) {
       await setupClient.query(

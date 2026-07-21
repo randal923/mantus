@@ -27,6 +27,7 @@ export class Session {
   languageUpdatePending = false;
   uiSettingsUpdatePending = false;
   actionBarUpdatePending = false;
+  potionActionBarUpdatePending = false;
   itemOperationPending = false;
   depotOperationPending = false;
   /**

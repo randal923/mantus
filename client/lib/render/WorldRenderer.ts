@@ -58,6 +58,7 @@ interface WorldRendererActions {
   dropDraggedItemOnCreature(creatureId: string): boolean;
   autoWalk(directions: ReadonlyArray<Direction>): void;
   targetPosition(position: Position): boolean;
+  targetCreature(creatureId: string): boolean;
   /** Reports spawn-area loading progress for the entering-world screen. */
   worldLoadProgress(completed: number, total: number): void;
   /** Fired once the spawn area's regions and atlas sheets are loaded. */
@@ -99,6 +100,7 @@ export class WorldRenderer {
   private mapDragIcon: HTMLCanvasElement | null = null;
   private previousBodyCursor = "";
   private suppressNextMapClick = false;
+  private lastPointerClientPosition: { x: number; y: number } | null = null;
   private destroyed = false;
 
   constructor(private readonly actions?: WorldRendererActions) {}
@@ -138,6 +140,13 @@ export class WorldRenderer {
     this.world.addChild(this.mapView.container);
     this.app.stage.addChild(this.world, this.overlay);
     this.app.ticker.add(() => this.tick(this.app.ticker.deltaMS));
+  }
+
+  creatureIdAtCursor(): string | null {
+    const position = this.lastPointerClientPosition;
+    if (!position) return null;
+    const point = this.canvasPointForClient(position.x, position.y);
+    return point ? this.creatureIdAt(point.x, point.y, true) : null;
   }
 
   applyMessage(message: ServerMessage): void {
@@ -532,6 +541,7 @@ export class WorldRenderer {
   };
 
   private readonly onMapPointerMove = (event: PointerEvent): void => {
+    this.lastPointerClientPosition = { x: event.clientX, y: event.clientY };
     const candidate = this.mapDragCandidate;
     if (
       !this.actions ||
@@ -628,6 +638,13 @@ export class WorldRenderer {
     if (!this.actions || !this.ownPosition) return;
     const point = this.canvasPoint(event);
     if (!point) return;
+    const targetCreatureId = this.creatureIdAt(point.x, point.y, true);
+    if (
+      targetCreatureId &&
+      this.actions.targetCreature(targetCreatureId)
+    ) {
+      return;
+    }
     const creatureId = this.creatureIdAt(point.x, point.y);
     if (creatureId) {
       if (creatureId === this.attackTargetId) {
@@ -651,11 +668,27 @@ export class WorldRenderer {
   };
 
   private canvasPoint(event: MouseEvent): { x: number; y: number } | null {
+    return this.canvasPointForClient(event.clientX, event.clientY);
+  }
+
+  private canvasPointForClient(
+    clientX: number,
+    clientY: number,
+  ): { x: number; y: number } | null {
     const bounds = this.app.canvas.getBoundingClientRect();
-    if (bounds.width <= 0 || bounds.height <= 0) return null;
+    if (
+      bounds.width <= 0 ||
+      bounds.height <= 0 ||
+      clientX < bounds.left ||
+      clientX > bounds.right ||
+      clientY < bounds.top ||
+      clientY > bounds.bottom
+    ) {
+      return null;
+    }
     return {
-      x: (event.clientX - bounds.left) * (this.app.screen.width / bounds.width),
-      y: (event.clientY - bounds.top) * (this.app.screen.height / bounds.height),
+      x: (clientX - bounds.left) * (this.app.screen.width / bounds.width),
+      y: (clientY - bounds.top) * (this.app.screen.height / bounds.height),
     };
   }
 
@@ -711,7 +744,11 @@ export class WorldRenderer {
    * (8px up-left displacement, name plates above), which made clicks
    * pick adjacent creatures instead of the one on the clicked tile.
    */
-  private creatureIdAt(screenX: number, screenY: number): string | null {
+  private creatureIdAt(
+    screenX: number,
+    screenY: number,
+    includeOwnPlayer = false,
+  ): string | null {
     if (!this.ownPosition) return null;
     const tile = getMapPointerPosition(
       screenX,
@@ -724,7 +761,12 @@ export class WorldRenderer {
     );
     let selected: { id: string; zIndex: number } | null = null;
     for (const [id, view] of this.creatureViews) {
-      if (id === this.ownPlayerId || !view.container.visible) continue;
+      if (
+        (!includeOwnPlayer && id === this.ownPlayerId) ||
+        !view.container.visible
+      ) {
+        continue;
+      }
       const position = view.position;
       if (
         position.x !== tile.x ||

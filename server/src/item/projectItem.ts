@@ -1,6 +1,7 @@
 import type { InventoryItem } from "@tibia/protocol";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
+import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { toItemTooltip } from "./toItemTooltip";
 
 export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
@@ -8,6 +9,8 @@ export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
   const useKind =
     type.kind === "rune"
       ? "rune"
+      : getPotionDefinition(type.id)
+        ? "potion"
       : type.containerCapacity !== undefined
         ? "container"
         : type.food

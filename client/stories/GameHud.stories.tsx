@@ -54,6 +54,8 @@ const meta = {
       },
     ],
     actionBar: ["exura-infir-ico"],
+    potionActionBar: [],
+    inventory: null,
     combatLog: ["You gained 5 experience."],
     chatPinnedOpen: false,
     chatChannels: [
@@ -107,7 +109,9 @@ const meta = {
       },
     ],
     onCast: fn(),
+    onActivatePotion: fn(),
     onConfigureActionBar: fn(),
+    onConfigurePotionActionBar: fn(),
     onChatChannelSelect: fn(),
     onChatChannelClose: fn(),
     onChatSenderSelect: fn(),

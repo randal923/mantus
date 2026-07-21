@@ -16,6 +16,8 @@ import { TileOccupancy } from "./world/TileOccupancy";
 
 export type { MoveResult } from "./world/MoveResult";
 
+const GROUND_FLOOR = 7;
+
 export class World {
   private readonly players = new Map<string, Player>();
   private readonly creatures = new Map<string, Creature>();
@@ -195,10 +197,10 @@ export class World {
   creaturesVisibleFrom(position: Position, range: ViewRange): Creature[] {
     const firstFloor = getFirstVisibleFloor(position, this.map);
     const floors =
-      position.z > 7
+      position.z > GROUND_FLOOR
         ? [position.z]
         : Array.from(
-            { length: position.z - firstFloor + 1 },
+            { length: GROUND_FLOOR - firstFloor + 1 },
             (_, index) => firstFloor + index,
           );
     const creatures = new Set<Creature>();
@@ -249,9 +251,9 @@ export class World {
 
   playersWhoCanSee(position: Position, range: ViewRange): Player[] {
     const viewerFloors =
-      position.z > 7
+      position.z > GROUND_FLOOR
         ? [position.z]
-        : Array.from({ length: 8 - position.z }, (_, index) => position.z + index);
+        : Array.from({ length: GROUND_FLOOR + 1 }, (_, index) => index);
     const players = new Set<Player>();
     for (const z of viewerFloors) {
       const shift = z - position.z;

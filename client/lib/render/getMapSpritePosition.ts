@@ -7,7 +7,11 @@ interface SpritePlacement {
   zIndex: number;
 }
 
-/** Places and sorts a multi-tile piece at the northwest tile it actually covers. */
+/**
+ * Places a multi-tile piece at the northwest tile it covers while sorting the
+ * whole item at its anchor tile, like Tibia draws tiles: a tall sprite covers
+ * everything already drawn on the tiles it spills into.
+ */
 export function getMapSpritePosition(
   tileX: number,
   tileY: number,
@@ -23,6 +27,6 @@ export function getMapSpritePosition(
   return {
     x: physicalX * TILE_SIZE - displacementX - elevation,
     y: physicalY * TILE_SIZE - displacementY - elevation,
-    zIndex: getMapObjectZ(physicalX, physicalY, depth),
+    zIndex: getMapObjectZ(tileX, tileY, depth),
   };
 }

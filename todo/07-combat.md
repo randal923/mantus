@@ -35,15 +35,18 @@ roll is computed by the server.
 - [x] Implement conditions such as haste/paralyze, poison/fire/energy damage,
   regeneration, invisibility, light, outfit, drunk, mute, and combat/PZ lock
   with server-clock expirations.
-- [ ] Implement potions (health/mana/spirit): consumed via use-with on a
-  player target (usually self), level/vocation gates with polite refusal,
-  server-rolled restore amounts, empty-flask return in the same atomic
-  mutation, and a 1 s potion exhaust separate from spell cooldowns (Canary
-  `timeBetweenExActions`). Protocol gap: `use-item-with` targets only a
-  position today — either add a creature target or mirror the `use-rune`
-  intent shape. Found in the 2026-07-18 Canary use-surface audit; fluid
-  containers (vials, casks, drunk/poison fluids) stay with
+- [x] Implement health/mana/spirit potions through a bounded player-target
+  intent. The server permits self or adjacent visible players, enforces the
+  using character's Canary level/vocation gates, rolls restoration, consumes
+  one potion, returns the empty flask in the same audited transaction, and
+  applies a separate 1 s potion exhaust. The client supports right-click
+  targeting plus a persistent nine-slot Shift+1–9 potion bar with Canary's
+  recommended OTClient modes: self, attack target, cursor, and crosshair.
+  Fluid containers (vials, casks, drunk/poison fluids) stay with
   [`05-items-and-inventory`](05-items-and-inventory.md).
+- [ ] Match Canary's potion-use sound and target `Aaaah...` monster-say once
+  item sounds and server-authored creature speech have a shared protocol
+  surface. The restorative mechanics and visual magic effect are complete.
 - [x] Make condition application/refresh/stack rules explicit and persistent
   only where logout/restart behavior requires it.
 
@@ -136,16 +139,18 @@ rune to become executable.
   registered gameplay definitions and reach zero disabled registered spells,
   runes, ignored formula fields, or unreviewed callbacks.
 
-## Known gaps: customizable action bar (2026-07-19)
+## Known gaps: customizable action bars (2026-07-20)
 
 The spell bar is per-character and player-configured (empty for new
 characters; the assignment modal validates and persists slot -> spell id via
-`update-action-bar`, stored in `characters.action_bar`). Accepted for now:
+`update-action-bar`, stored in `characters.action_bar`). The potion bar stores
+its slot -> potion type and target mode configuration in
+`characters.potion_action_bar`. Accepted for now:
 
-- The `action-bar-updated` ack is ignored by the client (same pattern as
-  `ui-settings-updated`); saves are debounced 800 ms, so an edit made right
-  before closing the tab can be lost. Fix: flush the pending update on
-  `beforeunload`/disconnect, for the minimap layout too.
+- The action-bar update acknowledgements are ignored by the client (same
+  pattern as `ui-settings-updated`); saves are debounced 800 ms, so an edit
+  made right before closing the tab can be lost. Fix: flush the pending update
+  on `beforeunload`/disconnect, for the minimap layout too.
 - Only `origin: "spell"` entries can be slotted; runes still cast through the
   inventory ground-targeting flow. Fix if wanted: allow rune slots that arm
   the existing rune targeting using the carried item count as the badge.

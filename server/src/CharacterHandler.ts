@@ -316,6 +316,7 @@ export class CharacterHandler {
       spells: this.spells.projectFor(player),
       uiSettings: session.account?.uiSettings ?? {},
       actionBar: character.actionBar,
+      potionActionBar: character.potionActionBar,
     });
     this.visibility.syncMapItems(session, player);
     void this.service
@@ -351,6 +352,7 @@ export class CharacterHandler {
     existing.itemOperationPending = false;
     existing.depotOperationPending = false;
     existing.actionBarUpdatePending = false;
+    existing.potionActionBarUpdatePending = false;
     existing.itemPersistsPending = 0;
     existing.travelOperationPending = false;
     existing.knownCreatureIds.clear();

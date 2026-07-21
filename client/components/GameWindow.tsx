@@ -19,6 +19,8 @@ import type {
   InventoryItem,
   InventoryState,
   OwnCharacterState,
+  PotionActionBar,
+  PotionTargetMode,
   ServerErrorCode,
   ServerMessage,
   SpellCatalogEntry,
@@ -81,6 +83,7 @@ import { toAuctionOwnOffer } from "../lib/market/toAuctionOwnOffer";
 import { CharacterSelectScreen } from "./characters/CharacterSelectScreen";
 import { GameHud } from "./GameHud";
 import { ActionBarModal } from "./spells/ActionBarModal";
+import { PotionActionBarModal } from "./action-bar/PotionActionBarModal";
 import { InventoryPanel } from "./inventory/InventoryPanel";
 import { LootPanel } from "./inventory/LootPanel";
 import { ItemTextModal } from "./inventory/ItemTextModal";
@@ -180,6 +183,7 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const levelUpSequenceRef = useRef(0);
   const resumeCharacterIdRef = useRef<string | null>(null);
   const pendingRuneRef = useRef<InventoryItem | null>(null);
+  const pendingPotionRef = useRef<InventoryItem | null>(null);
   const itemDragRef = useRef<ItemDragSource | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [connectionAttempt, setConnectionAttempt] = useState(0);
@@ -227,10 +231,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const actionBarSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const [potionActionBar, setPotionActionBar] =
+    useState<PotionActionBar>([]);
+  const potionActionBarRef = useRef<PotionActionBar>([]);
+  const potionActionBarSaveTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   /** Slot preselected in the assignment modal; null = modal closed. */
   const [actionBarConfigSlot, setActionBarConfigSlot] = useState<number | null>(
     null,
   );
+  const [potionActionBarConfigSlot, setPotionActionBarConfigSlot] = useState<
+    number | null
+  >(null);
   const handleActionBarChange = useCallback((next: ActionBar) => {
     setActionBar(next);
     actionBarRef.current = next;
@@ -242,6 +255,22 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
       clientRef.current?.updateActionBar(actionBarRef.current);
     }, 800);
   }, []);
+  const handlePotionActionBarChange = useCallback(
+    (next: PotionActionBar) => {
+      setPotionActionBar(next);
+      potionActionBarRef.current = next;
+      if (potionActionBarSaveTimerRef.current) {
+        clearTimeout(potionActionBarSaveTimerRef.current);
+      }
+      potionActionBarSaveTimerRef.current = setTimeout(() => {
+        potionActionBarSaveTimerRef.current = null;
+        clientRef.current?.updatePotionActionBar(
+          potionActionBarRef.current,
+        );
+      }, 800);
+    },
+    [],
+  );
   const handleMinimapLayoutChange = useCallback((layout: MinimapLayout) => {
     const next = { ...uiSettingsRef.current, minimap: layout };
     uiSettingsRef.current = next;
@@ -511,7 +540,39 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
   const [languageError, setLanguageError] = useState(false);
   const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
   const [runeTargeting, setRuneTargeting] = useState(false);
+  const [potionTargeting, setPotionTargeting] = useState(false);
   const marketItemOffers = marketSession?.itemOffers ?? null;
+  const handlePotionActivation = useCallback(
+    (item: InventoryItem, targetMode: PotionTargetMode) => {
+      pendingRuneRef.current = null;
+      setRuneTargeting(false);
+      pendingPotionRef.current = null;
+      setPotionTargeting(false);
+
+      const targetId =
+        targetMode === "self"
+          ? ownCharacter?.id
+          : targetMode === "attack-target"
+            ? fightState?.attackTargetId
+            : targetMode === "cursor"
+              ? rendererRef.current?.creatureIdAtCursor()
+              : null;
+      const target = targetId
+        ? visibleCreatures.find((candidate) => candidate.id === targetId)
+        : undefined;
+      if (
+        targetId &&
+        (targetId === ownCharacter?.id || target?.kind === "player")
+      ) {
+        clientRef.current?.usePotion(item, targetId);
+        return;
+      }
+
+      pendingPotionRef.current = item;
+      setPotionTargeting(true);
+    },
+    [fightState?.attackTargetId, ownCharacter?.id, visibleCreatures],
+  );
 
   const reconnect = (characterId: string | null) => {
     resumeCharacterIdRef.current = characterId;
@@ -556,12 +617,19 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
     setActionBar([]);
     actionBarRef.current = [];
     setActionBarConfigSlot(null);
+    setPotionActionBar([]);
+    potionActionBarRef.current = [];
+    setPotionActionBarConfigSlot(null);
     setCombatLog([]);
     dispatchChat({ type: "reset", ownPlayerId: null, ownName: null });
     setCharacterBusy(characterId !== null);
     setInventoryOpen(false);
     setCharacterStatsOpen(false);
     setGameMenuOpen(false);
+    pendingRuneRef.current = null;
+    pendingPotionRef.current = null;
+    setRuneTargeting(false);
+    setPotionTargeting(false);
     itemDragRef.current = null;
     setServerError(null);
     setConnectionAttempt((attempt) => attempt + 1);
@@ -657,6 +725,23 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
         useMap: (position) => client?.useMap(position),
         attackTarget: (creatureId) => client?.attackTarget(creatureId),
         cancelAttack: () => client?.cancelAttack(),
+        targetCreature: (creatureId) => {
+          const potion = pendingPotionRef.current;
+          if (!potion) return false;
+          const target = visibleCreaturesRef.current.find(
+            (candidate) => candidate.id === creatureId,
+          );
+          if (
+            creatureId !== ownCharacterRef.current?.id &&
+            target?.kind !== "player"
+          ) {
+            return false;
+          }
+          pendingPotionRef.current = null;
+          setPotionTargeting(false);
+          client?.usePotion(potion, creatureId);
+          return true;
+        },
         pickupMapItem: (item, position) => {
           const queued = dispatchItemOpChecked({
             kind: "pickup",
@@ -816,6 +901,9 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
             setActionBar(message.actionBar);
             actionBarRef.current = message.actionBar;
             setActionBarConfigSlot(null);
+            setPotionActionBar(message.potionActionBar);
+            potionActionBarRef.current = message.potionActionBar;
+            setPotionActionBarConfigSlot(null);
             setCharacterBusy(false);
             setServerError(null);
             setNpcDialogue(null);
@@ -1470,9 +1558,18 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
           if (nextStatus === "disconnected") setFightState(null);
           if (nextStatus === "disconnected") setSpells([]);
           if (nextStatus === "disconnected") {
+            pendingRuneRef.current = null;
+            setRuneTargeting(false);
+            pendingPotionRef.current = null;
+            setPotionTargeting(false);
+          }
+          if (nextStatus === "disconnected") {
             setActionBar([]);
             actionBarRef.current = [];
             setActionBarConfigSlot(null);
+            setPotionActionBar([]);
+            potionActionBarRef.current = [];
+            setPotionActionBarConfigSlot(null);
           }
           if (nextStatus === "disconnected") setCombatLog([]);
           if (nextStatus === "disconnected") setItemText(null);
@@ -1975,12 +2072,22 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               {t("combat.selectRuneTarget")}
             </div>
           )}
+          {potionTargeting && (
+            <div
+              role="status"
+              className="ui-panel-frame pointer-events-none absolute top-24 left-1/2 z-40 -translate-x-1/2 px-4 py-2 font-tibia text-sm text-ui-text-bright"
+            >
+              {t("potions.selectTarget")}
+            </div>
+          )}
           {fightState && (
             <GameHud
               spellHotkeysEnabled={
                 !gameMenuOpen &&
                 !characterStatsOpen &&
-                actionBarConfigSlot === null
+                !potionTargeting &&
+                actionBarConfigSlot === null &&
+                potionActionBarConfigSlot === null
               }
               battleListVisible={battleListVisible}
               minimapVisible={minimapVisible}
@@ -1992,6 +2099,8 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               fightState={fightState}
               spells={spells}
               actionBar={actionBar}
+              potionActionBar={potionActionBar}
+              inventory={inventory}
               hasWeapon={Boolean(inventory?.equipment.weapon)}
               combatLog={combatLog}
               chatPinnedOpen={uiSettings.chatPinnedOpen ?? false}
@@ -2089,7 +2198,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               onCast={(spellId, target) =>
                 clientRef.current?.castSpell(spellId, target)
               }
-              onConfigureActionBar={setActionBarConfigSlot}
+              onActivatePotion={handlePotionActivation}
+              onConfigureActionBar={(slotIndex) => {
+                setPotionActionBarConfigSlot(null);
+                setActionBarConfigSlot(slotIndex);
+              }}
+              onConfigurePotionActionBar={(slotIndex) => {
+                setActionBarConfigSlot(null);
+                setPotionActionBarConfigSlot(slotIndex);
+              }}
             />
           )}
           {npcDialogue && (
@@ -2397,6 +2514,15 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
               initialSlot={actionBarConfigSlot}
               onChange={handleActionBarChange}
               onClose={() => setActionBarConfigSlot(null)}
+            />
+          )}
+          {potionActionBarConfigSlot !== null && (
+            <PotionActionBarModal
+              inventory={inventory}
+              potionActionBar={potionActionBar}
+              initialSlot={potionActionBarConfigSlot}
+              onChange={handlePotionActionBarChange}
+              onClose={() => setPotionActionBarConfigSlot(null)}
             />
           )}
           {guildModalOpen && (
@@ -2830,6 +2956,14 @@ export default function GameWindow({ accessToken, onLogout }: GameWindowProps) {
                     return;
                   }
                   clientRef.current?.useRune(item, target);
+                }}
+                onUsePotion={(item) => {
+                  pendingRuneRef.current = null;
+                  setRuneTargeting(false);
+                  pendingPotionRef.current = item;
+                  setPotionTargeting(true);
+                  setInventoryOpen(false);
+                  setCharacterStatsOpen(false);
                 }}
                 onOpenContainer={(item) =>
                   clientRef.current?.openContainer(item)

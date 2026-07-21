@@ -825,6 +825,26 @@
       "assign": "Assign {{name}} to slot {{slot}}"
     }
   },
+  "potions": {
+    "bar": "Potion bar",
+    "use": "Use {{name}} ({{count}} available), {{shortcut}}",
+    "emptySlot": "Empty potion slot, {{shortcut}}",
+    "selectTarget": "Select yourself or an adjacent player for the potion",
+    "actionBar": {
+      "title": "Potion Action Bar",
+      "description": "Choose a potion and how each Shift-number slot selects its target.",
+      "slot": "Potion slot {{slot}}",
+      "targetMode": "Target mode",
+      "use": "Use {{name}} ({{count}} available) {{mode}}, {{shortcut}}",
+      "noPotions": "Carry a restorative potion to assign it to a slot.",
+      "mode": {
+        "self": "on yourself",
+        "attack-target": "on your attack target",
+        "cursor": "at the cursor",
+        "crosshair": "with crosshair selection"
+      }
+    }
+  },
   "combat": {
     "fightModes": "Fight modes",
     "offensive": "Offensive fighting",
@@ -1007,6 +1027,9 @@
     "invalid-message": "The game server rejected an invalid request.",
     "combat-action-failed": "That combat action could not be completed.",
     "item-action-failed": "That item action could not be completed.",
+    "potion-exhausted": "Wait a moment before using another potion.",
+    "potion-level-restricted": "Your level is too low to use that potion.",
+    "potion-vocation-restricted": "Your vocation cannot use that potion.",
     "loot-protected": "You may not open or loot this corpse yet; its loot is protected for the killer.",
     "player-full": "You are full.",
     "join-required": "Enter the world before performing this action.",

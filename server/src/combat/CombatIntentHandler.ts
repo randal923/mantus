@@ -4,6 +4,7 @@ import type {
   CastSpellMessage,
   FightMode,
   SetFightModeMessage,
+  UsePotionMessage,
   UseRuneMessage,
 } from "@tibia/protocol";
 import type { AccountStore } from "../AccountStore";
@@ -16,7 +17,8 @@ type CombatIntent =
   | CancelAttackMessage
   | SetFightModeMessage
   | CastSpellMessage
-  | UseRuneMessage;
+  | UseRuneMessage
+  | UsePotionMessage;
 
 interface PendingFightModeUpdate {
   readonly session: Session;
@@ -56,7 +58,11 @@ export class CombatIntentHandler {
       this.combat.castSpell(session, intent, now);
       return;
     }
-    this.combat.useRune(session, intent, now);
+    if (intent.type === "use-rune") {
+      this.combat.useRune(session, intent, now);
+      return;
+    }
+    this.combat.usePotion(session, intent, now);
   }
 
   applyResolvedOutcomes(): void {

@@ -8,6 +8,8 @@ import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import type { ConjureItemResult } from "./ConjureItemResult";
 import type { ItemMutation } from "./ItemMutation";
 import type { LootItemCreation } from "./LootItemCreation";
+import type { PotionUseRequest } from "./PotionUseRequest";
+import type { PotionUseResult } from "./PotionUseResult";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
 
@@ -84,6 +86,7 @@ export interface ItemStore {
     count: number,
     reason: "rune" | "ammunition" | "break" | "food",
   ): Promise<ItemMutation>;
+  usePotion(request: PotionUseRequest): Promise<PotionUseResult>;
   conjure(
     characterId: string,
     expectedCharacterVersion: number,

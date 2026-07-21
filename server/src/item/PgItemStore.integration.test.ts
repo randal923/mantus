@@ -210,6 +210,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "015_depot_and_inbox.sql",
       "018_pvp.sql",
       "023_character_action_bar.sql",
+      "029_character_potion_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -481,6 +482,80 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     await expect(
       store.moveToContainer(characterId, helmetId, 7, pouchId, 1, 3),
     ).rejects.toThrow("stale item revision");
+  });
+
+  it("atomically restores health, consumes one potion, returns a flask, and audits replay", async () => {
+    const potionId = await insertItem(266, 2, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 2,
+    });
+    const character = await pool.query<{
+      version: number;
+      health: number;
+      mana: number;
+    }>(
+      `UPDATE characters SET health = 10, mana = 0
+       WHERE id = $1 RETURNING version, health, mana`,
+      [characterId],
+    );
+    const current = character.rows[0];
+    if (!current) throw new Error("character update returned no row");
+    const request = {
+      actorCharacterId: characterId,
+      targetCharacterId: characterId,
+      itemId: potionId,
+      expectedItemVersion: 1,
+      expectedTargetCharacterVersion: current.version,
+      expectedTargetHealth: current.health,
+      expectedTargetMana: current.mana,
+      targetMaxHealth: 150,
+      targetMaxMana: 55,
+      healthRestore: 150,
+      manaRestore: 0,
+    } as const;
+
+    const results = await Promise.allSettled([
+      store.usePotion(request),
+      store.usePotion(request),
+    ]);
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    const savedCharacter = await pool.query<{
+      version: number;
+      health: number;
+      mana: number;
+    }>("SELECT version, health, mana FROM characters WHERE id = $1", [
+      characterId,
+    ]);
+    expect(savedCharacter.rows[0]).toEqual({
+      version: current.version + 1,
+      health: 150,
+      mana: 0,
+    });
+    expect(await itemRow(potionId)).toMatchObject({ count: 1, version: 2 });
+    const flask = await pool.query<{
+      item_type_id: number;
+      count: number;
+    }>(
+      "SELECT item_type_id, count FROM items WHERE item_type_id = 285",
+    );
+    expect(flask.rows).toEqual([{ item_type_id: 285, count: 1 }]);
+    expect(await auditRows("item-destroyed")).toEqual([
+      expect.objectContaining({
+        item_id: potionId,
+        details: expect.objectContaining({ count: 1, reason: "potion" }),
+      }),
+    ]);
+    expect(await auditRows("item-created")).toContainEqual(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          count: 1,
+          reason: "potion-flask",
+        }),
+      }),
+    );
   });
 
   it("rejects moving a container into itself or its own contents", async () => {

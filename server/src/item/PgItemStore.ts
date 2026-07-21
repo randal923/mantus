@@ -11,6 +11,8 @@ import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
 import type { LootItemCreation } from "./LootItemCreation";
+import type { PotionUseRequest } from "./PotionUseRequest";
+import type { PotionUseResult } from "./PotionUseResult";
 import { PgContainerMoveOps } from "./PgContainerMoveOps";
 import { PgDecayOps } from "./PgDecayOps";
 import { PgEquipmentOps } from "./PgEquipmentOps";
@@ -218,6 +220,10 @@ export class PgItemStore implements ItemStore {
       count,
       reason,
     );
+  }
+
+  usePotion(request: PotionUseRequest): Promise<PotionUseResult> {
+    return this.uses.usePotion(request);
   }
 
   conjure(

@@ -26,6 +26,21 @@ describe("canSee", () => {
     ).toBe(false);
   });
 
+  it("sees the ground floor from an elevated surface viewer", () => {
+    expect(
+      canSee({ x: 10, y: 10, z: 6 }, { x: 9, y: 9, z: 7 }, RANGE, 0),
+    ).toBe(true);
+    expect(
+      canSee({ x: 10, y: 10, z: 5 }, { x: 30, y: 10, z: 7 }, RANGE, 0),
+    ).toBe(false);
+  });
+
+  it("never reveals other floors underground", () => {
+    expect(
+      canSee({ x: 10, y: 10, z: 9 }, { x: 10, y: 10, z: 10 }, RANGE, 9),
+    ).toBe(false);
+  });
+
   it("projects an authorized upper floor into the viewer range", () => {
     expect(
       canSee({ x: 10, y: 10, z: 7 }, { x: 11, y: 11, z: 6 }, RANGE, 6),

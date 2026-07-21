@@ -89,4 +89,36 @@ characters walking under the wrong textures, and floor transitions.
 - [x] Profile a dense animated-water region; ticker cost must be bounded by
   visible animated items, not every item in the world.
 
+## Known gaps (2026-07-20 floor/occlusion audit)
+
+Fixed in the audit: liquid grounds were stripped from the static map
+(trashholder→mutable misclassification), multi-tile sprite pieces sorted at
+the covered tile instead of the anchor, `limitsFloorView` checked every tile
+item instead of OTClient's first-stack-thing rule, no cover calculation
+underground, and surface viewers could not see down to the ground floor.
+Remaining deliberate gaps:
+
+- [ ] `/assets/*` is browser-cached for 24h (next.config headers). Map
+  regions and minimap tiles are now cache-busted via the manifest's
+  `version` content hash (manifest itself fetched with `cache: "no-cache"`),
+  but `objects.json` and the atlas sheets still have no versioning — after
+  an asset re-rip users need a hard refresh until those get the same
+  treatment.
+- [ ] Underground dynamic visibility stays own-floor only: the server sends
+  creatures/tile-states for `position.z` when below ground, although the
+  client now draws static floors z±2 with OTClient cover rules. OTClient
+  shows dynamic entities on all drawn underground floors; extend
+  `creaturesVisibleFrom`/`mapItemTilesVisibleFrom`/`canSee` if that parity
+  matters.
+- [ ] Re-running the map converter changes the world-item seed hash; a dev
+  database with persisted world-item deltas from the old `items.bin` makes
+  the server throw "persisted world items require reconciliation" at
+  startup. `cleanupPartialWorldSeed.ts` refuses once real gameplay data
+  exists, and the `items_immutable_identity` trigger blocks rewriting
+  `seed_map_version`, so the working dev reconciliation is: verify each
+  stale row's seed key still exists in the new `items.bin`, then DELETE the
+  rows inside one transaction with `item-destroyed` audit entries (reverts
+  those world items to base map state). Done 2026-07-20 for 5 door rows.
+  Production needs a first-class reconciliation path (charter rule 12).
+
 [Back to overview](README.md)

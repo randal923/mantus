@@ -4,6 +4,7 @@ import type {
   CharacterVocation,
   Direction,
   StarterVocation,
+  PotionActionBar,
 } from "@tibia/protocol";
 import type { CharacterSkill } from "../progression/CharacterSkill";
 import type { ProgressionEvent } from "../progression/ProgressionEvent";
@@ -42,6 +43,7 @@ export interface Character {
   readonly outfit: CharacterOutfit;
   readonly townId: number;
   readonly actionBar: ActionBar;
+  readonly potionActionBar: PotionActionBar;
   readonly skull: SkullState;
   readonly skullExpiresAt: Date | null;
   readonly createdAt: Date;

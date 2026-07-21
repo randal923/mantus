@@ -5,8 +5,8 @@ import { MAP_DEPTH } from "./mapDepth";
 import { TILE_SIZE } from "./tileSize";
 
 describe("getMapSpritePosition", () => {
-  it("sorts a large northwest piece against the tile it spills into", () => {
-    const commonPiece = getMapSpritePosition(
+  it("draws a northwest spill piece at the covered tile but sorts it at the anchor", () => {
+    const spillPiece = getMapSpritePosition(
       10,
       10,
       1,
@@ -16,6 +16,13 @@ describe("getMapSpritePosition", () => {
       0,
       MAP_DEPTH.item,
     );
+
+    expect(spillPiece.x).toBe(9 * TILE_SIZE);
+    expect(spillPiece.y).toBe(9 * TILE_SIZE);
+    expect(spillPiece.zIndex).toBe(getMapObjectZ(10, 10, MAP_DEPTH.item));
+  });
+
+  it("lets a tall item cover creatures and top items on the tiles it spills into", () => {
     const canopyPiece = getMapSpritePosition(
       10,
       10,
@@ -24,17 +31,15 @@ describe("getMapSpritePosition", () => {
       0,
       0,
       0,
-      MAP_DEPTH.onTop,
+      MAP_DEPTH.item,
     );
-    const creatureDepth = getMapObjectZ(9, 9, MAP_DEPTH.creature);
+    const coveredCreature = getMapObjectZ(9, 9, MAP_DEPTH.creature);
+    const coveredTopItem = getMapObjectZ(9, 9, MAP_DEPTH.onTop);
+    const ownTileCreature = getMapObjectZ(10, 10, MAP_DEPTH.creature);
 
-    expect(commonPiece).toEqual({
-      x: 9 * TILE_SIZE,
-      y: 9 * TILE_SIZE,
-      zIndex: getMapObjectZ(9, 9, MAP_DEPTH.item),
-    });
-    expect(commonPiece.zIndex).toBeLessThan(creatureDepth);
-    expect(canopyPiece.zIndex).toBeGreaterThan(creatureDepth);
+    expect(canopyPiece.zIndex).toBeGreaterThan(coveredCreature);
+    expect(canopyPiece.zIndex).toBeGreaterThan(coveredTopItem);
+    expect(canopyPiece.zIndex).toBeLessThan(ownTileCreature);
   });
 
   it("applies displacement and accumulated elevation to every piece", () => {

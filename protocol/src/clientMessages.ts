@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { actionBarSchema } from "./actionBar";
+import { actionBarSchema, potionActionBarSchema } from "./actionBar";
 import {
   bankDepositMessageSchema,
   bankTransferMessageSchema,
@@ -234,6 +234,19 @@ export const useRuneMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
+/**
+ * Uses one owned restorative potion on a selected player. The packet is
+ * intentionally limited to identity and revision data; restore amounts,
+ * requirements, range, exhaustion, consumption, and flask return are all
+ * resolved by the server. Expected rate: at most one accepted use per second.
+ */
+export const usePotionMessageSchema = ownedItemIntentSchema
+  .extend({
+    type: z.literal("use-potion"),
+    targetPlayerId: z.string().uuid(),
+  })
+  .strict();
+
 /** Equips one owned item; the server verifies its catalog slot and requirements. */
 export const equipItemMessageSchema = ownedItemIntentSchema
   .extend({
@@ -386,6 +399,14 @@ export const updateActionBarMessageSchema = z.object({
   actionBar: actionBarSchema,
 });
 
+/** Bounded per-character potion type and client targeting-mode layout. */
+export const updatePotionActionBarMessageSchema = z
+  .object({
+    type: z.literal("update-potion-action-bar"),
+    potionActionBar: potionActionBarSchema,
+  })
+  .strict();
+
 export const clientMessageSchema = z.discriminatedUnion("type", [
   authMessageSchema,
   listCharactersMessageSchema,
@@ -401,6 +422,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   setFightModeMessageSchema,
   castSpellMessageSchema,
   useRuneMessageSchema,
+  usePotionMessageSchema,
   equipItemMessageSchema,
   unequipItemMessageSchema,
   pickupItemMessageSchema,
@@ -419,6 +441,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   setLanguageMessageSchema,
   updateUiSettingsMessageSchema,
   updateActionBarMessageSchema,
+  updatePotionActionBarMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,
   bankWithdrawMessageSchema,
@@ -516,6 +539,7 @@ export type CancelAttackMessage = z.infer<typeof cancelAttackMessageSchema>;
 export type SetFightModeMessage = z.infer<typeof setFightModeMessageSchema>;
 export type CastSpellMessage = z.infer<typeof castSpellMessageSchema>;
 export type UseRuneMessage = z.infer<typeof useRuneMessageSchema>;
+export type UsePotionMessage = z.infer<typeof usePotionMessageSchema>;
 export type ItemContainerDestination = z.infer<
   typeof itemContainerDestinationSchema
 >;
@@ -541,5 +565,8 @@ export type UpdateUiSettingsMessage = z.infer<
 >;
 export type UpdateActionBarMessage = z.infer<
   typeof updateActionBarMessageSchema
+>;
+export type UpdatePotionActionBarMessage = z.infer<
+  typeof updatePotionActionBarMessageSchema
 >;
 export type ClientMessage = z.infer<typeof clientMessageSchema>;

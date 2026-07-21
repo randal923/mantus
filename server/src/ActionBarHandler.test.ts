@@ -34,6 +34,7 @@ function makeSession(playerId: string | null) {
   const session = {
     playerId,
     actionBarUpdatePending: false,
+    potionActionBarUpdatePending: false,
     send: (message: ServerMessage) => sent.push(message),
     sendError: (code: string) => errors.push(code),
   } as unknown as Session;
@@ -101,6 +102,43 @@ describe("ActionBarHandler", () => {
     expect(session.actionBarUpdatePending).toBe(false);
     const character = await store.findByIdForAccount("account-id", "char-1");
     expect(character?.actionBar).toEqual(actionBar);
+  });
+
+  it("persists validated potion slots and their target modes", async () => {
+    const store = seededStore();
+    const handler = makeHandler(store);
+    const { session, sent, errors } = makeSession("char-1");
+    const potionActionBar = [
+      { itemTypeId: 266, targetMode: "self" as const },
+      null,
+      { itemTypeId: 268, targetMode: "crosshair" as const },
+    ];
+
+    handler.handle(session, {
+      type: "update-potion-action-bar",
+      potionActionBar,
+    });
+    await settle(handler);
+
+    expect(errors).toEqual([]);
+    expect(sent).toEqual([
+      { type: "potion-action-bar-updated", potionActionBar },
+    ]);
+    const character = await store.findByIdForAccount(
+      "account-id",
+      "char-1",
+    );
+    expect(character?.potionActionBar).toEqual(potionActionBar);
+  });
+
+  it("rejects non-potion type ids in potion slots", () => {
+    const { session, errors } = makeSession("char-1");
+    makeHandler(seededStore()).handle(session, {
+      type: "update-potion-action-bar",
+      potionActionBar: [{ itemTypeId: 3273, targetMode: "self" }],
+    });
+    expect(errors).toEqual(["action-bar-invalid"]);
+    expect(session.potionActionBarUpdatePending).toBe(false);
   });
 
   it("rejects a second update while one is pending", async () => {

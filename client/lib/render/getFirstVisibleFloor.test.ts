@@ -40,6 +40,33 @@ describe("getFirstVisibleFloor", () => {
     expect(firstVisible).toBe(7);
   });
 
+  it("never scans below the given lowest floor underground", () => {
+    expect(
+      getFirstVisibleFloor(
+        100,
+        200,
+        10,
+        () => true,
+        () => false,
+        8,
+      ),
+    ).toBe(8);
+  });
+
+  it("hides covered floors above an underground camera", () => {
+    const blocking = new Set(["9:100,200"]);
+    expect(
+      getFirstVisibleFloor(
+        100,
+        200,
+        10,
+        () => true,
+        (floor, x, y) => blocking.has(`${floor}:${x},${y}`),
+        8,
+      ),
+    ).toBe(10);
+  });
+
   it("does not let an opaque neighboring wall hide the whole upper floor", () => {
     const firstVisible = getFirstVisibleFloor(
       100,

@@ -13,14 +13,18 @@ import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
 import type { ItemStore } from "./ItemStore";
 import type { LootItemCreation } from "./LootItemCreation";
+import type { PotionUseRequest } from "./PotionUseRequest";
+import type { PotionUseResult } from "./PotionUseResult";
 import { requireMemoryContainerPlacement } from "./requireMemoryContainerPlacement";
 import { requireOwnedMemoryItem } from "./requireOwnedMemoryItem";
+import { getPotionDefinition } from "../potion/getPotionDefinition";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
 
 export class MemoryItemStore implements ItemStore {
   private readonly items = new Map<string, Item>();
   private readonly characterVersions = new Map<string, number>();
+  private readonly characterHealth = new Map<string, number>();
   private readonly characterMana = new Map<string, number>();
   private readonly characterSoul = new Map<string, number>();
 
@@ -455,6 +459,130 @@ export class MemoryItemStore implements ItemStore {
     return { before, after: [after] };
   }
 
+  async usePotion(request: PotionUseRequest): Promise<PotionUseResult> {
+    const before = requireOwnedMemoryItem(
+      this.items,
+      request.actorCharacterId,
+      request.itemId,
+      request.expectedItemVersion,
+    );
+    const potion = getPotionDefinition(before.typeId);
+    if (!potion) throw new Error("item is not a restorative potion");
+    this.requirePotionRestore(request.healthRestore, potion.health);
+    this.requirePotionRestore(request.manaRestore, potion.mana);
+
+    const currentVersion =
+      this.characterVersions.get(request.targetCharacterId) ??
+      request.expectedTargetCharacterVersion;
+    const currentHealth =
+      this.characterHealth.get(request.targetCharacterId) ??
+      request.expectedTargetHealth;
+    const currentMana =
+      this.characterMana.get(request.targetCharacterId) ??
+      request.expectedTargetMana;
+    if (
+      currentVersion !== request.expectedTargetCharacterVersion ||
+      currentHealth !== request.expectedTargetHealth ||
+      currentMana !== request.expectedTargetMana ||
+      currentHealth <= 0 ||
+      !Number.isInteger(request.targetMaxHealth) ||
+      request.targetMaxHealth < currentHealth ||
+      !Number.isInteger(request.targetMaxMana) ||
+      request.targetMaxMana < currentMana
+    ) {
+      throw new Error("potion target state is stale");
+    }
+
+    const nextHealth = Math.min(
+      request.targetMaxHealth,
+      currentHealth + request.healthRestore,
+    );
+    const nextMana = Math.min(
+      request.targetMaxMana,
+      currentMana + request.manaRestore,
+    );
+    let after: Item[];
+    if (before.count === 1) {
+      after = [
+        {
+          ...before,
+          typeId: potion.flaskTypeId,
+          count: 1,
+          attributes: {},
+          version: before.version + 1,
+        },
+      ];
+    } else {
+      const remaining = {
+        ...before,
+        count: before.count - 1,
+        version: before.version + 1,
+      };
+      const reachable = collectReachableItemIds(
+        [...this.items.values()],
+        request.actorCharacterId,
+      );
+      const flaskMaxCount =
+        this.catalog?.require(potion.flaskTypeId).maxCount ?? 100;
+      const flask = [...reachable].flatMap((id) => {
+        const item = this.items.get(id);
+        return item &&
+          item.typeId === potion.flaskTypeId &&
+          item.count < flaskMaxCount
+          ? [item]
+          : [];
+      })[0];
+      if (flask) {
+        after = [
+          remaining,
+          { ...flask, count: flask.count + 1, version: flask.version + 1 },
+        ];
+      } else {
+        const occupied = new Set(
+          [...this.items.values()].flatMap((item) =>
+            item.location.kind === "inventory" &&
+            item.location.characterId === request.actorCharacterId
+              ? [item.location.slot]
+              : [],
+          ),
+        );
+        const slot = Array.from({ length: 100 }, (_, index) => index).find(
+          (index) => !occupied.has(index),
+        );
+        if (slot === undefined) throw new Error("inventory is full");
+        after = [
+          remaining,
+          {
+            id: randomUUID(),
+            typeId: potion.flaskTypeId,
+            count: 1,
+            attributes: {},
+            version: 1,
+            location: {
+              kind: "inventory",
+              characterId: request.actorCharacterId,
+              slot,
+            },
+          },
+        ];
+      }
+    }
+
+    for (const item of after) this.items.set(item.id, item);
+    this.characterVersions.set(
+      request.targetCharacterId,
+      request.expectedTargetCharacterVersion + 1,
+    );
+    this.characterHealth.set(request.targetCharacterId, nextHealth);
+    this.characterMana.set(request.targetCharacterId, nextMana);
+    return {
+      mutation: { before, after },
+      targetCharacterVersion: request.expectedTargetCharacterVersion + 1,
+      healthRestored: nextHealth - currentHealth,
+      manaRestored: nextMana - currentMana,
+    };
+  }
+
   async conjure(
     characterId: string,
     expectedCharacterVersion: number,
@@ -589,6 +717,18 @@ export class MemoryItemStore implements ItemStore {
     this.characterVersions.set(characterId, expectedCharacterVersion + 1);
     this.characterMana.set(characterId, expectedMana - manaCost);
     this.characterSoul.set(characterId, expectedSoul - soulCost);
+  }
+
+  private requirePotionRestore(
+    amount: number,
+    range: readonly [number, number] | undefined,
+  ): void {
+    if (
+      !Number.isInteger(amount) ||
+      (range ? amount < range[0] || amount > range[1] : amount !== 0)
+    ) {
+      throw new Error("potion restore amount is out of range");
+    }
   }
 
   async decayWorldItem(

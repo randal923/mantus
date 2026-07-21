@@ -88,6 +88,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       "015_depot_and_inbox.sql",
       "018_pvp.sql",
       "023_character_action_bar.sql",
+      "029_character_potion_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -220,11 +221,24 @@ databaseDescribe("PgCharacterStore integration", () => {
     if (!summary) throw new Error("character was not created");
     const created = await store.findByIdForAccount(accountId, summary.id);
     expect(created?.actionBar).toEqual([]);
+    expect(created?.potionActionBar).toEqual([]);
 
     const actionBar = ["exori", null, "exura ico"];
     await store.updateActionBar(summary.id, actionBar);
     const updated = await store.findByIdForAccount(accountId, summary.id);
     expect(updated?.actionBar).toEqual(actionBar);
+
+    const potionActionBar = [
+      { itemTypeId: 266, targetMode: "self" as const },
+      null,
+      { itemTypeId: 268, targetMode: "crosshair" as const },
+    ];
+    await store.updatePotionActionBar(summary.id, potionActionBar);
+    const updatedPotions = await store.findByIdForAccount(
+      accountId,
+      summary.id,
+    );
+    expect(updatedPotions?.potionActionBar).toEqual(potionActionBar);
   });
 
   it("rejects a stale snapshot without overwriting the newer save", async () => {

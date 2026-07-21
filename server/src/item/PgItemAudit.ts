@@ -84,7 +84,13 @@ export class PgItemAudit {
     characterId: string,
     item: Item,
     count: number,
-    reason: "rune" | "ammunition" | "break" | "food" | "conjure-source",
+    reason:
+      | "rune"
+      | "ammunition"
+      | "break"
+      | "food"
+      | "potion"
+      | "conjure-source",
   ): Promise<void> {
     await client.query(insertItemDestroyedAudit, [
       characterId,
@@ -99,7 +105,7 @@ export class PgItemAudit {
     client: PoolClient,
     characterId: string,
     item: Item,
-    reason: "conjuring",
+    reason: "conjuring" | "potion-flask",
   ): Promise<void> {
     await client.query(insertItemCreatedAudit, [
       characterId,

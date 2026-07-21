@@ -1,3 +1,6 @@
+// "trashholder" is deliberately absent: Canary types water/lava/tar grounds
+// as trashholders (throwing an item in destroys it), but the tiles themselves
+// are immutable scenery and must stay in the static client map.
 const MUTABLE_TYPES = new Set([
   "bed",
   "container",
@@ -6,7 +9,6 @@ const MUTABLE_TYPES = new Set([
   "magicfield",
   "mailbox",
   "rewardchest",
-  "trashholder",
 ]);
 
 const STATEFUL_ATTRIBUTES = [

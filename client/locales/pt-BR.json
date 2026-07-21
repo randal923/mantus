@@ -825,6 +825,26 @@
       "assign": "Atribuir {{name}} ao espaço {{slot}}"
     }
   },
+  "potions": {
+    "bar": "Barra de poções",
+    "use": "Usar {{name}} ({{count}} disponíveis), {{shortcut}}",
+    "emptySlot": "Espaço de poção vazio, {{shortcut}}",
+    "selectTarget": "Selecione você ou um jogador adjacente para a poção",
+    "actionBar": {
+      "title": "Barra de Ações de Poções",
+      "description": "Escolha uma poção e como cada espaço Shift-número seleciona seu alvo.",
+      "slot": "Espaço de poção {{slot}}",
+      "targetMode": "Modo de alvo",
+      "use": "Usar {{name}} ({{count}} disponíveis) {{mode}}, {{shortcut}}",
+      "noPotions": "Carregue uma poção restauradora para atribuí-la a um espaço.",
+      "mode": {
+        "self": "em você",
+        "attack-target": "no seu alvo de ataque",
+        "cursor": "na posição do cursor",
+        "crosshair": "com seleção por mira"
+      }
+    }
+  },
   "combat": {
     "fightModes": "Modos de combate",
     "offensive": "Combate ofensivo",
@@ -1007,6 +1027,9 @@
     "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
     "combat-action-failed": "Não foi possível concluir essa ação de combate.",
     "item-action-failed": "Não foi possível concluir essa ação de item.",
+    "potion-exhausted": "Aguarde um momento antes de usar outra poção.",
+    "potion-level-restricted": "Seu nível é muito baixo para usar essa poção.",
+    "potion-vocation-restricted": "Sua vocação não pode usar essa poção.",
     "loot-protected": "Você ainda não pode abrir ou saquear este corpo; o espólio está protegido para quem o matou.",
     "player-full": "Você está cheio.",
     "join-required": "Entre no mundo antes de realizar esta ação.",

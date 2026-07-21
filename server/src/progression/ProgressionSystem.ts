@@ -102,6 +102,10 @@ export class ProgressionSystem {
     this.sendProgression(player, now);
   }
 
+  notifyCommittedPlayer(player: Player, now: number): void {
+    this.sendProgression(player, now);
+  }
+
   tick(now: number): void {
     for (const player of this.world.allPlayers()) {
       if (this.persistence.isExternalMutationPending(player)) continue;

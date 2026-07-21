@@ -3,7 +3,7 @@ import {
   accountTierSchema,
   premiumDaysRemainingSchema,
 } from "./account";
-import { actionBarSchema } from "./actionBar";
+import { actionBarSchema, potionActionBarSchema } from "./actionBar";
 import {
   bankActionFailedMessageSchema,
   bankOpenedMessageSchema,
@@ -148,6 +148,11 @@ export const actionBarUpdatedMessageSchema = z.object({
   actionBar: actionBarSchema,
 });
 
+export const potionActionBarUpdatedMessageSchema = z.object({
+  type: z.literal("potion-action-bar-updated"),
+  potionActionBar: potionActionBarSchema,
+});
+
 export const characterListMessageSchema = z.object({
   type: z.literal("character-list"),
   accountTier: accountTierSchema,
@@ -169,6 +174,7 @@ export const welcomeMessageSchema = z.object({
   spells: z.array(spellCatalogEntrySchema).max(256),
   uiSettings: uiSettingsSchema,
   actionBar: actionBarSchema,
+  potionActionBar: potionActionBarSchema,
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -362,6 +368,9 @@ export const serverErrorCodeSchema = z.enum([
   "item-action-failed",
   "loot-protected",
   "player-full",
+  "potion-exhausted",
+  "potion-level-restricted",
+  "potion-vocation-restricted",
   "logged-in-elsewhere",
   "kicked",
   "rate-limited",
@@ -378,6 +387,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   languageUpdatedMessageSchema,
   uiSettingsUpdatedMessageSchema,
   actionBarUpdatedMessageSchema,
+  potionActionBarUpdatedMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,

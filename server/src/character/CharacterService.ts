@@ -111,6 +111,7 @@ export class CharacterService {
       outfit: { lookType: input.lookType, ...STARTER_OUTFIT_COLORS },
       townId: this.starter.townId,
       actionBar: [],
+      potionActionBar: [],
       skull: "none",
       skullExpiresAt: null,
       createdAt: now,

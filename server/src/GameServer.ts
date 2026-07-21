@@ -632,6 +632,7 @@ export class GameServer {
       case "set-fight-mode":
       case "cast-spell":
       case "use-rune":
+      case "use-potion":
         this.combat.handle(session, intent, now);
         return;
       case "equip-item":
@@ -777,6 +778,7 @@ export class GameServer {
         this.uiSettings.handle(session, intent);
         return;
       case "update-action-bar":
+      case "update-potion-action-bar":
         this.actionBar.handle(session, intent);
         return;
     }

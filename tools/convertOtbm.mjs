@@ -39,6 +39,14 @@ const OTBM = {
 
 const REGION_SIZE = 256;
 const SECTOR_SIZE = 32;
+/** OTClient thing-stack insertion order; the lowest present is getThing(0). */
+const STACK_PRIORITIES = {
+  ground: 0,
+  border: 1,
+  bottom: 2,
+  top: 3,
+  common: 5,
+};
 const FLOORS = new Set(Array.from({ length: 16 }, (_, z) => z));
 const ZONE_FLAGS = {
   protection: 1 << 0,
@@ -393,8 +401,8 @@ function finishTile(tile) {
   let blocksSolid = false;
   let blocksProjectile = false;
   let blocksPath = false;
-  let limitsFloorView = false;
-  let limitsFloorViewFree = false;
+  let firstStackThing = null;
+  let firstStackPriority = Infinity;
   const drawIds = [];
   let floorChange = null;
   let floorChangeItemId = null;
@@ -415,13 +423,10 @@ function finishTile(tile) {
     blocksSolid ||= semantics.blocksSolid;
     blocksProjectile ||= semantics.blocksProjectile;
     blocksPath ||= semantics.blocksPath;
-    if (!appearance.flags.dontHide && appearance.flags.ground) {
-      limitsFloorView = true;
-      limitsFloorViewFree = true;
-    }
-    if (!appearance.flags.dontHide && appearance.flags.onBottom) {
-      limitsFloorViewFree = true;
-      limitsFloorView ||= semantics.blocksProjectile;
+    const stackPriority = STACK_PRIORITIES[semantics.stackOrder];
+    if (stackPriority < firstStackPriority) {
+      firstStackThing = appearance;
+      firstStackPriority = stackPriority;
     }
 
     if (semantics.mutable || semantics.interactive) {
@@ -533,6 +538,21 @@ function finishTile(tile) {
       });
     }
   }
+  // OTClient's Tile::limitsFloorsView examines only the first thing in stack
+  // order, so e.g. a border-only tile carrying a cliff face does not hide the
+  // floors above it.
+  const firstFlags = firstStackThing?.flags;
+  const limitsFloorViewFree = Boolean(
+    firstFlags &&
+      !firstFlags.dontHide &&
+      (firstFlags.ground || firstFlags.onBottom),
+  );
+  const limitsFloorView = Boolean(
+    firstFlags &&
+      !firstFlags.dontHide &&
+      (firstFlags.ground ||
+        (firstFlags.onBottom && firstFlags.blockProjectile)),
+  );
   const key = `${Math.floor(x / SECTOR_SIZE)},${Math.floor(y / SECTOR_SIZE)},${z}`;
   let sector = sectors.get(key);
   if (!sector) {
@@ -918,21 +938,23 @@ const serverContentStage = join(stagingRoot, `${mapName}.content.json`);
 rmSync(stagingRoot, { recursive: true, force: true });
 mkdirSync(clientStage, { recursive: true });
 const regionsByFloor = new Map();
+const regionContentHash = createHash("sha256");
 for (const [key, entries] of [...regions.entries()].sort(([a], [b]) =>
   a.localeCompare(b, "en", { numeric: true }),
 )) {
   const [rx, ry, z] = key.split(",").map(Number);
   mkdirSync(join(clientStage, `z${z}`), { recursive: true });
-  writeFileSync(
-    join(clientStage, `z${z}`, `${rx}.${ry}.json`),
-    `{"tiles":[${entries.join(",")}]}`,
-  );
+  const payload = `{"tiles":[${entries.join(",")}]}`;
+  writeFileSync(join(clientStage, `z${z}`, `${rx}.${ry}.json`), payload);
+  regionContentHash.update(key).update(payload);
   if (!regionsByFloor.has(z)) regionsByFloor.set(z, []);
   regionsByFloor.get(z).push([rx, ry]);
 }
 const manifest = {
   formatVersion: sourceManifest.converters.map,
   source: { mapSha256: mapHash },
+  /** Content hash of the generated regions; busts long-lived browser caches. */
+  version: regionContentHash.digest("hex").slice(0, 16),
   name: mapName,
   regionSize: REGION_SIZE,
   bounds: {

@@ -8,6 +8,8 @@ import type { MapData } from "../MapData";
 import type { MapItem } from "../MapItem";
 import { positionKey } from "../positionKey";
 
+const GROUND_FLOOR = 7;
+
 export interface TilePassabilityOverride {
   readonly walkable: boolean;
   readonly blocksProjectile: boolean;
@@ -149,10 +151,10 @@ export class DynamicMapItems {
   mapItemTilesVisibleFrom(position: Position, range: ViewRange) {
     const firstFloor = getFirstVisibleFloor(position, this.map);
     const floors =
-      position.z > 7
+      position.z > GROUND_FLOOR
         ? [position.z]
         : Array.from(
-            { length: position.z - firstFloor + 1 },
+            { length: GROUND_FLOOR - firstFloor + 1 },
             (_, index) => firstFloor + index,
           );
     const tiles = [];

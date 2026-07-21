@@ -1,6 +1,7 @@
 import type {
   CastSpellMessage,
   SetFightModeMessage,
+  UsePotionMessage,
   UseRuneMessage,
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
@@ -12,6 +13,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import type { PvpHooks } from "../pvp/PvpHooks";
+import { PotionService } from "../potion/PotionService";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -44,6 +46,7 @@ export class Combat {
   private readonly conditionSystem: ConditionSystem;
   private readonly spellCaster: SpellCaster;
   private readonly autoAttack: PlayerAutoAttack;
+  private readonly potions: PotionService;
 
   constructor(
     private readonly world: World,
@@ -125,6 +128,15 @@ export class Combat {
       this.damage,
       chase,
       pvpHooks,
+    );
+    this.potions = new PotionService(
+      world,
+      visibility,
+      persistence,
+      progression,
+      items,
+      formula,
+      partyHooks,
     );
   }
 
@@ -228,6 +240,10 @@ export class Combat {
         );
       },
     );
+  }
+
+  usePotion(session: Session, intent: UsePotionMessage, now: number): void {
+    this.potions.use(session, intent, now);
   }
 
   tick(now: number): void {

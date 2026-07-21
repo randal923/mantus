@@ -6,15 +6,16 @@ type LimitsFloorView = (
   freeView: boolean,
 ) => boolean;
 
-/** Finds the highest blocking roof/wall around the camera. */
+/** Finds the highest blocking roof/wall around the camera, never rising above lowestFloor. */
 export function getFirstVisibleFloor(
   playerX: number,
   playerY: number,
   playerFloor: number,
   isLookPossible: IsLookPossible,
   limitsFloorView: LimitsFloorView,
+  lowestFloor = 0,
 ): number {
-  let firstVisibleFloor = 0;
+  let firstVisibleFloor = lowestFloor;
   const neighbors = [
     [0, 0],
     [-1, 0],

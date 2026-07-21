@@ -33,6 +33,25 @@ describe("combat intent schemas", () => {
         target: { kind: "self" },
       }).success,
     ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "use-potion",
+        itemId: "00000000-0000-4000-8000-000000000001",
+        revision: 1,
+        targetPlayerId: "00000000-0000-4000-8000-000000000002",
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "update-potion-action-bar",
+        potionActionBar: [
+          { itemTypeId: 266, targetMode: "self" },
+          { itemTypeId: 268, targetMode: "attack-target" },
+          { itemTypeId: 7642, targetMode: "cursor" },
+          { itemTypeId: 23374, targetMode: "crosshair" },
+        ],
+      }).success,
+    ).toBe(true);
   });
 
   it("rejects client-authored combat outcomes and oversized target ids", () => {
@@ -71,6 +90,23 @@ describe("combat intent schemas", () => {
         itemId: "00000000-0000-4000-8000-000000000001",
         revision: 1,
         target: { kind: "position", position: { x: -1, y: 0, z: 7 } },
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "use-potion",
+        itemId: "00000000-0000-4000-8000-000000000001",
+        revision: 1,
+        targetPlayerId: "00000000-0000-4000-8000-000000000002",
+        healthRestore: 999_999,
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "update-potion-action-bar",
+        potionActionBar: [
+          { itemTypeId: 266, targetMode: "client-decides" },
+        ],
       }).success,
     ).toBe(false);
   });

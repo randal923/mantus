@@ -21,6 +21,7 @@ import {
   type ServerErrorCode,
   type ServerMessage,
   type ActionBar,
+  type PotionActionBar,
   type UiSettings,
   type ViewRange,
 } from "@tibia/protocol";
@@ -117,6 +118,15 @@ export class GameClient {
       itemId: item.id,
       revision: item.revision,
       target,
+    });
+  }
+
+  usePotion(item: InventoryItem, targetPlayerId: string): boolean {
+    return this.send({
+      type: "use-potion",
+      itemId: item.id,
+      revision: item.revision,
+      targetPlayerId,
     });
   }
 
@@ -667,6 +677,13 @@ export class GameClient {
 
   updateActionBar(actionBar: ActionBar): boolean {
     return this.send({ type: "update-action-bar", actionBar });
+  }
+
+  updatePotionActionBar(potionActionBar: PotionActionBar): boolean {
+    return this.send({
+      type: "update-potion-action-bar",
+      potionActionBar,
+    });
   }
 
   disconnect(): void {

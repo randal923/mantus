@@ -111,6 +111,16 @@ test("classifies subtype, action, and text attributes deliberately", () => {
   assert.equal(action.interactive, true);
 });
 
+test("keeps trashholder liquids static map scenery", () => {
+  const water = getMapItemSemantics(
+    appearance({ ground: true, notWalkable: true }),
+    { name: "shallow water", type: "trashholder", fluidSource: "water" },
+  );
+
+  assert.equal(water.mutable, false);
+  assert.equal(water.interactive, false);
+});
+
 test("keeps appearance-only ids immutable until catalog rules exist", () => {
   const unknown = getMapItemSemantics(
     appearance({ notMoveable: false, pickupable: true }),

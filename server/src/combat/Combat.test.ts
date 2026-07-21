@@ -35,6 +35,8 @@ const WEAPON_ID = "00000000-0000-4000-8000-000000000011";
 const AMMO_ID = "00000000-0000-4000-8000-000000000012";
 const RUNE_ID = "00000000-0000-4000-8000-000000000013";
 const BACKPACK_ID = "00000000-0000-4000-8000-000000000014";
+const POTION_ID = "00000000-0000-4000-8000-000000000015";
+const FRIEND_ID = "00000000-0000-4000-8000-000000000016";
 
 let catalog: ItemCatalog;
 
@@ -851,6 +853,181 @@ describe("Combat", () => {
           message.code === "combat-action-failed",
       ).length,
     ).toBeGreaterThanOrEqual(2);
+  });
+
+  it("uses a restorative potion on self once and enforces its shared exhaust", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(80, "Knight"),
+      inventory: [
+        ownedItem(
+          POTION_ID,
+          239,
+          {
+            kind: "inventory",
+            characterId: PLAYER_ID,
+            slot: 0,
+          },
+          2,
+        ),
+      ],
+    });
+    harness.player.setHealth(harness.player.maxHealth - 600);
+    const healthBefore = harness.player.health;
+    const firstIntent = {
+      type: "use-potion" as const,
+      itemId: POTION_ID,
+      revision: 1,
+      targetPlayerId: PLAYER_ID,
+    };
+
+    harness.combat.usePotion(harness.session, firstIntent, 1_000);
+    harness.combat.usePotion(harness.session, firstIntent, 1_000);
+    await settleItems(harness, 1_000);
+    harness.combat.usePotion(
+      harness.session,
+      { ...firstIntent, revision: 2 },
+      1_500,
+    );
+
+    expect(harness.player.health).toBeGreaterThanOrEqual(healthBefore + 425);
+    expect(harness.player.health).toBeLessThanOrEqual(healthBefore + 575);
+    expect(harness.session.combatCooldowns.get("potion")?.readyAt).toBe(2_000);
+    expect(
+      harness.sent.some(
+        (message) =>
+          message.type === "error" && message.code === "potion-exhausted",
+      ),
+    ).toBe(true);
+    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: POTION_ID,
+          typeId: 239,
+          count: 1,
+          version: 2,
+        }),
+        expect.objectContaining({ typeId: 284, count: 1 }),
+      ]),
+    );
+  });
+
+  it("allows a restorative potion to heal an adjacent visible player", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(80, "Knight"),
+      inventory: [
+        ownedItem(POTION_ID, 239, {
+          kind: "inventory",
+          characterId: PLAYER_ID,
+          slot: 0,
+        }),
+      ],
+    });
+    const friendCharacter = {
+      ...makeLeveledCharacter(80, "Knight"),
+      id: FRIEND_ID,
+      displayName: "Friend",
+      normalizedName: "friend",
+    };
+    const friend = new Player(friendCharacter, { x: 2, y: 1, z: 7 }, 0);
+    friend.setHealth(friend.maxHealth - 600);
+    const friendHealthBefore = friend.health;
+    harness.world.addPlayer(friend);
+    harness.session.knownCreatureIds.add(friend.id);
+
+    harness.combat.usePotion(
+      harness.session,
+      {
+        type: "use-potion",
+        itemId: POTION_ID,
+        revision: 1,
+        targetPlayerId: friend.id,
+      },
+      1_000,
+    );
+    await settleItems(harness, 1_000);
+
+    expect(friend.health).toBeGreaterThanOrEqual(friendHealthBefore + 425);
+    expect(friend.health).toBeLessThanOrEqual(friendHealthBefore + 575);
+    expect(harness.player.health).toBe(harness.player.maxHealth);
+    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toEqual([
+      expect.objectContaining({
+        id: POTION_ID,
+        typeId: 284,
+        count: 1,
+        version: 2,
+      }),
+    ]);
+  });
+
+  it("rejects out-of-range and vocation-restricted potion targets without consuming", async () => {
+    const farHarness = await makeHarness({
+      inventory: [
+        ownedItem(POTION_ID, 266, {
+          kind: "inventory",
+          characterId: PLAYER_ID,
+          slot: 0,
+        }),
+      ],
+    });
+    const farCharacter = {
+      ...makeLeveledCharacter(),
+      id: FRIEND_ID,
+      displayName: "Far Friend",
+      normalizedName: "far friend",
+    };
+    const farFriend = new Player(farCharacter, { x: 3, y: 1, z: 7 }, 0);
+    farFriend.setHealth(farFriend.maxHealth - 20);
+    farHarness.world.addPlayer(farFriend);
+    farHarness.session.knownCreatureIds.add(farFriend.id);
+    farHarness.combat.usePotion(
+      farHarness.session,
+      {
+        type: "use-potion",
+        itemId: POTION_ID,
+        revision: 1,
+        targetPlayerId: farFriend.id,
+      },
+      1_000,
+    );
+
+    const vocationHarness = await makeHarness({
+      character: makeLeveledCharacter(80, "Sorcerer"),
+      inventory: [
+        ownedItem(POTION_ID, 239, {
+          kind: "inventory",
+          characterId: PLAYER_ID,
+          slot: 0,
+        }),
+      ],
+    });
+    vocationHarness.player.setHealth(vocationHarness.player.health - 100);
+    vocationHarness.combat.usePotion(
+      vocationHarness.session,
+      {
+        type: "use-potion",
+        itemId: POTION_ID,
+        revision: 1,
+        targetPlayerId: PLAYER_ID,
+      },
+      1_000,
+    );
+
+    expect(farFriend.health).toBe(farFriend.maxHealth - 20);
+    await expect(farHarness.store.loadForCharacter(PLAYER_ID)).resolves.toEqual([
+      expect.objectContaining({ id: POTION_ID, typeId: 266, version: 1 }),
+    ]);
+    expect(
+      vocationHarness.sent.some(
+        (message) =>
+          message.type === "error" &&
+          message.code === "potion-vocation-restricted",
+      ),
+    ).toBe(true);
+    await expect(
+      vocationHarness.store.loadForCharacter(PLAYER_ID),
+    ).resolves.toEqual([
+      expect.objectContaining({ id: POTION_ID, typeId: 239, version: 1 }),
+    ]);
   });
 
   it("consumes ammunition once before applying a distance attack", async () => {

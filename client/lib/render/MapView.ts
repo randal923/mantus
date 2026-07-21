@@ -12,6 +12,7 @@ import { getItemInstanceSeed } from "./getItemInstanceSeed";
 import { getMapItemPattern } from "./getMapItemPattern";
 import { getMapSpritePosition } from "./getMapSpritePosition";
 import { getMergedTileItems } from "./getMergedTileItems";
+import { getTileLimitsFloorView } from "./getTileLimitsFloorView";
 import {
   getTileRenderLayers,
   type LayeredTileObject,
@@ -21,6 +22,7 @@ import { getVisibleFloors } from "./getVisibleFloors";
 import { projectFloorPosition } from "./projectFloorPosition";
 
 const GROUND_FLOOR = 7;
+const UNDERGROUND_FLOOR_AWARENESS = 2;
 /** Draw deeper floors first so physically higher floors can cover them. */
 const FLOORS = Array.from({ length: 16 }, (_, index) => 15 - index);
 const STATIC_TILE_MARGIN = 2;
@@ -28,6 +30,7 @@ const MAX_CACHED_REGIONS = 48;
 
 interface MapManifest {
   regionSize: number;
+  version?: string;
   regions: Record<string, [number, number][]>;
 }
 
@@ -100,7 +103,7 @@ export class MapView {
 
   isDynamicFloorVisible(z: number): boolean {
     if (!this.center || !this.isFloorVisible(z)) return false;
-    return this.center.z > GROUND_FLOOR ? z === this.center.z : z <= this.center.z;
+    return this.visibleFloors().includes(z);
   }
 
   projectPosition(x: number, y: number, z: number): { x: number; y: number } {
@@ -232,7 +235,11 @@ export class MapView {
     this.regionUse.clear();
     this.tileElevations.clear();
     this.mapName = name;
-    const response = await fetch(`/assets/map/${name}/manifest.json`);
+    // Revalidate the manifest on every login; its version then busts the
+    // long-lived browser cache of region files whenever the map is rebuilt.
+    const response = await fetch(`/assets/map/${name}/manifest.json`, {
+      cache: "no-cache",
+    });
     if (!response.ok) throw new Error(`missing map manifest for ${name}`);
     this.manifest = (await response.json()) as MapManifest;
     for (const z of FLOORS) {
@@ -253,11 +260,9 @@ export class MapView {
       floor.container.position.set(projected.x, projected.y);
     }
     if (previousFloor !== undefined && previousFloor !== z) {
+      const drawable = this.visibleFloors();
       for (const [key, state] of [...this.dynamicRequests]) {
-        const authorized = z > GROUND_FLOOR
-          ? state.position.z === z
-          : state.position.z <= z;
-        if (authorized) continue;
+        if (drawable.includes(state.position.z)) continue;
         this.dynamicRequests.delete(key);
         this.tileOverrides.delete(key);
         if (this.drawnTiles.has(key)) this.redrawTileKey(key);
@@ -394,9 +399,12 @@ export class MapView {
 
   private async fetchRegion(z: number, regionKey: string): Promise<Region | null> {
     const size = this.manifest?.regionSize ?? 0;
+    const version = this.manifest?.version;
     const [rx, ry] = regionKey.split(",").map(Number);
     const response = await fetch(
-      `/assets/map/${this.mapName}/z${z}/${rx}.${ry}.json`,
+      `/assets/map/${this.mapName}/z${z}/${rx}.${ry}.json${
+        version ? `?v=${version}` : ""
+      }`,
     );
     if (!response.ok) return null;
     const data = (await response.json()) as { tiles: number[][] };
@@ -451,8 +459,7 @@ export class MapView {
   private tileItems(z: number, x: number, y: number): TileRenderItem<TibiaObject>[] {
     const key = this.tileKey(z, x, y);
     const dynamicItems =
-      !this.center ||
-      (this.center.z > GROUND_FLOOR ? z === this.center.z : z <= this.center.z)
+      !this.center || this.visibleFloors().includes(z)
         ? (this.tileOverrides.get(key) ?? this.dynamicRequests.get(key))
             ?.items ?? []
         : [];
@@ -587,37 +594,31 @@ export class MapView {
   private applyCover(): void {
     if (!this.center) return;
     const { x, y, z: playerFloor } = this.center;
-    let visible: Set<number>;
-    if (playerFloor > GROUND_FLOOR) {
-      visible = new Set(this.visibleFloors());
-    } else {
-      const firstVisibleFloor = getFirstVisibleFloor(
-        x,
-        y,
-        playerFloor,
-        (floor, tileX, tileY) => {
-          const items = this.tileItems(floor, tileX, tileY);
-          return (
-            items.length > 0 &&
-            !items.some(({ object }) => object.flags.blockProjectile)
-          );
-        },
-        (floor, tileX, tileY, freeView) =>
-          this.tileItems(floor, tileX, tileY).some(({ object }) => {
-            const flags = object.flags;
-            if (flags.dontHide) return false;
-            return (
-              flags.ground ||
-              (flags.onBottom && (freeView || flags.blockProjectile))
-            );
-          }),
-      );
-      visible = new Set(
-        this.visibleFloors().filter(
-          (floor) => floor >= firstVisibleFloor && floor <= GROUND_FLOOR,
+    const lowestFloor =
+      playerFloor > GROUND_FLOOR
+        ? Math.max(GROUND_FLOOR + 1, playerFloor - UNDERGROUND_FLOOR_AWARENESS)
+        : 0;
+    const firstVisibleFloor = getFirstVisibleFloor(
+      x,
+      y,
+      playerFloor,
+      (floor, tileX, tileY) => {
+        const items = this.tileItems(floor, tileX, tileY);
+        return (
+          items.length > 0 &&
+          !items.some(({ object }) => object.flags.blockProjectile)
+        );
+      },
+      (floor, tileX, tileY, freeView) =>
+        getTileLimitsFloorView(
+          this.tileItems(floor, tileX, tileY).map(({ object }) => object),
+          freeView,
         ),
-      );
-    }
+      lowestFloor,
+    );
+    const visible = new Set(
+      this.visibleFloors().filter((floor) => floor >= firstVisibleFloor),
+    );
     for (const [z, floor] of this.floors) {
       floor.container.visible = visible.has(z);
     }

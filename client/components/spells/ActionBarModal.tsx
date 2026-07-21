@@ -83,7 +83,7 @@ export function ActionBarModal({
                   } ${spell ? "ui-button ui-button-secondary" : "border-dashed bg-black/25"}`}
                 >
                   {iconArtwork && <SpellIcon {...iconArtwork} />}
-                  <kbd className="absolute top-0.5 left-1 z-20 text-[9px] font-bold text-ui-muted">
+                  <kbd className="absolute top-0.5 left-1 z-20 text-xs font-bold text-ui-muted">
                     {index + 1}
                   </kbd>
                 </button>
@@ -140,7 +140,7 @@ export function ActionBarModal({
                       {assignedSlots.map((slot) => (
                         <kbd
                           key={slot}
-                          className="rounded border border-ui-gold/40 bg-black/40 px-1.5 py-0.5 text-[10px] font-bold text-ui-gold"
+                          className="rounded border border-ui-gold/40 bg-black/40 px-1.5 py-0.5 text-xs font-bold text-ui-gold"
                         >
                           {slot}
                         </kbd>
