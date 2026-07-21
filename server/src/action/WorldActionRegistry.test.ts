@@ -23,6 +23,8 @@ const LOCKED_KEY_DOOR = 1_628;
 const CLOSED_QUEST_DOOR = 1_642;
 const CLOSED_LEVEL_DOOR = 1_646;
 const OPEN_LEVEL_DOOR = 1_647;
+const CLOSED_DARASHIA_LEVEL_DOOR = 5_293;
+const OPEN_DARASHIA_LEVEL_DOOR = 5_294;
 const LEVER_OFF = 2_772;
 const LEVER_ON = 2_773;
 const ROTATABLE_STATUE = 2_025;
@@ -222,14 +224,19 @@ describe("WorldActionRegistry doors", () => {
     expect(tileItemIds(harness, questTile)).toEqual([CLOSED_QUEST_DOOR]);
   });
 
-  it("gates level doors on the imported requirement and closes them behind the player", async () => {
-    const doorLevels = new Map([[positionKey(TILE), 20]]);
+  it("prefers an imported level-door requirement over the embedded map action id", async () => {
+    const doorLevels = new Map([[positionKey(TILE), 40]]);
     const harness = makeHarness({
-      items: [{ position: TILE, item: seededMapItem(CLOSED_LEVEL_DOOR, TILE) }],
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(CLOSED_LEVEL_DOOR, TILE, { actionId: 1_030 }),
+        },
+      ],
       blocked: [[TILE.x, TILE.y]],
       doorLevels,
     });
-    const novice = await harness.makeSession("novice", { x: 5, y: 5, z: 7 }, 19);
+    const novice = await harness.makeSession("novice", { x: 5, y: 5, z: 7 }, 39);
     expect(
       harness.worldActions.handleUseMap(novice.session, TILE, 1_000),
     ).toBe(true);
@@ -242,7 +249,7 @@ describe("WorldActionRegistry doors", () => {
     const veteran = await harness.makeSession(
       "veteran",
       { x: 4, y: 4, z: 7 },
-      20,
+      40,
     );
     expect(
       harness.worldActions.handleUseMap(veteran.session, TILE, 2_000),
@@ -267,6 +274,39 @@ describe("WorldActionRegistry doors", () => {
     );
     expect(tileItemIds(harness, TILE)).toEqual([CLOSED_LEVEL_DOOR]);
     expect(harness.world.isWalkable(TILE)).toBe(false);
+  });
+
+  it("gates an embedded-action level door when no startup override exists", async () => {
+    const harness = makeHarness({
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(CLOSED_DARASHIA_LEVEL_DOOR, TILE, {
+            actionId: 1_040,
+          }),
+        },
+      ],
+      blocked: [[TILE.x, TILE.y]],
+    });
+    const novice = await harness.makeSession("novice", { x: 5, y: 5, z: 7 }, 39);
+    expect(
+      harness.worldActions.handleUseMap(novice.session, TILE, 1_000),
+    ).toBe(true);
+    expect(novice.sent.at(-1)).toMatchObject({
+      type: "combat-log",
+      text: "Only the worthy may pass.",
+    });
+    expect(tileItemIds(harness, TILE)).toEqual([CLOSED_DARASHIA_LEVEL_DOOR]);
+
+    const veteran = await harness.makeSession(
+      "veteran",
+      { x: 4, y: 4, z: 7 },
+      40,
+    );
+    expect(
+      harness.worldActions.handleUseMap(veteran.session, TILE, 2_000),
+    ).toBe(true);
+    expect(tileItemIds(harness, TILE)).toEqual([OPEN_DARASHIA_LEVEL_DOOR]);
   });
 
   it("fails closed on level doors with no imported requirement", async () => {

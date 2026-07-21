@@ -40,6 +40,7 @@ const baseType: MonsterType = {
   defenses: [],
   elements: {},
   immunities: [],
+  maxSummons: 0,
   summons: [],
   voices: [],
   loot: [],
@@ -160,6 +161,32 @@ describe("MonsterBrain", () => {
     expect(monster.position.z).toBe(7);
   });
 
+  it("only sees invisible players when Canary grants invisibility immunity", () => {
+    const hidden = new Player(makeCharacter("hidden"), { x: 3, y: 2, z: 7 });
+    hidden.applyCondition("invisible");
+
+    const ordinaryWorld = makeWorld();
+    const ordinary = makeMonster();
+    ordinaryWorld.addCreature(ordinary);
+    ordinaryWorld.addPlayer(hidden);
+    const ordinaryBrain = new MonsterBrain(ordinary, 0, 7, config);
+
+    ordinaryBrain.tick(ordinaryWorld, 1_000, 32);
+    expect(ordinaryBrain.targetCreatureId).toBeNull();
+
+    const immuneWorld = makeWorld();
+    const immune = makeMonster({
+      ...baseType,
+      immunities: ["invisible"],
+    });
+    immuneWorld.addCreature(immune);
+    immuneWorld.addPlayer(hidden);
+    const immuneBrain = new MonsterBrain(immune, 0, 7, config);
+
+    immuneBrain.tick(immuneWorld, 1_000, 32);
+    expect(immuneBrain.targetCreatureId).toBe(hidden.id);
+  });
+
   it("keeps deterministic random walking inside its home leash", () => {
     const passiveType: MonsterType = {
       ...baseType,
@@ -244,33 +271,150 @@ describe("MonsterBrain", () => {
     expect(summonMonster).toHaveBeenCalledWith(monster, "rat", 2, 1_000);
   });
 
-  it("retargets using current damage scores and flees at low health", () => {
+  it("speaks a Canary monster voice on its configured interval", () => {
     const type: MonsterType = {
       ...baseType,
-      flags: { ...baseType.flags, runHealth: 50 },
-      targetStrategy: { nearest: 1, health: 0, damage: 100, random: 0 },
+      speed: 0,
+      flags: { ...baseType.flags, hostile: false },
+      voices: [
+        {
+          intervalMs: 100,
+          chance: 100,
+          text: "GROOAAARRR",
+          yell: true,
+        },
+      ],
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const speak = vi.fn();
+    world.addCreature(monster);
+    const brain = new MonsterBrain(monster, 0, 7, config, { speak });
+
+    brain.tick(world, 100, 32);
+
+    expect(speak).toHaveBeenCalledWith(monster, "GROOAAARRR", true);
+  });
+
+  it("acquires the nearest target and flees from it at low health", () => {
+    const type: MonsterType = {
+      ...baseType,
+      flags: { ...baseType.flags, runHealth: 5 },
     };
     const world = makeWorld();
     const monster = makeMonster(type);
     const nearby = new Player(makeCharacter("nearby"), { x: 3, y: 2, z: 7 });
-    const damager = new Player(makeCharacter("damager"), { x: 4, y: 2, z: 7 });
-    monster.recordPlayerDamage(damager.id, 10);
+    const farther = new Player(makeCharacter("farther"), { x: 4, y: 2, z: 7 });
     monster.setHealth(5);
     world.addCreature(monster);
     world.addPlayer(nearby);
-    world.addPlayer(damager);
+    world.addPlayer(farther);
     const brain = new MonsterBrain(monster, 0, 7, config);
 
     brain.tick(world, 1_000, 32);
 
-    expect(brain.targetCreatureId).toBe(damager.id);
+    expect(brain.targetCreatureId).toBe(nearby.id);
     expect(brain.state).toBe("flee");
     expect(
       Math.max(
-        Math.abs(monster.position.x - damager.position.x),
-        Math.abs(monster.position.y - damager.position.y),
+        Math.abs(monster.position.x - nearby.position.x),
+        Math.abs(monster.position.y - nearby.position.y),
       ),
     ).toBeGreaterThanOrEqual(2);
+  });
+
+  it("uses Dragon's run-health value as hit points instead of a percentage", () => {
+    const type: MonsterType = {
+      ...baseType,
+      id: "dragon",
+      name: "Dragon",
+      description: "a dragon",
+      health: 1_000,
+      maxHealth: 1_000,
+      flags: { ...baseType.flags, runHealth: 300 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const player = new Player(makeCharacter("target"), { x: 6, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(player);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 1_000, 32);
+
+    expect(brain.targetCreatureId).toBe(player.id);
+    expect(brain.state).toBe("chase");
+
+    monster.setHealth(300);
+    brain.tick(world, 10_000, 32);
+
+    expect(brain.state).toBe("flee");
+  });
+
+  it("does not move a speed-zero monster while it is fleeing", () => {
+    const type: MonsterType = {
+      ...baseType,
+      speed: 0,
+      flags: { ...baseType.flags, runHealth: baseType.health },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const player = new Player(makeCharacter("target"), { x: 3, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(player);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 1_000, 32);
+
+    expect(brain.state).toBe("flee");
+    expect(monster.position).toEqual(monster.home);
+  });
+
+  it("lets a Dragon-like melee-distance monster retarget a farther player", () => {
+    const type: MonsterType = {
+      ...baseType,
+      speed: 0,
+      changeTarget: { intervalMs: 250, chance: 100 },
+      flags: { ...baseType.flags, staticAttackChance: 100 },
+      targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const nearby = new Player(makeCharacter("nearby"), { x: 3, y: 2, z: 7 });
+    const farther = new Player(makeCharacter("farther"), { x: 6, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(nearby);
+    world.addPlayer(farther);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 100, 32);
+    expect(brain.targetCreatureId).toBe(nearby.id);
+
+    brain.tick(world, 1_000, 32);
+
+    expect(brain.targetCreatureId).toBe(farther.id);
+  });
+
+  it("keeps ranged-distance target changes focused on the nearest player", () => {
+    const type: MonsterType = {
+      ...baseType,
+      speed: 0,
+      changeTarget: { intervalMs: 250, chance: 100 },
+      flags: { ...baseType.flags, targetDistance: 4 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const nearby = new Player(makeCharacter("nearby"), { x: 3, y: 2, z: 7 });
+    const farther = new Player(makeCharacter("farther"), { x: 6, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(nearby);
+    world.addPlayer(farther);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 100, 32);
+    brain.tick(world, 1_000, 32);
+
+    expect(brain.targetCreatureId).toBe(nearby.id);
   });
 
   it("keeps the current target when Canary's change-target roll is zero", () => {
@@ -297,6 +441,27 @@ describe("MonsterBrain", () => {
     });
     monster.recordPlayerDamage(damager.id, 10);
     world.addPlayer(damager);
+    brain.tick(world, 1_000, 32);
+
+    expect(brain.targetCreatureId).toBe(first.id);
+  });
+
+  it("does not retarget when Canary's change-target interval is disabled", () => {
+    const type: MonsterType = {
+      ...baseType,
+      speed: 0,
+      changeTarget: { intervalMs: 0, chance: 100 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const first = new Player(makeCharacter("first"), { x: 3, y: 2, z: 7 });
+    const second = new Player(makeCharacter("second"), { x: 4, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(first);
+    world.addPlayer(second);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 100, 32);
     brain.tick(world, 1_000, 32);
 
     expect(brain.targetCreatureId).toBe(first.id);

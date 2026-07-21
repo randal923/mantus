@@ -30,6 +30,18 @@ const DIRECTIONS = new Set<Direction>([
   "southwest",
   "northwest",
 ]);
+const EXECUTABLE_MONSTER_ABILITIES = new Set([
+  "combat",
+  "condition",
+  "drunk",
+  "effect",
+  "haste",
+  "invisible",
+  "melee",
+  "outfit",
+  "speed",
+  "strength",
+]);
 
 export function loadCreatureContent(
   name: string,
@@ -173,8 +185,9 @@ function parseMonsterType(value: unknown): MonsterType {
     defenses: parseMonsterAbilities(type.defenses, true),
     elements: parseElements(type.elements),
     immunities: parseImmunities(type.immunities),
+    maxSummons: nonnegativeInteger(type.maxSummons, "monster summon limit"),
     summons: parseSummons(type.summons),
-    voices: primitiveRecords(type.voices, "monster voices"),
+    voices: parseVoices(type.voices),
     loot: parseLoot(type.loot),
   };
 }
@@ -244,9 +257,14 @@ function parseMonsterAbilities(
       0,
       32,
     );
-    const target =
-      defensive || (ability.target !== true && range === 0) ? "self" : "target";
     const area = parseArea(ability);
+    const target = defensive
+      ? "self"
+      : ability.target !== true && range === 0
+        ? area.shape === "beam" || area.shape === "cone"
+          ? "direction"
+          : "self"
+        : "target";
     if (!name && (ability.defense !== undefined || ability.armor !== undefined)) {
       return {
         kind: "stats",
@@ -273,6 +291,20 @@ function parseMonsterAbilities(
           0,
           100,
         ),
+      };
+    }
+    if (name && !EXECUTABLE_MONSTER_ABILITIES.has(name.toLowerCase())) {
+      return {
+        kind: "effect",
+        intervalMs,
+        chance,
+        target,
+        range,
+        area,
+        ...(ability.effect !== undefined ? { effect: primitive(ability.effect) } : {}),
+        ...(typeof ability.shootEffect === "string"
+          ? { missile: ability.shootEffect }
+          : {}),
       };
     }
     if (name === "speed" || name === "haste") {
@@ -450,7 +482,7 @@ function parseImmunities(value: unknown): ConditionType[] {
     if (immunity === "paralyze") return ["paralyze"] as const;
     if (immunity === "invisible") return ["invisible"] as const;
     if (immunity === "outfit") return ["outfit"] as const;
-    if (immunity === "bleed") return ["poison"] as const;
+    if (immunity === "bleed") return ["bleeding"] as const;
     return [];
   });
 }
@@ -476,11 +508,44 @@ function parseSummons(value: unknown): MonsterSummon[] {
         100,
       ),
       maxCount: boundedInteger(
-        summon.max ?? summon.maxCount ?? 1,
+        summon.count ?? summon.max ?? summon.maxCount ?? 1,
         "monster summon limit",
         1,
         16,
       ),
+    };
+  });
+}
+
+function parseVoices(value: unknown): MonsterType["voices"] {
+  if (!Array.isArray(value)) throw new Error("monster voices must be an array");
+  const lines = value.slice(1);
+  if (lines.length === 0) return [];
+  const schedule = record(value[0], "monster voice schedule");
+  const intervalMs = boundedInteger(
+    schedule.interval,
+    "monster voice interval",
+    250,
+    60_000,
+  );
+  const chance = boundedInteger(
+    schedule.chance,
+    "monster voice chance",
+    0,
+    100,
+  );
+  return lines.map((entry) => {
+    const line = record(entry, "monster voice");
+    const voiceText = text(line.text, "monster voice text");
+    // eslint-disable-next-line no-control-regex
+    if (/[\u0000-\u001F\u007F-\u009F]/u.test(voiceText)) {
+      throw new Error("monster voice text contains control characters");
+    }
+    return {
+      intervalMs,
+      chance,
+      text: voiceText,
+      yell: bool(line.yell, "monster voice yell"),
     };
   });
 }
@@ -667,24 +732,6 @@ function parsePosition(value: unknown): Position {
     y: boundedInteger(position.y, "position y", 0, 65_535),
     z: boundedInteger(position.z, "position z", 0, 15),
   };
-}
-
-function primitiveRecords(
-  value: unknown,
-  label: string,
-): ReadonlyArray<Readonly<Record<string, string | number | boolean>>> {
-  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
-  return value.map((entry) => {
-    const source = record(entry, label);
-    const parsed: Record<string, string | number | boolean> = {};
-    for (const [key, primitive] of Object.entries(source)) {
-      if (!["string", "number", "boolean"].includes(typeof primitive)) {
-        throw new Error(`${label} contains a non-primitive value`);
-      }
-      parsed[key] = primitive as string | number | boolean;
-    }
-    return parsed;
-  });
 }
 
 function stringArray(value: unknown, label: string): string[] {

@@ -123,6 +123,13 @@ interface MonsterType {
 
 ## Remaining pinned Canary parity
 
+- [x] Audit all 897 imported monster types against the pinned Canary runtime
+  and apply the shared behavior corrections: `runHealth` is an absolute hit
+  point threshold, invisibility immunity permits seeing invisible targets,
+  speed-zero monsters never move while fleeing/dancing, and 323 untargeted
+  beam/cone abilities face their current target. Import and execute all 1,537
+  voice lines from 575 speaking monster types, plus all 76 static summon rows
+  from 68 summoner types with Canary's global and per-type limits.
 - [ ] Extend `MonsterType`, `NpcType`, and the importers until every ignored
   gameplay assignment and procedural callback in the world import report is
   represented as typed data or reviewed TypeScript behavior. This includes
@@ -135,6 +142,11 @@ interface MonsterType {
   [`12-world-actions`](12-world-actions.md), and
   bestiary/bosstiary/forge classifications by
   [`15-optional-features`](15-optional-features.md).
+- [ ] Implement the remaining shared movement/spawn flags
+  (`isBlockable`, `canWalkOnPoison`, `canWalkOnFire`, and
+  `canWalkOnEnergy`) after field ownership/decay is authoritative. The pinned
+  world report currently keeps those flags explicit for all 897 loaded monster
+  types instead of silently claiming parity.
 - [ ] Resolve every duplicate/ambiguous definition, blocked/out-of-map
   placement, appearance correction, and intentionally invisible creature
   individually. Keep valid variants addressable instead of choosing one by

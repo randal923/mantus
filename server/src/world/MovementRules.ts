@@ -123,11 +123,10 @@ export class MovementRules {
         retryAfterMs: 0,
       };
     }
-    const durationMs = getStepDurationMs(
-      player.stepSpeed,
-      groundSpeed,
-      this.tickMs,
-    );
+    const durationMs =
+      action.destination.z === from.z
+        ? getStepDurationMs(player.stepSpeed, groundSpeed, this.tickMs)
+        : 0;
     player.moveTo(action.destination);
     player.nextStepAt = now + durationMs;
     this.grid.move(player, from);
@@ -216,12 +215,15 @@ export class MovementRules {
         retryAfterMs: 0,
       };
     }
-    const durationMs = getStepDurationMs(
-      creature.stepSpeed,
-      groundSpeed,
-      this.tickMs,
-      dx !== 0 && dy !== 0,
-    );
+    const durationMs =
+      resolved.z === from.z
+        ? getStepDurationMs(
+            creature.stepSpeed,
+            groundSpeed,
+            this.tickMs,
+            dx !== 0 && dy !== 0,
+          )
+        : 0;
     creature.moveTo(resolved);
     creature.nextStepAt = now + durationMs;
     this.grid.move(creature, from);

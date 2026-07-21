@@ -171,10 +171,19 @@ describe("CreatureView", () => {
       { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
       0xffffff,
     );
-    view.applyMove({ x: 11, y: 10, z: 6 }, "east", 1, 1_000);
+    const sprite = view.container.children[0];
+    if (!(sprite instanceof Sprite)) throw new Error("expected player sprite");
+
+    view.applyMove({ x: 11, y: 10, z: 6 }, "east", 1, 0);
 
     expect(view.floor).toBe(6);
-    expect(view.pixelPosition()).toEqual({ x: 11 * TILE_SIZE, y: 10 * TILE_SIZE });
+    expect(view.pixelPosition()).toEqual({
+      x: 11 * TILE_SIZE,
+      y: 10 * TILE_SIZE,
+    });
+    expect(sprite.texture).toBe(animationTextures[0]);
+    view.tick(100);
+    expect(sprite.texture).toBe(animationTextures[0]);
     view.destroy();
   });
 

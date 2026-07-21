@@ -16,6 +16,8 @@ const MONSTER_FIELDS = new Set([
   "defenses",
   "elements",
   "immunities",
+  "maxSummons",
+  "summon",
   "summons",
   "voices",
   "loot",
@@ -33,6 +35,18 @@ const MONSTER_FLAG_FIELDS = new Set([
   "runHealth",
   "staticAttackChance",
   "healthHidden",
+]);
+const LOCALLY_SUPPORTED_MONSTER_ABILITIES = new Set([
+  "combat",
+  "condition",
+  "drunk",
+  "effect",
+  "haste",
+  "invisible",
+  "melee",
+  "outfit",
+  "speed",
+  "strength",
 ]);
 const NPC_FIELDS = new Set([
   "name",
@@ -368,6 +382,20 @@ function ignoredAssignments(source, variable, supported) {
   ].sort();
 }
 
+function unsupportedMonsterAbilities(records, field) {
+  const names = new Map();
+  for (const record of records) {
+    if (typeof record.name !== "string") continue;
+    const name = record.name.trim();
+    const normalized = name.toLowerCase();
+    if (!name || LOCALLY_SUPPORTED_MONSTER_ABILITIES.has(normalized)) continue;
+    names.set(normalized, name);
+  }
+  return [...names.values()]
+    .sort((left, right) => left.localeCompare(right))
+    .map((name) => `${field}.registeredSpell:${name}`);
+}
+
 function parseMonsterDefinition(definition, name, context, corrections) {
   const source = definition.source;
   const flags = objectValue(assignment(source, "monster", "flags"));
@@ -378,6 +406,18 @@ function parseMonsterDefinition(definition, name, context, corrections) {
   const light = objectValue(assignment(source, "monster", "light"));
   const elementRecords = recordList(assignment(source, "monster", "elements"));
   const immunityRecords = recordList(assignment(source, "monster", "immunities"));
+  const attacks = recordList(assignment(source, "monster", "attacks"));
+  const defenses = recordList(assignment(source, "monster", "defenses"));
+  const voices = recordList(assignment(source, "monster", "voices"));
+  const summon = objectValue(assignment(source, "monster", "summon"));
+  const nestedSummons = recordList(summon.summons);
+  const summons = nestedSummons.length > 0
+    ? nestedSummons
+    : recordList(assignment(source, "monster", "summons"));
+  const inferredMaxSummons = summons.reduce(
+    (total, entry) => total + numberValue(entry.count, 1),
+    0,
+  );
   const health = numberValue(assignment(source, "monster", "health"), 1);
   return {
     type: {
@@ -423,8 +463,8 @@ function parseMonsterDefinition(definition, name, context, corrections) {
         damage: numberValue(strategy.damage, 0),
         random: numberValue(strategy.random, 0),
       },
-      attacks: recordList(assignment(source, "monster", "attacks")),
-      defenses: recordList(assignment(source, "monster", "defenses")),
+      attacks,
+      defenses,
       elements: Object.fromEntries(
         elementRecords
           .filter((entry) => typeof entry.type === "string" && typeof entry.percent === "number")
@@ -433,8 +473,15 @@ function parseMonsterDefinition(definition, name, context, corrections) {
       immunities: immunityRecords
         .filter((entry) => entry.condition === true || entry.combat === true)
         .map((entry) => String(entry.type)),
-      summons: recordList(assignment(source, "monster", "summons")),
-      voices: recordList(assignment(source, "monster", "voices")),
+      maxSummons: numberValue(
+        summon.maxSummons,
+        numberValue(
+          assignment(source, "monster", "maxSummons"),
+          inferredMaxSummons,
+        ),
+      ),
+      summons,
+      voices,
       loot: recordList(assignment(source, "monster", "loot")),
     },
     ignored: [
@@ -445,9 +492,8 @@ function parseMonsterDefinition(definition, name, context, corrections) {
             field !== "$entries" && !MONSTER_FLAG_FIELDS.has(field),
         )
         .map((field) => `flags.${field}`),
-      ...(recordList(assignment(source, "monster", "voices")).length > 0
-        ? ["voices.runtime"]
-        : []),
+      ...unsupportedMonsterAbilities(attacks, "attacks"),
+      ...unsupportedMonsterAbilities(defenses, "defenses"),
     ].sort(),
     sourcePath: definition.path,
   };

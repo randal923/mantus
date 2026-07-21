@@ -61,8 +61,9 @@ function makeMonsterType(experience: number): MonsterType {
     attacks: [],
     defenses: [],
     elements: {},
-    immunities: [],
-    summons: [],
+  immunities: [],
+  maxSummons: 0,
+  summons: [],
     voices: [],
     loot: [],
   };

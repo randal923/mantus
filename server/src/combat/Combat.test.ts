@@ -99,6 +99,7 @@ function makeMonsterType(
     defenses: [],
     elements: {},
     immunities: [],
+    maxSummons: 0,
     summons: [],
     voices: [],
     loot: [],
@@ -1296,6 +1297,36 @@ describe("Combat", () => {
 
     expect(leech.player.health).toBeGreaterThan(healthBefore);
     expect(leech.player.mana).toBeGreaterThan(manaBefore);
+  });
+
+  it("aims an untargeted monster wave toward its current target", async () => {
+    const harness = await makeHarness({ position: { x: 1, y: 1, z: 7 } });
+    const attacker = makeMonster(
+      "monster-instance:wave-caster:0",
+      { x: 1, y: 4, z: 7 },
+    );
+    const wave: MonsterAbility = {
+      kind: "damage",
+      intervalMs: 1_000,
+      chance: 100,
+      target: "direction",
+      range: 0,
+      area: { shape: "cone", length: 4, spread: 3 },
+      damageType: "fire",
+      minimum: 10,
+      maximum: 10,
+    };
+    harness.world.addCreature(attacker);
+
+    const executed = harness.combat.executeMonsterAbility(
+      attacker,
+      harness.player,
+      wave,
+      1_000,
+    );
+
+    expect(executed).toBe(true);
+    expect(harness.player.health).toBe(harness.player.maxHealth - 10);
   });
 
   it("applies the experience death penalty exactly once per death", async () => {

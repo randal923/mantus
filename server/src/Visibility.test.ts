@@ -42,6 +42,7 @@ const monsterType: MonsterType = {
   defenses: [],
   elements: {},
   immunities: [],
+  maxSummons: 0,
   summons: [],
   voices: [],
   loot: [],
@@ -231,6 +232,9 @@ describe("Visibility creature projections", () => {
     visibility.broadcastCombatText(visible, 5, "physical", "none");
     visibility.broadcastCombatText(hidden, 5, "physical", "none");
     visibility.broadcastCombatText(wrongFloor, 5, "physical", "none");
+    visibility.broadcastCreatureSpeech(visible, "Squeak!", false);
+    visibility.broadcastCreatureSpeech(hidden, "Hidden", false);
+    visibility.broadcastCreatureSpeech(wrongFloor, "Above", true);
     visibility.sendExperienceText(viewer.id, visible, 5);
     visibility.sendExperienceText(viewer.id, hidden, 5);
     visibility.sendExperienceText(viewer.id, wrongFloor, 5);
@@ -250,6 +254,14 @@ describe("Visibility creature projections", () => {
         value: 5,
         damageType: "physical",
         block: "none",
+      },
+      {
+        type: "creature-spoke",
+        creatureId: visible.id,
+        name: visible.name,
+        mode: "say",
+        position: visible.position,
+        text: "Squeak!",
       },
       {
         type: "experience-text",

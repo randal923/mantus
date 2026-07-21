@@ -267,8 +267,7 @@
         "flags.isPreyExclusive",
         "flags.rewardBoss",
         "race",
-        "raceId",
-        "voices.runtime"
+        "raceId"
       ],
       "proceduralCallbacks": [],
       "gaps": [
@@ -343,14 +342,6 @@
           "status": "blocked",
           "blockedBy": "15-optional-features",
           "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "voices.runtime",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "09-chat",
-          "reason": "Requires 09-chat before this imported creature behavior can be completed."
         }
       ]
     },
@@ -367,8 +358,7 @@
         "flags.isPreyExclusive",
         "flags.rewardBoss",
         "race",
-        "raceId",
-        "voices.runtime"
+        "raceId"
       ],
       "proceduralCallbacks": [],
       "gaps": [
@@ -443,14 +433,6 @@
           "status": "blocked",
           "blockedBy": "15-optional-features",
           "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "voices.runtime",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "09-chat",
-          "reason": "Requires 09-chat before this imported creature behavior can be completed."
         }
       ]
     },
@@ -467,8 +449,7 @@
         "flags.isPreyExclusive",
         "flags.rewardBoss",
         "race",
-        "raceId",
-        "voices.runtime"
+        "raceId"
       ],
       "proceduralCallbacks": [],
       "gaps": [
@@ -543,14 +524,6 @@
           "status": "blocked",
           "blockedBy": "15-optional-features",
           "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "voices.runtime",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "09-chat",
-          "reason": "Requires 09-chat before this imported creature behavior can be completed."
         }
       ]
     },
@@ -568,8 +541,7 @@
         "flags.isPreyable",
         "flags.rewardBoss",
         "race",
-        "raceId",
-        "voices.runtime"
+        "raceId"
       ],
       "proceduralCallbacks": [],
       "gaps": [
@@ -652,14 +624,6 @@
           "status": "blocked",
           "blockedBy": "15-optional-features",
           "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "voices.runtime",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "09-chat",
-          "reason": "Requires 09-chat before this imported creature behavior can be completed."
         }
       ]
     },
@@ -676,8 +640,7 @@
         "flags.isPreyExclusive",
         "flags.rewardBoss",
         "race",
-        "raceId",
-        "voices.runtime"
+        "raceId"
       ],
       "proceduralCallbacks": [],
       "gaps": [
@@ -752,14 +715,6 @@
           "status": "blocked",
           "blockedBy": "15-optional-features",
           "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "voices.runtime",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "09-chat",
-          "reason": "Requires 09-chat before this imported creature behavior can be completed."
         }
       ]
     },

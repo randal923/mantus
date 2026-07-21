@@ -41,6 +41,7 @@ const monsterType: MonsterType = {
   defenses: [],
   elements: {},
   immunities: [],
+  maxSummons: 0,
   summons: [],
   voices: [],
   loot: [],
@@ -51,6 +52,7 @@ const visibility = {
   announceCreatureLeave: () => undefined,
   onCreatureStepped: () => undefined,
   broadcastPose: () => undefined,
+  broadcastCreatureSpeech: () => undefined,
 } as unknown as Visibility;
 
 const config = {
@@ -233,14 +235,13 @@ describe("SpawnManager", () => {
   });
 
   it("enforces summon limits and removes owned summons with their owner", () => {
-    const summonType: MonsterType = {
-      ...monsterType,
-      flags: { ...monsterType.flags, summonable: true },
-    };
+    const summonType: MonsterType = { ...monsterType };
     const ownerType: MonsterType = {
       ...monsterType,
       id: "summoner",
       name: "Summoner",
+      flags: { ...monsterType.flags, hostile: true },
+      maxSummons: 1,
       summons: [
         { typeId: summonType.id, intervalMs: 100, chance: 100, maxCount: 1 },
       ],

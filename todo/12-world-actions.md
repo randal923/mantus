@@ -29,11 +29,14 @@ executed at runtime.
   - [x] Doors: Canary pairs imported at the pinned commit
     (`tools/importCanaryDoors.mjs` → `content/items/canary-doors.json` →
     catalog `door` field; level requirements from the otservbr startup table
-    → `server/data/door-levels.json`). Custom doors toggle; key-variant
+    → `server/data/door-levels.json`, falling back to validated OTBM
+    `actionId - 1000` requirements when a position has no startup override).
+    Custom doors toggle; key-variant
     closed doors open unless flagged locked (Canary action ids 101/1001);
-    locked doors answer "It is locked."; level doors gate on the imported
-    per-position requirement (fail closed when absent) and close behind the
-    player via the step-out hook; closing rejects an occupied doorway. Door
+    locked doors answer "It is locked."; level doors gate on the startup
+    position override or embedded map action id (fail closed when both are
+    absent) and close behind the player via the step-out hook; closing rejects
+    an occupied doorway. Door
     state overlays tile passability/projectile blocking at runtime
     (`overrideMapData` + `DynamicMapItems` tile overrides) since the static
     navigation bitset baked the placed state. Known deviations: opening a

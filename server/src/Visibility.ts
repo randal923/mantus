@@ -144,6 +144,25 @@ export class Visibility {
     }
   }
 
+  broadcastCreatureSpeech(
+    creature: Creature,
+    text: string,
+    yell: boolean,
+  ): void {
+    const message = {
+      type: "creature-spoke" as const,
+      creatureId: creature.id,
+      name: creature.name,
+      mode: yell ? ("yell" as const) : ("say" as const),
+      position: { ...creature.position },
+      text,
+    };
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      if (!session.knownCreatureIds.has(creature.id)) continue;
+      session.send(message);
+    }
+  }
+
   onCreatureStateChanged(creature: Creature): void {
     for (const session of this.registry.all()) {
       if (!session.playerId) continue;

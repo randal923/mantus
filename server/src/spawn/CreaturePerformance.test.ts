@@ -14,6 +14,7 @@ const visibility = {
   announceCreatureLeave: () => undefined,
   onCreatureStepped: () => undefined,
   broadcastPose: () => undefined,
+  broadcastCreatureSpeech: () => undefined,
 } as unknown as Visibility;
 
 describe("full-world creature performance budgets", () => {

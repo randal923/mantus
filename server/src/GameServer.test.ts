@@ -1061,7 +1061,13 @@ describe("auth gate", () => {
     const first = await connect(server.port, "Climber", "tok.climber");
     sockets.push(first.socket);
 
-    first.socket.send(JSON.stringify({ type: "move", direction: "north" }));
+    first.socket.send(
+      JSON.stringify({
+        type: "auto-walk",
+        positionRevision: 0,
+        directions: ["north"],
+      }),
+    );
     await waitFor(
       () =>
         first.messages.some(
@@ -1072,6 +1078,14 @@ describe("auth gate", () => {
         ),
       "floor transition",
     );
+    expect(
+      first.messages.find(
+        (message) =>
+          message.type === "creature-moved" &&
+          message.creatureId === first.playerId &&
+          message.position.z === destination.z,
+      ),
+    ).toMatchObject({ durationMs: 0 });
     first.socket.terminate();
     await waitFor(
       () => {

@@ -19,6 +19,7 @@ export class MonsterBrain {
   private cachedPath: Direction[] = [];
   private readonly nextAbilityAt = new Map<MonsterAbility, number>();
   private readonly nextSummonAt = new Map<MonsterSummon, number>();
+  private nextVoiceAt: number | null;
   private nextTargetChangeAt: number;
   private brainState:
     | "idle"
@@ -40,13 +41,14 @@ export class MonsterBrain {
       wanderChance: number;
     },
     private readonly services?: {
-      combat: Combat;
-      summon: (
+      combat?: Combat;
+      summon?: (
         owner: Monster,
         typeId: string,
         maxCount: number,
         now: number,
       ) => boolean;
+      speak?: (monster: Monster, text: string, yell: boolean) => void;
     },
   ) {
     this.randomState = this.seedFor(seed, monster.id);
@@ -62,6 +64,9 @@ export class MonsterBrain {
     for (const summon of monster.type.summons) {
       this.nextSummonAt.set(summon, now + summon.intervalMs);
     }
+    this.nextVoiceAt = monster.type.voices[0]
+      ? now + monster.type.voices[0].intervalMs
+      : null;
   }
 
   get state(): string {
@@ -84,6 +89,7 @@ export class MonsterBrain {
       now + this.config.thinkIntervalMs,
       this.monster.nextStepAt,
     );
+    this.useVoice(now);
     let work = 1;
     let target = this.targetId ? world.getPlayer(this.targetId) : undefined;
     if (target && !this.canKeepTarget(world, target)) {
@@ -93,12 +99,21 @@ export class MonsterBrain {
     }
     if (this.monster.type.flags.hostile) {
       if (!target) {
-        target = this.acquireTarget(world);
-      } else if (now >= this.nextTargetChangeAt) {
+        target = this.acquireTarget(world, "nearest");
+      } else if (
+        this.monster.type.changeTarget.intervalMs > 0 &&
+        now >= this.nextTargetChangeAt
+      ) {
         this.nextTargetChangeAt =
           now + this.monster.type.changeTarget.intervalMs;
         if (this.randomChance(this.monster.type.changeTarget.chance)) {
-          const preferred = this.acquireTarget(world);
+          // Canary lets melee-distance monsters spread aggro; distance
+          // monsters switch only to the nearest visible target.
+          const search =
+            this.monster.type.flags.targetDistance <= 1
+              ? "random"
+              : "nearest";
+          const preferred = this.acquireTarget(world, search);
           if (preferred && preferred.id !== target.id) {
             target = preferred;
             this.clearPath();
@@ -114,7 +129,9 @@ export class MonsterBrain {
       availableWork - work,
     );
     work += defense.work;
-    const summons = this.useSummons(now, availableWork - work);
+    const summons = target
+      ? this.useSummons(now, availableWork - work)
+      : 0;
     work += summons;
     if (target) {
       const attacks = this.useAbilities(
@@ -131,14 +148,20 @@ export class MonsterBrain {
       );
       const fleeing =
         this.monster.type.flags.runHealth > 0 &&
-        this.monster.healthPercent <= this.monster.type.flags.runHealth;
+        this.monster.health <= this.monster.type.flags.runHealth;
       if (fleeing || currentDistance < targetDistance) {
         this.brainState = "flee";
+        if (this.monster.type.speed <= 0) {
+          return { work, movement: null };
+        }
         const movement = this.moveAway(world, target.position, now);
         return { work, movement };
       }
       this.brainState = "chase";
       if (currentDistance <= targetDistance) {
+        if (this.monster.type.speed <= 0) {
+          return { work, movement: null };
+        }
         if (
           this.randomChance(
             100 - this.monster.type.flags.staticAttackChance,
@@ -206,28 +229,24 @@ export class MonsterBrain {
     };
   }
 
-  private acquireTarget(world: World) {
+  private acquireTarget(
+    world: World,
+    search: "nearest" | "random",
+  ): Player | undefined {
     const range = this.config.acquisitionRange;
-    return world
+    const candidates = world
       .playersNear(this.monster.position, { x: range, y: range })
-      .filter((player) => this.canAcquireTarget(world, player))
-      .map((player) => ({ player, score: this.targetScore(player) }))
-      .sort(
-        (left, right) =>
-          left.score - right.score ||
-          left.player.id.localeCompare(right.player.id),
-      )[0]?.player;
-  }
-
-  private targetScore(player: Player): number {
-    const strategy = this.monster.type.targetStrategy;
-    const healthPercent = player.healthPercent;
-    return (
-      this.distance(this.monster.position, player.position) * strategy.nearest +
-      healthPercent * strategy.health -
-      this.monster.damageFrom(player.id) * strategy.damage +
-      this.random() * strategy.random
-    );
+      .filter((player) => this.canAcquireTarget(world, player));
+    if (candidates.length === 0) return undefined;
+    if (search === "random") {
+      return candidates[Math.floor(this.random() * candidates.length)];
+    }
+    return candidates.sort(
+      (left, right) =>
+        this.distance(this.monster.position, left.position) -
+          this.distance(this.monster.position, right.position) ||
+        left.id.localeCompare(right.id),
+    )[0];
   }
 
   private useAbilities(
@@ -236,7 +255,7 @@ export class MonsterBrain {
     now: number,
     availableWork: number,
   ): { work: number } {
-    if (!this.services || availableWork <= 0) return { work: 0 };
+    if (!this.services?.combat || availableWork <= 0) return { work: 0 };
     let work = 0;
     for (const ability of abilities) {
       if (work >= availableWork) break;
@@ -256,7 +275,7 @@ export class MonsterBrain {
   }
 
   private useSummons(now: number, availableWork: number): number {
-    if (!this.services || availableWork <= 0) return 0;
+    if (!this.services?.summon || availableWork <= 0) return 0;
     let work = 0;
     for (const summon of this.monster.type.summons) {
       if (work >= availableWork) break;
@@ -272,6 +291,22 @@ export class MonsterBrain {
       );
     }
     return work;
+  }
+
+  private useVoice(now: number): void {
+    if (this.nextVoiceAt === null || now < this.nextVoiceAt) return;
+    const first = this.monster.type.voices[0];
+    if (!first) {
+      this.nextVoiceAt = null;
+      return;
+    }
+    this.nextVoiceAt = now + first.intervalMs;
+    if (!this.services?.speak || !this.randomChance(first.chance)) return;
+    const voice =
+      this.monster.type.voices[
+        Math.floor(this.random() * this.monster.type.voices.length)
+      ];
+    if (voice) this.services.speak(this.monster, voice.text, voice.yell);
   }
 
   private moveAway(
@@ -357,7 +392,7 @@ export class MonsterBrain {
   private canAcquireTarget(world: World, player: Player): boolean {
     const { position } = player;
     return (
-      !player.conditions.has("invisible") &&
+      this.canSeePlayer(player) &&
       position.z === this.monster.home.z &&
       !world.isProtectionZone(this.monster.position) &&
       !world.isProtectionZone(position) &&
@@ -372,7 +407,7 @@ export class MonsterBrain {
   private canKeepTarget(world: World, player: Player): boolean {
     const { position } = player;
     return (
-      !player.conditions.has("invisible") &&
+      this.canSeePlayer(player) &&
       position.z === this.monster.home.z &&
       !world.isProtectionZone(this.monster.position) &&
       !world.isProtectionZone(position) &&
@@ -382,6 +417,13 @@ export class MonsterBrain {
         x: this.config.loseRange,
         y: this.config.loseRange,
       })
+    );
+  }
+
+  private canSeePlayer(player: Player): boolean {
+    return (
+      !player.hasCondition("invisible") ||
+      this.monster.type.immunities.includes("invisible")
     );
   }
 

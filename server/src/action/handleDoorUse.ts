@@ -72,7 +72,18 @@ export function handleDoorUse(
       return;
     }
     case "level": {
-      const requiredLevel = context.doorLevels.get(positionKey(position));
+      // Canary's startup table overwrites OTBM action ids at listed positions;
+      // every other level door keeps its embedded `1000 + level` action id.
+      const actionId = mapItemAttributes(world, item).actionId;
+      const embeddedLevel =
+        typeof actionId === "number" &&
+        Number.isInteger(actionId) &&
+        actionId > 1_000 &&
+        actionId <= 3_000
+          ? actionId - 1_000
+          : undefined;
+      const requiredLevel =
+        context.doorLevels.get(positionKey(position)) ?? embeddedLevel;
       if (
         requiredLevel === undefined ||
         context.player.level < requiredLevel

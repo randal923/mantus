@@ -116,19 +116,19 @@
   },
   {
    "path": "tools/convertOtbm.mjs",
-   "sha256": "122587968f22e21a851bbf69a96f461c5869756868c93392beeba53715fa4ae4"
+   "sha256": "f99209069de7b0bc4b770e47de80c4aa2ad8b6c28249389518f06344b521079c"
   },
   {
    "path": "tools/importCanaryCreatures.mjs",
-   "sha256": "f1c7f2ffdcc79a5437207f0060938c5d77699a876befec260de5f283966d6862"
+   "sha256": "2652e90e9f092f83671bf04adecf1bed6d7cca208d14c32da8d946881fe97ed0"
   },
   {
    "path": "tools/parseCanaryCreatureContent.mjs",
-   "sha256": "e67c3339bcf5056afb3f9fd7367f38a9e126122cb5307cc0343468d9012b5438"
+   "sha256": "dd1277f121d721b9c1c72be6bad8a624f812729db3ac5461d67d25ec2b89aeba"
   },
   {
    "path": "tools/importCanarySpells.mjs",
-   "sha256": "4d9d736818021938b52f09d65deee3d36f525c6fa4e0dd2f50667664bda9683f"
+   "sha256": "c8d3b3f874f74bd4aaa2b2ae934f207539b3889161b5217ed3893850c752be5d"
   },
   {
    "path": "tools/parseCanarySpells.mjs",
@@ -152,7 +152,7 @@
   },
   {
    "path": "tools/buildCanaryParityInventory.mjs",
-   "sha256": "59eb80001238baeeac2eeeffdfdee20bc9f6345bfa75902dee51c4a74c4494cf"
+   "sha256": "175635baa0773a1c1469d6185a2a671b93f68905320c9e0d497aa7c97fa11dfd"
   },
   {
    "path": "tools/verifyCanaryParityInventory.mjs",

@@ -110,7 +110,7 @@ describe("World.tryMove", () => {
     expect(east.position).toEqual({ x: 6, y: 5, z: 7 });
   });
 
-  it("resolves a server-authored floor transition atomically", () => {
+  it("resolves a floor transition without locking the next step", () => {
     const source = { x: 5, y: 4, z: 7 };
     const destination = { x: 5, y: 3, z: 6 };
     const world = new World(
@@ -139,9 +139,14 @@ describe("World.tryMove", () => {
     const result = world.tryMove(player, "north", 1000);
 
     expect(result.moved).toBe(true);
+    if (!result.moved) throw new Error("expected floor transition");
+    expect(result.durationMs).toBe(0);
     expect(player.position).toEqual(destination);
     expect(world.isOccupied(source)).toBe(false);
     expect(world.isOccupied(destination)).toBe(true);
+
+    expect(world.tryMove(player, "east", 1000).moved).toBe(true);
+    expect(player.position).toEqual({ x: 6, y: 3, z: 6 });
   });
 
   it("rejects a floor transition when its destination is occupied", () => {
@@ -262,7 +267,7 @@ describe("World.tryMove", () => {
     expect(world.tryMove(player, "north", 1000 + STEP_MS).moved).toBe(false);
   });
 
-  it("executes an adjacent server-authored ladder action", () => {
+  it("executes an adjacent ladder action without locking the next step", () => {
     const source = { x: 5, y: 4, z: 7 };
     const destination = { x: 5, y: 5, z: 6 };
     const world = new World(
@@ -288,8 +293,14 @@ describe("World.tryMove", () => {
     const player = makePlayer(5, 5);
     world.addPlayer(player);
 
-    expect(world.tryUseMap(player, source, 1000).moved).toBe(true);
+    const result = world.tryUseMap(player, source, 1000);
+
+    expect(result.moved).toBe(true);
+    if (!result.moved) throw new Error("expected ladder transition");
+    expect(result.durationMs).toBe(0);
     expect(player.position).toEqual(destination);
+    expect(world.tryMove(player, "east", 1000).moved).toBe(true);
+    expect(player.position).toEqual({ x: 6, y: 5, z: 6 });
   });
 
   it("never climbs a rope spot via a bare use-map (rope required)", () => {

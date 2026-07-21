@@ -280,7 +280,8 @@ export class Combat {
     }
     if (
       resolvedTarget !== monster &&
-      (!isInRange(monster.position, resolvedTarget.position, ability.range) ||
+      ((ability.target === "target" &&
+        !isInRange(monster.position, resolvedTarget.position, ability.range)) ||
         !this.world.hasLineOfSight(monster.position, resolvedTarget.position) ||
         (resolvedTarget instanceof Player &&
           (this.world.isProtectionZone(monster.position) ||

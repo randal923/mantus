@@ -74,6 +74,7 @@
         "COMBAT_DEATHDAMAGE": 0
       },
       "immunities": [],
+      "maxSummons": 0,
       "summons": [],
       "voices": [
         {
@@ -176,6 +177,7 @@
         "COMBAT_DEATHDAMAGE": 0
       },
       "immunities": [],
+      "maxSummons": 0,
       "summons": [],
       "voices": [
         {
@@ -256,6 +258,7 @@
         "COMBAT_DEATHDAMAGE": 0
       },
       "immunities": [],
+      "maxSummons": 0,
       "summons": [],
       "voices": [
         {
@@ -358,6 +361,7 @@
         "COMBAT_DEATHDAMAGE": 0
       },
       "immunities": [],
+      "maxSummons": 0,
       "summons": [],
       "voices": [
         {
@@ -456,6 +460,7 @@
         "COMBAT_DEATHDAMAGE": 0
       },
       "immunities": [],
+      "maxSummons": 0,
       "summons": [],
       "voices": [
         {

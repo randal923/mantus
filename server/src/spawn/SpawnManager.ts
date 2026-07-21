@@ -409,13 +409,17 @@ export class SpawnManager {
             now,
             this.config.ai.seed,
             this.config.ai,
-            this.combat
-              ? {
-                  combat: this.combat,
-                  summon: (owner, typeId, maxCount, summonAt) =>
-                    this.summon(owner, typeId, maxCount, summonAt),
-                }
-              : undefined,
+            {
+              speak: (monster, text, yell) =>
+                this.visibility.broadcastCreatureSpeech(monster, text, yell),
+              ...(this.combat
+                ? {
+                    combat: this.combat,
+                    summon: (owner, typeId, maxCount, summonAt) =>
+                      this.summon(owner, typeId, maxCount, summonAt),
+                  }
+                : {}),
+            },
           )
         : new NpcBrain(creature as Npc, now, this.config.ai.seed);
     this.brains.set(creature.id, brain);
@@ -430,13 +434,20 @@ export class SpawnManager {
     now: number,
   ): boolean {
     if (this.world.getCreature(owner.id) !== owner) return false;
+    const ownerId = this.summonOwnerByCreature.get(owner.id);
+    if (ownerId && ownerId !== GM_SPAWN_OWNER_ID) return false;
     const type = this.content.monsterTypes.get(typeId);
-    if (!type || !type.flags.summonable) return false;
+    if (!type) return false;
     const owned = this.summonsByOwner.get(owner.id) ?? new Set<string>();
     for (const summonId of [...owned]) {
       if (!this.world.getCreature(summonId)) owned.delete(summonId);
     }
-    if (owned.size >= maxCount) return false;
+    if (owned.size >= owner.type.maxSummons) return false;
+    const sameTypeCount = [...owned].filter((summonId) => {
+      const summon = this.world.getCreature(summonId);
+      return summon instanceof Monster && summon.type.id === typeId;
+    }).length;
+    if (sameTypeCount >= maxCount) return false;
     const positions = [
       { x: owner.position.x, y: owner.position.y - 1, z: owner.position.z },
       { x: owner.position.x + 1, y: owner.position.y, z: owner.position.z },

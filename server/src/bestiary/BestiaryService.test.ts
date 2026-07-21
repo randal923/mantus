@@ -52,8 +52,9 @@ function makeMonsterType(overrides: Partial<MonsterType>): MonsterType {
     attacks: [],
     defenses: [{ kind: "stats", intervalMs: 2_000, chance: 100, target: "self", range: 0, area: { shape: "single" }, defense: 5, armor: 1, mitigation: 0.07 }],
     elements: { earth: 20, ice: -10 },
-    immunities: [],
-    summons: [],
+  immunities: [],
+  maxSummons: 0,
+  summons: [],
     voices: [],
     loot: [
       { itemName: "gold coin", chance: 100_000, maxCount: 4 },

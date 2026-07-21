@@ -104,6 +104,15 @@ every disabled definition and reason. Disabled registered content is a
 temporary backlog state: pinned parity requires every registered spell and
 rune to become executable.
 
+The creature importer now also audits registered monster-spell names. The
+pinned world contains 276 attack/defense references to 171 distinct names that
+the generic inline monster-combat runtime cannot faithfully execute (including
+chains, custom matrices/waves, field creation, dispels, fear/root, skill
+reducers, and scripted summons/heals). Each reference is retained in
+`content/spawns/world-import-report.json` with TODO 7 ownership; it must remain
+reported until its Canary Lua spell has an equivalent reviewed TypeScript
+definition.
+
 - [x] Import and implement condition-backed player spells such as haste,
   strong haste, paralyze, and magic shield. Preserve Canary speed formulas,
   magic-shield capacity/depletion, refresh rules, and dispels before enabling

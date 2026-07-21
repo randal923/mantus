@@ -6,9 +6,9 @@ import { startPlaytestServer } from "../startPlaytestServer";
  * a fresh character and opens once the character is level 65. Run with:
  * yarn playtest:gate
  */
-const GATE = { x: 33102, y: 32537, z: 6 };
-const STAND = { x: 33102, y: 32538, z: 6 };
-const OPEN_GATE_ID = 1_681;
+const GATE = { x: 33266, y: 32278, z: 7 };
+const STAND = { x: 33266, y: 32279, z: 7 };
+const OPEN_GATE_ID = 5_294;
 const TOKEN = "dev-gate-scenario";
 const CHARACTER = "Gate Tester";
 

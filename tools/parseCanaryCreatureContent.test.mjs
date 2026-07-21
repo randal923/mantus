@@ -21,7 +21,7 @@ monster.attacks = { { name = "melee", interval = 2000, chance = 100, maxDamage =
 monster.defenses = { defense = 5, armor = 1 }
 monster.elements = { { type = COMBAT_EARTHDAMAGE, percent = 20 } }
 monster.immunities = { { type = "paralyze", condition = true } }
-monster.summons = {}
+monster.summon = { maxSummons = 2, summons = { { name = "Test Rat", interval = 2000, chance = 25, count = 2 } } }
 monster.voices = { interval = 5000, chance = 10, { text = "Meep!", yell = false } }
 monster.loot = { { name = "gold coin", chance = 100000, maxCount = 4 } }
 mType:register(monster)
@@ -34,11 +34,11 @@ const spawnXml = `<?xml version="1.0"?>
   </monster>
 </monsters>`;
 
-const parse = (xml = spawnXml) =>
+const parse = (xml = spawnXml, source = monsterLua) =>
   parseCanaryCreatureContent({
     monsterSpawnXml: xml,
     npcSpawnXml: "<npcs></npcs>",
-    monsterDefinitions: [{ path: "monster/test_rat.lua", source: monsterLua }],
+    monsterDefinitions: [{ path: "monster/test_rat.lua", source }],
     npcDefinitions: [],
     bounds: { centerX: 100, centerY: 200, z: 7, radius: 10 },
     tileAt: () => "walkable",
@@ -61,6 +61,26 @@ test("resolves spawn offsets, centerz, direction, and static type data", () => {
     color: 215,
   });
   assert.deepEqual(result.monsterTypes[0].immunities, ["paralyze"]);
+  assert.equal(result.monsterTypes[0].maxSummons, 2);
+  assert.deepEqual(result.monsterTypes[0].summons, [
+    { name: "Test Rat", interval: 2000, chance: 25, count: 2 },
+  ]);
+  assert.equal(result.report.unsupportedDefinitions.length, 0);
+});
+
+test("reports registered monster spells that the local runtime does not implement", () => {
+  const source = monsterLua.replace(
+    'monster.attacks = { { name = "melee", interval = 2000, chance = 100, maxDamage = -8 } }',
+    'monster.attacks = { { name = "melee", interval = 2000, chance = 100, maxDamage = -8 }, { name = "energy chain", interval = 2000, chance = 10, minDamage = -40, maxDamage = -80 } }',
+  );
+
+  const result = parse(spawnXml, source);
+
+  assert.ok(
+    result.report.unsupportedDefinitions[0].ignoredAssignments.includes(
+      "attacks.registeredSpell:energy chain",
+    ),
+  );
 });
 
 test("fails when a curated placement has no unambiguous static type", () => {

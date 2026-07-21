@@ -9,7 +9,7 @@ export interface MonsterAbility {
   readonly kind: "stats" | "damage" | "healing" | "condition" | "effect";
   readonly intervalMs: number;
   readonly chance: number;
-  readonly target: "self" | "target";
+  readonly target: "self" | "target" | "direction";
   readonly range: number;
   readonly area: {
     readonly shape: AreaShape;
@@ -90,7 +90,13 @@ export interface MonsterType {
   defenses: ReadonlyArray<MonsterAbility>;
   elements: Readonly<Partial<Record<DamageType, number>>>;
   immunities: ReadonlyArray<ConditionType>;
+  maxSummons: number;
   summons: ReadonlyArray<MonsterSummon>;
-  voices: ReadonlyArray<Readonly<Record<string, string | number | boolean>>>;
+  voices: ReadonlyArray<{
+    readonly intervalMs: number;
+    readonly chance: number;
+    readonly text: string;
+    readonly yell: boolean;
+  }>;
   loot: ReadonlyArray<MonsterLoot>;
 }

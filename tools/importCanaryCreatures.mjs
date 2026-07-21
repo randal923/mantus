@@ -253,6 +253,12 @@ function creatureGapOwner(kind, name) {
     return "08c-decay";
   }
   if (
+    name.startsWith("attacks.registeredSpell:") ||
+    name.startsWith("defenses.registeredSpell:")
+  ) {
+    return "07-combat";
+  }
+  if (
     ["shop", "currency", "moneyToNeedDonation"].includes(name) ||
     ["onBuyItem", "onSellItem", "onCheckItem"].includes(name)
   ) {
