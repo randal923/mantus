@@ -1,4 +1,5 @@
 import { ActionBar } from "./action-bar/ActionBar";
+import { VitalOrb } from "./action-bar/VitalOrb";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import {
   ACTION_BAR_SLOT_COUNT,
@@ -232,7 +233,7 @@ export function GameHud({
           attackTargetId={fightState.attackTargetId}
         />
       )}
-      <div className="pointer-events-auto absolute bottom-4 left-4">
+      <div className="pointer-events-auto absolute bottom-0 left-4">
         <ChatPanel
           channels={visibleChatChannels}
           pinnedOpen={chatPinnedOpen}
@@ -289,39 +290,63 @@ export function GameHud({
           />
         </div>
       )}
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
-        <ActionBar
-          ariaLabel={t("potions.bar")}
-          slots={potionSlots}
-          hotkeyModifier="shift"
-          hotkeysEnabled={spellHotkeysEnabled}
-          onActivate={(itemId, slotIndex) => {
-            const potion = potionItems.find(
-              (candidate) => candidate.item.id === itemId,
-            );
-            const targetMode = potionConfiguration[slotIndex]?.targetMode;
-            if (potion && targetMode) {
-              onActivatePotion(potion.item, targetMode);
-            }
-          }}
-          onConfigure={onConfigurePotionActionBar}
-        />
-        <ActionBar
-          ariaLabel={t("spells.bar")}
-          slots={spellSlots}
-          hotkeysEnabled={spellHotkeysEnabled}
-          onActivate={(spellId) => {
-            const spell = combatSpells.find(
-              (candidate) => candidate.id === spellId,
-            );
-            if (!spell) return;
-            onCast(
-              spell.id,
-              getSpellCombatTarget(spell, fightState.attackTargetId),
-            );
-          }}
-          onConfigure={onConfigureActionBar}
-        />
+      <div className="pointer-events-auto absolute inset-x-2 bottom-0 flex items-end justify-center">
+        <div className="flex w-max max-w-full items-end justify-center">
+          <VitalOrb
+            kind="health"
+            value={ownCharacter.health}
+            max={ownCharacter.maxHealth}
+          />
+
+          <div className="ui-action-cluster-shell relative z-0 min-w-0 max-w-[calc(100vw-12rem)] sm:max-w-[calc(100vw-16rem)]">
+            <div className="ui-action-cluster w-max max-w-full overflow-x-auto p-2">
+              <div className="flex w-max min-w-full flex-col items-center gap-1">
+                <ActionBar
+                  ariaLabel={t("potions.bar")}
+                  slots={potionSlots}
+                  hotkeyModifier="shift"
+                  hotkeysEnabled={spellHotkeysEnabled}
+                  onActivate={(itemId, slotIndex) => {
+                    const potion = potionItems.find(
+                      (candidate) => candidate.item.id === itemId,
+                    );
+                    const targetMode =
+                      potionConfiguration[slotIndex]?.targetMode;
+                    if (potion && targetMode) {
+                      onActivatePotion(potion.item, targetMode);
+                    }
+                  }}
+                  onConfigure={onConfigurePotionActionBar}
+                />
+                <ActionBar
+                  ariaLabel={t("spells.bar")}
+                  slots={spellSlots}
+                  hotkeysEnabled={spellHotkeysEnabled}
+                  onActivate={(spellId) => {
+                    const spell = combatSpells.find(
+                      (candidate) => candidate.id === spellId,
+                    );
+                    if (!spell) return;
+                    onCast(
+                      spell.id,
+                      getSpellCombatTarget(
+                        spell,
+                        fightState.attackTargetId,
+                      ),
+                    );
+                  }}
+                  onConfigure={onConfigureActionBar}
+                />
+              </div>
+            </div>
+          </div>
+
+          <VitalOrb
+            kind="mana"
+            value={ownCharacter.mana}
+            max={ownCharacter.maxMana}
+          />
+        </div>
       </div>
     </div>
   );

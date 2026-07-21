@@ -4,7 +4,6 @@ import type { CharacterOutfit, FightMode } from "@tibia/protocol";
 import { FightControls } from "../combat/FightControls";
 import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { HealthManaBars } from "./HealthManaBars";
 import { NavigationIconButton } from "./NavigationIconButton";
 
 type NavigationPanel =
@@ -30,10 +29,6 @@ interface TopNavigationBarProps {
   level: number;
   vocation: string;
   outfit: CharacterOutfit;
-  health: number;
-  maxHealth: number;
-  mana: number;
-  maxMana: number;
   connectionStatus: ConnectionStatus;
   fightMode: FightMode | null;
   battleListVisible: boolean;
@@ -59,10 +54,6 @@ export function TopNavigationBar({
   level,
   vocation,
   outfit,
-  health,
-  maxHealth,
-  mana,
-  maxMana,
   connectionStatus,
   fightMode,
   battleListVisible,
@@ -90,7 +81,7 @@ export function TopNavigationBar({
   }[connectionStatus];
 
   return (
-    <header className="relative isolate z-40 flex min-h-20 w-full items-center gap-2 border-b border-ui-gold/25 bg-ui-panel-deep/95 px-2 font-tibia text-ui-text shadow-[0_12px_40px_rgba(0,0,0,0.55),inset_0_-1px_0_rgba(0,0,0,0.8)] backdrop-blur-md select-none sm:gap-4 sm:px-4">
+    <header className="relative isolate z-40 flex min-h-16 w-full items-center gap-2 border-b border-ui-gold/25 bg-ui-panel-deep/95 px-2 font-tibia text-ui-text shadow-[0_12px_40px_rgba(0,0,0,0.55),inset_0_-1px_0_rgba(0,0,0,0.8)] backdrop-blur-md select-none sm:gap-4 sm:px-4">
       <div
         aria-hidden
         className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.035] mix-blend-soft-light"
@@ -111,7 +102,7 @@ export function TopNavigationBar({
           onClick={onCharacter}
         />
 
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex min-w-0 items-center gap-2 px-0.5">
             <span
               aria-hidden
@@ -128,19 +119,11 @@ export function TopNavigationBar({
             </span>
           </div>
 
-          <div className="mt-1 flex min-w-0 items-center gap-2 pl-3">
-            {fightMode && (
+          {fightMode && (
+            <div className="pl-3">
               <FightControls mode={fightMode} onChange={onFightModeChange} />
-            )}
-            <div className="min-w-0 flex-1">
-              <HealthManaBars
-                health={health}
-                maxHealth={maxHealth}
-                mana={mana}
-                maxMana={maxMana}
-              />
             </div>
-          </div>
+          )}
         </div>
       </section>
 

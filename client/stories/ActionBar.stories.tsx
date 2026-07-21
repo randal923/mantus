@@ -36,7 +36,9 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="ui-backdrop p-8">
-        <Story />
+        <div className="ui-action-cluster relative w-max p-2">
+          <Story />
+        </div>
       </div>
     ),
   ],

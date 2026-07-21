@@ -80,7 +80,7 @@ export function ActionBar({
         event.preventDefault();
         onConfigure(0);
       }}
-      className="ui-panel-frame pointer-events-auto relative isolate flex max-w-[calc(100vw-2rem)] gap-1.5 overflow-x-auto p-2"
+      className="pointer-events-auto relative isolate flex gap-1 rounded-sm border border-black/80 bg-black/75 p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.9),0_1px_0_rgba(255,255,255,0.04)]"
     >
       {slots.map((slot, index) => {
         const item = slot.item;
@@ -99,7 +99,7 @@ export function ActionBar({
                 event.stopPropagation();
                 onConfigure(index);
               }}
-              className="group relative flex size-12 shrink-0 items-center justify-center rounded-md border border-dashed border-ui-stone-light/25 text-ui-muted outline-none transition-[border-color,color] duration-150 hover:border-ui-gold/55 hover:text-ui-gold focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-50 sm:size-14"
+              className="ui-action-slot group relative flex size-12 shrink-0 items-center justify-center rounded-sm border border-ui-stone-light/20 bg-ui-panel-deep text-ui-muted outline-none transition-[border-color,color] duration-150 hover:border-ui-gold/55 hover:text-ui-gold focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-50 sm:size-14"
             >
               {onConfigure && (
                 <span aria-hidden className="text-lg leading-none opacity-45 group-hover:opacity-90">
@@ -144,7 +144,7 @@ export function ActionBar({
               }
               buttonRefs.current.delete(index);
             }}
-            className="ui-button ui-button-secondary group relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-ui-stone-light/25 text-ui-text outline-none transition-[border-color,filter,transform] duration-150 hover:-translate-y-px hover:border-ui-gold/55 hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-35 sm:size-14"
+            className="ui-action-slot group relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-ui-stone-light/25 bg-ui-panel-deep text-ui-text outline-none transition-[border-color,filter,transform] duration-150 hover:-translate-y-px hover:border-ui-gold/55 hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-35 sm:size-14"
           >
             {item.icon}
             <kbd className="absolute top-0.5 left-1 z-20 text-xs font-bold text-ui-muted">

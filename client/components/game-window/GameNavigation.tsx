@@ -91,10 +91,6 @@ export function GameNavigation() {
         level={character.level}
         vocation={t(`vocations.${character.vocation}.name`)}
         outfit={character.outfit}
-        health={character.health}
-        maxHealth={character.maxHealth}
-        mana={character.mana}
-        maxMana={character.maxMana}
         connectionStatus={status}
         fightMode={fightMode}
         battleListVisible={battleListVisible}

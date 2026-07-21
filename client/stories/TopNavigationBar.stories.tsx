@@ -28,10 +28,6 @@ const meta = {
       feet: 76,
       addons: 0,
     },
-    health: 1240,
-    maxHealth: 1580,
-    mana: 390,
-    maxMana: 620,
     connectionStatus: "connected",
     fightMode: {
       attack: "offensive",
@@ -73,7 +69,5 @@ export const Disconnected: Story = {
   args: {
     connectionStatus: "disconnected",
     activePanel: undefined,
-    health: 380,
-    mana: 90,
   },
 };

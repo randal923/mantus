@@ -21,6 +21,10 @@ const meta = {
       id: "player",
       vocation: "Knight",
       level: 20,
+      health: 225,
+      maxHealth: 300,
+      mana: 180,
+      maxMana: 290,
     } as OwnCharacterState,
     fightState: {
       attackTargetId: null,
