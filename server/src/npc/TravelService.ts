@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import type { Position } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { Npc } from "../creature/Npc";
@@ -67,8 +68,12 @@ export class TravelService {
       session.travelOperationPending) {
       return "busy";
     }
+    const requestedDestination =
+      offer.diversion && randomInt(offer.diversion.oneIn) === 0
+        ? offer.diversion.destination
+        : offer.destination;
     const destination = this.world.findUnoccupiedPosition(
-      offer.destination,
+      requestedDestination,
       DESTINATION_FALLBACK_RADIUS,
     );
     if (!destination) return "unavailable";
@@ -81,7 +86,13 @@ export class TravelService {
     session.autoWalkDirections = [];
     session.itemOperationPending = true;
     session.travelOperationPending = true;
-    const expectedVersion = this.persistence.beginExternalMutation(player, now);
+    // Travel persists position itself; other dirty state can follow in the
+    // next versioned snapshot instead of delaying the fare transaction.
+    const expectedVersion = this.persistence.beginExternalMutation(
+      player,
+      now,
+      { flushDirty: false },
+    );
     const operation = expectedVersion.then(async (version) => ({
       expectedVersion: version,
       result: await store.commit(

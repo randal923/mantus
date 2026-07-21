@@ -7,6 +7,7 @@ import type {
   DialogueNode,
   NpcTravelOffer,
 } from "./DialogueGraph";
+import { withBoatTravelRoutes } from "./withBoatTravelRoutes";
 
 const BASELINE_CONTENT_FILE = fileURLToPath(
   new URL(
@@ -49,7 +50,7 @@ export function loadNpcDialogueGraphs(
       graphs.set(typeId, parseGraph(definition));
     }
   }
-  return graphs;
+  return withBoatTravelRoutes(graphs, expectedCanaryCommit);
 }
 
 function parseGraph(value: Record<string, unknown>): DialogueGraph {
@@ -184,6 +185,9 @@ function parseOffer(value: unknown): NpcTravelOffer {
     id: identifier(offer.id, "NPC travel offer id"),
     cost: integer(offer.cost, "NPC travel cost", 0, 1_000_000_000),
     destination: position(offer.destination),
+    ...(offer.diversion === undefined
+      ? {}
+      : { diversion: parseDiversion(offer.diversion) }),
     ...(offer.minimumLevel === undefined
       ? {}
       : {
@@ -194,6 +198,21 @@ function parseOffer(value: unknown): NpcTravelOffer {
             10_000,
           ),
         }),
+  };
+}
+
+function parseDiversion(
+  value: unknown,
+): NonNullable<NpcTravelOffer["diversion"]> {
+  const diversion = record(value, "NPC travel diversion");
+  return {
+    oneIn: integer(
+      diversion.oneIn,
+      "NPC travel diversion denominator",
+      1,
+      1_000_000,
+    ),
+    destination: position(diversion.destination),
   };
 }
 

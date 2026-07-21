@@ -71,22 +71,24 @@ export class PgNpcTravelStore implements NpcTravelStore {
         after,
         removedItemIds,
       );
-      const backpack = await coinOps.lockBackpackSlots(after);
-      if (!backpack) {
-        throw new Error("no backpack space is available for travel change");
-      }
-      const changeGranted = await coinOps.grantStackable(
-        gold,
-        payment.goldChange,
-        3031,
-        100,
-        "npc-travel-change",
-        after,
-        removedItemIds,
-        backpack,
-      );
-      if (!changeGranted) {
-        throw new Error("no backpack space is available for travel change");
+      if (payment.goldChange > 0) {
+        const backpack = await coinOps.lockBackpackSlots(after);
+        if (!backpack) {
+          throw new Error("no backpack space is available for travel change");
+        }
+        const changeGranted = await coinOps.grantStackable(
+          gold,
+          payment.goldChange,
+          3031,
+          100,
+          "npc-travel-change",
+          after,
+          removedItemIds,
+          backpack,
+        );
+        if (!changeGranted) {
+          throw new Error("no backpack space is available for travel change");
+        }
       }
 
       const updatedCharacter = await client.query<{ version: number }>(

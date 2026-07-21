@@ -18,6 +18,10 @@ interface SaveState {
   settleExternalMutation: (() => void) | null;
 }
 
+interface BeginExternalMutationOptions {
+  readonly flushDirty?: boolean;
+}
+
 export class CharacterPersistence {
   private readonly states = new Map<string, SaveState>();
 
@@ -70,7 +74,11 @@ export class CharacterPersistence {
     }
   }
 
-  async beginExternalMutation(player: Player, now: number): Promise<number> {
+  async beginExternalMutation(
+    player: Player,
+    now: number,
+    options: BeginExternalMutationOptions = {},
+  ): Promise<number> {
     const state = this.states.get(player.id);
     if (
       !state ||
@@ -84,7 +92,9 @@ export class CharacterPersistence {
     state.externalMutationCompletion = new Promise<void>((resolve) => {
       state.settleExternalMutation = resolve;
     });
-    if (state.dirty) this.enqueueSnapshot(state, now);
+    if (state.dirty && options.flushDirty !== false) {
+      this.enqueueSnapshot(state, now);
+    }
     try {
       await state.tail;
       if (state.failed) throw state.failed;

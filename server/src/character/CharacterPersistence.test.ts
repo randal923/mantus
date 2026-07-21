@@ -175,6 +175,43 @@ describe("CharacterPersistence", () => {
     });
   });
 
+  it("can preserve dirty state across an external atomic mutation", async () => {
+    const snapshots: CharacterSaveSnapshot[] = [];
+    const store = makeStore(async (snapshot) => {
+      snapshots.push(snapshot);
+      return snapshot.expectedVersion + 1;
+    });
+    const persistence = new CharacterPersistence(store, 30_000, 0, 0);
+    const player = new Player(makeCharacter("character-id"), {
+      x: 0,
+      y: 0,
+      z: 7,
+    });
+    persistence.track(player, 0);
+    player.moveTo({ x: 1, y: 0, z: 7 });
+    persistence.markDirty(player);
+
+    const expectedVersion = await persistence.beginExternalMutation(
+      player,
+      1,
+      { flushDirty: false },
+    );
+
+    expect(expectedVersion).toBe(1);
+    expect(snapshots).toHaveLength(0);
+    player.moveTo({ x: 20, y: 20, z: 6 });
+    persistence.completeExternalMutation(player, expectedVersion, 2);
+    await persistence.flushCharacter(player.id);
+
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0]).toMatchObject({
+      expectedVersion: 2,
+      positionX: 20,
+      positionY: 20,
+      positionZ: 6,
+    });
+  });
+
   it("does not let relog flushing pass an unfinished external mutation", async () => {
     const persistence = new CharacterPersistence(
       makeStore(async (snapshot) => snapshot.expectedVersion + 1),

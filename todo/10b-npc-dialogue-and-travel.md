@@ -52,11 +52,14 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
 - Per-NPC/per-character conversations use opaque server-issued ids, explicit
   offered choices, server-clock expiry, range/floor cleanup, and private
   delivery. NPC wandering pauses while at least one conversation is active.
-- Captain Bluebear exposes ten unconditional pinned routes. Confirmation sends
-  only an opaque choice; fare and destination remain server-owned. Fare,
-  character position/version, item-destruction audits, and the travel audit
-  commit in one serializable PostgreSQL transaction before the tick teleports
-  and fully reconciles visibility.
+- Sixteen coastal boat NPCs expose 90 unconditional pinned routes, including
+  Captain Fearless in Venore. Haunted and storm-prone routes choose their
+  diversion with server RNG. Confirmation sends only an opaque choice; fare
+  and destination remain server-owned. Fare, character position/version,
+  item-destruction audits, and the travel audit commit in one serializable
+  PostgreSQL transaction before the tick teleports and fully reconciles
+  visibility. Travel does not block on a redundant pre-travel character
+  snapshot, and exact fares skip backpack/change allocation queries.
 - Quentin currently provides greeting, healing fallback, pilgrimage, and
   blessing information. Stateful healing, blessings, stake/adventurer-stone
   quests, and item grants remain unimplemented rather than being approximated
@@ -74,10 +77,12 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
   the canonical denomination/bank ledger in
   [`11a-currency-and-bank`](11a-currency-and-bank.md), then route travel fares
   through it without weakening the existing atomic transaction and audits.
-- Captain Bluebear's Yalahar storage gate, Postman discount, Carlin mission
-  side effect, and `kick` action require typed quest/action support. Add those
-  with [`20a-quest-state`](20a-quest-state.md); do not expose raw storage ids to
-  the client.
+- The coastal route slice deliberately excludes storage-gated Yalahar and
+  Goroma passages and the remaining quest/event boats. Postman discounts,
+  travel-triggered Postman mission side effects, and `kick` actions also await
+  typed quest/action support. Add them with
+  [`20a-quest-state`](20a-quest-state.md); do not expose raw storage ids to the
+  client or enable a route without its execution-time access check.
 - The generated baseline covers literal parent/child keyword trees, shop links,
   and bank links, but the import report still owns 2,307 procedural keyword
   actions, 21 dynamically composed messages, and 601 custom callbacks. Delayed

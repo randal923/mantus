@@ -1022,6 +1022,36 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     ]);
   });
 
+  it("commits an exact NPC fare without locking backpack space", async () => {
+    await pool.query("DELETE FROM items WHERE id = $1", [pouchId]);
+    await pool.query("DELETE FROM items WHERE id = $1", [backpackId]);
+    await insertItem(GOLD_TYPE, 100, {
+      kind: "inventory",
+      characterId,
+      slot: 0,
+    });
+    const character = await pool.query<{ version: number }>(
+      "SELECT version FROM characters WHERE id = $1",
+      [characterId],
+    );
+    const expectedVersion = character.rows[0]?.version;
+    if (!expectedVersion) throw new Error("character version is missing");
+
+    await expect(
+      travelStore.commit(
+        characterId,
+        expectedVersion,
+        { x: 120, y: 220, z: 6 },
+        100,
+        "captain-bluebear",
+        "carlin",
+      ),
+    ).resolves.toMatchObject({
+      status: "committed",
+      mutation: { removedItemIds: expect.any(Array) },
+    });
+  });
+
   it("pays an exact NPC fare from platinum and returns audited gold change", async () => {
     await insertItem(PLATINUM_TYPE, 50, {
       kind: "container",

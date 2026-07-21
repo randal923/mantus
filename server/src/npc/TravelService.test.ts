@@ -239,6 +239,45 @@ describe("TravelService", () => {
     ).toBe(true);
   });
 
+  it("commits a server-selected diversion destination", async () => {
+    const harness = makeHarness(async () => ({
+      status: "committed",
+      characterVersion: 2,
+      mutation: { after: [], removedItemIds: ["gold-stack"] },
+    }));
+
+    expect(
+      harness.travel.start(
+        harness.session,
+        harness.npc,
+        {
+          id: "ghostship",
+          cost: 60,
+          destination: { x: 20, y: 20, z: 6 },
+          diversion: {
+            oneIn: 1,
+            destination: { x: 30, y: 30, z: 6 },
+          },
+        },
+        1_000,
+        vi.fn(),
+        vi.fn(),
+      ),
+    ).toBe("started");
+    await nextTurn();
+
+    expect(harness.store.commit).toHaveBeenCalledWith(
+      harness.player.id,
+      1,
+      { x: 30, y: 30, z: 6 },
+      60,
+      "captain",
+      "ghostship",
+    );
+    harness.travel.applyResolvedOutcomes(2_000);
+    expect(harness.player.position).toEqual({ x: 30, y: 30, z: 6 });
+  });
+
   it("revalidates range and level before creating a store operation", () => {
     const harness = makeHarness(async () => ({
       status: "insufficient-funds",

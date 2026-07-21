@@ -25,6 +25,10 @@ export interface NpcTravelOffer {
   readonly id: string;
   readonly cost: number;
   readonly destination: Position;
+  readonly diversion?: {
+    readonly oneIn: number;
+    readonly destination: Position;
+  };
   readonly minimumLevel?: number;
 }
 
