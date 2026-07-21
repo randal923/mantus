@@ -29,6 +29,8 @@ export class Session {
   actionBarUpdatePending = false;
   potionActionBarUpdatePending = false;
   itemOperationPending = false;
+  /** One optimistic potion transaction may be durable at a time per user. */
+  potionPersistPending = false;
   depotOperationPending = false;
   /**
    * Memory-first item mutations (depot and carried ops) apply instantly; this

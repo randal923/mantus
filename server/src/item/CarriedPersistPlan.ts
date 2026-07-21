@@ -26,6 +26,13 @@ export type CarriedPersistRowOp =
 
 export type CarriedPersistAudit =
   | {
+      readonly kind: "destruction";
+      readonly itemId: string;
+      readonly typeId: number;
+      readonly count: number;
+      readonly reason: "food";
+    }
+  | {
       readonly kind: "transfer";
       readonly itemId: string;
       readonly from: ItemLocation;

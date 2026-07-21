@@ -16,6 +16,7 @@ interface SaveState {
   externalMutationPending: boolean;
   externalMutationCompletion: Promise<void> | null;
   settleExternalMutation: (() => void) | null;
+  discardOnUntrack: boolean;
 }
 
 interface BeginExternalMutationOptions {
@@ -57,6 +58,7 @@ export class CharacterPersistence {
       externalMutationPending: false,
       externalMutationCompletion: null,
       settleExternalMutation: null,
+      discardOnUntrack: false,
     });
   }
 
@@ -132,6 +134,15 @@ export class CharacterPersistence {
     this.removeSettledState(player.id, state);
   }
 
+  failExternalMutation(player: Player, cause: unknown): void {
+    const state = this.states.get(player.id);
+    if (!state || state.player !== player) return;
+    state.failed = cause;
+    state.discardOnUntrack = true;
+    this.settleExternalMutation(state);
+    this.removeSettledState(player.id, state);
+  }
+
   isExternalMutationPending(player: Player): boolean {
     const state = this.states.get(player.id);
     return Boolean(
@@ -158,6 +169,10 @@ export class CharacterPersistence {
     const state = this.states.get(player.id);
     if (!state || state.player !== player) return;
     state.online = false;
+    if (state.discardOnUntrack) {
+      this.states.delete(player.id);
+      return;
+    }
     if (state.dirty && !state.failed && !state.externalMutationPending) {
       this.enqueueSnapshot(state, now);
     }

@@ -136,6 +136,7 @@ export class Combat {
       progression,
       items,
       formula,
+      registry,
       partyHooks,
     );
   }

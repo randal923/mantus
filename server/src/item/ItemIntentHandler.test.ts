@@ -299,10 +299,29 @@ describe("ItemIntentHandler", () => {
       },
       0,
     );
+    expect(player.conditions.remainingMs("regeneration", 0)).toBe(180_000);
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.find((item) => item.id === FOOD_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+    handler.handle(
+      session,
+      {
+        type: "use-item",
+        itemId: FOOD_ID,
+        revision: 1,
+      },
+      0,
+    );
+    expect(sent.at(-1)).toEqual({
+      type: "error",
+      code: "item-action-failed",
+    });
     await handler.load(CHARACTER_ID, 400);
     handler.applyResolvedOutcomes(100);
 
-    expect(player.conditions.remainingMs("regeneration", 100)).toBe(180_000);
+    expect(player.conditions.remainingMs("regeneration", 100)).toBe(179_900);
     expect(sent).toContainEqual({
       type: "combat-log",
       kind: "condition",

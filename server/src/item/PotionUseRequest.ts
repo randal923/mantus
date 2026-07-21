@@ -1,8 +1,9 @@
+import type { PotionItemPlan } from "./PotionItemPlan";
+
 export interface PotionUseRequest {
   readonly actorCharacterId: string;
   readonly targetCharacterId: string;
-  readonly itemId: string;
-  readonly expectedItemVersion: number;
+  readonly itemPlan: PotionItemPlan;
   readonly expectedTargetCharacterVersion: number;
   readonly expectedTargetHealth: number;
   readonly expectedTargetMana: number;

@@ -460,12 +460,14 @@ export class MemoryItemStore implements ItemStore {
   }
 
   async usePotion(request: PotionUseRequest): Promise<PotionUseResult> {
+    const plan = request.itemPlan;
     const before = requireOwnedMemoryItem(
       this.items,
       request.actorCharacterId,
-      request.itemId,
-      request.expectedItemVersion,
+      plan.before.id,
+      plan.before.version,
     );
+    this.requirePlannedPotionItem(before, plan.before, "potion source");
     const potion = getPotionDefinition(before.typeId);
     if (!potion) throw new Error("item is not a restorative potion");
     this.requirePotionRestore(request.healthRestore, potion.health);
@@ -501,74 +503,97 @@ export class MemoryItemStore implements ItemStore {
       request.targetMaxMana,
       currentMana + request.manaRestore,
     );
-    let after: Item[];
-    if (before.count === 1) {
-      after = [
-        {
-          ...before,
-          typeId: potion.flaskTypeId,
-          count: 1,
-          attributes: {},
-          version: before.version + 1,
-        },
-      ];
+    if (plan.kind === "transform") {
+      if (before.count !== 1) {
+        throw new Error("potion transform plan does not consume one item");
+      }
+      const flaskAfter: Item = {
+        ...before,
+        typeId: potion.flaskTypeId,
+        count: 1,
+        attributes: {},
+        version: before.version + 1,
+      };
+      this.requirePlannedPotionItem(
+        flaskAfter,
+        plan.flaskAfter,
+        "transformed potion flask",
+      );
+      this.items.set(flaskAfter.id, flaskAfter);
     } else {
-      const remaining = {
+      if (before.count <= 1) {
+        throw new Error("potion decrement plan requires a stack");
+      }
+      const potionAfter: Item = {
         ...before,
         count: before.count - 1,
         version: before.version + 1,
       };
-      const reachable = collectReachableItemIds(
-        [...this.items.values()],
-        request.actorCharacterId,
+      this.requirePlannedPotionItem(
+        potionAfter,
+        plan.potionAfter,
+        "remaining potion stack",
       );
-      const flaskMaxCount =
-        this.catalog?.require(potion.flaskTypeId).maxCount ?? 100;
-      const flask = [...reachable].flatMap((id) => {
-        const item = this.items.get(id);
-        return item &&
-          item.typeId === potion.flaskTypeId &&
-          item.count < flaskMaxCount
-          ? [item]
-          : [];
-      })[0];
-      if (flask) {
-        after = [
-          remaining,
-          { ...flask, count: flask.count + 1, version: flask.version + 1 },
-        ];
+      if (plan.kind === "merge") {
+        const flaskBefore = requireOwnedMemoryItem(
+          this.items,
+          request.actorCharacterId,
+          plan.flaskBefore.id,
+          plan.flaskBefore.version,
+        );
+        this.requirePlannedPotionItem(
+          flaskBefore,
+          plan.flaskBefore,
+          "existing potion flask",
+        );
+        if (flaskBefore.typeId !== potion.flaskTypeId) {
+          throw new Error("potion flask merge type is invalid");
+        }
+        const flaskMaxCount =
+          this.catalog?.require(potion.flaskTypeId).maxCount ?? 100;
+        if (flaskBefore.count >= flaskMaxCount) {
+          throw new Error("potion flask stack is full");
+        }
+        const flaskAfter: Item = {
+          ...flaskBefore,
+          count: flaskBefore.count + 1,
+          version: flaskBefore.version + 1,
+        };
+        this.requirePlannedPotionItem(
+          flaskAfter,
+          plan.flaskAfter,
+          "merged potion flask",
+        );
+        this.items.set(flaskAfter.id, flaskAfter);
       } else {
-        const occupied = new Set(
-          [...this.items.values()].flatMap((item) =>
-            item.location.kind === "inventory" &&
-            item.location.characterId === request.actorCharacterId
-              ? [item.location.slot]
-              : [],
-          ),
-        );
-        const slot = Array.from({ length: 100 }, (_, index) => index).find(
-          (index) => !occupied.has(index),
-        );
-        if (slot === undefined) throw new Error("inventory is full");
-        after = [
-          remaining,
-          {
-            id: randomUUID(),
-            typeId: potion.flaskTypeId,
-            count: 1,
-            attributes: {},
-            version: 1,
-            location: {
-              kind: "inventory",
-              characterId: request.actorCharacterId,
-              slot,
-            },
-          },
-        ];
+        const flaskAfter = plan.flaskAfter;
+        if (
+          this.items.has(flaskAfter.id) ||
+          flaskAfter.typeId !== potion.flaskTypeId ||
+          flaskAfter.count !== 1 ||
+          flaskAfter.version !== 1 ||
+          Object.keys(flaskAfter.attributes).length !== 0 ||
+          flaskAfter.location.kind !== "inventory" ||
+          flaskAfter.location.characterId !== request.actorCharacterId
+        ) {
+          throw new Error("created potion flask plan is invalid");
+        }
+        const flaskLocation = flaskAfter.location;
+        if (
+          [...this.items.values()].some(
+            (item) =>
+              item.location.kind === "inventory" &&
+              item.location.characterId === request.actorCharacterId &&
+              item.location.slot === flaskLocation.slot,
+          )
+        ) {
+          throw new Error("created potion flask plan is invalid");
+        }
+        this.items.set(flaskAfter.id, flaskAfter);
       }
+      this.items.set(potionAfter.id, potionAfter);
     }
 
-    for (const item of after) this.items.set(item.id, item);
     this.characterVersions.set(
       request.targetCharacterId,
       request.expectedTargetCharacterVersion + 1,
@@ -576,7 +601,6 @@ export class MemoryItemStore implements ItemStore {
     this.characterHealth.set(request.targetCharacterId, nextHealth);
     this.characterMana.set(request.targetCharacterId, nextMana);
     return {
-      mutation: { before, after },
       targetCharacterVersion: request.expectedTargetCharacterVersion + 1,
       healthRestored: nextHealth - currentHealth,
       manaRestored: nextMana - currentMana,
@@ -728,6 +752,23 @@ export class MemoryItemStore implements ItemStore {
       (range ? amount < range[0] || amount > range[1] : amount !== 0)
     ) {
       throw new Error("potion restore amount is out of range");
+    }
+  }
+
+  private requirePlannedPotionItem(
+    actual: Item,
+    expected: Item,
+    label: string,
+  ): void {
+    if (
+      actual.id !== expected.id ||
+      actual.typeId !== expected.typeId ||
+      actual.count !== expected.count ||
+      actual.version !== expected.version ||
+      JSON.stringify(actual.attributes) !== JSON.stringify(expected.attributes) ||
+      JSON.stringify(actual.location) !== JSON.stringify(expected.location)
+    ) {
+      throw new Error(`${label} diverged from its in-memory plan`);
     }
   }
 

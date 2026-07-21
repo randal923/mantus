@@ -239,7 +239,7 @@ describe("ItemIntentHandler memory-first carried ops", () => {
     ).toBe(50);
   });
 
-  it("rejects DB-first consumption while memory-first writes are flushing", async () => {
+  it("applies food immediately behind an in-flight memory-first write", async () => {
     const FOOD_TYPE = 3577;
     const food: Item = {
       id: "dddd1111-1111-4111-8111-111111111111",
@@ -251,11 +251,11 @@ describe("ItemIntentHandler memory-first carried ops", () => {
     };
     const store = new MemoryItemStore(catalog);
     for (const item of [...carriedFixture(), food]) store.seed(item);
-    let release: (() => void) | undefined;
+    const releases: Array<() => void> = [];
     const originalPersist = store.persist.bind(store);
     store.persist = (plan) =>
       new Promise<void>((resolve) => {
-        release = () => resolve(originalPersist(plan));
+        releases.push(() => resolve(originalPersist(plan)));
       });
     const { handler, session, sent } = makeHarness(store);
     handler.attach(await handler.load(CHARACTER_ID, 400));
@@ -274,13 +274,17 @@ describe("ItemIntentHandler memory-first carried ops", () => {
       revision: 1,
     });
 
-    expect(session.itemPersistsPending).toBe(1);
-    expect(sent.at(-1)).toMatchObject({
-      type: "error",
-      code: "item-action-failed",
-    });
+    expect(session.itemPersistsPending).toBe(2);
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.find((item) => item.id === food.id),
+    ).toMatchObject({ count: 1, version: 2 });
+    expect(sent.some((message) => message.type === "error")).toBe(false);
     await nextTurn();
-    release?.();
+    releases.shift()?.();
+    await nextTurn();
+    releases.shift()?.();
     await nextTurn();
     handler.applyResolvedOutcomes(Date.now());
     expect(session.itemPersistsPending).toBe(0);

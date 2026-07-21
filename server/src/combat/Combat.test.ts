@@ -52,6 +52,8 @@ interface Harness {
   readonly store: MemoryItemStore;
   readonly items: ItemIntentHandler;
   readonly combat: Combat;
+  readonly persistence: CharacterPersistence;
+  readonly terminate: ReturnType<typeof vi.fn>;
   readonly deaths: { count: number };
 }
 
@@ -205,6 +207,7 @@ async function makeHarness(options: {
   );
   world.addPlayer(player);
   const sent: ServerMessage[] = [];
+  const terminate = vi.fn();
   const session = {
     id: "session",
     playerId: player.id,
@@ -215,11 +218,14 @@ async function makeHarness(options: {
     fightMode: { attack: "balanced", chase: true, secure: true },
     combatCooldowns: new Map(),
     itemOperationPending: false,
+    potionPersistPending: false,
+    itemPersistsPending: 0,
     movementDirection: null,
     bufferedMovementDirection: null,
     send: (message: ServerMessage) => sent.push(message),
     sendError: (code: "combat-action-failed") =>
       sent.push({ type: "error", code }),
+    terminate,
   } as unknown as Session;
   const registry = {
     all: () => [session],
@@ -237,6 +243,7 @@ async function makeHarness(options: {
     beginExternalMutation: vi.fn(async () => player.version),
     completeExternalMutation: vi.fn(),
     cancelExternalMutation: vi.fn(),
+    failExternalMutation: vi.fn(),
     isExternalMutationPending: vi.fn(() => false),
   } as unknown as CharacterPersistence;
   const progression = new ProgressionSystem(
@@ -261,7 +268,18 @@ async function makeHarness(options: {
       return true;
     },
   );
-  return { world, player, session, sent, store, items, combat, deaths };
+  return {
+    world,
+    player,
+    session,
+    sent,
+    store,
+    items,
+    combat,
+    persistence,
+    terminate,
+    deaths,
+  };
 }
 
 async function settleItems(harness: Harness, now: number): Promise<void> {
@@ -881,6 +899,14 @@ describe("Combat", () => {
     };
 
     harness.combat.usePotion(harness.session, firstIntent, 1_000);
+    expect(harness.player.health).toBeGreaterThanOrEqual(healthBefore + 425);
+    expect(harness.player.health).toBeLessThanOrEqual(healthBefore + 575);
+    expect(harness.session.combatCooldowns.get("potion")?.readyAt).toBe(2_000);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === POTION_ID),
+    ).toMatchObject({ count: 1, version: 2 });
     harness.combat.usePotion(harness.session, firstIntent, 1_000);
     await settleItems(harness, 1_000);
     harness.combat.usePotion(
@@ -909,6 +935,44 @@ describe("Combat", () => {
         expect.objectContaining({ typeId: 284, count: 1 }),
       ]),
     );
+  });
+
+  it("disconnects and poisons character persistence when an optimistic potion write fails", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(80, "Knight"),
+      inventory: [
+        ownedItem(POTION_ID, 239, {
+          kind: "inventory",
+          characterId: PLAYER_ID,
+          slot: 0,
+        }),
+      ],
+    });
+    harness.player.setHealth(harness.player.maxHealth - 600);
+    harness.store.usePotion = async () => {
+      throw new Error("db down");
+    };
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    harness.combat.usePotion(
+      harness.session,
+      {
+        type: "use-potion",
+        itemId: POTION_ID,
+        revision: 1,
+        targetPlayerId: PLAYER_ID,
+      },
+      1_000,
+    );
+
+    expect(harness.player.health).toBeGreaterThan(
+      harness.player.maxHealth - 600,
+    );
+    await settleItems(harness, 1_000);
+
+    expect(harness.persistence.failExternalMutation).toHaveBeenCalledOnce();
+    expect(harness.terminate).toHaveBeenCalled();
+    error.mockRestore();
   });
 
   it("allows a restorative potion to heal an adjacent visible player", async () => {

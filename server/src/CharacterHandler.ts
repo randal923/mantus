@@ -350,6 +350,7 @@ export class CharacterHandler {
     existing.bufferedMovementDirection = null;
     existing.attackTargetId = null;
     existing.itemOperationPending = false;
+    existing.potionPersistPending = false;
     existing.depotOperationPending = false;
     existing.actionBarUpdatePending = false;
     existing.potionActionBarUpdatePending = false;

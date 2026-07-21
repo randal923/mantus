@@ -10,7 +10,9 @@ import { PgNpcTravelStore } from "../npc/PgNpcTravelStore";
 import type { Item } from "./Item";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { PgItemStore } from "./PgItemStore";
+import { planConsume } from "./plan/planConsume";
 import { planMoveToContainer } from "./plan/planMoveToContainer";
+import { planPotionUse } from "./plan/planPotionUse";
 
 const TEST_SCHEMA = "item_store_integration";
 const MIGRATION_LOCK_KEY = 7_281_003;
@@ -501,11 +503,18 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     );
     const current = character.rows[0];
     if (!current) throw new Error("character update returned no row");
+    const planned = planPotionUse({
+      characterId,
+      catalog: await loadItemCatalog(),
+      items: await store.loadForCharacter(characterId),
+      itemId: potionId,
+      expectedVersion: 1,
+    });
+    if (!planned) throw new Error("potion plan was rejected");
     const request = {
       actorCharacterId: characterId,
       targetCharacterId: characterId,
-      itemId: potionId,
-      expectedItemVersion: 1,
+      itemPlan: planned.itemPlan,
       expectedTargetCharacterVersion: current.version,
       expectedTargetHealth: current.health,
       expectedTargetMana: current.mana,
@@ -614,6 +623,33 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     expect(audits).toContainEqual(
       expect.objectContaining({ item_id: goldId }),
     );
+  });
+
+  it("persists memory-first food consumption with its destruction audit", async () => {
+    const foodId = await insertItem(3577, 2, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const plan = planConsume({
+      characterId,
+      items: await store.loadForCharacter(characterId),
+      itemId: foodId,
+      expectedVersion: 1,
+      count: 1,
+      reason: "food",
+    });
+    if (!plan) throw new Error("food plan was rejected");
+
+    await store.persist(plan.persist);
+
+    expect(await itemRow(foodId)).toMatchObject({ count: 1, version: 2 });
+    expect(await auditRows("item-destroyed")).toEqual([
+      expect.objectContaining({
+        item_id: foodId,
+        details: expect.objectContaining({ count: 1, reason: "food" }),
+      }),
+    ]);
   });
 
   it("rolls back a carried persist whose guard misses", async () => {

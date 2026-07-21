@@ -22,7 +22,9 @@ import type { LootItemCreation } from "./LootItemCreation";
 import type { PotionUseResult } from "./PotionUseResult";
 import type { CarriedPlan } from "./plan/CarriedPlan";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
+import { planConsume } from "./plan/planConsume";
 import { planEquip } from "./plan/planEquip";
+import { planPotionUse } from "./plan/planPotionUse";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
 import { WorldContainerViews } from "./WorldContainerViews";
 import { WorldItemDecayRunner } from "./WorldItemDecayRunner";
@@ -211,35 +213,53 @@ export class ItemIntentHandler {
       result: PotionUseResult,
       now: number,
     ) => void,
-    onFailed: (now: number) => void,
+    onFailed: (cause: unknown, now: number) => void,
+    now: number,
   ): boolean {
     const actorCharacterId = session.playerId;
-    const combatItem = actorCharacterId
-      ? this.combatItem(
-          actorCharacterId,
-          request.itemId,
-          request.expectedItemVersion,
-        )
-      : null;
+    const cache = actorCharacterId
+      ? this.inventories.get(actorCharacterId)
+      : undefined;
+    const planned =
+      actorCharacterId && cache
+        ? planPotionUse({
+            characterId: actorCharacterId,
+            catalog: this.catalog,
+            items: cache.items,
+            itemId: request.itemId,
+            expectedVersion: request.expectedItemVersion,
+          })
+        : null;
     if (
       !actorCharacterId ||
-      !combatItem ||
+      !planned ||
       session.itemOperationPending ||
-      session.itemPersistsPending > 0 ||
-      combatItem.item.count < 1
+      session.potionPersistPending
     ) {
       session.sendError("combat-action-failed");
       return false;
     }
-    session.itemOperationPending = true;
-    const operation = expectedTargetCharacterVersion.then(
-      async (expectedTargetVersion) => ({
+    const inventory = this.operations.applyMutation(
+      actorCharacterId,
+      planned.mutation,
+      now,
+    );
+    if (inventory && session.playerId === actorCharacterId) {
+      session.send({ type: "inventory-updated", inventory });
+    }
+    session.potionPersistPending = true;
+    session.itemPersistsPending += 1;
+    const operation = this.persistChain.then(async () => {
+      if (this.poisonedPersistCharacters.has(actorCharacterId)) {
+        throw new Error("item persistence lane is poisoned");
+      }
+      const expectedTargetVersion = await expectedTargetCharacterVersion;
+      return {
         expectedTargetVersion,
         result: await this.store.usePotion({
           actorCharacterId,
           targetCharacterId: request.targetCharacterId,
-          itemId: request.itemId,
-          expectedItemVersion: request.expectedItemVersion,
+          itemPlan: planned.itemPlan,
           expectedTargetCharacterVersion: expectedTargetVersion,
           expectedTargetHealth: request.expectedTargetHealth,
           expectedTargetMana: request.expectedTargetMana,
@@ -248,37 +268,36 @@ export class ItemIntentHandler {
           healthRestore: request.healthRestore,
           manaRestore: request.manaRestore,
         }),
-      }),
-    );
-    const resolution = operation
+      };
+    });
+    const settled = operation
       .then(({ expectedTargetVersion, result }) => {
-        this.outcomes.push((now) => {
-          session.itemOperationPending = false;
-          const inventory = this.operations.applyMutation(
-            actorCharacterId,
-            result.mutation,
-            now,
-          );
-          if (inventory && session.playerId === actorCharacterId) {
-            session.send({ type: "inventory-updated", inventory });
-          }
-          onCommitted(expectedTargetVersion, result, now);
+        this.outcomes.push((committedAt) => {
+          session.potionPersistPending = false;
+          this.finishPersist(session);
+          onCommitted(expectedTargetVersion, result, committedAt);
         });
       })
       .catch((cause: unknown) => {
+        this.poisonedPersistCharacters.add(actorCharacterId);
         const reason = cause instanceof Error ? cause.message : "unknown";
-        console.warn(
-          `potion use failed for character ${actorCharacterId}: ${reason}`,
+        console.error(
+          `potion persist failed for character ${actorCharacterId}: ${reason}; disconnecting to resync from DB`,
         );
-        this.outcomes.push((now) => {
-          session.itemOperationPending = false;
-          onFailed(now);
+        this.outcomes.push((failedAt) => {
+          session.potionPersistPending = false;
+          this.finishPersist(session);
+          onFailed(cause, failedAt);
           if (session.playerId === actorCharacterId) {
             session.sendError("combat-action-failed");
           }
+          session.terminate();
         });
       });
-    this.operations.pending.track(actorCharacterId, resolution);
+    this.persistChain = settled;
+    this.operations.pending.trackSwallowingErrors(actorCharacterId, settled);
+    this.pendingPersistOperations.add(settled);
+    void settled.finally(() => this.pendingPersistOperations.delete(settled));
     return true;
   }
 
@@ -454,30 +473,37 @@ export class ItemIntentHandler {
     session: Session,
     itemId: string,
     revision: number,
+    now: number,
     onCommitted: (now: number) => void,
   ): void {
     const characterId = session.playerId;
-    if (
-      !characterId ||
-      session.itemOperationPending ||
-      session.itemPersistsPending > 0
-    ) {
+    const cache = characterId ? this.inventories.get(characterId) : undefined;
+    const planned =
+      characterId && cache
+        ? planConsume({
+            characterId,
+            items: cache.items,
+            itemId,
+            expectedVersion: revision,
+            count: 1,
+            reason: "food",
+          })
+        : null;
+    if (!characterId || !planned || session.itemOperationPending) {
       session.sendError("item-action-failed");
       return;
     }
-    session.itemOperationPending = true;
-    const operation = this.store.consume(
+    const inventory = this.operations.applyMutation(
       characterId,
-      itemId,
-      revision,
-      1,
-      "food",
+      planned.mutation,
+      now,
     );
-    this.operations.run(session, characterId, operation, {
-      errorCode: "item-action-failed",
-      logLabel: "item use consumption failed",
-      onCommitted,
-    });
+    if (inventory && session.playerId === characterId) {
+      session.send({ type: "inventory-updated", inventory });
+    }
+    onCommitted(now);
+    const persist = planned.persist;
+    this.enqueuePersist(session, characterId, () => this.store.persist(persist));
   }
 
   /** Creates the corpse in memory synchronously; rows appear on first touch. */
@@ -625,6 +651,7 @@ export class ItemIntentHandler {
           session,
           item!.id,
           item!.version,
+          now,
           (now) => {
             player.feed(type.food!.durationSeconds, now);
             session.send({

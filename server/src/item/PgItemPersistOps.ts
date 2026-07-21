@@ -5,6 +5,7 @@ import type {
 } from "./CarriedPersistPlan";
 import { itemLocationColumns } from "./itemLocationColumns";
 import { insertItemMergedAudit } from "./sql/insertItemMergedAudit";
+import { insertItemDestroyedAudit } from "./sql/insertItemDestroyedAudit";
 import { insertItemSplitAudit } from "./sql/insertItemSplitAudit";
 import { insertItemTransferredAudit } from "./sql/insertItemTransferredAudit";
 import { insertItemTransformedAudit } from "./sql/insertItemTransformedAudit";
@@ -128,6 +129,16 @@ export class PgItemPersistOps {
     characterId: string,
     audit: CarriedPersistAudit,
   ): Promise<void> {
+    if (audit.kind === "destruction") {
+      await client.query(insertItemDestroyedAudit, [
+        characterId,
+        audit.itemId,
+        audit.typeId,
+        audit.count,
+        audit.reason,
+      ]);
+      return;
+    }
     if (audit.kind === "transfer") {
       await client.query(insertItemTransferredAudit, [
         characterId,

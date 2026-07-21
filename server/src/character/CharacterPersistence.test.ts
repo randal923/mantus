@@ -246,6 +246,35 @@ describe("CharacterPersistence", () => {
     expect(persistence.unsavedPlayerCount).toBe(0);
   });
 
+  it("does not snapshot optimistic state after an external mutation fails", async () => {
+    const snapshots: CharacterSaveSnapshot[] = [];
+    const persistence = new CharacterPersistence(
+      makeStore(async (snapshot) => {
+        snapshots.push(snapshot);
+        return snapshot.expectedVersion + 1;
+      }),
+      30_000,
+      0,
+      0,
+    );
+    const player = new Player(makeCharacter("character-id"), {
+      x: 0,
+      y: 0,
+      z: 7,
+    });
+    const failure = new Error("atomic potion write failed");
+    persistence.track(player, 0);
+    await persistence.beginExternalMutation(player, 1);
+    player.setHealth(player.health + 1);
+    persistence.markDirty(player);
+
+    persistence.failExternalMutation(player, failure);
+    persistence.untrack(player, 2);
+
+    await expect(persistence.flushCharacter(player.id)).resolves.toBeUndefined();
+    expect(snapshots).toHaveLength(0);
+  });
+
   it("retains a failed save in the unsaved-player metric", async () => {
     const failure = new Error("database unavailable");
     const store = makeStore(async () => {

@@ -12,6 +12,7 @@ import type { PartyHooks } from "../party/PartyHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import { getVocation } from "../progression/getVocation";
 import type { Session } from "../Session";
+import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import { getPotionDefinition } from "./getPotionDefinition";
@@ -28,6 +29,7 @@ export class PotionService {
     private readonly progression: ProgressionSystem,
     private readonly items: ItemIntentHandler,
     private readonly formula: CombatFormula,
+    private readonly registry: SessionRegistry,
     private readonly partyHooks?: PartyHooks,
   ) {}
 
@@ -70,7 +72,11 @@ export class PotionService {
       this.reject(session, "potion-exhausted", now);
       return;
     }
-    if (session.itemOperationPending || session.itemPersistsPending > 0) {
+    if (
+      session.itemOperationPending ||
+      session.potionPersistPending ||
+      this.persistence.isExternalMutationPending(target)
+    ) {
       this.reject(session, "combat-action-failed", now);
       return;
     }
@@ -87,6 +93,11 @@ export class PotionService {
     const manaRestore = potion.mana
       ? this.formula.normalInteger(potion.mana[0], potion.mana[1])
       : 0;
+    const expectedHealthRestored =
+      Math.min(target.maxHealth, expectedHealth + healthRestore) -
+      expectedHealth;
+    const expectedManaRestored =
+      Math.min(target.maxMana, expectedMana + manaRestore) - expectedMana;
     const started = this.items.usePotionForCombat(
       session,
       {
@@ -101,71 +112,67 @@ export class PotionService {
         manaRestore,
       },
       expectedTargetVersion,
-      (expectedVersion, result, committedAt) => {
+      (expectedVersion, result) => {
+        if (
+          result.healthRestored !== expectedHealthRestored ||
+          result.manaRestored !== expectedManaRestored
+        ) {
+          const cause = new Error(
+            "committed potion restore diverged from its in-memory result",
+          );
+          console.error(
+            `potion result diverged for target ${target.id}; disconnecting to resync from DB`,
+          );
+          this.persistence.failExternalMutation(target, cause);
+          this.registry.sessionFor(target.id)?.terminate();
+          return;
+        }
         this.persistence.completeExternalMutation(
           target,
           expectedVersion,
           result.targetCharacterVersion,
         );
-        const healthBefore = target.health;
-        const manaBefore = target.mana;
-        const stillOnline = this.world.getPlayer(target.id) === target;
-        if (stillOnline && target.health > 0) {
-          target.setHealth(target.health + result.healthRestored);
-          target.restoreMana(result.manaRestored);
-        }
-        const healthRestored = target.health - healthBefore;
-        const manaRestored = target.mana - manaBefore;
-        if (stillOnline) {
-          const stateStayedCurrent =
-            healthBefore === expectedHealth &&
-            manaBefore === expectedMana &&
-            healthRestored === result.healthRestored &&
-            manaRestored === result.manaRestored;
-          if (stateStayedCurrent) {
-            this.progression.notifyCommittedPlayer(target, committedAt);
-          } else {
-            this.progression.syncPlayer(target, committedAt);
-          }
-          if (healthRestored > 0) {
-            this.visibility.broadcastHealth(target);
-            this.visibility.broadcastCombatText(
-              target,
-              healthRestored,
-              "healing",
-              "none",
-            );
-            this.partyHooks?.recordPartnerHeal(
-              actor.id,
-              target.id,
-              committedAt,
-            );
-          }
-          this.visibility.broadcastMagicEffect(
-            target.position,
-            POTION_EFFECT_ID,
-            target.id,
-          );
-        }
-        if (session.playerId === actor.id) {
-          session.combatCooldowns.set(POTION_COOLDOWN_GROUP, {
-            readyAt: committedAt + POTION_EXHAUST_MS,
-            totalMs: POTION_EXHAUST_MS,
-          });
-          session.send({
-            type: "combat-log",
-            kind: "healing",
-            text: `Used ${combatItem.type.name} on ${target.name}.`,
-          });
-          this.sendFightState(session, committedAt);
-        }
       },
-      (failedAt) => {
-        this.persistence.cancelExternalMutation(target);
-        this.persistence.saveNow(target, failedAt);
+      (cause) => {
+        this.persistence.failExternalMutation(target, cause);
+        this.registry.sessionFor(target.id)?.terminate();
       },
+      now,
     );
-    if (!started) this.persistence.cancelExternalMutation(target);
+    if (!started) {
+      this.persistence.cancelExternalMutation(target);
+      return;
+    }
+    const healthBefore = target.health;
+    target.setHealth(target.health + healthRestore);
+    target.restoreMana(manaRestore);
+    const healthRestored = target.health - healthBefore;
+    this.progression.notifyCommittedPlayer(target, now);
+    if (healthRestored > 0) {
+      this.visibility.broadcastHealth(target);
+      this.visibility.broadcastCombatText(
+        target,
+        healthRestored,
+        "healing",
+        "none",
+      );
+      this.partyHooks?.recordPartnerHeal(actor.id, target.id, now);
+    }
+    this.visibility.broadcastMagicEffect(
+      target.position,
+      POTION_EFFECT_ID,
+      target.id,
+    );
+    session.combatCooldowns.set(POTION_COOLDOWN_GROUP, {
+      readyAt: now + POTION_EXHAUST_MS,
+      totalMs: POTION_EXHAUST_MS,
+    });
+    session.send({
+      type: "combat-log",
+      kind: "healing",
+      text: `Used ${combatItem.type.name} on ${target.name}.`,
+    });
+    this.sendFightState(session, now);
   }
 
   private reject(

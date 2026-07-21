@@ -83,7 +83,7 @@ describe("MemoryItemStore", () => {
 
   it("atomically restores a character and returns exactly one flask under replay", async () => {
     const store = new MemoryItemStore();
-    store.seed({
+    const potion: Item = {
       id: POTION_ID,
       typeId: 266,
       count: 1,
@@ -94,12 +94,18 @@ describe("MemoryItemStore", () => {
         characterId: CHARACTER_ID,
         slot: 0,
       },
-    });
+    };
+    store.seed(potion);
+    const flask: Item = {
+      ...potion,
+      typeId: 285,
+      attributes: {},
+      version: 2,
+    };
     const request = {
       actorCharacterId: CHARACTER_ID,
       targetCharacterId: CHARACTER_ID,
-      itemId: POTION_ID,
-      expectedItemVersion: 1,
+      itemPlan: { kind: "transform", before: potion, flaskAfter: flask },
       expectedTargetCharacterVersion: 1,
       expectedTargetHealth: 100,
       expectedTargetMana: 50,

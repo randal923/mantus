@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { CharacterVocation } from "@tibia/protocol";
 import type { Pool } from "pg";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
@@ -20,7 +19,6 @@ import { deleteItemById } from "./sql/deleteItemById";
 import { incrementPotionFlaskUpdate } from "./sql/incrementPotionFlaskUpdate";
 import { insertPotionFlask } from "./sql/insertPotionFlask";
 import { insertItemWrittenAudit } from "./sql/insertItemWrittenAudit";
-import { lockPartialOwnedItemStackQuery } from "./sql/lockPartialOwnedItemStackQuery";
 import { lockPotionCharactersQuery } from "./sql/lockPotionCharactersQuery";
 import { potionFlaskTransformUpdate } from "./sql/potionFlaskTransformUpdate";
 import { restorePotionTargetQuery } from "./sql/restorePotionTargetQuery";
@@ -168,9 +166,11 @@ export class PgItemUseOps {
         throw new Error("potion target state is stale");
       }
 
-      const row = await this.locks.lockItem(client, request.itemId);
-      requireVersion(row, request.expectedItemVersion);
+      const plan = request.itemPlan;
+      const row = await this.locks.lockItem(client, plan.before.id);
+      requireVersion(row, plan.before.version);
       await this.guards.requireOwned(client, row.id, request.actorCharacterId);
+      this.requirePlannedItem(itemFromRow(row), plan.before, "potion source");
       const potion = getPotionDefinition(row.item_type_id);
       if (!potion) throw new Error("item is not a restorative potion");
       this.requirePotionRestore(request.healthRestore, potion.health);
@@ -207,53 +207,91 @@ export class PgItemUseOps {
         throw new Error("potion target changed during use");
       }
 
-      const before = itemFromRow(row);
-      let after: Item[];
       let createdFlask: Item;
-      if (row.count === 1) {
+      if (plan.kind === "transform") {
+        if (row.count !== 1) {
+          throw new Error("potion transform plan does not consume one item");
+        }
         const transformed = await client.query<ItemRow>(
           potionFlaskTransformUpdate,
           [row.id, potion.flaskTypeId],
         );
         createdFlask = requireReturnedItem(transformed.rows[0]);
-        after = [createdFlask];
+        this.requirePlannedItem(
+          createdFlask,
+          plan.flaskAfter,
+          "transformed potion flask",
+        );
       } else {
+        if (row.count <= 1) {
+          throw new Error("potion decrement plan requires a stack");
+        }
         const remaining = await client.query<ItemRow>(
           decrementItemCountUpdate,
           [row.id, 1],
         );
-        after = [requireReturnedItem(remaining.rows[0])];
-        const flaskType = this.catalog.require(potion.flaskTypeId);
-        const partialStack = await client.query<ItemRow>(
-          lockPartialOwnedItemStackQuery,
-          [request.actorCharacterId, potion.flaskTypeId, flaskType.maxCount],
+        this.requirePlannedItem(
+          requireReturnedItem(remaining.rows[0]),
+          plan.potionAfter,
+          "remaining potion stack",
         );
-        if (partialStack.rows[0]) {
+        const flaskType = this.catalog.require(potion.flaskTypeId);
+        if (plan.kind === "merge") {
+          if (plan.flaskBefore.typeId !== potion.flaskTypeId) {
+            throw new Error("potion flask merge type is invalid");
+          }
+          const flaskRow = await this.locks.lockItem(
+            client,
+            plan.flaskBefore.id,
+          );
+          requireVersion(flaskRow, plan.flaskBefore.version);
+          await this.guards.requireOwned(
+            client,
+            flaskRow.id,
+            request.actorCharacterId,
+          );
+          this.requirePlannedItem(
+            itemFromRow(flaskRow),
+            plan.flaskBefore,
+            "existing potion flask",
+          );
           const incremented = await client.query<ItemRow>(
             incrementPotionFlaskUpdate,
-            [partialStack.rows[0].id, flaskType.maxCount],
+            [flaskRow.id, flaskType.maxCount],
           );
           createdFlask = requireReturnedItem(incremented.rows[0]);
-        } else {
-          const slot = await this.locks.firstInventorySlot(
-            client,
-            request.actorCharacterId,
+          this.requirePlannedItem(
+            createdFlask,
+            plan.flaskAfter,
+            "merged potion flask",
           );
+        } else {
+          if (
+            plan.flaskAfter.typeId !== potion.flaskTypeId ||
+            plan.flaskAfter.location.kind !== "inventory" ||
+            plan.flaskAfter.location.characterId !== request.actorCharacterId
+          ) {
+            throw new Error("created potion flask location is invalid");
+          }
           const inserted = await client.query<ItemRow>(insertPotionFlask, [
-            randomUUID(),
+            plan.flaskAfter.id,
             potion.flaskTypeId,
             request.actorCharacterId,
-            slot,
+            plan.flaskAfter.location.slot,
           ]);
           createdFlask = requireReturnedItem(inserted.rows[0]);
+          this.requirePlannedItem(
+            createdFlask,
+            plan.flaskAfter,
+            "created potion flask",
+          );
         }
-        after.push(createdFlask);
       }
 
       await this.audit.destruction(
         client,
         request.actorCharacterId,
-        before,
+        plan.before,
         1,
         "potion",
       );
@@ -264,7 +302,6 @@ export class PgItemUseOps {
         "potion-flask",
       );
       return {
-        mutation: { before, after },
         targetCharacterVersion: restoredTarget.version,
         healthRestored: restoredTarget.health - target.health,
         manaRestored: restoredTarget.mana - target.mana,
@@ -281,6 +318,23 @@ export class PgItemUseOps {
       (range ? amount < range[0] || amount > range[1] : amount !== 0)
     ) {
       throw new Error("potion restore amount is out of range");
+    }
+  }
+
+  private requirePlannedItem(
+    actual: Item,
+    expected: Item,
+    label: string,
+  ): void {
+    if (
+      actual.id !== expected.id ||
+      actual.typeId !== expected.typeId ||
+      actual.count !== expected.count ||
+      actual.version !== expected.version ||
+      JSON.stringify(actual.attributes) !== JSON.stringify(expected.attributes) ||
+      JSON.stringify(actual.location) !== JSON.stringify(expected.location)
+    ) {
+      throw new Error(`${label} diverged from its in-memory plan`);
     }
   }
 }
