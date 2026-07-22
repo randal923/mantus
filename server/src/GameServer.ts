@@ -48,6 +48,7 @@ import type { ItemCatalog } from "./item/ItemCatalog";
 import type { ItemStore } from "./item/ItemStore";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
 import { MovementHandler } from "./MovementHandler";
+import { monotonicNow } from "./monotonicNow";
 import { NpcHandler } from "./npc/NpcHandler";
 import type { NpcTravelStore } from "./npc/NpcTravelStore";
 import type { PromotionStore } from "./npc/PromotionStore";
@@ -207,7 +208,7 @@ export class GameServer {
     );
     this.items.scheduleWorldDecay(
       deps.worldItemDeltas?.items ?? [],
-      Date.now(),
+      monotonicNow(),
     );
     this.depot = new DepotService(
       this.world,
@@ -545,7 +546,7 @@ export class GameServer {
   }
 
   private tick(): void {
-    const now = Date.now();
+    const now = monotonicNow();
     this.processDisconnects(now);
     this.auth.applyResolvedOutcomes();
     this.characters.applyResolvedOutcomes();
@@ -863,37 +864,37 @@ export class GameServer {
 
   private async finishStop(): Promise<void> {
     await this.travel.stop();
-    this.travel.applyResolvedOutcomes(Date.now());
+    this.travel.applyResolvedOutcomes(monotonicNow());
     await this.promotion.stop();
-    this.promotion.applyResolvedOutcomes(Date.now());
+    this.promotion.applyResolvedOutcomes(monotonicNow());
     await this.bank.stop();
-    this.bank.applyResolvedOutcomes(Date.now());
+    this.bank.applyResolvedOutcomes(monotonicNow());
     await this.shops.stop();
-    this.shops.applyResolvedOutcomes(Date.now());
+    this.shops.applyResolvedOutcomes(monotonicNow());
     await this.market.stop();
-    this.market.applyResolvedOutcomes(Date.now());
+    this.market.applyResolvedOutcomes(monotonicNow());
     await this.trade.stop();
-    this.trade.applyResolvedOutcomes(Date.now());
+    this.trade.applyResolvedOutcomes(monotonicNow());
     await this.guilds.stop();
-    this.guilds.applyResolvedOutcomes(Date.now());
+    this.guilds.applyResolvedOutcomes(monotonicNow());
     await this.houses.stop();
-    this.houses.applyResolvedOutcomes(Date.now());
+    this.houses.applyResolvedOutcomes(monotonicNow());
     await this.vips.stop();
-    this.vips.applyResolvedOutcomes(Date.now());
+    this.vips.applyResolvedOutcomes(monotonicNow());
     await this.highscores.stop();
-    this.highscores.applyResolvedOutcomes(Date.now());
+    this.highscores.applyResolvedOutcomes(monotonicNow());
     await this.moderation.stop();
-    this.moderation.applyResolvedOutcomes(Date.now());
+    this.moderation.applyResolvedOutcomes(monotonicNow());
     await this.pvp.stop();
     await this.bestiaryTracker.stop();
     await this.wheelTracker.stop();
     await this.gems.stop();
-    this.gems.applyResolvedOutcomes(Date.now());
+    this.gems.applyResolvedOutcomes(monotonicNow());
     await this.gemTracker.stop();
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();
-    this.items.applyResolvedOutcomes(Date.now());
+    this.items.applyResolvedOutcomes(monotonicNow());
     await this.persistence.stop();
     if (this.persistence.unsavedPlayerCount > 0) {
       console.error(

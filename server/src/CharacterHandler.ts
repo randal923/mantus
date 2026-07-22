@@ -12,6 +12,7 @@ import { CharacterError } from "./character/CharacterError";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { CharacterService } from "./character/CharacterService";
 import { getAccountStatus } from "./getAccountStatus";
+import { monotonicNow } from "./monotonicNow";
 import { Player } from "./Player";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
@@ -102,7 +103,7 @@ export class CharacterHandler {
         if (!account) return;
         session.send({
           type: "character-list",
-          ...getAccountStatus(account, Date.now()),
+          ...getAccountStatus(account, monotonicNow()),
           characters,
           creationOptions: this.service.creationOptions(),
         });
@@ -129,7 +130,7 @@ export class CharacterHandler {
         if (!account) return;
         session.send({
           type: "character-list",
-          ...getAccountStatus(account, Date.now()),
+          ...getAccountStatus(account, monotonicNow()),
           characters,
           creationOptions: this.service.creationOptions(),
         });
@@ -269,7 +270,7 @@ export class CharacterHandler {
       session.terminate();
       return;
     }
-    const now = Date.now();
+    const now = monotonicNow();
     const account = session.account;
     if (!account) return;
     const accountStatus = getAccountStatus(account, now);
@@ -320,7 +321,7 @@ export class CharacterHandler {
     });
     this.visibility.syncMapItems(session, player);
     void this.service
-      .recordLogin(character.accountId, character.id, new Date())
+      .recordLogin(character.accountId, character.id, new Date(monotonicNow()))
       .catch((cause: unknown) => {
         const reason = cause instanceof Error ? cause.message : "unknown";
         console.warn(
@@ -334,12 +335,12 @@ export class CharacterHandler {
     if (!existing || existing.id === replacement.id) return;
     const player = this.world.getPlayer(characterId);
     if (player) {
-      this.trade.detachCharacter(characterId, Date.now());
+      this.trade.detachCharacter(characterId, monotonicNow());
       this.guilds.detachCharacter(characterId);
       this.vips.detachCharacter(characterId);
       this.moderation.detachCharacter(characterId);
       this.pvp.detachCharacter(characterId);
-      this.persistence.untrack(player, Date.now());
+      this.persistence.untrack(player, monotonicNow());
       this.items.detach(characterId);
       this.depot.detachCharacter(characterId);
       this.world.removePlayer(characterId);

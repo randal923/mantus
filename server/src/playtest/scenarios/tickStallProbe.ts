@@ -4,14 +4,15 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PlaytestClient } from "../PlaytestClient";
 import { startPlaytestServer } from "../startPlaytestServer";
+import { monotonicNow } from "../../monotonicNow";
 
 /**
  * Scenario: play actively for 100 seconds and assert the game server's event
  * loop never stalls long enough to freeze the game ("the game freezes every
  * 20-30s"). A monitor injected via NODE_OPTIONS records every event-loop
- * stall >40ms and GC pause >20ms inside the real server process; the run
- * spans three 30s character-save and heartbeat periods, the two server-side
- * timers matching the reported cadence. Run with: yarn playtest:tick-stall
+ * stall >40ms, GC pause >20ms, and wall-clock correction >100ms inside the
+ * real server process. The run spans the 30s character-save and heartbeat
+ * periods matching the reported cadence. Run with: yarn playtest:tick-stall
  */
 const TOKEN = "dev-stall-probe";
 const CHARACTER = "Stall Probe";
@@ -40,12 +41,12 @@ try {
   const client = await PlaytestClient.connect(server.url);
   await client.enter(TOKEN, CHARACTER);
   ok(`entered world as ${client.playerId}`);
-  const enteredAt = Date.now();
+  const enteredAt = monotonicNow();
 
   step(`walking for ${RUN_MS / 1000}s while the monitor records stalls`);
   const directions = ["east", "west"] as const;
   let flip = 0;
-  while (Date.now() - enteredAt < RUN_MS) {
+  while (monotonicNow() - enteredAt < RUN_MS) {
     client.send({
       type: "move",
       direction: directions[flip % 2]!,
@@ -68,7 +69,11 @@ try {
     // Startup (module loading, map parse) legitimately blocks the loop;
     // only stalls while a player is in the world can freeze the game.
     .filter((event) => event.at >= enteredAt);
-  const worst = events.reduce(
+  const stalls = events.filter((event) => event.kind !== "clock-adjustment");
+  const clockAdjustments = events.filter(
+    (event) => event.kind === "clock-adjustment",
+  );
+  const worst = stalls.reduce(
     (max, event) => Math.max(max, event.durationMs),
     0,
   );
@@ -83,7 +88,8 @@ try {
   }
   ok(
     `no stall reached ${MAX_STALL_MS}ms across ${RUN_MS / 1000}s ` +
-      `(${events.length} minor events, worst ${worst}ms)`,
+      `(${stalls.length} minor stall/GC events, worst ${worst}ms; ` +
+      `${clockAdjustments.length} wall-clock corrections)`,
   );
 
   console.log("\nPASS: server tick loop stays responsive during play\n");

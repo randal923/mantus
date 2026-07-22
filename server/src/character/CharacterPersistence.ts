@@ -2,6 +2,7 @@ import type { Player } from "../Player";
 import type { CharacterSaveSnapshot } from "./Character";
 import type { CharacterStore } from "./CharacterStore";
 import { isTransientDatabaseError } from "./isTransientDatabaseError";
+import { monotonicNow } from "../monotonicNow";
 
 interface SaveState {
   player: Player;
@@ -192,7 +193,7 @@ export class CharacterPersistence {
       !state.failed &&
       !state.externalMutationPending
     ) {
-      this.enqueueSnapshot(state, Date.now());
+      this.enqueueSnapshot(state, monotonicNow());
     }
     await state.tail;
     if (state.failed) throw state.failed;
@@ -201,7 +202,7 @@ export class CharacterPersistence {
 
   async stop(): Promise<void> {
     const tails: Promise<void>[] = [];
-    const now = Date.now();
+    const now = monotonicNow();
     for (const [characterId, state] of this.states) {
       state.online = false;
       if (state.dirty && !state.failed && !state.externalMutationPending) {

@@ -17,6 +17,7 @@ import { getAccountStatus } from "../getAccountStatus";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
+import { monotonicNow } from "../monotonicNow";
 import { marketCategoryOf } from "./marketCategoryOf";
 import { marketFeeOf } from "./marketFeeOf";
 import { marketTotalOf } from "./marketTotalOf";
@@ -456,7 +457,7 @@ export class MarketService {
     const lookup = store.offerById(intent.offerId).then(
       (offer) => {
         this.outcomes.push(() => {
-          if (!offer || offer.expiresAt.getTime() <= Date.now()) {
+          if (!offer || offer.expiresAt.getTime() <= monotonicNow()) {
             session.itemOperationPending = false;
             this.fail(session, "offer-not-found");
             return;

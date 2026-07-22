@@ -4,6 +4,7 @@ import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { World } from "../World";
+import { monotonicNow } from "../monotonicNow";
 import { DepotAccessTracker } from "./DepotAccessTracker";
 import type { DepotCache } from "./DepotCache";
 import { DepotCacheManager } from "./DepotCacheManager";
@@ -56,7 +57,7 @@ export class DepotService {
 
   async load(characterId: string): Promise<LoadedDepot | null> {
     if (!this.store) return null;
-    this.caches.beginLoad(characterId, Date.now());
+    this.caches.beginLoad(characterId, monotonicNow());
     return this.store.loadForCharacter(characterId);
   }
 
@@ -237,7 +238,7 @@ export class DepotService {
       session,
       characterId,
       plan.inventoryMutation,
-      Date.now(),
+      monotonicNow(),
     );
     this.caches.apply(characterId, plan.cacheEvent);
     this.sendState(session, access, refreshLocation, 1, "");

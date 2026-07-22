@@ -3,6 +3,7 @@ import { normalizeCharacterName } from "../character/normalizeCharacterName";
 import type { Item } from "../item/Item";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
+import { monotonicNow } from "../monotonicNow";
 import type { DepotAccessTracker } from "./DepotAccessTracker";
 import type { DepotCacheManager } from "./DepotCacheManager";
 import type { DepotIntent } from "./DepotIntent";
@@ -79,7 +80,7 @@ export class DepotOperationRunner {
     }
     const characterId = session.playerId;
     const expiresAt = new Date(
-      Date.now() + DEPOT_LIMITS.mailExpiryDays * 24 * 60 * 60 * 1_000,
+      monotonicNow() + DEPOT_LIMITS.mailExpiryDays * 24 * 60 * 60 * 1_000,
     );
     session.itemOperationPending = true;
     session.depotOperationPending = true;
@@ -109,7 +110,7 @@ export class DepotOperationRunner {
               session,
               characterId,
               result.mutation,
-              Date.now(),
+              monotonicNow(),
             );
             this.caches.applyExternal(result.recipientCharacterId, {
               upserts: result.deliveredItems,

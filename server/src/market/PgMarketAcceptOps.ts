@@ -13,6 +13,7 @@ import { insertBankAccountPairQuery } from "../economy/sql/insertBankAccountPair
 import { lockBankAccountPairQuery } from "../economy/sql/lockBankAccountPairQuery";
 import { TransactionRollback } from "../economy/TransactionRollback";
 import type { ItemCatalog } from "../item/ItemCatalog";
+import { monotonicNow } from "../monotonicNow";
 import { marketTotalOf } from "./marketTotalOf";
 import { spendMarketFunds } from "./spendMarketFunds";
 import type { LockedMarketOffer, MarketTxHelper } from "./MarketTxHelper";
@@ -320,7 +321,7 @@ export class PgMarketAcceptOps {
   ): Promise<LockedMarketOffer> {
     const offer = await this.helper.lockOffer(client, offerId);
     if (!offer || offer.side !== side) throw this.fail("offer-not-found");
-    if (offer.expiresAt.getTime() <= Date.now()) {
+    if (offer.expiresAt.getTime() <= monotonicNow()) {
       throw this.fail("offer-not-found");
     }
     return offer;

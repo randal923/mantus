@@ -1,4 +1,5 @@
 import type { ReportReason } from "@tibia/protocol";
+import { monotonicNow } from "../monotonicNow";
 import type {
   ActiveMuteRecord,
   BanAccountResult,
@@ -76,7 +77,7 @@ export class MemoryModerationStore implements ModerationStore {
   }): Promise<MuteCharacterResult> {
     const target = this.resolve(input.targetName);
     if (!target) return { status: "failed", reason: "target-not-found" };
-    const mutedUntil = new Date(Date.now() + input.durationMs);
+    const mutedUntil = new Date(monotonicNow() + input.durationMs);
     this.mutes.set(target.id, { mutedUntil, reason: input.reason });
     this.record("mute", target.id, input.actorCharacterId, input.reason);
     return {
@@ -127,7 +128,7 @@ export class MemoryModerationStore implements ModerationStore {
   }): Promise<BanAccountResult> {
     const target = this.resolve(input.targetName);
     if (!target) return { status: "failed", reason: "target-not-found" };
-    const expiresAt = new Date(Date.now() + input.durationMs);
+    const expiresAt = new Date(monotonicNow() + input.durationMs);
     this.bans.set(target.accountId, { expiresAt });
     this.onBanChanged?.(target.accountId, expiresAt);
     this.record("ban", target.id, input.actorCharacterId, input.reason);
@@ -178,7 +179,7 @@ export class MemoryModerationStore implements ModerationStore {
   }): Promise<CreateReportResult> {
     const target = this.resolve(input.targetName);
     if (!target) return { status: "failed", reason: "target-not-found" };
-    const since = Date.now() - DAY_MS;
+    const since = monotonicNow() - DAY_MS;
     const recent = this.reports.filter(
       (report) =>
         report.reporterCharacterId === input.reporterCharacterId &&
@@ -193,7 +194,7 @@ export class MemoryModerationStore implements ModerationStore {
       targetName: target.name,
       reason: input.reason,
       comment: input.comment,
-      createdAt: Date.now(),
+      createdAt: monotonicNow(),
     });
     return { status: "created" };
   }

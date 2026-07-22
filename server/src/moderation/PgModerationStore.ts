@@ -3,6 +3,7 @@ import type { ReportReason } from "@tibia/protocol";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
 import { isSerializationFailure } from "../guild/isSerializationFailure";
+import { monotonicNow } from "../monotonicNow";
 import { characterMuteQuery } from "./sql/characterMuteQuery";
 import { countRecentReportsQuery } from "./sql/countRecentReportsQuery";
 import { deleteAccountBanQuery } from "./sql/deleteAccountBanQuery";
@@ -59,7 +60,7 @@ export class PgModerationStore implements ModerationStore {
   }): Promise<MuteCharacterResult> {
     return this.transact(async (client) => {
       const target = await this.requireTarget(client, input.targetName);
-      const mutedUntil = new Date(Date.now() + input.durationMs);
+      const mutedUntil = new Date(monotonicNow() + input.durationMs);
       await client.query(upsertCharacterMuteQuery, [
         target.id,
         mutedUntil.toISOString(),
@@ -137,7 +138,7 @@ export class PgModerationStore implements ModerationStore {
   }): Promise<BanAccountResult> {
     return this.transact(async (client) => {
       const target = await this.requireTarget(client, input.targetName);
-      const expiresAt = new Date(Date.now() + input.durationMs);
+      const expiresAt = new Date(monotonicNow() + input.durationMs);
       await client.query(updateAccountBannedUntilQuery, [
         target.account_id,
         expiresAt.toISOString(),

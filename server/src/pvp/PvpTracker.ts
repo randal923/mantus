@@ -7,6 +7,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import { monotonicNow } from "../monotonicNow";
 import { applyFragAndSkull } from "./applyFragAndSkull";
 import type { PvpHooks } from "./PvpHooks";
 import type { PvpPolicy } from "./PvpPolicy";
@@ -79,7 +80,7 @@ export class PvpTracker implements PvpHooks {
     if (!this.store) return [];
     return this.store.loadFrags(
       characterId,
-      new Date(Date.now() - this.policy.fragExpiryMs),
+      new Date(monotonicNow() - this.policy.fragExpiryMs),
     );
   }
 

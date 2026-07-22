@@ -12,6 +12,7 @@ import {
   type ViewRange,
 } from "@tibia/protocol";
 import type { Account } from "./AccountStore";
+import { monotonicNow } from "./monotonicNow";
 
 /**
  * One WebSocket connection. Inbound messages are size/rate-checked and
@@ -40,7 +41,7 @@ export class Session {
   itemPersistsPending = 0;
   travelOperationPending = false;
   promotionOperationPending = false;
-  readonly connectedAt = Date.now();
+  readonly connectedAt = monotonicNow();
   playerId: string | null = null;
   movementDirection: Direction | null = null;
   bufferedMovementDirection: Direction | null = null;
@@ -101,7 +102,7 @@ export class Session {
   }
 
   private withinRateLimit(): boolean {
-    const now = Date.now();
+    const now = monotonicNow();
     if (now - this.windowStartedAt >= 1000) {
       this.windowStartedAt = now;
       this.messagesInWindow = 0;

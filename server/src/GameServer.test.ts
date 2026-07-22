@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { afterEach, describe, expect, it } from "vitest";
+import { performance } from "node:perf_hooks";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import WebSocket from "ws";
 import type { Language, ServerMessage } from "@tibia/protocol";
 import type { ServerConfig } from "./config";
@@ -432,6 +433,7 @@ describe("auth gate", () => {
   const sockets: WebSocket[] = [];
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     for (const socket of sockets.splice(0)) socket.terminate();
     await server.stop();
   });
@@ -698,6 +700,62 @@ describe("auth gate", () => {
     }
     expect(correction.position).toEqual({ ...client.spawn, z: 7 });
     expect(correction.positionRevision).toBe(0);
+  });
+
+  it("continues held movement when the wall clock moves backward", async () => {
+    startServer({
+      map: {
+        source: "grid",
+        name: "clock-rollback-grid",
+        ...GRID,
+        blocked: [],
+        groundSpeed: 200,
+      },
+    });
+    const client = await connect(server.port, "Clock Walker", "tok.clock");
+    sockets.push(client.socket);
+
+    client.socket.send(
+      JSON.stringify({ type: "move", direction: "north", queueStep: true }),
+    );
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "creature-moved" &&
+            message.creatureId === client.playerId &&
+            message.positionRevision === 1,
+        ),
+      "initial movement before clock rollback",
+    );
+    const firstMove = client.messages.find(
+      (message) =>
+        message.type === "creature-moved" &&
+        message.creatureId === client.playerId &&
+        message.positionRevision === 1,
+    );
+    if (firstMove?.type !== "creature-moved") {
+      throw new Error("missing initial movement");
+    }
+
+    const realDateNow = Date.now.bind(Date);
+    vi.spyOn(Date, "now").mockImplementation(() => realDateNow() - 2_000);
+    const rollbackAt = performance.now();
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "creature-moved" &&
+            message.creatureId === client.playerId &&
+            message.positionRevision === 2,
+        ),
+      "movement after clock rollback",
+      firstMove.durationMs + 500,
+    );
+
+    expect(performance.now() - rollbackAt).toBeLessThan(
+      firstMove.durationMs + 300,
+    );
   });
 
   it("rejects an auto-walk path whose starting revision is stale", async () => {

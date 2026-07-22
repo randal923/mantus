@@ -6,6 +6,7 @@ import type {
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import { monotonicNow } from "../monotonicNow";
 import { CorpseCreator } from "./CorpseCreator";
 import type { DecayManager } from "./DecayManager";
 import { InventoryCacheManager } from "./InventoryCacheManager";
@@ -711,7 +712,7 @@ export class ItemIntentHandler {
     this.worldContainers.detach(session);
   }
 
-  handle(session: Session, intent: ItemIntent, now = Date.now()): void {
+  handle(session: Session, intent: ItemIntent, now = monotonicNow()): void {
     const playerId = session.playerId;
     const player = playerId ? this.world.getPlayer(playerId) : undefined;
     const cache = playerId ? this.inventories.get(playerId) : undefined;

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { GuildInvitationEntry } from "@tibia/protocol";
 import { GUILD_LIMITS } from "@tibia/protocol";
+import { monotonicNow } from "../monotonicNow";
 import type {
   CreateGuildResult,
   DeclareWarResult,
@@ -425,7 +426,7 @@ export class MemoryGuildStore implements GuildStore {
       guild2Id: target.id,
       status: WAR_PENDING,
       fragLimit: input.fragLimit,
-      startedAt: Date.now(),
+      startedAt: monotonicNow(),
       winnerGuildId: null,
     });
     return {

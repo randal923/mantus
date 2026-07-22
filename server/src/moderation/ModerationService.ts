@@ -6,6 +6,7 @@ import {
 } from "@tibia/protocol";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
+import { monotonicNow } from "../monotonicNow";
 import type { ChatModerationHooks } from "./ChatModerationHooks";
 import type { ModerationStore } from "./ModerationStore";
 
@@ -60,7 +61,7 @@ export class ModerationService implements ChatModerationHooks {
       return () => {
         if (!mute) return;
         const mutedUntil = mute.mutedUntil.getTime();
-        if (mutedUntil <= Date.now()) return;
+        if (mutedUntil <= monotonicNow()) return;
         this.muteByCharacter.set(characterId, {
           mutedUntil,
           reason: mute.reason,

@@ -19,6 +19,7 @@ import { getVocation } from "../progression/getVocation";
 import { PROGRESSION_DEFINITION_VERSION } from "../progression/progressionDefinitionVersion";
 import { projectOwnProgression } from "../progression/projectOwnProgression";
 import { normalizeCharacterName } from "./normalizeCharacterName";
+import { monotonicNow } from "../monotonicNow";
 
 interface StarterPosition extends Position {
   townId: number;
@@ -78,7 +79,7 @@ export class CharacterService {
     if (existing.length >= MAX_CHARACTERS_PER_ACCOUNT) {
       throw new CharacterError("limit-reached");
     }
-    const now = new Date();
+    const now = new Date(monotonicNow());
     const stats = deriveCharacterStats({
       vocation: input.vocation,
       definitionVersion: PROGRESSION_DEFINITION_VERSION,

@@ -13,6 +13,7 @@ import { CharacterProgression } from "./progression/CharacterProgression";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
 import { getDeathExperienceLoss } from "./progression/getDeathExperienceLoss";
 import type { SkullState } from "./pvp/SkullState";
+import { monotonicNow } from "./monotonicNow";
 
 export class Player extends Creature<Character["outfit"]> {
   nextAttackAt = 0;
@@ -43,7 +44,7 @@ export class Player extends Creature<Character["outfit"]> {
   constructor(
     character: Character,
     position: Position,
-    now = Date.now(),
+    now = monotonicNow(),
     premiumUntil: Date | null = null,
     wheelBonuses: WheelBonuses = EMPTY_WHEEL_BONUSES,
   ) {

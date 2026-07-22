@@ -4,6 +4,7 @@ import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { TokenVerifier } from "./TokenVerifier";
 import { getAccountStatus } from "./getAccountStatus";
+import { monotonicNow } from "./monotonicNow";
 
 export class AuthHandler {
   /** Outcomes of async token checks, applied at the top of the next tick. */
@@ -70,7 +71,7 @@ export class AuthHandler {
     // the socket may have closed while the token was being verified; a stale
     // outcome must not kick the account's live session
     if (!this.registry.contains(session)) return;
-    if (account.bannedUntil && account.bannedUntil.getTime() > Date.now()) {
+    if (account.bannedUntil && account.bannedUntil.getTime() > monotonicNow()) {
       session.sendError("account-banned");
       session.terminate();
       return;
@@ -83,7 +84,7 @@ export class AuthHandler {
     }
     session.account = account;
     session.fightMode = { ...account.fightMode };
-    const status = getAccountStatus(account, Date.now());
+    const status = getAccountStatus(account, monotonicNow());
     session.send({
       type: "auth-ok",
       language: account.language,
