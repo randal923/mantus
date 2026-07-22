@@ -1,8 +1,11 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "pg";
+import { parse, stringify } from "yaml";
 
 const serverRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -27,6 +30,7 @@ export interface PlaytestServer {
 export async function startPlaytestServer(
   options: { port?: number; log?: boolean } = {},
 ): Promise<PlaytestServer> {
+  const log = process.env.PLAYTEST_LOG === "1" || (options.log ?? false);
   const port = options.port ?? Number(process.env.PLAYTEST_PORT ?? DEFAULT_PORT);
   const database = process.env.PLAYTEST_DATABASE ?? DEFAULT_DATABASE;
   const adminUrl = process.env.PLAYTEST_ADMIN_URL ?? DEFAULT_ADMIN_URL;
@@ -41,6 +45,9 @@ export async function startPlaytestServer(
     DEV_AUTH: "1",
     DEV_COMMANDS: "1",
     SERVER_PORT: String(port),
+    // Playtests assert Canary-parity numbers, so the boosted dev rates are
+    // pinned back to 1x for the child server.
+    CONFIG_PATH: writeParityConfig(),
   };
 
   await runToCompletion("db:migrate", ["scripts/migrate.ts"], env);
@@ -50,7 +57,11 @@ export async function startPlaytestServer(
     ["--import", "tsx", "src/index.ts"],
     { cwd: serverRoot, env, stdio: ["ignore", "pipe", "pipe"] },
   );
-  const ready = waitForListening(child, options.log ?? false);
+  // A scenario dying on an uncaught exception skips its finally/stop; make
+  // sure the child game server never outlives the scenario process.
+  const killChild = () => child.kill("SIGKILL");
+  process.once("exit", killChild);
+  const ready = waitForListening(child, log);
   const exited = once(child, "exit").then(([code]) => {
     throw new Error(`game server exited early with code ${String(code)}`);
   });
@@ -59,6 +70,7 @@ export async function startPlaytestServer(
   return {
     url: `ws://127.0.0.1:${port}`,
     stop: async () => {
+      process.removeListener("exit", killChild);
       child.kill("SIGINT");
       const finished = once(child, "exit");
       const timeout = setTimeout(() => child.kill("SIGKILL"), 15_000);
@@ -66,6 +78,23 @@ export async function startPlaytestServer(
       clearTimeout(timeout);
     },
   };
+}
+
+function writeParityConfig(): string {
+  const config = parse(
+    readFileSync(join(serverRoot, "../config.yml"), "utf8"),
+  ) as { rates?: Record<string, number> };
+  config.rates = {
+    ...config.rates,
+    experience: 1,
+    skill: 1,
+    magic: 1,
+    loot: 1,
+  };
+  const directory = mkdtempSync(join(tmpdir(), "tibia-playtest-"));
+  const path = join(directory, "config.yml");
+  writeFileSync(path, stringify(config));
+  return path;
 }
 
 async function ensureDatabase(adminUrl: string, database: string): Promise<void> {

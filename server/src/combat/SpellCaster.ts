@@ -1,4 +1,4 @@
-import type { CombatTarget } from "@tibia/protocol";
+import type { CombatTarget, ServerErrorCode } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import { Player } from "../Player";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
@@ -49,11 +49,19 @@ export class SpellCaster {
     spendResources: boolean,
   ): void {
     const player = playerForSession(this.world, session);
-    if (
-      !player ||
-      !this.canBeginSpell(session, player, spell, targetIntent, now)
-    ) {
-      this.feedback.reject(session, now);
+    if (!player) {
+      this.feedback.reject(session, now, "spell-unavailable");
+      return;
+    }
+    const rejection = this.spellRejectionCode(
+      session,
+      player,
+      spell,
+      targetIntent,
+      now,
+    );
+    if (rejection) {
+      this.feedback.reject(session, now, rejection);
       return;
     }
     const target = resolveSpellTarget(
@@ -63,17 +71,17 @@ export class SpellCaster {
       targetIntent,
     );
     if (!target) {
-      this.feedback.reject(session, now);
+      this.feedback.reject(session, now, "spell-target-invalid");
       return;
     }
     if (spendResources) {
       if (!player.spendMana(spell.manaCost)) {
-        this.feedback.reject(session, now);
+        this.feedback.reject(session, now, "spell-mana-insufficient");
         return;
       }
       if (!player.spendSoul(spell.soulCost)) {
         player.restoreMana(spell.manaCost);
-        this.feedback.reject(session, now);
+        this.feedback.reject(session, now, "spell-soul-insufficient");
         return;
       }
     }
@@ -172,7 +180,7 @@ export class SpellCaster {
           now,
         );
       }
-    } else {
+    } else if (spell.effectId > 0) {
       this.visibility.broadcastMagicEffect(
         target.position,
         spell.effectId,
@@ -230,12 +238,19 @@ export class SpellCaster {
   ): void {
     const player = playerForSession(this.world, session);
     const conjure = spell.conjure;
-    if (
-      !player ||
-      !conjure ||
-      !this.canBeginSpell(session, player, spell, targetIntent, now)
-    ) {
-      this.feedback.reject(session, now);
+    if (!player || !conjure) {
+      this.feedback.reject(session, now, "spell-unavailable");
+      return;
+    }
+    const rejection = this.spellRejectionCode(
+      session,
+      player,
+      spell,
+      targetIntent,
+      now,
+    );
+    if (rejection) {
+      this.feedback.reject(session, now, rejection);
       return;
     }
     const expectedMana = player.mana;
@@ -299,43 +314,66 @@ export class SpellCaster {
     target: CombatTarget,
     now: number,
   ): boolean {
+    return (
+      this.spellRejectionCode(session, player, spell, target, now) === null
+    );
+  }
+
+  private spellRejectionCode(
+    session: Session,
+    player: Player,
+    spell: SpellDefinition,
+    target: CombatTarget,
+    now: number,
+  ): ServerErrorCode | null {
     const equipment = this.items.combatEquipment(player.id);
+    if (session.itemOperationPending) return "spell-busy";
+    if (player.conditions.has("mute")) return "spell-muted";
+    if (!spell.vocations.includes(player.vocation)) {
+      return "spell-vocation-restricted";
+    }
+    if (player.level < spell.requiredLevel) return "spell-level-restricted";
+    if (playerMagicLevel(player, equipment) < spell.requiredMagicLevel) {
+      return "spell-magic-level-restricted";
+    }
+    if (player.mana < spell.manaCost) return "spell-mana-insufficient";
+    if (player.progression.soul < spell.soulCost) {
+      return "spell-soul-insufficient";
+    }
+    if (!matchesSpellTarget(spell, target)) return "spell-target-invalid";
     if (
-      session.itemOperationPending ||
-      player.conditions.has("mute") ||
-      !spell.vocations.includes(player.vocation) ||
-      player.level < spell.requiredLevel ||
-      playerMagicLevel(player, equipment) <
-        spell.requiredMagicLevel ||
-      player.mana < spell.manaCost ||
-      player.progression.soul < spell.soulCost ||
-      !matchesSpellTarget(spell, target) ||
       (session.combatCooldowns.get(`spell:${spell.id}`)?.readyAt ?? 0) > now ||
       spell.groups.some(
         (group) =>
           (session.combatCooldowns.get(`group:${group}`)?.readyAt ?? 0) > now,
-      ) ||
-      (spell.needWeapon &&
-        !equipment.some(
-          (entry) =>
-            entry.item.location.kind === "equipment" &&
-            entry.item.location.slot === "weapon" &&
-            entry.type.weaponType !== undefined &&
-            entry.type.weaponType !== "shield",
-        ))
+      )
     ) {
-      return false;
+      return "spell-exhausted";
+    }
+    if (
+      spell.needWeapon &&
+      !equipment.some(
+        (entry) =>
+          entry.item.location.kind === "equipment" &&
+          entry.item.location.slot === "weapon" &&
+          entry.type.weaponType !== undefined &&
+          entry.type.weaponType !== "shield",
+      )
+    ) {
+      return "spell-weapon-required";
     }
     const resolved = resolveSpellTarget(this.world, session, player, target);
-    if (!resolved) return false;
+    if (!resolved) return "spell-target-invalid";
+    if (spell.castRules?.excludedVocations.includes(player.vocation)) {
+      return "spell-vocation-restricted";
+    }
     if (
       spell.castRules &&
-      (spell.castRules.excludedVocations.includes(player.vocation) ||
-        (spell.castRules.targetPlayerOnly &&
-          !(resolved.creature instanceof Player)) ||
+      ((spell.castRules.targetPlayerOnly &&
+        !(resolved.creature instanceof Player)) ||
         (!spell.castRules.allowSelf && resolved.creature === player))
     ) {
-      return false;
+      return "spell-target-invalid";
     }
     const harmful = spell.damageType !== "healing";
     if (
@@ -343,20 +381,34 @@ export class SpellCaster {
       (this.world.isProtectionZone(player.position) ||
         this.world.isProtectionZone(resolved.position))
     ) {
-      return false;
+      return "spell-protection-zone";
     }
     if (
       harmful &&
       resolved.creature &&
-      !canPlayerHarm(this.world, session, player, resolved.creature, this.pvpHooks)
+      resolved.creature !== player &&
+      !canPlayerHarm(
+        this.world,
+        session,
+        player,
+        resolved.creature,
+        this.pvpHooks,
+      )
     ) {
-      return false;
+      return "spell-target-protected";
     }
-    return (
-      (target.kind === "direction" ||
-        isInRange(player.position, resolved.position, spell.range)) &&
-      (!spell.lineOfSight ||
-        this.world.hasLineOfSight(player.position, resolved.position))
-    );
+    if (
+      target.kind !== "direction" &&
+      !isInRange(player.position, resolved.position, spell.range)
+    ) {
+      return "spell-out-of-range";
+    }
+    if (
+      spell.lineOfSight &&
+      !this.world.hasLineOfSight(player.position, resolved.position)
+    ) {
+      return "spell-line-of-sight";
+    }
+    return null;
   }
 }

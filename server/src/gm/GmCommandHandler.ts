@@ -1,10 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { MAX_CHARACTER_LEVEL, type GmResponseMessage } from "@tibia/protocol";
+import {
+  MAX_CHARACTER_LEVEL,
+  MAX_MAGIC_LEVEL,
+  MAX_SKILL_LEVEL,
+  MIN_SKILL_LEVEL,
+  SKILLS,
+  type GmResponseMessage,
+  type Skill,
+} from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { ModerationService } from "../moderation/ModerationService";
 import type { Player } from "../Player";
 import { getExperienceForLevel } from "../progression/getExperienceForLevel";
+import { getManaForNextMagicLevel } from "../progression/getManaForNextMagicLevel";
+import { getSkillTriesForNextLevel } from "../progression/getSkillTriesForNextLevel";
+import { getVocation } from "../progression/getVocation";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { Session } from "../Session";
 import type { SpawnManager } from "../spawn/SpawnManager";
@@ -63,6 +74,18 @@ export class GmCommandHandler {
       case "heal":
         this.heal(session, player, now);
         break;
+      case "magic":
+        this.setMagicLevel(session, player, args, now);
+        break;
+      case "skill":
+        this.setSkill(session, player, args, now);
+        break;
+      case "soul":
+        this.restoreSoul(session, player, now);
+        break;
+      case "hp":
+        this.setCurrentHealth(session, player, args, now);
+        break;
       case "where":
       case "pos":
         this.reply(session, true, this.describePosition(player));
@@ -89,7 +112,7 @@ export class GmCommandHandler {
         this.reply(
           session,
           false,
-          "Commands: /i <item> [count], /spawn <monster>, /goto <x> <y> [z], /level <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note",
+          "Commands: /i <item> [count], /spawn <monster>, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note",
         );
     }
     return true;
@@ -320,13 +343,149 @@ export class GmCommandHandler {
       );
       return;
     }
-    this.progression.awardExperience(
-      player.id,
-      `gm:level:${randomUUID()}`,
-      gap,
-      now,
-    );
+    // Progression awards are capped at 1e9 apiece; high levels need several.
+    for (let remaining = gap; remaining > 0; remaining -= 1_000_000_000) {
+      this.progression.awardExperience(
+        player.id,
+        `gm:level:${randomUUID()}`,
+        Math.min(remaining, 1_000_000_000),
+        now,
+      );
+    }
     this.reply(session, true, `Level set to ${player.level}.`);
+  }
+
+  private setMagicLevel(
+    session: Session,
+    player: Player,
+    args: string[],
+    now: number,
+  ): void {
+    const target = Number(args[0]);
+    if (
+      !Number.isInteger(target) ||
+      target < 1 ||
+      target > MAX_MAGIC_LEVEL
+    ) {
+      this.reply(session, false, `Usage: /magic <1..${MAX_MAGIC_LEVEL}>`);
+      return;
+    }
+    if (player.progression.magicLevel >= target) {
+      this.reply(
+        session,
+        false,
+        `Already magic level ${player.progression.magicLevel}; /magic can only raise it.`,
+      );
+      return;
+    }
+    const vocation = getVocation(
+      player.vocation,
+      player.progression.definitionVersion,
+    );
+    // One cumulative award (chunked at the 1e9 cap): awardMagicProgress rolls
+    // over intermediate levels itself, and a single persisted award avoids
+    // hammering the character row with one save per level.
+    let total = 0;
+    for (
+      let level = player.progression.magicLevel;
+      level < target;
+      level++
+    ) {
+      total += getManaForNextMagicLevel(vocation, level);
+    }
+    for (let remaining = total; remaining > 0; remaining -= 1_000_000_000) {
+      this.progression.awardMagicProgress(
+        player.id,
+        `gm:magic:${randomUUID()}`,
+        Math.min(remaining, 1_000_000_000),
+        now,
+      );
+    }
+    this.reply(
+      session,
+      true,
+      `Magic level set to ${player.progression.magicLevel}.`,
+    );
+  }
+
+  private setSkill(
+    session: Session,
+    player: Player,
+    args: string[],
+    now: number,
+  ): void {
+    const skill = args[0] as Skill;
+    const target = Number(args[1]);
+    if (
+      !SKILLS.includes(skill) ||
+      !Number.isInteger(target) ||
+      target < MIN_SKILL_LEVEL ||
+      target > MAX_SKILL_LEVEL
+    ) {
+      this.reply(
+        session,
+        false,
+        `Usage: /skill <${SKILLS.join("|")}> <${MIN_SKILL_LEVEL}..${MAX_SKILL_LEVEL}>`,
+      );
+      return;
+    }
+    const currentLevel = (): number =>
+      player.progression.skills.find((entry) => entry.skill === skill)
+        ?.level ?? MIN_SKILL_LEVEL;
+    if (currentLevel() >= target) {
+      this.reply(
+        session,
+        false,
+        `Already ${skill} ${currentLevel()}; /skill can only raise it.`,
+      );
+      return;
+    }
+    const vocation = getVocation(
+      player.vocation,
+      player.progression.definitionVersion,
+    );
+    // Single cumulative award; addSkillTries rolls over levels internally.
+    let total = 0;
+    for (let level = currentLevel(); level < target; level++) {
+      total += getSkillTriesForNextLevel(vocation, skill, level);
+    }
+    for (let remaining = total; remaining > 0; remaining -= 1_000_000_000) {
+      this.progression.awardSkillTries(
+        player.id,
+        `gm:skill:${randomUUID()}`,
+        skill,
+        Math.min(remaining, 1_000_000_000),
+        now,
+      );
+    }
+    this.reply(session, true, `Skill ${skill} set to ${currentLevel()}.`);
+  }
+
+  private restoreSoul(session: Session, player: Player, now: number): void {
+    player.progression.restoreSoul(player.progression.maxSoul);
+    this.progression.syncPlayer(player, now, true);
+    this.reply(
+      session,
+      true,
+      `Soul restored to ${player.progression.soul}.`,
+    );
+  }
+
+  private setCurrentHealth(
+    session: Session,
+    player: Player,
+    args: string[],
+    now: number,
+  ): void {
+    const target = Number(args[0]);
+    if (!Number.isInteger(target) || target < 1 || target > player.maxHealth) {
+      this.reply(session, false, `Usage: /hp <1..${player.maxHealth}>`);
+      return;
+    }
+    player.setHealth(target);
+    this.visibility.broadcastHealth(player);
+    this.progression.syncPlayer(player, now, true);
+    this.reply(session, true, `Health set to ${player.health}.`);
   }
 
   private heal(session: Session, player: Player, now: number): void {

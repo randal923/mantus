@@ -60,6 +60,15 @@ export interface MonsterAbility {
       readonly maximum: number;
       readonly multiplier: number;
     };
+    /**
+     * Precomputed Canary ConditionDamage series (on-hit poison/fire): the
+     * exact per-tick amounts, applied at intervalMs, strongest first.
+     */
+    readonly tickSchedule?: {
+      readonly damageType: DamageType;
+      readonly intervalMs: number;
+      readonly amounts: ReadonlyArray<number>;
+    };
   }>;
   readonly dispel?: ConditionType;
   readonly chain?: {

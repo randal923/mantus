@@ -15,6 +15,7 @@ interface ActionBarItem {
   readonly cooldownReadyAt?: number;
   readonly cooldownTotalMs?: number;
   readonly disabled?: boolean;
+  readonly unavailable?: boolean;
 }
 
 interface ActionBarSlot {
@@ -129,7 +130,7 @@ export function ActionBar({
             title={item.title}
             aria-label={item.ariaLabel}
             aria-keyshortcuts={slot.shortcut}
-            disabled={item.disabled || cooldownRemainingMs > 0}
+            disabled={item.disabled}
             onClick={() => onActivate?.(item.id, index)}
             onContextMenu={(event) => {
               if (!onConfigure) return;
@@ -144,7 +145,7 @@ export function ActionBar({
               }
               buttonRefs.current.delete(index);
             }}
-            className="ui-action-slot group relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-ui-stone-light/25 bg-ui-panel-deep text-ui-text outline-none transition-[border-color,filter,transform] duration-150 hover:-translate-y-px hover:border-ui-gold/55 hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-35 sm:size-14"
+            className={`ui-action-slot group relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-ui-stone-light/25 bg-ui-panel-deep text-ui-text outline-none transition-[border-color,filter,transform] duration-150 hover:-translate-y-px hover:border-ui-gold/55 hover:brightness-110 active:translate-y-px focus-visible:ring-2 focus-visible:ring-ui-gold/60 disabled:pointer-events-none disabled:opacity-35 sm:size-14 ${item.unavailable ? "opacity-35" : ""}`}
           >
             {item.icon}
             <kbd className="absolute top-0.5 left-1 z-20 text-xs font-bold text-ui-muted">

@@ -3,6 +3,7 @@ import {
   serverMessageSchema,
   type ClientMessage,
   type ServerMessage,
+  type StarterVocation,
 } from "@tibia/protocol";
 
 /**
@@ -13,6 +14,8 @@ import {
  */
 export class PlaytestClient {
   readonly messages: ServerMessage[] = [];
+  /** Wall-clock arrival time of messages[i], for latency/interval checks. */
+  readonly receivedAt: number[] = [];
   playerId: string | null = null;
   private readonly socket: WebSocket;
   private closedReason: string | null = null;
@@ -29,6 +32,7 @@ export class PlaytestClient {
         );
       }
       this.messages.push(parsed.data);
+      this.receivedAt.push(Date.now());
     });
     socket.on("close", () => {
       this.closedReason ??= "closed by server";
@@ -86,7 +90,11 @@ export class PlaytestClient {
    * Full login flow: authenticate with a dev token, then select (creating on
    * first run) the named character and wait for world entry.
    */
-  async enter(token: string, characterName: string): Promise<void> {
+  async enter(
+    token: string,
+    characterName: string,
+    vocation: StarterVocation = "Knight",
+  ): Promise<void> {
     this.send({ type: "auth", token, language: "en" });
     await this.waitFor(
       (m): m is ServerMessage & { type: "auth-ok" } => m.type === "auth-ok",
@@ -106,7 +114,7 @@ export class PlaytestClient {
       this.send({
         type: "create-character",
         name: characterName,
-        vocation: "Knight",
+        vocation,
         lookType: 128,
       });
       const updated = await this.waitFor(

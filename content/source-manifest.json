@@ -124,7 +124,7 @@
   },
   {
    "path": "tools/parseCanaryCreatureContent.mjs",
-   "sha256": "eb368cc215c153e0739469cf51b085520674f735660a0f7ff23da2a3cc24e1f3"
+   "sha256": "83b0b3f7333c53436991c85d79c7c8f6eff4219c7eb47e074da5b3ff5af8372f"
   },
   {
    "path": "tools/parseCanaryMonsterSpells.mjs",

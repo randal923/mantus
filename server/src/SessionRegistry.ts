@@ -6,10 +6,14 @@ export class SessionRegistry {
   private readonly sessionsByPlayerId = new Map<string, Session>();
   private readonly connectionsPerIp = new Map<string, number>();
 
+  constructor(
+    private readonly maxConnectionsPerIp: number = PROTOCOL_LIMITS.maxConnectionsPerIp,
+  ) {}
+
   canAccept(remoteAddress: string, maxSessions: number): boolean {
     if (this.sessions.size >= maxSessions) return false;
     const perIp = this.connectionsPerIp.get(remoteAddress) ?? 0;
-    return perIp < PROTOCOL_LIMITS.maxConnectionsPerIp;
+    return perIp < this.maxConnectionsPerIp;
   }
 
   add(session: Session): void {

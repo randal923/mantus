@@ -153,6 +153,26 @@ scripted summons/heals. The generated world report has zero unresolved
   registered gameplay definitions and reach zero disabled registered spells,
   runes, ignored formula fields, or unreviewed callbacks.
 
+## Known gaps: combat parity suite (2026-07-21)
+
+The Canary-parity e2e suite (`yarn playtest:spells|weapons|monsters` plus
+`combatVisualAssets.test.ts`) exercises every supported spell, the weapon
+classes, and monster combat over the real wire. Gaps accepted for now:
+
+- **No vocation promotion path exists**, so the two promoted-only spells
+  (`exevo con vis`, `exeta vis`) are skipped in the e2e suite. Fix: implement
+  the promotion NPC/mechanic, then drop the skip.
+- **`CONDITION_FREEZING` on-hit attack conditions are not imported** (one
+  Canary monster); `conditionTypeFor` maps freezing to `paralyze`, which has
+  no damage-over-time support. Fix: add a freeze DoT condition type.
+- **Monster on-hit conditions apply whenever the ability executes**, even if
+  the melee damage itself was fully blocked by armor/shield. Canary gates
+  some condition application on the hit landing; verify against Canary
+  `Combat::combatDamage` and gate if confirmed.
+- **`exura gran sio` is not party-gated** — castRules carry no party
+  requirement, so it heals any player target. Canary restricts it to party
+  members.
+
 ## Known gaps: customizable action bars (2026-07-20)
 
 The spell bar is per-character and player-configured (empty for new

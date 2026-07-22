@@ -52,7 +52,10 @@ Deliberate trade-offs, with reasons and recommended fixes:
   (40001).** Mail/expiry transactions racing a persist write can fail
   spuriously and surface as `mail-action-failed: failed` (client may retry) or
   a persist-failure disconnect. Recommended fix: bounded retry loop for 40001
-  in `runSerializableTransaction`.
+  in `runSerializableTransaction`. (2026-07-21: the carried-item persist lane
+  in `ItemIntentHandler.enqueuePersist` now retries 40001 up to three times
+  before poisoning/disconnecting; the depot/mail transaction lane still does
+  not.)
 - **Expiry returns race an online recipient's in-memory withdraw for ~1 tick.**
   The expiry scan works commit-first; the recipient's cache learns about the
   removal one outcome-application later. A withdraw of the just-returned item

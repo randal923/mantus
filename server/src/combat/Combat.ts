@@ -222,7 +222,7 @@ export class Combat {
   ): void {
     const spell = this.spells.get(intent.spellId);
     if (!spell || spell.origin !== "spell") {
-      this.feedback.reject(session, now);
+      this.feedback.reject(session, now, "spell-unavailable");
       return;
     }
     if (spell.conjure) {
@@ -495,16 +495,19 @@ export class Combat {
                 tickDamage.maximum,
               )
             : undefined;
-          const tickAmounts = tickDamage && tickBase !== undefined
-            ? Array.from({ length: tickDamage.count }, (_, index) =>
-                Math.max(
-                  1,
-                  Math.round(
-                    tickBase * tickDamage.multiplier ** index,
+          const schedule = condition.tickSchedule;
+          const tickAmounts = schedule
+            ? [...schedule.amounts]
+            : tickDamage && tickBase !== undefined
+              ? Array.from({ length: tickDamage.count }, (_, index) =>
+                  Math.max(
+                    1,
+                    Math.round(
+                      tickBase * tickDamage.multiplier ** index,
+                    ),
                   ),
-                ),
-              )
-            : undefined;
+                )
+              : undefined;
           this.conditionSystem.applyCondition(
             creature,
             {
@@ -515,13 +518,19 @@ export class Combat {
                 ? { magnitude: Math.floor(baseSpeed * speedPercent / 100) }
                 : {}),
               ...(attributes ? { attributes } : {}),
-              ...(tickAmounts && tickDamage
+              ...(tickAmounts && schedule
                 ? {
                     tickAmounts,
-                    tickIntervalMs: tickDamage.intervalMs,
-                    damageType: tickDamage.damageType,
+                    tickIntervalMs: schedule.intervalMs,
+                    damageType: schedule.damageType,
                   }
-                : {}),
+                : tickAmounts && tickDamage
+                  ? {
+                      tickAmounts,
+                      tickIntervalMs: tickDamage.intervalMs,
+                      damageType: tickDamage.damageType,
+                    }
+                  : {}),
               ...(condition.type === "fear"
                 ? { fearSource: { ...monster.position } }
                 : {}),
@@ -614,14 +623,16 @@ export class Combat {
       ignoreShield: ability.damageType !== "physical",
     };
     for (const creature of affected) {
-      if (
-        ability.kind === "damage" &&
-        (creature === monster || creature.kind === "npc")
+      if (ability.kind === "healing") {
+        // Self-heals bypass canMonsterAffect, which always excludes self.
+        if (creature !== monster) continue;
+      } else if (
+        creature === monster ||
+        creature.kind === "npc" ||
+        !canMonsterAffect(this.world, monster, creature)
       ) {
         continue;
       }
-      if (ability.kind === "healing" && creature !== monster) continue;
-      if (!canMonsterAffect(this.world, monster, creature)) continue;
       this.damage.applyDamage(creature, request, now);
     }
     return true;

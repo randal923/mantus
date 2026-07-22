@@ -134,13 +134,13 @@ export function GameHud({
           ariaLabel: label,
           badge: spell.manaCost,
           badgeTone: "mana" as const,
-          disabled:
+          unavailable:
             ownCharacter.level < spell.requiredLevel ||
             ownCharacter.magicLevel < spell.requiredMagicLevel ||
             ownCharacter.mana < spell.manaCost ||
             ownCharacter.soul < spell.soulCost ||
-            (spell.needWeapon && !hasWeapon) ||
-            spell.targetKind === "position",
+            (spell.needWeapon && !hasWeapon),
+          disabled: spell.targetKind === "position",
           ...(cooldown
             ? {
                 cooldownReadyAt: cooldown.readyAt,

@@ -17,6 +17,8 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
   const percent = boundedMax > 0 ? (boundedValue / boundedMax) * 100 : 0;
   const label = t(kind === "health" ? "stats.health" : "stats.mana");
   const low = percent > 0 && percent <= LOW_VITAL_PERCENT;
+  const formattedValue = boundedValue.toLocaleString(language);
+  const formattedMax = boundedMax.toLocaleString(language);
 
   return (
     <div
@@ -25,7 +27,7 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
       aria-valuemin={0}
       aria-valuemax={boundedMax}
       aria-valuenow={boundedValue}
-      title={`${label}: ${boundedValue.toLocaleString(language)} / ${boundedMax.toLocaleString(language)}`}
+      title={`${label}: ${formattedValue} / ${formattedMax}`}
       className={`ui-vital-orb ui-vital-orb-${kind} ${
         low ? "ui-vital-orb-low" : ""
       } relative isolate size-20 sm:size-28`}
@@ -42,6 +44,12 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
         aria-hidden
         className="ui-vital-orb-glass absolute inset-0 z-10 rounded-full"
       />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center whitespace-nowrap font-tibia text-xs font-semibold text-white tabular-nums [text-shadow:0_1px_3px_#000,1px_0_1px_#000,-1px_0_1px_#000] sm:text-sm"
+      >
+        {formattedValue} / {formattedMax}
+      </span>
     </div>
   );
 }

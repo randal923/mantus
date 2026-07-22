@@ -352,6 +352,27 @@ function recordList(value) {
   return records;
 }
 
+/**
+ * Ability entries additionally keep their nested `condition` table (Canary
+ * melee/combat attacks that poison or burn on hit, e.g. scorpions).
+ */
+function abilityRecord(value) {
+  const ability = primitiveRecord(value);
+  const condition = primitiveRecord(objectValue(value).condition);
+  if (Object.keys(condition).length > 0) ability.condition = condition;
+  return ability;
+}
+
+function abilityRecordList(value) {
+  if (Array.isArray(value)) return value.map(abilityRecord);
+  const table = objectValue(value);
+  const records = [];
+  const base = abilityRecord(table);
+  if (Object.keys(base).length > 0) records.push(base);
+  if (Array.isArray(table.$entries)) records.push(...table.$entries.map(abilityRecord));
+  return records;
+}
+
 function outfitValue(value, context, corrections) {
   const outfit = objectValue(value);
   const feet = numberValue(outfit.lookFeet, 0);
@@ -425,9 +446,9 @@ function parseMonsterDefinition(
   const light = objectValue(assignment(source, "monster", "light"));
   const elementRecords = recordList(assignment(source, "monster", "elements"));
   const immunityRecords = recordList(assignment(source, "monster", "immunities"));
-  const attacks = recordList(assignment(source, "monster", "attacks"))
+  const attacks = abilityRecordList(assignment(source, "monster", "attacks"))
     .map((ability) => resolveRegisteredSpell(ability, monsterSpells));
-  const defenses = recordList(assignment(source, "monster", "defenses"))
+  const defenses = abilityRecordList(assignment(source, "monster", "defenses"))
     .map((ability) => resolveRegisteredSpell(ability, monsterSpells));
   const voices = recordList(assignment(source, "monster", "voices"));
   const summon = objectValue(assignment(source, "monster", "summon"));

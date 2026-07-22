@@ -43,6 +43,9 @@ export function GameNotifications() {
   const setHouseToast = useGameWindowStore((state) => state.setHouseToast);
   const setGuildToast = useGameWindowStore((state) => state.setGuildToast);
   const setVipToast = useGameWindowStore((state) => state.setVipToast);
+  const showServerErrorAsToast =
+    serverError === "combat-action-failed" ||
+    serverError?.startsWith("spell-") === true;
 
   return (
     <>
@@ -56,14 +59,14 @@ export function GameNotifications() {
           {t("connection.disconnected")} · {t("connection.reconnect")}
         </button>
       )}
-      {serverError === "combat-action-failed" && (
+      {serverError && showServerErrorAsToast && (
         <Toast
           message={t(`serverErrors.${serverError}`)}
           onDismiss={() => setServerError(null)}
           autoDismissMs={3000}
         />
       )}
-      {serverError && serverError !== "combat-action-failed" && (
+      {serverError && !showServerErrorAsToast && (
         <button
           type="button"
           role="alert"

@@ -442,6 +442,7 @@ function parseMonsterAbilities(
     ) {
       const minimum = damageBound(ability.minDamage ?? 0);
       const maximum = damageBound(ability.maxDamage ?? minimum);
+      const onHitConditions = parseOnHitConditions(ability.condition);
       return {
         kind: healing ? "healing" : "damage",
         intervalMs,
@@ -452,6 +453,7 @@ function parseMonsterAbilities(
         damageType: damageType ?? "physical",
         minimum: Math.min(minimum, maximum),
         maximum: Math.max(minimum, maximum),
+        ...(onHitConditions ? { conditions: onHitConditions } : {}),
         ...(ability.effect !== undefined ? { effect: primitive(ability.effect) } : {}),
         ...(typeof ability.shootEffect === "string"
           ? { missile: ability.shootEffect }
@@ -992,6 +994,82 @@ function damageTypeFor(value: unknown): DamageType | undefined {
     COMBAT_HEALING: "healing",
   };
   return types[key];
+}
+
+/**
+ * Canary ConditionDamage::generateDamageList: turns a total condition damage
+ * into the classic decaying tick series (strongest tick first). Deterministic
+ * because monster on-hit conditions use minDamage == maxDamage == totalDamage.
+ */
+export function generateConditionDamageList(
+  amount: number,
+  start: number,
+): number[] {
+  const total = Math.abs(amount);
+  const list: number[] = [];
+  let sum = 0;
+  for (let i = start; i > 0; i--) {
+    const n = start + 1 - i;
+    const median = Math.trunc((n * total) / start);
+    let closerWithExtra: number;
+    let closerWithout: number;
+    do {
+      sum += i;
+      list.push(i);
+      closerWithExtra = Math.abs(1 - (sum + i) / median);
+      closerWithout = Math.abs(1 - sum / median);
+    } while (closerWithExtra < closerWithout);
+  }
+  return list;
+}
+
+/**
+ * Canary melee/combat attacks may carry `condition = { type, totalDamage,
+ * interval }` (scorpion poison, dragon-hatchling burn). Translated to the
+ * exact Canary damage series: start tick ceil(total/20), decaying to 1.
+ */
+function parseOnHitConditions(
+  value: unknown,
+): MonsterAbility["conditions"] | undefined {
+  if (value === undefined || value === null) return undefined;
+  const condition = record(value, "monster attack condition");
+  const type = conditionTypeFor(condition.type, "");
+  const damageOverTime: ReadonlyArray<ConditionType> = [
+    "poison",
+    "fire",
+    "energy",
+    "curse",
+    "bleeding",
+    "dazzled",
+    "drown",
+  ];
+  if (!type || !damageOverTime.includes(type)) return undefined;
+  const total = damageBound(condition.totalDamage ?? 0);
+  if (total < 1) return undefined;
+  const intervalMs = boundedInteger(
+    condition.interval ?? 2_000,
+    "monster attack condition interval",
+    250,
+    60_000,
+  );
+  const amounts = generateConditionDamageList(
+    total,
+    Math.max(1, Math.ceil(total / 20)),
+  );
+  return [
+    {
+      type,
+      durationMs: Math.min(
+        24 * 60 * 60 * 1000,
+        Math.max(250, amounts.length * intervalMs),
+      ),
+      tickSchedule: {
+        damageType: damageTypeForCondition(type),
+        intervalMs,
+        amounts,
+      },
+    },
+  ];
 }
 
 function conditionTypeFor(value: unknown, name: string): ConditionType | undefined {

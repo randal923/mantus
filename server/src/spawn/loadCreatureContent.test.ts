@@ -89,4 +89,34 @@ describe("loadCreatureContent", () => {
       summoners.every((type) => type.maxSummons > 0),
     ).toBe(true);
   });
+
+  it("imports Canary on-hit conditions with the exact ConditionDamage series", () => {
+    const content = loadCreatureContent("world", "otservbr");
+    const scorpion = content.monsterTypes.get("scorpion");
+    const melee = scorpion?.attacks.find((ability) => ability.kind === "damage");
+    const poison = melee?.conditions?.[0];
+
+    // scorpion.lua: condition = { CONDITION_POISON, totalDamage 340, interval 4000 }
+    expect(poison?.type).toBe("poison");
+    expect(poison?.tickSchedule?.damageType).toBe("earth");
+    expect(poison?.tickSchedule?.intervalMs).toBe(4_000);
+    const amounts = poison?.tickSchedule?.amounts ?? [];
+    expect(amounts.slice(0, 6)).toEqual([17, 16, 15, 15, 14, 13]);
+    expect(amounts).toHaveLength(69);
+    expect(amounts.reduce((sum, value) => sum + value, 0)).toBe(340);
+    expect(poison?.durationMs).toBe(69 * 4_000);
+
+    const clomp = content.monsterTypes.get("clomp");
+    const burn = clomp?.attacks
+      .flatMap((ability) => ability.conditions ?? [])
+      .find((condition) => condition.type === "fire");
+    expect(burn?.tickSchedule?.damageType).toBe("fire");
+
+    const withOnHit = [...content.monsterTypes.values()].filter((type) =>
+      [...type.attacks, ...type.defenses].some((ability) =>
+        ability.conditions?.some((condition) => condition.tickSchedule),
+      ),
+    );
+    expect(withOnHit.length).toBeGreaterThanOrEqual(100);
+  });
 });

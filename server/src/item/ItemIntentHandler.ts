@@ -414,7 +414,20 @@ export class ItemIntentHandler {
     const settled = this.persistChain
       .then(async () => {
         if (this.poisonedPersistCharacters.has(characterId)) return;
-        await persist();
+        // Serialization conflicts (SQLSTATE 40001) come from racing a
+        // concurrent character save on the same rows; the memory state is
+        // already the source of truth, so re-running the write is safe.
+        for (let attempt = 0; ; attempt++) {
+          try {
+            await persist();
+            return;
+          } catch (cause) {
+            if (attempt >= 2 || !isSerializationFailure(cause)) throw cause;
+            await new Promise((resolve) =>
+              setTimeout(resolve, 25 * (attempt + 1)),
+            );
+          }
+        }
       })
       .then(
         () => {
@@ -895,4 +908,12 @@ export class ItemIntentHandler {
     const persist = plan.persist;
     this.enqueuePersist(session, characterId, () => this.store.persist(persist));
   }
+}
+
+function isSerializationFailure(cause: unknown): boolean {
+  return (
+    cause instanceof Error &&
+    (("code" in cause && (cause as { code?: unknown }).code === "40001") ||
+      cause.message.includes("could not serialize access"))
+  );
 }

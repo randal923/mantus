@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type {
   CharacterVocation,
+  ServerErrorCode,
   ServerMessage,
 } from "@tibia/protocol";
 import type { Character } from "../character/Character";
@@ -235,8 +236,7 @@ async function makeHarness(options: {
     movementDirection: null,
     bufferedMovementDirection: null,
     send: (message: ServerMessage) => sent.push(message),
-    sendError: (code: "combat-action-failed") =>
-      sent.push({ type: "error", code }),
+    sendError: (code: ServerErrorCode) => sent.push({ type: "error", code }),
     terminate,
   } as unknown as Session;
   const registry = {
@@ -429,12 +429,129 @@ describe("Combat", () => {
       harness.sent.some(
         (message) =>
           message.type === "error" &&
-          message.code === "combat-action-failed",
+          message.code === "spell-exhausted",
       ),
     ).toBe(true);
     expect(
       harness.session.combatCooldowns.get("group:healing")?.readyAt,
     ).toBe(2_000);
+  });
+
+  it("reports execution-time Exori rejection reasons", async () => {
+    const lowLevel = await makeHarness({
+      character: makeLeveledCharacter(34, "Knight"),
+    });
+    lowLevel.combat.castSpell(
+      lowLevel.session,
+      {
+        type: "cast-spell",
+        spellId: "exori",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    expect(lowLevel.sent).toContainEqual({
+      type: "error",
+      code: "spell-level-restricted",
+    });
+
+    const lowMana = await makeHarness({
+      character: { ...makeLeveledCharacter(50, "Knight"), mana: 114 },
+      inventory: [
+        ownedItem(WEAPON_ID, 3273, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+    });
+    lowMana.combat.castSpell(
+      lowMana.session,
+      {
+        type: "cast-spell",
+        spellId: "exori",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    expect(lowMana.sent).toContainEqual({
+      type: "error",
+      code: "spell-mana-insufficient",
+    });
+
+    const unarmed = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight"),
+    });
+    unarmed.combat.castSpell(
+      unarmed.session,
+      {
+        type: "cast-spell",
+        spellId: "exori",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    expect(unarmed.sent).toContainEqual({
+      type: "error",
+      code: "spell-weapon-required",
+    });
+
+    const protectionZone = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight"),
+      map: makeMap([], [{ x: 1, y: 1, z: 7 }]),
+      inventory: [
+        ownedItem(WEAPON_ID, 3273, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+    });
+    protectionZone.combat.castSpell(
+      protectionZone.session,
+      {
+        type: "cast-spell",
+        spellId: "exori",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    expect(protectionZone.sent).toContainEqual({
+      type: "error",
+      code: "spell-protection-zone",
+    });
+
+    const valid = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight"),
+      inventory: [
+        ownedItem(WEAPON_ID, 3273, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+    });
+    const target = makeMonster(
+      "monster-instance:exori-target:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({ health: 500, maxHealth: 500 }),
+    );
+    valid.world.addCreature(target);
+    valid.session.knownCreatureIds.add(target.id);
+    valid.combat.castSpell(
+      valid.session,
+      {
+        type: "cast-spell",
+        spellId: "exori",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    expect(target.health).toBeLessThan(target.maxHealth);
+    expect(valid.sent).not.toContainEqual({
+      type: "error",
+      code: "spell-target-protected",
+    });
   });
 
   it("casts the level-one Canary directional spell with its imported area", async () => {
@@ -599,7 +716,7 @@ describe("Combat", () => {
     );
     expect(harness.sent).toContainEqual({
       type: "error",
-      code: "combat-action-failed",
+      code: "spell-target-invalid",
     });
 
     harness.combat.castSpell(
@@ -1308,6 +1425,37 @@ describe("Combat", () => {
 
     expect(leech.player.health).toBeGreaterThan(healthBefore);
     expect(leech.player.mana).toBeGreaterThan(manaBefore);
+  });
+
+  it("applies a monster's self-heal defense to itself", async () => {
+    const harness = await makeHarness({});
+    const monster = makeMonster(
+      "monster-instance:heal-self:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 100, maxHealth: 1_000 }),
+    );
+    harness.world.addCreature(monster);
+
+    const applied = harness.combat.executeMonsterAbility(
+      monster,
+      null,
+      {
+        kind: "healing",
+        intervalMs: 2_000,
+        chance: 100,
+        target: "self",
+        range: 0,
+        area: { shape: "single" },
+        damageType: "healing",
+        minimum: 40,
+        maximum: 70,
+      },
+      1_000,
+    );
+
+    expect(applied).toBe(true);
+    expect(monster.health).toBeGreaterThanOrEqual(140);
+    expect(monster.health).toBeLessThanOrEqual(170);
   });
 
   it("aims an untargeted monster wave toward its current target", async () => {

@@ -94,7 +94,9 @@ export function playerAttackPlan(
     player.vocation,
     player.progression.definitionVersion,
   );
-  let attack = weapon?.type.attack ?? 7;
+  // Canary: an unarmed fist attacks with value 7, but a weapon without an
+  // attack stat (bow, crossbow) contributes 0 — the ammunition carries it.
+  let attack = weapon ? (weapon.type.attack ?? 0) : 7;
   const range = distance ? (weapon?.type.range ?? 3) : 1;
   let hitChanceType = weapon?.type;
   let hitChanceBonus = 0;

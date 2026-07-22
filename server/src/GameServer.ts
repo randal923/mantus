@@ -104,7 +104,7 @@ export interface GameServerDeps {
 export class GameServer {
   private readonly wss: WebSocketServer;
   private readonly world: World;
-  private readonly registry = new SessionRegistry();
+  private readonly registry: SessionRegistry;
   private readonly visibility: Visibility;
   private readonly auth: AuthHandler;
   private readonly characters: CharacterHandler;
@@ -153,6 +153,9 @@ export class GameServer {
     private readonly config: ServerConfig,
     deps: GameServerDeps,
   ) {
+    // Dev-auth servers (playtests, local harnesses) drive many headless
+    // clients from one host; production keeps the strict per-IP cap.
+    this.registry = new SessionRegistry(config.dev.auth ? 64 : undefined);
     this.world = new World(
       resolveMapData(config.map, deps.itemCatalog),
       config.tickMs,
@@ -553,7 +556,17 @@ export class GameServer {
     for (const session of this.registry.all()) {
       this.auth.enforceDeadline(session, now);
       for (const intent of session.drainIntents()) {
-        this.handleIntent(session, intent, now);
+        try {
+          this.handleIntent(session, intent, now);
+        } catch (cause) {
+          // One malformed or state-conflicting intent must never take the
+          // whole server down; drop the offending connection instead.
+          console.error(
+            `intent ${intent.type} from session ${session.id} failed:`,
+            cause,
+          );
+          session.terminate();
+        }
       }
       this.movement.continueMovement(session, now);
     }

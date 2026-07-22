@@ -1,3 +1,4 @@
+import type { ServerErrorCode } from "@tibia/protocol";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
@@ -19,8 +20,12 @@ export class CombatFeedback {
     this.sendFightState(session, now);
   }
 
-  reject(session: Session, now: number): void {
-    session.sendError("combat-action-failed");
+  reject(
+    session: Session,
+    now: number,
+    code: ServerErrorCode = "combat-action-failed",
+  ): void {
+    session.sendError(code);
     this.sendFightState(session, now);
   }
 

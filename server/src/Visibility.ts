@@ -237,6 +237,9 @@ export class Visibility {
     effectId: number,
     relatedCreatureId?: string,
   ): void {
+    // Effect id 0 means "no effect" in imported content; sending it would
+    // violate the protocol schema (magic-effect requires a positive id).
+    if (effectId < 1) return;
     for (const session of this.viewerSessionsFor(position, 0)) {
       if (
         relatedCreatureId &&
