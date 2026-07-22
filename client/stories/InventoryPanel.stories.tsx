@@ -65,6 +65,16 @@ const nestedItem = makeInventoryItem({
   count: 1,
 });
 
+const deeplyNestedBackpack = makeInventoryItem({
+  id: "00000000-0000-4000-8000-000000000007",
+  clientId: 2870,
+  spriteId: 7145,
+  name: "Green Backpack",
+  count: 1,
+  useKind: "container",
+  containerCapacity: 8,
+});
+
 const character: OwnCharacterState = {
   id: "00000000-0000-4000-8000-000000000010",
   name: "Deceius",
@@ -239,6 +249,41 @@ export const NavigatesBackpacksAndDropsInsideThem: Story = {
       canvas.getByRole("heading", { name: "Backpack" }),
     ).toBeInTheDocument();
     await expect(canvas.getByTitle("5 Health Potion")).toBeInTheDocument();
+  },
+};
+
+export const OpensExactBackpackWithoutFlashingPreviousItems: Story = {
+  args: {
+    ...Knight.args,
+    items: [
+      { slot: 0, item: nestedBackpack },
+      { slot: 1, item: items[1]!.item },
+    ],
+    containers: [
+      {
+        container: nestedBackpack,
+        parentContainerId: equipment.backpack!.id,
+        capacity: 4,
+        items: [
+          { slot: 0, item: deeplyNestedBackpack },
+          { slot: 1, item: nestedItem },
+        ],
+      },
+    ],
+    onOpenContainer: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    fireEvent.contextMenu(canvas.getByTitle("Blue Backpack"));
+    await expect(canvas.getByTitle("Rope")).toBeInTheDocument();
+
+    fireEvent.contextMenu(canvas.getByTitle("Green Backpack"));
+    await expect(
+      canvas.getByRole("heading", { name: "Green Backpack" }),
+    ).toBeInTheDocument();
+    await expect(canvas.queryByTitle("Rope")).not.toBeInTheDocument();
+    await expect(canvas.queryByTitle("5 Health Potion")).not.toBeInTheDocument();
   },
 };
 
