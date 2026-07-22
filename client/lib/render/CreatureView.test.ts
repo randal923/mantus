@@ -1,4 +1,4 @@
-import { Sprite, Texture } from "pixi.js";
+import { Container, Sprite, Texture } from "pixi.js";
 import { describe, expect, it } from "vitest";
 import type { CreatureState } from "@tibia/protocol";
 import type {
@@ -203,6 +203,39 @@ describe("CreatureView", () => {
     // Name text, health bar, party shield, war emblem, and skull graphics.
     expect(view.plate.children).toHaveLength(5);
     view.destroy();
+  });
+
+  it("uses the rendered tile footprint for hit detection during movement", () => {
+    const world = new Container();
+    world.position.set(100, 50);
+    world.scale.set(3);
+    const view = new CreatureView(
+      store,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    world.addChild(view.container);
+    view.applyMove({ x: 11, y: 10, z: 7 }, "east", 1, 1_000);
+    view.tick(250);
+    const rendered = view.pixelPosition();
+    view.container.position.set(rendered.x, rendered.y);
+
+    expect(
+      view.containsScreenPoint(
+        world.position.x + (rendered.x + 2) * world.scale.x,
+        world.position.y + (rendered.y + 2) * world.scale.y,
+      ),
+    ).toBe(true);
+    expect(
+      view.containsScreenPoint(
+        world.position.x + (rendered.x + TILE_SIZE) * world.scale.x,
+        world.position.y + (rendered.y + 2) * world.scale.y,
+      ),
+    ).toBe(false);
+    view.destroy();
+    world.destroy();
   });
 
   it("marks publicly partied creatures from the server projection", () => {

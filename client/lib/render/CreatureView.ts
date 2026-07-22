@@ -6,6 +6,7 @@ import { TILE_SIZE } from "./tileSize";
 const MIN_FOOT_ANIMATION_DELAY_MS = 20;
 const MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS = 205;
 const MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS = 80;
+const SPRITE_DISPLACEMENT = 8;
 
 export type PartyShieldKind =
   | "none"
@@ -114,8 +115,8 @@ export class CreatureView {
     // outfits anchor bottom-right and draw displaced 8px up-left
     if (outfit) {
       this.sprite.position.set(
-        -(outfit.width - 1) * TILE_SIZE - 8,
-        -(outfit.height - 1) * TILE_SIZE - 8,
+        -(outfit.width - 1) * TILE_SIZE - SPRITE_DISPLACEMENT,
+        -(outfit.height - 1) * TILE_SIZE - SPRITE_DISPLACEMENT,
       );
     }
     this.attackTarget
@@ -166,6 +167,17 @@ export class CreatureView {
 
   setAttackTarget(targeted: boolean): void {
     this.attackTarget.visible = targeted;
+  }
+
+  containsScreenPoint(x: number, y: number): boolean {
+    if (!this.container.visible) return false;
+    const point = this.container.toLocal({ x, y });
+    return (
+      point.x >= -SPRITE_DISPLACEMENT &&
+      point.x < TILE_SIZE - SPRITE_DISPLACEMENT &&
+      point.y >= -SPRITE_DISPLACEMENT &&
+      point.y < TILE_SIZE - SPRITE_DISPLACEMENT
+    );
   }
 
   /** True when the server flagged this creature as publicly partied. */
