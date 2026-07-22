@@ -231,10 +231,13 @@ export const NavigatesBackpacksAndDropsInsideThem: Story = {
     await expect(canvas.getByTitle("Rope")).toBeInTheDocument();
     await expect(canvas.queryByTitle("5 Health Potion")).not.toBeInTheDocument();
 
-    fireEvent.click(canvas.getByRole("button", { name: /back$/i }));
+    fireEvent.contextMenu(canvas.getByTitle("Backpack"));
     await expect(args.onCloseContainer).toHaveBeenCalledWith(
       nestedBackpack.id,
     );
+    await expect(
+      canvas.getByRole("heading", { name: "Backpack" }),
+    ).toBeInTheDocument();
     await expect(canvas.getByTitle("5 Health Potion")).toBeInTheDocument();
   },
 };

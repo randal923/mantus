@@ -114,6 +114,12 @@ export function InventoryPanel({
     setViewedContainerId(item.id);
     onOpenContainer(item);
   };
+  const openEquippedBackpack = () => {
+    setViewedContainerId(null);
+    if (viewedContainer) {
+      onCloseContainer?.(viewedContainer.container.id);
+    }
+  };
   const goBack = () => {
     if (!viewedContainer) return;
     const parent = containers.find(
@@ -270,6 +276,7 @@ export function InventoryPanel({
             onDragEnd={onDragEnd}
             onDrop={onDropInEquipment}
             onDropInBackpack={dropInEquippedBackpack}
+            onOpenBackpack={openEquippedBackpack}
           />
 
           <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">

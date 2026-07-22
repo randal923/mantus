@@ -29,6 +29,7 @@ interface EquipmentPaperdollProps {
   onDragEnd?(): void;
   onDrop?(slot: EquipmentSlotId): void;
   onDropInBackpack?(): void;
+  onOpenBackpack?(): void;
 }
 
 export function EquipmentPaperdoll({
@@ -38,6 +39,7 @@ export function EquipmentPaperdoll({
   onDragEnd,
   onDrop,
   onDropInBackpack,
+  onOpenBackpack,
 }: EquipmentPaperdollProps) {
   const { t } = useAppTranslation();
 
@@ -63,7 +65,9 @@ export function EquipmentPaperdoll({
                     item={equipment[slot]}
                     placeholderSpriteId={SLOT_HINT_SPRITES[slot]}
                     onActivate={
-                      slot !== "backpack" && equipment[slot] && onUnequip
+                      slot === "backpack" && equipment.backpack
+                        ? onOpenBackpack
+                        : equipment[slot] && onUnequip
                         ? () => onUnequip(equipment[slot]!, slot)
                         : undefined
                     }
