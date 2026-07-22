@@ -1,12 +1,11 @@
-import { Text } from "pixi.js";
+import { Text, type Container } from "pixi.js";
 import type { Position } from "@tibia/protocol";
-import { getMapObjectZ } from "./getMapObjectZ";
 import type { MapView } from "./MapView";
-import { MAP_DEPTH } from "./mapDepth";
 import { TILE_SIZE } from "./tileSize";
 
 interface SpeechTextView {
   readonly text: Text;
+  readonly position: Position;
   readonly durationMs: number;
   elapsedMs: number;
 }
@@ -24,7 +23,10 @@ export class SpeechTextRenderer {
   private readonly bySpeaker = new Map<string, SpeechTextView>();
   private destroyed = false;
 
-  constructor(private readonly mapView: MapView) {}
+  constructor(
+    private readonly mapView: MapView,
+    private readonly layer: Container,
+  ) {}
 
   showSpeech(creatureId: string, position: Position, body: string): void {
     if (this.destroyed) return;
@@ -44,20 +46,17 @@ export class SpeechTextRenderer {
     });
     text.resolution = 3;
     text.anchor.set(0.5, 1);
-    text.position.set(
-      position.x * TILE_SIZE + TILE_SIZE / 2,
-      position.y * TILE_SIZE - 4,
-    );
-    text.zIndex = getMapObjectZ(position.x, position.y, MAP_DEPTH.effect + 3);
-    this.mapView.creatureLayer(position.z).addChild(text);
+    this.layer.addChild(text);
     this.bySpeaker.set(creatureId, {
       text,
+      position: { ...position },
       durationMs: Math.min(
         MAX_DURATION_MS,
         MIN_DURATION_MS + body.length * MS_PER_CHARACTER,
       ),
       elapsedMs: 0,
     });
+    this.updatePosition(text, position);
   }
 
   removeSpeaker(creatureId: string): void {
@@ -70,10 +69,23 @@ export class SpeechTextRenderer {
   tick(deltaMs: number): void {
     for (const [creatureId, view] of this.bySpeaker) {
       view.elapsedMs += deltaMs;
-      if (view.elapsedMs < view.durationMs) continue;
-      view.text.destroy();
-      this.bySpeaker.delete(creatureId);
+      if (view.elapsedMs >= view.durationMs) {
+        view.text.destroy();
+        this.bySpeaker.delete(creatureId);
+        continue;
+      }
+      this.updatePosition(view.text, view.position);
     }
+  }
+
+  private updatePosition(text: Text, position: Position): void {
+    const projected = this.mapView.projectPosition(
+      position.x * TILE_SIZE + TILE_SIZE / 2,
+      position.y * TILE_SIZE - 4,
+      position.z,
+    );
+    text.position.set(projected.x, projected.y);
+    text.visible = this.mapView.isDynamicFloorVisible(position.z);
   }
 
   destroy(): void {

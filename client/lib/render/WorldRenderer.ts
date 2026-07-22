@@ -90,11 +90,15 @@ export class WorldRenderer {
   private readonly world = new Container();
   private readonly overlay = new Container();
   private readonly mapView = new MapView(this.store);
+  private readonly speechLayer = new Container();
   private readonly combatEffects = new CombatEffectRenderer(
     this.store,
     this.mapView,
   );
-  private readonly speechTexts = new SpeechTextRenderer(this.mapView);
+  private readonly speechTexts = new SpeechTextRenderer(
+    this.mapView,
+    this.speechLayer,
+  );
   private readonly creatureViews = new Map<string, CreatureView>();
   private readonly pendingCreatures = new Map<string, CreatureState>();
   private readonly loadingCreatureIds = new Set<string>();
@@ -153,7 +157,7 @@ export class WorldRenderer {
 
     this.world.scale.set(ZOOM);
     this.overlay.sortableChildren = true;
-    this.world.addChild(this.mapView.container);
+    this.world.addChild(this.mapView.container, this.speechLayer);
     this.app.stage.addChild(this.world, this.overlay);
     this.app.ticker.add(() => this.tick(this.app.ticker.deltaMS));
   }
