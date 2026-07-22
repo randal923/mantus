@@ -1,11 +1,13 @@
 import type { Direction, Position } from "@tibia/protocol";
 import type { Combat } from "../combat/Combat";
+import { canMonsterAffect } from "../combat/canMonsterAffect";
+import type { Creature } from "../creature/Creature";
 import type { Monster } from "../creature/Monster";
 import type {
   MonsterAbility,
   MonsterSummon,
 } from "../creature/MonsterType";
-import type { Player } from "../Player";
+import { Player } from "../Player";
 import { findPath } from "../pathfinding/findPath";
 import type { MoveResult, World } from "../World";
 
@@ -90,8 +92,9 @@ export class MonsterBrain {
       this.monster.nextStepAt,
     );
     this.useVoice(now);
+    this.services?.combat?.onMonsterThink?.(this.monster, now);
     let work = 1;
-    let target = this.targetId ? world.getPlayer(this.targetId) : undefined;
+    let target = this.targetId ? world.getCreature(this.targetId) : undefined;
     if (target && !this.canKeepTarget(world, target)) {
       target = undefined;
       this.targetId = null;
@@ -99,7 +102,7 @@ export class MonsterBrain {
     }
     if (this.monster.type.flags.hostile) {
       if (!target) {
-        target = this.acquireTarget(world, "nearest");
+        target = this.acquireTarget(world, this.targetSearchStrategy());
       } else if (
         this.monster.type.changeTarget.intervalMs > 0 &&
         now >= this.nextTargetChangeAt
@@ -124,7 +127,7 @@ export class MonsterBrain {
     }
     const defense = this.useAbilities(
       this.monster.type.defenses,
-      target ?? null,
+      this.monster,
       now,
       availableWork - work,
     );
@@ -231,15 +234,29 @@ export class MonsterBrain {
 
   private acquireTarget(
     world: World,
-    search: "nearest" | "random",
-  ): Player | undefined {
+    search: "nearest" | "health" | "damage" | "random",
+  ): Creature | undefined {
     const range = this.config.acquisitionRange;
     const candidates = world
-      .playersNear(this.monster.position, { x: range, y: range })
-      .filter((player) => this.canAcquireTarget(world, player));
+      .creaturesNear(this.monster.position, { x: range, y: range })
+      .filter((creature) => this.canAcquireTarget(world, creature));
     if (candidates.length === 0) return undefined;
     if (search === "random") {
       return candidates[Math.floor(this.random() * candidates.length)];
+    }
+    if (search === "health") {
+      return candidates.sort(
+        (left, right) =>
+          left.health - right.health || left.id.localeCompare(right.id),
+      )[0];
+    }
+    if (search === "damage") {
+      return candidates.sort(
+        (left, right) =>
+          this.monster.damageFrom(right.id) -
+            this.monster.damageFrom(left.id) ||
+          left.id.localeCompare(right.id),
+      )[0];
     }
     return candidates.sort(
       (left, right) =>
@@ -249,9 +266,20 @@ export class MonsterBrain {
     )[0];
   }
 
+  private targetSearchStrategy(): "nearest" | "health" | "damage" | "random" {
+    const strategy = this.monster.type.targetStrategy;
+    const roll = Math.floor(this.random() * 100) + 1;
+    if (roll <= strategy.nearest) return "nearest";
+    if (roll <= strategy.nearest + strategy.health) return "health";
+    if (roll <= strategy.nearest + strategy.health + strategy.damage) {
+      return "damage";
+    }
+    return "random";
+  }
+
   private useAbilities(
     abilities: ReadonlyArray<MonsterAbility>,
-    target: Player | null,
+    target: Creature | null,
     now: number,
     availableWork: number,
   ): { work: number } {
@@ -264,12 +292,20 @@ export class MonsterBrain {
       this.nextAbilityAt.set(ability, now + ability.intervalMs);
       work++;
       if (!this.randomChance(ability.chance)) continue;
-      this.services.combat.executeMonsterAbility(
+      const executed = this.services.combat.executeMonsterAbility(
         this.monster,
         target ?? null,
         ability,
         now,
       );
+      if (executed && ability.summon && this.services.summon) {
+        this.services.summon(
+          this.monster,
+          ability.summon.typeId,
+          ability.summon.maxCount,
+          now,
+        );
+      }
     }
     return { work };
   }
@@ -389,10 +425,12 @@ export class MonsterBrain {
     return turned;
   }
 
-  private canAcquireTarget(world: World, player: Player): boolean {
-    const { position } = player;
+  private canAcquireTarget(world: World, creature: Creature): boolean {
+    const { position } = creature;
     return (
-      this.canSeePlayer(player) &&
+      creature.health > 0 &&
+      canMonsterAffect(world, this.monster, creature) &&
+      this.canSeeCreature(creature) &&
       position.z === this.monster.home.z &&
       !world.isProtectionZone(this.monster.position) &&
       !world.isProtectionZone(position) &&
@@ -404,10 +442,12 @@ export class MonsterBrain {
     );
   }
 
-  private canKeepTarget(world: World, player: Player): boolean {
-    const { position } = player;
+  private canKeepTarget(world: World, creature: Creature): boolean {
+    const { position } = creature;
     return (
-      this.canSeePlayer(player) &&
+      creature.health > 0 &&
+      canMonsterAffect(world, this.monster, creature) &&
+      this.canSeeCreature(creature) &&
       position.z === this.monster.home.z &&
       !world.isProtectionZone(this.monster.position) &&
       !world.isProtectionZone(position) &&
@@ -420,9 +460,10 @@ export class MonsterBrain {
     );
   }
 
-  private canSeePlayer(player: Player): boolean {
+  private canSeeCreature(creature: Creature): boolean {
     return (
-      !player.hasCondition("invisible") ||
+      !(creature instanceof Player) ||
+      !creature.hasCondition("invisible") ||
       this.monster.type.immunities.includes("invisible")
     );
   }
@@ -444,7 +485,7 @@ export class MonsterBrain {
           position.z === this.monster.home.z &&
           this.distance(position, this.monster.home) <=
             this.config.despawnRadius &&
-          world.isPathable(position) &&
+          world.canCreaturePathTo(this.monster, position, now) &&
           !world.isOccupied(position),
         maxVisited: Math.min(this.config.maxPathNodes, availableWork),
       });

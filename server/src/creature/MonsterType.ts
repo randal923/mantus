@@ -16,6 +16,15 @@ export interface MonsterAbility {
     readonly radius?: number;
     readonly length?: number;
     readonly spread?: number;
+    readonly offsets?: ReadonlyArray<{
+      readonly x: number;
+      readonly y: number;
+    }>;
+    readonly diagonalOffsets?: ReadonlyArray<{
+      readonly x: number;
+      readonly y: number;
+    }>;
+    readonly directional?: boolean;
   };
   readonly damageType?: DamageType;
   readonly minimum?: number;
@@ -24,13 +33,73 @@ export interface MonsterAbility {
   readonly armor?: number;
   readonly mitigation?: number;
   readonly effect?: string | number;
-  readonly missile?: string;
+  readonly missile?: string | number;
   readonly conditionType?: ConditionType;
   readonly durationMs?: number;
   readonly magnitude?: number;
   readonly tickIntervalMs?: number;
   readonly outfitMonsterId?: string;
   readonly outfitItemTypeId?: number;
+  readonly conditions?: ReadonlyArray<{
+    readonly type: ConditionType;
+    readonly durationMs: number;
+    readonly speedPercentMinimum?: number;
+    readonly speedPercentMaximum?: number;
+    readonly attributes?: {
+      readonly meleePercent?: { readonly minimum: number; readonly maximum: number };
+      readonly distancePercent?: { readonly minimum: number; readonly maximum: number };
+      readonly defensePercent?: { readonly minimum: number; readonly maximum: number };
+      readonly magicLevelPercent?: { readonly minimum: number; readonly maximum: number };
+      readonly magicLevelDelta?: { readonly minimum: number; readonly maximum: number };
+    };
+    readonly tickDamage?: {
+      readonly damageType: DamageType;
+      readonly intervalMs: number;
+      readonly count: number;
+      readonly minimum: number;
+      readonly maximum: number;
+      readonly multiplier: number;
+    };
+  }>;
+  readonly dispel?: ConditionType;
+  readonly chain?: {
+    readonly additionalTargets: number;
+    readonly range: number;
+    readonly backtracking: boolean;
+    readonly effect?: string | number;
+    readonly playersOnly: boolean;
+  };
+  readonly phases?: ReadonlyArray<{
+    readonly delayMs: number;
+    readonly area?: MonsterAbility["area"];
+  }>;
+  readonly pathEffect?: string | number;
+  readonly field?: { readonly type: "energy" | "fire" | "poison" };
+  readonly summon?: { readonly typeId: string; readonly maxCount: number };
+  readonly destroyMagicWalls?: boolean;
+  readonly questAction?: "spider-queen-wrap";
+  readonly targetRule?:
+    | {
+        readonly kind: "players-damage-monsters-heal";
+        readonly damageType: DamageType;
+        readonly minimum: number;
+        readonly maximum: number;
+      }
+    | {
+        readonly kind: "monsters-only-heal";
+        readonly damageType: "healing";
+        readonly minimum: number;
+        readonly maximum: number;
+      }
+    | {
+        readonly kind: "named-monsters";
+        readonly names: ReadonlyArray<string>;
+        readonly excludeSameName?: boolean;
+        readonly includeCaster?: boolean;
+        readonly damageType: DamageType;
+        readonly minimum: number;
+        readonly maximum: number;
+      };
 }
 
 export interface MonsterSummon {
@@ -79,7 +148,14 @@ export interface MonsterType {
     runHealth: number;
     staticAttackChance: number;
     healthHidden: boolean;
+    canWalkOnEnergy: boolean;
+    canWalkOnFire: boolean;
+    canWalkOnPoison: boolean;
+    isBlockable: boolean;
   };
+  race: string;
+  faction: string;
+  enemyFactions: ReadonlyArray<string>;
   targetStrategy: {
     nearest: number;
     health: number;
@@ -90,6 +166,10 @@ export interface MonsterType {
   defenses: ReadonlyArray<MonsterAbility>;
   elements: Readonly<Partial<Record<DamageType, number>>>;
   immunities: ReadonlyArray<ConditionType>;
+  reflects: Readonly<Partial<Record<DamageType, number>>>;
+  heals: Readonly<Partial<Record<DamageType, number>>>;
+  events: ReadonlyArray<string>;
+  callbacks: ReadonlyArray<"onSpawn" | "onThink" | "onPlayerAttack">;
   maxSummons: number;
   summons: ReadonlyArray<MonsterSummon>;
   voices: ReadonlyArray<{

@@ -21,6 +21,7 @@ export interface DamageRequest {
   readonly hitChance?: number;
   readonly ignoreArmor?: boolean;
   readonly ignoreShield?: boolean;
+  readonly allowReflection?: boolean;
 }
 
 export interface DamageResult {

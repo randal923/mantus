@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { BestiaryHooks } from "../bestiary/BestiaryHooks";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
+import type { MonsterEventHooks } from "../creature/MonsterEventHooks";
 import type { GuildHooks } from "../guild/GuildHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
@@ -33,6 +34,7 @@ export class DeathHandler {
     private readonly experienceRate = 1,
     private readonly lootRate = 1,
     private readonly bestiaryHooks?: BestiaryHooks,
+    private readonly monsterEventHooks?: MonsterEventHooks,
   ) {}
 
   handleDeath(
@@ -112,6 +114,12 @@ export class DeathHandler {
       if (damagers.size > 0) {
         this.bestiaryHooks?.onMonsterKilled([...damagers], target, now);
       }
+      this.monsterEventHooks?.onMonsterDeath(
+        target,
+        [...damagers],
+        target.topDamagerId() ?? killerId,
+        now,
+      );
       createMonsterCorpse(
         this.world,
         this.items,

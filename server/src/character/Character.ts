@@ -80,6 +80,7 @@ export interface CharacterSaveSnapshot {
   readonly skills: ReadonlyArray<CharacterSkill>;
   readonly progressionDefinitionVersion: number;
   readonly progressionEvents: ReadonlyArray<ProgressionEvent>;
+  readonly storageValues: Readonly<Record<string, number>>;
   readonly vocation: CharacterVocation;
   readonly positionX: number;
   readonly positionY: number;

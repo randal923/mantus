@@ -93,6 +93,10 @@ export interface SpellDefinition {
       readonly x: number;
       readonly y: number;
     }>;
+    readonly diagonalOffsets?: ReadonlyArray<{
+      readonly x: number;
+      readonly y: number;
+    }>;
     readonly directional?: boolean;
   };
   readonly dispel: ConditionType | null;

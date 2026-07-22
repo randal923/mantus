@@ -22,6 +22,7 @@ describe("assertValidCharacterSaveSnapshot", () => {
       soul: player.progression.soul,
       skills: player.progression.skills,
       progressionEvents: [],
+      storageValues: player.storageSnapshot,
       positionX: player.position.x,
       positionY: player.position.y,
       positionZ: player.position.z,

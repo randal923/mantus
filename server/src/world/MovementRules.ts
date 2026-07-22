@@ -1,5 +1,6 @@
 import type { Direction, Position } from "@tibia/protocol";
 import type { Creature } from "../creature/Creature";
+import { Monster } from "../creature/Monster";
 import { getStepDurationMs } from "../getStepDurationMs";
 import type { MapData } from "../MapData";
 import { Player } from "../Player";
@@ -29,6 +30,10 @@ export class MovementRules {
     private readonly tickMs: number,
     private readonly grid: SpatialGrid,
     private readonly occupancy: TileOccupancy,
+    private readonly fieldAt: (
+      position: Position,
+      now: number,
+    ) => "energy" | "fire" | "poison" | undefined = () => undefined,
   ) {}
 
   setHousePolicy(
@@ -60,6 +65,14 @@ export class MovementRules {
     leash?: { home: Position; radius: number },
   ): MoveResult {
     return this.tryMoveInternal(creature, direction, now, false, leash);
+  }
+
+  tryMoveFearedCreature(
+    creature: Creature,
+    direction: Direction,
+    now: number,
+  ): MoveResult {
+    return this.tryMoveInternal(creature, direction, now, false, undefined, true);
   }
 
   tryUseMap(player: Player, target: Position, now: number): MoveResult {
@@ -139,6 +152,7 @@ export class MovementRules {
     now: number,
     allowTransitions: boolean,
     leash?: { home: Position; radius: number },
+    forcedFearMovement = false,
   ): MoveResult {
     const direction = creature.conditions.resolveDirection(
       requestedDirection,
@@ -146,6 +160,13 @@ export class MovementRules {
     );
     const turned = creature.direction !== direction;
     creature.direction = direction;
+
+    if (
+      creature.conditions.has("root") ||
+      (creature.conditions.has("fear") && !forcedFearMovement)
+    ) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
 
     if (now < creature.nextStepAt) {
       return {
@@ -162,6 +183,9 @@ export class MovementRules {
       y: from.y + dy,
       z: from.z,
     };
+    if (forcedFearMovement && this.fieldAt(destination, now)) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
     if (
       creature instanceof Player &&
       creature.conditions.has("pz-lock") &&
@@ -181,6 +205,16 @@ export class MovementRules {
     }
     if (!this.map.isWalkable(destination)) {
       return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
+    if (creature instanceof Monster) {
+      const field = this.fieldAt(destination, now);
+      if (
+        (field === "energy" && !creature.type.flags.canWalkOnEnergy) ||
+        (field === "fire" && !creature.type.flags.canWalkOnFire) ||
+        (field === "poison" && !creature.type.flags.canWalkOnPoison)
+      ) {
+        return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+      }
     }
     if (this.houseBlocked(creature, destination)) {
       return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };

@@ -1,6 +1,8 @@
 import type { Direction, Position, ViewRange } from "@tibia/protocol";
 import { canSee } from "./canSee";
 import type { Creature } from "./creature/Creature";
+import { Monster } from "./creature/Monster";
+import { CombatFieldManager } from "./combat/CombatFieldManager";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
 import type { MapData } from "./MapData";
 import type { ItemMutation } from "./item/ItemMutation";
@@ -25,6 +27,7 @@ export class World {
   private readonly mapItems: DynamicMapItems;
   private readonly occupancy: TileOccupancy;
   private readonly movement: MovementRules;
+  readonly combatFields = new CombatFieldManager();
   /** Static map data overlaid with door-owned passability overrides. */
   private readonly map: MapData;
 
@@ -36,6 +39,9 @@ export class World {
     doorPassabilityForItemId: (
       itemId: number,
     ) => boolean | undefined = () => undefined,
+    private readonly fieldForItemId: (
+      itemId: number,
+    ) => "energy" | "fire" | "poison" | undefined = () => undefined,
   ) {
     this.mapItems = new DynamicMapItems(
       baseMap,
@@ -49,6 +55,7 @@ export class World {
       tickMs,
       this.grid,
       this.occupancy,
+      (position, now) => this.fieldTypeAt(position, now),
     );
     for (const seedKey of worldItemDeltas.hiddenSeedKeys) {
       this.mapItems.hideSeed(seedKey);
@@ -82,6 +89,29 @@ export class World {
 
   isProtectionZone(position: Position): boolean {
     return this.map.getTile(position)?.protectionZone ?? false;
+  }
+
+  fieldTypeAt(
+    position: Position,
+    now: number,
+  ): "energy" | "fire" | "poison" | undefined {
+    const combatField = this.combatFields.get(position, now);
+    if (combatField) return combatField.type;
+    for (const item of this.mapItems.getMapItems(position)) {
+      const type = this.fieldForItemId(item.itemId);
+      if (type) return type;
+    }
+    return undefined;
+  }
+
+  canCreaturePathTo(creature: Creature, position: Position, now: number): boolean {
+    if (!this.isPathable(position)) return false;
+    if (!(creature instanceof Monster)) return true;
+    const field = this.fieldTypeAt(position, now);
+    if (field === "energy") return creature.type.flags.canWalkOnEnergy;
+    if (field === "fire") return creature.type.flags.canWalkOnFire;
+    if (field === "poison") return creature.type.flags.canWalkOnPoison;
+    return true;
   }
 
   getHouseId(position: Position): number | undefined {
@@ -138,6 +168,10 @@ export class World {
 
   getWorldSubtree(rootId: string) {
     return this.mapItems.getWorldSubtree(rootId);
+  }
+
+  removeMapItem(instanceId: string, position: Position): boolean {
+    return this.mapItems.removeMapItem(instanceId, position);
   }
 
   lootOrigin(itemId: string) {
@@ -350,6 +384,14 @@ export class World {
     leash?: { home: Position; radius: number },
   ): MoveResult {
     return this.movement.tryMoveCreature(creature, direction, now, leash);
+  }
+
+  tryMoveFearedCreature(
+    creature: Creature,
+    direction: Direction,
+    now: number,
+  ): MoveResult {
+    return this.movement.tryMoveFearedCreature(creature, direction, now);
   }
 
   tryUseMap(player: Player, target: Position, now: number): MoveResult {

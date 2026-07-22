@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Combat } from "../combat/Combat";
+import { Monster } from "../creature/Monster";
 import type { MonsterType } from "../creature/MonsterType";
 import { gridMapData } from "../gridMapData";
 import { Player } from "../Player";
@@ -22,6 +23,9 @@ const monsterType: MonsterType = {
   light: { intensity: 0, color: 0 },
   experience: 5,
   corpseItemTypeId: 5964,
+  race: "blood",
+  faction: "default",
+  enemyFactions: [],
   flags: {
     attackable: true,
     hostile: false,
@@ -35,12 +39,20 @@ const monsterType: MonsterType = {
     runHealth: 5,
     staticAttackChance: 95,
     healthHidden: false,
+    canWalkOnEnergy: false,
+    canWalkOnFire: false,
+    canWalkOnPoison: false,
+    isBlockable: true,
   },
   targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
   attacks: [],
   defenses: [],
   elements: {},
   immunities: [],
+  reflects: {},
+  heals: {},
+  events: [],
+  callbacks: [],
   maxSummons: 0,
   summons: [],
   voices: [],
@@ -232,6 +244,49 @@ describe("SpawnManager", () => {
 
     expect(manager.activeCreatureId("monster:slot-1")).toBe(first);
     expect(world.getCreature(first)?.health).toBe(7);
+  });
+
+  it("transforms a live monster without detaching its ordinary spawn slot", () => {
+    const transformedType: MonsterType = {
+      ...monsterType,
+      id: "transformed-rat",
+      name: "Transformed Rat",
+      health: 40,
+      maxHealth: 40,
+    };
+    const content = makeContent();
+    const world = makeWorld();
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      {
+        ...content,
+        monsterTypes: new Map([
+          ...content.monsterTypes,
+          [transformedType.id, transformedType],
+        ]),
+      },
+      config,
+    );
+    manager.tick(1_000);
+    const creatureId = manager.activeCreatureId("monster:slot-1");
+    if (!creatureId) throw new Error("expected initial creature");
+
+    expect(
+      manager.transformMonster(creatureId, transformedType.id, 1_100),
+    ).toBe(true);
+    expect(manager.activeCreatureId("monster:slot-1")).toBe(creatureId);
+    const transformed = world.getCreature(creatureId);
+    expect(transformed).toBeInstanceOf(Monster);
+    expect((transformed as Monster).type.id).toBe(transformedType.id);
+
+    expect(manager.removeCreature(creatureId, 2_000)).toBe(true);
+    manager.tick(3_000);
+    const respawnedId = manager.activeCreatureId("monster:slot-1");
+    if (!respawnedId) throw new Error("expected respawned creature");
+    expect((world.getCreature(respawnedId) as Monster).type.id).toBe(
+      monsterType.id,
+    );
   });
 
   it("enforces summon limits and removes owned summons with their owner", () => {

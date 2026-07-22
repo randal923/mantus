@@ -4,7 +4,8 @@
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
     "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
     "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9",
-    "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a"
+    "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a",
+    "monsterSpellsSha256": "c188b2b984f9cb3f14f1af04e9e84f06b43677a69598b864c0c8958ba40d968b"
   },
   "mapExternalFiles": {
     "monsters": "otservbr-monster.xml",
@@ -260,13 +261,8 @@
       "sourcePath": "data-otservbr-global/monster/mammals/dog.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "flags.canWalkOnEnergy",
-        "flags.canWalkOnFire",
-        "flags.canWalkOnPoison",
-        "flags.isBlockable",
         "flags.isPreyExclusive",
         "flags.rewardBoss",
-        "race",
         "raceId"
       ],
       "proceduralCallbacks": [],
@@ -281,38 +277,6 @@
         },
         {
           "kind": "field",
-          "name": "flags.canWalkOnEnergy",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnFire",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnPoison",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.isBlockable",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
           "name": "flags.isPreyExclusive",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
@@ -322,14 +286,6 @@
         {
           "kind": "field",
           "name": "flags.rewardBoss",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "15-optional-features",
-          "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "race",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
           "blockedBy": "15-optional-features",
@@ -351,13 +307,8 @@
       "sourcePath": "data-otservbr-global/monster/mammals/pig.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "flags.canWalkOnEnergy",
-        "flags.canWalkOnFire",
-        "flags.canWalkOnPoison",
-        "flags.isBlockable",
         "flags.isPreyExclusive",
         "flags.rewardBoss",
-        "race",
         "raceId"
       ],
       "proceduralCallbacks": [],
@@ -372,38 +323,6 @@
         },
         {
           "kind": "field",
-          "name": "flags.canWalkOnEnergy",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnFire",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnPoison",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.isBlockable",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
           "name": "flags.isPreyExclusive",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
@@ -413,14 +332,6 @@
         {
           "kind": "field",
           "name": "flags.rewardBoss",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "15-optional-features",
-          "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "race",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
           "blockedBy": "15-optional-features",
@@ -442,13 +353,8 @@
       "sourcePath": "data-otservbr-global/monster/mammals/sheep.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "flags.canWalkOnEnergy",
-        "flags.canWalkOnFire",
-        "flags.canWalkOnPoison",
-        "flags.isBlockable",
         "flags.isPreyExclusive",
         "flags.rewardBoss",
-        "race",
         "raceId"
       ],
       "proceduralCallbacks": [],
@@ -463,38 +369,6 @@
         },
         {
           "kind": "field",
-          "name": "flags.canWalkOnEnergy",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnFire",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnPoison",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.isBlockable",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
           "name": "flags.isPreyExclusive",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
@@ -504,14 +378,6 @@
         {
           "kind": "field",
           "name": "flags.rewardBoss",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "15-optional-features",
-          "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "race",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
           "blockedBy": "15-optional-features",
@@ -533,14 +399,9 @@
       "sourcePath": "data-otservbr-global/monster/birds/chicken.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "flags.canWalkOnEnergy",
-        "flags.canWalkOnFire",
-        "flags.canWalkOnPoison",
-        "flags.isBlockable",
         "flags.isPreyExclusive",
         "flags.isPreyable",
         "flags.rewardBoss",
-        "race",
         "raceId"
       ],
       "proceduralCallbacks": [],
@@ -552,38 +413,6 @@
           "status": "blocked",
           "blockedBy": "15-optional-features",
           "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnEnergy",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnFire",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnPoison",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.isBlockable",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
         },
         {
           "kind": "field",
@@ -611,14 +440,6 @@
         },
         {
           "kind": "field",
-          "name": "race",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "15-optional-features",
-          "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
           "name": "raceId",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
@@ -633,13 +454,8 @@
       "sourcePath": "data-otservbr-global/monster/reptiles/snake.lua",
       "ignoredAssignments": [
         "Bestiary",
-        "flags.canWalkOnEnergy",
-        "flags.canWalkOnFire",
-        "flags.canWalkOnPoison",
-        "flags.isBlockable",
         "flags.isPreyExclusive",
         "flags.rewardBoss",
-        "race",
         "raceId"
       ],
       "proceduralCallbacks": [],
@@ -654,38 +470,6 @@
         },
         {
           "kind": "field",
-          "name": "flags.canWalkOnEnergy",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnFire",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.canWalkOnPoison",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "flags.isBlockable",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "08c-decay",
-          "reason": "Requires 08c-decay before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
           "name": "flags.isPreyExclusive",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
@@ -695,14 +479,6 @@
         {
           "kind": "field",
           "name": "flags.rewardBoss",
-          "ownerTodo": "04-creatures-spawns-and-ai",
-          "status": "blocked",
-          "blockedBy": "15-optional-features",
-          "reason": "Requires 15-optional-features before this imported creature behavior can be completed."
-        },
-        {
-          "kind": "field",
-          "name": "race",
           "ownerTodo": "04-creatures-spawns-and-ai",
           "status": "blocked",
           "blockedBy": "15-optional-features",

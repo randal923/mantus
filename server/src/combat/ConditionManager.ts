@@ -3,6 +3,8 @@ import {
   type ConditionType,
   type CreatureOutfit,
   type Direction,
+  type Position,
+  type Skill,
 } from "@tibia/protocol";
 import type {
   ActiveCondition,
@@ -184,6 +186,37 @@ export class ConditionManager {
     );
   }
 
+  skillModifier(skill: Skill, base: number): number {
+    const attributes = this.active.get("attributes")?.attributes;
+    const percent =
+      skill === "distance"
+        ? attributes?.distancePercent
+        : skill === "shielding"
+          ? attributes?.defensePercent
+          : skill === "club" || skill === "axe" || skill === "sword"
+            ? attributes?.meleePercent
+            : undefined;
+    return percent === undefined
+      ? 0
+      : Math.trunc(base * ((percent - 100) / 100));
+  }
+
+  magicLevelModifier(base: number): number {
+    const attributes = this.active.get("attributes")?.attributes;
+    const percent = attributes?.magicLevelPercent;
+    return (
+      (percent === undefined
+        ? 0
+        : Math.trunc(base * ((percent - 100) / 100))) +
+      (attributes?.magicLevelDelta ?? 0)
+    );
+  }
+
+  get fearSource(): Position | null {
+    const position = this.active.get("fear")?.fearSource;
+    return position ? { ...position } : null;
+  }
+
   get outfit(): CreatureOutfit | null {
     return this.active.get("outfit")?.outfit ?? null;
   }
@@ -254,6 +287,15 @@ export class ConditionManager {
         application.capacity > 1_000_000)
     ) {
       throw new Error("condition capacity is out of range");
+    }
+    if (
+      application.attributes &&
+      Object.values(application.attributes).some(
+        (value) =>
+          !Number.isInteger(value) || value < -1_000 || value > 1_000,
+      )
+    ) {
+      throw new Error("condition attributes are out of range");
     }
   }
 }

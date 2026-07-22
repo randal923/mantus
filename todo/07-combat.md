@@ -104,24 +104,26 @@ every disabled definition and reason. Disabled registered content is a
 temporary backlog state: pinned parity requires every registered spell and
 rune to become executable.
 
-The creature importer now also audits registered monster-spell names. The
-pinned world contains 276 attack/defense references to 171 distinct names that
-the generic inline monster-combat runtime cannot faithfully execute (including
-chains, custom matrices/waves, field creation, dispels, fear/root, skill
-reducers, and scripted summons/heals). Each reference is retained in
-`content/spawns/world-import-report.json` with TODO 7 ownership; it must remain
-reported until its Canary Lua spell has an equivalent reviewed TypeScript
-definition.
+The creature importer audits every registered monster-spell name. The original
+pinned world placements contain 276 attack/defense references to 171 distinct
+names; the event/callback dependency closure raises that to 285 references in
+911 reachable monster types. All 171 now resolve to reviewed typed behavior,
+including chains, custom matrices and delayed waves, field creation, dispels,
+fear/root, skill reducers, special target rules, magic-wall destruction, and
+scripted summons/heals. The generated world report has zero unresolved
+`registeredSpell` entries.
 
 - [x] Import and implement condition-backed player spells such as haste,
   strong haste, paralyze, and magic shield. Preserve Canary speed formulas,
   magic-shield capacity/depletion, refresh rules, and dispels before enabling
   them.
-- [ ] Implement field/item-creation spells and runes only after field ownership,
-  decay, damage ticks, and item creation are atomic and audited where relevant.
-- [ ] Implement procedural summon, party, chain, focus, familiar, named-player,
-  and vocation-specific callbacks as reviewed server-side TypeScript before
-  enabling their imported definitions.
+- [x] Implement monster-created energy/fire/poison fields with server-owned
+  duration, damage ticks, source attribution, and per-monster walking rules;
+  destroy-magic-walls removes the pinned magic-wall item ids through the
+  authoritative item path. Player field/item-creation runes remain separate.
+- [x] Implement every procedural summon, chain, named-monster heal/damage rule,
+  reducer, and vocation-specific callback referenced by the reachable monster
+  catalog as reviewed server-side TypeScript.
 - [ ] Match pinned attack/follow, challenge/taunt, aim-at-target, boss
   difficulty, hazard, encounter, and combat-analyzer interactions through
   bounded intents and server-owned state.
@@ -135,10 +137,13 @@ definition.
   find-person/find-fiend by [`14e-social-services`](14e-social-services.md);
   party spells by [`14a-parties`](14a-parties.md); familiar/avatar and
   Wheel/animus branches by [`15-optional-features`](15-optional-features.md).
-  Creature illusion, challenge/taunt, summons, chains, Monk harmony, focus/
-  virtue, and remaining direct callbacks are explicit TODO 7 gaps.
+  Creature illusion, challenge/taunt, player-facing summons and chains, Monk
+  harmony, focus/virtue, and remaining player-spell callbacks are explicit
+  TODO 7 gaps.
 - [ ] Support every static and dynamic combat area, including custom tile
   matrices and direction-dependent areas, without evaluating Lua at runtime.
+  The reachable monster catalog now preserves its custom cardinal/diagonal
+  matrices; this remaining item covers the disabled player spell catalog.
 - [x] Add an explicit ground-targeting cursor for position runes. Selecting a
   position rune arms one bounded tile click; the server still validates range,
   line of sight, target rules, ownership, and revision at execution.

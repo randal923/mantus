@@ -180,6 +180,21 @@ export class DynamicMapItems {
     ].sort((left, right) => left.stackIndex - right.stackIndex);
   }
 
+  removeMapItem(instanceId: string, position: Position): boolean {
+    const item = this.getMapItems(position).find(
+      (candidate) => candidate.instanceId === instanceId,
+    );
+    if (!item) return false;
+    this.hiddenMapItemIds.add(instanceId);
+    this.removeDynamicWorldItem(instanceId, position);
+    const tracked = this.getWorldItem(instanceId);
+    if (tracked) this.untrackWorldItem(tracked.id);
+    const key = positionKey(position);
+    this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
+    this.refreshTileOverride(position);
+    return true;
+  }
+
   mapItemTilesVisibleFrom(position: Position, range: ViewRange) {
     const firstFloor = getFirstVisibleFloor(position, this.map);
     const floors =

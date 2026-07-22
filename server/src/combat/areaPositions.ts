@@ -5,6 +5,22 @@ import { directionDelta } from "./directionDelta";
 import { directionToward } from "./directionToward";
 import { rotateAreaOffset } from "./rotateAreaOffset";
 
+const CANARY_RADIUS_AREA = [
+  [0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 8, 8, 7, 8, 8, 0, 0, 0, 0],
+  [0, 0, 0, 8, 7, 6, 6, 6, 7, 8, 0, 0, 0],
+  [0, 0, 8, 7, 6, 5, 5, 5, 6, 7, 8, 0, 0],
+  [0, 8, 7, 6, 5, 4, 4, 4, 5, 6, 7, 8, 0],
+  [0, 8, 6, 5, 4, 3, 2, 3, 4, 5, 6, 8, 0],
+  [8, 7, 6, 5, 4, 2, 1, 2, 4, 5, 6, 7, 8],
+  [0, 8, 6, 5, 4, 3, 2, 3, 4, 5, 6, 8, 0],
+  [0, 8, 7, 6, 5, 4, 4, 4, 5, 6, 7, 8, 0],
+  [0, 0, 8, 7, 6, 5, 5, 5, 6, 7, 8, 0, 0],
+  [0, 0, 0, 8, 7, 6, 6, 6, 7, 8, 0, 0, 0],
+  [0, 0, 0, 0, 8, 8, 7, 8, 8, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0],
+] as const;
+
 export function areaPositions(
   origin: Position,
   center: Position,
@@ -16,7 +32,23 @@ export function areaPositions(
     const direction = area.directional
       ? directionToward(origin, center)
       : "north";
-    return area.offsets.map((offset) => {
+    const diagonal = direction === "northeast" ||
+      direction === "southeast" ||
+      direction === "southwest" ||
+      direction === "northwest";
+    const offsets = diagonal && area.diagonalOffsets
+      ? area.diagonalOffsets
+      : area.offsets;
+    return offsets.map((offset) => {
+      if (diagonal && area.diagonalOffsets) {
+        const x = direction === "northeast" || direction === "southeast"
+          ? -offset.x
+          : offset.x;
+        const y = direction === "southwest" || direction === "southeast"
+          ? -offset.y
+          : offset.y;
+        return { x: anchor.x + x, y: anchor.y + y, z: anchor.z };
+      }
       const [x, y] = rotateAreaOffset(
         offset.x,
         offset.y,
@@ -31,16 +63,17 @@ export function areaPositions(
   }
   if (area.shape === "circle") {
     const radius = area.radius ?? 1;
-    const positions: Position[] = [];
-    for (let y = center.y - radius; y <= center.y + radius; y++) {
-      for (let x = center.x - radius; x <= center.x + radius; x++) {
-        if (Math.max(Math.abs(x - center.x), Math.abs(y - center.y)) > radius) {
-          continue;
-        }
-        positions.push({ x, y, z: center.z });
-      }
-    }
-    return positions;
+    return CANARY_RADIUS_AREA.flatMap((row, y) =>
+      row.flatMap((rank, x) =>
+        rank > 0 && rank <= radius
+          ? [{
+              x: center.x + x - 6,
+              y: center.y + y - 6,
+              z: center.z,
+            }]
+          : [],
+      ),
+    );
   }
   const direction = directionToward(origin, center);
   const [forwardX, forwardY] = directionDelta(direction);

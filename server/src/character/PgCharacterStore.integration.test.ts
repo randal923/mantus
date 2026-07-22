@@ -49,6 +49,7 @@ const saveSnapshot = (
   soul: character.soul,
   skills: character.skills,
   progressionEvents: [],
+  storageValues: character.storageValues,
   positionX,
   positionY: character.positionY,
   positionZ: character.positionZ,

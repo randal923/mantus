@@ -41,6 +41,11 @@ const MISSILE_IDS: Readonly<Record<string, number>> = {
   CONST_ANI_LEAFSTAR: 43,
 };
 
-export function getMissileId(missile: string | undefined): number | undefined {
+export function getMissileId(
+  missile: string | number | undefined,
+): number | undefined {
+  if (typeof missile === "number") {
+    return Math.max(1, Math.min(255, Math.floor(missile)));
+  }
   return missile ? (MISSILE_IDS[missile] ?? 3) : undefined;
 }

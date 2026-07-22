@@ -39,16 +39,24 @@ describe("loadCreatureContent", () => {
         },
       ],
     });
+    expect(content.monsterTypes.get("mooh-tah-master")?.attacks).toContainEqual(
+      expect.objectContaining({
+        kind: "effect",
+        target: "direction",
+        range: 1,
+        area: { shape: "single" },
+      }),
+    );
     expect(
       content.monsterTypes
         .get("carnivostrich")
         ?.attacks.find((ability) => ability.minimum === 302),
-    ).toBeUndefined();
-    expect(
-      content.monsterTypes.get("carnivostrich")?.attacks,
-    ).toContainEqual(
-      expect.objectContaining({ kind: "effect", range: 3 }),
-    );
+    ).toMatchObject({
+      kind: "damage",
+      target: "self",
+      damageType: "energy",
+      chain: { additionalTargets: 2, range: 3 },
+    });
   });
 
   it("loads every pinned monster through the shared parity rules", () => {
@@ -61,17 +69,22 @@ describe("loadCreatureContent", () => {
       ...type.attacks.filter((ability) => ability.target === "direction"),
       ...type.defenses.filter((ability) => ability.target === "direction"),
     ]);
+    const callbackTypes = types.filter((type) => type.callbacks.length > 0);
+    const eventReferences = types.flatMap((type) => type.events);
 
-    expect(types).toHaveLength(897);
-    expect(summoners).toHaveLength(68);
-    expect(summoners.flatMap((type) => type.summons)).toHaveLength(76);
-    expect(voiced).toHaveLength(575);
-    expect(voiced.flatMap((type) => type.voices)).toHaveLength(1_537);
-    expect(directionalAbilities).toHaveLength(323);
+    expect(types).toHaveLength(911);
+    expect(summoners).toHaveLength(69);
+    expect(summoners.flatMap((type) => type.summons)).toHaveLength(77);
+    expect(voiced).toHaveLength(585);
+    expect(voiced.flatMap((type) => type.voices)).toHaveLength(1_561);
+    expect(directionalAbilities).toHaveLength(407);
     expect(
       types.filter((type) => type.immunities.includes("invisible")),
-    ).toHaveLength(690);
+    ).toHaveLength(703);
     expect(types.filter((type) => type.speed === 0)).toHaveLength(27);
+    expect(callbackTypes).toHaveLength(15);
+    expect(new Set(eventReferences).size).toBe(54);
+    expect(eventReferences).toHaveLength(108);
     expect(
       summoners.every((type) => type.maxSummons > 0),
     ).toBe(true);

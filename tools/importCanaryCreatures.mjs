@@ -13,6 +13,7 @@ import {
 } from "node:fs";
 import { join, relative } from "node:path";
 import { parseCanaryCreatureContent } from "./parseCanaryCreatureContent.mjs";
+import { parseCanaryMonsterSpells } from "./parseCanaryMonsterSpells.mjs";
 
 const repoRoot = join(import.meta.dirname, "..");
 const canaryRoot = process.argv.find((argument, index) =>
@@ -58,6 +59,24 @@ assertHash(npcSpawnXml, source.npcSpawnsSha256, npcFilename);
 
 const monsterDefinitions = readDefinitions(monsterDir);
 const npcDefinitions = readDefinitions(npcDir);
+const monsterSpellSources = [
+  ...readDefinitions(join(canaryRoot, "data-otservbr-global/scripts/spells")),
+  ...readDefinitions(join(canaryRoot, "data/scripts/spells")),
+  ...readDefinitions(join(canaryRoot, "data/scripts/runes")),
+];
+const constantsSource = readFileSync(
+  join(canaryRoot, "src/utils/utils_definitions.hpp"),
+  "utf8",
+);
+const areasSource = readFileSync(
+  join(canaryRoot, "data/scripts/lib/register_spells.lua"),
+  "utf8",
+);
+const monsterSpells = parseCanaryMonsterSpells(
+  monsterSpellSources,
+  parseConstants(constantsSource),
+  parseAreas(areasSource),
+);
 const navigation = readNavigation(join(repoRoot, "server/data/otservbr.map.bin"));
 const bounds = starterOnly
   ? { centerX: 32369, centerY: 32241, z: 7, radius: 48 }
@@ -67,6 +86,25 @@ const parsed = parseCanaryCreatureContent({
   npcSpawnXml,
   monsterDefinitions,
   npcDefinitions,
+  monsterSpells,
+  additionalMonsterTypeIds: starterOnly
+    ? []
+    : [
+        "raging-mage",
+        "enraged-white-deer",
+        "desperate-white-deer",
+        "snake-thing",
+        "lizard-abomination",
+        "mutated-zalamon",
+        "ugly-monster",
+        "druid-s-apparition",
+        "knight-s-apparition",
+        "paladin-s-apparition",
+        "sorcerer-s-apparition",
+        "monk-s-apparition",
+        "greater-splinter-of-madness",
+        "mighty-splinter-of-madness",
+      ],
   bounds,
   tileAt: navigation.tileAt,
 });
@@ -79,11 +117,23 @@ const definitionHash = createHash("sha256")
       .join("\0"),
   )
   .digest("hex");
+const monsterSpellsHash = createHash("sha256")
+  .update(
+    [
+      ...monsterSpellSources.map(
+        (definition) => `${definition.path}\0${definition.source}`,
+      ),
+      `src/utils/utils_definitions.hpp\0${constantsSource}`,
+      `data/scripts/lib/register_spells.lua\0${areasSource}`,
+    ].sort().join("\0"),
+  )
+  .digest("hex");
 const provenance = {
   canaryCommit: commit,
   monsterSpawnsSha256: source.monsterSpawnsSha256,
   npcSpawnsSha256: source.npcSpawnsSha256,
   definitionsSha256: definitionHash,
+  monsterSpellsSha256: monsterSpellsHash,
 };
 const staging = join(repoRoot, `.creature-staging-${process.pid}`);
 rmSync(staging, { recursive: true, force: true });
@@ -201,6 +251,44 @@ function readDefinitions(directory) {
     });
   }
   return definitions.sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function parseConstants(source) {
+  const constants = {};
+  for (const match of source.matchAll(
+    /^\s*(CONST_(?:ME|ANI)_[A-Z0-9_]+)\s*=\s*(\d+)\s*,/gm,
+  )) {
+    constants[match[1]] = Number(match[2]);
+  }
+  return constants;
+}
+
+function parseAreas(source) {
+  const areas = {};
+  for (const match of source.matchAll(
+    /^((?:AREA_|AREADIAGONAL_)[A-Z0-9_]+)\s*=\s*\{([\s\S]*?)^}/gm,
+  )) {
+    const rows = [...match[2].matchAll(/{\s*([0-3,\s]+)\s*}/g)].map(
+      (row) =>
+        row[1]
+          .split(",")
+          .map((value) => Number(value.trim()))
+          .filter((value) => Number.isInteger(value)),
+    );
+    const centerY = rows.findIndex((row) => row.includes(3) || row.includes(2));
+    const centerX = rows[centerY]?.findIndex(
+      (value) => value === 3 || value === 2,
+    ) ?? -1;
+    if (centerX < 0 || centerY < 0) continue;
+    areas[match[1]] = rows.flatMap((row, y) =>
+      row.flatMap((value, x) =>
+        value === 1 || value === 3
+          ? [{ x: x - centerX, y: y - centerY }]
+          : [],
+      ),
+    );
+  }
+  return areas;
 }
 
 function addGapOwnership(definition) {

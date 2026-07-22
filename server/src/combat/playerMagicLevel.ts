@@ -5,12 +5,11 @@ export function playerMagicLevel(
   player: Player,
   equipment: ReadonlyArray<{ item: unknown; type: ItemType }>,
 ): number {
-  return Math.max(
-    0,
+  const equipped =
     player.progression.magicLevel +
-      equipment.reduce(
+    equipment.reduce(
         (total, entry) => total + (entry.type.magicLevelPoints ?? 0),
         0,
-      ),
-  );
+      );
+  return Math.max(0, equipped + player.conditions.magicLevelModifier(equipped));
 }

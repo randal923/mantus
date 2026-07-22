@@ -110,4 +110,15 @@ export function assertValidCharacterSaveSnapshot(
     }
     eventIds.add(event.id);
   }
+  for (const [key, value] of Object.entries(snapshot.storageValues)) {
+    if (
+      key.length < 1 ||
+      key.length > 192 ||
+      !Number.isInteger(value) ||
+      value < -2_147_483_648 ||
+      value > 2_147_483_647
+    ) {
+      throw new Error("character snapshot storage is invalid");
+    }
+  }
 }

@@ -292,6 +292,7 @@ export class CharacterPersistence {
         player.progression.sessionProgressionEvents.slice(
           progressionEventIndex,
         ),
+      storageValues: player.storageSnapshot,
       positionX: player.position.x,
       positionY: player.position.y,
       positionZ: player.position.z,

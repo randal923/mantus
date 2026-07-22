@@ -120,11 +120,15 @@
   },
   {
    "path": "tools/importCanaryCreatures.mjs",
-   "sha256": "2652e90e9f092f83671bf04adecf1bed6d7cca208d14c32da8d946881fe97ed0"
+   "sha256": "686c0adae25dfb2a48376b265a47f26d067b5eb2436f541112355eeb629d6827"
   },
   {
    "path": "tools/parseCanaryCreatureContent.mjs",
-   "sha256": "dd1277f121d721b9c1c72be6bad8a624f812729db3ac5461d67d25ec2b89aeba"
+   "sha256": "eb368cc215c153e0739469cf51b085520674f735660a0f7ff23da2a3cc24e1f3"
+  },
+  {
+   "path": "tools/parseCanaryMonsterSpells.mjs",
+   "sha256": "3f9fca602ee57da7896181ad76be9b90e6fd5bc2671bd3708937c1516843d0a2"
   },
   {
    "path": "tools/importCanarySpells.mjs",

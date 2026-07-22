@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type {
   EquipmentSlot,
   InventoryState,
@@ -24,6 +25,7 @@ import type { CarriedPlan } from "./plan/CarriedPlan";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
 import { planConsume } from "./plan/planConsume";
 import { planEquip } from "./plan/planEquip";
+import { firstFreeWorldStackIndex } from "./plan/firstFreeWorldStackIndex";
 import { planPotionUse } from "./plan/planPotionUse";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
 import { WorldContainerViews } from "./WorldContainerViews";
@@ -71,8 +73,8 @@ export class ItemIntentHandler {
     private readonly store: ItemStore,
     private readonly catalog: ItemCatalog,
     private readonly world: World,
-    visibility: Visibility,
-    decay?: DecayManager,
+    private readonly visibility: Visibility,
+    private readonly decay?: DecayManager,
   ) {
     this.inventories = new InventoryCacheManager(catalog);
     this.operations = new ItemOperationRunner(
@@ -525,6 +527,132 @@ export class ItemIntentHandler {
       loot,
       now,
     );
+  }
+
+  createEventWorldItem(
+    eventId: string,
+    itemTypeId: number,
+    position: Position,
+    attributes: Readonly<Record<string, unknown>>,
+    now: number,
+  ): string | null {
+    if (
+      !/^[A-Za-z0-9:_-]{1,128}$/.test(eventId) ||
+      !this.catalog.get(itemTypeId) ||
+      !this.world.getTile(position)
+    ) {
+      return null;
+    }
+    const stackIndex = firstFreeWorldStackIndex(this.world.getMapItems(position));
+    if (stackIndex === null) return null;
+    const item: Item = {
+      id: randomUUID(),
+      typeId: itemTypeId,
+      count: 1,
+      attributes: { ...attributes },
+      version: 1,
+      location: { kind: "world", position: { ...position }, stackIndex },
+    };
+    const changed = this.world.applyCreatedWorldItems([item]);
+    this.world.registerUnpersistedLootItems([item], {
+      eventId,
+      killerCharacterId: null,
+    });
+    this.visibility.onMapItemsChanged(changed);
+    this.decay?.observeCreated([item], now);
+    return item.id;
+  }
+
+  removeFirstWorldItemByTypeIds(
+    center: Position,
+    radius: number,
+    itemTypeIds: ReadonlyArray<number>,
+    now: number,
+  ): boolean {
+    const accepted = new Set(itemTypeIds);
+    for (let x = center.x - radius; x <= center.x + radius; x++) {
+      for (let y = center.y - radius; y <= center.y + radius; y++) {
+        const position = { x, y, z: center.z };
+        const top = this.world.getMapItems(position).at(-1);
+        if (!top || !accepted.has(top.itemId)) continue;
+        if (this.removeWorldItem(top.instanceId, position, now)) return true;
+      }
+    }
+    return false;
+  }
+
+  removeWorldItem(
+    instanceId: string,
+    position: Position,
+    now: number,
+  ): boolean {
+    const mapItem = this.world.getMapItems(position).find(
+      (candidate) => candidate.instanceId === instanceId,
+    );
+    if (!mapItem) return false;
+    const tracked = this.world.getWorldItem(instanceId);
+    if (tracked) {
+      const subtree = this.world.getWorldSubtree(tracked.id);
+      const mutation: ItemMutation = {
+        before: tracked,
+        after: [],
+        removedItemIds: subtree.map((item) => item.id),
+      };
+      const changed = this.world.applyItemMutation(mutation);
+      this.visibility.onMapItemsChanged(changed);
+      this.decay?.observeMutation(mutation, now);
+      return true;
+    }
+    if (!this.world.removeMapItem(instanceId, position)) return false;
+    this.visibility.onMapItemsChanged([position]);
+    return true;
+  }
+
+  transformEquippedItemForEvent(
+    session: Session,
+    characterId: string,
+    fromTypeId: number,
+    toTypeId: number,
+    now: number,
+  ): boolean {
+    const cache = this.inventories.get(characterId);
+    const item = cache?.items.find(
+      (candidate) =>
+        candidate.typeId === fromTypeId &&
+        candidate.location.kind === "equipment",
+    );
+    if (
+      !cache ||
+      !item ||
+      !this.catalog.get(toTypeId) ||
+      session.itemOperationPending ||
+      this.isPersistPoisoned(characterId)
+    ) {
+      return false;
+    }
+    const after: Item = {
+      ...item,
+      typeId: toTypeId,
+      version: item.version + 1,
+    };
+    const mutation: ItemMutation = { before: item, after: [after] };
+    const inventory = this.operations.applyMutation(characterId, mutation, now);
+    if (inventory && session.playerId === characterId) {
+      session.send({ type: "inventory-updated", inventory });
+    }
+    this.enqueuePersist(session, characterId, () =>
+      this.store.persist({
+        characterId,
+        rowOps: [{ kind: "write", expectedVersion: item.version, item: after }],
+        audits: [{
+          kind: "transform",
+          itemId: item.id,
+          fromTypeId,
+          toTypeId,
+        }],
+      }),
+    );
+    return true;
   }
 
   /** Arms decay deadlines for world items loaded or created outside intents. */

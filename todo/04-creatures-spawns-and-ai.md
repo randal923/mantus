@@ -123,30 +123,29 @@ interface MonsterType {
 
 ## Remaining pinned Canary parity
 
-- [x] Audit all 897 imported monster types against the pinned Canary runtime
+- [x] Audit all 911 reachable monster types against the pinned Canary runtime
   and apply the shared behavior corrections: `runHealth` is an absolute hit
   point threshold, invisibility immunity permits seeing invisible targets,
-  speed-zero monsters never move while fleeing/dancing, and 323 untargeted
-  beam/cone abilities face their current target. Import and execute all 1,537
-  voice lines from 575 speaking monster types, plus all 76 static summon rows
-  from 68 summoner types with Canary's global and per-type limits.
+  speed-zero monsters never move while fleeing/dancing, and 407 untargeted
+  beam/cone abilities face their current target. Import and execute all 1,561
+  voice lines from 585 speaking monster types, plus all 77 static summon rows
+  from 69 summoner types with Canary's global and per-type limits.
 - [ ] Extend `MonsterType`, `NpcType`, and the importers until every ignored
   gameplay assignment and procedural callback in the world import report is
   represented as typed data or reviewed TypeScript behavior. This includes
-  race/bestiary/bosstiary metadata, light/mana, target changes, forge and
-  reward-boss classifications, event hooks, and special summon/death behavior.
+  race/bestiary/bosstiary metadata, forge and reward-boss classifications.
   Static mana cost, light, target-change rules, hidden health, and static-attack
-  chance are now typed. Loot/corpse/death/reward-boss callbacks are owned by
+  chance are now typed. All 54 registered monster event names and all 15 active
+  MonsterType callbacks have reviewed runtime handlers, including delayed
+  transformations and teleports. Loot/corpse/reward-boss callbacks are owned by
   [`08-death-loot-and-decay`](08-death-loot-and-decay.md), NPC behavior by
-  [`10-npcs`](10-npcs.md), creature/world event hooks by
-  [`12-world-actions`](12-world-actions.md), and
+  [`10-npcs`](10-npcs.md), and
   bestiary/bosstiary/forge classifications by
   [`15-optional-features`](15-optional-features.md).
-- [ ] Implement the remaining shared movement/spawn flags
+- [x] Implement the shared movement/spawn flags
   (`isBlockable`, `canWalkOnPoison`, `canWalkOnFire`, and
-  `canWalkOnEnergy`) after field ownership/decay is authoritative. The pinned
-  world report currently keeps those flags explicit for all 897 loaded monster
-  types instead of silently claiming parity.
+  `canWalkOnEnergy`) with authoritative static and monster-created field
+  ownership, duration, pathfinding, step validation, and damage.
 - [ ] Resolve every duplicate/ambiguous definition, blocked/out-of-map
   placement, appearance correction, and intentionally invisible creature
   individually. Keep valid variants addressable instead of choosing one by
@@ -154,7 +153,7 @@ interface MonsterType {
 - [ ] Add aggregate parity tests for definition and placement counts and require
   zero unreviewed creature/NPC gameplay fields or callbacks before marking the
   pinned creature workstream complete.
-  Aggregate tests currently pin 897 monster types, 956 NPC types, 83,286
+  Aggregate tests currently pin 911 monster types, 956 NPC types, 83,286
   monster placements, and 1,008 NPC placements. The zero-gap clause remains
   blocked by the owners above.
 

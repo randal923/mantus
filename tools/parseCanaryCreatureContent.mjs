@@ -1,9 +1,13 @@
 const DIRECTIONS = ["north", "east", "south", "west"];
 const MONSTER_FIELDS = new Set([
   "description",
+  "enemyFactions",
+  "events",
   "experience",
+  "faction",
   "outfit",
   "health",
+  "heals",
   "maxHealth",
   "corpse",
   "speed",
@@ -17,6 +21,9 @@ const MONSTER_FIELDS = new Set([
   "elements",
   "immunities",
   "maxSummons",
+  "name",
+  "race",
+  "reflects",
   "summon",
   "summons",
   "voices",
@@ -35,6 +42,10 @@ const MONSTER_FLAG_FIELDS = new Set([
   "runHealth",
   "staticAttackChance",
   "healthHidden",
+  "canWalkOnEnergy",
+  "canWalkOnFire",
+  "canWalkOnPoison",
+  "isBlockable",
 ]);
 const LOCALLY_SUPPORTED_MONSTER_ABILITIES = new Set([
   "combat",
@@ -382,13 +393,15 @@ function ignoredAssignments(source, variable, supported) {
   ].sort();
 }
 
-function unsupportedMonsterAbilities(records, field) {
+function unsupportedMonsterAbilities(records, field, monsterSpells) {
   const names = new Map();
   for (const record of records) {
     if (typeof record.name !== "string") continue;
     const name = record.name.trim();
     const normalized = name.toLowerCase();
     if (!name || LOCALLY_SUPPORTED_MONSTER_ABILITIES.has(normalized)) continue;
+    if (monsterSpells.get(normalized)?.supported) continue;
+    if (["energyfield", "firefield", "poisonfield"].includes(normalized)) continue;
     names.set(normalized, name);
   }
   return [...names.values()]
@@ -396,7 +409,13 @@ function unsupportedMonsterAbilities(records, field) {
     .map((name) => `${field}.registeredSpell:${name}`);
 }
 
-function parseMonsterDefinition(definition, name, context, corrections) {
+function parseMonsterDefinition(
+  definition,
+  name,
+  context,
+  corrections,
+  monsterSpells,
+) {
   const source = definition.source;
   const flags = objectValue(assignment(source, "monster", "flags"));
   const strategy = objectValue(assignment(source, "monster", "strategiesTarget"));
@@ -406,8 +425,10 @@ function parseMonsterDefinition(definition, name, context, corrections) {
   const light = objectValue(assignment(source, "monster", "light"));
   const elementRecords = recordList(assignment(source, "monster", "elements"));
   const immunityRecords = recordList(assignment(source, "monster", "immunities"));
-  const attacks = recordList(assignment(source, "monster", "attacks"));
-  const defenses = recordList(assignment(source, "monster", "defenses"));
+  const attacks = recordList(assignment(source, "monster", "attacks"))
+    .map((ability) => resolveRegisteredSpell(ability, monsterSpells));
+  const defenses = recordList(assignment(source, "monster", "defenses"))
+    .map((ability) => resolveRegisteredSpell(ability, monsterSpells));
   const voices = recordList(assignment(source, "monster", "voices"));
   const summon = objectValue(assignment(source, "monster", "summon"));
   const nestedSummons = recordList(summon.summons);
@@ -419,6 +440,9 @@ function parseMonsterDefinition(definition, name, context, corrections) {
     0,
   );
   const health = numberValue(assignment(source, "monster", "health"), 1);
+  const callbacks = [
+    ...source.matchAll(/\bmType\.(on[A-Za-z]+)\s*=\s*function/g),
+  ].map((match) => match[1]);
   return {
     type: {
       id: normalizeName(name),
@@ -456,7 +480,16 @@ function parseMonsterDefinition(definition, name, context, corrections) {
         runHealth: numberValue(flags.runHealth, 0),
         staticAttackChance: numberValue(flags.staticAttackChance, 95),
         healthHidden: booleanValue(flags.healthHidden),
+        canWalkOnEnergy: booleanValue(flags.canWalkOnEnergy, true),
+        canWalkOnFire: booleanValue(flags.canWalkOnFire, true),
+        canWalkOnPoison: booleanValue(flags.canWalkOnPoison, true),
+        isBlockable: booleanValue(flags.isBlockable, true),
       },
+      race: String(assignment(source, "monster", "race") ?? "RACE_BLOOD"),
+      faction: String(assignment(source, "monster", "faction") ?? "FACTION_DEFAULT"),
+      enemyFactions: stringList(
+        assignment(source, "monster", "enemyFactions"),
+      ),
       targetStrategy: {
         nearest: numberValue(strategy.nearest, 100),
         health: numberValue(strategy.health, 0),
@@ -473,6 +506,12 @@ function parseMonsterDefinition(definition, name, context, corrections) {
       immunities: immunityRecords
         .filter((entry) => entry.condition === true || entry.combat === true)
         .map((entry) => String(entry.type)),
+      reflects: recordList(assignment(source, "monster", "reflects")),
+      heals: recordList(assignment(source, "monster", "heals")),
+      events: stringList(assignment(source, "monster", "events")),
+      callbacks: callbacks.filter((callback) =>
+        ["onSpawn", "onThink", "onPlayerAttack"].includes(callback)
+      ),
       maxSummons: numberValue(
         summon.maxSummons,
         numberValue(
@@ -492,9 +531,12 @@ function parseMonsterDefinition(definition, name, context, corrections) {
             field !== "$entries" && !MONSTER_FLAG_FIELDS.has(field),
         )
         .map((field) => `flags.${field}`),
-      ...unsupportedMonsterAbilities(attacks, "attacks"),
-      ...unsupportedMonsterAbilities(defenses, "defenses"),
+      ...unsupportedMonsterAbilities(attacks, "attacks", monsterSpells),
+      ...unsupportedMonsterAbilities(defenses, "defenses", monsterSpells),
     ].sort(),
+    callbacks: callbacks.filter((callback) =>
+      !["onSpawn", "onThink", "onPlayerAttack"].includes(callback)
+    ),
     sourcePath: definition.path,
   };
 }
@@ -563,7 +605,23 @@ export function parseCanaryCreatureContent(options) {
         Math.abs(slot.home.y - options.bounds.centerY) <= options.bounds.radius
       )
     : [...allMonsterSlots, ...allNpcSlots];
+  const definitionOnlyMonsters = (options.additionalMonsterTypeIds ?? []).map(
+    (typeId) => ({
+      id: `monster-definition:${typeId}`,
+      kind: "monster",
+      typeId,
+      rawName: typeId,
+      home: { x: 0, y: 0, z: 0 },
+      direction: "south",
+      radius: 0,
+      respawnMs: 0,
+      definitionOnly: true,
+    }),
+  );
   const monsterIndex = indexDefinitions(options.monsterDefinitions, "monster");
+  const monsterSpells = new Map(
+    (options.monsterSpells ?? []).map((spell) => [spell.name, spell]),
+  );
   const npcIndex = indexDefinitions(options.npcDefinitions, "npc");
   const parsedMonsters = new Map();
   const parsedNpcs = new Map();
@@ -572,7 +630,7 @@ export function parseCanaryCreatureContent(options) {
   const unsupported = [];
   const invisibleAppearances = [];
   const appearanceCorrections = [];
-  for (const slot of selected) {
+  for (const slot of [...selected, ...definitionOnlyMonsters]) {
     const definitions = slot.kind === "monster" ? monsterIndex.indexed : npcIndex.indexed;
     const index = slot.kind === "monster" ? monsterIndex : npcIndex;
     const matches = definitions.get(slot.typeId) ?? index.pathIndexed.get(slot.typeId);
@@ -591,7 +649,7 @@ export function parseCanaryCreatureContent(options) {
         candidatePaths: matches.map((match) => match.path),
       });
     }
-    if (definition.name !== slot.rawName) {
+    if (!slot.definitionOnly && definition.name !== slot.rawName) {
       aliases.push({ placement: slot.rawName, definition: definition.name, typeId: slot.typeId });
     }
     const target = slot.kind === "monster" ? parsedMonsters : parsedNpcs;
@@ -607,6 +665,7 @@ export function parseCanaryCreatureContent(options) {
           definition.name,
           context,
           appearanceCorrections,
+          monsterSpells,
         )
       : parseNpcDefinition(
           definition,
@@ -615,7 +674,7 @@ export function parseCanaryCreatureContent(options) {
           appearanceCorrections,
         );
     parsed.type.id = slot.typeId;
-    parsed.type.name = slot.rawName;
+    if (!slot.definitionOnly) parsed.type.name = slot.rawName;
     if (
       parsed.type.outfit.lookType <= 0 &&
       !parsed.type.outfit.lookTypeEx &&
@@ -677,4 +736,39 @@ export function parseCanaryCreatureContent(options) {
       fullPlacementsEnabled: options.bounds === null,
     },
   };
+}
+
+function resolveRegisteredSpell(ability, monsterSpells) {
+  if (typeof ability.name !== "string") return ability;
+  const name = ability.name.trim().toLowerCase();
+  if (LOCALLY_SUPPORTED_MONSTER_ABILITIES.has(name)) return ability;
+  if (name === "firefield" || name === "poisonfield" || name === "energyfield") {
+    return {
+      ...ability,
+      registeredSpell: {
+        damageType: null,
+        effect: null,
+        missile: null,
+        area: { shape: "single" },
+        target: ability.target === true ? "target" : "self",
+        conditions: [],
+        dispel: null,
+        chain: null,
+        phases: [],
+        pathEffect: null,
+        field: { type: name.replace("field", "") },
+      },
+    };
+  }
+  const spell = monsterSpells.get(name);
+  return spell?.supported
+    ? { ...ability, registeredSpell: spell.behavior }
+    : ability;
+}
+
+function stringList(value) {
+  if (Array.isArray(value)) {
+    return value.filter((entry) => typeof entry === "string");
+  }
+  return [];
 }

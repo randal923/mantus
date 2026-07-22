@@ -1,6 +1,7 @@
 import type { DamageType } from "@tibia/protocol";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
+import type { MonsterEventHooks } from "../creature/MonsterEventHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
@@ -33,6 +34,7 @@ export class DamageResolver {
     private readonly death: DeathHandler,
     private readonly partyHooks?: PartyHooks,
     private readonly pvpHooks?: PvpHooks,
+    private readonly monsterEventHooks?: MonsterEventHooks,
   ) {}
 
   applyDamage(
@@ -76,6 +78,22 @@ export class DamageResolver {
         healthChanged: false,
         manaChanged: false,
       };
+    }
+    if (
+      target instanceof Monster &&
+      pvpSource instanceof Player &&
+      target.type.callbacks.includes("onPlayerAttack")
+    ) {
+      this.monsterEventHooks?.onPlayerAttackMonster(target, pvpSource, now);
+      if (this.world.getCreature(target.id) !== target) {
+        return {
+          amount: 0,
+          block: "immunity",
+          critical: false,
+          healthChanged: false,
+          manaChanged: false,
+        };
+      }
     }
     if (
       request.hitChance !== undefined &&
@@ -129,8 +147,36 @@ export class DamageResolver {
         manaChanged: false,
       };
     }
+    if (target instanceof Monster && source && request.sourceId) {
+      const healingPercent = target.type.heals[request.type] ?? 0;
+      const elementalHealing = Math.ceil(amount * healingPercent / 100);
+      if (elementalHealing > 0) {
+        this.applyDamage(
+          target,
+          {
+            sourceId: null,
+            origin: "monster",
+            type: "healing",
+            minimum: elementalHealing,
+            maximum: elementalHealing,
+            allowReflection: false,
+          },
+          now,
+        );
+      }
+    }
     const mitigated = this.mitigate(target, request, amount, now);
     amount = mitigated.amount;
+    if (target instanceof Monster && amount > 0) {
+      amount = this.monsterEventHooks?.beforeMonsterDamage(
+        target,
+        source instanceof Player || source instanceof Monster
+          ? source
+          : undefined,
+        amount,
+        now,
+      ) ?? amount;
+    }
     let manaChanged = false;
     let healthChanged = false;
     if (request.type === "mana-drain") {
@@ -168,6 +214,16 @@ export class DamageResolver {
     if (target instanceof Monster && source instanceof Player && amount > 0) {
       target.recordPlayerDamage(source.id, amount);
       this.partyHooks?.recordMonsterDamage(source.id, now);
+    }
+    if (target instanceof Monster && amount > 0) {
+      this.monsterEventHooks?.onMonsterDamaged(
+        target,
+        source instanceof Player || source instanceof Monster
+          ? source
+          : undefined,
+        amount,
+        now,
+      );
     }
     if (target instanceof Player && (healthChanged || manaChanged)) {
       if (source instanceof Player && healthChanged) {
@@ -210,6 +266,35 @@ export class DamageResolver {
       );
       if (healthLeech > 0 || manaLeech > 0) {
         this.progression.syncPlayer(source, now);
+      }
+    }
+    if (
+      source &&
+      source !== target &&
+      amount > 0 &&
+      request.allowReflection !== false &&
+      target instanceof Monster
+    ) {
+      const reflectPercent = target.type.reflects[request.type] ?? 0;
+      const reflected = Math.min(
+        Math.ceil(source.maxHealth * 0.01),
+        Math.ceil(amount * reflectPercent / 100),
+      );
+      if (reflected > 0) {
+        this.applyDamage(
+          source,
+          {
+            sourceId: target.id,
+            origin: "monster",
+            type: request.type,
+            minimum: reflected,
+            maximum: reflected,
+            ignoreArmor: true,
+            ignoreShield: true,
+            allowReflection: false,
+          },
+          now,
+        );
       }
     }
     if (healthChanged && target.health <= 0) {

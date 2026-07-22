@@ -168,6 +168,14 @@ export class PartyHandler implements PartyHooks {
     return getPartyExperienceShares(members, baseExperience);
   }
 
+  getQuestParticipantIds(playerId: string): ReadonlyArray<string> {
+    const party = this.parties.partyOf(playerId);
+    if (!party) return this.world.getPlayer(playerId) ? [playerId] : [];
+    return party
+      .allMemberIds()
+      .filter((memberId) => this.world.getPlayer(memberId));
+  }
+
   private invite(
     session: Session,
     player: Player,

@@ -73,6 +73,7 @@ export class PgCharacterStore implements CharacterStore {
       soul: character.soul,
       skills: character.skills,
       progressionEvents: [],
+      storageValues: character.storageValues,
       positionX: character.positionX,
       positionY: character.positionY,
       positionZ: character.positionZ,
@@ -259,6 +260,18 @@ export class PgCharacterStore implements CharacterStore {
         if (inserted.rowCount !== 1) {
           throw new CharacterError("version-conflict");
         }
+      }
+      await client.query(
+        "DELETE FROM character_storages WHERE character_id = $1",
+        [snapshot.characterId],
+      );
+      for (const [key, value] of Object.entries(snapshot.storageValues)) {
+        await client.query(
+          `INSERT INTO character_storages (
+             character_id, storage_key, storage_value
+           ) VALUES ($1, $2, $3)`,
+          [snapshot.characterId, key, value],
+        );
       }
       await client.query("COMMIT");
       return version;

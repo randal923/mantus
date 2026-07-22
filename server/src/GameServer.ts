@@ -7,6 +7,7 @@ import { AuthHandler } from "./AuthHandler";
 import { CharacterHandler } from "./CharacterHandler";
 import { CharacterPersistence } from "./character/CharacterPersistence";
 import { CharacterService } from "./character/CharacterService";
+import { MonsterEventService } from "./creature/MonsterEventService";
 import type { CharacterStore } from "./character/CharacterStore";
 import { ChatHandler } from "./chat/ChatHandler";
 import { Combat } from "./combat/Combat";
@@ -117,6 +118,7 @@ export class GameServer {
   private readonly chat: ChatHandler;
   private readonly combat: CombatIntentHandler;
   private readonly combatSystem: Combat;
+  private readonly monsterEvents: MonsterEventService;
   private readonly progression: ProgressionSystem;
   private readonly spells = new SpellRegistry();
   private readonly items: ItemIntentHandler;
@@ -159,6 +161,14 @@ export class GameServer {
       (itemId) => {
         const door = deps.itemCatalog.get(itemId)?.door;
         return door ? door.role === "open" : undefined;
+      },
+      (itemId) => {
+        const type = deps.itemCatalog.get(itemId);
+        if (type?.kind !== "magicfield") return undefined;
+        if (type.name.includes("energy field")) return "energy";
+        if (type.name.includes("fire field")) return "fire";
+        if (type.name.includes("poison field")) return "poison";
+        return undefined;
       },
     );
     this.visibility = new Visibility(
@@ -379,6 +389,23 @@ export class GameServer {
       this.moderation,
     );
     let spawns: SpawnManager | null = null;
+    this.monsterEvents = new MonsterEventService(
+      this.world,
+      this.persistence,
+      this.visibility,
+      this.registry,
+      this.items,
+      config.combatSeed,
+      (typeId, position, spawnAt) => {
+        return spawns?.spawnEventMonsterNear(typeId, position, spawnAt) ?? null;
+      },
+      (creatureId, removeAt) => {
+        spawns?.removeCreature(creatureId, removeAt);
+      },
+      (creatureId, typeId, transformAt) =>
+        spawns?.transformMonster(creatureId, typeId, transformAt) ?? false,
+      this.parties,
+    );
     this.combatSystem = new Combat(
       this.world,
       this.visibility,
@@ -400,6 +427,7 @@ export class GameServer {
           this.gemDrops.onMonsterKilled(damagerIds, monster, killedAt);
         },
       },
+      this.monsterEvents,
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,
@@ -530,6 +558,7 @@ export class GameServer {
       this.movement.continueMovement(session, now);
     }
     this.combatSystem.tick(now);
+    this.monsterEvents.tick(now);
     this.spawns?.tick(now);
     this.npcs.tick(now);
     this.items.tickDecay(now);

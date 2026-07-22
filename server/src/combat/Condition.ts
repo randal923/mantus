@@ -2,6 +2,7 @@ import type {
   ConditionType,
   CreatureOutfit,
   DamageType,
+  Position,
 } from "@tibia/protocol";
 
 export interface ConditionApplication {
@@ -20,6 +21,11 @@ export interface ConditionApplication {
   };
   readonly capacity?: number;
   readonly naturalRegeneration?: boolean;
+  readonly attributes?: Readonly<Partial<Record<
+    "meleePercent" | "distancePercent" | "defensePercent" | "magicLevelPercent" | "magicLevelDelta",
+    number
+  >>>;
+  readonly fearSource?: Position;
 }
 
 export interface ActiveCondition extends ConditionApplication {

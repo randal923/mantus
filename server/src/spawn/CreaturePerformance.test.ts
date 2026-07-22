@@ -22,7 +22,7 @@ describe("full-world creature performance budgets", () => {
     const startedLoading = performance.now();
     const loaded = loadCreatureContent("world", "otservbr");
     const loadMs = performance.now() - startedLoading;
-    expect(loaded.monsterTypes.size).toBe(897);
+    expect(loaded.monsterTypes.size).toBe(911);
     expect(loaded.npcTypes.size).toBe(956);
     expect(loaded.slots).toHaveLength(84_294);
     expect(loaded.slots.filter((slot) => slot.enabled)).toHaveLength(83_493);

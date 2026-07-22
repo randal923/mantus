@@ -14,6 +14,7 @@ import type { SpawnSlotDefinition } from "./SpawnDefinition";
 const SPAWN_SECTOR_SIZE = 32;
 /** Synthetic summon owner for GM-spawned monsters; never a real creature id. */
 const GM_SPAWN_OWNER_ID = "gm:spawns";
+const EVENT_SPAWN_OWNER_ID = "event:spawns";
 
 interface SlotState {
   definition: SpawnSlotDefinition;
@@ -185,12 +186,64 @@ export class SpawnManager {
     near: { x: number; y: number; z: number },
     now: number,
   ): "spawned" | "unknown-type" | "no-space" {
+    const result = this.spawnAdHocMonster(typeId, near, now, GM_SPAWN_OWNER_ID);
+    return result === "unknown-type" || result === "no-space"
+      ? result
+      : "spawned";
+  }
+
+  spawnEventMonsterNear(
+    typeId: string,
+    near: { x: number; y: number; z: number },
+    now: number,
+  ): string | null {
+    const result = this.spawnAdHocMonster(
+      typeId,
+      near,
+      now,
+      EVENT_SPAWN_OWNER_ID,
+    );
+    return typeof result === "string" && result.startsWith("monster-event:")
+      ? result
+      : null;
+  }
+
+  transformMonster(creatureId: string, typeId: string, now: number): boolean {
+    const creature = this.world.getCreature(creatureId);
+    const type = this.content.monsterTypes.get(typeId);
+    if (!(creature instanceof Monster) || !type) return false;
+    const transformed = new Monster({
+      id: creature.id,
+      type,
+      position: creature.position,
+      direction: creature.direction,
+      home: creature.home,
+      spawnRadius: creature.spawnRadius,
+    });
+    this.world.removeCreature(creature.id);
+    this.visibility.announceCreatureLeave(creature);
+    this.removeBrain(creature.id);
+    this.world.addCreature(transformed);
+    this.addBrain(transformed, now);
+    this.visibility.announceCreatureSpawn(transformed);
+    this.combat?.onMonsterSpawn?.(transformed, now);
+    return true;
+  }
+
+  private spawnAdHocMonster(
+    typeId: string,
+    near: { x: number; y: number; z: number },
+    now: number,
+    ownerId: typeof GM_SPAWN_OWNER_ID | typeof EVENT_SPAWN_OWNER_ID,
+  ): string | "unknown-type" | "no-space" {
     const type = this.content.monsterTypes.get(typeId);
     if (!type) return "unknown-type";
     const position = this.world.findUnoccupiedPosition(near, 3);
     if (!position) return "no-space";
     const monster = new Monster({
-      id: `monster-gm:${typeId}:${this.summonGeneration++}`,
+      id: ownerId === GM_SPAWN_OWNER_ID
+        ? `monster-gm:${typeId}:${this.summonGeneration++}`
+        : `monster-event:${typeId}:${this.summonGeneration++}`,
       type,
       position,
       direction: "south",
@@ -198,13 +251,14 @@ export class SpawnManager {
       spawnRadius: 3,
     });
     this.world.addCreature(monster);
-    this.summonOwnerByCreature.set(monster.id, GM_SPAWN_OWNER_ID);
-    const owned = this.summonsByOwner.get(GM_SPAWN_OWNER_ID) ?? new Set<string>();
+    this.summonOwnerByCreature.set(monster.id, ownerId);
+    const owned = this.summonsByOwner.get(ownerId) ?? new Set<string>();
     owned.add(monster.id);
-    this.summonsByOwner.set(GM_SPAWN_OWNER_ID, owned);
+    this.summonsByOwner.set(ownerId, owned);
     this.addBrain(monster, now);
     this.visibility.announceCreatureSpawn(monster);
-    return "spawned";
+    this.combat?.onMonsterSpawn?.(monster, now);
+    return monster.id;
   }
 
   removeCreature(creatureId: string, now: number): boolean {
@@ -268,6 +322,9 @@ export class SpawnManager {
     this.creatureToSlot.set(creature.id, slot);
     this.addBrain(creature, now);
     this.visibility.announceCreatureSpawn(creature);
+    if (creature instanceof Monster) {
+      this.combat?.onMonsterSpawn?.(creature, now);
+    }
   }
 
   private createCreature(slot: SlotState, id: string): Creature {
@@ -435,7 +492,11 @@ export class SpawnManager {
   ): boolean {
     if (this.world.getCreature(owner.id) !== owner) return false;
     const ownerId = this.summonOwnerByCreature.get(owner.id);
-    if (ownerId && ownerId !== GM_SPAWN_OWNER_ID) return false;
+    if (
+      ownerId &&
+      ownerId !== GM_SPAWN_OWNER_ID &&
+      ownerId !== EVENT_SPAWN_OWNER_ID
+    ) return false;
     const type = this.content.monsterTypes.get(typeId);
     if (!type) return false;
     const owned = this.summonsByOwner.get(owner.id) ?? new Set<string>();
@@ -478,6 +539,7 @@ export class SpawnManager {
     this.summonsByOwner.set(owner.id, owned);
     this.addBrain(summon, now);
     this.visibility.announceCreatureSpawn(summon);
+    this.combat?.onMonsterSpawn?.(summon, now);
     return true;
   }
 

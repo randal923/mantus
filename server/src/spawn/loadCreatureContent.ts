@@ -7,6 +7,7 @@ import type {
   Direction,
   Position,
 } from "@tibia/protocol";
+import { CONDITION_TYPES } from "@tibia/protocol";
 import type {
   MonsterAbility,
   MonsterLoot,
@@ -174,7 +175,14 @@ function parseMonsterType(value: unknown): MonsterType {
         100,
       ),
       healthHidden: bool(flags.healthHidden, "healthHidden"),
+      canWalkOnEnergy: bool(flags.canWalkOnEnergy, "canWalkOnEnergy"),
+      canWalkOnFire: bool(flags.canWalkOnFire, "canWalkOnFire"),
+      canWalkOnPoison: bool(flags.canWalkOnPoison, "canWalkOnPoison"),
+      isBlockable: bool(flags.isBlockable, "isBlockable"),
     },
+    race: text(type.race, "monster race"),
+    faction: text(type.faction, "monster faction"),
+    enemyFactions: stringArray(type.enemyFactions, "monster enemy factions"),
     targetStrategy: {
       nearest: nonnegativeInteger(strategy.nearest, "nearest strategy"),
       health: nonnegativeInteger(strategy.health, "health strategy"),
@@ -185,6 +193,21 @@ function parseMonsterType(value: unknown): MonsterType {
     defenses: parseMonsterAbilities(type.defenses, true),
     elements: parseElements(type.elements),
     immunities: parseImmunities(type.immunities),
+    reflects: parseDamagePercentRecords(type.reflects, "monster reflection"),
+    heals: parseDamagePercentRecords(type.heals, "monster healing affinity"),
+    events: stringArray(type.events, "monster events"),
+    callbacks: stringArray(type.callbacks ?? [], "monster callbacks").map(
+      (callback) => {
+        if (
+          callback !== "onSpawn" &&
+          callback !== "onThink" &&
+          callback !== "onPlayerAttack"
+        ) {
+          throw new Error(`unsupported monster callback ${callback}`);
+        }
+        return callback;
+      },
+    ),
     maxSummons: nonnegativeInteger(type.maxSummons, "monster summon limit"),
     summons: parseSummons(type.summons),
     voices: parseVoices(type.voices),
@@ -260,11 +283,22 @@ function parseMonsterAbilities(
     const area = parseArea(ability);
     const target = defensive
       ? "self"
-      : ability.target !== true && range === 0
-        ? area.shape === "beam" || area.shape === "cone"
+      : ability.target === true
+        ? "target"
+        : area.shape === "beam" || area.shape === "cone"
           ? "direction"
-          : "self"
-        : "target";
+          : area.shape === "single"
+            ? "target"
+            : "self";
+    if (ability.registeredSpell !== undefined) {
+      return parseRegisteredMonsterAbility(
+        ability,
+        intervalMs,
+        chance,
+        range,
+        defensive,
+      );
+    }
     if (!name && (ability.defense !== undefined || ability.armor !== undefined)) {
       return {
         kind: "stats",
@@ -436,11 +470,337 @@ function parseMonsterAbilities(
   });
 }
 
+function parseRegisteredMonsterAbility(
+  ability: Record<string, unknown>,
+  intervalMs: number,
+  chance: number,
+  range: number,
+  _defensive: boolean,
+): MonsterAbility {
+  const behavior = record(ability.registeredSpell, "registered monster spell");
+  const scriptedArea = parseImportedArea(behavior.area);
+  const scriptedTarget = behavior.target;
+  if (
+    scriptedTarget !== "self" &&
+    scriptedTarget !== "target" &&
+    scriptedTarget !== "direction"
+  ) {
+    throw new Error("registered monster spell has an invalid target");
+  }
+  const target = scriptedTarget;
+  if (behavior.monsterNoOp === true) {
+    return {
+      kind: "effect",
+      intervalMs,
+      chance,
+      target,
+      range,
+      area: { shape: "single" },
+    };
+  }
+  const damageType =
+    behavior.damageType === null
+      ? undefined
+      : damageTypeFor(behavior.damageType);
+  if (behavior.damageType !== null && !damageType) {
+    throw new Error("registered monster spell has an invalid damage type");
+  }
+  const conditions = parseImportedConditions(behavior.conditions);
+  const targetRule = parseTargetRule(behavior.targetRule);
+  const summon = behavior.summon === undefined
+    ? undefined
+    : parseImportedSummon(behavior.summon);
+  const field = behavior.field === undefined
+    ? undefined
+    : parseImportedField(behavior.field);
+  const area = field ? parseArea(ability) : scriptedArea;
+  const effect = field && ability.effect !== undefined
+    ? primitive(ability.effect)
+    : behavior.effect !== null
+      ? primitive(behavior.effect)
+      : undefined;
+  const missile = field && ability.shootEffect !== undefined
+    ? primitive(ability.shootEffect)
+    : behavior.missile !== null
+      ? primitive(behavior.missile)
+      : undefined;
+  const dispel = behavior.dispel === null
+    ? undefined
+    : importedConditionType(behavior.dispel, "monster spell dispel");
+  const minimum = damageBound(
+    ability.minDamage ?? targetRule?.minimum ?? 0,
+  );
+  const maximum = damageBound(
+    ability.maxDamage ?? targetRule?.maximum ?? minimum,
+  );
+  const hasDamage = damageType !== undefined;
+  const kind: MonsterAbility["kind"] =
+    hasDamage
+      ? damageType === "healing"
+        ? "healing"
+        : "damage"
+      : conditions.length > 0
+        ? "condition"
+        : "effect";
+  return {
+    kind,
+    intervalMs,
+    chance,
+    target,
+    range,
+    area,
+    ...(damageType ? { damageType } : {}),
+    minimum: Math.min(minimum, maximum),
+    maximum: Math.max(minimum, maximum),
+    ...(effect !== undefined ? { effect } : {}),
+    ...(missile !== undefined ? { missile } : {}),
+    ...(conditions.length > 0 ? { conditions } : {}),
+    ...(dispel ? { dispel } : {}),
+    ...(behavior.chain !== null
+      ? { chain: parseImportedChain(behavior.chain) }
+      : {}),
+    ...(Array.isArray(behavior.phases) && behavior.phases.length > 0
+      ? { phases: parseImportedPhases(behavior.phases) }
+      : {}),
+    ...(behavior.pathEffect !== null
+      ? { pathEffect: primitive(behavior.pathEffect) }
+      : {}),
+    ...(field ? { field } : {}),
+    ...(summon ? { summon } : {}),
+    ...(behavior.destroyMagicWalls === true ? { destroyMagicWalls: true } : {}),
+    ...(behavior.questAction === "spider-queen-wrap"
+      ? { questAction: "spider-queen-wrap" as const }
+      : {}),
+    ...(targetRule ? { targetRule } : {}),
+  };
+}
+
+function parseImportedArea(value: unknown): MonsterAbility["area"] {
+  const area = record(value, "registered monster spell area");
+  if (area.shape === "single") return { shape: "single" };
+  if (area.shape === "tiles") {
+    if (!Array.isArray(area.offsets)) {
+      throw new Error("registered monster spell tile area has no offsets");
+    }
+    return {
+      shape: "tiles",
+      offsets: area.offsets.map((value) => {
+        const offset = record(value, "monster spell area offset");
+        return {
+          x: boundedInteger(offset.x, "monster spell offset x", -32, 32),
+          y: boundedInteger(offset.y, "monster spell offset y", -32, 32),
+        };
+      }),
+      ...(Array.isArray(area.diagonalOffsets)
+        ? {
+            diagonalOffsets: area.diagonalOffsets.map((value) => {
+              const offset = record(value, "monster spell diagonal area offset");
+              return {
+                x: boundedInteger(
+                  offset.x,
+                  "monster spell diagonal offset x",
+                  -32,
+                  32,
+                ),
+                y: boundedInteger(
+                  offset.y,
+                  "monster spell diagonal offset y",
+                  -32,
+                  32,
+                ),
+              };
+            }),
+          }
+        : {}),
+      directional: bool(area.directional, "monster spell directional area"),
+    };
+  }
+  throw new Error("registered monster spell has an unsupported area");
+}
+
+function parseImportedConditions(
+  value: unknown,
+): NonNullable<MonsterAbility["conditions"]> {
+  if (!Array.isArray(value)) {
+    throw new Error("registered monster spell conditions must be an array");
+  }
+  return value.map((entry) => {
+    const condition = record(entry, "registered monster spell condition");
+    const type = importedConditionType(condition.type, "monster spell condition");
+    const attributes = condition.attributes === undefined
+      ? undefined
+      : parseImportedAttributes(condition.attributes);
+    const tickDamage = condition.tickDamage === undefined
+      ? undefined
+      : parseImportedTickDamage(condition.tickDamage);
+    return {
+      type,
+      durationMs: boundedInteger(
+        condition.durationMs,
+        "monster spell condition duration",
+        250,
+        24 * 60 * 60 * 1_000,
+      ),
+      ...(condition.speedPercentMinimum !== undefined
+        ? {
+            speedPercentMinimum: boundedInteger(
+              condition.speedPercentMinimum,
+              "monster spell minimum speed percent",
+              0,
+              100,
+            ),
+          }
+        : {}),
+      ...(condition.speedPercentMaximum !== undefined
+        ? {
+            speedPercentMaximum: boundedInteger(
+              condition.speedPercentMaximum,
+              "monster spell maximum speed percent",
+              0,
+              100,
+            ),
+          }
+        : {}),
+      ...(attributes ? { attributes } : {}),
+      ...(tickDamage ? { tickDamage } : {}),
+    };
+  });
+}
+
+function parseImportedAttributes(
+  value: unknown,
+): NonNullable<NonNullable<MonsterAbility["conditions"]>[number]["attributes"]> {
+  const attributes = record(value, "monster spell attributes");
+  const parsed: Record<string, { minimum: number; maximum: number }> = {};
+  for (const field of [
+    "meleePercent",
+    "distancePercent",
+    "defensePercent",
+    "magicLevelPercent",
+    "magicLevelDelta",
+  ] as const) {
+    if (attributes[field] === undefined) continue;
+    const range = record(attributes[field], `monster spell ${field}`);
+    parsed[field] = {
+      minimum: boundedInteger(range.minimum, `monster spell ${field} minimum`, -1_000, 1_000),
+      maximum: boundedInteger(range.maximum, `monster spell ${field} maximum`, -1_000, 1_000),
+    };
+  }
+  return parsed;
+}
+
+function parseImportedTickDamage(
+  value: unknown,
+): NonNullable<NonNullable<MonsterAbility["conditions"]>[number]["tickDamage"]> {
+  const damage = record(value, "monster spell condition damage");
+  const damageType = damageTypeFor(damage.damageType);
+  if (!damageType || damageType === "healing") {
+    throw new Error("monster spell condition has invalid damage");
+  }
+  return {
+    damageType,
+    intervalMs: boundedInteger(damage.intervalMs, "condition interval", 250, 60_000),
+    count: boundedInteger(damage.count, "condition tick count", 1, 1_000),
+    minimum: finiteNumber(damage.minimum, "condition minimum", 0, 1_000_000),
+    maximum: finiteNumber(damage.maximum, "condition maximum", 0, 1_000_000),
+    multiplier: finiteNumber(damage.multiplier, "condition multiplier", 0, 100),
+  };
+}
+
+function parseImportedChain(
+  value: unknown,
+): NonNullable<MonsterAbility["chain"]> {
+  const chain = record(value, "monster spell chain");
+  return {
+    additionalTargets: boundedInteger(chain.additionalTargets, "chain targets", 1, 16),
+    range: boundedInteger(chain.range, "chain range", 1, 16),
+    backtracking: bool(chain.backtracking, "chain backtracking"),
+    playersOnly: bool(chain.playersOnly, "chain players only"),
+    ...(chain.effect !== null ? { effect: primitive(chain.effect) } : {}),
+  };
+}
+
+function parseImportedPhases(
+  value: ReadonlyArray<unknown>,
+): NonNullable<MonsterAbility["phases"]> {
+  return value.map((entry) => {
+    const phase = record(entry, "monster spell phase");
+    return {
+      delayMs: boundedInteger(phase.delayMs, "monster spell phase delay", 1, 60_000),
+      ...(phase.area === undefined ? {} : { area: parseImportedArea(phase.area) }),
+    };
+  });
+}
+
+function parseImportedSummon(
+  value: unknown,
+): NonNullable<MonsterAbility["summon"]> {
+  const summon = record(value, "monster spell summon");
+  return {
+    typeId: identifier(summon.typeId, "monster spell summon type"),
+    maxCount: boundedInteger(summon.maxCount, "monster spell summon count", 1, 16),
+  };
+}
+
+function parseImportedField(
+  value: unknown,
+): NonNullable<MonsterAbility["field"]> {
+  const field = record(value, "monster spell field");
+  if (field.type !== "energy" && field.type !== "fire" && field.type !== "poison") {
+    throw new Error("monster spell has an invalid field type");
+  }
+  return { type: field.type };
+}
+
+function parseTargetRule(value: unknown): MonsterAbility["targetRule"] {
+  if (value === undefined) return undefined;
+  const rule = record(value, "monster spell target rule");
+  const damageType = damageTypeFor(rule.damageType);
+  if (!damageType) throw new Error("monster spell target rule has invalid damage");
+  const minimum = boundedInteger(rule.minimum, "target rule minimum", 0, 1_000_000);
+  const maximum = boundedInteger(rule.maximum, "target rule maximum", 0, 1_000_000);
+  if (rule.kind === "players-damage-monsters-heal") {
+    return { kind: rule.kind, damageType, minimum, maximum };
+  }
+  if (rule.kind === "monsters-only-heal" && damageType === "healing") {
+    return { kind: rule.kind, damageType, minimum, maximum };
+  }
+  if (rule.kind === "named-monsters" && Array.isArray(rule.names)) {
+    return {
+      kind: rule.kind,
+      names: rule.names.map((name) => text(name, "target monster name")),
+      excludeSameName: rule.excludeSameName === true,
+      includeCaster: rule.includeCaster === true,
+      damageType,
+      minimum,
+      maximum,
+    };
+  }
+  throw new Error("monster spell has an invalid target rule");
+}
+
+function importedConditionType(value: unknown, label: string): ConditionType {
+  if (
+    typeof value !== "string" ||
+    !CONDITION_TYPES.includes(value as (typeof CONDITION_TYPES)[number])
+  ) {
+    throw new Error(`${label} is invalid`);
+  }
+  return value as ConditionType;
+}
+
 function parseArea(ability: Record<string, unknown>): MonsterAbility["area"] {
   if (ability.radius !== undefined) {
+    const radius = boundedInteger(
+      ability.radius,
+      "monster ability radius",
+      0,
+      16,
+    );
+    if (radius === 0) return { shape: "single" };
     return {
       shape: "circle",
-      radius: boundedInteger(ability.radius, "monster ability radius", 0, 16),
+      radius,
     };
   }
   if (ability.length !== undefined || ability.lenght !== undefined) {
@@ -473,6 +833,26 @@ function parseElements(
     const damageType = damageTypeFor(key);
     if (!damageType || damageType === "healing") continue;
     parsed[damageType] = finiteNumber(amount, "monster element", -1_000, 1_000);
+  }
+  return parsed;
+}
+
+function parseDamagePercentRecords(
+  value: unknown,
+  label: string,
+): Partial<Record<DamageType, number>> {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
+  const parsed: Partial<Record<DamageType, number>> = {};
+  for (const entry of value) {
+    const recordValue = record(entry, label);
+    const damageType = damageTypeFor(recordValue.type);
+    if (!damageType || damageType === "healing") continue;
+    parsed[damageType] = finiteNumber(
+      recordValue.percent,
+      `${label} percent`,
+      -1_000,
+      1_000,
+    );
   }
   return parsed;
 }
@@ -586,6 +966,17 @@ function parseLoot(value: unknown): MonsterLoot[] {
 function damageTypeFor(value: unknown): DamageType | undefined {
   const key = typeof value === "string" ? value : "";
   const types: Readonly<Record<string, DamageType>> = {
+    physical: "physical",
+    energy: "energy",
+    earth: "earth",
+    fire: "fire",
+    "life-drain": "life-drain",
+    "mana-drain": "mana-drain",
+    drown: "drown",
+    ice: "ice",
+    holy: "holy",
+    death: "death",
+    healing: "healing",
     COMBAT_PHYSICALDAMAGE: "physical",
     COMBAT_ENERGYDAMAGE: "energy",
     COMBAT_EARTHDAMAGE: "earth",

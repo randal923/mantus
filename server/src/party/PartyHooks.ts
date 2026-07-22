@@ -18,4 +18,6 @@ export interface PartyHooks {
     baseExperience: number,
     now: number,
   ): ReadonlyArray<{ playerId: string; amount: number }> | null;
+  /** Online party participants credited by Canary's onDeathForParty helper. */
+  getQuestParticipantIds(playerId: string): ReadonlyArray<string>;
 }

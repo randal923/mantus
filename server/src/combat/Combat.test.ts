@@ -80,6 +80,9 @@ function makeMonsterType(
     light: { intensity: 0, color: 0 },
     experience: 5,
     corpseItemTypeId: 5964,
+    race: "blood",
+    faction: "default",
+    enemyFactions: [],
     flags: {
       attackable: true,
       hostile: true,
@@ -93,12 +96,20 @@ function makeMonsterType(
       runHealth: 0,
       staticAttackChance: 95,
       healthHidden: false,
+      canWalkOnEnergy: false,
+      canWalkOnFire: false,
+      canWalkOnPoison: false,
+      isBlockable: true,
     },
     targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
     attacks: [],
     defenses: [],
     elements: {},
     immunities: [],
+    reflects: {},
+    heals: {},
+    events: [],
+    callbacks: [],
     maxSummons: 0,
     summons: [],
     voices: [],
@@ -1327,6 +1338,211 @@ describe("Combat", () => {
 
     expect(executed).toBe(true);
     expect(harness.player.health).toBe(harness.player.maxHealth - 10);
+  });
+
+  it("executes self-originating chains and delayed monster spell phases on the server tick", async () => {
+    const harness = await makeHarness({ position: { x: 1, y: 1, z: 7 } });
+    const second = new Player(
+      {
+        ...makeLeveledCharacter(),
+        id: "00000000-0000-4000-8000-000000000031",
+        displayName: "Second",
+        normalizedName: "second",
+      },
+      { x: 4, y: 1, z: 7 },
+    );
+    const third = new Player(
+      {
+        ...makeLeveledCharacter(),
+        id: "00000000-0000-4000-8000-000000000032",
+        displayName: "Third",
+        normalizedName: "third",
+      },
+      { x: 7, y: 1, z: 7 },
+    );
+    const attacker = makeMonster(
+      "monster-instance:chain-caster:0",
+      { x: 1, y: 4, z: 7 },
+    );
+    harness.world.addPlayer(second);
+    harness.world.addPlayer(third);
+    harness.world.addCreature(attacker);
+    const playerHealth = harness.player.health;
+    const secondHealth = second.health;
+    const thirdHealth = third.health;
+
+    harness.combat.executeMonsterAbility(
+      attacker,
+      third,
+      {
+        kind: "damage",
+        intervalMs: 1_000,
+        chance: 100,
+        target: "self",
+        range: 8,
+        area: { shape: "single" },
+        damageType: "energy",
+        minimum: 10,
+        maximum: 10,
+        chain: {
+          additionalTargets: 2,
+          range: 3,
+          backtracking: false,
+          playersOnly: true,
+        },
+      },
+      1_000,
+    );
+    expect(harness.player.health).toBe(playerHealth - 10);
+    expect(second.health).toBe(secondHealth);
+    harness.combat.tick(1_050);
+    expect(second.health).toBe(secondHealth - 10);
+    harness.combat.tick(1_100);
+    expect(third.health).toBe(thirdHealth - 10);
+
+    harness.combat.executeMonsterAbility(
+      attacker,
+      harness.player,
+      {
+        kind: "damage",
+        intervalMs: 1_000,
+        chance: 100,
+        target: "target",
+        range: 8,
+        area: { shape: "single" },
+        damageType: "ice",
+        minimum: 5,
+        maximum: 5,
+        phases: [
+          { delayMs: 1_000 },
+          { delayMs: 2_000 },
+        ],
+      },
+      2_000,
+    );
+    const beforePhases = harness.player.health;
+    harness.combat.tick(2_999);
+    expect(harness.player.health).toBe(beforePhases);
+    harness.combat.tick(3_000);
+    harness.combat.tick(4_000);
+    expect(harness.player.health).toBe(beforePhases - 10);
+  });
+
+  it("applies imported reducers and respects monster field-walking flags", async () => {
+    const harness = await makeHarness({ position: { x: 5, y: 5, z: 7 } });
+    const reducer = makeMonster(
+      "monster-instance:reducer:0",
+      { x: 5, y: 6, z: 7 },
+    );
+    harness.world.addCreature(reducer);
+    harness.combat.executeMonsterAbility(
+      reducer,
+      harness.player,
+      {
+        kind: "condition",
+        intervalMs: 1_000,
+        chance: 100,
+        target: "target",
+        range: 2,
+        area: { shape: "single" },
+        conditions: [
+          {
+            type: "attributes",
+            durationMs: 5_000,
+            attributes: {
+              meleePercent: { minimum: 50, maximum: 50 },
+            },
+          },
+        ],
+      },
+      1_000,
+    );
+    expect(harness.player.conditions.skillModifier("sword", 100)).toBe(-50);
+
+    harness.world.combatFields.create(
+      { x: 2, y: 1, z: 7 },
+      "fire",
+      reducer.id,
+      1_000,
+    );
+    const blocked = makeMonster(
+      "monster-instance:field-blocked:0",
+      { x: 1, y: 1, z: 7 },
+    );
+    harness.world.addCreature(blocked);
+    expect(
+      harness.world.tryMoveCreature(blocked, "east", 1_000).moved,
+    ).toBe(false);
+    harness.world.removeCreature(blocked.id);
+
+    const allowed = makeMonster(
+      "monster-instance:field-allowed:0",
+      { x: 1, y: 1, z: 7 },
+      makeMonsterType({
+        flags: {
+          ...makeMonsterType().flags,
+          canWalkOnFire: true,
+        },
+      }),
+    );
+    harness.world.addCreature(allowed);
+    expect(
+      harness.world.tryMoveCreature(allowed, "east", 1_000).moved,
+    ).toBe(true);
+  });
+
+  it("uses imported factions, elemental healing, and capped reflection", async () => {
+    const harness = await makeHarness();
+    const attacker = makeMonster(
+      "monster-instance:faction-a:0",
+      { x: 2, y: 2, z: 7 },
+      makeMonsterType({
+        id: "faction-a",
+        faction: "FACTION_A",
+        enemyFactions: ["FACTION_B"],
+        health: 100,
+        maxHealth: 100,
+      }),
+    );
+    const target = makeMonster(
+      "monster-instance:faction-b:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({
+        id: "faction-b",
+        faction: "FACTION_B",
+        health: 100,
+        maxHealth: 100,
+        reflects: { fire: 100 },
+        heals: { fire: 50 },
+      }),
+    );
+    harness.world.addCreature(attacker);
+    harness.world.addCreature(target);
+    target.setHealth(90);
+    const fire: MonsterAbility = {
+      kind: "damage",
+      intervalMs: 1_000,
+      chance: 100,
+      target: "target",
+      range: 2,
+      area: { shape: "single" },
+      damageType: "fire",
+      minimum: 10,
+      maximum: 10,
+    };
+
+    harness.combat.executeMonsterAbility(attacker, target, fire, 1_000);
+    expect(target.health).toBe(85);
+    expect(attacker.health).toBe(99);
+
+    const playerHealth = harness.player.health;
+    harness.combat.executeMonsterAbility(
+      attacker,
+      harness.player,
+      fire,
+      2_000,
+    );
+    expect(harness.player.health).toBe(playerHealth);
   });
 
   it("applies the experience death penalty exactly once per death", async () => {

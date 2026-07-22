@@ -21,6 +21,9 @@ const baseType: MonsterType = {
   light: { intensity: 0, color: 0 },
   experience: 5,
   corpseItemTypeId: 5964,
+  race: "blood",
+  faction: "default",
+  enemyFactions: [],
   flags: {
     attackable: true,
     hostile: true,
@@ -34,12 +37,20 @@ const baseType: MonsterType = {
     runHealth: 5,
     staticAttackChance: 95,
     healthHidden: false,
+    canWalkOnEnergy: false,
+    canWalkOnFire: false,
+    canWalkOnPoison: false,
+    isBlockable: true,
   },
   targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
   attacks: [],
   defenses: [],
   elements: {},
   immunities: [],
+  reflects: {},
+  heals: {},
+  events: [],
+  callbacks: [],
   maxSummons: 0,
   summons: [],
   voices: [],
@@ -385,7 +396,7 @@ describe("MonsterBrain", () => {
     world.addCreature(monster);
     world.addPlayer(nearby);
     world.addPlayer(farther);
-    const brain = new MonsterBrain(monster, 0, 7, config);
+    const brain = new MonsterBrain(monster, 0, 1, config);
 
     brain.tick(world, 100, 32);
     expect(brain.targetCreatureId).toBe(nearby.id);

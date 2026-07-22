@@ -33,7 +33,7 @@ export class Player extends Creature<Character["outfit"]> {
   readonly version: number;
   readonly progression: CharacterProgression;
   private readonly premiumUntil: number | null;
-  private readonly storageValues: Readonly<Record<string, number>>;
+  private readonly storageValues: Record<string, number>;
   private addAttackSkillPoint = false;
   private bloodHitCount = 0;
   private shieldBlockCount = 0;
@@ -153,6 +153,23 @@ export class Player extends Creature<Character["outfit"]> {
     return this.storageValues[key] ?? -1;
   }
 
+  setStorageValue(key: string, value: number): void {
+    if (
+      key.length < 1 ||
+      key.length > 192 ||
+      !Number.isInteger(value) ||
+      value < -2_147_483_648 ||
+      value > 2_147_483_647
+    ) {
+      throw new Error("character storage value is invalid");
+    }
+    this.storageValues[key] = value;
+  }
+
+  get storageSnapshot(): Readonly<Record<string, number>> {
+    return { ...this.storageValues };
+  }
+
   get experience(): number {
     return this.progression.experience;
   }
@@ -207,12 +224,15 @@ export class Player extends Creature<Character["outfit"]> {
       this.progression.skills.find((state) => state.skill === skill)?.level ??
       10;
     const boosts = this.currentWheelBonuses.skillBoosts;
-    if (skill === "sword" || skill === "club" || skill === "axe") {
-      return base + boosts.melee;
-    }
-    if (skill === "distance") return base + boosts.distance;
-    if (skill === "fist") return base + boosts.fist;
-    return base;
+    const boosted =
+      skill === "sword" || skill === "club" || skill === "axe"
+        ? base + boosts.melee
+        : skill === "distance"
+          ? base + boosts.distance
+          : skill === "fist"
+            ? base + boosts.fist
+            : base;
+    return Math.max(0, boosted + this.conditions.skillModifier(skill, boosted));
   }
 
   recordAttackBlock(block: HitBlock): void {
