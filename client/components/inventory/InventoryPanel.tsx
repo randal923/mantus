@@ -3,6 +3,7 @@
 import type {
   ContainerState,
   InventorySlotEntry,
+  ItemContainerDestination,
   OwnCharacterState,
 } from "@tibia/protocol";
 import type { Equipment, InventoryItem } from "./inventoryTypes";
@@ -49,7 +50,11 @@ interface InventoryPanelProps {
   onUseItem?: (item: InventoryItem) => void;
   onDragStart?: (source: ItemDragSource) => void;
   onDragEnd?: () => void;
-  onDropInContainer?: (destination: InventoryItem, slot: number) => void;
+  onDropInContainer?: (
+    destination: InventoryItem,
+    slot: number,
+    placement?: ItemContainerDestination["placement"],
+  ) => void;
   onDropInEquipment?: (slot: keyof Equipment) => void;
 }
 
@@ -86,6 +91,10 @@ export function InventoryPanel({
   const language = useLanguageStore((state) => state.language);
   const bySlot = new Map(items.map((entry) => [entry.slot, entry.item]));
   const visibleSlotCount = slotCount;
+  const dropInBackpack = () => {
+    if (!equipment.backpack || !onDropInContainer) return;
+    onDropInContainer(equipment.backpack, 0, "front");
+  };
   const activateItem = (item: InventoryItem) => {
     if (item.useKind === "rune" && onUseRune) {
       onUseRune(item);
@@ -124,6 +133,20 @@ export function InventoryPanel({
   return (
     <section
       aria-label={t("inventory.label", { name: characterName })}
+      onDragOver={(event) => {
+        if (!equipment.backpack || !onDropInContainer) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+      }}
+      onDrop={(event) => {
+        if (!equipment.backpack || !onDropInContainer) return;
+        event.preventDefault();
+        dropInBackpack();
+      }}
+      onPointerUp={(event) => {
+        if (event.button !== 0) return;
+        dropInBackpack();
+      }}
       className="relative flex h-full w-full justify-end font-tibia text-ui-text select-none"
     >
       <div className="relative flex h-full max-w-full">
@@ -294,7 +317,7 @@ export function InventoryPanel({
                     onDragEnd={onDragEnd}
                     onDrop={
                       equipment.backpack && onDropInContainer
-                        ? () => onDropInContainer(equipment.backpack!, slot)
+                        ? dropInBackpack
                         : undefined
                     }
                   />

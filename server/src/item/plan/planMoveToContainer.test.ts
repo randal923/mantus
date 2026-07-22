@@ -9,6 +9,7 @@ const BACKPACK_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const POUCH_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 const COIN_A_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const COIN_B_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+const COIN_C_ID = "ffffffff-ffff-4fff-8fff-ffffffffffff";
 
 const makeItemType = (
   overrides: Partial<ItemType> & { id: number },
@@ -181,5 +182,78 @@ describe("planMoveToContainer", () => {
       requestedCount: 40,
     });
     expect(plan).toBeNull();
+  });
+
+  it("atomically moves an item to the front without duplicating occupants", () => {
+    const plan = planMoveToContainer({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: fixture(),
+      itemId: COIN_B_ID,
+      expectedVersion: 1,
+      destinationContainerId: BACKPACK_ID,
+      destinationVersion: 1,
+      destinationSlot: 0,
+      destinationPlacement: "front",
+    });
+    if (!plan) throw new Error("plan was rejected");
+
+    const locations = new Map(
+      plan.mutation.after.map((item) => [item.id, item.location]),
+    );
+    expect(locations.get(COIN_B_ID)).toEqual({
+      kind: "container",
+      containerId: BACKPACK_ID,
+      slot: 0,
+    });
+    expect(locations.get(POUCH_ID)).toEqual({
+      kind: "container",
+      containerId: BACKPACK_ID,
+      slot: 1,
+    });
+    expect(locations.get(COIN_A_ID)).toEqual({
+      kind: "container",
+      containerId: BACKPACK_ID,
+      slot: 2,
+    });
+    expect(new Set(plan.mutation.after.map((item) => item.id)).size).toBe(3);
+    expect(plan.persist.rowOps.map((operation) => operation.kind)).toEqual([
+      "stage",
+      "stage",
+      "write",
+      "write",
+      "write",
+    ]);
+  });
+
+  it("rejects front placement into a full container", () => {
+    const fullCatalog = new ItemCatalog([
+      makeItemType({ id: BACKPACK_TYPE, containerCapacity: 3 }),
+      makeItemType({ id: POUCH_TYPE, containerCapacity: 5 }),
+      makeItemType({ id: COIN_TYPE, stackable: true, maxCount: 100, weight: 1 }),
+    ]);
+    const carried = fixture();
+    carried.push({
+      id: COIN_C_ID,
+      typeId: COIN_TYPE,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: POUCH_ID, slot: 0 },
+    });
+
+    expect(
+      planMoveToContainer({
+        characterId: CHARACTER_ID,
+        catalog: fullCatalog,
+        items: carried,
+        itemId: COIN_C_ID,
+        expectedVersion: 1,
+        destinationContainerId: BACKPACK_ID,
+        destinationVersion: 1,
+        destinationSlot: 0,
+        destinationPlacement: "front",
+      }),
+    ).toBeNull();
   });
 });

@@ -24,6 +24,8 @@ const CORPSE_TYPE = 6042;
 /** First decay stage: movable and pickupable, still a container. */
 const CORPSE_STAGE_TWO = 4330;
 const GOLD_TYPE = 3031;
+const AXE_TYPE = 3274;
+const AXE_ID = "71bfa12a-c57d-49f8-8d1a-cd211b6d49f5";
 const BACKPACK_TYPE = 2854;
 const CORPSE_POSITION = { x: 1, y: 2, z: 7 };
 
@@ -77,6 +79,7 @@ function backpackFor(characterId: string, backpackId: string): Item {
 async function makeHarness(input: {
   killerId: string | null;
   lootCount?: number;
+  carriedItems?: ReadonlyArray<Item>;
 }): Promise<Harness> {
   const world = new World(
     gridMapData({ name: "loot-test", width: 12, height: 12, blocked: [] }),
@@ -90,6 +93,7 @@ async function makeHarness(input: {
   const store = new MemoryItemStore(catalog);
   store.seed(backpackFor(KILLER_ID, KILLER_BACKPACK_ID));
   store.seed(backpackFor(RIVAL_ID, RIVAL_BACKPACK_ID));
+  for (const item of input.carriedItems ?? []) store.seed(item);
   const items = new ItemIntentHandler(
     store,
     catalog,
@@ -209,6 +213,62 @@ describe("world container (corpse) looting", () => {
         }),
       }),
     );
+  });
+
+  it("atomically prepends loot to an occupied backpack", async () => {
+    const harness = await makeHarness({
+      killerId: KILLER_ID,
+      carriedItems: [
+        {
+          id: AXE_ID,
+          typeId: AXE_TYPE,
+          count: 1,
+          attributes: {},
+          version: 1,
+          location: {
+            kind: "container",
+            containerId: KILLER_BACKPACK_ID,
+            slot: 0,
+          },
+        },
+      ],
+    });
+    const corpse = corpseAt(harness.world);
+    const gold = firstChild(harness.world, corpse.id);
+    harness.items.handleMapOpen(harness.killer.session, CORPSE_POSITION);
+
+    harness.items.handle(harness.killer.session, {
+      type: "loot-item",
+      itemId: gold.id,
+      revision: 1,
+      containerId: corpse.id,
+      destination: {
+        containerId: KILLER_BACKPACK_ID,
+        containerRevision: 1,
+        slot: 0,
+        placement: "front",
+      },
+    });
+
+    const snapshot = harness.items.inventorySnapshot(KILLER_ID);
+    expect(snapshot?.items.find((item) => item.id === gold.id)).toMatchObject({
+      location: {
+        kind: "container",
+        containerId: KILLER_BACKPACK_ID,
+        slot: 0,
+      },
+    });
+    expect(snapshot?.items.find((item) => item.id === AXE_ID)).toMatchObject({
+      location: {
+        kind: "container",
+        containerId: KILLER_BACKPACK_ID,
+        slot: 1,
+      },
+    });
+    await harness.items.stopPersists();
+    const durable = await harness.store.loadForCharacter(KILLER_ID);
+    expect(durable.filter((item) => item.id === gold.id)).toHaveLength(1);
+    expect(durable.filter((item) => item.id === AXE_ID)).toHaveLength(1);
   });
 
   it("blocks non-owners from opening or looting until protection expires", async () => {
@@ -383,4 +443,3 @@ describe("world container (corpse) looting", () => {
     expect(corpseChildren(harness.world, corpse.id)).toHaveLength(1);
   });
 });
-

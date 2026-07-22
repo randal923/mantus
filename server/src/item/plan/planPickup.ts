@@ -14,6 +14,7 @@ import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
 import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
 import { materializeWorldSource } from "./materializeWorldSource";
+import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
 import { subtreeHeight } from "./subtreeHeight";
 import type { WorldItemsView } from "./WorldItemsView";
 
@@ -81,6 +82,7 @@ export function planPickup(input: {
   const removedItemIds: string[] = [];
   let finalLocation: ItemLocation;
   let mergeTarget: Item | undefined;
+  let frontInsertion: ReturnType<typeof planContainerFrontInsertion> = null;
   let finalTypeId = root.typeId;
 
   if (input.equipSlot) {
@@ -144,6 +146,12 @@ export function planPickup(input: {
     }
     const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    if (
+      input.destination.placement === "front" &&
+      input.destination.slot !== 0
+    ) {
+      return null;
+    }
     const ancestry = containerAncestryChain(carriedById, container);
     if (
       ancestry.length + subtreeHeight(subtree, root.id) > 8 ||
@@ -158,9 +166,19 @@ export function planPickup(input: {
         candidate.location.containerId === container.id &&
         candidate.location.slot === input.destination?.slot,
     );
-    if (occupant) {
-      if (!canMergeItems(catalog, root, occupant, root.count)) return null;
+    if (occupant && canMergeItems(catalog, root, occupant, root.count)) {
       mergeTarget = occupant;
+    } else if (input.destination.placement === "front") {
+      frontInsertion = planContainerFrontInsertion({
+        characterId,
+        items: carried.items,
+        containerId: container.id,
+        capacity,
+        sourceItemId: root.id,
+      });
+      if (!frontInsertion) return null;
+    } else if (occupant) {
+      return null;
     }
     finalLocation = {
       kind: "container",
@@ -206,6 +224,7 @@ export function planPickup(input: {
     location: finalLocation,
     version: root.version + 1,
   };
+  if (frontInsertion) rowOps.push(...frontInsertion.stageOps);
   if (mergeTarget) {
     rowOps.push({
       kind: "delete",
@@ -233,6 +252,10 @@ export function planPickup(input: {
     appendUnpersistedLootInserts(world, children, rowOps, audits);
   } else {
     rowOps.push({ kind: "write", expectedVersion: root.version, item: final });
+  }
+  if (frontInsertion) {
+    rowOps.push(...frontInsertion.writeOps);
+    audits.push(...frontInsertion.audits);
   }
   if (mergeTarget) {
     audits.push({
@@ -262,7 +285,7 @@ export function planPickup(input: {
   return {
     mutation: {
       before: root,
-      after: [final, ...children],
+      after: [final, ...children, ...(frontInsertion?.after ?? [])],
       ...(removedItemIds.length > 0 ? { removedItemIds } : {}),
     },
     persist: { characterId, rowOps, audits },

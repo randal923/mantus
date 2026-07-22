@@ -76,6 +76,7 @@ export function planCarriedIntent(input: {
           destinationContainerId: intent.destinationContainerId,
           destinationVersion: intent.destinationRevision,
           destinationSlot: intent.destinationSlot,
+          destinationPlacement: intent.destinationPlacement,
           requestedCount: intent.count,
         }),
       );

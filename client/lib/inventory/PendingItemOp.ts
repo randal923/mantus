@@ -11,6 +11,7 @@ export type PendingItemOp =
       readonly itemId: string;
       readonly destinationContainerId: string;
       readonly destinationSlot: number;
+      readonly destinationPlacement?: "front";
     }
   | {
       readonly kind: "equip";
@@ -24,6 +25,7 @@ export type PendingItemOp =
       readonly destination?: {
         readonly containerId: string;
         readonly slot: number;
+        readonly placement?: "front";
       };
     }
   | {
@@ -42,6 +44,7 @@ export type PendingItemOp =
       readonly destination?: {
         readonly containerId: string;
         readonly slot: number;
+        readonly placement?: "front";
       };
       /** Asks the server to equip the item right after the pickup commits. */
       readonly equipSlot?: EquipmentSlot;

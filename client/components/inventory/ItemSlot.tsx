@@ -92,6 +92,7 @@ export function ItemSlot({
         }}
         onPointerUp={(event) => {
           if (event.button !== 0 || !onDrop) return;
+          event.stopPropagation();
           onDrop();
         }}
         onMouseEnter={(event) => {

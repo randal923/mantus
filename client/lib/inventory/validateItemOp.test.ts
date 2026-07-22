@@ -224,6 +224,25 @@ describe("validateItemOp", () => {
     ).toBe("invalid-destination");
   });
 
+  it("allows the server to atomically make room for a front placement", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "unequip",
+          itemId: SWORD.id,
+          slot: "weapon",
+          destination: {
+            containerId: BACKPACK.id,
+            slot: 0,
+            placement: "front",
+          },
+        },
+        makeState({ equipment: { backpack: BACKPACK, weapon: SWORD } }),
+        KNIGHT,
+      ),
+    ).toBeNull();
+  });
+
   it("allows unequipping into a free destination slot", () => {
     expect(
       validateItemOp(

@@ -678,6 +678,50 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     );
   });
 
+  it("persists a front insertion without transient slot collisions", async () => {
+    const helmetId = await insertItem(HELMET_TYPE, 1, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const bootsId = await insertItem(BOOTS_TYPE, 1, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 2,
+    });
+    const plan = planMoveToContainer({
+      characterId,
+      catalog: await loadItemCatalog(),
+      items: await store.loadForCharacter(characterId),
+      itemId: bootsId,
+      expectedVersion: 1,
+      destinationContainerId: backpackId,
+      destinationVersion: 1,
+      destinationSlot: 0,
+      destinationPlacement: "front",
+    });
+    if (!plan) throw new Error("plan was rejected");
+
+    await store.persist(plan.persist);
+
+    expect(await itemRow(bootsId)).toMatchObject({
+      container_id: backpackId,
+      slot_index: 0,
+      version: 2,
+    });
+    expect(await itemRow(pouchId)).toMatchObject({
+      container_id: backpackId,
+      slot_index: 1,
+      version: 2,
+    });
+    expect(await itemRow(helmetId)).toMatchObject({
+      container_id: backpackId,
+      slot_index: 2,
+      version: 2,
+    });
+    expect(await auditRows("item-transferred")).toHaveLength(3);
+  });
+
   it("persists memory-first food consumption with its destruction audit", async () => {
     const foodId = await insertItem(3577, 2, {
       kind: "container",

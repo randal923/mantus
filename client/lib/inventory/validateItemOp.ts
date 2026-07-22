@@ -119,6 +119,7 @@ export function validateItemOp(
       return "invalid-destination";
     }
     if (
+      op.destination.placement !== "front" &&
       slotOccupied(inventory, op.destination.containerId, op.destination.slot)
     ) {
       return "invalid-destination";

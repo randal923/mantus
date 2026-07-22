@@ -31,6 +31,34 @@ describe("item intent schemas", () => {
     ).toBe(true);
   });
 
+  it("accepts only the bounded front-placement marker", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "pickup-item",
+        itemId: "map:100:100:7:1",
+        revision: 1,
+        position: { x: 100, y: 100, z: 7 },
+        destination: {
+          containerId: CONTAINER_ID,
+          containerRevision: 2,
+          slot: 0,
+          placement: "front",
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move-item",
+        itemId: ITEM_ID,
+        revision: 1,
+        destinationContainerId: CONTAINER_ID,
+        destinationRevision: 2,
+        destinationSlot: 0,
+        destinationPlacement: "anywhere",
+      }).success,
+    ).toBe(false);
+  });
+
   it.each([0, -1, 100, 101])("rejects invalid split count %s", (count) => {
     expect(
       clientMessageSchema.safeParse({

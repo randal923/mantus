@@ -198,7 +198,7 @@ export function GameInventoryOverlays() {
             onDragEnd={() => {
               runtime.itemDragRef.current = null;
             }}
-            onDropInContainer={(destination, slot) => {
+            onDropInContainer={(destination, slot, placement) => {
               const source = runtime.itemDragRef.current;
               if (!source) return;
               if (
@@ -219,7 +219,11 @@ export function GameInventoryOverlays() {
                   ...(source.item.weight !== undefined
                     ? { weight: source.item.weight * source.item.count }
                     : {}),
-                  destination: { containerId: destination.id, slot },
+                  destination: {
+                    containerId: destination.id,
+                    slot,
+                    ...(placement ? { placement } : {}),
+                  },
                 });
                 if (queued) {
                   runtime.rendererRef.current?.previewMapItemRemoval(
@@ -235,6 +239,7 @@ export function GameInventoryOverlays() {
                     containerId: destination.id,
                     containerRevision: destination.revision,
                     slot,
+                    ...(placement ? { placement } : {}),
                   },
                 );
               } else if (source.location.kind === "equipment") {
@@ -246,7 +251,11 @@ export function GameInventoryOverlays() {
                   kind: "unequip",
                   itemId: source.item.id,
                   slot: source.location.slot,
-                  destination: { containerId: destination.id, slot },
+                  destination: {
+                    containerId: destination.id,
+                    slot,
+                    ...(placement ? { placement } : {}),
+                  },
                 });
               } else {
                 dispatchItemOp({
@@ -254,6 +263,9 @@ export function GameInventoryOverlays() {
                   itemId: source.item.id,
                   destinationContainerId: destination.id,
                   destinationSlot: slot,
+                  ...(placement
+                    ? { destinationPlacement: placement }
+                    : {}),
                 });
               }
               runtime.itemDragRef.current = null;

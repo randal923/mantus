@@ -193,6 +193,52 @@ describe("ItemIntentHandler memory-first carried ops", () => {
     });
   });
 
+  it("atomically prepends a picked-up map item", async () => {
+    const store = new MemoryItemStore(catalog);
+    for (const item of carriedFixture()) store.seed(item);
+    const { handler, session } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "move-item",
+      itemId: AXE_B_ID,
+      revision: 1,
+      destinationContainerId: BACKPACK_ID,
+      destinationRevision: 1,
+      destinationSlot: 0,
+    });
+    handler.handle(session, {
+      type: "drop-item",
+      itemId: AXE_A_ID,
+      revision: 1,
+      position: { x: 1, y: 2, z: 7 },
+    });
+    handler.handle(session, {
+      type: "pickup-item",
+      itemId: AXE_A_ID,
+      revision: 2,
+      position: { x: 1, y: 2, z: 7 },
+      destination: {
+        containerId: BACKPACK_ID,
+        containerRevision: 1,
+        slot: 0,
+        placement: "front",
+      },
+    });
+
+    const snapshot = handler.inventorySnapshot(CHARACTER_ID);
+    expect(snapshot?.items.find((item) => item.id === AXE_A_ID)).toMatchObject({
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+    });
+    expect(snapshot?.items.find((item) => item.id === AXE_B_ID)).toMatchObject({
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 1 },
+    });
+    await handler.stopPersists();
+    const durable = await store.loadForCharacter(CHARACTER_ID);
+    expect(durable.filter((item) => item.id === AXE_A_ID)).toHaveLength(1);
+    expect(durable.filter((item) => item.id === AXE_B_ID)).toHaveLength(1);
+  });
+
   it("splits a stack and merges it back without duplication", async () => {
     const store = new MemoryItemStore(catalog);
     for (const item of carriedFixture()) store.seed(item);

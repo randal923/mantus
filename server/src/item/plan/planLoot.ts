@@ -12,6 +12,7 @@ import { canMergeItems } from "./canMergeItems";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
 import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
+import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
 import { subtreeHeight } from "./subtreeHeight";
 import type { WorldItemsView } from "./WorldItemsView";
 
@@ -64,6 +65,7 @@ export function planLoot(input: {
   const carriedById = new Map(carried.items.map((entry) => [entry.id, entry]));
   let finalLocation: ItemLocation;
   let mergeTarget: Item | undefined;
+  let frontInsertion: ReturnType<typeof planContainerFrontInsertion> = null;
 
   if (input.destination) {
     const container = carriedById.get(input.destination.containerId);
@@ -75,6 +77,12 @@ export function planLoot(input: {
     }
     const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    if (
+      input.destination.placement === "front" &&
+      input.destination.slot !== 0
+    ) {
+      return null;
+    }
     const ancestry = containerAncestryChain(carriedById, container);
     if (ancestry.length + subtreeHeight(subtree, item.id) > 8) return null;
     const occupant = carried.items.find(
@@ -84,9 +92,19 @@ export function planLoot(input: {
         candidate.location.containerId === container.id &&
         candidate.location.slot === input.destination?.slot,
     );
-    if (occupant) {
-      if (!canMergeItems(catalog, item, occupant, item.count)) return null;
+    if (occupant && canMergeItems(catalog, item, occupant, item.count)) {
       mergeTarget = occupant;
+    } else if (input.destination.placement === "front") {
+      frontInsertion = planContainerFrontInsertion({
+        characterId,
+        items: carried.items,
+        containerId: container.id,
+        capacity,
+        sourceItemId: item.id,
+      });
+      if (!frontInsertion) return null;
+    } else if (occupant) {
+      return null;
     }
     finalLocation = {
       kind: "container",
@@ -135,6 +153,7 @@ export function planLoot(input: {
   const rowOps: CarriedPersistRowOp[] = [];
   const audits: CarriedPersistAudit[] = [];
   const removedItemIds: string[] = [];
+  if (frontInsertion) rowOps.push(...frontInsertion.stageOps);
   if (mergeTarget) {
     rowOps.push({
       kind: "delete",
@@ -165,6 +184,10 @@ export function planLoot(input: {
   } else {
     rowOps.push({ kind: "write", expectedVersion: item.version, item: final });
   }
+  if (frontInsertion) {
+    rowOps.push(...frontInsertion.writeOps);
+    audits.push(...frontInsertion.audits);
+  }
   appendUnpersistedLootInserts(world, children, rowOps, audits);
   audits.push({
     kind: "transfer",
@@ -176,7 +199,7 @@ export function planLoot(input: {
   return {
     mutation: {
       before: item,
-      after: [final, ...children],
+      after: [final, ...children, ...(frontInsertion?.after ?? [])],
       ...(removedItemIds.length > 0 ? { removedItemIds } : {}),
     },
     persist: { characterId, rowOps, audits },

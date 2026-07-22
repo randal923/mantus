@@ -85,6 +85,29 @@ describe("buildPendingItemOpMessage", () => {
     ).toBeNull();
   });
 
+  it("preserves server-authoritative front placement", () => {
+    expect(
+      buildPendingItemOpMessage(
+        {
+          kind: "move",
+          itemId: HELMET.id,
+          destinationContainerId: BACKPACK.id,
+          destinationSlot: 0,
+          destinationPlacement: "front",
+        },
+        STATE,
+      ),
+    ).toEqual({
+      type: "move-item",
+      itemId: HELMET.id,
+      revision: 3,
+      destinationContainerId: BACKPACK.id,
+      destinationRevision: 4,
+      destinationSlot: 0,
+      destinationPlacement: "front",
+    });
+  });
+
   it("builds an unequip intent with a refreshed destination revision", () => {
     const state: InventoryState = {
       ...STATE,

@@ -5,6 +5,7 @@ import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
 import { canMergeItems } from "./canMergeItems";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
+import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
 
 const MAX_CARRIED_ITEMS = 500;
 
@@ -17,6 +18,7 @@ export function planMoveToContainer(input: {
   readonly destinationContainerId: string;
   readonly destinationVersion: number;
   readonly destinationSlot: number;
+  readonly destinationPlacement?: "front";
   readonly requestedCount?: number;
 }): CarriedPlan | null {
   const { characterId, catalog, items, destinationSlot } = input;
@@ -38,6 +40,9 @@ export function planMoveToContainer(input: {
     destinationSlot < 0 ||
     destinationSlot >= destinationCapacity
   ) {
+    return null;
+  }
+  if (input.destinationPlacement === "front" && destinationSlot !== 0) {
     return null;
   }
   const count = input.requestedCount ?? item.count;
@@ -71,6 +76,47 @@ export function planMoveToContainer(input: {
     type.stackable && canMergeItems(catalog, item, slotTarget, count)
       ? slotTarget
       : undefined;
+  if (input.destinationPlacement === "front" && !mergeTarget) {
+    if (count !== item.count) return null;
+    const insertion = planContainerFrontInsertion({
+      characterId,
+      items,
+      containerId: destination.id,
+      capacity: destinationCapacity,
+      sourceItemId: item.id,
+    });
+    if (!insertion) return null;
+    const after: Item = {
+      ...item,
+      location: {
+        kind: "container",
+        containerId: destination.id,
+        slot: 0,
+      },
+      version: item.version + 1,
+    };
+    return {
+      mutation: { before: item, after: [after, ...insertion.after] },
+      persist: {
+        characterId,
+        rowOps: [
+          ...insertion.stageOps,
+          { kind: "write", expectedVersion: item.version, item: after },
+          ...insertion.writeOps,
+        ],
+        audits: [
+          ...insertion.audits,
+          {
+            kind: "transfer",
+            itemId: item.id,
+            from: item.location,
+            to: after.location,
+            count: after.count,
+          },
+        ],
+      },
+    };
+  }
   if (slotTarget && !mergeTarget) {
     return planSwap(input.characterId, catalog, items, itemsById, item, destination, destinationSlot, slotTarget, count);
   }

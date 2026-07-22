@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { OwnCharacterState } from "@tibia/protocol";
-import { fn } from "storybook/test";
+import { expect, fireEvent, fn, within } from "storybook/test";
 import { InventoryPanel } from "../components/inventory/InventoryPanel";
 import type { Equipment } from "../components/inventory/inventoryTypes";
 import { makeInventoryItem } from "./makeInventoryItem";
@@ -136,6 +136,35 @@ export const CharacterDetails: Story = {
   args: {
     ...Knight.args,
     characterStatsOpen: true,
+  },
+};
+
+export const DropsAnywhereIntoFirstBackpackSlot: Story = {
+  args: {
+    ...Knight.args,
+    onDropInContainer: fn(),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const inventory = canvas.getByRole("region", {
+      name: "Deceius's inventory",
+    });
+
+    fireEvent.drop(inventory);
+    fireEvent.drop(canvas.getByTitle("5 Health Potion"));
+
+    await expect(args.onDropInContainer).toHaveBeenNthCalledWith(
+      1,
+      equipment.backpack,
+      0,
+      "front",
+    );
+    await expect(args.onDropInContainer).toHaveBeenNthCalledWith(
+      2,
+      equipment.backpack,
+      0,
+      "front",
+    );
   },
 };
 

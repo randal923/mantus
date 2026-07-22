@@ -223,6 +223,8 @@ export const itemContainerDestinationSchema = z
     containerId: z.string().uuid(),
     containerRevision: z.number().int().positive(),
     slot: z.number().int().min(0).max(99),
+    /** Atomically shifts the occupied prefix so this item lands in slot 0. */
+    placement: z.literal("front").optional(),
   })
   .strict();
 
@@ -359,13 +361,14 @@ export const rotateItemMessageSchema = ownedItemIntentSchema
   .extend({ type: z.literal("rotate-item") })
   .strict();
 
-/** Moves an owned item into one bounded slot of an owned revisioned container. */
+/** Moves an owned item into one bounded position of an owned revisioned container. */
 export const moveItemMessageSchema = ownedItemIntentSchema
   .extend({
     type: z.literal("move-item"),
     destinationContainerId: z.string().uuid(),
     destinationRevision: z.number().int().positive(),
     destinationSlot: z.number().int().min(0).max(99),
+    destinationPlacement: z.literal("front").optional(),
     count: z.number().int().positive().max(100).optional(),
   })
   .strict();

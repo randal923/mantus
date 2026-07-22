@@ -41,6 +41,9 @@ export function buildPendingItemOpMessage(
         containerId: container.id,
         containerRevision: container.revision,
         slot: op.destination.slot,
+        ...(op.destination.placement
+          ? { placement: op.destination.placement }
+          : {}),
       },
     };
   }
@@ -60,6 +63,9 @@ export function buildPendingItemOpMessage(
         destinationContainerId: destination.id,
         destinationRevision: destination.revision,
         destinationSlot: op.destinationSlot,
+        ...(op.destinationPlacement
+          ? { destinationPlacement: op.destinationPlacement }
+          : {}),
       };
     }
     case "equip":
@@ -91,6 +97,9 @@ export function buildPendingItemOpMessage(
           containerId: container.id,
           containerRevision: container.revision,
           slot: op.destination.slot,
+          ...(op.destination.placement
+            ? { placement: op.destination.placement }
+            : {}),
         },
       };
     }

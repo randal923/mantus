@@ -8,6 +8,7 @@ import type { ItemLocation } from "../ItemLocation";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
 import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
+import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
 
 export function planUnequip(input: {
   readonly characterId: string;
@@ -33,6 +34,7 @@ export function planUnequip(input: {
   const transformedTypeId = type.transformDeEquipTo ?? item.typeId;
   if (!catalog.get(transformedTypeId)) return null;
   let destinationLocation: ItemLocation;
+  let frontInsertion: ReturnType<typeof planContainerFrontInsertion> = null;
   if (input.destination) {
     const container = items.find(
       (candidate) => candidate.id === input.destination?.containerId,
@@ -56,7 +58,19 @@ export function planUnequip(input: {
         candidate.location.containerId === container.id &&
         candidate.location.slot === input.destination?.slot,
     );
-    if (occupied) return null;
+    if (input.destination.placement === "front") {
+      if (input.destination.slot !== 0) return null;
+      frontInsertion = planContainerFrontInsertion({
+        characterId,
+        items,
+        containerId: container.id,
+        capacity,
+        sourceItemId: item.id,
+      });
+      if (!frontInsertion) return null;
+    } else if (occupied) {
+      return null;
+    }
     destinationLocation = {
       kind: "container",
       containerId: container.id,
@@ -89,13 +103,19 @@ export function planUnequip(input: {
     version: item.version + 1,
   };
   return {
-    mutation: { before: item, after: [after] },
+    mutation: {
+      before: item,
+      after: [after, ...(frontInsertion?.after ?? [])],
+    },
     persist: {
       characterId,
       rowOps: [
+        ...(frontInsertion?.stageOps ?? []),
         { kind: "write", expectedVersion: item.version, item: after },
+        ...(frontInsertion?.writeOps ?? []),
       ],
       audits: [
+        ...(frontInsertion?.audits ?? []),
         {
           kind: "transfer",
           itemId: item.id,
