@@ -28,6 +28,7 @@ interface EquipmentPaperdollProps {
   onDragStart?(source: ItemDragSource): void;
   onDragEnd?(): void;
   onDrop?(slot: EquipmentSlotId): void;
+  onDropInBackpack?(): void;
 }
 
 export function EquipmentPaperdoll({
@@ -36,6 +37,7 @@ export function EquipmentPaperdoll({
   onDragStart,
   onDragEnd,
   onDrop,
+  onDropInBackpack,
 }: EquipmentPaperdollProps) {
   const { t } = useAppTranslation();
 
@@ -77,7 +79,9 @@ export function EquipmentPaperdoll({
                     }
                     onDragEnd={onDragEnd}
                     onDrop={
-                      onDrop && (slot !== "backpack" || !equipment.backpack)
+                      slot === "backpack" && equipment.backpack
+                        ? onDropInBackpack
+                        : onDrop
                         ? () => onDrop(slot)
                         : undefined
                     }

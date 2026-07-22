@@ -47,6 +47,24 @@ const items = [
   },
 ];
 
+const nestedBackpack = makeInventoryItem({
+  id: "00000000-0000-4000-8000-000000000005",
+  clientId: 2869,
+  spriteId: 7152,
+  name: "Blue Backpack",
+  count: 1,
+  useKind: "container",
+  containerCapacity: 4,
+});
+
+const nestedItem = makeInventoryItem({
+  id: "00000000-0000-4000-8000-000000000006",
+  clientId: 3003,
+  spriteId: 7355,
+  name: "Rope",
+  count: 1,
+});
+
 const character: OwnCharacterState = {
   id: "00000000-0000-4000-8000-000000000010",
   name: "Deceius",
@@ -165,6 +183,59 @@ export const DropsAnywhereIntoFirstBackpackSlot: Story = {
       0,
       "front",
     );
+  },
+};
+
+export const NavigatesBackpacksAndDropsInsideThem: Story = {
+  args: {
+    ...Knight.args,
+    items: [
+      { slot: 0, item: nestedBackpack },
+      { slot: 1, item: items[1]!.item },
+    ],
+    containers: [
+      {
+        container: nestedBackpack,
+        parentContainerId: equipment.backpack!.id,
+        capacity: 4,
+        items: [{ slot: 0, item: nestedItem }],
+      },
+    ],
+    onOpenContainer: fn(),
+    onCloseContainer: fn(),
+    onDropInContainer: fn(),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const backpackItem = canvas.getByTitle("Blue Backpack");
+
+    fireEvent.drop(backpackItem);
+    await expect(args.onDropInContainer).toHaveBeenCalledWith(
+      nestedBackpack,
+      0,
+      "front",
+    );
+
+    fireEvent.drop(canvas.getByTitle("Backpack"));
+    await expect(args.onDropInContainer).toHaveBeenCalledWith(
+      equipment.backpack,
+      0,
+      "front",
+    );
+
+    fireEvent.contextMenu(backpackItem);
+    await expect(args.onOpenContainer).toHaveBeenCalledWith(nestedBackpack);
+    await expect(
+      canvas.getByRole("heading", { name: "Blue Backpack" }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByTitle("Rope")).toBeInTheDocument();
+    await expect(canvas.queryByTitle("5 Health Potion")).not.toBeInTheDocument();
+
+    fireEvent.click(canvas.getByRole("button", { name: /back$/i }));
+    await expect(args.onCloseContainer).toHaveBeenCalledWith(
+      nestedBackpack.id,
+    );
+    await expect(canvas.getByTitle("5 Health Potion")).toBeInTheDocument();
   },
 };
 

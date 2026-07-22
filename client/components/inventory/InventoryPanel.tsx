@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type {
   ContainerState,
   InventorySlotEntry,
@@ -16,7 +17,6 @@ import { EquipmentPaperdoll } from "./EquipmentPaperdoll";
 import { ItemSlot } from "./ItemSlot";
 import { SpriteIcon } from "./SpriteIcon";
 import { InventoryCharacterStats } from "./InventoryCharacterStats";
-import { ContainerInventorySection } from "./ContainerInventorySection";
 import type { ItemDragSource } from "./ItemDragSource";
 
 const GOLD_COIN_SPRITE = 7384;
@@ -89,11 +89,39 @@ export function InventoryPanel({
 }: InventoryPanelProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
-  const bySlot = new Map(items.map((entry) => [entry.slot, entry.item]));
-  const visibleSlotCount = slotCount;
-  const dropInBackpack = () => {
+  const [viewedContainerId, setViewedContainerId] = useState<string | null>(
+    null,
+  );
+  const viewedContainer = containers.find(
+    (container) => container.container.id === viewedContainerId,
+  );
+  const visibleContainer = viewedContainer?.container ?? equipment.backpack;
+  const visibleItems = viewedContainer?.items ?? items;
+  const visibleSlotCount = viewedContainer?.capacity ?? slotCount;
+  const bySlot = new Map(
+    visibleItems.map((entry) => [entry.slot, entry.item]),
+  );
+  const dropInVisibleContainer = () => {
+    if (!visibleContainer || !onDropInContainer) return;
+    onDropInContainer(visibleContainer, 0, "front");
+  };
+  const dropInEquippedBackpack = () => {
     if (!equipment.backpack || !onDropInContainer) return;
     onDropInContainer(equipment.backpack, 0, "front");
+  };
+  const openContainer = (item: InventoryItem) => {
+    if (!onOpenContainer) return;
+    setViewedContainerId(item.id);
+    onOpenContainer(item);
+  };
+  const goBack = () => {
+    if (!viewedContainer) return;
+    const parent = containers.find(
+      (container) =>
+        container.container.id === viewedContainer.parentContainerId,
+    );
+    setViewedContainerId(parent?.container.id ?? null);
+    onCloseContainer?.(viewedContainer.container.id);
   };
   const activateItem = (item: InventoryItem) => {
     if (item.useKind === "rune" && onUseRune) {
@@ -109,7 +137,7 @@ export function InventoryPanel({
       return;
     }
     if (item.useKind === "container" && onOpenContainer) {
-      onOpenContainer(item);
+      openContainer(item);
       return;
     }
     if (
@@ -134,18 +162,18 @@ export function InventoryPanel({
     <section
       aria-label={t("inventory.label", { name: characterName })}
       onDragOver={(event) => {
-        if (!equipment.backpack || !onDropInContainer) return;
+        if (!visibleContainer || !onDropInContainer) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
       }}
       onDrop={(event) => {
-        if (!equipment.backpack || !onDropInContainer) return;
+        if (!visibleContainer || !onDropInContainer) return;
         event.preventDefault();
-        dropInBackpack();
+        dropInVisibleContainer();
       }}
       onPointerUp={(event) => {
         if (event.button !== 0) return;
-        dropInBackpack();
+        dropInVisibleContainer();
       }}
       className="relative flex h-full w-full justify-end font-tibia text-ui-text select-none"
     >
@@ -241,6 +269,7 @@ export function InventoryPanel({
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDrop={onDropInEquipment}
+            onDropInBackpack={dropInEquippedBackpack}
           />
 
           <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
@@ -282,16 +311,21 @@ export function InventoryPanel({
 
           <CapacityBar used={capacityUsed} max={capacityMax} />
 
-          <div className="flex items-center justify-between border-b border-ui-gold/15 pb-2">
-            <h3 className="font-display text-xs tracking-[0.18em] text-ui-gold uppercase">
-              {t("inventory.backpack")}
+          <div className="flex items-center gap-2 border-b border-ui-gold/15 pb-2">
+            {viewedContainer && (
+              <Button size="sm" onClick={goBack}>
+                ‹ {t("common.back")}
+              </Button>
+            )}
+            <h3 className="min-w-0 flex-1 truncate font-display text-xs tracking-[0.18em] text-ui-gold uppercase">
+              {visibleContainer?.name ?? t("inventory.backpack")}
             </h3>
             <span className="text-xs text-ui-muted">
-              {items.length} / {visibleSlotCount}
+              {visibleItems.length} / {visibleSlotCount}
             </span>
           </div>
 
-          <div className="ui-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
+          <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
             <div className="grid grid-cols-4 justify-items-center gap-2">
               {Array.from({ length: visibleSlotCount }, (_, slot) => {
                 const item = bySlot.get(slot);
@@ -301,14 +335,14 @@ export function InventoryPanel({
                     item={item}
                     onActivate={item ? () => activateItem(item) : undefined}
                     onDragStart={
-                      item && onDragStart
+                      item && visibleContainer && onDragStart
                         ? () =>
                             onDragStart({
                               kind: "owned",
                               item,
                               location: {
                                 kind: "container",
-                                containerId: equipment.backpack!.id,
+                                containerId: visibleContainer.id,
                                 slot,
                               },
                             })
@@ -316,28 +350,16 @@ export function InventoryPanel({
                     }
                     onDragEnd={onDragEnd}
                     onDrop={
-                      equipment.backpack && onDropInContainer
-                        ? dropInBackpack
+                      visibleContainer && onDropInContainer
+                        ? item?.useKind === "container"
+                          ? () => onDropInContainer(item, 0, "front")
+                          : dropInVisibleContainer
                         : undefined
                     }
                   />
                 );
               })}
             </div>
-            {onCloseContainer &&
-              containers.map((container) => (
-                <ContainerInventorySection
-                  key={container.container.id}
-                  state={container}
-                  onActivate={activateItem}
-                  onDragStart={onDragStart ?? (() => undefined)}
-                  onDragEnd={onDragEnd ?? (() => undefined)}
-                  onDrop={(destination, slot) =>
-                    onDropInContainer?.(destination, slot)
-                  }
-                  onClose={onCloseContainer}
-                />
-              ))}
           </div>
         </div>
       </div>

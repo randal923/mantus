@@ -9,6 +9,8 @@ export function makeInventoryItem(input: {
   stackable?: boolean;
   maxCount?: number;
   equipmentSlot?: EquipmentSlot;
+  useKind?: InventoryItem["useKind"];
+  containerCapacity?: number;
 }): InventoryItem {
   return {
     ...input,
