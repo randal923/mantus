@@ -53,6 +53,7 @@ const makeItemType = (overrides: Partial<ItemType> & { id: number }): ItemType =
 });
 
 const catalog = new ItemCatalog([
+  makeItemType({ id: 2854, name: "backpack", containerCapacity: 20 }),
   makeItemType({ id: SWORD_TYPE, name: "sword" }),
   makeItemType({
     id: COIN_TYPE,
@@ -138,10 +139,22 @@ const makeHarness = (options: HarnessOptions = {}) => {
     world,
     new Visibility(world, new SessionRegistry()),
   );
+  const backpack: Item = {
+    id: "depot-backpack",
+    typeId: 2854,
+    count: 1,
+    attributes: {},
+    version: 1,
+    location: {
+      kind: "equipment",
+      characterId: player.id,
+      slot: "backpack",
+    },
+  };
   items.attach({
     characterId: player.id,
     capacityMax: 400,
-    items: options.carried ?? [],
+    items: [backpack, ...(options.carried ?? [])],
   });
   const persist = vi.fn(options.persist ?? (async () => undefined));
   const store = {
@@ -194,7 +207,7 @@ const carriedSword = (): Item => ({
   count: 1,
   attributes: {},
   version: 1,
-  location: { kind: "inventory", characterId: "depot-player", slot: 0 },
+  location: { kind: "container", containerId: "depot-backpack", slot: 0 },
 });
 
 const storedSword = (): Item => ({

@@ -51,9 +51,9 @@ export function ItemSlot({
             : undefined
         }
         onContextMenu={(event) => {
-          if (!item || !onActivate || optimistic) return;
+          if (!item || optimistic) return;
           event.preventDefault();
-          onActivate();
+          onActivate?.();
         }}
         onDragStart={(event) => {
           if (!item || !onDragStart || optimistic) {

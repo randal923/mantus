@@ -69,7 +69,7 @@ export function planDepotWithdraw(input: {
     return { status: "no-capacity" };
   }
   const [destination] = needsDestination
-    ? findCarriedDestinations(catalog, carried.items, characterId, 1)
+    ? findCarriedDestinations(catalog, carried.items, 1)
     : [];
   if (needsDestination && !destination) return { status: "no-space" };
 

@@ -78,10 +78,7 @@ export class DepotMailOps {
       if (!row || row.version !== request.itemRevision) {
         throw new TransactionRollback<SendMailResult>({ status: "not-owned" });
       }
-      if (
-        row.location_type !== "inventory" &&
-        row.location_type !== "container"
-      ) {
+      if (row.location_type !== "container") {
         throw new TransactionRollback<SendMailResult>({ status: "not-owned" });
       }
       const type = this.catalog.require(row.item_type_id);
@@ -92,7 +89,7 @@ export class DepotMailOps {
       if (
         !root ||
         root.character_id !== request.senderCharacterId ||
-        !["equipment", "inventory"].includes(root.location_type)
+        root.location_type !== "equipment"
       ) {
         throw new TransactionRollback<SendMailResult>({ status: "not-owned" });
       }

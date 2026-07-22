@@ -51,7 +51,7 @@ describe("World item mutations", () => {
       1,
     );
     const carried = makeSeededItem(
-      { kind: "inventory", characterId: "character", slot: 0 },
+      { kind: "equipment", characterId: "character", slot: "weapon" },
       2,
     );
 

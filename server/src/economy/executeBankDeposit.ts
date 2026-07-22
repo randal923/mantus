@@ -66,7 +66,7 @@ export async function executeBankDeposit(
       removedItemIds,
     );
   }
-  const backpack = await coinOps.lockBackpackSlots(after);
+  const backpack = await coinOps.lockBackpackSlots();
   if (!backpack) {
     throw new TransactionRollback<BankDepositResult>({
       status: "no-space",

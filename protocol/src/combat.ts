@@ -47,6 +47,7 @@ export const CONDITION_TYPES = [
   "poison",
   "fire",
   "energy",
+  "freeze",
   "bleeding",
   "curse",
   "dazzled",

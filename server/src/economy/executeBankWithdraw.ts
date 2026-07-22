@@ -31,7 +31,7 @@ export async function executeBankWithdraw(
   const coins = coinOps.coinRows(owned);
 
   const after = new Map<string, Item>();
-  const backpack = await coinOps.lockBackpackSlots(after);
+  const backpack = await coinOps.lockBackpackSlots();
   if (!backpack) {
     throw new TransactionRollback<BankWithdrawResult>({
       status: "no-space",

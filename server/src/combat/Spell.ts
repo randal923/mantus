@@ -109,6 +109,7 @@ export interface SpellDefinition {
   } | null;
   readonly castRules: {
     readonly targetPlayerOnly: boolean;
+    readonly targetPartyMemberOnly?: boolean;
     readonly allowSelf: boolean;
     readonly excludedVocations: ReadonlyArray<CharacterVocation>;
     readonly casterEffectId: number;

@@ -22,8 +22,7 @@ import { moveContainerSeededMergeQuery } from "./sql/moveContainerSeededMergeQue
 import { moveContainerSplitQuery } from "./sql/moveContainerSplitQuery";
 import { moveReadStateQuery } from "./sql/moveReadStateQuery";
 import { moveSwapDisplacedToContainerUpdate } from "./sql/moveSwapDisplacedToContainerUpdate";
-import { moveSwapDisplacedToInventoryUpdate } from "./sql/moveSwapDisplacedToInventoryUpdate";
-import { moveSwapDisplaceToInventoryUpdate } from "./sql/moveSwapDisplaceToInventoryUpdate";
+import { moveSwapDisplaceToStagingUpdate } from "./sql/moveSwapDisplaceToStagingUpdate";
 import { moveSwapSourceToContainerUpdate } from "./sql/moveSwapSourceToContainerUpdate";
 import { withSerializableTransaction } from "./withSerializableTransaction";
 
@@ -62,10 +61,7 @@ export class PgContainerMoveOps {
       requireVersion(destination, destinationVersion);
       requireOwnedInAncestry(read.ancestry, row.id, characterId);
       requireOwnedInAncestry(read.ancestry, destination.id, characterId);
-      if (
-        row.location_type !== "inventory" &&
-        row.location_type !== "container"
-      ) {
+      if (row.location_type !== "container") {
         throw new Error("item cannot move from this location");
       }
       if (row.id === destination.id) {
@@ -123,19 +119,17 @@ export class PgContainerMoveOps {
         if (row.slot_index === null) {
           throw new Error("item source slot is missing");
         }
-        if (row.location_type === "container") {
-          await this.guards.requireContainerPlacement(
-            client,
-            slotTarget.id,
-            row.container_id ?? "",
-          );
-        }
+        await this.guards.requireContainerPlacement(
+          client,
+          slotTarget.id,
+          row.container_id ?? "",
+        );
         const displacedBefore = itemFromRow(slotTarget);
-        const temporarySlot = await this.locks.firstInventorySlot(
+        const temporarySlot = await this.locks.firstStagingSlot(
           client,
           characterId,
         );
-        await client.query(moveSwapDisplaceToInventoryUpdate, [
+        await client.query(moveSwapDisplaceToStagingUpdate, [
           slotTarget.id,
           characterId,
           temporarySlot,
@@ -144,18 +138,10 @@ export class PgContainerMoveOps {
           moveSwapSourceToContainerUpdate,
           [row.id, destination.id, destinationSlot],
         );
-        const displacedResult =
-          row.location_type === "inventory"
-            ? await client.query<ItemRow>(moveSwapDisplacedToInventoryUpdate, [
-                slotTarget.id,
-                characterId,
-                row.slot_index,
-              ])
-            : await client.query<ItemRow>(moveSwapDisplacedToContainerUpdate, [
-                slotTarget.id,
-                row.container_id,
-                row.slot_index,
-              ]);
+        const displacedResult = await client.query<ItemRow>(
+          moveSwapDisplacedToContainerUpdate,
+          [slotTarget.id, row.container_id, row.slot_index],
+        );
         const after = requireReturnedItem(sourceResult.rows[0]);
         const displaced = requireReturnedItem(displacedResult.rows[0]);
         await this.audit.transfer(client, characterId, before, after);

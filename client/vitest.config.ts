@@ -20,6 +20,28 @@ export default defineConfig({
         },
       },
       {
+        resolve: {
+          alias: {
+            'next/image': path.join(dirname, 'e2e/nextImageStub.tsx'),
+            'next/link': path.join(dirname, 'e2e/nextLinkStub.tsx'),
+          },
+        },
+        test: {
+          name: 'e2e',
+          include: ['e2e/**/*.e2e.test.tsx'],
+          globalSetup: ['e2e/globalSetup.ts'],
+          setupFiles: ['e2e/setup.ts'],
+          testTimeout: 300_000,
+          hookTimeout: 120_000,
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: 'playwright',
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+      {
         extends: true,
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config

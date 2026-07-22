@@ -50,6 +50,8 @@ import type { WorldItemDeltas } from "./item/WorldItemDeltas";
 import { MovementHandler } from "./MovementHandler";
 import { NpcHandler } from "./npc/NpcHandler";
 import type { NpcTravelStore } from "./npc/NpcTravelStore";
+import type { PromotionStore } from "./npc/PromotionStore";
+import { PromotionService } from "./npc/PromotionService";
 import { TravelService } from "./npc/TravelService";
 import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
@@ -84,6 +86,7 @@ export interface GameServerDeps {
   items: ItemStore;
   itemCatalog: ItemCatalog;
   npcTravel?: NpcTravelStore;
+  promotion?: PromotionStore;
   bank?: BankStore;
   shop?: ShopStore;
   depot?: DepotStore;
@@ -123,6 +126,7 @@ export class GameServer {
   private readonly spells = new SpellRegistry();
   private readonly items: ItemIntentHandler;
   private readonly travel: TravelService;
+  private readonly promotion: PromotionService;
   private readonly bank: BankService;
   private readonly shops: ShopService;
   private readonly depot: DepotService;
@@ -318,12 +322,27 @@ export class GameServer {
       this.spells,
       deps.characters,
     );
+    this.progression = new ProgressionSystem(
+      this.world,
+      this.registry,
+      this.persistence,
+      this.items,
+      config.rates,
+    );
     this.travel = new TravelService(
       this.world,
       this.visibility,
       this.persistence,
       this.items,
       deps.npcTravel,
+    );
+    this.promotion = new PromotionService(
+      this.world,
+      this.persistence,
+      this.items,
+      this.progression,
+      this.spells,
+      deps.promotion,
     );
     this.bank = new BankService(this.world, this.items, deps.bank);
     this.shops = new ShopService(
@@ -339,6 +358,7 @@ export class GameServer {
       this.travel,
       this.bank,
       this.shops,
+      this.promotion,
     );
     this.houses = new HouseService(
       this.world,
@@ -377,13 +397,6 @@ export class GameServer {
       deps.itemCatalog,
       this.items,
       this.movement,
-    );
-    this.progression = new ProgressionSystem(
-      this.world,
-      this.registry,
-      this.persistence,
-      this.items,
-      config.rates,
     );
     this.parties = new PartyHandler(
       this.world,
@@ -538,6 +551,7 @@ export class GameServer {
     this.characters.applyResolvedOutcomes();
     this.items.applyResolvedOutcomes(now);
     this.travel.applyResolvedOutcomes(now);
+    this.promotion.applyResolvedOutcomes(now);
     this.bank.applyResolvedOutcomes(now);
     this.shops.applyResolvedOutcomes(now);
     this.depot.applyResolvedOutcomes();
@@ -850,6 +864,8 @@ export class GameServer {
   private async finishStop(): Promise<void> {
     await this.travel.stop();
     this.travel.applyResolvedOutcomes(Date.now());
+    await this.promotion.stop();
+    this.promotion.applyResolvedOutcomes(Date.now());
     await this.bank.stop();
     this.bank.applyResolvedOutcomes(Date.now());
     await this.shops.stop();

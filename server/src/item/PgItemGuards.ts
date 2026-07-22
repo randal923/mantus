@@ -26,7 +26,7 @@ export class PgItemGuards {
     const root = result.rows[0];
     if (
       root?.character_id !== characterId ||
-      !["equipment", "inventory"].includes(root.location_type)
+      root.location_type !== "equipment"
     ) {
       throw new Error("item is not owned by character");
     }

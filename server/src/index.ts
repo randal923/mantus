@@ -10,6 +10,7 @@ import { PgItemStore } from "./item/PgItemStore";
 import { PgBankStore } from "./economy/PgBankStore";
 import { PgShopStore } from "./economy/PgShopStore";
 import { PgNpcTravelStore } from "./npc/PgNpcTravelStore";
+import { PgPromotionStore } from "./npc/PgPromotionStore";
 import { PgDepotStore } from "./depot/PgDepotStore";
 import { PgMarketStore } from "./market/PgMarketStore";
 import { PgTradeStore } from "./trade/PgTradeStore";
@@ -62,6 +63,7 @@ const characters = new PgCharacterStore(pool);
 const itemCatalog = await loadItemCatalog();
 const items = new PgItemStore(pool, itemCatalog, serverConfig.map.name);
 const npcTravel = new PgNpcTravelStore(pool, itemCatalog);
+const promotion = new PgPromotionStore(pool, itemCatalog);
 const bank = new PgBankStore(pool, itemCatalog);
 const shop = new PgShopStore(pool, itemCatalog);
 const depot = new PgDepotStore(pool, itemCatalog);
@@ -92,6 +94,7 @@ const server = new GameServer(serverConfig, {
   items,
   itemCatalog,
   npcTravel,
+  promotion,
   bank,
   shop,
   depot,

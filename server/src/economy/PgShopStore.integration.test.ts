@@ -28,7 +28,7 @@ let store: PgShopStore;
 let characterService: CharacterService;
 let characterStore: PgCharacterStore;
 
-const insertInventoryItem = async (
+const insertBackpackItem = async (
   characterId: string,
   typeId: number,
   count: number,
@@ -38,9 +38,13 @@ const insertInventoryItem = async (
   const id = randomUUID();
   await pool.query(
     `INSERT INTO items (
-       id, item_type_id, count, attributes, location_type, character_id,
+       id, item_type_id, count, attributes, location_type, container_id,
        slot_index
-     ) VALUES ($1, $2, $3, $4::jsonb, 'inventory', $5, $6)`,
+     )
+     SELECT $1, $2, $3, $4::jsonb, 'container', id, $6
+     FROM items
+     WHERE character_id = $5 AND location_type = 'equipment'
+       AND equipment_slot = 'backpack'`,
     [id, typeId, count, JSON.stringify(attributes), characterId, slot],
   );
   return id;
@@ -124,7 +128,7 @@ const itemAmount = async (
        SELECT id, item_type_id, count, container_id
        FROM items
        WHERE character_id = $1
-         AND location_type IN ('equipment', 'inventory')
+         AND location_type = 'equipment'
        UNION ALL
        SELECT child.id, child.item_type_id, child.count, child.container_id
        FROM items child JOIN owned ON child.container_id = owned.id
@@ -201,10 +205,14 @@ databaseDescribe("PgShopStore integration", () => {
       "012_bank.sql",
       "013_shops.sql",
       "014_character_storages.sql",
+      "015_depot_and_inbox.sql",
       "018_pvp.sql",
       "019_houses.sql",
       "020_social.sql",
       "021_moderation.sql",
+      "023_character_action_bar.sql",
+      "029_character_potion_action_bar.sql",
+      "032_remove_loose_inventory.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -247,7 +255,7 @@ databaseDescribe("PgShopStore integration", () => {
   });
 
   it("commits carried money, bank money, purchased items, ledger, and audit atomically", async () => {
-    await insertInventoryItem(characterId, PLATINUM_TYPE, 1, 0);
+    await insertBackpackItem(characterId, PLATINUM_TYPE, 1, 0);
     await setBalance(characterId, 50);
 
     const result = await store.purchase(
@@ -285,7 +293,7 @@ databaseDescribe("PgShopStore integration", () => {
        ) VALUES ($1, $2, 1, 'container', $3, 0)`,
       [randomUUID(), PLATINUM_TYPE, backpackId],
     );
-    await insertInventoryItem(characterId, GOLD_TYPE, 14, 0);
+    await insertBackpackItem(characterId, GOLD_TYPE, 14, 1);
 
     const result = await store.purchase(
       characterId,
@@ -293,12 +301,12 @@ databaseDescribe("PgShopStore integration", () => {
     );
 
     expect(result.status).toBe("committed");
-    const rootItems = await pool.query<{ count: string }>(
+    const stagedItems = await pool.query<{ count: string }>(
       `SELECT count(*)::text AS count FROM items
-       WHERE character_id = $1 AND location_type = 'inventory'`,
+       WHERE character_id = $1 AND location_type = 'internal-staging'`,
       [characterId],
     );
-    expect(rootItems.rows[0]?.count).toBe("0");
+    expect(stagedItems.rows[0]?.count).toBe("0");
     const backpackItems = await pool.query<{
       item_type_id: number;
       count: number;
@@ -310,13 +318,13 @@ databaseDescribe("PgShopStore integration", () => {
       [backpackId],
     );
     expect(backpackItems.rows).toEqual([
-      { item_type_id: GOLD_TYPE, count: 94, slot_index: 0 },
-      { item_type_id: AXE_TYPE, count: 1, slot_index: 1 },
+      { item_type_id: AXE_TYPE, count: 1, slot_index: 0 },
+      { item_type_id: GOLD_TYPE, count: 94, slot_index: 1 },
     ]);
   });
 
   it("changes nothing when carried and bank funds are insufficient", async () => {
-    await insertInventoryItem(characterId, GOLD_TYPE, 10, 0);
+    await insertBackpackItem(characterId, GOLD_TYPE, 10, 0);
     await setBalance(characterId, 5);
 
     const result = await store.purchase(characterId, purchaseRequest());
@@ -330,7 +338,7 @@ databaseDescribe("PgShopStore integration", () => {
   });
 
   it("atomically spends a custom item currency without touching gold or bank", async () => {
-    await insertInventoryItem(characterId, SILVER_TOKEN_TYPE, 10, 0);
+    await insertBackpackItem(characterId, SILVER_TOKEN_TYPE, 10, 0);
     await setBalance(characterId, 500);
 
     const result = await store.purchase(
@@ -364,9 +372,9 @@ databaseDescribe("PgShopStore integration", () => {
   });
 
   it("rolls back partial payment and grants when a purchase cannot fit", async () => {
-    await insertInventoryItem(characterId, GOLD_TYPE, 100, 0);
-    for (let slot = 1; slot < 100; slot++) {
-      await insertInventoryItem(characterId, HELMET_TYPE, 1, slot);
+    await insertBackpackItem(characterId, GOLD_TYPE, 100, 0);
+    for (let slot = 1; slot < 20; slot++) {
+      await insertBackpackItem(characterId, HELMET_TYPE, 1, slot);
     }
 
     const result = await store.purchase(
@@ -412,8 +420,8 @@ databaseDescribe("PgShopStore integration", () => {
 
   it("sells only owned, unequipped items and commits proceeds with audits", async () => {
     await insertEquipmentItem(characterId, AXE_TYPE);
-    await insertInventoryItem(characterId, AXE_TYPE, 1, 0);
-    await insertInventoryItem(characterId, AXE_TYPE, 1, 1);
+    await insertBackpackItem(characterId, AXE_TYPE, 1, 0);
+    await insertBackpackItem(characterId, AXE_TYPE, 1, 1);
 
     const result = await store.sell(
       characterId,
@@ -429,7 +437,7 @@ databaseDescribe("PgShopStore integration", () => {
   });
 
   it("does not sell a non-empty container", async () => {
-    const containerId = await insertInventoryItem(
+    const containerId = await insertBackpackItem(
       characterId,
       AXE_TYPE,
       1,
@@ -451,9 +459,9 @@ databaseDescribe("PgShopStore integration", () => {
   });
 
   it("rolls back a sale when all proceeds cannot fit", async () => {
-    await insertInventoryItem(characterId, AXE_TYPE, 1, 0);
-    for (let slot = 1; slot < 100; slot++) {
-      await insertInventoryItem(characterId, HELMET_TYPE, 1, slot);
+    await insertBackpackItem(characterId, AXE_TYPE, 1, 0);
+    for (let slot = 1; slot < 20; slot++) {
+      await insertBackpackItem(characterId, HELMET_TYPE, 1, slot);
     }
 
     const result = await store.sell(
@@ -523,7 +531,7 @@ databaseDescribe("PgShopStore integration", () => {
   });
 
   it("lets exactly one racing sale consume the same item", async () => {
-    await insertInventoryItem(characterId, AXE_TYPE, 1, 0);
+    await insertBackpackItem(characterId, AXE_TYPE, 1, 0);
 
     const outcomes = await Promise.allSettled([
       store.sell(characterId, saleRequest()),

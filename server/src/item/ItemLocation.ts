@@ -2,7 +2,6 @@ import type { EquipmentSlot, Position } from "@tibia/protocol";
 
 export type ItemLocation =
   | { readonly kind: "equipment"; readonly characterId: string; readonly slot: EquipmentSlot }
-  | { readonly kind: "inventory"; readonly characterId: string; readonly slot: number }
   | { readonly kind: "container"; readonly containerId: string; readonly slot: number }
   | { readonly kind: "world"; readonly position: Position; readonly stackIndex: number }
   | {

@@ -86,7 +86,7 @@ const ownedAxe = (id: string, slot: number): Item => ({
   count: 1,
   attributes: {},
   version: 1,
-  location: { kind: "inventory", characterId: "shopper", slot },
+  location: { kind: "container", containerId: "test-backpack", slot },
 });
 
 const makeHarness = (
@@ -260,7 +260,7 @@ describe("ShopService", () => {
       count: 10,
       attributes: {},
       version: 1,
-      location: { kind: "inventory", characterId: "shopper", slot: 0 },
+      location: { kind: "container", containerId: "test-backpack", slot: 0 },
     };
     const purchase = vi.fn(async () => ({
       status: "committed" as const,

@@ -27,10 +27,7 @@ export function planDepotDeposit(input: {
   if (!item || item.version !== input.expectedItemRevision) {
     return { status: "stale" };
   }
-  if (
-    item.location.kind !== "inventory" &&
-    item.location.kind !== "container"
-  ) {
+  if (item.location.kind !== "container") {
     return { status: "invalid-item" };
   }
   const type = catalog.require(item.typeId);

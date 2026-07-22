@@ -428,6 +428,50 @@ describe("ItemIntentHandler memory-first carried ops", () => {
     ).toMatchObject({ kind: "equipment", slot: "backpack" });
   });
 
+  it("leaves a ground backpack in place when one is already equipped", async () => {
+    const store = new MemoryItemStore(catalog);
+    for (const item of carriedFixture()) store.seed(item);
+    const groundBackpack: Item = {
+      id: "dddd1111-1111-4111-8111-111111111111",
+      typeId: BACKPACK_TYPE,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "world",
+        position: { x: 1, y: 2, z: 7 },
+        stackIndex: 1,
+      },
+    };
+    store.seed(groundBackpack);
+    const { handler, session, sent, world } = makeHarness(store);
+    world.applyCreatedWorldItems([groundBackpack]);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "pickup-item",
+      itemId: groundBackpack.id,
+      revision: 1,
+      position: { x: 1, y: 2, z: 7 },
+      equipSlot: "backpack",
+    });
+
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    expect(world.getMapItems({ x: 1, y: 2, z: 7 })).toHaveLength(1);
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.filter(
+          (item) =>
+            item.location.kind === "equipment" &&
+            item.location.slot === "backpack",
+        ),
+    ).toHaveLength(1);
+  });
+
   it("equips an item picked up from the ground in one intent", async () => {
     const store = new MemoryItemStore(catalog);
     for (const item of carriedFixture()) store.seed(item);

@@ -61,12 +61,12 @@ export function EquipmentPaperdoll({
                     item={equipment[slot]}
                     placeholderSpriteId={SLOT_HINT_SPRITES[slot]}
                     onActivate={
-                      equipment[slot] && onUnequip
+                      slot !== "backpack" && equipment[slot] && onUnequip
                         ? () => onUnequip(equipment[slot]!, slot)
                         : undefined
                     }
                     onDragStart={
-                      equipment[slot] && onDragStart
+                      slot !== "backpack" && equipment[slot] && onDragStart
                         ? () =>
                             onDragStart({
                               kind: "owned",
@@ -77,7 +77,7 @@ export function EquipmentPaperdoll({
                     }
                     onDragEnd={onDragEnd}
                     onDrop={
-                      onDrop
+                      onDrop && (slot !== "backpack" || !equipment.backpack)
                         ? () => onDrop(slot)
                         : undefined
                     }

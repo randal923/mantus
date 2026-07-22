@@ -119,7 +119,7 @@ export class WorldRenderer {
   private mapDragIcon: HTMLCanvasElement | null = null;
   private previousBodyCursor = "";
   private suppressNextMapClick = false;
-  private suppressNextContextMenu = false;
+  private mapLookChordActive = false;
   private lastPointerClientPosition: { x: number; y: number } | null = null;
   private destroyed = false;
 
@@ -137,9 +137,11 @@ export class WorldRenderer {
     }
     host.appendChild(this.app.canvas);
     this.app.canvas.addEventListener("pointerdown", this.onMapPointerDown);
+    this.app.canvas.addEventListener("mousedown", this.onMapMouseDown);
     window.addEventListener("pointermove", this.onMapPointerMove);
     window.addEventListener("pointerup", this.onMapPointerUp);
     window.addEventListener("pointercancel", this.onMapPointerCancel);
+    window.addEventListener("mouseup", this.onMapMouseUp);
     this.app.canvas.addEventListener("dragover", this.onMapDragOver);
     this.app.canvas.addEventListener("drop", this.onMapDrop);
     this.app.canvas.addEventListener("click", this.onMapClick);
@@ -400,9 +402,11 @@ export class WorldRenderer {
     this.destroyed = true;
     this.hideMapDragIcon();
     this.app.canvas.removeEventListener("pointerdown", this.onMapPointerDown);
+    this.app.canvas.removeEventListener("mousedown", this.onMapMouseDown);
     window.removeEventListener("pointermove", this.onMapPointerMove);
     window.removeEventListener("pointerup", this.onMapPointerUp);
     window.removeEventListener("pointercancel", this.onMapPointerCancel);
+    window.removeEventListener("mouseup", this.onMapMouseUp);
     this.app.canvas.removeEventListener("dragover", this.onMapDragOver);
     this.app.canvas.removeEventListener("drop", this.onMapDrop);
     this.app.canvas.removeEventListener("click", this.onMapClick);
@@ -544,15 +548,10 @@ export class WorldRenderer {
   };
 
   private readonly onMapPointerDown = (event: PointerEvent): void => {
+    this.mapLookChordActive = false;
+    if (event.buttons === 1) this.suppressNextMapClick = false;
     this.mapDragCandidate = null;
     if (!this.actions || !this.ownPosition) return;
-    // Tibia's look gesture: both mouse buttons pressed together.
-    if ((event.buttons & 3) === 3) {
-      this.suppressNextMapClick = true;
-      this.suppressNextContextMenu = true;
-      this.lookAtEvent(event);
-      return;
-    }
     if (event.button !== 0) return;
     const position = this.mapPositionForEvent(event);
     if (!position) return;
@@ -566,6 +565,34 @@ export class WorldRenderer {
       startY: event.clientY,
       active: false,
     };
+  };
+
+  private readonly onMapMouseDown = (event: MouseEvent): void => {
+    // Mouse events report the second button press; pointerdown does not.
+    if (
+      (event.button !== 0 && event.button !== 2) ||
+      (event.buttons & 3) !== 3 ||
+      this.mapLookChordActive
+    ) {
+      return;
+    }
+    if (!this.actions || !this.ownPosition) return;
+    event.preventDefault();
+    if (this.mapDragCandidate?.active) this.actions.endItemDrag();
+    this.mapDragCandidate = null;
+    this.hideMapDragIcon();
+    this.suppressNextMapClick = true;
+    this.mapLookChordActive = true;
+    this.lookAtEvent(event);
+  };
+
+  private readonly onMapMouseUp = (event: MouseEvent): void => {
+    if (this.mapLookChordActive) {
+      if ((event.buttons & 3) === 0) this.mapLookChordActive = false;
+      return;
+    }
+    // Resolve a regular right-click only after it cannot become a look chord.
+    if (event.button === 2) this.performSecondaryMapAction(event);
   };
 
   private readonly onMapPointerMove = (event: PointerEvent): void => {
@@ -613,6 +640,7 @@ export class WorldRenderer {
   };
 
   private readonly onMapPointerCancel = (event: PointerEvent): void => {
+    this.mapLookChordActive = false;
     if (this.mapDragCandidate?.pointerId !== event.pointerId) return;
     if (this.mapDragCandidate.active) this.actions?.endItemDrag();
     this.mapDragCandidate = null;
@@ -667,16 +695,32 @@ export class WorldRenderer {
 
   private readonly onMapContextMenu = (event: MouseEvent): void => {
     event.preventDefault();
-    if (this.suppressNextContextMenu) {
-      this.suppressNextContextMenu = false;
-      return;
-    }
+    // macOS reports Ctrl+left-click as a context-menu event instead of click.
+    if (!event.ctrlKey || event.button !== 0) return;
+    if (!this.actions || !this.ownPosition) return;
+    const point = this.canvasPoint(event);
+    if (!point) return;
+    this.suppressNextMapClick = true;
+    this.openContextMenuFor(
+      event,
+      point,
+      getMapPointerPosition(
+        point.x,
+        point.y,
+        this.world.position.x,
+        this.world.position.y,
+        ZOOM,
+        TILE_SIZE,
+        this.ownPosition.z,
+      ),
+    );
+  };
+
+  private performSecondaryMapAction(event: MouseEvent): void {
     if (!this.actions || !this.ownPosition) return;
     if (this.actions.cancelUseWith()) return;
     const point = this.canvasPoint(event);
     if (!point) return;
-    // macOS fires contextmenu for Ctrl+left-click, so this branch covers
-    // both Ctrl+right-click and the laptop Ctrl+click gesture.
     if (event.ctrlKey) {
       this.openContextMenuFor(
         event,
@@ -722,7 +766,7 @@ export class WorldRenderer {
         ),
       ),
     );
-  };
+  }
 
   private openContextMenuFor(
     event: MouseEvent,

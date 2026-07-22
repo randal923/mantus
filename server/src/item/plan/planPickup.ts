@@ -1,4 +1,5 @@
-import type { ItemContainerDestination, Position } from "@tibia/protocol";
+import type { EquipmentSlot, ItemContainerDestination, Position } from "@tibia/protocol";
+import type { Character } from "../../character/Character";
 import { carriedWeight } from "../../depot/carriedWeight";
 import type {
   CarriedPersistAudit,
@@ -12,7 +13,6 @@ import { canMergeItems } from "./canMergeItems";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
 import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
-import { firstFreeInventorySlot } from "./firstFreeInventorySlot";
 import { materializeWorldSource } from "./materializeWorldSource";
 import { subtreeHeight } from "./subtreeHeight";
 import type { WorldItemsView } from "./WorldItemsView";
@@ -31,7 +31,9 @@ export function planPickup(input: {
   readonly expectedVersion: number;
   readonly position: Position;
   readonly destination?: ItemContainerDestination;
-  readonly stageInInventory: boolean;
+  readonly equipSlot?: EquipmentSlot;
+  readonly level: number;
+  readonly vocation: Character["vocation"];
 }): CarriedPlan | null {
   const { characterId, catalog, carried, world, position } = input;
   const mapItem = world
@@ -79,11 +81,59 @@ export function planPickup(input: {
   const removedItemIds: string[] = [];
   let finalLocation: ItemLocation;
   let mergeTarget: Item | undefined;
+  let finalTypeId = root.typeId;
 
-  if (input.stageInInventory) {
-    const stagingSlot = firstFreeInventorySlot(carried.items);
-    if (stagingSlot === null) return null;
-    finalLocation = { kind: "inventory", characterId, slot: stagingSlot };
+  if (input.equipSlot) {
+    if (input.destination || type.equipmentSlot !== input.equipSlot) return null;
+    if (
+      type.requirements?.level !== undefined &&
+      input.level < type.requirements.level
+    ) {
+      return null;
+    }
+    if (
+      type.requirements?.vocations &&
+      !type.requirements.vocations.includes(input.vocation)
+    ) {
+      return null;
+    }
+    if (
+      carried.items.some(
+        (item) =>
+          item.location.kind === "equipment" &&
+          item.location.slot === input.equipSlot,
+      )
+    ) {
+      return null;
+    }
+    if (
+      type.slotType === "two-handed" &&
+      carried.items.some(
+        (item) =>
+          item.location.kind === "equipment" &&
+          item.location.slot === "shield",
+      )
+    ) {
+      return null;
+    }
+    if (
+      input.equipSlot === "shield" &&
+      carried.items.some(
+        (item) =>
+          item.location.kind === "equipment" &&
+          item.location.slot === "weapon" &&
+          catalog.require(item.typeId).slotType === "two-handed",
+      )
+    ) {
+      return null;
+    }
+    finalLocation = {
+      kind: "equipment",
+      characterId,
+      slot: input.equipSlot,
+    };
+    finalTypeId = type.transformEquipTo ?? root.typeId;
+    if (!catalog.get(finalTypeId)) return null;
   } else if (input.destination) {
     const container = carriedById.get(input.destination.containerId);
     if (
@@ -151,6 +201,7 @@ export function planPickup(input: {
 
   const final: Item = {
     ...root,
+    typeId: finalTypeId,
     count: root.count + (mergeTarget?.count ?? 0),
     location: finalLocation,
     version: root.version + 1,
@@ -200,6 +251,14 @@ export function planPickup(input: {
     to: final.location,
     count: final.count,
   });
+  if (finalTypeId !== root.typeId) {
+    audits.push({
+      kind: "transform",
+      itemId: root.id,
+      fromTypeId: root.typeId,
+      toTypeId: finalTypeId,
+    });
+  }
   return {
     mutation: {
       before: root,
@@ -212,8 +271,7 @@ export function planPickup(input: {
 
 function slotOf(item: Item): number {
   return item.location.kind === "container" ||
-    item.location.kind === "corpse" ||
-    item.location.kind === "inventory"
+    item.location.kind === "corpse"
     ? item.location.slot
     : 0;
 }

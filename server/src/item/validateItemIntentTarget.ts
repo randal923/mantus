@@ -117,8 +117,7 @@ export function validateItemIntentTarget(
       return false;
     }
     if (intent.equipSlot) {
-      // Equip-after-pickup: the slot must match the catalog before the item
-      // is even lifted; the equip itself is re-validated after the pickup.
+      // Direct pickup-to-equipment: reject a mismatched slot before planning.
       if (intent.destination) return false;
       const type = catalog.get(visible.itemId);
       if (!type || type.equipmentSlot !== intent.equipSlot) return false;

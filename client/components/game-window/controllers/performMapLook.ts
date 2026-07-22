@@ -9,9 +9,9 @@ export function performMapLook(
   itemIds: ReadonlyArray<number>,
 ): void {
   const appendLine = (text: string) => {
-    const current = store.getState();
-    current.showScreenMessage(text, "look");
-    current.setCombatLog((entries) => [...entries, text].slice(-6));
+    store
+      .getState()
+      .setCombatLog((entries) => [...entries, text].slice(-6));
   };
   const state = store.getState();
   if (creatureId) {

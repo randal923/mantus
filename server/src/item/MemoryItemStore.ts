@@ -57,10 +57,7 @@ export class MemoryItemStore implements ItemStore {
     slot: EquipmentSlot,
   ): Promise<ItemMutation> {
     const before = requireOwnedMemoryItem(this.items, characterId, itemId, expectedVersion);
-    if (
-      before.location.kind !== "inventory" &&
-      before.location.kind !== "container"
-    ) {
+    if (before.location.kind !== "container") {
       throw new Error("item cannot be equipped from this location");
     }
     const occupied = [...this.items.values()].find(
@@ -70,7 +67,10 @@ export class MemoryItemStore implements ItemStore {
         item.location.characterId === characterId &&
         item.location.slot === slot,
     );
-    if (occupied && before.location.kind === "container") {
+    if (slot === "backpack" && occupied) {
+      throw new Error("equipped backpack cannot be replaced");
+    }
+    if (occupied) {
       requireMemoryContainerPlacement(this.items, occupied.id, before.location.containerId);
     }
     const after = {
@@ -97,6 +97,9 @@ export class MemoryItemStore implements ItemStore {
     slot: EquipmentSlot,
     destination?: ItemContainerDestination,
   ): Promise<ItemMutation> {
+    if (slot === "backpack") {
+      throw new Error("equipped backpack cannot be unequipped");
+    }
     const before = requireOwnedMemoryItem(this.items, characterId, itemId, expectedVersion);
     if (
       before.location.kind !== "equipment" ||
@@ -137,17 +140,33 @@ export class MemoryItemStore implements ItemStore {
       this.items.set(itemId, after);
       return { before, after: [after] };
     }
-    const destinationSlot = [...this.items.values()].filter(
+    const backpack = [...this.items.values()].find(
       (item) =>
-        item.location.kind === "inventory" &&
-        item.location.characterId === characterId,
-    ).length;
+        item.location.kind === "equipment" &&
+        item.location.characterId === characterId &&
+        item.location.slot === "backpack",
+    );
+    if (!backpack) throw new Error("character has no equipped backpack");
+    const capacity = this.catalog?.require(backpack.typeId).containerCapacity ?? 0;
+    const occupiedSlots = new Set(
+      [...this.items.values()].flatMap((item) =>
+        item.location.kind === "container" &&
+        item.location.containerId === backpack.id
+          ? [item.location.slot]
+          : [],
+      ),
+    );
+    const destinationSlot = Array.from(
+      { length: capacity },
+      (_, index) => index,
+    ).find((index) => !occupiedSlots.has(index));
+    if (destinationSlot === undefined) throw new Error("backpack is full");
     const after = {
       ...before,
       version: before.version + 1,
       location: {
-        kind: "inventory",
-        characterId,
+        kind: "container",
+        containerId: backpack.id,
         slot: destinationSlot,
       } as const,
     };
@@ -162,7 +181,7 @@ export class MemoryItemStore implements ItemStore {
     _position: Position,
     _source?: WorldItemSource,
     destination?: ItemContainerDestination,
-    stageInInventory = false,
+    equipSlot?: EquipmentSlot,
   ): Promise<ItemMutation> {
     const before = this.items.get(itemReference);
     if (!before) throw new Error("item not found");
@@ -172,28 +191,29 @@ export class MemoryItemStore implements ItemStore {
     if (before.location.kind !== "world") {
       throw new Error("item is not on the ground");
     }
-    if (stageInInventory) {
-      const occupied = new Set(
-        [...this.items.values()].flatMap((item) =>
-          item.location.kind === "inventory" &&
-          item.location.characterId === characterId
-            ? [item.location.slot]
-            : [],
-        ),
-      );
-      const stagingSlot = Array.from({ length: 100 }, (_, index) => index).find(
-        (index) => !occupied.has(index),
-      );
-      if (stagingSlot === undefined) {
-        throw new Error("inventory staging area is full");
+    if (equipSlot) {
+      const type = this.catalog?.require(before.typeId);
+      if (destination || type?.equipmentSlot !== equipSlot) {
+        throw new Error("item does not fit equipment slot");
+      }
+      if (
+        [...this.items.values()].some(
+          (item) =>
+            item.location.kind === "equipment" &&
+            item.location.characterId === characterId &&
+            item.location.slot === equipSlot,
+        )
+      ) {
+        throw new Error("equipment slot is occupied");
       }
       const after = {
         ...before,
+        typeId: type.transformEquipTo ?? before.typeId,
         version: before.version + 1,
         location: {
-          kind: "inventory",
+          kind: "equipment",
           characterId,
-          slot: stagingSlot,
+          slot: equipSlot,
         } as const,
       };
       this.items.set(after.id, after);
@@ -338,10 +358,7 @@ export class MemoryItemStore implements ItemStore {
     if (before.id === destination.id) {
       throw new Error("an item cannot contain itself");
     }
-    if (
-      before.location.kind !== "inventory" &&
-      before.location.kind !== "container"
-    ) {
+    if (before.location.kind !== "container") {
       throw new Error("item cannot move from this location");
     }
     requireMemoryContainerPlacement(this.items, before.id, destination.id);
@@ -374,7 +391,7 @@ export class MemoryItemStore implements ItemStore {
     if (occupied && movingCount !== before.count) {
       throw new Error("cannot split into an occupied slot");
     }
-    if (occupied && before.location.kind === "container") {
+    if (occupied) {
       requireMemoryContainerPlacement(this.items, occupied.id, before.location.containerId);
     }
     if (movingCount === before.count) {
@@ -573,8 +590,7 @@ export class MemoryItemStore implements ItemStore {
           flaskAfter.count !== 1 ||
           flaskAfter.version !== 1 ||
           Object.keys(flaskAfter.attributes).length !== 0 ||
-          flaskAfter.location.kind !== "inventory" ||
-          flaskAfter.location.characterId !== request.actorCharacterId
+          flaskAfter.location.kind !== "container"
         ) {
           throw new Error("created potion flask plan is invalid");
         }
@@ -582,8 +598,8 @@ export class MemoryItemStore implements ItemStore {
         if (
           [...this.items.values()].some(
             (item) =>
-              item.location.kind === "inventory" &&
-              item.location.characterId === request.actorCharacterId &&
+              item.location.kind === "container" &&
+              item.location.containerId === flaskLocation.containerId &&
               item.location.slot === flaskLocation.slot,
           )
         ) {
@@ -816,6 +832,16 @@ export class MemoryItemStore implements ItemStore {
 
   async persist(plan: CarriedPersistPlan): Promise<void> {
     for (const op of plan.rowOps) {
+      if (op.kind === "stage") {
+        const existing = this.items.get(op.itemId);
+        if (!existing || existing.version !== op.expectedVersion) {
+          throw new Error(
+            `carried persist stage missed item ${op.itemId}@${op.expectedVersion}`,
+          );
+        }
+        this.items.set(op.itemId, { ...existing, version: op.nextVersion });
+        continue;
+      }
       if (op.kind === "insert") {
         this.items.set(op.item.id, op.item);
         continue;

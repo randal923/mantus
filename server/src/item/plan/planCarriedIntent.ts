@@ -135,7 +135,9 @@ export function planCarriedIntent(input: {
           expectedVersion: intent.revision,
           position: intent.position,
           destination: intent.destination,
-          stageInInventory: intent.equipSlot !== undefined,
+          equipSlot: intent.equipSlot,
+          level: input.level,
+          vocation: input.vocation,
         }),
       );
     case "drop-item":

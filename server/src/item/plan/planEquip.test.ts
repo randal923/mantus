@@ -41,6 +41,8 @@ const SWORD = 100;
 const GATED_SWORD = 101;
 const TWO_HANDER = 102;
 const SHIELD = 103;
+const BACKPACK = 104;
+const CARRIED_CONTAINER_ID = "44444444-4444-4444-8444-444444444444";
 
 const catalog = new ItemCatalog([
   makeItemType({ id: SWORD, equipmentSlot: "weapon" }),
@@ -55,6 +57,7 @@ const catalog = new ItemCatalog([
     slotType: "two-handed",
   }),
   makeItemType({ id: SHIELD, equipmentSlot: "shield" }),
+  makeItemType({ id: BACKPACK, equipmentSlot: "backpack", containerCapacity: 20 }),
 ]);
 
 const carried = (typeId: number, slot = 0): Item => ({
@@ -63,8 +66,21 @@ const carried = (typeId: number, slot = 0): Item => ({
   count: 1,
   attributes: {},
   version: 1,
-  location: { kind: "inventory", characterId: CHARACTER_ID, slot },
+  location: { kind: "container", containerId: CARRIED_CONTAINER_ID, slot },
 });
+
+const sourceContainer: Item = {
+  id: CARRIED_CONTAINER_ID,
+  typeId: BACKPACK,
+  count: 1,
+  attributes: {},
+  version: 1,
+  location: {
+    kind: "equipment",
+    characterId: CHARACTER_ID,
+    slot: "backpack",
+  },
+};
 
 const equipped = (typeId: number, slot: "weapon" | "shield"): Item => ({
   id: `22222222-2222-4222-8222-2222222222${String(typeId).padStart(2, "0")}`,
@@ -144,7 +160,7 @@ describe("planEquip", () => {
     const plan = planEquip({
       characterId: CHARACTER_ID,
       catalog,
-      items: [incoming, occupying],
+      items: [sourceContainer, incoming, occupying],
       level: 50,
       vocation: "Knight",
       itemId: incoming.id,
@@ -162,9 +178,42 @@ describe("planEquip", () => {
     expect(displaced).toMatchObject({
       id: occupying.id,
       version: 2,
-      location: { kind: "inventory", slot: 4 },
+      location: {
+        kind: "container",
+        containerId: CARRIED_CONTAINER_ID,
+        slot: 4,
+      },
     });
     // The staged write, the equip, then the displaced item's final placement.
     expect(plan.persist.rowOps).toHaveLength(3);
+  });
+
+  it("rejects replacing the equipped backpack", () => {
+    const incoming = carried(BACKPACK, 4);
+    const occupying: Item = {
+      id: "33333333-3333-4333-8333-333333333333",
+      typeId: BACKPACK,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "equipment",
+        characterId: CHARACTER_ID,
+        slot: "backpack",
+      },
+    };
+
+    expect(
+      planEquip({
+        characterId: CHARACTER_ID,
+        catalog,
+        items: [incoming, occupying],
+        level: 50,
+        vocation: "Knight",
+        itemId: incoming.id,
+        expectedVersion: 1,
+        slot: "backpack",
+      }),
+    ).toBeNull();
   });
 });

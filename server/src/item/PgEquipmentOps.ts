@@ -14,12 +14,10 @@ import type { PgItemLocks } from "./PgItemLocks";
 import { requireReturnedItem } from "./requireReturnedItem";
 import { requireRow } from "./requireRow";
 import { requireVersion } from "./requireVersion";
-import { equipDisplaceToInventoryUpdate } from "./sql/equipDisplaceToInventoryUpdate";
+import { equipDisplaceToStagingUpdate } from "./sql/equipDisplaceToStagingUpdate";
 import { equipItemUpdate } from "./sql/equipItemUpdate";
 import { equipRestoreDisplacedToContainerUpdate } from "./sql/equipRestoreDisplacedToContainerUpdate";
-import { equipRestoreDisplacedToInventoryUpdate } from "./sql/equipRestoreDisplacedToInventoryUpdate";
 import { unequipToContainerUpdate } from "./sql/unequipToContainerUpdate";
-import { unequipToInventoryUpdate } from "./sql/unequipToInventoryUpdate";
 import { withSerializableTransaction } from "./withSerializableTransaction";
 
 export class PgEquipmentOps {
@@ -42,10 +40,7 @@ export class PgEquipmentOps {
       const row = await this.locks.lockItem(client, itemId);
       requireVersion(row, expectedVersion);
       await this.guards.requireOwned(client, row.id, characterId);
-      if (
-        row.location_type !== "inventory" &&
-        row.location_type !== "container"
-      ) {
+      if (row.location_type !== "container") {
         throw new Error("item cannot be equipped from this location");
       }
       const type = this.catalog.require(row.item_type_id);
@@ -71,27 +66,28 @@ export class PgEquipmentOps {
         slot,
         row.id,
       );
+      if (slot === "backpack" && occupied) {
+        throw new Error("equipped backpack cannot be replaced");
+      }
       let displacedBefore: Item | undefined;
       let displacedTypeId: number | undefined;
       if (occupied) {
         if (row.slot_index === null) throw new Error("item source slot is missing");
-        if (row.location_type === "container") {
-          await this.guards.requireContainerPlacement(
-            client,
-            occupied.id,
-            row.container_id ?? "",
-          );
-        }
+        await this.guards.requireContainerPlacement(
+          client,
+          occupied.id,
+          row.container_id ?? "",
+        );
         displacedBefore = itemFromRow(occupied);
         const occupiedType = this.catalog.require(occupied.item_type_id);
         displacedTypeId =
           occupiedType.transformDeEquipTo ?? occupied.item_type_id;
         this.catalog.require(displacedTypeId);
-        const temporarySlot = await this.locks.firstInventorySlot(
+        const temporarySlot = await this.locks.firstStagingSlot(
           client,
           characterId,
         );
-        await client.query(equipDisplaceToInventoryUpdate, [
+        await client.query(equipDisplaceToStagingUpdate, [
           occupied.id,
           displacedTypeId,
           characterId,
@@ -114,16 +110,10 @@ export class PgEquipmentOps {
       const after = requireReturnedItem(updated.rows[0]);
       let displaced: Item | undefined;
       if (occupied && displacedTypeId !== undefined) {
-        const displacedResult =
-          row.location_type === "inventory"
-            ? await client.query<ItemRow>(
-                equipRestoreDisplacedToInventoryUpdate,
-                [occupied.id, characterId, row.slot_index],
-              )
-            : await client.query<ItemRow>(
-                equipRestoreDisplacedToContainerUpdate,
-                [occupied.id, row.container_id, row.slot_index],
-              );
+        const displacedResult = await client.query<ItemRow>(
+          equipRestoreDisplacedToContainerUpdate,
+          [occupied.id, row.container_id, row.slot_index],
+        );
         displaced = requireReturnedItem(displacedResult.rows[0]);
       }
       await this.audit.transfer(client, characterId, before, after);
@@ -169,6 +159,9 @@ export class PgEquipmentOps {
     destination?: ItemContainerDestination,
   ): Promise<ItemMutation> {
     return withSerializableTransaction(this.pool, async (client) => {
+      if (slot === "backpack") {
+        throw new Error("equipped backpack cannot be unequipped");
+      }
       await this.locks.lockCharacter(client, characterId);
       const row = await this.locks.lockItem(client, itemId);
       requireVersion(row, expectedVersion);
@@ -215,18 +208,6 @@ export class PgEquipmentOps {
           transformedTypeId,
           container.id,
           destination.slot,
-        ]);
-        updated = requireRow(result.rows[0]);
-      } else if (slot === "backpack") {
-        const destinationSlot = await this.locks.firstInventorySlot(
-          client,
-          characterId,
-        );
-        const result = await client.query<ItemRow>(unequipToInventoryUpdate, [
-          characterId,
-          row.id,
-          transformedTypeId,
-          destinationSlot,
         ]);
         updated = requireRow(result.rows[0]);
       } else {

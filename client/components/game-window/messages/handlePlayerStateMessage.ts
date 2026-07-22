@@ -86,6 +86,16 @@ export function handlePlayerStateMessage(
     return true;
   }
 
+  if (message.type === "vocation-updated") {
+    state.setOwnCharacter((current) =>
+      current?.id === message.playerId
+        ? { ...current, vocation: message.vocation }
+        : current,
+    );
+    state.setSpells(message.spells);
+    return true;
+  }
+
   if (
     message.type === "creature-moved" ||
     message.type === "position-correction"

@@ -114,6 +114,19 @@ describe("buildPendingItemOpMessage", () => {
     });
   });
 
+  it("never builds a backpack unequip intent", () => {
+    expect(
+      buildPendingItemOpMessage(
+        {
+          kind: "unequip",
+          itemId: BACKPACK.id,
+          slot: "backpack",
+        },
+        STATE,
+      ),
+    ).toBeNull();
+  });
+
   it("builds a pickup intent with a refreshed destination revision", () => {
     expect(
       buildPendingItemOpMessage(

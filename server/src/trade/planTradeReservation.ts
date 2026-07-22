@@ -19,7 +19,6 @@ export function planTradeReservation(input: {
   const item = input.items.find((candidate) => candidate.id === input.itemId);
   if (!item || item.version !== input.expectedVersion) return null;
   if (
-    item.location.kind !== "inventory" &&
     item.location.kind !== "container" &&
     item.location.kind !== "equipment"
   ) {

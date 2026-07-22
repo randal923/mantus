@@ -136,13 +136,14 @@ export function GameInventoryOverlays() {
                 slot: item.equipmentSlot,
               });
             }}
-            onUnequip={(item, slot) =>
+            onUnequip={(item, slot) => {
+              if (slot === "backpack") return;
               dispatchItemOp({
                 kind: "unequip",
                 itemId: item.id,
                 slot,
-              })
-            }
+              });
+            }}
             onUseRune={(item) => {
               const rune = spells.find(
                 (spell) =>
@@ -237,6 +238,10 @@ export function GameInventoryOverlays() {
                   },
                 );
               } else if (source.location.kind === "equipment") {
+                if (source.location.slot === "backpack") {
+                  runtime.itemDragRef.current = null;
+                  return;
+                }
                 dispatchItemOp({
                   kind: "unequip",
                   itemId: source.item.id,

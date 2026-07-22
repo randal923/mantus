@@ -1,5 +1,6 @@
 import type {
   CombatTarget,
+  CharacterVocation,
   Position,
   ServerMessage,
   StarterVocation,
@@ -37,6 +38,42 @@ const STATION_SPOTS = [
 ] as const;
 const VICTIM_LEVEL = 800;
 const CASTER_LEVEL = 300;
+const PROMOTION_BY_VOCATION: Readonly<
+  Record<
+    StarterVocation,
+    {
+      readonly vocation: CharacterVocation;
+      readonly npcName: string;
+      readonly position: Position;
+    }
+  >
+> = {
+  Knight: {
+    vocation: "Elite Knight",
+    npcName: "Emperor Kruzak",
+    position: { x: 32_626, y: 31_923, z: 3 },
+  },
+  Paladin: {
+    vocation: "Royal Paladin",
+    npcName: "Emperor Rehal",
+    position: { x: 32_583, y: 31_402, z: 8 },
+  },
+  Sorcerer: {
+    vocation: "Master Sorcerer",
+    npcName: "Ishebad",
+    position: { x: 33_158, y: 32_849, z: 7 },
+  },
+  Druid: {
+    vocation: "Elder Druid",
+    npcName: "King Tibianus",
+    position: { x: 32_311, y: 32_172, z: 6 },
+  },
+  Monk: {
+    vocation: "Exalted Monk",
+    npcName: "Queen Eloise",
+    position: { x: 32_314, y: 31_754, z: 7 },
+  },
+};
 const WEAPON_BY_VOCATION: Partial<
   Record<StarterVocation, { typeId: number; attack: number; skill: string }>
 > = {
@@ -155,9 +192,6 @@ async function setupStation(
     randomName("Vict"),
     "Knight",
   );
-  const stationSpot = STATION_SPOTS[index % STATION_SPOTS.length] ?? BASE_SPOT;
-  const spot = await caster.goto(stationSpot.x, stationSpot.y, BASE_SPOT.z);
-  const station = new SpellStation(vocation, caster, victim, spot);
   const magicTarget = Math.min(
     30,
     Math.max(5, ...spells.map((spell) => spell.requiredMagicLevel + 2)),
@@ -171,6 +205,15 @@ async function setupStation(
     magicLevel: magicTarget,
     skills: needsWeapon && weapon ? { [weapon.skill]: 90 } : {},
   });
+  const promotion = PROMOTION_BY_VOCATION[vocation];
+  await caster.promoteAt(
+    promotion.npcName,
+    promotion.position,
+    promotion.vocation,
+  );
+  const stationSpot = STATION_SPOTS[index % STATION_SPOTS.length] ?? BASE_SPOT;
+  const spot = await caster.goto(stationSpot.x, stationSpot.y, BASE_SPOT.z);
+  const station = new SpellStation(vocation, caster, victim, spot);
   if (weapon && needsWeapon) {
     await caster.giveAndEquip(weapon.typeId, "weapon");
   }
@@ -323,6 +366,9 @@ async function runHealingTest(
   const target: CombatTarget = targetsOther
     ? { kind: "creature", creatureId: victim.playerId }
     : { kind: "self" };
+  if (spell.castRules?.targetPartyMemberOnly) {
+    await caster.formPartyWith(victim);
+  }
   const outcome = await castWithRetry(station, spell, target);
   if (outcome.errorCode) {
     return fail(spell, vocation, `rejected with ${outcome.errorCode}`);
@@ -592,7 +638,12 @@ async function runRuneTest(
     spell.targetKind === "position"
       ? { kind: "position", position: victim.position }
       : { kind: "creature", creatureId: victim.playerId };
-  const outcome = await caster.useRune(spell.runeItemTypeId, target, 500);
+  let outcome = await caster.useRune(spell.runeItemTypeId, target, 500);
+  if (outcome.errorCode === "combat-action-failed") {
+    // Transient: the GM item grant can still be draining its persist queue.
+    await sleep(900);
+    outcome = await caster.useRune(spell.runeItemTypeId, target, 500);
+  }
   if (outcome.errorCode) {
     return fail(spell, vocation, `rejected with ${outcome.errorCode}`);
   }
@@ -778,14 +829,15 @@ try {
   );
   for (const spell of catalog) {
     const eligible = STARTER_VOCATIONS.filter((vocation) =>
-      spell.vocations.includes(vocation),
+      spell.vocations.includes(vocation) ||
+      spell.vocations.includes(PROMOTION_BY_VOCATION[vocation].vocation),
     );
     if (eligible.length === 0) {
       results.push({
         spellId: spell.id,
         vocation: spell.vocations.join("/"),
-        status: "skip",
-        detail: "requires a promoted vocation; no promotion path exists yet",
+        status: "fail",
+        detail: "has no supported base or promoted vocation assignment",
       });
       continue;
     }
@@ -796,6 +848,12 @@ try {
         : best,
     );
     assignments.get(vocation)?.push(spell);
+  }
+  for (const spells of assignments.values()) {
+    spells.sort((left, right) =>
+      Number(left.castRules?.targetPartyMemberOnly ?? false) -
+      Number(right.castRules?.targetPartyMemberOnly ?? false),
+    );
   }
 
   console.log(

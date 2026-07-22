@@ -2,7 +2,7 @@ export const ownedItemCountQuery = `WITH RECURSIVE owned AS (
          SELECT id
          FROM items
          WHERE character_id = $1
-           AND location_type IN ('equipment', 'inventory')
+           AND location_type = 'equipment'
          UNION ALL
          SELECT child.id
          FROM items child

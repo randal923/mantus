@@ -62,7 +62,11 @@ export async function startPlaytestServer(
   const killChild = () => child.kill("SIGKILL");
   process.once("exit", killChild);
   const ready = waitForListening(child, log);
+  let stopping = false;
   const exited = once(child, "exit").then(([code]) => {
+    // The same promise settles again when stop() kills the child; throwing
+    // then would be an unhandled rejection racing the scenario's exit code.
+    if (stopping) return;
     throw new Error(`game server exited early with code ${String(code)}`);
   });
   await Promise.race([ready, exited]);
@@ -70,6 +74,7 @@ export async function startPlaytestServer(
   return {
     url: `ws://127.0.0.1:${port}`,
     stop: async () => {
+      stopping = true;
       process.removeListener("exit", killChild);
       child.kill("SIGINT");
       const finished = once(child, "exit");

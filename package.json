@@ -31,6 +31,7 @@
     "test": "yarn test:tools && yarn workspace client test && yarn workspace server test",
     "test:tools": "node --test tools/*.test.mjs && yarn parity:check",
     "db:migrate": "yarn workspace server db:migrate",
+    "db:reconcile-loose-inventory": "yarn workspace server db:reconcile-loose-inventory",
     "db:cleanup-partial-world-seed": "yarn workspace server db:cleanup-partial-world-seed"
   },
   "devDependencies": {

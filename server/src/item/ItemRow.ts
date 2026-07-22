@@ -7,7 +7,7 @@ export interface ItemRow {
   count: number;
   attributes: unknown;
   version: number;
-  location_type: ItemLocation["kind"];
+  location_type: ItemLocation["kind"] | "internal-staging";
   character_id: string | null;
   container_id: string | null;
   depot_id: number | null;

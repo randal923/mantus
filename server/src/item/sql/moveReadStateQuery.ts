@@ -38,7 +38,7 @@ export const moveReadStateQuery = `WITH RECURSIVE locked_character AS MATERIALIZ
        ), owned AS (
          SELECT id FROM items
          WHERE character_id = $1
-           AND location_type IN ('equipment', 'inventory')
+           AND location_type = 'equipment'
          UNION ALL
          SELECT child.id FROM items child
          JOIN owned ON child.container_id = owned.id

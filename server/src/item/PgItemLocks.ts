@@ -6,7 +6,6 @@ import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemRow } from "./ItemRow";
 import { requireRow } from "./requireRow";
 import { containerSlotIndexesQuery } from "./sql/containerSlotIndexesQuery";
-import { inventorySlotIndexesQuery } from "./sql/inventorySlotIndexesQuery";
 import { lockBackpackQuery } from "./sql/lockBackpackQuery";
 import { lockCharacterQuery } from "./sql/lockCharacterQuery";
 import { lockContainerMergeTargetQuery } from "./sql/lockContainerMergeTargetQuery";
@@ -16,6 +15,7 @@ import { lockItemByReferenceQuery } from "./sql/lockItemByReferenceQuery";
 import { lockItemsQuery } from "./sql/lockItemsQuery";
 import { lockOwnedItemByTypeQuery } from "./sql/lockOwnedItemByTypeQuery";
 import { lockWorldMergeTargetQuery } from "./sql/lockWorldMergeTargetQuery";
+import { stagingSlotIndexesQuery } from "./sql/stagingSlotIndexesQuery";
 import { worldStackIndexesQuery } from "./sql/worldStackIndexesQuery";
 
 export class PgItemLocks {
@@ -177,19 +177,19 @@ export class PgItemLocks {
     return slot;
   }
 
-  async firstInventorySlot(
+  async firstStagingSlot(
     client: PoolClient,
     characterId: string,
   ): Promise<number> {
     const occupied = await client.query<{ slot_index: number }>(
-      inventorySlotIndexesQuery,
+      stagingSlotIndexesQuery,
       [characterId],
     );
     const slots = new Set(occupied.rows.map((row) => row.slot_index));
     const slot = Array.from({ length: 100 }, (_, index) => index).find(
       (index) => !slots.has(index),
     );
-    if (slot === undefined) throw new Error("inventory staging area is full");
+    if (slot === undefined) throw new Error("item transaction staging area is full");
     return slot;
   }
 

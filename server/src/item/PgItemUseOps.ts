@@ -268,15 +268,37 @@ export class PgItemUseOps {
         } else {
           if (
             plan.flaskAfter.typeId !== potion.flaskTypeId ||
-            plan.flaskAfter.location.kind !== "inventory" ||
-            plan.flaskAfter.location.characterId !== request.actorCharacterId
+            plan.flaskAfter.location.kind !== "container"
           ) {
             throw new Error("created potion flask location is invalid");
+          }
+          const flaskContainer = await this.locks.lockItem(
+            client,
+            plan.flaskAfter.location.containerId,
+          );
+          await this.guards.requireOwned(
+            client,
+            flaskContainer.id,
+            request.actorCharacterId,
+          );
+          const capacity =
+            this.catalog.require(flaskContainer.item_type_id)
+              .containerCapacity ?? 0;
+          if (
+            plan.flaskAfter.location.slot < 0 ||
+            plan.flaskAfter.location.slot >= capacity ||
+            (await this.locks.lockContainerSlot(
+              client,
+              flaskContainer.id,
+              plan.flaskAfter.location.slot,
+            ))
+          ) {
+            throw new Error("created potion flask destination is unavailable");
           }
           const inserted = await client.query<ItemRow>(insertPotionFlask, [
             plan.flaskAfter.id,
             potion.flaskTypeId,
-            request.actorCharacterId,
+            flaskContainer.id,
             plan.flaskAfter.location.slot,
           ]);
           createdFlask = requireReturnedItem(inserted.rows[0]);

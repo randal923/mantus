@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type {
+  EquipmentSlot,
   ItemContainerDestination,
   Position,
 } from "@tibia/protocol";
@@ -28,7 +29,7 @@ import { moveWorldMergeQuery } from "./sql/moveWorldMergeQuery";
 import { moveWorldSeededMergeQuery } from "./sql/moveWorldSeededMergeQuery";
 import { pickupMergeIntoContainerUpdate } from "./sql/pickupMergeIntoContainerUpdate";
 import { pickupToContainerUpdate } from "./sql/pickupToContainerUpdate";
-import { pickupToInventoryUpdate } from "./sql/pickupToInventoryUpdate";
+import { pickupToEquipmentUpdate } from "./sql/pickupToEquipmentUpdate";
 import { withSerializableTransaction } from "./withSerializableTransaction";
 import type { WorldItemSource } from "./WorldItemSource";
 
@@ -50,7 +51,7 @@ export class PgWorldItemOps {
     position: Position,
     source?: WorldItemSource,
     destination?: ItemContainerDestination,
-    stageInInventory = false,
+    equipSlot?: EquipmentSlot,
   ): Promise<ItemMutation> {
     return withSerializableTransaction(this.pool, async (client) => {
       const character = await this.locks.lockCharacter(client, characterId);
@@ -80,21 +81,59 @@ export class PgWorldItemOps {
         character.capacity,
         row.id,
       );
-      if (stageInInventory) {
-        // Equip-after-pickup staging: no equipped backpack is required — the
-        // item lands on a loose inventory slot and the equip runs from there.
-        const before = itemFromRow(row);
-        const stagingSlot = await this.locks.firstInventorySlot(
+      if (equipSlot) {
+        if (destination || type.equipmentSlot !== equipSlot) {
+          throw new Error("item does not fit equipment slot");
+        }
+        if (
+          type.requirements?.level !== undefined &&
+          character.level < type.requirements.level
+        ) {
+          throw new Error("character level is too low for item");
+        }
+        if (
+          type.requirements?.vocations &&
+          !type.requirements.vocations.includes(character.vocation)
+        ) {
+          throw new Error("character vocation cannot equip item");
+        }
+        if (
+          await this.locks.lockEquipmentSlot(
+            client,
+            characterId,
+            equipSlot,
+            row.id,
+          )
+        ) {
+          throw new Error("equipment slot is occupied");
+        }
+        await this.guards.requireEquipmentCompatibility(
           client,
           characterId,
-        );
-        const result = await client.query<ItemRow>(pickupToInventoryUpdate, [
           row.id,
+          equipSlot,
+          type.slotType,
+        );
+        const before = itemFromRow(row);
+        const transformedTypeId = type.transformEquipTo ?? row.item_type_id;
+        this.catalog.require(transformedTypeId);
+        const result = await client.query<ItemRow>(pickupToEquipmentUpdate, [
+          row.id,
+          transformedTypeId,
           characterId,
-          stagingSlot,
+          equipSlot,
         ]);
         const after = requireReturnedItem(result.rows[0]);
         await this.audit.transfer(client, characterId, before, after);
+        if (transformedTypeId !== row.item_type_id) {
+          await this.audit.transform(
+            client,
+            characterId,
+            row.id,
+            row.item_type_id,
+            transformedTypeId,
+          );
+        }
         return { before, after: [after] };
       }
       const backpack = destination

@@ -4,7 +4,7 @@ import { collectReachableItemIds } from "../collectReachableItemIds";
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { PlannedPotionUse } from "../PotionItemPlan";
-import { firstFreeInventorySlot } from "./firstFreeInventorySlot";
+import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
 
 export function planPotionUse(input: {
   readonly characterId: string;
@@ -65,7 +65,14 @@ export function planPotionUse(input: {
       mutation: { before, after: [potionAfter, flaskAfter] },
     };
   }
-  const slot = firstFreeInventorySlot(input.items);
+  const backpack = input.items.find(
+    (item) =>
+      item.location.kind === "equipment" &&
+      item.location.characterId === input.characterId &&
+      item.location.slot === "backpack",
+  );
+  if (!backpack) return null;
+  const slot = firstFreeContainerSlot(input.catalog, input.items, backpack);
   if (slot === null) return null;
   const flaskAfter: Item = {
     id: randomUUID(),
@@ -73,7 +80,7 @@ export function planPotionUse(input: {
     count: 1,
     attributes: {},
     version: 1,
-    location: { kind: "inventory", characterId: input.characterId, slot },
+    location: { kind: "container", containerId: backpack.id, slot },
   };
   return {
     itemPlan: { kind: "create", before, potionAfter, flaskAfter },

@@ -356,6 +356,7 @@ export class CharacterHandler {
     existing.potionActionBarUpdatePending = false;
     existing.itemPersistsPending = 0;
     existing.travelOperationPending = false;
+    existing.promotionOperationPending = false;
     existing.knownCreatureIds.clear();
     existing.knownMapItemTiles.clear();
     this.registry.unbindPlayer(characterId, existing);

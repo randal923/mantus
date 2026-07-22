@@ -125,7 +125,7 @@ describe("CharacterProgression", () => {
     expect(reconnected.mana).toBe(0);
   });
 
-  it("gives premium accounts promotion-grade regeneration", () => {
+  it("uses promoted regeneration only after vocation promotion", () => {
     const character = {
       ...makeCharacter("mage"),
       vocation: "Sorcerer" as const,
@@ -134,27 +134,30 @@ describe("CharacterProgression", () => {
       soul: 0,
     };
     const free = new Player(character, { x: 0, y: 0, z: 7 }, 0, null);
-    const premium = new Player(
+    const promoted = new Player(
       character,
       { x: 0, y: 0, z: 7 },
       0,
       new Date(60_000),
     );
     free.feed(60, 0);
-    premium.feed(60, 0);
+    promoted.feed(60, 0);
+    promoted.promote("Master Sorcerer", 0);
 
     free.tickProgression(6_000);
-    premium.tickProgression(6_000);
+    promoted.tickProgression(6_000);
     expect(free.mana).toBe(4);
-    expect(premium.mana).toBe(6);
+    expect(promoted.mana).toBe(6);
 
     free.tickProgression(15_000);
-    premium.tickProgression(15_000);
+    promoted.tickProgression(15_000);
     expect(free.progression.soul).toBe(0);
-    expect(premium.progression.soul).toBe(1);
+    expect(promoted.progression.soul).toBe(1);
+    expect(promoted.vocation).toBe("Master Sorcerer");
+    expect(promoted.progression.maxSoul).toBe(200);
   });
 
-  it("stops premium regeneration when premium time expires online", () => {
+  it("does not tie vocation regeneration to premium expiration", () => {
     const player = new Player(
       {
         ...makeCharacter("expiring-mage"),
@@ -169,11 +172,11 @@ describe("CharacterProgression", () => {
     player.feed(60, 0);
 
     player.tickProgression(6_000);
-    expect(player.mana).toBe(6);
+    expect(player.mana).toBe(4);
     player.tickProgression(10_000);
     expect(player.mana).toBe(6);
     player.tickProgression(12_999);
-    expect(player.mana).toBe(6);
+    expect(player.mana).toBe(8);
     player.tickProgression(13_000);
     expect(player.mana).toBe(8);
   });

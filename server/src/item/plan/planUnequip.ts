@@ -8,7 +8,6 @@ import type { ItemLocation } from "../ItemLocation";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
 import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
-import { firstFreeInventorySlot } from "./firstFreeInventorySlot";
 
 export function planUnequip(input: {
   readonly characterId: string;
@@ -20,6 +19,7 @@ export function planUnequip(input: {
   readonly destination?: ItemContainerDestination;
 }): CarriedPlan | null {
   const { characterId, catalog, items, slot } = input;
+  if (slot === "backpack") return null;
   const item = items.find((candidate) => candidate.id === input.itemId);
   if (!item || item.version !== input.expectedVersion) return null;
   if (
@@ -61,14 +61,6 @@ export function planUnequip(input: {
       kind: "container",
       containerId: container.id,
       slot: input.destination.slot,
-    };
-  } else if (slot === "backpack") {
-    const destinationSlot = firstFreeInventorySlot(items);
-    if (destinationSlot === null) return null;
-    destinationLocation = {
-      kind: "inventory",
-      characterId,
-      slot: destinationSlot,
     };
   } else {
     const backpack = items.find(

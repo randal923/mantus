@@ -1,5 +1,6 @@
 import {
   type Direction,
+  type CharacterVocation,
   type CombatTarget,
   type EquipmentSlot,
   type InventoryState,
@@ -191,6 +192,89 @@ export class ParityRig {
     }
     await this.gm("/heal");
     await this.gm("/soul");
+  }
+
+  async promoteAt(
+    npcName: string,
+    npcPosition: Position,
+    expectedVocation: CharacterVocation,
+  ): Promise<void> {
+    await this.give("3043", 2);
+    const sinceTravel = this.client.mark();
+    await this.goto(npcPosition.x + 2, npcPosition.y, npcPosition.z);
+    const npc = await this.client.waitForCreatureNamed(npcName, {
+      since: sinceTravel,
+      timeoutMs: 5_000,
+    });
+    let since = this.client.mark();
+    this.client.say("hi");
+    await this.client.waitFor(
+      (message): message is Extract<ServerMessage, { type: "npc-dialogue" }> =>
+        message.type === "npc-dialogue" && message.npcId === npc.id,
+      `${npcName} greeting`,
+      { since },
+    );
+    for (let attempt = 0; attempt < 3; attempt++) {
+      since = this.client.mark();
+      this.client.say("promotion");
+      await this.client.waitFor(
+        (message): message is Extract<ServerMessage, { type: "npc-dialogue" }> =>
+          message.type === "npc-dialogue" &&
+          message.npcId === npc.id &&
+          message.options.some((option) => option.label === "Yes"),
+        `${npcName} promotion offer`,
+        { since },
+      );
+      since = this.client.mark();
+      this.client.say("yes");
+      const outcome = await this.client.waitFor(
+        (message): message is Extract<
+          ServerMessage,
+          { type: "vocation-updated" | "npc-dialogue" }
+        > =>
+          (message.type === "vocation-updated" &&
+            message.playerId === this.playerId &&
+            message.vocation === expectedVocation) ||
+          (message.type === "npc-dialogue" && message.npcId === npc.id),
+        `${expectedVocation} promotion`,
+        { since, timeoutMs: 10_000 },
+      );
+      if (outcome.type === "vocation-updated") return;
+      if (
+        outcome.text.includes("enough money") ||
+        outcome.text.includes("already promoted") ||
+        outcome.text.includes("reached level")
+      ) {
+        throw new Error(`${npcName}: ${outcome.text}`);
+      }
+      // A retry adds two more NPC speech lines; let Canary's four-message
+      // flood buffer drain so a transient busy response cannot auto-mute the rig.
+      await sleep(3_100);
+    }
+    throw new Error(`${npcName}: promotion remained unavailable after retries`);
+  }
+
+  async formPartyWith(member: ParityRig): Promise<void> {
+    let since = member.client.mark();
+    this.client.send({ type: "party-invite", targetName: member.name });
+    const invitation = await member.client.waitFor(
+      isType("party-invitation"),
+      `party invitation from ${this.name}`,
+      { since },
+    );
+    since = member.client.mark();
+    member.client.send({
+      type: "party-respond-invite",
+      leaderId: invitation.leaderId,
+      accept: true,
+    });
+    await member.client.waitFor(
+      (message): message is Extract<ServerMessage, { type: "party-state" }> =>
+        message.type === "party-state" &&
+        message.party?.members.some((entry) => entry.id === this.playerId) === true,
+      `party membership with ${this.name}`,
+      { since },
+    );
   }
 
   async heal(): Promise<void> {

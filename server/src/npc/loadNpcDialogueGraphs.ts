@@ -8,6 +8,7 @@ import type {
   NpcTravelOffer,
 } from "./DialogueGraph";
 import { withBoatTravelRoutes } from "./withBoatTravelRoutes";
+import { withPromotionActions } from "./withPromotionActions";
 
 const BASELINE_CONTENT_FILE = fileURLToPath(
   new URL(
@@ -50,7 +51,9 @@ export function loadNpcDialogueGraphs(
       graphs.set(typeId, parseGraph(definition));
     }
   }
-  return withBoatTravelRoutes(graphs, expectedCanaryCommit);
+  return withPromotionActions(
+    withBoatTravelRoutes(graphs, expectedCanaryCommit),
+  );
 }
 
 function parseGraph(value: Record<string, unknown>): DialogueGraph {

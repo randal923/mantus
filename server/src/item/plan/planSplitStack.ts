@@ -4,7 +4,6 @@ import type { ItemCatalog } from "../ItemCatalog";
 import type { ItemLocation } from "../ItemLocation";
 import type { CarriedPlan } from "./CarriedPlan";
 import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
-import { firstFreeInventorySlot } from "./firstFreeInventorySlot";
 
 const MAX_CARRIED_ITEMS = 500;
 
@@ -22,32 +21,19 @@ export function planSplitStack(input: {
   const type = catalog.require(item.typeId);
   if (!type.stackable || count < 1 || count >= item.count) return null;
   if (items.length >= MAX_CARRIED_ITEMS) return null;
-  if (
-    item.location.kind !== "container" &&
-    item.location.kind !== "inventory"
-  ) {
-    return null;
-  }
-  let destination: ItemLocation;
-  if (item.location.kind === "container") {
-    const container = items.find(
-      (candidate) =>
-        item.location.kind === "container" &&
-        candidate.id === item.location.containerId,
-    );
-    if (!container) return null;
-    const destinationSlot = firstFreeContainerSlot(catalog, items, container);
-    if (destinationSlot === null) return null;
-    destination = {
-      kind: "container",
-      containerId: container.id,
-      slot: destinationSlot,
-    };
-  } else {
-    const destinationSlot = firstFreeInventorySlot(items);
-    if (destinationSlot === null) return null;
-    destination = { kind: "inventory", characterId, slot: destinationSlot };
-  }
+  if (item.location.kind !== "container") return null;
+  const sourceContainerId = item.location.containerId;
+  const container = items.find(
+    (candidate) => candidate.id === sourceContainerId,
+  );
+  if (!container) return null;
+  const destinationSlot = firstFreeContainerSlot(catalog, items, container);
+  if (destinationSlot === null) return null;
+  const destination: ItemLocation = {
+    kind: "container",
+    containerId: container.id,
+    slot: destinationSlot,
+  };
   const sourceAfter: Item = {
     ...item,
     count: item.count - count,

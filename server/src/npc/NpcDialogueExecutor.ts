@@ -9,6 +9,7 @@ import type { NpcConversations } from "./NpcConversations";
 import type { NpcDialogueFlow } from "./NpcDialogueFlow";
 import { sendNpcDialogueResponses } from "./sendNpcDialogueResponses";
 import type { TravelService } from "./TravelService";
+import type { PromotionService } from "./PromotionService";
 
 export class NpcDialogueExecutor {
   constructor(
@@ -17,6 +18,7 @@ export class NpcDialogueExecutor {
     private readonly travel: TravelService,
     private readonly bank: BankService,
     private readonly shops: ShopService,
+    private readonly promotion?: PromotionService,
   ) {}
 
   executeNode(
@@ -29,6 +31,71 @@ export class NpcDialogueExecutor {
     now: number,
   ): void {
     const action = node.action;
+    if (action?.kind === "promote") {
+      conversation.pendingAction = true;
+      const result = this.promotion?.start(
+        session,
+        npc,
+        action.minimumLevel,
+        action.cost,
+        now,
+        (committedAt) => {
+          conversation.pendingAction = false;
+          if (!this.conversations.isCurrent(conversation)) return;
+          conversation.currentNodeId = node.nextNodeId ?? graph.rootNodeId;
+          conversation.expiresAt = committedAt + graph.timeoutMs;
+          sendNpcDialogueResponses(
+            session,
+            player,
+            npc,
+            graph,
+            conversation,
+            node.responses,
+            node,
+          );
+        },
+        (failedAt, reason) => {
+          conversation.pendingAction = false;
+          if (!this.conversations.isCurrent(conversation)) return;
+          conversation.currentNodeId = graph.rootNodeId;
+          conversation.expiresAt = failedAt + graph.timeoutMs;
+          const response = reason === "already-promoted"
+            ? "You are already promoted!"
+            : reason === "level-too-low"
+              ? `I am sorry, but I can only promote you once you have reached level ${action.minimumLevel}.`
+              : reason === "insufficient-funds"
+                ? "You do not have enough money!"
+                : "I cannot promote you right now.";
+          sendNpcDialogueResponses(
+            session,
+            player,
+            npc,
+            graph,
+            conversation,
+            [response],
+          );
+        },
+      ) ?? "unavailable";
+      if (result === "started") return;
+      conversation.pendingAction = false;
+      conversation.currentNodeId = graph.rootNodeId;
+      const response = result === "already-promoted"
+        ? "You are already promoted!"
+        : result === "level-too-low"
+          ? `I am sorry, but I can only promote you once you have reached level ${action.minimumLevel}.`
+          : result === "busy"
+            ? "Please wait until your other action is finished."
+            : "I cannot promote you right now.";
+      sendNpcDialogueResponses(
+        session,
+        player,
+        npc,
+        graph,
+        conversation,
+        [response],
+      );
+      return;
+    }
     if (action?.kind === "travel") {
       const offer = graph.travelOffers.find(
         (candidate) => candidate.id === action.offerId,

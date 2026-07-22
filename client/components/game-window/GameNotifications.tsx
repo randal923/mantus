@@ -5,6 +5,7 @@ import { Toast } from "../ui/Toast";
 import { useGameWindowStore } from "./store/useGameWindowStore";
 
 const SCREEN_MESSAGE_MS = 3_500;
+const LEVEL_UP_NOTICE_MS = 4_200;
 
 export function GameNotifications() {
   const { t } = useAppTranslation();
@@ -19,6 +20,9 @@ export function GameNotifications() {
   const guildToast = useGameWindowStore((state) => state.guildToast);
   const vipToast = useGameWindowStore((state) => state.vipToast);
   const levelUpNotice = useGameWindowStore((state) => state.levelUpNotice);
+  const setLevelUpNotice = useGameWindowStore(
+    (state) => state.setLevelUpNotice,
+  );
   const runeTargeting = useGameWindowStore((state) => state.runeTargeting);
   const potionTargeting = useGameWindowStore(
     (state) => state.potionTargeting,
@@ -36,6 +40,15 @@ export function GameNotifications() {
     const timer = setTimeout(clearScreenMessage, SCREEN_MESSAGE_MS);
     return () => clearTimeout(timer);
   }, [screenMessage, clearScreenMessage]);
+
+  useEffect(() => {
+    if (!levelUpNotice) return;
+    const timer = setTimeout(
+      () => setLevelUpNotice(null),
+      LEVEL_UP_NOTICE_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [levelUpNotice, setLevelUpNotice]);
   const reconnect = useGameWindowStore((state) => state.reconnect);
   const setServerError = useGameWindowStore((state) => state.setServerError);
   const setMarketToast = useGameWindowStore((state) => state.setMarketToast);

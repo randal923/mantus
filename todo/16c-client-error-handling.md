@@ -3,6 +3,20 @@
 Part of [`16-client-resilience`](16-client-resilience.md). Build continuously
 as authoritative features land.
 
+## Open investigations
+
+- [ ] Periodic in-game freeze (~every 20-30s) reported in dev play could not
+  be reproduced in isolation: the server tick loop showed zero stalls >40ms
+  over 2 minutes of active play (`yarn playtest:tick-stall`, monitor injected
+  into the real server process) and the full client in headless Chromium
+  showed zero main-thread stalls ≥250ms over 2 minutes of walking
+  (`yarn test:e2e` in `client/`). Both probes stay as regression tests.
+  Remaining suspects are environment-specific: `next dev`/HMR overhead,
+  browser extensions or devtools, GPU/driver vsync, or the WSL2↔Windows
+  browser boundary. Next step: run the same long-task/heap observer snippet
+  (see `client/e2e/gameFreeze.e2e.test.tsx`) in the real play session's
+  devtools console to timestamp the freezes and correlate.
+
 ## Error handling and diagnostics
 
 - [ ] Catch dynamic import, Pixi initialization, asset catalog/preload, map

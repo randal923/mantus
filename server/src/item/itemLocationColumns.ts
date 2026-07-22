@@ -52,7 +52,6 @@ export function itemLocationColumns(
     };
   }
   if (
-    location.kind === "inventory" ||
     location.kind === "inbox" ||
     location.kind === "trade-reservation" ||
     location.kind === "market-escrow"

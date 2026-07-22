@@ -4,6 +4,8 @@
  * and damage paths never act on stale party data (charter rule 4).
  */
 export interface PartyHooks {
+  /** Reads current party co-membership at the instant an action executes. */
+  sameParty(playerIdA: string, playerIdB: string): boolean;
   /** Records a member's damage against a monster for the activity window. */
   recordMonsterDamage(sourceId: string, now: number): void;
   /** Records a heal from one party member onto another. */

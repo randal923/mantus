@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   WHEEL_LIMITS,
+  type CharacterVocation,
   type ServerMessage,
   type WheelSaveMessage,
 } from "@tibia/protocol";
@@ -32,15 +33,20 @@ const withSlices = (points: Readonly<Record<number, number>>): number[] => {
   return slices;
 };
 
-function makeLeveledCharacter(id: string, level: number): Character {
+function makeLeveledCharacter(
+  id: string,
+  level: number,
+  vocation: CharacterVocation,
+): Character {
   const base = makeCharacter(id, "Alice");
   const stats = deriveCharacterStats({
-    vocation: base.vocation,
+    vocation,
     definitionVersion: PROGRESSION_DEFINITION_VERSION,
     level,
   });
   return {
     ...base,
+    vocation,
     level,
     experience: BigInt(getExperienceForLevel(level)),
     health: stats.maxHealth,
@@ -60,6 +66,7 @@ interface Harness {
 function makeHarness(options?: {
   level?: number;
   premium?: boolean;
+  vocation?: CharacterVocation;
 }): Harness {
   const world = new World(
     gridMapData({
@@ -71,7 +78,11 @@ function makeHarness(options?: {
     }),
     25,
   );
-  const character = makeLeveledCharacter(A, options?.level ?? 100);
+  const character = makeLeveledCharacter(
+    A,
+    options?.level ?? 100,
+    options?.vocation ?? "Elite Knight",
+  );
   const player = new Player(
     character,
     { x: 30, y: 30, z: 7 },
@@ -144,7 +155,7 @@ describe("WheelService", () => {
     expect(harness.tracker.slicesFor(A)).toEqual(emptySlices());
   });
 
-  it("rejects saves from free accounts and low levels", () => {
+  it("rejects saves from free accounts, low levels, and base vocations", () => {
     const free = makeHarness({ level: 100, premium: false });
     save(free, withSlices({ 22: 50 }), 0);
     expect(free.sent[0]).toMatchObject({
@@ -154,6 +165,12 @@ describe("WheelService", () => {
     const low = makeHarness({ level: 50 });
     save(low, withSlices({ 22: 50 }), 0);
     expect(low.sent[0]).toMatchObject({
+      type: "wheel-action-failed",
+      reason: "unavailable",
+    });
+    const unpromoted = makeHarness({ vocation: "Knight" });
+    save(unpromoted, withSlices({ 22: 50 }), 0);
+    expect(unpromoted.sent[0]).toMatchObject({
       type: "wheel-action-failed",
       reason: "unavailable",
     });

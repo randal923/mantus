@@ -40,7 +40,7 @@ const isType = <T extends ServerMessage["type"]>(type: T) =>
   (m: ServerMessage): m is Extract<ServerMessage, { type: T }> =>
     m.type === type;
 
-async function grantPremium(): Promise<void> {
+async function grantPremiumAndPromotion(): Promise<void> {
   const adminUrl =
     process.env.PLAYTEST_ADMIN_URL ??
     "postgres://tibia:tibia_dev_only@localhost:5432/postgres";
@@ -55,6 +55,15 @@ async function grantPremium(): Promise<void> {
     );
     if (result.rowCount !== 1) {
       throw new Error(`expected 1 premium update, got ${String(result.rowCount)}`);
+    }
+    const promoted = await db.query(
+      `UPDATE characters
+       SET vocation = 'Elite Knight', version = version + 1, updated_at = now()
+       WHERE normalized_name = lower($1) AND vocation = 'Knight'`,
+      [CHARACTER],
+    );
+    if (promoted.rowCount !== 1) {
+      throw new Error(`expected 1 promotion update, got ${String(promoted.rowCount)}`);
     }
   } finally {
     await db.end();
@@ -103,8 +112,8 @@ try {
   }
   ok("free-account save refused with reason=unavailable");
 
-  step("granting premium in the playtest database and relogging");
-  await grantPremium();
+  step("granting premium and promotion in the playtest database, then relogging");
+  await grantPremiumAndPromotion();
   client.terminate();
   const premium = await PlaytestClient.connect(url);
   await premium.enter(TOKEN, CHARACTER);

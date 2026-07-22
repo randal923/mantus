@@ -44,7 +44,9 @@ scope.
     list preloaded at login, category headers as non-clickable dividers
     (`server/src/bestiary/`, `client/components/bestiary/`,
     `content/monsters/bestiary.json` via `yarn bestiary:import`). Remaining
-    from this line: charms (points are earned/displayed but unspendable),
+    from this line: charms (points are earned/displayed but unspendable;
+    promotion-granted minor charm echoes are persisted but likewise have no
+    rune-spending UI/service),
     prey, hunting tasks, boosted creatures/bosses, kill trackers, boss
     slots/loot bonus. Accepted limitations: kill credit = damage participants
     + last hit (Canary also credits no-damage party members under shared exp);
@@ -65,9 +67,8 @@ scope.
   and `client/lib/wheel/wheelGeometry.ts`, ripped via the otclient wheel
   module). Points are `level - 50`, gated on level 51+ and premium. Deferred
   gaps:
-  - [ ] Promotion requirement is not enforced (promotion purchase itself is
-    still pending in todo/06); Canary additionally requires a promoted
-    vocation. Add the check to `WheelService.isUnlocked` once promotion ships.
+  - [x] Enforce the promoted-vocation requirement in the Wheel and gem atelier
+    server gates.
   - [ ] Combat application of mitigation multiplier, life/mana leech, magic
     skill boost, revelation flat damage/healing, conviction instants (Battle
     Instinct etc.), spell grants/augments, and the revelation abilities

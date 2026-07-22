@@ -24,6 +24,13 @@ const COASTAL_BOAT_ROUTE_COUNTS = {
   petros: 7,
   scrutinon: 4,
 } as const;
+const PROMOTION_NPCS = [
+  "emperor-kruzak",
+  "emperor-rehal",
+  "ishebad",
+  "king-tibianus",
+  "queen-eloise",
+] as const;
 
 describe("loadNpcDialogueGraphs", () => {
   it("loads generated baselines with reviewed server-owned overrides", () => {
@@ -97,6 +104,28 @@ describe("loadNpcDialogueGraphs", () => {
         destination: { x: 33324, y: 32173, z: 6 },
       },
     });
+  });
+
+  it("attaches the Canary promotion confirmation to all five rulers", () => {
+    const graphs = loadNpcDialogueGraphs(CANARY_COMMIT);
+
+    for (const typeId of PROMOTION_NPCS) {
+      const graph = graphs.get(typeId);
+      const prompt = graph
+        ? matchNpcDialogueNode(graph, graph.rootNodeId, "promotion")
+        : undefined;
+      const confirmation = prompt
+        ? matchNpcDialogueNode(graph!, prompt.id, "yes")
+        : undefined;
+
+      expect(prompt?.choices.some((choice) => choice.label === "Yes"), typeId)
+        .toBe(true);
+      expect(confirmation?.action, typeId).toEqual({
+        kind: "promote",
+        cost: 20_000,
+        minimumLevel: 20,
+      });
+    }
   });
 
   it("fails closed when dialogue and creature content use different commits", () => {

@@ -8,7 +8,7 @@ const BACKPACK_ID = "41868798-fc9b-43ac-bf28-4f52bf64c4eb";
 const POUCH_ID = "db85bce3-0fc9-49f4-87ff-dda53f3cc8c1";
 const POTION_ID = "9845c623-b959-4be1-a3da-5b93e83d61d1";
 
-function makeInventoryItem(): Item {
+function makeBackpackItem(): Item {
   return {
     id: ITEM_ID,
     typeId: 3273,
@@ -16,17 +16,73 @@ function makeInventoryItem(): Item {
     attributes: {},
     version: 1,
     location: {
-      kind: "inventory",
-      characterId: CHARACTER_ID,
+      kind: "container",
+      containerId: BACKPACK_ID,
       slot: 0,
     },
   };
 }
 
+function seedBackpack(store: MemoryItemStore): void {
+  store.seed({
+    id: BACKPACK_ID,
+    typeId: 2854,
+    count: 1,
+    attributes: {},
+    version: 1,
+    location: {
+      kind: "equipment",
+      characterId: CHARACTER_ID,
+      slot: "backpack",
+    },
+  });
+}
+
 describe("MemoryItemStore", () => {
+  it("never unequips the equipped backpack", async () => {
+    const store = new MemoryItemStore();
+    seedBackpack(store);
+
+    await expect(
+      store.unequip(CHARACTER_ID, BACKPACK_ID, 1, "backpack"),
+    ).rejects.toThrow("cannot be unequipped");
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toContainEqual(
+      expect.objectContaining({
+        id: BACKPACK_ID,
+        version: 1,
+        location: expect.objectContaining({
+          kind: "equipment",
+          slot: "backpack",
+        }),
+      }),
+    );
+  });
+
+  it("never replaces the equipped backpack", async () => {
+    const store = new MemoryItemStore();
+    seedBackpack(store);
+    store.seed({
+      id: POUCH_ID,
+      typeId: 2854,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "container",
+        containerId: BACKPACK_ID,
+        slot: 0,
+      },
+    });
+
+    await expect(
+      store.equip(CHARACTER_ID, POUCH_ID, 1, "backpack"),
+    ).rejects.toThrow("cannot be replaced");
+  });
+
   it("allows exactly one concurrent move of the same item", async () => {
     const store = new MemoryItemStore();
-    store.seed(makeInventoryItem());
+    seedBackpack(store);
+    store.seed(makeBackpackItem());
 
     const results = await Promise.allSettled([
       store.equip(CHARACTER_ID, ITEM_ID, 1, "weapon"),
@@ -35,7 +91,7 @@ describe("MemoryItemStore", () => {
 
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
     expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
-    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual([
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toContainEqual(
       expect.objectContaining({
         id: ITEM_ID,
         version: 2,
@@ -45,29 +101,31 @@ describe("MemoryItemStore", () => {
           slot: "weapon",
         },
       }),
-    ]);
+    );
   });
 
   it("rejects replayed revisions without changing the durable item", async () => {
     const store = new MemoryItemStore();
-    store.seed(makeInventoryItem());
+    seedBackpack(store);
+    store.seed(makeBackpackItem());
     await store.equip(CHARACTER_ID, ITEM_ID, 1, "weapon");
 
     await expect(
       store.unequip(CHARACTER_ID, ITEM_ID, 1, "weapon"),
     ).rejects.toThrow("stale");
-    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual([
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toContainEqual(
       expect.objectContaining({
         id: ITEM_ID,
         version: 2,
         location: expect.objectContaining({ kind: "equipment" }),
       }),
-    ]);
+    );
   });
 
   it("allows exactly one concurrent combat consumption of a revision", async () => {
     const store = new MemoryItemStore();
-    store.seed({ ...makeInventoryItem(), count: 2 });
+    seedBackpack(store);
+    store.seed({ ...makeBackpackItem(), count: 2 });
 
     const results = await Promise.allSettled([
       store.consume(CHARACTER_ID, ITEM_ID, 1, 1, "rune"),
@@ -76,13 +134,14 @@ describe("MemoryItemStore", () => {
 
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
     expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
-    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual([
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toContainEqual(
       expect.objectContaining({ id: ITEM_ID, count: 1, version: 2 }),
-    ]);
+    );
   });
 
   it("atomically restores a character and returns exactly one flask under replay", async () => {
     const store = new MemoryItemStore();
+    seedBackpack(store);
     const potion: Item = {
       id: POTION_ID,
       typeId: 266,
@@ -90,8 +149,8 @@ describe("MemoryItemStore", () => {
       attributes: {},
       version: 1,
       location: {
-        kind: "inventory",
-        characterId: CHARACTER_ID,
+        kind: "container",
+        containerId: BACKPACK_ID,
         slot: 0,
       },
     };
@@ -122,31 +181,20 @@ describe("MemoryItemStore", () => {
 
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
     expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
-    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toEqual([
+    await expect(store.loadForCharacter(CHARACTER_ID)).resolves.toContainEqual(
       expect.objectContaining({
         id: POTION_ID,
         typeId: 285,
         count: 1,
         version: 2,
       }),
-    ]);
+    );
   });
 
   it("allows exactly one concurrent generic container move", async () => {
     const store = new MemoryItemStore();
-    store.seed(makeInventoryItem());
-    store.seed({
-      id: BACKPACK_ID,
-      typeId: 2854,
-      count: 1,
-      attributes: {},
-      version: 1,
-      location: {
-        kind: "equipment",
-        characterId: CHARACTER_ID,
-        slot: "backpack",
-      },
-    });
+    store.seed(makeBackpackItem());
+    seedBackpack(store);
     store.seed({
       id: POUCH_ID,
       typeId: 2853,
@@ -196,18 +244,7 @@ describe("MemoryItemStore", () => {
 
   it("rejects moving a container into its own descendant", async () => {
     const store = new MemoryItemStore();
-    store.seed({
-      id: BACKPACK_ID,
-      typeId: 2854,
-      count: 1,
-      attributes: {},
-      version: 1,
-      location: {
-        kind: "inventory",
-        characterId: CHARACTER_ID,
-        slot: 0,
-      },
-    });
+    seedBackpack(store);
     store.seed({
       id: POUCH_ID,
       typeId: 2853,
@@ -220,13 +257,17 @@ describe("MemoryItemStore", () => {
         slot: 0,
       },
     });
+    store.seed({
+      ...makeBackpackItem(),
+      location: { kind: "container", containerId: POUCH_ID, slot: 0 },
+    });
 
     await expect(
       store.moveToContainer(
         CHARACTER_ID,
-        BACKPACK_ID,
-        1,
         POUCH_ID,
+        1,
+        ITEM_ID,
         1,
         0,
       ),
@@ -235,20 +276,9 @@ describe("MemoryItemStore", () => {
 
   it("atomically swaps two occupied slots in the same container", async () => {
     const store = new MemoryItemStore();
+    seedBackpack(store);
     store.seed({
-      id: BACKPACK_ID,
-      typeId: 2854,
-      count: 1,
-      attributes: {},
-      version: 1,
-      location: {
-        kind: "equipment",
-        characterId: CHARACTER_ID,
-        slot: "backpack",
-      },
-    });
-    store.seed({
-      ...makeInventoryItem(),
+      ...makeBackpackItem(),
       location: { kind: "container", containerId: BACKPACK_ID, slot: 0 },
     });
     store.seed({
@@ -291,7 +321,8 @@ describe("MemoryItemStore", () => {
 
   it("atomically swaps replacement equipment into the source slot", async () => {
     const store = new MemoryItemStore();
-    store.seed(makeInventoryItem());
+    seedBackpack(store);
+    store.seed(makeBackpackItem());
     store.seed({
       id: POUCH_ID,
       typeId: 3273,
@@ -310,25 +341,17 @@ describe("MemoryItemStore", () => {
     ).resolves.toMatchObject({
       after: [
         { id: ITEM_ID, location: { kind: "equipment", slot: "weapon" } },
-        { id: POUCH_ID, location: { kind: "inventory", slot: 0 } },
+        {
+          id: POUCH_ID,
+          location: { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+        },
       ],
     });
   });
 
   it("atomically consumes a conjuring source and creates the result", async () => {
     const store = new MemoryItemStore();
-    store.seed({
-      id: BACKPACK_ID,
-      typeId: 2854,
-      count: 1,
-      attributes: {},
-      version: 1,
-      location: {
-        kind: "equipment",
-        characterId: CHARACTER_ID,
-        slot: "backpack",
-      },
-    });
+    seedBackpack(store);
     store.seed({
       id: ITEM_ID,
       typeId: 3147,

@@ -24,7 +24,7 @@ let store: PgBankStore;
 let characterService: CharacterService;
 let characterStore: PgCharacterStore;
 
-const insertInventoryItem = async (
+const insertBackpackItem = async (
   characterId: string,
   typeId: number,
   count: number,
@@ -33,8 +33,12 @@ const insertInventoryItem = async (
   const id = randomUUID();
   await pool.query(
     `INSERT INTO items (
-       id, item_type_id, count, location_type, character_id, slot_index
-     ) VALUES ($1, $2, $3, 'inventory', $4, $5)`,
+       id, item_type_id, count, location_type, container_id, slot_index
+     )
+     SELECT $1, $2, $3, 'container', id, $5
+     FROM items
+     WHERE character_id = $4 AND location_type = 'equipment'
+       AND equipment_slot = 'backpack'`,
     [id, typeId, count, characterId, slot],
   );
   return id;
@@ -166,10 +170,14 @@ databaseDescribe("PgBankStore integration", () => {
       "011_npc_travel.sql",
       "012_bank.sql",
       "014_character_storages.sql",
+      "015_depot_and_inbox.sql",
       "018_pvp.sql",
       "019_houses.sql",
       "020_social.sql",
       "021_moderation.sql",
+      "023_character_action_bar.sql",
+      "029_character_potion_action_bar.sql",
+      "032_remove_loose_inventory.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -211,8 +219,8 @@ databaseDescribe("PgBankStore integration", () => {
   });
 
   it("deposits coins, credits the balance, and audits in one transaction", async () => {
-    const goldId = await insertInventoryItem(characterId, GOLD_TYPE, 100, 0);
-    await insertInventoryItem(characterId, PLATINUM_TYPE, 3, 1);
+    const goldId = await insertBackpackItem(characterId, GOLD_TYPE, 100, 0);
+    await insertBackpackItem(characterId, PLATINUM_TYPE, 3, 1);
 
     const result = await store.deposit(characterId, 120);
 
@@ -235,7 +243,7 @@ databaseDescribe("PgBankStore integration", () => {
   });
 
   it("makes change when a large coin covers a small deposit", async () => {
-    await insertInventoryItem(characterId, PLATINUM_TYPE, 3, 0);
+    await insertBackpackItem(characterId, PLATINUM_TYPE, 3, 0);
 
     const result = await store.deposit(characterId, 250);
 
@@ -257,7 +265,7 @@ databaseDescribe("PgBankStore integration", () => {
   });
 
   it("changes nothing when carried coins cannot cover the deposit", async () => {
-    await insertInventoryItem(characterId, GOLD_TYPE, 40, 0);
+    await insertBackpackItem(characterId, GOLD_TYPE, 40, 0);
 
     const result = await store.deposit(characterId, 100);
 
@@ -318,10 +326,10 @@ databaseDescribe("PgBankStore integration", () => {
     expect(await ledgerRows(characterId)).toEqual([]);
   });
 
-  it("changes nothing when the coins cannot fit the inventory", async () => {
+  it("changes nothing when the coins cannot fit the backpack", async () => {
     await setBalance(characterId, 300);
-    for (let slot = 0; slot < 100; slot++) {
-      await insertInventoryItem(characterId, HELMET_TYPE, 1, slot);
+    for (let slot = 0; slot < 20; slot++) {
+      await insertBackpackItem(characterId, HELMET_TYPE, 1, slot);
     }
 
     const result = await store.withdraw(characterId, 300);
@@ -353,7 +361,7 @@ databaseDescribe("PgBankStore integration", () => {
   });
 
   it("lets exactly one of two racing deposits spend the same coins", async () => {
-    await insertInventoryItem(characterId, GOLD_TYPE, 100, 0);
+    await insertBackpackItem(characterId, GOLD_TYPE, 100, 0);
 
     const outcomes = await Promise.allSettled([
       store.deposit(characterId, 100),
@@ -372,7 +380,7 @@ databaseDescribe("PgBankStore integration", () => {
   });
 
   it("conserves total currency under concurrent conversion requests", async () => {
-    await insertInventoryItem(characterId, GOLD_TYPE, 100, 0);
+    await insertBackpackItem(characterId, GOLD_TYPE, 100, 0);
     await setBalance(characterId, 50);
 
     await Promise.allSettled([

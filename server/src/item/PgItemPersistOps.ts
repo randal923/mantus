@@ -14,6 +14,7 @@ import { insertLootCreatedAudit } from "./sql/insertLootCreatedAudit";
 import { lockCharacterQuery } from "./sql/lockCharacterQuery";
 import { persistCarriedDelete } from "./sql/persistCarriedDelete";
 import { persistCarriedInsert } from "./sql/persistCarriedInsert";
+import { persistCarriedStageUpdate } from "./sql/persistCarriedStageUpdate";
 import { persistCarriedWriteUpdate } from "./sql/persistCarriedWriteUpdate";
 import { persistSeededInsert } from "./sql/persistSeededInsert";
 import { withSerializableTransaction } from "./withSerializableTransaction";
@@ -33,6 +34,21 @@ export class PgItemPersistOps {
     return withSerializableTransaction(this.pool, async (client) => {
       await client.query(lockCharacterQuery, [plan.characterId]);
       for (const op of plan.rowOps) {
+        if (op.kind === "stage") {
+          const staged = await client.query(persistCarriedStageUpdate, [
+            op.itemId,
+            op.expectedVersion,
+            op.nextVersion,
+            op.characterId,
+            op.slot,
+          ]);
+          if (staged.rowCount !== 1) {
+            throw new Error(
+              `carried persist stage missed item ${op.itemId}@${op.expectedVersion}`,
+            );
+          }
+          continue;
+        }
         if (op.kind === "insert") {
           const columns = itemLocationColumns(op.item, this.mapName);
           if (op.seed) {

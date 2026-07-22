@@ -42,7 +42,7 @@ export async function executeShopSale(
     after,
     removedItemIds,
   );
-  const backpack = await coinOps.lockBackpackSlots(after);
+  const backpack = await coinOps.lockBackpackSlots();
   if (!backpack) {
     throw new TransactionRollback<ShopSaleResult>({ status: "no-space" });
   }

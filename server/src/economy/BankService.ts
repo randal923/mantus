@@ -227,9 +227,8 @@ export class BankService {
     if (capacity === undefined) return false;
     const occupied = items.filter(
       (item) =>
-        item.location.kind === "inventory" ||
-        (item.location.kind === "container" &&
-          item.location.containerId === backpack.id),
+        item.location.kind === "container" &&
+        item.location.containerId === backpack.id,
     ).length;
     const freeSlots = capacity - occupied;
     if (freeSlots < 0) return false;

@@ -61,7 +61,7 @@ export class DepotTxHelper {
   async firstFreeSlot(
     client: PoolClient,
     characterId: string,
-    location: "depot" | "inbox" | "inventory",
+    location: "depot" | "inbox",
     capacity: number,
     depotId?: number,
   ): Promise<number | null> {

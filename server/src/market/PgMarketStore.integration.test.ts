@@ -90,7 +90,7 @@ const createCharacter = async (
   return { characterId: summary.id, accountId: resolvedAccountId };
 };
 
-const insertInventoryItem = async (
+const insertBackpackItem = async (
   characterId: string,
   typeId: number,
   count: number,
@@ -99,8 +99,12 @@ const insertInventoryItem = async (
   const id = randomUUID();
   await pool.query(
     `INSERT INTO items (
-       id, item_type_id, count, location_type, character_id, slot_index
-     ) VALUES ($1, $2, $3, 'inventory', $4, $5)`,
+       id, item_type_id, count, location_type, container_id, slot_index
+     )
+     SELECT $1, $2, $3, 'container', id, $5
+     FROM items
+     WHERE character_id = $4 AND location_type = 'equipment'
+       AND equipment_slot = 'backpack'`,
     [id, typeId, count, characterId, slot],
   );
   return id;
@@ -111,7 +115,7 @@ const carriedWorthOf = async (characterId: string): Promise<number> => {
     `WITH RECURSIVE owned AS (
        SELECT id, item_type_id, count FROM items
        WHERE character_id = $1
-         AND location_type IN ('equipment', 'inventory')
+         AND location_type = 'equipment'
        UNION ALL
        SELECT child.id, child.item_type_id, child.count
        FROM items child JOIN owned ON child.container_id = owned.id
@@ -368,6 +372,9 @@ databaseDescribe("PgMarketStore integration", () => {
       "019_houses.sql",
       "020_social.sql",
       "021_moderation.sql",
+      "023_character_action_bar.sql",
+      "029_character_potion_action_bar.sql",
+      "032_remove_loose_inventory.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -1311,7 +1318,7 @@ databaseDescribe("PgMarketStore integration", () => {
   describe("carried-coin payments", () => {
     it("pays the sell-offer fee from carried coins before the bank", async () => {
       await insertDepotItem(sellerId, SAPPHIRE_TYPE, 100, 0);
-      await insertInventoryItem(sellerId, PLATINUM_TYPE, 6, 0); // 600 gp
+      await insertBackpackItem(sellerId, PLATINUM_TYPE, 6, 0); // 600 gp
       await setBalance(sellerId, 1_000);
       const goldBefore = await systemGoldTotal();
 
@@ -1331,7 +1338,7 @@ databaseDescribe("PgMarketStore integration", () => {
     });
 
     it("escrows a buy offer from one large coin and grants exact change", async () => {
-      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 1, 0); // 10_000 gp
+      await insertBackpackItem(buyerId, CRYSTAL_TYPE, 1, 0); // 10_000 gp
       const goldBefore = await systemGoldTotal();
 
       const result = await store.createBuyOffer(
@@ -1357,7 +1364,7 @@ databaseDescribe("PgMarketStore integration", () => {
       expect(listed.status).toBe("committed");
       if (listed.status !== "committed") return;
       const sellerBankAfterFee = await balanceOf(sellerId);
-      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 5, 0); // 50_000 gp
+      await insertBackpackItem(buyerId, CRYSTAL_TYPE, 5, 0); // 50_000 gp
       const goldBefore = await systemGoldTotal();
 
       const result = await store.acceptSellOffer({
@@ -1393,7 +1400,7 @@ databaseDescribe("PgMarketStore integration", () => {
       expect(first.status).toBe("committed");
       expect(second.status).toBe("committed");
       if (first.status !== "committed" || second.status !== "committed") return;
-      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 5, 0); // exactly one fill
+      await insertBackpackItem(buyerId, CRYSTAL_TYPE, 5, 0); // exactly one fill
       const goldBefore = await systemGoldTotal();
 
       const outcomes = await Promise.allSettled([
@@ -1425,9 +1432,9 @@ databaseDescribe("PgMarketStore integration", () => {
     });
 
     it("rolls back the whole payment when coin change cannot fit", async () => {
-      await insertInventoryItem(buyerId, CRYSTAL_TYPE, 1, 0);
-      for (let slot = 1; slot < 100; slot++) {
-        await insertInventoryItem(buyerId, HELMET_TYPE, 1, slot);
+      await insertBackpackItem(buyerId, CRYSTAL_TYPE, 1, 0);
+      for (let slot = 1; slot < 20; slot++) {
+        await insertBackpackItem(buyerId, HELMET_TYPE, 1, slot);
       }
       const goldBefore = await systemGoldTotal();
 

@@ -96,7 +96,7 @@ export async function executeShopPurchase(
       removedItemIds,
     );
   }
-  const backpack = await coinOps.lockBackpackSlots(after);
+  const backpack = await coinOps.lockBackpackSlots();
   if (!backpack) {
     throw new TransactionRollback<ShopPurchaseResult>({
       status: "no-space",

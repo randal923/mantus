@@ -90,6 +90,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       "018_pvp.sql",
       "023_character_action_bar.sql",
       "029_character_potion_action_bar.sql",
+      "032_remove_loose_inventory.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -598,12 +599,16 @@ databaseDescribe("PgCharacterStore integration", () => {
     const rootId = randomUUID();
     await pool.query(
       `INSERT INTO items (
-         id, item_type_id, location_type, character_id, slot_index
-       ) VALUES ($1, 2853, 'inventory', $2, 0)`,
+         id, item_type_id, location_type, container_id, slot_index
+       )
+       SELECT $1, 2853, 'container', id, 18
+       FROM items
+       WHERE character_id = $2 AND location_type = 'equipment'
+         AND equipment_slot = 'backpack'`,
       [rootId, character.id],
     );
     const chain = [rootId];
-    for (let depth = 1; depth < 8; depth++) {
+    for (let depth = 1; depth < 7; depth++) {
       const id = randomUUID();
       await pool.query(
         `INSERT INTO items (
@@ -630,8 +635,12 @@ databaseDescribe("PgCharacterStore integration", () => {
     const childId = randomUUID();
     await pool.query(
       `INSERT INTO items (
-         id, item_type_id, location_type, character_id, slot_index
-       ) VALUES ($1, 2853, 'inventory', $2, 1)`,
+         id, item_type_id, location_type, container_id, slot_index
+       )
+       SELECT $1, 2853, 'container', id, 19
+       FROM items
+       WHERE character_id = $2 AND location_type = 'equipment'
+         AND equipment_slot = 'backpack'`,
       [subtreeId, character.id],
     );
     await pool.query(

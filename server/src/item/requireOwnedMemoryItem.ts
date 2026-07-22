@@ -2,7 +2,7 @@ import type { Item } from "./Item";
 
 /**
  * Returns the item when it matches the expected version and its container
- * chain (up to 8 levels) roots at the character's equipment or inventory.
+ * chain (up to 8 levels) roots at the character's equipment.
  */
 export function requireOwnedMemoryItem(
   items: ReadonlyMap<string, Item>,
@@ -17,8 +17,7 @@ export function requireOwnedMemoryItem(
   let root = item;
   for (let depth = 0; depth < 8; depth++) {
     if (
-      (root.location.kind === "equipment" ||
-        root.location.kind === "inventory") &&
+      root.location.kind === "equipment" &&
       root.location.characterId === characterId
     ) {
       return item;

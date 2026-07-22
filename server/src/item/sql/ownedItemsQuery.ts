@@ -5,7 +5,7 @@ export const ownedItemsQuery = `
     SELECT i.*, 1 AS item_depth
     FROM items i
     WHERE i.character_id = $1
-      AND i.location_type IN ('equipment', 'inventory')
+      AND i.location_type = 'equipment'
     UNION ALL
     SELECT child.*, owned.item_depth + 1
     FROM items child

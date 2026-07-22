@@ -61,7 +61,7 @@ const goldStack = (id: string, count: number, slot: number): Item => ({
   count,
   attributes: {},
   version: 1,
-  location: { kind: "inventory", characterId: "banker-test", slot },
+  location: { kind: "container", containerId: "test-backpack", slot },
 });
 
 const makeHarness = (store: Partial<BankStore>, carried: Item[] = []) => {

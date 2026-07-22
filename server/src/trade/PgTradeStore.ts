@@ -103,7 +103,6 @@ export class PgTradeStore implements TradeStore {
     ]);
     const planned = planTradeDelivery({
       catalog: this.catalog,
-      receiverCharacterId: leg.receiverCharacterId,
       receiverItems: carried.rows.map(itemFromRow),
       receiverCapacityMax: leg.receiverCapacityMax,
       legItems,

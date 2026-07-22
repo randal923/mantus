@@ -1,7 +1,7 @@
 import type { Item } from "./Item";
 
 /**
- * Ids of items reachable from the character's equipment/inventory, following
+ * Ids of items reachable from the character's equipment, following
  * container/corpse nesting up to 8 levels deep.
  */
 export function collectReachableItemIds(
@@ -12,8 +12,7 @@ export function collectReachableItemIds(
     items
       .filter(
         (item) =>
-          (item.location.kind === "equipment" ||
-            item.location.kind === "inventory") &&
+          item.location.kind === "equipment" &&
           item.location.characterId === characterId,
       )
       .map((item) => item.id),

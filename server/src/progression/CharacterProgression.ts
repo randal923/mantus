@@ -52,6 +52,7 @@ interface DueTicks {
 }
 
 export class CharacterProgression {
+  private currentVocation: CharacterVocation;
   private currentLevel: number;
   private currentExperience: number;
   private currentMagicLevel: number;
@@ -70,7 +71,7 @@ export class CharacterProgression {
   private wheelModifier: DerivedStatModifier;
 
   constructor(
-    readonly vocation: CharacterVocation,
+    vocation: CharacterVocation,
     readonly definitionVersion: number,
     accountTier: AccountTier,
     state: {
@@ -86,6 +87,7 @@ export class CharacterProgression {
     now: number,
     wheelModifier: DerivedStatModifier = {},
   ) {
+    this.currentVocation = vocation;
     this.wheelModifier = wheelModifier;
     const definition = getVocation(vocation, definitionVersion);
     this.accountTier = accountTier;
@@ -197,6 +199,26 @@ export class CharacterProgression {
 
   get level(): number {
     return this.currentLevel;
+  }
+
+  get vocation(): CharacterVocation {
+    return this.currentVocation;
+  }
+
+  promote(vocation: CharacterVocation, now: number): void {
+    const current = getVocation(this.currentVocation, this.definitionVersion);
+    if (current.promotedVocation !== vocation) {
+      throw new Error("vocation promotion is invalid");
+    }
+    this.currentVocation = vocation;
+    this.regeneration = getAccountRegeneration(
+      vocation,
+      this.definitionVersion,
+      this.accountTier,
+    );
+    this.nextHealthAt = now + this.regeneration.healthIntervalMs;
+    this.nextManaAt = now + this.regeneration.manaIntervalMs;
+    this.nextSoulAt = now + this.regeneration.soulIntervalMs;
   }
 
   get experience(): number {
@@ -470,11 +492,13 @@ export class CharacterProgression {
   private syncRegeneration(accountTier: AccountTier, now: number): boolean {
     if (accountTier === this.accountTier) return false;
     this.accountTier = accountTier;
-    this.regeneration = getAccountRegeneration(
+    const regeneration = getAccountRegeneration(
       this.vocation,
       this.definitionVersion,
       accountTier,
     );
+    if (regeneration === this.regeneration) return false;
+    this.regeneration = regeneration;
     this.nextHealthAt = now + this.regeneration.healthIntervalMs;
     this.nextManaAt = now + this.regeneration.manaIntervalMs;
     this.nextSoulAt = now + this.regeneration.soulIntervalMs;

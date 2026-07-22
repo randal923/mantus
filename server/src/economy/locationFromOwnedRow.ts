@@ -14,17 +14,6 @@ export function locationFromOwnedRow(row: OwnedItemRow): ItemLocation {
     };
   }
   if (
-    row.location_type === "inventory" &&
-    row.character_id &&
-    row.slot_index !== null
-  ) {
-    return {
-      kind: "inventory",
-      characterId: row.character_id,
-      slot: row.slot_index,
-    };
-  }
-  if (
     (row.location_type === "container" || row.location_type === "corpse") &&
     row.container_id &&
     row.slot_index !== null

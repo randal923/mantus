@@ -266,9 +266,9 @@ export const unequipItemMessageSchema = ownedItemIntentSchema
 
 /**
  * Picks up a visible map instance into an optional bounded owned container
- * slot, or — with `equipSlot` — asks the server to equip it right after the
- * pickup commits (the equip is re-validated like any equip intent; if it is
- * not possible the item simply stays picked up).
+ * slot, or — with `equipSlot` — asks the server to pick it up directly into
+ * an empty equipment slot. The whole operation is rejected if equipping is
+ * not currently valid.
  */
 export const pickupItemMessageSchema = z
   .object({

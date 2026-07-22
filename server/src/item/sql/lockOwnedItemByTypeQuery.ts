@@ -4,7 +4,7 @@ export const lockOwnedItemByTypeQuery = `WITH RECURSIVE owned AS (
          SELECT id, container_id, character_id, location_type, 1 AS depth
          FROM items
          WHERE character_id = $1
-           AND location_type IN ('equipment', 'inventory')
+           AND location_type = 'equipment'
          UNION ALL
          SELECT child.id, child.container_id, child.character_id,
            child.location_type, owned.depth + 1

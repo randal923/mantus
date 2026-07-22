@@ -5,7 +5,6 @@ import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
 import { canMergeItems } from "./canMergeItems";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
-import { firstFreeInventorySlot } from "./firstFreeInventorySlot";
 
 const MAX_CARRIED_ITEMS = 500;
 
@@ -28,12 +27,7 @@ export function planMoveToContainer(input: {
   if (!destination || destination.version !== input.destinationVersion) {
     return null;
   }
-  if (
-    item.location.kind !== "inventory" &&
-    item.location.kind !== "container"
-  ) {
-    return null;
-  }
+  if (item.location.kind !== "container") return null;
   if (item.id === destination.id) return null;
   const type = catalog.require(item.typeId);
   const destinationCapacity =
@@ -275,17 +269,15 @@ function planSwap(
   count: number,
 ): CarriedPlan | null {
   if (count !== item.count) return null;
-  if (item.location.kind === "container") {
-    const sourceContainer = itemsById.get(item.location.containerId);
-    if (
-      !sourceContainer ||
-      !containerPlacementAllowed(items, itemsById, slotTarget.id, sourceContainer)
-    ) {
-      return null;
-    }
+  if (item.location.kind !== "container") return null;
+  const sourceLocation = item.location;
+  const sourceContainer = itemsById.get(sourceLocation.containerId);
+  if (
+    !sourceContainer ||
+    !containerPlacementAllowed(items, itemsById, slotTarget.id, sourceContainer)
+  ) {
+    return null;
   }
-  const temporarySlot = firstFreeInventorySlot(items);
-  if (temporarySlot === null) return null;
   const after: Item = {
     ...item,
     location: {
@@ -297,20 +289,17 @@ function planSwap(
   };
   const displaced: Item = {
     ...slotTarget,
-    location: item.location,
+    location: sourceLocation,
     version: slotTarget.version + 1,
   };
   const rowOps: CarriedPersistRowOp[] = [
-    // Stage the displaced item on a free inventory slot so the partial
-    // unique indexes never collide mid-transaction.
     {
-      kind: "write",
+      kind: "stage",
+      itemId: slotTarget.id,
       expectedVersion: slotTarget.version,
-      item: {
-        ...slotTarget,
-        location: { kind: "inventory", characterId, slot: temporarySlot },
-        version: slotTarget.version + 1,
-      },
+      nextVersion: slotTarget.version + 1,
+      characterId,
+      slot: 0,
     },
     { kind: "write", expectedVersion: item.version, item: after },
     { kind: "write", expectedVersion: displaced.version, item: displaced },

@@ -39,29 +39,18 @@ export class PgStackOps {
         throw new Error("invalid stack split");
       }
       await this.guards.requireOwnedItemSpace(client, characterId);
-      if (
-        row.location_type !== "container" &&
-        row.location_type !== "inventory"
-      ) {
+      if (row.location_type !== "container") {
         throw new Error("stack cannot be split in this location");
       }
       const before = itemFromRow(row);
-      let destinationSlot: number;
-      if (row.location_type === "container") {
-        const container = await this.locks.lockItem(
-          client,
-          row.container_id ?? "",
-        );
-        destinationSlot = await this.locks.firstContainerSlot(
-          client,
-          container,
-        );
-      } else {
-        destinationSlot = await this.locks.firstInventorySlot(
-          client,
-          characterId,
-        );
-      }
+      const container = await this.locks.lockItem(
+        client,
+        row.container_id ?? "",
+      );
+      const destinationSlot = await this.locks.firstContainerSlot(
+        client,
+        container,
+      );
       const sourceResult = await client.query<ItemRow>(
         decrementItemCountUpdate,
         [row.id, count],
@@ -72,9 +61,9 @@ export class PgStackOps {
         row.item_type_id,
         count,
         JSON.stringify(row.attributes),
-        row.location_type,
-        row.location_type === "inventory" ? characterId : null,
-        row.location_type === "container" ? row.container_id : null,
+        "container",
+        null,
+        row.container_id,
         destinationSlot,
       ]);
       const sourceAfter = requireReturnedItem(sourceResult.rows[0]);

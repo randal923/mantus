@@ -27,7 +27,7 @@ export function locationFromRow(row: ItemRow): ItemLocation {
     };
   }
   if (
-    ["inventory", "inbox", "trade-reservation", "market-escrow"].includes(
+    ["inbox", "trade-reservation", "market-escrow"].includes(
       row.location_type,
     ) &&
     row.character_id &&
@@ -35,7 +35,6 @@ export function locationFromRow(row: ItemRow): ItemLocation {
   ) {
     return {
       kind: row.location_type as
-        | "inventory"
         | "inbox"
         | "trade-reservation"
         | "market-escrow",

@@ -27,7 +27,7 @@ export class Player extends Creature<Character["outfit"]> {
   skull: SkullState;
   /** Epoch ms when the persistent skull expires (null while none). */
   skullExpiresAt: number | null;
-  readonly vocation: Character["vocation"];
+  private currentVocation: Character["vocation"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
   readonly version: number;
@@ -70,7 +70,7 @@ export class Player extends Creature<Character["outfit"]> {
       maxHealth: stats.maxHealth,
     });
     this.currentWheelBonuses = wheelBonuses;
-    this.vocation = character.vocation;
+    this.currentVocation = character.vocation;
     this.premiumUntil = premiumUntil?.getTime() ?? null;
     this.townId = character.townId;
     this.skull = character.skull;
@@ -99,6 +99,16 @@ export class Player extends Creature<Character["outfit"]> {
 
   get wheelBonuses(): WheelBonuses {
     return this.currentWheelBonuses;
+  }
+
+  get vocation(): Character["vocation"] {
+    return this.currentVocation;
+  }
+
+  promote(vocation: Character["vocation"], now: number): void {
+    this.progression.promote(vocation, now);
+    this.currentVocation = vocation;
+    this.setMaxHealth(this.progression.maxHealth);
   }
 
   /** The wheel's contribution to derived stats, for save-snapshot checks. */

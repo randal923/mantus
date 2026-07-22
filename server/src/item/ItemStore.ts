@@ -35,8 +35,8 @@ export interface ItemStore {
     position: Position,
     source?: WorldItemSource,
     destination?: ItemContainerDestination,
-    /** Stage on a loose inventory slot (equip-after-pickup needs no backpack). */
-    stageInInventory?: boolean,
+    /** Pick up directly into an empty equipment slot. */
+    equipSlot?: EquipmentSlot,
   ): Promise<ItemMutation>;
   drop(
     characterId: string,

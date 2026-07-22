@@ -34,7 +34,6 @@ let travelStore: PgNpcTravelStore;
 type TestItemLocation =
   | { kind: "equipment"; characterId: string; slot: EquipmentSlot }
   | { kind: "container"; containerId: string; slot: number }
-  | { kind: "inventory"; characterId: string; slot: number }
   | { kind: "world"; x: number; y: number; z: number; stackIndex: number };
 
 const insertItem = async (
@@ -62,13 +61,9 @@ const insertItem = async (
       typeId,
       count,
       location.kind,
-      location.kind === "equipment" || location.kind === "inventory"
-        ? location.characterId
-        : null,
+      location.kind === "equipment" ? location.characterId : null,
       location.kind === "container" ? location.containerId : null,
-      location.kind === "container" || location.kind === "inventory"
-        ? location.slot
-        : null,
+      location.kind === "container" ? location.slot : null,
       location.kind === "equipment" ? location.slot : null,
       world ? "test" : null,
       world?.x ?? null,
@@ -117,6 +112,7 @@ const itemRow = async (id: string) => {
     location_type: string;
     container_id: string | null;
     slot_index: number | null;
+    equipment_slot: string | null;
     world_x: number | null;
     world_y: number | null;
     world_z: number | null;
@@ -124,7 +120,7 @@ const itemRow = async (id: string) => {
     count: number;
     version: number;
   }>(
-    `SELECT location_type, container_id, slot_index,
+    `SELECT location_type, container_id, slot_index, equipment_slot,
        world_x, world_y, world_z, world_stack_index, count, version
      FROM items WHERE id = $1`,
     [id],
@@ -213,6 +209,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "018_pvp.sql",
       "023_character_action_bar.sql",
       "029_character_potion_action_bar.sql",
+      "032_remove_loose_inventory.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -261,6 +258,41 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       MIGRATION_LOCK_KEY,
     ]);
     await setupClient.end();
+  });
+
+  it("never unequips the equipped backpack", async () => {
+    await expect(
+      store.unequip(characterId, backpackId, 1, "backpack"),
+    ).rejects.toThrow("cannot be unequipped");
+    expect(await itemRow(backpackId)).toMatchObject({
+      location_type: "equipment",
+      equipment_slot: "backpack",
+      version: 1,
+    });
+    expect(await auditRows("item-transferred")).toHaveLength(0);
+  });
+
+  it("never replaces the equipped backpack", async () => {
+    const incomingId = await insertItem(BACKPACK_TYPE, 1, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 2,
+    });
+
+    await expect(
+      store.equip(characterId, incomingId, 1, "backpack"),
+    ).rejects.toThrow("cannot be replaced");
+    expect(await itemRow(backpackId)).toMatchObject({
+      location_type: "equipment",
+      equipment_slot: "backpack",
+      version: 1,
+    });
+    expect(await itemRow(incomingId)).toMatchObject({
+      location_type: "container",
+      slot_index: 2,
+      version: 1,
+    });
+    expect(await auditRows("item-transferred")).toHaveLength(0);
   });
 
   it("moves an item into an empty slot and audits the transfer", async () => {
@@ -473,6 +505,27 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       container_id: backpackId,
       slot_index: 2,
     });
+    const staged = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM items
+       WHERE location_type = 'internal-staging'`,
+    );
+    expect(staged.rows[0]?.count).toBe("0");
+  });
+
+  it("rejects an item left in transaction staging at commit", async () => {
+    await expect(
+      pool.query(
+        `INSERT INTO items (
+           id, item_type_id, location_type, character_id, slot_index
+         ) VALUES ($1, $2, 'internal-staging', $3, 0)`,
+        [randomUUID(), HELMET_TYPE, characterId],
+      ),
+    ).rejects.toThrow("cannot commit in internal staging");
+    const staged = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM items
+       WHERE location_type = 'internal-staging'`,
+    );
+    expect(staged.rows[0]?.count).toBe("0");
   });
 
   it("rejects a stale item revision", async () => {
@@ -1135,10 +1188,9 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
 
   it("commits an exact NPC fare without locking backpack space", async () => {
     await pool.query("DELETE FROM items WHERE id = $1", [pouchId]);
-    await pool.query("DELETE FROM items WHERE id = $1", [backpackId]);
     await insertItem(GOLD_TYPE, 100, {
-      kind: "inventory",
-      characterId,
+      kind: "container",
+      containerId: backpackId,
       slot: 0,
     });
     const character = await pool.query<{ version: number }>(

@@ -12,6 +12,7 @@ import {
 import {
   characterCreationOptionsSchema,
   characterSummarySchema,
+  characterVocationSchema,
   ownCharacterStateSchema,
 } from "./character";
 import {
@@ -197,6 +198,13 @@ export const progressionUpdatedMessageSchema = z.object({
   type: z.literal("progression-updated"),
   playerId: z.string(),
   progression: ownProgressionStateSchema,
+});
+
+export const vocationUpdatedMessageSchema = z.object({
+  type: z.literal("vocation-updated"),
+  playerId: z.string(),
+  vocation: characterVocationSchema,
+  spells: z.array(spellCatalogEntrySchema).max(256),
 });
 
 export const creatureJoinedMessageSchema = z.object({
@@ -408,6 +416,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   inventoryUpdatedMessageSchema,
   itemTextMessageSchema,
   progressionUpdatedMessageSchema,
+  vocationUpdatedMessageSchema,
   creatureJoinedMessageSchema,
   creatureLeftMessageSchema,
   creatureMovedMessageSchema,

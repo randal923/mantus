@@ -18,6 +18,7 @@ import {
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { Player } from "../Player";
+import { getVocation } from "../progression/getVocation";
 import { projectOwnProgression } from "../progression/projectOwnProgression";
 import type { Session } from "../Session";
 import type { World } from "../World";
@@ -412,7 +413,11 @@ export class GemAtelierService {
   }
 
   private isUnlocked(player: Player, now: number): boolean {
-    return player.level >= WHEEL_LIMITS.minLevel && player.isPremiumAt(now);
+    return (
+      player.level >= WHEEL_LIMITS.minLevel &&
+      player.isPremiumAt(now) &&
+      getVocation(player.vocation).promotedFrom !== null
+    );
   }
 
   private guard(

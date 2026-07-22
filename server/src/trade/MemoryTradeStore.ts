@@ -47,7 +47,6 @@ export class MemoryTradeStore implements TradeStore {
       );
       const planned = planTradeDelivery({
         catalog: this.catalog,
-        receiverCharacterId: leg.receiverCharacterId,
         receiverItems: all.filter((item) => receiverIds.has(item.id)),
         receiverCapacityMax: leg.receiverCapacityMax,
         legItems: leg.items,

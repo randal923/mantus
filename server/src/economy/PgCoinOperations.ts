@@ -141,8 +141,8 @@ export class PgCoinOperations {
     );
   }
 
-  lockBackpackSlots(after: Map<string, Item>): Promise<BackpackSlots | null> {
-    return this.backpackLocker.lock(after);
+  lockBackpackSlots(): Promise<BackpackSlots | null> {
+    return this.backpackLocker.lock();
   }
 
   itemFromRow(row: OwnedItemRow): Item {

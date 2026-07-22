@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { OwnCharacterState } from "@tibia/protocol";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { GameHud } from "../components/GameHud";
 
@@ -139,3 +139,28 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const ChatHoverIsNotBlocked: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const chat = canvas.getByRole("region", { name: "Game chat" });
+    const chatBounds = chat.getBoundingClientRect();
+    const hitTarget = canvasElement.ownerDocument.elementFromPoint(
+      chatBounds.left + 8,
+      chatBounds.bottom - 8,
+    );
+
+    await expect(hitTarget).not.toBeNull();
+    await expect(chat.contains(hitTarget)).toBe(true);
+    if (!hitTarget) return;
+
+    await userEvent.hover(hitTarget);
+    await expect(
+      canvas.getByRole("button", { name: "Keep chat open" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    await userEvent.unhover(hitTarget);
+    await expect(
+      canvas.getByRole("button", { name: "Keep chat open" }),
+    ).toHaveAttribute("aria-expanded", "false");
+  },
+};

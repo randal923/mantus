@@ -5,7 +5,6 @@ import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
-import { firstFreeInventorySlot } from "./firstFreeInventorySlot";
 
 export function planEquip(input: {
   readonly characterId: string;
@@ -20,12 +19,7 @@ export function planEquip(input: {
   const { characterId, catalog, items, slot } = input;
   const item = items.find((candidate) => candidate.id === input.itemId);
   if (!item || item.version !== input.expectedVersion) return null;
-  if (
-    item.location.kind !== "inventory" &&
-    item.location.kind !== "container"
-  ) {
-    return null;
-  }
+  if (item.location.kind !== "container") return null;
   const type = catalog.require(item.typeId);
   if (type.equipmentSlot !== slot) return null;
   if (
@@ -68,42 +62,35 @@ export function planEquip(input: {
       candidate.location.slot === slot &&
       candidate.id !== item.id,
   );
+  if (slot === "backpack" && occupied) return null;
   const rowOps: CarriedPersistRowOp[] = [];
   const audits: CarriedPersistAudit[] = [];
   let displaced: Item | undefined;
   let displacedTypeId: number | undefined;
   if (occupied) {
-    if (item.location.kind === "container") {
-      const itemsById = new Map(items.map((entry) => [entry.id, entry]));
-      const sourceContainer = itemsById.get(item.location.containerId);
-      if (
-        !sourceContainer ||
-        !containerPlacementAllowed(
-          items,
-          itemsById,
-          occupied.id,
-          sourceContainer,
-        )
-      ) {
-        return null;
-      }
+    const itemsById = new Map(items.map((entry) => [entry.id, entry]));
+    const sourceContainer = itemsById.get(item.location.containerId);
+    if (
+      !sourceContainer ||
+      !containerPlacementAllowed(
+        items,
+        itemsById,
+        occupied.id,
+        sourceContainer,
+      )
+    ) {
+      return null;
     }
     const occupiedType = catalog.require(occupied.typeId);
     displacedTypeId = occupiedType.transformDeEquipTo ?? occupied.typeId;
     if (!catalog.get(displacedTypeId)) return null;
-    const temporarySlot = firstFreeInventorySlot(items);
-    if (temporarySlot === null) return null;
-    // The DB stages the displaced item on a free inventory slot so the
-    // partial unique indexes never collide mid-transaction.
     rowOps.push({
-      kind: "write",
+      kind: "stage",
+      itemId: occupied.id,
       expectedVersion: occupied.version,
-      item: {
-        ...occupied,
-        typeId: displacedTypeId,
-        location: { kind: "inventory", characterId, slot: temporarySlot },
-        version: occupied.version + 1,
-      },
+      nextVersion: occupied.version + 1,
+      characterId,
+      slot: 0,
     });
     displaced = {
       ...occupied,

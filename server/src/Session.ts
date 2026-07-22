@@ -39,6 +39,7 @@ export class Session {
    */
   itemPersistsPending = 0;
   travelOperationPending = false;
+  promotionOperationPending = false;
   readonly connectedAt = Date.now();
   playerId: string | null = null;
   movementDirection: Direction | null = null;

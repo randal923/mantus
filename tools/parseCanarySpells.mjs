@@ -212,6 +212,7 @@ function reviewedCastRules(path) {
     },
     "data/scripts/spells/healing/nature's_embrace.lua": {
       targetPlayerOnly: true,
+      targetPartyMemberOnly: true,
       allowSelf: false,
       excludedVocations: [],
       casterEffectId: 15,

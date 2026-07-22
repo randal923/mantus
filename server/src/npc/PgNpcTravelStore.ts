@@ -72,7 +72,7 @@ export class PgNpcTravelStore implements NpcTravelStore {
         removedItemIds,
       );
       if (payment.goldChange > 0) {
-        const backpack = await coinOps.lockBackpackSlots(after);
+        const backpack = await coinOps.lockBackpackSlots();
         if (!backpack) {
           throw new Error("no backpack space is available for travel change");
         }

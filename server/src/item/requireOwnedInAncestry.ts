@@ -12,7 +12,7 @@ export function requireOwnedInAncestry(
   }
   if (
     root?.characterId !== characterId ||
-    !["equipment", "inventory"].includes(root.locationType)
+    root.locationType !== "equipment"
   ) {
     throw new Error("item is not owned by character");
   }

@@ -1038,6 +1038,7 @@ function parseOnHitConditions(
     "poison",
     "fire",
     "energy",
+    "freeze",
     "curse",
     "bleeding",
     "dazzled",
@@ -1077,7 +1078,7 @@ function conditionTypeFor(value: unknown, name: string): ConditionType | undefin
   if (key === "CONDITION_POISON" || name.includes("poisonfield")) return "poison";
   if (key === "CONDITION_FIRE" || name.includes("firefield")) return "fire";
   if (key === "CONDITION_ENERGY" || name.includes("energyfield")) return "energy";
-  if (key === "CONDITION_FREEZING") return "paralyze";
+  if (key === "CONDITION_FREEZING") return "freeze";
   if (key === "CONDITION_CURSED") return "curse";
   if (key === "CONDITION_BLEEDING") return "bleeding";
   if (key === "CONDITION_DAZZLED") return "dazzled";
@@ -1087,6 +1088,7 @@ function conditionTypeFor(value: unknown, name: string): ConditionType | undefin
 function damageTypeForCondition(type: ConditionType): DamageType {
   if (type === "fire") return "fire";
   if (type === "energy") return "energy";
+  if (type === "freeze") return "ice";
   if (type === "bleeding") return "physical";
   if (type === "curse") return "death";
   if (type === "dazzled") return "holy";

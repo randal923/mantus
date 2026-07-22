@@ -13,6 +13,15 @@ export interface PersistSeedData {
 
 export type CarriedPersistRowOp =
   | {
+      /** Temporary DB-only state used to avoid unique-slot collisions. */
+      readonly kind: "stage";
+      readonly itemId: string;
+      readonly expectedVersion: number;
+      readonly nextVersion: number;
+      readonly characterId: string;
+      readonly slot: number;
+    }
+  | {
       readonly kind: "write";
       readonly expectedVersion: number;
       readonly item: Item;
@@ -82,8 +91,9 @@ export type CarriedPersistAudit =
 /**
  * The exact row changes a committed in-memory carried-item mutation must
  * write to the DB. Row ops run in order (swaps stage the displaced item on a
- * temporary slot so the partial unique indexes never collide); a guarded op
- * that misses means memory and DB diverged and the character is resynced.
+ * transaction-only location so the partial unique indexes never collide); a
+ * guarded op that misses means memory and DB diverged and the character is
+ * resynced.
  */
 export interface CarriedPersistPlan {
   readonly characterId: string;

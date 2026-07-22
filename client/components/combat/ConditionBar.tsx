@@ -8,6 +8,7 @@ const ICON_SOURCES: Record<ConditionType, string> = {
   poison: "/images/game/states/poisoned.png",
   fire: "/images/game/states/burning.png",
   energy: "/images/game/states/electrified.png",
+  freeze: "/images/game/states/freezing.png",
   bleeding: "/images/game/states/bleeding.png",
   curse: "/images/game/states/cursed.png",
   dazzled: "/images/game/states/dazzled.png",

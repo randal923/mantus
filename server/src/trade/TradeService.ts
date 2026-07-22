@@ -416,6 +416,7 @@ export class TradeService {
     if (!session || session.playerId !== characterId || !cache) return true;
     const plan = planTradeRestore({
       characterId,
+      catalog: this.catalog,
       items: cache.items,
       snapshot,
     });

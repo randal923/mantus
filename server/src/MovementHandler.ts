@@ -31,7 +31,7 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
-    if (session.travelOperationPending) {
+    if (session.travelOperationPending || session.promotionOperationPending) {
       this.stop(session);
       return;
     }
@@ -56,7 +56,7 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
-    if (session.travelOperationPending) {
+    if (session.travelOperationPending || session.promotionOperationPending) {
       this.stop(session);
       return;
     }
@@ -78,7 +78,7 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
-    if (session.travelOperationPending) {
+    if (session.travelOperationPending || session.promotionOperationPending) {
       this.stop(session);
       return;
     }
@@ -129,7 +129,7 @@ export class MovementHandler {
     }
     const player = this.world.getPlayer(session.playerId);
     if (!player) return;
-    if (session.travelOperationPending) {
+    if (session.travelOperationPending || session.promotionOperationPending) {
       this.stop(session);
       return;
     }
@@ -152,7 +152,7 @@ export class MovementHandler {
   }
 
   continueMovement(session: Session, now: number): void {
-    if (session.travelOperationPending) {
+    if (session.travelOperationPending || session.promotionOperationPending) {
       this.stop(session);
       return;
     }

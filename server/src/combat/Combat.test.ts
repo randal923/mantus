@@ -18,6 +18,7 @@ import { ItemIntentHandler } from "../item/ItemIntentHandler";
 import { loadItemCatalog } from "../item/loadItemCatalog";
 import { MemoryItemStore } from "../item/MemoryItemStore";
 import type { MapData } from "../MapData";
+import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import { positionKey } from "../positionKey";
 import { ProgressionSystem } from "../progression/ProgressionSystem";
@@ -38,6 +39,7 @@ const RUNE_ID = "00000000-0000-4000-8000-000000000013";
 const BACKPACK_ID = "00000000-0000-4000-8000-000000000014";
 const POTION_ID = "00000000-0000-4000-8000-000000000015";
 const FRIEND_ID = "00000000-0000-4000-8000-000000000016";
+const ARMOR_ID = "00000000-0000-4000-8000-000000000017";
 
 let catalog: ItemCatalog;
 
@@ -208,6 +210,7 @@ async function makeHarness(options: {
   position?: { x: number; y: number; z: number };
   map?: MapData;
   inventory?: ReadonlyArray<Item>;
+  partyMembership?: { sameParty: boolean };
 } = {}): Promise<Harness> {
   const world = new World(
     options.map ?? makeMap(),
@@ -245,8 +248,25 @@ async function makeHarness(options: {
       playerId === player.id ? session : undefined,
   } as unknown as SessionRegistry;
   const visibility = new Visibility(world, registry);
-  const store = new MemoryItemStore();
-  for (const item of options.inventory ?? []) store.seed(item);
+  const store = new MemoryItemStore(catalog);
+  const inventory = options.inventory ?? [];
+  if (
+    inventory.some(
+      (item) =>
+        item.location.kind === "container" &&
+        item.location.containerId === BACKPACK_ID,
+    ) &&
+    !inventory.some((item) => item.id === BACKPACK_ID)
+  ) {
+    store.seed(
+      ownedItem(BACKPACK_ID, 2854, {
+        kind: "equipment",
+        characterId: PLAYER_ID,
+        slot: "backpack",
+      }),
+    );
+  }
+  for (const item of inventory) store.seed(item);
   const items = new ItemIntentHandler(store, catalog, world, visibility);
   items.attach(await items.load(player.id, player.capacity));
   const persistence = {
@@ -279,6 +299,16 @@ async function makeHarness(options: {
       if (removed) visibility.announceCreatureLeave(removed);
       return true;
     },
+    undefined,
+    options.partyMembership
+      ? {
+          sameParty: () => options.partyMembership?.sameParty ?? false,
+          recordMonsterDamage: () => undefined,
+          recordPartnerHeal: () => undefined,
+          getExperienceShares: () => null,
+          getQuestParticipantIds: (playerId) => [playerId],
+        } satisfies PartyHooks
+      : undefined,
   );
   return {
     world,
@@ -731,6 +761,47 @@ describe("Combat", () => {
     expect(friend.health).toBeGreaterThan(100);
   });
 
+  it("restricts Nature's Embrace to a current party member", async () => {
+    const partyMembership = { sameParty: false };
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 20),
+      partyMembership,
+    });
+    const friend = new Player(
+      {
+        ...makeLeveledCharacter(300, "Elder Druid", 20),
+        id: "00000000-0000-4000-8000-000000000031",
+        displayName: "Party Friend",
+        normalizedName: "party friend",
+        health: 100,
+      },
+      { x: 2, y: 1, z: 7 },
+      0,
+    );
+    harness.world.addPlayer(friend);
+    harness.session.knownCreatureIds.add(friend.id);
+    const cast = () => harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exura-gran-sio",
+        target: { kind: "creature", creatureId: friend.id },
+      },
+      1_000,
+    );
+
+    cast();
+    expect(harness.sent).toContainEqual({
+      type: "error",
+      code: "spell-target-invalid",
+    });
+    expect(friend.health).toBe(100);
+
+    partyMembership.sameParty = true;
+    cast();
+    expect(friend.health).toBeGreaterThan(100);
+  });
+
   it("commits conjured ammunition with mana, soul, and inventory as one operation", async () => {
     const harness = await makeHarness({
       character: makeLeveledCharacter(13, "Paladin", 0),
@@ -960,11 +1031,7 @@ describe("Combat", () => {
         ownedItem(
           RUNE_ID,
           3155,
-          {
-            kind: "inventory",
-            characterId: PLAYER_ID,
-            slot: 0,
-          },
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
           2,
         ),
       ],
@@ -989,9 +1056,9 @@ describe("Combat", () => {
     await settleItems(harness, 1_000);
     harness.combat.useRune(harness.session, intent, 3_000);
 
-    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toEqual([
+    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toContainEqual(
       expect.objectContaining({ id: RUNE_ID, count: 1, version: 2 }),
-    ]);
+    );
     expect(monster.health).toBeLessThan(monster.maxHealth);
     expect(
       harness.sent.filter(
@@ -1009,11 +1076,7 @@ describe("Combat", () => {
         ownedItem(
           POTION_ID,
           239,
-          {
-            kind: "inventory",
-            characterId: PLAYER_ID,
-            slot: 0,
-          },
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
           2,
         ),
       ],
@@ -1071,8 +1134,8 @@ describe("Combat", () => {
       character: makeLeveledCharacter(80, "Knight"),
       inventory: [
         ownedItem(POTION_ID, 239, {
-          kind: "inventory",
-          characterId: PLAYER_ID,
+          kind: "container",
+          containerId: BACKPACK_ID,
           slot: 0,
         }),
       ],
@@ -1109,8 +1172,8 @@ describe("Combat", () => {
       character: makeLeveledCharacter(80, "Knight"),
       inventory: [
         ownedItem(POTION_ID, 239, {
-          kind: "inventory",
-          characterId: PLAYER_ID,
+          kind: "container",
+          containerId: BACKPACK_ID,
           slot: 0,
         }),
       ],
@@ -1142,22 +1205,22 @@ describe("Combat", () => {
     expect(friend.health).toBeGreaterThanOrEqual(friendHealthBefore + 425);
     expect(friend.health).toBeLessThanOrEqual(friendHealthBefore + 575);
     expect(harness.player.health).toBe(harness.player.maxHealth);
-    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toEqual([
+    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toContainEqual(
       expect.objectContaining({
         id: POTION_ID,
         typeId: 284,
         count: 1,
         version: 2,
       }),
-    ]);
+    );
   });
 
   it("rejects out-of-range and vocation-restricted potion targets without consuming", async () => {
     const farHarness = await makeHarness({
       inventory: [
         ownedItem(POTION_ID, 266, {
-          kind: "inventory",
-          characterId: PLAYER_ID,
+          kind: "container",
+          containerId: BACKPACK_ID,
           slot: 0,
         }),
       ],
@@ -1187,8 +1250,8 @@ describe("Combat", () => {
       character: makeLeveledCharacter(80, "Sorcerer"),
       inventory: [
         ownedItem(POTION_ID, 239, {
-          kind: "inventory",
-          characterId: PLAYER_ID,
+          kind: "container",
+          containerId: BACKPACK_ID,
           slot: 0,
         }),
       ],
@@ -1206,9 +1269,9 @@ describe("Combat", () => {
     );
 
     expect(farFriend.health).toBe(farFriend.maxHealth - 20);
-    await expect(farHarness.store.loadForCharacter(PLAYER_ID)).resolves.toEqual([
+    await expect(farHarness.store.loadForCharacter(PLAYER_ID)).resolves.toContainEqual(
       expect.objectContaining({ id: POTION_ID, typeId: 266, version: 1 }),
-    ]);
+    );
     expect(
       vocationHarness.sent.some(
         (message) =>
@@ -1218,9 +1281,9 @@ describe("Combat", () => {
     ).toBe(true);
     await expect(
       vocationHarness.store.loadForCharacter(PLAYER_ID),
-    ).resolves.toEqual([
+    ).resolves.toContainEqual(
       expect.objectContaining({ id: POTION_ID, typeId: 239, version: 1 }),
-    ]);
+    );
   });
 
   it("consumes ammunition once before applying a distance attack", async () => {
@@ -1837,5 +1900,66 @@ describe("Combat", () => {
           message.type === "combat-log" && message.kind === "death",
       ),
     ).toBe(false);
+  });
+
+  it("applies monster on-hit damage conditions only when the hit lands", async () => {
+    const blocked = await makeHarness({
+      inventory: [
+        ownedItem(ARMOR_ID, 3355, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "helmet",
+        }),
+      ],
+    });
+    const attacker = makeMonster(
+      "monster-instance:freezer:blocked",
+      { x: 2, y: 1, z: 7 },
+    );
+    const ability: MonsterAbility = {
+      kind: "damage",
+      intervalMs: 1_000,
+      chance: 100,
+      target: "target",
+      range: 2,
+      area: { shape: "single" },
+      damageType: "physical",
+      minimum: 1,
+      maximum: 1,
+      conditions: [
+        {
+          type: "freeze",
+          durationMs: 4_000,
+          tickSchedule: {
+            damageType: "ice",
+            intervalMs: 1_000,
+            amounts: [10, 5],
+          },
+        },
+      ],
+    };
+    blocked.world.addCreature(attacker);
+
+    blocked.combat.executeMonsterAbility(attacker, blocked.player, ability, 0);
+
+    expect(blocked.player.health).toBe(blocked.player.maxHealth);
+    expect(blocked.player.conditions.has("freeze")).toBe(false);
+
+    const landed = await makeHarness();
+    const landedAttacker = makeMonster(
+      "monster-instance:freezer:landed",
+      { x: 2, y: 1, z: 7 },
+    );
+    landed.world.addCreature(landedAttacker);
+
+    landed.combat.executeMonsterAbility(
+      landedAttacker,
+      landed.player,
+      { ...ability, minimum: 20, maximum: 20 },
+      0,
+    );
+
+    expect(landed.player.health).toBeLessThan(landed.player.maxHealth);
+    expect(landed.player.conditions.has("freeze")).toBe(true);
   });
 });

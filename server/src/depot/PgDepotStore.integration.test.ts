@@ -117,7 +117,7 @@ const loadCarried = async (characterId: string): Promise<Item[]> => {
     `WITH RECURSIVE owned AS (
        SELECT i.*, 1 AS item_depth FROM items i
        WHERE i.character_id = $1
-         AND i.location_type IN ('equipment', 'inventory')
+         AND i.location_type = 'equipment'
        UNION ALL
        SELECT child.*, owned.item_depth + 1 FROM items child
        JOIN owned ON child.container_id = owned.id
@@ -182,6 +182,9 @@ databaseDescribe("PgDepotStore integration", () => {
       "019_houses.sql",
       "020_social.sql",
       "021_moderation.sql",
+      "023_character_action_bar.sql",
+      "029_character_potion_action_bar.sql",
+      "032_remove_loose_inventory.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

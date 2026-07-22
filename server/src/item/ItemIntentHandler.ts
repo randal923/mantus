@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import type {
-  EquipmentSlot,
   InventoryState,
   Position,
 } from "@tibia/protocol";
@@ -24,7 +23,6 @@ import type { PotionUseResult } from "./PotionUseResult";
 import type { CarriedPlan } from "./plan/CarriedPlan";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
 import { planConsume } from "./plan/planConsume";
-import { planEquip } from "./plan/planEquip";
 import { firstFreeWorldStackIndex } from "./plan/firstFreeWorldStackIndex";
 import { planPotionUse } from "./plan/planPotionUse";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
@@ -857,56 +855,6 @@ export class ItemIntentHandler {
     }
     const persist = planned.plan.persist;
     this.enqueuePersist(session, playerId, () => this.store.persist(persist));
-    if (intent.type === "pickup-item" && intent.equipSlot) {
-      this.equipPickedItem(
-        session,
-        playerId,
-        planned.plan.mutation,
-        intent.equipSlot,
-        now,
-      );
-    }
-  }
-
-  /**
-   * Equip-after-pickup: once the pickup commit lands in memory, run the
-   * regular equip planner on the picked item. If the equip is not possible
-   * the item simply stays picked up.
-   */
-  private equipPickedItem(
-    session: Session,
-    characterId: string,
-    mutation: ItemMutation,
-    slot: EquipmentSlot,
-    now: number,
-  ): void {
-    const cache = this.inventories.get(characterId);
-    const player = this.world.getPlayer(characterId);
-    const rootId = mutation.before?.id;
-    if (!cache || !player || !rootId) return;
-    const item = cache.items.find((candidate) => candidate.id === rootId);
-    if (!item) return;
-    const plan = planEquip({
-      characterId,
-      catalog: this.catalog,
-      items: cache.items,
-      level: player.level,
-      vocation: player.vocation,
-      itemId: item.id,
-      expectedVersion: item.version,
-      slot,
-    });
-    if (!plan) return;
-    const inventory = this.operations.applyMutation(
-      characterId,
-      plan.mutation,
-      now,
-    );
-    if (inventory && session.playerId === characterId) {
-      session.send({ type: "inventory-updated", inventory });
-    }
-    const persist = plan.persist;
-    this.enqueuePersist(session, characterId, () => this.store.persist(persist));
   }
 }
 

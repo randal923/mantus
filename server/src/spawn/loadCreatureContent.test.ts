@@ -112,6 +112,22 @@ describe("loadCreatureContent", () => {
       .find((condition) => condition.type === "fire");
     expect(burn?.tickSchedule?.damageType).toBe("fire");
 
+    const freezing = content.monsterTypes
+      .get("true-frost-flower-asura")
+      ?.attacks.flatMap((ability) => ability.conditions ?? [])
+      .find((condition) => condition.type === "freeze");
+    expect(freezing?.tickSchedule?.damageType).toBe("ice");
+    expect(
+      content.monsterTypes
+        .get("chakoya-windcaller")
+        ?.attacks.some(
+          (ability) =>
+            ability.kind === "condition" &&
+            ability.conditionType === "freeze" &&
+            ability.damageType === "ice",
+        ),
+    ).toBe(true);
+
     const withOnHit = [...content.monsterTypes.values()].filter((type) =>
       [...type.attacks, ...type.defenses].some((ability) =>
         ability.conditions?.some((condition) => condition.tickSchedule),

@@ -140,6 +140,7 @@ export class Combat {
       this.damage,
       this.conditionSystem,
       pvpHooks,
+      partyHooks,
     );
     const chase = new ChaseController(world, visibility, persistence);
     this.autoAttack = new PlayerAutoAttack(
@@ -467,80 +468,19 @@ export class Combat {
       }
     }
     if (ability.conditions && ability.conditions.length > 0) {
+      const immediate = ability.conditions.filter(
+        (condition) => !condition.tickSchedule,
+      );
       for (const creature of affected) {
         if (!this.canReceiveMonsterCondition(monster, creature, ability)) continue;
-        for (const condition of ability.conditions) {
-          const attributes = condition.attributes
-            ? Object.fromEntries(
-                Object.entries(condition.attributes).map(([key, value]) => [
-                  key,
-                  this.formula.integer(value.minimum, value.maximum),
-                ]),
-              )
-            : undefined;
-          const speedPercent = this.formula.integer(
-            condition.speedPercentMinimum ?? 0,
-            condition.speedPercentMaximum ??
-              condition.speedPercentMinimum ??
-              0,
-          );
-          const baseSpeed = Math.max(
-            10,
-            creature.stepSpeed - creature.conditions.speedModifier,
-          );
-          const tickDamage = condition.tickDamage;
-          const tickBase = tickDamage
-            ? this.formula.integer(
-                tickDamage.minimum,
-                tickDamage.maximum,
-              )
-            : undefined;
-          const schedule = condition.tickSchedule;
-          const tickAmounts = schedule
-            ? [...schedule.amounts]
-            : tickDamage && tickBase !== undefined
-              ? Array.from({ length: tickDamage.count }, (_, index) =>
-                  Math.max(
-                    1,
-                    Math.round(
-                      tickBase * tickDamage.multiplier ** index,
-                    ),
-                  ),
-                )
-              : undefined;
-          this.conditionSystem.applyCondition(
-            creature,
-            {
-              type: condition.type,
-              sourceId: monster.id,
-              durationMs: condition.durationMs,
-              ...(speedPercent > 0
-                ? { magnitude: Math.floor(baseSpeed * speedPercent / 100) }
-                : {}),
-              ...(attributes ? { attributes } : {}),
-              ...(tickAmounts && schedule
-                ? {
-                    tickAmounts,
-                    tickIntervalMs: schedule.intervalMs,
-                    damageType: schedule.damageType,
-                  }
-                : tickAmounts && tickDamage
-                  ? {
-                      tickAmounts,
-                      tickIntervalMs: tickDamage.intervalMs,
-                      damageType: tickDamage.damageType,
-                    }
-                  : {}),
-              ...(condition.type === "fear"
-                ? { fearSource: { ...monster.position } }
-                : {}),
-              ...(ability.area.shape === "single" && effectId !== undefined
-                ? { effectId }
-                : {}),
-            },
-            now,
-          );
-        }
+        this.applyMonsterAbilityConditions(
+          monster,
+          creature,
+          ability,
+          immediate,
+          effectId,
+          now,
+        );
       }
     }
     if (ability.kind === "condition" && ability.conditionType) {
@@ -633,9 +573,91 @@ export class Combat {
       ) {
         continue;
       }
-      this.damage.applyDamage(creature, request, now);
+      const result = this.damage.applyDamage(creature, request, now);
+      if (result.healthChanged || result.manaChanged) {
+        this.applyMonsterAbilityConditions(
+          monster,
+          creature,
+          ability,
+          ability.conditions?.filter((condition) => condition.tickSchedule) ?? [],
+          effectId,
+          now,
+        );
+      }
     }
     return true;
+  }
+
+  private applyMonsterAbilityConditions(
+    monster: Monster,
+    creature: Creature,
+    ability: MonsterAbility,
+    conditions: NonNullable<MonsterAbility["conditions"]>,
+    effectId: number | undefined,
+    now: number,
+  ): void {
+    for (const condition of conditions) {
+      const attributes = condition.attributes
+        ? Object.fromEntries(
+            Object.entries(condition.attributes).map(([key, value]) => [
+              key,
+              this.formula.integer(value.minimum, value.maximum),
+            ]),
+          )
+        : undefined;
+      const speedPercent = this.formula.integer(
+        condition.speedPercentMinimum ?? 0,
+        condition.speedPercentMaximum ?? condition.speedPercentMinimum ?? 0,
+      );
+      const baseSpeed = Math.max(
+        10,
+        creature.stepSpeed - creature.conditions.speedModifier,
+      );
+      const tickDamage = condition.tickDamage;
+      const tickBase = tickDamage
+        ? this.formula.integer(tickDamage.minimum, tickDamage.maximum)
+        : undefined;
+      const schedule = condition.tickSchedule;
+      const tickAmounts = schedule
+        ? [...schedule.amounts]
+        : tickDamage && tickBase !== undefined
+          ? Array.from({ length: tickDamage.count }, (_, index) =>
+              Math.max(1, Math.round(tickBase * tickDamage.multiplier ** index)),
+            )
+          : undefined;
+      this.conditionSystem.applyCondition(
+        creature,
+        {
+          type: condition.type,
+          sourceId: monster.id,
+          durationMs: condition.durationMs,
+          ...(speedPercent > 0
+            ? { magnitude: Math.floor(baseSpeed * speedPercent / 100) }
+            : {}),
+          ...(attributes ? { attributes } : {}),
+          ...(tickAmounts && schedule
+            ? {
+                tickAmounts,
+                tickIntervalMs: schedule.intervalMs,
+                damageType: schedule.damageType,
+              }
+            : tickAmounts && tickDamage
+              ? {
+                  tickAmounts,
+                  tickIntervalMs: tickDamage.intervalMs,
+                  damageType: tickDamage.damageType,
+                }
+              : {}),
+          ...(condition.type === "fear"
+            ? { fearSource: { ...monster.position } }
+            : {}),
+          ...(ability.area.shape === "single" && effectId !== undefined
+            ? { effectId }
+            : {}),
+        },
+        now,
+      );
+    }
   }
 
   private executeQueuedMonsterAbilities(now: number): void {

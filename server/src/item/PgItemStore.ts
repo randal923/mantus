@@ -113,7 +113,7 @@ export class PgItemStore implements ItemStore {
     position: Position,
     source?: WorldItemSource,
     destination?: ItemContainerDestination,
-    stageInInventory?: boolean,
+    equipSlot?: EquipmentSlot,
   ): Promise<ItemMutation> {
     return this.world.pickup(
       characterId,
@@ -122,7 +122,7 @@ export class PgItemStore implements ItemStore {
       position,
       source,
       destination,
-      stageInInventory,
+      equipSlot,
     );
   }
 

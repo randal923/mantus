@@ -185,8 +185,7 @@ export function planLoot(input: {
 
 function slotOf(item: Item): number {
   return item.location.kind === "container" ||
-    item.location.kind === "corpse" ||
-    item.location.kind === "inventory"
+    item.location.kind === "corpse"
     ? item.location.slot
     : 0;
 }

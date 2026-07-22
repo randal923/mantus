@@ -26,6 +26,7 @@ const ROPE_SPOT = { x: 5, y: 4, z: 7 } as const;
 const ROPE_DESTINATION = { x: 5, y: 5, z: 6 } as const;
 const PILE = { x: 4, y: 4, z: 7 } as const;
 const BELOW_PILE = { x: 4, y: 4, z: 8 } as const;
+const BACKPACK_ID = "00000000-0000-4000-8000-000000000099";
 
 let catalog: ItemCatalog;
 
@@ -40,7 +41,7 @@ function carriedItem(id: string, typeId: number, characterId: string): Item {
     count: 1,
     attributes: {},
     version: 1,
-    location: { kind: "inventory", characterId, slot: 0 },
+    location: { kind: "container", containerId: BACKPACK_ID, slot: 0 },
   };
 }
 
@@ -94,7 +95,19 @@ async function makeHarness(
   );
   const registry = new SessionRegistry();
   const visibility = new Visibility(world, registry);
-  const store = new MemoryItemStore();
+  const store = new MemoryItemStore(catalog);
+  store.seed({
+    id: BACKPACK_ID,
+    typeId: 2854,
+    count: 1,
+    attributes: {},
+    version: 1,
+    location: {
+      kind: "equipment",
+      characterId: "actor",
+      slot: "backpack",
+    },
+  });
   for (const item of inventory) store.seed(item);
   const items = new ItemIntentHandler(store, catalog, world, visibility);
   const persistence = {

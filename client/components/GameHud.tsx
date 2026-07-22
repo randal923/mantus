@@ -290,7 +290,7 @@ export function GameHud({
           />
         </div>
       )}
-      <div className="pointer-events-auto absolute inset-x-2 bottom-0 flex items-end justify-center">
+      <div className="absolute inset-x-2 bottom-0 flex items-end justify-center">
         <div className="flex w-max max-w-full items-end justify-center">
           <VitalOrb
             kind="health"
@@ -298,7 +298,7 @@ export function GameHud({
             max={ownCharacter.maxHealth}
           />
 
-          <div className="ui-action-cluster-shell relative z-0 min-w-0 max-w-[calc(100vw-12rem)] sm:max-w-[calc(100vw-16rem)]">
+          <div className="ui-action-cluster-shell pointer-events-auto relative z-0 min-w-0 max-w-[calc(100vw-12rem)] sm:max-w-[calc(100vw-16rem)]">
             <div className="ui-action-cluster w-max max-w-full overflow-x-auto p-2">
               <div className="flex w-max min-w-full flex-col items-center gap-1">
                 <ActionBar

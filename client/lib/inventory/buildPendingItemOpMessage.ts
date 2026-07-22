@@ -71,6 +71,7 @@ export function buildPendingItemOpMessage(
         slot: op.slot,
       };
     case "unequip": {
+      if (op.slot === "backpack") return null;
       if (!op.destination) {
         return {
           type: "unequip-item",

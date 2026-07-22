@@ -72,7 +72,6 @@ export function planStashWithdraw(input: {
   const destinations = findCarriedDestinations(
     catalog,
     carried.items,
-    characterId,
     createdRowCount,
   );
   if (destinations.length !== createdRowCount) return { status: "no-space" };

@@ -63,7 +63,7 @@ export function InventoryPanel({
   platinum,
   capacityUsed,
   capacityMax,
-  slotCount = 24,
+  slotCount = 0,
   containers = [],
   onClose,
   onToggleCharacterStats,
@@ -85,6 +85,7 @@ export function InventoryPanel({
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
   const bySlot = new Map(items.map((entry) => [entry.slot, entry.item]));
+  const visibleSlotCount = slotCount;
   const activateItem = (item: InventoryItem) => {
     if (item.useKind === "rune" && onUseRune) {
       onUseRune(item);
@@ -111,7 +112,13 @@ export function InventoryPanel({
       onUseItem(item);
       return;
     }
-    if (item.equipmentSlot && onEquip) onEquip(item);
+    if (
+      item.equipmentSlot &&
+      item.equipmentSlot !== "backpack" &&
+      onEquip
+    ) {
+      onEquip(item);
+    }
   };
 
   return (
@@ -257,13 +264,13 @@ export function InventoryPanel({
               {t("inventory.backpack")}
             </h3>
             <span className="text-xs text-ui-muted">
-              {items.length} / {slotCount}
+              {items.length} / {visibleSlotCount}
             </span>
           </div>
 
           <div className="ui-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
             <div className="grid grid-cols-4 justify-items-center gap-2">
-              {Array.from({ length: slotCount }, (_, slot) => {
+              {Array.from({ length: visibleSlotCount }, (_, slot) => {
                 const item = bySlot.get(slot);
                 return (
                   <ItemSlot
@@ -271,9 +278,7 @@ export function InventoryPanel({
                     item={item}
                     onActivate={item ? () => activateItem(item) : undefined}
                     onDragStart={
-                      item &&
-                      equipment.backpack &&
-                      onDragStart
+                      item && onDragStart
                         ? () =>
                             onDragStart({
                               kind: "owned",

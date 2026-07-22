@@ -24,6 +24,7 @@ const BACKPACK_TYPE = 2854;
 const SWORD_ID = "11111111-1111-4111-8111-111111111111";
 const COINS_ID = "22222222-2222-4222-8222-222222222222";
 const BACKPACK_ID = "33333333-3333-4333-8333-333333333333";
+const equippedBackpackId = (owner: string) => `equipped-backpack:${owner}`;
 
 const makeItemType = (
   overrides: Partial<ItemType> & { id: number },
@@ -80,7 +81,7 @@ const sword = (owner: string): Item => ({
   count: 1,
   attributes: {},
   version: 1,
-  location: { kind: "inventory", characterId: owner, slot: 0 },
+  location: { kind: "container", containerId: equippedBackpackId(owner), slot: 0 },
 });
 
 const coins = (owner: string): Item => ({
@@ -89,7 +90,7 @@ const coins = (owner: string): Item => ({
   count: 50,
   attributes: {},
   version: 1,
-  location: { kind: "inventory", characterId: owner, slot: 0 },
+  location: { kind: "container", containerId: equippedBackpackId(owner), slot: 0 },
 });
 
 const makeHarness = (options?: {
@@ -149,8 +150,21 @@ const makeHarness = (options?: {
     session.playerId = characterId;
     registry.add(session);
     registry.bindPlayer(session);
-    for (const item of carried) itemStore.seed(item);
-    items.attach({ characterId, capacityMax, items: carried });
+    const backpack: Item = {
+      id: equippedBackpackId(characterId),
+      typeId: BACKPACK_TYPE,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "equipment",
+        characterId,
+        slot: "backpack",
+      },
+    };
+    const inventory = [backpack, ...carried];
+    for (const item of inventory) itemStore.seed(item);
+    items.attach({ characterId, capacityMax, items: inventory });
     return { player, session, messages };
   };
 
@@ -232,10 +246,12 @@ describe("TradeService", () => {
       reason: "completed",
     });
     expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
-      characterId: "player-b",
+      kind: "container",
+      containerId: equippedBackpackId("player-b"),
     });
     expect(itemById(harness, COINS_ID)?.location).toMatchObject({
-      characterId: "player-a",
+      kind: "container",
+      containerId: equippedBackpackId("player-a"),
     });
     expect(countOfType(harness, SWORD_TYPE)).toBe(1);
     expect(countOfType(harness, COIN_TYPE)).toBe(50);
@@ -314,12 +330,12 @@ describe("TradeService", () => {
       reason: "cancelled",
     });
     expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
-      kind: "inventory",
-      characterId: "player-a",
+      kind: "container",
+      containerId: equippedBackpackId("player-a"),
     });
     expect(itemById(harness, COINS_ID)?.location).toMatchObject({
-      kind: "inventory",
-      characterId: "player-b",
+      kind: "container",
+      containerId: equippedBackpackId("player-b"),
     });
     expect(countOfType(harness, SWORD_TYPE)).toBe(1);
     expect(countOfType(harness, COIN_TYPE)).toBe(50);
@@ -356,10 +372,12 @@ describe("TradeService", () => {
     await settle(harness, 2_000);
 
     expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
-      characterId: "player-b",
+      kind: "container",
+      containerId: equippedBackpackId("player-b"),
     });
     expect(itemById(harness, COINS_ID)?.location).toMatchObject({
-      characterId: "player-a",
+      kind: "container",
+      containerId: equippedBackpackId("player-a"),
     });
     expect(countOfType(harness, SWORD_TYPE)).toBe(1);
     expect(countOfType(harness, COIN_TYPE)).toBe(50);
@@ -397,12 +415,12 @@ describe("TradeService", () => {
       reason: "disconnected",
     });
     expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
-      kind: "inventory",
-      characterId: "player-a",
+      kind: "container",
+      containerId: equippedBackpackId("player-a"),
     });
     expect(itemById(harness, COINS_ID)?.location).toMatchObject({
-      kind: "inventory",
-      characterId: "player-b",
+      kind: "container",
+      containerId: equippedBackpackId("player-b"),
     });
   });
 
@@ -429,8 +447,8 @@ describe("TradeService", () => {
       reason: "moved-away",
     });
     expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
-      kind: "inventory",
-      characterId: "player-a",
+      kind: "container",
+      containerId: equippedBackpackId("player-a"),
     });
   });
 
@@ -455,7 +473,10 @@ describe("TradeService", () => {
       type: "trade-closed",
       reason: "timeout",
     });
-    expect(itemById(harness, SWORD_ID)?.location.kind).toBe("inventory");
+    expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
+      kind: "container",
+      containerId: equippedBackpackId("player-a"),
+    });
   });
 
   it("aborts the whole swap and restores both legs when a receiver lacks capacity", async () => {
@@ -491,12 +512,12 @@ describe("TradeService", () => {
       reason: "no-capacity",
     });
     expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
-      kind: "inventory",
-      characterId: "player-a",
+      kind: "container",
+      containerId: equippedBackpackId("player-a"),
     });
     expect(itemById(harness, COINS_ID)?.location).toMatchObject({
-      kind: "inventory",
-      characterId: "player-b",
+      kind: "container",
+      containerId: equippedBackpackId("player-b"),
     });
     expect(countOfType(harness, SWORD_TYPE)).toBe(1);
     expect(countOfType(harness, COIN_TYPE)).toBe(50);
@@ -549,7 +570,8 @@ describe("TradeService", () => {
     await settle(harness, 2_000);
 
     expect(itemById(harness, BACKPACK_ID)?.location).toMatchObject({
-      characterId: "player-b",
+      kind: "container",
+      containerId: equippedBackpackId("player-b"),
     });
     expect(itemById(harness, SWORD_ID)?.location).toMatchObject({
       kind: "container",
@@ -561,7 +583,11 @@ describe("TradeService", () => {
     const third: Item = {
       ...sword("player-a"),
       id: "44444444-4444-4444-8444-444444444444",
-      location: { kind: "inventory", characterId: "player-a", slot: 1 },
+      location: {
+        kind: "container",
+        containerId: equippedBackpackId("player-a"),
+        slot: 1,
+      },
     };
     const harness = makeHarness({ itemsA: [sword("player-a"), third] });
     const { trade, world, a } = harness;

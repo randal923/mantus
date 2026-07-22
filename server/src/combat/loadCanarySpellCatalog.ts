@@ -6,6 +6,7 @@ import {
   CONDITION_TYPES,
   DAMAGE_TYPES,
 } from "@tibia/protocol";
+import type { CharacterVocation } from "@tibia/protocol";
 import type {
   SpellDefinition,
   SpellCondition,
@@ -154,6 +155,8 @@ function parseCastRules(
   if (
     !isRecord(value) ||
     typeof value.targetPlayerOnly !== "boolean" ||
+    (value.targetPartyMemberOnly !== undefined &&
+      typeof value.targetPartyMemberOnly !== "boolean") ||
     typeof value.allowSelf !== "boolean" ||
     !Array.isArray(value.excludedVocations) ||
     !value.excludedVocations.every((vocation) =>
@@ -166,7 +169,17 @@ function parseCastRules(
   ) {
     throw new Error(`Canary spell ${String(id)} has invalid cast rules`);
   }
-  return value as SpellDefinition["castRules"];
+  return {
+    targetPlayerOnly: value.targetPlayerOnly,
+    ...(value.targetPartyMemberOnly === true
+      ? { targetPartyMemberOnly: true }
+      : {}),
+    allowSelf: value.allowSelf,
+    excludedVocations: value.excludedVocations as ReadonlyArray<
+      CharacterVocation
+    >,
+    casterEffectId: value.casterEffectId as number,
+  };
 }
 
 function parseConjure(

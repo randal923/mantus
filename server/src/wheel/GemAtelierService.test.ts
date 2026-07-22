@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   GEM_ATELIER_LIMITS,
   WHEEL_LIMITS,
+  type CharacterVocation,
   type GemAction,
   type GemStateMessage,
   type ServerMessage,
@@ -27,15 +28,20 @@ const PREMIUM_UNTIL = new Date("2030-01-01T00:00:00.000Z");
 const emptySlices = (): number[] =>
   new Array<number>(WHEEL_LIMITS.sliceCount).fill(0);
 
-function makeLeveledCharacter(id: string, level: number): Character {
+function makeLeveledCharacter(
+  id: string,
+  level: number,
+  vocation: CharacterVocation,
+): Character {
   const base = makeCharacter(id, "Alice");
   const stats = deriveCharacterStats({
-    vocation: base.vocation,
+    vocation,
     definitionVersion: PROGRESSION_DEFINITION_VERSION,
     level,
   });
   return {
     ...base,
+    vocation,
     level,
     experience: BigInt(getExperienceForLevel(level)),
     health: stats.maxHealth,
@@ -55,6 +61,7 @@ interface Harness {
 
 async function makeHarness(options?: {
   premium?: boolean;
+  vocation?: CharacterVocation;
   gold?: number;
   resources?: Partial<Record<string, number>>;
   slices?: number[];
@@ -70,7 +77,11 @@ async function makeHarness(options?: {
     }),
     25,
   );
-  const character = makeLeveledCharacter(A, 100);
+  const character = makeLeveledCharacter(
+    A,
+    100,
+    options?.vocation ?? "Elite Knight",
+  );
   const player = new Player(
     character,
     { x: 30, y: 30, z: 7 },
@@ -139,6 +150,21 @@ function lastGemState(harness: Harness): GemStateMessage {
 const HEALTH_MOD_RNG = [0, 0.25];
 
 describe("GemAtelierService", () => {
+  it("rejects gem actions from an unpromoted vocation", async () => {
+    const harness = await makeHarness({
+      vocation: "Knight",
+      gold: 200_000,
+      resources: { lesserGems: 1 },
+    });
+    act(harness, { kind: "reveal", quality: "lesser" }, 0);
+    expect(harness.sent[0]).toMatchObject({
+      type: "wheel-gem-failed",
+      reason: "unavailable",
+    });
+    expect(harness.tracker.dataFor(A).resources.lesserGems).toBe(1);
+    expect(await harness.store.bankBalance(A)).toBe(200_000);
+  });
+
   it("reveals a gem: charges bank gold, consumes the unrevealed gem", async () => {
     const harness = await makeHarness({
       gold: 200_000,

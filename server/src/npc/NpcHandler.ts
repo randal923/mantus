@@ -16,6 +16,7 @@ import { NpcConversations } from "./NpcConversations";
 import { NpcDialogueExecutor } from "./NpcDialogueExecutor";
 import { NpcDialogueFlow } from "./NpcDialogueFlow";
 import type { TravelService } from "./TravelService";
+import type { PromotionService } from "./PromotionService";
 
 const MAX_TALK_RANGE = 8;
 
@@ -31,6 +32,7 @@ export class NpcHandler {
     travel: TravelService,
     bank: BankService,
     private readonly shops: ShopService,
+    promotion?: PromotionService,
   ) {
     this.flow = new NpcDialogueFlow(this.conversations, visibility, shops);
     this.executor = new NpcDialogueExecutor(
@@ -39,6 +41,7 @@ export class NpcHandler {
       travel,
       bank,
       shops,
+      promotion,
     );
   }
 

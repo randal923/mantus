@@ -26,6 +26,7 @@ import { skillForWeapon } from "./skillForWeapon";
 import type { SpellDefinition } from "./Spell";
 import { spellCondition } from "./spellCondition";
 import type { PvpHooks } from "../pvp/PvpHooks";
+import type { PartyHooks } from "../party/PartyHooks";
 
 export class SpellCaster {
   constructor(
@@ -39,6 +40,7 @@ export class SpellCaster {
     private readonly damage: DamageResolver,
     private readonly conditions: ConditionSystem,
     private readonly pvpHooks?: PvpHooks,
+    private readonly partyHooks?: PartyHooks,
   ) {}
 
   executeSpell(
@@ -372,6 +374,13 @@ export class SpellCaster {
       ((spell.castRules.targetPlayerOnly &&
         !(resolved.creature instanceof Player)) ||
         (!spell.castRules.allowSelf && resolved.creature === player))
+    ) {
+      return "spell-target-invalid";
+    }
+    if (
+      spell.castRules?.targetPartyMemberOnly &&
+      (!(resolved.creature instanceof Player) ||
+        !this.partyHooks?.sameParty(player.id, resolved.creature.id))
     ) {
       return "spell-target-invalid";
     }

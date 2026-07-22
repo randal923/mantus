@@ -31,21 +31,14 @@ export function projectInventory(
   const contents = items
     .filter(
       (item) =>
-        (item.location.kind === "container" &&
-          item.location.containerId === backpack?.id) ||
-        item.location.kind === "inventory",
+        item.location.kind === "container" &&
+        item.location.containerId === backpack?.id,
     )
     .sort((left, right) => {
       const leftSlot =
-        left.location.kind === "container" ||
-        left.location.kind === "inventory"
-          ? left.location.slot
-          : 0;
+        left.location.kind === "container" ? left.location.slot : 0;
       const rightSlot =
-        right.location.kind === "container" ||
-        right.location.kind === "inventory"
-          ? right.location.slot
-          : 0;
+        right.location.kind === "container" ? right.location.slot : 0;
       return leftSlot - rightSlot;
     });
   const countCurrency = (typeId: number) =>
@@ -109,10 +102,7 @@ export function projectInventory(
     equipment,
     items: contents.map((item) => ({
       slot:
-        item.location.kind === "container" ||
-        item.location.kind === "inventory"
-          ? item.location.slot
-          : 0,
+        item.location.kind === "container" ? item.location.slot : 0,
       item: projectItem(item, catalog),
     })),
     gold: countCurrency(3031),

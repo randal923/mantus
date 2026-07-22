@@ -18625,6 +18625,7 @@
       "conjure": null,
       "castRules": {
         "targetPlayerOnly": true,
+        "targetPartyMemberOnly": true,
         "allowSelf": false,
         "excludedVocations": [],
         "casterEffectId": 15

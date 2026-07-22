@@ -32,7 +32,7 @@ describe("projectOwnProgression", () => {
     expect(visible).not.toHaveProperty("vocation");
   });
 
-  it("projects the premium regeneration schedule", () => {
+  it("projects regeneration from the saved vocation instead of premium", () => {
     const player = new Player(
       { ...makeCharacter("mage"), vocation: "Sorcerer" },
       { x: 0, y: 0, z: 7 },
@@ -40,6 +40,13 @@ describe("projectOwnProgression", () => {
       new Date(24 * 60 * 60 * 1_000),
     );
 
+    expect(projectOwnProgression(player, 0)).toMatchObject({
+      healthRegeneration: { amount: 1, intervalMs: 12_000 },
+      manaRegeneration: { amount: 2, intervalMs: 3_000 },
+      soulRegeneration: { amount: 1, intervalMs: 120_000 },
+    });
+
+    player.promote("Master Sorcerer", 0);
     expect(projectOwnProgression(player, 0)).toMatchObject({
       healthRegeneration: { amount: 1, intervalMs: 12_000 },
       manaRegeneration: { amount: 2, intervalMs: 2_000 },
