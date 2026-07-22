@@ -198,6 +198,28 @@ export const EnterReturnsFocusToGame: Story = {
   },
 };
 
+export const EnterDoesNotOpenBehindModal: Story = {
+  args: {
+    channels: [CHANNELS[0]],
+    pinnedOpen: true,
+  },
+  decorators: [
+    (Story) => (
+      <>
+        <Story />
+        <div role="dialog" aria-modal="true" aria-label="Example modal" />
+      </>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("textbox", { name: "Message World" });
+
+    await userEvent.keyboard("{Enter}");
+    await expect(input).not.toHaveFocus();
+  },
+};
+
 export const EmptyWhisper: Story = {
   args: {
     channels: [

@@ -140,6 +140,20 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const ChatHotkeyStaysEnabledWithHudPanels: Story = {
+  args: {
+    spellHotkeysEnabled: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.keyboard("{Enter}");
+    await expect(
+      canvas.getByRole("textbox", { name: "Message World" }),
+    ).toHaveFocus();
+  },
+};
+
 export const ChatHoverIsNotBlocked: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

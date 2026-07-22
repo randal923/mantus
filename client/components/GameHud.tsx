@@ -240,7 +240,6 @@ export function GameHud({
           {...(chatSelectedChannelId
             ? { selectedChannelId: chatSelectedChannelId }
             : {})}
-          hotkeysEnabled={spellHotkeysEnabled}
           maxMessageLength={PROTOCOL_LIMITS.maxChatTextLength}
           onChannelSelect={onChatChannelSelect}
           onChannelClose={onChatChannelClose}

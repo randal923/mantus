@@ -84,7 +84,8 @@ export function ChatPanel({
         event.altKey ||
         event.metaKey ||
         event.shiftKey ||
-        isEditableTarget(event.target)
+        isEditableTarget(event.target) ||
+        document.querySelector('[aria-modal="true"]')
       ) {
         return;
       }
