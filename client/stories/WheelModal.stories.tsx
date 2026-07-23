@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import {
   WHEEL_LIMITS,
   type GemStateMessage,
@@ -121,6 +121,27 @@ export const KnightBuild: Story = {
       unlocked: true,
     },
     vocation: "Elite Knight",
+  },
+};
+
+export const FragmentWorkshop: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("tab", { name: "Fragment Workshop" }),
+    );
+
+    const table = canvas.getByRole("table", { name: "Basic Mods" });
+    const workshop = within(table);
+    await expect(
+      workshop.getByRole("columnheader", { name: "Modifier" }),
+    ).toBeVisible();
+    await expect(
+      workshop.getByRole("columnheader", { name: "Current grade" }),
+    ).toBeVisible();
+    await expect(
+      workshop.getByRole("columnheader", { name: "Upgrade cost" }),
+    ).toBeVisible();
   },
 };
 

@@ -7,10 +7,16 @@ import {
   WHEEL_DOMAINS,
   type GemStateMessage,
   type WheelBaseVocation,
+  type GemQuality,
+  type WheelDomain,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { gemIconStyle } from "../../lib/wheel/gemSheets";
+import { Dropdown } from "../ui/Dropdown";
 import { GemSheetIcon } from "./GemSheetIcon";
+
+type GemQualityFilter = GemQuality | "all";
+type GemDomainFilter = WheelDomain | "all";
 
 interface GemListProps {
   gems: GemStateMessage;
@@ -27,8 +33,8 @@ export function GemList({
   onSelect,
 }: GemListProps) {
   const { t } = useAppTranslation();
-  const [quality, setQuality] = useState<string>("all");
-  const [domain, setDomain] = useState<string>("all");
+  const [quality, setQuality] = useState<GemQualityFilter>("all");
+  const [domain, setDomain] = useState<GemDomainFilter>("all");
 
   const equippedIds = new Set(Object.values(gems.equipped));
   const filtered = gems.revealed.filter(
@@ -39,33 +45,36 @@ export function GemList({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="flex items-center gap-2 text-sm">
-        <select
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <Dropdown<GemQualityFilter>
+          ariaLabel={t("wheel.gems.filters.quality")}
           value={quality}
-          onChange={(event) => setQuality(event.target.value)}
-          aria-label={t("wheel.gems.filters.quality")}
-          className="ui-button-secondary rounded border border-ui-stone-light/15 bg-black/40 px-2 py-1"
-        >
-          <option value="all">{t("wheel.gems.filters.allQualities")}</option>
-          {GEM_QUALITIES.map((value) => (
-            <option key={value} value={value}>
-              {t(`wheel.gems.quality.${value}`)}
-            </option>
-          ))}
-        </select>
-        <select
+          options={[
+            {
+              value: "all",
+              label: t("wheel.gems.filters.allQualities"),
+            },
+            ...GEM_QUALITIES.map((value) => ({
+              value,
+              label: t(`wheel.gems.quality.${value}`),
+            })),
+          ]}
+          onChange={setQuality}
+          className="w-full sm:w-48"
+        />
+        <Dropdown<GemDomainFilter>
+          ariaLabel={t("wheel.gems.filters.domain")}
           value={domain}
-          onChange={(event) => setDomain(event.target.value)}
-          aria-label={t("wheel.gems.filters.domain")}
-          className="ui-button-secondary rounded border border-ui-stone-light/15 bg-black/40 px-2 py-1"
-        >
-          <option value="all">{t("wheel.gems.filters.allDomains")}</option>
-          {WHEEL_DOMAINS.map((value) => (
-            <option key={value} value={value}>
-              {t(`wheel.domain.${value}`)}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "all", label: t("wheel.gems.filters.allDomains") },
+            ...WHEEL_DOMAINS.map((value) => ({
+              value,
+              label: t(`wheel.domain.${value}`),
+            })),
+          ]}
+          onChange={setDomain}
+          className="w-full sm:w-48"
+        />
         <span className="ml-auto text-xs text-ui-muted">
           {t("wheel.gems.count", { count: filtered.length })}
         </span>

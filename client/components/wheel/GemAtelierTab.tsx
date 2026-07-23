@@ -57,7 +57,7 @@ export function GemAtelierTab({
         )}
       </div>
       <div className="flex flex-wrap items-start gap-4 lg:flex-nowrap">
-        <div className="flex w-56 shrink-0 flex-col gap-3">
+        <div className="flex w-full shrink-0 flex-col gap-3 sm:w-72">
           <GemVessels
             gems={gems}
             vocation={vocation}
