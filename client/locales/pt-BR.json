@@ -853,6 +853,22 @@
         "cursor": "na posição do cursor",
         "crosshair": "com seleção por mira"
       }
+    },
+    "autoPotion": {
+      "title": "Poção Automática",
+      "description": "O servidor usa a poção selecionada em você quando o recurso fica abaixo do limite. O tempo de recarga normal continua valendo. As configurações são salvas para este personagem.",
+      "enabled": "Ativado",
+      "health": "Vida",
+      "mana": "Mana",
+      "useRule": "Usar para {{resource}}",
+      "potion": "Poção",
+      "potionFor": "Poção para {{resource}}",
+      "unavailablePotion": "Poção configurada indisponível (nº {{itemTypeId}})",
+      "below": "Usar abaixo de",
+      "noEligiblePotion": "Carregue uma poção que restaure {{resource}} para configurar esta regra.",
+      "priority": "Quando os dois limites forem atingidos",
+      "healthFirst": "Vida primeiro",
+      "manaFirst": "Mana primeiro"
     }
   },
   "combat": {

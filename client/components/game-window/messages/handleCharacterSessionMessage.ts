@@ -61,6 +61,8 @@ export function handleCharacterSessionMessage(
   state.setActionBarConfigSlot(null);
   state.setPotionActionBar(message.potionActionBar);
   runtime.potionActionBarRef.current = message.potionActionBar;
+  state.setAutoPotionSettings(message.autoPotionSettings);
+  runtime.autoPotionSettingsRef.current = message.autoPotionSettings;
   state.setPotionActionBarConfigSlot(null);
   state.setCharacterBusy(false);
   state.setServerError(null);

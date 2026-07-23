@@ -46,11 +46,15 @@ export class ProgressionSystem {
       this.syncPlayer(player, now, true);
       return true;
     }
-    return this.persistAward(
-      player,
-      player.awardMagicProgress(eventId, progress),
-      now,
-    );
+    const result = player.awardMagicProgress(eventId, progress);
+    if (!result.processed) {
+      // Mana was already spent by the spell/weapon path. Even if a stale
+      // server-authored progression id is replayed, that resource change
+      // must still reach the character row before another atomic action.
+      this.persistence.saveNow(player, now);
+      return false;
+    }
+    return this.persistAward(player, result, now);
   }
 
   awardSkillTries(

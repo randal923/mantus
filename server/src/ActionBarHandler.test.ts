@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { ServerMessage } from "@tibia/protocol";
+import {
+  DEFAULT_AUTO_POTION_SETTINGS,
+  type ServerMessage,
+} from "@tibia/protocol";
 import { ActionBarHandler } from "./ActionBarHandler";
 import type { SpellDefinition } from "./combat/Spell";
 import type { SpellRegistry } from "./combat/SpellRegistry";
@@ -35,6 +38,8 @@ function makeSession(playerId: string | null) {
     playerId,
     actionBarUpdatePending: false,
     potionActionBarUpdatePending: false,
+    autoPotionSettingsUpdatePending: false,
+    autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
     send: (message: ServerMessage) => sent.push(message),
     sendError: (code: string) => errors.push(code),
   } as unknown as Session;
@@ -139,6 +144,77 @@ describe("ActionBarHandler", () => {
     });
     expect(errors).toEqual(["action-bar-invalid"]);
     expect(session.potionActionBarUpdatePending).toBe(false);
+  });
+
+  it("persists validated auto potion rules and acks the active settings", async () => {
+    const store = seededStore();
+    const handler = makeHandler(store);
+    const { session, sent, errors } = makeSession("char-1");
+    const settings = {
+      enabled: true,
+      health: { itemTypeId: 239, thresholdPercent: 45 },
+      mana: { itemTypeId: 268, thresholdPercent: 30 },
+      priority: "health" as const,
+    };
+
+    handler.handle(session, {
+      type: "update-auto-potion-settings",
+      settings,
+    });
+    await settle(handler);
+
+    expect(errors).toEqual([]);
+    expect(sent).toEqual([
+      { type: "auto-potion-settings-updated", settings },
+    ]);
+    expect(session.autoPotionSettings).toEqual(settings);
+    const character = await store.findByIdForAccount(
+      "account-id",
+      "char-1",
+    );
+    expect(character?.autoPotionSettings).toEqual(settings);
+  });
+
+  it("rejects a potion that cannot restore the configured resource", () => {
+    const { session, errors } = makeSession("char-1");
+    makeHandler(seededStore()).handle(session, {
+      type: "update-auto-potion-settings",
+      settings: {
+        enabled: true,
+        health: { itemTypeId: 268, thresholdPercent: 50 },
+        mana: null,
+        priority: "health",
+      },
+    });
+
+    expect(errors).toEqual(["action-bar-invalid"]);
+    expect(session.autoPotionSettingsUpdatePending).toBe(false);
+    expect(session.autoPotionSettings).toEqual(DEFAULT_AUTO_POTION_SETTINGS);
+  });
+
+  it("restores the confirmed auto potion settings after a storage failure", async () => {
+    const handler = makeHandler(new InMemoryCharacterStore());
+    const { session, sent, errors } = makeSession("char-1");
+
+    handler.handle(session, {
+      type: "update-auto-potion-settings",
+      settings: {
+        enabled: true,
+        health: { itemTypeId: 239, thresholdPercent: 50 },
+        mana: null,
+        priority: "health",
+      },
+    });
+    await settle(handler);
+
+    expect(sent).toEqual([
+      {
+        type: "auto-potion-settings-updated",
+        settings: DEFAULT_AUTO_POTION_SETTINGS,
+      },
+    ]);
+    expect(errors).toEqual(["action-bar-update-failed"]);
+    expect(session.autoPotionSettingsUpdatePending).toBe(false);
   });
 
   it("rejects a second update while one is pending", async () => {

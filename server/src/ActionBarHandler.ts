@@ -1,7 +1,9 @@
 import type {
   ActionBar,
+  AutoPotionSettings,
   PotionActionBar,
   UpdateActionBarMessage,
+  UpdateAutoPotionSettingsMessage,
   UpdatePotionActionBarMessage,
 } from "@tibia/protocol";
 import type { CharacterStore } from "./character/CharacterStore";
@@ -23,12 +25,22 @@ export class ActionBarHandler {
 
   handle(
     session: Session,
-    intent: UpdateActionBarMessage | UpdatePotionActionBarMessage,
+    intent:
+      | UpdateActionBarMessage
+      | UpdatePotionActionBarMessage
+      | UpdateAutoPotionSettingsMessage,
   ): void {
     const playerId = session.playerId;
     const player = playerId ? this.world.getPlayer(playerId) : undefined;
     if (!playerId || !player) {
       session.sendError("join-required");
+      return;
+    }
+    if (
+      intent.type === "update-auto-potion-settings" &&
+      session.autoPotionSettingsUpdatePending
+    ) {
+      session.sendError("action-bar-update-pending");
       return;
     }
     if (
@@ -54,6 +66,27 @@ export class ActionBarHandler {
       }
       session.potionActionBarUpdatePending = true;
       void this.persistPotions(session, playerId, intent.potionActionBar);
+      return;
+    }
+    if (intent.type === "update-auto-potion-settings") {
+      const rules = [
+        ["health", intent.settings.health],
+        ["mana", intent.settings.mana],
+      ] as const;
+      for (const [resource, rule] of rules) {
+        if (!rule) continue;
+        const potion = getPotionDefinition(rule.itemTypeId);
+        if (!potion || !potion[resource]) {
+          session.sendError("action-bar-invalid");
+          return;
+        }
+      }
+      session.autoPotionSettingsUpdatePending = true;
+      void this.persistAutoPotionSettings(
+        session,
+        playerId,
+        intent.settings,
+      );
       return;
     }
     // Only spells the character's own vocation can ever cast may be slotted;
@@ -117,6 +150,49 @@ export class ActionBarHandler {
 
   applyResolvedOutcomes(): void {
     for (const outcome of this.outcomes.splice(0)) outcome();
+  }
+
+  private async persistAutoPotionSettings(
+    session: Session,
+    characterId: string,
+    settings: AutoPotionSettings,
+  ): Promise<void> {
+    try {
+      await this.characters.updateAutoPotionSettings(characterId, settings);
+      this.outcomes.push(() => {
+        session.autoPotionSettingsUpdatePending = false;
+        if (
+          !this.registry.contains(session) ||
+          session.playerId !== characterId
+        ) {
+          return;
+        }
+        session.autoPotionSettings = { ...settings };
+        session.send({
+          type: "auto-potion-settings-updated",
+          settings,
+        });
+      });
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(
+        `auto potion settings update failed for character ${characterId}: ${reason}`,
+      );
+      this.outcomes.push(() => {
+        session.autoPotionSettingsUpdatePending = false;
+        if (
+          !this.registry.contains(session) ||
+          session.playerId !== characterId
+        ) {
+          return;
+        }
+        session.send({
+          type: "auto-potion-settings-updated",
+          settings: session.autoPotionSettings,
+        });
+        session.sendError("action-bar-update-failed");
+      });
+    }
   }
 
   private async persist(

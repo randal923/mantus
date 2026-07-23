@@ -296,6 +296,7 @@ export class Combat {
     this.conditionSystem.tick(now);
     this.moveFearedCreatures(now);
     for (const session of this.registry.all()) {
+      this.potions.tickAutoUse(session, now);
       this.autoAttack.tickPlayerAttack(session, now);
     }
   }

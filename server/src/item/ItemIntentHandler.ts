@@ -168,6 +168,19 @@ export class ItemIntentHandler {
     return item ? { item, type: this.catalog.require(item.typeId) } : null;
   }
 
+  combatItemByType(
+    characterId: string,
+    itemTypeId: number,
+  ): { item: Item; type: ItemType } | null {
+    const item = this.inventories
+      .get(characterId)
+      ?.items.find(
+        (candidate) =>
+          candidate.typeId === itemTypeId && candidate.count > 0,
+      );
+    return item ? { item, type: this.catalog.require(item.typeId) } : null;
+  }
+
   consumeForCombat(
     session: Session,
     itemId: string,

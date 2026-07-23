@@ -1,5 +1,6 @@
 import type {
   ActionBar,
+  AutoPotionSettings,
   CharacterLookType,
   CharacterVocation,
   Direction,
@@ -44,6 +45,7 @@ export interface Character {
   readonly townId: number;
   readonly actionBar: ActionBar;
   readonly potionActionBar: PotionActionBar;
+  readonly autoPotionSettings: AutoPotionSettings;
   readonly skull: SkullState;
   readonly skullExpiresAt: Date | null;
   readonly createdAt: Date;

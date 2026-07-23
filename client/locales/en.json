@@ -853,6 +853,22 @@
         "cursor": "at the cursor",
         "crosshair": "with crosshair selection"
       }
+    },
+    "autoPotion": {
+      "title": "Auto Potion",
+      "description": "The server uses the selected potion on you when the resource falls below its threshold. Normal potion cooldowns still apply. Settings are saved for this character.",
+      "enabled": "Enabled",
+      "health": "Health",
+      "mana": "Mana",
+      "useRule": "Use for {{resource}}",
+      "potion": "Potion",
+      "potionFor": "Potion for {{resource}}",
+      "unavailablePotion": "Configured potion unavailable (#{{itemTypeId}})",
+      "below": "Use below",
+      "noEligiblePotion": "Carry a potion that restores {{resource}} to configure this rule.",
+      "priority": "When both thresholds are reached",
+      "healthFirst": "Health first",
+      "manaFirst": "Mana first"
     }
   },
   "combat": {

@@ -2,6 +2,7 @@ import type { SetStateAction } from "react";
 import type {
   AccountTier,
   ActionBar,
+  AutoPotionSettings,
   CharacterCreationOptions,
   CreatureState,
   FightState,
@@ -65,6 +66,9 @@ export interface GameWindowStoreActions {
   setUiSettings: (value: SetStateAction<UiSettings>) => void;
   setActionBar: (value: SetStateAction<ActionBar>) => void;
   setPotionActionBar: (value: SetStateAction<PotionActionBar>) => void;
+  setAutoPotionSettings: (
+    value: SetStateAction<AutoPotionSettings>,
+  ) => void;
   setActionBarConfigSlot: (value: SetStateAction<number | null>) => void;
   setPotionActionBarConfigSlot: (value: SetStateAction<number | null>) => void;
   setMarketSelectedItem: (value: SetStateAction<string | null>) => void;

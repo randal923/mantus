@@ -1,4 +1,5 @@
 import type {
+  AutoPotionRule,
   ServerErrorCode,
   UsePotionMessage,
 } from "@tibia/protocol";
@@ -173,6 +174,65 @@ export class PotionService {
       text: `Used ${combatItem.type.name} on ${target.name}.`,
     });
     this.sendFightState(session, now);
+  }
+
+  tickAutoUse(session: Session, now: number): void {
+    const actor = playerForSession(this.world, session);
+    const settings = session.autoPotionSettings;
+    if (
+      !actor ||
+      actor.health <= 0 ||
+      !settings.enabled ||
+      session.autoPotionSettingsUpdatePending ||
+      session.itemOperationPending ||
+      session.potionPersistPending ||
+      this.persistence.isExternalMutationPending(actor) ||
+      (session.combatCooldowns.get(POTION_COOLDOWN_GROUP)?.readyAt ?? 0) > now
+    ) {
+      return;
+    }
+    const rules: ReadonlyArray<
+      readonly ["health" | "mana", AutoPotionRule | null]
+    > =
+      settings.priority === "health"
+        ? [["health", settings.health], ["mana", settings.mana]]
+        : [["mana", settings.mana], ["health", settings.health]];
+    const baseVocation = getVocation(
+      actor.vocation,
+      actor.progression.definitionVersion,
+    ).baseVocation;
+    for (const [resource, rule] of rules) {
+      if (!rule) continue;
+      const current = resource === "health" ? actor.health : actor.mana;
+      const maximum = resource === "health" ? actor.maxHealth : actor.maxMana;
+      if (current * 100 >= maximum * rule.thresholdPercent) continue;
+      const potion = getPotionDefinition(rule.itemTypeId);
+      const combatItem = this.items.combatItemByType(
+        actor.id,
+        rule.itemTypeId,
+      );
+      if (
+        !potion ||
+        !potion[resource] ||
+        !combatItem ||
+        (potion.level !== undefined && actor.level < potion.level) ||
+        (potion.vocations !== undefined &&
+          !potion.vocations.includes(baseVocation))
+      ) {
+        continue;
+      }
+      this.use(
+        session,
+        {
+          type: "use-potion",
+          itemId: combatItem.item.id,
+          revision: combatItem.item.version,
+          targetPlayerId: actor.id,
+        },
+        now,
+      );
+      return;
+    }
   }
 
   private reject(

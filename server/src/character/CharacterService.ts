@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   CHARACTER_OUTFIT_LOOK_TYPES,
+  DEFAULT_AUTO_POTION_SETTINGS,
   MAX_CHARACTERS_PER_ACCOUNT,
   STARTER_VOCATIONS,
   type CharacterCreationOptions,
@@ -113,6 +114,7 @@ export class CharacterService {
       townId: this.starter.townId,
       actionBar: [],
       potionActionBar: [],
+      autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
       skull: "none",
       skullExpiresAt: null,
       createdAt: now,

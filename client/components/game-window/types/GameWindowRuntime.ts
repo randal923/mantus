@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import type {
   ActionBar,
+  AutoPotionSettings,
   CreatureState,
   InventoryItem,
   Language,
@@ -35,6 +36,10 @@ export interface GameWindowRuntime {
   actionBarSaveTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
   potionActionBarRef: RefObject<PotionActionBar>;
   potionActionBarSaveTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
+  autoPotionSettingsRef: RefObject<AutoPotionSettings>;
+  autoPotionSettingsSaveTimerRef: RefObject<
+    ReturnType<typeof setTimeout> | null
+  >;
   marketOpenRef: RefObject<boolean>;
   marketSelectedItemRef: RefObject<number | null>;
   hadPartyRef: RefObject<boolean>;

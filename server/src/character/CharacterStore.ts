@@ -1,4 +1,8 @@
-import type { ActionBar, PotionActionBar } from "@tibia/protocol";
+import type {
+  ActionBar,
+  AutoPotionSettings,
+  PotionActionBar,
+} from "@tibia/protocol";
 import type {
   Character,
   CharacterSaveSnapshot,
@@ -27,5 +31,9 @@ export interface CharacterStore {
   updatePotionActionBar(
     characterId: string,
     potionActionBar: PotionActionBar,
+  ): Promise<void>;
+  updateAutoPotionSettings(
+    characterId: string,
+    settings: AutoPotionSettings,
   ): Promise<void>;
 }

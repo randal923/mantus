@@ -3,7 +3,11 @@ import {
   accountTierSchema,
   premiumDaysRemainingSchema,
 } from "./account";
-import { actionBarSchema, potionActionBarSchema } from "./actionBar";
+import {
+  actionBarSchema,
+  autoPotionSettingsSchema,
+  potionActionBarSchema,
+} from "./actionBar";
 import {
   bankActionFailedMessageSchema,
   bankOpenedMessageSchema,
@@ -154,6 +158,11 @@ export const potionActionBarUpdatedMessageSchema = z.object({
   potionActionBar: potionActionBarSchema,
 });
 
+export const autoPotionSettingsUpdatedMessageSchema = z.object({
+  type: z.literal("auto-potion-settings-updated"),
+  settings: autoPotionSettingsSchema,
+});
+
 export const characterListMessageSchema = z.object({
   type: z.literal("character-list"),
   accountTier: accountTierSchema,
@@ -176,6 +185,7 @@ export const welcomeMessageSchema = z.object({
   uiSettings: uiSettingsSchema,
   actionBar: actionBarSchema,
   potionActionBar: potionActionBarSchema,
+  autoPotionSettings: autoPotionSettingsSchema,
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -411,6 +421,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   uiSettingsUpdatedMessageSchema,
   actionBarUpdatedMessageSchema,
   potionActionBarUpdatedMessageSchema,
+  autoPotionSettingsUpdatedMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,

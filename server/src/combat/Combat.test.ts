@@ -1,8 +1,10 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type {
-  CharacterVocation,
-  ServerErrorCode,
-  ServerMessage,
+import {
+  DEFAULT_AUTO_POTION_SETTINGS,
+  type AutoPotionSettings,
+  type CharacterVocation,
+  type ServerErrorCode,
+  type ServerMessage,
 } from "@tibia/protocol";
 import type { Character } from "../character/Character";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
@@ -40,6 +42,7 @@ const BACKPACK_ID = "00000000-0000-4000-8000-000000000014";
 const POTION_ID = "00000000-0000-4000-8000-000000000015";
 const FRIEND_ID = "00000000-0000-4000-8000-000000000016";
 const ARMOR_ID = "00000000-0000-4000-8000-000000000017";
+const MANA_POTION_ID = "00000000-0000-4000-8000-000000000018";
 
 let catalog: ItemCatalog;
 
@@ -211,6 +214,7 @@ async function makeHarness(options: {
   map?: MapData;
   inventory?: ReadonlyArray<Item>;
   partyMembership?: { sameParty: boolean };
+  autoPotionSettings?: AutoPotionSettings;
 } = {}): Promise<Harness> {
   const world = new World(
     options.map ?? makeMap(),
@@ -235,6 +239,9 @@ async function makeHarness(options: {
     combatCooldowns: new Map(),
     itemOperationPending: false,
     potionPersistPending: false,
+    autoPotionSettingsUpdatePending: false,
+    autoPotionSettings:
+      options.autoPotionSettings ?? { ...DEFAULT_AUTO_POTION_SETTINGS },
     itemPersistsPending: 0,
     movementDirection: null,
     bufferedMovementDirection: null,
@@ -1188,6 +1195,101 @@ describe("Combat", () => {
         expect.objectContaining({ typeId: 284, count: 1 }),
       ]),
     );
+  });
+
+  it("auto-uses one health potion below the configured threshold without replaying while pending", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(80, "Knight"),
+      inventory: [
+        ownedItem(
+          POTION_ID,
+          239,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+      autoPotionSettings: {
+        enabled: true,
+        health: { itemTypeId: 239, thresholdPercent: 50 },
+        mana: null,
+        priority: "health",
+      },
+    });
+    harness.player.setHealth(Math.floor(harness.player.maxHealth * 0.4));
+    const healthBefore = harness.player.health;
+
+    harness.combat.tick(1_000);
+    harness.combat.tick(1_000);
+
+    expect(harness.player.health).toBeGreaterThan(healthBefore);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === POTION_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+    expect(
+      harness.sent.filter(
+        (message) =>
+          message.type === "combat-log" &&
+          message.text.includes("great health potion"),
+      ),
+    ).toHaveLength(1);
+
+    await settleItems(harness, 1_000);
+    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: POTION_ID,
+          count: 1,
+          version: 2,
+        }),
+      ]),
+    );
+  });
+
+  it("honors mana-first priority when both auto potion thresholds are reached", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(80, "Knight"),
+      inventory: [
+        ownedItem(
+          POTION_ID,
+          239,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+        ownedItem(
+          MANA_POTION_ID,
+          268,
+          { kind: "container", containerId: BACKPACK_ID, slot: 1 },
+          2,
+        ),
+      ],
+      autoPotionSettings: {
+        enabled: true,
+        health: { itemTypeId: 239, thresholdPercent: 90 },
+        mana: { itemTypeId: 268, thresholdPercent: 90 },
+        priority: "mana",
+      },
+    });
+    harness.player.setHealth(harness.player.maxHealth - 700);
+    harness.player.spendMana(harness.player.maxMana);
+    const healthBefore = harness.player.health;
+
+    harness.combat.tick(1_000);
+
+    expect(harness.player.mana).toBeGreaterThan(0);
+    expect(harness.player.health).toBe(healthBefore);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === MANA_POTION_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === POTION_ID),
+    ).toMatchObject({ count: 2, version: 1 });
+    await settleItems(harness, 1_000);
   });
 
   it("disconnects and poisons character persistence when an optimistic potion write fails", async () => {

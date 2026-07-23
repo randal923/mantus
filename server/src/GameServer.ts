@@ -847,6 +847,7 @@ export class GameServer {
         return;
       case "update-action-bar":
       case "update-potion-action-bar":
+      case "update-auto-potion-settings":
         this.actionBar.handle(session, intent);
         return;
     }

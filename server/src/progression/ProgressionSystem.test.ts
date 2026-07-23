@@ -91,9 +91,34 @@ describe("ProgressionSystem rates", () => {
       1_000,
     );
   });
+
+  it("persists spent mana when a progression event id is replayed after restart", () => {
+    const eventId = "magic:restarted:run-a:1";
+    const harness = makeHarness(
+      { skill: 1, magic: 1 },
+      [eventId],
+    );
+    expect(harness.player.spendMana(5)).toBe(true);
+
+    expect(
+      harness.progression.awardMagicProgress(
+        PLAYER_ID,
+        eventId,
+        5,
+        1_000,
+      ),
+    ).toBe(false);
+    expect(harness.persistence.saveNow).toHaveBeenCalledWith(
+      harness.player,
+      1_000,
+    );
+  });
 });
 
-function makeHarness(rates: { skill: number; magic: number }) {
+function makeHarness(
+  rates: { skill: number; magic: number },
+  progressionEventIds: ReadonlyArray<string> = [],
+) {
   const world = new World(
     gridMapData({
       name: "progression-rate-test",
@@ -104,7 +129,7 @@ function makeHarness(rates: { skill: number; magic: number }) {
     25,
   );
   const player = new Player(
-    makeCharacter(PLAYER_ID),
+    { ...makeCharacter(PLAYER_ID), progressionEventIds },
     { x: 1, y: 1, z: 7 },
     0,
   );

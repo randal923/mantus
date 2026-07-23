@@ -21,6 +21,7 @@ import {
   type ServerErrorCode,
   type ServerMessage,
   type ActionBar,
+  type AutoPotionSettings,
   type PotionActionBar,
   type UiSettings,
   type ViewRange,
@@ -692,6 +693,13 @@ export class GameClient {
     return this.send({
       type: "update-potion-action-bar",
       potionActionBar,
+    });
+  }
+
+  updateAutoPotionSettings(settings: AutoPotionSettings): boolean {
+    return this.send({
+      type: "update-auto-potion-settings",
+      settings,
     });
   }
 

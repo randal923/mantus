@@ -2,6 +2,7 @@
 
 import {
   ACTION_BAR_SLOT_COUNT,
+  type AutoPotionSettings,
   type InventoryState,
   type PotionActionBar,
   type PotionTargetMode,
@@ -13,12 +14,17 @@ import { getEffectivePotionActionBar } from "../../lib/inventory/getEffectivePot
 import { SpriteIcon } from "../inventory/SpriteIcon";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
+import { AutoPotionSettingsPanel } from "./AutoPotionSettingsPanel";
 
 interface PotionActionBarModalProps {
   readonly inventory: InventoryState | null;
   readonly potionActionBar: PotionActionBar;
+  readonly autoPotionSettings: AutoPotionSettings;
   readonly initialSlot: number;
   readonly onChange: (next: PotionActionBar) => void;
+  readonly onAutoPotionSettingsChange: (
+    next: AutoPotionSettings,
+  ) => void;
   readonly onClose: () => void;
 }
 
@@ -32,8 +38,10 @@ const TARGET_MODES: ReadonlyArray<PotionTargetMode> = [
 export function PotionActionBarModal({
   inventory,
   potionActionBar,
+  autoPotionSettings,
   initialSlot,
   onChange,
+  onAutoPotionSettingsChange,
   onClose,
 }: PotionActionBarModalProps) {
   const { t } = useAppTranslation();
@@ -56,11 +64,21 @@ export function PotionActionBarModal({
   };
 
   return (
-    <Modal title={t("potions.actionBar.title")} onClose={onClose}>
+    <Modal
+      title={t("potions.actionBar.title")}
+      size="wide"
+      onClose={onClose}
+    >
       <div className="flex flex-col gap-4">
         <p className="rounded-lg border border-ui-gold/15 bg-black/25 px-3 py-2.5 text-sm leading-6 text-ui-muted">
           {t("potions.actionBar.description")}
         </p>
+
+        <AutoPotionSettingsPanel
+          settings={autoPotionSettings}
+          potions={potions}
+          onChange={onAutoPotionSettingsChange}
+        />
 
         <div className="flex items-center gap-3">
           <div className="flex flex-1 flex-wrap gap-1.5">

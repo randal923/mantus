@@ -1,6 +1,7 @@
 import type {
   AccountTier,
   ActionBar,
+  AutoPotionSettings,
   CharacterCreationOptions,
   CharacterSummary,
   CreatureState,
@@ -60,6 +61,7 @@ export interface GameWindowState {
   uiSettings: UiSettings;
   actionBar: ActionBar;
   potionActionBar: PotionActionBar;
+  autoPotionSettings: AutoPotionSettings;
   actionBarConfigSlot: number | null;
   potionActionBarConfigSlot: number | null;
   marketSelectedItem: string | null;

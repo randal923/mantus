@@ -1,4 +1,5 @@
 import type { SetStateAction } from "react";
+import { DEFAULT_AUTO_POTION_SETTINGS } from "@tibia/protocol";
 import { createStore } from "zustand/vanilla";
 import { chatReducer, initialChatState } from "../../../lib/chat/chatReducer";
 import type { GameWindowRuntime } from "../types/GameWindowRuntime";
@@ -38,6 +39,10 @@ export function createGameWindowStore({
     actionBarSaveTimerRef: { current: null },
     potionActionBarRef: { current: [] },
     potionActionBarSaveTimerRef: { current: null },
+    autoPotionSettingsRef: {
+      current: { ...DEFAULT_AUTO_POTION_SETTINGS },
+    },
+    autoPotionSettingsSaveTimerRef: { current: null },
     marketOpenRef: { current: false },
     marketSelectedItemRef: { current: null },
     hadPartyRef: { current: false },
@@ -74,6 +79,7 @@ export function createGameWindowStore({
     uiSettings: {},
     actionBar: [],
     potionActionBar: [],
+    autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
     actionBarConfigSlot: null,
     potionActionBarConfigSlot: null,
     marketSelectedItem: null,
@@ -201,6 +207,13 @@ export function createGameWindowStore({
     setPotionActionBar: (value) =>
       set((state) => ({
         potionActionBar: resolveStateAction(value, state.potionActionBar),
+      })),
+    setAutoPotionSettings: (value) =>
+      set((state) => ({
+        autoPotionSettings: resolveStateAction(
+          value,
+          state.autoPotionSettings,
+        ),
       })),
     setActionBarConfigSlot: (value) =>
       set((state) => ({
@@ -363,6 +376,13 @@ export function createGameWindowStore({
       actions.gems.reset();
       runtime.actionBarRef.current = [];
       runtime.potionActionBarRef.current = [];
+      runtime.autoPotionSettingsRef.current = {
+        ...DEFAULT_AUTO_POTION_SETTINGS,
+      };
+      if (runtime.autoPotionSettingsSaveTimerRef.current) {
+        clearTimeout(runtime.autoPotionSettingsSaveTimerRef.current);
+        runtime.autoPotionSettingsSaveTimerRef.current = null;
+      }
       runtime.pendingRuneRef.current = null;
       runtime.pendingPotionRef.current = null;
       runtime.pendingUseWithRef.current = null;
@@ -394,6 +414,7 @@ export function createGameWindowStore({
         actionBar: [],
         actionBarConfigSlot: null,
         potionActionBar: [],
+        autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
         potionActionBarConfigSlot: null,
         combatLog: [],
         chatState: chatReducer(state.chatState, {

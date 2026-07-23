@@ -1,3 +1,4 @@
+import { DEFAULT_AUTO_POTION_SETTINGS } from "@tibia/protocol";
 import type { ConnectionStatus } from "../../../lib/net/GameClient";
 import type { GameWindowStore } from "../types/GameWindowStore";
 
@@ -17,6 +18,13 @@ export function handleGameClientStatus(
     runtime.pendingUseWithRef.current = null;
     runtime.actionBarRef.current = [];
     runtime.potionActionBarRef.current = [];
+    runtime.autoPotionSettingsRef.current = {
+      ...DEFAULT_AUTO_POTION_SETTINGS,
+    };
+    if (runtime.autoPotionSettingsSaveTimerRef.current) {
+      clearTimeout(runtime.autoPotionSettingsSaveTimerRef.current);
+      runtime.autoPotionSettingsSaveTimerRef.current = null;
+    }
     state.setWorldLoading(false);
     state.setLevelUpNotice(null);
     state.setVisibleCreatures([]);
@@ -30,6 +38,7 @@ export function handleGameClientStatus(
     state.setActionBar([]);
     state.setActionBarConfigSlot(null);
     state.setPotionActionBar([]);
+    state.setAutoPotionSettings({ ...DEFAULT_AUTO_POTION_SETTINGS });
     state.setPotionActionBarConfigSlot(null);
     state.setCombatLog([]);
     state.setItemText(null);

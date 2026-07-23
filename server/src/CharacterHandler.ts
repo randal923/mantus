@@ -1,4 +1,5 @@
 import {
+  DEFAULT_AUTO_POTION_SETTINGS,
   computeWheelBonuses,
   type CreateCharacterMessage,
   type ListCharactersMessage,
@@ -291,6 +292,7 @@ export class CharacterHandler {
       this.persistence.saveNow(player, now);
     }
     session.playerId = player.id;
+    session.autoPotionSettings = { ...character.autoPotionSettings };
     this.registry.bindPlayer(session);
     const inventory = this.items.attach(loadedInventory);
     if (loadedDepot) this.depot.attach(loadedDepot);
@@ -318,6 +320,7 @@ export class CharacterHandler {
       uiSettings: session.account?.uiSettings ?? {},
       actionBar: character.actionBar,
       potionActionBar: character.potionActionBar,
+      autoPotionSettings: character.autoPotionSettings,
     });
     this.visibility.syncMapItems(session, player);
     void this.service
@@ -355,6 +358,10 @@ export class CharacterHandler {
     existing.depotOperationPending = false;
     existing.actionBarUpdatePending = false;
     existing.potionActionBarUpdatePending = false;
+    existing.autoPotionSettingsUpdatePending = false;
+    existing.autoPotionSettings = {
+      ...DEFAULT_AUTO_POTION_SETTINGS,
+    };
     existing.itemPersistsPending = 0;
     existing.travelOperationPending = false;
     existing.promotionOperationPending = false;

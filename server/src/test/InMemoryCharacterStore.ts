@@ -1,4 +1,8 @@
-import type { ActionBar, PotionActionBar } from "@tibia/protocol";
+import type {
+  ActionBar,
+  AutoPotionSettings,
+  PotionActionBar,
+} from "@tibia/protocol";
 import type {
   Character,
   CharacterSaveSnapshot,
@@ -102,6 +106,19 @@ export class InMemoryCharacterStore implements CharacterStore {
     this.characters.set(characterId, {
       ...character,
       potionActionBar,
+      updatedAt: new Date(),
+    });
+  }
+
+  async updateAutoPotionSettings(
+    characterId: string,
+    autoPotionSettings: AutoPotionSettings,
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, {
+      ...character,
+      autoPotionSettings,
       updatedAt: new Date(),
     });
   }

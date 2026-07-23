@@ -1,5 +1,10 @@
 import { Pool } from "pg";
-import type { ActionBar, PotionActionBar } from "@tibia/protocol";
+import {
+  DEFAULT_AUTO_POTION_SETTINGS,
+  type ActionBar,
+  type AutoPotionSettings,
+  type PotionActionBar,
+} from "@tibia/protocol";
 import { CharacterError } from "./CharacterError";
 import type {
   Character,
@@ -196,12 +201,52 @@ export class PgCharacterStore implements CharacterStore {
   ): Promise<void> {
     const result = await this.pool.query(
       `UPDATE characters
-       SET potion_action_bar = $2::jsonb
+       SET potion_action_bar = jsonb_build_object(
+         'slots',
+         $2::jsonb,
+         'autoPotionSettings',
+         CASE
+           WHEN jsonb_typeof(potion_action_bar) = 'object'
+             THEN COALESCE(
+               potion_action_bar->'autoPotionSettings',
+               $3::jsonb
+             )
+           ELSE $3::jsonb
+         END
+       )
        WHERE id = $1`,
-      [characterId, JSON.stringify(potionActionBar)],
+      [
+        characterId,
+        JSON.stringify(potionActionBar),
+        JSON.stringify(DEFAULT_AUTO_POTION_SETTINGS),
+      ],
     );
     if (result.rowCount !== 1) {
       throw new Error("character potion action bar update failed");
+    }
+  }
+
+  async updateAutoPotionSettings(
+    characterId: string,
+    settings: AutoPotionSettings,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET potion_action_bar = jsonb_build_object(
+         'slots',
+         CASE
+           WHEN jsonb_typeof(potion_action_bar) = 'array'
+             THEN potion_action_bar
+           ELSE COALESCE(potion_action_bar->'slots', '[]'::jsonb)
+         END,
+         'autoPotionSettings',
+         $2::jsonb
+       )
+       WHERE id = $1`,
+      [characterId, JSON.stringify(settings)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("character auto potion settings update failed");
     }
   }
 

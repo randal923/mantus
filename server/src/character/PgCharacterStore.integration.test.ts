@@ -224,6 +224,12 @@ databaseDescribe("PgCharacterStore integration", () => {
     const created = await store.findByIdForAccount(accountId, summary.id);
     expect(created?.actionBar).toEqual([]);
     expect(created?.potionActionBar).toEqual([]);
+    expect(created?.autoPotionSettings).toEqual({
+      enabled: false,
+      health: null,
+      mana: null,
+      priority: "health",
+    });
 
     const actionBar = ["exori", null, "exura ico"];
     await store.updateActionBar(summary.id, actionBar);
@@ -241,6 +247,31 @@ databaseDescribe("PgCharacterStore integration", () => {
       summary.id,
     );
     expect(updatedPotions?.potionActionBar).toEqual(potionActionBar);
+
+    const autoPotionSettings = {
+      enabled: true,
+      health: { itemTypeId: 266, thresholdPercent: 45 },
+      mana: { itemTypeId: 268, thresholdPercent: 30 },
+      priority: "health" as const,
+    };
+    await store.updateAutoPotionSettings(summary.id, autoPotionSettings);
+    const updatedAutoPotion = await store.findByIdForAccount(
+      accountId,
+      summary.id,
+    );
+    expect(updatedAutoPotion?.potionActionBar).toEqual(potionActionBar);
+    expect(updatedAutoPotion?.autoPotionSettings).toEqual(
+      autoPotionSettings,
+    );
+
+    const nextPotionActionBar = potionActionBar.slice(0, 1);
+    await store.updatePotionActionBar(summary.id, nextPotionActionBar);
+    const updatedAgain = await store.findByIdForAccount(
+      accountId,
+      summary.id,
+    );
+    expect(updatedAgain?.potionActionBar).toEqual(nextPotionActionBar);
+    expect(updatedAgain?.autoPotionSettings).toEqual(autoPotionSettings);
   });
 
   it("rejects a stale snapshot without overwriting the newer save", async () => {

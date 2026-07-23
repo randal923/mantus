@@ -7,10 +7,11 @@ import { toItemTooltip } from "./toItemTooltip";
 
 export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
   const type = catalog.require(item.typeId);
+  const potion = getPotionDefinition(type.id);
   const useKind =
     type.kind === "rune"
       ? "rune"
-      : getPotionDefinition(type.id)
+      : potion
         ? "potion"
       : getToolDefinition(type.id)
         ? "useWith"
@@ -39,6 +40,14 @@ export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
       ? { containerCapacity: type.containerCapacity }
       : {}),
     ...(useKind ? { useKind } : {}),
+    ...(potion
+      ? {
+          potionResources: [
+            ...(potion.health ? (["health"] as const) : []),
+            ...(potion.mana ? (["mana"] as const) : []),
+          ],
+        }
+      : {}),
     ...(type.stowable &&
     type.containerCapacity === undefined &&
     Object.keys(item.attributes).length === 0

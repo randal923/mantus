@@ -112,6 +112,15 @@ class MemoryCharacterStore implements CharacterStore {
     if (!character) throw new CharacterError("not-found");
     this.characters.set(characterId, { ...character, potionActionBar });
   }
+
+  async updateAutoPotionSettings(
+    characterId: string,
+    autoPotionSettings: Character["autoPotionSettings"],
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, { ...character, autoPotionSettings });
+  }
 }
 
 const makeService = () =>

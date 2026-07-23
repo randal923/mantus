@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { ServerMessage } from "@tibia/protocol";
+import {
+  DEFAULT_AUTO_POTION_SETTINGS,
+  type ServerMessage,
+} from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import { Combat } from "../combat/Combat";
 import { CombatFeedback } from "../combat/CombatFeedback";
@@ -64,6 +67,8 @@ function makeSession(player: Player, sent: ServerMessage[]): Session {
     attackTargetId: null,
     fightMode: { attack: "balanced", chase: false, secure: true },
     combatCooldowns: new Map(),
+    autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
+    autoPotionSettingsUpdatePending: false,
     itemOperationPending: false,
     movementDirection: null,
     bufferedMovementDirection: null,

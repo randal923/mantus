@@ -13,6 +13,24 @@ export function handlePlayerStateMessage(
 
   const { runtime } = state;
 
+  if (message.type === "action-bar-updated") {
+    state.setActionBar(message.actionBar);
+    runtime.actionBarRef.current = message.actionBar;
+    return true;
+  }
+
+  if (message.type === "potion-action-bar-updated") {
+    state.setPotionActionBar(message.potionActionBar);
+    runtime.potionActionBarRef.current = message.potionActionBar;
+    return true;
+  }
+
+  if (message.type === "auto-potion-settings-updated") {
+    state.setAutoPotionSettings(message.settings);
+    runtime.autoPotionSettingsRef.current = message.settings;
+    return true;
+  }
+
   if (message.type === "inventory-updated") {
     actions.inventory.confirm(message.inventory);
     state.setShopSession((current) =>

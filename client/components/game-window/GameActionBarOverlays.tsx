@@ -10,6 +10,9 @@ export function GameActionBarOverlays() {
   const potionActionBar = useGameWindowStore(
     (state) => state.potionActionBar,
   );
+  const autoPotionSettings = useGameWindowStore(
+    (state) => state.autoPotionSettings,
+  );
   const inventory = useGameWindowStore(
     (state) => state.sessions?.inventory ?? null,
   );
@@ -22,6 +25,9 @@ export function GameActionBarOverlays() {
   const setActionBar = useGameWindowStore((state) => state.setActionBar);
   const setPotionActionBar = useGameWindowStore(
     (state) => state.setPotionActionBar,
+  );
+  const setAutoPotionSettings = useGameWindowStore(
+    (state) => state.setAutoPotionSettings,
   );
   const setActionBarConfigSlot = useGameWindowStore(
     (state) => state.setActionBarConfigSlot,
@@ -58,6 +64,7 @@ export function GameActionBarOverlays() {
         <PotionActionBarModal
           inventory={inventory}
           potionActionBar={potionActionBar}
+          autoPotionSettings={autoPotionSettings}
           initialSlot={potionActionBarConfigSlot}
           onChange={(next) => {
             const runtime = store.getState().runtime;
@@ -70,6 +77,20 @@ export function GameActionBarOverlays() {
               runtime.potionActionBarSaveTimerRef.current = null;
               runtime.clientRef.current?.updatePotionActionBar(
                 runtime.potionActionBarRef.current,
+              );
+            }, 800);
+          }}
+          onAutoPotionSettingsChange={(next) => {
+            const runtime = store.getState().runtime;
+            setAutoPotionSettings(next);
+            runtime.autoPotionSettingsRef.current = next;
+            if (runtime.autoPotionSettingsSaveTimerRef.current) {
+              clearTimeout(runtime.autoPotionSettingsSaveTimerRef.current);
+            }
+            runtime.autoPotionSettingsSaveTimerRef.current = setTimeout(() => {
+              runtime.autoPotionSettingsSaveTimerRef.current = null;
+              runtime.clientRef.current?.updateAutoPotionSettings(
+                runtime.autoPotionSettingsRef.current,
               );
             }, 800);
           }}

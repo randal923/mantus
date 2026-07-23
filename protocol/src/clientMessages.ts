@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { actionBarSchema, potionActionBarSchema } from "./actionBar";
+import {
+  actionBarSchema,
+  autoPotionSettingsSchema,
+  potionActionBarSchema,
+} from "./actionBar";
 import {
   bankDepositMessageSchema,
   bankTransferMessageSchema,
@@ -410,6 +414,14 @@ export const updatePotionActionBarMessageSchema = z
   })
   .strict();
 
+/** Rare, bounded per-character update; automatic use remains server-owned. */
+export const updateAutoPotionSettingsMessageSchema = z
+  .object({
+    type: z.literal("update-auto-potion-settings"),
+    settings: autoPotionSettingsSchema,
+  })
+  .strict();
+
 export const clientMessageSchema = z.discriminatedUnion("type", [
   authMessageSchema,
   listCharactersMessageSchema,
@@ -445,6 +457,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   updateUiSettingsMessageSchema,
   updateActionBarMessageSchema,
   updatePotionActionBarMessageSchema,
+  updateAutoPotionSettingsMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,
   bankWithdrawMessageSchema,
@@ -571,5 +584,8 @@ export type UpdateActionBarMessage = z.infer<
 >;
 export type UpdatePotionActionBarMessage = z.infer<
   typeof updatePotionActionBarMessageSchema
+>;
+export type UpdateAutoPotionSettingsMessage = z.infer<
+  typeof updateAutoPotionSettingsMessageSchema
 >;
 export type ClientMessage = z.infer<typeof clientMessageSchema>;

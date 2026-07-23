@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { ItemCatalog } from "./ItemCatalog";
 import { loadItemCatalog } from "./loadItemCatalog";
+import { projectItem } from "./projectItem";
 import { toItemTooltip } from "./toItemTooltip";
 
 let catalog: ItemCatalog;
@@ -43,5 +44,29 @@ describe("loadItemCatalog", () => {
     expect(catalog.require(236).stowable).toBe(true);
     expect(catalog.require(3274).stowable).toBe(true);
     expect(catalog.require(3031).stowable).toBeUndefined();
+  });
+
+  it("projects server-owned potion resource metadata for configuration UIs", () => {
+    const baseItem = {
+      id: "00000000-0000-4000-8000-000000000001",
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "container" as const,
+        containerId: "00000000-0000-4000-8000-000000000002",
+        slot: 0,
+      },
+    };
+
+    expect(
+      projectItem({ ...baseItem, typeId: 239 }, catalog).potionResources,
+    ).toEqual(["health"]);
+    expect(
+      projectItem({ ...baseItem, typeId: 268 }, catalog).potionResources,
+    ).toEqual(["mana"]);
+    expect(
+      projectItem({ ...baseItem, typeId: 7642 }, catalog).potionResources,
+    ).toEqual(["health", "mana"]);
   });
 });
