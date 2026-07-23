@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { ActionBarModal } from "../components/spells/ActionBarModal";
 
@@ -68,6 +68,13 @@ export const Default: Story = {
     await expect(
       canvas.getByRole("dialog", { name: "Action Bar" }),
     ).toBeInTheDocument();
+    const search = canvas.getByRole("searchbox", { name: "Search spells" });
+    await userEvent.type(search, "exori infir min");
+    await expect(
+      canvas.queryByRole("button", {
+        name: "Assign Bruise Bane to slot 2",
+      }),
+    ).not.toBeInTheDocument();
     const row = canvas.getByRole("button", {
       name: "Assign Lesser Front Sweep to slot 2",
     });

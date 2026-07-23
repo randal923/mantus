@@ -9,6 +9,7 @@ import {
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { getSpellIconArtwork } from "../../lib/combat/getSpellIconArtwork";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
 import { SpellIcon } from "./SpellIcon";
 
@@ -31,11 +32,18 @@ export function ActionBarModal({
   const [selectedSlot, setSelectedSlot] = useState(() =>
     Math.min(Math.max(initialSlot, 0), ACTION_BAR_SLOT_COUNT - 1),
   );
+  const [search, setSearch] = useState("");
   const slots = Array.from(
     { length: ACTION_BAR_SLOT_COUNT },
     (_, index) => actionBar[index] ?? null,
   );
   const combatSpells = spells.filter((spell) => spell.origin === "spell");
+  const normalizedSearch = search.trim().toLowerCase();
+  const visibleSpells = combatSpells.filter(
+    (spell) =>
+      spell.name.toLowerCase().includes(normalizedSearch) ||
+      spell.words?.toLowerCase().includes(normalizedSearch),
+  );
 
   const assignSelected = (spellId: string | null) => {
     const next = [...slots];
@@ -99,8 +107,18 @@ export function ActionBarModal({
           </Button>
         </div>
 
+        <Input
+          label={t("spells.actionBar.search")}
+          name="action-bar-spell-search"
+          type="search"
+          autoComplete="off"
+          placeholder={t("spells.actionBar.searchPlaceholder")}
+          value={search}
+          onChange={(event) => setSearch(event.currentTarget.value)}
+        />
+
         <ul className="flex flex-col gap-2">
-          {combatSpells.map((spell) => {
+          {visibleSpells.map((spell) => {
             const iconArtwork = getSpellIconArtwork(spell.id);
             const assignedSlots = slots.flatMap((spellId, index) =>
               spellId === spell.id ? [index + 1] : [],
@@ -170,6 +188,11 @@ export function ActionBarModal({
               </li>
             );
           })}
+          {visibleSpells.length === 0 && (
+            <li className="rounded-lg border border-ui-stone-light/15 bg-black/25 px-4 py-8 text-center text-sm text-ui-muted">
+              {t("spells.actionBar.noResults")}
+            </li>
+          )}
         </ul>
       </div>
     </Modal>

@@ -823,6 +823,9 @@
       "emptySlot": "Empty slot {{shortcut}}",
       "emptySlotHint": "Empty slot — click to assign a spell",
       "clear": "Clear",
+      "search": "Search spells",
+      "searchPlaceholder": "Search by name or spell words…",
+      "noResults": "No spells match your search.",
       "assign": "Assign {{name}} to slot {{slot}}"
     }
   },

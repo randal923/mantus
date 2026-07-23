@@ -823,6 +823,9 @@
       "emptySlot": "Espaço vazio {{shortcut}}",
       "emptySlotHint": "Espaço vazio — clique para atribuir uma magia",
       "clear": "Limpar",
+      "search": "Buscar magias",
+      "searchPlaceholder": "Buscar por nome ou palavras mágicas…",
+      "noResults": "Nenhuma magia corresponde à sua busca.",
       "assign": "Atribuir {{name}} ao espaço {{slot}}"
     }
   },
