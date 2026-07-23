@@ -9,6 +9,14 @@ const choiceReferenceSchema = z
   .max(64)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
+/** One targeted greeting intent; the shared transport rate cap applies. */
+export const npcDialogueGreetMessageSchema = z
+  .object({
+    type: z.literal("npc-dialogue-greet"),
+    npcId: npcReferenceSchema,
+  })
+  .strict();
+
 /** One bounded click intent; the shared transport rate cap applies. */
 export const npcDialogueChoiceMessageSchema = z
   .object({
@@ -55,6 +63,9 @@ export const npcDialogueClosedMessageSchema = z
   })
   .strict();
 
+export type NpcDialogueGreetMessage = z.infer<
+  typeof npcDialogueGreetMessageSchema
+>;
 export type NpcDialogueChoiceMessage = z.infer<
   typeof npcDialogueChoiceMessageSchema
 >;

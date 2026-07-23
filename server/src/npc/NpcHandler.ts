@@ -1,4 +1,7 @@
-import type { NpcDialogueChoiceMessage } from "@tibia/protocol";
+import type {
+  NpcDialogueChoiceMessage,
+  NpcDialogueGreetMessage,
+} from "@tibia/protocol";
 import { Npc } from "../creature/Npc";
 import type { BankService } from "../economy/BankService";
 import type { ShopService } from "../economy/ShopService";
@@ -94,6 +97,27 @@ export class NpcHandler {
         );
       }
     }
+  }
+
+  handleGreeting(
+    session: Session,
+    intent: NpcDialogueGreetMessage,
+    now: number,
+  ): void {
+    if (!session.playerId) return;
+    const player = this.world.getPlayer(session.playerId);
+    const creature = this.world.getCreature(intent.npcId);
+    if (
+      !player ||
+      !(creature instanceof Npc) ||
+      !creature.type.dialogue ||
+      !session.knownCreatureIds.has(creature.id) ||
+      this.conversations.get(creature.id, player.id) ||
+      !isInNpcTalkRange(player, creature, creature.type.dialogue)
+    ) {
+      return;
+    }
+    this.flow.greet(session, player, creature, creature.type.dialogue, now);
   }
 
   handleChoice(

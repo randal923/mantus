@@ -16,9 +16,6 @@ export function GameHudOverlay() {
   const { t } = useAppTranslation();
   const store = useGameWindowStoreApi();
   const gameMenuOpen = useGameWindowStore((state) => state.gameMenuOpen);
-  const characterStatsOpen = useGameWindowStore(
-    (state) => state.characterStatsOpen,
-  );
   const potionTargeting = useGameWindowStore(
     (state) => state.potionTargeting,
   );
@@ -104,7 +101,6 @@ export function GameHudOverlay() {
     <GameHud
       spellHotkeysEnabled={
         !gameMenuOpen &&
-        !characterStatsOpen &&
         !potionTargeting &&
         actionBarConfigSlot === null &&
         potionActionBarConfigSlot === null

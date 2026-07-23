@@ -188,6 +188,40 @@ const dialogueMessages = (peer: TestPeer) =>
   peer.messages.filter((message) => message.type === "npc-dialogue");
 
 describe("NpcHandler", () => {
+  it("greets only the targeted visible NPC within talk range", () => {
+    const { handler, join, addNpc } = makeHarness();
+    const speaker = join("speaker", { x: 10, y: 10, z: 7 });
+    const target = addNpc("npc-target", { x: 10, y: 12, z: 7 });
+    addNpc("npc-nearby", { x: 12, y: 10, z: 7 });
+    const distant = addNpc("npc-distant", { x: 18, y: 10, z: 7 });
+    speaker.messages.length = 0;
+
+    handler.handleGreeting(
+      speaker.session,
+      { type: "npc-dialogue-greet", npcId: "npc-forged" },
+      900,
+    );
+    handler.handleGreeting(
+      speaker.session,
+      { type: "npc-dialogue-greet", npcId: distant.id },
+      950,
+    );
+    expect(dialogueMessages(speaker)).toEqual([]);
+
+    handler.handleGreeting(
+      speaker.session,
+      { type: "npc-dialogue-greet", npcId: target.id },
+      1_000,
+    );
+
+    expect(dialogueMessages(speaker)).toMatchObject([
+      {
+        npcId: target.id,
+        text: "Hello, speaker.",
+      },
+    ]);
+  });
+
   it("keeps dialogue and offered choices private to the relevant player", () => {
     const { handler, join, addNpc } = makeHarness();
     const speaker = join("speaker", { x: 10, y: 10, z: 7 });

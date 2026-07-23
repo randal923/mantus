@@ -12,7 +12,16 @@ export function createGameWindowRenderer(
 
   return new WorldRenderer({
     useMap: (position) => getClient()?.useMap(position),
-    attackTarget: (creatureId) => getClient()?.attackTarget(creatureId),
+    attackTarget: (creatureId) => {
+      const creature = runtime.visibleCreaturesRef.current.find(
+        (candidate) => candidate.id === creatureId,
+      );
+      if (creature?.kind === "npc") {
+        getClient()?.greetNpc(creatureId);
+        return;
+      }
+      getClient()?.attackTarget(creatureId);
+    },
     cancelAttack: () => getClient()?.cancelAttack(),
     targetCreature: (creatureId) => {
       const potion = runtime.pendingPotionRef.current;

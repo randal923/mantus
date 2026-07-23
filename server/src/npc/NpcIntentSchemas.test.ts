@@ -2,6 +2,25 @@ import { describe, expect, it } from "vitest";
 import { clientMessageSchema } from "@tibia/protocol";
 
 describe("NPC intent schema", () => {
+  it("accepts only a bounded NPC reference for targeted greetings", () => {
+    const message = {
+      type: "npc-dialogue-greet",
+      npcId: "npc:captain-bluebear:1",
+    };
+
+    expect(clientMessageSchema.safeParse(message).success).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({ ...message, npcId: "" }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({ ...message, npcId: "n".repeat(193) })
+        .success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({ ...message, greeting: "hi" }).success,
+    ).toBe(false);
+  });
+
   it("accepts only an opaque server-issued conversation and choice", () => {
     const message = {
       type: "npc-dialogue-choice",

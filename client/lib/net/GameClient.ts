@@ -109,6 +109,10 @@ export class GameClient {
     this.send({ type: "cancel-attack" });
   }
 
+  greetNpc(npcId: string): boolean {
+    return this.send({ type: "npc-dialogue-greet", npcId });
+  }
+
   setFightMode(mode: FightMode): boolean {
     return this.send({ type: "set-fight-mode", mode });
   }

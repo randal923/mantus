@@ -80,7 +80,10 @@ import {
   houseTransferRespondMessageSchema,
 } from "./house";
 import { reportPlayerMessageSchema } from "./moderation";
-import { npcDialogueChoiceMessageSchema } from "./npc";
+import {
+  npcDialogueChoiceMessageSchema,
+  npcDialogueGreetMessageSchema,
+} from "./npc";
 import {
   partyChatMessageSchema,
   partyInviteMessageSchema,
@@ -471,6 +474,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   updateActionBarMessageSchema,
   updatePotionActionBarMessageSchema,
   updateAutoPotionSettingsMessageSchema,
+  npcDialogueGreetMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,
   bankWithdrawMessageSchema,

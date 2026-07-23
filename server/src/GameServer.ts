@@ -738,6 +738,9 @@ export class GameServer {
       case "private-chat":
         this.chat.handle(session, intent, now);
         return;
+      case "npc-dialogue-greet":
+        this.npcs.handleGreeting(session, intent, now);
+        return;
       case "npc-dialogue-choice":
         this.npcs.handleChoice(session, intent, now);
         return;
