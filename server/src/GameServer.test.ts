@@ -703,6 +703,51 @@ describe("auth gate", () => {
     expect(correction.positionRevision).toBe(0);
   });
 
+  it("turns a player without moving them", async () => {
+    startServer({
+      map: {
+        source: "grid",
+        name: "turn-grid",
+        ...GRID,
+        blocked: [],
+        groundSpeed: 50,
+      },
+    });
+    const client = await connect(server.port, "Turner", "tok.turner");
+    sockets.push(client.socket);
+    const messageOffset = client.messages.length;
+
+    client.socket.send(
+      JSON.stringify({ type: "turn", direction: "north" }),
+    );
+    await waitFor(
+      () =>
+        client.messages.slice(messageOffset).some(
+          (message) =>
+            message.type === "creature-moved" &&
+            message.creatureId === client.playerId &&
+            message.direction === "north",
+      ),
+      "turn pose",
+    );
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    const poses = client.messages.slice(messageOffset).filter(
+      (message) =>
+        message.type === "creature-moved" &&
+        message.creatureId === client.playerId,
+    );
+    expect(poses).toHaveLength(1);
+    expect(poses[0]).toMatchObject({
+      type: "creature-moved",
+      from: { ...client.spawn, z: 7 },
+      position: { ...client.spawn, z: 7 },
+      direction: "north",
+      positionRevision: 0,
+      durationMs: 0,
+    });
+  });
+
   it("continues held movement when the wall clock moves backward", async () => {
     startServer({
       map: {

@@ -23,6 +23,18 @@ const makePlayer = (x: number, y: number, z = 7, id = "p1") =>
   new Player(makeCharacter(id, "Tester"), { x, y, z });
 
 describe("World.tryMove", () => {
+  it("turns without changing position or its revision", () => {
+    const world = makeWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+
+    expect(world.turnPlayer(player, "north")).toBe(true);
+    expect(player.direction).toBe("north");
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+    expect(player.positionRevision).toBe(0);
+    expect(world.turnPlayer(player, "north")).toBe(false);
+  });
+
   it("moves onto a free walkable tile", () => {
     const world = makeWorld();
     const player = makePlayer(5, 5);

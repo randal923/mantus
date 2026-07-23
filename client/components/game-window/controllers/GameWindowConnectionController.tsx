@@ -6,6 +6,7 @@ import type { WorldRenderer } from "../../../lib/render/WorldRenderer";
 import { updateVisibleCreatures } from "../../../lib/creatures/updateVisibleCreatures";
 import { isEditableTarget } from "../../../lib/hotkeys/isEditableTarget";
 import { getHeldMovementDirection } from "../../../lib/movement/getHeldMovementDirection";
+import { getKeyboardTurnDirection } from "../../../lib/movement/getKeyboardTurnDirection";
 import { useGameSettingsStore } from "../../../stores/useGameSettingsStore";
 import { useLanguageStore } from "../../../stores/useLanguageStore";
 import { handleCharacterSessionMessage } from "../messages/handleCharacterSessionMessage";
@@ -148,6 +149,18 @@ export function GameWindowConnectionController() {
           event.preventDefault();
           return;
         }
+      }
+      const turnDirection = getKeyboardTurnDirection(event);
+      if (
+        turnDirection &&
+        runtime.joinedRef.current &&
+        !isEditableTarget(event.target)
+      ) {
+        event.preventDefault();
+        if (event.repeat) return;
+        heldMovementKeys = [];
+        client?.turn(turnDirection);
+        return;
       }
       const direction = getHeldMovementDirection(
         [event.code],

@@ -66,6 +66,10 @@ export class GameClient {
     this.send({ type: "move", direction, queueStep });
   }
 
+  turn(direction: Direction): void {
+    this.send({ type: "turn", direction });
+  }
+
   stopMoving(): void {
     this.send({ type: "stop-move" });
   }

@@ -377,6 +377,10 @@ export class World {
     return this.movement.tryMove(player, direction, now);
   }
 
+  turnPlayer(player: Player, direction: Direction): boolean {
+    return this.movement.turn(player, direction);
+  }
+
   tryMoveCreature(
     creature: Creature,
     direction: Direction,

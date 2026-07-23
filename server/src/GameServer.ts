@@ -683,6 +683,9 @@ export class GameServer {
       case "move":
         this.movement.handle(session, intent, now);
         return;
+      case "turn":
+        this.movement.handleTurn(session, intent);
+        return;
       case "stop-move":
         this.movement.stop(session);
         return;

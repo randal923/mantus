@@ -2,6 +2,28 @@ import { describe, expect, it } from "vitest";
 import { clientMessageSchema, PROTOCOL_LIMITS } from "@tibia/protocol";
 
 describe("movement intent schemas", () => {
+  it("accepts a direction-only turn intent", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "turn",
+        direction: "north",
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "turn",
+        direction: "north",
+        position: { x: 1, y: 1, z: 7 },
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "turn",
+        direction: "up",
+      }).success,
+    ).toBe(false);
+  });
+
   it("accepts bounded diagonal auto-walk directions without coordinates", () => {
     expect(
       clientMessageSchema.safeParse({

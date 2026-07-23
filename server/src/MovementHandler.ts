@@ -3,6 +3,7 @@ import type {
   Direction,
   MoveMessage,
   Position,
+  TurnMessage,
   UseMapMessage,
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
@@ -43,6 +44,22 @@ export class MovementHandler {
     if (result.moved || result.reason !== "cooldown") {
       session.bufferedMovementDirection = null;
     }
+  }
+
+  handleTurn(session: Session, intent: TurnMessage): void {
+    if (!session.playerId) {
+      session.sendError("join-required");
+      return;
+    }
+    const player = this.world.getPlayer(session.playerId);
+    if (!player) return;
+    this.stop(session);
+    if (session.travelOperationPending || session.promotionOperationPending) {
+      return;
+    }
+    if (!this.world.turnPlayer(player, intent.direction)) return;
+    this.persistence.markDirty(player);
+    this.visibility.broadcastPose(player);
   }
 
   handleAutoWalk(

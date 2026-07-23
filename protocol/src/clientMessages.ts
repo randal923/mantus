@@ -147,6 +147,14 @@ export const moveMessageSchema = z
   })
   .strict();
 
+/** Fixed-size turn intent covered by the shared message-size and rate caps. */
+export const turnMessageSchema = z
+  .object({
+    type: z.literal("turn"),
+    direction: z.enum(DIRECTIONS),
+  })
+  .strict();
+
 /** Stops held movement; covered by the shared message size and rate caps. */
 export const stopMoveMessageSchema = z
   .object({
@@ -432,6 +440,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   createCharacterMessageSchema,
   selectCharacterMessageSchema,
   moveMessageSchema,
+  turnMessageSchema,
   stopMoveMessageSchema,
   autoWalkMessageSchema,
   setViewportMessageSchema,
@@ -552,6 +561,7 @@ export type SelectCharacterMessage = z.infer<
   typeof selectCharacterMessageSchema
 >;
 export type MoveMessage = z.infer<typeof moveMessageSchema>;
+export type TurnMessage = z.infer<typeof turnMessageSchema>;
 export type StopMoveMessage = z.infer<typeof stopMoveMessageSchema>;
 export type AutoWalkMessage = z.infer<typeof autoWalkMessageSchema>;
 export type SetViewportMessage = z.infer<typeof setViewportMessageSchema>;

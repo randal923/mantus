@@ -58,6 +58,12 @@ export class MovementRules {
     return this.tryMoveInternal(player, direction, now, true);
   }
 
+  turn(player: Player, direction: Direction): boolean {
+    if (player.direction === direction) return false;
+    player.direction = direction;
+    return true;
+  }
+
   tryMoveCreature(
     creature: Creature,
     direction: Direction,
