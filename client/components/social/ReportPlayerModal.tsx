@@ -84,7 +84,7 @@ export function ReportPlayerModal({
             onChange={setReason}
           />
           <label className="flex flex-col gap-2">
-            <span className="font-display text-[10px] font-semibold tracking-[0.18em] text-ui-gold uppercase">
+            <span className="font-display text-xs font-semibold tracking-[0.18em] text-ui-gold uppercase">
               {t("report.comment")}
             </span>
             <textarea
@@ -96,9 +96,9 @@ export function ReportPlayerModal({
               className="ui-scrollbar w-full resize-none rounded-lg border border-ui-stone/50 bg-black/40 px-3.5 py-2 font-tibia text-sm text-ui-text shadow-inner shadow-black/35 outline-none transition-[border-color,box-shadow,background-color] placeholder:text-ui-muted/55 hover:border-ui-stone-light/45 focus:border-ui-gold/60 focus:bg-black/55 focus:ring-2 focus:ring-ui-gold/15"
             />
           </label>
-          <p className="text-[10px] text-ui-muted">{t("report.hint")}</p>
+          <p className="text-sm text-ui-muted">{t("report.hint")}</p>
           {error && (
-            <p role="alert" className="text-xs text-red-300">
+            <p role="alert" className="text-sm text-red-300">
               {error}
             </p>
           )}

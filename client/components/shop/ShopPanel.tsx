@@ -95,13 +95,13 @@ export function ShopPanel({
           <p
             role="alert"
             aria-live="assertive"
-            className="border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-xs leading-5 text-red-200"
+            className="border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-sm leading-6 text-red-200"
           >
             {t(`shop.errors.${error}`)}
           </p>
         )}
         {!error && lastTransaction && (
-          <p aria-live="polite" className="border-l-2 border-ui-gold/40 bg-ui-gold/5 px-3 py-2 text-xs leading-5 text-ui-muted">
+          <p aria-live="polite" className="border-l-2 border-ui-gold/40 bg-ui-gold/5 px-3 py-2 text-sm leading-6 text-ui-muted">
             {t(
               lastTransaction.kind === "purchase"
                 ? "shop.bought"
@@ -117,7 +117,7 @@ export function ShopPanel({
         )}
 
         {visibleEntries.length === 0 ? (
-          <p className="py-6 text-center text-xs text-ui-muted">
+          <p className="py-6 text-center text-sm text-ui-muted">
             {t("shop.noItems")}
           </p>
         ) : (

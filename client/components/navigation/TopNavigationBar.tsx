@@ -114,7 +114,7 @@ export function TopNavigationBar({
             >
               {characterName}
             </h2>
-            <span className="hidden max-w-28 shrink-0 truncate rounded-sm border border-ui-stone-light/15 bg-black/30 px-1.5 py-0.5 text-[9px] font-medium tracking-wider text-ui-muted uppercase sm:block">
+            <span className="hidden max-w-28 shrink-0 truncate rounded-sm border border-ui-stone-light/15 bg-black/30 px-1.5 py-0.5 text-xs font-medium tracking-wider text-ui-muted uppercase sm:block">
               {vocation}
             </span>
           </div>
@@ -127,7 +127,7 @@ export function TopNavigationBar({
         </div>
       </section>
 
-      <div className="hidden items-center gap-2 text-[10px] tracking-widest text-ui-muted uppercase md:flex">
+      <div className="hidden items-center gap-2 text-xs tracking-widest text-ui-muted uppercase md:flex">
         <span
           aria-hidden
           className={`size-1.5 rounded-full shadow-[0_0_8px_currentColor] ${STATUS_CLASS[connectionStatus]}`}

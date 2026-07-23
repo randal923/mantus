@@ -54,7 +54,7 @@ export function BankPanel({
   return (
     <Modal title={t("bank.title", { npcName })} onClose={onClose}>
       <div className="flex flex-col gap-5">
-        <dl className="space-y-2 rounded-lg border border-ui-gold/15 bg-black/30 p-3 text-xs">
+        <dl className="space-y-2 rounded-lg border border-ui-gold/15 bg-black/30 p-3 text-sm">
           <div className="flex items-center justify-between gap-3 text-ui-muted">
             <dt>{t("bank.balance")}</dt>
             <dd className="flex items-center gap-1.5 font-semibold tabular-nums text-ui-text-bright">
@@ -85,14 +85,14 @@ export function BankPanel({
           <p
             role="alert"
             aria-live="assertive"
-            className="border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-xs leading-5 text-red-200"
+            className="border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-sm leading-6 text-red-200"
           >
             {t(`bank.errors.${error}`)}
           </p>
         )}
 
         <section aria-label={t("bank.deposit")} className="flex flex-col gap-2">
-          <h3 className="font-display text-[10px] font-semibold tracking-[0.16em] text-ui-gold uppercase">
+          <h3 className="font-display text-xs font-semibold tracking-[0.16em] text-ui-gold uppercase">
             {t("bank.deposit")}
           </h3>
           <BankAmountForm
@@ -105,7 +105,7 @@ export function BankPanel({
         </section>
 
         <section aria-label={t("bank.withdraw")} className="flex flex-col gap-2">
-          <h3 className="font-display text-[10px] font-semibold tracking-[0.16em] text-ui-gold uppercase">
+          <h3 className="font-display text-xs font-semibold tracking-[0.16em] text-ui-gold uppercase">
             {t("bank.withdraw")}
           </h3>
           <BankAmountForm
@@ -118,7 +118,7 @@ export function BankPanel({
         </section>
 
         <section aria-label={t("bank.transfer")} className="flex flex-col gap-2">
-          <h3 className="font-display text-[10px] font-semibold tracking-[0.16em] text-ui-gold uppercase">
+          <h3 className="font-display text-xs font-semibold tracking-[0.16em] text-ui-gold uppercase">
             {t("bank.transfer")}
           </h3>
           <BankTransferForm

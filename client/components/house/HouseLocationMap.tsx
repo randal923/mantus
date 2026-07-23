@@ -69,7 +69,7 @@ export function HouseLocationMap({
         <h3 className="font-display text-xs tracking-widest text-ui-gold uppercase">
           {t("house.location")}
         </h3>
-        <span className="text-xs text-ui-muted tabular-nums">
+        <span className="text-sm text-ui-muted tabular-nums">
           {position.x}, {position.y}, {position.z}
         </span>
       </div>
@@ -86,7 +86,7 @@ export function HouseLocationMap({
           <MapPinIcon className="size-full" />
         </span>
         {unavailable && (
-          <p className="absolute inset-0 flex items-center justify-center bg-black/70 text-xs text-ui-muted">
+          <p className="absolute inset-0 flex items-center justify-center bg-black/70 text-sm text-ui-muted">
             {t("house.mapUnavailable")}
           </p>
         )}

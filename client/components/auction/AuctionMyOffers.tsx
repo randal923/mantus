@@ -31,24 +31,24 @@ export function AuctionMyOffers({
           <header className="flex items-center justify-between gap-3 border-b border-ui-stone-light/15 bg-white/3 px-3 py-2.5">
             <h3
               id="auction-own-offers-heading"
-              className="font-display text-xs font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
+              className="font-display text-sm font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
             >
               {t("auction.activeOffers")}
             </h3>
-            <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-[10px] tabular-nums text-ui-muted">
+            <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-xs tabular-nums text-ui-muted">
               {ownOffers.length}
             </span>
           </header>
 
           {ownOffers.length === 0 ? (
-            <p className="px-4 py-8 text-center text-xs text-ui-muted">
+            <p className="px-4 py-8 text-center text-sm text-ui-muted">
               {t("auction.noOwnOffers")}
             </p>
           ) : (
             <div className="ui-scrollbar overflow-x-auto">
-              <table className="w-full min-w-[42rem] border-collapse text-left text-xs">
+              <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
                 <caption className="sr-only">{t("auction.activeOffers")}</caption>
-                <thead className="bg-black/25 text-[9px] tracking-wider text-ui-muted uppercase">
+                <thead className="bg-black/25 text-xs tracking-wider text-ui-muted uppercase">
                   <tr>
                     <th scope="col" className="px-3 py-2 font-medium">
                       {t("auction.item")}
@@ -136,24 +136,24 @@ export function AuctionMyOffers({
           <header className="flex items-center justify-between gap-3 border-b border-ui-stone-light/15 bg-white/3 px-3 py-2.5">
             <h3
               id="auction-history-heading"
-              className="font-display text-xs font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
+              className="font-display text-sm font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
             >
               {t("auction.history")}
             </h3>
-            <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-[10px] tabular-nums text-ui-muted">
+            <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-xs tabular-nums text-ui-muted">
               {history.length}
             </span>
           </header>
 
           {history.length === 0 ? (
-            <p className="px-4 py-8 text-center text-xs text-ui-muted">
+            <p className="px-4 py-8 text-center text-sm text-ui-muted">
               {t("auction.noHistory")}
             </p>
           ) : (
             <div className="ui-scrollbar overflow-x-auto">
-              <table className="w-full min-w-[42rem] border-collapse text-left text-xs">
+              <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
                 <caption className="sr-only">{t("auction.history")}</caption>
-                <thead className="bg-black/25 text-[9px] tracking-wider text-ui-muted uppercase">
+                <thead className="bg-black/25 text-xs tracking-wider text-ui-muted uppercase">
                   <tr>
                     <th scope="col" className="px-3 py-2 font-medium">
                       {t("auction.item")}

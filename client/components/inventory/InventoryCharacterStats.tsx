@@ -38,13 +38,13 @@ export function InventoryCharacterStats({
       />
 
       <header className="pr-4">
-        <p className="truncate text-[10px] tracking-[0.2em] text-ui-gold uppercase">
+        <p className="truncate text-xs tracking-[0.2em] text-ui-gold uppercase">
           {character.name}
         </p>
         <h2 className="font-display text-xl tracking-[0.12em] text-ui-text-bright uppercase">
           {t("characterStats.title")}
         </h2>
-        <p className="mt-1 text-xs text-ui-muted">
+        <p className="mt-1 text-sm text-ui-muted">
           {t(`vocations.${character.vocation}.name`)} ·{" "}
           {t("characterStats.level", { level: character.level })}
         </p>
@@ -80,10 +80,10 @@ export function InventoryCharacterStats({
         </section>
 
         <section>
-          <h3 className="mb-2 border-b border-ui-gold/15 pb-2 font-display text-xs tracking-[0.16em] text-ui-gold uppercase">
+          <h3 className="mb-2 border-b border-ui-gold/15 pb-2 font-display text-sm tracking-[0.16em] text-ui-gold uppercase">
             {t("characterStats.details")}
           </h3>
-          <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 text-xs">
+          <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 text-sm">
             <dt className="text-ui-muted">{t("stats.maxHealth")}</dt>
             <dd className="text-right font-semibold tabular-nums text-ui-text">
               {character.maxHealth.toLocaleString(language)}
@@ -137,7 +137,7 @@ export function InventoryCharacterStats({
         </section>
 
         <section>
-          <h3 className="mb-3 border-b border-ui-gold/15 pb-2 font-display text-xs tracking-[0.16em] text-ui-gold uppercase">
+          <h3 className="mb-3 border-b border-ui-gold/15 pb-2 font-display text-sm tracking-[0.16em] text-ui-gold uppercase">
             {t("characterStats.skills")}
           </h3>
           <div className="space-y-3">

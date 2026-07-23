@@ -256,7 +256,7 @@ export function InventoryPanel({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[10px] tracking-[0.2em] text-ui-gold uppercase">
+              <div className="truncate text-xs tracking-[0.2em] text-ui-gold uppercase">
                 {characterName}
               </div>
               <h2 className="font-display text-2xl tracking-[0.12em] text-ui-text-bright uppercase [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
@@ -284,11 +284,11 @@ export function InventoryPanel({
           />
 
           <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
-            <div className="grid flex-1 grid-cols-2 gap-2 text-xs text-ui-text">
+            <div className="grid flex-1 grid-cols-2 gap-2 text-sm text-ui-text">
               <div className="flex items-center gap-1.5 border-r border-ui-gold/10">
                 <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1.4} />
                 <span>
-                  <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
+                  <span className="block text-xs tracking-wider text-ui-muted uppercase">
                     {t("inventory.gold")}
                   </span>
                   {gold.toLocaleString(language)}
@@ -297,7 +297,7 @@ export function InventoryPanel({
               <div className="flex items-center gap-1.5">
                 <SpriteIcon spriteId={PLATINUM_COIN_SPRITE} scale={1.4} />
                 <span>
-                  <span className="block text-[10px] tracking-wider text-ui-muted uppercase">
+                  <span className="block text-xs tracking-wider text-ui-muted uppercase">
                     {t("inventory.platinum")}
                   </span>
                   {platinum.toLocaleString(language)}

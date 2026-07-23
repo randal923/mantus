@@ -45,7 +45,7 @@ export function BestiaryLootList({ loot }: BestiaryLootListProps) {
   })).filter((group) => group.entries.length > 0);
 
   if (groups.length === 0) {
-    return <p className="text-xs text-ui-muted">{t("bestiary.noLoot")}</p>;
+    return <p className="text-sm text-ui-muted">{t("bestiary.noLoot")}</p>;
   }
 
   return (
@@ -53,7 +53,7 @@ export function BestiaryLootList({ loot }: BestiaryLootListProps) {
       {groups.map((group) => (
         <div key={group.key}>
           <span
-            className={`text-[10px] tracking-widest uppercase ${RARITY_LABELS[group.rarity]}`}
+            className={`text-xs tracking-widest uppercase ${RARITY_LABELS[group.rarity]}`}
           >
             {t(`bestiary.rarity.${group.key}`)}
           </span>

@@ -14,7 +14,7 @@ interface GemResourceBarProps {
 export function GemResourceBar({ resources }: GemResourceBarProps) {
   const { t } = useAppTranslation();
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded border border-ui-gold/15 bg-black/25 px-3 py-2 text-xs">
+    <div className="flex flex-wrap items-center gap-4 rounded border border-ui-gold/15 bg-black/25 px-3 py-2 text-sm">
       <span className="flex items-center gap-1.5" title={t("wheel.gems.gold")}>
         <Image
           src="/assets/cyclopedia/currency/gold.png"

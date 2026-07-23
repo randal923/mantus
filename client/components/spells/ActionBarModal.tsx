@@ -50,7 +50,7 @@ export function ActionBarModal({
     <Modal title={t("spells.actionBar.title")} onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div className="rounded-lg border border-ui-gold/15 bg-black/25 px-3 py-2.5">
-          <p className="text-xs leading-5 text-ui-muted">
+          <p className="text-sm leading-6 text-ui-muted">
             {t("spells.actionBar.description")}
           </p>
         </div>
@@ -130,7 +130,7 @@ export function ActionBarModal({
                     <h3 className="truncate font-display text-sm font-medium tracking-wide text-ui-text-bright">
                       {spell.name}
                     </h3>
-                    <p className="truncate text-xs italic text-ui-muted">
+                    <p className="truncate text-sm italic text-ui-muted">
                       {spell.words ?? "—"}
                     </p>
                   </div>
@@ -148,12 +148,12 @@ export function ActionBarModal({
                     </div>
                   )}
 
-                  <dl className="grid shrink-0 grid-cols-2 gap-x-3 text-right text-[10px] leading-4">
+                  <dl className="grid shrink-0 grid-cols-2 gap-x-3 text-right text-xs leading-5">
                     <div>
                       <dt className="tracking-wider text-ui-muted uppercase">
                         {t("spells.list.level")}
                       </dt>
-                      <dd className="text-xs font-semibold tabular-nums text-ui-text">
+                      <dd className="text-sm font-semibold tabular-nums text-ui-text">
                         {spell.requiredLevel}
                       </dd>
                     </div>
@@ -161,7 +161,7 @@ export function ActionBarModal({
                       <dt className="tracking-wider text-ui-muted uppercase">
                         {t("spells.list.mana")}
                       </dt>
-                      <dd className="text-xs font-semibold tabular-nums text-ui-mana-light">
+                      <dd className="text-sm font-semibold tabular-nums text-ui-mana-light">
                         {spell.manaCost}
                       </dd>
                     </div>

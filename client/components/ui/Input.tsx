@@ -10,7 +10,7 @@ export function Input({ label, className, ...props }: InputProps) {
       className={`flex flex-col gap-2 has-disabled:pointer-events-none has-disabled:opacity-45 ${className ?? ""}`}
     >
       {label && (
-        <span className="font-display text-[10px] font-semibold tracking-[0.18em] text-ui-gold uppercase">
+        <span className="font-display text-xs font-semibold tracking-[0.18em] text-ui-gold uppercase">
           {label}
         </span>
       )}

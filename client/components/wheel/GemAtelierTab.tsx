@@ -51,7 +51,7 @@ export function GemAtelierTab({
       <div className="flex flex-wrap items-center gap-3">
         <GemResourceBar resources={gems.resources} />
         {error && (
-          <span className="text-xs text-ui-accent-light">
+          <span className="text-sm text-ui-accent-light">
             {t(`wheel.gems.errors.${error}`)}
           </span>
         )}

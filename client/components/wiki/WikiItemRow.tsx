@@ -36,12 +36,12 @@ export function WikiItemRow({
         <span className="block truncate font-display text-sm font-bold tracking-wide text-ui-text-bright capitalize group-hover:text-ui-gold">
           {item.name}
         </span>
-        <span className="mt-0.5 block truncate text-[10px] tracking-widest text-ui-muted uppercase">
+        <span className="mt-0.5 block truncate text-xs tracking-widest text-ui-muted uppercase">
           {item.primaryType ?? fallbackType}
         </span>
       </span>
       {summary && (
-        <span className="hidden shrink-0 text-[10px] tracking-wide text-ui-muted lg:block">
+        <span className="hidden shrink-0 text-xs tracking-wide text-ui-muted lg:block">
           {summary}
         </span>
       )}

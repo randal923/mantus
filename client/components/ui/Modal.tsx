@@ -139,7 +139,7 @@ export function Modal({
               >
                 {t("modal.pagination.previous")}
               </Button>
-              <span className="text-xs text-ui-muted">
+              <span className="text-sm text-ui-muted">
                 {t("modal.pagination.pageOf", {
                   page: pagination.currentPage,
                   total: pagination.totalPages,

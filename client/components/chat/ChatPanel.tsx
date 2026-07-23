@@ -102,7 +102,7 @@ export function ChatPanel({
 
   return (
     <div
-      className="relative w-[28rem] max-w-[calc(100vw-2rem)] text-xs"
+      className="relative w-[28rem] max-w-[calc(100vw-2rem)] text-sm"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocusCapture={(event) => {

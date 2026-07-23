@@ -64,7 +64,7 @@ export function GuildMemberRow({
           <span className="text-ui-muted"> “{member.nick}”</span>
         )}
       </span>
-      <span className="w-28 shrink-0 truncate text-xs tracking-wide text-ui-muted uppercase">
+      <span className="w-28 shrink-0 truncate text-sm tracking-wide text-ui-muted uppercase">
         {rankName}
       </span>
       {editingNick ? (
@@ -82,7 +82,7 @@ export function GuildMemberRow({
             value={nick}
             maxLength={GUILD_LIMITS.maxNickLength}
             onChange={(event) => setNick(event.target.value)}
-            className="w-32 [&>input]:h-8 [&>input]:text-xs"
+            className="w-32 [&>input]:h-8 [&>input]:text-sm"
           />
           <Button size="sm" type="submit" disabled={pending}>
             {t("guild.save")}

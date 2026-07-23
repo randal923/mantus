@@ -24,7 +24,7 @@ export function GuildInvitationsList({
         {t("guild.invitationsTitle")}
       </h3>
       {invitations.length === 0 ? (
-        <p className="text-xs text-ui-muted">{t("guild.noInvitations")}</p>
+        <p className="text-sm text-ui-muted">{t("guild.noInvitations")}</p>
       ) : (
         <ul className="flex max-w-md flex-col gap-2">
           {invitations.map((invitation) => (

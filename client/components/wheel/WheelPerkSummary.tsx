@@ -49,7 +49,7 @@ export function WheelPerkSummary({
   );
 
   return (
-    <div className="flex flex-col gap-4 text-xs leading-5">
+    <div className="flex flex-col gap-4 text-sm leading-6">
       <section>
         <h3 className="mb-1 font-display text-sm tracking-wide text-ui-text-bright">
           {t("wheel.summary.dedication")}
@@ -101,7 +101,7 @@ export function WheelPerkSummary({
             {row(t("wheel.summary.healing"), `+${bonuses.damageAndHealing}`)}
           </>
         )}
-        <p className="mt-1 text-[10px] text-ui-muted">
+        <p className="mt-1 text-xs leading-5 text-ui-muted">
           {t("wheel.summary.thresholds", {
             thresholds: WHEEL_REVELATION_THRESHOLDS.join(" / "),
           })}

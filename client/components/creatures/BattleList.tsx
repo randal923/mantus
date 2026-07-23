@@ -39,7 +39,7 @@ export function BattleList({
                 : "min-w-0 px-1"
             }
           >
-            <div className="flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center justify-between gap-2 text-sm">
               <span className="truncate text-ui-text">{creature.name}</span>
               <span className="text-ui-muted">
                 {creature.healthPercent === null

@@ -46,7 +46,7 @@ export function GuildSettingsSection({
       {isLeader ? (
         <>
           <div className="flex flex-col gap-2">
-            <h4 className="text-xs tracking-widest text-ui-muted uppercase">
+            <h4 className="text-sm tracking-widest text-ui-muted uppercase">
               {t("guild.rankNames")}
             </h4>
             {guild.ranks.map((rank) => (
@@ -103,7 +103,7 @@ export function GuildSettingsSection({
           <div className="ui-divider" aria-hidden />
           {confirmingDisband ? (
             <div className="flex items-center gap-3 rounded-md border border-ui-accent/40 bg-black/30 px-3 py-2">
-              <span className="min-w-0 flex-1 text-xs text-ui-text">
+              <span className="min-w-0 flex-1 text-sm text-ui-text">
                 {t("guild.disbandConfirm")}
               </span>
               <Button

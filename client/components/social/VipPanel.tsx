@@ -59,7 +59,7 @@ export function VipPanel({
         <CloseButton label={t("modal.close")} onClick={onClose} />
       </div>
       {sorted.length === 0 ? (
-        <p className="px-1 text-xs text-ui-muted">{t("vip.empty")}</p>
+        <p className="px-1 text-sm text-ui-muted">{t("vip.empty")}</p>
       ) : (
         <ul
           aria-label={t("vip.entriesLabel")}
@@ -95,7 +95,7 @@ export function VipPanel({
         </Button>
       </form>
       {error && (
-        <p role="alert" className="mt-2 px-1 text-xs text-red-300">
+        <p role="alert" className="mt-2 px-1 text-sm text-red-300">
           {error}
         </p>
       )}

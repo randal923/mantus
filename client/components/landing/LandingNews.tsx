@@ -18,7 +18,7 @@ export function LandingNews() {
           <h2 className="font-display text-base font-bold tracking-widest text-ui-text-bright uppercase">
             {t("landing.news.title")}
           </h2>
-          <p className="text-xs text-ui-muted">{t("landing.news.subtitle")}</p>
+          <p className="text-sm text-ui-muted">{t("landing.news.subtitle")}</p>
         </div>
         <div className="flex flex-col">
           {NEWS_ITEMS.map((item) => (

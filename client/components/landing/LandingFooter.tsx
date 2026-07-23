@@ -11,7 +11,7 @@ export function LandingFooter() {
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-4 py-10 sm:px-6">
         <MantusLogo size="sm" />
         <div aria-hidden className="ui-divider w-full max-w-md" />
-        <p className="text-center text-xs text-ui-muted">
+        <p className="text-center text-sm text-ui-muted">
           {t("landing.footer.copyright", { year: new Date().getFullYear() })}
         </p>
       </div>

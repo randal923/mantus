@@ -48,7 +48,7 @@ export function LandingVocationCard({
             <span className="size-1.5 shrink-0 rotate-45 bg-ui-gold/70" />
             <span className="ui-divider h-px flex-1" />
           </div>
-          <p className="text-xs leading-relaxed text-ui-text">
+          <p className="text-sm leading-relaxed text-ui-text">
             {t(`vocations.${showcase.vocation}.description`)}
           </p>
         </div>

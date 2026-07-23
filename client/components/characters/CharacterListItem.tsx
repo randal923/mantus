@@ -47,7 +47,7 @@ export function CharacterListItem({
         <span className="truncate font-display text-sm font-semibold tracking-wide text-ui-text-bright">
           {character.name}
         </span>
-        <span className="text-xs text-ui-muted">
+        <span className="text-sm text-ui-muted">
           {t("characters.level", { level: character.level, vocation })}
         </span>
       </span>

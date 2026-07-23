@@ -45,7 +45,7 @@ export function CharacterPortrait({
         scale={2}
         className="relative transition-transform duration-150 group-hover:scale-105"
       />
-      <span className="absolute right-1 bottom-1 flex min-w-5 items-center justify-center rounded-sm border border-ui-accent-light/35 bg-ui-accent-deep/90 px-1 py-0.5 font-display text-[10px] font-bold text-ui-text-bright">
+      <span className="absolute right-1 bottom-1 flex min-w-5 items-center justify-center rounded-sm border border-ui-accent-light/35 bg-ui-accent-deep/90 px-1 py-0.5 font-display text-xs font-bold text-ui-text-bright">
         {level}
       </span>
     </button>

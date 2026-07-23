@@ -43,7 +43,7 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
   };
 
   return (
-    <li className="px-1 text-xs">
+    <li className="px-1 text-sm">
       <div className="flex items-center gap-2">
         <span
           aria-label={entry.online ? t("vip.online") : t("vip.offline")}
@@ -90,7 +90,7 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
         </button>
       </div>
       {entry.description && !editing && (
-        <p className="truncate pl-4 text-[10px] text-ui-muted">
+        <p className="truncate pl-4 text-xs text-ui-muted">
           {entry.description}
         </p>
       )}
@@ -110,7 +110,7 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
             onChange={(event) => setDescription(event.target.value)}
           />
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] tracking-wide text-ui-muted uppercase">
+            <span className="text-xs tracking-wide text-ui-muted uppercase">
               {t("vip.icon")}
             </span>
             <div className="flex gap-1">
@@ -132,7 +132,7 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
               ))}
             </div>
           </div>
-          <label className="flex items-center justify-between gap-2 text-xs text-ui-text">
+          <label className="flex items-center justify-between gap-2 text-sm text-ui-text">
             <span>{t("vip.notifyLogin")}</span>
             <input
               type="checkbox"

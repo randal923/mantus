@@ -92,7 +92,7 @@ export function FragmentWorkshopTab({
               role="tab"
               aria-selected={kind === value}
               onClick={() => setKind(value)}
-              className={`ui-button rounded border px-3 py-1 text-xs ${
+              className={`ui-button rounded border px-3 py-1 text-sm ${
                 kind === value
                   ? "ui-button-primary border-ui-accent-light/50 text-ui-text-bright"
                   : "ui-button-secondary border-ui-stone-light/15 text-ui-muted"
@@ -103,7 +103,7 @@ export function FragmentWorkshopTab({
           ))}
         </div>
         {error && (
-          <span className="text-xs text-ui-accent-light">
+          <span className="text-sm text-ui-accent-light">
             {t(`wheel.gems.errors.${error}`)}
           </span>
         )}
@@ -117,7 +117,7 @@ export function FragmentWorkshopTab({
           return (
             <li
               key={mod.id}
-              className="flex items-center gap-3 rounded border border-ui-stone-light/10 bg-black/25 px-3 py-2 text-xs"
+              className="flex items-center gap-3 rounded border border-ui-stone-light/10 bg-black/25 px-3 py-2 text-sm"
             >
               <GemSheetIcon
                 style={
@@ -138,14 +138,14 @@ export function FragmentWorkshopTab({
                 <span className="block text-ui-gold">
                   {t("wheel.gems.grade", { grade: GRADE_NUMERALS[grade] })}
                 </span>
-                <span className="block text-[10px] text-ui-muted">
+                <span className="block text-xs text-ui-muted">
                   {t("wheel.gems.workshop.onGems", { count: owned })}
                   {socketed(mod.id) && ` · ${t("wheel.gems.workshop.socketed")}`}
                 </span>
               </span>
               {cost ? (
                 <span className="flex w-40 shrink-0 items-center justify-end gap-2">
-                  <span className="text-right text-[10px] leading-4">
+                  <span className="text-right text-xs leading-5">
                     <span className="block text-ui-gold">
                       {cost.gold.toLocaleString()}
                     </span>
@@ -173,7 +173,7 @@ export function FragmentWorkshopTab({
                   </Button>
                 </span>
               ) : (
-                <span className="w-40 shrink-0 text-right text-[10px] text-ui-muted">
+                <span className="w-40 shrink-0 text-right text-xs text-ui-muted">
                   {t("wheel.gems.workshop.maxed")}
                 </span>
               )}

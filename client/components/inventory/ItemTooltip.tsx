@@ -41,7 +41,7 @@ export function ItemTooltip({ item }: ItemTooltipProps) {
           <h3 className="font-display text-base font-semibold tracking-[0.08em] text-ui-text-bright uppercase [text-shadow:0_2px_8px_rgba(0,0,0,0.9)]">
             {item.name}
           </h3>
-          <p className="mt-1 text-xs text-ui-muted">{item.typeLine}</p>
+          <p className="mt-1 text-sm text-ui-muted">{item.typeLine}</p>
         </div>
         <SpriteIcon
           spriteId={item.spriteId}

@@ -40,7 +40,7 @@ export function ItemTextModal({
     >
       {item.writeable ? (
         <label className="flex flex-col gap-2">
-          <span className="text-xs text-ui-muted">
+          <span className="text-sm text-ui-muted">
             {text.length} / {item.maxLength}
           </span>
           <textarea

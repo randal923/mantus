@@ -220,7 +220,7 @@ export function WheelModal({
       footer={
         tab === "wheel" ? (
           <>
-            <span className="mr-auto self-center text-xs text-ui-muted">
+            <span className="mr-auto self-center text-sm text-ui-muted">
               {error && (
                 <span className="text-ui-accent-light">
                   {t(`wheel.errors.${error}`)}
@@ -257,7 +257,7 @@ export function WheelModal({
                 {available} / {totalPoints}
               </p>
               {!unlocked && (
-                <p className="mt-2 text-xs leading-5 text-ui-accent-light">
+                <p className="mt-2 text-sm leading-6 text-ui-accent-light">
                   {t("wheel.locked", { level: WHEEL_LIMITS.minLevel })}
                 </p>
               )}
@@ -287,7 +287,7 @@ export function WheelModal({
                 }
               />
             </section>
-            <p className="px-1 text-[10px] leading-4 text-ui-muted">
+            <p className="px-1 text-sm leading-6 text-ui-muted">
               {t("wheel.help")}
             </p>
           </div>

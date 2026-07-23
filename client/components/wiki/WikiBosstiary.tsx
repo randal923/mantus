@@ -96,12 +96,12 @@ export function WikiBosstiary({
           {bossReady ? (
             <BosstiaryBossSheet boss={boss} />
           ) : (
-            <p className="py-12 text-center text-xs text-ui-muted">
+            <p className="py-12 text-center text-sm text-ui-muted">
               {t("bestiary.loading")}
             </p>
           )}
           {error && !pending && (
-            <p role="alert" className="mt-4 text-xs text-red-300">
+            <p role="alert" className="mt-4 text-sm text-red-300">
               {t(`bestiary.errors.${error}`, { defaultValue: error })}
             </p>
           )}
@@ -114,7 +114,7 @@ export function WikiBosstiary({
             <h3 className="font-display text-sm font-bold tracking-widest text-ui-gold uppercase">
               {t("bosstiary.title")}
             </h3>
-            <p className="mt-1 text-xs text-ui-muted">
+            <p className="mt-1 text-sm text-ui-muted">
               {t("bosstiary.subtitle")}
             </p>
           </div>
@@ -162,11 +162,11 @@ export function WikiBosstiary({
               }}
               placeholder={t("wiki.search")}
               aria-label={t("wiki.search")}
-              className="min-w-48 flex-1 rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 lg:max-w-72"
+              className="min-w-48 flex-1 rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-sm text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 lg:max-w-72"
             />
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-ui-stone-light/10 pt-3 text-[10px] tracking-widest text-ui-muted uppercase">
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-ui-stone-light/10 pt-3 text-xs tracking-widest text-ui-muted uppercase">
           <span className="flex items-center gap-1">
             <BosstiaryMilestoneIcon active metal="bronze" />
             {t("wiki.bosstiary.prowess")}
@@ -190,7 +190,7 @@ export function WikiBosstiary({
       </section>
 
       {!bosses && (
-        <p className="py-12 text-center text-xs text-ui-muted">
+        <p className="py-12 text-center text-sm text-ui-muted">
           {t("bestiary.loading")}
         </p>
       )}
@@ -210,12 +210,12 @@ export function WikiBosstiary({
         </ul>
       )}
       {bosses && visibleEntries.length === 0 && !pending && (
-        <p className="py-12 text-center text-xs text-ui-muted">
+        <p className="py-12 text-center text-sm text-ui-muted">
           {query ? t("wiki.bosstiary.noResults") : t("bosstiary.empty")}
         </p>
       )}
       {error && !pending && (
-        <p role="alert" className="mt-4 text-xs text-red-300">
+        <p role="alert" className="mt-4 text-sm text-red-300">
           {t(`bestiary.errors.${error}`, { defaultValue: error })}
         </p>
       )}

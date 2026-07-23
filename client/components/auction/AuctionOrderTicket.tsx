@@ -57,7 +57,7 @@ export function AuctionOrderTicket({
   return (
     <aside className="flex h-full min-h-[30rem] flex-col overflow-hidden rounded-xl border border-ui-stone-light/15 bg-black/25 shadow-inner shadow-black/40 lg:min-h-0">
       <header className="border-b border-ui-gold/15 px-4 py-3">
-        <span className="text-[9px] font-semibold tracking-[0.18em] text-ui-muted uppercase">
+        <span className="text-xs font-semibold tracking-[0.18em] text-ui-muted uppercase">
           {t("auction.trading")}
         </span>
         <h2 className="font-display text-base tracking-wide text-ui-text-bright">
@@ -66,7 +66,7 @@ export function AuctionOrderTicket({
       </header>
 
       {!item ? (
-        <div className="flex flex-1 items-center justify-center px-6 text-center text-xs leading-5 text-ui-muted">
+        <div className="flex flex-1 items-center justify-center px-6 text-center text-sm leading-6 text-ui-muted">
           {t("auction.selectItemToCreate")}
         </div>
       ) : (
@@ -79,17 +79,17 @@ export function AuctionOrderTicket({
               <SpriteIcon spriteId={item.spriteId} scale={1.1} />
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-xs font-semibold text-ui-text-bright">
+              <span className="block truncate text-sm font-semibold text-ui-text-bright">
                 {item.name}
               </span>
-              <span className="block text-[10px] text-ui-muted">
+              <span className="block text-xs text-ui-muted">
                 {t("auction.owned", { count: item.ownedCount })}
               </span>
             </span>
           </div>
 
           <fieldset>
-            <legend className="mb-2 font-display text-[10px] font-semibold tracking-[0.16em] text-ui-gold uppercase">
+            <legend className="mb-2 font-display text-xs font-semibold tracking-[0.16em] text-ui-gold uppercase">
               {t("auction.offerType")}
             </legend>
             <div className="grid grid-cols-2 gap-2 rounded-lg border border-ui-stone-light/15 bg-black/25 p-1.5">
@@ -99,7 +99,7 @@ export function AuctionOrderTicket({
                   type="button"
                   aria-pressed={side === sideOption}
                   onClick={() => setSide(sideOption)}
-                  className={`rounded-md border px-3 py-2 font-display text-xs tracking-wider uppercase outline-none transition-[border-color,background-color,color] focus-visible:ring-2 focus-visible:ring-ui-gold/60 ${
+                  className={`rounded-md border px-3 py-2 font-display text-sm tracking-wider uppercase outline-none transition-[border-color,background-color,color] focus-visible:ring-2 focus-visible:ring-ui-gold/60 ${
                     side === sideOption
                       ? "border-ui-accent-light/55 bg-ui-accent-deep/75 text-ui-text-bright"
                       : "border-transparent text-ui-muted hover:border-ui-gold/25 hover:text-ui-text"
@@ -144,7 +144,7 @@ export function AuctionOrderTicket({
             />
           </div>
 
-          <dl className="space-y-2 rounded-lg border border-ui-gold/15 bg-black/30 p-3 text-xs">
+          <dl className="space-y-2 rounded-lg border border-ui-gold/15 bg-black/30 p-3 text-sm">
             <div className="flex items-center justify-between gap-3 text-ui-muted">
               <dt>{t("auction.estimatedTotal")}</dt>
               <dd className="flex items-center gap-1.5 font-semibold tabular-nums text-ui-text-bright">
@@ -161,23 +161,23 @@ export function AuctionOrderTicket({
           </dl>
 
           {!hasValidValues && (
-            <p role="alert" className="text-xs leading-5 text-red-200">
+            <p role="alert" className="text-sm leading-6 text-red-200">
               {t("auction.invalidOrderValues")}
             </p>
           )}
           {!hasEnoughGold && (
-            <p role="alert" className="text-xs leading-5 text-red-200">
+            <p role="alert" className="text-sm leading-6 text-red-200">
               {t("auction.insufficientGold")}
             </p>
           )}
           {!hasEnoughItems && (
-            <p role="alert" className="text-xs leading-5 text-red-200">
+            <p role="alert" className="text-sm leading-6 text-red-200">
               {t("auction.insufficientItems")}
             </p>
           )}
 
           <div className="mt-auto space-y-3 pt-2">
-            <p className="border-l-2 border-ui-gold/40 bg-ui-gold/5 px-3 py-2 text-[10px] leading-4 text-ui-muted">
+            <p className="border-l-2 border-ui-gold/40 bg-ui-gold/5 px-3 py-2 text-sm leading-6 text-ui-muted">
               {t("auction.serverValidationNotice")}
             </p>
             <Button

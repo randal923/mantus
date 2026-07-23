@@ -60,7 +60,7 @@ export function GemVessels({
                   ·
                 </span>
               )}
-              <span className="text-[10px] text-ui-muted">
+              <span className="text-xs text-ui-muted">
                 {t("wheel.gems.resonanceCount", {
                   count: resonances[domain] ?? 0,
                 })}

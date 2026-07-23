@@ -67,13 +67,13 @@ export function HouseOverviewSection({
         <HouseLocationMap mapName={mapName} position={house.entry} />
       )}
       {house.guildhall && (
-        <p className="text-xs text-ui-gold">{t("house.guildhallNote")}</p>
+        <p className="text-sm text-ui-gold">{t("house.guildhallNote")}</p>
       )}
       {house.ownerName === null && !house.guildhall && (
         <div className="flex items-center gap-2">
           {confirming === "buy" ? (
             <>
-              <span className="text-xs text-ui-muted">
+              <span className="text-sm text-ui-muted">
                 {t("house.buyConfirm", {
                   price: house.price.toLocaleString(locale),
                 })}
@@ -107,7 +107,7 @@ export function HouseOverviewSection({
         <div className="flex items-center gap-2">
           {confirming === "abandon" ? (
             <>
-              <span className="text-xs text-red-300">
+              <span className="text-sm text-red-300">
                 {t("house.abandonConfirm")}
               </span>
               <Button

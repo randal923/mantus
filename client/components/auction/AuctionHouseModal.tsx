@@ -141,7 +141,7 @@ export function AuctionHouseModal({
           <div className="min-w-0 flex-1">
             <p
               id="auction-house-description"
-              className="truncate text-[9px] font-semibold tracking-[0.24em] text-ui-gold uppercase"
+              className="truncate text-xs font-semibold tracking-[0.24em] text-ui-gold uppercase"
             >
               {t("auction.subtitle")}
             </p>
@@ -156,7 +156,7 @@ export function AuctionHouseModal({
           <div className="hidden items-center gap-3 rounded-xl border border-ui-gold/15 bg-black/30 px-3 py-2 sm:flex">
             <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={0.85} />
             <span>
-              <span className="block text-[9px] tracking-[0.14em] text-ui-muted uppercase">
+              <span className="block text-xs tracking-[0.14em] text-ui-muted uppercase">
                 {t("auction.availableGold")}
               </span>
               <span className="block font-display text-sm tabular-nums text-ui-text-bright">
@@ -174,7 +174,7 @@ export function AuctionHouseModal({
           <p
             role="alert"
             aria-live="assertive"
-            className="shrink-0 border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-xs leading-5 text-red-200"
+            className="shrink-0 border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-sm leading-6 text-red-200"
           >
             {error}
           </p>
@@ -190,7 +190,7 @@ export function AuctionHouseModal({
               type="button"
               aria-pressed={activeTab === tab}
               onClick={() => setActiveTab(tab)}
-              className={`rounded-md border px-5 py-2 font-display text-xs tracking-[0.12em] uppercase outline-none transition-[border-color,background-color,color] focus-visible:ring-2 focus-visible:ring-ui-gold/60 sm:min-w-40 ${
+              className={`rounded-md border px-5 py-2 font-display text-sm tracking-[0.12em] uppercase outline-none transition-[border-color,background-color,color] focus-visible:ring-2 focus-visible:ring-ui-gold/60 sm:min-w-40 ${
                 activeTab === tab
                   ? "border-ui-accent-light/55 bg-ui-accent-deep/75 text-ui-text-bright"
                   : "border-transparent text-ui-muted hover:border-ui-gold/25 hover:text-ui-text"

@@ -30,7 +30,7 @@ export function WikiBestiaryClassCard({
       <span className="flex h-24 items-center justify-center">
         <BestiaryClassIcon bestiaryClass={className} />
       </span>
-      <span className="mt-auto pb-3 text-[10px] tracking-widest text-ui-muted uppercase">
+      <span className="mt-auto pb-3 text-xs tracking-widest text-ui-muted uppercase">
         {t("bestiary.completedOfTotal", {
           completed,
           total: entries.length,

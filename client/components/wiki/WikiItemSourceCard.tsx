@@ -25,10 +25,10 @@ export function WikiItemSourceCard({
       <span className="flex h-20 items-center justify-center">
         <AnimatedOutfit outfit={source.outfit} fit={76} />
       </span>
-      <span className="w-full truncate text-xs text-ui-text-bright capitalize group-hover:text-ui-gold">
+      <span className="w-full truncate text-sm text-ui-text-bright capitalize group-hover:text-ui-gold">
         {source.name}
       </span>
-      <span className="mt-0.5 text-[9px] tracking-widest text-ui-muted uppercase">
+      <span className="mt-0.5 text-xs tracking-widest text-ui-muted uppercase">
         {t(`wiki.items.source.${source.scope}`)}
       </span>
     </button>

@@ -103,7 +103,7 @@ export function HighscoresModal({
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-ui-stone-light/20 text-[10px] tracking-widest text-ui-gold uppercase">
+            <tr className="border-b border-ui-stone-light/20 text-xs tracking-widest text-ui-gold uppercase">
               <th className="w-14 py-2 pr-2">{t("highscores.rank")}</th>
               <th className="py-2 pr-2">{t("highscores.name")}</th>
               <th className="w-20 py-2 pr-2">{t("highscores.level")}</th>
@@ -133,18 +133,18 @@ export function HighscoresModal({
           </tbody>
         </table>
         {!pending && (page?.entries.length ?? 0) === 0 && (
-          <p className="py-6 text-center text-xs text-ui-muted">
+          <p className="py-6 text-center text-sm text-ui-muted">
             {t("highscores.empty")}
           </p>
         )}
         {pending && (
-          <p className="py-6 text-center text-xs text-ui-muted">
+          <p className="py-6 text-center text-sm text-ui-muted">
             {t("highscores.loading")}
           </p>
         )}
       </div>
       {error && (
-        <p role="alert" className="mt-3 text-xs text-red-300">
+        <p role="alert" className="mt-3 text-sm text-red-300">
           {error}
         </p>
       )}

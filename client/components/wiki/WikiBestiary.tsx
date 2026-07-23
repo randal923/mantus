@@ -150,14 +150,14 @@ export function WikiBestiary({
                     ? monster.name
                     : t("bestiary.loading")}
             </h3>
-            <p className="mt-1 text-xs text-ui-muted">
+            <p className="mt-1 text-sm text-ui-muted">
               {t("bestiary.subtitle")}
             </p>
           </span>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           {creatures && (
-            <span className="flex items-center gap-2 self-start rounded-full border border-ui-gold/25 bg-black/25 px-3 py-1 text-xs text-ui-gold sm:self-auto">
+            <span className="flex items-center gap-2 self-start rounded-full border border-ui-gold/25 bg-black/25 px-3 py-1 text-sm text-ui-gold sm:self-auto">
               <WikiCurrencyIcon name="charm" />
               {t("bestiary.charmPoints", {
                 points: creatures.charmPoints.toLocaleString(),
@@ -174,14 +174,14 @@ export function WikiBestiary({
               }}
               placeholder={t("bestiary.searchPlaceholder")}
               aria-label={t("bestiary.searchPlaceholder")}
-              className="w-full rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 sm:w-64"
+              className="w-full rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-sm text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60 sm:w-64"
             />
           )}
         </div>
       </div>
 
       {!creatures && (
-        <p className="py-12 text-center text-xs text-ui-muted">
+        <p className="py-12 text-center text-sm text-ui-muted">
           {t("bestiary.loading")}
         </p>
       )}
@@ -227,7 +227,7 @@ export function WikiBestiary({
         view.kind !== "monster" &&
         !showingClasses &&
         visibleEntries.length === 0 && (
-          <p className="py-12 text-center text-xs text-ui-muted">
+          <p className="py-12 text-center text-sm text-ui-muted">
             {t("bestiary.noResults")}
           </p>
         )}
@@ -236,13 +236,13 @@ export function WikiBestiary({
         (monsterReady ? (
           <BestiaryMonsterSheet monster={monster} />
         ) : (
-          <p className="py-12 text-center text-xs text-ui-muted">
+          <p className="py-12 text-center text-sm text-ui-muted">
             {t("bestiary.loading")}
           </p>
         ))}
 
       {error && !pending && (
-        <p role="alert" className="mt-4 text-xs text-red-300">
+        <p role="alert" className="mt-4 text-sm text-red-300">
           {t(`bestiary.errors.${error}`, { defaultValue: error })}
         </p>
       )}

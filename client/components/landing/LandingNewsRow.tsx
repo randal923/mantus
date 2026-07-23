@@ -14,7 +14,7 @@ export function LandingNewsRow({
   return (
     <article className="flex flex-col gap-2 px-5 py-4 even:bg-black/25 sm:flex-row sm:gap-5">
       <div className="flex shrink-0 items-center gap-2 sm:w-32 sm:flex-col sm:items-start sm:gap-1.5">
-        <span className="rounded-sm border border-ui-accent/55 bg-ui-accent-deep/50 px-2 py-0.5 font-display text-[0.625rem] font-bold tracking-widest text-ui-accent-light uppercase">
+        <span className="rounded-sm border border-ui-accent/55 bg-ui-accent-deep/50 px-2 py-0.5 font-display text-xs font-bold tracking-widest text-ui-accent-light uppercase">
           {tag}
         </span>
         <time className="text-xs text-ui-muted">{date}</time>

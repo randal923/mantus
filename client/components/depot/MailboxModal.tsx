@@ -79,11 +79,11 @@ export function MailboxModal({
                 <span className="min-w-0 flex-1 truncate text-sm text-ui-text-bright">
                   {item.name}
                 </span>
-                <span className="text-xs text-ui-muted">×{item.count}</span>
+                <span className="text-sm text-ui-muted">×{item.count}</span>
               </label>
             ))}
             {inventoryItems.length === 0 && (
-              <p className="py-6 text-center text-xs text-ui-muted">
+              <p className="py-6 text-center text-sm text-ui-muted">
                 {t("mail.noItems")}
               </p>
             )}
@@ -94,7 +94,7 @@ export function MailboxModal({
           <p
             role="alert"
             aria-live="assertive"
-            className="border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-xs leading-5 text-red-200"
+            className="border-l-2 border-red-400/60 bg-red-950/40 px-3 py-2 text-sm leading-6 text-red-200"
           >
             {t(`mail.errors.${error}`)}
           </p>
@@ -102,7 +102,7 @@ export function MailboxModal({
         {sentRecipient && (
           <p
             aria-live="polite"
-            className="border-l-2 border-ui-gold/40 bg-ui-gold/5 px-3 py-2 text-xs leading-5 text-ui-muted"
+            className="border-l-2 border-ui-gold/40 bg-ui-gold/5 px-3 py-2 text-sm leading-6 text-ui-muted"
           >
             {t("mail.sent", { recipientName: sentRecipient })}
           </p>

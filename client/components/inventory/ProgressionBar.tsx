@@ -20,7 +20,7 @@ export function ProgressionBar({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3 text-[10px]">
+      <div className="flex items-center justify-between gap-3 text-sm">
         <span className="font-display tracking-wider text-ui-muted uppercase">
           {label}
         </span>

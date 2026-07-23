@@ -20,7 +20,7 @@ export function HouseOffersList({
   if (offers.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
+      <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
         {t("house.offersTitle")}
       </h3>
       <ul className="flex flex-col gap-1">

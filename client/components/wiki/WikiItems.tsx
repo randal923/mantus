@@ -132,7 +132,7 @@ export function WikiItems({
               >
                 <span className="flex items-center justify-between gap-2">
                   <span>{t(`wiki.items.categories.${itemCategory}`)}</span>
-                  <span className="text-[9px] text-ui-muted">
+                  <span className="text-xs text-ui-muted">
                     {(categoryCounts.get(itemCategory) ?? 0).toLocaleString()}
                   </span>
                 </span>
@@ -154,7 +154,7 @@ export function WikiItems({
               }}
               placeholder={t("wiki.items.level")}
               aria-label={t("wiki.items.level")}
-              className="rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60"
+              className="rounded-sm border border-ui-stone-light/20 bg-black/35 px-3 py-2 text-sm text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60"
             />
             <select
               value={vocation}
@@ -163,7 +163,7 @@ export function WikiItems({
                 setPage(0);
               }}
               aria-label={t("wiki.items.vocation")}
-              className="ui-dropdown rounded-sm border border-ui-stone-light/20 px-3 py-2 text-xs text-ui-text-bright outline-none focus:border-ui-gold/60"
+              className="ui-dropdown rounded-sm border border-ui-stone-light/20 px-3 py-2 text-sm text-ui-text-bright outline-none focus:border-ui-gold/60"
             >
               <option value="">{t("wiki.items.allVocations")}</option>
               {vocations.map((entry) => (
@@ -179,7 +179,7 @@ export function WikiItems({
           <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
               {t("wiki.items.title")}
-              <span className="ml-2 text-[10px] font-normal tracking-normal text-ui-muted normal-case">
+              <span className="ml-2 text-xs font-normal tracking-normal text-ui-muted normal-case">
                 {t("wiki.items.count", {
                   count: filteredItems.length.toLocaleString(),
                 })}
@@ -206,17 +206,17 @@ export function WikiItems({
                   setPage(0);
                 }}
                 placeholder={t("wiki.search")}
-                className="w-full rounded-sm border border-ui-stone-light/20 bg-black/35 py-2 pr-3 pl-9 text-xs text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60"
+                className="w-full rounded-sm border border-ui-stone-light/20 bg-black/35 py-2 pr-3 pl-9 text-sm text-ui-text-bright outline-none placeholder:text-ui-muted focus:border-ui-gold/60"
               />
             </label>
           </div>
           {pending && (
-            <p className="py-12 text-center text-xs text-ui-muted">
+            <p className="py-12 text-center text-sm text-ui-muted">
               {t("wiki.items.loading")}
             </p>
           )}
           {error && (
-            <p role="alert" className="py-12 text-center text-xs text-red-300">
+            <p role="alert" className="py-12 text-center text-sm text-red-300">
               {t("wiki.items.error")}
             </p>
           )}
@@ -237,7 +237,7 @@ export function WikiItems({
             </ul>
           )}
           {!pending && !error && visibleItems.length === 0 && (
-            <p className="py-12 text-center text-xs text-ui-muted">
+            <p className="py-12 text-center text-sm text-ui-muted">
               {t("wiki.items.noResults")}
             </p>
           )}

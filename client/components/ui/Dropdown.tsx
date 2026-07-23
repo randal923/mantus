@@ -28,7 +28,7 @@ export function Dropdown<Value extends string>({
       className={`flex min-w-0 flex-col gap-2 font-tibia has-disabled:pointer-events-none has-disabled:opacity-45 ${className ?? ""}`}
     >
       {label && (
-        <span className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
+        <span className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
           {label}
         </span>
       )}

@@ -71,7 +71,7 @@ export function GuildWarsSection({
         </form>
       )}
       {wars.length === 0 ? (
-        <p className="text-xs text-ui-muted">{t("guild.noWars")}</p>
+        <p className="text-sm text-ui-muted">{t("guild.noWars")}</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           {wars.map((war) => (
@@ -82,14 +82,14 @@ export function GuildWarsSection({
               <span className="min-w-0 flex-1 truncate text-ui-text-bright">
                 {war.enemyGuildName}
               </span>
-              <span className="shrink-0 font-display text-xs tracking-wider text-ui-text">
+              <span className="shrink-0 font-display text-sm tracking-wider text-ui-text">
                 {t("guild.warScore", {
                   mine: war.myKills,
                   theirs: war.enemyKills,
                   limit: war.fragLimit,
                 })}
               </span>
-              <span className="w-20 shrink-0 text-center text-[10px] tracking-widest text-ui-muted uppercase">
+              <span className="w-20 shrink-0 text-center text-xs tracking-widest text-ui-muted uppercase">
                 {t(`guild.warStatus.${war.status}`)}
               </span>
               {isLeader && war.status === "pending" && !war.initiatedByUs && (

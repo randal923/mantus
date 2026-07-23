@@ -57,11 +57,11 @@ export function HouseAccessSection({
     <section className="flex flex-col gap-4">
       {lists.map(({ kind, entries, draft, setDraft, canEdit }) => (
         <div key={kind} className="flex flex-col gap-2">
-          <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
+          <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
             {t(`house.accessLists.${kind}`)}
           </h3>
           {(entries ?? []).length === 0 ? (
-            <p className="text-xs text-ui-muted">{t("house.noEntries")}</p>
+            <p className="text-sm text-ui-muted">{t("house.noEntries")}</p>
           ) : (
             <ul className="flex flex-col gap-1">
               {(entries ?? []).map((entry) => (

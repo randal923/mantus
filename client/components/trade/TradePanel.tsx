@@ -33,7 +33,7 @@ export function TradePanel({
       onClose={onCancel}
       footer={
         <div className="flex w-full items-center justify-between gap-3">
-          <p aria-live="polite" className="min-w-0 flex-1 text-xs text-ui-text/80">
+          <p aria-live="polite" className="min-w-0 flex-1 text-sm text-ui-text/80">
             {error ??
               (session.ownAccepted
                 ? t("trade.waitingForPartnerAccept", {

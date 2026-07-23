@@ -58,12 +58,12 @@ export function HouseBrowserSection({
         </Button>
       </div>
       {!list || list.entries.length === 0 ? (
-        <p className="text-xs text-ui-muted">{t("house.noHouses")}</p>
+        <p className="text-sm text-ui-muted">{t("house.noHouses")}</p>
       ) : (
         <div className="max-h-72 overflow-y-auto ui-scrollbar">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="text-[10px] font-display tracking-widest text-ui-gold uppercase">
+              <tr className="font-display text-xs tracking-widest text-ui-gold uppercase">
                 <th className="py-1 pr-2">{t("house.nameColumn")}</th>
                 <th className="py-1 pr-2">{t("house.town")}</th>
                 <th className="py-1 pr-2">{t("house.size")}</th>
@@ -78,7 +78,7 @@ export function HouseBrowserSection({
                   <td className="py-1 pr-2 text-ui-text-bright">
                     {entry.name}
                     {entry.guildhall && (
-                      <span className="ml-1 text-[10px] text-ui-gold uppercase">
+                      <span className="ml-1 text-xs text-ui-gold uppercase">
                         {t("house.guildhall")}
                       </span>
                     )}

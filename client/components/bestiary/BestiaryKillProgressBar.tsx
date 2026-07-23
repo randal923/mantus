@@ -28,7 +28,7 @@ export function BestiaryKillProgressBar({
 
   return (
     <div>
-      <div className="flex items-baseline justify-between text-xs">
+      <div className="flex items-baseline justify-between text-sm">
         <span className="text-ui-muted">{t("bestiary.totalKills")}</span>
         <span className="text-base font-medium text-ui-gold">
           {kills.toLocaleString()}
@@ -55,7 +55,7 @@ export function BestiaryKillProgressBar({
           );
         })}
       </div>
-      <p className="mt-1 text-center text-[10px] text-ui-muted">
+      <p className="mt-1 text-center text-xs text-ui-muted">
         {complete
           ? t("bestiary.completed")
           : t("bestiary.nextUnlock", {

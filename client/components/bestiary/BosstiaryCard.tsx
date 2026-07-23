@@ -37,7 +37,7 @@ export function BosstiaryCard({ entry, onSelect }: BosstiaryCardProps) {
         <AnimatedOutfit outfit={entry.outfit} fit={108} />
       </span>
       <div className="mt-auto px-4 pb-4">
-        <span className="block text-center text-[9px] tracking-widest text-ui-muted uppercase">
+        <span className="block text-center text-xs tracking-widest text-ui-muted uppercase">
           {t("bestiary.totalKills")}
         </span>
         <span className="mt-1 block rounded-sm border border-ui-stone-light/15 bg-black/50 py-1 text-center text-sm font-bold text-ui-text-bright">

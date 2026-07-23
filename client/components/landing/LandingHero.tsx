@@ -40,7 +40,7 @@ export function LandingHero() {
               {t("landing.hero.ctaSecondary")}
             </ButtonLink>
           </div>
-          <p className="text-xs tracking-wide text-ui-muted uppercase">
+          <p className="text-sm tracking-wide text-ui-muted uppercase">
             {t("landing.hero.note")}
           </p>
         </div>

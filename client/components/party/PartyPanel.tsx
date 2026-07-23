@@ -80,14 +80,14 @@ export function PartyPanel({
           </ul>
           {party.invited.length > 0 && (
             <div className="mt-2">
-              <h3 className="text-xs tracking-wide text-ui-muted uppercase">
+              <h3 className="text-sm tracking-wide text-ui-muted uppercase">
                 {t("party.invited")}
               </h3>
               <ul className="space-y-1">
                 {party.invited.map((invitee) => (
                   <li
                     key={invitee.id}
-                    className="flex items-center justify-between gap-2 px-1 text-xs"
+                    className="flex items-center justify-between gap-2 px-1 text-sm"
                   >
                     <span className="truncate text-ui-muted">
                       {invitee.name}
@@ -107,7 +107,7 @@ export function PartyPanel({
           )}
           <div className="ui-divider my-2" />
           {isLeader ? (
-            <label className="flex items-center justify-between gap-2 px-1 text-xs text-ui-text">
+            <label className="flex items-center justify-between gap-2 px-1 text-sm text-ui-text">
               <span>{t("party.sharedExp")}</span>
               <input
                 type="checkbox"
@@ -116,7 +116,7 @@ export function PartyPanel({
               />
             </label>
           ) : (
-            <p className="px-1 text-xs text-ui-text">
+            <p className="px-1 text-sm text-ui-text">
               {t("party.sharedExp")}:{" "}
               {party.sharedExpActive
                 ? t("party.sharedExpOn")
@@ -125,7 +125,7 @@ export function PartyPanel({
           )}
           {party.sharedExpActive && (
             <p
-              className={`mt-1 px-1 text-xs ${
+              className={`mt-1 px-1 text-sm ${
                 party.sharedExpStatus === "ok"
                   ? "text-green-400"
                   : "text-amber-400"
@@ -136,7 +136,7 @@ export function PartyPanel({
           )}
         </>
       ) : (
-        <p className="px-1 text-xs text-ui-muted">{t("party.empty")}</p>
+        <p className="px-1 text-sm text-ui-muted">{t("party.empty")}</p>
       )}
       {canInvite && (
         <form
@@ -165,7 +165,7 @@ export function PartyPanel({
         </Button>
       )}
       {error && (
-        <p role="alert" className="mt-2 px-1 text-xs text-red-300">
+        <p role="alert" className="mt-2 px-1 text-sm text-red-300">
           {error}
         </p>
       )}

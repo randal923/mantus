@@ -62,7 +62,7 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
           <AnimatedOutfit outfit={monster.outfit} fit={168} />
         </div>
         <div className="flex min-w-0 flex-col justify-center p-5">
-          <span className="text-[10px] tracking-[0.2em] text-ui-gold uppercase">
+          <span className="text-xs tracking-[0.2em] text-ui-gold uppercase">
             {monster.className}
           </span>
           <h3 className="mt-1 font-display text-2xl font-bold tracking-wide text-ui-text-bright capitalize">
@@ -89,7 +89,7 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
               {"◆".repeat(Math.max(0, 4 - monster.occurrence - 1))}
             </span>
           </span>
-            <span className="text-xs text-ui-muted">
+            <span className="text-sm text-ui-muted">
               {t("bestiary.stat.charmPoints")}: {monster.charmPoints.toLocaleString()}
             </span>
           </div>
@@ -117,7 +117,7 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
               >
                 <BestiaryStatIcon name={stat.icon} />
                 <span className="min-w-0">
-                  <span className="block truncate text-[9px] tracking-widest text-ui-muted uppercase">
+                  <span className="block truncate text-xs tracking-widest text-ui-muted uppercase">
                     {t(`bestiary.stat.${stat.key}`)}
                   </span>
                   <span className="mt-0.5 block text-sm text-ui-text-bright">
@@ -137,7 +137,7 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
                 <li
                   key={resistance.element}
                   title={`${resistance.percent}%`}
-                  className="flex items-center gap-2 text-xs"
+                  className="flex items-center gap-2 text-sm"
                 >
                   <BestiaryResistanceIcon element={resistance.element} />
                   <span className="w-14 shrink-0 truncate text-ui-muted">
@@ -181,7 +181,7 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
           <h4 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
             {t("bestiary.locations")}
           </h4>
-          <p className="mt-3 text-xs leading-relaxed text-ui-muted">
+          <p className="mt-3 text-sm leading-relaxed text-ui-muted">
             {monster.locations || t("bestiary.noLocations")}
           </p>
         </section>

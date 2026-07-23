@@ -97,7 +97,7 @@ export function GuildModal({
                   key={candidate}
                   type="button"
                   onClick={() => setTab(candidate)}
-                  className={`rounded-md px-3 py-1.5 font-button text-xs tracking-wide uppercase transition-colors ${
+                  className={`rounded-md px-3 py-1.5 font-button text-sm tracking-wide uppercase transition-colors ${
                     activeTab === candidate
                       ? "bg-ui-accent/25 text-ui-text-bright"
                       : "text-ui-muted hover:text-ui-text"
@@ -161,7 +161,7 @@ export function GuildModal({
           </>
         )}
         {error && (
-          <p role="alert" className="text-xs text-red-300">
+          <p role="alert" className="text-sm text-red-300">
             {error}
           </p>
         )}

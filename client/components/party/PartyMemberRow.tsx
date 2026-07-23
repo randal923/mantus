@@ -22,7 +22,7 @@ export function PartyMemberRow({
   const { t } = useAppTranslation();
   return (
     <li className="min-w-0 px-1 py-1">
-      <div className="flex items-center justify-between gap-2 text-xs">
+      <div className="flex items-center justify-between gap-2 text-sm">
         <span className="flex min-w-0 items-center gap-1.5">
           {member.isLeader && (
             <span

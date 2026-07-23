@@ -30,7 +30,7 @@ export function GuildCreateForm({ pending, onCreate }: GuildCreateFormProps) {
       <h3 className="font-display text-sm tracking-widest text-ui-gold uppercase">
         {t("guild.createTitle")}
       </h3>
-      <p className="text-xs text-ui-muted">{t("guild.createHint")}</p>
+      <p className="text-sm text-ui-muted">{t("guild.createHint")}</p>
       <div className="flex items-end gap-2">
         <Input
           aria-label={t("guild.namePlaceholder")}

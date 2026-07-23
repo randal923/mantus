@@ -25,7 +25,7 @@ export function RangeSlider({
   return (
     <label className="flex flex-col gap-3 font-tibia has-disabled:pointer-events-none has-disabled:opacity-45">
       <span className="flex items-center justify-between gap-4">
-        <span className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
+        <span className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
           {label}
         </span>
         <output className="min-w-12 rounded-sm border border-ui-stone-light/15 bg-black/35 px-2 py-0.5 text-center text-xs font-semibold tabular-nums text-ui-text-bright">
@@ -44,7 +44,7 @@ export function RangeSlider({
         onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
         className="ui-range"
       />
-      <span className="flex justify-between text-[9px] font-medium tabular-nums text-ui-muted">
+      <span className="flex justify-between text-xs font-medium tabular-nums text-ui-muted">
         <span>
           {min}
           {unit}

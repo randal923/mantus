@@ -72,7 +72,7 @@ export function BosstiaryBossSheet({ boss }: BosstiaryBossSheetProps) {
           </div>
 
           <div className="flex flex-col justify-center">
-            <span className="text-[10px] tracking-widest text-ui-muted uppercase">
+            <span className="text-xs tracking-widest text-ui-muted uppercase">
               {t("bestiary.totalKills")}
             </span>
             <span className="mt-1 border-y border-ui-stone-light/15 bg-black/40 py-2 text-center font-display text-xl font-bold text-ui-text-bright">
@@ -84,7 +84,7 @@ export function BosstiaryBossSheet({ boss }: BosstiaryBossSheetProps) {
                 style={{ width: `${progress}%` }}
               />
             </span>
-            <span className="mt-1 text-right text-[10px] text-ui-muted">
+            <span className="mt-1 text-right text-xs text-ui-muted">
               {nextMilestone
                 ? `${boss.kills.toLocaleString()} / ${nextMilestone.kills.toLocaleString()}`
                 : t("wiki.bosstiary.complete")}
@@ -96,13 +96,13 @@ export function BosstiaryBossSheet({ boss }: BosstiaryBossSheetProps) {
                     active={boss.kills >= milestone.kills}
                     metal={MILESTONE_METALS[index]}
                   />
-                  <span className="text-[9px] text-ui-muted">
+                  <span className="text-xs text-ui-muted">
                     {milestone.kills.toLocaleString()}
                   </span>
                 </span>
               ))}
             </span>
-            <span className="mt-4 text-center text-xs text-ui-gold">
+            <span className="mt-4 text-center text-sm text-ui-gold">
               {t("bosstiary.bossPoints", { points: points.toLocaleString() })}
             </span>
           </div>
@@ -116,7 +116,7 @@ export function BosstiaryBossSheet({ boss }: BosstiaryBossSheetProps) {
                 >
                   <BestiaryStatIcon name={stat.icon} />
                   <span className="min-w-0">
-                    <span className="block truncate text-[9px] tracking-widest text-ui-muted uppercase">
+                    <span className="block truncate text-xs tracking-widest text-ui-muted uppercase">
                       {t(`bestiary.stat.${stat.key}`)}
                     </span>
                     <span className="block text-sm text-ui-text-bright">
@@ -130,7 +130,7 @@ export function BosstiaryBossSheet({ boss }: BosstiaryBossSheetProps) {
               {boss.resistances.map((resistance) => (
                 <li
                   key={resistance.element}
-                  className="flex items-center gap-2 text-xs"
+                  className="flex items-center gap-2 text-sm"
                 >
                   <BestiaryResistanceIcon element={resistance.element} />
                   <span className="min-w-16 text-ui-muted">

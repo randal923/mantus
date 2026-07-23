@@ -12,7 +12,7 @@ export function CombatLog({ entries }: CombatLogProps) {
     <section
       aria-label={t("combat.log")}
       aria-live="polite"
-      className="ui-panel-frame pointer-events-auto absolute bottom-24 left-4 w-72 p-2 text-xs text-ui-text"
+      className="ui-panel-frame pointer-events-auto absolute bottom-24 left-4 w-72 p-2 text-sm text-ui-text"
     >
       {entries.map((entry, index) => (
         <p key={`${index}:${entry}`} className="truncate">

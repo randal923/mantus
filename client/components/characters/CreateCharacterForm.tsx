@@ -69,7 +69,7 @@ export function CreateCharacterForm({
       )}
 
       <fieldset disabled={busy} className="min-w-0 has-disabled:opacity-45">
-        <legend className="font-display text-[10px] font-semibold tracking-[0.18em] text-ui-gold uppercase">
+        <legend className="font-display text-xs font-semibold tracking-[0.18em] text-ui-gold uppercase">
           {t("characters.vocation")}
         </legend>
         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -93,7 +93,7 @@ export function CreateCharacterForm({
               <span className="font-display text-base font-semibold tracking-wide text-ui-text-bright">
                 {t(`vocations.${option}.name`)}
               </span>
-              <span className="text-xs leading-5 text-ui-muted">
+              <span className="text-sm leading-6 text-ui-muted">
                 {t(`vocations.${option}.description`)}
               </span>
             </label>
@@ -102,7 +102,7 @@ export function CreateCharacterForm({
       </fieldset>
 
       <fieldset disabled={busy} className="min-w-0 has-disabled:opacity-45">
-        <legend className="font-display text-[10px] font-semibold tracking-[0.18em] text-ui-gold uppercase">
+        <legend className="font-display text-xs font-semibold tracking-[0.18em] text-ui-gold uppercase">
           {t("characters.outfit")}
         </legend>
         <div className="mt-2 grid grid-cols-2 gap-2">

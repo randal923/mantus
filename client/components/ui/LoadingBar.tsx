@@ -24,11 +24,11 @@ export function LoadingBar({
   return (
     <div className="w-full space-y-2 font-tibia">
       <div className="flex items-center justify-between gap-4 px-0.5">
-        <span className="font-display text-[10px] font-bold tracking-widest text-ui-text uppercase">
+        <span className="font-display text-xs font-bold tracking-widest text-ui-text uppercase">
           {resolvedLabel}
         </span>
         {showValue && (
-          <span className="text-[10px] font-semibold tabular-nums text-ui-muted">
+          <span className="text-xs font-semibold tabular-nums text-ui-muted">
             {roundedPercent}%
           </span>
         )}

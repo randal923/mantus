@@ -58,7 +58,7 @@ export function PotionActionBarModal({
   return (
     <Modal title={t("potions.actionBar.title")} onClose={onClose}>
       <div className="flex flex-col gap-4">
-        <p className="rounded-lg border border-ui-gold/15 bg-black/25 px-3 py-2.5 text-xs leading-5 text-ui-muted">
+        <p className="rounded-lg border border-ui-gold/15 bg-black/25 px-3 py-2.5 text-sm leading-6 text-ui-muted">
           {t("potions.actionBar.description")}
         </p>
 

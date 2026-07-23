@@ -70,7 +70,7 @@ export function WikiItemDetails({
             <h3 className="font-display text-xl font-bold tracking-wide text-ui-text-bright capitalize sm:text-2xl">
               {item.name}
             </h3>
-            <span className="mt-1 block text-[10px] tracking-[0.18em] text-ui-gold uppercase">
+            <span className="mt-1 block text-xs tracking-[0.18em] text-ui-gold uppercase">
               {item.primaryType ?? t("wiki.items.categories.other")}
             </span>
             <span className="mt-3 block text-sm text-ui-muted">
@@ -98,7 +98,7 @@ export function WikiItemDetails({
                   key={stat.label}
                   className="ui-panel-inset rounded-sm border border-ui-stone-light/15 px-3 py-2"
                 >
-                  <dt className="text-[9px] tracking-widest text-ui-muted uppercase">
+                  <dt className="text-xs tracking-widest text-ui-muted uppercase">
                     {stat.label}
                   </dt>
                   <dd className="mt-0.5 text-sm text-ui-text-bright">
@@ -111,10 +111,10 @@ export function WikiItemDetails({
 
           {item.requirements && (
             <section className="mt-5 rounded-sm border border-ui-gold/20 bg-black/25 p-3">
-              <h4 className="text-[10px] tracking-widest text-ui-gold uppercase">
+              <h4 className="text-xs tracking-widest text-ui-gold uppercase">
                 {t("wiki.items.requirements")}
               </h4>
-              <p className="mt-1 text-xs text-ui-text/80">
+              <p className="mt-1 text-sm text-ui-text/80">
                 {item.requirements.level !== undefined &&
                   t("wiki.items.requiredLevel", {
                     level: item.requirements.level,
@@ -133,12 +133,12 @@ export function WikiItemDetails({
               {t("wiki.items.droppedBy")}
             </h4>
             {sourcesPending && (
-              <p className="py-6 text-center text-xs text-ui-muted">
+              <p className="py-6 text-center text-sm text-ui-muted">
                 {t("wiki.items.sourcesLoading")}
               </p>
             )}
             {!sourcesPending && sources.length === 0 && (
-              <p className="py-6 text-center text-xs text-ui-muted">
+              <p className="py-6 text-center text-sm text-ui-muted">
                 {t("wiki.items.noSources")}
               </p>
             )}

@@ -120,7 +120,7 @@ export function CharacterSelectModal({
                 ))}
               </div>
             )}
-            <p className="text-center text-[10px] tracking-wider text-ui-muted uppercase">
+            <p className="text-center text-xs tracking-wider text-ui-muted uppercase">
               {t("characters.slotsUsed", {
                 count: characters.length,
                 max: creationOptions.maxCharacters,

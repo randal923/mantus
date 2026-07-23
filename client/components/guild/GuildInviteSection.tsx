@@ -51,7 +51,7 @@ export function GuildInviteSection({
         </Button>
       </form>
       {invites.length === 0 ? (
-        <p className="text-xs text-ui-muted">{t("guild.noPendingInvites")}</p>
+        <p className="text-sm text-ui-muted">{t("guild.noPendingInvites")}</p>
       ) : (
         <ul className="flex max-w-md flex-col gap-1.5">
           {invites.map((invite) => (

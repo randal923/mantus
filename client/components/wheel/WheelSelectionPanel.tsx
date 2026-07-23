@@ -44,7 +44,7 @@ export function WheelSelectionPanel({
   const { t } = useAppTranslation();
   if (!slice) {
     return (
-      <p className="text-xs text-ui-muted">{t("wheel.selection.empty")}</p>
+      <p className="text-sm text-ui-muted">{t("wheel.selection.empty")}</p>
     );
   }
   const rates = WHEEL_DEDICATION_RATES[baseVocation];
@@ -99,7 +99,7 @@ export function WheelSelectionPanel({
         <span className="font-display text-sm text-ui-text-bright">
           {t(`wheel.domain.${slice.domain}`)}
         </span>
-        <span className="text-xs text-ui-gold">
+        <span className="text-sm text-ui-gold">
           {points} / {slice.maxPoints}
         </span>
       </div>
@@ -109,11 +109,11 @@ export function WheelSelectionPanel({
           style={{ width: `${(points / slice.maxPoints) * 100}%` }}
         />
       </div>
-      <p className="text-xs leading-5 text-ui-text/85">
+      <p className="text-sm leading-6 text-ui-text/85">
         <span className="text-ui-muted">{t("wheel.selection.dedication")}:</span>{" "}
         {dedicationValue}
       </p>
-      <p className="text-xs leading-5 text-ui-text/85">
+      <p className="text-sm leading-6 text-ui-text/85">
         <span className="text-ui-muted">{t("wheel.selection.conviction")}:</span>{" "}
         {convictionLabel}
         {points === slice.maxPoints && (

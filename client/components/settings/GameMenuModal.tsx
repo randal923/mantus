@@ -192,7 +192,7 @@ export function GameMenuModal({
               {t("menu.logoutFailed")}
             </p>
           )}
-          <p className="mt-2 text-center text-[10px] tracking-wider text-ui-muted uppercase">
+          <p className="mt-2 text-center text-xs tracking-wider text-ui-muted uppercase">
             {t("menu.returnHint")}
           </p>
         </nav>
@@ -215,16 +215,16 @@ export function GameMenuModal({
             }}
           />
           {languageSaving && (
-            <p className="text-xs text-ui-muted">{t("languages.saving")}</p>
+            <p className="text-sm text-ui-muted">{t("languages.saving")}</p>
           )}
           {languageError && (
-            <p role="alert" className="text-xs text-red-200">
+            <p role="alert" className="text-sm text-red-200">
               {t("languages.saveFailed")}
             </p>
           )}
 
           <section className="flex flex-col gap-2">
-            <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
+            <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
               {t("settings.controls")}
             </h3>
             <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-3 has-disabled:cursor-not-allowed has-disabled:opacity-45">
@@ -232,7 +232,7 @@ export function GameMenuModal({
                 <span className="text-sm font-medium text-ui-text">
                   {t("settings.diagonalWalking")}
                 </span>
-                <span className="text-xs leading-5 text-ui-muted">
+                <span className="text-sm leading-6 text-ui-muted">
                   {t("settings.diagonalWalkingDescription")}
                 </span>
               </span>
@@ -253,7 +253,7 @@ export function GameMenuModal({
           </Button>
 
           <section className="flex flex-col gap-2">
-            <h3 className="font-display text-[10px] font-bold tracking-widest text-ui-gold uppercase">
+            <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
               {t("settings.account")}
             </h3>
             <p className="flex items-center justify-between rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-2 text-sm text-ui-text">
@@ -294,7 +294,7 @@ export function GameMenuModal({
                 key={row.id}
                 className="flex items-center justify-between gap-4 border-b border-ui-stone-light/10 px-3 py-2.5 last:border-b-0"
               >
-                <span className="text-xs font-medium text-ui-text">
+                <span className="text-sm font-medium text-ui-text">
                   {row.label}
                 </span>
                 <Dropdown
@@ -324,7 +324,7 @@ export function GameMenuModal({
               {t("hotkeys.resetDefaults")}
             </Button>
           </div>
-          <p className="text-[10px] leading-4 text-ui-muted">
+          <p className="text-sm leading-6 text-ui-muted">
             {t("hotkeys.previewNotice")}
           </p>
         </div>

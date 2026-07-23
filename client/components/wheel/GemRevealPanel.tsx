@@ -39,7 +39,7 @@ export function GemRevealPanel({
       <h3 className="mb-2 font-display text-sm tracking-wide text-ui-text-bright">
         {t("wheel.gems.reveal.title")}
       </h3>
-      <p className="mb-2 text-[10px] leading-4 text-ui-muted">
+      <p className="mb-2 text-sm leading-6 text-ui-muted">
         {t("wheel.gems.reveal.help")}
       </p>
       <ul className="flex flex-col gap-2">
@@ -47,7 +47,7 @@ export function GemRevealPanel({
           const owned = gems.resources[COUNT_KEYS[quality]];
           const cost = GEM_REVEAL_COSTS[quality];
           return (
-            <li key={quality} className="flex items-center gap-2 text-xs">
+            <li key={quality} className="flex items-center gap-2 text-sm">
               <GemSheetIcon
                 style={gemIconStyle(vocation, "green", quality)}
                 label={t(`wheel.gems.quality.${quality}`)}
@@ -56,7 +56,7 @@ export function GemRevealPanel({
                 <span className="block truncate">
                   {t(`wheel.gems.quality.${quality}`)} (x {owned})
                 </span>
-                <span className="block text-[10px] text-ui-gold">
+                <span className="block text-xs text-ui-gold">
                   {cost.toLocaleString()} {t("wheel.gems.goldSuffix")}
                 </span>
               </span>

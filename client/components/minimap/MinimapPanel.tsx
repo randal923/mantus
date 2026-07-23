@@ -284,7 +284,7 @@ export function MinimapPanel({
         <h2 className="text-sm font-medium tracking-wide text-ui-text-bright uppercase">
           {t("hud.minimap.title")}
         </h2>
-        <span className="rounded-sm border border-ui-stone-light/15 bg-black/30 px-1.5 py-0.5 text-[9px] font-medium tracking-wider text-ui-muted uppercase">
+        <span className="rounded-sm border border-ui-stone-light/15 bg-black/30 px-1.5 py-0.5 text-xs font-medium tracking-wider text-ui-muted uppercase">
           {t("hud.minimap.floor")} {floorLabel}
         </span>
       </div>
@@ -422,7 +422,7 @@ export function MinimapPanel({
               {hover.creature.name}
             </div>
             {hoverCategories && hoverCategories.length > 0 && (
-              <div className="text-xs leading-tight text-ui-muted">
+              <div className="text-sm leading-tight text-ui-muted">
                 {hoverCategories
                   .map((category) => t(`hud.minimap.categories.${category}`))
                   .join(" · ")}
@@ -431,7 +431,7 @@ export function MinimapPanel({
           </div>
         )}
       </div>
-      <div className="mt-2 flex items-center justify-between pr-4 text-[10px] tracking-wide text-ui-muted">
+      <div className="mt-2 flex items-center justify-between pr-4 text-xs tracking-wide text-ui-muted">
         <span>
           {Math.round(centerX)}, {Math.round(centerY)}, {floor}
         </span>

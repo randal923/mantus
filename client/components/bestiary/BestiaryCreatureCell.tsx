@@ -27,7 +27,7 @@ export function BestiaryCreatureCell({
       >
         <AnimatedOutfit outfit={entry.outfit} fit={64} />
       </LazyMount>
-      <span className="w-full truncate text-center text-xs text-ui-text-bright">
+      <span className="w-full truncate text-center text-sm text-ui-text-bright">
         {entry.name}
       </span>
       <span

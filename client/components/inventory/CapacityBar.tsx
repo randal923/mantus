@@ -20,7 +20,7 @@ export function CapacityBar({ used, max }: CapacityBarProps) {
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="mb-2 flex items-center justify-between text-xs text-ui-muted">
+      <div className="mb-2 flex items-center justify-between text-sm text-ui-muted">
         <span className="flex items-center gap-1.5 font-display tracking-wider text-ui-gold uppercase">
           <WeightIcon className="text-ui-gold" />
           {t("inventory.capacity")}

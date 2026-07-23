@@ -40,7 +40,7 @@ export function NavigationIconButton({
       {children}
       <span
         aria-hidden
-        className="pointer-events-none absolute top-full right-0 z-50 mt-2 translate-y-1 whitespace-nowrap rounded border border-ui-gold/25 bg-ui-panel-deep px-2 py-1 font-button text-xs font-normal tracking-wide text-ui-text-bright uppercase opacity-0 shadow-lg transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+        className="pointer-events-none absolute top-full right-0 z-50 mt-2 translate-y-1 whitespace-nowrap rounded border border-ui-gold/25 bg-ui-panel-deep px-2 py-1 font-button text-sm font-normal tracking-wide text-ui-text-bright uppercase opacity-0 shadow-lg transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
       >
         {title}
       </span>

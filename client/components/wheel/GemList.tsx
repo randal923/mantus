@@ -39,7 +39,7 @@ export function GemList({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="flex items-center gap-2 text-xs">
+      <div className="flex items-center gap-2 text-sm">
         <select
           value={quality}
           onChange={(event) => setQuality(event.target.value)}
@@ -66,12 +66,12 @@ export function GemList({
             </option>
           ))}
         </select>
-        <span className="ml-auto text-[10px] text-ui-muted">
+        <span className="ml-auto text-xs text-ui-muted">
           {t("wheel.gems.count", { count: filtered.length })}
         </span>
       </div>
       {filtered.length === 0 ? (
-        <p className="rounded border border-ui-stone-light/10 bg-black/20 p-4 text-center text-xs text-ui-muted">
+        <p className="rounded border border-ui-stone-light/10 bg-black/20 p-4 text-center text-sm text-ui-muted">
           {t("wheel.gems.empty")}
         </p>
       ) : (

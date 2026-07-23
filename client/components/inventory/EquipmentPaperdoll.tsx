@@ -48,7 +48,7 @@ export function EquipmentPaperdoll({
       aria-label={t("inventory.equippedItems")}
       className="rounded-xl border border-ui-gold/10 bg-black/15 px-3 py-4 shadow-inner shadow-black/25"
     >
-      <p className="mb-3 text-center font-display text-[10px] tracking-[0.22em] text-ui-muted uppercase">
+      <p className="mb-3 text-center font-display text-xs tracking-[0.22em] text-ui-muted uppercase">
         {t("inventory.equipped")}
       </p>
       <div className="flex justify-center gap-2">

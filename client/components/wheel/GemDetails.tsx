@@ -63,7 +63,7 @@ export function GemDetails({
               name: GEM_VOCATION_NAMES[vocation],
             })}
           </h3>
-          <p className="flex items-center gap-1 text-[10px] text-ui-muted">
+          <p className="flex items-center gap-1 text-xs text-ui-muted">
             <GemSheetIcon style={domainIconStyle(gem.domain)} />
             {t(`wheel.domain.${gem.domain}`)}
             {equipped && (
@@ -78,7 +78,7 @@ export function GemDetails({
         </div>
       </header>
 
-      <ul className="flex flex-col gap-2 text-xs">
+      <ul className="flex flex-col gap-2 text-sm">
         {gem.basicModIds.map((modId, index) => (
           <li key={`basic-${modId}`} className="flex items-start gap-2">
             <GemSheetIcon style={basicModIconStyle(modId)} />
@@ -89,7 +89,7 @@ export function GemDetails({
                 gradeOf(gems.grades.basic, modId),
                 vocation,
               ).join("\n")}
-              <span className="block text-[10px] text-ui-muted">
+              <span className="block text-xs text-ui-muted">
                 {t("wheel.gems.modSlot", { slot: index + 1 })}{" "}
                 {t("wheel.gems.grade", {
                   grade: GRADE_NUMERALS[gradeOf(gems.grades.basic, modId)],
@@ -108,7 +108,7 @@ export function GemDetails({
                 gradeOf(gems.grades.supreme, gem.supremeModId),
                 vocation,
               ).join("\n")}
-              <span className="block text-[10px] text-ui-muted">
+              <span className="block text-xs text-ui-muted">
                 {t("wheel.gems.supremeMod")}{" "}
                 {t("wheel.gems.grade", {
                   grade:

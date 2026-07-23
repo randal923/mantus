@@ -40,7 +40,7 @@ export function TradeOfferGrid({ label, offer, accepted }: TradeOfferGridProps) 
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-ui-text/70">{t("trade.waitingForOffer")}</p>
+        <p className="text-sm text-ui-text/70">{t("trade.waitingForOffer")}</p>
       )}
     </section>
   );

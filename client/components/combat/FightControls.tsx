@@ -16,7 +16,7 @@ const INACTIVE_BUTTON_CLASS =
   "ui-button-secondary border-ui-stone-light/10 text-ui-muted hover:border-ui-gold/30 hover:text-ui-text";
 
 const TOOLTIP_CLASS =
-  "pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded border border-ui-gold/25 bg-ui-panel-deep px-2 py-1 font-button text-xs font-normal tracking-wide text-ui-text-bright opacity-0 shadow-lg transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100";
+  "pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded border border-ui-gold/25 bg-ui-panel-deep px-2 py-1 font-button text-sm font-normal tracking-wide text-ui-text-bright opacity-0 shadow-lg transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100";
 
 export function FightControls({ mode, onChange }: FightControlsProps) {
   const { t } = useAppTranslation();

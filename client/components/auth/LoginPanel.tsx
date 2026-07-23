@@ -50,7 +50,7 @@ export function LoginPanel({
         <h1 className="contents">
           <MantusLogo className="mb-2" />
         </h1>
-        <p className="text-[10px] tracking-[0.34em] text-ui-gold uppercase">
+        <p className="text-xs tracking-[0.34em] text-ui-gold uppercase">
           {t("auth.welcomeBack")}
         </p>
         <p className="text-sm text-ui-muted">{t("auth.enterWorld")}</p>
@@ -109,7 +109,7 @@ export function LoginPanel({
 
       <div
         aria-hidden
-        className="flex items-center gap-3 text-[10px] tracking-[0.22em] text-ui-muted uppercase"
+        className="flex items-center gap-3 text-xs tracking-[0.22em] text-ui-muted uppercase"
       >
         <span className="h-px flex-1 bg-linear-to-r from-transparent to-ui-gold/35" />
         {t("auth.or")}

@@ -52,18 +52,18 @@ export function AuctionOrderBook({
               <SpriteIcon spriteId={item.spriteId} scale={1.6} />
             </span>
             <div className="min-w-0 flex-1">
-              <span className="text-[10px] font-semibold tracking-[0.18em] text-ui-gold uppercase">
+              <span className="text-xs font-semibold tracking-[0.18em] text-ui-gold uppercase">
                 {t(`auction.categories.${item.category}`)}
               </span>
               <h2 className="truncate font-display text-xl tracking-wide text-ui-text-bright">
                 {item.name}
               </h2>
-              <p className="mt-1 text-xs text-ui-muted">
+              <p className="mt-1 text-sm text-ui-muted">
                 {t("auction.owned", { count: item.ownedCount })}
               </p>
             </div>
             <div className="hidden shrink-0 rounded-lg border border-ui-gold/15 bg-black/30 px-3 py-2 text-right sm:block">
-              <span className="block text-[9px] tracking-[0.14em] text-ui-muted uppercase">
+              <span className="block text-xs tracking-[0.14em] text-ui-muted uppercase">
                 {t("auction.averagePrice")}
               </span>
               <span className="mt-0.5 flex items-center justify-end gap-1.5 font-display text-base tabular-nums text-ui-text-bright">
@@ -82,30 +82,30 @@ export function AuctionOrderBook({
                 <div>
                   <h3
                     id="auction-sell-offers-heading"
-                    className="font-display text-xs font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
+                    className="font-display text-sm font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
                   >
                     {t("auction.sellOffers")}
                   </h3>
-                  <p className="mt-0.5 text-[10px] text-ui-muted">
+                  <p className="mt-0.5 text-sm text-ui-muted">
                     {t("auction.sellOffersHint")}
                   </p>
                 </div>
-                <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-[10px] tabular-nums text-ui-muted">
+                <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-xs tabular-nums text-ui-muted">
                   {sellOffers.length}
                 </span>
               </header>
 
               {sellOffers.length === 0 ? (
-                <p className="px-4 py-8 text-center text-xs text-ui-muted">
+                <p className="px-4 py-8 text-center text-sm text-ui-muted">
                   {t("auction.noSellOffers")}
                 </p>
               ) : (
                 <div className="ui-scrollbar overflow-x-auto">
-                  <table className="w-full min-w-[36rem] border-collapse text-left text-xs">
+                  <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
                     <caption className="sr-only">
                       {t("auction.sellOffersFor", { item: item.name })}
                     </caption>
-                    <thead className="bg-black/25 text-[9px] tracking-wider text-ui-muted uppercase">
+                    <thead className="bg-black/25 text-xs tracking-wider text-ui-muted uppercase">
                       <tr>
                         <th scope="col" className="px-3 py-2 font-medium">
                           {t("auction.amount")}
@@ -156,7 +156,7 @@ export function AuctionOrderBook({
                             <td className="px-3 py-2 text-right">
                               <span className="flex items-center justify-end gap-2">
                                 {offer.mine && (
-                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-[9px] tracking-wider text-ui-gold uppercase">
+                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-xs tracking-wider text-ui-gold uppercase">
                                     {t("auction.yours")}
                                   </span>
                                 )}
@@ -205,30 +205,30 @@ export function AuctionOrderBook({
                 <div>
                   <h3
                     id="auction-buy-offers-heading"
-                    className="font-display text-xs font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
+                    className="font-display text-sm font-semibold tracking-[0.14em] text-ui-text-bright uppercase"
                   >
                     {t("auction.buyOffers")}
                   </h3>
-                  <p className="mt-0.5 text-[10px] text-ui-muted">
+                  <p className="mt-0.5 text-sm text-ui-muted">
                     {t("auction.buyOffersHint")}
                   </p>
                 </div>
-                <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-[10px] tabular-nums text-ui-muted">
+                <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-xs tabular-nums text-ui-muted">
                   {buyOffers.length}
                 </span>
               </header>
 
               {buyOffers.length === 0 ? (
-                <p className="px-4 py-8 text-center text-xs text-ui-muted">
+                <p className="px-4 py-8 text-center text-sm text-ui-muted">
                   {t("auction.noBuyOffers")}
                 </p>
               ) : (
                 <div className="ui-scrollbar overflow-x-auto">
-                  <table className="w-full min-w-[36rem] border-collapse text-left text-xs">
+                  <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
                     <caption className="sr-only">
                       {t("auction.buyOffersFor", { item: item.name })}
                     </caption>
-                    <thead className="bg-black/25 text-[9px] tracking-wider text-ui-muted uppercase">
+                    <thead className="bg-black/25 text-xs tracking-wider text-ui-muted uppercase">
                       <tr>
                         <th scope="col" className="px-3 py-2 font-medium">
                           {t("auction.amount")}
@@ -279,7 +279,7 @@ export function AuctionOrderBook({
                             <td className="px-3 py-2 text-right">
                               <span className="flex items-center justify-end gap-2">
                                 {offer.mine && (
-                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-[9px] tracking-wider text-ui-gold uppercase">
+                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-xs tracking-wider text-ui-gold uppercase">
                                     {t("auction.yours")}
                                   </span>
                                 )}
