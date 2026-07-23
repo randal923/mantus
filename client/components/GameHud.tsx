@@ -265,7 +265,7 @@ export function GameHud({
         </div>
       )}
       <div className="absolute inset-x-2 bottom-0 flex items-end justify-center">
-        <div className="flex w-max max-w-full items-end justify-center">
+        <div className="ui-action-bar-dock flex w-max max-w-full items-end justify-center">
           <VitalOrb
             kind="health"
             value={ownCharacter.health}

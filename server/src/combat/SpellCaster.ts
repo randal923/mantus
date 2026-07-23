@@ -6,6 +6,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import { areaPositions } from "./areaPositions";
 import { applySpellCooldowns } from "./applySpellCooldowns";
 import { canPlayerHarm } from "./canPlayerHarm";
 import { CombatFeedback } from "./CombatFeedback";
@@ -154,7 +155,26 @@ export class SpellCaster {
       target.position,
       spell.area,
     );
-    if (spell.area.shape === "single" && target.creature && affected.length === 0) {
+    const usesAreaEffect = spell.area.shape !== "single";
+    if (usesAreaEffect && spell.effectId > 0) {
+      const effectPositions = areaPositions(
+        player.position,
+        target.position,
+        spell.area,
+      ).filter(
+        (position) =>
+          this.world.getTile(position) &&
+          this.world.hasLineOfSight(player.position, position),
+      );
+      for (const position of effectPositions) {
+        this.visibility.broadcastMagicEffect(position, spell.effectId);
+      }
+    }
+    if (
+      spell.area.shape === "single" &&
+      target.creature &&
+      affected.length === 0
+    ) {
       affected.push(target.creature);
     }
     const specials = playerSpecials(equipment);
@@ -174,7 +194,7 @@ export class SpellCaster {
             type: spell.damageType,
             minimum,
             maximum,
-            effectId: spell.effectId,
+            ...(usesAreaEffect ? {} : { effectId: spell.effectId }),
             ignoreArmor: !spell.blockArmor,
             ignoreShield: !spell.blockShield,
             ...specials,
@@ -182,7 +202,7 @@ export class SpellCaster {
           now,
         );
       }
-    } else if (spell.effectId > 0) {
+    } else if (!usesAreaEffect && spell.effectId > 0) {
       this.visibility.broadcastMagicEffect(
         target.position,
         spell.effectId,

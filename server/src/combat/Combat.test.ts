@@ -584,13 +584,52 @@ describe("Combat", () => {
     });
   });
 
-  it("casts the level-one Canary directional spell with its imported area", async () => {
+  it("broadcasts Exori's effect across its full area without a creature target", async () => {
     const harness = await makeHarness({
-      character: makeLeveledCharacter(1, "Druid", 0),
+      character: makeLeveledCharacter(50, "Knight"),
+      position: { x: 5, y: 5, z: 7 },
+      inventory: [
+        ownedItem(WEAPON_ID, 3273, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+    });
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exori",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    const effects = harness.sent
+      .filter((message) => message.type === "magic-effect")
+      .filter((message) => message.effectId === 10);
+    expect(effects).toHaveLength(9);
+    expect(
+      new Set(effects.map((message) => positionKey(message.position))),
+    ).toEqual(
+      new Set(
+        [4, 5, 6].flatMap((y) =>
+          [4, 5, 6].map((x) => positionKey({ x, y, z: 7 })),
+        ),
+      ),
+    );
+  });
+
+  it("casts Scorch with one effect per tile across its imported area", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(1, "Sorcerer", 0),
+      position: { x: 5, y: 5, z: 7 },
     });
     const target = makeMonster(
-      "monster-instance:chill-out:0",
-      { x: 1, y: 2, z: 7 },
+      "monster-instance:scorch-target:0",
+      { x: 5, y: 6, z: 7 },
     );
     harness.world.addCreature(target);
     harness.session.knownCreatureIds.add(target.id);
@@ -600,7 +639,7 @@ describe("Combat", () => {
       harness.session,
       {
         type: "cast-spell",
-        spellId: "exevo-infir-frigo-hur",
+        spellId: "exevo-infir-flam-hur",
         target: { kind: "direction" },
       },
       1_000,
@@ -611,12 +650,25 @@ describe("Combat", () => {
     expect(harness.player.mana).toBe(manaBefore - 8);
     expect(
       harness.session.combatCooldowns.get(
-        "spell:exevo-infir-frigo-hur",
+        "spell:exevo-infir-flam-hur",
       )?.readyAt,
     ).toBe(5_000);
     expect(
       harness.session.combatCooldowns.get("group:attack")?.readyAt,
     ).toBe(3_000);
+    const effects = harness.sent
+      .filter((message) => message.type === "magic-effect")
+      .filter((message) => message.effectId === 16);
+    expect(effects).toHaveLength(12);
+    expect(
+      new Set(effects.map((message) => positionKey(message.position))).size,
+    ).toBe(12);
+    expect(
+      effects.filter(
+        (message) =>
+          positionKey(message.position) === positionKey(target.position),
+      ),
+    ).toHaveLength(1);
   });
 
   it("applies pinned haste and recovery conditions on the server clock", async () => {

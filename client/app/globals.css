@@ -59,6 +59,36 @@
   content: "";
 }
 
+.ui-action-bar-dock {
+  position: relative;
+  isolation: isolate;
+}
+
+.ui-action-bar-dock::before {
+  position: absolute;
+  right: 2rem;
+  bottom: 0;
+  left: 2rem;
+  z-index: -2;
+  height: 0.875rem;
+  border: 1px solid rgb(73 79 75 / 88%);
+  background:
+    linear-gradient(
+      180deg,
+      rgb(73 79 75 / 68%),
+      rgb(19 23 21 / 94%) 34%,
+      rgb(5 7 6 / 98%)
+    ),
+    url("/assets/ui/forged-stone-texture.webp") center / 260px 260px;
+  box-shadow:
+    inset 0 1px 0 rgb(226 226 219 / 8%),
+    inset 0 0 0 3px rgb(0 0 0 / 28%),
+    0 -4px 12px rgb(0 0 0 / 34%);
+  clip-path: polygon(1.5% 0, 98.5% 0, 100% 100%, 0 100%);
+  pointer-events: none;
+  content: "";
+}
+
 .ui-action-cluster-shell {
   isolation: isolate;
   filter: drop-shadow(0 18px 24px rgb(0 0 0 / 58%));
@@ -67,33 +97,63 @@
 .ui-action-cluster-shell::before,
 .ui-action-cluster-shell::after {
   position: absolute;
-  top: 1rem;
-  bottom: 0.75rem;
+  top: 0.75rem;
+  bottom: 0.5rem;
   z-index: -1;
-  width: 1.5rem;
+  width: 3.75rem;
   border: 1px solid rgb(75 80 77 / 82%);
   background-color: #111413;
   background-image:
-    linear-gradient(180deg, rgb(54 59 56 / 72%), rgb(8 10 10 / 88%)),
+    radial-gradient(
+      circle at 50% 50%,
+      rgb(155 161 155 / 30%) 0 2px,
+      rgb(5 7 6 / 90%) 3px,
+      transparent 4px
+    ),
+    linear-gradient(
+      180deg,
+      rgb(64 70 66 / 76%),
+      rgb(18 22 20 / 90%) 36%,
+      rgb(7 9 8 / 96%)
+    ),
     url("/assets/ui/forged-stone-texture.webp");
   background-position: center;
   background-size:
     auto,
+    auto,
     220px 220px;
   box-shadow:
     inset 0 1px 0 rgb(226 226 219 / 7%),
-    inset 0 0 0 3px rgb(0 0 0 / 30%);
+    inset 0 0 0 3px rgb(0 0 0 / 34%),
+    0 0 0 2px rgb(0 0 0 / 44%);
+  pointer-events: none;
   content: "";
 }
 
 .ui-action-cluster-shell::before {
-  left: -0.875rem;
-  clip-path: polygon(100% 0, 100% 100%, 0 82%, 20% 24%);
+  left: -3.25rem;
+  clip-path: polygon(
+    0 33%,
+    18% 17%,
+    100% 0,
+    100% 100%,
+    18% 83%,
+    0 67%,
+    10% 50%
+  );
 }
 
 .ui-action-cluster-shell::after {
-  right: -0.875rem;
-  clip-path: polygon(0 0, 80% 24%, 100% 82%, 0 100%);
+  right: -3.25rem;
+  clip-path: polygon(
+    100% 33%,
+    82% 17%,
+    0 0,
+    0 100%,
+    82% 83%,
+    100% 67%,
+    90% 50%
+  );
 }
 
 .ui-action-cluster {
