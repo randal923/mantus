@@ -145,11 +145,14 @@ export function WikiItems({
           </h3>
           <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-1">
             <input
-              type="number"
-              min="0"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={level}
               onChange={(event) => {
-                setLevel(event.target.value);
+                const next = event.currentTarget.value;
+                if (!/^\d*$/.test(next)) return;
+                setLevel(next);
                 setPage(0);
               }}
               placeholder={t("wiki.items.level")}

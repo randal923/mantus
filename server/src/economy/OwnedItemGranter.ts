@@ -5,9 +5,9 @@ import type { BackpackSlots } from "./BackpackSlots";
 import { itemFromOwnedRow } from "./itemFromOwnedRow";
 import type { OwnedItemRow } from "./OwnedItemRow";
 import type { OwnedItemTally } from "./OwnedItemTally";
-import { incrementItemCountQuery } from "./sql/incrementItemCountQuery";
-import { insertCreatedItemQuery } from "./sql/insertCreatedItemQuery";
-import { insertItemCreatedAuditQuery } from "./sql/insertItemCreatedAuditQuery";
+import { createOwnedItemsWithAuditQuery } from "./sql/createOwnedItemsWithAuditQuery";
+import { createOwnedItemWithAuditQuery } from "./sql/createOwnedItemWithAuditQuery";
+import { incrementOwnedItemWithAuditQuery } from "./sql/incrementOwnedItemWithAuditQuery";
 
 const OWNED_ITEM_LIMIT = 500;
 
@@ -49,8 +49,15 @@ export class OwnedItemGranter {
       const added = Math.min(maxCount - current.count, remaining);
       if (added === 0) continue;
       const updated = await this.client.query<{ version: number }>(
-        incrementItemCountQuery,
-        [row.id, added, current.version],
+        incrementOwnedItemWithAuditQuery,
+        [
+          row.id,
+          added,
+          current.version,
+          this.characterId,
+          itemTypeId,
+          reason,
+        ],
       );
       if (updated.rows[0]?.version !== current.version + 1) {
         throw new Error("economy item version is stale");
@@ -60,7 +67,6 @@ export class OwnedItemGranter {
         count: current.count + added,
         version: current.version + 1,
       });
-      await this.auditCreation(row.id, itemTypeId, added, reason);
       remaining -= added;
     }
     while (remaining > 0) {
@@ -85,19 +91,47 @@ export class OwnedItemGranter {
     backpack: BackpackSlots,
     attributes: Readonly<Record<string, unknown>> = {},
   ): Promise<boolean> {
+    if (this.tally.current() + rowCount > OWNED_ITEM_LIMIT) return false;
+    const items: Array<{ id: string; slot: number }> = [];
     for (let index = 0; index < rowCount; index++) {
-      if (
-        !(await this.createRow(
-          itemTypeId,
-          1,
-          reason,
-          after,
-          backpack,
-          attributes,
-        ))
-      ) {
-        return false;
-      }
+      const slot = this.takeFreeSlot(backpack);
+      if (slot === null) return false;
+      items.push({ id: randomUUID(), slot });
+    }
+    const created = await this.client.query<{ id: string }>(
+      createOwnedItemsWithAuditQuery,
+      [
+        items.map((item) => item.id),
+        items.map((item) => item.slot),
+        itemTypeId,
+        JSON.stringify(attributes),
+        backpack.containerId,
+        this.characterId,
+        reason,
+      ],
+    );
+    if (
+      created.rows.length !== items.length ||
+      items.some(
+        (item) => !created.rows.some((createdItem) => createdItem.id === item.id),
+      )
+    ) {
+      throw new Error("economy item creation was incomplete");
+    }
+    for (const item of items) {
+      this.tally.increment();
+      after.set(item.id, {
+        id: item.id,
+        typeId: itemTypeId,
+        count: 1,
+        attributes: { ...attributes },
+        version: 1,
+        location: {
+          kind: "container",
+          containerId: backpack.containerId,
+          slot: item.slot,
+        },
+      });
     }
     return true;
   }
@@ -114,14 +148,22 @@ export class OwnedItemGranter {
     const slot = this.takeFreeSlot(backpack);
     if (slot === null) return false;
     const itemId = randomUUID();
-    await this.client.query(insertCreatedItemQuery, [
-      itemId,
-      itemTypeId,
-      count,
-      JSON.stringify(attributes),
-      backpack.containerId,
-      slot,
-    ]);
+    const created = await this.client.query<{ id: string }>(
+      createOwnedItemWithAuditQuery,
+      [
+        itemId,
+        itemTypeId,
+        count,
+        JSON.stringify(attributes),
+        backpack.containerId,
+        slot,
+        this.characterId,
+        reason,
+      ],
+    );
+    if (created.rows[0]?.id !== itemId) {
+      throw new Error("economy item creation was incomplete");
+    }
     this.tally.increment();
     after.set(itemId, {
       id: itemId,
@@ -131,7 +173,6 @@ export class OwnedItemGranter {
       version: 1,
       location: { kind: "container", containerId: backpack.containerId, slot },
     });
-    await this.auditCreation(itemId, itemTypeId, count, reason);
     return true;
   }
 
@@ -143,20 +184,5 @@ export class OwnedItemGranter {
       }
     }
     return null;
-  }
-
-  private async auditCreation(
-    itemId: string,
-    itemTypeId: number,
-    count: number,
-    reason: string,
-  ): Promise<void> {
-    await this.client.query(insertItemCreatedAuditQuery, [
-      this.characterId,
-      itemId,
-      itemTypeId,
-      count,
-      reason,
-    ]);
   }
 }

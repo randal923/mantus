@@ -45,7 +45,8 @@ export function DepotModal({
   const { t } = useAppTranslation();
   const language = useLanguageStore((store) => store.language);
   const [query, setQuery] = useState(state.query);
-  const [amount, setAmount] = useState(1);
+  const [amountInput, setAmountInput] = useState("1");
+  const amount = Number(amountInput);
   const locations: ReadonlyArray<DepotLocation> = [
     "depot",
     "inbox",
@@ -55,7 +56,11 @@ export function DepotModal({
     state.location === "stash"
       ? inventoryItems.filter(({ item }) => item.stowable)
       : inventoryItems;
-  const validAmount = Number.isInteger(amount) && amount >= 1 && amount <= 100;
+  const validAmount =
+    amountInput !== "" &&
+    Number.isInteger(amount) &&
+    amount >= 1 &&
+    amount <= 100;
 
   return (
     <Modal
@@ -216,13 +221,15 @@ export function DepotModal({
                 <Input
                   label={t("depot.amount")}
                   name="stash-withdraw-amount"
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={amount}
-                  onChange={(event) =>
-                    setAmount(Math.trunc(event.currentTarget.valueAsNumber || 0))
-                  }
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={3}
+                  value={amountInput}
+                  onChange={(event) => {
+                    const next = event.currentTarget.value;
+                    if (/^\d*$/.test(next)) setAmountInput(next);
+                  }}
                   className="w-24"
                 />
               )}

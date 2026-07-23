@@ -1,16 +1,14 @@
 import type { PoolClient } from "pg";
 import { parseBalance } from "./parseBalance";
-import { insertBankAccountQuery } from "./sql/insertBankAccountQuery";
-import { selectBankBalanceForUpdateQuery } from "./sql/selectBankBalanceForUpdateQuery";
+import { lockBankBalanceQuery } from "./sql/lockBankBalanceQuery";
 
 /** Creates the account row if needed, then locks it and returns the balance. */
 export async function lockBankBalance(
   client: PoolClient,
   characterId: string,
 ): Promise<number> {
-  await client.query(insertBankAccountQuery, [characterId]);
   const result = await client.query<{ balance: string }>(
-    selectBankBalanceForUpdateQuery,
+    lockBankBalanceQuery,
     [characterId],
   );
   const row = result.rows[0];

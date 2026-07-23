@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { MARKET_LIMITS } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { SpriteIcon } from "../inventory/SpriteIcon";
@@ -28,10 +29,21 @@ export function AuctionOrderTicket({
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
   const [side, setSide] = useState<AuctionOfferSide>("sell");
-  const [amount, setAmount] = useState(1);
-  const [pricePerItem, setPricePerItem] = useState(item?.averagePrice ?? 0);
+  const [amountInput, setAmountInput] = useState("1");
+  const [priceInput, setPriceInput] = useState(
+    String(item?.averagePrice ?? 0),
+  );
+  const amount = Number(amountInput);
+  const pricePerItem = Number(priceInput);
   const total = amount * pricePerItem;
-  const hasValidValues = amount > 0 && pricePerItem > 0;
+  const hasValidValues =
+    Number.isSafeInteger(amount) &&
+    Number.isSafeInteger(pricePerItem) &&
+    amount > 0 &&
+    amount <= MARKET_LIMITS.maxAmountStackable &&
+    pricePerItem > 0 &&
+    pricePerItem <= MARKET_LIMITS.maxUnitPrice &&
+    total <= MARKET_LIMITS.maxTotalPrice;
   const hasEnoughGold = side === "sell" || total <= goldBalance;
   const hasEnoughItems =
     side === "buy" || (item !== undefined && amount <= item.ownedCount);
@@ -115,31 +127,27 @@ export function AuctionOrderTicket({
             <Input
               label={t("auction.amount")}
               name="auction-amount"
-              type="number"
-              min={1}
-              step={1}
+              type="text"
               inputMode="numeric"
-              value={amount}
+              pattern="[0-9]*"
+              maxLength={String(MARKET_LIMITS.maxAmountStackable).length}
+              value={amountInput}
               onChange={(event) => {
-                const nextAmount = event.currentTarget.valueAsNumber;
-                setAmount(
-                  Number.isFinite(nextAmount) ? Math.trunc(nextAmount) : 0,
-                );
+                const next = event.currentTarget.value;
+                if (/^\d*$/.test(next)) setAmountInput(next);
               }}
             />
             <Input
               label={t("auction.piecePrice")}
               name="auction-price"
-              type="number"
-              min={1}
-              step={1}
+              type="text"
               inputMode="numeric"
-              value={pricePerItem}
+              pattern="[0-9]*"
+              maxLength={String(MARKET_LIMITS.maxUnitPrice).length}
+              value={priceInput}
               onChange={(event) => {
-                const nextPrice = event.currentTarget.valueAsNumber;
-                setPricePerItem(
-                  Number.isFinite(nextPrice) ? Math.trunc(nextPrice) : 0,
-                );
+                const next = event.currentTarget.value;
+                if (/^\d*$/.test(next)) setPriceInput(next);
               }}
             />
           </div>

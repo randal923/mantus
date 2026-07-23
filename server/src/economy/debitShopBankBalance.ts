@@ -1,14 +1,15 @@
 import type { PoolClient } from "pg";
 import { parseBalance } from "./parseBalance";
-import { debitBankBalanceQuery } from "./sql/debitBankBalanceQuery";
+import { debitShopBankWithLedgerQuery } from "./sql/debitShopBankWithLedgerQuery";
 
+/** Debits shop funds and appends the matching bank ledger row atomically. */
 export async function debitShopBankBalance(
   client: PoolClient,
   characterId: string,
   amount: number,
 ): Promise<number> {
   const result = await client.query<{ balance: string }>(
-    debitBankBalanceQuery,
+    debitShopBankWithLedgerQuery,
     [characterId, amount],
   );
   const row = result.rows[0];

@@ -21,13 +21,15 @@ export function BankTransferForm({
 }: BankTransferFormProps) {
   const { t } = useAppTranslation();
   const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [amountInput, setAmountInput] = useState("");
   const trimmedRecipient = recipient.trim();
+  const amount = Number(amountInput);
   const canSubmit =
     !disabled &&
     trimmedRecipient.length >= MIN_NAME_LENGTH &&
     trimmedRecipient.length <= MAX_NAME_LENGTH &&
-    Number.isInteger(amount) &&
+    amountInput !== "" &&
+    Number.isSafeInteger(amount) &&
     amount > 0 &&
     amount <= maxAmount;
 
@@ -35,7 +37,7 @@ export function BankTransferForm({
     event.preventDefault();
     if (!canSubmit) return;
     onSubmit(trimmedRecipient, amount);
-    setAmount(0);
+    setAmountInput("");
   };
 
   return (
@@ -53,16 +55,15 @@ export function BankTransferForm({
         <Input
           label={t("bank.amount")}
           name="bank-transfer-amount"
-          type="number"
-          min={1}
-          max={maxAmount}
-          step={1}
+          type="text"
           inputMode="numeric"
-          value={amount === 0 ? "" : amount}
+          pattern="[0-9]*"
+          maxLength={String(maxAmount).length}
+          value={amountInput}
           placeholder="0"
           onChange={(event) => {
-            const next = event.currentTarget.valueAsNumber;
-            setAmount(Number.isFinite(next) ? Math.trunc(next) : 0);
+            const next = event.currentTarget.value;
+            if (/^\d*$/.test(next)) setAmountInput(next);
           }}
           className="min-w-0 flex-1"
         />

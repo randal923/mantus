@@ -736,6 +736,7 @@
     "search": "Search",
     "searchPlaceholder": "Search by item name…",
     "amount": "Amount",
+    "amountFor": "Amount for {{name}}",
     "carried": "Carried {{currency}}:",
     "buy": "Buy",
     "sell": "Sell",

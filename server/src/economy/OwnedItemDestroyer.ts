@@ -3,9 +3,8 @@ import type { Item } from "../item/Item";
 import { itemFromOwnedRow } from "./itemFromOwnedRow";
 import type { OwnedItemRow } from "./OwnedItemRow";
 import type { OwnedItemTally } from "./OwnedItemTally";
-import { decrementItemCountQuery } from "./sql/decrementItemCountQuery";
-import { deleteItemRowQuery } from "./sql/deleteItemRowQuery";
-import { insertItemDestroyedAuditQuery } from "./sql/insertItemDestroyedAuditQuery";
+import { decrementOwnedItemWithAuditQuery } from "./sql/decrementOwnedItemWithAuditQuery";
+import { deleteOwnedItemWithAuditQuery } from "./sql/deleteOwnedItemWithAuditQuery";
 
 /**
  * Destroys owned item rows with optimistic version guards, auditing each
@@ -36,8 +35,15 @@ export class OwnedItemDestroyer {
       remaining -= spent;
       if (spent === current.count) {
         const deleted = await this.client.query<{ id: string }>(
-          deleteItemRowQuery,
-          [row.id, current.version],
+          deleteOwnedItemWithAuditQuery,
+          [
+            row.id,
+            current.version,
+            this.characterId,
+            itemTypeId,
+            spent,
+            reason,
+          ],
         );
         if (deleted.rows[0]?.id !== row.id) {
           throw new Error("economy item version is stale");
@@ -47,8 +53,15 @@ export class OwnedItemDestroyer {
         this.tally.decrement();
       } else {
         const updated = await this.client.query<{ version: number }>(
-          decrementItemCountQuery,
-          [row.id, spent, current.version],
+          decrementOwnedItemWithAuditQuery,
+          [
+            row.id,
+            spent,
+            current.version,
+            this.characterId,
+            itemTypeId,
+            reason,
+          ],
         );
         if (updated.rows[0]?.version !== current.version + 1) {
           throw new Error("economy item version is stale");
@@ -59,13 +72,6 @@ export class OwnedItemDestroyer {
           version: current.version + 1,
         });
       }
-      await this.client.query(insertItemDestroyedAuditQuery, [
-        this.characterId,
-        row.id,
-        itemTypeId,
-        spent,
-        reason,
-      ]);
     }
     if (remaining !== 0) throw new Error("economy item balance is stale");
   }

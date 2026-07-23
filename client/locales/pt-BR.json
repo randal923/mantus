@@ -736,6 +736,7 @@
     "search": "Buscar",
     "searchPlaceholder": "Buscar pelo nome do item…",
     "amount": "Quantia",
+    "amountFor": "Quantidade de {{name}}",
     "carried": "{{currency}} carregado:",
     "buy": "Comprar",
     "sell": "Vender",

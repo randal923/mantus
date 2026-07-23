@@ -21,15 +21,20 @@ export function BankAmountForm({
   onSubmit,
 }: BankAmountFormProps) {
   const { t } = useAppTranslation();
-  const [amount, setAmount] = useState(0);
+  const [amountInput, setAmountInput] = useState("");
+  const amount = Number(amountInput);
   const canSubmit =
-    !disabled && Number.isInteger(amount) && amount > 0 && amount <= maxAmount;
+    !disabled &&
+    amountInput !== "" &&
+    Number.isSafeInteger(amount) &&
+    amount > 0 &&
+    amount <= maxAmount;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canSubmit) return;
     onSubmit(amount);
-    setAmount(0);
+    setAmountInput("");
   };
 
   return (
@@ -37,16 +42,15 @@ export function BankAmountForm({
       <Input
         label={t("bank.amount")}
         name={name}
-        type="number"
-        min={1}
-        max={maxAmount}
-        step={1}
+        type="text"
         inputMode="numeric"
-        value={amount === 0 ? "" : amount}
+        pattern="[0-9]*"
+        maxLength={String(maxAmount).length}
+        value={amountInput}
         placeholder="0"
         onChange={(event) => {
-          const next = event.currentTarget.valueAsNumber;
-          setAmount(Number.isFinite(next) ? Math.trunc(next) : 0);
+          const next = event.currentTarget.value;
+          if (/^\d*$/.test(next)) setAmountInput(next);
         }}
         className="min-w-0 flex-1"
       />
@@ -55,7 +59,7 @@ export function BankAmountForm({
         size="sm"
         className="h-11"
         disabled={disabled || maxAmount === 0}
-        onClick={() => setAmount(maxAmount)}
+        onClick={() => setAmountInput(String(maxAmount))}
       >
         {t("bank.all")}
       </Button>

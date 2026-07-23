@@ -18,7 +18,6 @@ import type { ShopPurchaseResult } from "./ShopOperationResult";
 import { shopSubtypeAttributes } from "./shopSubtypeAttributes";
 import type { ShopPurchaseRequest } from "./ShopStore";
 import { insertShopPurchaseAuditQuery } from "./sql/insertShopPurchaseAuditQuery";
-import { insertShopPurchaseLedgerQuery } from "./sql/insertShopPurchaseLedgerQuery";
 import { TransactionRollback } from "./TransactionRollback";
 
 /** Runs the money and item legs of one purchase inside the open transaction. */
@@ -156,16 +155,7 @@ export async function executeShopPurchase(
     });
   }
   if (bankPay > 0 && request.currencyItemTypeId === undefined) {
-    const balanceAfter = await debitShopBankBalance(
-      client,
-      characterId,
-      bankPay,
-    );
-    await client.query(insertShopPurchaseLedgerQuery, [
-      characterId,
-      bankPay,
-      balanceAfter,
-    ]);
+    await debitShopBankBalance(client, characterId, bankPay);
   }
   await client.query(insertShopPurchaseAuditQuery, [
     characterId,

@@ -13,8 +13,6 @@ import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
 import { ShopEntryRow } from "./ShopEntryRow";
 
-const MAX_AMOUNT = 100;
-
 interface ShopPanelProps {
   npcName: string;
   entries: ReadonlyArray<ShopEntryProjection>;
@@ -45,43 +43,22 @@ export function ShopPanel({
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
   const [search, setSearch] = useState("");
-  const [amount, setAmount] = useState(1);
   const normalizedSearch = search.trim().toLowerCase();
   const visibleEntries = entries.filter((entry) =>
     entry.name.toLowerCase().includes(normalizedSearch),
   );
-  const validAmount =
-    Number.isInteger(amount) && amount >= 1 && amount <= MAX_AMOUNT;
 
   return (
     <Modal title={t("shop.title", { npcName })} onClose={onClose}>
       <div className="flex flex-col gap-4">
-        <div className="flex items-end gap-3">
-          <Input
-            label={t("shop.search")}
-            name="shop-search"
-            type="search"
-            placeholder={t("shop.searchPlaceholder")}
-            value={search}
-            onChange={(event) => setSearch(event.currentTarget.value)}
-            className="min-w-0 flex-1"
-          />
-          <Input
-            label={t("shop.amount")}
-            name="shop-amount"
-            type="number"
-            min={1}
-            max={MAX_AMOUNT}
-            step={1}
-            inputMode="numeric"
-            value={amount === 0 ? "" : amount}
-            onChange={(event) => {
-              const next = event.currentTarget.valueAsNumber;
-              setAmount(Number.isFinite(next) ? Math.trunc(next) : 0);
-            }}
-            className="w-24"
-          />
-        </div>
+        <Input
+          label={t("shop.search")}
+          name="shop-search"
+          type="search"
+          placeholder={t("shop.searchPlaceholder")}
+          value={search}
+          onChange={(event) => setSearch(event.currentTarget.value)}
+        />
 
         <div className="flex items-center gap-1.5 text-xs tabular-nums text-ui-muted">
           {t("shop.carried", { currency: currencyName })}
@@ -126,8 +103,7 @@ export function ShopPanel({
               <ShopEntryRow
                 key={entry.offerId}
                 entry={entry}
-                amount={validAmount ? amount : 1}
-                disabled={pending || !validAmount}
+                disabled={pending}
                 currencyName={currencyName}
                 onBuy={onBuy}
                 onSell={onSell}

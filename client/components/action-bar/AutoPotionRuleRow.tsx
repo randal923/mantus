@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { AutoPotionRule } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import type { PotionBarItem } from "../../lib/inventory/getPotionBarItems";
@@ -19,6 +20,9 @@ export function AutoPotionRuleRow({
   onChange,
 }: AutoPotionRuleRowProps) {
   const { t } = useAppTranslation();
+  const [thresholdInput, setThresholdInput] = useState(
+    String(rule?.thresholdPercent ?? 50),
+  );
   const eligiblePotions = potions.filter(({ item }) =>
     item.potionResources?.includes(resource),
   );
@@ -30,6 +34,7 @@ export function AutoPotionRuleRow({
 
   const enableRule = () => {
     if (!defaultPotion) return;
+    setThresholdInput("50");
     onChange({
       itemTypeId: defaultPotion.typeId,
       thresholdPercent: 50,
@@ -112,20 +117,30 @@ export function AutoPotionRuleRow({
             <span>{t("potions.autoPotion.below")}</span>
             <span className="flex items-center gap-2">
               <input
-                type="number"
-                min={1}
-                max={99}
+                type="text"
                 inputMode="numeric"
-                value={rule?.thresholdPercent ?? 50}
+                pattern="[0-9]*"
+                maxLength={2}
+                value={thresholdInput}
                 disabled={!rule}
                 onChange={(event) => {
                   if (!rule) return;
-                  const thresholdPercent = Math.min(
-                    99,
-                    Math.max(1, Number(event.currentTarget.value)),
-                  );
+                  const next = event.currentTarget.value;
+                  if (!/^\d*$/.test(next)) return;
+                  setThresholdInput(next);
+                  const thresholdPercent = Number(next);
+                  if (
+                    !Number.isInteger(thresholdPercent) ||
+                    thresholdPercent < 1 ||
+                    thresholdPercent > 99
+                  ) {
+                    return;
+                  }
                   onChange({ ...rule, thresholdPercent });
                 }}
+                onBlur={() =>
+                  setThresholdInput(String(rule?.thresholdPercent ?? 50))
+                }
                 className="h-10 min-w-0 flex-1 rounded-md border border-ui-stone-light/25 bg-ui-panel-deep px-3 text-sm tabular-nums text-white outline-none hover:border-ui-gold/45 focus:border-ui-gold/60 focus:ring-2 focus:ring-ui-gold/15 disabled:opacity-45"
               />
               <span className="font-semibold text-ui-text-bright">%</span>

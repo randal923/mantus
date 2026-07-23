@@ -58,11 +58,15 @@ export function GuildWarsSection({
           <Input
             label={t("guild.fragLimit")}
             aria-label={t("guild.fragLimit")}
-            type="number"
-            min={1}
-            max={GUILD_LIMITS.maxFragLimit}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={String(GUILD_LIMITS.maxFragLimit).length}
             value={fragLimit}
-            onChange={(event) => setFragLimit(event.target.value)}
+            onChange={(event) => {
+              const next = event.currentTarget.value;
+              if (/^\d*$/.test(next)) setFragLimit(next);
+            }}
             className="w-28"
           />
           <Button variant="danger" type="submit" disabled={pending}>
