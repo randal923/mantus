@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { PartyState } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
+import { Checkbox } from "../ui/Checkbox";
 import { CloseButton } from "../ui/CloseButton";
 import { Input } from "../ui/Input";
 import { PartyMemberRow } from "./PartyMemberRow";
@@ -93,18 +94,13 @@ export function PartyPanel({
                 </p>
               </div>
               {isLeader ? (
-                <label className="relative inline-flex cursor-pointer items-center">
-                  <input
-                    type="checkbox"
-                    checked={party.sharedExpActive}
-                    onChange={(event) =>
-                      onSetSharedExp(event.target.checked)
-                    }
-                    className="peer sr-only"
-                  />
-                  <span className="h-7 w-12 rounded-full border border-ui-stone-light/20 bg-black/40 transition-colors peer-checked:border-ui-gold/45 peer-checked:bg-ui-gold-deep peer-focus-visible:ring-2 peer-focus-visible:ring-ui-gold/60 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-ui-muted after:transition-transform peer-checked:after:translate-x-5 peer-checked:after:bg-ui-gold" />
-                  <span className="sr-only">{t("party.sharedExp")}</span>
-                </label>
+                <Checkbox
+                  checked={party.sharedExpActive}
+                  aria-label={t("party.sharedExp")}
+                  onChange={(event) =>
+                    onSetSharedExp(event.target.checked)
+                  }
+                />
               ) : (
                 <span
                   className={`flex size-8 items-center justify-center rounded-md border ${

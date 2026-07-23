@@ -881,6 +881,75 @@
       "assign": "Atribuir {{name}} ao espaço {{slot}}"
     }
   },
+  "actionBot": {
+    "title": "Bot de Ações",
+    "configure": "Configurar Bot de Ações",
+    "description": "Selecione uma ação acima, adicione-a e escolha exatamente quando ela será executada.",
+    "enabled": "Ativado",
+    "quickHelpers": "Assistentes rápidos",
+    "quickHelpersDescription": "Ative magias de suporte comuns sem ocupar espaços na barra de ações.",
+    "autoHaste": "Velocidade Automática",
+    "autoHasteDescription": "Conjura novamente a magia de velocidade escolhida quando o efeito termina.",
+    "hasteSpell": "Magia de velocidade",
+    "haste": "Velocidade",
+    "strongHaste": "Velocidade Forte",
+    "enableAutoHaste": "Ativar Velocidade Automática",
+    "autoUtamoVita": "Utamo Vita Automático",
+    "autoUtamoVitaDescription": "Conjura Escudo Mágico novamente quando o efeito termina.",
+    "enableAutoUtamoVita": "Ativar Utamo Vita Automático",
+    "rulesTitle": "Regras de ações automáticas",
+    "rulesDescription": "As regras são executadas de cima para baixo. Mova-as para definir a prioridade.",
+    "ruleCount": "{{count}} / {{max}}",
+    "addSelectedAction": "Adicionar Ação Selecionada",
+    "columns": {
+      "on": "Ativa",
+      "action": "Ação",
+      "activateWhen": "Executar quando",
+      "setting": "Configuração",
+      "options": "Opções"
+    },
+    "noRules": "Nenhuma regra automática",
+    "noRulesDescription": "Coloque uma poção, runa, magia ou equipamento na barra de ações e adicione sua condição aqui.",
+    "status": "Status do Bot de Ações",
+    "statusEnabled": "Ativado ✓",
+    "statusDisabled": "Desativado",
+    "triggers": {
+      "resource-below": "Recurso fica abaixo de",
+      "resource-above": "Recurso fica acima de",
+      "target-present": "Alvo de ataque selecionado",
+      "condition-missing": "Efeito não está ativo"
+    },
+    "resources": {
+      "health": "Vida",
+      "mana": "Mana"
+    },
+    "conditions": {
+      "haste": "Velocidade",
+      "magic-shield": "Escudo Mágico"
+    },
+    "directions": {
+      "below": "abaixo de",
+      "above": "acima de"
+    },
+    "triggerDescriptions": {
+      "target": "Executa no alvo de ataque atual quando houver um selecionado.",
+      "condition": "Executa quando {{condition}} não estiver ativo.",
+      "resource": "Executa quando {{resource}} estiver {{direction}} {{percent}}%."
+    },
+    "enableRule": "Ativar regra {{number}}",
+    "actionForRule": "Ação da regra {{number}}",
+    "activationForRule": "Condição da regra {{number}}",
+    "resourceForRule": "Recurso da regra {{number}}",
+    "missingEffectForRule": "Efeito ausente da regra {{number}}",
+    "decreaseThreshold": "Diminuir limite da regra {{number}}",
+    "increaseThreshold": "Aumentar limite da regra {{number}}",
+    "currentTarget": "Alvo atual",
+    "explainRule": "Explicar regra {{number}}",
+    "moveRuleUp": "Mover regra para cima",
+    "moveRuleDown": "Mover regra para baixo",
+    "removeRule": "Remover regra",
+    "unequipInactive": "Desequipar quando esta condição deixar de estar ativa"
+  },
   "contextMenu": {
     "look": "Olhar",
     "use": "Usar",
@@ -931,7 +1000,7 @@
     "chase": "Perseguir alvo",
     "secureMode": "Modo PVP seguro",
     "conditions": "Condições ativas",
-    "selectRuneTarget": "Selecione um piso para a runa",
+    "selectRuneTarget": "Selecione um alvo para a runa",
     "conditionTitle": "{{condition}}, {{seconds}} segundos restantes",
     "log": "Registro de combate",
     "condition": {

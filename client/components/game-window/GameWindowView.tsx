@@ -22,7 +22,7 @@ export function GameWindowView() {
     <div className="fixed inset-0 overflow-hidden bg-black">
       <div
         ref={setContainer}
-        className={`absolute inset-0 ${targeting ? "cursor-crosshair" : ""}`}
+        className={`absolute inset-0 ${targeting ? "cursor-action-target" : ""}`}
       />
       <div
         aria-hidden

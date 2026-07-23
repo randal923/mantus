@@ -2,8 +2,7 @@ import type { Character } from "./Character";
 import type { CharacterRow } from "./CharacterRow";
 import type { CharacterSkill } from "../progression/CharacterSkill";
 import { parseActionBar } from "./parseActionBar";
-import { parseAutoPotionSettings } from "./parseAutoPotionSettings";
-import { parsePotionActionBar } from "./parsePotionActionBar";
+import { parseActionBotSettings } from "./parseActionBotSettings";
 import { skullFromCode } from "../pvp/skullFromCode";
 
 export function toCharacter(
@@ -12,6 +11,7 @@ export function toCharacter(
   progressionEventIds: ReadonlyArray<string>,
   storageValues: Readonly<Record<string, number>>,
 ): Character {
+  const actionBar = parseActionBar(row.action_bar, row.potion_action_bar);
   return {
     id: row.id,
     accountId: row.account_id,
@@ -42,9 +42,11 @@ export function toCharacter(
       addons: row.outfit_addons,
     },
     townId: row.town_id,
-    actionBar: parseActionBar(row.action_bar),
-    potionActionBar: parsePotionActionBar(row.potion_action_bar),
-    autoPotionSettings: parseAutoPotionSettings(row.potion_action_bar),
+    actionBar,
+    actionBotSettings: parseActionBotSettings(
+      row.potion_action_bar,
+      actionBar,
+    ),
     skull: skullFromCode(row.skull),
     skullExpiresAt: row.skull_expires_at,
     createdAt: row.created_at,

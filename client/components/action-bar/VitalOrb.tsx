@@ -22,6 +22,10 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
   const formattedMax = boundedMax.toLocaleString(language);
   const horizontalPosition =
     kind === "health" ? "-left-2 sm:-left-4" : "left-2 sm:left-4";
+  const dragonPosition =
+    kind === "health"
+      ? "left-[46%]"
+      : "left-[54%] -scale-x-100";
 
   return (
     <div
@@ -55,9 +59,7 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
         width={256}
         height={256}
         draggable={false}
-        className={`ui-vital-orb-dragon pointer-events-none absolute top-1/2 left-1/2 z-30 size-44 max-w-none -translate-x-1/2 -translate-y-1/2 select-none sm:size-60 ${
-          kind === "mana" ? "-scale-x-100" : ""
-        }`}
+        className={`ui-vital-orb-dragon pointer-events-none absolute top-1/2 z-30 size-44 max-w-none -translate-x-1/2 -translate-y-1/2 select-none sm:size-60 ${dragonPosition}`}
       />
       <span
         aria-hidden

@@ -1,8 +1,11 @@
 import type {
+  ActivateActionBarMessage,
   CastSpellMessage,
+  CombatTarget,
   Direction,
   Position,
   SetFightModeMessage,
+  UseItemWithMessage,
   UsePotionMessage,
   UseRuneMessage,
 } from "@tibia/protocol";
@@ -42,8 +45,12 @@ import { getMissileId } from "./getMissileId";
 import { isInRange } from "./isInRange";
 import { PlayerAutoAttack } from "./PlayerAutoAttack";
 import { playerForSession } from "./playerForSession";
+import type { SpellDefinition } from "./Spell";
 import { SpellCaster } from "./SpellCaster";
 import { SpellRegistry } from "./SpellRegistry";
+import { ActionBot } from "./ActionBot";
+import { getPotionDefinition } from "../potion/getPotionDefinition";
+import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
 
 export class Combat {
   private readonly spells: SpellRegistry;
@@ -53,6 +60,7 @@ export class Combat {
   private readonly spellCaster: SpellCaster;
   private readonly autoAttack: PlayerAutoAttack;
   private readonly potions: PotionService;
+  private readonly actionBot: ActionBot;
   private readonly formula: CombatFormula;
   private readonly queuedMonsterAbilities: Array<{
     readonly executeAt: number;
@@ -86,6 +94,11 @@ export class Combat {
     lootRate = 1,
     bestiaryHooks?: BestiaryHooks,
     private readonly monsterEventHooks?: MonsterEventHooks,
+    private readonly useItemWith?: (
+      session: Session,
+      intent: UseItemWithMessage,
+      now: number,
+    ) => boolean,
   ) {
     this.spells = spells;
     this.formula = new CombatFormula(seed);
@@ -164,6 +177,20 @@ export class Combat {
       registry,
       partyHooks,
     );
+    this.actionBot = new ActionBot(
+      world,
+      (session, slotIndex, target, now) =>
+        this.activateAutomaticActionBarSlot(
+          session,
+          slotIndex,
+          target,
+          now,
+        ),
+      (session, slotIndex, now) =>
+        this.deactivateActionBarSlot(session, slotIndex, now),
+      (session, spellId, now) =>
+        this.activateAutomaticSpell(session, spellId, now),
+    );
   }
 
   selectTarget(session: Session, creatureId: string, now: number): void {
@@ -233,7 +260,7 @@ export class Combat {
     this.spellCaster.executeSpell(session, spell, intent.target, now, true);
   }
 
-  useRune(session: Session, intent: UseRuneMessage, now: number): void {
+  useRune(session: Session, intent: UseRuneMessage, now: number): boolean {
     const player = playerForSession(this.world, session);
     const combatItem = player
       ? this.items.combatItem(player.id, intent.itemId, intent.revision)
@@ -249,9 +276,9 @@ export class Combat {
       !this.spellCaster.canBeginSpell(session, player, spell, intent.target, now)
     ) {
       this.feedback.reject(session, now);
-      return;
+      return false;
     }
-    this.items.consumeForCombat(
+    return this.items.consumeForCombat(
       session,
       intent.itemId,
       intent.revision,
@@ -270,6 +297,27 @@ export class Combat {
 
   usePotion(session: Session, intent: UsePotionMessage, now: number): void {
     this.potions.use(session, intent, now);
+  }
+
+  activateActionBar(
+    session: Session,
+    intent: ActivateActionBarMessage,
+    now: number,
+  ): void {
+    const errorRevision = session.errorRevision;
+    const started = this.activateActionBarSlot(
+      session,
+      intent.slotIndex,
+      intent.target,
+      now,
+      false,
+    );
+    session.send({
+      type: "action-bar-activation-result",
+      slotIndex: intent.slotIndex,
+      accepted:
+        started && session.errorRevision === errorRevision,
+    });
   }
 
   onMonsterSpawn(monster: Monster, now: number): void {
@@ -296,9 +344,365 @@ export class Combat {
     this.conditionSystem.tick(now);
     this.moveFearedCreatures(now);
     for (const session of this.registry.all()) {
-      this.potions.tickAutoUse(session, now);
+      this.actionBot.tick(session, now);
       this.autoAttack.tickPlayerAttack(session, now);
     }
+  }
+
+  private activateAutomaticActionBarSlot(
+    session: Session,
+    slotIndex: number,
+    suppliedTarget: CombatTarget | undefined,
+    now: number,
+  ): { readonly started: boolean; readonly nextAttemptAt: number } {
+    const cooldown = this.actionBarCooldown(session, slotIndex);
+    if (cooldown.readyAt > now) {
+      return { started: false, nextAttemptAt: cooldown.readyAt };
+    }
+    const started = this.activateActionBarSlot(
+      session,
+      slotIndex,
+      suppliedTarget,
+      now,
+      true,
+    );
+    const updatedCooldown = this.actionBarCooldown(session, slotIndex);
+    return {
+      started,
+      nextAttemptAt: started
+        ? Math.max(
+            now + 500,
+            now + cooldown.totalMs,
+            updatedCooldown.readyAt,
+          )
+        : Math.max(now + 250, updatedCooldown.readyAt),
+    };
+  }
+
+  private activateActionBarSlot(
+    session: Session,
+    slotIndex: number,
+    suppliedTarget: CombatTarget | undefined,
+    now: number,
+    automatic: boolean,
+  ): boolean {
+    const player = playerForSession(this.world, session);
+    const action = session.actionBar[slotIndex]?.action;
+    if (!player || !action || action.kind === "text") return false;
+    if (action.kind === "spell") {
+      const spell = this.spells.get(action.spellId);
+      if (!spell || spell.origin !== "spell") return false;
+      const targetMode = getSpellActionTargetMode(
+        spell.targetKind,
+        action.targetMode,
+      );
+      const target = this.actionTarget(
+        targetMode,
+        suppliedTarget,
+      ) ??
+        (automatic
+          ? this.automaticTarget(
+              session,
+              spell.targetKind === "position",
+            )
+          : null);
+      if (
+        !target ||
+        (automatic &&
+          !this.spellCaster.canBeginSpell(
+            session,
+            player,
+            spell,
+            target,
+            now,
+          ))
+      ) {
+        return false;
+      }
+      this.castSpell(
+        session,
+        { type: "cast-spell", spellId: spell.id, target },
+        now,
+      );
+      return true;
+    }
+    if (action.mode === "equip") {
+      return this.items.toggleEquippedItem(
+        session,
+        action.itemTypeId,
+        automatic ? true : null,
+        now,
+      );
+    }
+    const combatItem = this.items.combatItemByType(
+      player.id,
+      action.itemTypeId,
+    );
+    if (!combatItem) return false;
+    const targetMode =
+      action.mode === "use-on-self"
+        ? "self"
+        : action.mode === "use-on-target"
+          ? "attack-target"
+          : action.mode === "use-at-cursor"
+            ? "cursor"
+            : action.mode === "use-with-crosshair"
+              ? "crosshair"
+              : null;
+    const target = targetMode
+      ? this.actionTarget(targetMode, suppliedTarget)
+      : undefined;
+    const potion = getPotionDefinition(action.itemTypeId);
+    if (potion) {
+      const potionTarget =
+        target ?? (automatic ? this.automaticTarget(session, false) : null);
+      const targetPlayerId = this.targetCreatureId(
+        session,
+        player,
+        potionTarget ?? undefined,
+      );
+      if (!targetPlayerId) return false;
+      return this.potions.use(
+        session,
+        {
+          type: "use-potion",
+          itemId: combatItem.item.id,
+          revision: combatItem.item.version,
+          targetPlayerId,
+        },
+        now,
+        !automatic,
+      );
+    }
+    const rune = this.spells.getRune(action.itemTypeId);
+    if (rune) {
+      const runeTarget =
+        target ??
+        (automatic
+          ? this.automaticTarget(
+              session,
+              rune.targetKind === "position",
+            )
+          : null);
+      if (
+        !runeTarget ||
+        (automatic &&
+          !this.spellCaster.canBeginSpell(
+            session,
+            player,
+            rune,
+            runeTarget,
+            now,
+          ))
+      ) {
+        return false;
+      }
+      return this.useRune(
+        session,
+        {
+          type: "use-rune",
+          itemId: combatItem.item.id,
+          revision: combatItem.item.version,
+          target: runeTarget,
+        },
+        now,
+      );
+    }
+    const itemTarget =
+      target ?? (automatic ? this.automaticTarget(session, true) : null);
+    const targetPosition = itemTarget
+      ? this.targetPosition(session, player, itemTarget)
+      : null;
+    if (
+      targetPosition &&
+      action.mode !== "use" &&
+      this.useItemWith?.(
+        session,
+        {
+          type: "use-item-with",
+          itemId: combatItem.item.id,
+          revision: combatItem.item.version,
+          targetPosition,
+        },
+        now,
+      )
+    ) {
+      return true;
+    }
+    return this.items.activateOwnedItem(
+      session,
+      action.itemTypeId,
+      action.mode,
+      targetPosition,
+      now,
+    );
+  }
+
+  private activateAutomaticSpell(
+    session: Session,
+    spellId: string,
+    now: number,
+  ): { readonly started: boolean; readonly nextAttemptAt: number } {
+    if (
+      spellId !== "utani-hur" &&
+      spellId !== "utani-gran-hur" &&
+      spellId !== "utamo-vita"
+    ) {
+      return { started: false, nextAttemptAt: now + 250 };
+    }
+    const player = playerForSession(this.world, session);
+    const spell = this.spells.get(spellId);
+    const target = { kind: "self" } as const;
+    if (!spell) {
+      return { started: false, nextAttemptAt: now + 250 };
+    }
+    const cooldown = this.spellCooldown(session, spell);
+    if (cooldown.readyAt > now) {
+      return { started: false, nextAttemptAt: cooldown.readyAt };
+    }
+    if (
+      !player ||
+      spell.origin !== "spell" ||
+      spell.targetKind !== "self" ||
+      !this.spellCaster.canBeginSpell(
+        session,
+        player,
+        spell,
+        target,
+        now,
+      )
+    ) {
+      return { started: false, nextAttemptAt: now + 250 };
+    }
+    this.castSpell(
+      session,
+      { type: "cast-spell", spellId, target },
+      now,
+    );
+    return {
+      started: true,
+      nextAttemptAt: Math.max(
+        now + 500,
+        now + cooldown.totalMs,
+        this.spellCooldown(session, spell).readyAt,
+      ),
+    };
+  }
+
+  private actionBarCooldown(
+    session: Session,
+    slotIndex: number,
+  ): { readonly readyAt: number; readonly totalMs: number } {
+    const action = session.actionBar[slotIndex]?.action;
+    if (!action || action.kind === "text") {
+      return { readyAt: 0, totalMs: 0 };
+    }
+    if (action.kind === "spell") {
+      const spell = this.spells.get(action.spellId);
+      return spell
+        ? this.spellCooldown(session, spell)
+        : { readyAt: 0, totalMs: 0 };
+    }
+    if (getPotionDefinition(action.itemTypeId)) {
+      return (
+        session.combatCooldowns.get("potion") ?? {
+          readyAt: 0,
+          totalMs: 0,
+        }
+      );
+    }
+    const rune = this.spells.getRune(action.itemTypeId);
+    return rune
+      ? this.spellCooldown(session, rune)
+      : { readyAt: 0, totalMs: 0 };
+  }
+
+  private spellCooldown(
+    session: Session,
+    spell: SpellDefinition,
+  ): { readonly readyAt: number; readonly totalMs: number } {
+    return {
+      readyAt: Math.max(
+        session.combatCooldowns.get(`spell:${spell.id}`)?.readyAt ?? 0,
+        ...spell.groups.map(
+          (group) =>
+            session.combatCooldowns.get(`group:${group}`)?.readyAt ?? 0,
+        ),
+      ),
+      totalMs: Math.max(spell.cooldownMs, ...spell.groupCooldownMs),
+    };
+  }
+
+  private deactivateActionBarSlot(
+    session: Session,
+    slotIndex: number,
+    now: number,
+  ): boolean {
+    const action = session.actionBar[slotIndex]?.action;
+    if (action?.kind !== "item" || action.mode !== "equip") return false;
+    return this.items.toggleEquippedItem(
+      session,
+      action.itemTypeId,
+      false,
+      now,
+    );
+  }
+
+  private actionTarget(
+    mode: "self" | "attack-target" | "direction" | "cursor" | "crosshair",
+    supplied: CombatTarget | undefined,
+  ): CombatTarget | null {
+    if (mode === "self") return { kind: "self" };
+    if (mode === "attack-target") return { kind: "attack-target" };
+    if (mode === "direction") return { kind: "direction" };
+    if (
+      supplied?.kind === "position" ||
+      supplied?.kind === "creature"
+    ) {
+      return supplied;
+    }
+    return null;
+  }
+
+  private automaticTarget(
+    session: Session,
+    asPosition: boolean,
+  ): CombatTarget | null {
+    if (!session.attackTargetId) return null;
+    if (!asPosition) return { kind: "attack-target" };
+    const target = this.world.getCreature(session.attackTargetId);
+    return target
+      ? { kind: "position", position: target.position }
+      : null;
+  }
+
+  private targetCreatureId(
+    session: Session,
+    player: Player,
+    target: CombatTarget | undefined,
+  ): string | null {
+    if (target?.kind === "self") return player.id;
+    if (target?.kind === "creature") return target.creatureId;
+    if (target?.kind === "attack-target") return session.attackTargetId;
+    return null;
+  }
+
+  private targetPosition(
+    session: Session,
+    player: Player,
+    target: CombatTarget,
+  ): Position | null {
+    if (target.kind === "self") return player.position;
+    if (target.kind === "position") return target.position;
+    const creatureId =
+      target.kind === "attack-target"
+        ? session.attackTargetId
+        : target.kind === "creature"
+          ? target.creatureId
+          : null;
+    return creatureId
+      ? (this.world.getCreature(creatureId)?.position ?? null)
+      : null;
   }
 
   executeMonsterAbility(

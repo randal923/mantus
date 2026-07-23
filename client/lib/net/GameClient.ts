@@ -21,8 +21,7 @@ import {
   type ServerErrorCode,
   type ServerMessage,
   type ActionBar,
-  type AutoPotionSettings,
-  type PotionActionBar,
+  type ActionBotSettings,
   type UiSettings,
   type ViewRange,
 } from "@tibia/protocol";
@@ -136,6 +135,14 @@ export class GameClient {
       itemId: item.id,
       revision: item.revision,
       targetPlayerId,
+    });
+  }
+
+  activateActionBar(slotIndex: number, target?: CombatTarget): boolean {
+    return this.send({
+      type: "activate-action-bar",
+      slotIndex,
+      ...(target ? { target } : {}),
     });
   }
 
@@ -701,20 +708,13 @@ export class GameClient {
     return this.send({ type: "update-ui-settings", settings });
   }
 
-  updateActionBar(actionBar: ActionBar): boolean {
-    return this.send({ type: "update-action-bar", actionBar });
-  }
-
-  updatePotionActionBar(potionActionBar: PotionActionBar): boolean {
+  updateActionBar(
+    actionBar: ActionBar,
+    settings: ActionBotSettings,
+  ): boolean {
     return this.send({
-      type: "update-potion-action-bar",
-      potionActionBar,
-    });
-  }
-
-  updateAutoPotionSettings(settings: AutoPotionSettings): boolean {
-    return this.send({
-      type: "update-auto-potion-settings",
+      type: "update-action-bar",
+      actionBar,
       settings,
     });
   }

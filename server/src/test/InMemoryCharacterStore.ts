@@ -1,7 +1,6 @@
 import type {
   ActionBar,
-  AutoPotionSettings,
-  PotionActionBar,
+  ActionBotSettings,
 } from "@tibia/protocol";
 import type {
   Character,
@@ -87,38 +86,14 @@ export class InMemoryCharacterStore implements CharacterStore {
   async updateActionBar(
     characterId: string,
     actionBar: ActionBar,
+    actionBotSettings: ActionBotSettings,
   ): Promise<void> {
     const character = this.characters.get(characterId);
     if (!character) throw new CharacterError("not-found");
     this.characters.set(characterId, {
       ...character,
       actionBar,
-      updatedAt: new Date(),
-    });
-  }
-
-  async updatePotionActionBar(
-    characterId: string,
-    potionActionBar: PotionActionBar,
-  ): Promise<void> {
-    const character = this.characters.get(characterId);
-    if (!character) throw new CharacterError("not-found");
-    this.characters.set(characterId, {
-      ...character,
-      potionActionBar,
-      updatedAt: new Date(),
-    });
-  }
-
-  async updateAutoPotionSettings(
-    characterId: string,
-    autoPotionSettings: AutoPotionSettings,
-  ): Promise<void> {
-    const character = this.characters.get(characterId);
-    if (!character) throw new CharacterError("not-found");
-    this.characters.set(characterId, {
-      ...character,
-      autoPotionSettings,
+      actionBotSettings,
       updatedAt: new Date(),
     });
   }

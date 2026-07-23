@@ -24,6 +24,22 @@ export function createGameWindowRenderer(
     },
     cancelAttack: () => getClient()?.cancelAttack(),
     targetCreature: (creatureId) => {
+      const action = runtime.pendingActionBarRef.current;
+      if (action?.target === "creature") {
+        if (action.awaitingResult) return true;
+        const sent = getClient()?.activateActionBar(action.slotIndex, {
+          kind: "creature",
+          creatureId,
+        });
+        if (sent) {
+          runtime.pendingActionBarRef.current = {
+            ...action,
+            awaitingResult: true,
+          };
+        }
+        return true;
+      }
+      if (action) return false;
       const potion = runtime.pendingPotionRef.current;
       if (!potion) return false;
       const target = runtime.visibleCreaturesRef.current.find(
@@ -33,7 +49,7 @@ export function createGameWindowRenderer(
         creatureId !== store.getState().ownCharacter?.id &&
         target?.kind !== "player"
       ) {
-        return false;
+        return true;
       }
       runtime.pendingPotionRef.current = null;
       store.getState().setPotionTargeting(false);
@@ -136,6 +152,22 @@ export function createGameWindowRenderer(
       store.getState().setWorldLoading(false);
     },
     targetPosition: (position) => {
+      const action = runtime.pendingActionBarRef.current;
+      if (action?.target === "creature") return true;
+      if (action?.target === "position") {
+        if (action.awaitingResult) return true;
+        const sent = getClient()?.activateActionBar(action.slotIndex, {
+          kind: "position",
+          position,
+        });
+        if (sent) {
+          runtime.pendingActionBarRef.current = {
+            ...action,
+            awaitingResult: true,
+          };
+        }
+        return true;
+      }
       const tool = runtime.pendingUseWithRef.current;
       if (tool) {
         runtime.pendingUseWithRef.current = null;
@@ -151,6 +183,13 @@ export function createGameWindowRenderer(
       return true;
     },
     cancelUseWith: () => {
+      if (runtime.pendingActionBarRef.current) {
+        runtime.pendingActionBarRef.current = null;
+        store.getState().setRuneTargeting(false);
+        store.getState().setPotionTargeting(false);
+        store.getState().setUseWithTargeting(false);
+        return true;
+      }
       if (!runtime.pendingUseWithRef.current) return false;
       runtime.pendingUseWithRef.current = null;
       store.getState().setUseWithTargeting(false);

@@ -1,17 +1,18 @@
-import type {
-  ActionBar,
-  AutoPotionSettings,
-  PotionActionBar,
-  UpdateActionBarMessage,
-  UpdateAutoPotionSettingsMessage,
-  UpdatePotionActionBarMessage,
+import {
+  createDefaultActionBar,
+  type ActionBar,
+  type ActionBarAction,
+  type ActionBotSettings,
+  type CharacterVocation,
+  type UpdateActionBarMessage,
 } from "@tibia/protocol";
 import type { CharacterStore } from "./character/CharacterStore";
 import type { SpellRegistry } from "./combat/SpellRegistry";
+import { getSpellActionTargetMode } from "./combat/getSpellActionTargetMode";
+import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { World } from "./World";
-import { getPotionDefinition } from "./potion/getPotionDefinition";
 
 export class ActionBarHandler {
   private readonly outcomes: Array<() => void> = [];
@@ -20,15 +21,13 @@ export class ActionBarHandler {
     private readonly registry: SessionRegistry,
     private readonly world: World,
     private readonly spells: SpellRegistry,
+    private readonly items: ItemIntentHandler,
     private readonly characters: CharacterStore,
   ) {}
 
   handle(
     session: Session,
-    intent:
-      | UpdateActionBarMessage
-      | UpdatePotionActionBarMessage
-      | UpdateAutoPotionSettingsMessage,
+    intent: UpdateActionBarMessage,
   ): void {
     const playerId = session.playerId;
     const player = playerId ? this.world.getPlayer(playerId) : undefined;
@@ -36,172 +35,122 @@ export class ActionBarHandler {
       session.sendError("join-required");
       return;
     }
-    if (
-      intent.type === "update-auto-potion-settings" &&
-      session.autoPotionSettingsUpdatePending
-    ) {
+    if (session.actionBarUpdatePending) {
       session.sendError("action-bar-update-pending");
       return;
     }
+
+    const sanitized = this.sanitizeActionBar(intent.actionBar, player.vocation);
     if (
-      intent.type === "update-potion-action-bar" &&
-      session.potionActionBarUpdatePending
-    ) {
-      session.sendError("action-bar-update-pending");
-      return;
-    }
-    if (
-      intent.type === "update-action-bar" &&
-      session.actionBarUpdatePending
-    ) {
-      session.sendError("action-bar-update-pending");
-      return;
-    }
-    if (intent.type === "update-potion-action-bar") {
-      for (const slot of intent.potionActionBar) {
-        if (slot && !getPotionDefinition(slot.itemTypeId)) {
-          session.sendError("action-bar-invalid");
-          return;
-        }
-      }
-      session.potionActionBarUpdatePending = true;
-      void this.persistPotions(session, playerId, intent.potionActionBar);
-      return;
-    }
-    if (intent.type === "update-auto-potion-settings") {
-      const rules = [
-        ["health", intent.settings.health],
-        ["mana", intent.settings.mana],
-      ] as const;
-      for (const [resource, rule] of rules) {
-        if (!rule) continue;
-        const potion = getPotionDefinition(rule.itemTypeId);
-        if (!potion || !potion[resource]) {
-          session.sendError("action-bar-invalid");
-          return;
-        }
-      }
-      session.autoPotionSettingsUpdatePending = true;
-      void this.persistAutoPotionSettings(
-        session,
-        playerId,
+      !sanitized ||
+      !this.validBotSettings(
         intent.settings,
-      );
+        sanitized,
+        player.vocation,
+      )
+    ) {
+      session.sendError("action-bar-invalid");
       return;
-    }
-    // Only spells the character's own vocation can ever cast may be slotted;
-    // level/mana gates stay cast-time checks so low-level slots are allowed.
-    for (const spellId of intent.actionBar) {
-      if (spellId === null) continue;
-      const spell = this.spells.get(spellId);
-      if (
-        !spell ||
-        spell.origin !== "spell" ||
-        !spell.vocations.includes(player.vocation)
-      ) {
-        session.sendError("action-bar-invalid");
-        return;
-      }
     }
     session.actionBarUpdatePending = true;
-    void this.persist(session, playerId, intent.actionBar);
-  }
-
-  private async persistPotions(
-    session: Session,
-    characterId: string,
-    potionActionBar: PotionActionBar,
-  ): Promise<void> {
-    try {
-      await this.characters.updatePotionActionBar(
-        characterId,
-        potionActionBar,
-      );
-      this.outcomes.push(() => {
-        session.potionActionBarUpdatePending = false;
-        if (
-          !this.registry.contains(session) ||
-          session.playerId !== characterId
-        ) {
-          return;
-        }
-        session.send({
-          type: "potion-action-bar-updated",
-          potionActionBar,
-        });
-      });
-    } catch (cause) {
-      const reason = cause instanceof Error ? cause.message : "unknown";
-      console.warn(
-        `potion action bar update failed for character ${characterId}: ${reason}`,
-      );
-      this.outcomes.push(() => {
-        session.potionActionBarUpdatePending = false;
-        if (
-          !this.registry.contains(session) ||
-          session.playerId !== characterId
-        ) {
-          return;
-        }
-        session.sendError("action-bar-update-failed");
-      });
-    }
+    void this.persist(session, playerId, sanitized, intent.settings);
   }
 
   applyResolvedOutcomes(): void {
     for (const outcome of this.outcomes.splice(0)) outcome();
   }
 
-  private async persistAutoPotionSettings(
-    session: Session,
-    characterId: string,
-    settings: AutoPotionSettings,
-  ): Promise<void> {
-    try {
-      await this.characters.updateAutoPotionSettings(characterId, settings);
-      this.outcomes.push(() => {
-        session.autoPotionSettingsUpdatePending = false;
-        if (
-          !this.registry.contains(session) ||
-          session.playerId !== characterId
-        ) {
-          return;
-        }
-        session.autoPotionSettings = { ...settings };
-        session.send({
-          type: "auto-potion-settings-updated",
-          settings,
-        });
-      });
-    } catch (cause) {
-      const reason = cause instanceof Error ? cause.message : "unknown";
-      console.warn(
-        `auto potion settings update failed for character ${characterId}: ${reason}`,
-      );
-      this.outcomes.push(() => {
-        session.autoPotionSettingsUpdatePending = false;
-        if (
-          !this.registry.contains(session) ||
-          session.playerId !== characterId
-        ) {
-          return;
-        }
-        session.send({
-          type: "auto-potion-settings-updated",
-          settings: session.autoPotionSettings,
-        });
-        session.sendError("action-bar-update-failed");
-      });
+  private sanitizeActionBar(
+    requested: ActionBar,
+    vocation: CharacterVocation,
+  ): ActionBar | null {
+    const next = createDefaultActionBar();
+    const hotkeys = new Set<string>();
+    for (const [index, slot] of requested.entries()) {
+      if (slot.hotkey && hotkeys.has(slot.hotkey)) return null;
+      if (slot.hotkey) hotkeys.add(slot.hotkey);
+      const action = slot.action
+        ? this.sanitizeAction(slot.action, vocation)
+        : null;
+      if (slot.action && !action) return null;
+      next[index] = { action, hotkey: slot.hotkey };
     }
+    return next;
+  }
+
+  private sanitizeAction(
+    action: ActionBarAction,
+    vocation: CharacterVocation,
+  ): ActionBarAction | null {
+    if (action.kind === "text") return { ...action };
+    if (action.kind === "item") {
+      const type = this.items.itemType(action.itemTypeId);
+      if (!type || (action.mode === "equip" && !type.equipmentSlot)) {
+        return null;
+      }
+      return { ...action };
+    }
+    const spell = this.spells.get(action.spellId);
+    if (
+      !spell ||
+      spell.origin !== "spell" ||
+      !spell.vocations.includes(vocation)
+    ) {
+      return null;
+    }
+    const targetMode = getSpellActionTargetMode(
+      spell.targetKind,
+      action.targetMode,
+    );
+    return { ...action, targetMode };
+  }
+
+  private validBotSettings(
+    settings: ActionBotSettings,
+    actionBar: ActionBar,
+    vocation: CharacterVocation,
+  ): boolean {
+    if (settings.autoHaste.enabled) {
+      const haste = this.spells.get(settings.autoHaste.spellId);
+      if (
+        !haste ||
+        haste.origin !== "spell" ||
+        !haste.vocations.includes(vocation)
+      ) {
+        return false;
+      }
+    }
+    if (settings.autoUtamoVita) {
+      const utamoVita = this.spells.get("utamo-vita");
+      if (
+        !utamoVita ||
+        utamoVita.origin !== "spell" ||
+        !utamoVita.vocations.includes(vocation)
+      ) {
+        return false;
+      }
+    }
+    const ids = new Set<string>();
+    for (const rule of settings.rules) {
+      const action = actionBar[rule.slotIndex]?.action;
+      if (ids.has(rule.id) || !action || action.kind === "text") return false;
+      ids.add(rule.id);
+    }
+    return true;
   }
 
   private async persist(
     session: Session,
     characterId: string,
     actionBar: ActionBar,
+    settings: ActionBotSettings,
   ): Promise<void> {
     try {
-      await this.characters.updateActionBar(characterId, actionBar);
+      await this.characters.updateActionBar(
+        characterId,
+        actionBar,
+        settings,
+      );
       this.outcomes.push(() => {
         session.actionBarUpdatePending = false;
         if (
@@ -210,7 +159,19 @@ export class ActionBarHandler {
         ) {
           return;
         }
-        session.send({ type: "action-bar-updated", actionBar });
+        session.actionBar = actionBar.map((slot) => ({
+          ...slot,
+          action: slot.action ? { ...slot.action } : null,
+        }));
+        session.actionBotSettings = {
+          ...settings,
+          rules: [...settings.rules],
+        };
+        session.send({
+          type: "action-bar-updated",
+          actionBar,
+          settings,
+        });
       });
     } catch (cause) {
       const reason = cause instanceof Error ? cause.message : "unknown";
@@ -225,6 +186,11 @@ export class ActionBarHandler {
         ) {
           return;
         }
+        session.send({
+          type: "action-bar-updated",
+          actionBar: session.actionBar,
+          settings: session.actionBotSettings,
+        });
         session.sendError("action-bar-update-failed");
       });
     }

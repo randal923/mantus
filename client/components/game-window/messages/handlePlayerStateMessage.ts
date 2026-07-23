@@ -13,21 +13,29 @@ export function handlePlayerStateMessage(
 
   const { runtime } = state;
 
+  if (message.type === "action-bar-activation-result") {
+    const pending = runtime.pendingActionBarRef.current;
+    if (!pending || pending.slotIndex !== message.slotIndex) return true;
+    if (!message.accepted) {
+      runtime.pendingActionBarRef.current = {
+        ...pending,
+        awaitingResult: false,
+      };
+      return true;
+    }
+    runtime.pendingActionBarRef.current = null;
+    state.setRuneTargeting(false);
+    state.setPotionTargeting(false);
+    state.setUseWithTargeting(false);
+    return true;
+  }
+
   if (message.type === "action-bar-updated") {
+    if (runtime.actionBarSaveTimerRef.current) return true;
     state.setActionBar(message.actionBar);
     runtime.actionBarRef.current = message.actionBar;
-    return true;
-  }
-
-  if (message.type === "potion-action-bar-updated") {
-    state.setPotionActionBar(message.potionActionBar);
-    runtime.potionActionBarRef.current = message.potionActionBar;
-    return true;
-  }
-
-  if (message.type === "auto-potion-settings-updated") {
-    state.setAutoPotionSettings(message.settings);
-    runtime.autoPotionSettingsRef.current = message.settings;
+    state.setActionBotSettings(message.settings);
+    runtime.actionBotSettingsRef.current = message.settings;
     return true;
   }
 

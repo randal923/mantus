@@ -1,13 +1,12 @@
 import type {
   AccountTier,
   ActionBar,
-  AutoPotionSettings,
+  ActionBotSettings,
   CharacterCreationOptions,
   CharacterSummary,
   CreatureState,
   FightState,
   OwnCharacterState,
-  PotionActionBar,
   ServerErrorCode,
   SpellCatalogEntry,
   TradeClosedReason,
@@ -31,6 +30,7 @@ import type { ScreenMessageState } from "./ScreenMessageState";
 import type { ShopSessionState } from "./ShopSessionState";
 import type { StoreSessionState } from "./StoreSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
+import type { ActionBarEditorRequest } from "../../action-bar/ActionBarEditorRequest";
 
 export interface GameWindowState {
   accessToken: string;
@@ -63,10 +63,8 @@ export interface GameWindowState {
   mapName: string | null;
   uiSettings: UiSettings;
   actionBar: ActionBar;
-  potionActionBar: PotionActionBar;
-  autoPotionSettings: AutoPotionSettings;
-  actionBarConfigSlot: number | null;
-  potionActionBarConfigSlot: number | null;
+  actionBotSettings: ActionBotSettings;
+  actionBarEditorRequest: ActionBarEditorRequest | null;
   marketSelectedItem: string | null;
   marketToast: "created" | "accepted" | "cancelled" | null;
   partyPanelVisible: boolean;

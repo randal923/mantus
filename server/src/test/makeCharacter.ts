@@ -1,4 +1,7 @@
-import { DEFAULT_AUTO_POTION_SETTINGS } from "@tibia/protocol";
+import {
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
+} from "@tibia/protocol";
 import type { Character } from "../character/Character";
 import { createInitialSkills } from "../progression/createInitialSkills";
 import { deriveCharacterStats } from "../progression/deriveCharacterStats";
@@ -42,9 +45,8 @@ export function makeCharacter(id: string, displayName = id): Character {
       addons: 0,
     },
     townId: 1,
-    actionBar: [],
-    potionActionBar: [],
-    autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
+    actionBar: createDefaultActionBar(),
+    actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS },
     skull: "none",
     skullExpiresAt: null,
     createdAt: now,

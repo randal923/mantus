@@ -23,8 +23,6 @@ const makeStore = (
   },
   async recordLogin(): Promise<void> {},
   async updateActionBar(): Promise<void> {},
-  async updatePotionActionBar(): Promise<void> {},
-  async updateAutoPotionSettings(): Promise<void> {},
   saveSnapshot,
 });
 

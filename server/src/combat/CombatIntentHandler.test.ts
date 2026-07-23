@@ -13,6 +13,8 @@ describe("CombatIntentHandler", () => {
       setFightMode: vi.fn(),
       castSpell: vi.fn(),
       useRune: vi.fn(),
+      usePotion: vi.fn(),
+      activateActionBar: vi.fn(),
     } as unknown as Combat;
     const session = {} as Session;
     const accounts = {} as AccountStore;
@@ -52,12 +54,30 @@ describe("CombatIntentHandler", () => {
       },
       1_004,
     );
+    handler.handle(
+      session,
+      {
+        type: "use-potion",
+        itemId: "434b8502-04e2-4e3b-875d-f9be2153016d",
+        revision: 1,
+        targetPlayerId: "player",
+      },
+      1_005,
+    );
+    handler.handle(
+      session,
+      { type: "activate-action-bar", slotIndex: 0 },
+      1_006,
+    );
 
     expect(combat.selectTarget).toHaveBeenCalledWith(session, "monster", 1_000);
     expect(combat.cancelTarget).toHaveBeenCalledWith(session, 1_001);
     expect(combat.setFightMode).toHaveBeenCalledOnce();
     expect(combat.castSpell).toHaveBeenCalledOnce();
     expect(combat.useRune).toHaveBeenCalledOnce();
+    expect(combat.usePotion).toHaveBeenCalledOnce();
+    expect(combat.activateActionBar).toHaveBeenCalledOnce();
+    expect(session.actionBotSuppressedAt).toBe(1_006);
   });
 
   it("persists accepted fight modes on the account", async () => {

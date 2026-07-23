@@ -143,6 +143,7 @@ export function GameWindowConnectionController() {
           runtime.pendingRuneRef.current = null;
           runtime.pendingPotionRef.current = null;
           runtime.pendingUseWithRef.current = null;
+          runtime.pendingActionBarRef.current = null;
           state.setRuneTargeting(false);
           state.setPotionTargeting(false);
           state.setUseWithTargeting(false);

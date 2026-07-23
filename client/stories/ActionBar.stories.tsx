@@ -1,21 +1,33 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import type { ActionBarAction } from "@tibia/protocol";
 import { expect, fn, userEvent } from "storybook/test";
 import { ActionBar } from "../components/action-bar/ActionBar";
 
-const SLOTS = Array.from({ length: 9 }, (_, index) => {
-  const shortcut = String(index + 1);
+const SLOTS = Array.from({ length: 18 }, (_, index) => {
+  const hotkey =
+    index < 9 ? `Digit${index + 1}` : `Shift+Digit${index - 8}`;
+  const hotkeyLabel =
+    index < 9 ? String(index + 1) : `⇧${index - 8}`;
+  const action: ActionBarAction | null =
+    index < 7
+      ? {
+          kind: "spell",
+          spellId: `action-${index + 1}`,
+          targetMode: "self",
+        }
+      : null;
   return {
-    shortcut,
-    shortcutLabel: shortcut,
-    emptyTitle: `Empty slot ${shortcut}`,
-    emptyAriaLabel: `Empty slot ${shortcut}`,
+    action,
+    hotkey,
+    hotkeyLabel,
+    emptyTitle: `Empty slot ${index + 1}`,
+    emptyAriaLabel: `Empty slot ${index + 1}`,
     item:
-      index < 7
+      action
         ? {
-            id: `action-${index + 1}`,
             icon: <span aria-hidden>✦</span>,
-            title: `Action ${index + 1} (${shortcut})`,
-            ariaLabel: `Action ${index + 1}, shortcut ${shortcut}`,
+            title: `Action ${index + 1} (${hotkeyLabel})`,
+            ariaLabel: `Action ${index + 1}, shortcut ${hotkeyLabel}`,
             badge: 20 + index * 5,
             badgeTone: "mana" as const,
             ...(index === 3
@@ -47,6 +59,10 @@ const meta = {
     slots: SLOTS,
     onActivate: fn(),
     onConfigure: fn(),
+    onChangeHotkey: fn(),
+    onClearAction: fn(),
+    onMoveAction: fn(),
+    onDropItem: fn(),
     hotkeysEnabled: true,
   },
 } satisfies Meta<typeof ActionBar>;
@@ -57,7 +73,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ args }) => {
     await userEvent.keyboard("1");
-    await expect(args.onActivate).toHaveBeenCalledWith("action-1", 0);
+    await expect(args.onActivate).toHaveBeenCalledWith(0);
     await userEvent.keyboard("8");
     await expect(args.onActivate).toHaveBeenCalledTimes(1);
   },
@@ -65,11 +81,10 @@ export const Default: Story = {
 
 export const ShiftHotkeys: Story = {
   args: {
-    hotkeyModifier: "shift",
     slots: SLOTS.map((slot, index) => ({
       ...slot,
-      shortcut: `Shift+${index + 1}`,
-      shortcutLabel: `⇧${index + 1}`,
+      hotkey: `Shift+Digit${(index % 9) + 1}`,
+      hotkeyLabel: `⇧${(index % 9) + 1}`,
     })),
   },
 };
@@ -81,6 +96,6 @@ export const Empty: Story = {
   play: async ({ args, canvas }) => {
     const emptySlots = await canvas.findAllByRole("button");
     await userEvent.click(emptySlots[0]!);
-    await expect(args.onConfigure).toHaveBeenCalledWith(0);
+    await expect(args.onConfigure).toHaveBeenCalledWith(0, "spell");
   },
 };

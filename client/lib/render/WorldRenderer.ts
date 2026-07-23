@@ -126,6 +126,10 @@ export class WorldRenderer {
 
   constructor(private readonly actions?: WorldRendererActions) {}
 
+  showLocalMagicEffect(position: Position, effectId: number): void {
+    this.combatEffects.showMagicEffect(position, effectId);
+  }
+
   async init(host: HTMLElement): Promise<void> {
     await this.app.init({
       resizeTo: host,
@@ -170,6 +174,22 @@ export class WorldRenderer {
     if (!position) return null;
     const point = this.canvasPointForClient(position.x, position.y);
     return point ? this.creatureIdAt(point.x, point.y, true) : null;
+  }
+
+  positionAtCursor(): Position | null {
+    const pointer = this.lastPointerClientPosition;
+    if (!pointer || !this.ownPosition) return null;
+    const point = this.canvasPointForClient(pointer.x, pointer.y);
+    if (!point) return null;
+    return getMapPointerPosition(
+      point.x,
+      point.y,
+      this.world.position.x,
+      this.world.position.y,
+      ZOOM,
+      TILE_SIZE,
+      this.ownPosition.z,
+    );
   }
 
   applyMessage(message: ServerMessage): void {
@@ -694,6 +714,13 @@ export class WorldRenderer {
       TILE_SIZE,
       this.ownPosition.z,
     );
+    const targetCreatureId = this.creatureIdAt(point.x, point.y, true);
+    if (
+      targetCreatureId &&
+      this.actions.targetCreature(targetCreatureId)
+    ) {
+      return;
+    }
     if (this.actions.targetPosition(target)) return;
     if (event.ctrlKey) {
       this.openContextMenuFor(event, point, target);

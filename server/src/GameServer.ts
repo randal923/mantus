@@ -330,6 +330,7 @@ export class GameServer {
       this.registry,
       this.world,
       this.spells,
+      this.items,
       deps.characters,
     );
     this.progression = new ProgressionSystem(
@@ -454,6 +455,7 @@ export class GameServer {
         },
       },
       this.monsterEvents,
+      (session, intent, now) => this.toolUse.handle(session, intent, now),
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,
@@ -712,6 +714,7 @@ export class GameServer {
       case "cast-spell":
       case "use-rune":
       case "use-potion":
+      case "activate-action-bar":
         this.combat.handle(session, intent, now);
         return;
       case "use-item-with":
@@ -867,8 +870,6 @@ export class GameServer {
         this.uiSettings.handle(session, intent);
         return;
       case "update-action-bar":
-      case "update-potion-action-bar":
-      case "update-auto-potion-settings":
         this.actionBar.handle(session, intent);
         return;
     }

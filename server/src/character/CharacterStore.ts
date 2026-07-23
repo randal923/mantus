@@ -1,7 +1,6 @@
 import type {
   ActionBar,
-  AutoPotionSettings,
-  PotionActionBar,
+  ActionBotSettings,
 } from "@tibia/protocol";
 import type {
   Character,
@@ -27,13 +26,9 @@ export interface CharacterStore {
     loggedInAt: Date,
   ): Promise<void>;
   saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number>;
-  updateActionBar(characterId: string, actionBar: ActionBar): Promise<void>;
-  updatePotionActionBar(
+  updateActionBar(
     characterId: string,
-    potionActionBar: PotionActionBar,
-  ): Promise<void>;
-  updateAutoPotionSettings(
-    characterId: string,
-    settings: AutoPotionSettings,
+    actionBar: ActionBar,
+    settings: ActionBotSettings,
   ): Promise<void>;
 }

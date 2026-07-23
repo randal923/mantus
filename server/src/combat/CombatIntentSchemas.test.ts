@@ -43,13 +43,12 @@ describe("combat intent schemas", () => {
     ).toBe(true);
     expect(
       clientMessageSchema.safeParse({
-        type: "update-potion-action-bar",
-        potionActionBar: [
-          { itemTypeId: 266, targetMode: "self" },
-          { itemTypeId: 268, targetMode: "attack-target" },
-          { itemTypeId: 7642, targetMode: "cursor" },
-          { itemTypeId: 23374, targetMode: "crosshair" },
-        ],
+        type: "activate-action-bar",
+        slotIndex: 17,
+        target: {
+          kind: "position",
+          position: { x: 100, y: 100, z: 7 },
+        },
       }).success,
     ).toBe(true);
   });
@@ -103,10 +102,8 @@ describe("combat intent schemas", () => {
     ).toBe(false);
     expect(
       clientMessageSchema.safeParse({
-        type: "update-potion-action-bar",
-        potionActionBar: [
-          { itemTypeId: 266, targetMode: "client-decides" },
-        ],
+        type: "activate-action-bar",
+        slotIndex: 18,
       }).success,
     ).toBe(false);
   });

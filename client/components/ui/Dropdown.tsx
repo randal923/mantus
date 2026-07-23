@@ -23,6 +23,9 @@ export function Dropdown<Value extends string>({
   disabled = false,
   className,
 }: DropdownProps<Value>) {
+  const selectedLabel = options.find(
+    (option) => option.value === value,
+  )?.label;
   return (
     <label
       className={`flex min-w-0 flex-col gap-2 font-tibia has-disabled:pointer-events-none has-disabled:opacity-45 ${className ?? ""}`}
@@ -35,6 +38,7 @@ export function Dropdown<Value extends string>({
       <span className="relative block min-w-0">
         <select
           aria-label={ariaLabel}
+          title={selectedLabel}
           value={value}
           disabled={disabled}
           onChange={(event) => {
@@ -44,7 +48,7 @@ export function Dropdown<Value extends string>({
             if (!option) return;
             onChange(option.value);
           }}
-          className="ui-dropdown h-10 w-full rounded-md border border-ui-stone-light/25 py-2 pr-10 pl-3 font-tibia text-sm text-white outline-none transition-[border-color,box-shadow,filter] duration-150 hover:border-ui-gold/45 hover:brightness-110 focus:border-ui-gold/60 focus:ring-2 focus:ring-ui-gold/15 disabled:cursor-default"
+          className="ui-dropdown h-10 w-full truncate rounded-md border border-ui-stone-light/25 py-2 pr-10 pl-3 font-tibia text-sm text-white outline-none transition-[border-color,box-shadow,filter] duration-150 hover:border-ui-gold/45 hover:brightness-110 focus:border-ui-gold/60 focus:ring-2 focus:ring-ui-gold/15 disabled:cursor-default"
         >
           {options.map((option) => (
             <option key={option.value} value={option.value} disabled={option.disabled}>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { VIP_LIMITS, type VipEntry } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
+import { Checkbox } from "../ui/Checkbox";
 import { Input } from "../ui/Input";
 
 interface VipEntryRowProps {
@@ -223,14 +224,12 @@ export function VipEntryRow({
               ))}
             </div>
           </div>
-          <label className="flex items-center justify-between gap-2 text-sm text-ui-text">
-            <span>{t("vip.notifyLogin")}</span>
-            <input
-              type="checkbox"
-              checked={notifyLogin}
-              onChange={(event) => setNotifyLogin(event.target.checked)}
-            />
-          </label>
+          <Checkbox
+            checked={notifyLogin}
+            onChange={(event) => setNotifyLogin(event.target.checked)}
+            label={t("vip.notifyLogin")}
+            className="flex-row-reverse justify-between text-sm text-ui-text"
+          />
           <Button size="sm" type="submit" className="w-full">
             {t("vip.save")}
           </Button>

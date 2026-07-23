@@ -16,6 +16,7 @@ interface ChatPanelProps {
   selectedChannelId?: string;
   pinnedOpen: boolean;
   focusRequestId?: number;
+  draftRequest?: { readonly id: number; readonly text: string };
   hotkeysEnabled?: boolean;
   maxMessageLength?: number;
   onChannelSelect?: (channelId: string) => void;
@@ -31,6 +32,7 @@ export function ChatPanel({
   selectedChannelId: controlledChannelId,
   pinnedOpen,
   focusRequestId,
+  draftRequest,
   hotkeysEnabled = true,
   maxMessageLength = 280,
   onChannelSelect,
@@ -48,6 +50,7 @@ export function ChatPanel({
   );
   const selectedChannelId = controlledChannelId ?? internalChannelId;
   const handledFocusRequestIdRef = useRef(0);
+  const handledDraftRequestIdRef = useRef(0);
   const [drafts, setDrafts] = useState<Readonly<Record<string, string>>>({});
   const [hovered, setHovered] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
@@ -88,6 +91,24 @@ export function ChatPanel({
     handledFocusRequestIdRef.current = focusRequestId;
     setInputFocused(true);
   }, [canSend, focusRequestId]);
+
+  useEffect(() => {
+    if (
+      !draftRequest ||
+      draftRequest.id === handledDraftRequestIdRef.current ||
+      !activeChannel ||
+      !canSend
+    ) {
+      return;
+    }
+    handledDraftRequestIdRef.current = draftRequest.id;
+    setDrafts((current) => ({
+      ...current,
+      [activeChannel.id]: draftRequest.text,
+    }));
+    setInputFocused(true);
+    window.requestAnimationFrame(() => inputRef.current?.focus());
+  }, [activeChannel, canSend, draftRequest]);
 
   useEffect(() => {
     if (

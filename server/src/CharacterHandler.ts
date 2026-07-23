@@ -1,5 +1,6 @@
 import {
-  DEFAULT_AUTO_POTION_SETTINGS,
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
   computeWheelBonuses,
   type CreateCharacterMessage,
   type ListCharactersMessage,
@@ -292,7 +293,14 @@ export class CharacterHandler {
       this.persistence.saveNow(player, now);
     }
     session.playerId = player.id;
-    session.autoPotionSettings = { ...character.autoPotionSettings };
+    session.actionBar = character.actionBar.map((slot) => ({
+      ...slot,
+      action: slot.action ? { ...slot.action } : null,
+    }));
+    session.actionBotSettings = {
+      ...character.actionBotSettings,
+      rules: [...character.actionBotSettings.rules],
+    };
     this.registry.bindPlayer(session);
     const inventory = this.items.attach(loadedInventory);
     if (loadedDepot) this.depot.attach(loadedDepot);
@@ -320,8 +328,7 @@ export class CharacterHandler {
       spells: this.spells.projectFor(player),
       uiSettings: session.account?.uiSettings ?? {},
       actionBar: character.actionBar,
-      potionActionBar: character.potionActionBar,
-      autoPotionSettings: character.autoPotionSettings,
+      actionBotSettings: character.actionBotSettings,
     });
     this.visibility.syncMapItems(session, player);
     void this.service
@@ -354,14 +361,15 @@ export class CharacterHandler {
     existing.movementDirection = null;
     existing.bufferedMovementDirection = null;
     existing.attackTargetId = null;
+    existing.actionBotRuleReadyAt.clear();
     existing.itemOperationPending = false;
     existing.potionPersistPending = false;
     existing.depotOperationPending = false;
     existing.actionBarUpdatePending = false;
-    existing.potionActionBarUpdatePending = false;
-    existing.autoPotionSettingsUpdatePending = false;
-    existing.autoPotionSettings = {
-      ...DEFAULT_AUTO_POTION_SETTINGS,
+    existing.actionBar = createDefaultActionBar();
+    existing.actionBotSettings = {
+      ...DEFAULT_ACTION_BOT_SETTINGS,
+      rules: [],
     };
     existing.itemPersistsPending = 0;
     existing.travelOperationPending = false;

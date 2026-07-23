@@ -4,9 +4,9 @@ import {
   premiumDaysRemainingSchema,
 } from "./account";
 import {
+  ACTION_BAR_SLOT_COUNT,
   actionBarSchema,
-  autoPotionSettingsSchema,
-  potionActionBarSchema,
+  actionBotSettingsSchema,
 } from "./actionBar";
 import {
   bankActionFailedMessageSchema,
@@ -156,17 +156,16 @@ export const uiSettingsUpdatedMessageSchema = z.object({
 export const actionBarUpdatedMessageSchema = z.object({
   type: z.literal("action-bar-updated"),
   actionBar: actionBarSchema,
+  settings: actionBotSettingsSchema,
 });
 
-export const potionActionBarUpdatedMessageSchema = z.object({
-  type: z.literal("potion-action-bar-updated"),
-  potionActionBar: potionActionBarSchema,
-});
-
-export const autoPotionSettingsUpdatedMessageSchema = z.object({
-  type: z.literal("auto-potion-settings-updated"),
-  settings: autoPotionSettingsSchema,
-});
+export const actionBarActivationResultMessageSchema = z
+  .object({
+    type: z.literal("action-bar-activation-result"),
+    slotIndex: z.number().int().min(0).max(ACTION_BAR_SLOT_COUNT - 1),
+    accepted: z.boolean(),
+  })
+  .strict();
 
 export const characterListMessageSchema = z.object({
   type: z.literal("character-list"),
@@ -190,8 +189,7 @@ export const welcomeMessageSchema = z.object({
   spells: z.array(spellCatalogEntrySchema).max(256),
   uiSettings: uiSettingsSchema,
   actionBar: actionBarSchema,
-  potionActionBar: potionActionBarSchema,
-  autoPotionSettings: autoPotionSettingsSchema,
+  actionBotSettings: actionBotSettingsSchema,
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -426,8 +424,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   languageUpdatedMessageSchema,
   uiSettingsUpdatedMessageSchema,
   actionBarUpdatedMessageSchema,
-  potionActionBarUpdatedMessageSchema,
-  autoPotionSettingsUpdatedMessageSchema,
+  actionBarActivationResultMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,

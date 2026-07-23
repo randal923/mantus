@@ -1,11 +1,15 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_AUTO_POTION_SETTINGS,
-  type AutoPotionSettings,
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
+  type ActionBar,
+  type ActionBarAction,
+  type ActionBotSettings,
   type CharacterVocation,
   type ServerErrorCode,
   type ServerMessage,
 } from "@tibia/protocol";
+import type { AccountStore } from "../AccountStore";
 import type { Character } from "../character/Character";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import { Monster } from "../creature/Monster";
@@ -33,6 +37,7 @@ import { makeCharacter } from "../test/makeCharacter";
 import { Visibility } from "../Visibility";
 import { World } from "../World";
 import { Combat } from "./Combat";
+import { CombatIntentHandler } from "./CombatIntentHandler";
 
 const PLAYER_ID = "00000000-0000-4000-8000-000000000010";
 const WEAPON_ID = "00000000-0000-4000-8000-000000000011";
@@ -49,6 +54,15 @@ let catalog: ItemCatalog;
 beforeAll(async () => {
   catalog = await loadItemCatalog();
 });
+
+function actionBarWith(
+  actions: ReadonlyArray<ActionBarAction>,
+): ActionBar {
+  return createDefaultActionBar().map((slot, index) => ({
+    ...slot,
+    action: actions[index] ?? null,
+  }));
+}
 
 interface Harness {
   readonly world: World;
@@ -214,7 +228,8 @@ async function makeHarness(options: {
   map?: MapData;
   inventory?: ReadonlyArray<Item>;
   partyMembership?: { sameParty: boolean };
-  autoPotionSettings?: AutoPotionSettings;
+  actionBar?: ActionBar;
+  actionBotSettings?: ActionBotSettings;
 } = {}): Promise<Harness> {
   const world = new World(
     options.map ?? makeMap(),
@@ -239,14 +254,20 @@ async function makeHarness(options: {
     combatCooldowns: new Map(),
     itemOperationPending: false,
     potionPersistPending: false,
-    autoPotionSettingsUpdatePending: false,
-    autoPotionSettings:
-      options.autoPotionSettings ?? { ...DEFAULT_AUTO_POTION_SETTINGS },
+    actionBar: options.actionBar ?? createDefaultActionBar(),
+    actionBotSettings:
+      options.actionBotSettings ?? { ...DEFAULT_ACTION_BOT_SETTINGS },
+    actionBotRuleReadyAt: new Map(),
+    actionBotSuppressedAt: Number.NEGATIVE_INFINITY,
+    errorRevision: 0,
     itemPersistsPending: 0,
     movementDirection: null,
     bufferedMovementDirection: null,
     send: (message: ServerMessage) => sent.push(message),
-    sendError: (code: ServerErrorCode) => sent.push({ type: "error", code }),
+    sendError: (code: ServerErrorCode) => {
+      session.errorRevision += 1;
+      sent.push({ type: "error", code });
+    },
     terminate,
   } as unknown as Session;
   const registry = {
@@ -1208,11 +1229,34 @@ describe("Combat", () => {
           2,
         ),
       ],
-      autoPotionSettings: {
+      actionBar: createDefaultActionBar().map((slot, index) =>
+        index === 0
+          ? {
+              ...slot,
+              action: {
+                kind: "item" as const,
+                itemTypeId: 239,
+                mode: "use-on-self" as const,
+              },
+            }
+          : slot,
+      ),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
-        health: { itemTypeId: 239, thresholdPercent: 50 },
-        mana: null,
-        priority: "health",
+        rules: [
+          {
+            id: "health",
+            enabled: true,
+            slotIndex: 0,
+            trigger: {
+              kind: "resource-below",
+              resource: "health",
+              percent: 50,
+            },
+            unequipWhenInactive: false,
+          },
+        ],
       },
     });
     harness.player.setHealth(Math.floor(harness.player.maxHealth * 0.4));
@@ -1222,6 +1266,7 @@ describe("Combat", () => {
     harness.combat.tick(1_000);
 
     expect(harness.player.health).toBeGreaterThan(healthBefore);
+    expect(harness.session.actionBotRuleReadyAt.get("health")).toBe(2_000);
     expect(
       harness.items
         .inventorySnapshot(PLAYER_ID)
@@ -1247,7 +1292,461 @@ describe("Combat", () => {
     );
   });
 
-  it("honors mana-first priority when both auto potion thresholds are reached", async () => {
+  it("automatically casts haste once while its server condition is missing", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight"),
+      actionBar: createDefaultActionBar(),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        autoHaste: {
+          enabled: true,
+          spellId: "utani-hur",
+        },
+      },
+    });
+    const manaBefore = harness.player.mana;
+
+    harness.combat.tick(1_000);
+    const manaAfterCast = harness.player.mana;
+    harness.combat.tick(2_000);
+
+    expect(harness.player.conditions.has("haste")).toBe(true);
+    expect(manaAfterCast).toBeLessThan(manaBefore);
+    expect(harness.player.mana).toBe(manaAfterCast);
+  });
+
+  it("casts auto haste once before using a sudden death rune on its target", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3155,
+          mode: "use-on-target",
+        },
+      ]),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        autoHaste: {
+          enabled: true,
+          spellId: "utani-hur",
+        },
+        rules: [
+          {
+            id: "rune-target",
+            enabled: true,
+            slotIndex: 0,
+            trigger: { kind: "target-present" },
+            unequipWhenInactive: false,
+          },
+        ],
+      },
+    });
+    const monster = makeMonster(
+      "monster-instance:auto-haste-rune-target:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 2_000, maxHealth: 2_000 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.session.fightMode = {
+      ...harness.session.fightMode,
+      chase: false,
+    };
+    harness.combat.selectTarget(harness.session, monster.id, 1_000);
+
+    harness.combat.tick(1_000);
+
+    expect(harness.player.conditions.has("haste")).toBe(true);
+    expect(harness.session.actionBotRuleReadyAt.get("auto-haste")).toBe(
+      3_000,
+    );
+    expect(monster.health).toBe(monster.maxHealth);
+
+    harness.combat.tick(1_050);
+    await settleItems(harness, 1_050);
+
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+    expect(harness.session.actionBotRuleReadyAt.get("rune-target")).toBe(
+      3_050,
+    );
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+  });
+
+  it("gives a manual action-bar hotkey priority over the action bot", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3155,
+          mode: "use-on-target",
+        },
+        {
+          kind: "spell",
+          spellId: "utani-hur",
+          targetMode: "self",
+        },
+      ]),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        autoHaste: {
+          enabled: true,
+          spellId: "utani-hur",
+        },
+        rules: [
+          {
+            id: "rune-target",
+            enabled: true,
+            slotIndex: 0,
+            trigger: { kind: "target-present" },
+            unequipWhenInactive: false,
+          },
+        ],
+      },
+    });
+    const monster = makeMonster(
+      "monster-instance:manual-priority-target:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 2_000, maxHealth: 2_000 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.session.fightMode = {
+      ...harness.session.fightMode,
+      chase: false,
+    };
+    harness.combat.selectTarget(harness.session, monster.id, 900);
+    const intents = new CombatIntentHandler(
+      harness.combat,
+      {} as AccountStore,
+      {} as SessionRegistry,
+    );
+
+    intents.handle(
+      harness.session,
+      { type: "activate-action-bar", slotIndex: 1 },
+      1_000,
+    );
+    harness.combat.tick(1_000);
+
+    expect(harness.player.conditions.has("haste")).toBe(true);
+    expect(monster.health).toBe(monster.maxHealth);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 2, version: 1 });
+
+    harness.combat.tick(1_050);
+    await settleItems(harness, 1_050);
+
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+  });
+
+  it("automatically casts utamo vita while magic shield is missing", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Sorcerer"),
+      actionBar: createDefaultActionBar(),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        autoUtamoVita: true,
+      },
+    });
+    const manaBefore = harness.player.mana;
+
+    harness.combat.tick(1_000);
+    const manaAfterCast = harness.player.mana;
+    harness.combat.tick(2_000);
+
+    expect(harness.player.conditions.has("magic-shield")).toBe(true);
+    expect(manaAfterCast).toBeLessThan(manaBefore);
+    expect(harness.player.mana).toBe(manaAfterCast);
+  });
+
+  it("repairs a legacy self spell target mode when its action executes", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight"),
+      actionBar: actionBarWith([
+        {
+          kind: "spell",
+          spellId: "exura-infir-ico",
+          targetMode: "attack-target",
+        },
+      ]),
+    });
+    harness.player.setHealth(harness.player.health - 100);
+    const healthBefore = harness.player.health;
+
+    harness.combat.activateActionBar(
+      harness.session,
+      { type: "activate-action-bar", slotIndex: 0 },
+      1_000,
+    );
+
+    expect(harness.player.health).toBeGreaterThan(healthBefore);
+    expect(harness.sent).toContainEqual({
+      type: "action-bar-activation-result",
+      slotIndex: 0,
+      accepted: true,
+    });
+  });
+
+  it("uses a crosshair sudden death rune on the selected creature", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3155,
+          mode: "use-with-crosshair",
+        },
+      ]),
+    });
+    const monster = makeMonster(
+      "monster-instance:crosshair-rune-target:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({ health: 500, maxHealth: 500 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+
+    harness.combat.activateActionBar(
+      harness.session,
+      {
+        type: "activate-action-bar",
+        slotIndex: 0,
+        target: { kind: "creature", creatureId: monster.id },
+      },
+      1_000,
+    );
+    await settleItems(harness, 1_000);
+
+    expect(harness.sent).toContainEqual({
+      type: "action-bar-activation-result",
+      slotIndex: 0,
+      accepted: true,
+    });
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+  });
+
+  it("keeps a targeted action pending when the server rejects its target", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3155,
+          mode: "use-with-crosshair",
+        },
+      ]),
+    });
+
+    harness.combat.activateActionBar(
+      harness.session,
+      {
+        type: "activate-action-bar",
+        slotIndex: 0,
+        target: { kind: "creature", creatureId: "missing-creature" },
+      },
+      1_000,
+    );
+
+    expect(harness.sent).toContainEqual({
+      type: "action-bar-activation-result",
+      slotIndex: 0,
+      accepted: false,
+    });
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 2, version: 1 });
+  });
+
+  it("automatically resolves a crosshair rune against the current target", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          3,
+        ),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3155,
+          mode: "use-with-crosshair",
+        },
+      ]),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        rules: [
+          {
+            id: "rune-target",
+            enabled: true,
+            slotIndex: 0,
+            trigger: { kind: "target-present" },
+            unequipWhenInactive: false,
+          },
+        ],
+      },
+    });
+    const monster = makeMonster(
+      "monster-instance:auto-rune-target:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 2_000, maxHealth: 2_000 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.session.fightMode = {
+      ...harness.session.fightMode,
+      chase: false,
+    };
+    harness.combat.selectTarget(harness.session, monster.id, 1_000);
+
+    harness.combat.tick(1_000);
+    await settleItems(harness, 1_000);
+    const healthAfterFirstRune = monster.health;
+
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+    expect(harness.session.actionBotRuleReadyAt.get("rune-target")).toBe(
+      3_000,
+    );
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 2, version: 2 });
+
+    harness.combat.tick(2_999);
+    expect(monster.health).toBe(healthAfterFirstRune);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 2, version: 2 });
+
+    harness.combat.tick(3_000);
+    await settleItems(harness, 3_000);
+
+    expect(monster.health).toBeLessThan(healthAfterFirstRune);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 1, version: 3 });
+  });
+
+  it("atomically equips and unequips one configured item as its trigger changes", async () => {
+    const harness = await makeHarness({
+      inventory: [
+        ownedItem(ARMOR_ID, 3355, {
+          kind: "container",
+          containerId: BACKPACK_ID,
+          slot: 0,
+        }),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3355,
+          mode: "equip",
+        },
+      ]),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        rules: [
+          {
+            id: "emergency-helmet",
+            enabled: true,
+            slotIndex: 0,
+            trigger: {
+              kind: "resource-below",
+              resource: "health",
+              percent: 50,
+            },
+            unequipWhenInactive: true,
+          },
+        ],
+      },
+    });
+    harness.player.setHealth(Math.floor(harness.player.maxHealth * 0.4));
+
+    harness.combat.tick(1_000);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === ARMOR_ID)?.location,
+    ).toMatchObject({ kind: "equipment", slot: "helmet" });
+    await settleItems(harness, 1_000);
+
+    harness.player.setHealth(harness.player.maxHealth);
+    harness.combat.tick(2_000);
+    const inventory = harness.items.inventorySnapshot(PLAYER_ID)?.items;
+    expect(inventory?.filter((item) => item.id === ARMOR_ID)).toHaveLength(1);
+    expect(
+      inventory?.find((item) => item.id === ARMOR_ID)?.location,
+    ).toMatchObject({ kind: "container", containerId: BACKPACK_ID });
+    await settleItems(harness, 2_000);
+  });
+
+  it("honors rule order when multiple automated potion thresholds are reached", async () => {
     const harness = await makeHarness({
       character: makeLeveledCharacter(80, "Knight"),
       inventory: [
@@ -1264,11 +1763,56 @@ describe("Combat", () => {
           2,
         ),
       ],
-      autoPotionSettings: {
+      actionBar: createDefaultActionBar().map((slot, index) => {
+        if (index === 0) {
+          return {
+            ...slot,
+            action: {
+              kind: "item" as const,
+              itemTypeId: 268,
+              mode: "use-on-self" as const,
+            },
+          };
+        }
+        if (index === 1) {
+          return {
+            ...slot,
+            action: {
+              kind: "item" as const,
+              itemTypeId: 239,
+              mode: "use-on-self" as const,
+            },
+          };
+        }
+        return slot;
+      }),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
-        health: { itemTypeId: 239, thresholdPercent: 90 },
-        mana: { itemTypeId: 268, thresholdPercent: 90 },
-        priority: "mana",
+        rules: [
+          {
+            id: "mana",
+            enabled: true,
+            slotIndex: 0,
+            trigger: {
+              kind: "resource-below",
+              resource: "mana",
+              percent: 90,
+            },
+            unequipWhenInactive: false,
+          },
+          {
+            id: "health",
+            enabled: true,
+            slotIndex: 1,
+            trigger: {
+              kind: "resource-below",
+              resource: "health",
+              percent: 90,
+            },
+            unequipWhenInactive: false,
+          },
+        ],
       },
     });
     harness.player.setHealth(harness.player.maxHealth - 700);

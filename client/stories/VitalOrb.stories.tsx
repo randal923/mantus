@@ -38,6 +38,7 @@ export const Health: Story = {
     await expect(orb).toHaveClass("size-24");
     await expect(dragon).not.toBeNull();
     await expect(dragon).toHaveClass("size-44");
+    await expect(dragon).toHaveClass("left-[46%]");
     await expect(dragon).not.toHaveClass("-scale-x-100");
   },
 };
@@ -64,6 +65,7 @@ export const Mana: Story = {
     await expect(orb).toHaveClass("left-2");
     await expect(orb).toHaveClass("size-24");
     await expect(dragon).toHaveClass("size-44");
+    await expect(dragon).toHaveClass("left-[54%]");
     await expect(dragon).toHaveClass("-scale-x-100");
   },
 };

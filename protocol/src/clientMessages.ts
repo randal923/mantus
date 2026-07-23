@@ -1,8 +1,8 @@
 import { z } from "zod";
 import {
+  ACTION_BAR_SLOT_COUNT,
   actionBarSchema,
-  autoPotionSettingsSchema,
-  potionActionBarSchema,
+  actionBotSettingsSchema,
 } from "./actionBar";
 import {
   bankDepositMessageSchema,
@@ -268,6 +268,18 @@ export const usePotionMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
+/**
+ * Activates one server-stored action button. The server resolves the action,
+ * owned item instance, targeting mode, requirements, and outcome in the tick.
+ */
+export const activateActionBarMessageSchema = z
+  .object({
+    type: z.literal("activate-action-bar"),
+    slotIndex: z.number().int().min(0).max(ACTION_BAR_SLOT_COUNT - 1),
+    target: combatTargetSchema.optional(),
+  })
+  .strict();
+
 /** Equips one owned item; the server verifies its catalog slot and requirements. */
 export const equipItemMessageSchema = ownedItemIntentSchema
   .extend({
@@ -417,28 +429,12 @@ export const updateUiSettingsMessageSchema = z.object({
   settings: uiSettingsSchema,
 });
 
-/**
- * Bounded per-character spell bar layout intent; spell ids are re-validated
- * against the character's own spell list at execution time.
- */
-export const updateActionBarMessageSchema = z.object({
-  type: z.literal("update-action-bar"),
-  actionBar: actionBarSchema,
-});
-
-/** Bounded per-character potion type and client targeting-mode layout. */
-export const updatePotionActionBarMessageSchema = z
+/** Bounded per-character action layout; every referenced id is revalidated. */
+export const updateActionBarMessageSchema = z
   .object({
-    type: z.literal("update-potion-action-bar"),
-    potionActionBar: potionActionBarSchema,
-  })
-  .strict();
-
-/** Rare, bounded per-character update; automatic use remains server-owned. */
-export const updateAutoPotionSettingsMessageSchema = z
-  .object({
-    type: z.literal("update-auto-potion-settings"),
-    settings: autoPotionSettingsSchema,
+    type: z.literal("update-action-bar"),
+    actionBar: actionBarSchema,
+    settings: actionBotSettingsSchema,
   })
   .strict();
 
@@ -459,6 +455,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   castSpellMessageSchema,
   useRuneMessageSchema,
   usePotionMessageSchema,
+  activateActionBarMessageSchema,
   equipItemMessageSchema,
   unequipItemMessageSchema,
   pickupItemMessageSchema,
@@ -477,8 +474,6 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   setLanguageMessageSchema,
   updateUiSettingsMessageSchema,
   updateActionBarMessageSchema,
-  updatePotionActionBarMessageSchema,
-  updateAutoPotionSettingsMessageSchema,
   npcDialogueGreetMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,
@@ -607,10 +602,7 @@ export type UpdateUiSettingsMessage = z.infer<
 export type UpdateActionBarMessage = z.infer<
   typeof updateActionBarMessageSchema
 >;
-export type UpdatePotionActionBarMessage = z.infer<
-  typeof updatePotionActionBarMessageSchema
->;
-export type UpdateAutoPotionSettingsMessage = z.infer<
-  typeof updateAutoPotionSettingsMessageSchema
+export type ActivateActionBarMessage = z.infer<
+  typeof activateActionBarMessageSchema
 >;
 export type ClientMessage = z.infer<typeof clientMessageSchema>;

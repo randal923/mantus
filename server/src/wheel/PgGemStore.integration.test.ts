@@ -115,6 +115,7 @@ databaseDescribe("PgGemStore integration", () => {
       "023_character_action_bar.sql",
       "029_character_potion_action_bar.sql",
       "028_gem_atelier.sql",
+      "034_unified_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

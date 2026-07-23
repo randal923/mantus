@@ -98,28 +98,15 @@ class MemoryCharacterStore implements CharacterStore {
   async updateActionBar(
     characterId: string,
     actionBar: Character["actionBar"],
+    actionBotSettings: Character["actionBotSettings"],
   ): Promise<void> {
     const character = this.characters.get(characterId);
     if (!character) throw new CharacterError("not-found");
-    this.characters.set(characterId, { ...character, actionBar });
-  }
-
-  async updatePotionActionBar(
-    characterId: string,
-    potionActionBar: Character["potionActionBar"],
-  ): Promise<void> {
-    const character = this.characters.get(characterId);
-    if (!character) throw new CharacterError("not-found");
-    this.characters.set(characterId, { ...character, potionActionBar });
-  }
-
-  async updateAutoPotionSettings(
-    characterId: string,
-    autoPotionSettings: Character["autoPotionSettings"],
-  ): Promise<void> {
-    const character = this.characters.get(characterId);
-    if (!character) throw new CharacterError("not-found");
-    this.characters.set(characterId, { ...character, autoPotionSettings });
+    this.characters.set(characterId, {
+      ...character,
+      actionBar,
+      actionBotSettings,
+    });
   }
 }
 

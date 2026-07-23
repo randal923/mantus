@@ -1,36 +1,38 @@
-import { ActionBar } from "./action-bar/ActionBar";
-import { VitalOrb } from "./action-bar/VitalOrb";
-import { useAppTranslation } from "../i18n/useAppTranslation";
+"use client";
+
+import { useState } from "react";
 import {
-  ACTION_BAR_SLOT_COUNT,
   PROTOCOL_LIMITS,
   type ActionBar as ActionBarState,
-  type CombatTarget,
+  type ActionBarAction,
   type CreatureState,
   type FightState,
-  type InventoryItem,
   type InventoryState,
   type MinimapLayout,
   type OwnCharacterState,
-  type PotionActionBar,
-  type PotionTargetMode,
   type SpellCatalogEntry,
 } from "@tibia/protocol";
+import { ActionBar } from "./action-bar/ActionBar";
+import type { ActionBarEditorRequest } from "./action-bar/ActionBarEditorRequest";
+import { VitalOrb } from "./action-bar/VitalOrb";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 import { ChatPanel } from "./chat/ChatPanel";
 import type { ChatChannel } from "./chat/chatTypes";
 import { ConditionBar } from "./combat/ConditionBar";
 import { OwnSkullIndicator } from "./pvp/OwnSkullIndicator";
 import { BattleList } from "./creatures/BattleList";
 import { MinimapPanel } from "./minimap/MinimapPanel";
-import { getSpellCombatTarget } from "../lib/combat/getSpellCombatTarget";
 import { getSpellIconArtwork } from "../lib/combat/getSpellIconArtwork";
-import { getPotionBarItems } from "../lib/inventory/getPotionBarItems";
-import { getEffectivePotionActionBar } from "../lib/inventory/getEffectivePotionActionBar";
+import { getInventoryItems } from "../lib/inventory/getInventoryItems";
+import { formatActionBarHotkey } from "../lib/hotkeys/formatActionBarHotkey";
+import { createItemAction } from "../lib/action-bar/createItemAction";
+import { getActionBarActionName } from "../lib/action-bar/getActionBarActionName";
+import { getSpellActionTargetMode } from "../lib/action-bar/getSpellActionTargetMode";
 import { SpriteIcon } from "./inventory/SpriteIcon";
 import { SpellIcon } from "./spells/SpellIcon";
 
 interface GameHudProps {
-  spellHotkeysEnabled?: boolean;
+  actionHotkeysEnabled?: boolean;
   battleListVisible: boolean;
   minimapVisible: boolean;
   mapName: string | null;
@@ -41,7 +43,7 @@ interface GameHudProps {
   fightState: FightState;
   spells: ReadonlyArray<SpellCatalogEntry>;
   actionBar: ActionBarState;
-  potionActionBar: PotionActionBar;
+  actionBotEnabled: boolean;
   inventory: InventoryState | null;
   hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
@@ -49,13 +51,15 @@ interface GameHudProps {
   chatFocusRequestId?: number;
   chatChannels?: ReadonlyArray<ChatChannel>;
   chatSelectedChannelId?: string;
-  onCast: (spellId: string, target: CombatTarget) => void;
-  onActivatePotion: (
-    item: InventoryItem,
-    targetMode: PotionTargetMode,
+  onActivateActionBar: (
+    slotIndex: number,
+    action: Exclude<ActionBarAction, { kind: "text" }>,
   ) => void;
-  onConfigureActionBar: (slotIndex: number) => void;
-  onConfigurePotionActionBar: (slotIndex: number) => void;
+  onActionBarChange: (actionBar: ActionBarState) => void;
+  onConfigureActionBar: (
+    slotIndex: number,
+    section: ActionBarEditorRequest["section"],
+  ) => void;
   onChatChannelSelect?: (channelId: string) => void;
   onChatChannelClose?: (channelId: string) => void;
   onChatSenderSelect?: (sender: string) => void;
@@ -64,7 +68,7 @@ interface GameHudProps {
 }
 
 export function GameHud({
-  spellHotkeysEnabled = true,
+  actionHotkeysEnabled = true,
   battleListVisible,
   minimapVisible,
   mapName,
@@ -73,9 +77,9 @@ export function GameHud({
   visibleCreatures,
   ownCharacter,
   fightState,
-  spells: spellCatalog,
+  spells,
   actionBar,
-  potionActionBar,
+  actionBotEnabled,
   inventory,
   hasWeapon,
   combatLog,
@@ -83,10 +87,9 @@ export function GameHud({
   chatFocusRequestId,
   chatChannels,
   chatSelectedChannelId,
-  onCast,
-  onActivatePotion,
+  onActivateActionBar,
+  onActionBarChange,
   onConfigureActionBar,
-  onConfigurePotionActionBar,
   onChatChannelSelect,
   onChatChannelClose,
   onChatSenderSelect,
@@ -94,55 +97,75 @@ export function GameHud({
   onChatPinnedOpenChange,
 }: GameHudProps) {
   const { t } = useAppTranslation();
-  const combatSpells = spellCatalog.filter(
-    (spell) => spell.origin === "spell",
-  );
-  const spellSlots = Array.from(
-    { length: ACTION_BAR_SLOT_COUNT },
-    (_, index) => {
-      const spellId = actionBar[index] ?? null;
-      const spell = spellId
-        ? combatSpells.find((candidate) => candidate.id === spellId)
-        : undefined;
-      const shortcut = String(index + 1);
-      const emptyTitle = t("spells.actionBar.emptySlotHint");
-      const emptyAriaLabel = t("spells.actionBar.emptySlot", { shortcut });
-      if (!spell) {
-        return {
-          shortcut,
-          shortcutLabel: shortcut,
-          emptyTitle,
-          emptyAriaLabel,
-          item: null,
-        };
-      }
-      const cooldown = fightState.cooldowns
-        .filter((entry) => spell.cooldownGroups.includes(entry.group))
-        .sort((left, right) => right.readyAt - left.readyAt)[0];
-      const iconArtwork = getSpellIconArtwork(spell.id);
-      const label = t("spells.shortcut", {
-        name: spell.name,
-        shortcut,
-      });
+  const [chatDraftRequest, setChatDraftRequest] = useState<{
+    readonly id: number;
+    readonly text: string;
+  }>();
+  const inventoryItems = getInventoryItems(inventory);
+  const slots = actionBar.map((slot, index) => {
+    const hotkeyLabel = formatActionBarHotkey(slot.hotkey);
+    const emptyTitle = `Configure action button ${index + 1}`;
+    const emptyAriaLabel = `${emptyTitle}${hotkeyLabel ? ` (${hotkeyLabel})` : ""}`;
+    const action = slot.action;
+    if (!action) {
       return {
-        shortcut,
-        shortcutLabel: shortcut,
+        action,
+        hotkey: slot.hotkey,
+        hotkeyLabel,
+        emptyTitle,
+        emptyAriaLabel,
+        item: null,
+      };
+    }
+    if (action.kind === "text") {
+      return {
+        action,
+        hotkey: slot.hotkey,
+        hotkeyLabel,
         emptyTitle,
         emptyAriaLabel,
         item: {
-          id: spell.id,
-          icon: iconArtwork ? <SpellIcon {...iconArtwork} /> : null,
-          title: label,
-          ariaLabel: label,
-          badge: spell.manaCost,
+          icon: (
+            <span className="flex size-8 items-center justify-center rounded border border-ui-gold/25 bg-black/35 font-display text-xs text-ui-gold">
+              TXT
+            </span>
+          ),
+          title: action.text,
+          ariaLabel: `Text action: ${action.text}`,
+        },
+      };
+    }
+    if (action.kind === "spell") {
+      const spell = spells.find(
+        (candidate) =>
+          candidate.origin === "spell" && candidate.id === action.spellId,
+      );
+      const cooldown = spell
+        ? fightState.cooldowns
+            .filter((entry) => spell.cooldownGroups.includes(entry.group))
+            .sort((left, right) => right.readyAt - left.readyAt)[0]
+        : undefined;
+      const artwork = getSpellIconArtwork(action.spellId);
+      const name = spell?.name ?? action.spellId;
+      return {
+        action,
+        hotkey: slot.hotkey,
+        hotkeyLabel,
+        emptyTitle,
+        emptyAriaLabel,
+        item: {
+          icon: artwork ? <SpellIcon {...artwork} /> : null,
+          title: name,
+          ariaLabel: `Cast ${name}`,
+          badge: spell?.manaCost,
           badgeTone: "mana" as const,
           unavailable:
+            !spell ||
             ownCharacter.level < spell.requiredLevel ||
             ownCharacter.magicLevel < spell.requiredMagicLevel ||
             ownCharacter.mana < spell.manaCost ||
             ownCharacter.soul < spell.soulCost ||
             (spell.needWeapon && !hasWeapon),
-          disabled: spell.targetKind === "position",
           ...(cooldown
             ? {
                 cooldownReadyAt: cooldown.readyAt,
@@ -151,65 +174,49 @@ export function GameHud({
             : {}),
         },
       };
-    },
-  );
-  const potionItems = getPotionBarItems(inventory);
-  const potionCooldown = fightState.cooldowns.find(
-    (cooldown) => cooldown.group === "potion",
-  );
-  const potionConfiguration = getEffectivePotionActionBar(
-    potionActionBar,
-    potionItems,
-  );
-  const potionSlots = Array.from(
-    { length: ACTION_BAR_SLOT_COUNT },
-    (_, index) => {
-      const configuration = potionConfiguration[index];
-      const potion = configuration
-        ? potionItems.find(
-            (candidate) =>
-              candidate.item.typeId === configuration.itemTypeId,
-          )
+    }
+    const matchingItems = inventoryItems.filter(
+      (item) => item.typeId === action.itemTypeId,
+    );
+    const item = matchingItems[0];
+    const count = matchingItems.reduce(
+      (total, candidate) => total + candidate.count,
+      0,
+    );
+    const rune = spells.find(
+      (spell) =>
+        spell.origin === "rune" && spell.runeItemTypeId === action.itemTypeId,
+    );
+    const cooldown = rune
+      ? fightState.cooldowns
+          .filter((entry) => rune.cooldownGroups.includes(entry.group))
+          .sort((left, right) => right.readyAt - left.readyAt)[0]
+      : item?.useKind === "potion"
+        ? fightState.cooldowns.find((entry) => entry.group === "potion")
         : undefined;
-      const shortcut = `Shift+${index + 1}`;
-      const emptyLabel = t("potions.emptySlot", { shortcut });
-      if (!configuration || !potion) {
-        return {
-          shortcut,
-          shortcutLabel: `⇧${index + 1}`,
-          emptyTitle: emptyLabel,
-          emptyAriaLabel: emptyLabel,
-          item: null,
-        };
-      }
-      const label = t("potions.actionBar.use", {
-        name: potion.item.name,
-        count: potion.count,
-        shortcut,
-        mode: t(`potions.actionBar.mode.${configuration.targetMode}`),
-      });
-      return {
-        shortcut,
-        shortcutLabel: `⇧${index + 1}`,
-        emptyTitle: emptyLabel,
-        emptyAriaLabel: emptyLabel,
-        item: {
-          id: potion.item.id,
-          icon: <SpriteIcon spriteId={potion.item.spriteId} />,
-          title: label,
-          ariaLabel: label,
-          badge: potion.count,
-          badgeTone: "count" as const,
-          ...(potionCooldown
-            ? {
-                cooldownReadyAt: potionCooldown.readyAt,
-                cooldownTotalMs: potionCooldown.totalMs,
-              }
-            : {}),
-        },
-      };
-    },
-  );
+    const name = getActionBarActionName(action, spells, inventoryItems);
+    return {
+      action,
+      hotkey: slot.hotkey,
+      hotkeyLabel,
+      emptyTitle,
+      emptyAriaLabel,
+      item: {
+        icon: item ? <SpriteIcon spriteId={item.spriteId} /> : null,
+        title: `${name} · ${action.mode.replaceAll("-", " ")}`,
+        ariaLabel: `Use ${name}`,
+        badge: count > 0 ? count : undefined,
+        badgeTone: "count" as const,
+        unavailable: count === 0,
+        ...(cooldown
+          ? {
+              cooldownReadyAt: cooldown.readyAt,
+              cooldownTotalMs: cooldown.totalMs,
+            }
+          : {}),
+      },
+    };
+  });
   const visibleChatChannels: ReadonlyArray<ChatChannel> = chatChannels ?? [
     {
       id: "system",
@@ -240,6 +247,7 @@ export function GameHud({
           channels={visibleChatChannels}
           pinnedOpen={chatPinnedOpen}
           focusRequestId={chatFocusRequestId}
+          draftRequest={chatDraftRequest}
           {...(chatSelectedChannelId
             ? { selectedChannelId: chatSelectedChannelId }
             : {})}
@@ -274,50 +282,114 @@ export function GameHud({
             value={ownCharacter.health}
             max={ownCharacter.maxHealth}
           />
-
-          <div className="ui-action-cluster-shell pointer-events-auto relative z-0 min-w-0 max-w-[calc(100vw-12rem)] sm:max-w-[calc(100vw-16rem)]">
+          <div className="ui-action-cluster-shell pointer-events-auto relative z-0 min-w-0 max-w-[calc(100vw-16rem)] sm:max-w-[calc(100vw-16rem)]">
+            <button
+              type="button"
+              title={t("actionBot.configure")}
+              aria-label={t("actionBot.configure")}
+              onClick={() => onConfigureActionBar(0, "bot")}
+              className="ui-button ui-button-secondary absolute -top-7 left-1/2 z-10 flex h-7 -translate-x-1/2 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
+            >
+              <span
+                className={`size-2 rounded-full ${
+                  actionBotEnabled
+                    ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                    : "bg-ui-stone"
+                }`}
+              />
+              {t("actionBot.title").toLocaleUpperCase()}
+            </button>
             <div className="ui-action-cluster w-max max-w-full overflow-x-auto p-2">
-              <div className="flex w-max min-w-full flex-col items-center gap-1">
+              <div className="flex w-max min-w-full items-end">
                 <ActionBar
-                  ariaLabel={t("potions.bar")}
-                  slots={potionSlots}
-                  hotkeyModifier="shift"
-                  hotkeysEnabled={spellHotkeysEnabled}
-                  onActivate={(itemId, slotIndex) => {
-                    const potion = potionItems.find(
-                      (candidate) => candidate.item.id === itemId,
-                    );
-                    const targetMode =
-                      potionConfiguration[slotIndex]?.targetMode;
-                    if (potion && targetMode) {
-                      onActivatePotion(potion.item, targetMode);
+                  ariaLabel="Action bar"
+                  slots={slots}
+                  hotkeysEnabled={actionHotkeysEnabled}
+                  onActivate={(slotIndex) => {
+                    const action = actionBar[slotIndex]?.action;
+                    if (!action) return;
+                    if (action.kind === "text") {
+                      if (
+                        action.sendAutomatically &&
+                        chatSelectedChannelId &&
+                        onSendChat
+                      ) {
+                        onSendChat(chatSelectedChannelId, action.text);
+                        return;
+                      }
+                      setChatDraftRequest((current) => ({
+                        id: (current?.id ?? 0) + 1,
+                        text: action.text,
+                      }));
+                      return;
                     }
-                  }}
-                  onConfigure={onConfigurePotionActionBar}
-                />
-                <ActionBar
-                  ariaLabel={t("spells.bar")}
-                  slots={spellSlots}
-                  hotkeysEnabled={spellHotkeysEnabled}
-                  onActivate={(spellId) => {
-                    const spell = combatSpells.find(
-                      (candidate) => candidate.id === spellId,
-                    );
-                    if (!spell) return;
-                    onCast(
-                      spell.id,
-                      getSpellCombatTarget(
-                        spell,
-                        fightState.attackTargetId,
-                      ),
-                    );
+                    if (action.kind === "spell") {
+                      const spell = spells.find(
+                        (candidate) =>
+                          candidate.origin === "spell" &&
+                          candidate.id === action.spellId,
+                      );
+                      onActivateActionBar(
+                        slotIndex,
+                        spell
+                          ? {
+                              ...action,
+                              targetMode: getSpellActionTargetMode(
+                                spell.targetKind,
+                                action.targetMode,
+                              ),
+                            }
+                          : action,
+                      );
+                      return;
+                    }
+                    onActivateActionBar(slotIndex, action);
                   }}
                   onConfigure={onConfigureActionBar}
+                  onChangeHotkey={(slotIndex, hotkey) => {
+                    const next = [...actionBar];
+                    next[slotIndex] = { ...next[slotIndex]!, hotkey };
+                    onActionBarChange(next);
+                  }}
+                  onClearAction={(slotIndex) => {
+                    const next = [...actionBar];
+                    next[slotIndex] = {
+                      ...next[slotIndex]!,
+                      action: null,
+                    };
+                    onActionBarChange(next);
+                  }}
+                  onMoveAction={(fromIndex, toIndex) => {
+                    if (fromIndex === toIndex) return;
+                    const next = [...actionBar];
+                    const sourceAction = next[fromIndex]?.action ?? null;
+                    const targetAction = next[toIndex]?.action ?? null;
+                    next[fromIndex] = {
+                      ...next[fromIndex]!,
+                      action: targetAction,
+                    };
+                    next[toIndex] = {
+                      ...next[toIndex]!,
+                      action: sourceAction,
+                    };
+                    onActionBarChange(next);
+                  }}
+                  onDropItem={(slotIndex, itemId) => {
+                    const item = inventoryItems.find(
+                      (candidate) => candidate.id === itemId,
+                    );
+                    if (!item) return;
+                    const next = [...actionBar];
+                    next[slotIndex] = {
+                      ...next[slotIndex]!,
+                      action: createItemAction(item, spells),
+                    };
+                    onActionBarChange(next);
+                  }}
                 />
               </div>
             </div>
           </div>
-
           <VitalOrb
             kind="mana"
             value={ownCharacter.mana}

@@ -5,6 +5,7 @@ import type { AccountTier, Language } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
+import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/Dropdown";
 import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
@@ -227,7 +228,7 @@ export function GameMenuModal({
             <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
               {t("settings.controls")}
             </h3>
-            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-3 has-disabled:cursor-not-allowed has-disabled:opacity-45">
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-3">
               <span className="flex flex-col gap-1">
                 <span className="text-sm font-medium text-ui-text">
                   {t("settings.diagonalWalking")}
@@ -236,16 +237,16 @@ export function GameMenuModal({
                   {t("settings.diagonalWalkingDescription")}
                 </span>
               </span>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={diagonalWalking}
                 disabled={!onDiagonalWalkingChange}
+                aria-label={t("settings.diagonalWalking")}
                 onChange={(event) =>
                   onDiagonalWalkingChange?.(event.currentTarget.checked)
                 }
-                className="size-4 shrink-0 accent-ui-accent-light"
+                className="shrink-0"
               />
-            </label>
+            </div>
           </section>
 
           <Button className="w-full" onClick={() => setView("hotkeys")}>

@@ -1,11 +1,13 @@
 import type { RawData, WebSocket } from "ws";
 import {
   clientMessageSchema,
-  DEFAULT_AUTO_POTION_SETTINGS,
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
   DEFAULT_FIGHT_MODE,
   PROTOCOL_LIMITS,
   type ClientMessage,
-  type AutoPotionSettings,
+  type ActionBar,
+  type ActionBotSettings,
   type Direction,
   type FightMode,
   type Position,
@@ -30,8 +32,6 @@ export class Session {
   languageUpdatePending = false;
   uiSettingsUpdatePending = false;
   actionBarUpdatePending = false;
-  potionActionBarUpdatePending = false;
-  autoPotionSettingsUpdatePending = false;
   itemOperationPending = false;
   /** One optimistic potion transaction may be durable at a time per user. */
   potionPersistPending = false;
@@ -56,8 +56,13 @@ export class Session {
     string,
     { readyAt: number; totalMs: number }
   >();
-  autoPotionSettings: AutoPotionSettings = {
-    ...DEFAULT_AUTO_POTION_SETTINGS,
+  readonly actionBotRuleReadyAt = new Map<string, number>();
+  actionBotSuppressedAt = Number.NEGATIVE_INFINITY;
+  errorRevision = 0;
+  actionBar: ActionBar = createDefaultActionBar();
+  actionBotSettings: ActionBotSettings = {
+    ...DEFAULT_ACTION_BOT_SETTINGS,
+    rules: [],
   };
   isAlive = true;
   readonly knownCreatureIds = new Set<string>();
@@ -146,6 +151,7 @@ export class Session {
   }
 
   sendError(code: ServerErrorCode): void {
+    this.errorRevision += 1;
     this.send({ type: "error", code });
   }
 

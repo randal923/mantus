@@ -7,6 +7,8 @@ import {
 import { parseChatInput } from "../../lib/chat/parseChatInput";
 import { sanitizeChatText } from "../../lib/chat/sanitizeChatText";
 import { toChatMessage } from "../../lib/chat/toChatMessage";
+import { removeInvalidActionBotRules } from "../../lib/action-bar/removeInvalidActionBotRules";
+import { getInventoryItems } from "../../lib/inventory/getInventoryItems";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { GameHud } from "../GameHud";
 import { useGameWindowStore } from "./store/useGameWindowStore";
@@ -19,11 +21,12 @@ export function GameHudOverlay() {
   const potionTargeting = useGameWindowStore(
     (state) => state.potionTargeting,
   );
-  const actionBarConfigSlot = useGameWindowStore(
-    (state) => state.actionBarConfigSlot,
+  const runeTargeting = useGameWindowStore((state) => state.runeTargeting);
+  const useWithTargeting = useGameWindowStore(
+    (state) => state.useWithTargeting,
   );
-  const potionActionBarConfigSlot = useGameWindowStore(
-    (state) => state.potionActionBarConfigSlot,
+  const actionBarEditorRequest = useGameWindowStore(
+    (state) => state.actionBarEditorRequest,
   );
   const battleListVisible = useGameWindowStore(
     (state) => state.battleListVisible,
@@ -38,8 +41,8 @@ export function GameHudOverlay() {
   const fightState = useGameWindowStore((state) => state.fightState);
   const spells = useGameWindowStore((state) => state.spells);
   const actionBar = useGameWindowStore((state) => state.actionBar);
-  const potionActionBar = useGameWindowStore(
-    (state) => state.potionActionBar,
+  const actionBotSettings = useGameWindowStore(
+    (state) => state.actionBotSettings,
   );
   const inventory = useGameWindowStore(
     (state) => state.sessions?.inventory ?? null,
@@ -60,11 +63,11 @@ export function GameHudOverlay() {
   const setPotionTargeting = useGameWindowStore(
     (state) => state.setPotionTargeting,
   );
-  const setActionBarConfigSlot = useGameWindowStore(
-    (state) => state.setActionBarConfigSlot,
+  const setActionBarEditorRequest = useGameWindowStore(
+    (state) => state.setActionBarEditorRequest,
   );
-  const setPotionActionBarConfigSlot = useGameWindowStore(
-    (state) => state.setPotionActionBarConfigSlot,
+  const setActionBotSettings = useGameWindowStore(
+    (state) => state.setActionBotSettings,
   );
   if (!ownCharacter || !fightState) return null;
 
@@ -102,11 +105,12 @@ export function GameHudOverlay() {
 
   return (
     <GameHud
-      spellHotkeysEnabled={
+      actionHotkeysEnabled={
         !gameMenuOpen &&
         !potionTargeting &&
-        actionBarConfigSlot === null &&
-        potionActionBarConfigSlot === null
+        !runeTargeting &&
+        !useWithTargeting &&
+        actionBarEditorRequest === null
       }
       battleListVisible={battleListVisible}
       minimapVisible={minimapVisible}
@@ -118,7 +122,7 @@ export function GameHudOverlay() {
       fightState={fightState}
       spells={spells}
       actionBar={actionBar}
-      potionActionBar={potionActionBar}
+      actionBotEnabled={actionBotSettings.enabled}
       inventory={inventory}
       hasWeapon={Boolean(inventory?.equipment.weapon)}
       combatLog={combatLog}
@@ -213,10 +217,7 @@ export function GameHudOverlay() {
         if (text.length === 0) return;
         client?.sendPrivateChat(channel.counterpart, text);
       }}
-      onCast={(spellId, target) =>
-        store.getState().runtime.clientRef.current?.castSpell(spellId, target)
-      }
-      onActivatePotion={(item, targetMode) => {
+      onActivateActionBar={(slotIndex, action) => {
         const runtime = store.getState().runtime;
         runtime.pendingRuneRef.current = null;
         setRuneTargeting(false);
@@ -224,36 +225,110 @@ export function GameHudOverlay() {
         store.getState().setUseWithTargeting(false);
         runtime.pendingPotionRef.current = null;
         setPotionTargeting(false);
+        runtime.pendingActionBarRef.current = null;
 
-        const targetId =
-          targetMode === "self"
-            ? ownCharacter.id
-            : targetMode === "attack-target"
-              ? fightState.attackTargetId
-              : targetMode === "cursor"
-                ? runtime.rendererRef.current?.creatureIdAtCursor()
-                : null;
-        const target = targetId
-          ? visibleCreatures.find((candidate) => candidate.id === targetId)
-          : undefined;
+        const mode =
+          action.kind === "spell"
+            ? action.targetMode
+            : action.mode === "use-on-self"
+              ? "self"
+              : action.mode === "use-on-target"
+                ? "attack-target"
+                : action.mode === "use-at-cursor"
+                  ? "cursor"
+                  : action.mode === "use-with-crosshair"
+                    ? "crosshair"
+                    : null;
         if (
-          targetId &&
-          (targetId === ownCharacter.id || target?.kind === "player")
+          !mode ||
+          mode === "self" ||
+          mode === "attack-target" ||
+          mode === "direction"
         ) {
-          runtime.clientRef.current?.usePotion(item, targetId);
+          runtime.clientRef.current?.activateActionBar(slotIndex);
           return;
         }
-
-        runtime.pendingPotionRef.current = item;
-        setPotionTargeting(true);
+        const configuredItem =
+          action.kind === "item"
+            ? getInventoryItems(inventory).find(
+                (item) => item.typeId === action.itemTypeId,
+              )
+            : undefined;
+        const rune =
+          action.kind === "item"
+            ? spells.find(
+                (spell) =>
+                  spell.origin === "rune" &&
+                  spell.runeItemTypeId === action.itemTypeId,
+              )
+            : undefined;
+        const spell =
+          action.kind === "spell"
+            ? spells.find((candidate) => candidate.id === action.spellId)
+            : undefined;
+        const wantsCreature =
+          configuredItem?.useKind === "potion" ||
+          rune?.targetKind === "target" ||
+          spell?.targetKind === "target";
+        if (mode === "cursor") {
+          if (wantsCreature) {
+            const creatureId =
+              runtime.rendererRef.current?.creatureIdAtCursor();
+            if (creatureId) {
+              runtime.clientRef.current?.activateActionBar(slotIndex, {
+                kind: "creature",
+                creatureId,
+              });
+            }
+            return;
+          }
+          const position = runtime.rendererRef.current?.positionAtCursor();
+          if (position) {
+            runtime.clientRef.current?.activateActionBar(slotIndex, {
+              kind: "position",
+              position,
+            });
+          }
+          return;
+        }
+        runtime.pendingActionBarRef.current = {
+          slotIndex,
+          target: wantsCreature ? "creature" : "position",
+          awaitingResult: false,
+        };
+        if (rune) {
+          setRuneTargeting(true);
+          return;
+        }
+        if (configuredItem?.useKind === "potion") {
+          setPotionTargeting(true);
+          return;
+        }
+        store.getState().setUseWithTargeting(true);
       }}
-      onConfigureActionBar={(slotIndex) => {
-        setPotionActionBarConfigSlot(null);
-        setActionBarConfigSlot(slotIndex);
+      onActionBarChange={(next) => {
+        const runtime = store.getState().runtime;
+        const nextBotSettings = removeInvalidActionBotRules(
+          runtime.actionBotSettingsRef.current,
+          next,
+        );
+        store.getState().setActionBar(next);
+        setActionBotSettings(nextBotSettings);
+        runtime.actionBarRef.current = next;
+        runtime.actionBotSettingsRef.current = nextBotSettings;
+        if (runtime.actionBarSaveTimerRef.current) {
+          clearTimeout(runtime.actionBarSaveTimerRef.current);
+        }
+        runtime.actionBarSaveTimerRef.current = setTimeout(() => {
+          runtime.actionBarSaveTimerRef.current = null;
+          runtime.clientRef.current?.updateActionBar(
+            runtime.actionBarRef.current,
+            runtime.actionBotSettingsRef.current,
+          );
+        }, 800);
       }}
-      onConfigurePotionActionBar={(slotIndex) => {
-        setActionBarConfigSlot(null);
-        setPotionActionBarConfigSlot(slotIndex);
+      onConfigureActionBar={(slotIndex, section) => {
+        setActionBarEditorRequest({ slotIndex, section });
       }}
     />
   );

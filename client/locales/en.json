@@ -881,6 +881,75 @@
       "assign": "Assign {{name}} to slot {{slot}}"
     }
   },
+  "actionBot": {
+    "title": "Action Bot",
+    "configure": "Configure Action Bot",
+    "description": "Select an action above, add it, then choose exactly when it runs.",
+    "enabled": "Enabled",
+    "quickHelpers": "Quick helpers",
+    "quickHelpersDescription": "Enable common support spells without using action bar slots.",
+    "autoHaste": "Auto Haste",
+    "autoHasteDescription": "Recasts your chosen haste spell when haste expires.",
+    "hasteSpell": "Haste spell",
+    "haste": "Haste",
+    "strongHaste": "Strong Haste",
+    "enableAutoHaste": "Enable Auto Haste",
+    "autoUtamoVita": "Auto Utamo Vita",
+    "autoUtamoVitaDescription": "Recasts Magic Shield whenever it is no longer active.",
+    "enableAutoUtamoVita": "Enable Auto Utamo Vita",
+    "rulesTitle": "Automatic action rules",
+    "rulesDescription": "Rules run from top to bottom. Move them to set priority.",
+    "ruleCount": "{{count}} / {{max}}",
+    "addSelectedAction": "Add Selected Action",
+    "columns": {
+      "on": "On",
+      "action": "Action",
+      "activateWhen": "Activate when",
+      "setting": "Setting",
+      "options": "Options"
+    },
+    "noRules": "No automation rules yet",
+    "noRulesDescription": "Put a potion, rune, spell, or equipment item on the action bar, then add its trigger here.",
+    "status": "Action Bot Status",
+    "statusEnabled": "Enabled ✓",
+    "statusDisabled": "Disabled",
+    "triggers": {
+      "resource-below": "Resource falls below",
+      "resource-above": "Resource rises above",
+      "target-present": "Attack target is selected",
+      "condition-missing": "Status effect is missing"
+    },
+    "resources": {
+      "health": "Health",
+      "mana": "Mana"
+    },
+    "conditions": {
+      "haste": "Haste",
+      "magic-shield": "Magic Shield"
+    },
+    "directions": {
+      "below": "below",
+      "above": "above"
+    },
+    "triggerDescriptions": {
+      "target": "Runs on your current attack target whenever one is selected.",
+      "condition": "Runs whenever {{condition}} is not active.",
+      "resource": "Runs when {{resource}} is {{direction}} {{percent}}%."
+    },
+    "enableRule": "Enable rule {{number}}",
+    "actionForRule": "Action for rule {{number}}",
+    "activationForRule": "Activation condition for rule {{number}}",
+    "resourceForRule": "Resource for rule {{number}}",
+    "missingEffectForRule": "Missing effect for rule {{number}}",
+    "decreaseThreshold": "Decrease threshold for rule {{number}}",
+    "increaseThreshold": "Increase threshold for rule {{number}}",
+    "currentTarget": "Current target",
+    "explainRule": "Explain rule {{number}}",
+    "moveRuleUp": "Move rule up",
+    "moveRuleDown": "Move rule down",
+    "removeRule": "Remove rule",
+    "unequipInactive": "Unequip when this trigger is no longer active"
+  },
   "contextMenu": {
     "look": "Look",
     "use": "Use",
@@ -931,7 +1000,7 @@
     "chase": "Chase target",
     "secureMode": "Secure PVP mode",
     "conditions": "Active conditions",
-    "selectRuneTarget": "Select a tile for the rune",
+    "selectRuneTarget": "Select a target for the rune",
     "conditionTitle": "{{condition}}, {{seconds}} seconds remaining",
     "log": "Combat log",
     "condition": {

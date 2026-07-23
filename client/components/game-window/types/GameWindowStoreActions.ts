@@ -2,12 +2,11 @@ import type { SetStateAction } from "react";
 import type {
   AccountTier,
   ActionBar,
-  AutoPotionSettings,
+  ActionBotSettings,
   CharacterCreationOptions,
   CreatureState,
   FightState,
   OwnCharacterState,
-  PotionActionBar,
   ServerErrorCode,
   SpellCatalogEntry,
   TradeClosedReason,
@@ -30,6 +29,7 @@ import type { ReportSessionState } from "./ReportSessionState";
 import type { ShopSessionState } from "./ShopSessionState";
 import type { StoreSessionState } from "./StoreSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
+import type { ActionBarEditorRequest } from "../../action-bar/ActionBarEditorRequest";
 
 export interface GameWindowStoreActions {
   setConfig: (config: Pick<GameWindowState, "accessToken" | "onLogout">) => void;
@@ -68,12 +68,12 @@ export interface GameWindowStoreActions {
   setMapName: (value: SetStateAction<string | null>) => void;
   setUiSettings: (value: SetStateAction<UiSettings>) => void;
   setActionBar: (value: SetStateAction<ActionBar>) => void;
-  setPotionActionBar: (value: SetStateAction<PotionActionBar>) => void;
-  setAutoPotionSettings: (
-    value: SetStateAction<AutoPotionSettings>,
+  setActionBotSettings: (
+    value: SetStateAction<ActionBotSettings>,
   ) => void;
-  setActionBarConfigSlot: (value: SetStateAction<number | null>) => void;
-  setPotionActionBarConfigSlot: (value: SetStateAction<number | null>) => void;
+  setActionBarEditorRequest: (
+    value: SetStateAction<ActionBarEditorRequest | null>,
+  ) => void;
   setMarketSelectedItem: (value: SetStateAction<string | null>) => void;
   setMarketToast: (value: SetStateAction<GameWindowState["marketToast"]>) => void;
   setPartyPanelVisible: (value: SetStateAction<boolean>) => void;

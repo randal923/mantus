@@ -3,6 +3,10 @@ import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
+import {
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
+} from "@tibia/protocol";
 import type { Character, CharacterSaveSnapshot } from "./Character";
 import { CharacterService } from "./CharacterService";
 import { PgCharacterStore } from "./PgCharacterStore";
@@ -91,6 +95,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       "023_character_action_bar.sql",
       "029_character_potion_action_bar.sql",
       "032_remove_loose_inventory.sql",
+      "034_unified_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -212,7 +217,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     });
   });
 
-  it("persists the action bar and starts new characters with an empty one", async () => {
+  it("persists the unified action bar and action bot settings", async () => {
     const accountId = await createAccount("action-bar");
     await service.create(accountId, {
       displayName: "Bar Hero",
@@ -222,56 +227,47 @@ databaseDescribe("PgCharacterStore integration", () => {
     const summary = (await store.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
     const created = await store.findByIdForAccount(accountId, summary.id);
-    expect(created?.actionBar).toEqual([]);
-    expect(created?.potionActionBar).toEqual([]);
-    expect(created?.autoPotionSettings).toEqual({
-      enabled: false,
-      health: null,
-      mana: null,
-      priority: "health",
-    });
-
-    const actionBar = ["exori", null, "exura ico"];
-    await store.updateActionBar(summary.id, actionBar);
-    const updated = await store.findByIdForAccount(accountId, summary.id);
-    expect(updated?.actionBar).toEqual(actionBar);
-
-    const potionActionBar = [
-      { itemTypeId: 266, targetMode: "self" as const },
-      null,
-      { itemTypeId: 268, targetMode: "crosshair" as const },
-    ];
-    await store.updatePotionActionBar(summary.id, potionActionBar);
-    const updatedPotions = await store.findByIdForAccount(
-      accountId,
-      summary.id,
+    expect(created?.actionBar).toEqual(createDefaultActionBar());
+    expect(created?.actionBotSettings).toEqual(
+      DEFAULT_ACTION_BOT_SETTINGS,
     );
-    expect(updatedPotions?.potionActionBar).toEqual(potionActionBar);
 
-    const autoPotionSettings = {
+    const actionBar = createDefaultActionBar().map((slot, index) =>
+      index === 0
+        ? {
+            ...slot,
+            action: {
+              kind: "spell" as const,
+              spellId: "exori",
+              targetMode: "direction" as const,
+            },
+          }
+        : slot,
+    );
+    const actionBotSettings = {
+      ...DEFAULT_ACTION_BOT_SETTINGS,
       enabled: true,
-      health: { itemTypeId: 266, thresholdPercent: 45 },
-      mana: { itemTypeId: 268, thresholdPercent: 30 },
-      priority: "health" as const,
+      rules: [
+        {
+          id: "auto-exori",
+          enabled: true,
+          slotIndex: 0,
+          trigger: { kind: "target-present" as const },
+          unequipWhenInactive: false,
+        },
+      ],
     };
-    await store.updateAutoPotionSettings(summary.id, autoPotionSettings);
-    const updatedAutoPotion = await store.findByIdForAccount(
+    await store.updateActionBar(
+      summary.id,
+      actionBar,
+      actionBotSettings,
+    );
+    const updatedBot = await store.findByIdForAccount(
       accountId,
       summary.id,
     );
-    expect(updatedAutoPotion?.potionActionBar).toEqual(potionActionBar);
-    expect(updatedAutoPotion?.autoPotionSettings).toEqual(
-      autoPotionSettings,
-    );
-
-    const nextPotionActionBar = potionActionBar.slice(0, 1);
-    await store.updatePotionActionBar(summary.id, nextPotionActionBar);
-    const updatedAgain = await store.findByIdForAccount(
-      accountId,
-      summary.id,
-    );
-    expect(updatedAgain?.potionActionBar).toEqual(nextPotionActionBar);
-    expect(updatedAgain?.autoPotionSettings).toEqual(autoPotionSettings);
+    expect(updatedBot?.actionBar).toEqual(actionBar);
+    expect(updatedBot?.actionBotSettings).toEqual(actionBotSettings);
   });
 
   it("rejects a stale snapshot without overwriting the newer save", async () => {

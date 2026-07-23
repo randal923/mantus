@@ -1,8 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import type { OwnCharacterState } from "@tibia/protocol";
+import {
+  createDefaultActionBar,
+  type OwnCharacterState,
+} from "@tibia/protocol";
 import { expect, fn, userEvent, within } from "storybook/test";
 
 import { GameHud } from "../components/GameHud";
+
+const actionBar = createDefaultActionBar();
+actionBar[0] = {
+  ...actionBar[0]!,
+  action: {
+    kind: "spell",
+    spellId: "exura-infir-ico",
+    targetMode: "self",
+  },
+};
 
 const meta = {
   title: "GameHud",
@@ -58,8 +71,8 @@ const meta = {
         targetKind: "self",
       },
     ],
-    actionBar: ["exura-infir-ico"],
-    potionActionBar: [],
+    actionBar,
+    actionBotEnabled: false,
     inventory: null,
     combatLog: ["You gained 5 experience."],
     chatPinnedOpen: false,
@@ -113,10 +126,9 @@ const meta = {
         ],
       },
     ],
-    onCast: fn(),
-    onActivatePotion: fn(),
+    onActivateActionBar: fn(),
+    onActionBarChange: fn(),
     onConfigureActionBar: fn(),
-    onConfigurePotionActionBar: fn(),
     onChatChannelSelect: fn(),
     onChatChannelClose: fn(),
     onChatSenderSelect: fn(),
@@ -166,7 +178,7 @@ export const MinimapAnchoredBottomRight: Story = {
 
 export const ChatHotkeyStaysEnabledWithHudPanels: Story = {
   args: {
-    spellHotkeysEnabled: false,
+    actionHotkeysEnabled: false,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

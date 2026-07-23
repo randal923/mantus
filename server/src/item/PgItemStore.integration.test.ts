@@ -211,6 +211,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "023_character_action_bar.sql",
       "029_character_potion_action_bar.sql",
       "032_remove_loose_inventory.sql",
+      "034_unified_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

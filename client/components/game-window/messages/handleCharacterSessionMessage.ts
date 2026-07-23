@@ -59,12 +59,9 @@ export function handleCharacterSessionMessage(
   state.setSpells(message.spells);
   state.setActionBar(message.actionBar);
   runtime.actionBarRef.current = message.actionBar;
-  state.setActionBarConfigSlot(null);
-  state.setPotionActionBar(message.potionActionBar);
-  runtime.potionActionBarRef.current = message.potionActionBar;
-  state.setAutoPotionSettings(message.autoPotionSettings);
-  runtime.autoPotionSettingsRef.current = message.autoPotionSettings;
-  state.setPotionActionBarConfigSlot(null);
+  state.setActionBotSettings(message.actionBotSettings);
+  runtime.actionBotSettingsRef.current = message.actionBotSettings;
+  state.setActionBarEditorRequest(null);
   state.setCharacterBusy(false);
   state.setServerError(null);
   state.setNpcDialogue(null);

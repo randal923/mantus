@@ -1,23 +1,80 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_AUTO_POTION_SETTINGS,
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
+  type ActionBar,
+  type ActionBarAction,
   type ServerMessage,
 } from "@tibia/protocol";
 import { ActionBarHandler } from "./ActionBarHandler";
 import type { SpellDefinition } from "./combat/Spell";
 import type { SpellRegistry } from "./combat/SpellRegistry";
+import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { World } from "./World";
 import { InMemoryCharacterStore } from "./test/InMemoryCharacterStore";
 import { makeCharacter } from "./test/makeCharacter";
 
-const KNIGHT_SPELLS = new Map<string, Partial<SpellDefinition>>([
-  ["exura ico", { origin: "spell", vocations: ["Knight"] }],
-  ["exori", { origin: "spell", vocations: ["Knight"] }],
-  ["exura vita", { origin: "spell", vocations: ["Druid"] }],
-  ["adori flam", { origin: "rune", vocations: ["Knight", "Sorcerer"] }],
+const SPELLS = new Map<string, Partial<SpellDefinition>>([
+  [
+    "exura ico",
+    {
+      origin: "spell",
+      vocations: ["Knight"],
+      targetKind: "self",
+    },
+  ],
+  [
+    "exori",
+    {
+      origin: "spell",
+      vocations: ["Knight"],
+      targetKind: "direction",
+    },
+  ],
+  [
+    "utani-hur",
+    {
+      origin: "spell",
+      vocations: ["Knight"],
+      targetKind: "self",
+    },
+  ],
+  [
+    "utamo-vita",
+    {
+      origin: "spell",
+      vocations: ["Sorcerer"],
+      targetKind: "self",
+    },
+  ],
+  [
+    "exura vita",
+    {
+      origin: "spell",
+      vocations: ["Druid"],
+      targetKind: "self",
+    },
+  ],
+  [
+    "adori flam",
+    {
+      origin: "rune",
+      vocations: ["Knight", "Sorcerer"],
+      targetKind: "position",
+    },
+  ],
 ]);
+
+function withFirstAction(
+  action: ActionBarAction,
+  hotkey = "Digit1",
+): ActionBar {
+  return createDefaultActionBar().map((slot, index) =>
+    index === 0 ? { action, hotkey } : slot,
+  );
+}
 
 function makeHandler(store: InMemoryCharacterStore) {
   const registry = { contains: () => true } as unknown as SessionRegistry;
@@ -26,9 +83,18 @@ function makeHandler(store: InMemoryCharacterStore) {
       id === "char-1" ? { vocation: "Knight" } : undefined,
   } as unknown as World;
   const spells = {
-    get: (spellId: string) => KNIGHT_SPELLS.get(spellId),
+    get: (spellId: string) => SPELLS.get(spellId),
   } as unknown as SpellRegistry;
-  return new ActionBarHandler(registry, world, spells, store);
+  const items = {
+    itemType: (itemTypeId: number) => {
+      if (itemTypeId === 266) return { id: 266, useKind: "potion" };
+      if (itemTypeId === 3273) {
+        return { id: 3273, equipmentSlot: "weapon" };
+      }
+      return undefined;
+    },
+  } as unknown as ItemIntentHandler;
+  return new ActionBarHandler(registry, world, spells, items, store);
 }
 
 function makeSession(playerId: string | null) {
@@ -36,10 +102,9 @@ function makeSession(playerId: string | null) {
   const errors: string[] = [];
   const session = {
     playerId,
+    actionBar: createDefaultActionBar(),
     actionBarUpdatePending: false,
-    potionActionBarUpdatePending: false,
-    autoPotionSettingsUpdatePending: false,
-    autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
+    actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS },
     send: (message: ServerMessage) => sent.push(message),
     sendError: (code: string) => errors.push(code),
   } as unknown as Session;
@@ -62,183 +127,285 @@ describe("ActionBarHandler", () => {
     const { session, errors } = makeSession(null);
     makeHandler(seededStore()).handle(session, {
       type: "update-action-bar",
-      actionBar: ["exura ico"],
+      actionBar: withFirstAction({
+        kind: "spell",
+        spellId: "exura ico",
+        targetMode: "self",
+      }),
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(errors).toEqual(["join-required"]);
   });
 
-  it("rejects spell ids that do not exist", () => {
+  it.each([
+    ["unknown spell", "utori kort"],
+    ["another vocation's spell", "exura vita"],
+    ["rune catalog entry as a spoken spell", "adori flam"],
+  ])("rejects %s", (_label, spellId) => {
     const { session, errors } = makeSession("char-1");
     makeHandler(seededStore()).handle(session, {
       type: "update-action-bar",
-      actionBar: ["utori kort"],
+      actionBar: withFirstAction({
+        kind: "spell",
+        spellId,
+        targetMode: "self",
+      }),
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(errors).toEqual(["action-bar-invalid"]);
     expect(session.actionBarUpdatePending).toBe(false);
   });
 
-  it("rejects spells of another vocation", () => {
+  it("rejects unknown objects and equipping non-equipment", () => {
+    const handler = makeHandler(seededStore());
+    const first = makeSession("char-1");
+    handler.handle(first.session, {
+      type: "update-action-bar",
+      actionBar: withFirstAction({
+        kind: "item",
+        itemTypeId: 9999,
+        mode: "use",
+      }),
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
+    });
+    const second = makeSession("char-1");
+    handler.handle(second.session, {
+      type: "update-action-bar",
+      actionBar: withFirstAction({
+        kind: "item",
+        itemTypeId: 266,
+        mode: "equip",
+      }),
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
+    });
+    expect(first.errors).toEqual(["action-bar-invalid"]);
+    expect(second.errors).toEqual(["action-bar-invalid"]);
+  });
+
+  it("rejects duplicate hotkeys", () => {
     const { session, errors } = makeSession("char-1");
+    const actionBar = createDefaultActionBar().map((slot, index) =>
+      index === 1 ? { ...slot, hotkey: "Digit1" } : slot,
+    );
     makeHandler(seededStore()).handle(session, {
       type: "update-action-bar",
-      actionBar: ["exura vita"],
+      actionBar,
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(errors).toEqual(["action-bar-invalid"]);
   });
 
-  it("rejects rune spells in bar slots", () => {
-    const { session, errors } = makeSession("char-1");
-    makeHandler(seededStore()).handle(session, {
-      type: "update-action-bar",
-      actionBar: ["adori flam"],
+  it("canonicalizes spell targeting, persists the layout, and acks", async () => {
+    const store = seededStore();
+    const handler = makeHandler(store);
+    const { session, sent, errors } = makeSession("char-1");
+    const requested = withFirstAction({
+      kind: "spell",
+      spellId: "exori",
+      targetMode: "crosshair",
     });
-    expect(errors).toEqual(["action-bar-invalid"]);
-  });
-
-  it("persists the layout and acks", async () => {
-    const store = seededStore();
-    const handler = makeHandler(store);
-    const { session, sent, errors } = makeSession("char-1");
-    const actionBar = ["exori", null, "exura ico"];
-    handler.handle(session, { type: "update-action-bar", actionBar });
-    await settle(handler);
-    expect(errors).toEqual([]);
-    expect(sent).toEqual([{ type: "action-bar-updated", actionBar }]);
-    expect(session.actionBarUpdatePending).toBe(false);
-    const character = await store.findByIdForAccount("account-id", "char-1");
-    expect(character?.actionBar).toEqual(actionBar);
-  });
-
-  it("persists validated potion slots and their target modes", async () => {
-    const store = seededStore();
-    const handler = makeHandler(store);
-    const { session, sent, errors } = makeSession("char-1");
-    const potionActionBar = [
-      { itemTypeId: 266, targetMode: "self" as const },
-      null,
-      { itemTypeId: 268, targetMode: "crosshair" as const },
-    ];
 
     handler.handle(session, {
-      type: "update-potion-action-bar",
-      potionActionBar,
+      type: "update-action-bar",
+      actionBar: requested,
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     await settle(handler);
 
     expect(errors).toEqual([]);
+    expect(session.actionBar[0]?.action).toEqual({
+      kind: "spell",
+      spellId: "exori",
+      targetMode: "direction",
+    });
     expect(sent).toEqual([
-      { type: "potion-action-bar-updated", potionActionBar },
+      {
+        type: "action-bar-updated",
+        actionBar: session.actionBar,
+        settings: DEFAULT_ACTION_BOT_SETTINGS,
+      },
     ]);
     const character = await store.findByIdForAccount(
       "account-id",
       "char-1",
     );
-    expect(character?.potionActionBar).toEqual(potionActionBar);
+    expect(character?.actionBar).toEqual(session.actionBar);
   });
 
-  it("rejects non-potion type ids in potion slots", () => {
-    const { session, errors } = makeSession("char-1");
-    makeHandler(seededStore()).handle(session, {
-      type: "update-potion-action-bar",
-      potionActionBar: [{ itemTypeId: 3273, targetMode: "self" }],
-    });
-    expect(errors).toEqual(["action-bar-invalid"]);
-    expect(session.potionActionBarUpdatePending).toBe(false);
-  });
-
-  it("persists validated auto potion rules and acks the active settings", async () => {
+  it("persists automation rules that reference a configured action", async () => {
     const store = seededStore();
     const handler = makeHandler(store);
     const { session, sent, errors } = makeSession("char-1");
+    const actionBar = withFirstAction({
+      kind: "item",
+      itemTypeId: 266,
+      mode: "use-on-self",
+    });
     const settings = {
+      ...DEFAULT_ACTION_BOT_SETTINGS,
       enabled: true,
-      health: { itemTypeId: 239, thresholdPercent: 45 },
-      mana: { itemTypeId: 268, thresholdPercent: 30 },
-      priority: "health" as const,
+      rules: [
+        {
+          id: "heal",
+          enabled: true,
+          slotIndex: 0,
+          trigger: {
+            kind: "resource-below" as const,
+            resource: "health" as const,
+            percent: 45,
+          },
+          unequipWhenInactive: false,
+        },
+      ],
     };
 
     handler.handle(session, {
-      type: "update-auto-potion-settings",
+      type: "update-action-bar",
+      actionBar,
       settings,
     });
     await settle(handler);
 
     expect(errors).toEqual([]);
+    expect(session.actionBotSettings).toEqual(settings);
     expect(sent).toEqual([
-      { type: "auto-potion-settings-updated", settings },
+      { type: "action-bar-updated", actionBar, settings },
     ]);
-    expect(session.autoPotionSettings).toEqual(settings);
     const character = await store.findByIdForAccount(
       "account-id",
       "char-1",
     );
-    expect(character?.autoPotionSettings).toEqual(settings);
+    expect(character?.actionBotSettings).toEqual(settings);
   });
 
-  it("rejects a potion that cannot restore the configured resource", () => {
+  it("persists auto haste without an action bar spell", async () => {
+    const handler = makeHandler(seededStore());
     const { session, errors } = makeSession("char-1");
-    makeHandler(seededStore()).handle(session, {
-      type: "update-auto-potion-settings",
-      settings: {
+    const settings = {
+      ...DEFAULT_ACTION_BOT_SETTINGS,
+      enabled: true,
+      autoHaste: {
         enabled: true,
-        health: { itemTypeId: 268, thresholdPercent: 50 },
-        mana: null,
-        priority: "health",
+        spellId: "utani-hur" as const,
+      },
+    };
+
+    handler.handle(session, {
+      type: "update-action-bar",
+      actionBar: createDefaultActionBar(),
+      settings,
+    });
+    await settle(handler);
+
+    expect(errors).toEqual([]);
+    expect(session.actionBotSettings).toEqual(settings);
+    expect(session.actionBar).toEqual(createDefaultActionBar());
+  });
+
+  it("rejects an automatic support spell restricted to another vocation", () => {
+    const { session, errors } = makeSession("char-1");
+
+    makeHandler(seededStore()).handle(session, {
+      type: "update-action-bar",
+      actionBar: createDefaultActionBar(),
+      settings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        autoUtamoVita: true,
       },
     });
 
     expect(errors).toEqual(["action-bar-invalid"]);
-    expect(session.autoPotionSettingsUpdatePending).toBe(false);
-    expect(session.autoPotionSettings).toEqual(DEFAULT_AUTO_POTION_SETTINGS);
+    expect(session.actionBarUpdatePending).toBe(false);
   });
 
-  it("restores the confirmed auto potion settings after a storage failure", async () => {
+  it("rejects automation rules that reference empty slots", () => {
+    const { session, errors } = makeSession("char-1");
+    makeHandler(seededStore()).handle(session, {
+      type: "update-action-bar",
+      actionBar: createDefaultActionBar(),
+      settings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        rules: [
+          {
+            id: "invalid",
+            enabled: true,
+            slotIndex: 0,
+            trigger: { kind: "target-present" },
+            unequipWhenInactive: false,
+          },
+        ],
+      },
+    });
+    expect(errors).toEqual(["action-bar-invalid"]);
+    expect(session.actionBarUpdatePending).toBe(false);
+  });
+
+  it("rejects a second update while one is pending", async () => {
+    const handler = makeHandler(seededStore());
+    const { session, errors } = makeSession("char-1");
+    const actionBar = withFirstAction({
+      kind: "spell",
+      spellId: "exori",
+      targetMode: "direction",
+    });
+    handler.handle(session, {
+      type: "update-action-bar",
+      actionBar,
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
+    });
+    handler.handle(session, {
+      type: "update-action-bar",
+      actionBar,
+      settings: DEFAULT_ACTION_BOT_SETTINGS,
+    });
+    expect(errors).toEqual(["action-bar-update-pending"]);
+    await settle(handler);
+  });
+
+  it("reports storage failures and restores confirmed bot settings", async () => {
     const handler = makeHandler(new InMemoryCharacterStore());
     const { session, sent, errors } = makeSession("char-1");
+    session.actionBar = withFirstAction({
+      kind: "spell",
+      spellId: "exura ico",
+      targetMode: "self",
+    });
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     handler.handle(session, {
-      type: "update-auto-potion-settings",
+      type: "update-action-bar",
+      actionBar: session.actionBar,
       settings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
-        health: { itemTypeId: 239, thresholdPercent: 50 },
-        mana: null,
-        priority: "health",
+        rules: [
+          {
+            id: "heal",
+            enabled: true,
+            slotIndex: 0,
+            trigger: {
+              kind: "resource-below",
+              resource: "health",
+              percent: 50,
+            },
+            unequipWhenInactive: false,
+          },
+        ],
       },
     });
     await settle(handler);
 
     expect(sent).toEqual([
       {
-        type: "auto-potion-settings-updated",
-        settings: DEFAULT_AUTO_POTION_SETTINGS,
+        type: "action-bar-updated",
+        actionBar: session.actionBar,
+        settings: DEFAULT_ACTION_BOT_SETTINGS,
       },
     ]);
     expect(errors).toEqual(["action-bar-update-failed"]);
-    expect(session.autoPotionSettingsUpdatePending).toBe(false);
-  });
-
-  it("rejects a second update while one is pending", async () => {
-    const handler = makeHandler(seededStore());
-    const { session, errors } = makeSession("char-1");
-    handler.handle(session, {
-      type: "update-action-bar",
-      actionBar: ["exori"],
-    });
-    handler.handle(session, { type: "update-action-bar", actionBar: [] });
-    expect(errors).toEqual(["action-bar-update-pending"]);
-    await settle(handler);
-  });
-
-  it("reports a storage failure and clears the pending flag", async () => {
-    const handler = makeHandler(new InMemoryCharacterStore());
-    const { session, sent, errors } = makeSession("char-1");
-    handler.handle(session, {
-      type: "update-action-bar",
-      actionBar: ["exori"],
-    });
-    await settle(handler);
-    expect(sent).toEqual([]);
-    expect(errors).toEqual(["action-bar-update-failed"]);
     expect(session.actionBarUpdatePending).toBe(false);
+    warning.mockRestore();
   });
 });

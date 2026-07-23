@@ -1,4 +1,7 @@
-import { DEFAULT_AUTO_POTION_SETTINGS } from "@tibia/protocol";
+import {
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
+} from "@tibia/protocol";
 import type { ConnectionStatus } from "../../../lib/net/GameClient";
 import type { GameWindowStore } from "../types/GameWindowStore";
 
@@ -16,14 +19,15 @@ export function handleGameClientStatus(
     runtime.pendingRuneRef.current = null;
     runtime.pendingPotionRef.current = null;
     runtime.pendingUseWithRef.current = null;
-    runtime.actionBarRef.current = [];
-    runtime.potionActionBarRef.current = [];
-    runtime.autoPotionSettingsRef.current = {
-      ...DEFAULT_AUTO_POTION_SETTINGS,
+    runtime.pendingActionBarRef.current = null;
+    runtime.actionBarRef.current = createDefaultActionBar();
+    runtime.actionBotSettingsRef.current = {
+      ...DEFAULT_ACTION_BOT_SETTINGS,
+      rules: [],
     };
-    if (runtime.autoPotionSettingsSaveTimerRef.current) {
-      clearTimeout(runtime.autoPotionSettingsSaveTimerRef.current);
-      runtime.autoPotionSettingsSaveTimerRef.current = null;
+    if (runtime.actionBarSaveTimerRef.current) {
+      clearTimeout(runtime.actionBarSaveTimerRef.current);
+      runtime.actionBarSaveTimerRef.current = null;
     }
     state.setWorldLoading(false);
     state.setLevelUpNotice(null);
@@ -35,11 +39,12 @@ export function handleGameClientStatus(
     state.setUseWithTargeting(false);
     state.setMapContextMenu(null);
     state.clearScreenMessage();
-    state.setActionBar([]);
-    state.setActionBarConfigSlot(null);
-    state.setPotionActionBar([]);
-    state.setAutoPotionSettings({ ...DEFAULT_AUTO_POTION_SETTINGS });
-    state.setPotionActionBarConfigSlot(null);
+    state.setActionBar(createDefaultActionBar());
+    state.setActionBotSettings({
+      ...DEFAULT_ACTION_BOT_SETTINGS,
+      rules: [],
+    });
+    state.setActionBarEditorRequest(null);
     state.setCombatLog([]);
     state.setItemText(null);
     state.setNpcDialogue(null);

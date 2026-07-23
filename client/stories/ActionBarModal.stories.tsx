@@ -1,7 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import {
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
+} from "@tibia/protocol";
 import { expect, fn, userEvent, within } from "storybook/test";
 
-import { ActionBarModal } from "../components/spells/ActionBarModal";
+import { ActionBarModal } from "../components/action-bar/ActionBarModal";
+
+const actionBar = createDefaultActionBar();
+actionBar[0] = {
+  ...actionBar[0]!,
+  action: {
+    kind: "spell",
+    spellId: "exura-infir-ico",
+    targetMode: "self",
+  },
+};
 
 const meta = {
   title: "ActionBarModal",
@@ -52,9 +66,12 @@ const meta = {
         targetKind: "direction",
       },
     ],
-    actionBar: ["exura-infir-ico"],
-    initialSlot: 1,
-    onChange: fn(),
+    inventory: null,
+    actionBar,
+    botSettings: DEFAULT_ACTION_BOT_SETTINGS,
+    request: { slotIndex: 1, section: "spell" },
+    onActionBarChange: fn(),
+    onBotSettingsChange: fn(),
     onClose: fn(),
   },
 } satisfies Meta<typeof ActionBarModal>;
@@ -70,32 +87,16 @@ export const Default: Story = {
     ).toBeInTheDocument();
     const search = canvas.getByRole("searchbox", { name: "Search spells" });
     await userEvent.type(search, "exori infir min");
-    await expect(
-      canvas.queryByRole("button", {
-        name: "Assign Bruise Bane to slot 2",
-      }),
-    ).not.toBeInTheDocument();
-    const row = canvas.getByRole("button", {
-      name: "Assign Lesser Front Sweep to slot 2",
-    });
+    await expect(canvas.queryByText("Bruise Bane")).not.toBeInTheDocument();
+    const row = canvas.getByRole("button", { name: /Lesser Front Sweep/ });
     await row.click();
-    await expect(args.onChange).toHaveBeenCalledWith([
-      "exura-infir-ico",
-      "exori-infir-min",
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-    ]);
+    await expect(args.onActionBarChange).toHaveBeenCalled();
   },
 };
 
 export const EmptyBar: Story = {
   args: {
-    actionBar: [],
-    initialSlot: 0,
+    actionBar: createDefaultActionBar(),
+    request: { slotIndex: 0, section: "spell" },
   },
 };

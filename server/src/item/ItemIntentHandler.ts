@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type {
+  ActionBarItemMode,
   InventoryState,
   Position,
 } from "@tibia/protocol";
@@ -179,6 +180,117 @@ export class ItemIntentHandler {
           candidate.typeId === itemTypeId && candidate.count > 0,
       );
     return item ? { item, type: this.catalog.require(item.typeId) } : null;
+  }
+
+  activateOwnedItem(
+    session: Session,
+    itemTypeId: number,
+    mode: Extract<ActionBarItemMode, "use" | "use-on-self" | "use-on-target" | "use-at-cursor" | "use-with-crosshair">,
+    targetPosition: Position | null,
+    now: number,
+  ): boolean {
+    if (session.itemOperationPending) return false;
+    const characterId = session.playerId;
+    const item = characterId
+      ? this.combatItemByType(characterId, itemTypeId)?.item
+      : undefined;
+    if (!item) return false;
+    if (
+      mode === "use-on-self" ||
+      mode === "use-on-target" ||
+      mode === "use-at-cursor" ||
+      mode === "use-with-crosshair"
+    ) {
+      if (!targetPosition) return false;
+      this.handle(
+        session,
+        {
+          type: "use-item-with",
+          itemId: item.id,
+          revision: item.version,
+          targetPosition,
+        },
+        now,
+      );
+      return true;
+    }
+    const type = this.catalog.require(item.typeId);
+    this.handle(
+      session,
+      {
+        type:
+          type.containerCapacity !== undefined
+            ? "open-container"
+            : "use-item",
+        itemId: item.id,
+        revision: item.version,
+      },
+      now,
+    );
+    return true;
+  }
+
+  toggleEquippedItem(
+    session: Session,
+    configuredTypeId: number,
+    equip: boolean | null,
+    now: number,
+  ): boolean {
+    if (session.itemOperationPending) return false;
+    const characterId = session.playerId;
+    const cache = characterId ? this.inventories.get(characterId) : undefined;
+    const configuredType = this.catalog.get(configuredTypeId);
+    const carriedTypeId =
+      configuredType?.transformDeEquipTo ?? configuredTypeId;
+    const carriedType = this.catalog.get(carriedTypeId);
+    const slot = configuredType?.equipmentSlot ?? carriedType?.equipmentSlot;
+    if (!characterId || !cache || !configuredType || !carriedType || !slot) {
+      return false;
+    }
+    const equippedTypeId = carriedType.transformEquipTo ?? carriedTypeId;
+    const equipped = cache.items.find(
+      (item) =>
+        item.location.kind === "equipment" &&
+        item.location.slot === slot &&
+        (item.typeId === configuredTypeId ||
+          item.typeId === carriedTypeId ||
+          item.typeId === equippedTypeId),
+    );
+    const shouldEquip = equip ?? !equipped;
+    if (!shouldEquip) {
+      if (!equipped || slot === "backpack") return false;
+      this.handle(
+        session,
+        {
+          type: "unequip-item",
+          itemId: equipped.id,
+          revision: equipped.version,
+          slot,
+        },
+        now,
+      );
+      return true;
+    }
+    if (equipped) return false;
+    const carried = cache.items.find(
+      (item) =>
+        item.location.kind === "container" &&
+        (item.typeId === configuredTypeId ||
+          item.typeId === carriedTypeId ||
+          item.typeId === equippedTypeId),
+    );
+    if (!carried) return false;
+    this.handle(
+      session,
+      {
+        type: "equip-item",
+        itemId: carried.id,
+        revision: carried.version,
+        slot,
+      },
+      now,
+    );
+    return true;
   }
 
   consumeForCombat(

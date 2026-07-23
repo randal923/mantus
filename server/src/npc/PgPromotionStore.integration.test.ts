@@ -51,6 +51,7 @@ databaseDescribe("PgPromotionStore integration", () => {
       "030_vocation_promotion.sql",
       "031_minor_charm_echoes.sql",
       "032_remove_loose_inventory.sql",
+      "034_unified_action_bar.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),

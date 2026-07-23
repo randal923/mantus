@@ -11,6 +11,16 @@ export function handleGameClientError(
   const state = store.getState();
   const actions = state.sessionActions;
   const { runtime } = state;
+  const showPuff =
+    code === "combat-action-failed" ||
+    code === "item-action-failed" ||
+    code === "player-full" ||
+    code.startsWith("spell-") ||
+    code.startsWith("potion-");
+
+  if (showPuff && state.ownCharacter) {
+    renderer.showLocalMagicEffect(state.ownCharacter.position, 3);
+  }
 
   if (code === "item-action-failed") {
     actions?.inventory.rollback();

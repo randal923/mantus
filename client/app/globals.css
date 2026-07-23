@@ -762,6 +762,13 @@ button:disabled {
   cursor: default;
 }
 
+.cursor-action-target,
+.cursor-action-target canvas {
+  cursor:
+    url("/assets/ui/action-target-cursor.svg") 16 16,
+    crosshair !important;
+}
+
 a {
   color: inherit;
   text-decoration: none;

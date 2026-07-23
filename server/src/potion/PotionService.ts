@@ -1,5 +1,4 @@
 import type {
-  AutoPotionRule,
   ServerErrorCode,
   UsePotionMessage,
 } from "@tibia/protocol";
@@ -34,7 +33,12 @@ export class PotionService {
     private readonly partyHooks?: PartyHooks,
   ) {}
 
-  use(session: Session, intent: UsePotionMessage, now: number): void {
+  use(
+    session: Session,
+    intent: UsePotionMessage,
+    now: number,
+    reportRejection = true,
+  ): boolean {
     const actor = playerForSession(this.world, session);
     const target = this.world.getPlayer(intent.targetPlayerId);
     const combatItem = actor
@@ -44,8 +48,8 @@ export class PotionService {
       ? getPotionDefinition(combatItem.item.typeId)
       : undefined;
     if (!actor || !target || !combatItem || !potion) {
-      this.reject(session, "combat-action-failed", now);
-      return;
+      this.reject(session, "combat-action-failed", now, reportRejection);
+      return false;
     }
     if (
       target.health <= 0 ||
@@ -53,33 +57,38 @@ export class PotionService {
       !this.world.canSee(actor.position, target.position, session.viewRange) ||
       !isInRange(actor.position, target.position, 1)
     ) {
-      this.reject(session, "combat-action-failed", now);
-      return;
+      this.reject(session, "combat-action-failed", now, reportRejection);
+      return false;
     }
     if (potion.level && actor.level < potion.level) {
-      this.reject(session, "potion-level-restricted", now);
-      return;
+      this.reject(session, "potion-level-restricted", now, reportRejection);
+      return false;
     }
     const baseVocation = getVocation(
       actor.vocation,
       actor.progression.definitionVersion,
     ).baseVocation;
     if (potion.vocations && !potion.vocations.includes(baseVocation)) {
-      this.reject(session, "potion-vocation-restricted", now);
-      return;
+      this.reject(
+        session,
+        "potion-vocation-restricted",
+        now,
+        reportRejection,
+      );
+      return false;
     }
     const cooldown = session.combatCooldowns.get(POTION_COOLDOWN_GROUP);
     if (cooldown && cooldown.readyAt > now) {
-      this.reject(session, "potion-exhausted", now);
-      return;
+      this.reject(session, "potion-exhausted", now, reportRejection);
+      return false;
     }
     if (
       session.itemOperationPending ||
       session.potionPersistPending ||
       this.persistence.isExternalMutationPending(target)
     ) {
-      this.reject(session, "combat-action-failed", now);
-      return;
+      this.reject(session, "combat-action-failed", now, reportRejection);
+      return false;
     }
 
     const expectedHealth = target.health;
@@ -142,7 +151,7 @@ export class PotionService {
     );
     if (!started) {
       this.persistence.cancelExternalMutation(target);
-      return;
+      return false;
     }
     const healthBefore = target.health;
     target.setHealth(target.health + healthRestore);
@@ -174,72 +183,16 @@ export class PotionService {
       text: `Used ${combatItem.type.name} on ${target.name}.`,
     });
     this.sendFightState(session, now);
-  }
-
-  tickAutoUse(session: Session, now: number): void {
-    const actor = playerForSession(this.world, session);
-    const settings = session.autoPotionSettings;
-    if (
-      !actor ||
-      actor.health <= 0 ||
-      !settings.enabled ||
-      session.autoPotionSettingsUpdatePending ||
-      session.itemOperationPending ||
-      session.potionPersistPending ||
-      this.persistence.isExternalMutationPending(actor) ||
-      (session.combatCooldowns.get(POTION_COOLDOWN_GROUP)?.readyAt ?? 0) > now
-    ) {
-      return;
-    }
-    const rules: ReadonlyArray<
-      readonly ["health" | "mana", AutoPotionRule | null]
-    > =
-      settings.priority === "health"
-        ? [["health", settings.health], ["mana", settings.mana]]
-        : [["mana", settings.mana], ["health", settings.health]];
-    const baseVocation = getVocation(
-      actor.vocation,
-      actor.progression.definitionVersion,
-    ).baseVocation;
-    for (const [resource, rule] of rules) {
-      if (!rule) continue;
-      const current = resource === "health" ? actor.health : actor.mana;
-      const maximum = resource === "health" ? actor.maxHealth : actor.maxMana;
-      if (current * 100 >= maximum * rule.thresholdPercent) continue;
-      const potion = getPotionDefinition(rule.itemTypeId);
-      const combatItem = this.items.combatItemByType(
-        actor.id,
-        rule.itemTypeId,
-      );
-      if (
-        !potion ||
-        !potion[resource] ||
-        !combatItem ||
-        (potion.level !== undefined && actor.level < potion.level) ||
-        (potion.vocations !== undefined &&
-          !potion.vocations.includes(baseVocation))
-      ) {
-        continue;
-      }
-      this.use(
-        session,
-        {
-          type: "use-potion",
-          itemId: combatItem.item.id,
-          revision: combatItem.item.version,
-          targetPlayerId: actor.id,
-        },
-        now,
-      );
-      return;
-    }
+    return true;
   }
 
   private reject(
     session: Session,
     code: ServerErrorCode,
     now: number,
+    report: boolean,
   ): void {
+    if (!report) return;
     session.sendError(code);
     this.sendFightState(session, now);
   }

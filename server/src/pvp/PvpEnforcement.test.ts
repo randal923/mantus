@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_AUTO_POTION_SETTINGS,
+  createDefaultActionBar,
+  DEFAULT_ACTION_BOT_SETTINGS,
   type ServerMessage,
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
@@ -67,8 +68,9 @@ function makeSession(player: Player, sent: ServerMessage[]): Session {
     attackTargetId: null,
     fightMode: { attack: "balanced", chase: false, secure: true },
     combatCooldowns: new Map(),
-    autoPotionSettings: { ...DEFAULT_AUTO_POTION_SETTINGS },
-    autoPotionSettingsUpdatePending: false,
+    actionBar: createDefaultActionBar(),
+    actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS },
+    actionBotRuleReadyAt: new Map(),
     itemOperationPending: false,
     movementDirection: null,
     bufferedMovementDirection: null,

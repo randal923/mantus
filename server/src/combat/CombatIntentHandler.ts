@@ -1,4 +1,5 @@
 import type {
+  ActivateActionBarMessage,
   AttackTargetMessage,
   CancelAttackMessage,
   CastSpellMessage,
@@ -18,7 +19,8 @@ type CombatIntent =
   | SetFightModeMessage
   | CastSpellMessage
   | UseRuneMessage
-  | UsePotionMessage;
+  | UsePotionMessage
+  | ActivateActionBarMessage;
 
 interface PendingFightModeUpdate {
   readonly session: Session;
@@ -40,6 +42,14 @@ export class CombatIntentHandler {
   ) {}
 
   handle(session: Session, intent: CombatIntent, now: number): void {
+    if (
+      intent.type === "cast-spell" ||
+      intent.type === "use-rune" ||
+      intent.type === "use-potion" ||
+      intent.type === "activate-action-bar"
+    ) {
+      session.actionBotSuppressedAt = now;
+    }
     if (intent.type === "attack-target") {
       this.combat.selectTarget(session, intent.creatureId, now);
       return;
@@ -60,6 +70,10 @@ export class CombatIntentHandler {
     }
     if (intent.type === "use-rune") {
       this.combat.useRune(session, intent, now);
+      return;
+    }
+    if (intent.type === "activate-action-bar") {
+      this.combat.activateActionBar(session, intent, now);
       return;
     }
     this.combat.usePotion(session, intent, now);
