@@ -52,95 +52,189 @@ export function PartyPanel({
   return (
     <section
       aria-label={t("party.title")}
-      className="ui-panel-frame pointer-events-auto w-64 p-3"
+      className="ui-panel-frame pointer-events-auto flex h-full w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden p-4"
     >
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-medium tracking-wide text-ui-text-bright uppercase">
+      <header className="flex items-center gap-3">
+        <h2 className="min-w-0 flex-1 font-display text-2xl font-bold tracking-[0.12em] text-ui-text-bright uppercase">
           {t("party.title")}
         </h2>
         <CloseButton label={t("modal.close")} onClick={onClose} />
-      </div>
+      </header>
+      <div aria-hidden className="ui-divider my-4" />
+
+      {error && (
+        <p
+          role="alert"
+          className="mb-3 rounded-lg border border-red-400/20 bg-red-950/20 px-3 py-2 text-sm text-red-300"
+        >
+          {error}
+        </p>
+      )}
+
       {party ? (
         <>
-          <ul
-            aria-label={t("party.membersLabel")}
-            className="ui-scrollbar max-h-64 space-y-1 overflow-y-auto"
-          >
-            {party.members.map((member) => (
-              <PartyMemberRow
-                key={member.id}
-                member={member}
-                isOwn={member.id === ownPlayerId}
-                sharedExpActive={party.sharedExpActive}
-                showLeaderControls={isLeader}
-                onKick={onKick}
-                onPassLeadership={onPassLeadership}
-              />
-            ))}
-          </ul>
-          {party.invited.length > 0 && (
-            <div className="mt-2">
-              <h3 className="text-sm tracking-wide text-ui-muted uppercase">
-                {t("party.invited")}
-              </h3>
-              <ul className="space-y-1">
-                {party.invited.map((invitee) => (
-                  <li
-                    key={invitee.id}
-                    className="flex items-center justify-between gap-2 px-1 text-sm"
+          <section className="rounded-xl border border-ui-gold/15 bg-black/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="font-display text-sm tracking-[0.15em] text-ui-gold uppercase">
+                  {t("party.sharedExp")}
+                </h3>
+                <p
+                  className={`mt-1 text-sm ${
+                    party.sharedExpActive &&
+                    party.sharedExpStatus === "ok"
+                      ? "text-emerald-400"
+                      : "text-ui-muted"
+                  }`}
+                >
+                  {party.sharedExpActive
+                    ? t(`party.sharedExpStatus.${party.sharedExpStatus}`)
+                    : t("party.sharedExpOff")}
+                </p>
+              </div>
+              {isLeader ? (
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    checked={party.sharedExpActive}
+                    onChange={(event) =>
+                      onSetSharedExp(event.target.checked)
+                    }
+                    className="peer sr-only"
+                  />
+                  <span className="h-7 w-12 rounded-full border border-ui-stone-light/20 bg-black/40 transition-colors peer-checked:border-ui-gold/45 peer-checked:bg-ui-gold-deep peer-focus-visible:ring-2 peer-focus-visible:ring-ui-gold/60 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-ui-muted after:transition-transform peer-checked:after:translate-x-5 peer-checked:after:bg-ui-gold" />
+                  <span className="sr-only">{t("party.sharedExp")}</span>
+                </label>
+              ) : (
+                <span
+                  className={`flex size-8 items-center justify-center rounded-md border ${
+                    party.sharedExpActive
+                      ? "border-emerald-400/25 bg-emerald-950/20 text-emerald-400"
+                      : "border-ui-stone-light/15 bg-black/20 text-ui-muted"
+                  }`}
+                >
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 24 24"
+                    className="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <span className="truncate text-ui-muted">
-                      {invitee.name}
-                    </span>
-                    {isLeader && (
-                      <Button
-                        size="sm"
-                        onClick={() => onRevokeInvite(invitee.id)}
-                      >
-                        {t("party.revoke")}
-                      </Button>
+                    {party.sharedExpActive ? (
+                      <path d="m5 12 4 4L19 6" />
+                    ) : (
+                      <path d="m7 7 10 10M17 7 7 17" />
                     )}
-                  </li>
-                ))}
-              </ul>
+                  </svg>
+                </span>
+              )}
             </div>
-          )}
-          <div className="ui-divider my-2" />
-          {isLeader ? (
-            <label className="flex items-center justify-between gap-2 px-1 text-sm text-ui-text">
-              <span>{t("party.sharedExp")}</span>
-              <input
-                type="checkbox"
-                checked={party.sharedExpActive}
-                onChange={(event) => onSetSharedExp(event.target.checked)}
-              />
-            </label>
-          ) : (
-            <p className="px-1 text-sm text-ui-text">
-              {t("party.sharedExp")}:{" "}
-              {party.sharedExpActive
-                ? t("party.sharedExpOn")
-                : t("party.sharedExpOff")}
-            </p>
-          )}
-          {party.sharedExpActive && (
-            <p
-              className={`mt-1 px-1 text-sm ${
-                party.sharedExpStatus === "ok"
-                  ? "text-green-400"
-                  : "text-amber-400"
-              }`}
+          </section>
+
+          <div className="mt-5 flex items-center gap-3">
+            <h3 className="min-w-0 flex-1 font-display text-lg tracking-wide text-ui-gold">
+              {t("party.members")}
+            </h3>
+            <span className="flex min-w-10 items-center justify-center rounded-full border border-ui-gold/25 bg-ui-gold-deep/40 px-3 py-1 text-sm font-bold tabular-nums text-ui-text-bright">
+              {party.members.length}
+            </span>
+          </div>
+
+          <div className="ui-scrollbar mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+            <ul
+              aria-label={t("party.membersLabel")}
+              className="space-y-2"
             >
-              {t(`party.sharedExpStatus.${party.sharedExpStatus}`)}
-            </p>
-          )}
+              {party.members.map((member) => (
+                <PartyMemberRow
+                  key={member.id}
+                  member={member}
+                  isOwn={member.id === ownPlayerId}
+                  sharedExpActive={party.sharedExpActive}
+                  showLeaderControls={isLeader}
+                  onKick={onKick}
+                  onPassLeadership={onPassLeadership}
+                />
+              ))}
+            </ul>
+
+            {party.invited.length > 0 && (
+              <section className="mt-5">
+                <div className="flex items-center gap-3">
+                  <h3 className="min-w-0 flex-1 font-display text-lg tracking-wide text-ui-gold">
+                    {t("party.invited")}
+                  </h3>
+                  <span className="flex min-w-10 items-center justify-center rounded-full border border-ui-gold/25 bg-ui-gold-deep/40 px-3 py-1 text-sm font-bold tabular-nums text-ui-text-bright">
+                    {party.invited.length}
+                  </span>
+                </div>
+                <ul className="mt-3 space-y-2">
+                  {party.invited.map((invitee) => (
+                    <li
+                      key={invitee.id}
+                      className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/25 p-3 text-sm"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-ui-gold/20 bg-ui-panel-deep/80 text-ui-muted">
+                        <svg
+                          aria-hidden
+                          viewBox="0 0 24 24"
+                          className="size-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="9" cy="8" r="3.25" />
+                          <path d="M3.5 19a5.5 5.5 0 0 1 11 0M18 7v6M15 10h6" />
+                        </svg>
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-ui-muted">
+                        {invitee.name}
+                      </span>
+                      {isLeader && (
+                        <Button
+                          size="sm"
+                          onClick={() => onRevokeInvite(invitee.id)}
+                        >
+                          {t("party.revoke")}
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
         </>
       ) : (
-        <p className="px-1 text-sm text-ui-muted">{t("party.empty")}</p>
+        <div className="flex min-h-40 flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-ui-gold/15 bg-black/15 px-6 text-center">
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-10 text-ui-gold/55"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="8" cy="8" r="3" />
+            <circle cx="17" cy="9" r="2.5" />
+            <path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 19.5a4.5 4.5 0 0 1 8.5 0" />
+          </svg>
+          <p className="mt-3 text-sm leading-6 text-ui-muted">
+            {t("party.empty")}
+          </p>
+        </div>
       )}
+
       {canInvite && (
         <form
-          className="mt-2 flex items-end gap-1.5"
+          className="mt-4 flex items-end gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             submitInvite();
@@ -160,14 +254,14 @@ export function PartyPanel({
         </form>
       )}
       {party && (
-        <Button variant="danger" size="sm" className="mt-2" onClick={onLeave}>
+        <Button
+          variant="danger"
+          size="sm"
+          className="mt-3 w-full"
+          onClick={onLeave}
+        >
           {t("party.leave")}
         </Button>
-      )}
-      {error && (
-        <p role="alert" className="mt-2 px-1 text-sm text-red-300">
-          {error}
-        </p>
       )}
     </section>
   );

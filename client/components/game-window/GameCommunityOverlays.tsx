@@ -32,6 +32,10 @@ export function GameCommunityOverlays() {
     (state) => state.sessions?.vip ?? null,
   );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
+  const dispatchChat = useGameWindowStore((state) => state.dispatchChat);
+  const requestChatFocus = useGameWindowStore(
+    (state) => state.requestChatFocus,
+  );
   const setGuildModalOpen = useGameWindowStore(
     (state) => state.setGuildModalOpen,
   );
@@ -181,7 +185,10 @@ export function GameCommunityOverlays() {
             entries={vipSession.entries}
             pending={vipSession.pending}
             hasParty={Boolean(partySession.party)}
-            onOpenParty={() => setPartyPanelVisible(true)}
+            onOpenParty={() => {
+              setVipPanelVisible(false);
+              setPartyPanelVisible(true);
+            }}
             error={
               vipSession.error
                 ? t(`vip.errors.${vipSession.error}`, {
@@ -190,6 +197,11 @@ export function GameCommunityOverlays() {
                 : null
             }
             onAdd={(name) => runtime.clientRef.current?.addVip(name)}
+            onChat={(name) => {
+              dispatchChat({ type: "open-private", counterpart: name });
+              requestChatFocus();
+              setVipPanelVisible(false);
+            }}
             onEdit={(targetCharacterId, edits) =>
               runtime.clientRef.current?.editVip(targetCharacterId, edits)
             }

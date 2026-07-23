@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { TopNavigationBar } from "../components/navigation/TopNavigationBar";
 
@@ -36,12 +36,16 @@ const meta = {
     },
     battleListVisible: true,
     minimapVisible: true,
+    vipVisible: false,
+    partyVisible: false,
     gold: 5_228,
     mantusCoins: 340,
     storeOpen: false,
     activePanel: "inventory",
     onCharacter: fn(),
     onInventory: fn(),
+    onVip: fn(),
+    onParty: fn(),
     onQuests: fn(),
     onWiki: fn(),
     onFightModeChange: fn(),
@@ -56,7 +60,21 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Connected: Story = {};
+export const Connected: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "VIP List [V]" }),
+    );
+    await expect(args.onVip).toHaveBeenCalledOnce();
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Party [P]" }),
+    );
+    await expect(args.onParty).toHaveBeenCalledOnce();
+  },
+};
 
 export const WikiActive: Story = {
   args: { activePanel: "wiki" },

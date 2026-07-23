@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import type { VipEntry } from "@tibia/protocol";
 import { VipPanel } from "../components/social/VipPanel";
 
@@ -46,6 +46,7 @@ const meta = {
     hasParty: false,
     onOpenParty: fn(),
     onAdd: fn(),
+    onChat: fn(),
     onEdit: fn(),
     onRemove: fn(),
     onClose: fn(),
@@ -55,7 +56,37 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const WithEntries: Story = {};
+export const WithEntries: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const addFriend = canvas.getByRole("button", { name: "Add Friend" });
+    await expect(addFriend).toHaveClass("rounded-md");
+    await expect(addFriend).not.toHaveClass("rounded-full");
+
+    const chat = canvas.getByRole("button", {
+      name: "Chat with Mirella",
+    });
+    const edit = canvas.getByRole("button", { name: "Edit Mirella" });
+    const remove = canvas.getByRole("button", { name: "Remove Mirella" });
+
+    for (const action of [chat, edit, remove]) {
+      await expect(action).toHaveClass(
+        "rounded-sm",
+        "border-ui-stone-light/20",
+      );
+      await expect(action.querySelector("svg")).toHaveClass("size-5");
+    }
+
+    await userEvent.click(chat);
+    await expect(args.onChat).toHaveBeenCalledWith("Mirella");
+
+    await userEvent.click(edit);
+    await expect(
+      canvas.getByRole("button", { name: "Icon 0" }),
+    ).toHaveClass("size-8", "rounded-sm");
+  },
+};
 
 export const Empty: Story = {
   args: { entries: [] },

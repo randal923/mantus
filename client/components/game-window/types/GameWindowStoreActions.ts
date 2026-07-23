@@ -59,6 +59,7 @@ export interface GameWindowStoreActions {
   setCombatLog: (value: SetStateAction<ReadonlyArray<string>>) => void;
   setLevelUpNotice: (value: SetStateAction<LevelUpNotice | null>) => void;
   dispatchChat: (action: ChatAction) => void;
+  requestChatFocus: () => void;
   setCharacterBusy: (value: SetStateAction<boolean>) => void;
   setInventoryOpen: (value: SetStateAction<boolean>) => void;
   setCharacterStatsOpen: (value: SetStateAction<boolean>) => void;

@@ -71,6 +71,7 @@ export function createGameWindowStore({
     combatLog: [],
     levelUpNotice: null,
     chatState: initialChatState,
+    chatFocusRequestId: 0,
     characterBusy: false,
     inventoryOpen: false,
     characterStatsOpen: false,
@@ -179,6 +180,10 @@ export function createGameWindowStore({
       })),
     dispatchChat: (action) =>
       set((state) => ({ chatState: chatReducer(state.chatState, action) })),
+    requestChatFocus: () =>
+      set((state) => ({
+        chatFocusRequestId: state.chatFocusRequestId + 1,
+      })),
     setCharacterBusy: (value) =>
       set((state) => ({
         characterBusy: resolveStateAction(value, state.characterBusy),
@@ -448,6 +453,7 @@ export function createGameWindowStore({
           ownPlayerId: null,
           ownName: null,
         }),
+        chatFocusRequestId: 0,
         characterBusy: characterId !== null,
         inventoryOpen: false,
         characterStatsOpen: false,

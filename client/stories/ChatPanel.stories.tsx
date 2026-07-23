@@ -267,6 +267,24 @@ export const OpenPrivateConversation: Story = {
   },
 };
 
+export const FocusRequestedConversation: Story = {
+  args: {
+    selectedChannelId: "whisper:aria",
+    focusRequestId: 1,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("textbox", {
+      name: "Message Aria Vale",
+    });
+
+    await expect(input).toHaveFocus();
+    await expect(
+      canvas.getByRole("tab", { name: "Aria Vale" }),
+    ).toHaveAttribute("aria-selected", "true");
+  },
+};
+
 export const CloseConversation: Story = {
   args: {
     initialChannelId: "whisper:aria",

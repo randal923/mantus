@@ -29,7 +29,7 @@ export function GamePartyTradeOverlays() {
   return (
     <>
       {partyPanelVisible && (
-        <div className="absolute top-40 left-4 z-30">
+        <div className="absolute top-24 bottom-4 left-4 z-30">
           <PartyPanel
             party={partySession.party}
             ownPlayerId={ownPlayerId}

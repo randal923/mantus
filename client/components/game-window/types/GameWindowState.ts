@@ -54,6 +54,7 @@ export interface GameWindowState {
   combatLog: ReadonlyArray<string>;
   levelUpNotice: LevelUpNotice | null;
   chatState: ChatState;
+  chatFocusRequestId: number;
   characterBusy: boolean;
   inventoryOpen: boolean;
   characterStatsOpen: boolean;

@@ -30,6 +30,12 @@ export function GameNavigation() {
   const highscoresOpen = useGameWindowStore((state) => state.highscoresOpen);
   const wikiOpen = useGameWindowStore((state) => state.wikiOpen);
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
+  const vipPanelVisible = useGameWindowStore(
+    (state) => state.vipPanelVisible,
+  );
+  const partyPanelVisible = useGameWindowStore(
+    (state) => state.partyPanelVisible,
+  );
   const characterStatsOpen = useGameWindowStore(
     (state) => state.characterStatsOpen,
   );
@@ -64,6 +70,12 @@ export function GameNavigation() {
   );
   const setWikiOpen = useGameWindowStore((state) => state.setWikiOpen);
   const setWheelOpen = useGameWindowStore((state) => state.setWheelOpen);
+  const setVipPanelVisible = useGameWindowStore(
+    (state) => state.setVipPanelVisible,
+  );
+  const setPartyPanelVisible = useGameWindowStore(
+    (state) => state.setPartyPanelVisible,
+  );
   const setBattleListVisible = useGameWindowStore(
     (state) => state.setBattleListVisible,
   );
@@ -103,6 +115,8 @@ export function GameNavigation() {
         fightMode={fightMode}
         battleListVisible={battleListVisible}
         minimapVisible={minimapVisible}
+        vipVisible={vipPanelVisible}
+        partyVisible={partyPanelVisible}
         gold={inventory ? countMoneyWorth(inventory) : 0}
         mantusCoins={mantusCoins}
         storeOpen={storeOpen}
@@ -126,6 +140,24 @@ export function GameNavigation() {
           }
           setCharacterStatsOpen(false);
           setInventoryOpen((open) => !open);
+        }}
+        onVip={() => {
+          setGameMenuOpen(false);
+          if (vipPanelVisible) {
+            setVipPanelVisible(false);
+            return;
+          }
+          setPartyPanelVisible(false);
+          setVipPanelVisible(true);
+        }}
+        onParty={() => {
+          setGameMenuOpen(false);
+          if (partyPanelVisible) {
+            setPartyPanelVisible(false);
+            return;
+          }
+          setVipPanelVisible(false);
+          setPartyPanelVisible(true);
         }}
         onGuild={() => {
           setGameMenuOpen(false);

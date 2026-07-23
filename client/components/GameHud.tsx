@@ -46,6 +46,7 @@ interface GameHudProps {
   hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
   chatPinnedOpen: boolean;
+  chatFocusRequestId?: number;
   chatChannels?: ReadonlyArray<ChatChannel>;
   chatSelectedChannelId?: string;
   onCast: (spellId: string, target: CombatTarget) => void;
@@ -79,6 +80,7 @@ export function GameHud({
   hasWeapon,
   combatLog,
   chatPinnedOpen,
+  chatFocusRequestId,
   chatChannels,
   chatSelectedChannelId,
   onCast,
@@ -237,6 +239,7 @@ export function GameHud({
         <ChatPanel
           channels={visibleChatChannels}
           pinnedOpen={chatPinnedOpen}
+          focusRequestId={chatFocusRequestId}
           {...(chatSelectedChannelId
             ? { selectedChannelId: chatSelectedChannelId }
             : {})}

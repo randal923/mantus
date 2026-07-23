@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import type { PartyMemberEntry, PartyState } from "@tibia/protocol";
 import { PartyPanel } from "../components/party/PartyPanel";
 
@@ -94,7 +94,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const AsLeader: Story = {};
+export const AsLeader: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sharedExperience = canvas.getByRole("checkbox", {
+      name: "Shared experience",
+    });
+
+    await expect(sharedExperience).toBeChecked();
+    await userEvent.click(sharedExperience);
+    await expect(args.onSetSharedExp).toHaveBeenCalledWith(false);
+  },
+};
 
 export const AsMember: Story = {
   args: {

@@ -15,6 +15,7 @@ interface ChatPanelProps {
   /** Provide to control the active tab from the parent. */
   selectedChannelId?: string;
   pinnedOpen: boolean;
+  focusRequestId?: number;
   hotkeysEnabled?: boolean;
   maxMessageLength?: number;
   onChannelSelect?: (channelId: string) => void;
@@ -29,6 +30,7 @@ export function ChatPanel({
   initialChannelId,
   selectedChannelId: controlledChannelId,
   pinnedOpen,
+  focusRequestId,
   hotkeysEnabled = true,
   maxMessageLength = 280,
   onChannelSelect,
@@ -45,6 +47,7 @@ export function ChatPanel({
     initialChannelId ?? channels[0]?.id ?? "",
   );
   const selectedChannelId = controlledChannelId ?? internalChannelId;
+  const handledFocusRequestIdRef = useRef(0);
   const [drafts, setDrafts] = useState<Readonly<Record<string, string>>>({});
   const [hovered, setHovered] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
@@ -72,6 +75,30 @@ export function ChatPanel({
     if (!messageList) return;
     messageList.scrollTop = messageList.scrollHeight;
   }, [activeChannel?.id, activeChannel?.messages.length, expanded]);
+
+  useEffect(() => {
+    if (
+      !focusRequestId ||
+      focusRequestId === handledFocusRequestIdRef.current ||
+      !canSend
+    ) {
+      return;
+    }
+
+    handledFocusRequestIdRef.current = focusRequestId;
+    setInputFocused(true);
+  }, [canSend, focusRequestId]);
+
+  useEffect(() => {
+    if (
+      !focusRequestId ||
+      focusRequestId !== handledFocusRequestIdRef.current ||
+      !inputFocused
+    ) {
+      return;
+    }
+    inputRef.current?.focus();
+  }, [focusRequestId, inputFocused]);
 
   useEffect(() => {
     if (!hotkeysEnabled || !canSend) return;

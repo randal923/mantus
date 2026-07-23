@@ -8,6 +8,7 @@ import { Input } from "../ui/Input";
 
 interface VipEntryRowProps {
   entry: VipEntry;
+  onChat: (name: string) => void;
   onEdit: (
     targetCharacterId: string,
     edits: { description?: string; icon?: number; notifyLogin?: boolean },
@@ -16,21 +17,26 @@ interface VipEntryRowProps {
 }
 
 const ICON_COLORS = [
-  "text-ui-muted",
-  "text-red-400",
-  "text-orange-400",
-  "text-amber-300",
-  "text-lime-400",
-  "text-emerald-400",
-  "text-cyan-400",
-  "text-sky-400",
-  "text-violet-400",
-  "text-fuchsia-400",
-  "text-rose-400",
+  { foreground: "text-ui-muted", swatch: "bg-ui-muted" },
+  { foreground: "text-red-400", swatch: "bg-red-400" },
+  { foreground: "text-orange-400", swatch: "bg-orange-400" },
+  { foreground: "text-amber-300", swatch: "bg-amber-300" },
+  { foreground: "text-lime-400", swatch: "bg-lime-400" },
+  { foreground: "text-emerald-400", swatch: "bg-emerald-400" },
+  { foreground: "text-cyan-400", swatch: "bg-cyan-400" },
+  { foreground: "text-sky-400", swatch: "bg-sky-400" },
+  { foreground: "text-violet-400", swatch: "bg-violet-400" },
+  { foreground: "text-fuchsia-400", swatch: "bg-fuchsia-400" },
+  { foreground: "text-rose-400", swatch: "bg-rose-400" },
 ] as const;
 
 /** One private friend entry with server-projected presence and character data. */
-export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
+export function VipEntryRow({
+  entry,
+  onChat,
+  onEdit,
+  onRemove,
+}: VipEntryRowProps) {
   const { t } = useAppTranslation();
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState(entry.description);
@@ -47,9 +53,22 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
       <div className="flex items-center gap-3">
         <span
           aria-hidden
-          className={`flex size-12 shrink-0 items-center justify-center rounded-full border border-ui-gold/25 bg-ui-panel-deep/80 font-display text-lg shadow-inner shadow-black/50 ${ICON_COLORS[entry.icon] ?? ICON_COLORS[0]}`}
+          className={`flex size-12 shrink-0 items-center justify-center rounded-md border border-ui-gold/25 bg-ui-panel-deep/80 shadow-inner shadow-black/50 ${
+            (ICON_COLORS[entry.icon] ?? ICON_COLORS[0]).foreground
+          }`}
         >
-          ◆
+          <svg
+            viewBox="0 0 24 24"
+            className="size-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5.5 20a6.5 6.5 0 0 1 13 0M4 4.5h3M17 4.5h3" />
+          </svg>
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -70,8 +89,23 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
               {entry.name}
             </p>
             {entry.notifyLogin && (
-              <span aria-label={t("vip.notifyLogin")} className="text-ui-gold">
-                ♪
+              <span
+                aria-label={t("vip.notifyLogin")}
+                className="text-ui-gold"
+              >
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  className="size-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                  <path d="M10 21h4" />
+                </svg>
               </span>
             )}
           </div>
@@ -84,19 +118,63 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
         </div>
         <button
           type="button"
+          aria-label={t("vip.chat", { name: entry.name })}
+          onClick={() => onChat(entry.name)}
+          className="flex size-8 items-center justify-center rounded-sm border border-ui-stone-light/20 bg-black/15 text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-ui-gold/45 hover:bg-white/5 hover:text-ui-gold focus-visible:ring-2 focus-visible:ring-ui-gold/60"
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 5.5h14v10H9l-4 3z" />
+            <path d="M8.5 9h7M8.5 12h4.5" />
+          </svg>
+        </button>
+        <button
+          type="button"
           aria-label={t("vip.edit", { name: entry.name })}
           onClick={() => setEditing((open) => !open)}
-          className="flex size-8 items-center justify-center rounded-lg border border-transparent text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-ui-gold/20 hover:bg-white/5 hover:text-ui-text-bright focus-visible:ring-2 focus-visible:ring-ui-gold/60"
+          className="flex size-8 items-center justify-center rounded-sm border border-ui-stone-light/20 bg-black/15 text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-ui-gold/45 hover:bg-white/5 hover:text-ui-text-bright focus-visible:ring-2 focus-visible:ring-ui-gold/60"
         >
-          <span aria-hidden>✎</span>
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m4 20 4.2-1 10.6-10.6a2 2 0 0 0-2.8-2.8L5.4 16.2z" />
+            <path d="m14.5 7.1 2.8 2.8M4 20h5" />
+          </svg>
         </button>
         <button
           type="button"
           aria-label={t("vip.remove", { name: entry.name })}
           onClick={() => onRemove(entry.characterId)}
-          className="flex size-8 items-center justify-center rounded-lg border border-transparent text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-red-400/20 hover:bg-red-950/25 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-red-400/60"
+          className="flex size-8 items-center justify-center rounded-sm border border-ui-stone-light/20 bg-black/15 text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-red-400/45 hover:bg-red-950/25 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-red-400/60"
         >
-          <span aria-hidden>✕</span>
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 7h16M9 7V4.5h6V7M7 7l1 13h8l1-13" />
+            <path d="M10 11v5M14 11v5" />
+          </svg>
         </button>
       </div>
       {entry.description && !editing && (
@@ -119,25 +197,28 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
             maxLength={VIP_LIMITS.maxDescriptionLength}
             onChange={(event) => setDescription(event.target.value)}
           />
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-start justify-between gap-3">
             <span className="text-xs tracking-wide text-ui-muted uppercase">
               {t("vip.icon")}
             </span>
-            <div className="flex gap-1">
-              {ICON_COLORS.map((color, iconId) => (
+            <div className="grid grid-cols-6 gap-1.5">
+              {ICON_COLORS.map(({ foreground, swatch }, iconId) => (
                 <button
-                  key={color}
+                  key={foreground}
                   type="button"
                   aria-label={t("vip.iconOption", { icon: iconId })}
                   aria-pressed={icon === iconId}
                   onClick={() => setIcon(iconId)}
-                  className={`${color} ${
+                  className={`flex size-8 items-center justify-center rounded-sm border bg-black/25 outline-none transition-[border-color,filter,transform] hover:-translate-y-px hover:brightness-125 focus-visible:ring-2 focus-visible:ring-ui-gold/60 ${
                     icon === iconId
-                      ? "opacity-100 outline outline-1 outline-ui-gold/60"
-                      : "opacity-45 hover:opacity-80"
+                      ? "border-ui-gold"
+                      : "border-ui-stone-light/20"
                   }`}
                 >
-                  ◆
+                  <span
+                    aria-hidden
+                    className={`size-4 ${swatch}`}
+                  />
                 </button>
               ))}
             </div>

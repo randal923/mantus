@@ -46,6 +46,9 @@ export function GameHudOverlay() {
   );
   const combatLog = useGameWindowStore((state) => state.combatLog);
   const chatState = useGameWindowStore((state) => state.chatState);
+  const chatFocusRequestId = useGameWindowStore(
+    (state) => state.chatFocusRequestId,
+  );
   const dispatchChat = useGameWindowStore((state) => state.dispatchChat);
   const setUiSettings = useGameWindowStore((state) => state.setUiSettings);
   const setReportSession = useGameWindowStore(
@@ -120,6 +123,7 @@ export function GameHudOverlay() {
       hasWeapon={Boolean(inventory?.equipment.weapon)}
       combatLog={combatLog}
       chatPinnedOpen={uiSettings.chatPinnedOpen ?? false}
+      chatFocusRequestId={chatFocusRequestId}
       chatChannels={[
         ...chatState.channels.map((channel) => ({
           id: channel.id,

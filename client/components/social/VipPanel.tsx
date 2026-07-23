@@ -14,6 +14,7 @@ interface VipPanelProps {
   hasParty: boolean;
   onOpenParty: () => void;
   onAdd: (name: string) => void;
+  onChat: (name: string) => void;
   onEdit: (
     targetCharacterId: string,
     edits: { description?: string; icon?: number; notifyLogin?: boolean },
@@ -33,6 +34,7 @@ export function VipPanel({
   hasParty,
   onOpenParty,
   onAdd,
+  onChat,
   onEdit,
   onRemove,
   onClose,
@@ -58,7 +60,7 @@ export function VipPanel({
           type="button"
           aria-label={t("vip.addFriend")}
           onClick={() => setAddModalOpen(true)}
-          className="ui-button ui-button-secondary flex size-10 items-center justify-center rounded-full border border-ui-gold/30 text-ui-gold outline-none transition-[filter,border-color] hover:border-ui-gold/55 hover:brightness-125 focus-visible:ring-2 focus-visible:ring-ui-gold/60"
+          className="ui-button ui-button-secondary flex size-10 items-center justify-center rounded-md border border-ui-gold/30 text-ui-gold outline-none transition-[filter,border-color] hover:border-ui-gold/55 hover:brightness-125 focus-visible:ring-2 focus-visible:ring-ui-gold/60"
         >
           <svg
             aria-hidden
@@ -87,9 +89,20 @@ export function VipPanel({
           onClick={onOpenParty}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-ui-gold/30 bg-ui-stone-dark/35 px-4 py-3 font-display text-sm font-bold tracking-[0.12em] text-ui-text-bright uppercase shadow-inner shadow-black/35 outline-none transition-[border-color,background-color,filter] hover:border-ui-gold/50 hover:bg-ui-stone-dark/55 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ui-gold/60"
         >
-          <span aria-hidden className="text-ui-gold">
-            ⚔
-          </span>
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5 text-ui-gold"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="8" cy="8" r="3" />
+            <circle cx="17" cy="9" r="2.5" />
+            <path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 19.5a4.5 4.5 0 0 1 8.5 0" />
+          </svg>
           {hasParty ? t("vip.viewParty") : t("vip.createParty")}
         </button>
       </section>
@@ -114,9 +127,19 @@ export function VipPanel({
 
       {sorted.length === 0 ? (
         <div className="mt-4 flex min-h-40 flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-ui-gold/15 bg-black/15 px-6 text-center">
-          <span aria-hidden className="text-3xl text-ui-gold/55">
-            ◇
-          </span>
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-10 text-ui-gold/55"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="9" cy="8" r="3.25" />
+            <path d="M3.5 19a5.5 5.5 0 0 1 11 0M18 7v6M15 10h6" />
+          </svg>
           <p className="mt-3 text-sm leading-6 text-ui-muted">
             {t("vip.empty")}
           </p>
@@ -130,6 +153,7 @@ export function VipPanel({
             <VipEntryRow
               key={entry.characterId}
               entry={entry}
+              onChat={onChat}
               onEdit={onEdit}
               onRemove={onRemove}
             />

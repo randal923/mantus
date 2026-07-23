@@ -34,12 +34,16 @@ interface TopNavigationBarProps {
   fightMode: FightMode | null;
   battleListVisible: boolean;
   minimapVisible: boolean;
+  vipVisible: boolean;
+  partyVisible: boolean;
   gold: number;
   mantusCoins: number;
   storeOpen: boolean;
   activePanel?: NavigationPanel;
   onCharacter?: () => void;
   onInventory?: () => void;
+  onVip?: () => void;
+  onParty?: () => void;
   onQuests?: () => void;
   onGuild?: () => void;
   onHouse?: () => void;
@@ -63,12 +67,16 @@ export function TopNavigationBar({
   fightMode,
   battleListVisible,
   minimapVisible,
+  vipVisible,
+  partyVisible,
   gold,
   mantusCoins,
   storeOpen,
   activePanel,
   onCharacter,
   onInventory,
+  onVip,
+  onParty,
   onQuests,
   onGuild,
   onHouse,
@@ -195,6 +203,52 @@ export function TopNavigationBar({
           >
             <path d="M5 8.5h14v11H5z" />
             <path d="M8.5 8.5V6.7A3.3 3.3 0 0 1 12 3.5a3.3 3.3 0 0 1 3.5 3.2v1.8M9 12h6" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.vip")}
+          hotkey="V"
+          active={vipVisible}
+          disabled={!onVip}
+          onClick={onVip}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="9" cy="8" r="3.5" />
+            <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
+            <path d="m18 5 .9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.party")}
+          hotkey="P"
+          active={partyVisible}
+          disabled={!onParty}
+          onClick={onParty}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="8" cy="8" r="3" />
+            <circle cx="17" cy="9" r="2.5" />
+            <path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 19.5a4.5 4.5 0 0 1 8.5 0" />
           </svg>
         </NavigationIconButton>
 
