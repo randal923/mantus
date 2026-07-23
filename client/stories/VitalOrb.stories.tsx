@@ -33,7 +33,11 @@ export const Health: Story = {
     const dragon = orb.querySelector("img");
 
     await expect(orb).toHaveClass("z-10");
+    await expect(orb).toHaveClass("bottom-7");
+    await expect(orb).toHaveClass("-left-2");
+    await expect(orb).toHaveClass("size-24");
     await expect(dragon).not.toBeNull();
+    await expect(dragon).toHaveClass("size-44");
     await expect(dragon).not.toHaveClass("-scale-x-100");
   },
 };
@@ -56,6 +60,10 @@ export const Mana: Story = {
     const dragon = orb.querySelector("img");
 
     await expect(orb).toHaveClass("z-10");
+    await expect(orb).toHaveClass("bottom-7");
+    await expect(orb).toHaveClass("left-2");
+    await expect(orb).toHaveClass("size-24");
+    await expect(dragon).toHaveClass("size-44");
     await expect(dragon).toHaveClass("-scale-x-100");
   },
 };

@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   --color-ui-panel-light: #252827;
@@ -34,7 +34,7 @@
     radial-gradient(circle at 50% 115%, rgb(91 16 12 / 32%), transparent 42%),
     radial-gradient(circle at 50% 18%, rgb(114 116 110 / 8%), transparent 28%),
     linear-gradient(180deg, rgb(8 10 10 / 91%) 0%, rgb(3 4 4 / 97%) 100%),
-    url('/assets/ui/forged-stone-texture.webp') center / 900px 900px;
+    url("/assets/ui/forged-stone-texture.webp") center / 900px 900px;
 }
 
 .ui-panel-frame {
@@ -43,7 +43,7 @@
   background:
     radial-gradient(circle at 50% 0%, rgb(64 68 66 / 28%), transparent 38%),
     linear-gradient(180deg, rgb(27 30 29 / 84%), rgb(10 12 12 / 94%)),
-    url('/assets/ui/forged-stone-texture.webp') center / 620px 620px;
+    url("/assets/ui/forged-stone-texture.webp") center / 620px 620px;
   box-shadow:
     0 18px 56px rgb(0 0 0 / 58%),
     inset 0 1px 0 rgb(210 213 205 / 6%),
@@ -56,7 +56,7 @@
   border: 1px solid rgb(154 157 150 / 14%);
   border-radius: 0.5rem;
   pointer-events: none;
-  content: '';
+  content: "";
 }
 
 .ui-action-cluster-shell {
@@ -75,13 +75,15 @@
   background-color: #111413;
   background-image:
     linear-gradient(180deg, rgb(54 59 56 / 72%), rgb(8 10 10 / 88%)),
-    url('/assets/ui/forged-stone-texture.webp');
+    url("/assets/ui/forged-stone-texture.webp");
   background-position: center;
-  background-size: auto, 220px 220px;
+  background-size:
+    auto,
+    220px 220px;
   box-shadow:
     inset 0 1px 0 rgb(226 226 219 / 7%),
     inset 0 0 0 3px rgb(0 0 0 / 30%);
-  content: '';
+  content: "";
 }
 
 .ui-action-cluster-shell::before {
@@ -100,10 +102,19 @@
   border-radius: 0.25rem;
   background-color: #161918;
   background-image:
-    linear-gradient(90deg, rgb(4 5 5 / 70%), rgb(62 67 64 / 34%) 14%, rgb(36 40 38 / 42%) 50%, rgb(62 67 64 / 34%) 86%, rgb(4 5 5 / 70%)),
-    url('/assets/ui/forged-stone-texture.webp');
+    linear-gradient(
+      90deg,
+      rgb(4 5 5 / 70%),
+      rgb(62 67 64 / 34%) 14%,
+      rgb(36 40 38 / 42%) 50%,
+      rgb(62 67 64 / 34%) 86%,
+      rgb(4 5 5 / 70%)
+    ),
+    url("/assets/ui/forged-stone-texture.webp");
   background-position: center;
-  background-size: auto, 520px 520px;
+  background-size:
+    auto,
+    520px 520px;
   box-shadow:
     inset 0 1px 0 rgb(226 226 219 / 8%),
     inset 0 0 0 4px rgb(0 0 0 / 25%);
@@ -117,7 +128,7 @@
   border: 1px solid rgb(154 157 150 / 12%);
   border-radius: 0.125rem;
   pointer-events: none;
-  content: '';
+  content: "";
 }
 
 .ui-action-cluster::after {
@@ -126,18 +137,25 @@
   bottom: 0.1875rem;
   left: 0.5rem;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(184 177 158 / 38%), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(184 177 158 / 38%),
+    transparent
+  );
   pointer-events: none;
-  content: '';
+  content: "";
 }
 
 .ui-action-slot {
   background-color: #070909;
   background-image:
     linear-gradient(180deg, rgb(54 59 56 / 38%), rgb(0 0 0 / 64%)),
-    url('/assets/ui/forged-stone-texture.webp');
+    url("/assets/ui/forged-stone-texture.webp");
   background-position: center;
-  background-size: auto, 220px 220px;
+  background-size:
+    auto,
+    220px 220px;
   box-shadow:
     inset 0 0 0 2px rgb(0 0 0 / 72%),
     inset 0 1px 0 rgb(226 226 219 / 8%),
@@ -150,7 +168,7 @@
   z-index: 1;
   border: 1px solid rgb(154 157 150 / 10%);
   pointer-events: none;
-  content: '';
+  content: "";
 }
 
 .ui-vital-orb-shell {
@@ -159,29 +177,35 @@
 }
 
 .ui-vital-orb-dragon {
-  filter:
-    drop-shadow(0 7px 8px rgb(0 0 0 / 72%))
+  filter: drop-shadow(0 7px 8px rgb(0 0 0 / 72%))
     drop-shadow(0 2px 2px rgb(0 0 0 / 85%));
 }
 
 .ui-vital-orb {
   overflow: hidden;
   border-radius: 9999px;
-  /* Deep glass well behind the liquid: near-black with a faint cold core. */
-  background: radial-gradient(
-    circle at 50% 40%,
-    rgb(17 19 20 / 98%) 0%,
-    rgb(6 7 8) 58%,
-    rgb(1 2 2) 100%
-  );
+  background:
+    radial-gradient(
+      circle at 31% 23%,
+      rgb(255 255 255 / 9%) 0%,
+      transparent 18%
+    ),
+    radial-gradient(
+      circle at 50% 42%,
+      rgb(22 27 28 / 98%) 0%,
+      rgb(6 8 9) 61%,
+      rgb(1 2 2) 100%
+    );
   box-shadow:
     0 16px 30px rgb(0 0 0 / 62%),
     0 4px 10px rgb(0 0 0 / 55%),
+    inset 0 0 0 1px rgb(216 226 223 / 8%),
+    inset 0 0 24px rgb(0 0 0 / 76%),
     0 0 0 1px rgb(0 0 0 / 90%);
   pointer-events: none;
 }
 
-/* Forged iron rim: conic sheen ring with worn bright glints, gold inlay. */
+/* Forged iron rim with restrained charcoal highlights. */
 .ui-vital-orb::before {
   position: absolute;
   inset: 0;
@@ -191,13 +215,13 @@
     conic-gradient(
       from 215deg,
       #14171a 0%,
-      #3b4145 9%,
+      #303638 9%,
       #191d20 20%,
-      #4d5356 31%,
+      #3d4445 31%,
       #101315 44%,
-      #33383c 56%,
+      #2b3132 56%,
       #15181a 66%,
-      #585f63 78%,
+      #414849 78%,
       #1a1e21 88%,
       #14171a 100%
     ),
@@ -213,33 +237,41 @@
     #000 calc(100% - 8px)
   );
   pointer-events: none;
-  content: '';
+  content: "";
 }
 
-/* Inner bezel: a thin worn-gold inlay ring plus deep well shadow. */
+/* Inner glass seat and deep well shadow. */
 .ui-vital-orb::after {
   position: absolute;
   inset: 6px;
   z-index: 30;
-  border: 1px solid rgb(186 148 79 / 30%);
+  border: 1px solid rgb(184 197 192 / 22%);
   border-radius: inherit;
   box-shadow:
     inset 0 0 18px 5px rgb(0 0 0 / 80%),
     inset 0 2px 3px rgb(0 0 0 / 85%),
+    0 0 5px rgb(200 214 210 / 8%),
     0 0 0 2px rgb(0 0 0 / 80%);
   pointer-events: none;
-  content: '';
+  content: "";
 }
 
 .ui-vital-orb-liquid {
   transition:
     height 420ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 180ms ease-out;
-  background-size: 130% 130%, 100% 100%, 100% 100%;
-  background-position: 50% 50%, 50% 100%, 50% 0%;
+  border-radius: 0 0 9999px 9999px;
+  background-size:
+    130% 130%,
+    100% 100%,
+    100% 100%;
+  background-position:
+    50% 50%,
+    50% 100%,
+    50% 0%;
 }
 
-/* Lit meniscus: bright curved surface line on top of the liquid. */
+/* Curved meniscus at the liquid surface. */
 .ui-vital-orb-liquid::before {
   position: absolute;
   top: -0.22rem;
@@ -249,14 +281,14 @@
   border-radius: 50%;
   background: radial-gradient(
     ellipse at 50% 50%,
-    rgb(255 255 255 / 55%) 0%,
-    rgb(255 255 255 / 18%) 45%,
+    rgb(255 255 255 / 44%) 0%,
+    rgb(255 255 255 / 14%) 45%,
     transparent 72%
   );
   box-shadow:
     0 0 8px 1px currentColor,
     0 2px 10px currentColor;
-  content: '';
+  content: "";
 }
 
 /* Bloom rising off the surface into the empty glass above. */
@@ -269,80 +301,111 @@
   background: linear-gradient(to top, currentColor, transparent);
   opacity: 0.32;
   filter: blur(7px);
-  content: '';
+  content: "";
 }
 
 .ui-vital-orb-health .ui-vital-orb-liquid {
-  color: #ff4a3a;
+  color: #f34b44;
   background:
     radial-gradient(
-      ellipse 90% 70% at 50% 108%,
-      rgb(255 122 84 / 85%) 0%,
-      rgb(224 42 44 / 70%) 34%,
-      transparent 72%
+      ellipse 96% 76% at 50% 106%,
+      rgb(255 125 105 / 82%) 0%,
+      rgb(215 35 46 / 68%) 38%,
+      transparent 74%
     ),
     radial-gradient(
-      circle at 50% 24%,
-      rgb(255 116 96 / 34%) 0%,
-      transparent 44%
+      ellipse 34% 18% at 31% 20%,
+      rgb(255 220 208 / 32%) 0%,
+      transparent 68%
     ),
-    linear-gradient(180deg, #a3111f 0%, #7c0a16 36%, #43040c 76%, #2a0107 100%);
+    linear-gradient(180deg, #bd1d2b 0%, #8e0d1d 38%, #500711 76%, #280106 100%);
   box-shadow:
-    inset 0 10px 20px rgb(255 110 90 / 20%),
+    inset 0 10px 20px rgb(255 125 104 / 24%),
     inset 8px 0 22px rgb(70 3 10 / 60%),
     inset -8px 0 22px rgb(70 3 10 / 60%),
     inset 0 -18px 30px rgb(28 0 4 / 80%),
-    0 -3px 14px rgb(255 62 54 / 30%);
+    0 -3px 14px rgb(243 75 68 / 34%);
 }
 
 .ui-vital-orb-mana .ui-vital-orb-liquid {
-  color: #3fa8f5;
+  color: #b469ee;
   background:
     radial-gradient(
-      ellipse 90% 70% at 50% 108%,
-      rgb(120 210 255 / 85%) 0%,
-      rgb(31 118 214 / 70%) 34%,
-      transparent 72%
+      ellipse 96% 76% at 50% 106%,
+      rgb(204 130 255 / 82%) 0%,
+      rgb(139 54 202 / 68%) 38%,
+      transparent 74%
     ),
     radial-gradient(
-      circle at 50% 24%,
-      rgb(140 214 255 / 32%) 0%,
-      transparent 44%
+      ellipse 34% 18% at 31% 20%,
+      rgb(238 210 255 / 30%) 0%,
+      transparent 68%
     ),
-    linear-gradient(180deg, #0e57a8 0%, #0a3f80 36%, #06224b 76%, #031229 100%);
+    linear-gradient(180deg, #852db7 0%, #62178e 38%, #38094f 76%, #190220 100%);
   box-shadow:
-    inset 0 10px 20px rgb(140 214 255 / 22%),
-    inset 8px 0 22px rgb(2 22 48 / 62%),
-    inset -8px 0 22px rgb(2 22 48 / 62%),
-    inset 0 -18px 30px rgb(1 10 26 / 82%),
-    0 -3px 14px rgb(64 168 245 / 34%);
+    inset 0 10px 20px rgb(213 151 255 / 24%),
+    inset 8px 0 22px rgb(31 3 45 / 64%),
+    inset -8px 0 22px rgb(31 3 45 / 64%),
+    inset 0 -18px 30px rgb(16 0 24 / 84%),
+    0 -3px 14px rgb(180 105 238 / 34%);
 }
 
-/* Glass dome over everything: specular crescent, side sheen, deep vignette. */
+/* Glass dome: refracted highlights over a dark spherical vignette. */
 .ui-vital-orb-glass {
+  overflow: hidden;
+  border: 1px solid rgb(220 232 228 / 15%);
   background:
     radial-gradient(
-      ellipse 56% 32% at 50% 11%,
-      rgb(255 255 255 / 30%) 0%,
-      rgb(255 255 255 / 7%) 52%,
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 26% 14% at 30% 24%,
-      rgb(255 255 255 / 18%) 0%,
+      ellipse 48% 25% at 35% 15%,
+      rgb(255 255 255 / 38%) 0%,
+      rgb(255 255 255 / 10%) 46%,
       transparent 70%
     ),
     radial-gradient(
-      ellipse 72% 26% at 50% 103%,
-      rgb(255 255 255 / 8%) 0%,
-      transparent 62%
+      ellipse 18% 9% at 27% 29%,
+      rgb(255 255 255 / 20%) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      circle at 50% 46%,
+      transparent 45%,
+      rgb(255 255 255 / 4%) 67%,
+      rgb(0 0 0 / 34%) 100%
     );
   box-shadow:
-    inset 0 0 36px rgb(0 0 0 / 68%),
-    inset 0 8px 12px rgb(255 255 255 / 5%),
-    inset 12px 0 24px rgb(0 0 0 / 35%),
-    inset -12px 0 24px rgb(0 0 0 / 35%),
-    inset 0 -14px 30px rgb(0 0 0 / 60%);
+    inset 0 0 0 1px rgb(255 255 255 / 7%),
+    inset 0 7px 14px rgb(255 255 255 / 7%),
+    inset 13px 0 24px rgb(0 0 0 / 38%),
+    inset -13px 0 24px rgb(0 0 0 / 42%),
+    inset 0 -17px 32px rgb(0 0 0 / 66%);
+  backdrop-filter: blur(0.5px);
+}
+
+.ui-vital-orb-glass::before {
+  position: absolute;
+  top: 18%;
+  left: 18%;
+  width: 28%;
+  height: 8%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 30%),
+    transparent
+  );
+  filter: blur(0.5px);
+  transform: rotate(-32deg);
+  content: "";
+}
+
+.ui-vital-orb-glass::after {
+  position: absolute;
+  inset: 8%;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  border-radius: inherit;
+  box-shadow: inset 0 -10px 16px rgb(0 0 0 / 18%);
+  content: "";
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -359,11 +422,17 @@
 
 @keyframes ui-vital-orb-swirl {
   from {
-    background-position: 38% 50%, 50% 100%, 50% 0%;
+    background-position:
+      38% 50%,
+      50% 100%,
+      50% 0%;
   }
 
   to {
-    background-position: 62% 50%, 50% 100%, 50% 0%;
+    background-position:
+      62% 50%,
+      50% 100%,
+      50% 0%;
   }
 }
 
@@ -381,7 +450,9 @@
   position: relative;
   background-position: center, center;
   background-repeat: no-repeat, repeat;
-  background-size: 100% 100%, 280px 280px;
+  background-size:
+    100% 100%,
+    280px 280px;
   box-shadow:
     inset 0 1px 0 rgb(226 226 219 / 8%),
     inset 0 -1px 0 rgb(0 0 0 / 55%),
@@ -394,19 +465,19 @@
   border: 1px solid rgb(214 213 205 / 8%);
   border-radius: 0.3rem;
   pointer-events: none;
-  content: '';
+  content: "";
 }
 
 .ui-button-secondary {
   background-image:
     linear-gradient(180deg, rgb(48 51 50 / 76%), rgb(13 15 15 / 90%)),
-    url('/assets/ui/forged-stone-texture.webp');
+    url("/assets/ui/forged-stone-texture.webp");
 }
 
 .ui-button-primary {
   background-image:
     linear-gradient(180deg, rgb(151 34 25 / 88%), rgb(75 10 7 / 94%)),
-    url('/assets/ui/forged-stone-texture.webp');
+    url("/assets/ui/forged-stone-texture.webp");
   box-shadow:
     inset 0 1px 0 rgb(255 218 207 / 14%),
     inset 0 -1px 0 rgb(31 2 1 / 68%),
@@ -416,7 +487,7 @@
 .ui-button-danger {
   background-image:
     linear-gradient(180deg, rgb(90 17 13 / 72%), rgb(31 7 6 / 94%)),
-    url('/assets/ui/forged-stone-texture.webp');
+    url("/assets/ui/forged-stone-texture.webp");
 }
 
 .ui-button:active:not(:disabled) {
@@ -433,7 +504,7 @@
   appearance: none;
   background:
     linear-gradient(180deg, rgb(48 51 50 / 82%), rgb(13 15 15 / 94%)),
-    url('/assets/ui/forged-stone-texture.webp') center / 280px 280px;
+    url("/assets/ui/forged-stone-texture.webp") center / 280px 280px;
   box-shadow:
     inset 0 1px 0 rgb(226 226 219 / 7%),
     inset 0 -1px 0 rgb(0 0 0 / 60%),
@@ -474,7 +545,7 @@
     border-radius: 0.5rem;
     background:
       linear-gradient(180deg, rgb(37 40 39 / 98%), rgb(9 10 10 / 99%)),
-      url('/assets/ui/forged-stone-texture.webp') center / 280px 280px;
+      url("/assets/ui/forged-stone-texture.webp") center / 280px 280px;
     box-shadow: 0 14px 32px rgb(0 0 0 / 58%);
   }
 
@@ -514,7 +585,7 @@
   border-radius: 0.25rem;
   background:
     linear-gradient(180deg, rgb(151 34 25 / 96%), rgb(75 10 7 / 98%)),
-    url('/assets/ui/forged-stone-texture.webp') center / 160px 160px;
+    url("/assets/ui/forged-stone-texture.webp") center / 160px 160px;
   box-shadow:
     inset 0 1px 0 rgb(255 218 207 / 14%),
     0 2px 6px rgb(0 0 0 / 55%);
@@ -527,7 +598,7 @@
   border-radius: 0.25rem;
   background:
     linear-gradient(180deg, rgb(151 34 25 / 96%), rgb(75 10 7 / 98%)),
-    url('/assets/ui/forged-stone-texture.webp') center / 160px 160px;
+    url("/assets/ui/forged-stone-texture.webp") center / 160px 160px;
   box-shadow:
     inset 0 1px 0 rgb(255 218 207 / 14%),
     0 2px 6px rgb(0 0 0 / 55%);
@@ -545,7 +616,14 @@
 
 .ui-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, #424744 20%, #7c807a 50%, #424744 80%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #424744 20%,
+    #7c807a 50%,
+    #424744 80%,
+    transparent
+  );
   box-shadow: 0 1px 0 rgb(0 0 0 / 80%);
 }
 
@@ -580,7 +658,13 @@
 .ui-game-vignette {
   background:
     radial-gradient(circle at center, transparent 52%, rgb(0 0 0 / 44%) 100%),
-    linear-gradient(180deg, rgb(0 0 0 / 22%), transparent 22%, transparent 74%, rgb(0 0 0 / 42%));
+    linear-gradient(
+      180deg,
+      rgb(0 0 0 / 22%),
+      transparent 22%,
+      transparent 74%,
+      rgb(0 0 0 / 42%)
+    );
 }
 
 :root {

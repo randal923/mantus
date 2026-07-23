@@ -20,6 +20,8 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
   const low = percent > 0 && percent <= LOW_VITAL_PERCENT;
   const formattedValue = boundedValue.toLocaleString(language);
   const formattedMax = boundedMax.toLocaleString(language);
+  const horizontalPosition =
+    kind === "health" ? "-left-2 sm:-left-4" : "left-2 sm:left-4";
 
   return (
     <div
@@ -29,7 +31,7 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
       aria-valuemax={boundedMax}
       aria-valuenow={boundedValue}
       title={`${label}: ${formattedValue} / ${formattedMax}`}
-      className="ui-vital-orb-shell relative z-10 isolate size-20 sm:size-28"
+      className={`ui-vital-orb-shell relative bottom-7 z-10 isolate size-24 sm:bottom-10 sm:size-32 ${horizontalPosition}`}
     >
       <div
         aria-hidden
@@ -53,7 +55,7 @@ export function VitalOrb({ kind, value, max }: VitalOrbProps) {
         width={256}
         height={256}
         draggable={false}
-        className={`ui-vital-orb-dragon pointer-events-none absolute top-1/2 left-1/2 z-30 size-40 max-w-none -translate-x-1/2 -translate-y-1/2 select-none sm:size-56 ${
+        className={`ui-vital-orb-dragon pointer-events-none absolute top-1/2 left-1/2 z-30 size-44 max-w-none -translate-x-1/2 -translate-y-1/2 select-none sm:size-60 ${
           kind === "mana" ? "-scale-x-100" : ""
         }`}
       />
