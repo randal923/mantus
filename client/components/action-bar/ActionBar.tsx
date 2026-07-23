@@ -44,7 +44,7 @@ export function ActionBar({
   onConfigure,
 }: ActionBarProps) {
   const buttonRefs = useRef(new Map<number, HTMLButtonElement>());
-  const [now, setNow] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const hasCooldown = slots.some(
     (slot) => (slot.item?.cooldownReadyAt ?? 0) > now,
   );

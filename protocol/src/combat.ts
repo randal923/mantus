@@ -151,6 +151,7 @@ export const combatCooldownStateSchema = z
   .object({
     group: z.string().min(1).max(64),
     readyAt: z.number().int().nonnegative(),
+    remainingMs: z.number().int().min(0).max(60 * 60 * 1000),
     totalMs: z.number().int().positive().max(60 * 60 * 1000),
   })
   .strict();

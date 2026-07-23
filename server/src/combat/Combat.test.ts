@@ -465,6 +465,15 @@ describe("Combat", () => {
     expect(
       harness.session.combatCooldowns.get("group:healing")?.readyAt,
     ).toBe(2_000);
+    const latestFightState = harness.sent
+      .filter((message) => message.type === "fight-state")
+      .at(-1);
+    expect(latestFightState?.fightState.cooldowns).toContainEqual({
+      group: "group:healing",
+      readyAt: 2_000,
+      remainingMs: 1_000,
+      totalMs: 1_000,
+    });
   });
 
   it("reports execution-time Exori rejection reasons", async () => {

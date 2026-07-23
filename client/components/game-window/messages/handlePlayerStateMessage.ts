@@ -1,5 +1,6 @@
 import { GOLD_COIN_TYPE_ID } from "@tibia/protocol";
 import type { ServerMessage } from "@tibia/protocol";
+import { anchorFightStateCooldowns } from "../../../lib/combat/anchorFightStateCooldowns";
 import type { GameWindowMessageContext } from "../types/GameWindowMessageContext";
 
 export function handlePlayerStateMessage(
@@ -35,7 +36,9 @@ export function handlePlayerStateMessage(
   }
 
   if (message.type === "fight-state") {
-    state.setFightState(message.fightState);
+    state.setFightState(
+      anchorFightStateCooldowns(message.fightState, Date.now()),
+    );
     return false;
   }
 

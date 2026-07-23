@@ -30,6 +30,7 @@ export function projectFightState(
       .map(([group, cooldown]) => ({
         group,
         readyAt: cooldown.readyAt,
+        remainingMs: Math.max(0, cooldown.readyAt - now),
         totalMs: cooldown.totalMs,
       }))
       .sort((left, right) => left.group.localeCompare(right.group)),

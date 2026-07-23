@@ -1,4 +1,5 @@
 import type { ServerMessage } from "@tibia/protocol";
+import { anchorFightStateCooldowns } from "../../../lib/combat/anchorFightStateCooldowns";
 import type { GameWindowMessageContext } from "../types/GameWindowMessageContext";
 
 export function handleCharacterSessionMessage(
@@ -51,7 +52,9 @@ export function handleCharacterSessionMessage(
   state.setUiSettings(message.uiSettings);
   runtime.uiSettingsRef.current = message.uiSettings;
   actions.inventory.reset(message.inventory);
-  state.setFightState(message.fightState);
+  state.setFightState(
+    anchorFightStateCooldowns(message.fightState, Date.now()),
+  );
   state.setSpells(message.spells);
   state.setActionBar(message.actionBar);
   runtime.actionBarRef.current = message.actionBar;
