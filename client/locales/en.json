@@ -1379,7 +1379,12 @@
       "lesserFragmentsShort": "lesser fragments",
       "greaterFragmentsShort": "greater fragments",
       "vessels": "Vessels",
+      "emptyVessel": "Empty vessel",
       "resonanceCount": "Resonance {{count}}/3",
+      "collectionTitle": "Gem Collection",
+      "selectedTitle": "Selected Gem",
+      "selectGem": "Select a gem to inspect its modifiers and actions.",
+      "modifiers": "Modifiers",
       "quality": {
         "lesser": "Lesser Gem",
         "regular": "Regular Gem",
@@ -1388,6 +1393,8 @@
       "reveal": {
         "title": "Gem Revelation",
         "help": "Revealing a gem rolls random mods: lesser gems get one basic mod, regular gems two, greater gems two basic mods and one supreme mod. Costs are paid from your bank.",
+        "available_one": "{{count}} available",
+        "available_other": "{{count}} available",
         "button": "Reveal"
       },
       "filters": {

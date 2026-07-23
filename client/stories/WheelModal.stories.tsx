@@ -124,6 +124,32 @@ export const KnightBuild: Story = {
   },
 };
 
+export const GemAtelier: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("tab", { name: "Gem Atelier" }));
+
+    await expect(
+      canvas.getByRole("heading", { name: "Vessels" }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("heading", { name: "Gem Revelation" }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("heading", { name: "Gem Collection" }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("heading", { name: "Selected Gem" }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("combobox", { name: "Filter by quality" }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("combobox", { name: "Filter by domain" }),
+    ).toBeVisible();
+  },
+};
+
 export const FragmentWorkshop: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

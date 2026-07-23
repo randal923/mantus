@@ -1379,7 +1379,12 @@
       "lesserFragmentsShort": "fragmentos menores",
       "greaterFragmentsShort": "fragmentos maiores",
       "vessels": "Recipientes",
+      "emptyVessel": "Recipiente vazio",
       "resonanceCount": "Ressonância {{count}}/3",
+      "collectionTitle": "Coleção de Gemas",
+      "selectedTitle": "Gema Selecionada",
+      "selectGem": "Selecione uma gema para inspecionar seus modificadores e ações.",
+      "modifiers": "Modificadores",
       "quality": {
         "lesser": "Gema Menor",
         "regular": "Gema Comum",
@@ -1388,6 +1393,8 @@
       "reveal": {
         "title": "Revelação de Gemas",
         "help": "Revelar uma gema sorteia mods aleatórios: gemas menores recebem um mod básico, comuns dois, e maiores dois mods básicos e um supremo. Os custos saem do seu banco.",
+        "available_one": "{{count}} disponível",
+        "available_other": "{{count}} disponíveis",
         "button": "Revelar"
       },
       "filters": {
