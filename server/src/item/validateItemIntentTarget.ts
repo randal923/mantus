@@ -1,4 +1,4 @@
-import type { Position } from "@tibia/protocol";
+import type { Position, ViewRange } from "@tibia/protocol";
 import type { World } from "../World";
 import type { InventoryCache } from "./InventoryCache";
 import { isNear } from "./isNear";
@@ -6,18 +6,16 @@ import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemIntent } from "./ItemIntent";
 
-/** Furthest tile a map item may be thrown to, in tiles from the player. */
-const THROW_RANGE = 7;
-
 /**
  * Validates the intent's target (destination container/slot, text length,
- * proximity, map visibility, throw range) at execution time. Returns false
- * when the intent must be rejected with "item-action-failed".
+ * proximity, map visibility, and line of sight) at execution time. Returns
+ * false when the intent must be rejected with "item-action-failed".
  */
 export function validateItemIntentTarget(
   intent: ItemIntent,
   item: Item | undefined,
   playerPosition: Position,
+  viewRange: ViewRange,
   cache: InventoryCache,
   catalog: ItemCatalog,
   world: World,
@@ -82,11 +80,17 @@ export function validateItemIntentTarget(
     }
   }
   if (
-    (intent.type === "drop-item" || intent.type === "use-item-with") &&
-    (!isNear(playerPosition, intent.type === "drop-item" ? intent.position : intent.targetPosition) ||
-      !world.getTile(
-        intent.type === "drop-item" ? intent.position : intent.targetPosition,
-      ))
+    intent.type === "drop-item" &&
+    (!world.canSee(playerPosition, intent.position, viewRange) ||
+      !world.hasLineOfSight(playerPosition, intent.position) ||
+      !world.getTile(intent.position))
+  ) {
+    return false;
+  }
+  if (
+    intent.type === "use-item-with" &&
+    (!isNear(playerPosition, intent.targetPosition) ||
+      !world.getTile(intent.targetPosition))
   ) {
     return false;
   }
@@ -131,11 +135,8 @@ export function validateItemIntentTarget(
       !isNear(playerPosition, intent.fromPosition) ||
       !visible ||
       (visible.revision ?? 1) !== intent.revision ||
-      intent.toPosition.z !== playerPosition.z ||
-      Math.max(
-        Math.abs(intent.toPosition.x - playerPosition.x),
-        Math.abs(intent.toPosition.y - playerPosition.y),
-      ) > THROW_RANGE ||
+      !world.canSee(playerPosition, intent.toPosition, viewRange) ||
+      !world.hasLineOfSight(playerPosition, intent.toPosition) ||
       !world.getTile(intent.toPosition)
     ) {
       return false;

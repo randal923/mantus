@@ -258,12 +258,24 @@ describe("validateItemOp", () => {
     ).toBeNull();
   });
 
-  it("rejects dropping onto a tile the player is not next to", () => {
+  it("allows dropping an inventory item throughout the current viewport", () => {
     expect(
       validateItemOp(
-        { kind: "drop", itemId: SWORD.id, position: { x: 103, y: 100, z: 7 } },
+        { kind: "drop", itemId: SWORD.id, position: { x: 108, y: 100, z: 7 } },
         makeState(),
         KNIGHT,
+        { x: 9, y: 7 },
+      ),
+    ).toBeNull();
+  });
+
+  it("rejects dropping an inventory item outside the current viewport", () => {
+    expect(
+      validateItemOp(
+        { kind: "drop", itemId: SWORD.id, position: { x: 110, y: 100, z: 7 } },
+        makeState(),
+        KNIGHT,
+        { x: 9, y: 7 },
       ),
     ).toBe("out-of-range");
   });
@@ -315,7 +327,7 @@ describe("validateItemOp", () => {
     ).toBeNull();
   });
 
-  it("rejects throwing a map item beyond the throw range", () => {
+  it("rejects throwing a map item beyond the current viewport", () => {
     expect(
       validateItemOp(
         {
@@ -327,11 +339,12 @@ describe("validateItemOp", () => {
         },
         makeState(),
         KNIGHT,
+        { x: 7, y: 7 },
       ),
     ).toBe("too-far");
   });
 
-  it("allows throwing a map item within the throw range", () => {
+  it("allows throwing a map item throughout the current viewport", () => {
     expect(
       validateItemOp(
         {
@@ -339,10 +352,11 @@ describe("validateItemOp", () => {
           itemId: crypto.randomUUID(),
           revision: 1,
           fromPosition: { x: 101, y: 100, z: 7 },
-          toPosition: { x: 107, y: 100, z: 7 },
+          toPosition: { x: 108, y: 100, z: 7 },
         },
         makeState(),
         KNIGHT,
+        { x: 9, y: 7 },
       ),
     ).toBeNull();
   });

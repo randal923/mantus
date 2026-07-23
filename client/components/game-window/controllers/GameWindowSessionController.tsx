@@ -45,8 +45,12 @@ export function GameWindowSessionController() {
   );
   const validateItemOpLocally = useCallback(
     (op: PendingItemOp, projected: InventoryState) => {
-      const character = store.getState().ownCharacter;
-      return character ? validateItemOp(op, projected, character) : null;
+      const state = store.getState();
+      const character = state.ownCharacter;
+      const viewRange = state.runtime.rendererRef.current?.getViewRange();
+      return character
+        ? validateItemOp(op, projected, character, viewRange)
+        : null;
     },
     [store],
   );

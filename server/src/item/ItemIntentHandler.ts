@@ -835,6 +835,7 @@ export class ItemIntentHandler {
         intent,
         item,
         player.position,
+        session.viewRange,
         cache,
         this.catalog,
         this.world,

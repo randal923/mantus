@@ -99,6 +99,7 @@ export class WorldRenderer {
     this.mapView,
     this.speechLayer,
   );
+  private viewRange: ViewRange = { x: 1, y: 1 };
   private readonly creatureViews = new Map<string, CreatureView>();
   private readonly pendingCreatures = new Map<string, CreatureState>();
   private readonly loadingCreatureIds = new Set<string>();
@@ -376,8 +377,13 @@ export class WorldRenderer {
 
   setViewportSize(width: number, height: number): ViewRange {
     const range = getViewportRange(width, height, TILE_SIZE * ZOOM);
+    this.viewRange = { ...range };
     this.mapView.setViewRange(range);
     return range;
+  }
+
+  getViewRange(): ViewRange {
+    return { ...this.viewRange };
   }
 
   prefetchMapAt(position: Position): void {

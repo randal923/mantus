@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { ServerMessage } from "@tibia/protocol";
+import type { Position, ServerMessage, ViewRange } from "@tibia/protocol";
 import type { WebSocket } from "ws";
 import { Player } from "../Player";
 import { Session } from "../Session";
@@ -141,6 +141,153 @@ describe("ItemIntentHandler", () => {
     expect(world.getMapItems({ x: 1, y: 2, z: 7 })).toHaveLength(0);
     expect(world.getMapItems({ x: 2, y: 2, z: 7 })).toMatchObject([
       { instanceId: WORLD_GOLD_ID, count: 10 },
+    ]);
+  });
+
+  it("drops an inventory item throughout the current unobstructed viewport", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const target = { x: 10, y: 2, z: 7 };
+    const { handler, session, sent, world } = makeHarness(store, {
+      width: 20,
+      height: 5,
+      playerPosition: { x: 2, y: 2, z: 7 },
+      viewRange: { x: 9, y: 2 },
+    });
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "drop-item",
+      itemId: ITEM_ID,
+      revision: 1,
+      position: target,
+    });
+    await handler.stopPersists();
+
+    expect(sent.some((message) => message.type === "error")).toBe(false);
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.some((item) => item.id === ITEM_ID),
+    ).toBe(false);
+    expect(world.getMapItems(target)).toMatchObject([
+      { instanceId: ITEM_ID, revision: 2 },
+    ]);
+  });
+
+  it("rejects inventory drops behind walls or outside the current viewport", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const { handler, session, sent, world } = makeHarness(store, {
+      width: 20,
+      height: 5,
+      blocked: [[6, 2]],
+      playerPosition: { x: 2, y: 2, z: 7 },
+      viewRange: { x: 9, y: 2 },
+    });
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    for (const position of [
+      { x: 10, y: 2, z: 7 },
+      { x: 12, y: 2, z: 7 },
+    ]) {
+      handler.handle(session, {
+        type: "drop-item",
+        itemId: ITEM_ID,
+        revision: 1,
+        position,
+      });
+      expect(sent.at(-1)).toMatchObject({
+        type: "error",
+        code: "item-action-failed",
+      });
+      expect(world.getMapItems(position)).toHaveLength(0);
+    }
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.some((item) => item.id === ITEM_ID),
+    ).toBe(true);
+  });
+
+  it("throws a map item throughout the current unobstructed viewport", async () => {
+    const store = new MemoryItemStore();
+    const source = { x: 3, y: 2, z: 7 };
+    const target = { x: 10, y: 2, z: 7 };
+    const worldGold: Item = {
+      id: WORLD_GOLD_ID,
+      typeId: 3031,
+      count: 10,
+      attributes: {},
+      version: 1,
+      location: { kind: "world", position: source, stackIndex: 1 },
+    };
+    store.seed(worldGold);
+    const { handler, session, sent, world } = makeHarness(store, {
+      width: 20,
+      height: 5,
+      playerPosition: { x: 2, y: 2, z: 7 },
+      viewRange: { x: 9, y: 2 },
+    });
+    world.applyCreatedWorldItems([worldGold]);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "move-map-item",
+      itemId: WORLD_GOLD_ID,
+      revision: 1,
+      fromPosition: source,
+      toPosition: target,
+    });
+    await handler.stopPersists();
+
+    expect(sent.some((message) => message.type === "error")).toBe(false);
+    expect(world.getMapItems(source)).toHaveLength(0);
+    expect(world.getMapItems(target)).toMatchObject([
+      { instanceId: WORLD_GOLD_ID, revision: 2 },
+    ]);
+  });
+
+  it("rejects map item throws behind walls or outside the current viewport", async () => {
+    const store = new MemoryItemStore();
+    const source = { x: 3, y: 2, z: 7 };
+    const worldGold: Item = {
+      id: WORLD_GOLD_ID,
+      typeId: 3031,
+      count: 10,
+      attributes: {},
+      version: 1,
+      location: { kind: "world", position: source, stackIndex: 1 },
+    };
+    store.seed(worldGold);
+    const { handler, session, sent, world } = makeHarness(store, {
+      width: 20,
+      height: 5,
+      blocked: [[6, 2]],
+      playerPosition: { x: 2, y: 2, z: 7 },
+      viewRange: { x: 9, y: 2 },
+    });
+    world.applyCreatedWorldItems([worldGold]);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    for (const toPosition of [
+      { x: 10, y: 2, z: 7 },
+      { x: 12, y: 2, z: 7 },
+    ]) {
+      handler.handle(session, {
+        type: "move-map-item",
+        itemId: WORLD_GOLD_ID,
+        revision: 1,
+        fromPosition: source,
+        toPosition,
+      });
+      expect(sent.at(-1)).toMatchObject({
+        type: "error",
+        code: "item-action-failed",
+      });
+    }
+    expect(world.getMapItems(source)).toMatchObject([
+      { instanceId: WORLD_GOLD_ID, revision: 1 },
     ]);
   });
 
@@ -397,7 +544,18 @@ function nestedItems(): Item[] {
   ];
 }
 
-function makeHarness(store: MemoryItemStore): {
+interface HarnessOptions {
+  readonly width?: number;
+  readonly height?: number;
+  readonly blocked?: ReadonlyArray<readonly [number, number]>;
+  readonly playerPosition?: Position;
+  readonly viewRange?: ViewRange;
+}
+
+function makeHarness(
+  store: MemoryItemStore,
+  options: HarnessOptions = {},
+): {
   handler: ItemIntentHandler;
   player: Player;
   session: Session;
@@ -407,19 +565,15 @@ function makeHarness(store: MemoryItemStore): {
   const world = new World(
     gridMapData({
       name: "test",
-      width: 3,
-      height: 3,
-      blocked: [],
+      width: options.width ?? 3,
+      height: options.height ?? 3,
+      blocked: options.blocked ?? [],
     }),
     25,
   );
   const player = new Player(
     makeCharacter(CHARACTER_ID, "Container Tester"),
-    {
-      x: 1,
-      y: 1,
-      z: 7,
-    },
+    options.playerPosition ?? { x: 1, y: 1, z: 7 },
   );
   world.addPlayer(player);
   const sent: ServerMessage[] = [];
@@ -434,7 +588,7 @@ function makeHarness(store: MemoryItemStore): {
   const session = new Session("session", "127.0.0.1", socket, {
     maxPendingIntents: 16,
     maxProtocolViolations: 5,
-    initialViewRange: { x: 9, y: 7 },
+    initialViewRange: options.viewRange ?? { x: 9, y: 7 },
   });
   session.playerId = CHARACTER_ID;
   return {

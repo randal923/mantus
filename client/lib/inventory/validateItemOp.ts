@@ -2,13 +2,11 @@ import type {
   InventoryState,
   OwnCharacterState,
   Position,
+  ViewRange,
 } from "@tibia/protocol";
 import { exceedsCapacity } from "./exceedsCapacity";
 import { findInventoryItem } from "./findInventoryItem";
 import type { PendingItemOp } from "./PendingItemOp";
-
-/** Mirrors the server's THROW_RANGE in validateItemIntentTarget. */
-const THROW_RANGE = 7;
 
 export type ItemOpRejection =
   | "wrong-slot"
@@ -85,6 +83,7 @@ export function validateItemOp(
   op: PendingItemOp,
   inventory: InventoryState,
   character: Pick<OwnCharacterState, "level" | "vocation" | "position">,
+  viewRange?: ViewRange,
 ): ItemOpRejection | null {
   if (op.kind === "equip") {
     const item = findInventoryItem(inventory, op.itemId);
@@ -137,7 +136,15 @@ export function validateItemOp(
     return null;
   }
   if (op.kind === "drop") {
-    return isNear(character.position, op.position) ? null : "out-of-range";
+    if (op.position.z !== character.position.z) return "out-of-range";
+    if (
+      viewRange !== undefined &&
+      (Math.abs(op.position.x - character.position.x) > viewRange.x ||
+        Math.abs(op.position.y - character.position.y) > viewRange.y)
+    ) {
+      return "out-of-range";
+    }
+    return null;
   }
   if (op.kind === "pickup") {
     if (!isNear(character.position, op.position)) return "out-of-range";
@@ -155,10 +162,9 @@ export function validateItemOp(
   if (!isNear(character.position, op.fromPosition)) return "out-of-range";
   if (
     op.toPosition.z !== character.position.z ||
-    Math.max(
-      Math.abs(op.toPosition.x - character.position.x),
-      Math.abs(op.toPosition.y - character.position.y),
-    ) > THROW_RANGE
+    (viewRange !== undefined &&
+      (Math.abs(op.toPosition.x - character.position.x) > viewRange.x ||
+        Math.abs(op.toPosition.y - character.position.y) > viewRange.y))
   ) {
     return "too-far";
   }

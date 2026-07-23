@@ -304,7 +304,11 @@ export const pickupItemMessageSchema = z
   })
   .strict();
 
-/** Drops an owned item or bounded portion of a stack on an adjacent tile. */
+/**
+ * Drops an owned item or bounded portion of a stack onto a visible tile. The
+ * server re-validates the current viewport, line of sight, and tile at
+ * execution time.
+ */
 export const dropItemMessageSchema = ownedItemIntentSchema
   .extend({
     type: z.literal("drop-item"),
@@ -314,9 +318,10 @@ export const dropItemMessageSchema = ownedItemIntentSchema
   .strict();
 
 /**
- * Throws a visible map item from an adjacent tile onto another nearby tile.
+ * Throws a visible map item from an adjacent tile onto another visible tile.
  * Same fixed size and rate expectations as the other item intents; the
- * server re-validates reach, target range, and the tile at execution time.
+ * server re-validates reach, current viewport, line of sight, and the tile at
+ * execution time.
  */
 export const moveMapItemMessageSchema = z
   .object({
