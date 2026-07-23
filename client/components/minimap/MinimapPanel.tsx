@@ -49,7 +49,7 @@ interface PanelDrag {
   startClientX: number;
   startClientY: number;
   baseLayout: MinimapLayout;
-  resizeDirection: MinimapResizeDirection | null;
+  resizeDirection: MinimapResizeDirection;
 }
 
 interface MinimapPanelProps {
@@ -207,7 +207,7 @@ export function MinimapPanel({
 
   const beginPanelDrag = (
     event: ReactPointerEvent<HTMLElement>,
-    resizeDirection: MinimapResizeDirection | null,
+    resizeDirection: MinimapResizeDirection,
   ) => {
     const rect = sectionRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -231,23 +231,9 @@ export function MinimapPanel({
     if (!drag || drag.pointerId !== event.pointerId) return;
     const dx = event.clientX - drag.startClientX;
     const dy = event.clientY - drag.startClientY;
-    if (drag.resizeDirection) {
-      onLayoutChange(
-        resizeMinimapLayout(drag.baseLayout, drag.resizeDirection, dx, dy),
-      );
-      return;
-    }
-    onLayoutChange({
-      ...drag.baseLayout,
-      x: Math.min(
-        Math.max(0, window.innerWidth - 160),
-        Math.max(0, Math.round(drag.baseLayout.x + dx)),
-      ),
-      y: Math.min(
-        Math.max(0, window.innerHeight - 120),
-        Math.max(0, Math.round(drag.baseLayout.y + dy)),
-      ),
-    });
+    onLayoutChange(
+      resizeMinimapLayout(drag.baseLayout, drag.resizeDirection, dx, dy),
+    );
   };
 
   const endPanelDrag = (event: ReactPointerEvent<HTMLElement>) => {
@@ -273,14 +259,7 @@ export function MinimapPanel({
       style={{ width: canvasWidth + PANEL_CHROME }}
       className="ui-panel-frame pointer-events-auto relative p-3"
     >
-      <div
-        className="mb-2 flex cursor-move touch-none items-center justify-between gap-2"
-        title={t("hud.minimap.move")}
-        onPointerDown={(event) => beginPanelDrag(event, null)}
-        onPointerMove={onPanelDragMove}
-        onPointerUp={endPanelDrag}
-        onPointerCancel={endPanelDrag}
-      >
+      <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium tracking-wide text-ui-text-bright uppercase">
           {t("hud.minimap.title")}
         </h2>
@@ -445,7 +424,7 @@ export function MinimapPanel({
       </div>
       <div
         aria-hidden
-        className="pointer-events-none absolute right-1 bottom-1 size-4 text-ui-muted"
+        className="pointer-events-none absolute top-1 left-1 size-4 text-ui-muted"
       >
         <svg
           aria-hidden
@@ -456,7 +435,7 @@ export function MinimapPanel({
           strokeWidth="1.4"
           strokeLinecap="round"
         >
-          <path d="M13 6.5 6.5 13M13 10.5 10.5 13" />
+          <path d="M3 9.5 9.5 3M3 5.5 5.5 3" />
         </svg>
       </div>
       <MinimapResizeBorder

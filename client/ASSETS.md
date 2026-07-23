@@ -123,6 +123,9 @@ and be stored in a web-optimized format.
 
 - `forged-stone-texture.webp` — seamless warm-black forged stone used beneath
   the CSS gradients and borders on gothic panels and full-screen backdrops.
+- `vital-orb-dragon-charcoal.png` — original transparent forged-dragon ornament used
+  around both HUD vital orbs; the mana treatment mirrors the same asset so the
+  two dragons face inward as a matched pair.
 
 ## Wheel of Destiny art (`public/assets/wheel/`)
 

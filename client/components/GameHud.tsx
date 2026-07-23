@@ -233,7 +233,7 @@ export function GameHud({
           attackTargetId={fightState.attackTargetId}
         />
       )}
-      <div className="pointer-events-auto absolute bottom-0 left-4">
+      <div className="pointer-events-auto absolute bottom-0 left-0">
         <ChatPanel
           channels={visibleChatChannels}
           pinnedOpen={chatPinnedOpen}
@@ -253,32 +253,7 @@ export function GameHud({
         {fightState.skull && <OwnSkullIndicator skull={fightState.skull} />}
       </div>
       {minimapVisible && mapName && (
-        <div
-          className={
-            minimapLayout ? "absolute" : "absolute right-4 bottom-4"
-          }
-          style={
-            minimapLayout
-              ? {
-                  // Clamp so a layout saved on a larger screen stays reachable.
-                  left:
-                    typeof window === "undefined"
-                      ? minimapLayout.x
-                      : Math.min(
-                          minimapLayout.x,
-                          Math.max(0, window.innerWidth - 240),
-                        ),
-                  top:
-                    typeof window === "undefined"
-                      ? minimapLayout.y
-                      : Math.min(
-                          minimapLayout.y,
-                          Math.max(0, window.innerHeight - 160),
-                        ),
-                }
-              : undefined
-          }
-        >
+        <div className="absolute right-0 bottom-0">
           <MinimapPanel
             mapName={mapName}
             ownPlayerId={ownCharacter.id}

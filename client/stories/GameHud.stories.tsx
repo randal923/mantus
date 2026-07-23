@@ -25,6 +25,7 @@ const meta = {
       maxHealth: 300,
       mana: 180,
       maxMana: 290,
+      position: { x: 32069, y: 31901, z: 6 },
     } as OwnCharacterState,
     fightState: {
       attackTargetId: null,
@@ -140,6 +141,29 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const MinimapAnchoredBottomRight: Story = {
+  args: {
+    minimapVisible: true,
+    mapName: "otservbr",
+    minimapLayout: {
+      x: 640,
+      y: 360,
+      width: 300,
+      height: 240,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const minimap = canvas.getByRole("region", { name: "Map" });
+    const positioner = minimap.parentElement;
+
+    await expect(positioner).not.toBeNull();
+    await expect(positioner).toHaveClass("absolute", "right-0", "bottom-0");
+    await expect(positioner).not.toHaveAttribute("style");
+    await expect(minimap).toHaveStyle({ width: "328px" });
+  },
+};
+
 export const ChatHotkeyStaysEnabledWithHudPanels: Story = {
   args: {
     spellHotkeysEnabled: false,
@@ -158,6 +182,8 @@ export const ChatHoverIsNotBlocked: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const chat = canvas.getByRole("region", { name: "Game chat" });
+    await expect(chat.parentElement).toHaveClass("left-0", "bottom-0");
+
     const chatBounds = chat.getBoundingClientRect();
     const hitTarget = canvasElement.ownerDocument.elementFromPoint(
       chatBounds.left + 8,

@@ -937,7 +937,6 @@
       "zoomOut": "Zoom out",
       "recenter": "Re-center on you",
       "npcLegend": "NPC",
-      "move": "Drag to move the map",
       "resize": "Drag to resize the map",
       "categories": {
         "food": "Food",

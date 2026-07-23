@@ -153,8 +153,18 @@
   content: '';
 }
 
-.ui-vital-orb {
+.ui-vital-orb-shell {
   flex: none;
+  pointer-events: none;
+}
+
+.ui-vital-orb-dragon {
+  filter:
+    drop-shadow(0 7px 8px rgb(0 0 0 / 72%))
+    drop-shadow(0 2px 2px rgb(0 0 0 / 85%));
+}
+
+.ui-vital-orb {
   overflow: hidden;
   border-radius: 9999px;
   /* Deep glass well behind the liquid: near-black with a faint cold core. */
