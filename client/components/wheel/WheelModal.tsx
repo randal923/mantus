@@ -190,7 +190,7 @@ export function WheelModal({
     <Modal
       title={t("wheel.title")}
       onClose={onClose}
-      size="full"
+      size="extra-wide"
       tabs={{
         label: t("wheel.sections"),
         selected: tab,

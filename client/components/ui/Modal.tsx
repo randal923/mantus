@@ -37,7 +37,7 @@ interface ModalProps {
   pagination?: ModalPagination;
   /** Optional action row rendered below a divider at the bottom of the panel. */
   footer?: ReactNode;
-  size?: "default" | "wide" | "full";
+  size?: "default" | "wide" | "extra-wide";
 }
 
 /** Centered dialog on a dimmed backdrop, styled like the game panels. */
@@ -69,12 +69,8 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className={`ui-panel-frame relative isolate flex min-w-0 w-full flex-col gap-3 overflow-hidden p-3 font-tibia text-ui-text sm:gap-5 sm:p-6 ${
-          size === "full"
-            ? "h-[calc(100dvh-1rem)] sm:h-[calc(100dvh-2rem)]"
-            : "h-[calc(100dvh-1rem)] sm:h-4/5 sm:max-h-[calc(100dvh-2rem)]"
-        } ${
-          size === "full"
+        className={`ui-panel-frame relative isolate flex max-h-[calc(100dvh-1rem)] min-w-0 w-full flex-col gap-3 overflow-hidden p-3 font-tibia text-ui-text sm:max-h-4/5 sm:gap-5 sm:p-6 ${
+          size === "extra-wide"
             ? "max-w-7xl"
             : size === "wide"
               ? "max-w-5xl"

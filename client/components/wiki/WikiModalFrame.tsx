@@ -28,7 +28,7 @@ export function WikiModalFrame({
     <Modal
       title={t("wiki.title")}
       onClose={onClose}
-      size="full"
+      size="extra-wide"
       pagination={pagination}
       tabs={{
         label: t("wiki.sections"),
