@@ -29,7 +29,7 @@ const ICON_COLORS = [
   "text-rose-400",
 ] as const;
 
-/** One VIP list entry with an inline edit form for its private metadata. */
+/** One private friend entry with server-projected presence and character data. */
 export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
   const { t } = useAppTranslation();
   const [editing, setEditing] = useState(false);
@@ -43,60 +43,70 @@ export function VipEntryRow({ entry, onEdit, onRemove }: VipEntryRowProps) {
   };
 
   return (
-    <li className="px-1 text-sm">
-      <div className="flex items-center gap-2">
-        <span
-          aria-label={entry.online ? t("vip.online") : t("vip.offline")}
-          className={`size-2 shrink-0 rounded-full ${
-            entry.online
-              ? "bg-green-500 shadow-[0_0_6px_currentColor] text-green-500"
-              : "bg-ui-stone-light/40"
-          }`}
-        />
+    <li className="rounded-xl border border-ui-gold/10 bg-black/25 p-3 text-sm shadow-sm shadow-black/30">
+      <div className="flex items-center gap-3">
         <span
           aria-hidden
-          className={`font-display text-[10px] ${ICON_COLORS[entry.icon] ?? ICON_COLORS[0]}`}
+          className={`flex size-12 shrink-0 items-center justify-center rounded-full border border-ui-gold/25 bg-ui-panel-deep/80 font-display text-lg shadow-inner shadow-black/50 ${ICON_COLORS[entry.icon] ?? ICON_COLORS[0]}`}
         >
           ◆
         </span>
-        <span
-          className={`min-w-0 flex-1 truncate ${
-            entry.online ? "text-ui-text-bright" : "text-ui-muted"
-          }`}
-          title={entry.description || entry.name}
-        >
-          {entry.name}
-        </span>
-        {entry.notifyLogin && (
-          <span aria-label={t("vip.notifyLogin")} className="text-ui-gold">
-            ♪
-          </span>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span
+              aria-label={entry.online ? t("vip.online") : t("vip.offline")}
+              className={`size-2 shrink-0 rounded-full ${
+                entry.online
+                  ? "bg-emerald-400 shadow-[0_0_7px_currentColor] text-emerald-400"
+                  : "bg-ui-stone-light/35"
+              }`}
+            />
+            <p
+              className={`truncate font-display font-semibold ${
+                entry.online ? "text-ui-text-bright" : "text-ui-muted"
+              }`}
+              title={entry.description || entry.name}
+            >
+              {entry.name}
+            </p>
+            {entry.notifyLogin && (
+              <span aria-label={t("vip.notifyLogin")} className="text-ui-gold">
+                ♪
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 truncate text-xs tracking-wide text-ui-muted">
+            {t("vip.levelVocation", {
+              level: entry.level,
+              vocation: t(`vocations.${entry.vocation}.name`),
+            })}
+          </p>
+        </div>
         <button
           type="button"
           aria-label={t("vip.edit", { name: entry.name })}
           onClick={() => setEditing((open) => !open)}
-          className="text-ui-muted transition-colors hover:text-ui-text-bright"
+          className="flex size-8 items-center justify-center rounded-lg border border-transparent text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-ui-gold/20 hover:bg-white/5 hover:text-ui-text-bright focus-visible:ring-2 focus-visible:ring-ui-gold/60"
         >
-          ✎
+          <span aria-hidden>✎</span>
         </button>
         <button
           type="button"
           aria-label={t("vip.remove", { name: entry.name })}
           onClick={() => onRemove(entry.characterId)}
-          className="text-ui-muted transition-colors hover:text-red-400"
+          className="flex size-8 items-center justify-center rounded-lg border border-transparent text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-red-400/20 hover:bg-red-950/25 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-red-400/60"
         >
-          ✕
+          <span aria-hidden>✕</span>
         </button>
       </div>
       {entry.description && !editing && (
-        <p className="truncate pl-4 text-xs text-ui-muted">
+        <p className="mt-2 truncate pl-15 text-xs text-ui-muted">
           {entry.description}
         </p>
       )}
       {editing && (
         <form
-          className="mt-1 space-y-1.5 rounded-sm border border-ui-stone-light/15 bg-black/25 p-2"
+          className="mt-3 space-y-2 rounded-lg border border-ui-stone-light/15 bg-black/25 p-3"
           onSubmit={(event) => {
             event.preventDefault();
             saveEdits();

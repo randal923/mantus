@@ -126,6 +126,9 @@ and be stored in a web-optimized format.
 - `vital-orb-dragon-charcoal.png` — original transparent forged-dragon ornament used
   around both HUD vital orbs; the mana treatment mirrors the same asset so the
   two dragons face inward as a matched pair.
+- `mantus-coin.png` — original transparent Mantus Coin icon: a forged
+  silver-and-obsidian coin with cyan mantis sigil and restrained gold edge
+  marks, generated for the account wallet and store UI.
 
 ## Wheel of Destiny art (`public/assets/wheel/`)
 

@@ -73,6 +73,8 @@ import { HighscoreService } from "./social/HighscoreService";
 import type { HighscoreStore } from "./social/HighscoreStore";
 import { VipService } from "./social/VipService";
 import type { VipStore } from "./social/VipStore";
+import { MantusStoreService } from "./store/MantusStoreService";
+import type { MantusStoreStore } from "./store/MantusStoreStore";
 import { loadCreatureContent } from "./spawn/loadCreatureContent";
 import { SpawnManager } from "./spawn/SpawnManager";
 import { TickLoop } from "./TickLoop";
@@ -102,6 +104,7 @@ export interface GameServerDeps {
   wheel?: WheelStore;
   gems?: GemStore;
   moderation?: ModerationStore;
+  store?: MantusStoreStore;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -147,6 +150,7 @@ export class GameServer {
   private readonly gemTracker: GemTracker;
   private readonly gemDrops: GemDropHooks;
   private readonly moderation: ModerationService;
+  private readonly store: MantusStoreService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -231,6 +235,11 @@ export class GameServer {
       deps.trade,
     );
     this.moderation = new ModerationService(this.registry, deps.moderation);
+    this.store = new MantusStoreService(
+      this.world,
+      this.registry,
+      deps.store,
+    );
     this.vips = new VipService(this.world, this.registry, deps.vip);
     this.highscores = new HighscoreService(this.world, deps.highscores);
     const creatureContent =
@@ -563,6 +572,7 @@ export class GameServer {
     this.vips.applyResolvedOutcomes(now);
     this.highscores.applyResolvedOutcomes(now);
     this.moderation.applyResolvedOutcomes(now);
+    this.store.applyResolvedOutcomes(now);
     this.gems.applyResolvedOutcomes(now);
     this.language.applyResolvedOutcomes();
     this.uiSettings.applyResolvedOutcomes();
@@ -640,6 +650,7 @@ export class GameServer {
       this.wheel.detach(session);
       this.gems.detach(session);
       this.moderation.detach(session);
+      this.store.detach(session);
       this.items.detachSession(session);
       this.registry.remove(session);
     }
@@ -806,6 +817,10 @@ export class GameServer {
       case "vip-edit":
         this.vips.handle(session, intent, now);
         return;
+      case "store-open":
+      case "store-purchase":
+        this.store.handle(session, intent, now);
+        return;
       case "highscores-get":
         this.highscores.handle(session, intent, now);
         return;
@@ -886,6 +901,8 @@ export class GameServer {
     this.highscores.applyResolvedOutcomes(monotonicNow());
     await this.moderation.stop();
     this.moderation.applyResolvedOutcomes(monotonicNow());
+    await this.store.stop();
+    this.store.applyResolvedOutcomes(monotonicNow());
     await this.pvp.stop();
     await this.bestiaryTracker.stop();
     await this.wheelTracker.stop();

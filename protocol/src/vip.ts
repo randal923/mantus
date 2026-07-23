@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { characterVocationSchema } from "./character";
 import { PROTOCOL_LIMITS } from "./limits";
 
 export const VIP_LIMITS = {
@@ -53,6 +54,8 @@ export const vipEntrySchema = z
   .object({
     characterId: z.string().min(1).max(192),
     name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
+    level: z.number().int().min(1),
+    vocation: characterVocationSchema,
     online: z.boolean(),
     description: z.string().max(VIP_LIMITS.maxDescriptionLength),
     icon: z.number().int().min(0).max(VIP_LIMITS.maxIconId),

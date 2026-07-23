@@ -44,6 +44,7 @@ export class Session {
   itemPersistsPending = 0;
   travelOperationPending = false;
   promotionOperationPending = false;
+  storeOperationPending = false;
   readonly connectedAt = monotonicNow();
   playerId: string | null = null;
   movementDirection: Direction | null = null;

@@ -108,7 +108,11 @@ scope.
 - [ ] Cyclopedia character/map/house/item/monster views, achievements, titles,
   badges, attached effects, and authorized tracker projections.
 - [ ] Reward bosses/chests, quick loot and loot containers, supply stash,
-  daily rewards, reward calendars/streaks, and store currency/content.
+  daily rewards, and reward calendars/streaks.
+- [ ] Complete store parity. The 2026-07-23 first slice has account-scoped
+  Mantus Coins and atomic Premium Time purchases; remaining work is the
+  authorized coin-funding path, transferable balances/history, full
+  server-owned catalog, inbox delivery, non-premium grants, and refunds.
 - [ ] Familiars, hirelings, hireling skills/outfits, summons, and their
   ownership, persistence, dialogue, combat, and return rules.
 - [ ] Hazard levels, concoctions, encounter/boss difficulty selection, resource

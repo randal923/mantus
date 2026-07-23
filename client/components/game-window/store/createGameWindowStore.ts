@@ -60,6 +60,7 @@ export function createGameWindowStore({
     characters: null,
     accountTier: "free",
     premiumDaysRemaining: 0,
+    mantusCoins: 0,
     creationOptions: null,
     ownCharacter: null,
     worldLoading: false,
@@ -101,6 +102,8 @@ export function createGameWindowStore({
     npcTravelPending: false,
     bankSession: null,
     shopSession: null,
+    storeOpen: false,
+    storeSession: null,
     mailboxSession: null,
     lootSession: null,
     gameMenuOpen: false,
@@ -135,6 +138,10 @@ export function createGameWindowStore({
           value,
           state.premiumDaysRemaining,
         ),
+      })),
+    setMantusCoins: (value) =>
+      set((state) => ({
+        mantusCoins: resolveStateAction(value, state.mantusCoins),
       })),
     setCreationOptions: (value) =>
       set((state) => ({
@@ -308,6 +315,14 @@ export function createGameWindowStore({
       set((state) => ({
         shopSession: resolveStateAction(value, state.shopSession),
       })),
+    setStoreOpen: (value) =>
+      set((state) => ({
+        storeOpen: resolveStateAction(value, state.storeOpen),
+      })),
+    setStoreSession: (value) =>
+      set((state) => ({
+        storeSession: resolveStateAction(value, state.storeSession),
+      })),
     setMailboxSession: (value) =>
       set((state) => ({
         mailboxSession: resolveStateAction(value, state.mailboxSession),
@@ -405,6 +420,8 @@ export function createGameWindowStore({
         npcTravelPending: false,
         bankSession: null,
         shopSession: null,
+        storeOpen: false,
+        storeSession: null,
         partyPanelVisible: false,
         guildModalOpen: false,
         guildToast: null,

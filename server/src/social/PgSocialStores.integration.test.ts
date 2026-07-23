@@ -206,7 +206,11 @@ databaseDescribe("Pg social stores integration", () => {
   it("loads only the owner's private list", async () => {
     const alice = await insertCharacter("Alice");
     const bob = await insertCharacter("Bob");
-    await insertCharacter("Carol");
+    await insertCharacter("Carol", {
+      vocation: "Master Sorcerer",
+      level: 52,
+      experience: 2_927_600,
+    });
     await vipStore.addVip({
       characterId: alice,
       targetName: "Carol",
@@ -221,6 +225,11 @@ databaseDescribe("Pg social stores integration", () => {
     const aliceEntries = await vipStore.loadEntries(alice);
     const bobEntries = await vipStore.loadEntries(bob);
     expect(aliceEntries.map((entry) => entry.name)).toEqual(["Carol"]);
+    expect(aliceEntries[0]).toMatchObject({
+      name: "Carol",
+      level: 52,
+      vocation: "Master Sorcerer",
+    });
     expect(bobEntries.map((entry) => entry.name)).toEqual(["Alice"]);
   });
 

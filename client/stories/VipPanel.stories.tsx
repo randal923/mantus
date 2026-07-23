@@ -7,6 +7,8 @@ const ENTRIES: VipEntry[] = [
   {
     characterId: "00000000-0000-4000-8000-000000000001",
     name: "Mirella",
+    level: 84,
+    vocation: "Royal Paladin",
     online: true,
     description: "Hunt partner",
     icon: 4,
@@ -15,6 +17,8 @@ const ENTRIES: VipEntry[] = [
   {
     characterId: "00000000-0000-4000-8000-000000000002",
     name: "Thorgal",
+    level: 61,
+    vocation: "Elite Knight",
     online: true,
     description: "",
     icon: 0,
@@ -23,6 +27,8 @@ const ENTRIES: VipEntry[] = [
   {
     characterId: "00000000-0000-4000-8000-000000000003",
     name: "Elyra",
+    level: 52,
+    vocation: "Master Sorcerer",
     online: false,
     description: "Guild banker",
     icon: 7,
@@ -35,7 +41,10 @@ const meta = {
   component: VipPanel,
   args: {
     entries: ENTRIES,
+    pending: false,
     error: null,
+    hasParty: false,
+    onOpenParty: fn(),
     onAdd: fn(),
     onEdit: fn(),
     onRemove: fn(),

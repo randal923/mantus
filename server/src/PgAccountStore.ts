@@ -13,6 +13,7 @@ interface AccountRow {
   email: string | null;
   banned_until: Date | null;
   premium_until: Date | null;
+  mantus_coins: string;
   language: Language;
   ui_settings: unknown;
   fight_mode: unknown;
@@ -43,7 +44,7 @@ export class PgAccountStore implements AccountStore {
        ON CONFLICT (supabase_user_id)
        DO UPDATE SET email = EXCLUDED.email
        RETURNING id, supabase_user_id, email, banned_until, premium_until,
-         language, ui_settings, fight_mode`,
+         mantus_coins, language, ui_settings, fight_mode`,
       [supabaseUserId, email, language],
     );
     const row = result.rows[0];
@@ -54,6 +55,7 @@ export class PgAccountStore implements AccountStore {
       email: row.email,
       bannedUntil: row.banned_until,
       premiumUntil: row.premium_until,
+      mantusCoins: Number(row.mantus_coins ?? 0),
       language: row.language,
       uiSettings: parseUiSettings(row.ui_settings),
       fightMode: parseFightMode(row.fight_mode),

@@ -9,7 +9,6 @@ import type {
 } from "@tibia/protocol";
 import type { Equipment, InventoryItem } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
 import { CloseButton } from "../ui/CloseButton";
 import { CapacityBar } from "./CapacityBar";
@@ -19,9 +18,6 @@ import { SpriteIcon } from "./SpriteIcon";
 import { InventoryCharacterStats } from "./InventoryCharacterStats";
 import type { ItemDragSource } from "./ItemDragSource";
 
-const GOLD_COIN_SPRITE = 7384;
-const PLATINUM_COIN_SPRITE = 7409;
-
 interface InventoryPanelProps {
   characterName: string;
   character?: OwnCharacterState;
@@ -29,8 +25,6 @@ interface InventoryPanelProps {
   equipment: Equipment;
   /** Backpack contents; display only — all mutations go through server intents. */
   items: InventorySlotEntry[];
-  gold: number;
-  platinum: number;
   capacityUsed: number;
   capacityMax: number;
   /** Backpack size in slots; empty slots render as open squares. */
@@ -64,8 +58,6 @@ export function InventoryPanel({
   characterStatsOpen = false,
   equipment,
   items,
-  gold,
-  platinum,
   capacityUsed,
   capacityMax,
   slotCount = 0,
@@ -88,7 +80,6 @@ export function InventoryPanel({
   onDropInEquipment,
 }: InventoryPanelProps) {
   const { t } = useAppTranslation();
-  const language = useLanguageStore((state) => state.language);
   const [containerPath, setContainerPath] = useState<InventoryItem[]>([]);
   const requestedContainer = containerPath[containerPath.length - 1];
   const viewedContainer = containers.find(
@@ -283,42 +274,20 @@ export function InventoryPanel({
             onOpenBackpack={openEquippedBackpack}
           />
 
-          <div className="flex items-center gap-3 rounded-xl border border-ui-gold/10 bg-black/20 p-2.5">
-            <div className="grid flex-1 grid-cols-2 gap-2 text-sm text-ui-text">
-              <div className="flex items-center gap-1.5 border-r border-ui-gold/10">
-                <SpriteIcon spriteId={GOLD_COIN_SPRITE} scale={1.4} />
-                <span>
-                  <span className="block text-xs tracking-wider text-ui-muted uppercase">
-                    {t("inventory.gold")}
-                  </span>
-                  {gold.toLocaleString(language)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <SpriteIcon spriteId={PLATINUM_COIN_SPRITE} scale={1.4} />
-                <span>
-                  <span className="block text-xs tracking-wider text-ui-muted uppercase">
-                    {t("inventory.platinum")}
-                  </span>
-                  {platinum.toLocaleString(language)}
-                </span>
-              </div>
+          {(onStack || onSort) && (
+            <div className="flex justify-end gap-2">
+              {onStack && (
+                <Button size="sm" onClick={onStack}>
+                  {t("inventory.stack")}
+                </Button>
+              )}
+              {onSort && (
+                <Button size="sm" onClick={onSort}>
+                  {t("inventory.sort")}
+                </Button>
+              )}
             </div>
-            {(onStack || onSort) && (
-              <div className="flex flex-col gap-1.5">
-                {onStack && (
-                  <Button size="sm" onClick={onStack}>
-                    {t("inventory.stack")}
-                  </Button>
-                )}
-                {onSort && (
-                  <Button size="sm" onClick={onSort}>
-                    {t("inventory.sort")}
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
+          )}
 
           <CapacityBar used={capacityUsed} max={capacityMax} />
 

@@ -13,7 +13,12 @@ services; each can be its own PR.
     watcher index, private lists (presence only revealed for names on your
     own list), VipPanel client UI. (Migration `020_social.sql`,
     `server/src/social/`, `protocol/src/vip.ts`.)
-  - Deferred: VIP groups, typing state, finder visibility, exiva
+  - Updated 2026-07-23: the client presents this as the full-height Friends
+    panel with Party access and add-friend dialog; entries now include the
+    server-projected level and vocation. The durable relationship remains the
+    existing one-way private VIP entry, not a reciprocal friend request.
+  - Deferred: reciprocal friend requests/acceptance, VIP groups, typing state,
+    finder visibility, exiva
     restrictions (no exiva spell exists), ignore lists (client-side in
     pinned Tibia; nothing server-side yet).
 - [x] Match pinned highscore categories and filters through bounded read models,

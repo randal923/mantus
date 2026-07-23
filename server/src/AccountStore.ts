@@ -6,6 +6,7 @@ export interface Account {
   email: string | null;
   bannedUntil: Date | null;
   premiumUntil: Date | null;
+  mantusCoins: number;
   language: Language;
   uiSettings: UiSettings;
   fightMode: FightMode;

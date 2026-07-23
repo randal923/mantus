@@ -235,6 +235,49 @@
     "bosstiary": "Bosstiário",
     "wheel": "Roda"
   },
+  "currency": {
+    "wallet": "Carteira de moedas",
+    "gold": "Valor em ouro carregado",
+    "mantusCoins": "Mantus Coins"
+  },
+  "store": {
+    "title": "Loja Mantus",
+    "open": "Abrir Loja Mantus",
+    "categories": "Categorias da loja",
+    "category": {
+      "premium-time": "Tempo Premium",
+      "premium-timeHint": "Benefícios para toda a conta"
+    },
+    "yourBalance": "Suas Mantus Coins",
+    "balanceHint": "Mantus Coins pertencem à conta e são separadas do ouro carregado pelo personagem.",
+    "hero": {
+      "eyebrow": "Forje sua lenda",
+      "title": "Tempo Premium",
+      "description": "Desbloqueie a experiência completa de Mantus para todos os personagens da sua conta.",
+      "action": "Ver oferta em destaque"
+    },
+    "currentPremium": "{{count}} dias premium restantes",
+    "loading": "Abrindo a loja…",
+    "premiumOffers": "Ofertas premium",
+    "premiumOffersHint": "O tempo premium é somado ao período atual.",
+    "popular": "Popular",
+    "days": "{{count}} dias",
+    "premiumAccount": "Conta premium",
+    "select": "Selecionar",
+    "purchaseComplete": "Compra concluída. Seu tempo premium está ativo.",
+    "confirmTitle": "Adicionar {{count}} dias de Tempo Premium?",
+    "confirmDescription": "Esta compra custa {{price}} Mantus Coins.",
+    "confirm": "Confirmar compra",
+    "purchasing": "Comprando…",
+    "errors": {
+      "insufficient-coins": "Você não tem Mantus Coins suficientes.",
+      "offer-not-found": "Esta oferta não está mais disponível.",
+      "premium-limit": "Esta compra ultrapassaria o limite de tempo premium.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente.",
+      "unavailable": "A Loja Mantus está indisponível no momento.",
+      "failed": "Não foi possível concluir a compra. Nenhuma moeda foi cobrada."
+    }
+  },
   "connection": {
     "connecting": "Conectando",
     "connected": "Conectado",
@@ -1097,11 +1140,18 @@
     }
   },
   "vip": {
-    "title": "Lista VIP",
-    "entriesLabel": "Entradas VIP",
-    "empty": "Sua lista VIP está vazia. Adicione um personagem abaixo.",
+    "title": "Amigos",
+    "friends": "Amigos",
+    "entriesLabel": "Amigos",
+    "empty": "Sua lista de amigos está vazia. Adicione um personagem para acompanhá-lo.",
+    "addFriend": "Adicionar Amigo",
+    "playerName": "Nome do jogador",
     "addPlaceholder": "Nome do personagem…",
     "add": "Adicionar",
+    "party": "Party",
+    "createParty": "Criar Party",
+    "viewParty": "Ver Party",
+    "levelVocation": "Nível {{level}} • {{vocation}}",
     "online": "Online",
     "offline": "Offline",
     "edit": "Editar {{name}}",

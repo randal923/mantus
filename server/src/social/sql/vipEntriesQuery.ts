@@ -2,6 +2,8 @@ export const vipEntriesQuery = `
   SELECT
     v.vip_character_id,
     c.display_name,
+    c.level,
+    c.vocation,
     v.description,
     v.icon,
     v.notify_login

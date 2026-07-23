@@ -43,6 +43,7 @@ export class InMemoryAccountStore implements AccountStore {
       email,
       bannedUntil: null,
       premiumUntil: null,
+      mantusCoins: 0,
       language,
       uiSettings: {},
       fightMode: { ...DEFAULT_FIGHT_MODE },

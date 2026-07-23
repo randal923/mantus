@@ -5,6 +5,7 @@ import { FightControls } from "../combat/FightControls";
 import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { NavigationIconButton } from "./NavigationIconButton";
+import { CurrencyCounters } from "./CurrencyCounters";
 
 type NavigationPanel =
   | "character"
@@ -33,6 +34,9 @@ interface TopNavigationBarProps {
   fightMode: FightMode | null;
   battleListVisible: boolean;
   minimapVisible: boolean;
+  gold: number;
+  mantusCoins: number;
+  storeOpen: boolean;
   activePanel?: NavigationPanel;
   onCharacter?: () => void;
   onInventory?: () => void;
@@ -45,6 +49,7 @@ interface TopNavigationBarProps {
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
   onMinimap: () => void;
+  onStore: () => void;
   onMarket?: () => void;
   onSettings?: () => void;
 }
@@ -58,6 +63,9 @@ export function TopNavigationBar({
   fightMode,
   battleListVisible,
   minimapVisible,
+  gold,
+  mantusCoins,
+  storeOpen,
   activePanel,
   onCharacter,
   onInventory,
@@ -70,6 +78,7 @@ export function TopNavigationBar({
   onFightModeChange,
   onBattleList,
   onMinimap,
+  onStore,
   onMarket,
   onSettings,
 }: TopNavigationBarProps) {
@@ -134,6 +143,13 @@ export function TopNavigationBar({
         />
         {connectionLabel}
       </div>
+
+      <CurrencyCounters
+        gold={gold}
+        mantusCoins={mantusCoins}
+        storeOpen={storeOpen}
+        onStore={onStore}
+      />
 
       <nav
         aria-label={t("navigation.gamePanels")}

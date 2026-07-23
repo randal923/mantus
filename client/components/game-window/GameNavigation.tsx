@@ -1,3 +1,4 @@
+import { countMoneyWorth } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { TopNavigationBar } from "../navigation/TopNavigationBar";
 import { useGameWindowStore } from "./store/useGameWindowStore";
@@ -19,6 +20,11 @@ export function GameNavigation() {
   const marketOpen = useGameWindowStore(
     (state) => Boolean(state.sessions?.market),
   );
+  const inventory = useGameWindowStore(
+    (state) => state.sessions?.inventory ?? null,
+  );
+  const mantusCoins = useGameWindowStore((state) => state.mantusCoins);
+  const storeOpen = useGameWindowStore((state) => state.storeOpen);
   const guildModalOpen = useGameWindowStore((state) => state.guildModalOpen);
   const houseModalOpen = useGameWindowStore((state) => state.houseModalOpen);
   const highscoresOpen = useGameWindowStore((state) => state.highscoresOpen);
@@ -64,6 +70,8 @@ export function GameNavigation() {
   const setMinimapVisible = useGameWindowStore(
     (state) => state.setMinimapVisible,
   );
+  const setStoreOpen = useGameWindowStore((state) => state.setStoreOpen);
+  const setStoreSession = useGameWindowStore((state) => state.setStoreSession);
   const closeMarket = useGameWindowStore((state) => state.closeMarket);
   if (!character || !sessionActions) return null;
   const activePanel = marketOpen
@@ -95,6 +103,9 @@ export function GameNavigation() {
         fightMode={fightMode}
         battleListVisible={battleListVisible}
         minimapVisible={minimapVisible}
+        gold={inventory ? countMoneyWorth(inventory) : 0}
+        mantusCoins={mantusCoins}
+        storeOpen={storeOpen}
         activePanel={activePanel}
         onCharacter={() => {
           setGameMenuOpen(false);
@@ -185,6 +196,29 @@ export function GameNavigation() {
         }}
         onBattleList={() => setBattleListVisible((visible) => !visible)}
         onMinimap={() => setMinimapVisible((visible) => !visible)}
+        onStore={() => {
+          if (storeOpen) {
+            setStoreOpen(false);
+            return;
+          }
+          setGameMenuOpen(false);
+          setStoreSession((current) =>
+            current
+              ? { ...current, error: null, purchasedOfferId: null }
+              : current,
+          );
+          setStoreOpen(true);
+          const sent = runtime.clientRef.current?.openStore() ?? false;
+          if (!sent) {
+            setStoreSession({
+              categories: [],
+              pending: false,
+              pendingOfferId: null,
+              purchasedOfferId: null,
+              error: "unavailable",
+            });
+          }
+        }}
         onFightModeChange={(mode) =>
           runtime.clientRef.current?.setFightMode(mode)
         }

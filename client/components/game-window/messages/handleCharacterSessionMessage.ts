@@ -41,6 +41,7 @@ export function handleCharacterSessionMessage(
   state.setWorldLoadProgress(null);
   state.setAccountTier(message.accountTier);
   state.setPremiumDaysRemaining(message.premiumDaysRemaining);
+  state.setMantusCoins(message.mantusCoins);
   runtime.confirmedLevelRef.current = {
     playerId: message.playerId,
     level: message.character.level,
@@ -69,6 +70,8 @@ export function handleCharacterSessionMessage(
   state.setNpcDialogue(null);
   state.setBankSession(null);
   state.setShopSession(null);
+  state.setStoreOpen(false);
+  state.setStoreSession(null);
   actions.depot.reset();
   state.closeMarket();
   actions.trade.reset();

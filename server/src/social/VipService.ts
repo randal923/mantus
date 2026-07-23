@@ -222,6 +222,8 @@ export class VipService {
     ).map((entry) => ({
       characterId: entry.vipCharacterId,
       name: entry.name,
+      level: entry.level,
+      vocation: entry.vocation,
       online: this.isOnline(entry.vipCharacterId),
       description: entry.description,
       icon: entry.icon,

@@ -235,6 +235,49 @@
     "bosstiary": "Bosstiary",
     "wheel": "Wheel"
   },
+  "currency": {
+    "wallet": "Currency wallet",
+    "gold": "Carried gold value",
+    "mantusCoins": "Mantus Coins"
+  },
+  "store": {
+    "title": "Mantus Store",
+    "open": "Open Mantus Store",
+    "categories": "Store categories",
+    "category": {
+      "premium-time": "Premium Time",
+      "premium-timeHint": "Account-wide benefits"
+    },
+    "yourBalance": "Your Mantus Coins",
+    "balanceHint": "Mantus Coins are account-wide and separate from gold carried by your character.",
+    "hero": {
+      "eyebrow": "Forge your legend",
+      "title": "Premium Time",
+      "description": "Unlock the complete Mantus experience across every character on your account.",
+      "action": "View featured offer"
+    },
+    "currentPremium": "{{count}} premium days remaining",
+    "loading": "Opening the store…",
+    "premiumOffers": "Premium offers",
+    "premiumOffersHint": "Premium time is added to your existing entitlement.",
+    "popular": "Popular",
+    "days": "{{count}} days",
+    "premiumAccount": "Premium account",
+    "select": "Select",
+    "purchaseComplete": "Purchase complete. Your premium time is active.",
+    "confirmTitle": "Add {{count}} days of Premium Time?",
+    "confirmDescription": "This purchase costs {{price}} Mantus Coins.",
+    "confirm": "Confirm purchase",
+    "purchasing": "Purchasing…",
+    "errors": {
+      "insufficient-coins": "You do not have enough Mantus Coins.",
+      "offer-not-found": "That store offer is no longer available.",
+      "premium-limit": "This purchase would exceed the premium-time limit.",
+      "rate-limited": "Please wait a moment before trying again.",
+      "unavailable": "The Mantus Store is unavailable right now.",
+      "failed": "The purchase could not be completed. No coins were charged."
+    }
+  },
   "connection": {
     "connecting": "Connecting",
     "connected": "Connected",
@@ -1097,11 +1140,18 @@
     }
   },
   "vip": {
-    "title": "VIP List",
-    "entriesLabel": "VIP entries",
-    "empty": "Your VIP list is empty. Add a character below.",
+    "title": "Friends",
+    "friends": "Friends",
+    "entriesLabel": "Friends",
+    "empty": "Your friends list is empty. Add a character to keep track of them.",
+    "addFriend": "Add Friend",
+    "playerName": "Player name",
     "addPlaceholder": "Character name…",
     "add": "Add",
+    "party": "Party",
+    "createParty": "Create Party",
+    "viewParty": "View Party",
+    "levelVocation": "Level {{level}} • {{vocation}}",
     "online": "Online",
     "offline": "Offline",
     "edit": "Edit {{name}}",

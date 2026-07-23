@@ -1,9 +1,14 @@
-import type { VipActionFailedReason } from "@tibia/protocol";
+import type {
+  CharacterVocation,
+  VipActionFailedReason,
+} from "@tibia/protocol";
 
 /** One durable VIP row joined with the listed character's display name. */
 export interface VipEntryRecord {
   readonly vipCharacterId: string;
   readonly name: string;
+  readonly level: number;
+  readonly vocation: CharacterVocation;
   readonly description: string;
   readonly icon: number;
   readonly notifyLogin: boolean;

@@ -12,6 +12,7 @@ describe("PgAccountStore fight modes", () => {
           email: null,
           banned_until: null,
           premium_until: null,
+          mantus_coins: "125",
           language: "en",
           ui_settings: { chatPinnedOpen: true },
           fight_mode: { attack: "defensive", chase: true, secure: false },
@@ -27,6 +28,7 @@ describe("PgAccountStore fight modes", () => {
     );
 
     expect(account.uiSettings).toEqual({ chatPinnedOpen: true });
+    expect(account.mantusCoins).toBe(125);
     expect(account.fightMode).toEqual({
       attack: "defensive",
       chase: true,
@@ -43,6 +45,7 @@ describe("PgAccountStore fight modes", () => {
           email: null,
           banned_until: null,
           premium_until: null,
+          mantus_coins: "0",
           language: "en",
           ui_settings: {},
           fight_mode: { attack: "offensive", chase: "yes", secure: true },

@@ -16,9 +16,6 @@ export function GameCommunityOverlays() {
   const mapName = useGameWindowStore((state) => state.mapName);
   const guildModalOpen = useGameWindowStore((state) => state.guildModalOpen);
   const houseModalOpen = useGameWindowStore((state) => state.houseModalOpen);
-  const partyPanelVisible = useGameWindowStore(
-    (state) => state.partyPanelVisible,
-  );
   const vipPanelVisible = useGameWindowStore(
     (state) => state.vipPanelVisible,
   );
@@ -43,6 +40,9 @@ export function GameCommunityOverlays() {
   );
   const setVipPanelVisible = useGameWindowStore(
     (state) => state.setVipPanelVisible,
+  );
+  const setPartyPanelVisible = useGameWindowStore(
+    (state) => state.setPartyPanelVisible,
   );
   if (
     !ownPlayerId ||
@@ -176,13 +176,12 @@ export function GameCommunityOverlays() {
         </div>
       )}
       {vipPanelVisible && (
-        <div
-          className={`absolute top-40 z-30 ${
-            partyPanelVisible ? "left-72" : "left-4"
-          }`}
-        >
+        <div className="absolute top-24 bottom-4 left-4 z-30">
           <VipPanel
             entries={vipSession.entries}
+            pending={vipSession.pending}
+            hasParty={Boolean(partySession.party)}
+            onOpenParty={() => setPartyPanelVisible(true)}
             error={
               vipSession.error
                 ? t(`vip.errors.${vipSession.error}`, {

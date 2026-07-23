@@ -28,6 +28,7 @@ import type { MapContextMenuState } from "./MapContextMenuState";
 import type { NpcDialogueState } from "./NpcDialogueState";
 import type { ReportSessionState } from "./ReportSessionState";
 import type { ShopSessionState } from "./ShopSessionState";
+import type { StoreSessionState } from "./StoreSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
 
 export interface GameWindowStoreActions {
@@ -41,6 +42,7 @@ export interface GameWindowStoreActions {
   setCharacters: (value: SetStateAction<GameWindowState["characters"]>) => void;
   setAccountTier: (value: SetStateAction<AccountTier>) => void;
   setPremiumDaysRemaining: (value: SetStateAction<number>) => void;
+  setMantusCoins: (value: SetStateAction<number>) => void;
   setCreationOptions: (
     value: SetStateAction<CharacterCreationOptions | null>,
   ) => void;
@@ -90,6 +92,8 @@ export interface GameWindowStoreActions {
   setNpcTravelPending: (value: SetStateAction<boolean>) => void;
   setBankSession: (value: SetStateAction<BankSessionState | null>) => void;
   setShopSession: (value: SetStateAction<ShopSessionState | null>) => void;
+  setStoreOpen: (value: SetStateAction<boolean>) => void;
+  setStoreSession: (value: SetStateAction<StoreSessionState | null>) => void;
   setMailboxSession: (value: SetStateAction<MailboxSessionState | null>) => void;
   setLootSession: (value: SetStateAction<LootSessionState | null>) => void;
   setGameMenuOpen: (value: SetStateAction<boolean>) => void;

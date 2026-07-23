@@ -33,7 +33,7 @@ export class Player extends Creature<Character["outfit"]> {
   readonly lastLoginAt: Date | null;
   readonly version: number;
   readonly progression: CharacterProgression;
-  private readonly premiumUntil: number | null;
+  private premiumUntil: number | null;
   private readonly storageValues: Record<string, number>;
   private addAttackSkillPoint = false;
   private bloodHitCount = 0;
@@ -147,6 +147,10 @@ export class Player extends Creature<Character["outfit"]> {
 
   isPremiumAt(now: number): boolean {
     return this.accountTierAt(now) === "premium";
+  }
+
+  setPremiumUntil(premiumUntil: Date): void {
+    this.premiumUntil = premiumUntil.getTime();
   }
 
   override toState(): CreatureState {

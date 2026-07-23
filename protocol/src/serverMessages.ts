@@ -109,6 +109,11 @@ import {
   shopTransactedMessageSchema,
 } from "./shop";
 import {
+  storeActionFailedMessageSchema,
+  storePurchaseCompletedMessageSchema,
+  storeStateMessageSchema,
+} from "./store";
+import {
   tradeActionFailedMessageSchema,
   tradeClosedMessageSchema,
   tradeStateMessageSchema,
@@ -176,6 +181,7 @@ export const welcomeMessageSchema = z.object({
   playerId: z.string(),
   accountTier: accountTierSchema,
   premiumDaysRemaining: premiumDaysRemainingSchema,
+  mantusCoins: z.number().int().min(0).max(1_000_000_000_000),
   character: ownCharacterStateSchema,
   map: mapInfoSchema,
   creatures: z.array(creatureStateSchema),
@@ -452,6 +458,9 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   shopOpenedMessageSchema,
   shopTransactedMessageSchema,
   shopActionFailedMessageSchema,
+  storeStateMessageSchema,
+  storePurchaseCompletedMessageSchema,
+  storeActionFailedMessageSchema,
   depotStateMessageSchema,
   depotActionFailedMessageSchema,
   mailboxOpenedMessageSchema,

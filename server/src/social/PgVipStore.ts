@@ -1,5 +1,5 @@
 import type { Pool } from "pg";
-import { VIP_LIMITS } from "@tibia/protocol";
+import { VIP_LIMITS, type CharacterVocation } from "@tibia/protocol";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
 import { isSerializationFailure } from "../guild/isSerializationFailure";
@@ -33,6 +33,8 @@ export class PgVipStore implements VipStore {
     const result = await this.pool.query<{
       vip_character_id: string;
       display_name: string;
+      level: number;
+      vocation: CharacterVocation;
       description: string;
       icon: number;
       notify_login: boolean;
@@ -40,6 +42,8 @@ export class PgVipStore implements VipStore {
     return result.rows.map((row) => ({
       vipCharacterId: row.vip_character_id,
       name: row.display_name,
+      level: row.level,
+      vocation: row.vocation,
       description: row.description,
       icon: row.icon,
       notifyLogin: row.notify_login,
@@ -57,6 +61,8 @@ export class PgVipStore implements VipStore {
           const target = await client.query<{
             id: string;
             display_name: string;
+            level: number;
+            vocation: CharacterVocation;
           }>(socialCharacterByNameQuery, [input.targetName]);
           const targetRow = target.rows[0];
           if (!targetRow) throw this.rollback("not-found");
@@ -79,6 +85,8 @@ export class PgVipStore implements VipStore {
             entry: {
               vipCharacterId: targetRow.id,
               name: targetRow.display_name,
+              level: targetRow.level,
+              vocation: targetRow.vocation,
               description: "",
               icon: 0,
               notifyLogin: false,

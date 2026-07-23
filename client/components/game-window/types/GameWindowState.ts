@@ -29,6 +29,7 @@ import type { NpcDialogueState } from "./NpcDialogueState";
 import type { ReportSessionState } from "./ReportSessionState";
 import type { ScreenMessageState } from "./ScreenMessageState";
 import type { ShopSessionState } from "./ShopSessionState";
+import type { StoreSessionState } from "./StoreSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
 
 export interface GameWindowState {
@@ -42,6 +43,7 @@ export interface GameWindowState {
   characters: ReadonlyArray<CharacterSummary> | null;
   accountTier: AccountTier;
   premiumDaysRemaining: number;
+  mantusCoins: number;
   creationOptions: CharacterCreationOptions | null;
   ownCharacter: OwnCharacterState | null;
   worldLoading: boolean;
@@ -83,6 +85,8 @@ export interface GameWindowState {
   npcTravelPending: boolean;
   bankSession: BankSessionState | null;
   shopSession: ShopSessionState | null;
+  storeOpen: boolean;
+  storeSession: StoreSessionState | null;
   mailboxSession: MailboxSessionState | null;
   lootSession: LootSessionState | null;
   gameMenuOpen: boolean;

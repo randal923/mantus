@@ -70,6 +70,7 @@ function makeHarness(): Harness {
             accountTier === "premium"
               ? new Date("2100-01-01T00:00:00.000Z")
               : null,
+          mantusCoins: 0,
           language: "en",
           uiSettings: {},
         },
@@ -164,6 +165,8 @@ describe("VipService", () => {
       {
         characterId: B,
         name: "Bob",
+        level: 1,
+        vocation: "Knight",
         online: true,
         description: "",
         icon: 0,

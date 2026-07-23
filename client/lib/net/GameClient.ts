@@ -564,6 +564,14 @@ export class GameClient {
     return this.send({ type: "vip-add", name });
   }
 
+  openStore(): boolean {
+    return this.send({ type: "store-open" });
+  }
+
+  purchaseStoreOffer(offerId: string): boolean {
+    return this.send({ type: "store-purchase", offerId });
+  }
+
   removeVip(targetCharacterId: string): boolean {
     return this.send({ type: "vip-remove", targetCharacterId });
   }

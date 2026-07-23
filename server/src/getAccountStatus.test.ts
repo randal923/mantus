@@ -8,6 +8,7 @@ const account = (premiumUntil: Date | null): Account => ({
   email: null,
   bannedUntil: null,
   premiumUntil,
+  mantusCoins: 0,
   language: "en",
   uiSettings: {},
   fightMode: { attack: "offensive", chase: false, secure: true },

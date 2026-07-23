@@ -24,6 +24,7 @@ export * from "./party";
 export * from "./position";
 export * from "./progression";
 export * from "./shop";
+export * from "./store";
 export * from "./trade";
 export * from "./uiSettings";
 export * from "./viewRange";

@@ -12,6 +12,50 @@ export function handleCommerceMessage(
 
   const { runtime } = state;
 
+  if (message.type === "store-state") {
+    state.setMantusCoins(message.balance);
+    state.setStoreSession({
+      categories: message.categories,
+      pending: false,
+      pendingOfferId: null,
+      purchasedOfferId: null,
+      error: null,
+    });
+    return true;
+  }
+
+  if (message.type === "store-purchase-completed") {
+    state.setMantusCoins(message.balance);
+    state.setAccountTier(message.accountTier);
+    state.setPremiumDaysRemaining(message.premiumDaysRemaining);
+    state.setStoreSession((current) =>
+      current
+        ? {
+            ...current,
+            pending: false,
+            pendingOfferId: null,
+            purchasedOfferId: message.offerId,
+            error: null,
+          }
+        : current,
+    );
+    return true;
+  }
+
+  if (message.type === "store-action-failed") {
+    state.setStoreSession((current) =>
+      current
+        ? {
+            ...current,
+            pending: false,
+            pendingOfferId: null,
+            error: message.reason,
+          }
+        : current,
+    );
+    return true;
+  }
+
   if (message.type === "bank-opened") {
     state.setShopSession(null);
     actions.depot.reset();

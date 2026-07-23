@@ -12,6 +12,7 @@ import { AuctionHouseModal } from "../auction/AuctionHouseModal";
 import { BankPanel } from "../bank/BankPanel";
 import { DepotModal } from "../depot/DepotModal";
 import { ShopPanel } from "../shop/ShopPanel";
+import { StoreModal } from "../store/StoreModal";
 import { useGameWindowStore } from "./store/useGameWindowStore";
 import { useGameWindowStoreApi } from "./store/useGameWindowStoreApi";
 
@@ -21,6 +22,12 @@ export function GameCommerceOverlays() {
   const runtime = store.getState().runtime;
   const bankSession = useGameWindowStore((state) => state.bankSession);
   const shopSession = useGameWindowStore((state) => state.shopSession);
+  const storeOpen = useGameWindowStore((state) => state.storeOpen);
+  const storeSession = useGameWindowStore((state) => state.storeSession);
+  const mantusCoins = useGameWindowStore((state) => state.mantusCoins);
+  const premiumDaysRemaining = useGameWindowStore(
+    (state) => state.premiumDaysRemaining,
+  );
   const inventory = useGameWindowStore(
     (state) => state.sessions?.inventory ?? null,
   );
@@ -36,6 +43,8 @@ export function GameCommerceOverlays() {
   );
   const setBankSession = useGameWindowStore((state) => state.setBankSession);
   const setShopSession = useGameWindowStore((state) => state.setShopSession);
+  const setStoreOpen = useGameWindowStore((state) => state.setStoreOpen);
+  const setStoreSession = useGameWindowStore((state) => state.setStoreSession);
   const setMarketSelectedItem = useGameWindowStore(
     (state) => state.setMarketSelectedItem,
   );
@@ -45,6 +54,29 @@ export function GameCommerceOverlays() {
 
   return (
     <>
+      {storeOpen && (
+        <StoreModal
+          balance={mantusCoins}
+          premiumDaysRemaining={premiumDaysRemaining}
+          session={storeSession}
+          onClose={() => setStoreOpen(false)}
+          onPurchase={(offerId) => {
+            const sent =
+              runtime.clientRef.current?.purchaseStoreOffer(offerId) ?? false;
+            setStoreSession((current) =>
+              current
+                ? {
+                    ...current,
+                    pending: sent,
+                    pendingOfferId: sent ? offerId : null,
+                    purchasedOfferId: null,
+                    error: sent ? null : "failed",
+                  }
+                : current,
+            );
+          }}
+        />
+      )}
       {bankSession && inventory && (
         <BankPanel
           npcName={bankSession.npcName}

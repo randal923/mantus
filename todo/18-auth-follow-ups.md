@@ -25,12 +25,13 @@ online player does nothing until they reconnect.
 the timestamp, while runtime checks use the server clock so an online premium
 account loses regeneration and gated actions immediately at expiry.
 
-- [ ] Add an authorized, audited purchase/grant/renewal path that updates
-  `premium_until`; do not make hand-edited production rows the normal account
-  workflow.
-- [ ] Propagate renewals to an online session. Expiry is live today, but added
-  time is not observed until the account reconnects because the session holds
-  the timestamp loaded at authentication.
+- [x] Add an authorized, audited purchase/renewal path that updates
+  `premium_until`. Mantus Store purchases now debit the account wallet and
+  renew the entitlement with the ledger and audit entry in one transaction.
+- [x] Propagate store renewals to the online account session and live Player.
+- [ ] Add the production payment/admin grant path that funds Mantus Coins.
+  Wallet grants must be authorized and recorded in the coin ledger; production
+  balances must not be hand-edited.
 
 ## Accepted residual auth risks
 

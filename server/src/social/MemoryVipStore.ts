@@ -1,3 +1,4 @@
+import type { CharacterVocation } from "@tibia/protocol";
 import type {
   AddVipResult,
   VipEntryRecord,
@@ -17,14 +18,26 @@ interface MemoryVipRow {
  * tests exercise the same failure paths.
  */
 export class MemoryVipStore implements VipStore {
-  private readonly characterNames = new Map<string, string>();
+  private readonly characters = new Map<
+    string,
+    {
+      readonly name: string;
+      readonly level: number;
+      readonly vocation: CharacterVocation;
+    }
+  >();
   private readonly listsByCharacter = new Map<
     string,
     Map<string, MemoryVipRow>
   >();
 
-  registerCharacter(characterId: string, name: string): void {
-    this.characterNames.set(characterId, name);
+  registerCharacter(
+    characterId: string,
+    name: string,
+    level = 1,
+    vocation: CharacterVocation = "Knight",
+  ): void {
+    this.characters.set(characterId, { name, level, vocation });
   }
 
   async loadEntries(
@@ -34,7 +47,9 @@ export class MemoryVipStore implements VipStore {
     if (!list) return [];
     return [...list.entries()].map(([vipCharacterId, row]) => ({
       vipCharacterId,
-      name: this.characterNames.get(vipCharacterId) ?? "?",
+      name: this.characters.get(vipCharacterId)?.name ?? "?",
+      level: this.characters.get(vipCharacterId)?.level ?? 1,
+      vocation: this.characters.get(vipCharacterId)?.vocation ?? "Knight",
       description: row.description,
       icon: row.icon,
       notifyLogin: row.notifyLogin,
@@ -47,11 +62,11 @@ export class MemoryVipStore implements VipStore {
     maxEntries: number;
   }): Promise<AddVipResult> {
     const wanted = input.targetName.trim().toLowerCase();
-    const target = [...this.characterNames.entries()].find(
-      ([, name]) => name.toLowerCase() === wanted,
+    const target = [...this.characters.entries()].find(
+      ([, character]) => character.name.toLowerCase() === wanted,
     );
     if (!target) return { status: "failed", reason: "not-found" };
-    const [vipCharacterId, name] = target;
+    const [vipCharacterId, character] = target;
     if (vipCharacterId === input.characterId) {
       return { status: "failed", reason: "cannot-add-self" };
     }
@@ -73,7 +88,7 @@ export class MemoryVipStore implements VipStore {
     this.listsByCharacter.set(input.characterId, list);
     return {
       status: "added",
-      entry: { vipCharacterId, name, ...row },
+      entry: { vipCharacterId, ...character, ...row },
     };
   }
 

@@ -22,4 +22,11 @@ banking, NPC catalogs, depot/inbox/mail/stash, player trade, market/escrow,
 store currency/content, and every associated history or delivery rule must
 match Canary behavior without adopting its schema or trusting its client.
 
+First store slice shipped 2026-07-23: account-scoped Mantus Coins, a
+server-owned Premium Time catalog, atomic coin debit + entitlement renewal,
+coin ledger and economy audit records, online-session propagation, and the
+Mantus Store client. Remaining parity includes an authorized real-money/admin
+coin grant path, transferable coin balances and history UI, the full catalog,
+inbox delivery, purchase grants beyond Premium Time, and refunds.
+
 [Back to overview](README.md)

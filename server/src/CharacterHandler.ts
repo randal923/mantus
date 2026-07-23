@@ -310,6 +310,7 @@ export class CharacterHandler {
     session.send({
       type: "welcome",
       playerId: player.id,
+      mantusCoins: account.mantusCoins,
       ...accountStatus,
       character: this.service.ownState(player, now),
       map: { name: this.world.mapName },
