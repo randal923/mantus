@@ -19,6 +19,7 @@ const MIGRATION_LOCK_KEY = 7_281_003;
 const BACKPACK_TYPE = 2854;
 const GOLD_TYPE = 3031;
 const PLATINUM_TYPE = 3035;
+const CRYSTAL_TYPE = 3043;
 const HELMET_TYPE = 3355;
 const BOOTS_TYPE = 3552;
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -1318,6 +1319,79 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
           details: expect.objectContaining({
             itemTypeId: GOLD_TYPE,
             count: 90,
+            reason: "npc-travel-change",
+          }),
+        }),
+      ]),
+    );
+  });
+
+  it("pays an NPC fare from a crystal coin and returns audited change", async () => {
+    await insertItem(CRYSTAL_TYPE, 1, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const character = await pool.query<{ version: number }>(
+      "SELECT version FROM characters WHERE id = $1",
+      [characterId],
+    );
+    const expectedVersion = character.rows[0]?.version;
+    if (!expectedVersion) throw new Error("character version is missing");
+
+    const result = await travelStore.commit(
+      characterId,
+      expectedVersion,
+      { x: 120, y: 220, z: 6 },
+      110,
+      "captain-bluebear",
+      "carlin",
+    );
+
+    expect(result).toMatchObject({
+      status: "committed",
+      mutation: {
+        after: expect.arrayContaining([
+          expect.objectContaining({ typeId: GOLD_TYPE, count: 90 }),
+          expect.objectContaining({ typeId: PLATINUM_TYPE, count: 98 }),
+        ]),
+      },
+    });
+    const currency = await pool.query<{
+      item_type_id: number;
+      count: number;
+    }>(
+      `SELECT item_type_id, count FROM items
+       WHERE item_type_id IN ($1, $2, $3)
+       ORDER BY item_type_id`,
+      [GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
+    );
+    expect(currency.rows).toEqual([
+      { item_type_id: GOLD_TYPE, count: 90 },
+      { item_type_id: PLATINUM_TYPE, count: 98 },
+    ]);
+    expect(await auditRows("item-destroyed")).toMatchObject([
+      {
+        details: {
+          itemTypeId: CRYSTAL_TYPE,
+          count: 1,
+          reason: "npc-travel",
+        },
+      },
+    ]);
+    expect(await auditRows("item-created")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          details: expect.objectContaining({
+            itemTypeId: GOLD_TYPE,
+            count: 90,
+            reason: "npc-travel-change",
+          }),
+        }),
+        expect.objectContaining({
+          details: expect.objectContaining({
+            itemTypeId: PLATINUM_TYPE,
+            count: 98,
             reason: "npc-travel-change",
           }),
         }),

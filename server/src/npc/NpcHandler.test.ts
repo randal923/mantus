@@ -58,6 +58,50 @@ const npcType: NpcType = {
   dialogue,
 };
 
+const travelDialogue: DialogueGraph = {
+  ...dialogue,
+  rootNodeId: "root",
+  nodes: [
+    {
+      id: "root",
+      matches: [],
+      responses: [],
+      children: ["boat-offer-carlin"],
+      choices: [{ nodeId: "boat-offer-carlin", label: "Carlin" }],
+    },
+    {
+      id: "boat-offer-carlin",
+      matches: [["carlin"]],
+      responses: ["Do you seek a passage to Carlin for |TRAVELCOST|?"],
+      children: ["boat-confirm-carlin"],
+      choices: [{ nodeId: "boat-confirm-carlin", label: "Yes" }],
+      offerId: "carlin",
+    },
+    {
+      id: "boat-confirm-carlin",
+      matches: [["yes"]],
+      responses: ["Set the sails!"],
+      children: [],
+      choices: [],
+      action: { kind: "travel", offerId: "carlin" },
+    },
+  ],
+  travelOffers: [
+    {
+      id: "carlin",
+      cost: 110,
+      destination: { x: 20, y: 20, z: 7 },
+    },
+  ],
+};
+
+const captainType: NpcType = {
+  ...npcType,
+  id: "captain",
+  name: "Captain",
+  dialogue: travelDialogue,
+};
+
 interface TestPeer {
   player: Player;
   session: Session;
@@ -119,10 +163,14 @@ const makeHarness = () => {
     return { player, session, messages };
   };
 
-  const addNpc = (id: string, position: Position): Npc => {
+  const addNpc = (
+    id: string,
+    position: Position,
+    type: NpcType = npcType,
+  ): Npc => {
     const npc = new Npc({
       id,
-      type: npcType,
+      type,
       position,
       direction: "south",
       home: position,
@@ -255,6 +303,46 @@ describe("NpcHandler", () => {
       1_300,
     );
     expect(speaker.messages).toHaveLength(messageCount);
+  });
+
+  it("sends a server-owned prefetch hint and marks travel confirmations", () => {
+    const { handler, join, addNpc } = makeHarness();
+    const speaker = join("speaker", { x: 10, y: 10, z: 7 });
+    const npc = addNpc(
+      "npc-captain",
+      { x: 10, y: 12, z: 7 },
+      captainType,
+    );
+    speaker.messages.length = 0;
+    handler.handleSpeech(speaker.player, "hi", 1_000);
+    const greeting = dialogueMessages(speaker)[0];
+    if (!greeting) throw new Error("NPC greeting is missing");
+    speaker.messages.length = 0;
+
+    handler.handleChoice(
+      speaker.session,
+      {
+        type: "npc-dialogue-choice",
+        npcId: npc.id,
+        conversationId: greeting.conversationId,
+        choiceId: "boat-offer-carlin",
+      },
+      1_100,
+    );
+
+    expect(dialogueMessages(speaker)).toMatchObject([
+      {
+        travelPrefetchPosition: { x: 20, y: 20, z: 7 },
+        options: [
+          {
+            id: "boat-confirm-carlin",
+            label: "Yes",
+            action: "travel",
+          },
+          { id: "farewell", label: "Bye" },
+        ],
+      },
+    ]);
   });
 
   it("closes state after range, floor, timeout, and logout cleanup", () => {

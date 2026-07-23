@@ -1,11 +1,17 @@
 import type { Position } from "@tibia/protocol";
 import type { Pool } from "pg";
+import { COIN_STACK_LIMIT } from "../economy/coinStackLimit";
+import {
+  CRYSTAL_COIN_TYPE_ID,
+  GOLD_COIN_TYPE_ID,
+  PLATINUM_COIN_TYPE_ID,
+} from "../economy/CurrencyBalance";
 import { PgCoinOperations } from "../economy/PgCoinOperations";
+import { planMoneySpend } from "../economy/planMoneySpend";
 import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { NpcTravelCommitResult } from "./NpcTravelCommitResult";
 import type { NpcTravelStore } from "./NpcTravelStore";
-import { planNpcFarePayment } from "./planNpcFarePayment";
 
 export class PgNpcTravelStore implements NpcTravelStore {
   constructor(
@@ -41,11 +47,13 @@ export class PgNpcTravelStore implements NpcTravelStore {
       }
       const coinOps = new PgCoinOperations(client, characterId, this.catalog);
       const owned = await coinOps.loadOwnedItems();
-      const gold = coinOps.rowsOfType(owned, 3031);
-      const platinum = coinOps.rowsOfType(owned, 3035);
-      const payment = planNpcFarePayment(
-        coinOps.countRows(gold),
-        coinOps.countRows(platinum),
+      const coins = coinOps.coinRows(owned);
+      const payment = planMoneySpend(
+        {
+          gold: coinOps.countRows(coins.gold),
+          platinum: coinOps.countRows(coins.platinum),
+          crystal: coinOps.countRows(coins.crystal),
+        },
         cost,
       );
       if (!payment) {
@@ -55,39 +63,62 @@ export class PgNpcTravelStore implements NpcTravelStore {
 
       const after = new Map<string, Item>();
       const removedItemIds: string[] = [];
-      await coinOps.destroyItems(
-        gold,
-        payment.goldSpent,
-        3031,
-        "npc-travel",
-        after,
-        removedItemIds,
-      );
-      await coinOps.destroyItems(
-        platinum,
-        payment.platinumSpent,
-        3035,
-        "npc-travel",
-        after,
-        removedItemIds,
-      );
-      if (payment.goldChange > 0) {
+      for (const spend of [
+        {
+          rows: coins.gold,
+          count: payment.goldSpent,
+          typeId: GOLD_COIN_TYPE_ID,
+        },
+        {
+          rows: coins.platinum,
+          count: payment.platinumSpent,
+          typeId: PLATINUM_COIN_TYPE_ID,
+        },
+        {
+          rows: coins.crystal,
+          count: payment.crystalSpent,
+          typeId: CRYSTAL_COIN_TYPE_ID,
+        },
+      ]) {
+        await coinOps.destroyItems(
+          spend.rows,
+          spend.count,
+          spend.typeId,
+          "npc-travel",
+          after,
+          removedItemIds,
+        );
+      }
+      if (payment.goldChange > 0 || payment.platinumChange > 0) {
         const backpack = await coinOps.lockBackpackSlots();
         if (!backpack) {
           throw new Error("no backpack space is available for travel change");
         }
-        const changeGranted = await coinOps.grantStackable(
-          gold,
-          payment.goldChange,
-          3031,
-          100,
-          "npc-travel-change",
-          after,
-          removedItemIds,
-          backpack,
-        );
-        if (!changeGranted) {
-          throw new Error("no backpack space is available for travel change");
+        for (const grant of [
+          {
+            rows: coins.gold,
+            count: payment.goldChange,
+            typeId: GOLD_COIN_TYPE_ID,
+          },
+          {
+            rows: coins.platinum,
+            count: payment.platinumChange,
+            typeId: PLATINUM_COIN_TYPE_ID,
+          },
+        ]) {
+          const changeGranted = await coinOps.grantStackable(
+            grant.rows,
+            grant.count,
+            grant.typeId,
+            COIN_STACK_LIMIT,
+            "npc-travel-change",
+            after,
+            removedItemIds,
+            backpack,
+          );
+          if (!changeGranted) {
+            throw new Error("no backpack space is available for travel change");
+          }
         }
       }
 

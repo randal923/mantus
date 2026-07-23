@@ -98,6 +98,7 @@ export function createGameWindowStore({
     tradeToast: null,
     itemText: null,
     npcDialogue: null,
+    npcTravelPending: false,
     bankSession: null,
     shopSession: null,
     mailboxSession: null,
@@ -289,8 +290,15 @@ export function createGameWindowStore({
     setItemText: (value) =>
       set((state) => ({ itemText: resolveStateAction(value, state.itemText) })),
     setNpcDialogue: (value) =>
+      set((state) => {
+        const npcDialogue = resolveStateAction(value, state.npcDialogue);
+        return npcDialogue === state.npcDialogue
+          ? { npcDialogue }
+          : { npcDialogue, npcTravelPending: false };
+      }),
+    setNpcTravelPending: (value) =>
       set((state) => ({
-        npcDialogue: resolveStateAction(value, state.npcDialogue),
+        npcTravelPending: resolveStateAction(value, state.npcTravelPending),
       })),
     setBankSession: (value) =>
       set((state) => ({
@@ -394,6 +402,7 @@ export function createGameWindowStore({
         ownCharacter: null,
         itemText: null,
         npcDialogue: null,
+        npcTravelPending: false,
         bankSession: null,
         shopSession: null,
         partyPanelVisible: false,

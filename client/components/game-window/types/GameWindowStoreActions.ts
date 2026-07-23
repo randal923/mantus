@@ -87,6 +87,7 @@ export interface GameWindowStoreActions {
   setTradeToast: (value: SetStateAction<TradeClosedReason | null>) => void;
   setItemText: (value: SetStateAction<ItemTextState | null>) => void;
   setNpcDialogue: (value: SetStateAction<NpcDialogueState | null>) => void;
+  setNpcTravelPending: (value: SetStateAction<boolean>) => void;
   setBankSession: (value: SetStateAction<BankSessionState | null>) => void;
   setShopSession: (value: SetStateAction<ShopSessionState | null>) => void;
   setMailboxSession: (value: SetStateAction<MailboxSessionState | null>) => void;

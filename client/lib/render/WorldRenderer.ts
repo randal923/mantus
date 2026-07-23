@@ -380,6 +380,10 @@ export class WorldRenderer {
     return range;
   }
 
+  prefetchMapAt(position: Position): void {
+    void this.mapView.prefetchAt(position);
+  }
+
   previewMapItemRemoval(position: Position, instanceId: string): void {
     if (this.destroyed) return;
     this.mapView.previewMapItemRemoval(position, instanceId);

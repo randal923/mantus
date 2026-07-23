@@ -55,9 +55,8 @@ All four live in `server/src/economy/PgBankStore.integration.test.ts`
   is not implemented — the world currently has one effective town.
 - Withdrawn coins and deposit change land in loose `inventory` slots (matching
   NPC travel change behavior), not inside the backpack container.
-- NPC travel fares still use `planNpcFarePayment` (gold+platinum only, no bank
-  fallback); unify it with `planMoneySpend` when shops land so all payment
-  paths share the canonical conversion.
+- NPC travel fares use `planMoneySpend` for carried gold, platinum, and crystal
+  coins, but still have no bank fallback.
 - `BankService` keeps private copies of `COIN_STACK_LIMIT`, `countCarried`,
   and `inTalkRange` that duplicate the shared helpers extracted during the
   2026-07-18 economy refactor (`coinStackLimit`, `countCarriedCoins`,

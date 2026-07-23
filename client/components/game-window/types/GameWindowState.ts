@@ -80,6 +80,7 @@ export interface GameWindowState {
   tradeToast: TradeClosedReason | null;
   itemText: ItemTextState | null;
   npcDialogue: NpcDialogueState | null;
+  npcTravelPending: boolean;
   bankSession: BankSessionState | null;
   shopSession: ShopSessionState | null;
   mailboxSession: MailboxSessionState | null;

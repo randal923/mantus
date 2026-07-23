@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn } from "storybook/test";
+import { expect, fn, within } from "storybook/test";
 import { NpcDialogue } from "../components/npc/NpcDialogue";
 
 const meta = {
@@ -19,6 +19,7 @@ const meta = {
         { id: "farewell", label: "Bye" },
       ],
     },
+    travelPending: false,
     onChoice: fn(),
   },
   decorators: [
@@ -34,3 +35,29 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const TravelPending: Story = {
+  args: {
+    dialogue: {
+      ...meta.args.dialogue,
+      text: "Do you seek a passage to Carlin for 110 gold?",
+      options: [
+        {
+          id: "boat-confirm-carlin",
+          label: "Yes",
+          action: "travel",
+        },
+        { id: "boat-decline", label: "No" },
+      ],
+      travelPrefetchPosition: { x: 32387, y: 31820, z: 6 },
+    },
+    travelPending: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("status")).toHaveTextContent("Sailing…");
+    for (const button of canvas.getAllByRole("button")) {
+      await expect(button).toBeDisabled();
+    }
+  },
+};

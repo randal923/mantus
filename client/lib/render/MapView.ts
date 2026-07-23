@@ -8,6 +8,7 @@ import type {
 import type { AssetStore, TibiaObject } from "./AssetStore";
 import { AnimatedMapItemRegistry } from "./AnimatedMapItemRegistry";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
+import { getMapRegionKeys } from "./getMapRegionKeys";
 import { getItemInstanceSeed } from "./getItemInstanceSeed";
 import { getMapItemPattern } from "./getMapItemPattern";
 import { getMapSpritePosition } from "./getMapSpritePosition";
@@ -293,6 +294,29 @@ export class MapView {
     void this.refresh();
   }
 
+  async prefetchAt(position: Position): Promise<void> {
+    if (!this.manifest) return;
+    const keys = getMapRegionKeys(
+      position,
+      this.viewRange,
+      this.manifest.regionSize,
+      STATIC_TILE_MARGIN,
+    );
+    await Promise.all(keys.map((key) => this.loadRegion(key)));
+    const protectedKeys = new Set(keys);
+    if (this.center) {
+      for (const key of getMapRegionKeys(
+        this.center,
+        this.viewRange,
+        this.manifest.regionSize,
+        STATIC_TILE_MARGIN,
+      )) {
+        protectedKeys.add(key);
+      }
+    }
+    this.evictRegions(protectedKeys);
+  }
+
   setViewRange(range: ViewRange): void {
     if (range.x === this.viewRange.x && range.y === this.viewRange.y) return;
     this.viewRange = { ...range };
@@ -351,27 +375,16 @@ export class MapView {
   private refresh(): Promise<void> {
     if (!this.manifest || !this.center) return Promise.resolve();
     const generation = ++this.generation;
-    const size = this.manifest.regionSize;
-    const needed = new Set<string>();
-    const loads: Array<Promise<Region | null>> = [];
+    const needed = new Set(
+      getMapRegionKeys(
+        this.center,
+        this.viewRange,
+        this.manifest.regionSize,
+        STATIC_TILE_MARGIN,
+      ),
+    );
+    const loads = [...needed].map((key) => this.loadRegion(key));
     const visibleFloors = this.visibleFloors();
-    const windowX = this.viewRange.x + STATIC_TILE_MARGIN;
-    const windowY = this.viewRange.y + STATIC_TILE_MARGIN;
-    for (const z of visibleFloors) {
-      const { x, y } = this.floorCenter(z);
-      const firstRegionX = Math.floor((x - windowX) / size);
-      const lastRegionX = Math.floor((x + windowX) / size);
-      const firstRegionY = Math.floor((y - windowY) / size);
-      const lastRegionY = Math.floor((y + windowY) / size);
-      for (let regionY = firstRegionY; regionY <= lastRegionY; regionY++) {
-        for (let regionX = firstRegionX; regionX <= lastRegionX; regionX++) {
-          const key = `${z}:${regionX},${regionY}`;
-          if (needed.has(key)) continue;
-          needed.add(key);
-          loads.push(this.loadRegion(key));
-        }
-      }
-    }
     if (this.onLoadProgress && loads.length > 0) {
       let completed = 0;
       this.onLoadProgress(0, loads.length);

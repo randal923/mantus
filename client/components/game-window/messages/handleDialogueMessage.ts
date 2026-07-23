@@ -4,7 +4,7 @@ import type { GameWindowMessageContext } from "../types/GameWindowMessageContext
 
 export function handleDialogueMessage(
   message: ServerMessage,
-  { store }: GameWindowMessageContext,
+  { renderer, store }: GameWindowMessageContext,
 ): boolean {
   const state = store.getState();
 
@@ -21,6 +21,9 @@ export function handleDialogueMessage(
   }
 
   if (message.type === "npc-dialogue") {
+    if (message.travelPrefetchPosition) {
+      renderer.prefetchMapAt(message.travelPrefetchPosition);
+    }
     state.setNpcDialogue(message);
     state.dispatchChat({
       type: "spoke",

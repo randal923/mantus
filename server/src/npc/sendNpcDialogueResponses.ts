@@ -20,13 +20,23 @@ export function sendNpcDialogueResponses(
   const current = findDialogueNode(graph, conversation.currentNodeId);
   const options = includeOptions
     ? [
-        ...(current?.choices.map((choice) => ({
-          id: choice.nodeId,
-          label: choice.label,
-        })) ?? []),
+        ...(current?.choices.map((choice) => {
+          const target = findDialogueNode(graph, choice.nodeId);
+          return {
+            id: choice.nodeId,
+            label: choice.label,
+            ...(target?.action?.kind === "travel"
+              ? { action: "travel" as const }
+              : {}),
+          };
+        }) ?? []),
         { id: FAREWELL_CHOICE_ID, label: "Bye" },
       ]
     : [];
+  const travelPrefetchPosition = responseNode?.offerId
+    ? graph.travelOffers.find((offer) => offer.id === responseNode.offerId)
+        ?.destination
+    : undefined;
   responses.forEach((response, index) => {
     session.send({
       type: "npc-dialogue",
@@ -36,6 +46,9 @@ export function sendNpcDialogueResponses(
       position: { ...npc.position },
       text: renderNpcDialogueText(response, player, graph, responseNode),
       options: index === responses.length - 1 ? options : [],
+      ...(travelPrefetchPosition
+        ? { travelPrefetchPosition: { ...travelPrefetchPosition } }
+        : {}),
     });
   });
 }

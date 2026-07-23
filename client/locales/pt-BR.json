@@ -979,7 +979,8 @@
   },
   "npc": {
     "dialogueLabel": "Diálogo com {{name}}",
-    "responsesLabel": "Respostas"
+    "responsesLabel": "Respostas",
+    "sailing": "Navegando…"
   },
   "modal": {
     "close": "Fechar janela",

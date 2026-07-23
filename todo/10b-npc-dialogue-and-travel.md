@@ -59,7 +59,9 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
   item-destruction audits, and the travel audit commit in one serializable
   PostgreSQL transaction before the tick teleports and fully reconciles
   visibility. Travel does not block on a redundant pre-travel character
-  snapshot, and exact fares skip backpack/change allocation queries.
+  snapshot, and exact fares skip backpack/change allocation queries. Offered
+  destinations send a bounded server-owned prefetch hint on confirmation so
+  the client warms the existing map-region and sprite caches before travel.
 - Quentin currently provides greeting, healing fallback, pilgrimage, and
   blessing information. Stateful healing, blessings, stake/adventurer-stone
   quests, and item grants remain unimplemented rather than being approximated
@@ -71,12 +73,11 @@ money/item transfers are delegated to [`11b-npc-shops.md`](11b-npc-shops.md).
 
 ## Known remaining gaps
 
-- Travel currently spends carried gold and platinum coin stacks, returning
-  exact gold change in the same audited transaction. Canary's
-  `removeMoneyBank` also handles crystal conversion and bank balance. Implement
-  the canonical denomination/bank ledger in
-  [`11a-currency-and-bank`](11a-currency-and-bank.md), then route travel fares
-  through it without weakening the existing atomic transaction and audits.
+- Travel spends carried gold, platinum, and crystal coin stacks, returning
+  exact gold and platinum change in the same audited transaction. Unlike
+  Canary's `removeMoneyBank`, it does not yet fall back to the bank balance;
+  track that remaining gap in
+  [`11a-currency-and-bank`](11a-currency-and-bank.md).
 - The coastal route slice deliberately excludes storage-gated Yalahar and
   Goroma passages and the remaining quest/event boats. Postman discounts,
   travel-triggered Postman mission side effects, and `kick` actions also await

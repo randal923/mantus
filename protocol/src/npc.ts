@@ -23,6 +23,7 @@ export const npcDialogueOptionSchema = z
   .object({
     id: choiceReferenceSchema,
     label: z.string().min(1).max(40),
+    action: z.literal("travel").optional(),
   })
   .strict();
 
@@ -35,6 +36,7 @@ export const npcDialogueMessageSchema = z
     position: positionSchema,
     text: z.string().min(1).max(1_000),
     options: z.array(npcDialogueOptionSchema).max(16),
+    travelPrefetchPosition: positionSchema.optional(),
   })
   .strict();
 

@@ -979,7 +979,8 @@
   },
   "npc": {
     "dialogueLabel": "Dialogue with {{name}}",
-    "responsesLabel": "Responses"
+    "responsesLabel": "Responses",
+    "sailing": "Sailing…"
   },
   "modal": {
     "close": "Close dialog",
