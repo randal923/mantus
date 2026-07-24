@@ -122,8 +122,10 @@ export class ConditionManager {
   tick(now: number): {
     effects: ReadonlyArray<ConditionTick>;
     changed: boolean;
+    expiredTypes: ReadonlyArray<ConditionType>;
   } {
     const effects: ConditionTick[] = [];
+    const expiredTypes: ConditionType[] = [];
     let changed = false;
     for (const [type, condition] of [...this.active]) {
       let nextTickAt = condition.nextTickAt;
@@ -167,10 +169,11 @@ export class ConditionManager {
       }
       if (condition.expiresAt <= now) {
         this.active.delete(type);
+        expiredTypes.push(type);
         changed = true;
       }
     }
-    return { effects, changed };
+    return { effects, changed, expiredTypes };
   }
 
   project(now: number): CombatConditionState[] {

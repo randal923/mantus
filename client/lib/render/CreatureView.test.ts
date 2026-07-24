@@ -143,6 +143,40 @@ describe("CreatureView", () => {
     view.destroy();
   });
 
+  it("preserves an in-flight walk animation across state-only updates", () => {
+    const view = new CreatureView(
+      animationStore,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    const sprite = view.container.children[0];
+    if (!(sprite instanceof Sprite)) throw new Error("expected player sprite");
+
+    view.tick(205);
+    view.applyMove({ x: 11, y: 10, z: 7 }, "east", 1, 100);
+    view.tick(25);
+    const beforeUpdate = view.pixelPosition();
+
+    view.updateState({
+      ...state,
+      position: { x: 11, y: 10, z: 7 },
+      positionRevision: 1,
+      direction: "north",
+      healthPercent: 80,
+      light: { intensity: 4, color: 215 },
+    });
+
+    expect(view.pixelPosition()).toEqual(beforeUpdate);
+    expect(sprite.texture).toBe(animationTextures[1]);
+
+    view.tick(50);
+
+    expect(sprite.texture).toBe(animationTextures[2]);
+    view.destroy();
+  });
+
   it("returns to the idle frame when a step finishes", () => {
     const view = new CreatureView(
       animationStore,

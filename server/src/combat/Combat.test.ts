@@ -2490,6 +2490,11 @@ describe("Combat", () => {
       1_000,
     );
     expect(harness.player.conditions.skillModifier("sword", 100)).toBe(-50);
+    expect(
+      harness.sent.some(
+        (message) => message.type === "creature-state-changed",
+      ),
+    ).toBe(false);
 
     harness.world.combatFields.create(
       { x: 2, y: 1, z: 7 },
@@ -2521,6 +2526,51 @@ describe("Combat", () => {
     expect(
       harness.world.tryMoveCreature(allowed, "east", 1_000).moved,
     ).toBe(true);
+  });
+
+  it("broadcasts creature state only for visually projected conditions", async () => {
+    const harness = await makeHarness();
+    const source = makeMonster(
+      "monster-instance:condition-state:0",
+      { x: 2, y: 1, z: 7 },
+    );
+    harness.world.addCreature(source);
+
+    harness.combat.executeMonsterAbility(
+      source,
+      harness.player,
+      {
+        kind: "condition",
+        intervalMs: 1_000,
+        chance: 100,
+        target: "target",
+        range: 2,
+        area: { shape: "single" },
+        conditionType: "outfit",
+        durationMs: 5_000,
+      },
+      1_000,
+    );
+
+    const applied = harness.sent.flatMap((message) =>
+      message.type === "creature-state-changed" &&
+      message.creature.id === harness.player.id
+        ? [message.creature]
+        : [],
+    );
+    expect(applied).toHaveLength(1);
+    expect(applied[0]?.outfit).toEqual(source.outfit);
+
+    harness.combat.tick(6_000);
+
+    const expired = harness.sent.flatMap((message) =>
+      message.type === "creature-state-changed" &&
+      message.creature.id === harness.player.id
+        ? [message.creature]
+        : [],
+    );
+    expect(expired).toHaveLength(2);
+    expect(expired[1]?.outfit).toEqual(harness.player.outfit);
   });
 
   it("uses imported factions, elemental healing, and capped reflection", async () => {

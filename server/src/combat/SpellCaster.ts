@@ -242,11 +242,7 @@ export class SpellCaster {
     }
     if (spell.dispel) {
       for (const creature of affected.length > 0 ? affected : [player]) {
-        if (!creature.conditions.remove(spell.dispel)) continue;
-        this.visibility.onCreatureStateChanged(creature);
-        if (creature instanceof Player) {
-          this.feedback.sendFightStateForPlayer(creature.id, now);
-        }
+        this.conditions.removeCondition(creature, spell.dispel, now);
       }
     }
     this.feedback.sendFightState(session, now);

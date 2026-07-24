@@ -991,11 +991,7 @@ export class Combat {
     if (ability.dispel) {
       for (const creature of affected) {
         if (!this.canReceiveMonsterCondition(monster, creature, ability)) continue;
-        if (!creature.conditions.remove(ability.dispel)) continue;
-        this.visibility.onCreatureStateChanged(creature);
-        if (creature instanceof Player) {
-          this.feedback.sendFightStateForPlayer(creature.id, now);
-        }
+        this.conditionSystem.removeCondition(creature, ability.dispel, now);
       }
     }
     if (ability.conditions && ability.conditions.length > 0) {

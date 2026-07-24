@@ -518,6 +518,19 @@ export class WorldRenderer {
   }
 
   private replaceCreature(creature: CreatureState): void {
+    const view = this.creatureViews.get(creature.id);
+    if (view?.hasAppearance(creature.outfit)) {
+      const previousFloor = view.floor;
+      view.updateState(creature);
+      if (view.floor !== previousFloor) {
+        this.mapView.creatureLayer(view.floor).addChild(view.container);
+      }
+      view.setPartyShield(
+        this.partyShieldKindFor(creature.id, view.isPublicPartyMember),
+      );
+      view.setWarEmblem(this.warEmblemKindFor(view.guildName, view.isAtWar));
+      return;
+    }
     this.removeCreature(creature.id, false);
     this.addCreature(creature);
   }

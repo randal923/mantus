@@ -46,7 +46,10 @@ describe("ConditionManager", () => {
     );
 
     expect(conditions.tick(5_000).effects).toHaveLength(5);
-    expect(conditions.tick(10_000)).toMatchObject({ changed: true });
+    expect(conditions.tick(10_000)).toMatchObject({
+      changed: true,
+      expiredTypes: ["fire"],
+    });
     expect(conditions.has("fire")).toBe(false);
   });
 

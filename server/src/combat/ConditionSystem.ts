@@ -1,3 +1,4 @@
+import type { ConditionType } from "@tibia/protocol";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import { Player } from "../Player";
@@ -37,7 +38,9 @@ export class ConditionSystem {
         target.id,
       );
     }
-    this.visibility.onCreatureStateChanged(target);
+    if (this.changesCreatureState(application.type)) {
+      this.visibility.onCreatureStateChanged(target);
+    }
     if (target instanceof Player) {
       this.feedback.sendFightStateForPlayer(target.id, now);
       this.registry.sessionFor(target.id)?.send({
@@ -71,10 +74,31 @@ export class ConditionSystem {
         if (creature.health <= 0) break;
       }
       if (!result.changed) continue;
-      this.visibility.onCreatureStateChanged(creature);
+      if (result.expiredTypes.some((type) => this.changesCreatureState(type))) {
+        this.visibility.onCreatureStateChanged(creature);
+      }
       if (creature instanceof Player) {
         this.feedback.sendFightStateForPlayer(creature.id, now);
       }
     }
+  }
+
+  removeCondition(
+    target: Creature,
+    type: ConditionType,
+    now: number,
+  ): boolean {
+    if (!target.conditions.remove(type)) return false;
+    if (this.changesCreatureState(type)) {
+      this.visibility.onCreatureStateChanged(target);
+    }
+    if (target instanceof Player) {
+      this.feedback.sendFightStateForPlayer(target.id, now);
+    }
+    return true;
+  }
+
+  private changesCreatureState(type: ConditionType): boolean {
+    return type === "invisible" || type === "light" || type === "outfit";
   }
 }

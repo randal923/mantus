@@ -199,7 +199,6 @@ export class DamageResolver {
           }
           manaChanged = true;
           amount -= absorbed;
-          this.visibility.onCreatureStateChanged(target);
           this.feedback.sendFightStateForPlayer(target.id, now);
         }
       }

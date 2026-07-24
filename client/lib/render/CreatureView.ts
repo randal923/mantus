@@ -79,9 +79,10 @@ export class CreatureView {
   private readonly warEmblem = new Graphics();
   private readonly skullMark = new Graphics();
   private readonly name: Text;
-  private readonly publicPartyMember: boolean;
-  private readonly publicGuildName: string | null;
-  private readonly publicAtWar: boolean;
+  private publicPartyMember: boolean;
+  private publicGuildName: string | null;
+  private publicAtWar: boolean;
+  private readonly appearance: CreatureState["outfit"];
   private readonly frames = new Map<string, Texture>();
   private direction: Direction;
   private walkDirection: Direction;
@@ -141,6 +142,7 @@ export class CreatureView {
     name.anchor.set(0.5, 1);
     name.position.y = -5;
     this.name = name;
+    this.appearance = { ...state.outfit };
     this.publicPartyMember = state.partyStatus === "member";
     this.publicGuildName = state.guildName ?? null;
     this.publicAtWar = state.atWar ?? false;
@@ -167,6 +169,33 @@ export class CreatureView {
 
   get position(): Position {
     return { x: this.tileX, y: this.tileY, z: this.tileZ };
+  }
+
+  hasAppearance(appearance: CreatureState["outfit"]): boolean {
+    return (
+      appearance.lookType === this.appearance.lookType &&
+      appearance.lookTypeEx === this.appearance.lookTypeEx &&
+      appearance.head === this.appearance.head &&
+      appearance.body === this.appearance.body &&
+      appearance.legs === this.appearance.legs &&
+      appearance.feet === this.appearance.feet &&
+      appearance.addons === this.appearance.addons
+    );
+  }
+
+  /** Applies state-only changes without interrupting an in-flight step. */
+  updateState(state: CreatureState): void {
+    this.applyCorrection(
+      state.position,
+      state.direction,
+      state.positionRevision,
+    );
+    this.publicPartyMember = state.partyStatus === "member";
+    this.publicGuildName = state.guildName ?? null;
+    this.publicAtWar = state.atWar ?? false;
+    this.drawSkullMark(state.skull);
+    this.updateHealth(state.healthPercent);
+    this.updateLight(state.light);
   }
 
   setAttackTarget(targeted: boolean): void {
