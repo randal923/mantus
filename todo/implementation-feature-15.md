@@ -2,25 +2,22 @@
 
 Part of [Todo 6 — Items and inventory](todo-6.md).
 
-## Why
+**Completed 2026-07-24 (harness).** A crash-injection seam in
+`withSerializableTransaction` (`ITEM_TX_CRASH_POINT`, read once at import,
+no-op in production) abruptly ends the process with `process.exit(137)` before
+or after COMMIT, severing the DB socket mid-transaction. `crashHarness/crashWorker.ts`
+runs one memory-first ownership move in a spawned child; `PgItemCrashHarness.integration.test.ts`
+asserts kill-before-commit leaves the item in its original location, kill-after-commit
+in its new location (one row each, no dupes), and the control commits. The one
+seam covers every item write path (all use `withSerializableTransaction`). Full
+record and the `process.exit` vs SIGKILL rationale in
+[completed/implementation-feature-15-completed.md](completed/implementation-feature-15-completed.md).
 
-This is the one unchecked exploit test from the item-system definition of done: abrupt process death around an ownership transaction must leave the item in exactly one durable location after restart. The current Postgres fault-injection suite approximates but does not prove it.
+## Accepted limitation (still open)
 
-## Remaining work
-
-- Build a true process-kill crash harness; the current fault-injection suite covers capacity, ancestry, rollback, audit atomicity, and conjuring, but only runs when `TEST_DATABASE_URL` is set.
-- Related accepted limitation (record stays until fixed): a future map-version upgrade needs an explicit seed reconciliation migration.
-
-## Implementation
-
-- Harness that spawns the game server as a child process, delivers SIGKILL immediately before and immediately after commit in the write paths of `/home/randal/code/tibia/server/src/item/PgItemPersistOps.ts`, restarts the server, and asserts the item has exactly one durable location.
-- Extend the existing integration-test infrastructure in `/home/randal/code/tibia/server/src/item/PgItemStore.integration.test.ts` (pg integration-test setup is documented in memory: item-drag-optimistic-queue notes).
-
-## Tests
-
-- Kill-before-commit: item remains in its original location after restart; no duplicate.
-- Kill-after-commit: item exists only in its new location after restart; no duplicate.
-- Both variants for each memory-first write path (move, equip, pickup, drop).
+A future map-version upgrade needs an explicit seed reconciliation migration
+(recorded when the world-seed path landed). Unrelated to the crash harness;
+keep tracking here until implemented.
 
 ## Dependencies
 

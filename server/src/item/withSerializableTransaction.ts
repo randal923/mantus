@@ -8,6 +8,23 @@ const MAX_ATTEMPTS = 5;
 const RETRY_BACKOFF_MS = 15;
 
 /**
+ * Test-only crash injection for the process-kill durability harness
+ * (`PgItemCrashHarness.integration.test.ts`). Read once at import, so an unset
+ * production process pays only a constant comparison. When set to
+ * "before-commit" or "after-commit", the process dies abruptly at that
+ * transaction boundary via `process.exit(137)` — no rollback, no flush, no
+ * graceful shutdown: the OS severs the DB socket mid-transaction, exactly as a
+ * SIGKILL would, proving an abrupt death leaves exactly one durable item
+ * location. `process.exit` is used over self-SIGKILL because signal delivery
+ * to self raced a clean exit and did not survive the `tsx` child boundary.
+ */
+const CRASH_POINT = process.env.ITEM_TX_CRASH_POINT ?? null;
+
+function crashIfInjected(point: "before-commit" | "after-commit"): void {
+  if (CRASH_POINT === point) process.exit(137);
+}
+
+/**
  * Runs `operation` in one SERIALIZABLE transaction, retried a bounded number
  * of times on serialization aborts (SQLSTATE 40001 and friends): concurrent
  * transactions on shared rows — a persist locking the character row while a
@@ -34,7 +51,9 @@ export async function withSerializableTransaction<T>(
     try {
       await client.query(beginSerializableCommand);
       const result = await operation(client);
+      crashIfInjected("before-commit");
       await client.query(commitCommand);
+      crashIfInjected("after-commit");
       return result;
     } catch (cause) {
       try {
