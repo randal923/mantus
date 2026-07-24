@@ -132,7 +132,7 @@ export function GameNotifications() {
       )}
       {levelUpNotice && (
         <LevelUpBanner
-          key={levelUpNotice.id}
+          key={`level-up-${levelUpNotice.id}`}
           level={levelUpNotice.level}
         />
       )}
@@ -162,7 +162,7 @@ export function GameNotifications() {
       )}
       {screenMessage && (
         <div
-          key={screenMessage.id}
+          key={`screen-message-${screenMessage.id}`}
           role="status"
           className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center"
         >
