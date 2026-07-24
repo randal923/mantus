@@ -13,14 +13,11 @@ export function GameMapContextMenu() {
   const setMapContextMenu = useGameWindowStore(
     (state) => state.setMapContextMenu,
   );
-  const fightState = useGameWindowStore((state) => state.fightState);
-  const ownCharacter = useGameWindowStore((state) => state.ownCharacter);
-  const visibleCreatures = useGameWindowStore(
-    (state) => state.visibleCreatures,
-  );
 
   if (!menu) return null;
-  const client = store.getState().runtime.clientRef.current;
+  const { fightState, ownCharacter, visibleCreatures, runtime } =
+    store.getState();
+  const client = runtime.clientRef.current;
   const creature = menu.creatureId
     ? visibleCreatures.find((candidate) => candidate.id === menu.creatureId)
     : undefined;

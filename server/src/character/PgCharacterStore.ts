@@ -76,8 +76,10 @@ export class PgCharacterStore implements CharacterStore {
       mana: character.mana,
       soul: character.soul,
       skills: character.skills,
+      skillsChanged: true,
       progressionEvents: [],
       storageValues: character.storageValues,
+      storageChanged: true,
       positionX: character.positionX,
       positionY: character.positionY,
       positionZ: character.positionZ,
@@ -238,14 +240,16 @@ export class PgCharacterStore implements CharacterStore {
       );
       const version = result.rows[0]?.version;
       if (!version) throw new CharacterError("version-conflict");
-      const updatedSkills = await client.query(updateCharacterSkillsQuery, [
-        snapshot.characterId,
-        snapshot.skills.map((skill) => skill.skill),
-        snapshot.skills.map((skill) => skill.level),
-        snapshot.skills.map((skill) => skill.tries.toString()),
-      ]);
-      if (updatedSkills.rowCount !== snapshot.skills.length) {
-        throw new Error("one or more character skills were not found");
+      if (snapshot.skillsChanged) {
+        const updatedSkills = await client.query(updateCharacterSkillsQuery, [
+          snapshot.characterId,
+          snapshot.skills.map((skill) => skill.skill),
+          snapshot.skills.map((skill) => skill.level),
+          snapshot.skills.map((skill) => skill.tries.toString()),
+        ]);
+        if (updatedSkills.rowCount !== snapshot.skills.length) {
+          throw new Error("one or more character skills were not found");
+        }
       }
       if (snapshot.progressionEvents.length > 0) {
         const inserted = await client.query(insertProgressionEventsQuery, [
@@ -257,10 +261,12 @@ export class PgCharacterStore implements CharacterStore {
           throw new CharacterError("version-conflict");
         }
       }
-      await client.query(replaceCharacterStoragesQuery, [
-        snapshot.characterId,
-        JSON.stringify(snapshot.storageValues),
-      ]);
+      if (snapshot.storageChanged) {
+        await client.query(replaceCharacterStoragesQuery, [
+          snapshot.characterId,
+          JSON.stringify(snapshot.storageValues),
+        ]);
+      }
       await client.query("COMMIT");
       return version;
     } catch (cause) {

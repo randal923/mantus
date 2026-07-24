@@ -6,6 +6,7 @@ import {
 import { expect, fn, userEvent, within } from "storybook/test";
 
 import { GameHud } from "../components/GameHud";
+import { MinimapPanel } from "../components/minimap/MinimapPanel";
 
 const actionBar = createDefaultActionBar();
 actionBar[0] = {
@@ -27,9 +28,6 @@ const meta = {
     battleListVisible: true,
     minimapVisible: false,
     mapName: null,
-    minimapLayout: null,
-    onMinimapLayoutChange: fn(),
-    visibleCreatures: [],
     ownCharacter: {
       id: "player",
       vocation: "Knight",
@@ -157,12 +155,21 @@ export const MinimapAnchoredBottomRight: Story = {
   args: {
     minimapVisible: true,
     mapName: "otservbr",
-    minimapLayout: {
-      x: 640,
-      y: 360,
-      width: 300,
-      height: 240,
-    },
+    minimap: (
+      <MinimapPanel
+        mapName="otservbr"
+        ownPlayerId="player"
+        ownPosition={{ x: 32069, y: 31901, z: 6 }}
+        creatures={[]}
+        layout={{
+          x: 640,
+          y: 360,
+          width: 300,
+          height: 240,
+        }}
+        onLayoutChange={fn()}
+      />
+    ),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

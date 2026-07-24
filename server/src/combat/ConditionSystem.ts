@@ -53,8 +53,14 @@ export class ConditionSystem {
   }
 
   tick(now: number): void {
-    for (const creature of [...this.world.allCreatures()]) {
-      if (!creature.conditions.isActive) continue;
+    // Snapshot only the creatures that need work: applyDamage below can kill
+    // and remove creatures, so the processing loop must not walk the live map.
+    let active: Creature[] | null = null;
+    for (const creature of this.world.allCreatures()) {
+      if (creature.conditions.isActive) (active ??= []).push(creature);
+    }
+    if (!active) return;
+    for (const creature of active) {
       const result = creature.conditions.tick(now);
       for (const effect of result.effects) {
         this.damage.applyDamage(

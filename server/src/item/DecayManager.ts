@@ -27,6 +27,12 @@ export interface DecayRecord {
  */
 export class DecayManager {
   private readonly records = new Map<string, DecayRecord>();
+  /**
+   * Lower bound on the next due deadline so the per-tick check is O(1) when
+   * nothing is due. Deletions may leave it stale (too low), which only costs
+   * an occasional wasted scan, never a missed record.
+   */
+  private earliestDeadlineAt = Number.POSITIVE_INFINITY;
 
   constructor(
     private readonly catalog: ItemCatalog,
@@ -57,21 +63,34 @@ export class DecayManager {
     const durationSeconds =
       this.catalog.get(record.typeId)?.decay?.durationSeconds;
     if (durationSeconds === undefined) return;
-    this.records.set(record.itemId, {
-      ...record,
-      deadlineAt: now + durationSeconds * 1_000,
-    });
+    const deadlineAt = now + durationSeconds * 1_000;
+    this.records.set(record.itemId, { ...record, deadlineAt });
+    if (deadlineAt < this.earliestDeadlineAt) this.earliestDeadlineAt = deadlineAt;
   }
 
   /** Due records leave the schedule; only a later mutation re-adds an item. */
   collectDue(now: number): DecayRecord[] {
+    if (this.records.size === 0) {
+      this.earliestDeadlineAt = Number.POSITIVE_INFINITY;
+      return [];
+    }
+    if (now < this.earliestDeadlineAt) return [];
     const due: DecayRecord[] = [];
+    let nextEarliest = Number.POSITIVE_INFINITY;
+    let truncated = false;
     for (const record of this.records.values()) {
-      if (record.deadlineAt > now) continue;
+      if (record.deadlineAt > now) {
+        if (record.deadlineAt < nextEarliest) nextEarliest = record.deadlineAt;
+        continue;
+      }
       due.push(record);
-      if (due.length >= this.maxDuePerTick) break;
+      if (due.length >= this.maxDuePerTick) {
+        truncated = true;
+        break;
+      }
     }
     for (const record of due) this.records.delete(record.itemId);
+    this.earliestDeadlineAt = truncated ? now : nextEarliest;
     return due;
   }
 
@@ -86,13 +105,15 @@ export class DecayManager {
       this.records.delete(item.id);
       return;
     }
+    const deadlineAt = now + durationSeconds * 1_000;
     this.records.set(item.id, {
       itemId: item.id,
       instanceId: item.seedKey ?? item.id,
       typeId: item.typeId,
       version: item.version,
       position: item.location.position,
-      deadlineAt: now + durationSeconds * 1_000,
+      deadlineAt,
     });
+    if (deadlineAt < this.earliestDeadlineAt) this.earliestDeadlineAt = deadlineAt;
   }
 }

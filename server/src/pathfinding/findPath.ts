@@ -11,6 +11,10 @@ const STEPS: ReadonlyArray<{
   { direction: "west", dx: -1, dy: 0 },
 ];
 
+// Collision-free for any map coordinate (y stays far below 2^20, and the
+// keys remain exact integers well inside Number.MAX_SAFE_INTEGER).
+const KEY_STRIDE = 0x100000;
+
 /** Bounded deterministic breadth-first pathfinding on one authoritative floor. */
 export function findPath(options: {
   start: Position;
@@ -20,29 +24,40 @@ export function findPath(options: {
 }): { directions: Direction[]; visited: number } {
   if (options.maxVisited <= 0) return { directions: [], visited: 0 };
   if (options.isGoal(options.start)) return { directions: [], visited: 1 };
-  const queue: Array<{ position: Position; path: Direction[] }> = [
-    { position: options.start, path: [] },
-  ];
-  const seen = new Set([`${options.start.x},${options.start.y}`]);
+  const startKey = options.start.x * KEY_STRIDE + options.start.y;
+  const queue: Position[] = [options.start];
+  const seen = new Set([startKey]);
+  const arrivals = new Map<
+    number,
+    { parentKey: number; direction: Direction }
+  >();
   let cursor = 0;
   let visited = 0;
   while (cursor < queue.length && visited < options.maxVisited) {
     const current = queue[cursor++];
     if (!current) break;
+    const currentKey = current.x * KEY_STRIDE + current.y;
     visited++;
     for (const step of STEPS) {
-      const position = {
-        x: current.position.x + step.dx,
-        y: current.position.y + step.dy,
-        z: options.start.z,
-      };
-      const key = `${position.x},${position.y}`;
+      const x = current.x + step.dx;
+      const y = current.y + step.dy;
+      const key = x * KEY_STRIDE + y;
       if (seen.has(key)) continue;
       seen.add(key);
+      const position = { x, y, z: options.start.z };
       if (!options.canStep(position)) continue;
-      const path = [...current.path, step.direction];
-      if (options.isGoal(position)) return { directions: path, visited };
-      queue.push({ position, path });
+      arrivals.set(key, { parentKey: currentKey, direction: step.direction });
+      if (options.isGoal(position)) {
+        const directions: Direction[] = [];
+        for (let at = key; at !== startKey; ) {
+          const arrival = arrivals.get(at);
+          if (!arrival) break;
+          directions.push(arrival.direction);
+          at = arrival.parentKey;
+        }
+        return { directions: directions.reverse(), visited };
+      }
+      queue.push(position);
     }
   }
   return { directions: [], visited };

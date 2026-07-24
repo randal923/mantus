@@ -181,8 +181,10 @@ export class PgMarketCancelOps {
         state === "cancelled" ? "market-cancel" : "market-expiry",
         inboxFullResult,
       );
-      for (const itemId of delivery.removedItemIds) {
-        await client.query(deleteMarketEscrowItemQuery, [itemId]);
+      if (delivery.removedItemIds.length > 0) {
+        await client.query(deleteMarketEscrowItemQuery, [
+          delivery.removedItemIds,
+        ]);
       }
       returnedItems = delivery.delivered;
       await client.query(bumpInboxRevisionUpdate, [offer.characterId]);

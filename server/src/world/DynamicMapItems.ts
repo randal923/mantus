@@ -42,9 +42,19 @@ export class DynamicMapItems {
    */
   private readonly tileOverrides = new Map<string, TilePassabilityOverride>();
   private currentRevision = 0;
+  private currentPassabilityRevision = 0;
 
   get revision(): number {
     return this.currentRevision;
+  }
+
+  /**
+   * Bumps only when a tile's walkable/projectile override actually changes
+   * (doors, shovel holes) — not on ordinary item drops. Line-of-sight caches
+   * key on this so loot churn does not invalidate them.
+   */
+  get passabilityRevision(): number {
+    return this.currentPassabilityRevision;
   }
 
   constructor(
@@ -96,8 +106,22 @@ export class DynamicMapItems {
       override = { walkable: passable, blocksProjectile: !passable };
     }
     const key = positionKey(position);
-    if (override) this.tileOverrides.set(key, override);
-    else this.tileOverrides.delete(key);
+    const current = this.tileOverrides.get(key);
+    if (override) {
+      if (
+        !current ||
+        current.walkable !== override.walkable ||
+        current.blocksProjectile !== override.blocksProjectile
+      ) {
+        this.tileOverrides.set(key, override);
+        this.currentPassabilityRevision++;
+      }
+      return;
+    }
+    if (current) {
+      this.tileOverrides.delete(key);
+      this.currentPassabilityRevision++;
+    }
   }
 
   hideSeed(seedKey: string): void {
@@ -177,14 +201,35 @@ export class DynamicMapItems {
     if (item.seedKey) this.seedKeyToId.delete(item.seedKey);
   }
 
-  getMapItems(position: Position) {
-    const key = positionKey(position);
-    return [
-      ...this.map
-        .getItems(position)
-        .filter((item) => !this.hiddenMapItemIds.has(item.instanceId)),
-      ...(this.dynamicMapItems.get(key) ?? []),
-    ].sort((left, right) => left.stackIndex - right.stackIndex);
+  getMapItems(position: Position): ReadonlyArray<MapItem> {
+    const statics = this.map.getItems(position);
+    let visible: ReadonlyArray<MapItem> = statics;
+    if (this.hiddenMapItemIds.size > 0 && statics.length > 0) {
+      for (const item of statics) {
+        if (!this.hiddenMapItemIds.has(item.instanceId)) continue;
+        visible = statics.filter(
+          (candidate) => !this.hiddenMapItemIds.has(candidate.instanceId),
+        );
+        break;
+      }
+    }
+    const dynamic = this.dynamicMapItems.get(positionKey(position));
+    if (!dynamic || dynamic.length === 0) {
+      let sorted = true;
+      for (let index = 1; index < visible.length; index++) {
+        if (visible[index]!.stackIndex < visible[index - 1]!.stackIndex) {
+          sorted = false;
+          break;
+        }
+      }
+      if (sorted) return visible;
+      return [...visible].sort(
+        (left, right) => left.stackIndex - right.stackIndex,
+      );
+    }
+    return [...visible, ...dynamic].sort(
+      (left, right) => left.stackIndex - right.stackIndex,
+    );
   }
 
   removeMapItem(instanceId: string, position: Position): boolean {

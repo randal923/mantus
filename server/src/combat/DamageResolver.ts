@@ -21,6 +21,16 @@ import { DeathHandler } from "./DeathHandler";
 import { EventSequence } from "./EventSequence";
 import { playerDefense } from "./playerDefense";
 
+const ARMOR_SLOTS = new Set([
+  "helmet",
+  "amulet",
+  "armor",
+  "legs",
+  "boots",
+  "ring",
+  "ammo",
+]);
+
 export class DamageResolver {
   constructor(
     private readonly world: World,
@@ -326,11 +336,15 @@ export class DamageResolver {
         );
       }
     }
+    // One visibility scan shared by the effect/text/health broadcasts below;
+    // they all target the same "viewers who know the target" recipient set.
+    const recipients = this.visibility.knowingViewersOf(target);
     if (request.effectId) {
       this.visibility.broadcastMagicEffect(
         target.position,
         request.effectId,
         target.id,
+        recipients,
       );
     }
     this.visibility.broadcastCombatText(
@@ -338,8 +352,9 @@ export class DamageResolver {
       amount,
       request.type,
       block,
+      recipients,
     );
-    this.visibility.broadcastHealth(target);
+    this.visibility.broadcastHealth(target, recipients);
     const sourceSession = request.sourceId
       ? this.registry.sessionFor(request.sourceId)
       : undefined;
@@ -459,15 +474,7 @@ export class DamageResolver {
           equipment.reduce(
             (total, entry) =>
               entry.item.location.kind === "equipment" &&
-              [
-                "helmet",
-                "amulet",
-                "armor",
-                "legs",
-                "boots",
-                "ring",
-                "ammo",
-              ].includes(entry.item.location.slot)
+              ARMOR_SLOTS.has(entry.item.location.slot)
                 ? total + (entry.type.armor ?? 0)
                 : total,
             0,

@@ -18,6 +18,7 @@ import {
   type GuildRespondWarMessage,
   type GuildRevokeInviteMessage,
   type GuildSetMotdMessage,
+  type ServerMessage,
   type GuildSetNickMessage,
   type GuildSetRankNameMessage,
 } from "@tibia/protocol";
@@ -698,15 +699,15 @@ export class GuildService implements GuildHooks {
       });
       return;
     }
-    const message = {
+    const serialized = JSON.stringify({
       type: "guild-chat-delivered" as const,
       speakerId: player.id,
       speakerName: player.name,
       rankLevel: membership.rankLevel,
       text: trimmed,
-    };
+    } satisfies ServerMessage);
     for (const memberId of this.onlineByGuild.get(membership.guildId) ?? []) {
-      this.registry.sessionFor(memberId)?.send(message);
+      this.registry.sessionFor(memberId)?.sendSerialized(serialized);
     }
   }
 
@@ -869,8 +870,11 @@ export class GuildService implements GuildHooks {
   }
 
   private sendEventToGuild(guildId: string, event: GuildEventMessage): void {
-    for (const memberId of this.onlineByGuild.get(guildId) ?? []) {
-      this.registry.sessionFor(memberId)?.send(event);
+    const members = this.onlineByGuild.get(guildId);
+    if (!members || members.size === 0) return;
+    const serialized = JSON.stringify(event);
+    for (const memberId of members) {
+      this.registry.sessionFor(memberId)?.sendSerialized(serialized);
     }
   }
 

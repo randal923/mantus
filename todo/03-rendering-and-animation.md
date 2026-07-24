@@ -120,5 +120,11 @@ Remaining deliberate gaps:
   rows inside one transaction with `item-destroyed` audit entries (reverts
   those world items to base map state). Done 2026-07-20 for 5 door rows.
   Production needs a first-class reconciliation path (charter rule 12).
+- [ ] Combat effects/missiles/floating text moved to a per-floor transient
+  container above `floor.objects` (perf: no whole-floor re-sort per spawn).
+  Deliberate deviation: they now draw above `onTop`-flagged items (e.g.
+  archway tops, `MAP_DEPTH.onTop = 896`) instead of sorting beneath them at
+  `MAP_DEPTH.effect = 768`. If that parity ever matters, effects would need
+  to rejoin the sorted objects layer or onTop pieces need their own overlay.
 
 [Back to overview](README.md)

@@ -1,4 +1,4 @@
-import { Sprite, Text, type Texture } from "pixi.js";
+import { Container, Sprite, Text, Texture } from "pixi.js";
 import type {
   DamageType,
   HitBlock,
@@ -10,17 +10,23 @@ import type { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
 import { TILE_SIZE } from "./tileSize";
 
-interface MagicEffectView {
+interface MagicEffectPiece {
   readonly sprite: Sprite;
-  readonly frames: Texture[];
+  /** Shared atlas sub-rect textures per phase — never destroyed here. */
+  readonly textures: Texture[];
+}
+
+interface MagicEffectView {
+  readonly container: Container;
+  readonly pieces: MagicEffectPiece[];
   readonly durations: number[];
+  readonly phaseCount: number;
   elapsedMs: number;
   phase: number;
 }
 
 interface MissileView {
-  readonly sprite: Sprite;
-  readonly texture: Texture;
+  readonly container: Container;
   readonly from: Position;
   readonly to: Position;
   readonly durationMs: number;
@@ -49,11 +55,13 @@ const TEXT_COLORS: Record<DamageType, number> = {
 };
 const EXPERIENCE_TEXT_COLOR = 0xffffff;
 const EXPERIENCE_TEXT_OFFSET_Y = -6;
+const MAX_POOLED_TEXTS = 32;
 
 export class CombatEffectRenderer {
   private readonly effects: MagicEffectView[] = [];
   private readonly missiles: MissileView[] = [];
   private readonly texts: CombatTextView[] = [];
+  private readonly textPool: Text[] = [];
   private destroyed = false;
 
   constructor(
@@ -117,24 +125,33 @@ export class CombatEffectRenderer {
     color: number,
     offsetY: number,
   ): void {
-    const text = new Text({
-      text: label,
-      style: {
-        fontFamily: "Verdana, sans-serif",
-        fontSize: 5,
-        fontWeight: "bold",
-        fill: color,
-        stroke: { color: 0x000000, width: 1 },
-      },
-    });
-    text.resolution = 3;
-    text.anchor.set(0.5, 1);
+    const pooled = this.textPool.pop();
+    const text =
+      pooled ??
+      new Text({
+        text: label,
+        style: {
+          fontFamily: "Verdana, sans-serif",
+          fontSize: 5,
+          fontWeight: "bold",
+          fill: color,
+          stroke: { color: 0x000000, width: 1 },
+        },
+      });
+    if (pooled) {
+      pooled.text = label;
+      pooled.style.fill = color;
+      pooled.alpha = 1;
+    } else {
+      text.resolution = 3;
+      text.anchor.set(0.5, 1);
+    }
     text.position.set(
       position.x * TILE_SIZE + TILE_SIZE / 2,
       position.y * TILE_SIZE + offsetY,
     );
     text.zIndex = getMapObjectZ(position.x, position.y, MAP_DEPTH.effect + 2);
-    this.mapView.creatureLayer(position.z).addChild(text);
+    this.mapView.effectLayer(position.z).addChild(text);
     this.texts.push({
       text,
       position: { ...position },
@@ -149,18 +166,19 @@ export class CombatEffectRenderer {
       if (!effect) continue;
       effect.elapsedMs += deltaMs;
       while (
-        effect.phase < effect.frames.length &&
+        effect.phase < effect.phaseCount &&
         effect.elapsedMs >= (effect.durations[effect.phase] ?? 100)
       ) {
         effect.elapsedMs -= effect.durations[effect.phase] ?? 100;
         effect.phase++;
-        if (effect.phase < effect.frames.length) {
-          effect.sprite.texture = effect.frames[effect.phase]!;
+        if (effect.phase < effect.phaseCount) {
+          for (const piece of effect.pieces) {
+            piece.sprite.texture = piece.textures[effect.phase]!;
+          }
         }
       }
-      if (effect.phase < effect.frames.length) continue;
-      effect.sprite.destroy();
-      for (const frame of effect.frames) frame.destroy(true);
+      if (effect.phase < effect.phaseCount) continue;
+      effect.container.destroy({ children: true });
       this.effects.splice(index, 1);
     }
 
@@ -172,7 +190,7 @@ export class CombatEffectRenderer {
         missile.elapsedMs + deltaMs,
       );
       const progress = missile.elapsedMs / missile.durationMs;
-      missile.sprite.position.set(
+      missile.container.position.set(
         (missile.from.x +
           (missile.to.x - missile.from.x) * progress) *
           TILE_SIZE +
@@ -183,8 +201,7 @@ export class CombatEffectRenderer {
           TILE_SIZE / 2,
       );
       if (progress < 1) continue;
-      missile.sprite.destroy();
-      missile.texture.destroy(true);
+      missile.container.destroy({ children: true });
       this.missiles.splice(index, 1);
     }
 
@@ -199,25 +216,34 @@ export class CombatEffectRenderer {
         progress * (TILE_SIZE / 2);
       entry.text.alpha = 1 - progress;
       if (progress < 1) continue;
-      entry.text.destroy();
+      this.releaseText(entry.text);
       this.texts.splice(index, 1);
     }
+  }
+
+  private releaseText(text: Text): void {
+    text.removeFromParent();
+    if (this.textPool.length >= MAX_POOLED_TEXTS) {
+      text.destroy();
+      return;
+    }
+    this.textPool.push(text);
   }
 
   destroy(): void {
     this.destroyed = true;
     for (const effect of this.effects) {
-      effect.sprite.destroy();
-      for (const frame of effect.frames) frame.destroy(true);
+      effect.container.destroy({ children: true });
     }
     for (const missile of this.missiles) {
-      missile.sprite.destroy();
-      missile.texture.destroy(true);
+      missile.container.destroy({ children: true });
     }
     for (const entry of this.texts) entry.text.destroy();
+    for (const text of this.textPool) text.destroy();
     this.effects.length = 0;
     this.missiles.length = 0;
     this.texts.length = 0;
+    this.textPool.length = 0;
   }
 
   private async loadMagicEffect(
@@ -232,15 +258,13 @@ export class CombatEffectRenderer {
       return;
     }
     if (this.destroyed) return;
-    const frames = Array.from({ length: appearance.phases }, (_, phase) =>
-      this.store.frameTexture(appearance, { phase }),
-    );
-    const durations = frames.map(
+    const durations = Array.from(
+      { length: appearance.phases },
       (_, phase) =>
         appearance.animation?.phases[phase]?.minimumDurationMs ?? 100,
     );
-    const sprite = new Sprite(frames[0]);
-    sprite.position.set(
+    const container = new Container();
+    container.position.set(
       position.x * TILE_SIZE -
         (appearance.width - 1) * TILE_SIZE -
         appearance.flags.displacementX,
@@ -248,19 +272,48 @@ export class CombatEffectRenderer {
         (appearance.height - 1) * TILE_SIZE -
         appearance.flags.displacementY,
     );
-    sprite.zIndex = getMapObjectZ(
+    container.zIndex = getMapObjectZ(
       position.x,
       position.y,
       MAP_DEPTH.effect + 1,
     );
-    this.mapView.creatureLayer(position.z).addChild(sprite);
+    const pieces = this.buildPieces(appearance, container);
+    this.mapView.effectLayer(position.z).addChild(container);
     this.effects.push({
-      sprite,
-      frames,
+      container,
+      pieces,
       durations,
+      phaseCount: appearance.phases,
       elapsedMs: 0,
       phase: 0,
     });
+  }
+
+  /** One sprite per w×h piece, textured from the shared atlas per phase. */
+  private buildPieces(
+    appearance: TibiaObject,
+    container: Container,
+    patternX = 0,
+  ): MagicEffectPiece[] {
+    const pieces: MagicEffectPiece[] = [];
+    for (let h = 0; h < appearance.height; h++) {
+      for (let w = 0; w < appearance.width; w++) {
+        const textures = Array.from({ length: appearance.phases }, (_, phase) =>
+          this.store.spriteTexture(
+            this.store.spriteId(appearance, { x: patternX, w, h, phase }),
+          ),
+        );
+        if (textures.every((texture) => texture === Texture.EMPTY)) continue;
+        const sprite = new Sprite(textures[0]);
+        sprite.position.set(
+          (appearance.width - 1 - w) * TILE_SIZE,
+          (appearance.height - 1 - h) * TILE_SIZE,
+        );
+        container.addChild(sprite);
+        pieces.push({ sprite, textures });
+      }
+    }
+    return pieces;
   }
 
   private async loadMissile(
@@ -277,21 +330,25 @@ export class CombatEffectRenderer {
       return;
     }
     if (this.destroyed || from.z !== to.z) return;
-    const texture = this.store.frameTexture(appearance, {
-      x: this.missilePattern(from, to, appearance.px),
-      phase: 0,
-    });
-    const sprite = new Sprite(texture);
-    sprite.anchor.set(0.5);
-    sprite.position.set(
+    const container = new Container();
+    container.position.set(
       from.x * TILE_SIZE + TILE_SIZE / 2,
       from.y * TILE_SIZE + TILE_SIZE / 2,
     );
-    sprite.zIndex = getMapObjectZ(from.x, from.y, MAP_DEPTH.effect);
-    this.mapView.creatureLayer(from.z).addChild(sprite);
+    container.zIndex = getMapObjectZ(from.x, from.y, MAP_DEPTH.effect);
+    const pieces = this.buildPieces(
+      appearance,
+      container,
+      this.missilePattern(from, to, appearance.px),
+    );
+    // Recenter pieces so the container origin matches the old canvas center.
+    for (const piece of pieces) {
+      piece.sprite.position.x -= (appearance.width * TILE_SIZE) / 2;
+      piece.sprite.position.y -= (appearance.height * TILE_SIZE) / 2;
+    }
+    this.mapView.effectLayer(from.z).addChild(container);
     this.missiles.push({
-      sprite,
-      texture,
+      container,
       from: { ...from },
       to: { ...to },
       durationMs,

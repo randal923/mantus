@@ -69,12 +69,12 @@ const outfit: TibiaObject = {
 };
 
 const store = {
-  frameTexture: () => Texture.EMPTY,
+  cachedFrameTexture: () => Texture.EMPTY,
 } as unknown as AssetStore;
 
 const animationTextures = [new Texture(), new Texture(), new Texture()];
 const animationStore = {
-  frameTexture: (_outfit: TibiaObject, pattern: SpritePattern) =>
+  cachedFrameTexture: (_outfit: TibiaObject, pattern: SpritePattern) =>
     animationTextures[pattern.phase ?? 0] ?? Texture.EMPTY,
 } as unknown as AssetStore;
 

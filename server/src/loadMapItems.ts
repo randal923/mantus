@@ -31,6 +31,22 @@ function comparePosition(entry: ItemEntry, position: Position): number {
   return entry.z - position.z || entry.y - position.y || entry.x - position.x;
 }
 
+/** comparePosition against the raw buffer without materializing an entry. */
+function comparePositionAt(
+  buffer: Buffer,
+  index: number,
+  position: Position,
+): number {
+  const offset = HEADER_SIZE + index * ENTRY_SIZE;
+  return (
+    buffer.readUInt8(offset + 4) - position.z ||
+    buffer.readUInt16LE(offset + 2) - position.y ||
+    buffer.readUInt16LE(offset) - position.x
+  );
+}
+
+const NO_ITEMS: ReadonlyArray<MapItem> = [];
+
 function mapItemCount(
   itemId: number,
   instanceId: string,
@@ -101,8 +117,11 @@ export function loadMapItems(
     let high = count;
     while (low < high) {
       const middle = Math.floor((low + high) / 2);
-      if (comparePosition(readEntry(buffer, middle), position) < 0) low = middle + 1;
+      if (comparePositionAt(buffer, middle, position) < 0) low = middle + 1;
       else high = middle;
+    }
+    if (low >= count || comparePositionAt(buffer, low, position) !== 0) {
+      return NO_ITEMS;
     }
     const items: MapItem[] = [];
     for (let index = low; index < count; index++) {

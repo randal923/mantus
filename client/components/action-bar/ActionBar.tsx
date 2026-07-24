@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { ActionBarAction } from "@tibia/protocol";
 import { isEditableTarget } from "../../lib/hotkeys/isEditableTarget";
 import { matchesActionBarHotkey } from "../../lib/hotkeys/matchesActionBarHotkey";
@@ -44,7 +44,7 @@ interface ActionBarProps {
   readonly onDropItem: (slotIndex: number, itemId: string) => void;
 }
 
-export function ActionBar({
+export const ActionBar = memo(function ActionBar({
   ariaLabel,
   slots,
   hotkeysEnabled = true,
@@ -239,4 +239,4 @@ export function ActionBar({
       )}
     </div>
   );
-}
+});

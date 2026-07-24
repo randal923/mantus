@@ -69,6 +69,12 @@ export class CharacterProgression {
   private accountTier: AccountTier;
   private regeneration: ReturnType<typeof getAccountRegeneration>;
   private wheelModifier: DerivedStatModifier;
+  private cachedStats: {
+    vocation: CharacterVocation;
+    level: number;
+    wheel: DerivedStatModifier;
+    value: ReturnType<typeof deriveCharacterStats>;
+  } | null = null;
 
   constructor(
     vocation: CharacterVocation,
@@ -506,12 +512,30 @@ export class CharacterProgression {
   }
 
   private get stats() {
-    return deriveCharacterStats({
+    // Hot getter (speed/maxMana/maxHealth read every step and regen tick);
+    // recompute only when one of the derivation inputs actually changed.
+    const cached = this.cachedStats;
+    if (
+      cached &&
+      cached.vocation === this.vocation &&
+      cached.level === this.currentLevel &&
+      cached.wheel === this.wheelModifier
+    ) {
+      return cached.value;
+    }
+    const value = deriveCharacterStats({
       vocation: this.vocation,
       definitionVersion: this.definitionVersion,
       level: this.currentLevel,
       wheel: this.wheelModifier,
     });
+    this.cachedStats = {
+      vocation: this.vocation,
+      level: this.currentLevel,
+      wheel: this.wheelModifier,
+      value,
+    };
+    return value;
   }
 
   setWheelModifier(modifier: DerivedStatModifier): void {

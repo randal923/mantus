@@ -1,5 +1,7 @@
 import type { TibiaObject } from "./AssetStore";
-import { getItemAnimationPhase } from "./getItemAnimationPhase";
+import type { ItemAnimationTimeline } from "./getItemAnimationTimeline";
+import { getItemAnimationTimeline } from "./getItemAnimationTimeline";
+import { resolveItemAnimationPhase } from "./resolveItemAnimationPhase";
 
 export interface AnimatedMapItemRegistration {
   id: string;
@@ -11,6 +13,7 @@ export interface AnimatedMapItemRegistration {
 
 interface AnimatedMapItemEntry extends AnimatedMapItemRegistration {
   phase: number;
+  timeline: ItemAnimationTimeline;
 }
 
 /** Advances only animated items currently registered in visible map windows. */
@@ -34,13 +37,13 @@ export class AnimatedMapItemRegistry {
 
   register(registration: AnimatedMapItemRegistration): void {
     this.unregister(registration.id);
-    const phase = getItemAnimationPhase(
+    const timeline = getItemAnimationTimeline(
       registration.appearance,
-      this.elapsedMs,
       registration.instanceSeed,
     );
+    const phase = resolveItemAnimationPhase(timeline, this.elapsedMs);
     registration.applyPhase(phase);
-    this.entries.set(registration.id, { ...registration, phase });
+    this.entries.set(registration.id, { ...registration, phase, timeline });
     const floorEntries = this.entriesByFloor.get(registration.floor) ?? new Set<string>();
     floorEntries.add(registration.id);
     this.entriesByFloor.set(registration.floor, floorEntries);
@@ -66,11 +69,7 @@ export class AnimatedMapItemRegistry {
       for (const id of this.entriesByFloor.get(floor) ?? []) {
         const entry = this.entries.get(id);
         if (!entry) continue;
-        const phase = getItemAnimationPhase(
-          entry.appearance,
-          this.elapsedMs,
-          entry.instanceSeed,
-        );
+        const phase = resolveItemAnimationPhase(entry.timeline, this.elapsedMs);
         if (phase === entry.phase) continue;
         entry.phase = phase;
         entry.applyPhase(phase);

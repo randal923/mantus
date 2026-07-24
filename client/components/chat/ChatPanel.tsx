@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { memo, useEffect, useId, useRef, useState } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { isEditableTarget } from "../../lib/hotkeys/isEditableTarget";
 import { ChatComposer } from "./ChatComposer";
@@ -26,7 +26,7 @@ interface ChatPanelProps {
   onPinnedOpenChange: (pinnedOpen: boolean) => void;
 }
 
-export function ChatPanel({
+export const ChatPanel = memo(function ChatPanel({
   channels,
   initialChannelId,
   selectedChannelId: controlledChannelId,
@@ -241,4 +241,4 @@ export function ChatPanel({
       </section>
     </div>
   );
-}
+});

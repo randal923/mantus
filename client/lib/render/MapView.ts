@@ -45,6 +45,7 @@ interface FloorLayers {
   container: Container;
   ground: Container;
   objects: Container;
+  transient: Container;
 }
 
 interface RenderedTile {
@@ -83,12 +84,13 @@ export class MapView {
     for (const z of FLOORS) {
       const ground = new Container();
       const objects = new Container();
+      const transient = new Container();
       ground.sortableChildren = true;
       objects.sortableChildren = true;
       const container = new Container();
-      container.addChild(ground, objects);
+      container.addChild(ground, objects, transient);
       this.container.addChild(container);
-      this.floors.set(z, { container, ground, objects });
+      this.floors.set(z, { container, ground, objects, transient });
     }
   }
 
@@ -97,6 +99,16 @@ export class MapView {
     const floor = this.floors.get(z);
     if (!floor) throw new Error(`map floor ${z} is out of range`);
     return floor.objects;
+  }
+
+  /**
+   * Short-lived effects/missiles/floating text attach here: it draws above
+   * the floor's objects without forcing a re-sort of that layer per spawn.
+   */
+  effectLayer(z: number): Container {
+    const floor = this.floors.get(z);
+    if (!floor) throw new Error(`map floor ${z} is out of range`);
+    return floor.transient;
   }
 
   isFloorVisible(z: number): boolean {

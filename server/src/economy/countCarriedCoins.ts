@@ -7,13 +7,13 @@ import {
 } from "./CurrencyBalance";
 
 export function countCarriedCoins(items: ReadonlyArray<Item>): CurrencyBalance {
-  const count = (typeId: number) =>
-    items
-      .filter((item) => item.typeId === typeId)
-      .reduce((total, item) => total + item.count, 0);
-  return {
-    gold: count(GOLD_COIN_TYPE_ID),
-    platinum: count(PLATINUM_COIN_TYPE_ID),
-    crystal: count(CRYSTAL_COIN_TYPE_ID),
-  };
+  let gold = 0;
+  let platinum = 0;
+  let crystal = 0;
+  for (const item of items) {
+    if (item.typeId === GOLD_COIN_TYPE_ID) gold += item.count;
+    else if (item.typeId === PLATINUM_COIN_TYPE_ID) platinum += item.count;
+    else if (item.typeId === CRYSTAL_COIN_TYPE_ID) crystal += item.count;
+  }
+  return { gold, platinum, crystal };
 }

@@ -7,6 +7,7 @@ import { Player } from "../Player";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { Visibility } from "../Visibility";
+import { drainDue } from "../drainDue";
 import type { Creature } from "./Creature";
 import { Monster } from "./Monster";
 import type { MonsterEventHooks } from "./MonsterEventHooks";
@@ -76,14 +77,10 @@ export class MonsterEventService implements MonsterEventHooks {
   }
 
   tick(now: number): void {
-    for (const entry of this.scheduledStorage.filter((value) => value.executeAt <= now)) {
-      const index = this.scheduledStorage.indexOf(entry);
-      if (index >= 0) this.scheduledStorage.splice(index, 1);
+    for (const entry of drainDue(this.scheduledStorage, now)) {
       this.worldStorage.set(entry.key, entry.value);
     }
-    for (const entry of this.scheduledSpawns.filter((value) => value.executeAt <= now)) {
-      const index = this.scheduledSpawns.indexOf(entry);
-      if (index >= 0) this.scheduledSpawns.splice(index, 1);
+    for (const entry of drainDue(this.scheduledSpawns, now)) {
       const creatureId = this.spawnMonster(entry.typeId, entry.position, now);
       if (creatureId && entry.removeAfterMs) {
         this.scheduledRemovals.push({
@@ -92,15 +89,11 @@ export class MonsterEventService implements MonsterEventHooks {
         });
       }
     }
-    for (const entry of this.scheduledRemovals.filter((value) => value.executeAt <= now)) {
-      const index = this.scheduledRemovals.indexOf(entry);
-      if (index >= 0) this.scheduledRemovals.splice(index, 1);
+    for (const entry of drainDue(this.scheduledRemovals, now)) {
       this.removeMonster(entry.creatureId, now);
       this.worldStorage.set("GlobalStorage.UglyMonster", 0);
     }
-    for (const entry of this.scheduledItemRemovals.filter((value) => value.executeAt <= now)) {
-      const index = this.scheduledItemRemovals.indexOf(entry);
-      if (index >= 0) this.scheduledItemRemovals.splice(index, 1);
+    for (const entry of drainDue(this.scheduledItemRemovals, now)) {
       if (entry.instanceId) {
         this.items.removeWorldItem(entry.instanceId, entry.position, now);
       } else if (entry.itemTypeId) {
@@ -112,9 +105,7 @@ export class MonsterEventService implements MonsterEventHooks {
         );
       }
     }
-    for (const entry of this.scheduledTeleports.filter((value) => value.executeAt <= now)) {
-      const index = this.scheduledTeleports.indexOf(entry);
-      if (index >= 0) this.scheduledTeleports.splice(index, 1);
+    for (const entry of drainDue(this.scheduledTeleports, now)) {
       const monster = this.world.getCreature(entry.monsterId);
       const player = this.world.getPlayer(entry.playerId);
       if (
@@ -130,11 +121,7 @@ export class MonsterEventService implements MonsterEventHooks {
       this.visibility.onCreatureStepped(monster, from, 0);
       this.visibility.broadcastMagicEffect(monster.position, 11, monster.id);
     }
-    for (const entry of this.scheduledTransformations.filter(
-      (value) => value.executeAt <= now,
-    )) {
-      const index = this.scheduledTransformations.indexOf(entry);
-      if (index >= 0) this.scheduledTransformations.splice(index, 1);
+    for (const entry of drainDue(this.scheduledTransformations, now)) {
       this.transformMonster(entry.monsterId, entry.typeId, now);
     }
     for (const [playerId, expiresAt] of this.teleportCooldownUntil) {
@@ -246,9 +233,13 @@ export class MonsterEventService implements MonsterEventHooks {
       return [];
     }
     this.nextTormentAt = now + 3_000;
-    const bossPresent = [...this.world.allCreatures()].some(
-      (creature) => creature.name === "Goshnar's Megalomania",
-    );
+    let bossPresent = false;
+    for (const creature of this.world.allCreatures()) {
+      if (creature.name === "Goshnar's Megalomania") {
+        bossPresent = true;
+        break;
+      }
+    }
     const key = "SoulWar.goshnars-hatred-torment-count";
     const damageTable = [
       1_400, 1_600, 1_800, 2_200, 2_400, 2_600, 3_000,

@@ -29,10 +29,6 @@ export function GameInventoryOverlays() {
   );
   const ownCharacter = useGameWindowStore((state) => state.ownCharacter);
   const spells = useGameWindowStore((state) => state.spells);
-  const fightState = useGameWindowStore((state) => state.fightState);
-  const visibleCreatures = useGameWindowStore(
-    (state) => state.visibleCreatures,
-  );
   const dispatchItemOp = useGameWindowStore(
     (state) => state.sessionActions?.dispatchItemOpChecked ?? null,
   );
@@ -150,11 +146,12 @@ export function GameInventoryOverlays() {
                   spell.origin === "rune" &&
                   spell.runeItemTypeId === item.typeId,
               );
+              const state = store.getState();
               const target = getRuneCombatTarget(
                 rune,
-                fightState?.attackTargetId ?? null,
-                visibleCreatures,
-                ownCharacter.position,
+                state.fightState?.attackTargetId ?? null,
+                state.visibleCreatures,
+                state.ownCharacter?.position ?? ownCharacter.position,
               );
               if (rune?.targetKind === "position") {
                 runtime.pendingRuneRef.current = item;

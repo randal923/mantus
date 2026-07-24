@@ -18,6 +18,13 @@ interface SaveState {
   externalMutationCompletion: Promise<void> | null;
   settleExternalMutation: (() => void) | null;
   discardOnUntrack: boolean;
+  /**
+   * Fingerprints of the skills/storage rows as last handed to the store.
+   * Saves are serialized per character and a failed save poisons the whole
+   * chain, so "same as last enqueued" always means "same as persisted".
+   */
+  lastSkillsFingerprint: string;
+  lastStorageFingerprint: string;
 }
 
 interface BeginExternalMutationOptions {
@@ -64,6 +71,9 @@ export class CharacterPersistence {
       externalMutationCompletion: null,
       settleExternalMutation: null,
       discardOnUntrack: false,
+      // The player was just loaded from the store, so the rows match now.
+      lastSkillsFingerprint: this.skillsFingerprint(player),
+      lastStorageFingerprint: this.storageFingerprint(player.storageSnapshot),
     });
   }
 
@@ -243,11 +253,19 @@ export class CharacterPersistence {
 
   private enqueueSnapshot(state: SaveState, now: number): void {
     if (!state.dirty || state.failed) return;
+    const skillsFingerprint = this.skillsFingerprint(state.player);
+    const storageValues = state.player.storageSnapshot;
+    const storageFingerprint = this.storageFingerprint(storageValues);
     const snapshot = this.snapshot(
       state.player,
       state.nextExpectedVersion,
       state.nextProgressionEventIndex,
+      storageValues,
+      skillsFingerprint !== state.lastSkillsFingerprint,
+      storageFingerprint !== state.lastStorageFingerprint,
     );
+    state.lastSkillsFingerprint = skillsFingerprint;
+    state.lastStorageFingerprint = storageFingerprint;
     state.dirty = false;
     this.dirtyStates.delete(state);
     state.nextExpectedVersion += 1;
@@ -300,6 +318,9 @@ export class CharacterPersistence {
     player: Player,
     expectedVersion: number,
     progressionEventIndex: number,
+    storageValues: Readonly<Record<string, number>>,
+    skillsChanged: boolean,
+    storageChanged: boolean,
   ): CharacterSaveSnapshot {
     return {
       characterId: player.id,
@@ -314,11 +335,13 @@ export class CharacterPersistence {
       mana: player.mana,
       soul: player.progression.soul,
       skills: player.progression.skills,
+      skillsChanged,
       progressionEvents:
         player.progression.sessionProgressionEvents.slice(
           progressionEventIndex,
         ),
-      storageValues: player.storageSnapshot,
+      storageValues,
+      storageChanged,
       positionX: player.position.x,
       positionY: player.position.y,
       positionZ: player.position.z,
@@ -329,6 +352,20 @@ export class CharacterPersistence {
         player.skullExpiresAt === null ? null : new Date(player.skullExpiresAt),
       wheelBonus: player.wheelStatModifier,
     };
+  }
+
+  private skillsFingerprint(player: Player): string {
+    let fingerprint = "";
+    for (const skill of player.progression.skills) {
+      fingerprint += `${skill.skill}:${skill.level}:${skill.tries};`;
+    }
+    return fingerprint;
+  }
+
+  private storageFingerprint(
+    storageValues: Readonly<Record<string, number>>,
+  ): string {
+    return JSON.stringify(storageValues);
   }
 
   private removeSettledState(characterId: string, state: SaveState): void {

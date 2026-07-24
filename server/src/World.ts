@@ -286,7 +286,7 @@ export class World {
       const shift = position.z - z;
       const center = { x: position.x + shift, y: position.y + shift, z };
       for (const creature of this.grid.query(center, range.x, range.y)) {
-        if (this.canSee(position, creature.position, range)) {
+        if (canSee(position, creature.position, range, firstFloor)) {
           creatures.add(creature);
         }
       }
@@ -336,37 +336,30 @@ export class World {
   }
 
   playersWhoCanSee(position: Position, range: ViewRange): Player[] {
-    const players = new Set<Player>();
-    for (const z of this.grid.occupiedFloors()) {
-      if (
-        (position.z > GROUND_FLOOR && z !== position.z) ||
-        (position.z <= GROUND_FLOOR && z > GROUND_FLOOR)
-      ) {
-        continue;
-      }
-      const shift = z - position.z;
-      const center = { x: position.x - shift, y: position.y - shift, z };
-      for (const creature of this.grid.query(center, range.x, range.y)) {
-        const player = this.players.get(creature.id);
-        if (!player) continue;
-        if (this.canCreatureSee(player, position, range)) players.add(player);
-      }
+    // canCreatureSee already encodes the floor-stack and shifted-box rules
+    // the old per-floor grid scan prefiltered with; players are far rarer
+    // than creatures, so checking each directly is cheaper than the scan.
+    const players: Player[] = [];
+    for (const player of this.players.values()) {
+      if (this.canCreatureSee(player, position, range)) players.push(player);
     }
-    return [...players];
+    return players;
   }
 
   private firstVisibleFloorFor(creature: Creature): number {
+    // First-visible-floor reads static tiles plus door/hole passability
+    // overrides only, so ordinary item drops must not invalidate the cache.
     const cached = this.firstVisibleFloorByCreature.get(creature);
     if (
       cached?.positionRevision === creature.positionRevision &&
-      cached.mapRevision === this.mapItems.revision
+      cached.mapRevision === this.mapItems.passabilityRevision
     ) {
       return cached.floor;
     }
     const floor = getFirstVisibleFloor(creature.position, this.map);
     this.firstVisibleFloorByCreature.set(creature, {
       positionRevision: creature.positionRevision,
-      mapRevision: this.mapItems.revision,
+      mapRevision: this.mapItems.passabilityRevision,
       floor,
     });
     return floor;

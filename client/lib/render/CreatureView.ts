@@ -83,7 +83,6 @@ export class CreatureView {
   private publicGuildName: string | null;
   private publicAtWar: boolean;
   private readonly appearance: CreatureState["outfit"];
-  private readonly frames = new Map<string, Texture>();
   private direction: Direction;
   private walkDirection: Direction;
   private tileX: number;
@@ -461,29 +460,19 @@ export class CreatureView {
       return;
     }
     if (this.outfit.category !== "outfit") {
-      const key = "item";
-      let texture = this.frames.get(key);
-      if (!texture) {
-        texture = this.store.frameTexture(this.outfit, { phase: 0 });
-        this.frames.set(key, texture);
-      }
-      this.sprite.texture = texture;
+      this.sprite.texture = this.store.cachedFrameTexture(this.outfit, {
+        phase: 0,
+      });
       return;
     }
     const walkPhases = this.outfit.phases - 1;
     const moving = this.moveT < 1;
     const phase = moving && walkPhases > 0 ? this.walkAnimationPhase : 0;
     const dir = DIR_INDEX[moving ? this.walkDirection : this.direction];
-    const key = `${dir}:${phase}`;
-    let texture = this.frames.get(key);
-    if (!texture) {
-      texture = this.store.frameTexture(
-        this.outfit,
-        { x: dir, phase },
-        this.colors,
-      );
-      this.frames.set(key, texture);
-    }
-    this.sprite.texture = texture;
+    this.sprite.texture = this.store.cachedFrameTexture(
+      this.outfit,
+      { x: dir, phase },
+      this.colors,
+    );
   }
 }

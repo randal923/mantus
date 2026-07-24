@@ -74,6 +74,21 @@ export class SpatialGrid {
     return found;
   }
 
+  /** Allocation-free exact-tile check for the movement/pathfinding hot path. */
+  hasCreatureAt(position: Position): boolean {
+    const cell = this.cells.get(this.cellKey(position));
+    if (!cell) return false;
+    for (const creature of cell) {
+      if (
+        creature.position.x === position.x &&
+        creature.position.y === position.y
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   occupiedFloors(): Iterable<number> {
     return this.floorCounts.keys();
   }

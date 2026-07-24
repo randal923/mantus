@@ -78,9 +78,13 @@ export interface CharacterSaveSnapshot {
   readonly mana: number;
   readonly soul: number;
   readonly skills: ReadonlyArray<CharacterSkill>;
+  /** False lets the store skip rewriting rows that match the last save. */
+  readonly skillsChanged: boolean;
   readonly progressionDefinitionVersion: number;
   readonly progressionEvents: ReadonlyArray<ProgressionEvent>;
   readonly storageValues: Readonly<Record<string, number>>;
+  /** False lets the store skip the storage delete + reinsert entirely. */
+  readonly storageChanged: boolean;
   readonly vocation: CharacterVocation;
   readonly positionX: number;
   readonly positionY: number;

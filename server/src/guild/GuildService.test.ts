@@ -69,6 +69,8 @@ function makeHarness(): Harness {
         knownMapItemTiles: new Map(),
         attackTargetId: null,
         send: (message: ServerMessage) => sent.push(message),
+        sendSerialized: (message: string) =>
+          sent.push(JSON.parse(message) as ServerMessage),
         sendError: () => {},
       } as unknown as Session;
       sessions.set(id, session);

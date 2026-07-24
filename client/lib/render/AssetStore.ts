@@ -100,6 +100,7 @@ export class AssetStore {
   private sheetTextures: (Texture | undefined)[] = [];
   private sheetLoads = new Map<number, Promise<void>>();
   private spriteTexCache = new Map<number, Texture>();
+  private frameTexCache = new Map<string, Texture>();
   private loadPromise: Promise<void> | null = null;
 
   /** Idempotent: concurrent and repeat callers share one catalog fetch. */
@@ -326,6 +327,31 @@ export class AssetStore {
   frameTexture(o: TibiaObject, p: SpritePattern, colors?: OutfitColors): Texture {
     const tex = Texture.from(this.bakeFrame(o, p, colors));
     tex.source.scaleMode = "nearest";
+    return tex;
+  }
+
+  /**
+   * Session-lifetime shared frame textures so identical outfits bake and
+   * upload once. Callers must never destroy the returned texture.
+   */
+  cachedFrameTexture(
+    o: TibiaObject,
+    p: SpritePattern,
+    colors?: OutfitColors,
+  ): Texture {
+    const key = [
+      o.category,
+      o.clientId,
+      p.x ?? 0,
+      p.y ?? 0,
+      p.z ?? 0,
+      p.phase ?? 0,
+      colors ? `${colors.head}|${colors.body}|${colors.legs}|${colors.feet}` : "",
+    ].join(":");
+    const cached = this.frameTexCache.get(key);
+    if (cached) return cached;
+    const tex = this.frameTexture(o, p, colors);
+    this.frameTexCache.set(key, tex);
     return tex;
   }
 }

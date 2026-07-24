@@ -8,29 +8,36 @@ export function collectReachableItemIds(
   items: ReadonlyArray<Item>,
   characterId: string,
 ): Set<string> {
-  const reachable = new Set(
-    items
-      .filter(
-        (item) =>
-          item.location.kind === "equipment" &&
-          item.location.characterId === characterId,
-      )
-      .map((item) => item.id),
-  );
-  for (let depth = 0; depth < 8; depth++) {
-    let changed = false;
-    for (const item of items) {
-      if (
-        (item.location.kind === "container" ||
-          item.location.kind === "corpse") &&
-        reachable.has(item.location.containerId) &&
-        !reachable.has(item.id)
-      ) {
-        reachable.add(item.id);
-        changed = true;
+  const reachable = new Set<string>();
+  const childrenByContainer = new Map<string, Item[]>();
+  for (const item of items) {
+    if (
+      item.location.kind === "equipment" &&
+      item.location.characterId === characterId
+    ) {
+      reachable.add(item.id);
+      continue;
+    }
+    if (
+      item.location.kind === "container" ||
+      item.location.kind === "corpse"
+    ) {
+      const children = childrenByContainer.get(item.location.containerId);
+      if (children) children.push(item);
+      else childrenByContainer.set(item.location.containerId, [item]);
+    }
+  }
+  let frontier = [...reachable];
+  for (let depth = 0; depth < 8 && frontier.length > 0; depth++) {
+    const next: string[] = [];
+    for (const containerId of frontier) {
+      for (const child of childrenByContainer.get(containerId) ?? []) {
+        if (reachable.has(child.id)) continue;
+        reachable.add(child.id);
+        next.push(child.id);
       }
     }
-    if (!changed) break;
+    frontier = next;
   }
   return reachable;
 }

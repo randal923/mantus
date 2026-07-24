@@ -51,6 +51,21 @@ export class Visibility {
     }
   }
 
+  private *knowingViewerSessions(creature: Creature): Iterable<Session> {
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      if (session.knownCreatureIds.has(creature.id)) yield session;
+    }
+  }
+
+  /**
+   * The recipient set shared by health/effect/combat-text broadcasts about
+   * one creature. Compute it once per combat event and pass it to each
+   * broadcast to avoid repeating the visibility scan.
+   */
+  knowingViewersOf(creature: Creature): ReadonlyArray<Session> {
+    return [...this.knowingViewerSessions(creature)];
+  }
+
   *viewerSessionsFor(position: Position, margin: number): Iterable<Session> {
     const maximumRange = {
       x: PROTOCOL_LIMITS.maxViewRangeX + margin,
@@ -135,27 +150,19 @@ export class Visibility {
 
   broadcastPose(creature: Creature): void {
     const message = this.movedMessage(creature, creature.position, 0);
-    this.sendShared(
-      message,
-      [...this.viewerSessionsFor(creature.position, 0)].filter((session) =>
-        session.knownCreatureIds.has(creature.id)
-      ),
-    );
+    this.sendShared(message, this.knowingViewerSessions(creature));
   }
 
-  broadcastHealth(creature: Creature): void {
-    const state = creature.toState();
+  broadcastHealth(
+    creature: Creature,
+    recipients?: ReadonlyArray<Session>,
+  ): void {
     const message: ServerMessage = {
       type: "creature-health" as const,
       creatureId: creature.id,
-      healthPercent: state.healthPercent,
+      healthPercent: creature.healthPercent,
     };
-    this.sendShared(
-      message,
-      [...this.viewerSessionsFor(creature.position, 0)].filter((session) =>
-        session.knownCreatureIds.has(creature.id)
-      ),
-    );
+    this.sendShared(message, recipients ?? this.knowingViewerSessions(creature));
   }
 
   broadcastCreatureSpeech(
@@ -171,12 +178,7 @@ export class Visibility {
       position: { ...creature.position },
       text,
     };
-    this.sendShared(
-      message,
-      [...this.viewerSessionsFor(creature.position, 0)].filter((session) =>
-        session.knownCreatureIds.has(creature.id)
-      ),
-    );
+    this.sendShared(message, this.knowingViewerSessions(creature));
   }
 
   onCreatureStateChanged(creature: Creature): void {
@@ -206,6 +208,7 @@ export class Visibility {
     value: number,
     damageType: DamageType,
     block: HitBlock,
+    recipients?: ReadonlyArray<Session>,
   ): void {
     const message: ServerMessage = {
       type: "combat-text",
@@ -214,12 +217,7 @@ export class Visibility {
       damageType,
       block,
     };
-    const recipients: Session[] = [];
-    for (const session of this.viewerSessionsFor(creature.position, 0)) {
-      if (!session.knownCreatureIds.has(creature.id)) continue;
-      recipients.push(session);
-    }
-    this.sendShared(message, recipients);
+    this.sendShared(message, recipients ?? this.knowingViewerSessions(creature));
   }
 
   sendExperienceText(
@@ -252,6 +250,7 @@ export class Visibility {
     position: Position,
     effectId: number,
     relatedCreatureId?: string,
+    recipients?: ReadonlyArray<Session>,
   ): void {
     // Effect id 0 means "no effect" in imported content; sending it would
     // violate the protocol schema (magic-effect requires a positive id).
@@ -261,7 +260,11 @@ export class Visibility {
       position: { ...position },
       effectId,
     };
-    const recipients: Session[] = [];
+    if (recipients) {
+      this.sendShared(message, recipients);
+      return;
+    }
+    const found: Session[] = [];
     for (const session of this.viewerSessionsFor(position, 0)) {
       if (
         relatedCreatureId &&
@@ -269,9 +272,9 @@ export class Visibility {
       ) {
         continue;
       }
-      recipients.push(session);
+      found.push(session);
     }
-    this.sendShared(message, recipients);
+    this.sendShared(message, found);
   }
 
   broadcastDistanceMissile(
@@ -281,10 +284,9 @@ export class Visibility {
     durationMs: number,
     relatedCreatureIds: ReadonlyArray<string> = [],
   ): void {
-    const nearby = new Set([
-      ...this.viewerSessionsFor(from, 0),
-      ...this.viewerSessionsFor(to, 0),
-    ]);
+    const nearby = new Set<Session>();
+    for (const session of this.viewerSessionsFor(from, 0)) nearby.add(session);
+    for (const session of this.viewerSessionsFor(to, 0)) nearby.add(session);
     const message: ServerMessage = {
       type: "distance-missile",
       from: { ...from },
@@ -334,29 +336,7 @@ export class Visibility {
       session.knownMapItemTiles.set(key, tile.position);
       return true;
     });
-    for (let index = 0; index < hidden.length; index += 32) {
-      session.send({
-        type: "tile-states",
-        visible: [],
-        hidden: hidden.slice(index, index + 32),
-      });
-    }
-    let batch: TileState[] = [];
-    for (const tile of visible) {
-      const candidate = [...batch, tile];
-      const bytes = Buffer.byteLength(
-        JSON.stringify({ type: "tile-states", visible: candidate, hidden: [] }),
-      );
-      if (bytes > PROTOCOL_LIMITS.maxMessageBytes && batch.length > 0) {
-        session.send({ type: "tile-states", visible: batch, hidden: [] });
-        batch = [tile];
-      } else {
-        batch = candidate;
-      }
-    }
-    if (batch.length > 0) {
-      session.send({ type: "tile-states", visible: batch, hidden: [] });
-    }
+    this.sendMapItemChanges(session, visible, hidden);
   }
 
   private syncMapItemsAfterStep(
@@ -395,18 +375,25 @@ export class Visibility {
         hidden: hidden.slice(index, index + 32),
       });
     }
+    const envelopeBytes = Buffer.byteLength(
+      JSON.stringify({ type: "tile-states", visible: [], hidden: [] }),
+    );
     let batch: TileState[] = [];
+    let batchBytes = envelopeBytes;
     for (const tile of visible) {
-      const candidate = [...batch, tile];
-      const bytes = Buffer.byteLength(
-        JSON.stringify({ type: "tile-states", visible: candidate, hidden: [] }),
-      );
-      if (bytes > PROTOCOL_LIMITS.maxMessageBytes && batch.length > 0) {
+      // +1 covers the separating comma; overestimating by one byte on the
+      // first tile only makes batches marginally smaller, never oversized.
+      const tileBytes = Buffer.byteLength(JSON.stringify(tile)) + 1;
+      if (
+        batch.length > 0 &&
+        batchBytes + tileBytes > PROTOCOL_LIMITS.maxMessageBytes
+      ) {
         session.send({ type: "tile-states", visible: batch, hidden: [] });
-        batch = [tile];
-      } else {
-        batch = candidate;
+        batch = [];
+        batchBytes = envelopeBytes;
       }
+      batch.push(tile);
+      batchBytes += tileBytes;
     }
     if (batch.length > 0) {
       session.send({ type: "tile-states", visible: batch, hidden: [] });
@@ -432,10 +419,11 @@ export class Visibility {
       this.movedMessage(creature, from, durationMs),
     ),
   ): void {
-    const nearby = new Set([
-      ...this.viewerSessionsFor(from, 1),
-      ...this.viewerSessionsFor(creature.position, 1),
-    ]);
+    const nearby = new Set<Session>();
+    for (const session of this.viewerSessionsFor(from, 1)) nearby.add(session);
+    for (const session of this.viewerSessionsFor(creature.position, 1)) {
+      nearby.add(session);
+    }
     for (const session of nearby) {
       if (session.id === excludedSessionId || !session.playerId) continue;
       const viewer = this.world.getPlayer(session.playerId);

@@ -64,6 +64,53 @@ describe("CharacterPersistence", () => {
     expect(persistence.unsavedPlayerCount).toBe(0);
   });
 
+  it("flags skills and storage as unchanged for movement-only saves", async () => {
+    const snapshots: CharacterSaveSnapshot[] = [];
+    const store = makeStore(async (snapshot) => {
+      snapshots.push(snapshot);
+      return snapshot.expectedVersion + 1;
+    });
+    const persistence = new CharacterPersistence(store, 30_000, 0, 0);
+    const player = new Player(makeCharacter("character-id"), {
+      x: 0,
+      y: 0,
+      z: 7,
+    });
+
+    persistence.track(player, 0);
+    player.moveTo({ x: 1, y: 0, z: 7 });
+    persistence.saveNow(player, 1);
+    await persistence.flushCharacter(player.id);
+
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0]).toMatchObject({
+      skillsChanged: false,
+      storageChanged: false,
+    });
+
+    player.setStorageValue("quest.flag", 1);
+    player.progression.awardSkillTries("event-1", "fist", 50);
+    persistence.saveNow(player, 3);
+    await persistence.flushCharacter(player.id);
+
+    expect(snapshots).toHaveLength(2);
+    expect(snapshots[1]).toMatchObject({
+      skillsChanged: true,
+      storageChanged: true,
+    });
+    expect(snapshots[1]?.storageValues).toMatchObject({ "quest.flag": 1 });
+
+    player.moveTo({ x: 2, y: 0, z: 7 });
+    persistence.saveNow(player, 5);
+    await persistence.flushCharacter(player.id);
+
+    expect(snapshots).toHaveLength(3);
+    expect(snapshots[2]).toMatchObject({
+      skillsChanged: false,
+      storageChanged: false,
+    });
+  });
+
   it("retries transient database failures", async () => {
     let attempts = 0;
     const store = makeStore(async (snapshot) => {

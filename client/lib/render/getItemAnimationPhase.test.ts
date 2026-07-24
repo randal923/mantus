@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createRenderTestObject } from "./createRenderTestObject";
 import { getItemAnimationPhase } from "./getItemAnimationPhase";
+import { getItemAnimationTimeline } from "./getItemAnimationTimeline";
+import { resolveItemAnimationPhase } from "./resolveItemAnimationPhase";
 
 describe("getItemAnimationPhase", () => {
   it("keeps one-phase items on phase zero", () => {
@@ -89,5 +91,30 @@ describe("getItemAnimationPhase", () => {
     expect([0, 1, 2, 1, 0].map((_, index) =>
       getItemAnimationPhase(pingPong, index * 100, 0),
     )).toEqual([0, 1, 2, 1, 0]);
+  });
+
+  it("matches precomputed timeline resolution for every seed and elapsed time", () => {
+    const appearance = createRenderTestObject({
+      phases: 4,
+      animation: {
+        source: "legacy",
+        timingMode: "asynchronous",
+        loopType: "ping-pong",
+        loopCount: 0,
+        startPhase: 2,
+        phases: Array.from({ length: 4 }, (_, phase) => ({
+          minimumDurationMs: 100 + phase * 50,
+          maximumDurationMs: 300 + phase * 50,
+        })),
+      },
+    });
+    for (const seed of [0, 1, 7, 4_294_967_295]) {
+      const timeline = getItemAnimationTimeline(appearance, seed);
+      for (let elapsed = 0; elapsed <= 5_000; elapsed += 73) {
+        expect(resolveItemAnimationPhase(timeline, elapsed)).toBe(
+          getItemAnimationPhase(appearance, elapsed, seed),
+        );
+      }
+    }
   });
 });

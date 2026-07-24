@@ -16,8 +16,9 @@ export class TileOccupancy {
 
   isOccupied(position: Position): boolean {
     return (
-      this.grid.query(position, 0, 0).length > 0 ||
-      this.positionReservations.has(positionKey(position))
+      this.grid.hasCreatureAt(position) ||
+      (this.positionReservations.size > 0 &&
+        this.positionReservations.has(positionKey(position)))
     );
   }
 

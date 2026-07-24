@@ -56,6 +56,10 @@ export class ItemIntentHandler {
    * server, not just per character.
    */
   private persistChain: Promise<void> = Promise.resolve();
+  private readonly equipmentByItems = new WeakMap<
+    ReadonlyArray<Item>,
+    ReadonlyArray<{ item: Item; type: ItemType }>
+  >();
   private readonly poisonedPersistCharacters = new Set<string>();
   private readonly pendingPersistOperations = new Set<Promise<void>>();
   /** House-tile authorization, consulted at execution time when set. */
@@ -136,11 +140,17 @@ export class ItemIntentHandler {
   ): ReadonlyArray<{ item: Item; type: ItemType }> {
     const cache = this.inventories.get(characterId);
     if (!cache) return [];
-    return cache.items.flatMap((item) =>
+    // Inventory caches are replaced immutably on every mutation, so the items
+    // array identity is a complete invalidation key for this per-hit lookup.
+    const memoized = this.equipmentByItems.get(cache.items);
+    if (memoized) return memoized;
+    const equipment = cache.items.flatMap((item) =>
       item.location.kind === "equipment"
         ? [{ item, type: this.catalog.require(item.typeId) }]
         : [],
     );
+    this.equipmentByItems.set(cache.items, equipment);
+    return equipment;
   }
 
   itemType(itemTypeId: number): ItemType | undefined {

@@ -86,13 +86,11 @@ export class PgDecayOps {
     }>(doomedContainedItemsQuery, [containerId, keepSlots]);
     if (doomed.rows.length === 0) return [];
     await client.query(deleteItemsByIds, [doomed.rows.map((row) => row.id)]);
-    for (const row of doomed.rows) {
-      await client.query(insertDecayContentDestroyedAudit, [
-        row.id,
-        row.item_type_id,
-        row.count,
-      ]);
-    }
+    await client.query(insertDecayContentDestroyedAudit, [
+      doomed.rows.map((row) => row.id),
+      doomed.rows.map((row) => row.item_type_id),
+      doomed.rows.map((row) => row.count),
+    ]);
     return doomed.rows.map((row) => row.id);
   }
 }

@@ -1,18 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import {
   PROTOCOL_LIMITS,
   type ActionBar as ActionBarState,
   type ActionBarAction,
-  type CreatureState,
   type FightState,
   type InventoryState,
-  type MinimapLayout,
   type OwnCharacterState,
   type SpellCatalogEntry,
 } from "@tibia/protocol";
-import { ActionBar } from "./action-bar/ActionBar";
+import { ActionBar, type ActionBarViewSlot } from "./action-bar/ActionBar";
 import type { ActionBarEditorRequest } from "./action-bar/ActionBarEditorRequest";
 import { VitalOrb } from "./action-bar/VitalOrb";
 import { useAppTranslation } from "../i18n/useAppTranslation";
@@ -20,8 +18,6 @@ import { ChatPanel } from "./chat/ChatPanel";
 import type { ChatChannel } from "./chat/chatTypes";
 import { ConditionBar } from "./combat/ConditionBar";
 import { OwnSkullIndicator } from "./pvp/OwnSkullIndicator";
-import { BattleList } from "./creatures/BattleList";
-import { MinimapPanel } from "./minimap/MinimapPanel";
 import { getSpellIconArtwork } from "../lib/combat/getSpellIconArtwork";
 import { getInventoryItems } from "../lib/inventory/getInventoryItems";
 import { formatActionBarHotkey } from "../lib/hotkeys/formatActionBarHotkey";
@@ -36,9 +32,8 @@ interface GameHudProps {
   battleListVisible: boolean;
   minimapVisible: boolean;
   mapName: string | null;
-  minimapLayout: MinimapLayout | null;
-  onMinimapLayoutChange: (layout: MinimapLayout) => void;
-  visibleCreatures: ReadonlyArray<CreatureState>;
+  battleList?: ReactNode;
+  minimap?: ReactNode;
   ownCharacter: OwnCharacterState;
   fightState: FightState;
   spells: ReadonlyArray<SpellCatalogEntry>;
@@ -72,9 +67,8 @@ export function GameHud({
   battleListVisible,
   minimapVisible,
   mapName,
-  minimapLayout,
-  onMinimapLayoutChange,
-  visibleCreatures,
+  battleList,
+  minimap,
   ownCharacter,
   fightState,
   spells,
@@ -101,147 +95,254 @@ export function GameHud({
     readonly id: number;
     readonly text: string;
   }>();
-  const inventoryItems = getInventoryItems(inventory);
-  const slots = actionBar.map((slot, index) => {
-    const hotkeyLabel = formatActionBarHotkey(slot.hotkey);
-    const emptyTitle = `Configure action button ${index + 1}`;
-    const emptyAriaLabel = `${emptyTitle}${hotkeyLabel ? ` (${hotkeyLabel})` : ""}`;
-    const action = slot.action;
-    if (!action) {
-      return {
-        action,
-        hotkey: slot.hotkey,
-        hotkeyLabel,
-        emptyTitle,
-        emptyAriaLabel,
-        item: null,
-      };
-    }
-    if (action.kind === "text") {
-      return {
-        action,
-        hotkey: slot.hotkey,
-        hotkeyLabel,
-        emptyTitle,
-        emptyAriaLabel,
-        item: {
-          icon: (
-            <span className="flex size-8 items-center justify-center rounded border border-ui-gold/25 bg-black/35 font-display text-xs text-ui-gold">
-              TXT
-            </span>
-          ),
-          title: action.text,
-          ariaLabel: `Text action: ${action.text}`,
+  const inventoryItems = useMemo(
+    () => getInventoryItems(inventory),
+    [inventory],
+  );
+  const cooldowns = fightState.cooldowns;
+  const { level, magicLevel, mana, soul } = ownCharacter;
+  const slots = useMemo<ReadonlyArray<ActionBarViewSlot>>(
+    () =>
+      actionBar.map((slot, index) => {
+        const hotkeyLabel = formatActionBarHotkey(slot.hotkey);
+        const emptyTitle = `Configure action button ${index + 1}`;
+        const emptyAriaLabel = `${emptyTitle}${hotkeyLabel ? ` (${hotkeyLabel})` : ""}`;
+        const action = slot.action;
+        if (!action) {
+          return {
+            action,
+            hotkey: slot.hotkey,
+            hotkeyLabel,
+            emptyTitle,
+            emptyAriaLabel,
+            item: null,
+          };
+        }
+        if (action.kind === "text") {
+          return {
+            action,
+            hotkey: slot.hotkey,
+            hotkeyLabel,
+            emptyTitle,
+            emptyAriaLabel,
+            item: {
+              icon: (
+                <span className="flex size-8 items-center justify-center rounded border border-ui-gold/25 bg-black/35 font-display text-xs text-ui-gold">
+                  TXT
+                </span>
+              ),
+              title: action.text,
+              ariaLabel: `Text action: ${action.text}`,
+            },
+          };
+        }
+        if (action.kind === "spell") {
+          const spell = spells.find(
+            (candidate) =>
+              candidate.origin === "spell" && candidate.id === action.spellId,
+          );
+          const cooldown = spell
+            ? cooldowns
+                .filter((entry) => spell.cooldownGroups.includes(entry.group))
+                .sort((left, right) => right.readyAt - left.readyAt)[0]
+            : undefined;
+          const artwork = getSpellIconArtwork(action.spellId);
+          const name = spell?.name ?? action.spellId;
+          return {
+            action,
+            hotkey: slot.hotkey,
+            hotkeyLabel,
+            emptyTitle,
+            emptyAriaLabel,
+            item: {
+              icon: artwork ? <SpellIcon {...artwork} /> : null,
+              title: name,
+              ariaLabel: `Cast ${name}`,
+              badge: spell?.manaCost,
+              badgeTone: "mana" as const,
+              unavailable:
+                !spell ||
+                level < spell.requiredLevel ||
+                magicLevel < spell.requiredMagicLevel ||
+                mana < spell.manaCost ||
+                soul < spell.soulCost ||
+                (spell.needWeapon && !hasWeapon),
+              ...(cooldown
+                ? {
+                    cooldownReadyAt: cooldown.readyAt,
+                    cooldownTotalMs: cooldown.totalMs,
+                  }
+                : {}),
+            },
+          };
+        }
+        const matchingItems = inventoryItems.filter(
+          (item) => item.typeId === action.itemTypeId,
+        );
+        const item = matchingItems[0];
+        const count = matchingItems.reduce(
+          (total, candidate) => total + candidate.count,
+          0,
+        );
+        const rune = spells.find(
+          (spell) =>
+            spell.origin === "rune" &&
+            spell.runeItemTypeId === action.itemTypeId,
+        );
+        const cooldown = rune
+          ? cooldowns
+              .filter((entry) => rune.cooldownGroups.includes(entry.group))
+              .sort((left, right) => right.readyAt - left.readyAt)[0]
+          : item?.useKind === "potion"
+            ? cooldowns.find((entry) => entry.group === "potion")
+            : undefined;
+        const name = getActionBarActionName(action, spells, inventoryItems);
+        return {
+          action,
+          hotkey: slot.hotkey,
+          hotkeyLabel,
+          emptyTitle,
+          emptyAriaLabel,
+          item: {
+            icon: item ? <SpriteIcon spriteId={item.spriteId} /> : null,
+            title: `${name} · ${action.mode.replaceAll("-", " ")}`,
+            ariaLabel: `Use ${name}`,
+            badge: count > 0 ? count : undefined,
+            badgeTone: "count" as const,
+            unavailable: count === 0,
+            ...(cooldown
+              ? {
+                  cooldownReadyAt: cooldown.readyAt,
+                  cooldownTotalMs: cooldown.totalMs,
+                }
+              : {}),
+          },
+        };
+      }),
+    [
+      actionBar,
+      spells,
+      cooldowns,
+      inventoryItems,
+      level,
+      magicLevel,
+      mana,
+      soul,
+      hasWeapon,
+    ],
+  );
+  const visibleChatChannels = useMemo<ReadonlyArray<ChatChannel>>(
+    () =>
+      chatChannels ?? [
+        {
+          id: "system",
+          label: t("chat.channels.system"),
+          kind: "system",
+          description: t("chat.systemDescription"),
+          canSend: false,
+          messages: combatLog.map((body, index) => ({
+            id: `combat:${index}:${body}`,
+            body,
+            tone: "combat",
+          })),
         },
-      };
-    }
-    if (action.kind === "spell") {
-      const spell = spells.find(
-        (candidate) =>
-          candidate.origin === "spell" && candidate.id === action.spellId,
-      );
-      const cooldown = spell
-        ? fightState.cooldowns
-            .filter((entry) => spell.cooldownGroups.includes(entry.group))
-            .sort((left, right) => right.readyAt - left.readyAt)[0]
-        : undefined;
-      const artwork = getSpellIconArtwork(action.spellId);
-      const name = spell?.name ?? action.spellId;
-      return {
-        action,
-        hotkey: slot.hotkey,
-        hotkeyLabel,
-        emptyTitle,
-        emptyAriaLabel,
-        item: {
-          icon: artwork ? <SpellIcon {...artwork} /> : null,
-          title: name,
-          ariaLabel: `Cast ${name}`,
-          badge: spell?.manaCost,
-          badgeTone: "mana" as const,
-          unavailable:
-            !spell ||
-            ownCharacter.level < spell.requiredLevel ||
-            ownCharacter.magicLevel < spell.requiredMagicLevel ||
-            ownCharacter.mana < spell.manaCost ||
-            ownCharacter.soul < spell.soulCost ||
-            (spell.needWeapon && !hasWeapon),
-          ...(cooldown
+      ],
+    [chatChannels, combatLog, t],
+  );
+  const onActivateSlot = useCallback(
+    (slotIndex: number) => {
+      const action = actionBar[slotIndex]?.action;
+      if (!action) return;
+      if (action.kind === "text") {
+        if (action.sendAutomatically && chatSelectedChannelId && onSendChat) {
+          onSendChat(chatSelectedChannelId, action.text);
+          return;
+        }
+        setChatDraftRequest((current) => ({
+          id: (current?.id ?? 0) + 1,
+          text: action.text,
+        }));
+        return;
+      }
+      if (action.kind === "spell") {
+        const spell = spells.find(
+          (candidate) =>
+            candidate.origin === "spell" && candidate.id === action.spellId,
+        );
+        onActivateActionBar(
+          slotIndex,
+          spell
             ? {
-                cooldownReadyAt: cooldown.readyAt,
-                cooldownTotalMs: cooldown.totalMs,
+                ...action,
+                targetMode: getSpellActionTargetMode(
+                  spell.targetKind,
+                  action.targetMode,
+                ),
               }
-            : {}),
-        },
-      };
-    }
-    const matchingItems = inventoryItems.filter(
-      (item) => item.typeId === action.itemTypeId,
-    );
-    const item = matchingItems[0];
-    const count = matchingItems.reduce(
-      (total, candidate) => total + candidate.count,
-      0,
-    );
-    const rune = spells.find(
-      (spell) =>
-        spell.origin === "rune" && spell.runeItemTypeId === action.itemTypeId,
-    );
-    const cooldown = rune
-      ? fightState.cooldowns
-          .filter((entry) => rune.cooldownGroups.includes(entry.group))
-          .sort((left, right) => right.readyAt - left.readyAt)[0]
-      : item?.useKind === "potion"
-        ? fightState.cooldowns.find((entry) => entry.group === "potion")
-        : undefined;
-    const name = getActionBarActionName(action, spells, inventoryItems);
-    return {
-      action,
-      hotkey: slot.hotkey,
-      hotkeyLabel,
-      emptyTitle,
-      emptyAriaLabel,
-      item: {
-        icon: item ? <SpriteIcon spriteId={item.spriteId} /> : null,
-        title: `${name} · ${action.mode.replaceAll("-", " ")}`,
-        ariaLabel: `Use ${name}`,
-        badge: count > 0 ? count : undefined,
-        badgeTone: "count" as const,
-        unavailable: count === 0,
-        ...(cooldown
-          ? {
-              cooldownReadyAt: cooldown.readyAt,
-              cooldownTotalMs: cooldown.totalMs,
-            }
-          : {}),
-      },
-    };
-  });
-  const visibleChatChannels: ReadonlyArray<ChatChannel> = chatChannels ?? [
-    {
-      id: "system",
-      label: t("chat.channels.system"),
-      kind: "system",
-      description: t("chat.systemDescription"),
-      canSend: false,
-      messages: combatLog.map((body, index) => ({
-        id: `combat:${index}:${body}`,
-        body,
-        tone: "combat",
-      })),
+            : action,
+        );
+        return;
+      }
+      onActivateActionBar(slotIndex, action);
     },
-  ];
+    [actionBar, spells, chatSelectedChannelId, onSendChat, onActivateActionBar],
+  );
+  const onChangeHotkey = useCallback(
+    (slotIndex: number, hotkey: null) => {
+      const next = [...actionBar];
+      next[slotIndex] = { ...next[slotIndex]!, hotkey };
+      onActionBarChange(next);
+    },
+    [actionBar, onActionBarChange],
+  );
+  const onClearAction = useCallback(
+    (slotIndex: number) => {
+      const next = [...actionBar];
+      next[slotIndex] = {
+        ...next[slotIndex]!,
+        action: null,
+      };
+      onActionBarChange(next);
+    },
+    [actionBar, onActionBarChange],
+  );
+  const onMoveAction = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (fromIndex === toIndex) return;
+      const next = [...actionBar];
+      const sourceAction = next[fromIndex]?.action ?? null;
+      const targetAction = next[toIndex]?.action ?? null;
+      next[fromIndex] = {
+        ...next[fromIndex]!,
+        action: targetAction,
+      };
+      next[toIndex] = {
+        ...next[toIndex]!,
+        action: sourceAction,
+      };
+      onActionBarChange(next);
+    },
+    [actionBar, onActionBarChange],
+  );
+  const onDropItem = useCallback(
+    (slotIndex: number, itemId: string) => {
+      const item = inventoryItems.find(
+        (candidate) => candidate.id === itemId,
+      );
+      if (!item) return;
+      const next = [...actionBar];
+      next[slotIndex] = {
+        ...next[slotIndex]!,
+        action: createItemAction(item, spells),
+      };
+      onActionBarChange(next);
+    },
+    [inventoryItems, actionBar, spells, onActionBarChange],
+  );
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 font-tibia text-ui-text select-none">
-      {battleListVisible && (
-        <BattleList
-          title={t("hud.battleList")}
-          creatures={visibleCreatures}
-          ownPlayerId={ownCharacter.id}
-          attackTargetId={fightState.attackTargetId}
-        />
-      )}
+      {battleListVisible && battleList}
       <div className="pointer-events-auto absolute bottom-0 left-0">
         <ChatPanel
           channels={visibleChatChannels}
@@ -264,16 +365,7 @@ export function GameHud({
         {fightState.skull && <OwnSkullIndicator skull={fightState.skull} />}
       </div>
       {minimapVisible && mapName && (
-        <div className="absolute right-0 bottom-0">
-          <MinimapPanel
-            mapName={mapName}
-            ownPlayerId={ownCharacter.id}
-            ownPosition={ownCharacter.position}
-            creatures={visibleCreatures}
-            layout={minimapLayout}
-            onLayoutChange={onMinimapLayoutChange}
-          />
-        </div>
+        <div className="absolute right-0 bottom-0">{minimap}</div>
       )}
       <div className="absolute inset-x-2 bottom-0 flex items-end justify-center">
         <div className="ui-action-bar-dock flex w-max max-w-full items-end justify-center">
@@ -305,87 +397,12 @@ export function GameHud({
                   ariaLabel="Action bar"
                   slots={slots}
                   hotkeysEnabled={actionHotkeysEnabled}
-                  onActivate={(slotIndex) => {
-                    const action = actionBar[slotIndex]?.action;
-                    if (!action) return;
-                    if (action.kind === "text") {
-                      if (
-                        action.sendAutomatically &&
-                        chatSelectedChannelId &&
-                        onSendChat
-                      ) {
-                        onSendChat(chatSelectedChannelId, action.text);
-                        return;
-                      }
-                      setChatDraftRequest((current) => ({
-                        id: (current?.id ?? 0) + 1,
-                        text: action.text,
-                      }));
-                      return;
-                    }
-                    if (action.kind === "spell") {
-                      const spell = spells.find(
-                        (candidate) =>
-                          candidate.origin === "spell" &&
-                          candidate.id === action.spellId,
-                      );
-                      onActivateActionBar(
-                        slotIndex,
-                        spell
-                          ? {
-                              ...action,
-                              targetMode: getSpellActionTargetMode(
-                                spell.targetKind,
-                                action.targetMode,
-                              ),
-                            }
-                          : action,
-                      );
-                      return;
-                    }
-                    onActivateActionBar(slotIndex, action);
-                  }}
+                  onActivate={onActivateSlot}
                   onConfigure={onConfigureActionBar}
-                  onChangeHotkey={(slotIndex, hotkey) => {
-                    const next = [...actionBar];
-                    next[slotIndex] = { ...next[slotIndex]!, hotkey };
-                    onActionBarChange(next);
-                  }}
-                  onClearAction={(slotIndex) => {
-                    const next = [...actionBar];
-                    next[slotIndex] = {
-                      ...next[slotIndex]!,
-                      action: null,
-                    };
-                    onActionBarChange(next);
-                  }}
-                  onMoveAction={(fromIndex, toIndex) => {
-                    if (fromIndex === toIndex) return;
-                    const next = [...actionBar];
-                    const sourceAction = next[fromIndex]?.action ?? null;
-                    const targetAction = next[toIndex]?.action ?? null;
-                    next[fromIndex] = {
-                      ...next[fromIndex]!,
-                      action: targetAction,
-                    };
-                    next[toIndex] = {
-                      ...next[toIndex]!,
-                      action: sourceAction,
-                    };
-                    onActionBarChange(next);
-                  }}
-                  onDropItem={(slotIndex, itemId) => {
-                    const item = inventoryItems.find(
-                      (candidate) => candidate.id === itemId,
-                    );
-                    if (!item) return;
-                    const next = [...actionBar];
-                    next[slotIndex] = {
-                      ...next[slotIndex]!,
-                      action: createItemAction(item, spells),
-                    };
-                    onActionBarChange(next);
-                  }}
+                  onChangeHotkey={onChangeHotkey}
+                  onClearAction={onClearAction}
+                  onMoveAction={onMoveAction}
+                  onDropItem={onDropItem}
                 />
               </div>
             </div>

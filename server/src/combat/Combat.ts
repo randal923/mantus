@@ -51,6 +51,18 @@ import { SpellRegistry } from "./SpellRegistry";
 import { ActionBot } from "./ActionBot";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
+import { drainDue } from "../drainDue";
+
+const FEAR_DIRECTIONS: ReadonlyArray<readonly [Direction, number, number]> = [
+  ["north", 0, -1],
+  ["northeast", 1, -1],
+  ["east", 1, 0],
+  ["southeast", 1, 1],
+  ["south", 0, 1],
+  ["southwest", -1, 1],
+  ["west", -1, 0],
+  ["northwest", -1, -1],
+];
 
 export class Combat {
   private readonly lastFieldCheckByCreature = new WeakMap<
@@ -1188,12 +1200,10 @@ export class Combat {
   }
 
   private executeQueuedMonsterAbilities(now: number): void {
-    const due = this.queuedMonsterAbilities
-      .filter((entry) => entry.executeAt <= now)
-      .sort((left, right) => left.executeAt - right.executeAt);
+    const due = [...drainDue(this.queuedMonsterAbilities, now)].sort(
+      (left, right) => left.executeAt - right.executeAt,
+    );
     for (const entry of due) {
-      const index = this.queuedMonsterAbilities.indexOf(entry);
-      if (index >= 0) this.queuedMonsterAbilities.splice(index, 1);
       const monster = this.world.getCreature(entry.monsterId);
       const target = this.world.getCreature(entry.targetId);
       if (!(monster instanceof Monster) || !target) continue;
@@ -1209,10 +1219,7 @@ export class Combat {
   }
 
   private executeQueuedTeleports(now: number): void {
-    const due = this.queuedTeleports.filter((entry) => entry.executeAt <= now);
-    for (const entry of due) {
-      const index = this.queuedTeleports.indexOf(entry);
-      if (index >= 0) this.queuedTeleports.splice(index, 1);
+    for (const entry of drainDue(this.queuedTeleports, now)) {
       const player = this.world.getPlayer(entry.playerId);
       if (
         !player ||
@@ -1398,6 +1405,7 @@ export class Combat {
 
   private moveFearedCreatures(now: number): void {
     for (const creature of this.world.allCreatures()) {
+      if (!creature.conditions.isActive) continue;
       const source = creature.conditions.fearSource;
       if (!source || now < creature.nextStepAt || creature.health <= 0) continue;
       for (const direction of this.fearDirections(creature.position, source)) {
@@ -1427,19 +1435,9 @@ export class Combat {
   }
 
   private fearDirections(position: Position, source: Position): Direction[] {
-    const directions: ReadonlyArray<readonly [Direction, number, number]> = [
-      ["north", 0, -1],
-      ["northeast", 1, -1],
-      ["east", 1, 0],
-      ["southeast", 1, 1],
-      ["south", 0, 1],
-      ["southwest", -1, 1],
-      ["west", -1, 0],
-      ["northwest", -1, -1],
-    ];
     const awayX = position.x - source.x;
     const awayY = position.y - source.y;
-    return [...directions]
+    return [...FEAR_DIRECTIONS]
       .sort(
         (left, right) =>
           right[1] * awayX + right[2] * awayY -

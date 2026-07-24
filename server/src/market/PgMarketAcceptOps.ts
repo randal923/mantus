@@ -106,8 +106,10 @@ export class PgMarketAcceptOps {
         "market-fill",
         { status: "inbox-full" },
       );
-      for (const itemId of delivery.removedItemIds) {
-        await client.query(deleteMarketEscrowItemQuery, [itemId]);
+      if (delivery.removedItemIds.length > 0) {
+        await client.query(deleteMarketEscrowItemQuery, [
+          delivery.removedItemIds,
+        ]);
       }
 
       let buyerAfter = buyerBalance;
