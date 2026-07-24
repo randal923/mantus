@@ -492,6 +492,8 @@ export class GameServer {
       this.npcs,
       gm,
       this.moderation,
+      (session, text, now) =>
+        this.combatSystem.castSpellByWords(session, text, now),
     );
     this.wss = new WebSocketServer({
       port: config.port,

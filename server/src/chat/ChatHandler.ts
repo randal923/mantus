@@ -42,6 +42,11 @@ export class ChatHandler {
     private readonly npcs?: NpcHandler,
     private readonly gm?: GmCommandHandler,
     private readonly moderation?: ChatModerationHooks,
+    private readonly castSpellWords?: (
+      session: Session,
+      text: string,
+      now: number,
+    ) => boolean,
   ) {}
 
   handle(session: Session, intent: ChatIntent, now: number): void {
@@ -99,6 +104,9 @@ export class ChatHandler {
     }
     this.broadcastLocal(speaker, intent.mode, text);
     this.npcs?.handleSpeech(speaker, text, now);
+    // Saying a spell's words casts it, Tibia-style. The words are spoken
+    // either way; the cast pipeline re-validates everything itself.
+    this.castSpellWords?.(session, text, now);
   }
 
   /** Say and whisper reach normal view range; whisper muffles beyond 1 tile. */

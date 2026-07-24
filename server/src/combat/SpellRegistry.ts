@@ -3,6 +3,9 @@ import type { Player } from "../Player";
 import { loadCanarySpellCatalog } from "./loadCanarySpellCatalog";
 import type { SpellDefinition } from "./Spell";
 
+const normalizeSpellWords = (text: string): string =>
+  text.trim().toLowerCase().replace(/\s+/g, " ");
+
 export class SpellRegistry {
   private readonly spells = loadCanarySpellCatalog();
   private readonly byId = new Map(
@@ -15,6 +18,13 @@ export class SpellRegistry {
         : [],
     ),
   );
+  private readonly byWords = new Map(
+    this.spells.flatMap((spell) =>
+      spell.words && spell.origin === "spell"
+        ? [[normalizeSpellWords(spell.words), spell] as const]
+        : [],
+    ),
+  );
 
   get(spellId: string): SpellDefinition | undefined {
     return this.byId.get(spellId);
@@ -22,6 +32,10 @@ export class SpellRegistry {
 
   getRune(itemTypeId: number): SpellDefinition | undefined {
     return this.byRuneTypeId.get(itemTypeId);
+  }
+
+  getByWords(text: string): SpellDefinition | undefined {
+    return this.byWords.get(normalizeSpellWords(text));
   }
 
   projectFor(player: Player): SpellCatalogEntry[] {

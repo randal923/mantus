@@ -169,4 +169,19 @@ its slot -> potion type and target mode configuration in
   inventory ground-targeting flow. Fix if wanted: allow rune slots that arm
   the existing rune targeting using the carried item count as the badge.
 
+## Known gaps: spell words via chat (2026-07-24)
+
+Saying a spell's words in local chat casts it (`ChatHandler` ->
+`Combat.castSpellByWords`; exact match after case/whitespace normalization,
+full validation stays in the cast pipeline). Accepted for now:
+
+- Name-parameterized casts like `exura sio "Friend"` are not parsed; "exura
+  sio" matches but resolves to the attack target, so friend heals still need
+  the action bar. Fix: strip a trailing quoted argument, resolve it to an
+  on-screen player, and pass a `creature` target.
+- Successful casts broadcast as plain `say` text; there is no distinct
+  magic/orange speech mode in the protocol.
+- Yelled spell words do not cast (yell has its own exhaust path); say and
+  whisper do.
+
 [Back to overview](README.md)

@@ -3,6 +3,7 @@ import type { WebSocket } from "ws";
 import type { Position, ServerMessage } from "@tibia/protocol";
 import { ChatHandler } from "./ChatHandler";
 import { gridMapData } from "../gridMapData";
+import type { ChatModerationHooks } from "../moderation/ChatModerationHooks";
 import { Player } from "../Player";
 import { getExperienceForLevel } from "../progression/getExperienceForLevel";
 import { Session } from "../Session";
@@ -19,7 +20,12 @@ interface TestPeer {
   messages: ServerMessage[];
 }
 
-const makeHarness = () => {
+interface HarnessOptions {
+  moderation?: ChatModerationHooks;
+  castSpellWords?: (session: Session, text: string, now: number) => boolean;
+}
+
+const makeHarness = (options: HarnessOptions = {}) => {
   const world = new World(
     gridMapData({
       name: "chat-grid",
@@ -33,7 +39,15 @@ const makeHarness = () => {
   );
   const registry = new SessionRegistry();
   const visibility = new Visibility(world, registry);
-  const chat = new ChatHandler(world, registry, visibility);
+  const chat = new ChatHandler(
+    world,
+    registry,
+    visibility,
+    undefined,
+    undefined,
+    options.moderation,
+    options.castSpellWords,
+  );
 
   const join = (name: string, position: Position, level = 1): TestPeer => {
     const character = {
@@ -329,5 +343,63 @@ describe("ChatHandler private messages", () => {
       reason: "muted",
       retryAfterMs: 5_000,
     });
+  });
+});
+
+describe("ChatHandler spell words", () => {
+  it("attempts a cast for say text and still broadcasts the words", () => {
+    const castSpellWords = vi.fn().mockReturnValue(true);
+    const { chat, join } = makeHarness({ castSpellWords });
+    const speaker = join("Speaker", { x: 30, y: 30, z: 7 });
+    const near = join("Near", { x: 31, y: 30, z: 7 });
+
+    chat.handle(
+      speaker.session,
+      { type: "speak", mode: "say", text: "exura" },
+      1_000,
+    );
+
+    expect(castSpellWords).toHaveBeenCalledWith(
+      speaker.session,
+      "exura",
+      1_000,
+    );
+    expect(spokenTo(near)).toHaveLength(1);
+  });
+
+  it("does not attempt casts for muted speakers", () => {
+    const castSpellWords = vi.fn().mockReturnValue(true);
+    const { chat, join } = makeHarness({
+      castSpellWords,
+      moderation: {
+        muteRemainingMs: () => 5_000,
+        noteAutoMute: vi.fn(),
+      },
+    });
+    const speaker = join("Speaker", { x: 30, y: 30, z: 7 });
+
+    chat.handle(
+      speaker.session,
+      { type: "speak", mode: "say", text: "exura" },
+      1_000,
+    );
+
+    expect(castSpellWords).not.toHaveBeenCalled();
+    expect(rejectionsTo(speaker)).toHaveLength(1);
+  });
+
+  it("does not attempt casts for private messages", () => {
+    const castSpellWords = vi.fn().mockReturnValue(true);
+    const { chat, join } = makeHarness({ castSpellWords });
+    const speaker = join("Speaker", { x: 30, y: 30, z: 7 });
+    join("Friend", { x: 31, y: 30, z: 7 });
+
+    chat.handle(
+      speaker.session,
+      { type: "private-chat", to: "Friend", text: "exura" },
+      1_000,
+    );
+
+    expect(castSpellWords).not.toHaveBeenCalled();
   });
 });

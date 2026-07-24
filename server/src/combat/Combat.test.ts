@@ -506,6 +506,62 @@ describe("Combat", () => {
     });
   });
 
+  it("casts a spell from its spoken words, normalizing case and spacing", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+    });
+    harness.player.setHealth(harness.player.health - 50);
+    const manaBefore = harness.player.mana;
+
+    const matched = harness.combat.castSpellByWords(
+      harness.session,
+      "  Exura   INFIR ico ",
+      1_000,
+    );
+
+    expect(matched).toBe(true);
+    expect(harness.player.health).toBeGreaterThan(
+      harness.player.maxHealth - 50,
+    );
+    expect(harness.player.mana).toBe(manaBefore - 10);
+  });
+
+  it("still enforces vocation and resources on spoken spell words", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+    });
+    const manaBefore = harness.player.mana;
+
+    // "exura" belongs to other vocations; matching the words must not
+    // bypass the cast pipeline's vocation check.
+    const matched = harness.combat.castSpellByWords(
+      harness.session,
+      "exura",
+      1_000,
+    );
+
+    expect(matched).toBe(true);
+    expect(harness.player.mana).toBe(manaBefore);
+    expect(
+      harness.sent.some((message) => message.type === "error"),
+    ).toBe(true);
+  });
+
+  it("ignores spoken text that matches no spell words", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+    });
+
+    const matched = harness.combat.castSpellByWords(
+      harness.session,
+      "hello there",
+      1_000,
+    );
+
+    expect(matched).toBe(false);
+    expect(harness.sent).toEqual([]);
+  });
+
   it("reports execution-time Exori rejection reasons", async () => {
     const lowLevel = await makeHarness({
       character: makeLeveledCharacter(34, "Knight"),

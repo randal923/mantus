@@ -278,6 +278,46 @@ export class Combat {
     this.spellCaster.executeSpell(session, spell, intent.target, now, true);
   }
 
+  /**
+   * Spoken spell words ("exura") arrive through chat; the text only selects
+   * the spell — vocation, level, mana, and cooldowns are all re-checked by
+   * the regular cast pipeline at execution time.
+   */
+  castSpellByWords(session: Session, text: string, now: number): boolean {
+    const spell = this.spells.getByWords(text);
+    if (!spell) return false;
+    session.actionBotSuppressedAt = now;
+    this.castSpell(
+      session,
+      {
+        type: "cast-spell",
+        spellId: spell.id,
+        target: this.spokenSpellTarget(session, spell),
+      },
+      now,
+    );
+    return true;
+  }
+
+  private spokenSpellTarget(
+    session: Session,
+    spell: SpellDefinition,
+  ): CombatTarget {
+    if (spell.targetKind === "self") return { kind: "self" };
+    if (spell.targetKind === "direction") return { kind: "direction" };
+    if (spell.targetKind === "target-or-direction") {
+      return session.attackTargetId
+        ? { kind: "attack-target" }
+        : { kind: "direction" };
+    }
+    if (spell.targetKind === "position") {
+      return (
+        this.automaticTarget(session, true) ?? { kind: "attack-target" }
+      );
+    }
+    return { kind: "attack-target" };
+  }
+
   useRune(session: Session, intent: UseRuneMessage, now: number): boolean {
     const player = playerForSession(this.world, session);
     const combatItem = player
