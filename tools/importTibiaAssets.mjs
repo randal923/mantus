@@ -530,11 +530,22 @@ if (validateOnly) {
   process.exit(0);
 }
 
+const datSha256 = createHash("sha256").update(dat).digest("hex");
+const sprSha256 = createHash("sha256").update(spr).digest("hex");
+// Single content version covering objects.json (from .dat) and atlas
+// sheets/index (from .spr), mirroring the map pipeline's
+// mapVersion = sha256(mapSha256:itemsSha256). Written to a no-cache
+// manifest so the client can bust the 24h-cached /assets/* after a re-rip.
+const assetVersion = createHash("sha256")
+  .update(`${datSha256}:${sprSha256}`)
+  .digest("hex")
+  .slice(0, 16);
+
 const objectsFile = {
   formatVersion: 2,
   source: {
-    datSha256: createHash("sha256").update(dat).digest("hex"),
-    sprSha256: createHash("sha256").update(spr).digest("hex"),
+    datSha256,
+    sprSha256,
   },
   datSignature: parsed.datSignature,
   sprSignature,
@@ -548,8 +559,10 @@ const objectsFile = {
   objects: parsed.objects,
 };
 await writeFile(join(stagingDir, "objects.json"), JSON.stringify(objectsFile));
+const assetManifest = { version: assetVersion };
+await writeFile(join(stagingDir, "manifest.json"), JSON.stringify(assetManifest));
 if (metadataOnly) {
-  await publish(stagingDir, outputDir, ["objects.json"]);
+  await publish(stagingDir, outputDir, ["objects.json", "manifest.json"]);
   console.log(`imported ${basename(datPath)} metadata into ${outputDir}`);
   process.exit(0);
 }
@@ -568,6 +581,11 @@ const atlasIndex = {
   sheets,
 };
 await writeFile(join(stagingDir, "atlas-index.json"), JSON.stringify(atlasIndex));
-await publish(stagingDir, outputDir, [...sheets, "objects.json", "atlas-index.json"]);
+await publish(stagingDir, outputDir, [
+  ...sheets,
+  "objects.json",
+  "atlas-index.json",
+  "manifest.json",
+]);
 
 console.log(`imported ${basename(datPath)} and ${basename(sprPath)} into ${outputDir}`);

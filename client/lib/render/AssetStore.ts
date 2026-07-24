@@ -89,9 +89,14 @@ export interface OutfitColors {
 
 const ASSET_BASE = "/assets";
 
+interface AssetManifest {
+  version?: string;
+}
+
 export class AssetStore {
   index!: AtlasIndex;
   outfitPalette: RGB[] = [];
+  private version: string | null = null;
   private items = new Map<number, TibiaObject>();
   private outfits = new Map<number, TibiaObject>();
   private effects = new Map<number, TibiaObject>();
@@ -109,10 +114,40 @@ export class AssetStore {
     return this.loadPromise;
   }
 
+  /**
+   * The atlas sheets, objects.json, and atlas-index.json are 24h browser-cached
+   * (`/assets/*` Cache-Control) and share one content version from the re-rip.
+   * Appending it as a query param busts stale sprites after a re-import without
+   * a hard refresh — the same manifest-hash pattern the map uses. Missing or
+   * malformed manifest → unversioned URLs (previous behavior).
+   */
+  private assetUrl(name: string): string {
+    return `${ASSET_BASE}/${name}${this.version ? `?v=${this.version}` : ""}`;
+  }
+
+  private async loadVersion(): Promise<void> {
+    try {
+      const response = await fetch(`${ASSET_BASE}/manifest.json`, {
+        cache: "no-cache",
+      });
+      if (!response.ok) return;
+      const manifest = (await response.json()) as AssetManifest;
+      this.version =
+        typeof manifest.version === "string" && manifest.version.length > 0
+          ? manifest.version
+          : null;
+    } catch {
+      this.version = null;
+    }
+  }
+
   private async loadCatalog(): Promise<void> {
+    // Revalidate the version first (no-cache), then fetch the cache-busted
+    // catalog files. outfit-colors.json is not part of the dat/spr bundle.
+    await this.loadVersion();
     const [index, objectsFile, palette] = await Promise.all([
-      fetch(`${ASSET_BASE}/atlas-index.json`).then((r) => r.json()),
-      fetch(`${ASSET_BASE}/objects.json`).then((r) => r.json()),
+      fetch(this.assetUrl("atlas-index.json")).then((r) => r.json()),
+      fetch(this.assetUrl("objects.json")).then((r) => r.json()),
       fetch(`${ASSET_BASE}/outfit-colors.json`).then((r) => r.json()),
     ]);
     this.index = index;
@@ -220,8 +255,9 @@ export class AssetStore {
   private async loadSheet(sheet: number): Promise<void> {
     const filename = this.index.sheets[sheet];
     if (!filename) throw new Error(`unknown atlas sheet ${sheet}`);
-    const response = await fetch(`${ASSET_BASE}/${filename}`);
-    if (!response.ok) throw new Error(`failed to load ${ASSET_BASE}/${filename}`);
+    const url = this.assetUrl(filename);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`failed to load ${url}`);
     // createImageBitmap decodes the 4096×4096 PNG off the main thread,
     // unlike drawing an HTMLImageElement which can rasterize mid-frame.
     const bitmap = await createImageBitmap(await response.blob());
