@@ -13,7 +13,6 @@ interface SaveState {
   failed: unknown | null;
   tail: Promise<void>;
   lastQueuedAt: number;
-  nextProgressionEventIndex: number;
   externalMutationPending: boolean;
   externalMutationCompletion: Promise<void> | null;
   settleExternalMutation: (() => void) | null;
@@ -66,7 +65,6 @@ export class CharacterPersistence {
       failed: null,
       tail: Promise.resolve(),
       lastQueuedAt: now,
-      nextProgressionEventIndex: 0,
       externalMutationPending: false,
       externalMutationCompletion: null,
       settleExternalMutation: null,
@@ -259,7 +257,6 @@ export class CharacterPersistence {
     const snapshot = this.snapshot(
       state.player,
       state.nextExpectedVersion,
-      state.nextProgressionEventIndex,
       storageValues,
       skillsFingerprint !== state.lastSkillsFingerprint,
       storageFingerprint !== state.lastStorageFingerprint,
@@ -269,7 +266,6 @@ export class CharacterPersistence {
     state.dirty = false;
     this.dirtyStates.delete(state);
     state.nextExpectedVersion += 1;
-    state.nextProgressionEventIndex += snapshot.progressionEvents.length;
     state.pendingCount += 1;
     state.lastQueuedAt = now;
     const save = state.tail.then(async () => {
@@ -277,6 +273,11 @@ export class CharacterPersistence {
       if (version !== snapshot.expectedVersion + 1) {
         throw new Error("character save returned an unexpected version");
       }
+      // Durable now: mark the reserved events committed so the in-memory queue
+      // compacts (mirrors the durable-table prune in the save transaction).
+      state.player.progression.commitPersistedEvents(
+        snapshot.progressionEvents.length,
+      );
     });
     state.tail = save
       .catch((cause: unknown) => {
@@ -317,7 +318,6 @@ export class CharacterPersistence {
   private snapshot(
     player: Player,
     expectedVersion: number,
-    progressionEventIndex: number,
     storageValues: Readonly<Record<string, number>>,
     skillsChanged: boolean,
     storageChanged: boolean,
@@ -336,10 +336,7 @@ export class CharacterPersistence {
       soul: player.progression.soul,
       skills: player.progression.skills,
       skillsChanged,
-      progressionEvents:
-        player.progression.sessionProgressionEvents.slice(
-          progressionEventIndex,
-        ),
+      progressionEvents: player.progression.reserveUnpersistedEvents(),
       storageValues,
       storageChanged,
       positionX: player.position.x,

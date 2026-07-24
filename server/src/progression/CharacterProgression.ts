@@ -23,6 +23,12 @@ import { getVocation } from "./getVocation";
 import type { ProgressionEvent, ProgressionEventType } from "./ProgressionEvent";
 
 const MAX_AWARD_AMOUNT = 1_000_000_000;
+/**
+ * How many durably-committed progression events to keep in memory past the
+ * commit boundary. Event ids never recur, so this is a defense-in-depth window
+ * that bounds `sessionEvents`/`processedEventIds` growth over a long session.
+ */
+export const RETAINED_MEMORY_EVENTS = 256;
 const MAX_SCHEDULES = 4;
 const MIN_TRAINING_INTERVAL_MS = 250;
 const MAX_SCHEDULE_TICKS_PER_SERVER_TICK = 5;
@@ -62,6 +68,10 @@ export class CharacterProgression {
   private readonly skillStates = new Map<Skill, CharacterSkill>();
   private readonly processedEventIds: Set<string>;
   private readonly sessionEvents: ProgressionEvent[] = [];
+  /** Count of `sessionEvents` already handed to a snapshot (reserved). */
+  private reservedEventCount = 0;
+  /** Count of reserved events whose snapshot is now durable (committed). */
+  private committedEventCount = 0;
   private readonly trainingSchedules = new Map<string, TrainingSchedule>();
   private nextHealthAt: number;
   private nextManaAt: number;
@@ -280,6 +290,38 @@ export class CharacterProgression {
 
   get sessionProgressionEvents(): ReadonlyArray<ProgressionEvent> {
     return this.sessionEvents;
+  }
+
+  /**
+   * Returns the events appended since the last reservation and advances the
+   * reserve pointer, so pipelined snapshots partition the queue without
+   * overlap. Called once per enqueued snapshot inside the tick.
+   */
+  reserveUnpersistedEvents(): ReadonlyArray<ProgressionEvent> {
+    const pending = this.sessionEvents.slice(this.reservedEventCount);
+    this.reservedEventCount = this.sessionEvents.length;
+    return pending;
+  }
+
+  /**
+   * Marks `count` reserved events durable and compacts the queue so neither
+   * `sessionEvents` nor `processedEventIds` grows without bound. Runs in
+   * snapshot-commit order (never ahead of what was reserved). Event ids never
+   * recur, so dropping settled ids past the retained window cannot double-award.
+   */
+  commitPersistedEvents(count: number): void {
+    this.committedEventCount = Math.min(
+      this.reservedEventCount,
+      this.committedEventCount + Math.max(0, count),
+    );
+    const drop = this.committedEventCount - RETAINED_MEMORY_EVENTS;
+    if (drop <= 0) return;
+    for (let i = 0; i < drop; i++) {
+      this.processedEventIds.delete(this.sessionEvents[i]!.id);
+    }
+    this.sessionEvents.splice(0, drop);
+    this.reservedEventCount -= drop;
+    this.committedEventCount -= drop;
   }
 
   spendMana(amount: number): boolean {

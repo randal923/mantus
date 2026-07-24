@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Player } from "../Player";
 import { makeCharacter } from "../test/makeCharacter";
+import { RETAINED_MEMORY_EVENTS } from "./CharacterProgression";
 import { getExperienceForLevel } from "./getExperienceForLevel";
 
 describe("CharacterProgression", () => {
@@ -42,6 +43,59 @@ describe("CharacterProgression", () => {
       reconnected.awardExperience("kill:rat:1", experience),
     ).toMatchObject({ processed: false, changed: false });
     expect(reconnected.level).toBe(1);
+  });
+
+  it("bounds the in-memory event queue while still deduping in-window replays", () => {
+    const player = new Player(makeCharacter("hero"), { x: 0, y: 0, z: 7 }, 0);
+    const total = RETAINED_MEMORY_EVENTS + 50;
+
+    for (let i = 0; i < total; i++) {
+      expect(
+        player.awardExperience(`kill:rat:${i}`, 1).processed,
+      ).toBe(true);
+    }
+    const experienceAfterAwards = player.experience;
+
+    // One save reserves every event, then durably commits it: the queue must
+    // compact down to the retained window (not grow with playtime).
+    player.progression.reserveUnpersistedEvents();
+    player.progression.commitPersistedEvents(total);
+    expect(player.progression.sessionProgressionEvents.length).toBe(
+      RETAINED_MEMORY_EVENTS,
+    );
+
+    // The most recent id is still inside the retained window: a replay is
+    // deduped and cannot double-award (charter idempotency).
+    expect(
+      player.awardExperience(`kill:rat:${total - 1}`, 1),
+    ).toEqual({ processed: false, changed: false });
+    expect(player.experience).toBe(experienceAfterAwards);
+  });
+
+  it("does not drop or lose an event awarded concurrently with a commit", () => {
+    const player = new Player(makeCharacter("hero"), { x: 0, y: 0, z: 7 }, 0);
+    const reserved = RETAINED_MEMORY_EVENTS + 50;
+    for (let i = 0; i < reserved; i++) {
+      player.awardExperience(`kill:rat:${i}`, 1);
+    }
+
+    // A snapshot reserves the current events; its DB write is in flight.
+    const pending = player.progression.reserveUnpersistedEvents();
+    expect(pending.length).toBe(reserved);
+
+    // A new kill lands while that save is still committing.
+    expect(player.awardExperience("kill:rat:live", 1).processed).toBe(true);
+
+    // The save commits and compacts. The concurrent award must survive both as
+    // a dedupe guard and as an unreserved event for the next snapshot.
+    player.progression.commitPersistedEvents(reserved);
+    expect(player.awardExperience("kill:rat:live", 1)).toEqual({
+      processed: false,
+      changed: false,
+    });
+    expect(player.progression.reserveUnpersistedEvents()).toEqual([
+      { id: "kill:rat:live", type: "experience" },
+    ]);
   });
 
   it("handles multi-level skill and magic gains without duplicate awards", () => {

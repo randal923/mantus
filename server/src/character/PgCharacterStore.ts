@@ -24,7 +24,11 @@ import { toCharacter } from "./toCharacter";
 import { countCharactersQuery } from "./sql/countCharactersQuery";
 import { findByIdForAccountQuery } from "./sql/findByIdForAccountQuery";
 import { insertCharacterQuery } from "./sql/insertCharacterQuery";
-import { insertProgressionEventsQuery } from "./sql/insertProgressionEventsQuery";
+import {
+  insertProgressionEventsQuery,
+  pruneProgressionEventsQuery,
+  RETAINED_PROGRESSION_SNAPSHOT_VERSIONS,
+} from "./sql/insertProgressionEventsQuery";
 import { listByAccountQuery } from "./sql/listByAccountQuery";
 import { recordLoginQuery } from "./sql/recordLoginQuery";
 import { replaceCharacterStoragesQuery } from "./sql/replaceCharacterStoragesQuery";
@@ -256,10 +260,20 @@ export class PgCharacterStore implements CharacterStore {
           snapshot.characterId,
           snapshot.progressionEvents.map((event) => event.id),
           snapshot.progressionEvents.map((event) => event.type),
+          version,
         ]);
         if (inserted.rowCount !== snapshot.progressionEvents.length) {
           throw new CharacterError("version-conflict");
         }
+        // Same transaction: the events just inserted are now reflected in the
+        // durable snapshot, so older rows can be dropped while preserving the
+        // idempotency guarantee (an id is discarded only once its snapshot is
+        // durable). Keeps the retained window bounded (charter: no unbounded
+        // per-connection growth).
+        await client.query(pruneProgressionEventsQuery, [
+          snapshot.characterId,
+          Math.max(0, version - RETAINED_PROGRESSION_SNAPSHOT_VERSIONS),
+        ]);
       }
       if (snapshot.storageChanged) {
         await client.query(replaceCharacterStoragesQuery, [

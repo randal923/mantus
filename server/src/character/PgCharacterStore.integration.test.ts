@@ -10,6 +10,7 @@ import {
 import type { Character, CharacterSaveSnapshot } from "./Character";
 import { CharacterService } from "./CharacterService";
 import { PgCharacterStore } from "./PgCharacterStore";
+import { RETAINED_PROGRESSION_SNAPSHOT_VERSIONS } from "./sql/insertProgressionEventsQuery";
 import { loadItemCatalog } from "../item/loadItemCatalog";
 import { PgItemStore } from "../item/PgItemStore";
 
@@ -98,6 +99,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       "029_character_potion_action_bar.sql",
       "032_remove_loose_inventory.sql",
       "034_unified_action_bar.sql",
+      "037_progression_event_pruning.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -371,6 +373,43 @@ databaseDescribe("PgCharacterStore integration", () => {
     expect(persisted?.progressionEventIds).toEqual(
       expect.arrayContaining(events.map((event) => event.id)),
     );
+  });
+
+  it("prunes progression events older than the retained snapshot window", async () => {
+    const accountId = await createAccount("progression-prune");
+    await service.create(accountId, {
+      displayName: "Prune Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const summary = (await store.listByAccountId(accountId))[0];
+    if (!summary) throw new Error("character was not created");
+    const character = await store.findByIdForAccount(accountId, summary.id);
+    if (!character) throw new Error("character was not found");
+
+    // One event per save, for enough versions to age the oldest ones out of
+    // the retained window (which keeps the newest window + current batch).
+    const retained = RETAINED_PROGRESSION_SNAPSHOT_VERSIONS + 1;
+    const saves = retained + 2;
+    const savedEventIds: string[] = [];
+    let expectedVersion = character.version;
+    for (let i = 0; i < saves; i++) {
+      const eventId = `kill:rat:prune-${i}`;
+      savedEventIds.push(eventId);
+      const version = await store.saveSnapshot({
+        ...saveSnapshot(character, 100 + i),
+        expectedVersion,
+        progressionEvents: [{ id: eventId, type: "experience" }],
+      });
+      expect(version).toBe(expectedVersion + 1);
+      expectedVersion = version;
+    }
+
+    const reloaded = await store.findByIdForAccount(accountId, character.id);
+    if (!reloaded) throw new Error("character was not reloaded");
+    // Only the newest window of events survives; older rows are pruned in the
+    // same transaction that made their successors durable.
+    expect(reloaded.progressionEventIds).toEqual(savedEventIds.slice(-retained));
   });
 
   it("creates starter items and their audit records in the character transaction", async () => {
