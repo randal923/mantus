@@ -596,3 +596,105 @@ describe("World.tryMove", () => {
     expect(player.direction).toBe("west");
   });
 });
+
+describe("World.tryLevitate", () => {
+  const cliffWorld = () =>
+    new World(
+      gridMapData({
+        name: "levitate",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        // Open air above the caster at (5,5) and off the upper cliff at
+        // (5,4): standing at z7 you can float up onto (5,4,6); standing on
+        // the upper floor at (5,5,6) facing north you can float down.
+        voids: [
+          [5, 5, 6],
+          [4, 4, 6],
+        ],
+      }),
+      STEP_MS,
+    );
+
+  it("floats one tile forward and one floor up over a cliff", () => {
+    const world = cliffWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+    player.direction = "north";
+
+    const result = world.tryLevitate(player, "up", 1000);
+
+    expect(result.moved).toBe(true);
+    if (!result.moved) throw new Error("expected levitate");
+    expect(result.durationMs).toBe(0);
+    expect(player.position).toEqual({ x: 5, y: 4, z: 6 });
+  });
+
+  it("refuses to float up through a ceiling", () => {
+    const world = cliffWorld();
+    const player = makePlayer(4, 5);
+    world.addPlayer(player);
+    player.direction = "north";
+
+    expect(world.tryLevitate(player, "up", 1000).moved).toBe(false);
+    expect(player.position).toEqual({ x: 4, y: 5, z: 7 });
+  });
+
+  it("floats down when facing open air", () => {
+    const world = cliffWorld();
+    const player = makePlayer(4, 5, 6);
+    world.addPlayer(player);
+    player.direction = "north";
+
+    const result = world.tryLevitate(player, "down", 1000);
+
+    expect(result.moved).toBe(true);
+    expect(player.position).toEqual({ x: 4, y: 4, z: 7 });
+  });
+
+  it("refuses to float down when a tile is in front", () => {
+    const world = cliffWorld();
+    const player = makePlayer(3, 5, 6);
+    world.addPlayer(player);
+    player.direction = "north";
+
+    expect(world.tryLevitate(player, "down", 1000).moved).toBe(false);
+  });
+
+  it("never crosses the surface boundary", () => {
+    const world = new World(
+      gridMapData({
+        name: "levitate-surface",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [7, 8],
+        groundSpeed: 50,
+        voids: [[5, 5, 7]],
+      }),
+      STEP_MS,
+    );
+    const surface = makePlayer(4, 5, 7, "surface");
+    const underground = makePlayer(5, 5, 8, "underground");
+    world.addPlayer(surface);
+    world.addPlayer(underground);
+    surface.direction = "north";
+    underground.direction = "north";
+
+    expect(world.tryLevitate(surface, "down", 1000).moved).toBe(false);
+    expect(world.tryLevitate(underground, "up", 1000).moved).toBe(false);
+  });
+
+  it("refuses to land on an occupied tile", () => {
+    const world = cliffWorld();
+    const player = makePlayer(5, 5);
+    const blocker = makePlayer(5, 4, 6, "p2");
+    world.addPlayer(player);
+    world.addPlayer(blocker);
+    player.direction = "north";
+
+    expect(world.tryLevitate(player, "up", 1000).moved).toBe(false);
+  });
+});

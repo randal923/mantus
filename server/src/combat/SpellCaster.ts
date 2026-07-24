@@ -10,7 +10,10 @@ import { areaPositions } from "./areaPositions";
 import { applySpellCooldowns } from "./applySpellCooldowns";
 import { canPlayerHarm } from "./canPlayerHarm";
 import { CombatFeedback } from "./CombatFeedback";
-import { MISSILE_DURATION_MS } from "./combatConstants";
+import {
+  MISSILE_DURATION_MS,
+  SPELL_FAILURE_EFFECT_ID,
+} from "./combatConstants";
 import { ConditionSystem } from "./ConditionSystem";
 import { creaturesInArea } from "./creaturesInArea";
 import { DamageResolver } from "./DamageResolver";
@@ -244,6 +247,66 @@ export class SpellCaster {
       for (const creature of affected.length > 0 ? affected : [player]) {
         this.conditions.removeCondition(creature, spell.dispel, now);
       }
+    }
+    this.feedback.sendFightState(session, now);
+  }
+
+  /**
+   * Floor-moving spells (magic rope, levitate). The movement attempt runs
+   * before resources are spent; everything here is synchronous inside the
+   * tick and mana/soul were pre-checked, so success can never underpay.
+   */
+  executeWorldSpell(
+    session: Session,
+    spell: SpellDefinition,
+    now: number,
+    attempt: (player: Player) => boolean,
+  ): void {
+    const player = playerForSession(this.world, session);
+    if (!player) {
+      this.feedback.reject(session, now, "spell-unavailable");
+      return;
+    }
+    const rejection = this.spellRejectionCode(
+      session,
+      player,
+      spell,
+      { kind: "self" },
+      now,
+    );
+    if (rejection) {
+      this.feedback.reject(session, now, rejection);
+      return;
+    }
+    if (!attempt(player)) {
+      this.visibility.broadcastMagicEffect(
+        player.position,
+        SPELL_FAILURE_EFFECT_ID,
+        player.id,
+      );
+      this.feedback.reject(session, now, "spell-not-possible");
+      return;
+    }
+    if (!player.spendMana(spell.manaCost) || !player.spendSoul(spell.soulCost)) {
+      throw new Error("world spell resources diverged");
+    }
+    applySpellCooldowns(this.feedback, session, spell, now);
+    if (spell.manaCost > 0) {
+      this.progression.awardMagicProgress(
+        player.id,
+        this.sequence.nextEventId(`magic:${player.id}`),
+        spell.manaCost,
+        now,
+      );
+    } else if (spell.soulCost > 0) {
+      this.progression.syncPlayer(player, now, true);
+    }
+    if (spell.effectId > 0) {
+      this.visibility.broadcastMagicEffect(
+        player.position,
+        spell.effectId,
+        player.id,
+      );
     }
     this.feedback.sendFightState(session, now);
   }

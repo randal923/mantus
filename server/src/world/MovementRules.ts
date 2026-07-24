@@ -90,6 +90,63 @@ export class MovementRules {
     return this.tryUseAction(player, target, now, "use-with");
   }
 
+  /**
+   * Levitate (exani hur): float one tile forward and one floor up or down.
+   * Mirrors Canary's levitate.lua — never across the surface boundary
+   * (z7 <-> z8), only up with no ceiling overhead, only down over open air.
+   */
+  tryLevitate(
+    player: Player,
+    parameter: "up" | "down",
+    now: number,
+  ): MoveResult {
+    const blocked: MoveResult = {
+      moved: false,
+      turned: false,
+      reason: "blocked",
+      retryAfterMs: 0,
+    };
+    const from = player.position;
+    if (parameter === "up" ? from.z === 8 || from.z <= 0 : from.z === 7 || from.z >= 15) {
+      return blocked;
+    }
+    if (now < player.nextStepAt) {
+      return {
+        moved: false,
+        turned: false,
+        reason: "cooldown",
+        retryAfterMs: player.nextStepAt - now,
+      };
+    }
+    const [dx, dy] = DIRECTION_DELTAS[player.direction];
+    if (parameter === "up") {
+      // A tile directly overhead is a ceiling; you cannot float through it.
+      if (this.map.getTile({ x: from.x, y: from.y, z: from.z - 1 })) {
+        return blocked;
+      }
+    } else if (this.map.getTile({ x: from.x + dx, y: from.y + dy, z: from.z })) {
+      // Floating down requires facing open air (a cliff edge).
+      return blocked;
+    }
+    const destination = {
+      x: from.x + dx,
+      y: from.y + dy,
+      z: from.z + (parameter === "up" ? -1 : 1),
+    };
+    if (
+      !this.map.isWalkable(destination) ||
+      !this.map.getGroundSpeed(destination) ||
+      this.houseBlocked(player, destination) ||
+      this.occupancy.isOccupied(destination)
+    ) {
+      return blocked;
+    }
+    player.moveTo(destination);
+    player.nextStepAt = now;
+    this.grid.move(player, from);
+    return { moved: true, turned: false, from, durationMs: 0 };
+  }
+
   private tryUseAction(
     player: Player,
     target: Position,

@@ -114,4 +114,6 @@ export interface SpellDefinition {
     readonly excludedVocations: ReadonlyArray<CharacterVocation>;
     readonly casterEffectId: number;
   } | null;
+  /** Floor-moving support spells resolved by the movement rules, not combat. */
+  readonly worldAction: "magic-rope" | "levitate" | null;
 }

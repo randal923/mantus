@@ -34,8 +34,31 @@ export class SpellRegistry {
     return this.byRuneTypeId.get(itemTypeId);
   }
 
-  getByWords(text: string): SpellDefinition | undefined {
-    return this.byWords.get(normalizeSpellWords(text));
+  /**
+   * Matches spoken text to a spell, Tibia-style: an exact words match, or
+   * the longest words prefix followed by a parameter ('exani hur "up"').
+   */
+  matchWords(
+    text: string,
+  ): { spell: SpellDefinition; parameter: string | null } | undefined {
+    const normalized = normalizeSpellWords(text);
+    const exact = this.byWords.get(normalized);
+    if (exact) return { spell: exact, parameter: null };
+    for (
+      let end = normalized.lastIndexOf(" ");
+      end > 0;
+      end = normalized.lastIndexOf(" ", end - 1)
+    ) {
+      const spell = this.byWords.get(normalized.slice(0, end));
+      if (!spell) continue;
+      const parameter = normalized
+        .slice(end + 1)
+        .replace(/^"/, "")
+        .replace(/"$/, "")
+        .trim();
+      return { spell, parameter: parameter.length > 0 ? parameter : null };
+    }
+    return undefined;
   }
 
   projectFor(player: Player): SpellCatalogEntry[] {

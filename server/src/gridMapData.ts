@@ -10,6 +10,8 @@ interface GridMapConfig {
   width: number;
   height: number;
   blocked: ReadonlyArray<readonly [number, number]>;
+  /** Positions with no tile at all (open air / void), as [x, y, z]. */
+  voids?: ReadonlyArray<readonly [number, number, number]>;
   floors?: ReadonlyArray<number>;
   groundSpeed?: number;
   groundSpeeds?: ReadonlyArray<readonly [number, number, number, number]>;
@@ -34,6 +36,9 @@ export function gridMapData(config: GridMapConfig): MapData {
   );
   const actions = new Map(
     (config.actions ?? []).map((action) => [positionKey(action.source), action]),
+  );
+  const voids = new Set(
+    (config.voids ?? []).map(([x, y, z]) => positionKey({ x, y, z })),
   );
   const groundSpeeds = new Map(
     (config.groundSpeeds ?? []).map(([x, y, z, speed]) => [
@@ -61,6 +66,7 @@ export function gridMapData(config: GridMapConfig): MapData {
       if (x < 0 || y < 0 || x >= config.width || y >= config.height) {
         return undefined;
       }
+      if (voids.has(positionKey(position))) return undefined;
       const walkable = !blocked.has(positionKey(position));
       return {
         walkable,

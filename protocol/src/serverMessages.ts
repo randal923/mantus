@@ -394,6 +394,7 @@ export const serverErrorCodeSchema = z.enum([
   "spell-magic-level-restricted",
   "spell-mana-insufficient",
   "spell-muted",
+  "spell-not-possible",
   "spell-out-of-range",
   "spell-protection-zone",
   "spell-soul-insufficient",

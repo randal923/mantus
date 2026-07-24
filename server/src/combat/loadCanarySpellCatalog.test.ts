@@ -19,8 +19,24 @@ describe("Canary spell catalog", () => {
     const haste = spells.find((spell) => spell.name === "Haste");
     const curse = spells.find((spell) => spell.name === "Curse");
     const energyBeam = spells.find((spell) => spell.name === "Energy Beam");
+    const magicRope = spells.find((spell) => spell.name === "Magic Rope");
+    const levitate = spells.find((spell) => spell.name === "Levitate");
 
-    expect(spells).toHaveLength(151);
+    expect(spells).toHaveLength(153);
+    expect(magicRope).toMatchObject({
+      id: "exani-tera",
+      worldAction: "magic-rope",
+      manaCost: 20,
+      requiredLevel: 9,
+      targetKind: "self",
+      effectId: 11,
+    });
+    expect(levitate).toMatchObject({
+      id: "exani-hur",
+      worldAction: "levitate",
+      manaCost: 50,
+      requiredLevel: 12,
+    });
     expect(buzz).toMatchObject({
       id: "exori-infir-vis",
       manaCost: 6,

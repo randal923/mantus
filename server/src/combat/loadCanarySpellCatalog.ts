@@ -144,7 +144,17 @@ function parseSpell(value: Record<string, unknown>): SpellDefinition {
           ),
     conjure: parseConjure(value.conjure, value.id),
     castRules: parseCastRules(value.castRules, value.id),
+    worldAction: parseWorldAction(value.worldAction, value.id),
   };
+}
+
+function parseWorldAction(
+  value: unknown,
+  id: unknown,
+): SpellDefinition["worldAction"] {
+  if (value === undefined || value === null) return null;
+  if (value === "magic-rope" || value === "levitate") return value;
+  throw new Error(`Canary spell ${String(id)} has an invalid world action`);
 }
 
 function parseCastRules(

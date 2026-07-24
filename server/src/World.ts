@@ -481,4 +481,12 @@ export class World {
   tryUseRopeSpot(player: Player, target: Position, now: number): MoveResult {
     return this.movement.tryUseRopeSpot(player, target, now);
   }
+
+  tryLevitate(
+    player: Player,
+    parameter: "up" | "down",
+    now: number,
+  ): MoveResult {
+    return this.movement.tryLevitate(player, parameter, now);
+  }
 }

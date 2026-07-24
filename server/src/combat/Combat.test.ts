@@ -38,6 +38,7 @@ import { Visibility } from "../Visibility";
 import { World } from "../World";
 import { Combat } from "./Combat";
 import { CombatIntentHandler } from "./CombatIntentHandler";
+import type { WorldSpellHooks } from "./WorldSpellHooks";
 
 const PLAYER_ID = "00000000-0000-4000-8000-000000000010";
 const WEAPON_ID = "00000000-0000-4000-8000-000000000011";
@@ -230,6 +231,7 @@ async function makeHarness(options: {
   partyMembership?: { sameParty: boolean };
   actionBar?: ActionBar;
   actionBotSettings?: ActionBotSettings;
+  worldSpells?: WorldSpellHooks;
 } = {}): Promise<Harness> {
   const world = new World(
     options.map ?? makeMap(),
@@ -339,6 +341,14 @@ async function makeHarness(options: {
           getQuestParticipantIds: (playerId) => [playerId],
         } satisfies PartyHooks
       : undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    options.worldSpells,
   );
   return {
     world,
@@ -560,6 +570,80 @@ describe("Combat", () => {
 
     expect(matched).toBe(false);
     expect(harness.sent).toEqual([]);
+  });
+
+  it("casts exani tera through the movement hook and pays only on success", async () => {
+    const magicRope = vi.fn().mockReturnValue(true);
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+      worldSpells: { magicRope, levitate: vi.fn() },
+    });
+    const manaBefore = harness.player.mana;
+
+    expect(
+      harness.combat.castSpellByWords(harness.session, "exani tera", 1_000),
+    ).toBe(true);
+
+    expect(magicRope).toHaveBeenCalledWith(harness.session, 1_000);
+    expect(harness.player.mana).toBe(manaBefore - 20);
+    expect(
+      harness.session.combatCooldowns.get("spell:exani-tera")?.readyAt,
+    ).toBe(3_000);
+  });
+
+  it("rejects exani tera off a rope spot without spending mana", async () => {
+    const magicRope = vi.fn().mockReturnValue(false);
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+      worldSpells: { magicRope, levitate: vi.fn() },
+    });
+    const manaBefore = harness.player.mana;
+
+    harness.combat.castSpellByWords(harness.session, "exani tera", 1_000);
+
+    expect(harness.player.mana).toBe(manaBefore);
+    expect(harness.sent).toContainEqual({
+      type: "error",
+      code: "spell-not-possible",
+    });
+    expect(
+      harness.session.combatCooldowns.get("spell:exani-tera"),
+    ).toBeUndefined();
+  });
+
+  it("passes the spoken exani hur parameter to the levitate hook", async () => {
+    const levitate = vi.fn().mockReturnValue(true);
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+      worldSpells: { magicRope: vi.fn(), levitate },
+    });
+
+    harness.combat.castSpellByWords(harness.session, 'exani hur "up"', 1_000);
+    harness.combat.castSpellByWords(harness.session, "exani hur down", 5_000);
+
+    expect(levitate).toHaveBeenNthCalledWith(1, harness.session, "up", 1_000);
+    expect(levitate).toHaveBeenNthCalledWith(2, harness.session, "down", 5_000);
+  });
+
+  it("rejects exani hur without a valid up/down parameter", async () => {
+    const levitate = vi.fn();
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+      worldSpells: { magicRope: vi.fn(), levitate },
+    });
+    const manaBefore = harness.player.mana;
+
+    harness.combat.castSpellByWords(harness.session, "exani hur", 1_000);
+    harness.combat.castSpellByWords(harness.session, "exani hur sideways", 2_000);
+
+    expect(levitate).not.toHaveBeenCalled();
+    expect(harness.player.mana).toBe(manaBefore);
+    expect(
+      harness.sent.filter(
+        (message) =>
+          message.type === "error" && message.code === "spell-not-possible",
+      ),
+    ).toHaveLength(2);
   });
 
   it("reports execution-time Exori rejection reasons", async () => {

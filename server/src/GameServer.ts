@@ -456,6 +456,12 @@ export class GameServer {
       },
       this.monsterEvents,
       (session, intent, now) => this.toolUse.handle(session, intent, now),
+      {
+        magicRope: (session, now) =>
+          this.movement.handleMagicRopeSpell(session, now),
+        levitate: (session, parameter, now) =>
+          this.movement.handleLevitateSpell(session, parameter, now),
+      },
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,

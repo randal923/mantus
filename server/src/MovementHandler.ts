@@ -162,6 +162,41 @@ export class MovementHandler {
     );
   }
 
+  /** Movement leg of exani tera; the spell pipeline owns failure feedback. */
+  handleMagicRopeSpell(session: Session, now: number): boolean {
+    return this.applySpellFloorMove(session, now, (player) =>
+      this.world.tryUseRopeSpot(player, player.position, now),
+    );
+  }
+
+  /** Movement leg of exani hur; the spell pipeline owns failure feedback. */
+  handleLevitateSpell(
+    session: Session,
+    parameter: "up" | "down",
+    now: number,
+  ): boolean {
+    return this.applySpellFloorMove(session, now, (player) =>
+      this.world.tryLevitate(player, parameter, now),
+    );
+  }
+
+  private applySpellFloorMove(
+    session: Session,
+    now: number,
+    move: (player: Player) => ReturnType<World["tryMove"]>,
+  ): boolean {
+    if (!session.playerId) return false;
+    const player = this.world.getPlayer(session.playerId);
+    if (!player) return false;
+    if (session.travelOperationPending || session.promotionOperationPending) {
+      return false;
+    }
+    const result = move(player);
+    if (result.moved) this.stop(session);
+    this.publishResult(session, player, result, false, now);
+    return result.moved;
+  }
+
   stop(session: Session): void {
     session.movementDirection = null;
     session.bufferedMovementDirection = null;

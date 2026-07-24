@@ -6,20 +6,20 @@
   },
   "report": {
     "total": 236,
-    "supported": 151,
-    "unsupported": 85,
+    "supported": 153,
+    "unsupported": 83,
     "reasons": {
       "condition mechanics require a dedicated importer": 23,
       "dynamic combat area": 1,
       "example definition": 1,
       "field or item creation is not implemented": 9,
       "missing literal Spell declaration": 1,
-      "procedural cast callback": 55,
+      "procedural cast callback": 53,
       "procedural combat callback": 18,
       "unsupported combat area AREA_BALANCED_BRAWL": 1,
       "unsupported combat area AREA_RING1_BURST3": 2,
-      "unsupported or missing combat formula": 81,
-      "unsupported or missing combat type": 58
+      "unsupported or missing combat formula": 79,
+      "unsupported or missing combat type": 56
     }
   },
   "spells": [
@@ -21443,20 +21443,37 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 11,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula"
-      ],
+      "worldAction": "levitate",
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "12-world-actions",
-        "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -21573,20 +21590,37 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 11,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula"
-      ],
+      "worldAction": "magic-rope",
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "12-world-actions",
-        "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {

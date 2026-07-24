@@ -130,10 +130,11 @@ scripted summons/heals. The generated world report has zero unresolved
 - [ ] Implement conjuring, ammunition/enchantment, cure/dispel, house, levitate,
   rope, find-person/find-fiend, creature illusion, challenge, food, light, and
   every other support callback represented by the pinned spell registrations.
-  Conjuring, ammunition/enchantment, cure/dispel, light, and the inventory food
-  path are now executable. The random food-creation spell remains a TODO 7
+  Conjuring, ammunition/enchantment, cure/dispel, light, the inventory food
+  path, and the floor-moving support spells (exani tera magic rope, exani hur
+  levitate — `worldAction` spells resolved by the movement rules) are now
+  executable. The random food-creation spell remains a TODO 7
   gap. House spells are blocked by [`14d-houses`](14d-houses.md);
-  levitate/rope by [`12-world-actions`](12-world-actions.md);
   find-person/find-fiend by [`14e-social-services`](14e-social-services.md);
   party spells by [`14a-parties`](14a-parties.md); familiar/avatar and
   Wheel/animus branches by [`15-optional-features`](15-optional-features.md).
@@ -175,13 +176,21 @@ Saying a spell's words in local chat casts it (`ChatHandler` ->
 `Combat.castSpellByWords`; exact match after case/whitespace normalization,
 full validation stays in the cast pipeline). Accepted for now:
 
-- Name-parameterized casts like `exura sio "Friend"` are not parsed; "exura
-  sio" matches but resolves to the attack target, so friend heals still need
-  the action bar. Fix: strip a trailing quoted argument, resolve it to an
-  on-screen player, and pass a `creature` target.
+- Spell-word parameters are parsed (longest words prefix + remainder, quotes
+  optional) but only consumed by exani hur "up"/"down". Name-parameterized
+  casts like `exura sio "Friend"` are matched and then dropped without a cast;
+  friend heals still need the action bar. Fix: resolve the parameter to an
+  on-screen player and pass a `creature` target.
+- Exani hur cannot be cast from the action bar or the bare `cast-spell`
+  intent — neither carries a parameter, so it rejects with
+  `spell-not-possible`. Fix if wanted: an up/down chooser on the slot, or two
+  pseudo-actions.
 - Successful casts broadcast as plain `say` text; there is no distinct
   magic/orange speech mode in the protocol.
 - Yelled spell words do not cast (yell has its own exhaust path); say and
   whisper do.
+- Spell-driven floor moves reuse the step cooldown (`player.nextStepAt`), so
+  exani tera/exani hur can fizzle (no mana lost) if cast mid-step; Canary
+  teleports immediately.
 
 [Back to overview](README.md)

@@ -48,6 +48,7 @@ import { playerForSession } from "./playerForSession";
 import type { SpellDefinition } from "./Spell";
 import { SpellCaster } from "./SpellCaster";
 import { SpellRegistry } from "./SpellRegistry";
+import type { WorldSpellHooks } from "./WorldSpellHooks";
 import { ActionBot } from "./ActionBot";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
@@ -115,6 +116,7 @@ export class Combat {
       intent: UseItemWithMessage,
       now: number,
     ) => boolean,
+    private readonly worldSpells?: WorldSpellHooks,
   ) {
     this.spells = spells;
     this.formula = new CombatFormula(seed);
@@ -271,6 +273,10 @@ export class Combat {
       this.feedback.reject(session, now, "spell-unavailable");
       return;
     }
+    if (spell.worldAction) {
+      this.castWorldActionSpell(session, spell, null, now);
+      return;
+    }
     if (spell.conjure) {
       this.spellCaster.executeConjure(session, spell, intent.target, now);
       return;
@@ -284,9 +290,15 @@ export class Combat {
    * the regular cast pipeline at execution time.
    */
   castSpellByWords(session: Session, text: string, now: number): boolean {
-    const spell = this.spells.getByWords(text);
-    if (!spell) return false;
+    const match = this.spells.matchWords(text);
+    if (!match) return false;
+    const { spell, parameter } = match;
     session.actionBotSuppressedAt = now;
+    if (spell.worldAction) {
+      this.castWorldActionSpell(session, spell, parameter, now);
+      return true;
+    }
+    if (parameter !== null) return false;
     this.castSpell(
       session,
       {
@@ -297,6 +309,21 @@ export class Combat {
       now,
     );
     return true;
+  }
+
+  private castWorldActionSpell(
+    session: Session,
+    spell: SpellDefinition,
+    parameter: string | null,
+    now: number,
+  ): void {
+    this.spellCaster.executeWorldSpell(session, spell, now, () => {
+      if (spell.worldAction === "magic-rope") {
+        return this.worldSpells?.magicRope(session, now) ?? false;
+      }
+      if (parameter !== "up" && parameter !== "down") return false;
+      return this.worldSpells?.levitate(session, parameter, now) ?? false;
+    });
   }
 
   private spokenSpellTarget(

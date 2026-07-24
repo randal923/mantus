@@ -185,6 +185,9 @@ function parseDefinition(definition, constants, areas) {
       : null,
     conjure,
     castRules,
+    ...(specialCombat?.worldAction
+      ? { worldAction: specialCombat.worldAction }
+      : {}),
     supported: unsupportedReasons.length === 0,
     unsupportedReasons,
   };
@@ -230,6 +233,16 @@ function parseSpecialCombat(path) {
     dispel: null,
     allowsProceduralCast,
   });
+  // Floor-moving support spells: the cast pipeline validates resources and
+  // the movement rules perform the actual z-change (CONST_ME_TELEPORT = 11).
+  const worldMove = (worldAction) => ({
+    damageType: "healing",
+    formula: zeroFormula,
+    dispel: null,
+    allowsProceduralCast: true,
+    effectId: 11,
+    worldAction,
+  });
   const damageCondition = (
     type,
     damageType,
@@ -249,6 +262,8 @@ function parseSpecialCombat(path) {
     allowsProceduralCast: false,
   });
   const simple = {
+    "data/scripts/spells/support/magic_rope.lua": worldMove("magic-rope"),
+    "data/scripts/spells/support/levitate.lua": worldMove("levitate"),
     "data/scripts/spells/support/light.lua": support({
       type: "light",
       durationMs: 370_000,
