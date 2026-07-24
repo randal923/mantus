@@ -334,6 +334,42 @@ describe("ItemIntentHandler", () => {
     ]);
   });
 
+  it("throttles action-bar item uses to one per 200 ms exhaust window", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    store.seed({
+      id: LETTER_ID,
+      typeId: 3505,
+      count: 1,
+      attributes: { text: "Read me" },
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 2 },
+    });
+    const { handler, session, sent } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    const textCount = () =>
+      sent.filter((message) => message.type === "item-text").length;
+
+    // First use fires and arms the exhaust.
+    expect(handler.activateOwnedItem(session, 3505, "use", null, 0)).toBe(true);
+    expect(textCount()).toBe(1);
+    // A replay 100 ms later is inside the exhaust window: rejected, no re-use.
+    expect(handler.activateOwnedItem(session, 3505, "use", null, 100)).toBe(
+      false,
+    );
+    expect(textCount()).toBe(1);
+    // 199 ms is still exhausted; 200 ms clears the window.
+    expect(handler.activateOwnedItem(session, 3505, "use", null, 199)).toBe(
+      false,
+    );
+    expect(textCount()).toBe(1);
+    expect(handler.activateOwnedItem(session, 3505, "use", null, 200)).toBe(
+      true,
+    );
+    expect(textCount()).toBe(2);
+  });
+
   it("reads and atomically writes bounded owned item text", async () => {
     const store = new MemoryItemStore();
     for (const item of nestedItems()) store.seed(item);

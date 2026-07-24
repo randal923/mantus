@@ -14,6 +14,7 @@ export function handleGameClientError(
   const showPuff =
     code === "combat-action-failed" ||
     code === "item-action-failed" ||
+    code === "item-exhausted" ||
     code === "player-full" ||
     code.startsWith("spell-") ||
     code.startsWith("potion-");

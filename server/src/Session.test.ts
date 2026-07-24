@@ -73,4 +73,19 @@ describe("Session", () => {
     expect(send).not.toHaveBeenCalled();
     expect(terminate).toHaveBeenCalledOnce();
   });
+
+  it("arms a 200 ms generic use exhaust window", () => {
+    const socket = { on: vi.fn() } as unknown as WebSocket;
+    const session = new Session("session", "127.0.0.1", socket, {
+      maxPendingIntents: 16,
+      maxProtocolViolations: 5,
+      initialViewRange: { x: 9, y: 7 },
+    });
+
+    expect(session.useExhausted(0)).toBe(false);
+    session.armUseExhaust(0);
+    expect(session.useExhausted(0)).toBe(true);
+    expect(session.useExhausted(199)).toBe(true);
+    expect(session.useExhausted(200)).toBe(false);
+  });
 });

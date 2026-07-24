@@ -404,6 +404,7 @@ export const serverErrorCodeSchema = z.enum([
   "spell-vocation-restricted",
   "spell-weapon-required",
   "item-action-failed",
+  "item-exhausted",
   "loot-protected",
   "player-full",
   "potion-exhausted",

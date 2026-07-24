@@ -212,6 +212,10 @@ export class ItemIntentHandler {
       mode === "use-with-crosshair"
     ) {
       if (!targetPosition) return false;
+      // Action-bar item uses reach the tick outside handleIntent, so the
+      // 200 ms generic use exhaust is applied here as well (charter rule 8).
+      if (session.useExhausted(now)) return false;
+      session.armUseExhaust(now);
       this.handle(
         session,
         {
@@ -225,6 +229,11 @@ export class ItemIntentHandler {
       return true;
     }
     const type = this.catalog.require(item.typeId);
+    // Opening a container is not a "use" and is not exhaust-gated.
+    if (type.containerCapacity === undefined) {
+      if (session.useExhausted(now)) return false;
+      session.armUseExhaust(now);
+    }
     this.handle(
       session,
       {

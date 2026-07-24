@@ -743,10 +743,23 @@ export class GameServer {
         return;
       }
       case "use-map":
-        if (this.depot.handleMapUse(session, intent.position)) return;
-        if (this.items.handleMapOpen(session, intent.position)) return;
-        if (this.worldActions.handleUseMap(session, intent.position, now)) {
-          return;
+        // The instant-use branches (depot, world container, world action) are
+        // gated by the 200 ms use exhaust; the walk-to fallback (ladders,
+        // stairs, holes) stays governed by the step cooldown, so a walk-click
+        // is never blocked by a recent use.
+        if (!session.useExhausted(now)) {
+          if (this.depot.handleMapUse(session, intent.position)) {
+            session.armUseExhaust(now);
+            return;
+          }
+          if (this.items.handleMapOpen(session, intent.position)) {
+            session.armUseExhaust(now);
+            return;
+          }
+          if (this.worldActions.handleUseMap(session, intent.position, now)) {
+            session.armUseExhaust(now);
+            return;
+          }
         }
         this.movement.handleUseMap(session, intent, now);
         return;
@@ -760,7 +773,22 @@ export class GameServer {
         this.combat.handle(session, intent, now);
         return;
       case "use-item-with":
+        if (session.useExhausted(now)) {
+          session.sendError("item-exhausted");
+          return;
+        }
+        session.armUseExhaust(now);
         if (this.toolUse.handle(session, intent, now)) return;
+        this.items.handle(session, intent, now);
+        return;
+      case "use-item":
+        // Generic item use (food, tools, readables, world-action items) is
+        // exhaust-gated; container open/move/equip flows are not "uses".
+        if (session.useExhausted(now)) {
+          session.sendError("item-exhausted");
+          return;
+        }
+        session.armUseExhaust(now);
         this.items.handle(session, intent, now);
         return;
       case "equip-item":
@@ -772,7 +800,6 @@ export class GameServer {
       case "close-container":
       case "loot-item":
       case "close-world-container":
-      case "use-item":
       case "split-stack":
       case "rotate-item":
       case "move-item":

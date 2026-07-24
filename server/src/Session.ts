@@ -20,6 +20,9 @@ import {
 import type { Account } from "./AccountStore";
 import { monotonicNow } from "./monotonicNow";
 
+/** Canary's generic action exhaust: 200 ms between item/object uses. */
+export const USE_EXHAUST_MS = 200;
+
 /**
  * One WebSocket connection. Inbound messages are size/rate-checked and
  * schema-validated here, then *queued* — never executed. The game loop drains
@@ -35,6 +38,12 @@ export class Session {
   uiSettingsUpdatePending = false;
   actionBarUpdatePending = false;
   itemOperationPending = false;
+  /**
+   * Ready-time for the next generic item/object use. Canary applies a 200 ms
+   * action exhaust per use; this is the server-authoritative timer, checked at
+   * execution time inside the tick (charter rules 4, 8).
+   */
+  useExhaustReadyAt = 0;
   /** One optimistic potion transaction may be durable at a time per user. */
   potionPersistPending = false;
   depotOperationPending = false;
@@ -159,6 +168,16 @@ export class Session {
         this.bufferedMovementDirection ||
         this.autoWalkDirections.length > 0,
     );
+  }
+
+  /** True while the generic use exhaust is still active (rule 8). */
+  useExhausted(now: number): boolean {
+    return now < this.useExhaustReadyAt;
+  }
+
+  /** Arms the next 200 ms use window; call only when a use actually fires. */
+  armUseExhaust(now: number): void {
+    this.useExhaustReadyAt = now + USE_EXHAUST_MS;
   }
 
   setViewRange(range: ViewRange): boolean {
