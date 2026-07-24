@@ -8,8 +8,8 @@ const TURN_DIRECTIONS: Readonly<Record<string, Direction>> = {
 };
 
 export function getKeyboardTurnDirection(
-  event: Pick<KeyboardEvent, "altKey" | "code">,
+  event: Pick<KeyboardEvent, "code" | "shiftKey">,
 ): Direction | null {
-  if (!event.altKey) return null;
+  if (!event.shiftKey) return null;
   return TURN_DIRECTIONS[event.code] ?? null;
 }

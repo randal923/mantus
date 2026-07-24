@@ -7,16 +7,16 @@ describe("getKeyboardTurnDirection", () => {
     ["KeyD", "east"],
     ["KeyS", "south"],
     ["KeyA", "west"],
-  ] as const)("maps Alt+%s to %s", (code, direction) => {
-    expect(getKeyboardTurnDirection({ altKey: true, code })).toBe(direction);
+  ] as const)("maps Shift+%s to %s", (code, direction) => {
+    expect(getKeyboardTurnDirection({ shiftKey: true, code })).toBe(direction);
   });
 
-  it("leaves unmodified movement keys and Alt+arrow keys alone", () => {
+  it("leaves unmodified movement keys and Shift+arrow keys alone", () => {
     expect(
-      getKeyboardTurnDirection({ altKey: false, code: "KeyW" }),
+      getKeyboardTurnDirection({ shiftKey: false, code: "KeyW" }),
     ).toBeNull();
     expect(
-      getKeyboardTurnDirection({ altKey: true, code: "ArrowUp" }),
+      getKeyboardTurnDirection({ shiftKey: true, code: "ArrowUp" }),
     ).toBeNull();
   });
 });
