@@ -90,6 +90,34 @@ describe("loadCreatureContent", () => {
     ).toBe(true);
   });
 
+  it("round-trips the typed scalar creature fields through the loader", () => {
+    const types = [
+      ...loadCreatureContent("world", "otservbr").monsterTypes.values(),
+    ];
+
+    // Every monster carries the typed scalar shape (Feature 9 "already typed"
+    // set): static mana cost, light, target-change rules, hidden health,
+    // static-attack chance.
+    for (const type of types) {
+      expect(typeof type.manaCost).toBe("number");
+      expect(typeof type.light.intensity).toBe("number");
+      expect(typeof type.light.color).toBe("number");
+      expect(typeof type.changeTarget.intervalMs).toBe("number");
+      expect(typeof type.changeTarget.chance).toBe("number");
+      expect(typeof type.flags.healthHidden).toBe("boolean");
+      expect(typeof type.flags.staticAttackChance).toBe("number");
+    }
+
+    // ...and the fields carry real parsed values, not just defaults.
+    expect(types.some((type) => type.manaCost > 0)).toBe(true);
+    expect(types.some((type) => type.light.intensity > 0)).toBe(true);
+    expect(types.some((type) => type.flags.healthHidden)).toBe(true);
+    expect(types.some((type) => type.flags.staticAttackChance !== 95)).toBe(
+      true,
+    );
+    expect(types.some((type) => type.changeTarget.chance > 0)).toBe(true);
+  });
+
   it("imports Canary on-hit conditions with the exact ConditionDamage series", () => {
     const content = loadCreatureContent("world", "otservbr");
     const scorpion = content.monsterTypes.get("scorpion");

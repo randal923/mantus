@@ -2,6 +2,16 @@
 
 Part of [Todo 5 — Creatures, spawns, and AI](todo-5.md).
 
+> **Status: open.** The importer (`creatureGapOwner`) classifies every remaining
+> ignored assignment as `blocked`, owned by Todo 11 (NPC behavior/shops) and
+> Todo 16 (bestiary/bosstiary/forge) — those owner-todos must define the target
+> representation before the fields can be typed. Finished self-contained guard
+> work (the "gap cannot silently reopen" report assertion + typed-scalar
+> round-trip) is logged in
+> [completed/implementation-feature-9-completed.md](completed/implementation-feature-9-completed.md)
+> as `server/src/spawn/creatureImportReport.test.ts`. Do not archive until the
+> ignored-assignment surface reaches zero.
+
 ## Why
 
 The world import report still lists ignored gameplay assignments; parity requires zero of them. Every ignored assignment and procedural callback must become typed data or reviewed TypeScript — never executed Lua.
