@@ -292,6 +292,71 @@ describe("ItemIntentHandler", () => {
     ]);
   });
 
+  it("rejects a drop or throw whose line of sight is blocked by a wall", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const from = { x: 2, y: 2, z: 7 };
+    const worldGold: Item = {
+      id: WORLD_GOLD_ID,
+      typeId: 3031,
+      count: 5,
+      attributes: {},
+      version: 1,
+      location: { kind: "world", position: from, stackIndex: 1 },
+    };
+    store.seed(worldGold);
+    const { handler, session, sent, world } = makeHarness(store, {
+      width: 10,
+      height: 5,
+      blocked: [[4, 2]],
+      playerPosition: from,
+      viewRange: { x: 9, y: 7 },
+    });
+    world.applyCreatedWorldItems([worldGold]);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    // Throwing the grounded gold across the wall at (4,2) has no line of sight.
+    handler.handle(session, {
+      type: "move-map-item",
+      itemId: WORLD_GOLD_ID,
+      revision: 1,
+      fromPosition: from,
+      toPosition: { x: 6, y: 2, z: 7 },
+    });
+    expect(sent.at(-1)).toMatchObject({ type: "error", code: "item-action-failed" });
+    expect(world.getMapItems({ x: 6, y: 2, z: 7 })).toEqual([]);
+    expect(world.getMapItems(from)).toMatchObject([{ instanceId: WORLD_GOLD_ID }]);
+
+    // Dropping a carried item across the same wall is rejected for the same reason.
+    handler.handle(session, {
+      type: "drop-item",
+      itemId: ITEM_ID,
+      revision: 1,
+      position: { x: 6, y: 2, z: 7 },
+    });
+    expect(sent.at(-1)).toMatchObject({ type: "error", code: "item-action-failed" });
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.find((item) => item.id === ITEM_ID),
+    ).toBeDefined();
+
+    // Control: a clear-line throw to (2,4) is accepted — the rejection above is
+    // line of sight, not a blanket block on the range.
+    handler.handle(session, {
+      type: "move-map-item",
+      itemId: WORLD_GOLD_ID,
+      revision: 1,
+      fromPosition: from,
+      toPosition: { x: 2, y: 4, z: 7 },
+    });
+    expect(
+      world
+        .getMapItems({ x: 2, y: 4, z: 7 })
+        .some((item) => item.instanceId === WORLD_GOLD_ID),
+    ).toBe(true);
+  });
+
   it("rejects throws to missing tiles, other floors, or stale revisions", async () => {
     const store = new MemoryItemStore();
     for (const item of nestedItems()) store.seed(item);
