@@ -1,3 +1,4 @@
+import type { Position } from "@tibia/protocol";
 import type { CarriedPersistPlan } from "../CarriedPersistPlan";
 import type { ItemMutation } from "../ItemMutation";
 
@@ -9,4 +10,6 @@ import type { ItemMutation } from "../ItemMutation";
 export interface CarriedPlan {
   readonly mutation: ItemMutation;
   readonly persist: CarriedPersistPlan;
+  /** Magic effect to broadcast at execution time (e.g. a trash-destroy poff). */
+  readonly effect?: { readonly position: Position; readonly effectId: number };
 }

@@ -12,6 +12,7 @@ import { loadItemCatalog } from "./loadItemCatalog";
 import { PgItemStore } from "./PgItemStore";
 import { planConsume } from "./plan/planConsume";
 import { planMoveToContainer } from "./plan/planMoveToContainer";
+import { planTrashDrop } from "./plan/planTrashDrop";
 import { planPotionUse } from "./plan/planPotionUse";
 
 const TEST_SCHEMA = "item_store_integration";
@@ -797,6 +798,34 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       expect.objectContaining({
         item_id: foodId,
         details: expect.objectContaining({ count: 1, reason: "food" }),
+      }),
+    ]);
+  });
+
+  it("destroys a trash-dropped item exactly once with one destruction audit", async () => {
+    const goldId = await insertItem(GOLD_TYPE, 5, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 1,
+    });
+    const carried = await store.loadForCharacter(characterId);
+    const item = carried.find((candidate) => candidate.id === goldId);
+    if (!item) throw new Error("dropped item was not loaded");
+    const plan = planTrashDrop({
+      characterId,
+      carriedItems: carried,
+      item,
+      count: item.count,
+      position: { x: 1, y: 1, z: 7 },
+    });
+
+    await store.persist(plan.persist);
+
+    expect(await itemRow(goldId)).toBeUndefined();
+    expect(await auditRows("item-destroyed")).toEqual([
+      expect.objectContaining({
+        item_id: goldId,
+        details: expect.objectContaining({ count: 5, reason: "trash" }),
       }),
     ]);
   });

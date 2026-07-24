@@ -39,7 +39,7 @@ export type CarriedPersistAudit =
       readonly itemId: string;
       readonly typeId: number;
       readonly count: number;
-      readonly reason: "food";
+      readonly reason: "food" | "trash";
     }
   | {
       readonly kind: "transfer";

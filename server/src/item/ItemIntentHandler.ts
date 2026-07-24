@@ -999,6 +999,12 @@ export class ItemIntentHandler {
     if (inventory && session.playerId === playerId) {
       session.send({ type: "inventory-updated", inventory });
     }
+    if (planned.plan.effect) {
+      this.visibility.broadcastMagicEffect(
+        planned.plan.effect.position,
+        planned.plan.effect.effectId,
+      );
+    }
     const persist = planned.plan.persist;
     this.enqueuePersist(session, playerId, () => this.store.persist(persist));
   }

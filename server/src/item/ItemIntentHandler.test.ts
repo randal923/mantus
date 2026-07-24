@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { Position, ServerMessage, ViewRange } from "@tibia/protocol";
 import type { WebSocket } from "ws";
+import type { MapItem } from "../MapItem";
 import { Player } from "../Player";
 import { Session } from "../Session";
 import { gridMapData } from "../gridMapData";
@@ -370,6 +371,45 @@ describe("ItemIntentHandler", () => {
     expect(textCount()).toBe(2);
   });
 
+  it("destroys a carried item dropped onto a trashholder tile", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    // 622 = "water", a trashholder-kind static map item on the destination tile.
+    const water: MapItem = {
+      instanceId: "water-1-2",
+      itemId: 622,
+      stackIndex: 0,
+      mutable: false,
+    };
+    const { handler, session, world } = makeHarness(store, {
+      mapItems: [{ position: { x: 1, y: 2, z: 7 }, item: water }],
+    });
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(
+      session,
+      {
+        type: "drop-item",
+        itemId: ITEM_ID,
+        revision: 1,
+        position: { x: 1, y: 2, z: 7 },
+      },
+      0,
+    );
+
+    // Destroyed, not placed: gone from the inventory and never on the tile.
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.find((item) => item.id === ITEM_ID),
+    ).toBeUndefined();
+    expect(world.getMapItems({ x: 1, y: 2, z: 7 })).toEqual([water]);
+
+    // Durable delete once the persist queue drains.
+    const durable = await handler.load(CHARACTER_ID, 400);
+    expect(durable.items.find((item) => item.id === ITEM_ID)).toBeUndefined();
+  });
+
   it("reads and atomically writes bounded owned item text", async () => {
     const store = new MemoryItemStore();
     for (const item of nestedItems()) store.seed(item);
@@ -586,6 +626,7 @@ interface HarnessOptions {
   readonly blocked?: ReadonlyArray<readonly [number, number]>;
   readonly playerPosition?: Position;
   readonly viewRange?: ViewRange;
+  readonly mapItems?: ReadonlyArray<{ position: Position; item: MapItem }>;
 }
 
 function makeHarness(
@@ -604,6 +645,7 @@ function makeHarness(
       width: options.width ?? 3,
       height: options.height ?? 3,
       blocked: options.blocked ?? [],
+      items: options.mapItems,
     }),
     25,
   );

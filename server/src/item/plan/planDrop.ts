@@ -6,6 +6,8 @@ import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
 import { firstFreeWorldStackIndex } from "./firstFreeWorldStackIndex";
+import { isTrashholderTile } from "./isTrashholderTile";
+import { planTrashDrop } from "./planTrashDrop";
 import type { WorldItemsView } from "./WorldItemsView";
 
 export function planDrop(input: {
@@ -31,6 +33,15 @@ export function planDrop(input: {
     (!type.stackable && count !== 1)
   ) {
     return null;
+  }
+  if (isTrashholderTile(world.getMapItems(position), catalog)) {
+    return planTrashDrop({
+      characterId,
+      carriedItems: carried.items,
+      item,
+      count,
+      position,
+    });
   }
   const mergeTarget =
     type.stackable && !item.seedKey

@@ -9,6 +9,10 @@ import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
 import { firstFreeWorldStackIndex } from "./firstFreeWorldStackIndex";
+import {
+  isTrashholderTile,
+  TRASH_DESTRUCTION_EFFECT_ID,
+} from "./isTrashholderTile";
 import { materializeWorldSource } from "./materializeWorldSource";
 import type { WorldItemsView } from "./WorldItemsView";
 
@@ -51,6 +55,43 @@ export function planMoveMapItem(input: {
   if (root.version !== input.expectedVersion) return null;
   const type = catalog.require(root.typeId);
   if (!type.movable) return null;
+
+  // Pristine static-seed items are excluded: destroying one would leave the
+  // static map seed to reappear on reload (there is no world row to hide), so
+  // they fall through to normal placement, which properly consumes the seed.
+  if (!pristine && isTrashholderTile(world.getMapItems(toPosition), catalog)) {
+    // Thrown onto trash: destroy the whole world subtree instead of placing it.
+    const destroyed = [root, ...children];
+    const trashRowOps: CarriedPersistRowOp[] = [];
+    const trashAudits: CarriedPersistAudit[] = [];
+    // Leaf-first delete for the RESTRICT container FK; memory-only items
+    // (untouched kill loot) have no row to delete.
+    for (const victim of [...destroyed].reverse()) {
+      if (world.lootOrigin(victim.id) === undefined) {
+        trashRowOps.push({
+          kind: "delete",
+          itemId: victim.id,
+          expectedVersion: victim.version,
+        });
+      }
+      trashAudits.push({
+        kind: "destruction",
+        itemId: victim.id,
+        typeId: victim.typeId,
+        count: victim.count,
+        reason: "trash",
+      });
+    }
+    return {
+      mutation: {
+        before: root,
+        after: [],
+        removedItemIds: destroyed.map((victim) => victim.id),
+      },
+      persist: { characterId, rowOps: trashRowOps, audits: trashAudits },
+      effect: { position: { ...toPosition }, effectId: TRASH_DESTRUCTION_EFFECT_ID },
+    };
+  }
 
   const rowOps: CarriedPersistRowOp[] = [];
   const audits: CarriedPersistAudit[] = [];
