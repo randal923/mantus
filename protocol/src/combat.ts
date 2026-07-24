@@ -176,6 +176,7 @@ export const fightStateSchema = z
     conditions: z.array(combatConditionStateSchema).max(CONDITION_TYPES.length),
     cooldowns: z.array(combatCooldownStateSchema).max(16),
     skull: ownSkullStateSchema.optional(),
+    inProtectionZone: z.boolean(),
   })
   .strict();
 

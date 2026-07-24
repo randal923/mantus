@@ -17,6 +17,7 @@ import { useAppTranslation } from "../i18n/useAppTranslation";
 import { ChatPanel } from "./chat/ChatPanel";
 import type { ChatChannel } from "./chat/chatTypes";
 import { ConditionBar } from "./combat/ConditionBar";
+import { ProtectionZoneIndicator } from "./combat/ProtectionZoneIndicator";
 import { OwnSkullIndicator } from "./pvp/OwnSkullIndicator";
 import { getSpellIconArtwork } from "../lib/combat/getSpellIconArtwork";
 import { getInventoryItems } from "../lib/inventory/getInventoryItems";
@@ -361,6 +362,7 @@ export function GameHud({
         />
       </div>
       <div className="absolute top-24 left-4 flex flex-col items-start gap-2">
+        <ProtectionZoneIndicator active={fightState.inProtectionZone} />
         <ConditionBar conditions={fightState.conditions} />
         {fightState.skull && <OwnSkullIndicator skull={fightState.skull} />}
       </div>

@@ -1026,7 +1026,8 @@
       "magic-shield": "Magic Shield",
       "combat-lock": "In combat",
       "pz-lock": "Protection-zone lock"
-    }
+    },
+    "protectionZone": "Protection Zone"
   },
   "chat": {
     "label": "Game chat",

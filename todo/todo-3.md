@@ -4,7 +4,7 @@ The converter (all floors 0-15, transition metadata, atomic versioned builds), z
 
 ## Remaining features
 
-- [ ] **Feature 3 — pz-lock enforcement on ladder/hole/rope/levitate transitions** — A pz-locked player can enter a protection zone via the use path, which skips the pz-lock destination check normal walking enforces. See [implementation](implementation-feature-3.md).
+- [x] **Feature 3 — pz-lock enforcement on ladder/hole/rope/levitate transitions** — A pz-locked player can enter a protection zone via the use path, which skips the pz-lock destination check normal walking enforces. Completed 2026-07-24; see [implementation](implementation-feature-3.md) → [completed log](completed/implementation-feature-3-completed.md).
 - [ ] **Feature 4 — Disabled map transitions and movement-action parity resolution** — Individually resolve every disabled transition, movement action, zone behavior, and invalid placement so no map behavior stays silently unsupported. See [implementation](implementation-feature-4.md).
 
 [Back to overview](README.md)

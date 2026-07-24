@@ -45,6 +45,7 @@ const meta = {
         { type: "combat-lock", remainingMs: 24_000, stacks: 1 },
       ],
       cooldowns: [],
+      inProtectionZone: true,
     },
     hasWeapon: true,
     spells: [

@@ -25,6 +25,9 @@ export function projectFightState(
         }
       : {}),
     conditions: player?.conditions.project(now) ?? [],
+    inProtectionZone: player
+      ? world.isProtectionZone(player.position)
+      : false,
     cooldowns: [...session.combatCooldowns.entries()]
       .filter(([, cooldown]) => cooldown.readyAt > now)
       .map(([group, cooldown]) => ({

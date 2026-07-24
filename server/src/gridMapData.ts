@@ -12,6 +12,8 @@ interface GridMapConfig {
   blocked: ReadonlyArray<readonly [number, number]>;
   /** Positions with no tile at all (open air / void), as [x, y, z]. */
   voids?: ReadonlyArray<readonly [number, number, number]>;
+  /** Tiles flagged as a protection zone, as [x, y, z]. */
+  protectionZones?: ReadonlyArray<readonly [number, number, number]>;
   floors?: ReadonlyArray<number>;
   groundSpeed?: number;
   groundSpeeds?: ReadonlyArray<readonly [number, number, number, number]>;
@@ -39,6 +41,11 @@ export function gridMapData(config: GridMapConfig): MapData {
   );
   const voids = new Set(
     (config.voids ?? []).map(([x, y, z]) => positionKey({ x, y, z })),
+  );
+  const protectionZones = new Set(
+    (config.protectionZones ?? []).map(([x, y, z]) =>
+      positionKey({ x, y, z }),
+    ),
   );
   const groundSpeeds = new Map(
     (config.groundSpeeds ?? []).map(([x, y, z, speed]) => [
@@ -76,7 +83,7 @@ export function gridMapData(config: GridMapConfig): MapData {
         blocksProjectile: !walkable,
         limitsFloorView: true,
         limitsFloorViewFree: true,
-        protectionZone: false,
+        protectionZone: protectionZones.has(positionKey(position)),
         noPvpZone: false,
         noLogoutZone: false,
         pvpZone: false,

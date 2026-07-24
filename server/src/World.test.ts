@@ -698,3 +698,95 @@ describe("World.tryLevitate", () => {
     expect(world.tryLevitate(player, "up", 1000).moved).toBe(false);
   });
 });
+
+describe("pz-lock blocks protection-zone transitions", () => {
+  const pzLock = (player: Player) =>
+    player.conditions.apply(
+      { type: "pz-lock", sourceId: null, durationMs: 60_000 },
+      0,
+    );
+
+  it("rejects a pz-locked player climbing a ladder into a protection zone", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "ladder-pz",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        protectionZones: [[destination.x, destination.y, destination.z]],
+        actions: [
+          { kind: "ladder", activation: "use", source, destination, itemId: 1948 },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    pzLock(player);
+    world.addPlayer(player);
+
+    const result = world.tryUseMap(player, source, 1000);
+
+    expect(result.moved).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("rejects a pz-locked player roping into a protection zone", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 5, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "rope-pz",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        protectionZones: [[destination.x, destination.y, destination.z]],
+        actions: [
+          { kind: "rope-spot", activation: "use-with", source, destination, itemId: 386 },
+        ],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    pzLock(player);
+    world.addPlayer(player);
+
+    const result = world.tryUseRopeSpot(player, source, 1000);
+
+    expect(result.moved).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("rejects a pz-locked player levitating into a protection zone", () => {
+    const destination = { x: 5, y: 4, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "levitate-pz",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        // Open air directly above the caster so there is no ceiling to block
+        // the float; the landing tile is a protection zone.
+        voids: [[5, 5, 6]],
+        protectionZones: [[destination.x, destination.y, destination.z]],
+      }),
+      STEP_MS,
+    );
+    const player = makePlayer(5, 5);
+    player.direction = "north";
+    pzLock(player);
+    world.addPlayer(player);
+
+    const result = world.tryLevitate(player, "up", 1000);
+
+    expect(result.moved).toBe(false);
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+});

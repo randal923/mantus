@@ -12,6 +12,7 @@ import type { CharacterStore } from "./character/CharacterStore";
 import { ChatHandler } from "./chat/ChatHandler";
 import { Combat } from "./combat/Combat";
 import { CombatIntentHandler } from "./combat/CombatIntentHandler";
+import { projectFightState } from "./combat/projectFightState";
 import { SpellRegistry } from "./combat/SpellRegistry";
 import type { ServerConfig } from "./config";
 import { BankService } from "./economy/BankService";
@@ -392,8 +393,21 @@ export class GameServer {
       this.world,
       this.visibility,
       this.persistence,
-      (session, player, from, now) =>
-        this.worldActions.closeDoorBehind(session, player, from, now),
+      (session, player, from, now) => {
+        this.worldActions.closeDoorBehind(session, player, from, now);
+        // A step that crosses a protection-zone boundary refreshes the
+        // client's fight-state so its PZ status icon appears/clears in step
+        // with the move. Server-authoritative and own-tile-only (charter 6).
+        if (
+          this.world.isProtectionZone(from) !==
+          this.world.isProtectionZone(player.position)
+        ) {
+          session.send({
+            type: "fight-state",
+            fightState: projectFightState(session, this.world, now),
+          });
+        }
+      },
     );
     this.worldActions = new WorldActionRegistry(
       this.world,

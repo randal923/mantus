@@ -8,6 +8,7 @@ describe("anchorFightStateCooldowns", () => {
       attackTargetId: null,
       mode: { attack: "offensive", chase: false, secure: true },
       conditions: [],
+      inProtectionZone: false,
       cooldowns: [
         {
           group: "spell:exori",

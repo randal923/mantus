@@ -51,6 +51,18 @@ export class MovementRules {
   }
 
   /**
+   * A pz-locked player may never enter a protection-zone tile — on any path
+   * (walk, ladder/hole/rope, levitate). Re-checked at execution time so the
+   * lock and the destination's zone are both current (charter rules 4, 8).
+   */
+  private pzBlocked(player: Player, destination: Position): boolean {
+    return (
+      player.conditions.has("pz-lock") &&
+      (this.map.getTile(destination)?.protectionZone ?? false)
+    );
+  }
+
+  /**
    * Validates and applies one step. All rules live here, at execution time:
    * walk-speed cooldown, bounds, blocked tiles, occupancy (charter rules 4, 8).
    */
@@ -136,6 +148,7 @@ export class MovementRules {
     if (
       !this.map.isWalkable(destination) ||
       !this.map.getGroundSpeed(destination) ||
+      this.pzBlocked(player, destination) ||
       this.houseBlocked(player, destination) ||
       this.occupancy.isOccupied(destination)
     ) {
@@ -183,6 +196,9 @@ export class MovementRules {
         reason: "invalid-transition",
         retryAfterMs: 0,
       };
+    }
+    if (this.pzBlocked(player, action.destination)) {
+      return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
     }
     if (this.houseBlocked(player, action.destination)) {
       return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
@@ -249,11 +265,7 @@ export class MovementRules {
     if (forcedFearMovement && this.fieldAt(destination, now)) {
       return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
     }
-    if (
-      creature instanceof Player &&
-      creature.conditions.has("pz-lock") &&
-      (this.map.getTile(destination)?.protectionZone ?? false)
-    ) {
+    if (creature instanceof Player && this.pzBlocked(creature, destination)) {
       return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
     }
     if (
