@@ -1,5 +1,7 @@
 import type { CreatureState } from "@tibia/protocol";
 
+const MAX_RENDERED_CREATURES = 24;
+
 interface BattleListProps {
   title: string;
   creatures: ReadonlyArray<CreatureState>;
@@ -15,6 +17,7 @@ export function BattleList({
 }: BattleListProps) {
   const visible = creatures
     .filter((creature) => creature.id !== ownPlayerId)
+    .slice(0, MAX_RENDERED_CREATURES)
     .sort((left, right) =>
       left.kind.localeCompare(right.kind) ||
       left.name.localeCompare(right.name) ||

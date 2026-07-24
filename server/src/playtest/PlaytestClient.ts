@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import {
-  serverMessageSchema,
+  parseServerMessages,
   type ClientMessage,
   type ServerMessage,
   type StarterVocation,
@@ -23,16 +23,16 @@ export class PlaytestClient {
   private constructor(socket: WebSocket) {
     this.socket = socket;
     socket.on("message", (data) => {
-      const parsed = serverMessageSchema.safeParse(
-        JSON.parse(data.toString()),
-      );
-      if (!parsed.success) {
+      const parsed = parseServerMessages(JSON.parse(data.toString()));
+      if (!parsed) {
         throw new Error(
           `server sent a message that fails the protocol schema: ${data.toString().slice(0, 300)}`,
         );
       }
-      this.messages.push(parsed.data);
-      this.receivedAt.push(Date.now());
+      for (const message of parsed) {
+        this.messages.push(message);
+        this.receivedAt.push(Date.now());
+      }
     });
     socket.on("close", () => {
       this.closedReason ??= "closed by server";
@@ -82,7 +82,7 @@ export class PlaytestClient {
           `timed out waiting for ${label}; saw message types: ${seen.join(", ") || "none"}`,
         );
       }
-      await new Promise((resolveSleep) => setTimeout(resolveSleep, 25));
+      await new Promise((resolveSleep) => setTimeout(resolveSleep, 5));
     }
   }
 

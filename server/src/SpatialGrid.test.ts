@@ -70,6 +70,7 @@ describe("SpatialGrid", () => {
 
     expect(grid.query({ x: 7, y: 7, z: 7 }, 0, 0)).toEqual([]);
     expect(grid.query({ x: 7, y: 7, z: 8 }, 0, 0)).toEqual([walker]);
+    expect([...grid.occupiedFloors()]).toEqual([8]);
   });
 
   it("removes players", () => {
@@ -78,5 +79,6 @@ describe("SpatialGrid", () => {
     grid.insert(gone);
     grid.remove(gone);
     expect(grid.query({ x: 3, y: 3, z: 7 }, 8, 8)).toEqual([]);
+    expect([...grid.occupiedFloors()]).toEqual([]);
   });
 });

@@ -24,6 +24,14 @@ export class World {
   private readonly players = new Map<string, Player>();
   private readonly creatures = new Map<string, Creature>();
   private readonly grid = new SpatialGrid();
+  private readonly firstVisibleFloorByCreature = new WeakMap<
+    Creature,
+    {
+      readonly positionRevision: number;
+      readonly mapRevision: number;
+      readonly floor: number;
+    }
+  >();
   private readonly mapItems: DynamicMapItems;
   private readonly occupancy: TileOccupancy;
   private readonly movement: MovementRules;
@@ -102,6 +110,10 @@ export class World {
       if (type) return type;
     }
     return undefined;
+  }
+
+  get fieldRevision(): number {
+    return this.combatFields.revision + this.mapItems.revision;
   }
 
   canCreaturePathTo(creature: Creature, position: Position, now: number): boolean {
@@ -228,8 +240,40 @@ export class World {
     );
   }
 
+  canCreatureSee(
+    viewer: Creature,
+    target: Position,
+    range: ViewRange,
+  ): boolean {
+    return canSee(
+      viewer.position,
+      target,
+      range,
+      this.firstVisibleFloorFor(viewer),
+    );
+  }
+
   creaturesVisibleFrom(position: Position, range: ViewRange): Creature[] {
-    const firstFloor = getFirstVisibleFloor(position, this.map);
+    return this.creaturesVisibleFromFloor(
+      position,
+      range,
+      getFirstVisibleFloor(position, this.map),
+    );
+  }
+
+  creaturesVisibleTo(viewer: Creature, range: ViewRange): Creature[] {
+    return this.creaturesVisibleFromFloor(
+      viewer.position,
+      range,
+      this.firstVisibleFloorFor(viewer),
+    );
+  }
+
+  private creaturesVisibleFromFloor(
+    position: Position,
+    range: ViewRange,
+    firstFloor: number,
+  ): Creature[] {
     const floors =
       position.z > GROUND_FLOOR
         ? [position.z]
@@ -271,6 +315,14 @@ export class World {
     return this.mapItems.mapItemTilesVisibleFrom(position, range);
   }
 
+  mapItemTilesEnteringView(
+    from: Position,
+    position: Position,
+    range: ViewRange,
+  ) {
+    return this.mapItems.mapItemTilesEnteringView(from, position, range);
+  }
+
   mapItemTileState(position: Position) {
     return this.mapItems.mapItemTileState(position);
   }
@@ -284,21 +336,40 @@ export class World {
   }
 
   playersWhoCanSee(position: Position, range: ViewRange): Player[] {
-    const viewerFloors =
-      position.z > GROUND_FLOOR
-        ? [position.z]
-        : Array.from({ length: GROUND_FLOOR + 1 }, (_, index) => index);
     const players = new Set<Player>();
-    for (const z of viewerFloors) {
+    for (const z of this.grid.occupiedFloors()) {
+      if (
+        (position.z > GROUND_FLOOR && z !== position.z) ||
+        (position.z <= GROUND_FLOOR && z > GROUND_FLOOR)
+      ) {
+        continue;
+      }
       const shift = z - position.z;
       const center = { x: position.x - shift, y: position.y - shift, z };
       for (const creature of this.grid.query(center, range.x, range.y)) {
         const player = this.players.get(creature.id);
         if (!player) continue;
-        if (this.canSee(player.position, position, range)) players.add(player);
+        if (this.canCreatureSee(player, position, range)) players.add(player);
       }
     }
     return [...players];
+  }
+
+  private firstVisibleFloorFor(creature: Creature): number {
+    const cached = this.firstVisibleFloorByCreature.get(creature);
+    if (
+      cached?.positionRevision === creature.positionRevision &&
+      cached.mapRevision === this.mapItems.revision
+    ) {
+      return cached.floor;
+    }
+    const floor = getFirstVisibleFloor(creature.position, this.map);
+    this.firstVisibleFloorByCreature.set(creature, {
+      positionRevision: creature.positionRevision,
+      mapRevision: this.mapItems.revision,
+      floor,
+    });
+    return floor;
   }
 
   /** Spiral out from the map's spawn point until a free tile is found. */
@@ -320,6 +391,18 @@ export class World {
 
   getPlayer(playerId: string): Player | undefined {
     return this.players.get(playerId);
+  }
+
+  get playerCount(): number {
+    return this.players.size;
+  }
+
+  get monsterCount(): number {
+    let count = 0;
+    for (const creature of this.creatures.values()) {
+      if (creature.kind === "monster") count++;
+    }
+    return count;
   }
 
   allPlayers(): Iterable<Player> {

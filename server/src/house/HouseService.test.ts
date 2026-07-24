@@ -187,6 +187,8 @@ function makeHarness(): Harness {
         bufferedMovementDirection: null,
         autoWalkDirections: [],
         send: (message: ServerMessage) => sent.push(message),
+        sendSerialized: (message: string) =>
+          sent.push(JSON.parse(message) as ServerMessage),
         sendError: () => {},
       } as unknown as Session;
       sessions.set(id, session);

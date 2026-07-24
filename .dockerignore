@@ -1,11 +1,15 @@
-# Keep the build context small; the Dockerfile copies only what it names,
-# but everything not ignored here is still uploaded as context.
-node_modules
-**/node_modules
-client
 .git
-.env*
-!.env.example
-*.md
-storybook-static
 .next
+.turbo
+coverage
+node_modules
+client/node_modules
+protocol/node_modules
+server/node_modules
+client/.next
+client/test-results
+client/storybook-static
+client/tsconfig.tsbuildinfo
+docs
+map
+*.log

@@ -1,0 +1,25 @@
+FROM node:24-bookworm-slim
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
+
+COPY performance-1x.package.json package.json
+COPY yarn.lock ./
+COPY protocol/package.json protocol/package.json
+COPY server/package.json server/package.json
+RUN yarn install --frozen-lockfile --production
+
+COPY config.yml ./
+COPY content content
+COPY protocol protocol
+COPY server server
+
+ENV NODE_ENV=production
+ENV LOAD_TEST_PORT=4125
+
+EXPOSE 4125
+
+USER node
+
+CMD ["node", "--import", "tsx", "server/src/playtest/playerLoadServer.ts"]

@@ -140,6 +140,39 @@ describe("CharacterPersistence", () => {
     expect(snapshots[0]).toMatchObject({ positionX: 1 });
   });
 
+  it("bounds periodic snapshot enqueue work per tick", async () => {
+    const snapshots: CharacterSaveSnapshot[] = [];
+    const persistence = new CharacterPersistence(
+      makeStore(async (snapshot) => {
+        snapshots.push(snapshot);
+        return snapshot.expectedVersion + 1;
+      }),
+      100,
+      0,
+      0,
+    );
+    const players = Array.from({ length: 12 }, (_, index) => {
+      const player = new Player(makeCharacter(`character-${index}`), {
+        x: index,
+        y: 0,
+        z: 7,
+      });
+      persistence.track(player, 0);
+      persistence.markDirty(player);
+      return player;
+    });
+
+    persistence.tick(100);
+    await nextTurn();
+    expect(snapshots).toHaveLength(8);
+
+    persistence.tick(125);
+    await Promise.all(
+      players.map((player) => persistence.flushCharacter(player.id)),
+    );
+    expect(snapshots).toHaveLength(12);
+  });
+
   it("coordinates an external atomic mutation with snapshot versions", async () => {
     const snapshots: CharacterSaveSnapshot[] = [];
     const store = makeStore(async (snapshot) => {

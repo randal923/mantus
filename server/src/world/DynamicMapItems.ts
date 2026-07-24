@@ -4,6 +4,7 @@ import {
   SHOVEL_HOLE_PAIRS,
 } from "../action/shovelHolePairs";
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
+import { canSee } from "../canSee";
 import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
 import type { LootOrigin } from "../item/LootOrigin";
@@ -40,6 +41,11 @@ export class DynamicMapItems {
    * are overlaid here.
    */
   private readonly tileOverrides = new Map<string, TilePassabilityOverride>();
+  private currentRevision = 0;
+
+  get revision(): number {
+    return this.currentRevision;
+  }
 
   constructor(
     private readonly map: MapData,
@@ -96,6 +102,7 @@ export class DynamicMapItems {
 
   hideSeed(seedKey: string): void {
     this.hiddenMapItemIds.add(seedKey);
+    this.currentRevision++;
   }
 
   /** Marks memory-only loot items awaiting their first-touch row insert. */
@@ -192,6 +199,7 @@ export class DynamicMapItems {
     const key = positionKey(position);
     this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
     this.refreshTileOverride(position);
+    this.currentRevision++;
     return true;
   }
 
@@ -212,6 +220,42 @@ export class DynamicMapItems {
       for (let y = centerY - range.y; y <= centerY + range.y; y++) {
         for (let x = centerX - range.x; x <= centerX + range.x; x++) {
           const tilePosition = { x, y, z };
+          const items = this.getMapItems(tilePosition);
+          if (items.length === 0) continue;
+          tiles.push({
+            position: tilePosition,
+            revision: this.tileItemRevisions.get(positionKey(tilePosition)) ?? 0,
+            items: items.map((item) => this.toMapItemState(item)),
+          });
+        }
+      }
+    }
+    return tiles;
+  }
+
+  mapItemTilesEnteringView(
+    from: Position,
+    position: Position,
+    range: ViewRange,
+  ) {
+    const firstFloor = getFirstVisibleFloor(position, this.map);
+    const previousFirstFloor = getFirstVisibleFloor(from, this.map);
+    const floors =
+      position.z > GROUND_FLOOR
+        ? [position.z]
+        : Array.from(
+            { length: GROUND_FLOOR - firstFloor + 1 },
+            (_, index) => firstFloor + index,
+          );
+    const tiles = [];
+    for (const z of floors) {
+      const shift = position.z - z;
+      const centerX = position.x + shift;
+      const centerY = position.y + shift;
+      for (let y = centerY - range.y; y <= centerY + range.y; y++) {
+        for (let x = centerX - range.x; x <= centerX + range.x; x++) {
+          const tilePosition = { x, y, z };
+          if (canSee(from, tilePosition, range, previousFirstFloor)) continue;
           const items = this.getMapItems(tilePosition);
           if (items.length === 0) continue;
           tiles.push({
@@ -310,6 +354,7 @@ export class DynamicMapItems {
       this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
       this.refreshTileOverride(position);
     }
+    if (changed.size > 0) this.currentRevision++;
     return [...changed.values()];
   }
 
@@ -332,6 +377,7 @@ export class DynamicMapItems {
       this.tileItemRevisions.set(key, (this.tileItemRevisions.get(key) ?? 0) + 1);
       this.refreshTileOverride(item.location.position);
     }
+    if (changed.size > 0) this.currentRevision++;
     return [...changed.values()];
   }
 

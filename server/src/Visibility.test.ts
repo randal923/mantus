@@ -134,6 +134,8 @@ describe("Visibility creature projections", () => {
       knownMapItemTiles: new Map(),
       attackTargetId: null,
       send: (message: ServerMessage) => sent.push(message),
+      sendSerialized: (message: string) =>
+        sent.push(JSON.parse(message) as ServerMessage),
     } as unknown as Session;
     const registry = {
       sessionFor: (playerId: string) =>
@@ -180,6 +182,8 @@ describe("Visibility creature projections", () => {
       knownMapItemTiles: new Map(),
       attackTargetId: null,
       send: (message: ServerMessage) => sent.push(message),
+      sendSerialized: (message: string) =>
+        sent.push(JSON.parse(message) as ServerMessage),
     } as unknown as Session;
     const registry = {
       sessionFor: (playerId: string) =>
@@ -231,6 +235,8 @@ describe("Visibility creature projections", () => {
       knownMapItemTiles: new Map(),
       attackTargetId: null,
       send: (message: ServerMessage) => sent.push(message),
+      sendSerialized: (message: string) =>
+        sent.push(JSON.parse(message) as ServerMessage),
     } as unknown as Session;
     const registry = {
       sessionFor: (playerId: string) =>
@@ -323,6 +329,8 @@ describe("Visibility creature projections", () => {
         knownMapItemTiles: new Map(),
         attackTargetId: null,
         send: (message: ServerMessage) => sent.push(message),
+        sendSerialized: (message: string) =>
+          sent.push(JSON.parse(message) as ServerMessage),
       } as unknown as Session;
     });
     const registry = {

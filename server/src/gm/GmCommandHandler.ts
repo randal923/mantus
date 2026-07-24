@@ -23,6 +23,7 @@ import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 
 const MAX_CREATE_COUNT = 100;
+const MAX_SPAWN_COUNT = 1_000;
 const MAX_MUTE_MINUTES = 43_200;
 const MAX_BAN_DAYS = 3_650;
 const MAX_MODERATION_TEXT = 200;
@@ -64,6 +65,9 @@ export class GmCommandHandler {
         break;
       case "spawn":
         this.spawnMonster(session, player, args, now);
+        break;
+      case "despawn":
+        this.despawnMonsters(session);
         break;
       case "goto":
         this.teleport(session, player, args, now);
@@ -112,7 +116,7 @@ export class GmCommandHandler {
         this.reply(
           session,
           false,
-          "Commands: /i <item> [count], /spawn <monster>, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note",
+          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note",
         );
     }
     return true;
@@ -266,9 +270,39 @@ export class GmCommandHandler {
       this.reply(session, false, "Creature spawning is disabled on this server.");
       return;
     }
-    const typeId = args.join(" ").trim().toLowerCase().replace(/\s+/g, " ");
+    const typeParts = [...args];
+    const countText = typeParts.at(-1);
+    const hasCount = typeParts.length > 1 && Boolean(countText?.match(/^\d+$/));
+    const count = hasCount ? Number(typeParts.pop()) : 1;
+    const typeId = typeParts.join(" ").trim().toLowerCase().replace(/\s+/g, " ");
     if (typeId.length === 0) {
-      this.reply(session, false, "Usage: /spawn <monster type>");
+      this.reply(session, false, "Usage: /spawn <monster type> [count]");
+      return;
+    }
+    if (!Number.isSafeInteger(count) || count < 1 || count > MAX_SPAWN_COUNT) {
+      this.reply(
+        session,
+        false,
+        `Monster count must be from 1 to ${MAX_SPAWN_COUNT}.`,
+      );
+      return;
+    }
+    if (count > 1) {
+      const result = this.spawns.spawnMonstersNear(
+        typeId,
+        player.position,
+        count,
+        now,
+      );
+      if (result === "unknown-type") {
+        this.reply(session, false, `Unknown monster type "${typeId}".`);
+        return;
+      }
+      this.reply(
+        session,
+        result === count,
+        `Spawned ${result}/${count} ${typeId}.`,
+      );
       return;
     }
     const result = this.spawns.spawnMonsterNear(typeId, player.position, now);
@@ -281,6 +315,15 @@ export class GmCommandHandler {
       return;
     }
     this.reply(session, true, `Spawned ${typeId}.`);
+  }
+
+  private despawnMonsters(session: Session): void {
+    if (!this.spawns) {
+      this.reply(session, false, "Creature spawning is disabled on this server.");
+      return;
+    }
+    const removed = this.spawns.removeGmMonsters();
+    this.reply(session, true, `Despawned ${removed} GM monster(s).`);
   }
 
   private teleport(

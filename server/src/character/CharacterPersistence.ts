@@ -24,8 +24,12 @@ interface BeginExternalMutationOptions {
   readonly flushDirty?: boolean;
 }
 
+const MAX_INTERVAL_SNAPSHOTS_PER_TICK = 8;
+
 export class CharacterPersistence {
   private readonly states = new Map<string, SaveState>();
+  private readonly dirtyStates = new Set<SaveState>();
+  private nextIntervalScanAt = Number.POSITIVE_INFINITY;
 
   constructor(
     private readonly store: CharacterStore,
@@ -67,6 +71,11 @@ export class CharacterPersistence {
     const state = this.states.get(player.id);
     if (!state || state.player !== player) return;
     state.dirty = true;
+    this.dirtyStates.add(state);
+    this.nextIntervalScanAt = Math.min(
+      this.nextIntervalScanAt,
+      state.lastQueuedAt + this.saveIntervalMs,
+    );
   }
 
   saveNow(player: Player, now: number): void {
@@ -140,6 +149,7 @@ export class CharacterPersistence {
     if (!state || state.player !== player) return;
     state.failed = cause;
     state.discardOnUntrack = true;
+    this.dirtyStates.delete(state);
     this.settleExternalMutation(state);
     this.removeSettledState(player.id, state);
   }
@@ -152,24 +162,38 @@ export class CharacterPersistence {
   }
 
   tick(now: number): void {
-    for (const state of this.states.values()) {
+    if (now < this.nextIntervalScanAt) return;
+    let queued = 0;
+    let nextScanAt = Number.POSITIVE_INFINITY;
+    for (const state of this.dirtyStates) {
       if (
         !state.online ||
-        !state.dirty ||
         state.failed ||
         state.externalMutationPending
       ) {
+        nextScanAt = Math.min(nextScanAt, now + 250);
         continue;
       }
-      if (now - state.lastQueuedAt < this.saveIntervalMs) continue;
+      const dueAt = state.lastQueuedAt + this.saveIntervalMs;
+      if (now < dueAt) {
+        nextScanAt = Math.min(nextScanAt, dueAt);
+        continue;
+      }
       this.enqueueSnapshot(state, now);
+      queued++;
+      if (queued >= MAX_INTERVAL_SNAPSHOTS_PER_TICK) {
+        nextScanAt = now;
+        break;
+      }
     }
+    this.nextIntervalScanAt = nextScanAt;
   }
 
   untrack(player: Player, now: number): void {
     const state = this.states.get(player.id);
     if (!state || state.player !== player) return;
     state.online = false;
+    this.dirtyStates.delete(state);
     if (state.discardOnUntrack) {
       this.states.delete(player.id);
       return;
@@ -225,6 +249,7 @@ export class CharacterPersistence {
       state.nextProgressionEventIndex,
     );
     state.dirty = false;
+    this.dirtyStates.delete(state);
     state.nextExpectedVersion += 1;
     state.nextProgressionEventIndex += snapshot.progressionEvents.length;
     state.pendingCount += 1;
@@ -318,6 +343,7 @@ export class CharacterPersistence {
     }
     if (this.states.get(characterId) === state) {
       this.states.delete(characterId);
+      this.dirtyStates.delete(state);
     }
   }
 

@@ -5,6 +5,8 @@
 export const PROTOCOL_LIMITS = {
   maxMessageBytes: 16_384,
   maxMessagesPerSecond: 30,
+  maxServerMessagesPerBatch: 128,
+  maxSocketBufferedBytes: 1_048_576,
   maxConnectionsPerIp: 5,
   minCharacterNameLength: 3,
   maxCharacterNameLength: 20,

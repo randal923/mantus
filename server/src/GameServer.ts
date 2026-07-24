@@ -511,6 +511,18 @@ export class GameServer {
     return this.persistence.unsavedPlayerCount;
   }
 
+  get sessionCount(): number {
+    return this.registry.size;
+  }
+
+  get onlinePlayerCount(): number {
+    return this.world.playerCount;
+  }
+
+  get monsterCount(): number {
+    return this.world.monsterCount;
+  }
+
   start(): void {
     this.wss.on("connection", (socket, request) =>
       this.onConnection(socket, request),
@@ -541,7 +553,7 @@ export class GameServer {
       maxPendingIntents: this.config.maxPendingIntents,
       maxProtocolViolations: this.config.maxProtocolViolations,
       initialViewRange: this.config.defaultViewRange,
-    });
+    }, (queued) => this.registry.markForTick(queued));
     this.registry.add(session);
     // queue the leave; world state only changes inside the tick (charter rule 5)
     socket.on("close", () => this.disconnected.push(session));
@@ -558,60 +570,68 @@ export class GameServer {
 
   private tick(): void {
     const now = monotonicNow();
-    this.processDisconnects(now);
-    this.auth.applyResolvedOutcomes();
-    this.characters.applyResolvedOutcomes();
-    this.items.applyResolvedOutcomes(now);
-    this.travel.applyResolvedOutcomes(now);
-    this.promotion.applyResolvedOutcomes(now);
-    this.bank.applyResolvedOutcomes(now);
-    this.shops.applyResolvedOutcomes(now);
-    this.depot.applyResolvedOutcomes();
-    this.market.applyResolvedOutcomes(now);
-    this.trade.applyResolvedOutcomes(now);
-    this.guilds.applyResolvedOutcomes(now);
-    this.houses.applyResolvedOutcomes(now);
-    this.vips.applyResolvedOutcomes(now);
-    this.highscores.applyResolvedOutcomes(now);
-    this.moderation.applyResolvedOutcomes(now);
-    this.store.applyResolvedOutcomes(now);
-    this.gems.applyResolvedOutcomes(now);
-    this.language.applyResolvedOutcomes();
-    this.uiSettings.applyResolvedOutcomes();
-    this.actionBar.applyResolvedOutcomes();
-    this.combat.applyResolvedOutcomes();
-    for (const session of this.registry.all()) {
-      this.auth.enforceDeadline(session, now);
-      for (const intent of session.drainIntents()) {
-        try {
-          this.handleIntent(session, intent, now);
-        } catch (cause) {
-          // One malformed or state-conflicting intent must never take the
-          // whole server down; drop the offending connection instead.
-          console.error(
-            `intent ${intent.type} from session ${session.id} failed:`,
-            cause,
-          );
-          session.terminate();
-        }
+    for (const session of this.registry.all()) session.beginBatch();
+    try {
+      this.processDisconnects(now);
+      this.auth.applyResolvedOutcomes();
+      this.characters.applyResolvedOutcomes();
+      this.items.applyResolvedOutcomes(now);
+      this.travel.applyResolvedOutcomes(now);
+      this.promotion.applyResolvedOutcomes(now);
+      this.bank.applyResolvedOutcomes(now);
+      this.shops.applyResolvedOutcomes(now);
+      this.depot.applyResolvedOutcomes();
+      this.market.applyResolvedOutcomes(now);
+      this.trade.applyResolvedOutcomes(now);
+      this.guilds.applyResolvedOutcomes(now);
+      this.houses.applyResolvedOutcomes(now);
+      this.vips.applyResolvedOutcomes(now);
+      this.highscores.applyResolvedOutcomes(now);
+      this.moderation.applyResolvedOutcomes(now);
+      this.store.applyResolvedOutcomes(now);
+      this.gems.applyResolvedOutcomes(now);
+      this.language.applyResolvedOutcomes();
+      this.uiSettings.applyResolvedOutcomes();
+      this.actionBar.applyResolvedOutcomes();
+      this.combat.applyResolvedOutcomes();
+      for (const session of this.registry.awaitingAuth()) {
+        this.auth.enforceDeadline(session, now);
       }
-      this.movement.continueMovement(session, now);
+      for (const session of this.registry.tickable()) {
+        for (const intent of session.drainIntents()) {
+          try {
+            this.handleIntent(session, intent, now);
+          } catch (cause) {
+            // One malformed or state-conflicting intent must never take the
+            // whole server down; drop the offending connection instead.
+            console.error(
+              `intent ${intent.type} from session ${session.id} failed:`,
+              cause,
+            );
+            session.terminate();
+          }
+        }
+        this.movement.continueMovement(session, now);
+        this.registry.finishTick(session);
+      }
+      this.combatSystem.tick(now);
+      this.monsterEvents.tick(now);
+      this.spawns?.tick(now);
+      this.npcs.tick(now);
+      this.items.tickDecay(now);
+      this.items.tickWorldContainers();
+      this.depot.tick(now);
+      this.market.tick(now);
+      this.trade.tick(now);
+      this.parties.tick(now);
+      this.guilds.tick(now);
+      this.houses.tick(now);
+      this.pvp.tick(now);
+      this.progression.tick(now);
+      this.persistence.tick(now);
+    } finally {
+      for (const session of this.registry.all()) session.flushBatch();
     }
-    this.combatSystem.tick(now);
-    this.monsterEvents.tick(now);
-    this.spawns?.tick(now);
-    this.npcs.tick(now);
-    this.items.tickDecay(now);
-    this.items.tickWorldContainers();
-    this.depot.tick(now);
-    this.market.tick(now);
-    this.trade.tick(now);
-    this.parties.tick(now);
-    this.guilds.tick(now);
-    this.houses.tick(now);
-    this.pvp.tick(now);
-    this.progression.tick(now);
-    this.persistence.tick(now);
   }
 
   private processDisconnects(now: number): void {

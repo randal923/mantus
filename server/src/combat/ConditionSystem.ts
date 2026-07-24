@@ -51,6 +51,7 @@ export class ConditionSystem {
 
   tick(now: number): void {
     for (const creature of [...this.world.allCreatures()]) {
+      if (!creature.conditions.isActive) continue;
       const result = creature.conditions.tick(now);
       for (const effect of result.effects) {
         this.damage.applyDamage(

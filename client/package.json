@@ -9,6 +9,9 @@
     "lint": "eslint",
     "test": "vitest run --project unit",
     "test:e2e": "vitest run --project e2e",
+    "test:e2e:monsters": "vitest run --project e2e e2e/monsterPerformance.e2e.test.tsx",
+    "test:e2e:monsters:cpu": "VITE_CLIENT_RENDERER_PROFILE=software vitest run --project e2e e2e/monsterPerformance.e2e.test.tsx",
+    "test:e2e:monsters:gpu": "VITE_CLIENT_RENDERER_PROFILE=hardware vitest run --project e2e e2e/monsterPerformance.e2e.test.tsx",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

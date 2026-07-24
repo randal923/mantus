@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import WebSocket from "ws";
-import type { ServerMessage } from "@tibia/protocol";
+import {
+  parseServerMessages,
+  type ServerMessage,
+} from "@tibia/protocol";
 import type { ServerConfig } from "../config";
 import { GameServer } from "../GameServer";
 import type { ItemCatalog } from "../item/ItemCatalog";
@@ -78,15 +81,21 @@ const connect = (
       client.closed = true;
     });
     socket.on("message", (data) => {
-      const message = JSON.parse(data.toString()) as ServerMessage;
-      messages.push(message);
-      if (message.type === "auth-ok") {
-        socket.send(JSON.stringify({ type: "select-character", characterId }));
+      const parsed = parseServerMessages(JSON.parse(data.toString()));
+      if (!parsed) {
+        reject(new Error("server sent invalid protocol messages"));
         return;
       }
-      if (message.type === "welcome") {
-        client.playerId = message.playerId;
-        resolve(client);
+      for (const message of parsed) {
+        messages.push(message);
+        if (message.type === "auth-ok") {
+          socket.send(JSON.stringify({ type: "select-character", characterId }));
+          continue;
+        }
+        if (message.type === "welcome") {
+          client.playerId = message.playerId;
+          resolve(client);
+        }
       }
     });
   });
@@ -105,7 +114,8 @@ const connectUntilClosed = (
     socket.on("error", reject);
     socket.on("close", () => resolve(messages));
     socket.on("message", (data) => {
-      messages.push(JSON.parse(data.toString()) as ServerMessage);
+      const parsed = parseServerMessages(JSON.parse(data.toString()));
+      if (parsed) messages.push(...parsed);
     });
   });
 

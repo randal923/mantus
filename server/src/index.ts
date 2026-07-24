@@ -31,6 +31,7 @@ const serverConfig = await loadServerConfig();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const databaseUrl = process.env.DATABASE_URL;
+const postgresPoolMax = Number(process.env.PG_POOL_MAX ?? 20);
 
 if (!databaseUrl || (!supabaseUrl && !serverConfig.dev.auth)) {
   console.error(
@@ -38,6 +39,14 @@ if (!databaseUrl || (!supabaseUrl && !serverConfig.dev.auth)) {
       "(see .env.example). SUPABASE_JWT_SECRET is only needed for legacy " +
       "HS256 projects.",
   );
+  process.exit(1);
+}
+if (
+  !Number.isSafeInteger(postgresPoolMax) ||
+  postgresPoolMax < 1 ||
+  postgresPoolMax > 50
+) {
+  console.error("PG_POOL_MAX must be an integer from 1 to 50.");
   process.exit(1);
 }
 
@@ -54,7 +63,12 @@ if (serverConfig.dev.auth || serverConfig.dev.commands) {
       "never enable these in production",
   );
 }
-const pool = new Pool({ connectionString: databaseUrl });
+const pool = new Pool({
+  connectionString: databaseUrl,
+  max: postgresPoolMax,
+  connectionTimeoutMillis: 5_000,
+  idleTimeoutMillis: 30_000,
+});
 // idle pooled connections dropped by the pooler must not crash the process
 pool.on("error", (cause) => {
   console.error(`postgres pool error: ${cause.message}`);

@@ -8,6 +8,7 @@ const globalWithProcess = globalThis as {
 };
 globalWithProcess.process ??= { env: {} };
 globalWithProcess.process.env.NODE_ENV ??= "test";
-globalWithProcess.process.env.NEXT_PUBLIC_WS_URL = "ws://127.0.0.1:4124";
+globalWithProcess.process.env.NEXT_PUBLIC_WS_URL =
+  import.meta.env.VITE_PLAYTEST_WS_URL ?? "ws://127.0.0.1:4124";
 
 export {};

@@ -107,16 +107,23 @@ export class ChatHandler {
     mode: Exclude<ChatSpeechMode, "yell">,
     text: string,
   ): void {
+    const audible = JSON.stringify(this.spokenMessage(speaker, mode, text));
+    const muffled =
+      mode === "whisper"
+        ? JSON.stringify(
+            this.spokenMessage(speaker, mode, WHISPER_MUFFLED_TEXT),
+          )
+        : audible;
     for (const session of this.visibility.viewerSessionsFor(
       speaker.position,
       0,
     )) {
       if (!session.knownCreatureIds.has(speaker.id)) continue;
-      const heardText =
+      session.sendSerialized(
         mode === "whisper" && !this.hearsWhisper(session, speaker)
-          ? WHISPER_MUFFLED_TEXT
-          : text;
-      session.send(this.spokenMessage(speaker, mode, heardText));
+          ? muffled
+          : audible,
+      );
     }
   }
 
@@ -141,11 +148,12 @@ export class ChatHandler {
     }
     this.nextYellAt.set(speaker.id, now + YELL_EXHAUST_MS);
     const message = this.spokenMessage(speaker, "yell", text.toUpperCase());
+    const serialized = JSON.stringify(message);
     for (const listener of this.world.playersWhoCanSee(
       speaker.position,
       YELL_RANGE,
     )) {
-      this.registry.sessionFor(listener.id)?.send(message);
+      this.registry.sessionFor(listener.id)?.sendSerialized(serialized);
     }
   }
 

@@ -24,10 +24,11 @@ import { toCharacter } from "./toCharacter";
 import { countCharactersQuery } from "./sql/countCharactersQuery";
 import { findByIdForAccountQuery } from "./sql/findByIdForAccountQuery";
 import { insertCharacterQuery } from "./sql/insertCharacterQuery";
-import { insertProgressionEventQuery } from "./sql/insertProgressionEventQuery";
+import { insertProgressionEventsQuery } from "./sql/insertProgressionEventsQuery";
 import { listByAccountQuery } from "./sql/listByAccountQuery";
 import { recordLoginQuery } from "./sql/recordLoginQuery";
-import { updateCharacterSkillQuery } from "./sql/updateCharacterSkillQuery";
+import { replaceCharacterStoragesQuery } from "./sql/replaceCharacterStoragesQuery";
+import { updateCharacterSkillsQuery } from "./sql/updateCharacterSkillsQuery";
 import { updateCharacterSnapshotQuery } from "./sql/updateCharacterSnapshotQuery";
 
 export class PgCharacterStore implements CharacterStore {
@@ -237,39 +238,29 @@ export class PgCharacterStore implements CharacterStore {
       );
       const version = result.rows[0]?.version;
       if (!version) throw new CharacterError("version-conflict");
-      for (const skill of snapshot.skills) {
-        const updated = await client.query(updateCharacterSkillQuery, [
-          snapshot.characterId,
-          skill.skill,
-          skill.level,
-          skill.tries.toString(),
-        ]);
-        if (updated.rowCount !== 1) {
-          throw new Error(`character skill ${skill.skill} was not found`);
-        }
+      const updatedSkills = await client.query(updateCharacterSkillsQuery, [
+        snapshot.characterId,
+        snapshot.skills.map((skill) => skill.skill),
+        snapshot.skills.map((skill) => skill.level),
+        snapshot.skills.map((skill) => skill.tries.toString()),
+      ]);
+      if (updatedSkills.rowCount !== snapshot.skills.length) {
+        throw new Error("one or more character skills were not found");
       }
-      for (const event of snapshot.progressionEvents) {
-        const inserted = await client.query(insertProgressionEventQuery, [
+      if (snapshot.progressionEvents.length > 0) {
+        const inserted = await client.query(insertProgressionEventsQuery, [
           snapshot.characterId,
-          event.id,
-          event.type,
+          snapshot.progressionEvents.map((event) => event.id),
+          snapshot.progressionEvents.map((event) => event.type),
         ]);
-        if (inserted.rowCount !== 1) {
+        if (inserted.rowCount !== snapshot.progressionEvents.length) {
           throw new CharacterError("version-conflict");
         }
       }
-      await client.query(
-        "DELETE FROM character_storages WHERE character_id = $1",
-        [snapshot.characterId],
-      );
-      for (const [key, value] of Object.entries(snapshot.storageValues)) {
-        await client.query(
-          `INSERT INTO character_storages (
-             character_id, storage_key, storage_value
-           ) VALUES ($1, $2, $3)`,
-          [snapshot.characterId, key, value],
-        );
-      }
+      await client.query(replaceCharacterStoragesQuery, [
+        snapshot.characterId,
+        JSON.stringify(snapshot.storageValues),
+      ]);
       await client.query("COMMIT");
       return version;
     } catch (cause) {

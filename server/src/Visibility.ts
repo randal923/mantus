@@ -60,14 +60,14 @@ export class Visibility {
       const session = this.registry.sessionFor(player.id);
       if (!session) continue;
       const range = this.rangeWithMargin(session.viewRange, margin);
-      if (this.world.canSee(player.position, position, range)) yield session;
+      if (this.world.canCreatureSee(player, position, range)) yield session;
     }
   }
 
   /** Introduces a spawning player and returns only creatures in their view. */
   announceSpawn(joiner: Session, player: Player): CreatureState[] {
     const visibleCreatures = this.world
-      .creaturesVisibleFrom(player.position, joiner.viewRange)
+      .creaturesVisibleTo(player, joiner.viewRange)
       .filter((creature) => this.canObserve(joiner, player, creature));
     for (const creature of visibleCreatures) {
       joiner.knownCreatureIds.add(creature.id);
@@ -86,14 +86,16 @@ export class Visibility {
   }
 
   announceLeave(leaver: Session, creature: Creature): void {
-    for (const near of this.registry.all()) {
+    for (const near of this.viewerSessionsFor(creature.position, 0)) {
       if (near.id === leaver.id) continue;
       this.forget(near, creature.id);
     }
   }
 
   announceCreatureLeave(creature: Creature): void {
-    for (const session of this.registry.all()) this.forget(session, creature.id);
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      this.forget(session, creature.id);
+    }
   }
 
   onPlayerStepped(
@@ -102,17 +104,19 @@ export class Visibility {
     from: Position,
     durationMs: number,
   ): void {
-    mover.send(this.movedMessage(player, from, durationMs));
+    const moved = JSON.stringify(this.movedMessage(player, from, durationMs));
+    mover.sendSerialized(moved);
     this.reconcileMoverView(mover, player);
-    this.syncMapItems(mover, player);
-    this.updateObservers(player, from, durationMs, mover.id);
+    this.syncMapItemsAfterStep(mover, player, from);
+    this.updateObservers(player, from, durationMs, mover.id, moved);
   }
 
   onPlayerTeleported(mover: Session, player: Player, from: Position): void {
-    mover.send(this.movedMessage(player, from, 0));
+    const moved = JSON.stringify(this.movedMessage(player, from, 0));
+    mover.sendSerialized(moved);
     this.reconcileMoverView(mover, player);
     this.syncMapItems(mover, player);
-    this.updateObservers(player, from, 0, mover.id);
+    this.updateObservers(player, from, 0, mover.id, moved);
   }
 
   onCreatureStepped(
@@ -120,28 +124,38 @@ export class Visibility {
     from: Position,
     durationMs: number,
   ): void {
-    this.updateObservers(creature, from, durationMs);
+    this.updateObservers(
+      creature,
+      from,
+      durationMs,
+      undefined,
+      JSON.stringify(this.movedMessage(creature, from, durationMs)),
+    );
   }
 
   broadcastPose(creature: Creature): void {
     const message = this.movedMessage(creature, creature.position, 0);
-    for (const session of this.viewerSessionsFor(creature.position, 0)) {
-      if (!session.knownCreatureIds.has(creature.id)) continue;
-      session.send(message);
-    }
+    this.sendShared(
+      message,
+      [...this.viewerSessionsFor(creature.position, 0)].filter((session) =>
+        session.knownCreatureIds.has(creature.id)
+      ),
+    );
   }
 
   broadcastHealth(creature: Creature): void {
     const state = creature.toState();
-    const message = {
+    const message: ServerMessage = {
       type: "creature-health" as const,
       creatureId: creature.id,
       healthPercent: state.healthPercent,
     };
-    for (const session of this.viewerSessionsFor(creature.position, 0)) {
-      if (!session.knownCreatureIds.has(creature.id)) continue;
-      session.send(message);
-    }
+    this.sendShared(
+      message,
+      [...this.viewerSessionsFor(creature.position, 0)].filter((session) =>
+        session.knownCreatureIds.has(creature.id)
+      ),
+    );
   }
 
   broadcastCreatureSpeech(
@@ -149,7 +163,7 @@ export class Visibility {
     text: string,
     yell: boolean,
   ): void {
-    const message = {
+    const message: ServerMessage = {
       type: "creature-spoke" as const,
       creatureId: creature.id,
       name: creature.name,
@@ -157,23 +171,22 @@ export class Visibility {
       position: { ...creature.position },
       text,
     };
-    for (const session of this.viewerSessionsFor(creature.position, 0)) {
-      if (!session.knownCreatureIds.has(creature.id)) continue;
-      session.send(message);
-    }
+    this.sendShared(
+      message,
+      [...this.viewerSessionsFor(creature.position, 0)].filter((session) =>
+        session.knownCreatureIds.has(creature.id)
+      ),
+    );
   }
 
   onCreatureStateChanged(creature: Creature): void {
-    for (const session of this.registry.all()) {
+    for (const session of this.viewerSessionsFor(creature.position, 0)) {
       if (!session.playerId) continue;
       const viewer = this.world.getPlayer(session.playerId);
       if (!viewer) continue;
       const visible =
-        this.world.canSee(
-          viewer.position,
-          creature.position,
-          session.viewRange,
-        ) && this.canObserve(session, viewer, creature);
+        this.world.canCreatureSee(viewer, creature.position, session.viewRange) &&
+        this.canObserve(session, viewer, creature);
       const known = session.knownCreatureIds.has(creature.id);
       if (visible && known) {
         session.send({
@@ -194,16 +207,19 @@ export class Visibility {
     damageType: DamageType,
     block: HitBlock,
   ): void {
+    const message: ServerMessage = {
+      type: "combat-text",
+      position: { ...creature.position },
+      value,
+      damageType,
+      block,
+    };
+    const recipients: Session[] = [];
     for (const session of this.viewerSessionsFor(creature.position, 0)) {
       if (!session.knownCreatureIds.has(creature.id)) continue;
-      session.send({
-        type: "combat-text",
-        position: { ...creature.position },
-        value,
-        damageType,
-        block,
-      });
+      recipients.push(session);
     }
+    this.sendShared(message, recipients);
   }
 
   sendExperienceText(
@@ -217,8 +233,8 @@ export class Visibility {
       !recipient ||
       !session ||
       !session.knownCreatureIds.has(creature.id) ||
-      !this.world.canSee(
-        recipient.position,
+      !this.world.canCreatureSee(
+        recipient,
         creature.position,
         session.viewRange,
       )
@@ -240,6 +256,12 @@ export class Visibility {
     // Effect id 0 means "no effect" in imported content; sending it would
     // violate the protocol schema (magic-effect requires a positive id).
     if (effectId < 1) return;
+    const message: ServerMessage = {
+      type: "magic-effect",
+      position: { ...position },
+      effectId,
+    };
+    const recipients: Session[] = [];
     for (const session of this.viewerSessionsFor(position, 0)) {
       if (
         relatedCreatureId &&
@@ -247,12 +269,9 @@ export class Visibility {
       ) {
         continue;
       }
-      session.send({
-        type: "magic-effect",
-        position: { ...position },
-        effectId,
-      });
+      recipients.push(session);
     }
+    this.sendShared(message, recipients);
   }
 
   broadcastDistanceMissile(
@@ -266,27 +285,30 @@ export class Visibility {
       ...this.viewerSessionsFor(from, 0),
       ...this.viewerSessionsFor(to, 0),
     ]);
+    const message: ServerMessage = {
+      type: "distance-missile",
+      from: { ...from },
+      to: { ...to },
+      missileId,
+      durationMs,
+    };
+    const recipients: Session[] = [];
     for (const session of nearby) {
       if (!session.playerId) continue;
       const viewer = this.world.getPlayer(session.playerId);
       if (
         !viewer ||
-        !this.world.canSee(viewer.position, from, session.viewRange) ||
-        !this.world.canSee(viewer.position, to, session.viewRange) ||
+        !this.world.canCreatureSee(viewer, from, session.viewRange) ||
+        !this.world.canCreatureSee(viewer, to, session.viewRange) ||
         relatedCreatureIds.some(
           (creatureId) => !session.knownCreatureIds.has(creatureId),
         )
       ) {
         continue;
       }
-      session.send({
-        type: "distance-missile",
-        from: { ...from },
-        to: { ...to },
-        missileId,
-        durationMs,
-      });
+      recipients.push(session);
     }
+    this.sendShared(message, recipients);
   }
 
   onViewerRangeChanged(session: Session, player: Player): void {
@@ -337,6 +359,60 @@ export class Visibility {
     }
   }
 
+  private syncMapItemsAfterStep(
+    session: Session,
+    player: Player,
+    from: Position,
+  ): void {
+    const hidden: Position[] = [];
+    for (const [key, position] of session.knownMapItemTiles) {
+      if (this.world.canCreatureSee(player, position, session.viewRange)) {
+        continue;
+      }
+      session.knownMapItemTiles.delete(key);
+      hidden.push(position);
+    }
+    const visible = this.world
+      .mapItemTilesEnteringView(from, player.position, session.viewRange)
+      .filter((tile) => {
+        const key = positionKey(tile.position);
+        if (session.knownMapItemTiles.has(key)) return false;
+        session.knownMapItemTiles.set(key, tile.position);
+        return true;
+      });
+    this.sendMapItemChanges(session, visible, hidden);
+  }
+
+  private sendMapItemChanges(
+    session: Session,
+    visible: ReadonlyArray<TileState>,
+    hidden: ReadonlyArray<Position>,
+  ): void {
+    for (let index = 0; index < hidden.length; index += 32) {
+      session.send({
+        type: "tile-states",
+        visible: [],
+        hidden: hidden.slice(index, index + 32),
+      });
+    }
+    let batch: TileState[] = [];
+    for (const tile of visible) {
+      const candidate = [...batch, tile];
+      const bytes = Buffer.byteLength(
+        JSON.stringify({ type: "tile-states", visible: candidate, hidden: [] }),
+      );
+      if (bytes > PROTOCOL_LIMITS.maxMessageBytes && batch.length > 0) {
+        session.send({ type: "tile-states", visible: batch, hidden: [] });
+        batch = [tile];
+      } else {
+        batch = candidate;
+      }
+    }
+    if (batch.length > 0) {
+      session.send({ type: "tile-states", visible: batch, hidden: [] });
+    }
+  }
+
   onMapItemsChanged(positions: ReadonlyArray<Position>): void {
     for (const position of positions) {
       const tile = this.world.mapItemTileState(position);
@@ -352,6 +428,9 @@ export class Visibility {
     from: Position,
     durationMs: number,
     excludedSessionId?: string,
+    serializedMoved = JSON.stringify(
+      this.movedMessage(creature, from, durationMs),
+    ),
   ): void {
     const nearby = new Set([
       ...this.viewerSessionsFor(from, 1),
@@ -361,7 +440,12 @@ export class Visibility {
       if (session.id === excludedSessionId || !session.playerId) continue;
       const viewer = this.world.getPlayer(session.playerId);
       if (viewer) {
-        this.updateViewOfCreature(session, viewer, creature, from, durationMs);
+        this.updateViewOfCreature(
+          session,
+          viewer,
+          creature,
+          serializedMoved,
+        );
       }
     }
   }
@@ -370,17 +454,16 @@ export class Visibility {
     viewerSession: Session,
     viewer: Player,
     moved: Creature,
-    from: Position,
-    durationMs: number,
+    serializedMoved: string,
   ): void {
-    const visible = this.world.canSee(
-      viewer.position,
+    const visible = this.world.canCreatureSee(
+      viewer,
       moved.position,
       viewerSession.viewRange,
     ) && this.canObserve(viewerSession, viewer, moved);
     const known = viewerSession.knownCreatureIds.has(moved.id);
     if (visible && known) {
-      viewerSession.send(this.movedMessage(moved, from, durationMs));
+      viewerSession.sendSerialized(serializedMoved);
       return;
     }
     if (visible) {
@@ -396,17 +479,14 @@ export class Visibility {
       const other = this.world.getCreature(knownId);
       if (
         other &&
-        this.world.canSee(player.position, other.position, mover.viewRange) &&
+        this.world.canCreatureSee(player, other.position, mover.viewRange) &&
         this.canObserve(mover, player, other)
       ) {
         continue;
       }
       this.forget(mover, knownId);
     }
-    for (const other of this.world.creaturesVisibleFrom(
-      player.position,
-      mover.viewRange,
-    )) {
+    for (const other of this.world.creaturesVisibleTo(player, mover.viewRange)) {
       if (!this.canObserve(mover, player, other)) continue;
       if (mover.knownCreatureIds.has(other.id)) continue;
       this.introduce(mover, other);
@@ -467,5 +547,13 @@ export class Visibility {
     creature: Creature,
   ): boolean {
     return creature.id === viewer.id || !creature.conditions.has("invisible");
+  }
+
+  private sendShared(
+    message: ServerMessage,
+    recipients: Iterable<Session>,
+  ): void {
+    const serialized = JSON.stringify(message);
+    for (const session of recipients) session.sendSerialized(serialized);
   }
 }

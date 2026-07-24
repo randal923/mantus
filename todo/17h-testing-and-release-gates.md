@@ -10,6 +10,12 @@ the final gate before public access; it assumes 17a–17g are in place.
 - [ ] Add deterministic tick simulations and load tests for player movement,
   dense visibility, animated client regions, spawns, AI/pathfinding, combat,
   inventory races, chat floods, and market contention.
+- [ ] Promote the current 4,000-player controlled protocol capacity result to a
+  distributed staging gate using production PostgreSQL, Supabase, TLS/proxy
+  termination, the full map/content, slow-client backpressure, periodic dirty
+  saves, reconnect storms, mixed actions, and dense hotspots. Keep a separately
+  bounded transport-session headroom above the configured in-world target so a
+  full world can still admit replacements and operators.
 - [ ] Pin dependencies/content manifests and run typecheck, lint, unit,
   integration, migration, build, and provenance checks in CI using Yarn.
 - [ ] Define staged rollout, maintenance mode, rollback-forward migration policy,
@@ -27,16 +33,17 @@ the final gate before public access; it assumes 17a–17g are in place.
   registered gameplay definition, callback, placement, persistent system, or
   player/operator-facing action is absent from the ledger, regresses to
   unsupported, or loses aggregate/fixture coverage.
-- [ ] Fix 3 pre-existing pg integration failures (verified identical before
-  and after the 2026-07-18 structural refactor, so not refactor-caused):
-  `PgCharacterStore` "serializes generic container moves" and "rolls ownership
-  and audit back together" both abort early with "starter gold was not
-  created" (the tests expect a gold item in the starter set that the current
-  starter content no longer includes), and `PgDepotStore` "delivers one
-  offline reward when the same delivery is retried" surfaces "could not
-  serialize access due to concurrent update" instead of retrying/absorbing
-  the serialization conflict. The other 66 integration tests pass against the
-  local docker Postgres.
+- [ ] Add a 30-minute combined staging soak with hostile/pathfinding monsters,
+  spells, runes, loot, containers, deaths, dirty character snapshots, a
+  reconnect storm, 100/300/500-player dense hotspots, and deliberately slow
+  clients. The current isolated gates cover 4,000 lightweight protocol players
+  and 1,900 active hotspot monsters, but not both workloads together.
+- [ ] Add a real Supabase/staging PostgreSQL capacity gate for authentication,
+  world entry, pool wait, 4,000 dirty saves, transaction timeouts, pool
+  exhaustion, and database failure. Never run this against production data.
+- [ ] Run the renderer gate on a native integrated-GPU low-end client and a
+  native discrete-GPU client. WSL currently exposes the RTX device to CUDA but
+  Chromium falls back to SwiftShader/Canvas2D.
 
 ## Production checklist
 

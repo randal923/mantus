@@ -264,6 +264,8 @@ async function makeHarness(options: {
     movementDirection: null,
     bufferedMovementDirection: null,
     send: (message: ServerMessage) => sent.push(message),
+    sendSerialized: (message: string) =>
+      sent.push(JSON.parse(message) as ServerMessage),
     sendError: (code: ServerErrorCode) => {
       session.errorRevision += 1;
       sent.push({ type: "error", code });

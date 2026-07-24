@@ -161,6 +161,10 @@ export class CreatureView {
     return this.tileZ;
   }
 
+  get cullMarginTiles(): number {
+    return Math.max(this.outfit?.width ?? 1, this.outfit?.height ?? 1);
+  }
+
   get position(): Position {
     return { x: this.tileX, y: this.tileY, z: this.tileZ };
   }

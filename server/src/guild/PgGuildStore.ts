@@ -71,6 +71,8 @@ const WAR_ACTIVE = 1;
 const WAR_REJECTED = 2;
 const WAR_CANCELED = 3;
 const WAR_ENDED = 4;
+const MAX_TRANSACTION_ATTEMPTS = 5;
+const RETRY_BACKOFF_MS = 15;
 
 /**
  * Postgres GuildStore. Every mutation is one SERIALIZABLE transaction that
@@ -659,7 +661,12 @@ export class PgGuildStore implements GuildStore {
     operation: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
     let lastCause: unknown;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
+      if (attempt > 0) {
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, RETRY_BACKOFF_MS * attempt);
+        });
+      }
       try {
         return await runSerializableTransaction(this.pool, operation);
       } catch (cause) {

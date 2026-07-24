@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/playwright:v1.61.1-noble
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
+
+COPY client-performance.package.json package.json
+COPY yarn.lock ./
+COPY client/package.json client/package.json
+COPY protocol/package.json protocol/package.json
+COPY server/package.json server/package.json
+RUN yarn install --frozen-lockfile
+
+COPY config.yml ./
+COPY content content
+COPY client client
+COPY protocol protocol
+COPY server server
+
+ENV CI=1
+ENV VITE_CLIENT_RENDERER_PROFILE=software
+
+CMD ["yarn", "workspace", "client", "test:e2e:monsters"]

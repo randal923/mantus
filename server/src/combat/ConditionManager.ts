@@ -33,6 +33,10 @@ const STACKING_CONDITIONS = new Set<ConditionType>([
 export class ConditionManager {
   private readonly active = new Map<ConditionType, ActiveCondition>();
 
+  get isActive(): boolean {
+    return this.active.size > 0;
+  }
+
   apply(application: ConditionApplication, now: number): boolean {
     this.assertApplication(application);
     const current = this.active.get(application.type);

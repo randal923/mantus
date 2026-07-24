@@ -1,5 +1,5 @@
 import {
-  serverMessageSchema,
+  parseServerMessages,
   type ChatSpeechMode,
   type CreateCharacterInput,
   type ClientMessage,
@@ -735,46 +735,50 @@ export class GameClient {
     } catch {
       return;
     }
-    const result = serverMessageSchema.safeParse(json);
-    if (!result.success) return;
-    if (result.data.type === "auth-ok") {
+    const messages = parseServerMessages(json);
+    if (!messages) return;
+    for (const message of messages) this.handleMessage(message);
+  }
+
+  private handleMessage(message: ServerMessage): void {
+    if (message.type === "auth-ok") {
       this.authenticated = true;
-      this.handlers.onLanguage(result.data.language);
+      this.handlers.onLanguage(message.language);
       if (this.viewRange) {
         this.send({ type: "set-viewport", range: this.viewRange });
       }
       this.send({ type: "list-characters" });
       return;
     }
-    if (result.data.type === "language-updated") {
-      this.handlers.onLanguage(result.data.language);
+    if (message.type === "language-updated") {
+      this.handlers.onLanguage(message.language);
       return;
     }
-    if (result.data.type === "welcome") {
-      const playerId = result.data.playerId;
+    if (message.type === "welcome") {
+      const playerId = message.playerId;
       this.ownPlayerId = playerId;
-      const own = result.data.creatures.find(
+      const own = message.creatures.find(
         (creature) => creature.id === playerId,
       );
       this.positionRevision = own?.positionRevision ?? 0;
     }
     if (
-      result.data.type === "creature-moved" &&
-      result.data.creatureId === this.ownPlayerId
+      message.type === "creature-moved" &&
+      message.creatureId === this.ownPlayerId
     ) {
-      this.positionRevision = result.data.positionRevision;
+      this.positionRevision = message.positionRevision;
     }
     if (
-      result.data.type === "position-correction" &&
-      result.data.playerId === this.ownPlayerId
+      message.type === "position-correction" &&
+      message.playerId === this.ownPlayerId
     ) {
-      this.positionRevision = result.data.positionRevision;
+      this.positionRevision = message.positionRevision;
     }
-    if (result.data.type === "error") {
-      this.handlers.onError(result.data.code);
+    if (message.type === "error") {
+      this.handlers.onError(message.code);
       return;
     }
-    this.handlers.onMessage(result.data);
+    this.handlers.onMessage(message);
   }
 
   private send(message: ClientMessage): boolean {

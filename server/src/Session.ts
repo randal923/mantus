@@ -81,6 +81,8 @@ export class Session {
   private windowStartedAt = 0;
   private messagesInWindow = 0;
   private violations = 0;
+  private batching = false;
+  private batchedMessages: string[] = [];
 
   constructor(
     readonly id: string,
@@ -91,6 +93,7 @@ export class Session {
       maxProtocolViolations: number;
       initialViewRange: ViewRange;
     },
+    private readonly onIntentQueued: (session: Session) => void = () => {},
   ) {
     this.viewRange = { ...limits.initialViewRange };
     socket.on("message", (data) => this.onMessage(data));
@@ -119,6 +122,7 @@ export class Session {
     }
     if (this.pendingIntents.length >= this.limits.maxPendingIntents) return;
     this.pendingIntents.push(result.data);
+    this.onIntentQueued(this);
   }
 
   private withinRateLimit(): boolean {
@@ -145,6 +149,18 @@ export class Session {
     return intents;
   }
 
+  get hasPendingIntents(): boolean {
+    return this.pendingIntents.length > 0;
+  }
+
+  get needsMovementTick(): boolean {
+    return Boolean(
+      this.movementDirection ||
+        this.bufferedMovementDirection ||
+        this.autoWalkDirections.length > 0,
+    );
+  }
+
   setViewRange(range: ViewRange): boolean {
     if (range.x === this.viewRange.x && range.y === this.viewRange.y) {
       return false;
@@ -154,8 +170,52 @@ export class Session {
   }
 
   send(message: ServerMessage): void {
+    this.sendSerialized(JSON.stringify(message));
+  }
+
+  beginBatch(): void {
+    this.batching = true;
+  }
+
+  flushBatch(): void {
+    this.batching = false;
+    if (this.batchedMessages.length === 0) return;
+    const messages = this.batchedMessages;
+    this.batchedMessages = [];
     if (this.socket.readyState !== this.socket.OPEN) return;
-    this.socket.send(JSON.stringify(message));
+
+    let batch: string[] = [];
+    let batchBytes = 2;
+    for (const message of messages) {
+      const separatorBytes = batch.length === 0 ? 0 : 1;
+      const messageBytes = Buffer.byteLength(message);
+      if (
+        batch.length >= PROTOCOL_LIMITS.maxServerMessagesPerBatch ||
+        (batch.length > 0 &&
+          batchBytes + separatorBytes + messageBytes >
+            PROTOCOL_LIMITS.maxMessageBytes)
+      ) {
+        if (!this.sendBatch(batch)) return;
+        batch = [];
+        batchBytes = 2;
+      }
+      batch.push(message);
+      batchBytes += (batch.length === 1 ? 0 : 1) + messageBytes;
+    }
+    this.sendBatch(batch);
+  }
+
+  /**
+   * Sends a server-authored payload that was serialized once for a whole
+   * visibility broadcast. Callers must only pass protocol messages.
+   */
+  sendSerialized(message: string): void {
+    if (this.batching) {
+      this.batchedMessages.push(message);
+      return;
+    }
+    if (this.socket.readyState !== this.socket.OPEN) return;
+    this.socket.send(message);
   }
 
   sendError(code: ServerErrorCode): void {
@@ -169,6 +229,22 @@ export class Session {
   }
 
   terminate(): void {
+    this.flushBatch();
     this.socket.terminate();
+  }
+
+  private sendBatch(messages: ReadonlyArray<string>): boolean {
+    if (messages.length === 0) return true;
+    const payload =
+      messages.length === 1 ? messages[0]! : `[${messages.join(",")}]`;
+    if (
+      this.socket.bufferedAmount + Buffer.byteLength(payload) >
+      PROTOCOL_LIMITS.maxSocketBufferedBytes
+    ) {
+      this.socket.terminate();
+      return false;
+    }
+    this.socket.send(payload);
+    return true;
   }
 }

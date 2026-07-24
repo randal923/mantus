@@ -15,7 +15,7 @@ development:
 network:
   # Enable only behind a trusted proxy that replaces Fly-Client-IP.
   trustProxyHeader: false
-  maxSessions: 100
+  maxSessions: 2000
   maxPendingIntents: 16
   maxProtocolViolations: 5
   defaultViewRange:

@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import WebSocket from "ws";
-import type { Language, ServerMessage } from "@tibia/protocol";
+import {
+  parseServerMessages,
+  type Language,
+  type ServerMessage,
+} from "@tibia/protocol";
 import type { ServerConfig } from "./config";
 import { GameServer } from "./GameServer";
 import { ItemCatalog } from "./item/ItemCatalog";
@@ -77,50 +81,56 @@ const connect = (
     );
     socket.on("error", reject);
     socket.on("message", (data) => {
-      const message = JSON.parse(data.toString()) as ServerMessage;
-      messages.push(message);
-      if (message.type === "auth-ok") {
-        socket.send(JSON.stringify({ type: "list-characters" }));
+      const parsed = parseServerMessages(JSON.parse(data.toString()));
+      if (!parsed) {
+        reject(new Error("server sent invalid protocol messages"));
         return;
       }
-      if (message.type === "character-list") {
-        const character = message.characters[0];
-        if (!character && !createRequested) {
-          createRequested = true;
-          socket.send(
-            JSON.stringify({
-              type: "create-character",
-              name,
-              vocation: "Knight",
-              lookType: 128,
-            }),
-          );
+      for (const message of parsed) {
+        messages.push(message);
+        if (message.type === "auth-ok") {
+          socket.send(JSON.stringify({ type: "list-characters" }));
           return;
         }
-        if (character && !selectRequested) {
-          selectRequested = true;
-          socket.send(
-            JSON.stringify({
-              type: "select-character",
-              characterId: character.id,
-            }),
-          );
+        if (message.type === "character-list") {
+          const character = message.characters[0];
+          if (!character && !createRequested) {
+            createRequested = true;
+            socket.send(
+              JSON.stringify({
+                type: "create-character",
+                name,
+                vocation: "Knight",
+                lookType: 128,
+              }),
+            );
+            return;
+          }
+          if (character && !selectRequested) {
+            selectRequested = true;
+            socket.send(
+              JSON.stringify({
+                type: "select-character",
+                characterId: character.id,
+              }),
+            );
+          }
+          continue;
         }
-        return;
+        if (message.type !== "welcome") continue;
+        const self = message.creatures.find((p) => p.id === message.playerId);
+        if (!self) {
+          reject(new Error("welcome without own player state"));
+          return;
+        }
+        resolve({
+          socket,
+          messages,
+          playerId: message.playerId,
+          spawn: { x: self.position.x, y: self.position.y },
+          closed: () => closed,
+        });
       }
-      if (message.type !== "welcome") return;
-      const self = message.creatures.find((p) => p.id === message.playerId);
-      if (!self) {
-        reject(new Error("welcome without own player state"));
-        return;
-      }
-      resolve({
-        socket,
-        messages,
-        playerId: message.playerId,
-        spawn: { x: self.position.x, y: self.position.y },
-        closed: () => closed,
-      });
     });
   });
 
@@ -140,9 +150,10 @@ const openRaw = (port: number): Promise<RawClient> =>
       closed = true;
     });
     socket.on("error", reject);
-    socket.on("message", (data) =>
-      messages.push(JSON.parse(data.toString()) as ServerMessage),
-    );
+    socket.on("message", (data) => {
+      const parsed = parseServerMessages(JSON.parse(data.toString()));
+      if (parsed) messages.push(...parsed);
+    });
     socket.on("open", () => resolve({ socket, messages, closed: () => closed }));
   });
 
@@ -442,11 +453,12 @@ describe("auth gate", () => {
     overrides: Partial<ServerConfig> = {},
     accounts = new InMemoryAccountStore(),
     characters = new InMemoryCharacterStore(),
+    verifier: TokenVerifier = fakeVerifier,
   ) => {
     server = new GameServer(
       { ...testConfig, ...overrides },
       {
-        verifier: fakeVerifier,
+        verifier,
         accounts,
         characters,
         items: new MemoryItemStore(),
@@ -477,6 +489,25 @@ describe("auth gate", () => {
     await waitFor(
       () => sawError(client.messages, "auth-failed") && client.closed(),
       "auth-failed error and disconnect",
+    );
+  });
+
+  it("disconnects an authentication request whose verifier never settles", async () => {
+    startServer(
+      { authTimeoutMs: 25 },
+      new InMemoryAccountStore(),
+      new InMemoryCharacterStore(),
+      { verify: () => new Promise<VerifiedUser>(() => {}) },
+    );
+    const client = await openRaw(server.port);
+    sockets.push(client.socket);
+    client.socket.send(
+      JSON.stringify({ type: "auth", token: "tok.hanging", language: "en" }),
+    );
+
+    await waitFor(
+      () => sawError(client.messages, "auth-timeout") && client.closed(),
+      "pending authentication timeout",
     );
   });
 
@@ -1072,6 +1103,69 @@ describe("auth gate", () => {
             ),
         ),
       "shrunken viewport item removal",
+    );
+  });
+
+  it("incrementally reveals and hides map items while walking", async () => {
+    const spawn = { x: GRID.width / 2, y: GRID.height / 2, z: 7 };
+    const itemPosition = { ...spawn, x: spawn.x + 2 };
+    startServer({
+      defaultViewRange: { x: 1, y: 1 },
+      map: {
+        source: "grid",
+        name: "walking-item-grid",
+        ...GRID,
+        blocked: [],
+        groundSpeed: 1,
+        items: [
+          {
+            position: itemPosition,
+            item: {
+              instanceId: "walking-visible",
+              itemId: 3003,
+              stackIndex: 1,
+              mutable: true,
+            },
+          },
+        ],
+      },
+    });
+    const client = await connect(server.port, "Walking Viewer", "tok.walk-items");
+    sockets.push(client.socket);
+
+    client.socket.send(
+      JSON.stringify({ type: "move", direction: "east", queueStep: true }),
+    );
+    client.socket.send(JSON.stringify({ type: "stop-move" }));
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "tile-states" &&
+            message.visible.some((tile) =>
+              tile.items.some((item) => item.instanceId === "walking-visible"),
+            ),
+        ),
+      "walked-into-view item",
+    );
+
+    client.socket.send(
+      JSON.stringify({ type: "move", direction: "west", queueStep: true }),
+    );
+    client.socket.send(JSON.stringify({ type: "stop-move" }));
+    await waitFor(
+      () =>
+        client.messages.some(
+          (message) =>
+            message.type === "tile-states" &&
+            message.hidden.some(
+              (position) =>
+                position.x === itemPosition.x &&
+                position.y === itemPosition.y &&
+                position.z === itemPosition.z,
+            ),
+        ),
+      "walked-out-of-view item",
     );
   });
 

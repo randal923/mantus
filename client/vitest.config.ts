@@ -7,10 +7,19 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
 const dirname =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+const rendererProfile =
+  process.env.VITE_CLIENT_RENDERER_PROFILE ??
+  process.env.CLIENT_RENDERER_PROFILE ??
+  'software';
+const chromiumArgs =
+  rendererProfile === 'hardware'
+    ? ['--use-angle=vulkan', '--enable-features=Vulkan', '--disable-vulkan-surface']
+    : [];
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   test: {
+    fileParallelism: false,
     projects: [
       {
         test: {
@@ -37,7 +46,7 @@ export default defineConfig({
             enabled: true,
             headless: true,
             provider: 'playwright',
-            instances: [{ browser: 'chromium' }],
+            instances: [{ browser: 'chromium', launch: { args: chromiumArgs } }],
           },
         },
       },

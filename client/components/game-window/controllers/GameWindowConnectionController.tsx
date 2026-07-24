@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import type { ServerMessage } from "@tibia/protocol";
 import type { GameClient } from "../../../lib/net/GameClient";
 import type { WorldRenderer } from "../../../lib/render/WorldRenderer";
-import { updateVisibleCreatures } from "../../../lib/creatures/updateVisibleCreatures";
+import { updateVisibleCreaturesBatch } from "../../../lib/creatures/updateVisibleCreaturesBatch";
 import { isEditableTarget } from "../../../lib/hotkeys/isEditableTarget";
 import { getHeldMovementDirection } from "../../../lib/movement/getHeldMovementDirection";
 import { getKeyboardTurnDirection } from "../../../lib/movement/getKeyboardTurnDirection";
@@ -47,7 +48,25 @@ export function GameWindowConnectionController() {
     let client: GameClient | undefined;
     let renderer: WorldRenderer | undefined;
     let heldMovementKeys: ReadonlyArray<string> = [];
+    let creatureFrame: number | null = null;
+    let creatureMessages: ServerMessage[] = [];
     runtime.joinedRef.current = false;
+
+    const flushCreatureMessages = () => {
+      creatureFrame = null;
+      const messages = creatureMessages;
+      creatureMessages = [];
+      store.getState().setVisibleCreatures((current) => {
+        const next = updateVisibleCreaturesBatch(current, messages);
+        runtime.visibleCreaturesRef.current = next;
+        return next;
+      });
+    };
+
+    const queueCreatureMessage = (message: ServerMessage) => {
+      creatureMessages.push(message);
+      creatureFrame ??= window.requestAnimationFrame(flushCreatureMessages);
+    };
 
     const syncViewport = () => {
       const range = renderer?.setViewportSize(
@@ -84,11 +103,7 @@ export function GameWindowConnectionController() {
       client = new GameClient(WS_URL, {
         onMessage: (message) => {
           if (disposed || !client) return;
-          store.getState().setVisibleCreatures((current) => {
-            const next = updateVisibleCreatures(current, message);
-            runtime.visibleCreaturesRef.current = next;
-            return next;
-          });
+          queueCreatureMessage(message);
 
           const context = { client, renderer: worldRenderer, store };
           if (handleCharacterSessionMessage(message, context)) return;
@@ -219,6 +234,10 @@ export function GameWindowConnectionController() {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
       resizeObserver.disconnect();
+      if (creatureFrame !== null) {
+        window.cancelAnimationFrame(creatureFrame);
+      }
+      creatureMessages = [];
       client?.disconnect();
       runtime.clientRef.current = null;
       renderer?.destroy();

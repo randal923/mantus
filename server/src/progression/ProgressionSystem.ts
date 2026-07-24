@@ -7,6 +7,7 @@ import type { World } from "../World";
 import { projectOwnProgression } from "./projectOwnProgression";
 
 export class ProgressionSystem {
+  private nextTickAt = 0;
   constructor(
     private readonly world: World,
     private readonly registry: SessionRegistry,
@@ -111,6 +112,8 @@ export class ProgressionSystem {
   }
 
   tick(now: number): void {
+    if (now < this.nextTickAt) return;
+    this.nextTickAt = now + 100;
     for (const player of this.world.allPlayers()) {
       if (this.persistence.isExternalMutationPending(player)) continue;
       if (!player.tickProgression(now)) continue;

@@ -37,3 +37,4 @@ export * from "./gemAtelierMessages";
 export * from "./computeGemBonuses";
 export * from "./clientMessages";
 export * from "./serverMessages";
+export * from "./parseServerMessages";

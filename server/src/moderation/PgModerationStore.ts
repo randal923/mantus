@@ -33,6 +33,9 @@ interface TargetRow {
   account_id: string;
 }
 
+const MAX_TRANSACTION_ATTEMPTS = 5;
+const RETRY_BACKOFF_MS = 15;
+
 /**
  * Postgres ModerationStore. Each action is one SERIALIZABLE transaction
  * that resolves the target from database truth at execution time and
@@ -262,7 +265,12 @@ export class PgModerationStore implements ModerationStore {
     operation: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
     let lastCause: unknown;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
+      if (attempt > 0) {
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, RETRY_BACKOFF_MS * attempt);
+        });
+      }
       try {
         return await runSerializableTransaction(this.pool, operation);
       } catch (cause) {

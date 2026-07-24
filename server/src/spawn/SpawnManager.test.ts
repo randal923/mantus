@@ -348,4 +348,46 @@ describe("SpawnManager", () => {
       ),
     ).toHaveLength(0);
   });
+
+  it("bulk-spawns and removes a four-digit dev performance fixture", () => {
+    const world = new World(
+      gridMapData({ name: "test", width: 80, height: 80, blocked: [] }),
+      25,
+    );
+    world.addPlayer(
+      new Player(makeCharacter("viewer"), { x: 40, y: 40, z: 7 }),
+    );
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      makeContent(false),
+      {
+        ...config,
+        activationRange: { x: 32, y: 24 },
+        maxAiScansPerTick: 1_000,
+        maxAiWorkPerTick: 1_000,
+      },
+    );
+
+    expect(
+      manager.spawnMonstersNear(
+        monsterType.id,
+        { x: 40, y: 40, z: 7 },
+        1_000,
+        1_000,
+      ),
+    ).toBe(1_000);
+    expect(
+      [...world.allCreatures()].filter(
+        (creature) => creature.kind === "monster",
+      ),
+    ).toHaveLength(1_000);
+
+    expect(manager.removeGmMonsters()).toBe(1_000);
+    expect(
+      [...world.allCreatures()].filter(
+        (creature) => creature.kind === "monster",
+      ),
+    ).toHaveLength(0);
+  });
 });

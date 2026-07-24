@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { createRoot } from "react-dom/client";
 import {
   clientMessageSchema,
-  serverMessageSchema,
+  parseServerMessages,
   type ClientMessage,
   type Direction,
   type Position,
@@ -64,7 +64,8 @@ async function ensureCharacterExists(): Promise<void> {
   const messages: Array<{ type: string; characters?: Array<{ name: string }> }> =
     [];
   socket.onmessage = (event) => {
-    messages.push(JSON.parse(event.data as string));
+    const parsed = parseServerMessages(JSON.parse(event.data as string));
+    if (parsed) messages.push(...parsed);
   };
   await new Promise<void>((resolve, reject) => {
     socket.onopen = () => resolve();
@@ -170,29 +171,30 @@ function instrumentWebSocket(): WireProbe {
         } catch {
           return;
         }
-        const parsed = serverMessageSchema.safeParse(json);
-        if (!parsed.success) return;
-        if (parsed.data.type === "welcome") {
-          ownPlayerId = parsed.data.playerId;
-          for (const creature of parsed.data.creatures) {
+        const parsed = parseServerMessages(json);
+        if (!parsed) return;
+        for (const message of parsed) {
+        if (message.type === "welcome") {
+          ownPlayerId = message.playerId;
+          for (const creature of message.creatures) {
             creatureNames.set(creature.id, creature.name);
           }
           timeline.push({
             atMs: performance.now(),
-            detail: `welcome player=${parsed.data.playerId}`,
+            detail: `welcome player=${message.playerId}`,
           });
-          return;
+          continue;
         }
-        if (parsed.data.type === "creature-joined") {
-          creatureNames.set(parsed.data.creature.id, parsed.data.creature.name);
-          return;
+        if (message.type === "creature-joined") {
+          creatureNames.set(message.creature.id, message.creature.name);
+          continue;
         }
-        if (parsed.data.type === "creature-left") {
-          creatureNames.delete(parsed.data.creatureId);
-          return;
+        if (message.type === "creature-left") {
+          creatureNames.delete(message.creatureId);
+          continue;
         }
-        if (parsed.data.type === "fight-state") {
-          const conditions = parsed.data.fightState.conditions
+        if (message.type === "fight-state") {
+          const conditions = message.fightState.conditions
             .map(
               (condition) =>
                 `${condition.type}:${condition.remainingMs}ms`,
@@ -202,52 +204,52 @@ function instrumentWebSocket(): WireProbe {
             atMs: performance.now(),
             detail: `fight-state conditions=${conditions || "none"}`,
           });
-          return;
+          continue;
         }
-        if (parsed.data.type === "combat-log") {
+        if (message.type === "combat-log") {
           timeline.push({
             atMs: performance.now(),
-            detail: `combat-log ${parsed.data.kind}: ${parsed.data.text}`,
+            detail: `combat-log ${message.kind}: ${message.text}`,
           });
-          return;
+          continue;
         }
         if (
-          parsed.data.type === "position-correction" &&
-          parsed.data.playerId === ownPlayerId
+          message.type === "position-correction" &&
+          message.playerId === ownPlayerId
         ) {
           timeline.push({
             atMs: performance.now(),
             detail:
-              `correction ${parsed.data.reason} retry=${parsed.data.retryAfterMs}ms ` +
-              `rev=${parsed.data.positionRevision} ` +
-              `pos=${parsed.data.position.x},${parsed.data.position.y},${parsed.data.position.z}`,
+              `correction ${message.reason} retry=${message.retryAfterMs}ms ` +
+              `rev=${message.positionRevision} ` +
+              `pos=${message.position.x},${message.position.y},${message.position.z}`,
           });
-          return;
+          continue;
         }
-        if (parsed.data.type !== "creature-moved") return;
+        if (message.type !== "creature-moved") continue;
         creatureMovesReceived += 1;
-        if (parsed.data.creatureId !== ownPlayerId) {
+        if (message.creatureId !== ownPlayerId) {
           if (
-            Math.abs(parsed.data.position.x - WALK_START.x) <= 1 &&
-            parsed.data.position.y >= WALK_START.y - 1 &&
-            parsed.data.position.y <= WALK_END_Y + 1 &&
-            parsed.data.position.z === WALK_START.z
+            Math.abs(message.position.x - WALK_START.x) <= 1 &&
+            message.position.y >= WALK_START.y - 1 &&
+            message.position.y <= WALK_END_Y + 1 &&
+            message.position.z === WALK_START.z
           ) {
             timeline.push({
               atMs: performance.now(),
               detail:
-                `nearby move ${creatureNames.get(parsed.data.creatureId) ?? parsed.data.creatureId} ` +
-                `pos=${parsed.data.position.x},${parsed.data.position.y},${parsed.data.position.z}`,
+                `nearby move ${creatureNames.get(message.creatureId) ?? message.creatureId} ` +
+                `pos=${message.position.x},${message.position.y},${message.position.z}`,
             });
           }
-          return;
+          continue;
         }
         const receipt = {
           atMs: performance.now(),
-          durationMs: parsed.data.durationMs,
-          direction: parsed.data.direction,
-          position: { ...parsed.data.position },
-          positionRevision: parsed.data.positionRevision,
+          durationMs: message.durationMs,
+          direction: message.direction,
+          position: { ...message.position },
+          positionRevision: message.positionRevision,
         };
         ownMoves.push(receipt);
         timeline.push({
@@ -257,6 +259,7 @@ function instrumentWebSocket(): WireProbe {
             `rev=${receipt.positionRevision} ` +
             `pos=${receipt.position.x},${receipt.position.y},${receipt.position.z}`,
         });
+        }
       });
     }
 

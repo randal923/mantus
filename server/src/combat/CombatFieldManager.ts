@@ -10,6 +10,11 @@ interface CombatField {
 
 export class CombatFieldManager {
   private readonly fields = new Map<string, CombatField>();
+  private currentRevision = 0;
+
+  get revision(): number {
+    return this.currentRevision;
+  }
 
   create(
     position: Position,
@@ -28,6 +33,7 @@ export class CombatFieldManager {
       sourceId,
       expiresAt: now + durationMs,
     });
+    this.currentRevision++;
   }
 
   get(position: Position, now: number): CombatField | undefined {
@@ -36,12 +42,15 @@ export class CombatFieldManager {
     if (!field) return undefined;
     if (field.expiresAt > now) return field;
     this.fields.delete(key);
+    this.currentRevision++;
     return undefined;
   }
 
   tick(now: number): void {
     for (const [key, field] of this.fields) {
-      if (field.expiresAt <= now) this.fields.delete(key);
+      if (field.expiresAt > now) continue;
+      this.fields.delete(key);
+      this.currentRevision++;
     }
   }
 }

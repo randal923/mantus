@@ -342,6 +342,35 @@ databaseDescribe("PgCharacterStore integration", () => {
     expect(persisted).toMatchObject({ positionX: 101, version: 2 });
   });
 
+  it("persists multiple progression events in one atomic snapshot", async () => {
+    const accountId = await createAccount("progression-event-batch");
+    await service.create(accountId, {
+      displayName: "Batch Hero",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const summary = (await store.listByAccountId(accountId))[0];
+    if (!summary) throw new Error("character was not created");
+    const character = await store.findByIdForAccount(accountId, summary.id);
+    if (!character) throw new Error("character was not found");
+    const events = [
+      { id: "kill:rat:batch-1", type: "experience" },
+      { id: "skill:sword:batch-1", type: "skill" },
+    ] as const;
+
+    await expect(
+      store.saveSnapshot({
+        ...saveSnapshot(character, 101),
+        progressionEvents: events,
+      }),
+    ).resolves.toBe(2);
+
+    const persisted = await store.findByIdForAccount(accountId, character.id);
+    expect(persisted?.progressionEventIds).toEqual(
+      expect.arrayContaining(events.map((event) => event.id)),
+    );
+  });
+
   it("creates starter items and their audit records in the character transaction", async () => {
     const accountId = await createAccount("starter-set");
     const characters = await service.create(accountId, {

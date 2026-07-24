@@ -182,8 +182,26 @@ export class CharacterHandler {
         accountId,
         characterId,
       );
-      const wheelSlices = character ? await this.wheel.load(character.id) : [];
-      const gemData = character ? await this.gems.load(character.id) : null;
+      let wheelSlices: ReadonlyArray<number> = [];
+      let gemData: GemCharacterData | null = null;
+      let depot: LoadedDepot | null = null;
+      let pvpFrags: ReadonlyArray<PvpKillRecord> = [];
+      let bestiaryKills: ReadonlyMap<number, number> = new Map();
+      if (character) {
+        [
+          wheelSlices,
+          gemData,
+          depot,
+          pvpFrags,
+          bestiaryKills,
+        ] = await Promise.all([
+          this.wheel.load(character.id),
+          this.gems.load(character.id),
+          this.depot.load(character.id),
+          this.pvp.load(character.id),
+          this.bestiary.load(character.id),
+        ]);
+      }
       const wheelBonuses = character
         ? computeWheelBonuses(
             wheelSlices,
@@ -207,11 +225,6 @@ export class CharacterHandler {
             }).capacity,
           )
         : null;
-      const depot = character ? await this.depot.load(character.id) : null;
-      const pvpFrags = character ? await this.pvp.load(character.id) : [];
-      const bestiaryKills = character
-        ? await this.bestiary.load(character.id)
-        : new Map<number, number>();
       this.outcomes.push(() => {
         if (!this.isCurrentOperation(session, accountId)) return;
         if (!character) {

@@ -9,6 +9,7 @@ import { positionKey } from "./positionKey";
  */
 export class SpatialGrid {
   private readonly cells = new Map<string, Set<Creature>>();
+  private readonly floorCounts = new Map<number, number>();
 
   constructor(private readonly cellSize = 8) {}
 
@@ -28,6 +29,10 @@ export class SpatialGrid {
       this.cells.set(key, cell);
     }
     cell.add(creature);
+    this.floorCounts.set(
+      creature.position.z,
+      (this.floorCounts.get(creature.position.z) ?? 0) + 1,
+    );
   }
 
   /** Remove using the creature's current coordinates. */
@@ -69,11 +74,18 @@ export class SpatialGrid {
     return found;
   }
 
+  occupiedFloors(): Iterable<number> {
+    return this.floorCounts.keys();
+  }
+
   private removeAt(creature: Creature, position: Position): void {
     const key = this.cellKey(position);
     const cell = this.cells.get(key);
     if (!cell) return;
-    cell.delete(creature);
+    if (!cell.delete(creature)) return;
+    const floorCount = this.floorCounts.get(position.z) ?? 1;
+    if (floorCount <= 1) this.floorCounts.delete(position.z);
+    else this.floorCounts.set(position.z, floorCount - 1);
     if (cell.size === 0) this.cells.delete(key);
   }
 }

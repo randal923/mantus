@@ -53,6 +53,10 @@ import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
 
 export class Combat {
+  private readonly lastFieldCheckByCreature = new WeakMap<
+    Creature,
+    { readonly positionRevision: number; readonly fieldRevision: number }
+  >();
   private readonly spells: SpellRegistry;
   private readonly feedback: CombatFeedback;
   private readonly damage: DamageResolver;
@@ -75,7 +79,7 @@ export class Combat {
     readonly playerId: string;
     readonly position: Position;
   }> = [];
-  private readonly lastFieldByCreature = new Map<string, string>();
+  private readonly lastFieldByCreature = new WeakMap<Creature, string>();
 
   constructor(
     private readonly world: World,
@@ -365,7 +369,6 @@ export class Combat {
     this.executeQueuedTeleports(now);
     this.world.combatFields.tick(now);
     for (const creature of this.world.allCreatures()) {
-      creature.tickDefense(now);
       const tileDamage = this.monsterEventHooks?.onCreatureTile(creature, now);
       if (tileDamage) this.damage.applyDamage(creature, tileDamage, now);
       this.applyFieldAtCreature(creature, now);
@@ -1339,14 +1342,26 @@ export class Combat {
   }
 
   private applyFieldAtCreature(creature: Creature, now: number): void {
+    const fieldRevision = this.world.fieldRevision;
+    const previous = this.lastFieldCheckByCreature.get(creature);
+    if (
+      previous?.positionRevision === creature.positionRevision &&
+      previous.fieldRevision === fieldRevision
+    ) {
+      return;
+    }
+    this.lastFieldCheckByCreature.set(creature, {
+      positionRevision: creature.positionRevision,
+      fieldRevision,
+    });
     const field = this.world.fieldTypeAt(creature.position, now);
     if (!field) {
-      this.lastFieldByCreature.delete(creature.id);
+      this.lastFieldByCreature.delete(creature);
       return;
     }
     const key = `${positionKey(creature.position)}:${field}`;
-    if (this.lastFieldByCreature.get(creature.id) === key) return;
-    this.lastFieldByCreature.set(creature.id, key);
+    if (this.lastFieldByCreature.get(creature) === key) return;
+    this.lastFieldByCreature.set(creature, key);
     const dynamicField = this.world.combatFields.get(creature.position, now);
     const tickAmounts = field === "fire"
       ? Array.from({ length: 7 }, () => 20)

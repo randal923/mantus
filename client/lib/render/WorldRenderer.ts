@@ -28,6 +28,7 @@ import { SpeechTextRenderer } from "./SpeechTextRenderer";
 import { TILE_SIZE } from "./tileSize";
 
 const ZOOM = 3;
+const NAME_PLATE_CULL_MARGIN_PX = 32;
 const NAME_COLORS: Record<CreatureState["kind"], number> = {
   player: 0x44dd44,
   monster: 0xff7777,
@@ -101,6 +102,9 @@ export class WorldRenderer {
   );
   private viewRange: ViewRange = { x: 1, y: 1 };
   private readonly creatureViews = new Map<string, CreatureView>();
+  private orderedCreatureViews: ReadonlyArray<readonly [string, CreatureView]> =
+    [];
+  private creatureOrderDirty = false;
   private readonly pendingCreatures = new Map<string, CreatureState>();
   private readonly loadingCreatureIds = new Set<string>();
   private ownPlayerId = "";
@@ -140,6 +144,7 @@ export class WorldRenderer {
       this.app.destroy(true, { children: true });
       return;
     }
+    this.app.canvas.dataset.tibiaWorld = "true";
     host.appendChild(this.app.canvas);
     this.app.canvas.addEventListener("pointerdown", this.onMapPointerDown);
     this.app.canvas.addEventListener("mousedown", this.onMapMouseDown);
@@ -488,6 +493,7 @@ export class WorldRenderer {
       this.mapView.creatureLayer(creature.position.z).addChild(view.container);
       this.overlay.addChild(view.plate);
       this.creatureViews.set(creature.id, view);
+      this.creatureOrderDirty = true;
       view.setAttackTarget(creature.id === this.attackTargetId);
       view.setPartyShield(
         this.partyShieldKindFor(creature.id, view.isPublicPartyMember),
@@ -508,6 +514,7 @@ export class WorldRenderer {
     if (!view) return;
     view.destroy();
     this.creatureViews.delete(creatureId);
+    this.creatureOrderDirty = true;
   }
 
   private replaceCreature(creature: CreatureState): void {
@@ -1021,13 +1028,31 @@ export class WorldRenderer {
     this.mapView.tick(dtMs);
     this.combatEffects.tick(dtMs);
     this.speechTexts.tick(dtMs);
-    const orderedViews = [...this.creatureViews.entries()].sort(([left], [right]) =>
-      left.localeCompare(right),
+    const orderedViews = this.sortedCreatureViews();
+    for (const [, view] of orderedViews) view.tick(dtMs);
+
+    const ownView = this.creatureViews.get(this.ownPlayerId);
+    const ownPosition = ownView?.pixelPosition();
+    const ownElevation = ownView && ownPosition
+      ? this.mapView.elevationAt(
+          ownView.floor,
+          ownPosition.x / TILE_SIZE,
+          ownPosition.y / TILE_SIZE,
+        )
+      : 0;
+    const focus = ownView && ownPosition
+      ? ownView.visualPosition(ownElevation)
+      : this.cameraFallback;
+    const cameraX = Math.round(
+      this.app.screen.width / 2 - (focus.x + TILE_SIZE / 2) * ZOOM,
     );
-    const visualPositions = new Map<string, { x: number; y: number }>();
+    const cameraY = Math.round(
+      this.app.screen.height / 2 - (focus.y + TILE_SIZE / 2) * ZOOM,
+    );
+    this.world.position.set(cameraX, cameraY);
+
     for (let index = 0; index < orderedViews.length; index++) {
-      const [id, view] = orderedViews[index];
-      view.tick(dtMs);
+      const [, view] = orderedViews[index];
       const position = view.pixelPosition();
       const elevation = this.mapView.elevationAt(
         view.floor,
@@ -1035,7 +1060,27 @@ export class WorldRenderer {
         position.y / TILE_SIZE,
       );
       const visual = view.visualPosition(elevation);
-      visualPositions.set(id, visual);
+      const projected = this.mapView.projectPosition(
+        visual.x,
+        visual.y,
+        view.floor,
+      );
+      const screenX = cameraX + (projected.x + TILE_SIZE / 2 - 8) * ZOOM;
+      const screenY = cameraY + (projected.y - 8) * ZOOM - 26;
+      const floorVisible = this.mapView.isDynamicFloorVisible(view.floor);
+      const cullMargin =
+        view.cullMarginTiles * TILE_SIZE * ZOOM +
+        NAME_PLATE_CULL_MARGIN_PX;
+      const onScreen =
+        floorVisible &&
+        screenX >= -cullMargin &&
+        screenX <= this.app.screen.width + cullMargin &&
+        screenY >= -cullMargin &&
+        screenY <= this.app.screen.height + cullMargin;
+      view.container.visible = onScreen;
+      view.plate.visible = onScreen;
+      if (!onScreen) continue;
+
       view.container.position.set(visual.x, visual.y);
       const creatureOrder =
         ((index + 1) * (MAP_DEPTH.effect - MAP_DEPTH.creature)) /
@@ -1049,34 +1094,19 @@ export class WorldRenderer {
         sortPosition.y,
         MAP_DEPTH.creature + creatureOrder,
       );
-      view.container.visible = this.mapView.isDynamicFloorVisible(view.floor);
-    }
-
-    const focus =
-      visualPositions.get(this.ownPlayerId) ??
-      this.cameraFallback;
-    const cameraX = Math.round(
-      this.app.screen.width / 2 - (focus.x + TILE_SIZE / 2) * ZOOM,
-    );
-    const cameraY = Math.round(
-      this.app.screen.height / 2 - (focus.y + TILE_SIZE / 2) * ZOOM,
-    );
-    this.world.position.set(cameraX, cameraY);
-
-    for (const [id, view] of orderedViews) {
-      const visual = visualPositions.get(id);
-      if (!visual) continue;
-      const projected = this.mapView.projectPosition(
-        visual.x,
-        visual.y,
-        view.floor,
-      );
-      view.plate.position.set(
-        cameraX + (projected.x + TILE_SIZE / 2 - 8) * ZOOM,
-        cameraY + (projected.y - 8) * ZOOM - 26,
-      );
-      view.plate.visible = this.mapView.isDynamicFloorVisible(view.floor);
+      view.plate.position.set(screenX, screenY);
       view.plate.zIndex = view.container.zIndex;
     }
+  }
+
+  private sortedCreatureViews(): ReadonlyArray<
+    readonly [string, CreatureView]
+  > {
+    if (!this.creatureOrderDirty) return this.orderedCreatureViews;
+    this.orderedCreatureViews = [...this.creatureViews.entries()].sort(
+      ([left], [right]) => left.localeCompare(right),
+    );
+    this.creatureOrderDirty = false;
+    return this.orderedCreatureViews;
   }
 }

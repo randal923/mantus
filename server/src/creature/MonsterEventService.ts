@@ -47,7 +47,7 @@ export class MonsterEventService implements MonsterEventHooks {
     readonly typeId: string;
   }> = [];
   private readonly uglyMonsterSources = new Set<string>();
-  private readonly tileRevisionByCreature = new Map<string, number>();
+  private readonly tileRevisionByCreature = new WeakMap<Creature, number>();
   private readonly teleportCooldownUntil = new Map<string, number>();
   private nextTormentAt = 0;
   private randomState: number;
@@ -408,14 +408,13 @@ export class MonsterEventService implements MonsterEventHooks {
   }
 
   onCreatureTile(creature: Creature, now: number): DamageRequest | null {
-    const previousRevision = this.tileRevisionByCreature.get(creature.id);
-    this.tileRevisionByCreature.set(creature.id, creature.positionRevision);
-    if (
-      previousRevision === undefined ||
-      previousRevision === creature.positionRevision
-    ) {
+    const previousRevision = this.tileRevisionByCreature.get(creature);
+    if (previousRevision === undefined) {
+      this.tileRevisionByCreature.set(creature, creature.positionRevision);
       return null;
     }
+    if (previousRevision === creature.positionRevision) return null;
+    this.tileRevisionByCreature.set(creature, creature.positionRevision);
     const blood = this.world.getMapItems(creature.position).find((item) =>
       [33_854, 34_006, 34_007].includes(item.itemId)
     );

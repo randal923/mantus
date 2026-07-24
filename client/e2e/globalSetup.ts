@@ -13,6 +13,9 @@ const serverRoot = join(
  * the browser e2e tests and tears it down when the run ends.
  */
 export default async function globalSetup(): Promise<() => Promise<void>> {
+  if (process.env.PLAYTEST_EXTERNAL_SERVER === "1") {
+    return () => Promise.resolve();
+  }
   const child = spawn(
     process.execPath,
     ["--import", "tsx", "src/playtest/e2eServer.ts"],

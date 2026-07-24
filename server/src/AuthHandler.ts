@@ -31,7 +31,7 @@ export class AuthHandler {
   }
 
   enforceDeadline(session: Session, now: number): void {
-    if (session.account || session.authPending) return;
+    if (session.account) return;
     if (now - session.connectedAt < this.authTimeoutMs) return;
     session.sendError("auth-timeout");
     session.terminate();
@@ -77,12 +77,13 @@ export class AuthHandler {
       return;
     }
     // one live session per account: the newest login wins (charter §login)
-    for (const other of this.registry.all()) {
-      if (other.id === session.id || other.account?.id !== account.id) continue;
+    const other = this.registry.sessionForAccount(account.id);
+    if (other && other.id !== session.id) {
       other.sendError("logged-in-elsewhere");
       other.terminate();
     }
     session.account = account;
+    this.registry.bindAccount(session, account.id);
     session.fightMode = { ...account.fightMode };
     const status = getAccountStatus(account, monotonicNow());
     session.send({

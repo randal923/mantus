@@ -2,6 +2,7 @@ import { MonsterBrain } from "../ai/MonsterBrain";
 import { NpcBrain } from "../ai/NpcBrain";
 import type { Combat } from "../combat/Combat";
 import type { Creature } from "../creature/Creature";
+import { PROTOCOL_LIMITS } from "@tibia/protocol";
 import { Monster } from "../creature/Monster";
 import { Npc } from "../creature/Npc";
 import type { Visibility } from "../Visibility";
@@ -121,7 +122,7 @@ export class SpawnManager {
   } {
     const players = [...this.world.allPlayers()];
     const spawn = this.tickSpawns(now, players);
-    const ai = this.tickBrains(now, players);
+    const ai = this.tickBrains(now);
     return { ...spawn, ...ai };
   }
 
@@ -168,7 +169,7 @@ export class SpawnManager {
       }
       const activationPosition = slot.dormantCreature?.position ??
         slot.definition.home;
-      if (!this.hasPlayerNear(activationPosition, players)) continue;
+      if (!this.hasPlayerNear(activationPosition)) continue;
       spawnAttempts++;
       this.trySpawn(slot, now);
     }
@@ -190,6 +191,60 @@ export class SpawnManager {
     return result === "unknown-type" || result === "no-space"
       ? result
       : "spawned";
+  }
+
+  /**
+   * Dev-only performance fixture: fills free, walkable tiles inside the
+   * protocol's maximum viewport without repeatedly rescanning the same ring.
+   */
+  spawnMonstersNear(
+    typeId: string,
+    near: { x: number; y: number; z: number },
+    count: number,
+    now: number,
+  ): number | "unknown-type" {
+    if (!this.content.monsterTypes.has(typeId)) return "unknown-type";
+    let spawned = 0;
+    const maxRadius = Math.max(
+      PROTOCOL_LIMITS.maxViewRangeX,
+      PROTOCOL_LIMITS.maxViewRangeY,
+    );
+    for (let radius = 0; radius <= maxRadius && spawned < count; radius++) {
+      const minY = Math.max(-radius, -PROTOCOL_LIMITS.maxViewRangeY);
+      const maxY = Math.min(radius, PROTOCOL_LIMITS.maxViewRangeY);
+      const minX = Math.max(-radius, -PROTOCOL_LIMITS.maxViewRangeX);
+      const maxX = Math.min(radius, PROTOCOL_LIMITS.maxViewRangeX);
+      for (let dy = minY; dy <= maxY && spawned < count; dy++) {
+        for (let dx = minX; dx <= maxX && spawned < count; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+          const result = this.spawnAdHocMonster(
+            typeId,
+            { x: near.x + dx, y: near.y + dy, z: near.z },
+            now,
+            GM_SPAWN_OWNER_ID,
+            0,
+          );
+          if (
+            result !== "unknown-type" &&
+            result !== "no-space"
+          ) {
+            spawned++;
+          }
+        }
+      }
+    }
+    return spawned;
+  }
+
+  removeGmMonsters(): number {
+    const creatureIds = [
+      ...(this.summonsByOwner.get(GM_SPAWN_OWNER_ID) ?? []),
+    ];
+    let removed = 0;
+    for (const creatureId of creatureIds) {
+      if (this.removeSummon(creatureId)) removed++;
+    }
+    return removed;
   }
 
   spawnEventMonsterNear(
@@ -235,10 +290,11 @@ export class SpawnManager {
     near: { x: number; y: number; z: number },
     now: number,
     ownerId: typeof GM_SPAWN_OWNER_ID | typeof EVENT_SPAWN_OWNER_ID,
+    searchRadius = 3,
   ): string | "unknown-type" | "no-space" {
     const type = this.content.monsterTypes.get(typeId);
     if (!type) return "unknown-type";
-    const position = this.world.findUnoccupiedPosition(near, 3);
+    const position = this.world.findUnoccupiedPosition(near, searchRadius);
     if (!position) return "no-space";
     const monster = new Monster({
       id: ownerId === GM_SPAWN_OWNER_ID
@@ -353,10 +409,7 @@ export class SpawnManager {
     });
   }
 
-  private tickBrains(
-    now: number,
-    players: ReadonlyArray<Player>,
-  ): { aiScans: number; aiWork: number } {
+  private tickBrains(now: number): { aiScans: number; aiWork: number } {
     let work = 0;
     let scanned = 0;
     while (
@@ -371,7 +424,7 @@ export class SpawnManager {
       const brain = this.brains.get(creatureId);
       const creature = this.world.getCreature(creatureId);
       if (!brain || !creature) continue;
-      if (!this.hasPlayerNear(creature.position, players)) {
+      if (!this.hasPlayerNear(creature.position)) {
         this.detachCreature(creatureId, now, true);
         continue;
       }
@@ -425,13 +478,9 @@ export class SpawnManager {
 
   private hasPlayerNear(
     position: { x: number; y: number; z: number },
-    players: ReadonlyArray<Player>,
   ): boolean {
-    return players.some((player) =>
-      player.position.z === position.z &&
-      Math.abs(player.position.x - position.x) <= this.config.activationRange.x &&
-      Math.abs(player.position.y - position.y) <= this.config.activationRange.y
-    );
+    return this.world.playersNear(position, this.config.activationRange).length >
+      0;
   }
 
   private sectorKey(position: { x: number; y: number; z: number }): string {
