@@ -46,6 +46,7 @@ interface FloorLayers {
   ground: Container;
   objects: Container;
   transient: Container;
+  onTop: Container;
 }
 
 interface RenderedTile {
@@ -85,12 +86,18 @@ export class MapView {
       const ground = new Container();
       const objects = new Container();
       const transient = new Container();
+      // onTop pieces (archway tops, roof edges) draw above the transient
+      // effect/missile layer so a missile passes *under* them, matching
+      // OTClient occlusion. Kept as its own overlay so effects still avoid a
+      // whole-floor re-sort per spawn (that is why they live in `transient`).
+      const onTop = new Container();
       ground.sortableChildren = true;
       objects.sortableChildren = true;
+      onTop.sortableChildren = true;
       const container = new Container();
-      container.addChild(ground, objects, transient);
+      container.addChild(ground, objects, transient, onTop);
       this.container.addChild(container);
-      this.floors.set(z, { container, ground, objects, transient });
+      this.floors.set(z, { container, ground, objects, transient, onTop });
     }
   }
 
@@ -551,7 +558,11 @@ export class MapView {
         x,
         y,
         z,
-        item.layer === "ground" ? floor.ground : floor.objects,
+        item.layer === "ground"
+          ? floor.ground
+          : item.layer === "top-item"
+            ? floor.onTop
+            : floor.objects,
         rendered,
         hooks,
       );
