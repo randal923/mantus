@@ -2,6 +2,15 @@
 
 Part of [Todo 3 — Map and movement](todo-3.md).
 
+> **Status: open umbrella.** Per-entry resolution is delegated to Features
+> 50-53 (world tool actions) and 61-64 (house/zone ownership). Finished
+> self-contained sub-work is logged in
+> [completed/implementation-feature-4-completed.md](completed/implementation-feature-4-completed.md).
+> The aggregate parity-ceiling regression (this feature's stated "disabled
+> entries only decrease" test) has landed as
+> `server/src/mapParityCeiling.test.ts`. Do not archive this feature until the
+> disabled/unresolved counts reach zero.
+
 ## Why
 Every disabled transition, movement action, zone behavior, and invalid placement from the pinned source must be individually resolved so no player-visible map behavior stays silently unsupported. Entries stay disabled rather than ever accepting client-authored destinations.
 
@@ -17,7 +26,9 @@ Canary reference: pinned datapack movement/action registrations for each disable
 
 ## Tests
 - Per-resolved-action converter fixtures.
-- Aggregate count check asserting disabled entries only decrease across re-imports.
+- ~~Aggregate count check asserting disabled entries only decrease across re-imports.~~
+  Landed: `server/src/mapParityCeiling.test.ts` pins current disabled/unresolved
+  counts (by reason/kind) as a monotonic ceiling.
 
 ## Dependencies
 - Features 50-53 (world actions: remaining action kinds, tool actions, registry guarantees, action parity inventory).
