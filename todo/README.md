@@ -203,6 +203,9 @@ interface CreatureState {
     content is the largest pure-content layer in the pinned baseline and only
     consumes the platform built in steps 1–10; nothing else depends on it.
 
+Deferred, measurement-first optimizations from the July 2026 performance pass
+live in [`performance follow-ups`](21-performance-follow-ups.md).
+
 The larger feature files (08, 10, 11, 14, 16, 17, 20) are split into lettered
 one-session units (for example `11a-currency-and-bank.md`); each parent file is
 a short index giving the order within that feature. Implement one lettered unit
