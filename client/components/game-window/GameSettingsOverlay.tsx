@@ -1,3 +1,8 @@
+import { useCallback } from "react";
+import {
+  DEFAULT_TURN_MODIFIER,
+  type TurnModifier,
+} from "@tibia/protocol";
 import { useGameSettingsStore } from "../../stores/useGameSettingsStore";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { GameMenuModal } from "../settings/GameMenuModal";
@@ -16,6 +21,9 @@ export function GameSettingsOverlay() {
     (state) => state.languageSaving,
   );
   const languageError = useGameWindowStore((state) => state.languageError);
+  const turnModifier = useGameWindowStore(
+    (state) => state.uiSettings.turnModifier ?? DEFAULT_TURN_MODIFIER,
+  );
   const setLanguageSaving = useGameWindowStore(
     (state) => state.setLanguageSaving,
   );
@@ -25,6 +33,7 @@ export function GameSettingsOverlay() {
   const setGameMenuOpen = useGameWindowStore(
     (state) => state.setGameMenuOpen,
   );
+  const setUiSettings = useGameWindowStore((state) => state.setUiSettings);
   const gameMenuOpen = useGameWindowStore((state) => state.gameMenuOpen);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const diagonalWalking = useGameSettingsStore(
@@ -32,6 +41,28 @@ export function GameSettingsOverlay() {
   );
   const setDiagonalWalking = useGameSettingsStore(
     (state) => state.setDiagonalWalking,
+  );
+
+  const onTurnModifierChange = useCallback(
+    (nextTurnModifier: TurnModifier) => {
+      const currentRuntime = store.getState().runtime;
+      const next = {
+        ...currentRuntime.uiSettingsRef.current,
+        turnModifier: nextTurnModifier,
+      };
+      currentRuntime.uiSettingsRef.current = next;
+      setUiSettings(next);
+      if (currentRuntime.uiSettingsSaveTimerRef.current) {
+        clearTimeout(currentRuntime.uiSettingsSaveTimerRef.current);
+      }
+      currentRuntime.uiSettingsSaveTimerRef.current = setTimeout(() => {
+        currentRuntime.uiSettingsSaveTimerRef.current = null;
+        currentRuntime.clientRef.current?.updateUiSettings(
+          currentRuntime.uiSettingsRef.current,
+        );
+      }, 800);
+    },
+    [setUiSettings, store],
   );
 
   if (!gameMenuOpen) return null;
@@ -46,6 +77,8 @@ export function GameSettingsOverlay() {
       languageError={languageError}
       diagonalWalking={diagonalWalking}
       onDiagonalWalkingChange={setDiagonalWalking}
+      turnModifier={turnModifier}
+      onTurnModifierChange={onTurnModifierChange}
       onChangeLanguage={(nextLanguage) => {
         setLanguage(nextLanguage);
         setLanguageSaving(true);

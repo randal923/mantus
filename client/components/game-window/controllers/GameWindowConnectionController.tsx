@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import type { ServerMessage } from "@tibia/protocol";
+import {
+  DEFAULT_TURN_MODIFIER,
+  type ServerMessage,
+} from "@tibia/protocol";
 import type { GameClient } from "../../../lib/net/GameClient";
 import type { WorldRenderer } from "../../../lib/render/WorldRenderer";
 import { updateVisibleCreaturesBatch } from "../../../lib/creatures/updateVisibleCreaturesBatch";
@@ -166,7 +169,10 @@ export function GameWindowConnectionController() {
           return;
         }
       }
-      const turnDirection = getKeyboardTurnDirection(event);
+      const turnDirection = getKeyboardTurnDirection(
+        event,
+        runtime.uiSettingsRef.current.turnModifier ?? DEFAULT_TURN_MODIFIER,
+      );
       if (
         turnDirection &&
         runtime.joinedRef.current &&

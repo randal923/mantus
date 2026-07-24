@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export const TURN_MODIFIERS = ["Alt", "Control", "Meta", "Shift"] as const;
+
+export const turnModifierSchema = z.enum(TURN_MODIFIERS);
+
 /** Screen placement and size (CSS px) of the minimap panel's canvas. */
 export const minimapLayoutSchema = z
   .object({
@@ -19,8 +23,12 @@ export const uiSettingsSchema = z
   .object({
     minimap: minimapLayoutSchema.optional(),
     chatPinnedOpen: z.boolean().optional(),
+    turnModifier: turnModifierSchema.optional(),
   })
   .strict();
 
 export type MinimapLayout = z.infer<typeof minimapLayoutSchema>;
+export type TurnModifier = z.infer<typeof turnModifierSchema>;
 export type UiSettings = z.infer<typeof uiSettingsSchema>;
+
+export const DEFAULT_TURN_MODIFIER: TurnModifier = "Shift";

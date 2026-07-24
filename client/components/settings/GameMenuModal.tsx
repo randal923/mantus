@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import type { AccountTier, Language } from "@tibia/protocol";
+import type {
+  AccountTier,
+  Language,
+  TurnModifier,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
@@ -44,6 +48,8 @@ interface GameMenuModalProps {
   onChangeLanguage?: (language: Language) => void;
   diagonalWalking?: boolean;
   onDiagonalWalkingChange?: (enabled: boolean) => void;
+  turnModifier?: TurnModifier;
+  onTurnModifierChange?: (modifier: TurnModifier) => void;
   languageSaving?: boolean;
   languageError?: boolean;
   initialView?: MenuView;
@@ -80,6 +86,8 @@ export function GameMenuModal({
   onChangeLanguage,
   diagonalWalking = true,
   onDiagonalWalkingChange,
+  turnModifier = "Shift",
+  onTurnModifierChange,
   languageSaving = false,
   languageError = false,
   initialView = "menu",
@@ -111,6 +119,15 @@ export function GameMenuModal({
     { value: "ArrowDown", label: t("hotkeys.arrowDown") },
     { value: "ArrowRight", label: t("hotkeys.arrowRight") },
     { value: "Escape", label: t("hotkeys.escape") },
+  ];
+  const turnModifierOptions: ReadonlyArray<{
+    value: TurnModifier;
+    label: string;
+  }> = [
+    { value: "Shift", label: t("hotkeys.modifiers.shift") },
+    { value: "Alt", label: t("hotkeys.modifiers.alt") },
+    { value: "Control", label: t("hotkeys.modifiers.control") },
+    { value: "Meta", label: t("hotkeys.modifiers.meta") },
   ];
   const hotkeyRows: ReadonlyArray<HotkeyRow> = [
     { id: "moveUp", label: t("hotkeys.moveUp") },
@@ -245,6 +262,24 @@ export function GameMenuModal({
                   onDiagonalWalkingChange?.(event.currentTarget.checked)
                 }
                 className="shrink-0"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-3">
+              <span className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-ui-text">
+                  {t("settings.turnModifier")}
+                </span>
+                <span className="text-sm leading-6 text-ui-muted">
+                  {t("settings.turnModifierDescription")}
+                </span>
+              </span>
+              <Dropdown
+                ariaLabel={t("settings.turnModifier")}
+                value={turnModifier}
+                options={turnModifierOptions}
+                disabled={!onTurnModifierChange}
+                onChange={(value) => onTurnModifierChange?.(value)}
+                className="w-36 shrink-0"
               />
             </div>
           </section>

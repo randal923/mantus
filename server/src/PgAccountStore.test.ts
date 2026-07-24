@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Pool } from "pg";
 import { PgAccountStore } from "./PgAccountStore";
 
-describe("PgAccountStore fight modes", () => {
+describe("PgAccountStore", () => {
   it("loads a validated persisted fight mode", async () => {
     const query = vi.fn(async () => ({
       rows: [
@@ -14,7 +14,10 @@ describe("PgAccountStore fight modes", () => {
           premium_until: null,
           mantus_coins: "125",
           language: "en",
-          ui_settings: { chatPinnedOpen: true },
+          ui_settings: {
+            chatPinnedOpen: true,
+            turnModifier: "Alt",
+          },
           fight_mode: { attack: "defensive", chase: true, secure: false },
         },
       ],
@@ -27,7 +30,10 @@ describe("PgAccountStore fight modes", () => {
       "en",
     );
 
-    expect(account.uiSettings).toEqual({ chatPinnedOpen: true });
+    expect(account.uiSettings).toEqual({
+      chatPinnedOpen: true,
+      turnModifier: "Alt",
+    });
     expect(account.mantusCoins).toBe(125);
     expect(account.fightMode).toEqual({
       attack: "defensive",
@@ -47,7 +53,7 @@ describe("PgAccountStore fight modes", () => {
           premium_until: null,
           mantus_coins: "0",
           language: "en",
-          ui_settings: {},
+          ui_settings: { turnModifier: "CapsLock" },
           fight_mode: { attack: "offensive", chase: "yes", secure: true },
         },
       ],
@@ -65,6 +71,7 @@ describe("PgAccountStore fight modes", () => {
       chase: false,
       secure: true,
     });
+    expect(account.uiSettings).toEqual({});
   });
 
   it("updates the account with a parameterized JSON value", async () => {
@@ -77,6 +84,22 @@ describe("PgAccountStore fight modes", () => {
     expect(query).toHaveBeenCalledWith(expect.stringContaining("$2::jsonb"), [
       "account-1",
       JSON.stringify(mode),
+    ]);
+  });
+
+  it("persists the turn modifier in account UI settings", async () => {
+    const query = vi.fn(async () => ({ rowCount: 1 }));
+    const store = new PgAccountStore({ query } as unknown as Pool);
+    const settings = {
+      chatPinnedOpen: true,
+      turnModifier: "Meta",
+    } as const;
+
+    await store.updateUiSettings("account-1", settings);
+
+    expect(query).toHaveBeenCalledWith(expect.stringContaining("$2::jsonb"), [
+      "account-1",
+      JSON.stringify(settings),
     ]);
   });
 });

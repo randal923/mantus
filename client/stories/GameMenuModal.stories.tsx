@@ -17,6 +17,8 @@ const meta = {
     onChangePassword: fn(),
     diagonalWalking: true,
     onDiagonalWalkingChange: fn(),
+    turnModifier: "Shift",
+    onTurnModifierChange: fn(),
   },
 } satisfies Meta<typeof GameMenuModal>;
 
@@ -36,6 +38,11 @@ export const Settings: Story = {
       canvas.getByRole("checkbox", { name: /Diagonal walking/ }),
     );
     await expect(args.onDiagonalWalkingChange).toHaveBeenCalledWith(false);
+    await userEvent.selectOptions(
+      canvas.getByRole("combobox", { name: /Turn modifier/ }),
+      "Alt",
+    );
+    await expect(args.onTurnModifierChange).toHaveBeenCalledWith("Alt");
   },
 };
 

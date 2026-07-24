@@ -1127,6 +1127,8 @@
     "controls": "Controles",
     "diagonalWalking": "Movimento diagonal",
     "diagonalWalkingDescription": "Permite movimento diagonal com teclas pressionadas e o teclado numérico. Caminhar por clique ainda pode usar diagonais.",
+    "turnModifier": "Modificador para virar",
+    "turnModifierDescription": "Segure esta tecla com W, A, S ou D para virar sem andar.",
     "hotkeyMapping": "Mapeamento de Teclas",
     "account": "Conta",
     "accountTier": "Tipo de conta",
@@ -1158,6 +1160,12 @@
     "arrowDown": "Seta para Baixo",
     "arrowRight": "Seta para a Direita",
     "escape": "Escape",
+    "modifiers": {
+      "alt": "Alt",
+      "control": "Control",
+      "meta": "Meta",
+      "shift": "Shift"
+    },
     "inputLabel": "Atalho de {{action}}",
     "resetDefaults": "Restaurar Padrões",
     "previewNotice": "Estes mapeamentos são locais desta prévia e ainda não alteram os controles do jogo."
