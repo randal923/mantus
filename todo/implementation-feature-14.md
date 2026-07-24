@@ -2,23 +2,12 @@
 
 Part of [Todo 6 — Items and inventory](todo-6.md).
 
-## Why
-
-Canary auto-walks the player adjacent to an out-of-reach use/pickup target and retries; we hard-fail the action. Pure QoL, entirely client-side — server reach checks stay authoritative.
-
-## Remaining work
-
-- On an out-of-reach use/pickup, auto-walk adjacent to the target and retry the action once; the server's reach validation remains the real check.
-
-## Implementation
-
-- Client-only: on `item-action-failed` reach errors — or preemptively via the precheck in `/home/randal/code/tibia/client/lib/inventory/validateItemOp.ts` — issue walk intents through `/home/randal/code/tibia/client/lib/net/GameClient.ts` and retry the original action once on arrival.
-- No server changes; no client-side reach decisions are trusted (charter golden rule).
-
-## Tests
-
-- Client test: out-of-reach use triggers walk intents and exactly one retry; a second failure does not loop.
-
-## Dependencies
-
-- None.
+**Completed 2026-07-24.** Client-only QoL: a right-click use / double-click use /
+shift-pickup on an out-of-reach map target auto-walks the player adjacent and
+retries the action once on arrival. `walkStepsToReach` computes the steps that
+end adjacent; `ReachActionScheduler` (unit-tested, extracted from the PixiJS
+`WorldRenderer`) runs the action immediately when in reach, defers it otherwise,
+fires it exactly once on arrival, and cancels on a fresh walk — never looping.
+The server still owns every reach check. The map context-menu "Use" path is not
+covered (documented). Full record, files touched, and verification in
+[completed/implementation-feature-14-completed.md](completed/implementation-feature-14-completed.md).

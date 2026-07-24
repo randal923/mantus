@@ -13,6 +13,7 @@ import type { OutfitColors } from "./AssetStore";
 import { getSharedAssetStore } from "./getSharedAssetStore";
 import { getCreatureSortPosition } from "./getCreatureSortPosition";
 import { getAutoWalkDirections } from "../movement/getAutoWalkDirections";
+import { ReachActionScheduler } from "../movement/ReachActionScheduler";
 import { getMapObjectZ } from "./getMapObjectZ";
 import { getMapPointerPosition } from "./getMapPointerPosition";
 import { getViewportRange } from "./getViewportRange";
@@ -109,6 +110,10 @@ export class WorldRenderer {
   private readonly loadingCreatureIds = new Set<string>();
   private ownPlayerId = "";
   private ownPosition: Position | null = null;
+  /** Walk-then-use QoL: defers an out-of-reach use/pickup until arrival. */
+  private readonly reachScheduler = new ReachActionScheduler((directions) =>
+    this.actions?.autoWalk(directions),
+  );
   private attackTargetId: string | null = null;
   private partyView: PartyView | null = null;
   private guildView: GuildView | null = null;
@@ -211,7 +216,7 @@ export class WorldRenderer {
           (creature) => creature.id === message.playerId,
         );
         if (own) {
-          this.ownPosition = { ...own.position };
+          this.setOwnPosition(own.position);
           this.cameraFallback = {
             x: own.position.x * TILE_SIZE,
             y: own.position.y * TILE_SIZE,
@@ -266,7 +271,7 @@ export class WorldRenderer {
             message.positionRevision,
           );
           if (message.playerId === this.ownPlayerId) {
-            this.ownPosition = { ...message.position };
+            this.setOwnPosition(message.position);
             this.applyOwnPlayerCenter(message.position);
           }
           return;
@@ -281,7 +286,7 @@ export class WorldRenderer {
           this.mapView.creatureLayer(view.floor).addChild(view.container);
         }
         if (message.playerId === this.ownPlayerId) {
-          this.ownPosition = { ...message.position };
+          this.setOwnPosition(message.position);
           this.applyOwnPlayerCenter(message.position);
         }
         return;
@@ -560,7 +565,7 @@ export class WorldRenderer {
     if (!view) {
       this.updatePendingCreature(creatureId, position, direction, revision);
       if (creatureId === this.ownPlayerId) {
-        this.ownPosition = { ...position };
+        this.setOwnPosition(position);
         this.applyOwnPlayerCenter(position);
       }
       return;
@@ -571,9 +576,38 @@ export class WorldRenderer {
       this.mapView.creatureLayer(view.floor).addChild(view.container);
     }
     if (creatureId === this.ownPlayerId) {
-      this.ownPosition = { ...position };
+      this.setOwnPosition(position);
       this.applyOwnPlayerCenter(position);
     }
+  }
+
+  /** Updates the tracked own position and fires a deferred reach action. */
+  private setOwnPosition(position: Position): void {
+    this.ownPosition = { ...position };
+    this.reachScheduler.onMoved(position);
+  }
+
+  private useMapWithReach(tile: Position): void {
+    if (!this.ownPosition) {
+      this.actions?.useMap(tile);
+      return;
+    }
+    this.reachScheduler.request(this.ownPosition, tile, () =>
+      this.actions?.useMap(tile),
+    );
+  }
+
+  private pickupMapItemWithReach(
+    item: MapItemState,
+    position: Position,
+  ): void {
+    if (!this.ownPosition) {
+      this.actions?.pickupMapItem(item, position);
+      return;
+    }
+    this.reachScheduler.request(this.ownPosition, position, () =>
+      this.actions?.pickupMapItem(item, position),
+    );
   }
 
   private readonly onMapDoubleClick = (event: MouseEvent): void => {
@@ -591,10 +625,10 @@ export class WorldRenderer {
     );
     if (event.shiftKey) {
       const item = this.mapView.topServerItem(position);
-      if (item) this.actions.pickupMapItem(item, position);
+      if (item) this.pickupMapItemWithReach(item, position);
       return;
     }
-    this.actions.useMap(this.mapView.interactiveTileFor(position));
+    this.useMapWithReach(this.mapView.interactiveTileFor(position));
   };
 
   private readonly onMapPointerDown = (event: PointerEvent): void => {
@@ -747,7 +781,11 @@ export class WorldRenderer {
       return;
     }
     const directions = getAutoWalkDirections(this.ownPosition, target);
-    if (directions.length > 0) this.actions.autoWalk(directions);
+    if (directions.length > 0) {
+      // A fresh walk destination supersedes any deferred walk-then-use.
+      this.reachScheduler.cancel();
+      this.actions.autoWalk(directions);
+    }
   };
 
   private readonly onMapContextMenu = (event: MouseEvent): void => {
@@ -810,7 +848,7 @@ export class WorldRenderer {
       this.actions.attackTarget(creatureId);
       return;
     }
-    this.actions.useMap(
+    this.useMapWithReach(
       this.mapView.interactiveTileFor(
         getMapPointerPosition(
           point.x,
