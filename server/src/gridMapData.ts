@@ -14,6 +14,11 @@ interface GridMapConfig {
   voids?: ReadonlyArray<readonly [number, number, number]>;
   /** Tiles flagged as a protection zone, as [x, y, z]. */
   protectionZones?: ReadonlyArray<readonly [number, number, number]>;
+  /**
+   * Tiles that do NOT limit floor view (an open shaft/roof gap), as [x, y, z].
+   * Tiles limit floor view by default; list the ones that let sight pass.
+   */
+  transparentFloorView?: ReadonlyArray<readonly [number, number, number]>;
   floors?: ReadonlyArray<number>;
   groundSpeed?: number;
   groundSpeeds?: ReadonlyArray<readonly [number, number, number, number]>;
@@ -47,6 +52,11 @@ export function gridMapData(config: GridMapConfig): MapData {
       positionKey({ x, y, z }),
     ),
   );
+  const transparentFloorView = new Set(
+    (config.transparentFloorView ?? []).map(([x, y, z]) =>
+      positionKey({ x, y, z }),
+    ),
+  );
   const groundSpeeds = new Map(
     (config.groundSpeeds ?? []).map(([x, y, z, speed]) => [
       positionKey({ x, y, z }),
@@ -75,14 +85,15 @@ export function gridMapData(config: GridMapConfig): MapData {
       }
       if (voids.has(positionKey(position))) return undefined;
       const walkable = !blocked.has(positionKey(position));
+      const limitsFloorView = !transparentFloorView.has(positionKey(position));
       return {
         walkable,
         pathable: walkable,
         groundSpeed:
           groundSpeeds.get(positionKey(position)) ?? config.groundSpeed ?? 150,
         blocksProjectile: !walkable,
-        limitsFloorView: true,
-        limitsFloorViewFree: true,
+        limitsFloorView,
+        limitsFloorViewFree: limitsFloorView,
         protectionZone: protectionZones.has(positionKey(position)),
         noPvpZone: false,
         noLogoutZone: false,

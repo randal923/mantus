@@ -2,24 +2,10 @@
 
 Part of [Todo 4 — Rendering and animation](todo-4.md).
 
-## Why
-Parity gap (explicitly optional): underground, the server sends creatures/tile-states only for the player's own z, while the client already draws static floors z±2 with OTClient cover rules. OTClient shows dynamic entities on all drawn underground floors.
-
-## Remaining work
-- Extend `creaturesVisibleFrom`/`mapItemTilesVisibleFrom`/`canSee` to include drawn underground floors instead of own-floor only.
-
-## Implementation
-VERIFIED STILL OPEN: `server/src/World.ts` lines 278-279 — `position.z > GROUND_FLOOR ? [position.z] : ...` in `creaturesVisibleFromFloor`. Change the underground branch to a cover-aware z-range matching `client/lib/render/getVisibleFloors.ts`; update `mapItemTilesVisibleFrom` (`World.ts` line 314) and the `canSee` policy in lockstep so send-filtering and rendering agree — there must remain a single visibility policy.
-
-Charter rule 6 applies: only send floors genuinely visible under cover rules — never leak dynamic entities through cover.
-
-Canary/OTClient reference: OTClient underground floor-visibility (cover) rules already mirrored in `getVisibleFloors.ts`.
-
-## Tests
-- Underground creature on z±1 is visible when uncovered.
-- Underground creature is not leaked through cover.
-- Visibility reconciliation on underground floor change.
-
-## Dependencies
-- Parity decision (explicitly optional deviation).
-- Must stay consistent with the single visibility policy established in the map/movement work (Todo 3).
+**Completed 2026-07-24.** Underground viewers now receive creatures and mutable
+tile-item states for the cover-aware aware range (z±2) instead of their own
+floor only, via a single shared `visibleFloorRange` policy used by
+`creaturesVisibleFromFloor`, `mapItemTilesVisibleFrom`/`...EnteringView`, and
+`canSee` — never leaking dynamic entities past a roof (charter rule 6). Full
+record, files touched, and verification in
+[completed/implementation-feature-6-completed.md](completed/implementation-feature-6-completed.md).

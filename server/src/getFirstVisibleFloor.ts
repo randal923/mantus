@@ -2,13 +2,22 @@ import type { Position } from "@tibia/protocol";
 import type { MapData } from "./MapData";
 
 const GROUND_FLOOR = 7;
+const UNDERGROUND_FLOOR_AWARENESS = 2;
 
 export function getFirstVisibleFloor(
   position: Position,
   map: MapData,
 ): number {
-  if (position.z > GROUND_FLOOR) return position.z;
-  let firstVisibleFloor = 0;
+  // Surface viewers can be roofed all the way down to floor 0; underground
+  // viewers can see at most UNDERGROUND_FLOOR_AWARENESS floors up toward the
+  // surface (matching the client's getVisibleFloors range), and the covering
+  // walk below raises this bound wherever a roof/wall blocks the view. This is
+  // the single send-side cover policy — never reveal a floor past its roof.
+  const lowestFloor =
+    position.z > GROUND_FLOOR
+      ? Math.max(GROUND_FLOOR + 1, position.z - UNDERGROUND_FLOOR_AWARENESS)
+      : 0;
+  let firstVisibleFloor = lowestFloor;
   const neighbors = [
     [0, 0],
     [-1, 0],

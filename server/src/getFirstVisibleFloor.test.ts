@@ -42,6 +42,29 @@ const makeMap = (covered: boolean): MapData => ({
   },
 });
 
+// Underground map: solid floors at z 8..11, with an optional roof on floor 8
+// directly above a z=9 viewer at (10, 10).
+const undergroundMap = (covered: boolean): MapData => ({
+  ...makeMap(false),
+  getTile(position) {
+    if (position.z < 8 || position.z > 11) return undefined;
+    const isRoof =
+      covered && position.z === 8 && position.x === 10 && position.y === 10;
+    return {
+      walkable: true,
+      pathable: true,
+      groundSpeed: 150,
+      blocksProjectile: false,
+      limitsFloorView: isRoof,
+      limitsFloorViewFree: isRoof,
+      protectionZone: false,
+      noPvpZone: false,
+      noLogoutZone: false,
+      pvpZone: false,
+    };
+  },
+});
+
 describe("getFirstVisibleFloor", () => {
   it("allows upper surface floors through an open shaft", () => {
     expect(
@@ -55,9 +78,17 @@ describe("getFirstVisibleFloor", () => {
     ).toBe(7);
   });
 
-  it("keeps underground visibility on the current floor", () => {
+  it("extends underground visibility up through an open shaft", () => {
+    // z=9 viewer with no roof above sees one floor up (to the aware top, 8).
     expect(
-      getFirstVisibleFloor({ x: 10, y: 10, z: 9 }, makeMap(false)),
+      getFirstVisibleFloor({ x: 10, y: 10, z: 9 }, undergroundMap(false)),
+    ).toBe(8);
+  });
+
+  it("stops underground visibility at a covering upper floor", () => {
+    // A roof on floor 8 directly above keeps the viewer on its own floor.
+    expect(
+      getFirstVisibleFloor({ x: 10, y: 10, z: 9 }, undergroundMap(true)),
     ).toBe(9);
   });
 });

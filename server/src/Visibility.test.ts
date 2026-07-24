@@ -372,4 +372,66 @@ describe("Visibility creature projections", () => {
       }),
     );
   });
+
+  it("reconciles the mover's view when it changes underground floors", () => {
+    const world = new World(
+      gridMapData({
+        name: "underground-reconcile",
+        width: 20,
+        height: 20,
+        blocked: [],
+        floors: [8, 9, 10, 11, 12, 13, 14],
+      }),
+      25,
+    );
+    const mover = new Player(makeCharacter("mover"), { x: 5, y: 5, z: 9 });
+    // shallow is only in the aware range from z=9; deep only from z=12.
+    const shallow = makeMonster("monster-instance:shallow:0", 5, 6, 9);
+    const deep = makeMonster("monster-instance:deep:0", 5, 6, 12);
+    world.addPlayer(mover);
+    world.addCreature(shallow);
+    world.addCreature(deep);
+
+    const sent: ServerMessage[] = [];
+    const session = {
+      id: "session-mover",
+      playerId: mover.id,
+      viewRange: { x: 3, y: 3 },
+      knownCreatureIds: new Set<string>(),
+      knownMapItemTiles: new Map(),
+      attackTargetId: null,
+      send: (message: ServerMessage) => sent.push(message),
+      sendSerialized: (message: string) =>
+        sent.push(JSON.parse(message) as ServerMessage),
+    } as unknown as Session;
+    const registry = {
+      sessionFor: (playerId: string) =>
+        playerId === mover.id ? session : undefined,
+      all: () => [session],
+    } as unknown as SessionRegistry;
+    const visibility = new Visibility(world, registry);
+    visibility.announceSpawn(session, mover);
+
+    // At z=9: shallow (same floor) is known, deep (z+3) is out of aware range.
+    expect(session.knownCreatureIds.has(shallow.id)).toBe(true);
+    expect(session.knownCreatureIds.has(deep.id)).toBe(false);
+    sent.length = 0;
+
+    const from = world.relocateCreature(mover, { x: 5, y: 5, z: 12 });
+    visibility.onPlayerTeleported(session, mover, from);
+
+    // At z=12: deep (same floor) joins, shallow (z-3) leaves.
+    expect(session.knownCreatureIds.has(deep.id)).toBe(true);
+    expect(session.knownCreatureIds.has(shallow.id)).toBe(false);
+    expect(sent).toContainEqual({
+      type: "creature-left",
+      creatureId: shallow.id,
+    });
+    expect(sent).toContainEqual(
+      expect.objectContaining({
+        type: "creature-joined",
+        creature: expect.objectContaining({ id: deep.id }),
+      }),
+    );
+  });
 });

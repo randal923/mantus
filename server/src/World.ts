@@ -4,6 +4,7 @@ import type { Creature } from "./creature/Creature";
 import { Monster } from "./creature/Monster";
 import { CombatFieldManager } from "./combat/CombatFieldManager";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
+import { visibleFloorRange } from "./visibleFloorRange";
 import type { MapData } from "./MapData";
 import type { ItemMutation } from "./item/ItemMutation";
 import type { LootOrigin } from "./item/LootOrigin";
@@ -17,8 +18,6 @@ import { overrideMapData } from "./world/overrideMapData";
 import { TileOccupancy } from "./world/TileOccupancy";
 
 export type { MoveResult } from "./world/MoveResult";
-
-const GROUND_FLOOR = 7;
 
 export class World {
   private readonly players = new Map<string, Player>();
@@ -274,13 +273,7 @@ export class World {
     range: ViewRange,
     firstFloor: number,
   ): Creature[] {
-    const floors =
-      position.z > GROUND_FLOOR
-        ? [position.z]
-        : Array.from(
-            { length: GROUND_FLOOR - firstFloor + 1 },
-            (_, index) => firstFloor + index,
-          );
+    const floors = visibleFloorRange(position, firstFloor);
     const creatures = new Set<Creature>();
     for (const z of floors) {
       const shift = position.z - z;

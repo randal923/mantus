@@ -790,3 +790,70 @@ describe("pz-lock blocks protection-zone transitions", () => {
     expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
   });
 });
+
+describe("World underground multi-floor visibility", () => {
+  const RANGE = { x: 8, y: 6 };
+  const openFloor = (z: number, width: number, height: number) =>
+    Array.from({ length: width }, (_, x) =>
+      Array.from({ length: height }, (_, y) => [x, y, z] as const),
+    ).flat();
+
+  const undergroundWorld = (open: boolean) =>
+    new World(
+      gridMapData({
+        name: "underground",
+        width: 14,
+        height: 14,
+        blocked: [],
+        floors: [8, 9, 10, 11],
+        groundSpeed: 50,
+        // When `open`, floor 8 lets sight pass so a z=9 viewer sees up to z=8;
+        // otherwise every tile limits floor view (a solid ceiling).
+        transparentFloorView: open ? openFloor(8, 14, 14) : [],
+      }),
+      STEP_MS,
+    );
+
+  const ids = (world: World, position: { x: number; y: number; z: number }) =>
+    world.creaturesVisibleFrom(position, RANGE).map((creature) => creature.id);
+
+  it("shows a creature on the floor directly below (z+1)", () => {
+    const world = undergroundWorld(false);
+    const viewer = makePlayer(5, 5, 9, "viewer");
+    const below = makePlayer(5, 5, 10, "below");
+    world.addPlayer(viewer);
+    world.addPlayer(below);
+
+    expect(ids(world, viewer.position)).toContain("below");
+  });
+
+  it("does not leak a creature one floor up when the ceiling covers it", () => {
+    const world = undergroundWorld(false);
+    const viewer = makePlayer(5, 5, 9, "viewer");
+    const above = makePlayer(5, 5, 8, "above");
+    world.addPlayer(viewer);
+    world.addPlayer(above);
+
+    expect(ids(world, viewer.position)).not.toContain("above");
+  });
+
+  it("shows a creature one floor up through an open shaft (z-1)", () => {
+    const world = undergroundWorld(true);
+    const viewer = makePlayer(5, 5, 9, "viewer");
+    const above = makePlayer(5, 5, 8, "above");
+    world.addPlayer(viewer);
+    world.addPlayer(above);
+
+    expect(ids(world, viewer.position)).toContain("above");
+  });
+
+  it("does not reveal a creature beyond the aware range (z+3)", () => {
+    const world = undergroundWorld(false);
+    const viewer = makePlayer(5, 5, 8, "viewer");
+    const deep = makePlayer(5, 5, 11, "deep");
+    world.addPlayer(viewer);
+    world.addPlayer(deep);
+
+    expect(ids(world, viewer.position)).not.toContain("deep");
+  });
+});

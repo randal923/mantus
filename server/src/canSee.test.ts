@@ -35,9 +35,26 @@ describe("canSee", () => {
     ).toBe(false);
   });
 
-  it("never reveals other floors underground", () => {
+  it("reveals the underground aware range but not beyond", () => {
+    const viewer = { x: 10, y: 10, z: 9 };
+    // Deeper floors within z+2 are visible; z+3 is out of the aware range.
+    expect(canSee(viewer, { x: 10, y: 10, z: 10 }, RANGE, 7)).toBe(true);
+    expect(canSee(viewer, { x: 10, y: 10, z: 11 }, RANGE, 7)).toBe(true);
+    expect(canSee(viewer, { x: 10, y: 10, z: 12 }, RANGE, 7)).toBe(false);
+    // One floor up is visible when uncovered (cover-aware top floor 8)...
+    expect(canSee(viewer, { x: 10, y: 10, z: 8 }, RANGE, 8)).toBe(true);
+    // ...but a covering roof (firstVisibleFloor = 9) hides it.
+    expect(canSee(viewer, { x: 10, y: 10, z: 8 }, RANGE, 9)).toBe(false);
+  });
+
+  it("never reveals the surface floor to an underground viewer", () => {
+    // A too-low firstVisibleFloor must not leak the ground floor: the aware
+    // range clamps the top to max(GROUND_FLOOR + 1, z - 2).
     expect(
-      canSee({ x: 10, y: 10, z: 9 }, { x: 10, y: 10, z: 10 }, RANGE, 9),
+      canSee({ x: 10, y: 10, z: 8 }, { x: 10, y: 10, z: 7 }, RANGE, 7),
+    ).toBe(false);
+    expect(
+      canSee({ x: 10, y: 10, z: 9 }, { x: 10, y: 10, z: 7 }, RANGE, 0),
     ).toBe(false);
   });
 
@@ -45,8 +62,5 @@ describe("canSee", () => {
     expect(
       canSee({ x: 10, y: 10, z: 7 }, { x: 11, y: 11, z: 6 }, RANGE, 6),
     ).toBe(true);
-    expect(
-      canSee({ x: 10, y: 10, z: 8 }, { x: 10, y: 10, z: 7 }, RANGE, 7),
-    ).toBe(false);
   });
 });

@@ -4,6 +4,7 @@ import {
   SHOVEL_HOLE_PAIRS,
 } from "../action/shovelHolePairs";
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
+import { visibleFloorRange } from "../visibleFloorRange";
 import { canSee } from "../canSee";
 import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
@@ -13,8 +14,6 @@ import type { MapData } from "../MapData";
 import type { MapItem } from "../MapItem";
 import type { MapTransition } from "../MapTransition";
 import { positionKey } from "../positionKey";
-
-const GROUND_FLOOR = 7;
 
 export interface TilePassabilityOverride {
   readonly walkable: boolean;
@@ -250,13 +249,7 @@ export class DynamicMapItems {
 
   mapItemTilesVisibleFrom(position: Position, range: ViewRange) {
     const firstFloor = getFirstVisibleFloor(position, this.map);
-    const floors =
-      position.z > GROUND_FLOOR
-        ? [position.z]
-        : Array.from(
-            { length: GROUND_FLOOR - firstFloor + 1 },
-            (_, index) => firstFloor + index,
-          );
+    const floors = visibleFloorRange(position, firstFloor);
     const tiles = [];
     for (const z of floors) {
       const shift = position.z - z;
@@ -285,13 +278,7 @@ export class DynamicMapItems {
   ) {
     const firstFloor = getFirstVisibleFloor(position, this.map);
     const previousFirstFloor = getFirstVisibleFloor(from, this.map);
-    const floors =
-      position.z > GROUND_FLOOR
-        ? [position.z]
-        : Array.from(
-            { length: GROUND_FLOOR - firstFloor + 1 },
-            (_, index) => firstFloor + index,
-          );
+    const floors = visibleFloorRange(position, firstFloor);
     const tiles = [];
     for (const z of floors) {
       const shift = position.z - z;
