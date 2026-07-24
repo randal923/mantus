@@ -2,6 +2,15 @@
 
 Part of [Todo 5 — Creatures, spawns, and AI](todo-5.md).
 
+> **Status: open.** The aggregate definition/placement parity pins + report
+> reconciliation have landed (`server/src/spawn/creatureParityGate.test.ts` and
+> `CreaturePerformance.test.ts`; zero-unreviewed-fields gate in
+> `creatureImportReport.test.ts` from Feature 9). Still open: per-entry review of
+> the duplicate/ambiguous/blocked/out-of-map buckets, stable variant-id
+> addressing in the importer, and full gate closure — which depends on Feature 9's
+> field-typing (blocked on Todo 11/16). Finished sub-work is logged in
+> [completed/implementation-feature-10-completed.md](completed/implementation-feature-10-completed.md).
+
 ## Why
 
 Import normalization currently resolves duplicates and bad placements in aggregate; final parity requires each one reviewed individually, valid variants kept addressable, and the counts locked by tests so regressions cannot slip in.

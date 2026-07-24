@@ -26,6 +26,13 @@ describe("full-world creature performance budgets", () => {
     expect(loaded.npcTypes.size).toBe(956);
     expect(loaded.slots).toHaveLength(84_294);
     expect(loaded.slots.filter((slot) => slot.enabled)).toHaveLength(83_493);
+    // Placement counts pinned per kind (Feature 10 parity gate).
+    expect(loaded.slots.filter((slot) => slot.kind === "monster")).toHaveLength(
+      83_286,
+    );
+    expect(loaded.slots.filter((slot) => slot.kind === "npc")).toHaveLength(
+      1_008,
+    );
     expect(loadMs).toBeLessThan(2_000);
 
     const localSlot = loaded.slots.find((slot) => slot.enabled);
