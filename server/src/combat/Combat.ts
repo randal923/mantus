@@ -206,6 +206,7 @@ export class Combat {
       this.feedback.reject(session, now);
       return;
     }
+    session.pendingManualActionBarActivation = null;
     this.feedback.setTarget(session, target.id, now);
   }
 
@@ -214,6 +215,7 @@ export class Combat {
       session.sendError("join-required");
       return;
     }
+    session.pendingManualActionBarActivation = null;
     this.feedback.setTarget(session, null, now);
   }
 
@@ -304,6 +306,33 @@ export class Combat {
     intent: ActivateActionBarMessage,
     now: number,
   ): void {
+    const action = session.actionBar[intent.slotIndex]?.action;
+    const cooldown = this.actionBarCooldown(session, intent.slotIndex);
+    if (
+      action &&
+      action.kind !== "text" &&
+      cooldown.readyAt <= now &&
+      this.actionBarTemporarilyBlockedByItems(session, action)
+    ) {
+      const player = playerForSession(this.world, session);
+      if (!player) {
+        session.sendError("join-required");
+        return;
+      }
+      session.pendingManualActionBarActivation = {
+        intent: { ...intent },
+        action,
+        attackTargetId: session.attackTargetId,
+        direction: player.direction,
+      };
+      session.send({
+        type: "action-bar-activation-result",
+        slotIndex: intent.slotIndex,
+        accepted: true,
+      });
+      return;
+    }
+    session.pendingManualActionBarActivation = null;
     const errorRevision = session.errorRevision;
     const started = this.activateActionBarSlot(
       session,
@@ -344,9 +373,103 @@ export class Combat {
     this.conditionSystem.tick(now);
     this.moveFearedCreatures(now);
     for (const session of this.registry.all()) {
+      this.activatePendingManualActionBar(session, now);
       this.actionBot.tick(session, now);
       this.autoAttack.tickPlayerAttack(session, now);
     }
+  }
+
+  private activatePendingManualActionBar(
+    session: Session,
+    now: number,
+  ): void {
+    const pending = session.pendingManualActionBarActivation;
+    if (!pending) return;
+    const action = session.actionBar[pending.intent.slotIndex]?.action;
+    const player = playerForSession(this.world, session);
+    if (
+      !player ||
+      !action ||
+      action.kind === "text" ||
+      action !== pending.action ||
+      (this.actionUsesAttackTarget(action) &&
+        session.attackTargetId !== pending.attackTargetId) ||
+      (this.actionUsesDirection(action) &&
+        player.direction !== pending.direction)
+    ) {
+      session.pendingManualActionBarActivation = null;
+      return;
+    }
+    if (this.actionBarTemporarilyBlockedByItems(session, action)) return;
+    session.pendingManualActionBarActivation = null;
+    if (
+      this.actionBarCooldown(session, pending.intent.slotIndex).readyAt > now
+    ) {
+      return;
+    }
+    session.actionBotSuppressedAt = now;
+    const errorRevision = session.errorRevision;
+    const started = this.activateActionBarSlot(
+      session,
+      pending.intent.slotIndex,
+      pending.intent.target,
+      now,
+      false,
+    );
+    if (!started && session.errorRevision === errorRevision) {
+      session.sendError("combat-action-failed");
+    }
+  }
+
+  private actionBarTemporarilyBlockedByItems(
+    session: Session,
+    action: Exclude<
+      NonNullable<Session["actionBar"][number]["action"]>,
+      { readonly kind: "text" }
+    >,
+  ): boolean {
+    if (action.kind === "spell") {
+      const spell = this.spells.get(action.spellId);
+      return (
+        session.itemOperationPending ||
+        Boolean(spell?.conjure && session.itemPersistsPending > 0)
+      );
+    }
+    const rune = this.spells.getRune(action.itemTypeId);
+    if (rune) {
+      return (
+        session.itemOperationPending || session.itemPersistsPending > 0
+      );
+    }
+    if (getPotionDefinition(action.itemTypeId)) {
+      return session.itemOperationPending || session.potionPersistPending;
+    }
+    return false;
+  }
+
+  private actionUsesAttackTarget(
+    action: Session["actionBar"][number]["action"],
+  ): boolean {
+    if (!action || action.kind === "text") return false;
+    if (action.kind === "item") return action.mode === "use-on-target";
+    const spell = this.spells.get(action.spellId);
+    return Boolean(
+      spell &&
+        getSpellActionTargetMode(spell.targetKind, action.targetMode) ===
+          "attack-target",
+    );
+  }
+
+  private actionUsesDirection(
+    action: Session["actionBar"][number]["action"],
+  ): boolean {
+    if (!action || action.kind !== "spell") return false;
+    const spell = this.spells.get(action.spellId);
+    return Boolean(
+      spell &&
+        getSpellActionTargetMode(spell.targetKind, action.targetMode) ===
+          "direction",
+    );
   }
 
   private activateAutomaticActionBarSlot(

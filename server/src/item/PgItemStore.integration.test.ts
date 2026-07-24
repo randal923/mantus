@@ -212,6 +212,8 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       "029_character_potion_action_bar.sql",
       "032_remove_loose_inventory.sql",
       "034_unified_action_bar.sql",
+      "035_fast_combat_item_consumption.sql",
+      "036_restrict_combat_item_consumption.sql",
     ]) {
       await setupClient.query(
         await readFile(`${migrationsDirectory}${migration}`, "utf8"),
@@ -539,6 +541,54 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     await expect(
       store.moveToContainer(characterId, helmetId, 7, pouchId, 1, 3),
     ).rejects.toThrow("stale item revision");
+  });
+
+  it("atomically consumes and audits exactly once under combat replay", async () => {
+    const runeId = await insertItem(3155, 2, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 2,
+    });
+
+    const results = await Promise.allSettled([
+      store.consume(characterId, runeId, 1, 1, "rune"),
+      store.consume(characterId, runeId, 1, 1, "rune"),
+    ]);
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    expect(await itemRow(runeId)).toMatchObject({ count: 1, version: 2 });
+    expect(await auditRows("item-destroyed")).toEqual([
+      expect.objectContaining({
+        item_id: runeId,
+        details: expect.objectContaining({
+          itemTypeId: 3155,
+          count: 1,
+          reason: "rune",
+        }),
+      }),
+    ]);
+  });
+
+  it("atomically removes and audits the final combat item", async () => {
+    const runeId = await insertItem(3155, 1, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 2,
+    });
+
+    const mutation = await store.consume(
+      characterId,
+      runeId,
+      1,
+      1,
+      "rune",
+    );
+
+    expect(mutation.removedItemIds).toEqual([runeId]);
+    expect(mutation.after).toEqual([]);
+    expect(await itemRow(runeId)).toBeUndefined();
+    expect(await auditRows("item-destroyed")).toHaveLength(1);
   });
 
   it("atomically restores health, consumes one potion, returns a flask, and audits replay", async () => {

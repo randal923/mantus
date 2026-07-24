@@ -6,7 +6,9 @@ import {
   DEFAULT_FIGHT_MODE,
   PROTOCOL_LIMITS,
   type ClientMessage,
+  type ActivateActionBarMessage,
   type ActionBar,
+  type ActionBarAction,
   type ActionBotSettings,
   type Direction,
   type FightMode,
@@ -58,6 +60,12 @@ export class Session {
   >();
   readonly actionBotRuleReadyAt = new Map<string, number>();
   actionBotSuppressedAt = Number.NEGATIVE_INFINITY;
+  pendingManualActionBarActivation: {
+    readonly intent: ActivateActionBarMessage;
+    readonly action: ActionBarAction;
+    readonly attackTargetId: string | null;
+    readonly direction: Direction;
+  } | null = null;
   errorRevision = 0;
   actionBar: ActionBar = createDefaultActionBar();
   actionBotSettings: ActionBotSettings = {

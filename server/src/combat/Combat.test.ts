@@ -1572,6 +1572,118 @@ describe("Combat", () => {
     ).toMatchObject({ count: 1, version: 2 });
   });
 
+  it("retains one ready manual rune activation while an item operation is busy", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3155,
+          mode: "use-on-target",
+        },
+      ]),
+    });
+    const monster = makeMonster(
+      "monster-instance:queued-rune-target:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({ health: 500, maxHealth: 500 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.combat.selectTarget(harness.session, monster.id, 900);
+    harness.session.itemOperationPending = true;
+
+    harness.combat.activateActionBar(
+      harness.session,
+      { type: "activate-action-bar", slotIndex: 0 },
+      1_000,
+    );
+
+    expect(harness.sent).toContainEqual({
+      type: "action-bar-activation-result",
+      slotIndex: 0,
+      accepted: true,
+    });
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 2, version: 1 });
+
+    harness.session.itemOperationPending = false;
+    harness.combat.tick(1_025);
+    await settleItems(harness, 1_050);
+
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+  });
+
+  it("does not replay a repeated hotkey press after its first rune commits", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+      actionBar: actionBarWith([
+        {
+          kind: "item",
+          itemTypeId: 3155,
+          mode: "use-on-target",
+        },
+      ]),
+    });
+    const monster = makeMonster(
+      "monster-instance:repeated-rune-target:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({ health: 500, maxHealth: 500 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.combat.selectTarget(harness.session, monster.id, 900);
+
+    harness.combat.activateActionBar(
+      harness.session,
+      { type: "activate-action-bar", slotIndex: 0 },
+      1_000,
+    );
+    harness.combat.activateActionBar(
+      harness.session,
+      { type: "activate-action-bar", slotIndex: 0 },
+      1_000,
+    );
+    await settleItems(harness, 1_025);
+    harness.combat.tick(1_025);
+
+    expect(
+      harness.items
+        .inventorySnapshot(PLAYER_ID)
+        ?.items.find((item) => item.id === RUNE_ID),
+    ).toMatchObject({ count: 1, version: 2 });
+    expect(
+      harness.sent.filter(
+        (message) =>
+          message.type === "error" && message.code === "spell-exhausted",
+      ),
+    ).toHaveLength(0);
+  });
+
   it("keeps a targeted action pending when the server rejects its target", async () => {
     const harness = await makeHarness({
       character: makeLeveledCharacter(50, "Knight", 15),

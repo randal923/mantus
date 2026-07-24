@@ -14,8 +14,8 @@ import type { PotionUseRequest } from "./PotionUseRequest";
 import type { PotionUseResult } from "./PotionUseResult";
 import { requireReturnedItem } from "./requireReturnedItem";
 import { requireVersion } from "./requireVersion";
+import { consumeOwnedCombatItemQuery } from "./sql/consumeOwnedCombatItemQuery";
 import { decrementItemCountUpdate } from "./sql/decrementItemCountUpdate";
-import { deleteItemById } from "./sql/deleteItemById";
 import { incrementPotionFlaskUpdate } from "./sql/incrementPotionFlaskUpdate";
 import { insertPotionFlask } from "./sql/insertPotionFlask";
 import { insertItemWrittenAudit } from "./sql/insertItemWrittenAudit";
@@ -88,47 +88,34 @@ export class PgItemUseOps {
     });
   }
 
-  consume(
+  async consume(
     characterId: string,
     itemId: string,
     expectedVersion: number,
     count: number,
     reason: "rune" | "ammunition" | "break" | "food",
   ): Promise<ItemMutation> {
-    return withSerializableTransaction(this.pool, async (client) => {
-      await this.locks.lockCharacter(client, characterId);
-      const row = await this.locks.lockItem(client, itemId);
-      requireVersion(row, expectedVersion);
-      await this.guards.requireOwned(client, row.id, characterId);
-      if (!Number.isInteger(count) || count < 1 || count > row.count) {
-        throw new Error("invalid consume count");
-      }
-      const before = itemFromRow(row);
-      if (count === row.count) {
-        await client.query(deleteItemById, [row.id]);
-        await this.audit.destruction(
-          client,
-          characterId,
-          before,
-          count,
-          reason,
-        );
-        return { before, after: [], removedItemIds: [row.id] };
-      }
-      const result = await client.query<ItemRow>(decrementItemCountUpdate, [
-        row.id,
-        count,
-      ]);
-      const after = requireReturnedItem(result.rows[0]);
-      await this.audit.destruction(
-        client,
-        characterId,
-        before,
-        count,
-        reason,
-      );
-      return { before, after: [after] };
-    });
+    const result = await this.pool.query<{
+      before_item: ItemRow;
+      after_item: ItemRow | null;
+      removed_item_id: string | null;
+    }>(consumeOwnedCombatItemQuery, [
+      characterId,
+      itemId,
+      expectedVersion,
+      count,
+      reason,
+    ]);
+    const row = result.rows[0];
+    if (!row) throw new Error("combat item consumption returned no result");
+    const before = itemFromRow(row.before_item);
+    return {
+      before,
+      after: row.after_item ? [itemFromRow(row.after_item)] : [],
+      ...(row.removed_item_id
+        ? { removedItemIds: [row.removed_item_id] }
+        : {}),
+    };
   }
 
   usePotion(request: PotionUseRequest): Promise<PotionUseResult> {
