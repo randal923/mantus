@@ -1,0 +1,16 @@
+# Todo 8 — Combat, spells, and conditions
+
+The combat core shipped: bounded intents with execution-time re-checks, server-owned formulas/RNG, full monster-spell parity (all 171 registered monster-spell names resolved to reviewed TypeScript), conditions, potions, monster combat AI, action bars, and — most recently (`4b332a1` spell-in-chat, `2e25fa9` magic rope) — spell words castable via chat plus exani tera/exani hur as `worldAction` spells resolved by movement rules (see [done.md](done.md)). What remains is potion sound/speech polish, two missing spell icons, advanced targeting systems, the last player support-spell callbacks, custom combat areas, the spell-report zero-disabled gate (currently 236 total / 153 supported / 83 unsupported), action-bar polish, and the recorded gaps in spell-words-via-chat.
+
+## Remaining features
+
+- [ ] **Feature 21 — Potion sound and target monster-say** — Canary plays a potion-use sound and the target says `Aaaah...`; blocked on a shared item-sound/creature-speech protocol surface. See [implementation](implementation-feature-21.md).
+- [ ] **Feature 22 — Spell artwork for Blank Rune and Conjure Royal Star** — client-only icon gap; pinned OTClient data lacks valid indices for these two. See [implementation](implementation-feature-22.md).
+- [ ] **Feature 23 — Advanced targeting and encounter interactions** — attack/follow, challenge/taunt, aim-at-target, boss difficulty, hazard, encounter, and combat-analyzer systems as bounded intents and server-owned state. See [implementation](implementation-feature-23.md).
+- [ ] **Feature 24 — Remaining player support-spell callbacks** — the unfinished slice of pinned player spell registrations (food creation, creature illusion, challenge, summons/chains, Monk spells). See [implementation](implementation-feature-24.md).
+- [ ] **Feature 25 — Custom combat areas for disabled player spells** — custom tile matrices and direction-dependent areas representable without runtime Lua. See [implementation](implementation-feature-25.md).
+- [ ] **Feature 26 — Spell report zero-disabled gate** — the generated spell report must distinguish non-content from registered gameplay definitions and reach zero disabled entries. See [implementation](implementation-feature-26.md).
+- [ ] **Feature 27 — Action-bar polish** — accepted gaps (2026-07-20): ignored acks, debounced saves that can lose edits, spell-only slots. See [implementation](implementation-feature-27.md).
+- [ ] **Feature 28 — Spell-words-via-chat completion** — accepted gaps (2026-07-24): name-parameterized casts, exani hur from the action bar, speech mode, yell, step-cooldown fizzles. See [implementation](implementation-feature-28.md).
+
+[Back to overview](README.md)

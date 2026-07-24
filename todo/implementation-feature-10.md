@@ -1,0 +1,32 @@
+# Feature 10 — Placement disambiguation and creature parity gate
+
+Part of [Todo 5 — Creatures, spawns, and AI](todo-5.md).
+
+## Why
+
+Import normalization currently resolves duplicates and bad placements in aggregate; final parity requires each one reviewed individually, valid variants kept addressable, and the counts locked by tests so regressions cannot slip in.
+
+## Remaining work
+
+- Resolve every duplicate/ambiguous creature definition, blocked/out-of-map placement, appearance correction, and intentionally invisible creature individually.
+- Keep valid variants addressable instead of picking one by filename accident.
+- Add aggregate parity tests for definition and placement counts; current pins: 911 monster types, 956 NPC types, 83,286 monster placements, 1,008 NPC placements.
+- Gate closure on zero unreviewed creature/NPC gameplay fields or callbacks.
+
+## Implementation
+
+- Work from the alias/duplicate/blocked sections of `/home/randal/code/tibia/content/world-import-report.json` and `/home/randal/code/tibia/content/starter-import-report.json`.
+- Variant addressing likely needs stable variant ids in `/home/randal/code/tibia/content/monsters/world-monsters.json` plus support in `/home/randal/code/tibia/tools/importCanaryCreatures.mjs`.
+- Extend the aggregate pin tests in `/home/randal/code/tibia/server/src/spawn/loadCreatureContent.test.ts` and `/home/randal/code/tibia/server/src/spawn/CreaturePerformance.test.ts` with count assertions and a zero-unreviewed-fields assertion over the generated report.
+- All resolution is offline importer/content work; runtime spawn behavior stays inside the tick-owned `SpawnManager` with its execution-time re-checks unchanged.
+
+## Tests
+
+- Aggregate pins: exact monster-type, NPC-type, monster-placement, and NPC-placement counts asserted.
+- Zero-unreviewed-fields assertion over `world-import-report.json` (fails if any gameplay field or callback is unreviewed).
+- Variant-id stability test: re-running the importer preserves variant ids.
+
+## Dependencies
+
+- Feature 9 (importer typed-data completeness) must land first.
+- Delegated owners: Todo 9 (Features 29–31), Todo 11 (Features 37–42), Todo 16 (Features 77–78).

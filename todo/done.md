@@ -1,0 +1,280 @@
+# Completed work
+
+Everything already shipped toward pinned Canary parity, grouped by area and
+mapped to the old todo numbering. Recorded from the 2026-07-24 backlog audit.
+Remaining work lives in [`todo-1.md` … `todo-22.md`](README.md); this file is
+the permanent record of what is done.
+
+---
+
+## Foundations and migrations (old todo 00)
+- Source provenance pinned in `content/source-manifest.json` (exact map, DAT/SPR, Canary commit, OTClient commit, converter version, hashes); conversion fails on asset/map/content era mismatch.
+- No downloaded Lua is ever executed during imports; only a whitelisted literal subset is parsed offline (callbacks/function calls/unknown constants rejected); procedural monster/NPC scripts require a TypeScript reimplementation.
+- Migration system replaced `server/db/schema.sql` entirely: numbered migrations in `server/db/migrations/` (36 migrations, `001_accounts.sql` through `036_restrict_combat_item_consumption.sql`) plus a `schema_migrations(version, applied_at)` table.
+- `server/scripts/migrate.ts` takes a Postgres advisory lock, applies each migration once in one transaction, fails on changed checksum.
+- `yarn db:migrate` is the only schema-changing command (root/server package.json); Yarn used throughout.
+- CI covers migrate-from-empty and migrate-from-current-schema in `.github/workflows/migrations.yml`; nothing runs migrations from the game tick.
+- Completion gates passed: reproducible provenance manifest; machine-readable parity inventory (`content/canary-parity-inventory.json`, `tools/buildCanaryParityInventory.mjs`, `tools/verifyCanaryParityInventory.mjs`) that fails CI on missing/ignored/ownerless entries; migrations serialized, transactional, checksummed, CI-covered.
+
+## Canary parity ledger (old todo 00a)
+- 1 of 12 required workstreams checked: machine-readable source inventory covering Canary XML, Lua registrations, map/spawn content, item definitions, protocol-facing systems, and persistent player/world systems, with CI detection of disappearing/ownerless entries.
+- World creature import enables all 83,286 monster and 1,008 NPC placements.
+- Static item numbers and appearance semantics are imported.
+
+## Characters and saved world entry (old todo 01)
+- `characters` migration (`003_characters.sql`): immutable id, account FK, display/normalized name, vocation, level/exp, hp/mana, capacity, x/y/z, direction, outfit fields, town/temple id, timestamps, `last_login_at`, optimistic version.
+- Globally unique normalized names + bounded characters-per-account enforced in DB transaction and service.
+- Explicit `Character`, `CharacterSummary`, `CreateCharacterInput`, `CharacterSaveSnapshot` types; persistence model separate from public creature projection.
+- Outfits stored as palette indexes + allowed look type, not client RGB or client-claimed unlocks.
+- Expanding state in later normalized migrations (`007_progression.sql`, `014_character_storages.sql`, …), not a JSON blob.
+- Character-list / create-character / select-character flows; each message zod-defined in `protocol/src/character.ts` with max byte size and rate expectations; rename/delete deferred.
+- `account_id` always derived from the authenticated session.
+- Server-side name validation: normalized uniqueness, length, allowed characters/spacing, reserved names, impersonation policy.
+- Server chooses starter vocation options, stats, outfit ownership, town, spawn; client only selects from advertised options.
+- Ownership re-checked at selection; atomic one-live-session-per-character claim kicks the older session.
+- Saved position validated against current map at login with temple fallback, optimistic versioning; `last_login_at` set only after successful world entry.
+- Only selected character's private stats sent; lists are summaries. `placeholderCharacter.ts` removed; HUD renders the real projection.
+- `CharacterStore` interface + `PgCharacterStore` with parameterized queries (`server/src/character/`).
+- Full aggregate loaded once at world entry; locked against concurrent online loads; synchronous in-tick mutation; queued immutable versioned save snapshots; dirty-interval/logout/shutdown saves with capped retry + unsaved-players metric; stale saves cannot overwrite newer versions; item/economy ownership excluded from snapshot path.
+- Client: character-select screen with loading/empty/failure/reconnect/selected states (`client/components/characters/`); free/premium status; server-driven create form; portraits colorized from saved palette indexes.
+- Tests: pg-backed name-race, slot-limit race, cross-account list/select denial, forged position/stats/outfit/vocation rejected, two connections → one live session, stale-save rollback, invalid-position temple recovery, reconnect without leaking other characters.
+
+## Map semantics and multi-floor movement (old todo 02)
+- Converter exports all floors 0-15 for server navigation and client regions; decodes unique/action ids, text, subtype/count, charges, depot/door data, teleports, tile flags; merges OTBM ids with `items.xml` semantics (blocking, projectile/path blocking, ground speed, elevation, stack order, floor-change direction, movable/pickupable, container, door, field, hangable).
+- Explicit floor-transition metadata exported (stairs, ladders, ramps, holes, rope spots, teleports with source/destination rules); floor-change items with absent Canary-compatible targets classified and kept disabled as unresolved metadata.
+- External spawn-file/town references preserved; immutable decoration classified separately from server-owned mutable world items; generated format versioned with source hashes; staging-directory build with atomic replace; conversion fails on unknown attributes, out-of-range positions, era mismatches, duplicate transitions, invalid destinations.
+- Server: one typed `Position` + z-aware key utility; z-aware `getTile`/`isWalkable`/`getGroundSpeed`/`blocksProjectile`/`getTransition`; occupancy/spatial buckets keyed x/y/z (`server/src/MapData.ts`, `MapTransition.ts`, `MapAction.ts`, `SpatialGrid.ts`, `World.ts`, `MovementHandler.ts`, `server/src/world/MovementRules.ts`).
+- Movement packets are direction/intents only; tick-time re-check of adjacency, ownership, walkability, occupancy, speed delay, conditions, transition rules; cardinal stairs/ramps with Tibia-compatible offsets incl. step-up/auto step-down; ladder/hole/rope/shovel/teleport as server-side world actions; Canary-compatible diagonal movement + bounded auto-walk with per-step revalidation and correct diagonal duration; walk duration from server speed x ground speed x diagonal factor x conditions; bounded corrections carry authoritative position/revision.
+- Visibility: floor-aware viewport tests (above-ground vs underground rules, cover reduction); reconciliation after every transition; one visibility policy filters dynamic tiles/items/creatures; region-delivery publicity documented.
+- Tests: converter fixtures (ground, borders, blocking, speed, subtype/action, every floor-change kind, invalid data); stair/ramp offsets in every direction; forged destination / non-adjacent / illegal z rejected; early speed replay and blocked transition destination rejected at execution; simultaneous moves serialize to one winner; equal x/y across floors no collide/leak; reconnect after floor change; deterministic outputs per manifest.
+
+## Rendering, animation, floors, and occlusion (old todo 03)
+- Atlas/appearance layer exposes every animation phase and timing mode (~4,887 animated item types; water ids 622, 629, 4597); pure `getItemAnimationPhase(appearance, elapsedMs, instanceSeed)` supporting the legacy async 500ms cycle, API ready for enhanced animator metadata; stable per-instance seed for async items, shared clock for synchronized; render clock in Pixi's ticker swaps textures on existing sprites; registry registers/deregisters animated items as regions stream, stops ticker work for invisible regions; exact animator phase durations/start phase/loop type/patterns/light decoded from matching DAT; animation kept visual-only.
+- Floor-aware rendering: visible floors per OTClient rules; all visible regions/floors drawn top-down with correct x/y projection shift; dynamic entities drawn only on their own floor within authorized view; stair/teleport floor+camera change as one coherent update with interpolation rebase; bounded region cache/unload.
+- Draw order: OTBM stack positions + DAT flags → explicit layers (ground, borders, bottom, common, creatures, effects, top); Tibia reverse ordering for common stackables; creatures between common and always-on-top (roofs/arches occlude); cumulative item elevation applied to feet/outfits/health bars/names with cap; multi-tile/oversized sprites, displacement/anchors, NW-neighbor spill handled; nameplates/health bars anchored to final elevated position with deterministic overlap layering.
+- File surface: `client/lib/render/getItemAnimationPhase.ts`, `AnimatedMapItemRegistry.ts`, `getVisibleFloors.ts`, `getTileRenderLayers.ts`, `AssetStore.ts`; pinned DAT is legacy (`enhancedAnim: false`) with 500ms timing at load time.
+- All required tests passed: phase-boundary units, registry cleanup on region unload, stack-order snapshot fixtures, creature/nameplate elevation on stacked parcels, arch/canopy occlusion, visible floors before/during/after stairs, dense-water profiling bounded by visible animated items.
+- 2026-07-20 audit fixes: liquid grounds no longer stripped (trashholder→mutable misclassification), multi-tile pieces sorted at anchor, `limitsFloorView` uses OTClient first-stack-thing rule, underground cover calculation added, surface viewers can see down to ground floor.
+
+## Creatures, world spawns, respawns, and AI (old todo 04)
+- OTBM external spawn import: monster positions from `otservbr-monster.xml`, NPCs from `otservbr-npc.xml`, with center/radius/offset resolution, spawn time, and direction preserved.
+- Import normalization with hard failure on unmatched placements; the report covers aliases, duplicates, out-of-map positions, blocked tiles, and unsupported definitions.
+- Typed project-native `MonsterType` format (outfit, health, speed, flags, target strategy, attacks/defenses, elements, immunities, summons, voices, loot refs, experience, corpse id); no Canary Lua execution — a whitelisted literal subset is parsed offline and procedural callbacks are reimplemented as reviewed TypeScript.
+- Curated starter-region slice first, then all 84,294 world placements enabled after memory/spawn/AI/pathfinding/tick benchmarks passed.
+- Server-only `Creature` base shared by `Player`/`Monster`/`Npc`: generalized occupancy, spatial queries, visibility deltas, protocol ids; exact stats stay server-only (viewers get health percentage); non-colliding id namespace.
+- `SpawnManager` owned by the game tick (no timer-callback mutation); stable spawn-slot ids separate from live instances; execution-time re-check of tile/walkability/occupancy/region activation; documented restart semantics; region activation never heals/duplicates/rerolls; spawns emitted as ordinary visibility deltas.
+- Minimal AI: bounded tick schedules with a per-tick work budget; idle/walk-home/random-walk/acquire/chase/lose-target/return-home states; server-side z-aware A* with caching, leash/floor bounds, occupied-destination recovery; server-owned, deterministic-under-seed target selection and RNG.
+- Client: generic `CreatureView` by kind/outfit/direction with movement animation; names/health % without stat leaks; battle list built from visible projections with stable ids.
+- All required tests pass: spawn offset/centerz resolution, no duplicate live creatures per slot, single respawn per death, safe blocked-tile retry, AI blocker/floor/budget limits, hidden creatures absent from packets, full-world load/tick/pathfinding benchmarks with explicit budgets.
+- 911-monster audit vs pinned Canary applied shared corrections: `runHealth` as absolute HP threshold, invisibility-immunity sees invisible targets, speed-zero monsters never move when fleeing/dancing, 407 untargeted beam/cone abilities face the current target; all 1,561 voice lines from 585 speakers and all 77 static summon rows from 69 summoners with Canary global/per-type limits.
+- Shared movement/spawn flags `isBlockable`, `canWalkOnPoison`, `canWalkOnFire`, `canWalkOnEnergy` with authoritative field ownership, duration, pathfinding, step validation, and damage.
+
+## Items, inventory, equipment, and map use (old todo 05)
+- Typed `ItemType` catalog from DAT metadata + static `items.xml` rules; mutable OTBM ids absent from the catalog rejected; full property set (stackability, weight, currency worth, slots, weapon/armor stats, container capacity, flags, decay/transform, field/door/bed/depot, light, elevation, render flags); pinned versions and source hashes; full catalog server-side, display data only to the client.
+- `items` table with immutable instance id, type, subtype/count, attributes, version, and exactly one location/owner; location as a constrained union (equipment slot, container slot, tile, depot, inbox, house, trade reservation, market escrow, corpse); DB constraints on counts, unique slots, legal owner/location combos, parent ids; ancestry-cycle prevention plus nesting/slot/content caps; UUID ids with audit_log entries in the same transaction; durability handled in the operation's transaction.
+- Bounded zod intents for move/use/use-with/open/close/equip/unequip/split/rotate plus generic container-to-container movement; server-issued ids and revisions; acting character taken from the session; execution-time re-checks (existence/version, ownership, visibility, reach/LOS, slot, count, capacity/weight, destination, cooldown, target compatibility); no await between checked and changed; same-item/container/player operations serialized.
+- Map items: immutable decoration split from mutable items at conversion; atomic first-mutation materialization with a stable seed origin; authoritative `TileState` with revisioned visible diffs; pickup/drop, stack merge/split, containers, equipment, capacity/weight, rotate, readables, use/use-with; client controls (double-click use, Shift-double-click pickup, right-click menus, drag to tiles); nested container windows with ancestry; pinned food/regeneration consume path.
+- Inventory/equipment UI is a projection of committed server state (`I` hotkey).
+- Exploit tests: concurrent moves leave one item; two-player pickup has one durable winner; replay/stale revisions cannot dupe/destroy/rollback; invalid counts/indexes/ids/capacity/cycles/nesting rejected; disconnect/persistence-failure resolves to one owner; lazy materialization idempotent under concurrency; economy audit entries commit atomically.
+- Memory-first item ops: carried + ground ops planned in `server/src/item/plan/`, applied in the tick, flushed as guarded single-transaction writes (`PgItemPersistOps`); world items memory-resident (`DynamicMapItems.worldItems`); one global FIFO persist lane (`ItemIntentHandler.persistChain`).
+- Client-side item-op prechecks (`client/lib/inventory/validateItemOp.ts`, `exceedsCapacity.ts`, `client/lib/shop/precheckShopPurchase.ts`/`precheckShopSale.ts`) mirroring exact server capacity math.
+- Optimistic drag queue: move/equip/unequip/drop/pickup/move-map-item through `useOptimisticInventory`; optimistic tile previews via `MapView.tileOverrides`.
+
+## Vocations, stats, and progression (old todo 06)
+- Typed `Vocation` data (base/promoted, health/mana/cap gains, regen, attack-speed/formula coefficients, skill/magic rates, starter options, display data); explicit `Skill` union with progression curves; no runtime Lua/XML; definitions versioned with the content manifest.
+- Persistent experience/level/magic-level/mana-spent plus normalized `character_skills(character_id, skill, level, tries)` with constraints; derived totals pure and recomputable.
+- Authoritative runtime: XP/skill/magic awarded only from validated server events, capped, idempotent; level-ups computed server-side with immutable versioned snapshots after synchronous tick mutation; regen/training on bounded tick schedules (max five overdue intervals per tick, online-only; reconnect cannot manufacture offline ticks); exact progression sent only to the owning session.
+- All required tests: deterministic curve boundaries and multi-level gains, no double awards from duplicate events, invalid/negative/overflow rejected, derived stats match inputs, stale save cannot erase newer gains.
+- Every pinned vocation and promotion including Monk/Exalted Monk with exact gains, curves, regen, attack speed, formulas, requirements, projections.
+- NPC promotion purchase: all five Canary rulers promote at level 20 for 20,000 gold, atomically spending carried then bank money, persisting vocation plus 100 minor charm echoes, updating live regen/spell availability.
+- UI: collapsible character-details pane in the inventory (edge arrow, top-nav Character button, or `C` hotkey).
+
+## Combat, spells, and conditions (old todo 07)
+Status note: the previously flagged uncommitted combat work was committed as `2e25fa9 add magic rope` (on top of `4b332a1 spell in chat`), which also updated the old todo file itself. The recent commits did not fully close any open checkbox; they advanced the floor-moving support spells (exani tera magic rope and exani hur levitate now executable as `worldAction` spells) and added spell-words-via-chat with its own recorded known-gaps list (now Feature 28).
+- Bounded attack-target/cancel-attack and fight-mode/cast/use-rune intents defined before handlers; no client damage, coordinates, hit chance, mana result, rolls, or cooldown completion accepted.
+- Target selection enqueued into the tick with execution-time re-checks (session character, target existence, attackability, visibility, floor); attack/cast execution re-checks range, LOS, weapon/ammo/rune ownership, mana/soul, cooldown/exhaust, conditions, PZ, PVP rules.
+- Server-side seeded formulas and RNG; the complete synchronous in-memory outcome applied once, then persisted; outcomes sent only to observers who can see them, exact stats only to the owner.
+- Combat model: typed damage/healing types, origin, area shape, target rules, block/result, effect/missile ids; melee, distance/ammo, wand/rod, mitigation, armor/shielding, elemental resistances/immunities, crits, and healing all incrementally tested.
+- Typed spell/rune data (vocation/level/magic reqs, cost, cooldown groups, range/LOS, target/area, formula, effect, conditions); procedural behavior as reviewed TypeScript.
+- Conditions: haste/paralyze, poison/fire/energy DoT, regeneration, invisibility, light, outfit, drunk, mute, combat/PZ lock with server-clock expirations; explicit application/refresh/stack rules, persisted only where logout/restart requires.
+- Health/mana/spirit potions: bounded player-target intent, self or adjacent visible players, Canary level/vocation gates, server-rolled restoration, potion consumed and empty flask returned in one audited transaction, separate 1 s exhaust; client right-click targeting plus a nine-slot Shift+1-9 potion bar with OTClient modes (self, attack target, cursor, crosshair).
+- Monster combat AI: target selection, attack scheduling, distance keeping/fleeing, retargeting, spell chance, summon limits, return-home; every AI action revalidated like a player intent; per-tick budgets.
+- Client: right-click attack target and fight mode as intent + server state; server-sent damage/heal text, magic effects, missiles, condition icons, cooldown decoration, health changes; target cleared when the server forgets the creature; predicted cooldowns reconcile after rejection/resync.
+- All exploit tests: forged/hidden/wrong-floor/unattackable ids never change the target; forged parameters never affect outcomes; replay/rapid intents cannot bypass attack speed or exhaust; two lethal hits/DoT/disconnect races resolve death once; LOS/PZ/PVP enforced at execution; no out-of-view leaks; seeded determinism.
+- Monster-spell parity: all 171 distinct registered monster-spell names (285 references across 911 reachable types) resolved to reviewed typed behavior — chains, custom matrices, delayed waves, field creation, dispels, fear/root, skill reducers, special target rules, magic-wall destruction, scripted summons/heals; zero unresolved `registeredSpell` entries.
+- Condition-backed player spells (haste, strong haste, paralyze, magic shield) with Canary speed formulas, magic-shield capacity/depletion, refresh rules, dispels.
+- Monster-created energy/fire/poison fields with server-owned duration, damage ticks, source attribution, per-monster walking rules; destroy-magic-walls removes pinned magic-wall ids via the authoritative item path.
+- Every procedural summon, chain, named-monster heal/damage rule, reducer, and vocation-specific callback in the reachable monster catalog implemented as reviewed server TypeScript.
+- Ground-targeting cursor for position runes.
+- Monk/Exalted Monk added after protocol/progression/creation/UI support existed.
+- Customizable action bars: per-character spell bar (`update-action-bar` → `characters.action_bar`) and potion bar (`characters.potion_action_bar` with target mode).
+- Spell words via chat (`4b332a1` + `2e25fa9`): `ChatHandler` → `Combat.castSpellByWords`, exact match after case/whitespace normalization, full validation in the cast pipeline; parameter parsing (longest words prefix + remainder, optional quotes); exani tera (magic rope) and exani hur up/down (levitate) executable as `worldAction` spells resolved by movement rules with Canary levitate.lua semantics, resources spent only when the move succeeds.
+
+## Monster death and loot (old todo 08a)
+- Stable life/death transition: `Creature.claimDeath()` guards alive→dead exactly once even with multiple lethal events in one tick; each death mints a unique `death:{uuid}` event id.
+- Ordered death handler (`Combat.handleDeath` in `server/src/combat/Combat.ts` + `DeathHandler.ts`): stops AI/combat, removes occupancy, notifies only visible observers, schedules the spawn slot, creates the correct corpse. (Planned `server/src/death/` extraction deferred.)
+- Loot rolled once server-side; corpse/container items created atomically with `item-created` audits (`ItemStore.createCorpse`, single transaction; `server/src/item/CorpseCreator.ts`).
+- Pinned v1 kill attribution: direct source player else top damager; killer gets 100% experience; corpse stamped `attributes.ownerCharacterId`; ownership expires on first decay transform. Party rights / boss contribution deferred until parties exist.
+- Restart safety: loot roll and corpse commit happen once per in-memory death; monsters are not persisted; no replayable path into `handleDeath`.
+- Corpse contents exposed: `use-map` opens a per-session view (`server/src/item/WorldContainerViews.ts`), reach-checked and re-validated every tick; contents sent as `world-container-state` with viewers reconciled on mutation. `loot-item` moves a direct child to carried inventory (`planLoot`): memory-first atomic mutation, expected-version guard, `ownerCharacterId` re-checked at execution, transfer/merge audits in the same persist transaction. Client renders the corpse as a loot section in the inventory panel.
+- Memory-first corpse redesign (2026-07-19): no DB rows until first touch (`appendUnpersistedLootInserts`), in-memory decay via `WorldItemDecayRunner.decayInMemory`; untouched corpses vanish on restart by design (matches Canary).
+- Exploit tests: concurrent lethal hits → one death/corpse/roll/XP (`Combat.test.ts`); restart cannot reroll or duplicate committed loot (`ItemIntentHandler.decay.test.ts`); two players racing for protected loot → exactly one item, with stale-revision/out-of-reach/non-owner rejected (`server/src/item/ItemIntentHandler.loot.test.ts`); corpse packets visibility/permission-filtered.
+- 2026-07-19 fix: `withSerializableTransaction` retries SQLSTATE 40001 — 5 attempts with growing backoff on `isTransientDatabaseError` (`server/src/item/withSerializableTransaction.ts` + tests).
+
+## Player death (old todo 08b)
+- Pinned v1 death penalty (`server/src/progression/getDeathExperienceLoss.ts`): lose 10% of total experience, floored; level/max-health/max-mana/capacity re-derived; full heal and mana restore, temple teleport, 2s invulnerability.
+- Penalty and respawn state applied atomically before acknowledging respawn/login: one character snapshot (`progression.syncPlayer` immediate save) carrying the applied-penalty event id.
+- Replay-proof: deaths are server-computed (no death packet); `Creature.claimDeath()` dedupes; the persisted `death:{uuid}` event id blocks replay across reconnects.
+- Tests: penalties neither skipped nor doubled on reconnect (`server/src/progression/CharacterProgression.test.ts`); concurrent lethal events apply the penalty exactly once (`Combat.test.ts`).
+
+## Decay (old todo 08c)
+- Bounded tick-owned `DecayManager` (`server/src/item/DecayManager.ts`): timers are bookkeeping only; `ItemIntentHandler.tickDecay` collects a bounded batch per tick and applies it via the outcome queue.
+- Documented restart semantics: deadlines in-memory only; on boot every persisted world item with decay metadata is re-armed with its full duration — transforms run late, never early, never twice.
+- Stale-decay safety: identity/version/location re-checked at execution both in-memory and in the version-checked store transaction. `ItemStore.decayWorldItem` (`PgItemStore` transactional, audited `item-transformed`/`item-destroyed` with reason `decay`; first transform clears `ownerCharacterId`; `PgDecayOps.ts`).
+- World (ground) item decay fully imported: transform chains, capacity-shrinking stages that destroy overflow contents, audited removal.
+- Tests: a stale decay task cannot remove a moved/transformed/new instance; restart reschedules and transforms exactly once.
+
+## Chat and channels (old todo 09)
+- Bounded zod intents for say/whisper/yell/private message in `protocol/src/chat.ts`; channel-message intents deliberately deferred until guild/party/help channels exist; channel ids/recipients are references, never authority.
+- Speaker identity derived from the session; schemas `.strict()` with no forgeable sender field.
+- Server-enforced limits: 255-char messages, no control characters, flood limits (4-message burst, one slot per 1.5s, 5·n² s escalating mutes via `ChatRateLimiter`), mute checked at execution time.
+- Floor-aware, mode-specific routing: say/whisper reach normal view range (whisper muffles to "pspsps" beyond one tile); yell covers 18x14, uppercased, 30s exhaust, level-2 minimum; local chat never broadcast world-wide.
+- Private messages resolve online recipients by name; the sender learns only online/offline; offline probes consume flood budget.
+- Text rendered inert everywhere: React text nodes in the panel, canvas text in world (regression story `PlayerTextIsInert`). Chat bodies never logged.
+- Client: accessible tabbed chat panel (`client/components/chat/ChatPanel.tsx`) with bounded local history; `SpeechTextRenderer` draws only server-delivered speakers, keyed per speaker, expiring by length, removed on creature-left/destroy; system (read-only gold channel), private (violet tabs), own lines, localized `chat-rejected` notices.
+- Tests: forged sender rejected (`ChatIntentSchemas.test.ts`); wrong-floor/out-of-range never delivered (`ChatHandler.test.ts`); flood/oversize/control-character/mute limits enforced; private content not delivered to bystanders; HTML/script-like text inert (`ChatPanel.stories.tsx`).
+
+## NPC content import (old todo 10a)
+- All 1,008 external-XML NPC placements imported (center/radius, offsets, `centerz`, direction, matched type id); 956 NPC types resolved without executing Lua. Ambiguous script variants explicitly disabled in `content/spawns/world-import-report.json`.
+- `tools/importCanaryNpcs.mjs` statically parses the 956 world-selected definitions; generates conversational baselines for all 949 interactive types (6,745 literal keyword/shop/bank nodes); classifies the 7 non-interactive types; reviewed graphs in `content/npcs/canary-dialogues.json` override the baseline.
+- Import report `content/npcs/canary-npc-import-report.json` records every selected source, all shop rows/callbacks, all 80 unselected global NPC sources, and every procedural dialogue gap; source commit, definition count, and aggregate hash pinned in the manifest.
+- Loader rejects mismatched commits, duplicate node/offer ids, duplicate child/choice references, missing references, unknown NPC types, unsupported actions, out-of-range content. A world-map fixture proves all ten reviewed travel destinations resolve to walkable tiles.
+
+## NPC dialogue and travel (old todo 10b)
+- NPCs modeled as creatures: occupancy, movement, visibility, rendering share the z-aware paths (`server/src/creature/Npc.ts`).
+- Per-NPC/per-character conversation state with server-clock timeout, range/floor checks, cleanup on logout/death/removal; opaque server-issued conversation ids, explicit offered choices, private delivery; NPC wandering pauses during conversation.
+- Hello/goodbye/local NPC speech routed through visibility-aware chat; private dialogue state goes only to that player.
+- Travel as intent outcome: eligibility/cost validated, payment reserved and committed atomically, server-known destination; destination walkability validated with safe fallback; full visibility/tile-state reconciliation after travel.
+- Vertical slice (2026-07-17): 16 coastal boat NPCs, 90 unconditional pinned routes; haunted/storm routes pick a diversion with server RNG; confirmation sends only an opaque choice; fare + character position/version + item-destruction audits + travel audit in one serializable transaction before the tick teleports; exact fares skip backpack/change allocation; a bounded server-owned prefetch hint warms client caches.
+- Quentin: greeting, healing fallback, pilgrimage, blessing information (informational only).
+- All 949 interactive world NPC types have a safe generated greeting, farewell, walk-away, literal keyword-tree baseline, and typed shop/bank links where declared.
+- Tests: dialogue state cannot be stolen/replayed/continued after range/floor/logout timeout; forged node/action ids, quest state, prices, destinations rejected; concurrent travel/payment cannot double-charge or travel unpaid (`TravelService.test.ts`, `NpcHandler.test.ts`, `NpcIntentSchemas.test.ts`); NPC private state/offers delivered only to the relevant player.
+
+## Economy overview and Mantus Store (old todo 11)
+- First Mantus Store slice (2026-07-23): account-scoped Mantus Coins, server-owned Premium Time catalog, atomic coin debit + entitlement renewal, coin ledger + economy audit records, online-session propagation, and the Mantus Store client. Surface: `server/src/store/MantusStoreService.ts`, `PgMantusStore.ts`, `PgMantusStore.integration.test.ts`, `MANTUS_STORE_CATEGORIES.ts`.
+
+## Currency and bank (old todo 11a)
+- Canonical carried-money/bank model: `server/src/economy/CurrencyBalance.ts` provides the single gold/platinum/crystal conversion; `planMoneySpend`/`planMoneyGrant` are the only conversion paths.
+- Bank balances with nonnegative checks: `bank_accounts` + `bank_ledger` (`012_bank.sql`); `server/src/economy/PgBankStore.ts` commits ledger + audit in one SERIALIZABLE transaction.
+- Exact integer units, overflow-bounded: `BANK_LIMITS` caps single operations at 1e12 and balances at 1e15; all inputs integer-validated.
+- All four exploit tests pass (`PgBankStore.integration.test.ts`, gated on `TEST_DATABASE_URL`): racing spends can't go negative; failed ops change nothing; every balance change has a same-transaction audit/ledger entry; carried↔balance conversion conserves currency under concurrency.
+
+## NPC shops (old todo 11b)
+- All four main checkboxes: typed server catalogs (type, buy/sell price, subtype, amount bounds, availability/quest rules, optional stock); execution-time re-check of catalog/range/floor/money/capacity/space/ownership/amount; purchase/sale item + money legs + audit in one transaction before success; full pinned catalog import.
+- Import completeness (2026-07-17): 956 NPC types, all 286 shop declarations accounted for — 284 non-empty catalogs, 8,368 executable offers (6,176 buy, 3,368 sell, 530 subtype, 125 storage-gated); Larry/Squeekquek empty catalogs classified; every buy/sell callback mapped; Cledwyn silver-token and Yana gold-token item-currency catalogs atomic; Simon the Beggar's free shovel preserved and audited; 3 stale Black Bert rows recorded.
+- Shop access via NPC dialogue action bound to an opaque expiring server session; serializable transactions couple money, items, finite stock, bank ledger, and audit; accessible localized client shop panel with catalogs split into ordered messages under the payload limit.
+- All three exploit-test boxes: forgery rejection, concurrent balance/stock races, same-transaction audit. Surface: `server/src/economy/ShopService.ts`, `PgShopStore.ts`, `loadShopCatalogs.ts`, `PgShopStore.integration.test.ts`.
+
+## Depot and inbox (old todo 11c)
+- All four main checkboxes: account/character depot ownership with bounded containers keyed by server-known town/depot ids; open authorization at a visible/reachable depot with per-move session/revision/slot/capacity/owner validation; inbox/mail delivery ownership, limits, expiry/return rules, and offline transactional behavior without loading an offline live aggregate; pinned depot search/retrieval, inbox, mailbox, supply stash, reward delivery, and town/depot behavior via bounded authorized projections.
+- All three exploit tests: unreachable/wrong-town depot rejected at execution; concurrent moves leave one item per slot; offline inbox delivery transactional and retry-safe. Surface: `server/src/depot/` (DepotService, DepotCacheManager, DepotMailOps, DepotExpiryOps, DepotRewardOps, PgDepotStore + integration test, stash plans).
+- Architecture: memory-authoritative for online characters — loaded at login, mutated synchronously in the tick, persisted behind via a per-character FIFO of guarded single-transaction writes.
+
+## Player trade (old todo 11d)
+- All four main checkboxes (2026-07-18): explicit state machine in `server/src/trade/TradeSession.ts` with all cancel paths through `TradeService.cancelTrade` restoring both offers; reservation via synchronous move of the root item to a `trade-reservation` location (subtree leaves reachable inventory; commit re-verifies both roots' location + version against DB); one SERIALIZABLE commit in `PgTradeStore.commitTrade` (character locks in id order, root locks + re-verification, per-receiver capacity/room re-check from fresh rows, both moves, both `item-transferred` audits with `trade` detail); pinned inspection/display/distance/capacity/cancel behavior (2-tile same-floor + LOS, 100-item cap, commit-time capacity with whole-trade abort, already-trading guards, flat root-first projections with nested contents/tooltips).
+- All four exploit tests: reserved item unmovable; simultaneous accept/cancel/disconnect conserves ownership + currency; racing double-commit yields exactly one commit; audit in the same transaction with second-leg failure rolling back the first leg + audit. Surface: `server/src/trade/`, `protocol/src/trade.ts`, `client/components/trade/TradePanel.tsx`.
+- Additions beyond Canary: 1 s per-session cooldown on request/accept and a 2-minute inactivity timeout. Deliberate tightening: both sides must offer before accepting.
+
+## Market (old todo 11e)
+- All four main checkboxes (2026-07-18): durable uuid order ids + escrow (`016_market.sql`: `market_escrow_items` join, `escrow_balance` with DB invariant `= remaining_amount * unit_price`); atomic match/fill/cancel (one SERIALIZABLE transaction per mutation, `market_requests` consumes each client `requestId` exactly once, 2% fee clamped to [20, 1_000_000], creator pays, never refunded); bounded orders/queries/rates (`MARKET_LIMITS` in `protocol/src/market.ts`, 100 offers/character, paged item list, 1 s mutation cooldown, browse exposes no owner names — only a `mine` flag); pinned fees, escrow-at-creation, 30-day expiry, partial fills, same-account accept block, inbox delivery, bank proceeds, premium requirement.
+- Money legs: fees, buy escrow, purchases pay carried-coins-first with bank fallback (`spendMarketFunds`, same transaction, Canary order); proceeds/refunds credit the bank; UI shows the combined spendable balance.
+- All five exploit tests in `PgMarketStore.integration.test.ts`: escrowed item unmovable/un-re-offerable; partial fill/cancel/replay races can't duplicate escrow or overfill; listings/history leak no private state; same-transaction audit/ledger with zero rows on failure; conservation under concurrent mixed load.
+- Surface: `server/src/market/` (MarketService, PgMarketStore + Create/Accept/Cancel/Read ops, marketCategoryOf, marketFeeOf, spendMarketFunds, pickEscrowSources), `protocol/src/market.ts`, `client/components/auction/AuctionOrderBook.tsx`.
+- Deliberate product decision: market usable from anywhere — no depot session; sell offers/buy fills source pristine stock from ALL depots with per-depot revision bumps in the same transaction. Canary depot-proximity can be restored, if wanted, via an access check in `MarketService.handle`.
+
+## Typed world actions (old todo 12)
+- Action registry: `server/src/action/WorldActionRegistry.ts` (+ `resolveWorldAction.ts`, `handleDoorUse.ts`, `handleLeverUse.ts`, `handleSignRead.ts`, `handleMapRotate.ts`) resolves use-map against current tile state at execution time; ladder/dropdown keep the movement path; scripted placements, unpaired door types, and quest doors fail closed; out-of-view use-map probes fall through identically to empty tiles.
+- Doors: Canary pairs imported (`tools/importCanaryDoors.mjs` → `content/items/canary-doors.json`; level requirements from the otservbr startup table → `server/data/door-levels.json`, with OTBM `actionId - 1000` fallback). Custom doors toggle; key-variant closed doors open unless locked (101/1001); locked doors say "It is locked."; level doors gate and auto-close via a step-out hook; closing rejects an occupied doorway; door state overlays passability/projectile blocking (`overrideMapData` + `DynamicMapItems`).
+- Levers: bare levers (2772/2773, 9110/9111) toggle; quest-scripted levers fail closed until the quest platform. 2026-07-21: lever ids added to `MUTABLE_ITEM_IDS` in `tools/getMapItemSemantics.mjs` (416 map levers had been baked draw-only).
+- Readables: use-map sends `item-text` (protocol `itemId` widened to map instance ids); `allowDistanceRead` within view, otherwise adjacency; map items are read-only.
+- Rope spots (2026-07-21): crosshair via `useKind: "useWith"`; converter emits `rope-spot`/`use-with` from Canary `ropeSpots` ground ids (1498); `ToolUseHandler` + `World.tryUseRopeSpot` re-validate tool ownership, adjacency, occupancy, and step cooldown at execution.
+- Shovel on closed holes (2026-07-21): 593/606/608 piles made mutable; shovel transforms pile → open hole (`shovelHolePairs.ts`); the digger falls (`MovementHandler.handleHoleFall`); catalog decay re-closes; others fall via `DynamicMapItems.getHoleTransition` consulted by `overrideMapData.getTransition`.
+- Quest doors answer "sealed against unwanted intruders" while staying shut until the quest platform; Darashia dragon-lair doors 5115/5124 carry no lock actionId (quest-script territory).
+- Look (2026-07-21), fully client-side: `MapView.lookItemIds` + generated `client/public/assets/look-items.json` (`tools/buildLookCatalog.mjs`, chained into `items:catalog`) — zero new protocol surface.
+- Ctrl+click action menu: `client/components/ui/ContextMenu.tsx` + `client/components/game-window/GameMapContextMenu.tsx` — Look always; Attack/Stop Attack; Use on tiles.
+- Multi-tile sprite click fix: `client/lib/render/resolveInteractiveTile.ts` redirects to the SE anchor of 2x2 items; covering sprites win over 1x1 scenery.
+- Map-item rotation/transform-on-use: furniture with `rotateTo` (~1007 types) transforms in place via `planTransformMapItem` (materialize-on-first-mutation, version bump, transform audit, tile-state broadcast).
+- Use-activated dropdowns: sewer grates/trapdoors/large holes/grilles (435/7750/21298, 475/8708/21374, 867/7523/7524, 22750) via `primaryType === "dropdowns"` without `floorChange`, moving one floor down after server-side destination checks.
+- Exploit tests (2 of 4): concurrent/replayed use on one world item yields exactly one outcome (`WorldActionRegistry.test.ts`); forged action id/target/position/destination rejected for all shipped kinds.
+
+## Raids and world events (old todo 13)
+- Nothing implemented yet; `server/src/event/` does not exist.
+
+## Parties (old todo 14a)
+- Invite/join/leave/kick/leadership and shared-experience intents with server-derived ids, membership checks, limits, and rates (2026-07-19: `server/src/party/`, `protocol/src/party.ts`, `client/components/party/`). In-memory parties with Canary parity: leader-only controls, auto-promotion on leader leave/logout, disband-when-empty, in-fight leave block.
+- Visibility/status sharing + exp eligibility: 30x30x1-floor status range per recipient with hp/mana nulled out of range; shared exp uses the ceil(highest/1.5) level rule, 30/30/1 range from leader, 2-min activity window.
+- Party membership/eligibility re-checked at kill-reward execution time.
+- Shared-exp activation + status reasons, party shields (gray/blue/gold + shared-exp stroke) on nameplates, vocation-diversity boosts (1.2/1.3/1.6/2.0), invite/leadership edge cases, party chat channel (`/p`).
+- Exploit tests: no double-award on membership/reward races (`PartyDeathShares.test.ts`); forged party ids/membership/status targets rejected; status shared only with current members in range/floor (`PartyHandler.test.ts`).
+
+## Guilds (old todo 14b)
+- Durable guild/rank/membership/invitation/MOTD/permission tables with normalized unique names and explicit role capabilities (`017_guilds.sql`, `server/src/guild/`, `protocol/src/guild.ts`). Ranks 1/2/3 Member/Vice-Leader/The Leader; one guild per character via membership PK.
+- Create/invite/accept/remove/promote/disband as authorized serializable transactions with unique-violation race mapping and execution-time rank re-reads; managed fully in-game via the guild modal.
+- Guild `/g` channel through the chat membership/permission path; membership + mute re-checked at execution.
+- Pinned guild wars: states 0-4, frag limits with exactly-once end-war, `guild_war_kills` rows written from the death path, viewer-relative ally/enemy/at-war emblems, online/member lists, rank permissions, guild message behavior.
+- Exploit tests: permission and concurrent membership/name races fail safely (`GuildService.test.ts`, `PgGuildStore.integration.test.ts`); channel access follows execution-time state; no over-share (roster only to members, invite list only to vice+, public creature state carries only guild name + at-war flag).
+
+## PVP policy (old todo 14c)
+- World type + pinned skull/unjustified-kill rules (2026-07-19: `server/src/pvp/`, `018_pvp.sql`). Canary constants: protection level 7; white 15 min / red 24 h / black 72 h; frag windows 4 h/7 d/30 d with 3/5/10 red and 6/10/20 black thresholds; 60 s combat lock; black-skull 40 hp/0 mana respawn + no damage to unmarked; retaliation and justified-avenge rules; per-viewer yellow/orange marks never leaked.
+- Enforcement at combat execution: `canPlayerTarget`/`canPlayerHarm`/`DamageResolver` gates re-checked every attack tick; red/black transitions write `pvp-skull-sanction` audit rows exactly once per death event; skulls/frags durable across relogin; client indicators are projections only.
+- Exploit tests: no bypass via stale party/guild state (`PvpTracker.test.ts`), exactly-once audited transitions (`PgPvpStore.integration.test.ts`), protection-level/secure-mode held at execution (`PvpEnforcement.test.ts`).
+
+## Houses (old todo 14d)
+- House import: `tools/importCanaryHouses.mjs` → `server/data/houses.json` (993 houses, sha-pinned); `tileMetadata.houseId` parsed into a house-tile index on `MapData`/`World`.
+- Durable owner/tenant/guest/access-list/rent state + atomic ownership transfer (`019_houses.sql`): buy-at-house from bank (level 100, 1000 gp/sqm), owner-to-player transfer offer/accept with both bank legs in one serializable tx, premium checks, abandon.
+- Server-side authorization of doors/item placement/removal/invitations/eviction: execution-time gates via `HouseService.canUseHouseTile`; eviction moves movables to the previous owner's inbox with per-item idempotent delivery keys.
+- Audit: `house-purchase/transfer/rent/eviction` events + bank ledger entries in the same transactions.
+- Durable idempotent schedules: tick-driven scan ≥60 s apart, each rent charge guarded on `paid_until` in its own tx, 7 warnings then eviction, replay/crash safe.
+- Transfers and guest/subowner access managed in-game via the House modal (replaces aleta sio/som), kick, monthly rent warnings, item eviction.
+- Exploit tests: sale/eviction/rent races conserve every item and gold unit (`PgHouseStore.integration.test.ts`); schedules exactly-once across uptime and crash/restart; door/item authorization follows current owner/guest state at execution, with mid-session revocation blocking the next step/use and sweeping occupants (`HouseService.test.ts`).
+
+## Social services (old todo 14e)
+- VIP/friends core (2026-07-19): character-scoped VIP list, 20 free / 100 premium, description/icon/notify-on-login, live presence via reverse watcher index, private lists, VipPanel UI (`020_social.sql`, `server/src/social/`, `protocol/src/vip.ts`, `client/components/social/VipPanel.tsx`).
+- 2026-07-23: full-height Friends panel with Party access and add-friend dialog; entries include server-projected level and vocation; the durable relationship remains a one-way private VIP entry.
+- Highscores: 9 categories from persisted progression, vocation filter, LIMIT 50 / max 1000 rows, 10-min cache, fixed parameterized queries; `HighscoresModal.tsx`. Caveat: GM exclusion pending a staff flag.
+- Mail/inbox verified end-to-end on the item-ownership model; exploit tests for delivery-key replay idempotency and the racing-sends dupe race in `PgDepotStore.integration.test.ts`. Caveat: no time-based send-mail rate limit beyond the per-session mutex.
+- Moderation (`021_moderation.sql`, `server/src/moderation/`): durable mutes enforced across say/private/party/guild at execution time, spam auto-mute 5·n² escalation, bans reuse `accounts.banned_until` + kick live sessions in the same action, every action writes `moderation_actions` in the same tx, `/report <name>` with 1/min + 20/day limits.
+- Exploit tests: presence/access-lists/reports/moderation not over-shared (`VipService.test.ts`, `PgSocialStores.integration.test.ts`); moderation authorized/audited/target-validated (`ModerationCommands.test.ts`, `PgModerationStore.integration.test.ts`); highscore queries bounded with no private state (`HighscoreService.test.ts`).
+
+## Remaining Canary systems (old todo 15): minimap, UI settings, bestiary, Wheel, Gem Atelier, store slice
+- Minimap panel core (2026-07-19): pre-baked terrain tiles in the classic automap palette (`yarn minimap:build` chained into `map:convert`), NPC/monster/player markers from live visibility, NPC tooltips with sold-item categories, floor navigation, zoom, drag-pan.
+- Account-wide UI settings (2026-07-19): `accounts.ui_settings` jsonb (`022_account_ui_settings.sql`), strict bounded `uiSettingsSchema`, draggable/resizable minimap panel, per-account layout persistence via `update-ui-settings` with debounced saves.
+- Bestiary + bosstiary core: per-player kill tracking (`025_bestiary_kills.sql`), stage-gated detail projections, per-kill entry-changed pushes, navbar modals with animated sprites, searchable preloaded list (`server/src/bestiary/`, `client/components/bestiary/`, `content/monsters/bestiary.json` via `yarn bestiary:import`).
+- Wheel of Destiny core (2026-07-20): shared slice/adjacency/bonus tables + `validateWheelAllocation`/`computeWheelBonuses` in `protocol/src/wheel*`; server `WheelService`/`WheelTracker`/`PgWheelStore` (`027_character_wheel.sql`); wheel HP/mana/capacity threaded through `deriveCharacterStats`; conviction skill boosts in `Player.skillLevel`; exploit tests; Tibia-exact client modal (`client/components/wheel/`, `client/lib/wheel/wheelGeometry.ts`). Points = level − 50, gated on level 51+ and premium. Promoted-vocation requirement enforced in Wheel and gem atelier gates.
+- Gem Atelier + Fragment Workshop (Canary-pinned): unrevealed gems drop from bestiary/bosstiary kills; reveal/switch-domain/lock/destroy/equip; global per-mod grades; vessel resonance gating in `server/src/wheel/Gem*` (`028_gem_atelier.sql`, protocol `gemAtelier*`/`computeGemBonuses`); equipped gems grant real max HP/mana, capacity, elemental resistances (in `DamageResolver`), and revelation-mastery points; costs are ACID bank debits with ledger + audit; exploit tests (`GemAtelierService.test.ts`, `PgGemStore.integration.test.ts`).
+- Store first slice (2026-07-23): account-scoped Mantus Coins and atomic Premium Time purchases.
+
+## Client resilience (old todo 16a-c)
+- Freeze diagnostics: server tick and headless client proven clean; probes retained as regression tests (`yarn playtest:tick-stall`, `client/e2e/gameFreeze.e2e.test.tsx`). Server tick: zero stalls >40ms over 2 min (`server/src/playtest/lagMonitor.mjs`); headless client: zero main-thread stalls ≥250ms over 2 min walking. (Everything else in 16 is not started.)
+
+## Operations and security (old todo 17a-h)
+- Protocol limits partially enforced: `protocol/src/limits.ts` defines `PROTOCOL_LIMITS` (`maxMessageBytes: 16_384`, `maxMessagesPerSecond: 30`); `GameServer.ts` sets WS `maxPayload`; `Session.ts` enforces per-connection message rate and outbound size; zod validation repo-wide.
+- DEV_COMMANDS-gated moderation suite: `server/src/moderation/` (ModerationService, PgModerationStore, ChatModerationHooks + tests) implements kick/ban/unban/mute/unmute with immediate live-session kick and a `moderation_actions` audit row in the same transaction; `/kick`, `/ban`, `/mute` wired in `GmCommandHandler.ts`. Not role-authorized — production gating is Feature 96.
+- Economy audit rows written in-transaction via `audit_log` with event-type check constraints (migrations 004/012/013/016/018/030); parameterized queries are repo policy.
+- Load-test baselines: 4,000-player controlled protocol capacity result and isolated 1,900-active-hotspot-monster gate (both explicitly insufficient as launch gates — never combined, never on production-like infra; promotion to staging gates is Feature 100).
+
+## Auth follow-ups (old todo 18)
+- Authorized, audited premium purchase/renewal: Mantus Store purchases debit the account wallet and renew `premium_until` with ledger + audit in one transaction (`server/src/store/PgMantusStore.ts` + integration test, `033_mantus_store.sql`, `premium_until` in `PgAccountStore.ts`).
+- Store renewals propagate to the online account session and live Player.
+- `accounts.premium_until` is authoritative and defaults free; runtime checks use the server clock so premium expiry applies immediately while online.
+- Instant ban substantially implemented (todo checkboxes were stale): `ModerationService.gmBan` writes `banned_until` via `PgModerationStore.banAccount` (state change + audit row in the same transaction), immediately disconnects every live session (`sendError("account-banned")`), and login re-checks `banned_until`; wired to `/ban`; tests in `ModerationEnforcement.test.ts` and `PgModerationStore.integration.test.ts`. Residual: DEV_COMMANDS-gated rather than role-gated (Feature 96/101).
+
+## Dev tooling (old todo 19)
+- Dev-only testing infrastructure (2026-07-18): `DEV_AUTH=1` swaps Supabase verification for `DevTokenVerifier` (tokens `dev-<name>`); `DEV_COMMANDS=1` enables GM chat commands `/i`, `/spawn`, `/goto`, `/level`, `/heal`, `/where` (`server/src/gm/GmCommandHandler.ts`; now also `/kick`, `/ban`, `/mute`).
+- `server/src/playtest/`: headless protocol client plus scenario scripts booting the real server against the local docker Postgres `playtest` DB.
+
+## Quests (old todo 20/20a)
+- Nothing implemented yet (`server/src/quest/` does not exist; no `character_storage` migration — latest is 036).
+
+## Performance follow-ups (old todo 21)
+- 2026-07-24 optimization pass landed: visibility broadcast dedup + serialize-once, quadratic tile-states batching, non-allocating occupancy checks, findPath parent-pointer reconstruction, first-visible-floor cache keyed on passability-only revision, per-tick queue drains, equipment/stats memoization, dirty-tracked skills/storage saves, client HUD re-render isolation, shared outfit texture cache, atlas-based combat effects.

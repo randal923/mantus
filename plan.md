@@ -237,5 +237,5 @@ signals server-side (never tell the client why it was flagged).
 - [ ] NPC shop + player trade (both fully transactional)
 - [ ] Rate limiting, session hardening, TLS, backups + restore drill
 - [ ] Full pinned Canary feature/content inventory and zero-unsupported parity
-      gate (see `todo/00a-canary-parity.md`)
+      gate (see `todo/implementation-feature-1.md`)
 - [ ] Playtest with friends; watch `audit_log` and metrics for surprises
