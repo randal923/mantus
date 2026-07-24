@@ -232,9 +232,18 @@ export const castSpellMessageSchema = z
   })
   .strict();
 
+/**
+ * Opaque client-issued tag echoed back in the resulting `inventory-updated`.
+ * Lets the optimistic drag queue distinguish its own confirmation from an
+ * unsolicited inventory change (potion, food, decay) that arrives mid-flight.
+ * The server never interprets it; it only echoes it.
+ */
+export const itemIntentNonceSchema = z.string().min(1).max(64);
+
 const ownedItemIntentSchema = z.object({
   itemId: z.string().uuid(),
   revision: z.number().int().positive(),
+  nonce: itemIntentNonceSchema.optional(),
 });
 
 export const itemContainerDestinationSchema = z
@@ -313,6 +322,7 @@ export const pickupItemMessageSchema = z
     // intents carrying both (a refine here would break the discriminated union).
     destination: itemContainerDestinationSchema.optional(),
     equipSlot: equipmentSlotSchema.optional(),
+    nonce: itemIntentNonceSchema.optional(),
   })
   .strict();
 
@@ -342,6 +352,7 @@ export const moveMapItemMessageSchema = z
     revision: z.number().int().positive(),
     fromPosition: positionSchema,
     toPosition: positionSchema,
+    nonce: itemIntentNonceSchema.optional(),
   })
   .strict();
 

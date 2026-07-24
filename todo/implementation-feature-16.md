@@ -2,6 +2,10 @@
 
 Part of [Todo 6 — Items and inventory](todo-6.md).
 
+**Umbrella — stays open.** Finished slices (throw/drop LOS lock, nonce echo) are
+logged in
+[completed/implementation-feature-16-completed.md](completed/implementation-feature-16-completed.md).
+
 ## Why
 
 The client optimistic drag queue and the memory-first persistence path shipped with a set of accepted limitations, each with a recorded fix. This feature is the ledger of those refinements so they don't live only in past conversations.
@@ -10,7 +14,7 @@ The client optimistic drag queue and the memory-first persistence path shipped w
 
 - `use-item`/`open-container` send immediately and get `item-action-failed` if they race a queued drag.
 - Picked-up items appear in the backpack only on server confirm — there is no clientId→sprite/tooltip catalog for placeholder prediction; pickup costs ~8–10 sequential queries.
-- The queue treats any `inventory-updated` as confirmation; an unsolicited update (e.g. a capacity patch on level-up) arriving mid-flight advances the queue early. Recorded fix: tag item intents with a client nonce echoed in `inventory-updated`.
+- ~~The queue treats any `inventory-updated` as confirmation; an unsolicited update arriving mid-flight advances the queue early.~~ **Done 2026-07-24**: drag intents carry an optional `nonce` (`itemIntentNonceSchema`) echoed by the server in `inventory-updated`; the optimistic queue advances the in-flight drag only on a matching nonce (`resolveConfirmAction`), so an unsolicited change (potion/food/decay) now patches state without advancing. The level-up capacity change already used `patch`, not `inventory-updated`.
 - Merge prediction guesses stackability client-side (assumes max stack 100); tile previews never predict world-stack merges.
 - ~~`move-map-item` allows throws to any existing tile within `THROW_RANGE` (7) with no line-of-sight or walkability check~~ — **LOS done 2026-07-24**: `validateItemIntentTarget` rejects both `move-map-item` and `drop-item` when `world.hasLineOfSight`/`canSee` fail (regression test in `ItemIntentHandler.test.ts`, "rejects a drop or throw whose line of sight is blocked by a wall"). Remaining: a strict destination-walkability check is deliberately *not* added because it would reject trashholder tiles (Feature 13, water/lava are non-walkable but must accept-then-destroy); an explicit 7-tile `THROW_RANGE` distinct from view range is still open.
 - Only `PgItemStore.moveToContainer` and `moveWorldItem` use the combined-CTE pattern; `equip`/`unequip`/`pickup`/`drop` run ~8 sequential queries — apply the CTE pattern if confirm latency matters.

@@ -195,6 +195,13 @@ export const welcomeMessageSchema = z.object({
 export const inventoryUpdatedMessageSchema = z.object({
   type: z.literal("inventory-updated"),
   inventory: inventoryStateSchema,
+  /**
+   * Echo of the client nonce from the item intent that produced this update.
+   * Present only for optimistic drag ops; absent on server-initiated changes
+   * (potion, food, decay), which the client applies without advancing its
+   * drag queue.
+   */
+  nonce: z.string().min(1).max(64).optional(),
 });
 
 export const itemTextMessageSchema = z.object({

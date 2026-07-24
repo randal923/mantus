@@ -40,7 +40,7 @@ export function handlePlayerStateMessage(
   }
 
   if (message.type === "inventory-updated") {
-    actions.inventory.confirm(message.inventory);
+    actions.inventory.confirm(message.inventory, message.nonce);
     state.setShopSession((current) =>
       current?.currencyItemTypeId === GOLD_COIN_TYPE_ID
         ? { ...current, pendingPurchaseCost: 0 }

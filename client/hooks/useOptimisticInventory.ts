@@ -5,6 +5,7 @@ import { applyInventoryPrediction } from "../lib/inventory/applyInventoryPredict
 import { buildPendingItemOpMessage } from "../lib/inventory/buildPendingItemOpMessage";
 import { findInventoryItem } from "../lib/inventory/findInventoryItem";
 import type { InventoryPrediction } from "../lib/inventory/InventoryPrediction";
+import { resolveConfirmAction } from "../lib/inventory/resolveConfirmAction";
 import type {
   PendingItemOp,
   PendingItemOpIntent,
@@ -15,8 +16,12 @@ export interface OptimisticInventory {
   readonly inventory: InventoryState | null;
   /** Replaces all state on join/leave; discards any queued ops. */
   readonly reset: (state: InventoryState | null) => void;
-  /** Applies a server inventory snapshot and sends the next queued op. */
-  readonly confirm: (state: InventoryState) => void;
+  /**
+   * Applies a server inventory snapshot. `nonce` is the echo from the intent
+   * that produced it: the in-flight drag advances only on a matching nonce, so
+   * an unsolicited update (potion/food/decay) patches state without advancing.
+   */
+  readonly confirm: (state: InventoryState, nonce?: string) => void;
   /** Drops queued ops and re-renders the last server-confirmed state. */
   readonly rollback: () => void;
   /** Adjusts the server-confirmed state (e.g. capacity from progression). */
@@ -56,6 +61,9 @@ export function useOptimisticInventory(
   const serverStateRef = useRef<InventoryState | null>(null);
   const pendingRef = useRef<ReadonlyArray<PendingItemOp>>([]);
   const inFlightRef = useRef(false);
+  /** Nonce of the op currently in flight; matched against confirm echoes. */
+  const inFlightNonceRef = useRef<string | null>(null);
+  const nonceCounterRef = useRef(0);
   const previewRef = useRef<ReadonlyArray<InventoryPrediction>>([]);
 
   const projectedState = useCallback((): InventoryState | null => {
@@ -82,9 +90,13 @@ export function useOptimisticInventory(
       const serverState = serverStateRef.current;
       if (!next || !serverState) return;
       const intent = buildPendingItemOpMessage(next, serverState);
-      if (intent && send(intent)) {
-        inFlightRef.current = true;
-        return;
+      if (intent) {
+        const nonce = `n${(nonceCounterRef.current += 1)}`;
+        if (send({ ...intent, nonce })) {
+          inFlightRef.current = true;
+          inFlightNonceRef.current = nonce;
+          return;
+        }
       }
       pendingRef.current = pendingRef.current.slice(1);
       onDiscarded?.(next);
@@ -96,6 +108,7 @@ export function useOptimisticInventory(
       serverStateRef.current = state;
       pendingRef.current = [];
       inFlightRef.current = false;
+      inFlightNonceRef.current = null;
       previewRef.current = [];
       project();
     },
@@ -103,13 +116,23 @@ export function useOptimisticInventory(
   );
 
   const confirm = useCallback(
-    (state: InventoryState) => {
+    (state: InventoryState, nonce?: string) => {
       serverStateRef.current = state;
-      if (previewRef.current.length > 0) {
+      const action = resolveConfirmAction({
+        hasPreview: previewRef.current.length > 0,
+        inFlight: inFlightRef.current,
+        echoedNonce: nonce,
+        inFlightNonce: inFlightNonceRef.current,
+      });
+      if (action === "advance-preview") {
         previewRef.current = previewRef.current.slice(1);
-      } else if (inFlightRef.current) {
+      } else if (action === "advance-drag") {
+        // Our own drag confirmation. An unsolicited change (patch-only) leaves
+        // the in-flight op pending; the server never sends a post-drag state
+        // before that drag's own echo, so the projection stays consistent.
         pendingRef.current = pendingRef.current.slice(1);
         inFlightRef.current = false;
+        inFlightNonceRef.current = null;
       }
       sendNext();
       project();
@@ -127,6 +150,7 @@ export function useOptimisticInventory(
     }
     pendingRef.current = [];
     inFlightRef.current = false;
+    inFlightNonceRef.current = null;
     previewRef.current = [];
     project();
   }, [project]);

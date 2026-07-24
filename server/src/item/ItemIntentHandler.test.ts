@@ -527,6 +527,37 @@ describe("ItemIntentHandler", () => {
     });
   });
 
+  it("echoes a drag intent's nonce in its inventory-updated confirmation", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const { handler, session, sent } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "move-item",
+      itemId: ITEM_ID,
+      revision: 1,
+      destinationContainerId: BACKPACK_ID,
+      destinationRevision: 1,
+      destinationSlot: 1,
+      nonce: "n42",
+    });
+    expect(sent.at(-1)).toMatchObject({ type: "inventory-updated", nonce: "n42" });
+
+    // A move without a nonce carries none (so the client patches, not advances).
+    handler.handle(session, {
+      type: "move-item",
+      itemId: ITEM_ID,
+      revision: 2,
+      destinationContainerId: BACKPACK_ID,
+      destinationRevision: 1,
+      destinationSlot: 2,
+    });
+    const last = sent.at(-1);
+    expect(last).toMatchObject({ type: "inventory-updated" });
+    expect(last && "nonce" in last ? last.nonce : undefined).toBeUndefined();
+  });
+
   it("applies a move in the same tick and persists it across detach", async () => {
     const store = new MemoryItemStore();
     for (const item of nestedItems()) store.seed(item);

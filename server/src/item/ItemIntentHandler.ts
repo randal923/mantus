@@ -997,7 +997,10 @@ export class ItemIntentHandler {
       now,
     );
     if (inventory && session.playerId === playerId) {
-      session.send({ type: "inventory-updated", inventory });
+      // Echo the client nonce so the optimistic drag queue can tell this
+      // confirmation apart from an unsolicited mid-flight inventory change.
+      const nonce = "nonce" in intent ? intent.nonce : undefined;
+      session.send({ type: "inventory-updated", inventory, ...(nonce ? { nonce } : {}) });
     }
     if (planned.plan.effect) {
       this.visibility.broadcastMagicEffect(
