@@ -42849,9 +42849,8 @@
       "path": "data/scripts/spells/support/levitate.lua",
       "blob": "aa4fa1d4fcf0cd27e330e222138180c3cd44d066",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "12-world-actions",
-      "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/light.lua",
@@ -42864,9 +42863,8 @@
       "path": "data/scripts/spells/support/magic_rope.lua",
       "blob": "0ae41e3c608d70624967d3971d660270888e25b9",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "12-world-actions",
-      "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/magic_shield.lua",
@@ -130937,9 +130935,8 @@
       "sourcePath": "data/scripts/spells/support/levitate.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "12-world-actions",
-      "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/light.lua",
@@ -130952,9 +130949,8 @@
       "sourcePath": "data/scripts/spells/support/magic_rope.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "12-world-actions",
-      "reason": "Requires 12-world-actions before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/magic_shield.lua",

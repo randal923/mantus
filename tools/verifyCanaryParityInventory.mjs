@@ -100,6 +100,71 @@ for (const spell of spells.spells ?? []) {
     throw new Error(`spell ${String(spell.id)} has invalid parity ownership`);
   }
 }
+
+// The inventory is generated from the spell report, so its per-spell entries
+// must stay in lockstep with it. Without this the two can silently disagree —
+// a spell can be `supported` in the report while its inventory source/callback
+// entries still read `blocked` (the exact drift a stale, un-regenerated
+// inventory produces), and every structural check above still passes.
+const inventorySourceByPath = new Map(
+  inventory.sourceFiles.map((source) => [source.path, source]),
+);
+const inventoryCallbacksByPath = new Map();
+for (const callback of inventory.callbacks ?? []) {
+  const list = inventoryCallbacksByPath.get(callback.sourcePath) ?? [];
+  list.push(callback);
+  inventoryCallbacksByPath.set(callback.sourcePath, list);
+}
+for (const spell of spells.spells ?? []) {
+  const source = inventorySourceByPath.get(spell.sourcePath);
+  if (!source || source.status !== spell.parity.status) {
+    throw new Error(
+      `parity inventory source ${spell.sourcePath} is stale against the spell report`,
+    );
+  }
+  if (!spell.supported) continue;
+  for (const callback of inventoryCallbacksByPath.get(spell.sourcePath) ?? []) {
+    const deferredOptionalFeature =
+      callback.status === "blocked" &&
+      callback.blockedBy === "15-optional-features";
+    if (callback.status !== "implemented" && !deferredOptionalFeature) {
+      throw new Error(
+        `parity inventory callback ${spell.sourcePath}#${callback.name} is stale against its supported spell`,
+      );
+    }
+  }
+}
+
+// Same lockstep guarantee for the creature and NPC domains: a monster source is
+// `implemented` exactly when the creature report does NOT list it as
+// unsupported, and every NPC source stays `blocked` until an NPC dialogue
+// runtime lands. A stale inventory would otherwise keep a now-clean monster
+// `blocked` (or a newly-gapped one `implemented`) while all structural checks
+// still pass.
+const unsupportedCreaturePaths = new Set(
+  (creatureReport.unsupportedDefinitions ?? []).map(
+    (definition) => definition.sourcePath,
+  ),
+);
+for (const source of inventory.sourceFiles) {
+  if (source.path.startsWith("data-otservbr-global/monster/")) {
+    const expected = unsupportedCreaturePaths.has(source.path)
+      ? "blocked"
+      : "implemented";
+    if (source.status !== expected) {
+      throw new Error(
+        `parity inventory monster ${source.path} is stale against the creature report`,
+      );
+    }
+  } else if (
+    source.path.startsWith("data-otservbr-global/npc/") &&
+    source.status !== "blocked"
+  ) {
+    throw new Error(
+      `parity inventory npc ${source.path} must stay blocked until the NPC dialogue runtime lands`,
+    );
+  }
+}
 for (const definition of creatureReport.unsupportedDefinitions ?? []) {
   for (const gap of definition.gaps ?? []) {
     if (

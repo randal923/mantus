@@ -136,7 +136,7 @@
   },
   {
    "path": "tools/parseCanarySpells.mjs",
-   "sha256": "622cc311fa96285a0e3e533be9b85ad36ea808548db6872478b48acc43df0a24"
+   "sha256": "96b1d72a3ca0f9f755984292496c9d5d0e2ab9c598c35ef3708bfc6a8c097bd6"
   },
   {
    "path": "tools/importCanaryNpcs.mjs",
@@ -160,7 +160,7 @@
   },
   {
    "path": "tools/verifyCanaryParityInventory.mjs",
-   "sha256": "8d1c633a84fbc76714b3f95e79cd04ed5919001ac9238dd56c7caffedc679407"
+   "sha256": "6b864145e86df4690d297b425316f2844ac1bff0e6f4791075bb1202f4855d87"
   },
   {
    "path": "tools/importCanaryDoors.mjs",
