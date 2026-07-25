@@ -10,6 +10,7 @@ import { PROGRESSION_DEFINITION_VERSION } from "../progression/progressionDefini
 import { InMemoryAccountStore } from "../test/InMemoryAccountStore";
 import { InMemoryCharacterStore } from "../test/InMemoryCharacterStore";
 import { makeCharacter } from "../test/makeCharacter";
+import { DEFAULT_CHAT_FLOOD_LIMITS } from "../chat/ChatFloodLimits";
 
 const port = Number(process.env.LOAD_TEST_PORT ?? 4_125);
 if (!Number.isSafeInteger(port) || port < 0 || port > 65_535) {
@@ -56,6 +57,8 @@ const config: ServerConfig = {
   maxSessions: 8,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
+  chat: DEFAULT_CHAT_FLOOD_LIMITS,
+  moderationRetentionDays: 365,
   combatSeed: 1_129_270_594,
   rates: {
     experience: 1,

@@ -2,29 +2,55 @@
 
 Part of [Todo 11 — NPCs, dialogue, and travel](todo-11.md).
 
+The typed graph model (conditions, effects, focus rules), execution-time
+re-validation, and the parity fixture shipped 2026-07-25 — see
+[completed log](completed/implementation-feature-40-completed.md). This file
+tracks only what is still open.
+
 ## Why
-The engine runs literal keyword trees plus a handful of typed actions; the formal graph model (conditions, quest requirements) and full execution-time re-validation are incomplete. Parity means every pinned dialogue branch is representable and re-checked at the moment it executes.
+Parity means every pinned dialogue branch is representable and re-checked at
+the moment it executes. The engine now does that for the branches whose
+requirements it can express; the remaining condition kinds need their own
+evaluation surfaces.
 
 ## Remaining work
-- Typed dialogue graph with explicit node ids, input matches, response, conditions, and server action — no open-ended scripting evaluator.
-- Re-check range/floor/state/quest requirements/money/items/travel destination at exact node/action execution time (quest-requirement and general condition re-checks await those systems).
-- Continue until every pinned dialogue branch, focus rule, action, travel offer, shop link, and storage gate is represented.
-- Delayed speech, dynamic profession/quest greetings, quest rewards, blessings, and remaining travel/state mutations need explicit TypeScript commands — the 2,307 keyword actions / 21 composed messages / 601 callbacks are owned by the import report (Feature 38).
-- Parity fixture test: every imported dialogue/action has an executable typed path or an explicit non-content classification.
+- **Condition kinds beyond storage/level/premium.** Canary gates branches on
+  blessings, carried item counts, health, and money (carried + bank). Each
+  needs a typed condition, an evaluation path that reads live state inside the
+  tick, and an importer translation. Counts and shapes are enumerated in
+  [implementation-feature-38.md](implementation-feature-38.md).
+- **Quest-requirement conditions** proper — the storage condition kind is the
+  data layer, but the quest platform (Feature 103) owns the semantics and the
+  key namespace.
+- **Effects beyond `set-storage`** — item grants and removals as part of a
+  dialogue branch, which must run in the same transaction as any money leg.
+- **Delayed speech and dynamic profession/quest greetings** — Canary composes
+  some greetings at runtime; the 21 composed messages are owned by the import
+  report (Feature 38).
+- **Multi-destination travel offers** so a `kick`/`travel` whose Canary
+  destination is a table can be represented with a server-rolled choice.
 
 ## Implementation
-- Extend `server/src/npc/DialogueGraph.ts` with condition nodes and `server/src/npc/NpcDialogueExecutor.ts` with new action types whose re-validation runs inside the tick at execution time (charter rule 4 — never act on stale validation from when the intent was enqueued).
-- Extend `server/src/npc/matchNpcDialogueNode.ts` / `matchesNpcDialogueInput.ts` for the richer input-match model.
-- Follow the `withBoatTravelRoutes.ts` / `withPromotionActions.ts` composition pattern per command family.
-- Preserve shipped conversation invariants: opaque server-issued conversation ids, explicit offered choices, private delivery, server-clock timeouts, cleanup on logout/death/removal, wandering paused during conversation.
-- The parity fixture parallels `server/src/npc/loadNpcDialogueGraphs.test.ts`.
+- Extend `DialogueCondition` in `server/src/npc/DialogueGraph.ts` and its
+  evaluation in `server/src/npc/evaluateDialogueConditions.ts`; every new kind
+  is evaluated at node-execution time, never at offer time (charter rule 4).
+- Extend `translateCondition` / `translateEffects` in
+  `tools/parseCanaryNpcDialogues.mjs` in lockstep, and lower the parity
+  ceilings.
+- Preserve the shipped conversation invariants: opaque server-issued
+  conversation ids, explicit offered choices, private delivery, server-clock
+  timeouts, cleanup on logout/death/removal, wandering paused during
+  conversation, and unfocused branches that open no conversation at all.
 
 ## Tests
-- Parity fixture: every imported dialogue/action resolves to an executable typed path or explicit non-content classification.
-- Condition nodes re-evaluated at execution: state changed between choice offer and confirmation must reject.
-- Existing invariants stay green: dialogue state cannot be stolen/replayed/continued after range/floor/logout timeout; forged node/action ids, quest state, prices, destinations rejected.
+- `server/src/npc/dialogueGraphParity.test.ts` must keep passing with each new
+  kind added to its executable-path lists.
+- `server/src/npc/loadNpcDialogueGraphsFailClosed.test.ts` gets one injected
+  defect case per new condition/effect kind.
+- Condition nodes re-evaluated at execution: state changed between choice offer
+  and confirmation must reject.
 
 ## Dependencies
-- Feature 37 (typed NpcType/content model), Feature 38 (command vocabulary).
-- Feature 103 (quest platform) for quest-requirement conditions and storage gates.
-- Bank (shipped) / Feature 46 (shop) / Feature 72 (blessings) for money- and blessing-touching branches.
+- Feature 38 (command vocabulary) — shares the translator and the parity gate.
+- Feature 103 (quest platform) for quest-requirement semantics.
+- Feature 72 (blessings) for blessing conditions.

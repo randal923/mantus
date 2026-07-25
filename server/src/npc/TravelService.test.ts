@@ -15,10 +15,11 @@ import { World } from "../World";
 import type { NpcTravelCommitResult } from "./NpcTravelCommitResult";
 import type { NpcTravelStore } from "./NpcTravelStore";
 import { TravelService } from "./TravelService";
+import { makeNpcType } from "../test/makeNpcType";
 
 const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-const npcType: NpcType = {
+const npcType: NpcType = makeNpcType({
   id: "captain",
   name: "Captain",
   outfit: { lookType: 129, head: 0, body: 0, legs: 0, feet: 0, addons: 0 },
@@ -47,7 +48,7 @@ const npcType: NpcType = {
     ],
     travelOffers: [],
   },
-};
+});
 
 const makePersistence = () => {
   const store = {

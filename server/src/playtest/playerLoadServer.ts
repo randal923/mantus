@@ -7,6 +7,7 @@ import { MemoryItemStore } from "../item/MemoryItemStore";
 import { InMemoryAccountStore } from "../test/InMemoryAccountStore";
 import { InMemoryCharacterStore } from "../test/InMemoryCharacterStore";
 import { makeCharacter } from "../test/makeCharacter";
+import { DEFAULT_CHAT_FLOOD_LIMITS } from "../chat/ChatFloodLimits";
 
 const targetPlayers = Number(process.env.LOAD_TEST_PLAYERS ?? 2_000);
 if (
@@ -58,6 +59,8 @@ const config: ServerConfig = {
   maxSessions: targetPlayers,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
+  chat: DEFAULT_CHAT_FLOOD_LIMITS,
+  moderationRetentionDays: 365,
   combatSeed: 1_129_270_594,
   rates: {
     experience: 1,

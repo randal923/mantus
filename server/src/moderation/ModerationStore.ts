@@ -65,6 +65,14 @@ export type CreateReportResult =
   | { readonly status: "created" }
   | ModerationOpFailure;
 
+/** Rows dropped by one retention pass, per table. */
+export interface ModerationPruneResult {
+  readonly mutes: number;
+  readonly bans: number;
+  readonly reports: number;
+  readonly actions: number;
+}
+
 /**
  * Durable moderation storage. Every applied action resolves its target
  * by name and writes its moderation_actions audit row in the same
@@ -111,4 +119,10 @@ export interface ModerationStore {
     comment: string;
     maxPerDay: number;
   }): Promise<CreateReportResult>;
+  /**
+   * Drops moderation metadata older than `before` that is no longer
+   * enforcing anything, up to `limit` rows per table
+   * (docs/moderation-retention.md).
+   */
+  pruneRetention(before: Date, limit: number): Promise<ModerationPruneResult>;
 }

@@ -35,12 +35,31 @@ describe("loadServerConfig", () => {
         loot: expect.any(Number),
         spawn: expect.any(Number),
       },
+      chat: {
+        bufferCapacity: 4,
+        bufferDrainMs: 1500,
+        muteBaseMs: 5000,
+        escalationDecayMs: 600000,
+      },
+      moderationRetentionDays: 365,
       map: { source: "data", name: "otservbr", spawnTown: "Thais" },
       creatures: {
         contentName: "world",
         ai: { seed: 1296125524, wanderChance: 0.2 },
       },
     });
+  });
+
+  it("rejects out-of-range chat flood limits", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const directory = await mkdtemp(join(tmpdir(), "server-config-"));
+    temporaryDirectories.push(directory);
+    const path = join(directory, "config.yml");
+    await writeFile(path, source.replace("bufferCapacity: 4", "bufferCapacity: 0"));
+
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      /config\.chat\.bufferCapacity/,
+    );
   });
 
   it("applies validated deployment overrides", async () => {

@@ -2,27 +2,62 @@
 
 Part of [Todo 11 — NPCs, dialogue, and travel](todo-11.md).
 
+Six command families shipped 2026-07-25 and took the reported gap count from
+2,307 to 611 — see
+[completed log](completed/implementation-feature-38-completed.md) for what
+landed, how it was verified, and the full residual breakdown. This file tracks
+only what is still open.
+
 ## Why
-This is the core parity grind: every procedural gap in the NPC import must become a reviewed, typed TypeScript command until the import report reaches zero. There will be no general Lua evaluator — ever.
+This is the core parity grind: every procedural gap in the NPC import must
+become a reviewed, typed TypeScript command until the import report reaches
+zero. There will be no general Lua evaluator — ever.
 
 ## Remaining work
-- 2,307 procedural keyword actions, 21 dynamically composed messages, and 601 custom dialogue callbacks across 494 selected definitions remain unexecuted/unapproximated.
-- Add reviewed typed quest/travel/blessing/action commands until the report reaches zero; no general Lua evaluator.
-- Three Black Bert shop rows reference item ids absent from the pinned catalog — keep these as explicit source-invalid exclusions in the report, not silent omissions.
+- **316 callback branches outside the typed grammar.** 266 condition callbacks
+  and 50 effect callbacks whose bodies are not pure `getStorageValue` /
+  `setStorageValue`. By shape: `hasBlessing(n)` (116, blocked on Feature 72),
+  `getHealth() < n` (29), `getMoney() + getBankBalance() >= n` (22),
+  `getItemById`/`getItemCount` (31), multi-clause conjunctions mixing storage
+  with item counts (35), and item-granting effect bodies. Each needs its own
+  typed condition/effect kind plus an execution-time evaluation surface.
+- **27 `StdModule.bless`** — blocked on Feature 72 (blessing purchase,
+  persistence, consumption).
+- **30 `travel`/`kick` calls whose destination is a Lua table or expression**
+  (Canary picks one at random from a table, or computes it). Needs a
+  multi-destination offer shape with server-rolled selection.
+- **~13 one-off handlers** — `townTravelHandler`, `donationHandler`, the
+  wedding handlers, Wayfarer/dream quest steps. Blocked on Feature 103.
+- **21 dynamically composed messages** and the remaining reported
+  `proceduralCallbacks`.
+- **181 source-invalid spell offers** naming spells outside the pinned catalog
+  stay explicit exclusions in the report, not silent omissions — as do Black
+  Bert's three shop rows. Do not "fix" these by loosening the resolution.
 
 ## Implementation
-- Grow the action vocabulary in `server/src/npc/NpcDialogueExecutor.ts` / `server/src/npc/DialogueGraph.ts`, following the existing typed-action composition pattern per command family: `server/src/npc/withBoatTravelRoutes.ts`, `withPromotionActions.ts`.
-- Reviewed content lives in `content/npcs/canary-dialogues.json`, overriding the generated baseline.
-- The import report (`content/npcs/canary-npc-import-report.json`) drives a monotonically shrinking gap count — every landed command family reduces it and the parity test tightens.
-- Every new action re-validates at execution time inside the tick (range/floor/state/money/items), never at enqueue (charter rule 4). Money-touching actions (blessings, fees) run as one ACID transaction with audit entries (charter rules 2/11), following the shipped travel-payment pattern in `PgNpcTravelStore.ts`.
-- Canary reference: the 494 definitions' Lua callbacks in opentibiabr/canary are the source of truth for each command's semantics.
+- Grow the action vocabulary in `server/src/npc/NpcDialogueExecutor.ts` /
+  `server/src/npc/DialogueGraph.ts`, following the shipped families there and
+  the `withBoatTravelRoutes.ts` composition pattern.
+- Extend the typed condition grammar in
+  `server/src/npc/evaluateDialogueConditions.ts` and the matching translator in
+  `tools/parseCanaryNpcDialogues.mjs` (`translateCondition` / `translateEffects`).
+- Reviewed content lives in `content/npcs/canary-dialogues.json`, overriding
+  the generated baseline.
+- Every new action re-validates at execution time inside the tick
+  (range/floor/state/money/items), never at enqueue (charter rule 4).
+  Money-touching actions run as one ACID transaction with audit entries
+  (charter rules 2/11), following `PgSpellTeacherStore.ts` / `PgPromotionStore.ts`.
+- Canary reference: the selected definitions' Lua callbacks in
+  opentibiabr/canary are the source of truth for each command's semantics.
 
 ## Tests
-- Per-command-family tests in the `NpcHandler.test.ts` / `NpcDialogueExecutor` style: forged action ids rejected, execution-time re-checks enforced, money legs atomic.
-- Gap-count regression test asserting the report's unexecuted counts never increase.
-- Black Bert exclusions asserted as explicit source-invalid entries.
+- Per-command-family tests in the `NpcTypedCommands.test.ts` style: forged
+  action ids rejected, execution-time re-checks enforced, money legs atomic.
+- Lower the ceilings in `server/src/npc/npcImportParityGate.test.ts` with every
+  landed family; they may never rise.
 
 ## Dependencies
 - Feature 103 (quest platform) for quest-hook commands and storage gates.
-- Bank (shipped) and shop completions (Feature 46) for money actions; blessings (Feature 72) for blessing commands.
-- Feature 37 (typed NpcType model), Feature 40 (graph engine to host conditions).
+- Feature 72 (blessings) for blessing commands and `hasBlessing` conditions.
+- Feature 46 (shop completions) for the remaining money actions.
+- Feature 40 (graph engine) hosts the conditions.

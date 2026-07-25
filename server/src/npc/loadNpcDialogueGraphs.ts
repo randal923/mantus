@@ -1,14 +1,17 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { Position } from "@tibia/protocol";
+import { loadCanarySpellCatalog } from "../combat/loadCanarySpellCatalog";
 import type {
+  DialogueAction,
   DialogueChoiceDefinition,
+  DialogueCondition,
+  DialogueEffect,
   DialogueGraph,
   DialogueNode,
   NpcTravelOffer,
 } from "./DialogueGraph";
 import { withBoatTravelRoutes } from "./withBoatTravelRoutes";
-import { withPromotionActions } from "./withPromotionActions";
 
 const BASELINE_CONTENT_FILE = fileURLToPath(
   new URL(
@@ -20,12 +23,18 @@ const REVIEWED_CONTENT_FILE = fileURLToPath(
   new URL("../../../content/npcs/canary-dialogues.json", import.meta.url),
 );
 const IDENTIFIER = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const STORAGE_KEY = /^[A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*$/;
 
 export function loadNpcDialogueGraphs(
   expectedCanaryCommit: string,
+  /** Overridable so fail-closed tests can feed the loader injected defects. */
+  contentFiles: ReadonlyArray<string> = [
+    BASELINE_CONTENT_FILE,
+    REVIEWED_CONTENT_FILE,
+  ],
 ): ReadonlyMap<string, DialogueGraph> {
   const graphs = new Map<string, DialogueGraph>();
-  for (const contentFile of [BASELINE_CONTENT_FILE, REVIEWED_CONTENT_FILE]) {
+  for (const contentFile of contentFiles) {
     const document = record(
       JSON.parse(readFileSync(contentFile, "utf8")),
       "NPC dialogue document",
@@ -51,12 +60,28 @@ export function loadNpcDialogueGraphs(
       graphs.set(typeId, parseGraph(definition));
     }
   }
-  return withPromotionActions(
-    withBoatTravelRoutes(graphs, expectedCanaryCommit),
+  // Promotion actions used to be composed in here from a hard-coded ruler
+  // list; the importer now derives them from `StdModule.promotePlayer` in the
+  // pinned sources, so the composition step is gone.
+  return withBoatTravelRoutes(graphs, expectedCanaryCommit);
+}
+
+/**
+ * Spell ids a `learn-spell` offer may name. Resolved from the pinned spell
+ * catalog so a reviewed dialogue can never sell a spell the server cannot
+ * cast; a drifted id fails the load instead of failing at purchase time.
+ */
+let cachedSpellIds: ReadonlySet<string> | undefined;
+
+function knownSpellIdSet(): ReadonlySet<string> {
+  cachedSpellIds ??= new Set(
+    loadCanarySpellCatalog().map((spell) => spell.id),
   );
+  return cachedSpellIds;
 }
 
 function parseGraph(value: Record<string, unknown>): DialogueGraph {
+  const knownSpellIds = knownSpellIdSet();
   const nodes = array(value.nodes, "NPC dialogue nodes", 1, 512).map(parseNode);
   const nodeIds = new Set<string>();
   for (const node of nodes) {
@@ -93,9 +118,17 @@ function parseGraph(value: Record<string, unknown>): DialogueGraph {
     if (node.offerId && !offerIds.has(node.offerId)) {
       throw new Error(`${node.id} references missing travel offer ${node.offerId}`);
     }
-    if (node.action?.kind === "travel" && !offerIds.has(node.action.offerId)) {
+    if (
+      (node.action?.kind === "travel" || node.action?.kind === "teleport") &&
+      !offerIds.has(node.action.offerId)
+    ) {
       throw new Error(
         `${node.id} references missing travel offer ${node.action.offerId}`,
+      );
+    }
+    if (node.action?.kind === "learn-spell" && !knownSpellIds.has(node.action.spellId)) {
+      throw new Error(
+        `${node.id} references unknown spell ${node.action.spellId}`,
       );
     }
   }
@@ -138,6 +171,21 @@ function parseNode(value: unknown): DialogueNode {
   const action = node.action === undefined
     ? undefined
     : parseAction(node.action);
+  const conditions = array(
+    node.conditions ?? [],
+    "NPC dialogue conditions",
+    0,
+    8,
+  ).map(parseCondition);
+  const effects = array(node.effects ?? [], "NPC dialogue effects", 0, 8).map(
+    parseEffect,
+  );
+  if (node.focus !== undefined && node.focus !== "focused" && node.focus !== "unfocused") {
+    throw new Error("NPC dialogue focus is invalid");
+  }
+  if (node.ungreet !== undefined && typeof node.ungreet !== "boolean") {
+    throw new Error("NPC dialogue ungreet is invalid");
+  }
   return {
     id: identifier(node.id, "NPC dialogue node id"),
     matches,
@@ -150,8 +198,75 @@ function parseNode(value: unknown): DialogueNode {
     ...(node.offerId === undefined
       ? {}
       : { offerId: identifier(node.offerId, "dialogue travel offer") }),
+    ...(conditions.length > 0 ? { conditions } : {}),
+    ...(effects.length > 0 ? { effects } : {}),
+    ...(node.ungreet === true ? { ungreet: true } : {}),
+    ...(node.focus === "unfocused" ? { focus: "unfocused" as const } : {}),
     ...(action ? { action } : {}),
   };
+}
+
+const CONDITION_OPERATORS = ["eq", "neq", "gte", "lte", "gt", "lt"] as const;
+
+function parseCondition(value: unknown): DialogueCondition {
+  const condition = record(value, "NPC dialogue condition");
+  if (condition.kind === "storage") {
+    const operator = CONDITION_OPERATORS.find(
+      (candidate) => candidate === condition.operator,
+    );
+    if (!operator) throw new Error("NPC dialogue condition operator is invalid");
+    return {
+      kind: "storage",
+      key: storageKey(condition.key),
+      operator,
+      value: integer(
+        condition.value,
+        "NPC dialogue condition value",
+        -2_147_483_648,
+        2_147_483_647,
+      ),
+    };
+  }
+  if (condition.kind === "level") {
+    return {
+      kind: "level",
+      minimum: integer(condition.minimum, "NPC dialogue level", 1, 10_000),
+    };
+  }
+  if (condition.kind === "premium") {
+    if (typeof condition.required !== "boolean") {
+      throw new Error("NPC dialogue premium condition is invalid");
+    }
+    return { kind: "premium", required: condition.required };
+  }
+  throw new Error("NPC dialogue condition is unsupported");
+}
+
+function parseEffect(value: unknown): DialogueEffect {
+  const effect = record(value, "NPC dialogue effect");
+  if (effect.kind !== "set-storage") {
+    throw new Error("NPC dialogue effect is unsupported");
+  }
+  return {
+    kind: "set-storage",
+    key: storageKey(effect.key),
+    value: integer(
+      effect.value,
+      "NPC dialogue effect value",
+      -2_147_483_648,
+      2_147_483_647,
+    ),
+  };
+}
+
+/**
+ * Quest state keys are dotted paths mirroring Canary's `Storage.*` tables.
+ * They are validated here and never leave the server (charter rule 6).
+ */
+function storageKey(value: unknown): string {
+  const key = text(value, "NPC dialogue storage key", 192);
+  if (!STORAGE_KEY.test(key)) throw new Error("NPC dialogue storage key is invalid");
+  return key;
 }
 
 function parseChoice(value: unknown): DialogueChoiceDefinition {
@@ -162,12 +277,18 @@ function parseChoice(value: unknown): DialogueChoiceDefinition {
   };
 }
 
-function parseAction(value: unknown): DialogueNode["action"] {
+function parseAction(value: unknown): DialogueAction {
   const action = record(value, "NPC dialogue action");
   if (action.kind === "travel") {
     return {
       kind: "travel",
       offerId: identifier(action.offerId, "NPC travel action offer"),
+    };
+  }
+  if (action.kind === "teleport") {
+    return {
+      kind: "teleport",
+      offerId: identifier(action.offerId, "NPC teleport action offer"),
     };
   }
   if (action.kind === "shop") {
@@ -178,6 +299,39 @@ function parseAction(value: unknown): DialogueNode["action"] {
   }
   if (action.kind === "bank") {
     return { kind: "bank" };
+  }
+  if (action.kind === "promote") {
+    return {
+      kind: "promote",
+      cost: integer(action.cost, "NPC promotion cost", 0, 1_000_000_000),
+      minimumLevel: integer(
+        action.minimumLevel,
+        "NPC promotion level",
+        1,
+        10_000,
+      ),
+    };
+  }
+  if (action.kind === "learn-spell") {
+    if (typeof action.premium !== "boolean") {
+      throw new Error("NPC spell offer premium flag is invalid");
+    }
+    return {
+      kind: "learn-spell",
+      spellId: identifier(action.spellId, "NPC spell offer id"),
+      price: integer(action.price, "NPC spell price", 0, 1_000_000_000),
+      minimumLevel: integer(action.minimumLevel, "NPC spell level", 1, 10_000),
+      premium: action.premium,
+    };
+  }
+  if (action.kind === "hint") {
+    return {
+      kind: "hint",
+      storageKey: storageKey(action.storageKey),
+      hints: array(action.hints, "NPC hints", 1, 64).map((entry) =>
+        strings(entry, "NPC hint lines", 1, 8, 1_000),
+      ),
+    };
   }
   throw new Error("NPC dialogue action is unsupported");
 }

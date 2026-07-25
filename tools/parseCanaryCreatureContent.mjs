@@ -67,6 +67,30 @@ const NPC_FIELDS = new Set([
   "walkInterval",
   "walkRadius",
   "outfit",
+  "flags",
+  "speechBubble",
+  "voices",
+  "currency",
+  // Shop rows are imported separately by parseCanaryNpcShops.
+  "shop",
+]);
+
+/**
+ * Canary NPC callbacks that are pure delegation to the shared NpcHandler /
+ * shop plumbing, which this server implements natively. A callback whose body
+ * matches one of these is reviewed content, not a procedural gap; anything
+ * else stays reported so it can be turned into a typed command (Feature 38).
+ */
+const STANDARD_NPC_CALLBACK_BODIES = new Map([
+  ["onBuyItem", ["npc:sellItem(player, itemId, amount, subType, 0, ignore, inBackpacks)"]],
+  [
+    "onSellItem",
+    [
+      'player:sendTextMessage(MESSAGE_TRADE, string.format("Sold %ix %s for %i gold.", amount, name, totalCost))',
+      'player:sendTextMessage(MESSAGE_INFO_DESCR, string.format("Sold %ix %s for %i gold.", amount, name, totalCost))',
+    ],
+  ],
+  ["onCheckItem", ["", "return true"]],
 ]);
 
 class LuaReader {
@@ -566,10 +590,16 @@ function parseNpcDefinition(definition, name, context, corrections) {
   const source = definition.source;
   const health = numberValue(assignment(source, "npcConfig", "health"), 100);
   const maxHealthValue = assignment(source, "npcConfig", "maxHealth");
+  const flags = objectValue(assignment(source, "npcConfig", "flags"));
+  const currency = assignment(source, "npcConfig", "currency");
   return {
     type: {
       id: normalizeName(name),
       name,
+      description: npcDescription(
+        assignment(source, "npcConfig", "description"),
+        name,
+      ),
       outfit: outfitValue(
         assignment(source, "npcConfig", "outfit"),
         context,
@@ -580,11 +610,182 @@ function parseNpcDefinition(definition, name, context, corrections) {
       speed: 100,
       walkIntervalMs: numberValue(assignment(source, "npcConfig", "walkInterval"), 2000),
       walkRadius: numberValue(assignment(source, "npcConfig", "walkRadius"), 0),
+      canChangeFloor: booleanValue(flags.floorchange, false),
+      profession: npcProfession(flags.profession),
+      speechBubble: npcSpeechBubble(
+        assignment(source, "npcConfig", "speechBubble"),
+      ),
+      voices: npcVoices(assignment(source, "npcConfig", "voices")),
+      ...(typeof currency === "number" && Number.isInteger(currency)
+        ? { currencyItemTypeId: currency }
+        : {}),
     },
     ignored: ignoredAssignments(source, "npcConfig", NPC_FIELDS),
-    callbacks: [...source.matchAll(/\bnpcType\.(on[A-Za-z]+)\s*=/g)].map((match) => match[1]),
+    callbacks: npcCallbacks(source),
     sourcePath: definition.path,
   };
+}
+
+/**
+ * Reports only the callbacks this server does not already implement. The
+ * common `npcType.onX = function(a, b) npcHandler:onX(a, b) end` delegation
+ * and the boilerplate shop callbacks are recognized natively and drop out of
+ * the parity report; every other body stays listed as a procedural gap.
+ */
+function npcCallbacks(source) {
+  const reported = [];
+  const pattern = /\bnpcType\.(on[A-Za-z]+)\s*=\s*function\s*\(([^)]*)\)/g;
+  for (const match of source.matchAll(pattern)) {
+    const [, callback, parameters] = match;
+    const opening = source.indexOf(")", match.index) + 1;
+    const body = luaFunctionBody(source, opening);
+    if (body === undefined) {
+      reported.push(callback);
+      continue;
+    }
+    const normalized = body.replace(/\s+/gu, " ").trim();
+    if (isStandardNpcCallback(callback, parameters, normalized)) continue;
+    reported.push(callback);
+  }
+  return [...new Set(reported)];
+}
+
+function isStandardNpcCallback(callback, parameters, body) {
+  const names = parameters
+    .split(",")
+    .map((parameter) => parameter.trim())
+    .filter(Boolean);
+  const delegation = `npcHandler:${callback}(${names.join(", ")})`;
+  if (body === delegation) return true;
+  return (STANDARD_NPC_CALLBACK_BODIES.get(callback) ?? []).includes(body);
+}
+
+/** Slices a Lua function body, tracking nested block keywords and strings. */
+function luaFunctionBody(source, start) {
+  let depth = 1;
+  let index = start;
+  const opens = /\b(function|if|for|while|do)\b/y;
+  const closes = /\bend\b/y;
+  while (index < source.length) {
+    const character = source[index];
+    if (character === '"' || character === "'") {
+      index = skipLuaString(source, index);
+      continue;
+    }
+    if (source.startsWith("--[[", index)) {
+      const stop = source.indexOf("]]", index + 4);
+      index = stop === -1 ? source.length : stop + 2;
+      continue;
+    }
+    if (source.startsWith("--", index)) {
+      const stop = source.indexOf("\n", index + 2);
+      index = stop === -1 ? source.length : stop;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(character)) {
+      opens.lastIndex = index;
+      const open = opens.exec(source);
+      if (open && (index === 0 || !/[A-Za-z0-9_]/.test(source[index - 1]))) {
+        // `for ... do` and `while ... do` open one block, not two.
+        if (open[1] !== "do") depth++;
+        index += open[1].length;
+        continue;
+      }
+      closes.lastIndex = index;
+      const close = closes.exec(source);
+      if (close && (index === 0 || !/[A-Za-z0-9_]/.test(source[index - 1]))) {
+        depth--;
+        if (depth === 0) return source.slice(start, index);
+        index += 3;
+        continue;
+      }
+      while (index < source.length && /[A-Za-z0-9_]/.test(source[index])) index++;
+      continue;
+    }
+    index++;
+  }
+  return undefined;
+}
+
+function skipLuaString(source, start) {
+  const quote = source[start];
+  let index = start + 1;
+  while (index < source.length) {
+    if (source[index] === "\\") {
+      index += 2;
+      continue;
+    }
+    if (source[index] === quote) return index + 1;
+    index++;
+  }
+  return index;
+}
+
+/** `npcConfig.description = internalNpcName` is the overwhelmingly common form. */
+function npcDescription(value, name) {
+  if (typeof value !== "string" || value.length === 0) return name;
+  if (value === "internalNpcName" || value === "npcConfig.name") return name;
+  return value;
+}
+
+const NPC_PROFESSIONS = new Set([
+  "normal",
+  "trader",
+  "banker",
+  "sailor",
+  "king",
+  "queen",
+]);
+
+function npcProfession(value) {
+  if (typeof value !== "string") return "normal";
+  const profession = value.toLowerCase();
+  if (!NPC_PROFESSIONS.has(profession)) {
+    throw new Error(`unsupported NPC profession ${value}`);
+  }
+  return profession;
+}
+
+const NPC_SPEECH_BUBBLES = new Map([
+  ["SPEECHBUBBLE_NONE", "none"],
+  ["SPEECHBUBBLE_NORMAL", "normal"],
+  ["SPEECHBUBBLE_TRADE", "trade"],
+  ["SPEECHBUBBLE_QUEST", "normal"],
+  ["SPEECHBUBBLE_QUESTTRADER", "trade"],
+  ["SPEECHBUBBLE_BANKER", "banker"],
+  ["SPEECHBUBBLE_SAILOR", "sailor"],
+  ["SPEECHBUBBLE_HIRELING", "hireling"],
+]);
+
+function npcSpeechBubble(value) {
+  if (typeof value !== "string") return "none";
+  const bubble = NPC_SPEECH_BUBBLES.get(value);
+  if (!bubble) throw new Error(`unsupported NPC speech bubble ${value}`);
+  return bubble;
+}
+
+/**
+ * Canary voices: one interval/chance pair shared by the array part's lines.
+ * A line may override `yell`.
+ */
+function npcVoices(value) {
+  const table = objectValue(value);
+  const entries = Array.isArray(table.$entries) ? table.$entries : [];
+  if (entries.length === 0) return [];
+  const intervalMs = numberValue(table.interval, 15000);
+  const chance = numberValue(table.chance, 50);
+  return entries.flatMap((entry) => {
+    const voice = primitiveRecord(entry);
+    if (typeof voice.text !== "string" || voice.text.length === 0) return [];
+    return [
+      {
+        text: voice.text,
+        intervalMs,
+        chance,
+        yell: booleanValue(voice.yell, false),
+      },
+    ];
+  });
 }
 
 function indexDefinitions(definitions, kind) {
@@ -649,6 +850,7 @@ export function parseCanaryCreatureContent(options) {
   const aliases = [];
   const ambiguousDefinitions = [];
   const unsupported = [];
+  const definitionIndex = [];
   const invisibleAppearances = [];
   const appearanceCorrections = [];
   for (const slot of [...selected, ...definitionOnlyMonsters]) {
@@ -708,6 +910,11 @@ export function parseCanaryCreatureContent(options) {
       });
     }
     target.set(slot.typeId, parsed.type);
+    definitionIndex.push({
+      kind: slot.kind,
+      typeId: slot.typeId,
+      sourcePath: parsed.sourcePath,
+    });
     if (parsed.ignored.length > 0 || parsed.callbacks?.length > 0) {
       unsupported.push({
         kind: slot.kind,
@@ -746,6 +953,14 @@ export function parseCanaryCreatureContent(options) {
         npcs: slots.filter((slot) => slot.kind === "npc").length,
       },
       aliases,
+      // The authoritative type-id -> Canary source mapping for everything
+      // this import resolved. Downstream importers (NPC dialogues, shops)
+      // select from this, not from whichever types happen to be unsupported.
+      definitions: definitionIndex.sort(
+        (left, right) =>
+          left.kind.localeCompare(right.kind) ||
+          left.typeId.localeCompare(right.typeId),
+      ),
       duplicates,
       duplicateDefinitions: [...monsterIndex.duplicates, ...npcIndex.duplicates],
       ambiguousDefinitions,

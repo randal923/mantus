@@ -13,10 +13,11 @@ import { World } from "../World";
 import type { ShopCatalog } from "./ShopCatalog";
 import type { ShopStore } from "./ShopStore";
 import { ShopService } from "./ShopService";
+import { makeNpcType } from "../test/makeNpcType";
 
 const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-const shopkeeperType: NpcType = {
+const shopkeeperType: NpcType = makeNpcType({
   id: "sam",
   name: "Sam",
   outfit: { lookType: 129, head: 0, body: 0, legs: 0, feet: 0, addons: 0 },
@@ -54,7 +55,7 @@ const shopkeeperType: NpcType = {
     ],
     travelOffers: [],
   },
-};
+});
 
 const catalog: ShopCatalog = {
   id: "sam",

@@ -20,6 +20,11 @@ import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import { ChatChannelRegistry } from "./ChatChannelRegistry";
+import {
+  DEFAULT_CHAT_FLOOD_LIMITS,
+  type ChatFloodLimits,
+} from "./ChatFloodLimits";
+import { ChatFloodMetrics } from "./ChatFloodMetrics";
 import { ChatRateLimiter } from "./ChatRateLimiter";
 import { IgnoreList } from "./IgnoreList";
 import { TalkactionRegistry } from "./TalkactionRegistry";
@@ -50,7 +55,9 @@ const YELL_MINIMUM_LEVEL = 2;
  * Message bodies are never logged.
  */
 export class ChatHandler {
-  private readonly rateLimiter = new ChatRateLimiter();
+  /** Flood counters an operator can read; never holds message content. */
+  readonly floodMetrics = new ChatFloodMetrics();
+  private readonly rateLimiter: ChatRateLimiter;
   /** Keyed by character id for the server's lifetime so relogging cannot reset it. */
   private readonly nextYellAt = new Map<string, number>();
   private readonly channels = new ChatChannelRegistry();
@@ -77,7 +84,10 @@ export class ChatHandler {
       experienceRate: number;
       lootRate: number;
     },
-  ) {}
+    floodLimits: ChatFloodLimits = DEFAULT_CHAT_FLOOD_LIMITS,
+  ) {
+    this.rateLimiter = new ChatRateLimiter(floodLimits, this.floodMetrics);
+  }
 
   /** Drops a leaving character's open channels; the ignore list outlives them. */
   detach(characterId: string): void {

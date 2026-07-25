@@ -22,6 +22,21 @@ network:
     x: 9
     y: 7
 
+chat:
+  # Flood control, enforced server-side. Canary's message buffer: 4 lines of
+  # burst, one slot back every 1.5 s, the n-th overflow mutes for 5·n² seconds.
+  bufferCapacity: 4
+  bufferDrainMs: 1500
+  muteBaseMs: 5000
+  # Ten quiet minutes forgives one escalation level. The counter survives
+  # relogging (but not a restart — see TODO.md).
+  escalationDecayMs: 600000
+
+moderation:
+  # Retention for moderation metadata (actions, reports, expired mutes and
+  # bans). Rows older than this are pruned; see docs/moderation-retention.md.
+  retentionDays: 365
+
 combat:
   seed: 1129270594
 

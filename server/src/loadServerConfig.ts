@@ -73,6 +73,17 @@ const serverConfigFileSchema = z
           .strict(),
       })
       .strict(),
+    chat: z
+      .object({
+        bufferCapacity: positiveIntegerSchema.max(64),
+        bufferDrainMs: positiveIntegerSchema.max(60_000),
+        muteBaseMs: positiveIntegerSchema.max(60 * 60_000),
+        escalationDecayMs: positiveIntegerSchema.max(24 * 60 * 60_000),
+      })
+      .strict(),
+    moderation: z
+      .object({ retentionDays: positiveIntegerSchema.max(3_650) })
+      .strict(),
     combat: z.object({ seed: uint32Schema }).strict(),
     rates: z
       .object({
@@ -205,6 +216,8 @@ export async function loadServerConfig(
     maxSessions: config.network.maxSessions,
     maxPendingIntents: config.network.maxPendingIntents,
     maxProtocolViolations: config.network.maxProtocolViolations,
+    chat: config.chat,
+    moderationRetentionDays: config.moderation.retentionDays,
     combatSeed: config.combat.seed,
     rates: config.rates,
     progression: config.progression,

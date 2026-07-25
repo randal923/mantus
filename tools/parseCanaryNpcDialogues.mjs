@@ -3,16 +3,30 @@ const DEFAULT_FAREWELL = "Good bye, |PLAYERNAME|.";
 const DEFAULT_WALK_AWAY = "Good bye.";
 const DEFAULT_TRADE = "Of course, just browse through my wares.";
 const ALLOWED_SAY_FIELDS = new Set([
+  "cost",
+  "message",
   "moveup",
   "npchandler",
   "onlyfocus",
+  "onlyunfocus",
   "reset",
   "text",
   "topic",
+  "ungreet",
 ]);
 
-/** Imports literal greeting and keyword dialogue without executing Canary Lua. */
-export function parseCanaryNpcDialogues(definitions, shopTypeIds) {
+/**
+ * Imports greeting and keyword dialogue without executing Canary Lua.
+ * `context` carries the pinned lookups the typed command families need:
+ * `spellIdsByName` (from the pinned spell catalog) and `rookgaardHints`
+ * (from the pinned npc_system module). Both default to empty, in which case
+ * the families that need them stay reported rather than guessing.
+ */
+export function parseCanaryNpcDialogues(definitions, shopTypeIds, options = {}) {
+  const context = {
+    spellIdsByName: options.spellIdsByName ?? new Map(),
+    rookgaardHints: options.rookgaardHints ?? [],
+  };
   const dialogues = [];
   const definitionsReport = [];
 
@@ -86,6 +100,7 @@ export function parseCanaryNpcDialogues(definitions, shopTypeIds) {
     }
 
     const variableNodes = new Map();
+    const travelOffers = [];
     for (const call of keywordCalls(source)) {
       const keywords = keywordArray(call.arguments[0]);
       const action = call.arguments[1]?.trim();
@@ -94,44 +109,63 @@ export function parseCanaryNpcDialogues(definitions, shopTypeIds) {
         call.receiver === "keywordHandler"
           ? "root"
           : variableNodes.get(call.receiver);
-      if (
-        keywords.length === 0 ||
-        !parentId ||
-        action !== "StdModule.say" ||
-        !parameters
-      ) {
+      if (keywords.length === 0 || !parentId || !action || !parameters) {
         if (call.assignment) variableNodes.set(call.assignment, undefined);
-        if (keywords.length > 0 && action && action !== "StdModule.say") {
+        if (keywords.length > 0 && action) {
           unsupportedKeywordActions.push({ keywords, action });
         }
         continue;
       }
-      const unsupportedFields = Object.keys(parameters).filter(
-        (key) => !ALLOWED_SAY_FIELDS.has(key.toLowerCase()),
-      );
-      const hasCallback = call.arguments
-        .slice(3)
-        .some((argument) => !["", "nil"].includes(argument.trim()));
-      const responses = responseValue(parameters.text);
-      if (unsupportedFields.length > 0 || hasCallback || responses.length === 0) {
+      // The 4th argument gates the branch, the 5th applies state once it
+      // runs. Both become typed content or the whole branch stays reported;
+      // an unparsed callback is never silently dropped.
+      const gate = translateCondition(call.arguments[3]);
+      const effectResult = translateEffects(call.arguments[4]);
+      const translated =
+        gate.status === "unsupported" || effectResult.status === "unsupported"
+          ? {
+              status: "unsupported",
+              detail: {
+                ...(gate.status === "unsupported" ? { callback: true } : {}),
+                ...(effectResult.status === "unsupported"
+                  ? { effectCallback: true }
+                  : {}),
+              },
+            }
+          : translateKeywordAction(action, parameters, context);
+      if (translated.status === "unsupported") {
         if (call.assignment) variableNodes.set(call.assignment, undefined);
         unsupportedKeywordActions.push({
           keywords,
           action,
-          ...(unsupportedFields.length === 0 ? {} : { unsupportedFields }),
-          ...(hasCallback ? { callback: true } : {}),
-          ...(responses.length > 0 ? {} : { nonLiteralResponse: true }),
+          ...translated.detail,
         });
         continue;
       }
       const id = `dialogue-${nodes.length + 1}`;
+      if (translated.offer) {
+        travelOffers.push({ ...translated.offer, id: `offer-${id}` });
+      }
       nodes.push({
         id,
         matches: keywords.map((keyword) => [keyword]),
-        responses,
+        responses: translated.responses,
         children: [],
         choices: [],
         nextNodeId: "root",
+        ...(gate.conditions.length > 0 ? { conditions: gate.conditions } : {}),
+        ...(effectResult.effects.length > 0
+          ? { effects: effectResult.effects }
+          : {}),
+        ...(translated.ungreet ? { ungreet: true } : {}),
+        ...(translated.focus ? { focus: translated.focus } : {}),
+        ...(translated.action
+          ? {
+              action: translated.offer
+                ? { ...translated.action, offerId: `offer-${id}` }
+                : translated.action,
+            }
+          : {}),
       });
       if (parentId === "root") rootChildren.push(id);
       else {
@@ -177,7 +211,7 @@ export function parseCanaryNpcDialogues(definitions, shopTypeIds) {
       walkAway,
       rootNodeId: "root",
       nodes: allNodes,
-      travelOffers: [],
+      travelOffers,
     });
     definitionsReport.push({
       typeId: definition.typeId,
@@ -219,6 +253,252 @@ export function parseCanaryNpcDialogues(definitions, shopTypeIds) {
       definitions: definitionsReport,
     },
   };
+}
+
+/**
+ * Turns one Canary keyword action into typed content, or reports why it
+ * cannot be. Every family here is a reviewed TypeScript command on the
+ * server side; there is no general Lua evaluator and never will be.
+ */
+function translateKeywordAction(action, parameters, context) {
+  if (action === "StdModule.say") return translateSay(parameters);
+  if (action === "StdModule.learnSpell") {
+    return translateLearnSpell(parameters, context);
+  }
+  if (action === "StdModule.travel") return translateTravel(parameters);
+  if (action === "StdModule.kick") return translateKick(parameters);
+  if (action === "StdModule.promotePlayer") return translatePromote(parameters);
+  if (action === "StdModule.rookgaardHints") {
+    return translateHints(parameters, context);
+  }
+  return { status: "unsupported", detail: {} };
+}
+
+function translateSay(parameters) {
+  const unsupportedFields = Object.keys(parameters).filter(
+    (key) => !ALLOWED_SAY_FIELDS.has(key.toLowerCase()),
+  );
+  if (unsupportedFields.length > 0) {
+    return { status: "unsupported", detail: { unsupportedFields } };
+  }
+  const responses = renderCostTags(
+    responseValue(parameters.text ?? parameters.message),
+    parameters,
+  );
+  if (!responses) return { status: "unsupported", detail: { costTag: true } };
+  if (responses.length === 0) {
+    return { status: "unsupported", detail: { nonLiteralResponse: true } };
+  }
+  if (booleanField(parameters.onlyFocus) === false && booleanField(parameters.onlyUnfocus) === true) {
+    return { status: "ok", responses, focus: "unfocused" };
+  }
+  if (booleanField(parameters.onlyUnfocus) === true) {
+    return { status: "ok", responses, focus: "unfocused" };
+  }
+  return {
+    status: "ok",
+    responses,
+    ...(booleanField(parameters.ungreet) === true ? { ungreet: true } : {}),
+  };
+}
+
+/**
+ * |TRAVELCOST| renders the server-owned price. A say node carries no price
+ * of its own, so a cost tag is only importable when the cost is a literal.
+ */
+function renderCostTags(responses, parameters) {
+  if (!responses.some((response) => response.includes("|TRAVELCOST|"))) {
+    return responses;
+  }
+  if (parameters.discount !== undefined) return undefined;
+  const cost = numberField(parameters.cost);
+  if (cost === undefined) return undefined;
+  const rendered = cost > 0 ? `${cost} gold` : "free";
+  return responses.map((response) =>
+    response.replaceAll("|TRAVELCOST|", rendered),
+  );
+}
+
+function translateLearnSpell(parameters, context) {
+  const spellName = luaString(parameters.spellName);
+  const price = numberField(parameters.price);
+  const level = numberField(parameters.level);
+  if (spellName === undefined || price === undefined) {
+    return { status: "unsupported", detail: { nonLiteralSpellOffer: true } };
+  }
+  const spellId = context.spellIdsByName.get(spellName.trim().toLowerCase());
+  if (!spellId) {
+    // Source-invalid, not silently omitted: the pinned NPC sells a spell the
+    // pinned spell catalog does not define.
+    return {
+      status: "unsupported",
+      detail: { sourceInvalid: `spell "${spellName}" is not in the pinned catalog` },
+    };
+  }
+  return {
+    status: "ok",
+    responses: [`You have learned '${spellName}'.`],
+    action: {
+      kind: "learn-spell",
+      spellId,
+      price,
+      minimumLevel: level === undefined || level < 1 ? 1 : level,
+      premium: booleanField(parameters.premium) === true,
+    },
+  };
+}
+
+function translateTravel(parameters) {
+  const destination = positionValue(parameters.destination);
+  if (!destination) {
+    return { status: "unsupported", detail: { nonLiteralDestination: true } };
+  }
+  if (parameters.discount !== undefined) {
+    return { status: "unsupported", detail: { unsupportedFields: ["discount"] } };
+  }
+  const cost = numberField(parameters.cost) ?? 0;
+  const level = numberField(parameters.level);
+  const responses = responseValue(parameters.text);
+  return {
+    status: "ok",
+    responses: responses.length > 0 ? responses : ["Set the sails!"],
+    offer: {
+      cost,
+      destination,
+      ...(level !== undefined && level > 1 ? { minimumLevel: level } : {}),
+    },
+    action: { kind: "travel" },
+  };
+}
+
+function translateKick(parameters) {
+  const destination = positionValue(parameters.destination);
+  if (!destination) {
+    return { status: "unsupported", detail: { nonLiteralDestination: true } };
+  }
+  const responses = responseValue(parameters.text);
+  return {
+    status: "ok",
+    responses: responses.length > 0 ? responses : ["Off with you!"],
+    offer: { cost: 0, destination },
+    action: { kind: "teleport" },
+  };
+}
+
+function translatePromote(parameters) {
+  const cost = numberField(parameters.cost);
+  const level = numberField(parameters.level);
+  if (cost === undefined || level === undefined) {
+    return { status: "unsupported", detail: { nonLiteralPromotion: true } };
+  }
+  const responses = responseValue(parameters.text);
+  return {
+    status: "ok",
+    responses:
+      responses.length > 0 ? responses : ["Congratulations! You are now promoted."],
+    action: { kind: "promote", cost, minimumLevel: level },
+  };
+}
+
+function translateHints(_parameters, context) {
+  if (context.rookgaardHints.length === 0) {
+    return { status: "unsupported", detail: { missingHintTable: true } };
+  }
+  return {
+    status: "ok",
+    responses: context.rookgaardHints[0],
+    action: {
+      kind: "hint",
+      storageKey: "RookgaardHints",
+      hints: context.rookgaardHints,
+    },
+  };
+}
+
+/**
+ * `function(player) return player:getStorageValue(Storage.A.B) == n end`
+ * is the only condition shape imported; anything else keeps its branch out
+ * of the content until it is reviewed into a typed condition.
+ */
+const CONDITION_PATTERN =
+  /^function\s*\(\s*player\s*\)\s*return\s+player:getStorageValue\s*\(\s*Storage\.([A-Za-z0-9_.]+)\s*\)\s*(==|~=|>=|<=|>|<)\s*(-?\d+)\s*end$/;
+const CONDITION_OPERATORS = {
+  "==": "eq",
+  "~=": "neq",
+  ">=": "gte",
+  "<=": "lte",
+  ">": "gt",
+  "<": "lt",
+};
+/** `player:setStorageValue(Storage.A.B, n)`, one or more, and nothing else. */
+const EFFECT_PATTERN =
+  /player:setStorageValue\s*\(\s*Storage\.([A-Za-z0-9_.]+)\s*,\s*(-?\d+)\s*\)/g;
+
+function translateCondition(argument) {
+  const source = argument?.trim();
+  if (!source || source === "nil") return { status: "ok", conditions: [] };
+  const match = CONDITION_PATTERN.exec(source.replace(/\s+/gu, " "));
+  if (!match) return { status: "unsupported", conditions: [] };
+  return {
+    status: "ok",
+    conditions: [
+      {
+        kind: "storage",
+        key: match[1],
+        operator: CONDITION_OPERATORS[match[2]],
+        value: Number(match[3]),
+      },
+    ],
+  };
+}
+
+function translateEffects(argument) {
+  const source = argument?.trim();
+  if (!source || source === "nil") return { status: "ok", effects: [] };
+  const normalized = source.replace(/\s+/gu, " ");
+  const body = /^function\s*\(\s*player\s*\)(.*)end$/.exec(normalized)?.[1];
+  if (body === undefined) return { status: "unsupported", effects: [] };
+  const effects = [];
+  let consumed = "";
+  for (const match of body.matchAll(EFFECT_PATTERN)) {
+    effects.push({ kind: "set-storage", key: match[1], value: Number(match[2]) });
+    consumed += match[0];
+  }
+  // Only bodies made up entirely of storage writes are importable; a body
+  // that also gives items or teleports stays a reported gap.
+  if (effects.length === 0 || body.replace(/\s/gu, "") !== consumed.replace(/\s/gu, "")) {
+    return { status: "unsupported", effects: [] };
+  }
+  return { status: "ok", effects };
+}
+
+function positionValue(value) {
+  const match = /^Position\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/.exec(
+    value?.trim() ?? "",
+  );
+  if (!match) return undefined;
+  const position = {
+    x: Number(match[1]),
+    y: Number(match[2]),
+    z: Number(match[3]),
+  };
+  if (position.x > 65_535 || position.y > 65_535 || position.z > 15) {
+    return undefined;
+  }
+  return position;
+}
+
+function numberField(value) {
+  const trimmed = value?.trim();
+  if (trimmed === undefined || !/^-?\d+$/.test(trimmed)) return undefined;
+  return Number(trimmed);
+}
+
+function booleanField(value) {
+  const trimmed = value?.trim();
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  return undefined;
 }
 
 function messageDefinitions(source) {

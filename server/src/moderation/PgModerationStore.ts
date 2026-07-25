@@ -10,6 +10,7 @@ import { deleteCharacterMuteQuery } from "./sql/deleteCharacterMuteQuery";
 import { insertModerationActionQuery } from "./sql/insertModerationActionQuery";
 import { insertPlayerReportQuery } from "./sql/insertPlayerReportQuery";
 import { moderationCharacterByNameQuery } from "./sql/moderationCharacterByNameQuery";
+import { pruneModerationRetentionQuery } from "./sql/pruneModerationRetentionQuery";
 import { updateAccountBannedUntilQuery } from "./sql/updateAccountBannedUntilQuery";
 import { upsertAccountBanQuery } from "./sql/upsertAccountBanQuery";
 import { upsertCharacterMuteQuery } from "./sql/upsertCharacterMuteQuery";
@@ -18,6 +19,7 @@ import type {
   BanAccountResult,
   CreateReportResult,
   ModerationOpFailure,
+  ModerationPruneResult,
   ModerationStore,
   MuteCharacterResult,
   RecordKickResult,
@@ -243,6 +245,25 @@ export class PgModerationStore implements ModerationStore {
       ]);
       return { status: "created" as const };
     });
+  }
+
+  async pruneRetention(
+    before: Date,
+    limit: number,
+  ): Promise<ModerationPruneResult> {
+    const result = await this.pool.query<{
+      mutes: string;
+      bans: string;
+      reports: string;
+      actions: string;
+    }>(pruneModerationRetentionQuery, [before.toISOString(), limit]);
+    const row = result.rows[0];
+    return {
+      mutes: Number(row?.mutes ?? 0),
+      bans: Number(row?.bans ?? 0),
+      reports: Number(row?.reports ?? 0),
+      actions: Number(row?.actions ?? 0),
+    };
   }
 
   private async requireTarget(

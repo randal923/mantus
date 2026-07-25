@@ -15,6 +15,12 @@ interface CachedMute {
   readonly reason: string;
 }
 
+const DAY_MS = 24 * 3600 * 1000;
+const RETENTION_SCAN_INTERVAL_MS = 60 * 60_000;
+/** Rows per table per pass; a neglected database drains over several scans. */
+const RETENTION_PRUNE_LIMIT = 500;
+const DEFAULT_RETENTION_DAYS = 365;
+
 /**
  * Server-authoritative moderation runtime. Durable GM mutes are cached
  * in memory per online character (loaded at login, updated in the same
@@ -33,14 +39,50 @@ export class ModerationService implements ChatModerationHooks {
   private readonly autoMuteUntilByCharacter = new Map<string, number>();
   private readonly nextReportAtBySession = new Map<string, number>();
   private readonly reportPendingBySession = new Set<string>();
+  private nextPruneAt = 0;
+  private prunePending = false;
 
   constructor(
     private readonly registry: SessionRegistry,
     private readonly store?: ModerationStore,
+    private readonly retentionDays = DEFAULT_RETENTION_DAYS,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
     for (const outcome of this.outcomes.splice(0)) outcome(now);
+  }
+
+  /**
+   * Retention prune (docs/moderation-retention.md). One bounded pass per
+   * scan interval, never overlapping itself; live enforcement state is
+   * excluded by the store's query, not by anything decided here.
+   */
+  tick(now: number): void {
+    const store = this.store;
+    if (!store || this.prunePending || now < this.nextPruneAt) return;
+    this.nextPruneAt = now + RETENTION_SCAN_INTERVAL_MS;
+    this.prunePending = true;
+    const before = new Date(now - this.retentionDays * DAY_MS);
+    const operation = store
+      .pruneRetention(before, RETENTION_PRUNE_LIMIT)
+      .then((result) => {
+        const total =
+          result.mutes + result.bans + result.reports + result.actions;
+        if (total === 0) return;
+        console.warn(
+          `moderation retention prune: mutes=${result.mutes} bans=${result.bans} ` +
+            `reports=${result.reports} actions=${result.actions}`,
+        );
+      })
+      .catch((cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(`moderation retention prune failed: ${reason}`);
+      })
+      .finally(() => {
+        this.prunePending = false;
+      });
+    this.pendingOperations.add(operation);
+    void operation.finally(() => this.pendingOperations.delete(operation));
   }
 
   async stop(): Promise<void> {

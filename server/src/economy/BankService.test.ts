@@ -12,10 +12,11 @@ import { makeCharacter } from "../test/makeCharacter";
 import { World } from "../World";
 import type { BankStore } from "./BankStore";
 import { BankService } from "./BankService";
+import { makeNpcType } from "../test/makeNpcType";
 
 const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-const bankerType: NpcType = {
+const bankerType: NpcType = makeNpcType({
   id: "naji",
   name: "Naji",
   outfit: { lookType: 129, head: 0, body: 0, legs: 0, feet: 0, addons: 0 },
@@ -53,7 +54,7 @@ const bankerType: NpcType = {
     ],
     travelOffers: [],
   },
-};
+});
 
 const goldStack = (id: string, count: number, slot: number): Item => ({
   id,

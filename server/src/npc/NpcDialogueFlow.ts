@@ -4,7 +4,7 @@ import type { ShopService } from "../economy/ShopService";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
-import type { DialogueGraph } from "./DialogueGraph";
+import type { DialogueGraph, DialogueNode } from "./DialogueGraph";
 import type { NpcConversation } from "./NpcConversation";
 import type { NpcConversations } from "./NpcConversations";
 import { sendNpcDialogueResponses } from "./sendNpcDialogueResponses";
@@ -84,6 +84,29 @@ export class NpcDialogueFlow {
       false,
     );
     this.close(session, npc, conversation, "walked-away");
+  }
+
+  /**
+   * Speaks one `onlyUnfocus` branch to a player who has not greeted the NPC.
+   * No conversation is opened, so nothing here can be replayed or continued:
+   * the line is delivered privately and the exchange is over.
+   */
+  sayUnfocused(
+    session: Session,
+    player: Player,
+    npc: Npc,
+    node: DialogueNode,
+  ): void {
+    for (const response of node.responses) {
+      session.send({
+        type: "creature-spoke",
+        creatureId: npc.id,
+        name: npc.name,
+        mode: "say",
+        position: { ...npc.position },
+        text: response.replaceAll("|PLAYERNAME|", player.name),
+      });
+    }
   }
 
   close(

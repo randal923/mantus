@@ -72,6 +72,15 @@ limitations accepted during a session are recorded in the owning feature file
   relogin (keyed by character id for the server's lifetime) but not a restart.
   Fix: a table alongside the other social stores; the suppression path itself
   needs no change.
+- **Chat flood escalation is memory-only** (2026-07-25, Feature 36). The
+  repeat-offender counter behind escalating mutes is keyed by character id for
+  the server's lifetime, so it survives relogging but a restart forgives every
+  offender. Accepted deliberately over persisting it: the counter now decays on
+  a schedule (`chat.escalationDecayMs`), so its worst case is one forgiven
+  escalation step, and keeping it out of the database keeps the chat hot path
+  free of I/O. Fix if abuse warrants: a `character_chat_escalation` row loaded
+  at login next to the durable mute (`ModerationService.attachCharacter`) and
+  written behind the tick when a mute is issued. Owner: Feature 36.
 
 ## Repo-wide known breakage
 

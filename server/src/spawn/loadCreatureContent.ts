@@ -14,7 +14,12 @@ import type {
   MonsterSummon,
   MonsterType,
 } from "../creature/MonsterType";
-import type { NpcType } from "../creature/NpcType";
+import type {
+  NpcProfession,
+  NpcSpeechBubble,
+  NpcType,
+  NpcVoice,
+} from "../creature/NpcType";
 import { loadShopCatalogs } from "../economy/loadShopCatalogs";
 import { loadNpcDialogueGraphs } from "../npc/loadNpcDialogueGraphs";
 import type { CreatureContent } from "./CreatureContent";
@@ -31,6 +36,22 @@ const DIRECTIONS = new Set<Direction>([
   "southwest",
   "northwest",
 ]);
+const NPC_PROFESSIONS: ReadonlyArray<NpcProfession> = [
+  "normal",
+  "trader",
+  "banker",
+  "sailor",
+  "king",
+  "queen",
+];
+const NPC_SPEECH_BUBBLES: ReadonlyArray<NpcSpeechBubble> = [
+  "none",
+  "normal",
+  "trade",
+  "banker",
+  "sailor",
+  "hireling",
+];
 const EXECUTABLE_MONSTER_ABILITIES = new Set([
   "combat",
   "condition",
@@ -53,9 +74,9 @@ export function loadCreatureContent(
   const npcs = readDocument(`npcs/${name}-npcs.json`);
   const spawns = readDocument(`spawns/${name}-spawns.json`);
   if (
-    monsters.formatVersion !== 2 ||
-    npcs.formatVersion !== 2 ||
-    spawns.formatVersion !== 2
+    monsters.formatVersion !== 3 ||
+    npcs.formatVersion !== 3 ||
+    spawns.formatVersion !== 3
   ) {
     throw new Error(`${name} creature content has an unsupported version`);
   }
@@ -100,9 +121,14 @@ export function loadCreatureContent(
   }
   const shopCatalogs = loadShopCatalogs(canaryCommit);
   for (const catalog of shopCatalogs.values()) {
-    if (!npcTypes.has(catalog.npcTypeId)) {
+    const owner = npcTypes.get(catalog.npcTypeId);
+    if (!owner) {
       throw new Error(`shop ${catalog.id} references unknown type ${catalog.npcTypeId}`);
     }
+    if (owner.shopId) {
+      throw new Error(`NPC ${owner.id} owns more than one shop catalog`);
+    }
+    npcTypes.set(catalog.npcTypeId, { ...owner, shopId: catalog.id });
   }
   for (const [typeId, graph] of dialogueGraphs) {
     for (const node of graph.nodes) {
@@ -1151,13 +1177,58 @@ function parseNpcType(value: unknown): NpcType {
   return {
     id: identifier(type.id, "NPC id"),
     name: text(type.name, "NPC name"),
+    description: text(type.description, "NPC description"),
     outfit: parseOutfit(type.outfit),
     health,
     maxHealth,
     speed: positiveInteger(type.speed, "NPC speed"),
     walkIntervalMs: nonnegativeInteger(type.walkIntervalMs, "NPC walk interval"),
     walkRadius: nonnegativeInteger(type.walkRadius, "NPC walk radius"),
+    canChangeFloor: bool(type.canChangeFloor, "NPC floor change"),
+    profession: oneOf(type.profession, "NPC profession", NPC_PROFESSIONS),
+    speechBubble: oneOf(type.speechBubble, "NPC speech bubble", NPC_SPEECH_BUBBLES),
+    voices: parseNpcVoices(type.voices),
+    ...(type.currencyItemTypeId === undefined
+      ? {}
+      : {
+          currencyItemTypeId: boundedInteger(
+            type.currencyItemTypeId,
+            "NPC currency item",
+            1,
+            65_535,
+          ),
+        }),
   };
+}
+
+function parseNpcVoices(value: unknown): NpcVoice[] {
+  if (!Array.isArray(value)) throw new Error("NPC voices must be an array");
+  if (value.length > 32) throw new Error("NPC has too many voices");
+  return value.map((entry) => {
+    const voice = record(entry, "NPC voice");
+    const voiceText = boundedText(voice.text, "NPC voice text", 256);
+    // eslint-disable-next-line no-control-regex
+    if (/[\u0000-\u001F\u007F-\u009F]/u.test(voiceText)) {
+      throw new Error("NPC voice text contains control characters");
+    }
+    return {
+      text: voiceText,
+      intervalMs: boundedInteger(voice.intervalMs, "NPC voice interval", 250, 600_000),
+      chance: boundedInteger(voice.chance, "NPC voice chance", 0, 100),
+      yell: bool(voice.yell, "NPC voice yell"),
+    };
+  });
+}
+
+function oneOf<T extends string>(
+  value: unknown,
+  label: string,
+  allowed: ReadonlyArray<T>,
+): T {
+  if (typeof value !== "string" || !allowed.includes(value as T)) {
+    throw new Error(`${label} is invalid`);
+  }
+  return value as T;
 }
 
 function parseSpawnSlot(value: unknown): SpawnSlotDefinition {
@@ -1231,7 +1302,11 @@ function identifier(value: unknown, label: string): string {
 }
 
 function text(value: unknown, label: string): string {
-  if (typeof value !== "string" || value.length === 0 || value.length > 192) {
+  return boundedText(value, label, 192);
+}
+
+function boundedText(value: unknown, label: string, maximum: number): string {
+  if (typeof value !== "string" || value.length === 0 || value.length > maximum) {
     throw new Error(`${label} is invalid`);
   }
   return value;

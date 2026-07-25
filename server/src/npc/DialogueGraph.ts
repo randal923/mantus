@@ -5,6 +5,67 @@ export interface DialogueChoiceDefinition {
   readonly label: string;
 }
 
+/**
+ * A requirement a branch carries. Conditions are re-evaluated at the exact
+ * moment the node executes, never when the choice was offered (charter rule
+ * 4) — state that changed in between rejects the branch. Storage keys are
+ * server-side quest state and are never sent to a client.
+ */
+export type DialogueCondition =
+  | {
+      readonly kind: "storage";
+      readonly key: string;
+      readonly operator: "eq" | "neq" | "gte" | "lte" | "gt" | "lt";
+      readonly value: number;
+    }
+  | { readonly kind: "level"; readonly minimum: number }
+  | { readonly kind: "premium"; readonly required: boolean };
+
+/** A state change a branch applies once its action has committed. */
+export type DialogueEffect = {
+  readonly kind: "set-storage";
+  readonly key: string;
+  readonly value: number;
+};
+
+export type DialogueAction =
+  | { readonly kind: "travel"; readonly offerId: string }
+  | {
+      readonly kind: "promote";
+      readonly cost: number;
+      readonly minimumLevel: number;
+    }
+  | { readonly kind: "shop"; readonly shopId: string }
+  | { readonly kind: "bank" }
+  | {
+      /** Buys a spell: bank/carried money leg, audit row, permanent grant. */
+      readonly kind: "learn-spell";
+      readonly spellId: string;
+      readonly price: number;
+      readonly minimumLevel: number;
+      readonly premium: boolean;
+    }
+  | {
+      /**
+       * Canary StdModule.kick: the NPC teleports the player away for free
+       * and drops the conversation. Modelled as a travel offer so the
+       * destination goes through the same execution-time walkability and
+       * distance checks a paid trip does.
+       */
+      readonly kind: "teleport";
+      readonly offerId: string;
+    }
+  | {
+      /**
+       * Canary StdModule.rookgaardHints: says the hint the player's counter
+       * points at, then advances it. One hint is one or more spoken lines,
+       * matching the pinned table's string-or-table entries.
+       */
+      readonly kind: "hint";
+      readonly storageKey: string;
+      readonly hints: ReadonlyArray<ReadonlyArray<string>>;
+    };
+
 export interface DialogueNode {
   readonly id: string;
   /** Each inner list is one ordered, contains-all keyword alternative. */
@@ -15,15 +76,18 @@ export interface DialogueNode {
   readonly nextNodeId?: string;
   /** Used only to render the server-owned price into an offer response. */
   readonly offerId?: string;
-  readonly action?:
-    | { readonly kind: "travel"; readonly offerId: string }
-    | {
-        readonly kind: "promote";
-        readonly cost: number;
-        readonly minimumLevel: number;
-      }
-    | { readonly kind: "shop"; readonly shopId: string }
-    | { readonly kind: "bank" };
+  /** All must hold, re-checked at execution time. */
+  readonly conditions?: ReadonlyArray<DialogueCondition>;
+  /** Applied only after the node's action (if any) has committed. */
+  readonly effects?: ReadonlyArray<DialogueEffect>;
+  /** Canary `ungreet`: say the line, then end the conversation. */
+  readonly ungreet?: boolean;
+  /**
+   * Canary `onlyUnfocus`: the branch answers only outside a conversation.
+   * The default ("focused") is the ordinary in-conversation branch.
+   */
+  readonly focus?: "focused" | "unfocused";
+  readonly action?: DialogueAction;
 }
 
 export interface NpcTravelOffer {

@@ -1,4 +1,5 @@
 import type { Position, ViewRange } from "@tibia/protocol";
+import type { ChatFloodLimits } from "./chat/ChatFloodLimits";
 import type { MapAction } from "./MapAction";
 import type { MapItem } from "./MapItem";
 import type { MapTransition } from "./MapTransition";
@@ -53,6 +54,10 @@ export interface ServerConfig {
   maxSessions: number;
   maxPendingIntents: number;
   maxProtocolViolations: number;
+  /** Flood control the server enforces; the client's chat box only displays it. */
+  chat: ChatFloodLimits;
+  /** How long moderation metadata is kept before the retention prune drops it. */
+  moderationRetentionDays: number;
   combatSeed: number;
   rates: {
     experience: number;

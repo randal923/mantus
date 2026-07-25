@@ -16,6 +16,7 @@ import { World } from "../World";
 import type { DialogueGraph } from "./DialogueGraph";
 import { NpcHandler } from "./NpcHandler";
 import type { TravelService } from "./TravelService";
+import { makeNpcType } from "../test/makeNpcType";
 
 const dialogue: DialogueGraph = {
   talkRange: 4,
@@ -46,7 +47,7 @@ const dialogue: DialogueGraph = {
   travelOffers: [],
 };
 
-const npcType: NpcType = {
+const npcType: NpcType = makeNpcType({
   id: "guide",
   name: "Guide",
   outfit: { lookType: 57, head: 0, body: 0, legs: 0, feet: 0, addons: 0 },
@@ -56,7 +57,7 @@ const npcType: NpcType = {
   walkIntervalMs: 2_000,
   walkRadius: 2,
   dialogue,
-};
+});
 
 const travelDialogue: DialogueGraph = {
   ...dialogue,

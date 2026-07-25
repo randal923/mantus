@@ -4,6 +4,7 @@ import type {
   ActiveMuteRecord,
   BanAccountResult,
   CreateReportResult,
+  ModerationPruneResult,
   ModerationStore,
   MuteCharacterResult,
   RecordKickResult,
@@ -168,6 +169,39 @@ export class MemoryModerationStore implements ModerationStore {
     if (!target) return { status: "failed", reason: "target-not-found" };
     this.record("note", target.id, input.actorCharacterId, input.text);
     return { status: "recorded", targetName: target.name };
+  }
+
+  /**
+   * Mirrors the Pg retention prune: age alone never drops state that is
+   * still enforcing something, so an unexpired mute survives the cutoff.
+   */
+  async pruneRetention(
+    before: Date,
+    limit: number,
+  ): Promise<ModerationPruneResult> {
+    const cutoff = before.getTime();
+    let mutes = 0;
+    for (const [characterId, mute] of this.mutes) {
+      if (mutes >= limit) break;
+      if (mute.mutedUntil.getTime() >= cutoff) continue;
+      this.mutes.delete(characterId);
+      mutes += 1;
+    }
+    let bans = 0;
+    for (const [accountId, ban] of this.bans) {
+      if (bans >= limit) break;
+      if (ban.expiresAt.getTime() >= cutoff) continue;
+      this.bans.delete(accountId);
+      bans += 1;
+    }
+    const staleReports = this.reports.filter(
+      (report) => report.createdAt < cutoff,
+    );
+    const reports = staleReports.slice(0, limit);
+    for (const report of reports) {
+      this.reports.splice(this.reports.indexOf(report), 1);
+    }
+    return { mutes, bans, reports: reports.length, actions: 0 };
   }
 
   async createReport(input: {

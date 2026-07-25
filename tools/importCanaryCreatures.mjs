@@ -14,6 +14,7 @@ import {
 import { join, relative } from "node:path";
 import { parseCanaryCreatureContent } from "./parseCanaryCreatureContent.mjs";
 import { parseCanaryMonsterSpells } from "./parseCanaryMonsterSpells.mjs";
+import { readMapNavigation } from "./readMapNavigation.mjs";
 
 const repoRoot = join(import.meta.dirname, "..");
 const canaryRoot = process.argv.find((argument, index) =>
@@ -31,7 +32,7 @@ const manifest = JSON.parse(
   readFileSync(join(repoRoot, "content/source-manifest.json"), "utf8"),
 );
 const source = manifest.sources.canaryCreatures;
-if (!source || manifest.converters.creatures !== 2) {
+if (!source || manifest.converters.creatures !== 3) {
   throw new Error("source manifest has no supported Canary creature source");
 }
 const commit = execFileSync("git", ["-C", canaryRoot, "rev-parse", "HEAD"], {
@@ -77,7 +78,7 @@ const monsterSpells = parseCanaryMonsterSpells(
   parseConstants(constantsSource),
   parseAreas(areasSource),
 );
-const navigation = readNavigation(join(repoRoot, "server/data/otservbr.map.bin"));
+const navigation = readMapNavigation(join(repoRoot, "server/data/otservbr.map.bin"));
 const bounds = starterOnly
   ? { centerX: 32369, centerY: 32241, z: 7, radius: 48 }
   : null;
@@ -369,46 +370,6 @@ function creatureGapOwner(kind, name) {
   return "04-creatures-spawns-and-ai";
 }
 
-function readNavigation(path) {
-  const buffer = readFileSync(path);
-  if (buffer.toString("ascii", 0, 4) !== "TMAP" || buffer.readUInt8(4) !== 3) {
-    throw new Error("creature import requires version 3 TMAP navigation data");
-  }
-  const sectorSize = buffer.readUInt8(5);
-  const sectorCount = buffer.readUInt32LE(8);
-  const bitsetBytes = (sectorSize * sectorSize) / 8;
-  const entrySize = 5 + bitsetBytes * 10 + (sectorSize * sectorSize * 5) / 8;
-  if (buffer.length !== 12 + sectorCount * entrySize) {
-    throw new Error("TMAP navigation length does not match its sector count");
-  }
-  const sectors = new Map();
-  let offset = 12;
-  for (let index = 0; index < sectorCount; index++) {
-    const x = buffer.readUInt16LE(offset);
-    const y = buffer.readUInt16LE(offset + 2);
-    const z = buffer.readUInt8(offset + 4);
-    const present = buffer.subarray(offset + 5, offset + 5 + bitsetBytes);
-    const walkable = buffer.subarray(
-      offset + 5 + bitsetBytes,
-      offset + 5 + bitsetBytes * 2,
-    );
-    sectors.set(`${x},${y},${z}`, { present, walkable });
-    offset += entrySize;
-  }
-  return {
-    tileAt(position) {
-      const sector = sectors.get(
-        `${Math.floor(position.x / sectorSize)},${Math.floor(position.y / sectorSize)},${position.z}`,
-      );
-      if (!sector) return "missing";
-      const bit = (position.y % sectorSize) * sectorSize + (position.x % sectorSize);
-      const present = (sector.present[bit >> 3] & (1 << (bit & 7))) !== 0;
-      if (!present) return "missing";
-      const walkable = (sector.walkable[bit >> 3] & (1 << (bit & 7))) !== 0;
-      return walkable ? "walkable" : "blocked";
-    },
-  };
-}
 
 function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);

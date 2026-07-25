@@ -54,6 +54,8 @@ import { NpcHandler } from "./npc/NpcHandler";
 import type { NpcTravelStore } from "./npc/NpcTravelStore";
 import type { PromotionStore } from "./npc/PromotionStore";
 import { PromotionService } from "./npc/PromotionService";
+import { SpellTeacherService } from "./npc/SpellTeacherService";
+import type { SpellTeacherStore } from "./npc/SpellTeacherStore";
 import { TravelService } from "./npc/TravelService";
 import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
@@ -91,6 +93,7 @@ export interface GameServerDeps {
   itemCatalog: ItemCatalog;
   npcTravel?: NpcTravelStore;
   promotion?: PromotionStore;
+  spellTeacher?: SpellTeacherStore;
   bank?: BankStore;
   shop?: ShopStore;
   depot?: DepotStore;
@@ -132,6 +135,7 @@ export class GameServer {
   private readonly items: ItemIntentHandler;
   private readonly travel: TravelService;
   private readonly promotion: PromotionService;
+  private readonly spellTeacher: SpellTeacherService;
   private readonly bank: BankService;
   private readonly shops: ShopService;
   private readonly depot: DepotService;
@@ -238,7 +242,11 @@ export class GameServer {
       deps.itemCatalog,
       deps.trade,
     );
-    this.moderation = new ModerationService(this.registry, deps.moderation);
+    this.moderation = new ModerationService(
+      this.registry,
+      deps.moderation,
+      config.moderationRetentionDays,
+    );
     this.store = new MantusStoreService(
       this.world,
       this.registry,
@@ -360,6 +368,12 @@ export class GameServer {
       this.spells,
       deps.promotion,
     );
+    this.spellTeacher = new SpellTeacherService(
+      this.world,
+      this.persistence,
+      this.items,
+      deps.spellTeacher,
+    );
     this.bank = new BankService(this.world, this.items, deps.bank);
     this.shops = new ShopService(
       this.world,
@@ -375,6 +389,7 @@ export class GameServer {
       this.bank,
       this.shops,
       this.promotion,
+      this.spellTeacher,
     );
     this.houses = new HouseService(
       this.world,
@@ -523,6 +538,8 @@ export class GameServer {
       this.moderation,
       (session, text, now) =>
         this.combatSystem.castSpellByWords(session, text, now),
+      undefined,
+      config.chat,
     );
     this.wss = new WebSocketServer({
       port: config.port,
@@ -609,6 +626,7 @@ export class GameServer {
       this.items.applyResolvedOutcomes(now);
       this.travel.applyResolvedOutcomes(now);
       this.promotion.applyResolvedOutcomes(now);
+      this.spellTeacher.applyResolvedOutcomes(now);
       this.bank.applyResolvedOutcomes(now);
       this.shops.applyResolvedOutcomes(now);
       this.depot.applyResolvedOutcomes();
@@ -619,6 +637,7 @@ export class GameServer {
       this.vips.applyResolvedOutcomes(now);
       this.highscores.applyResolvedOutcomes(now);
       this.moderation.applyResolvedOutcomes(now);
+      this.moderation.tick(now);
       this.store.applyResolvedOutcomes(now);
       this.gems.applyResolvedOutcomes(now);
       this.language.applyResolvedOutcomes();
@@ -984,6 +1003,8 @@ export class GameServer {
     this.travel.applyResolvedOutcomes(monotonicNow());
     await this.promotion.stop();
     this.promotion.applyResolvedOutcomes(monotonicNow());
+    await this.spellTeacher.stop();
+    this.spellTeacher.applyResolvedOutcomes(monotonicNow());
     await this.bank.stop();
     this.bank.applyResolvedOutcomes(monotonicNow());
     await this.shops.stop();

@@ -106,13 +106,16 @@ describe("loadNpcDialogueGraphs", () => {
     });
   });
 
-  it("attaches the Canary promotion confirmation to all five rulers", () => {
+  it("imports the Canary promotion confirmation for all five rulers", () => {
     const graphs = loadNpcDialogueGraphs(CANARY_COMMIT);
 
     for (const typeId of PROMOTION_NPCS) {
       const graph = graphs.get(typeId);
+      // "promot" is the pinned keyword, and Canary's MsgContains needs a
+      // whole-word hit — saying "promotion" does not reach this branch there
+      // either, so neither does it here.
       const prompt = graph
-        ? matchNpcDialogueNode(graph, graph.rootNodeId, "promotion")
+        ? matchNpcDialogueNode(graph, graph.rootNodeId, "promot")
         : undefined;
       const confirmation = prompt
         ? matchNpcDialogueNode(graph!, prompt.id, "yes")
@@ -157,7 +160,9 @@ describe("loadNpcDialogueGraphs", () => {
       ...(offer.diversion ? [offer.diversion.destination] : []),
     ]);
 
-    expect(offers).toHaveLength(90);
+    // 90 reviewed boat routes plus the travel and kick destinations the
+    // importer now derives from the pinned sources.
+    expect(offers).toHaveLength(104);
     expect(
       destinations.filter(
         (destination) => !world.findUnoccupiedPosition(destination, 2),

@@ -20,6 +20,7 @@ import { NpcDialogueExecutor } from "./NpcDialogueExecutor";
 import { NpcDialogueFlow } from "./NpcDialogueFlow";
 import type { TravelService } from "./TravelService";
 import type { PromotionService } from "./PromotionService";
+import type { SpellTeacherService } from "./SpellTeacherService";
 
 const MAX_TALK_RANGE = 8;
 
@@ -36,6 +37,7 @@ export class NpcHandler {
     bank: BankService,
     private readonly shops: ShopService,
     promotion?: PromotionService,
+    spellTeacher?: SpellTeacherService,
   ) {
     this.flow = new NpcDialogueFlow(this.conversations, visibility, shops);
     this.executor = new NpcDialogueExecutor(
@@ -45,6 +47,7 @@ export class NpcHandler {
       bank,
       shops,
       promotion,
+      spellTeacher,
     );
   }
 
@@ -67,6 +70,18 @@ export class NpcHandler {
           )
         ) {
           this.flow.greet(session, player, creature, creature.type.dialogue, now);
+          continue;
+        }
+        // Canary `onlyUnfocus`: a branch that answers without being greeted.
+        // It speaks one line and never opens a conversation.
+        const unfocused = matchNpcDialogueNode(
+          creature.type.dialogue,
+          creature.type.dialogue.rootNodeId,
+          text,
+          "unfocused",
+        );
+        if (unfocused) {
+          this.flow.sayUnfocused(session, player, creature, unfocused);
         }
         continue;
       }

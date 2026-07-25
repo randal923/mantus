@@ -15,6 +15,7 @@ import { InMemoryAccountStore } from "./test/InMemoryAccountStore";
 import { InMemoryCharacterStore } from "./test/InMemoryCharacterStore";
 import { makeCharacter } from "./test/makeCharacter";
 import type { TokenVerifier, VerifiedUser } from "./TokenVerifier";
+import { DEFAULT_CHAT_FLOOD_LIMITS } from "./chat/ChatFloodLimits";
 
 const VIEW_RANGE = { x: 9, y: 7 };
 const BAD_TOKEN = "bad.token";
@@ -30,6 +31,8 @@ const testConfig: ServerConfig = {
   maxSessions: 10,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
+  chat: DEFAULT_CHAT_FLOOD_LIMITS,
+  moderationRetentionDays: 365,
   combatSeed: 12345,
   rates: {
     experience: 1,
