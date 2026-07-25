@@ -14,6 +14,8 @@ interface GridMapConfig {
   voids?: ReadonlyArray<readonly [number, number, number]>;
   /** Tiles flagged as a protection zone, as [x, y, z]. */
   protectionZones?: ReadonlyArray<readonly [number, number, number]>;
+  /** Designated pvp-zone (arena) tiles, as [x, y, z]. */
+  pvpZones?: ReadonlyArray<readonly [number, number, number]>;
   /**
    * Tiles that do NOT limit floor view (an open shaft/roof gap), as [x, y, z].
    * Tiles limit floor view by default; list the ones that let sight pass.
@@ -51,6 +53,9 @@ export function gridMapData(config: GridMapConfig): MapData {
     (config.protectionZones ?? []).map(([x, y, z]) =>
       positionKey({ x, y, z }),
     ),
+  );
+  const pvpZones = new Set(
+    (config.pvpZones ?? []).map(([x, y, z]) => positionKey({ x, y, z })),
   );
   const transparentFloorView = new Set(
     (config.transparentFloorView ?? []).map(([x, y, z]) =>
@@ -97,7 +102,7 @@ export function gridMapData(config: GridMapConfig): MapData {
         protectionZone: protectionZones.has(positionKey(position)),
         noPvpZone: false,
         noLogoutZone: false,
-        pvpZone: false,
+        pvpZone: pvpZones.has(positionKey(position)),
       };
     },
     isWalkable(position, pathfinding = false) {

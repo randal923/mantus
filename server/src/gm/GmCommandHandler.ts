@@ -20,6 +20,7 @@ import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { Session } from "../Session";
 import type { SpawnManager } from "../spawn/SpawnManager";
 import type { StoreOperatorService } from "../store/StoreOperatorService";
+import type { WorldEventManager } from "../event/WorldEventManager";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 
@@ -47,6 +48,7 @@ export class GmCommandHandler {
     private readonly spawns: SpawnManager | null,
     private readonly moderation: ModerationService | null,
     private readonly storeOperator: StoreOperatorService | null = null,
+    private readonly worldEvents: WorldEventManager | null = null,
   ) {}
 
   /** Returns true when the text was a slash command and has been consumed. */
@@ -120,11 +122,14 @@ export class GmCommandHandler {
       case "storerefund":
         this.refundStorePurchase(session, player, args);
         break;
+      case "raid":
+        this.startWorldEvent(session, player, args, now);
+        break;
       default:
         this.reply(
           session,
           false,
-          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note, /coins <amount>, /storerefund <ledgerEntryId>",
+          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note, /coins <amount>, /storerefund <ledgerEntryId>, /raid <eventId>",
         );
     }
     return true;
@@ -577,6 +582,36 @@ export class GmCommandHandler {
   private describePosition(player: Player): string {
     const { x, y, z } = player.position;
     return `Position: ${x}, ${y}, ${z}.`;
+  }
+
+  /**
+   * Operator-triggered world event. Real operator authorization ships with the
+   * admin tooling feature; until then this is dev-commands-only, and the
+   * request is audited against the operator's own character either way.
+   */
+  private startWorldEvent(
+    session: Session,
+    player: Player,
+    args: ReadonlyArray<string>,
+    now: number,
+  ): void {
+    const eventId = args[0];
+    if (!this.worldEvents || !eventId) {
+      this.reply(session, false, "Usage: /raid <eventId>");
+      return;
+    }
+    const result = this.worldEvents.requestOperatorStart(
+      eventId,
+      player.id,
+      now,
+    );
+    this.reply(
+      session,
+      result === "started",
+      result === "started"
+        ? `Started world event ${eventId}.`
+        : `Could not start ${eventId}: ${result}.`,
+    );
   }
 
   private reply(session: Session, ok: boolean, text: string): void {

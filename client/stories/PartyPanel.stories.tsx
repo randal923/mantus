@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
-import type { PartyMemberEntry, PartyState } from "@tibia/protocol";
+import type {
+  PartyAnalyzerMessage,
+  PartyFinderListingMessage,
+  PartyMemberEntry,
+  PartyState,
+} from "@tibia/protocol";
 import { PartyPanel } from "../components/party/PartyPanel";
 
 const OWN_PLAYER_ID = "00000000-0000-4000-8000-000000000001";
@@ -66,6 +71,50 @@ const PARTY: PartyState = {
   ],
 };
 
+const ANALYZER: PartyAnalyzerMessage = {
+  type: "party-analyzer",
+  elapsedMs: 74 * 60 * 1000,
+  priceMode: "npc",
+  entries: [
+    {
+      playerId: OWN_PLAYER_ID,
+      name: "Deceius",
+      damageDealt: 184_320,
+      damageTaken: 96_112,
+      healingDone: 4_020,
+      lootValue: 128_400,
+      supplyValue: 41_250,
+      balance: 87_150,
+    },
+    {
+      playerId: "00000000-0000-4000-8000-000000000003",
+      name: "Avara Stormblade",
+      damageDealt: 91_005,
+      damageTaken: 22_480,
+      healingDone: 88_640,
+      lootValue: 12_900,
+      supplyValue: 63_500,
+      balance: -50_600,
+    },
+  ],
+};
+
+const FINDER: PartyFinderListingMessage = {
+  type: "party-finder-listing",
+  truncated: false,
+  entries: [
+    {
+      partyId: "00000000-0000-4000-8000-0000000000aa",
+      leaderId: "00000000-0000-4000-8000-0000000000ab",
+      leaderName: "Kalyra",
+      title: "Draken walls, need a healer",
+      memberCount: 3,
+      minLevel: 250,
+      maxLevel: null,
+    },
+  ],
+};
+
 const meta = {
   title: "Game/PartyPanel",
   component: PartyPanel,
@@ -79,6 +128,8 @@ const meta = {
   ],
   args: {
     party: PARTY,
+    analyzer: ANALYZER,
+    finderListing: FINDER,
     ownPlayerId: OWN_PLAYER_ID,
     error: null,
     onInvite: fn(),
@@ -86,6 +137,11 @@ const meta = {
     onKick: fn(),
     onPassLeadership: fn(),
     onSetSharedExp: fn(),
+    onResetAnalyzer: fn(),
+    onSetAnalyzerPriceMode: fn(),
+    onAdvertise: fn(),
+    onClearAdvert: fn(),
+    onSearchFinder: fn(),
     onLeave: fn(),
     onClose: fn(),
   },

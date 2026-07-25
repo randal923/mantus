@@ -15,6 +15,7 @@ import { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
 import { Visibility } from "../Visibility";
 import { World } from "../World";
+import type { ChestDefinition } from "./ChestDefinition";
 import { WorldActionRegistry } from "./WorldActionRegistry";
 
 const CLOSED_DOOR = 1_638;
@@ -68,11 +69,14 @@ function makeHarness(options: {
   items: ReadonlyArray<{ position: Position; item: MapItem }>;
   blocked?: ReadonlyArray<readonly [number, number]>;
   doorLevels?: ReadonlyMap<string, number>;
+  chests?: ReadonlyMap<string, ChestDefinition>;
+  width?: number;
 }) {
+  const lootedChests: Array<{ characterId: string; uniqueId: number }> = [];
   const world = new World(
     gridMapData({
       name: "test",
-      width: 10,
+      width: options.width ?? 10,
       height: 8,
       blocked: options.blocked ?? [],
       items: [...options.items],
@@ -98,6 +102,11 @@ function makeHarness(options: {
     catalog,
     items,
     options.doorLevels ?? new Map(),
+    undefined,
+    options.chests ?? new Map(),
+    (_session, player, chest) => {
+      lootedChests.push({ characterId: player.id, uniqueId: chest.uniqueId });
+    },
   );
   const makeSession = async (
     characterId: string,
@@ -132,7 +141,7 @@ function makeHarness(options: {
     items.attach(await items.load(characterId, 400));
     return { player, session, sent };
   };
-  return { world, store, items, worldActions, makeSession };
+  return { world, store, items, worldActions, makeSession, lootedChests };
 }
 
 const tileItemIds = (harness: { world: World }, position: Position) =>
@@ -413,6 +422,26 @@ describe("WorldActionRegistry levers, rotation, and signs", () => {
     });
   });
 
+  it("reports the world time from a clock instead of rotating it", async () => {
+    const PENDULUM_CLOCK = 2_445;
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(PENDULUM_CLOCK, TILE) }],
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "combat-log",
+      text: expect.stringMatching(/^The time is \d{1,2}:\d{2}\.$/) as unknown,
+    });
+    // Rotation never happened: the clock still has its original type.
+    expect(tileItemIds(harness, TILE)).toEqual([PENDULUM_CLOCK]);
+  });
+
   it("reads adjacent map text and enforces the distance rule", async () => {
     const statueTile = { x: 5, y: 4, z: 7 };
     const boardTile = { x: 8, y: 4, z: 7 };
@@ -439,7 +468,9 @@ describe("WorldActionRegistry levers, rotation, and signs", () => {
     expect(near.sent.at(-1)).toMatchObject({
       type: "item-text",
       text: "hewn in stone",
-      writeable: false,
+      // Both pinned types are writeable, so the client is offered the editor.
+      writeable: true,
+      maxLength: 249,
     });
 
     // The statue is not distance-readable; the blackboard is.
@@ -457,6 +488,292 @@ describe("WorldActionRegistry levers, rotation, and signs", () => {
     expect(far.sent.at(-1)).toMatchObject({
       type: "item-text",
       text: "chalk notes",
+    });
+  });
+});
+
+describe("WorldActionRegistry chests", () => {
+  const CHEST_ITEM = 2_472;
+  const chestAt = (position: Position): ReadonlyMap<string, ChestDefinition> =>
+    new Map([
+      [
+        positionKey(position),
+        {
+          uniqueId: 5_000,
+          itemTypeId: CHEST_ITEM,
+          lootedKey: "chest-storage:3980",
+          reward: [{ typeId: 3_031, count: 1 }],
+        },
+      ],
+    ]);
+
+  it("routes a registered chest ahead of the container and rotate paths", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(CHEST_ITEM, TILE) }],
+      chests: chestAt(TILE),
+    });
+    const { session } = await harness.makeSession("actor", { x: 5, y: 5, z: 7 });
+
+    expect(harness.worldActions.handleChestUse(session, TILE, 1_000)).toBe(true);
+    expect(harness.lootedChests).toEqual([
+      { characterId: "actor", uniqueId: 5_000 },
+    ]);
+    // The chest was not rotated by the generic rotate arm.
+    expect(tileItemIds(harness, TILE)).toEqual([CHEST_ITEM]);
+  });
+
+  it("rejects a forged position that carries no registered chest", async () => {
+    const decoy = { x: 3, y: 4, z: 7 };
+    const harness = makeHarness({
+      items: [
+        { position: TILE, item: seededMapItem(CHEST_ITEM, TILE) },
+        { position: decoy, item: seededMapItem(CHEST_ITEM, decoy) },
+      ],
+      chests: chestAt(TILE),
+    });
+    const { session } = await harness.makeSession("actor", { x: 3, y: 5, z: 7 });
+
+    expect(harness.worldActions.handleChestUse(session, decoy, 1_000)).toBe(
+      false,
+    );
+    expect(harness.lootedChests).toEqual([]);
+  });
+
+  it("rejects a chest whose registered item type is not on the tile", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(LEVER_OFF, TILE) }],
+      chests: chestAt(TILE),
+    });
+    const { session } = await harness.makeSession("actor", { x: 5, y: 5, z: 7 });
+
+    expect(harness.worldActions.handleChestUse(session, TILE, 1_000)).toBe(
+      false,
+    );
+    expect(harness.lootedChests).toEqual([]);
+  });
+
+  it("rejects chest use from beyond reach", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(CHEST_ITEM, TILE) }],
+      chests: chestAt(TILE),
+    });
+    const { session, sent } = await harness.makeSession("far", {
+      x: 1,
+      y: 1,
+      z: 7,
+    });
+
+    expect(harness.worldActions.handleChestUse(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    expect(harness.lootedChests).toEqual([]);
+  });
+
+  it("answers out-of-view chest probes exactly like empty tiles", async () => {
+    const farTile = { x: 25, y: 4, z: 7 };
+    const harness = makeHarness({
+      items: [{ position: farTile, item: seededMapItem(CHEST_ITEM, farTile) }],
+      chests: chestAt(farTile),
+      width: 30,
+    });
+    const { session, sent } = await harness.makeSession("prober", {
+      x: 1,
+      y: 1,
+      z: 7,
+    });
+
+    expect(harness.worldActions.handleChestUse(session, farTile, 1_000)).toBe(
+      false,
+    );
+    expect(sent).toHaveLength(0);
+    expect(harness.lootedChests).toEqual([]);
+  });
+
+  it("leaves non-chest tiles to the paths behind the chest-only pass", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(CLOSED_DOOR, TILE) }],
+      chests: chestAt({ x: 1, y: 1, z: 7 }),
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+
+    expect(harness.worldActions.handleChestUse(session, TILE, 1_000)).toBe(
+      false,
+    );
+    expect(sent).toHaveLength(0);
+    expect(tileItemIds(harness, TILE)).toEqual([CLOSED_DOOR]);
+  });
+});
+
+describe("WorldActionRegistry write-map", () => {
+  const writeIntent = (
+    itemId: string,
+    revision: number,
+    position: Position,
+    text: string,
+  ) =>
+    ({
+      type: "write-map-item",
+      itemId,
+      revision,
+      position,
+      text,
+    }) as const;
+
+  const boardHarness = () =>
+    makeHarness({
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(DISTANCE_BLACKBOARD, TILE, { text: "old" }),
+        },
+      ],
+    });
+
+  it("writes text onto a pristine board as one materialized row", async () => {
+    const harness = boardHarness();
+    const { session } = await harness.makeSession("scribe", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+
+    harness.worldActions.handleWriteMap(
+      session,
+      writeIntent(`test:${TILE.x}:${TILE.y}:${TILE.z}:1`, 1, TILE, "chalked"),
+      1_000,
+    );
+
+    await harness.items.stopPersists();
+    const rows = harness.store.allItems();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ version: 2 });
+    expect(rows[0]?.attributes).toMatchObject({ text: "chalked" });
+  });
+
+  it("leaves one coherent text when two writers race the same board", async () => {
+    const harness = boardHarness();
+    const first = await harness.makeSession("first", { x: 5, y: 5, z: 7 });
+    const second = await harness.makeSession("second", { x: 4, y: 4, z: 7 });
+    const instanceId = `test:${TILE.x}:${TILE.y}:${TILE.z}:1`;
+
+    harness.worldActions.handleWriteMap(
+      first.session,
+      writeIntent(instanceId, 1, TILE, "first"),
+      1_000,
+    );
+    // The loser still claims revision 1, which no longer exists.
+    harness.worldActions.handleWriteMap(
+      second.session,
+      writeIntent(instanceId, 1, TILE, "second"),
+      1_000,
+    );
+
+    await harness.items.stopPersists();
+    const rows = harness.store.allItems();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.attributes).toMatchObject({ text: "first" });
+    expect(second.sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+  });
+
+  it("rejects text longer than the item type allows", async () => {
+    const harness = boardHarness();
+    const { session, sent } = await harness.makeSession("scribe", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+
+    harness.worldActions.handleWriteMap(
+      session,
+      writeIntent(
+        `test:${TILE.x}:${TILE.y}:${TILE.z}:1`,
+        1,
+        TILE,
+        "x".repeat(1_024),
+      ),
+      1_000,
+    );
+
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    await harness.items.stopPersists();
+    expect(harness.store.allItems()).toHaveLength(0);
+  });
+
+  it("rejects a write beyond reach even on a distance-readable board", async () => {
+    const harness = boardHarness();
+    const { session, sent } = await harness.makeSession("far", {
+      x: 1,
+      y: 1,
+      z: 7,
+    });
+
+    harness.worldActions.handleWriteMap(
+      session,
+      writeIntent(`test:${TILE.x}:${TILE.y}:${TILE.z}:1`, 1, TILE, "remote"),
+      1_000,
+    );
+
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    await harness.items.stopPersists();
+    expect(harness.store.allItems()).toHaveLength(0);
+  });
+
+  it("rejects a forged instance id for the targeted tile", async () => {
+    const harness = boardHarness();
+    const { session, sent } = await harness.makeSession("forger", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+
+    harness.worldActions.handleWriteMap(
+      session,
+      writeIntent("test:9:9:9:1", 1, TILE, "forged"),
+      1_000,
+    );
+
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    await harness.items.stopPersists();
+    expect(harness.store.allItems()).toHaveLength(0);
+  });
+
+  it("rejects a write onto a read-only map item", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(LEVER_OFF, TILE) }],
+    });
+    const { session, sent } = await harness.makeSession("scribe", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+
+    harness.worldActions.handleWriteMap(
+      session,
+      writeIntent(`test:${TILE.x}:${TILE.y}:${TILE.z}:1`, 1, TILE, "nope"),
+      1_000,
+    );
+
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
     });
   });
 });

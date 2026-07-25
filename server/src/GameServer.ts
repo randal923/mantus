@@ -30,13 +30,23 @@ import type { GuildStore } from "./guild/GuildStore";
 import { HouseService } from "./house/HouseService";
 import type { HouseStore } from "./house/HouseStore";
 import { loadHouseContent } from "./house/loadHouseContent";
+import { ClockHandler } from "./action/ClockHandler";
+import { loadChestDefinitions } from "./action/loadChestDefinitions";
 import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
+import { PressurePlateRegistry } from "./action/PressurePlateRegistry";
 import { ToolUseHandler } from "./action/ToolUseHandler";
 import { WorldActionRegistry } from "./action/WorldActionRegistry";
+import { WorldActionRng } from "./action/WorldActionRng";
+import { ChestService } from "./chest/ChestService";
+import type { ChestStore } from "./chest/ChestStore";
+import { loadWorldEventContent } from "./event/loadWorldEventContent";
+import { WorldEventManager } from "./event/WorldEventManager";
+import type { WorldEventStore } from "./event/WorldEventStore";
 import { MarketService } from "./market/MarketService";
 import type { MarketStore } from "./market/MarketStore";
 import { ModerationService } from "./moderation/ModerationService";
 import type { ModerationStore } from "./moderation/ModerationStore";
+import { ItemValuation } from "./party/ItemValuation";
 import { PartyHandler } from "./party/PartyHandler";
 import { PVP_POLICY } from "./pvp/PvpPolicy";
 import type { PvpStore } from "./pvp/PvpStore";
@@ -52,6 +62,8 @@ import type { ItemCatalog } from "./item/ItemCatalog";
 import type { ItemStore } from "./item/ItemStore";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
 import { PersistResyncRunner } from "./item/PersistResyncRunner";
+import { LingeringPlayers, type CarriedCombatLocks } from "./LingeringPlayers";
+import type { Player } from "./Player";
 import { MovementHandler } from "./MovementHandler";
 import { monotonicNow } from "./monotonicNow";
 import { NpcHandler } from "./npc/NpcHandler";
@@ -114,6 +126,8 @@ export interface GameServerDeps {
   gems?: GemStore;
   moderation?: ModerationStore;
   store?: MantusStoreStore;
+  chests?: ChestStore;
+  worldEvents?: WorldEventStore;
   /** Read-only money-supply sweep; absent in tests and memory-only runs. */
   currencyReconciler?: CurrencyReconciler;
   worldItemDeltas?: WorldItemDeltas;
@@ -132,6 +146,10 @@ export class GameServer {
   private readonly actionBar: ActionBarHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
+  private readonly pressurePlates: PressurePlateRegistry;
+  private readonly clocks: ClockHandler;
+  private readonly chests: ChestService;
+  private readonly worldEvents: WorldEventManager;
   private readonly toolUse: ToolUseHandler;
   private readonly chat: ChatHandler;
   private readonly combat: CombatIntentHandler;
@@ -171,6 +189,7 @@ export class GameServer {
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
+  private readonly lingering = new LingeringPlayers();
   private heartbeat: NodeJS.Timeout | undefined;
   private readonly startedAt = monotonicNow();
   private stopPromise: Promise<void> | null = null;
@@ -358,6 +377,7 @@ export class GameServer {
       this.bestiaryTracker,
       this.wheelTracker,
       this.gemTracker,
+      (characterId, now) => this.reclaimLingeringPlayer(characterId, now),
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
@@ -449,6 +469,8 @@ export class GameServer {
       this.persistence,
       (session, player, from, now) => {
         this.worldActions.closeDoorBehind(session, player, from, now);
+        this.pressurePlates.onStepOut(session, player, from, now);
+        this.pressurePlates.onStepIn(session, player, from, now);
         // A step that crosses a protection-zone boundary refreshes the
         // client's fight-state so its PZ status icon appears/clears in step
         // with the move. Server-authoritative and own-tile-only (charter 6).
@@ -463,6 +485,12 @@ export class GameServer {
         }
       },
     );
+    this.chests = new ChestService(
+      this.items,
+      deps.itemCatalog,
+      new WorldActionRng(config.combatSeed),
+      deps.chests,
+    );
     this.worldActions = new WorldActionRegistry(
       this.world,
       deps.itemCatalog,
@@ -470,19 +498,50 @@ export class GameServer {
       loadDoorLevelRequirements(this.world.mapName),
       (characterId, position) =>
         this.houses.canUseHouseTile(characterId, position),
+      loadChestDefinitions(this.world.mapName),
+      (session, player, chest) => this.chests.loot(session, player, chest),
+    );
+    this.clocks = new ClockHandler(this.items);
+    this.pressurePlates = new PressurePlateRegistry(
+      this.world,
+      deps.itemCatalog,
+      this.items,
+      (session, player, to, now) =>
+        this.movement.teleportPlayer(session, player, to, now),
+      (creature, damage, now) =>
+        this.combatSystem.applyTileTrapDamage(creature, damage, now),
     );
     this.toolUse = new ToolUseHandler(
       this.world,
       deps.itemCatalog,
       this.items,
       this.movement,
+      this.visibility,
+      this.persistence,
+      this.progression,
+      new WorldActionRng(config.combatSeed ^ 0x5f37_5a86),
+      (typeName, position, now) => {
+        spawns?.spawnEventMonsterNear(typeName, position, now);
+      },
     );
     this.parties = new PartyHandler(
       this.world,
       this.registry,
       this.visibility,
       this.moderation,
+      new ItemValuation(
+        deps.itemCatalog,
+        creatureContent?.shopCatalogs ?? new Map(),
+      ),
     );
+    // The analyzer's loot and supply totals come only from mutations the item
+    // handler itself applied (charter rule 1).
+    this.items.setAnalyzerHooks({
+      onLooted: (characterId, typeId, count) =>
+        this.parties.recordLoot(characterId, typeId, count),
+      onSupplyConsumed: (characterId, typeId, count) =>
+        this.parties.recordSupply(characterId, typeId, count),
+    });
     let spawns: SpawnManager | null = null;
     this.monsterEvents = new MonsterEventService(
       this.world,
@@ -553,6 +612,24 @@ export class GameServer {
         : null;
     this.spawns = spawns;
     if (spawns) this.combatSystem.attachTargeting(spawns);
+    const monsterTypeIdByName = new Map(
+      [...(creatureContent?.monsterTypes ?? new Map())].map(([id, type]) => [
+        type.name.toLowerCase(),
+        id,
+      ]),
+    );
+    this.worldEvents = new WorldEventManager(
+      this.world,
+      this.registry,
+      loadWorldEventContent(this.world.mapName),
+      new WorldActionRng(config.combatSeed ^ 0x2545_f491),
+      (typeName, position, at) => {
+        const typeId = monsterTypeIdByName.get(typeName.toLowerCase());
+        if (!typeId) return false;
+        return spawns?.spawnEventMonsterNear(typeId, position, at) !== null;
+      },
+      deps.worldEvents,
+    );
     const gm = config.dev.commands
       ? new GmCommandHandler(
           this.world,
@@ -563,6 +640,7 @@ export class GameServer {
           spawns,
           this.moderation,
           this.storeOperator,
+          this.worldEvents,
         )
       : undefined;
     this.chat = new ChatHandler(
@@ -617,6 +695,10 @@ export class GameServer {
       const reason = cause instanceof Error ? cause.message : "unknown";
       console.warn(`shop restock seeding failed: ${reason}`);
     });
+    void this.worldEvents.start().catch((cause: unknown) => {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(`world event registration failed: ${reason}`);
+    });
     this.loop.start();
     this.heartbeat = setInterval(
       () => this.pingSessions(),
@@ -663,9 +745,11 @@ export class GameServer {
     for (const session of this.registry.all()) session.beginBatch();
     try {
       this.processDisconnects(now);
+      this.expireLingeringPlayers(now);
       this.auth.applyResolvedOutcomes();
       this.characters.applyResolvedOutcomes();
       this.items.applyResolvedOutcomes(now);
+      this.chests.applyResolvedOutcomes(now);
       this.travel.applyResolvedOutcomes(now);
       this.promotion.applyResolvedOutcomes(now);
       this.spellTeacher.applyResolvedOutcomes(now);
@@ -711,6 +795,7 @@ export class GameServer {
       this.combatSystem.tick(now);
       this.monsterEvents.tick(now);
       this.spawns?.tick(now);
+      this.worldEvents.tick(now);
       this.npcs.tick(now);
       this.items.tickDecay(now);
       this.items.tickWorldContainers();
@@ -739,26 +824,21 @@ export class GameServer {
         player &&
         this.registry.sessionFor(playerId) === session
       ) {
-        this.npcs.removePlayer(playerId);
-        // Player summons are owned creatures: they leave with their owner so
-        // an offline player can never keep monsters alive in the world.
-        this.spawns?.releaseSummonsOf(playerId);
-        this.parties.detachCharacter(playerId, now);
-        this.trade.detachCharacter(playerId, now);
-        this.guilds.detachCharacter(playerId);
-        this.houses.detachCharacter(playerId);
-        this.vips.detachCharacter(playerId);
-        this.moderation.detachCharacter(playerId);
-        this.pvp.detachCharacter(playerId);
-        this.bestiaryTracker.detachCharacter(playerId);
-        this.wheelTracker.detachCharacter(playerId);
-        this.gemTracker.detachCharacter(playerId);
-        this.persistence.untrack(player, now);
-        this.items.detach(playerId);
-        this.chat.detach(playerId);
-        this.depot.detachCharacter(playerId);
-        this.world.removePlayer(playerId);
-        this.visibility.announceLeave(session, player);
+        // Canary keeps an in-fight character in the world until the combat
+        // lock expires, so logging out cannot dodge the frag or the skull.
+        // Only the session-scoped systems detach; the entity keeps ticking.
+        if (
+          player.health > 0 &&
+          player.conditions.remainingMs("combat-lock", now) > 0
+        ) {
+          this.lingering.add(player);
+          this.npcs.removePlayer(playerId);
+          this.trade.detachCharacter(playerId, now);
+          this.chat.detach(playerId);
+          this.depot.detachCharacter(playerId);
+        } else {
+          this.leaveWorld(session, playerId, player, now);
+        }
       }
       this.depot.detach(session);
       this.market.detach(session);
@@ -775,6 +855,71 @@ export class GameServer {
       this.store.detach(session);
       this.items.detachSession(session);
       this.registry.remove(session);
+    }
+  }
+
+  /**
+   * A reconnecting character reclaims its lingering entity: the entity leaves
+   * the world (flushing its damage) and its remaining combat locks are handed
+   * back so the fresh player re-enters still locked. There is never a moment
+   * with two entities for one character (one session per character).
+   */
+  private reclaimLingeringPlayer(
+    characterId: string,
+    now: number,
+  ): CarriedCombatLocks | null {
+    const carried = this.lingering.retire(characterId, now);
+    if (!carried) return null;
+    const player = this.world.getPlayer(characterId);
+    if (player) {
+      this.leaveWorld(undefined, characterId, player, now);
+      this.visibility.announceCreatureLeave(player);
+    }
+    return carried;
+  }
+
+  /** The full leave path: every system detaches and the entity is removed. */
+  private leaveWorld(
+    session: Session | undefined,
+    playerId: string,
+    player: Player,
+    now: number,
+  ): void {
+    this.npcs.removePlayer(playerId);
+    // Player summons are owned creatures: they leave with their owner so
+    // an offline player can never keep monsters alive in the world.
+    this.spawns?.releaseSummonsOf(playerId);
+    this.parties.detachCharacter(playerId, now);
+    this.trade.detachCharacter(playerId, now);
+    this.guilds.detachCharacter(playerId);
+    this.houses.detachCharacter(playerId);
+    this.vips.detachCharacter(playerId);
+    this.moderation.detachCharacter(playerId);
+    this.pvp.detachCharacter(playerId);
+    this.bestiaryTracker.detachCharacter(playerId);
+    this.wheelTracker.detachCharacter(playerId);
+    this.gemTracker.detachCharacter(playerId);
+    this.persistence.untrack(player, now);
+    this.items.detach(playerId);
+    this.chat.detach(playerId);
+    this.depot.detachCharacter(playerId);
+    this.world.removePlayer(playerId);
+    if (session) this.visibility.announceLeave(session, player);
+  }
+
+  /**
+   * Closes every linger window whose combat lock has expired (or whose
+   * character died or already left). Runs inside the tick, never from a
+   * socket callback (charter rule 5).
+   */
+  private expireLingeringPlayers(now: number): void {
+    if (this.lingering.size === 0) return;
+    for (const player of this.lingering.due(now, (characterId) =>
+      this.world.getPlayer(characterId) !== undefined,
+    )) {
+      if (!this.world.getPlayer(player.id)) continue;
+      this.leaveWorld(undefined, player.id, player, now);
+      this.visibility.announceCreatureLeave(player);
     }
   }
 
@@ -826,6 +971,12 @@ export class GameServer {
         // stairs, holes) stays governed by the step cooldown, so a walk-click
         // is never blocked by a recent use.
         if (!session.useExhausted(now)) {
+          // A quest chest's unique-id registration outranks the generic
+          // container-open path in Canary, so it is offered the use first.
+          if (this.worldActions.handleChestUse(session, intent.position, now)) {
+            session.armUseExhaust(now);
+            return;
+          }
           if (this.depot.handleMapUse(session, intent.position)) {
             session.armUseExhaust(now);
             return;
@@ -871,6 +1022,9 @@ export class GameServer {
           return;
         }
         session.armUseExhaust(now);
+        // Canary registers the watch action by item id, ahead of the generic
+        // item-use path; it only reads the world clock.
+        if (this.clocks.handleUseItem(session, intent)) return;
         this.items.handle(session, intent, now);
         return;
       case "equip-item":
@@ -889,6 +1043,14 @@ export class GameServer {
       case "move-item":
       case "write-item":
         this.items.handle(session, intent, now);
+        return;
+      case "write-map-item":
+        if (session.useExhausted(now)) {
+          session.sendError("item-exhausted");
+          return;
+        }
+        session.armUseExhaust(now);
+        this.worldActions.handleWriteMap(session, intent, now);
         return;
       case "speak":
       case "private-chat":
@@ -946,6 +1108,10 @@ export class GameServer {
       case "party-kick":
       case "party-pass-leadership":
       case "party-set-shared-exp":
+      case "party-reset-analyzer":
+      case "party-set-analyzer-price-mode":
+      case "party-finder-advertise":
+      case "party-finder-list":
       case "party-chat":
         this.parties.handle(session, intent, now);
         return;
@@ -967,6 +1133,8 @@ export class GameServer {
       case "guild-declare-war":
       case "guild-respond-war":
       case "guild-end-war":
+      case "guild-deposit":
+      case "guild-withdraw":
         this.guilds.handle(session, intent, now);
         return;
       case "house-open":
@@ -1076,6 +1244,9 @@ export class GameServer {
     this.store.applyResolvedOutcomes(monotonicNow());
     await this.storeOperator.stop();
     this.storeOperator.applyResolvedOutcomes();
+    await this.chests.stop();
+    this.chests.applyResolvedOutcomes(monotonicNow());
+    await this.worldEvents.stop();
     await this.pvp.stop();
     await this.bestiaryTracker.stop();
     await this.wheelTracker.stop();

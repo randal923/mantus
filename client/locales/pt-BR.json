@@ -503,6 +503,32 @@
       "inactive": "Um membro está inativo há muito tempo.",
       "empty-party": "Seu grupo ainda não tem membros."
     },
+    "analyzer": {
+      "title": "Analisador de caça",
+      "member": "Membro",
+      "loot": "Loot",
+      "supplies": "Suprimentos",
+      "balance": "Saldo",
+      "damage": "Dano",
+      "healing": "Cura",
+      "reset": "Reiniciar",
+      "priceMode": {
+        "npc": "Preços de NPC",
+        "market": "Valor do item"
+      }
+    },
+    "finder": {
+      "title": "Buscar grupo",
+      "advertPlaceholder": "Descreva sua caça…",
+      "advertise": "Anunciar",
+      "clearAdvert": "Remover",
+      "myLevelOnly": "Somente meu nível",
+      "search": "Buscar",
+      "noResults": "Nenhum grupo está anunciando agora.",
+      "entryMeta": "{{leader}} • {{count}} membros",
+      "contact": "Mensagem",
+      "truncated": "Há mais grupos anunciando do que cabem aqui."
+    },
     "eligible": "Conta para a experiência compartilhada",
     "notEligible": "Não elegível para a experiência compartilhada",
     "invitationFrom": "{{name}} convida você para um grupo.",

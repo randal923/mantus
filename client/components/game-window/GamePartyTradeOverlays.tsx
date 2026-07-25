@@ -32,6 +32,8 @@ export function GamePartyTradeOverlays() {
         <div className="absolute top-24 bottom-4 left-4 z-30">
           <PartyPanel
             party={partySession.party}
+            analyzer={partySession.analyzer}
+            finderListing={partySession.finder}
             ownPlayerId={ownPlayerId}
             error={
               partySession.error
@@ -54,6 +56,21 @@ export function GamePartyTradeOverlays() {
             }
             onSetSharedExp={(enabled) =>
               runtime.clientRef.current?.setPartySharedExp(enabled)
+            }
+            onResetAnalyzer={() =>
+              runtime.clientRef.current?.resetPartyAnalyzer()
+            }
+            onSetAnalyzerPriceMode={(mode) =>
+              runtime.clientRef.current?.setPartyAnalyzerPriceMode(mode)
+            }
+            onAdvertise={(title) =>
+              runtime.clientRef.current?.advertiseParty({ title })
+            }
+            onClearAdvert={() =>
+              runtime.clientRef.current?.advertiseParty({})
+            }
+            onSearchFinder={(forOwnLevel) =>
+              runtime.clientRef.current?.listPartyFinder(forOwnLevel)
             }
             onLeave={() => runtime.clientRef.current?.leaveParty()}
             onClose={() => setPartyPanelVisible(false)}

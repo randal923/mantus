@@ -4,12 +4,12 @@ The cores of all five systems shipped (see [done.md](done.md)): parties with Can
 
 ## Remaining features
 
-- [ ] **Feature 55 — Party analyzer** — Per-member loot, supplies, damage, and healing over a hunt session with leader-controlled reset and price mode. See [implementation](implementation-feature-55.md).
-- [ ] **Feature 56 — Party finder** — Leader/member party finder (list/search) with bounded read models and privacy rules. See [implementation](implementation-feature-56.md).
-- [ ] **Feature 57 — Party polish (invite shields, party-aware spells)** — Pending-invite shield variants and party-gated friendly-target spell selection. See [implementation](implementation-feature-57.md).
-- [ ] **Feature 58 — Guild bank, war stakes, and guild points** — Guild balance with ACID deposits/withdrawals, Canary war payment stakes, guild points/level. See [implementation](implementation-feature-58.md).
-- [ ] **Feature 59 — Combat-logout in-world persistence** — Keep in-fight characters in the world after disconnect until the combat lock expires, Canary-style. See [implementation](implementation-feature-59.md).
-- [ ] **Feature 60 — PVP-zone tiles and blessing-loss extras** — Emit pvp-zone tile flags from map conversion into PvpPolicy; blessing-loss modifiers once blessings ship. See [implementation](implementation-feature-60.md).
+- [x] **Feature 55 — Party analyzer** — Shipped 2026-07-25. See [completed](completed/implementation-feature-55-completed.md).
+- [ ] **Feature 56 — Party finder** — Shipped 2026-07-25; the finder-visibility hook still needs Feature 65's privacy setting. See [implementation](implementation-feature-56.md) · [completed](completed/implementation-feature-56-completed.md).
+- [ ] **Feature 57 — Party polish (party-aware spells)** — Invite-pending shields shipped 2026-07-25; party-gated friendly-target spells wait on the spell catalog. See [implementation](implementation-feature-57.md) · [completed](completed/implementation-feature-57-completed.md).
+- [ ] **Feature 58 — Guild bank, war stakes, and guild points** — Shipped 2026-07-25; the deposit/withdraw client UI and per-rank withdrawal permission remain. See [implementation](implementation-feature-58.md) · [completed](completed/implementation-feature-58-completed.md).
+- [ ] **Feature 59 — Combat-logout in-world persistence** — Shipped 2026-07-25; the end-to-end playtest scenario remains. See [implementation](implementation-feature-59.md) · [completed](completed/implementation-feature-59-completed.md).
+- [ ] **Feature 60 — Blessing-loss extras** — pvp-zone tiles shipped 2026-07-25 (the map pipeline already emitted the flag; only the policy consumer was missing); blessing-loss modifiers wait on Feature 72. See [implementation](implementation-feature-60.md) · [completed](completed/implementation-feature-60-completed.md).
 - [ ] **Feature 61 — Timed house auctions** — Bid/close auction flow on the existing durable schedule loop with escrowed bank legs. See [implementation](implementation-feature-61.md).
 - [ ] **Feature 62 — House access lists (Canary syntax, per-door)** — Canary text access lists (`@guild`, wildcards) and separate per-door lists, evaluated at execution. See [implementation](implementation-feature-62.md).
 - [ ] **Feature 63 — Guildhall purchase** — Guildhall-flagged houses purchasable from the guild balance by the leader. See [implementation](implementation-feature-63.md).

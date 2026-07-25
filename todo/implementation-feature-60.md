@@ -1,25 +1,26 @@
-# Feature 60 — PVP-zone tiles and blessing-loss extras
+# Feature 60 — Blessing-loss extras
 
 Part of [Todo 15 — Parties, guilds, PVP, houses, and social services](todo-15.md).
 
-## Why
-Kills inside designated pvp-zone tiles produce no skull/frag in Canary, but our map conversion currently emits no pvp-zone flags, so the policy cannot see them. Blessing-loss modifiers on death are also pending blessings themselves.
+pvp-zone tiles shipped 2026-07-25 — see the
+[completed log](completed/implementation-feature-60-completed.md). The map
+pipeline needed no change: the OTBM `pvp` flag was already converted and loaded,
+only the policy consumer was missing.
 
 ## Remaining work
-- Source pvp-zone tile flags from map data (the OTBM conversion currently produces none) and wire them through walkability/zone metadata to `PvpPolicy`.
-- Blessing-loss extras once blessings ship (blessings live in Feature 72).
 
-## Implementation
-- Extend the OTBM converter (`tools/` map pipeline) to emit the pvp-zone tile flag into the converted map / `server/src/gridMapData.ts` tile metadata.
-- Consume the flag in `server/src/pvp/PvpPolicy.ts` and `server/src/pvp/resolvePlayerAttackConsequence.ts`.
-- Blessing modifiers apply inside the Feature 32 death-consequence path and `server/src/pvp/PvpHooks.ts` once Feature 72 lands.
-- Rerun map conversion artifacts per the map-pipeline conventions (minimap rebuild after convert).
+- **Blessing-loss modifiers on death.** Blocked on Feature 72 (blessings).
+  `Player.blessings` is a seam that returns 0, so the Feature 32 death-loss
+  formula is only reduced by promotion and the unfair-fight reduction today (see
+  `TODO.md`). Once blessings ship, the modifier applies inside the Feature 32
+  death-consequence path and `server/src/pvp/PvpHooks.ts`.
 
 ## Tests
-- Kills inside a pvp-zone tile produce no skull and no frag, per Canary.
-- Zone flag evaluated at execution time of the death event, not cached from attack start.
+
+- Kills inside a pvp-zone tile produce no skull and no frag — **done**.
+- Zone flag evaluated at execution time of the death event — **done**.
 
 ## Dependencies
-- Map pipeline (OTBM converter).
+
 - Feature 72 (blessings) for the blessing-loss half.
 - Feature 32 (death consequences).

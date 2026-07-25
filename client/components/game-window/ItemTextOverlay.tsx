@@ -15,15 +15,18 @@ export function ItemTextOverlay() {
       item={item}
       onClose={() => setItem(null)}
       onSave={(text) => {
-        if (
-          runtime.clientRef.current?.writeItem(
-            item.itemId,
-            item.revision,
-            text,
-          )
-        ) {
-          setItem(null);
-        }
+        const client = runtime.clientRef.current;
+        // A map item's text goes through the world-action write intent; a
+        // carried item's through the owned-item one.
+        const sent = item.position
+          ? client?.writeMapItem(
+              item.itemId,
+              item.revision,
+              item.position,
+              text,
+            )
+          : client?.writeItem(item.itemId, item.revision, text);
+        if (sent) setItem(null);
       }}
     />
   );

@@ -1,5 +1,6 @@
 import type { ServerMessage } from "@tibia/protocol";
 import { formatChatTime } from "../../../lib/chat/formatChatTime";
+import { derivePartyView } from "../../../lib/render/derivePartyView";
 import type { GameWindowMessageContext } from "../types/GameWindowMessageContext";
 
 export function handleCommunityMessage(
@@ -21,24 +22,49 @@ export function handleCommunityMessage(
     }
     actions.party.stateReceived(message);
     renderer.setPartyView(
-      message.party
-        ? {
-            leaderId: message.party.leaderId,
-            memberIds: message.party.members.map((member) => member.id),
-            sharedExpActive: message.party.sharedExpActive,
-          }
-        : null,
+      derivePartyView({
+        party: message.party,
+        // Joining a party voids any invitation still pending.
+        invitedByLeaderId: message.party
+          ? null
+          : (state.sessions?.party?.invitation?.leaderId ?? null),
+      }),
     );
+    return true;
+  }
+
+  if (message.type === "party-analyzer") {
+    actions.party.analyzerReceived(message);
+    return true;
+  }
+
+  if (message.type === "party-finder-listing") {
+    actions.party.finderReceived(message);
     return true;
   }
 
   if (message.type === "party-invitation") {
     actions.party.invitationReceived(message);
+    renderer.setPartyView(
+      derivePartyView({
+        party: state.sessions?.party?.party ?? null,
+        invitedByLeaderId: message.leaderId,
+      }),
+    );
     return true;
   }
 
   if (message.type === "party-invitation-revoked") {
     actions.party.invitationRevoked(message.leaderId);
+    const invitation = state.sessions?.party?.invitation;
+    if (!invitation || invitation.leaderId === message.leaderId) {
+      renderer.setPartyView(
+        derivePartyView({
+          party: state.sessions?.party?.party ?? null,
+          invitedByLeaderId: null,
+        }),
+      );
+    }
     return true;
   }
 

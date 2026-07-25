@@ -18,6 +18,7 @@ import {
   type QuickLootFilter,
   type Language,
   type MarketSide,
+  type PartyAnalyzerPriceMode,
   type Position,
   type ReportReason,
   type ServerErrorCode,
@@ -230,11 +231,46 @@ export class GameClient {
     });
   }
 
+  advertiseParty(advert: {
+    title?: string;
+    minLevel?: number;
+    maxLevel?: number;
+  }): boolean {
+    return this.send({ type: "party-finder-advertise", ...advert });
+  }
+
+  listPartyFinder(forOwnLevel: boolean): boolean {
+    return this.send({ type: "party-finder-list", forOwnLevel });
+  }
+
+  resetPartyAnalyzer(): boolean {
+    return this.send({ type: "party-reset-analyzer" });
+  }
+
+  setPartyAnalyzerPriceMode(mode: PartyAnalyzerPriceMode): boolean {
+    return this.send({ type: "party-set-analyzer-price-mode", mode });
+  }
+
   writeItem(itemId: string, revision: number, text: string): boolean {
     return this.send({
       type: "write-item",
       itemId,
       revision,
+      text,
+    });
+  }
+
+  writeMapItem(
+    itemId: string,
+    revision: number,
+    position: Position,
+    text: string,
+  ): boolean {
+    return this.send({
+      type: "write-map-item",
+      itemId,
+      revision,
+      position,
       text,
     });
   }

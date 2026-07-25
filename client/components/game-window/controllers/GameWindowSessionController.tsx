@@ -155,6 +155,8 @@ export function GameWindowSessionController() {
       },
       party: {
         stateReceived: party.stateReceived,
+        analyzerReceived: party.analyzerReceived,
+        finderReceived: party.finderReceived,
         invitationReceived: party.invitationReceived,
         invitationRevoked: party.invitationRevoked,
         fail: party.fail,
@@ -297,6 +299,8 @@ export function GameWindowSessionController() {
       party.invitationRevoked,
       party.reset,
       party.stateReceived,
+      party.analyzerReceived,
+      party.finderReceived,
       trade.begin,
       trade.fail,
       trade.reset,

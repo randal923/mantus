@@ -1,16 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import type { PartyState } from "@tibia/protocol";
+import type {
+  PartyAnalyzerMessage,
+  PartyAnalyzerPriceMode,
+  PartyFinderListingMessage,
+  PartyState,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { Checkbox } from "../ui/Checkbox";
 import { CloseButton } from "../ui/CloseButton";
 import { Input } from "../ui/Input";
+import { PartyAnalyzerSection } from "./PartyAnalyzerSection";
+import { PartyFinderSection } from "./PartyFinderSection";
 import { PartyMemberRow } from "./PartyMemberRow";
 
 interface PartyPanelProps {
   party: PartyState | null;
+  analyzer: PartyAnalyzerMessage | null;
+  finderListing: PartyFinderListingMessage | null;
   ownPlayerId: string;
   error: string | null;
   onInvite: (targetName: string) => void;
@@ -18,6 +27,11 @@ interface PartyPanelProps {
   onKick: (targetPlayerId: string) => void;
   onPassLeadership: (targetPlayerId: string) => void;
   onSetSharedExp: (enabled: boolean) => void;
+  onResetAnalyzer: () => void;
+  onSetAnalyzerPriceMode: (mode: PartyAnalyzerPriceMode) => void;
+  onAdvertise: (title: string) => void;
+  onClearAdvert: () => void;
+  onSearchFinder: (forOwnLevel: boolean) => void;
   onLeave: () => void;
   onClose: () => void;
 }
@@ -28,6 +42,8 @@ interface PartyPanelProps {
  */
 export function PartyPanel({
   party,
+  analyzer,
+  finderListing,
   ownPlayerId,
   error,
   onInvite,
@@ -35,6 +51,11 @@ export function PartyPanel({
   onKick,
   onPassLeadership,
   onSetSharedExp,
+  onResetAnalyzer,
+  onSetAnalyzerPriceMode,
+  onAdvertise,
+  onClearAdvert,
+  onSearchFinder,
   onLeave,
   onClose,
 }: PartyPanelProps) {
@@ -129,6 +150,15 @@ export function PartyPanel({
               )}
             </div>
           </section>
+
+          {analyzer && (
+            <PartyAnalyzerSection
+              analyzer={analyzer}
+              isLeader={isLeader}
+              onReset={onResetAnalyzer}
+              onSetPriceMode={onSetAnalyzerPriceMode}
+            />
+          )}
 
           <div className="mt-5 flex items-center gap-3">
             <h3 className="min-w-0 flex-1 font-display text-lg tracking-wide text-ui-gold">
@@ -227,6 +257,14 @@ export function PartyPanel({
           </p>
         </div>
       )}
+
+      <PartyFinderSection
+        listing={finderListing}
+        isLeader={isLeader}
+        onAdvertise={onAdvertise}
+        onClearAdvert={onClearAdvert}
+        onSearch={onSearchFinder}
+      />
 
       {canInvite && (
         <form

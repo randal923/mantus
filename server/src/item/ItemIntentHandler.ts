@@ -66,6 +66,26 @@ export class ItemIntentHandler {
   private readonly poisonedPersistCharacters = new Set<string>();
   private readonly pendingPersistOperations = new Set<Promise<void>>();
   /** House-tile authorization, consulted at execution time when set. */
+  /**
+   * Hunt-session observers for the party analyzer. Called synchronously inside
+   * the tick right after the server's own mutation has been applied, so every
+   * total the analyzer shows comes from an outcome the server produced.
+   */
+  private analyzerHooks:
+    | {
+        readonly onLooted: (
+          characterId: string,
+          typeId: number,
+          count: number,
+        ) => void;
+        readonly onSupplyConsumed: (
+          characterId: string,
+          typeId: number,
+          count: number,
+        ) => void;
+      }
+    | null = null;
+
   private housePolicy:
     | ((characterId: string, position: Position) => boolean)
     | null = null;
@@ -78,6 +98,21 @@ export class ItemIntentHandler {
     policy: (characterId: string, position: Position) => boolean,
   ): void {
     this.housePolicy = policy;
+  }
+
+  setAnalyzerHooks(hooks: {
+    readonly onLooted: (
+      characterId: string,
+      typeId: number,
+      count: number,
+    ) => void;
+    readonly onSupplyConsumed: (
+      characterId: string,
+      typeId: number,
+      count: number,
+    ) => void;
+  }): void {
+    this.analyzerHooks = hooks;
   }
 
   setPersistResync(
@@ -362,6 +397,7 @@ export class ItemIntentHandler {
       return false;
     }
     session.itemOperationPending = true;
+    const consumedTypeId = combatItem.item.typeId;
     const operation = this.store.consume(
       characterId,
       itemId,
@@ -372,7 +408,10 @@ export class ItemIntentHandler {
     this.operations.run(session, characterId, operation, {
       errorCode: "combat-action-failed",
       logLabel: "combat item consumption failed",
-      onCommitted,
+      onCommitted: (committedAt) => {
+        this.analyzerHooks?.onSupplyConsumed(characterId, consumedTypeId, 1);
+        onCommitted(committedAt);
+      },
     });
     return true;
   }
@@ -417,6 +456,13 @@ export class ItemIntentHandler {
       planned.mutation,
       now,
     );
+    if (planned.mutation.before) {
+      this.analyzerHooks?.onSupplyConsumed(
+        actorCharacterId,
+        planned.mutation.before.typeId,
+        1,
+      );
+    }
     if (inventory && session.playerId === actorCharacterId) {
       session.send({ type: "inventory-updated", inventory });
     }
@@ -769,6 +815,7 @@ export class ItemIntentHandler {
       }
       const persist = plan.persist;
       this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+      this.analyzerHooks?.onLooted(playerId, item.typeId, item.count);
       taken += 1;
     }
     if (taken === 0) session.sendError("item-action-failed");
@@ -1171,6 +1218,10 @@ export class ItemIntentHandler {
       planned.plan.mutation,
       now,
     );
+    const looted = planned.plan.mutation.before;
+    if (lootIntent.type === "loot-item" && looted) {
+      this.analyzerHooks?.onLooted(playerId, looted.typeId, looted.count);
+    }
     if (inventory && session.playerId === playerId) {
       // Echo the client nonce so the optimistic drag queue can tell this
       // confirmation apart from an unsolicited mid-flight inventory change.

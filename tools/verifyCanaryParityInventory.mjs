@@ -17,6 +17,7 @@ const npcDialogueBaseline = readJson(
 const npcShops = readJson("content/npcs/canary-shops.json");
 const spawnDefinitions = readJson("content/spawns/world-spawns.json");
 const foodDefinitions = readJson("content/items/canary-foods.json");
+const worldActions = readJson("content/canary-world-action-parity.json");
 
 for (const converter of manifest.converterSources ?? []) {
   if (
@@ -229,8 +230,34 @@ const expectedCounts = {
 if (JSON.stringify(inventory.counts) !== JSON.stringify(expectedCounts)) {
   throw new Error("Canary parity aggregate counts are stale");
 }
+// Every pinned action/movement/creature-event registration must carry an
+// explicit disposition; an unclassified one is a silently ignored interaction.
+if (worldActions.source?.commit !== manifest.canary?.commit) {
+  throw new Error("world-action parity report has invalid provenance");
+}
+const worldActionStatuses = new Set(["implemented", "deferred", "excluded"]);
+for (const registration of worldActions.registrations ?? []) {
+  if (
+    typeof registration.sourcePath !== "string" ||
+    !worldActionStatuses.has(registration.status) ||
+    typeof registration.owner !== "string" ||
+    registration.owner.length === 0 ||
+    typeof registration.reason !== "string" ||
+    registration.reason.length === 0
+  ) {
+    throw new Error(
+      `world-action registration ${String(registration.sourcePath)} is unclassified`,
+    );
+  }
+}
+if (
+  worldActions.counts?.registrations !== worldActions.registrations?.length ||
+  worldActions.counts?.unclassified !== 0
+) {
+  throw new Error("world-action parity counts are stale");
+}
 console.log(
-  `verified ${expectedCounts.sourceFiles} Canary sources, ${expectedCounts.callbacks} callbacks, and ${expectedCounts.spells} spells`,
+  `verified ${expectedCounts.sourceFiles} Canary sources, ${expectedCounts.callbacks} callbacks, ${expectedCounts.spells} spells, and ${worldActions.counts.registrations} world-action registrations`,
 );
 
 function readJson(path) {

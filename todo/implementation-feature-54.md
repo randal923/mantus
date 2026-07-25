@@ -1,32 +1,47 @@
-# Feature 54 — World event engine
+# Feature 54 — World event engine (remaining)
 
 Part of [Todo 14 — Raids and world events](todo-14.md).
 
-## Why
-Nothing exists yet — `server/src/event/` is absent. Raids, global events, daily resets, and boosted rotations all need one durable, restart-safe engine; ad-hoc timers or startup-triggered scripts are exactly how duplicate bosses and double rewards happen.
+The durable engine and the raid import lane shipped 2026-07-25 — see the
+[completed log](completed/implementation-feature-54-completed.md).
 
 ## Remaining work
-- Typed state machines with stable event ids, bounded work per tick, announcements, spawn/action steps, and completion handling.
-- Restart-safe, idempotent durable events — a restart cannot create rewards or bosses twice.
-- Daily resets, rewards, raids, and event boundaries driven by durable server-clock schedules with idempotency keys/leases — never startup- or daily-save-triggered.
-- Operator controls with authorization and audit.
-- Import every pinned raid, global event, startup/daily schedule, boosted rotation, announcement, spawn wave, and completion callback as durable typed state.
 
-## Implementation
-- New `server/src/event/WorldEventManager.ts` plus a migration for durable schedule/event-state tables carrying idempotency keys and leases.
-- Event steps execute in the tick loop with bounded work per tick; spawn steps hook the spawn runtime; announcements are visibility-filtered (charter rule 6 — no server internals or out-of-view state leaks).
-- Reward/economy outcomes and operator actions commit with their `audit_log` entries in the same transaction that performs them; operator controls are authorized against operator identity, never a client-supplied id.
-- Import lane: a `tools/` script over the pinned Canary XML raids and `data/scripts` globalevents, emitting typed content with a classify-everything report (implemented / deferred / excluded, nothing silently dropped).
-- Explicitly does NOT wait for the quest storage platform: the pinned raid scripts use no player storage.
+- **Import the other global events.** Only the 21 raid revscripts are imported.
+  Still unimported: `data/scripts/globalevents` (`encounters.lua`,
+  `global_server_save.lua`, `online_record.lua`, `save_interval.lua`,
+  `server_initialization.lua`, `update_guild_war_status.lua`) and
+  `data-otservbr-global/scripts/globalevents` (spawn sweeps, VIP, world
+  update). Each needs the same classify-everything report the raid importer
+  emits.
+- **Daily resets and boosted rotations.** The engine's schedule table can carry
+  them (`next_check_at` + idempotency key), but no content is imported and the
+  daily-boundary step kinds do not exist. `daily_reward_shrine.lua` is
+  classified `deferred` to this feature in
+  `content/canary-world-action-parity.json`.
+- **Reward steps.** No pinned raid grants an item or currency, so the engine has
+  no reward step kind. When one lands it must commit inside a run-keyed
+  transaction (the `character_chest_loot` pattern) so a retry cannot double-pay.
+- **Real operator authorization.** `/raid <eventId>` is dev-commands-only, like
+  `/coins` and `/storerefund`; it should move behind operator authorization once
+  Feature 96 ships. The attempt is already audited.
+- **17 raid monster names cannot spawn.** They are absent from the pinned
+  creature import (`content/events/canary-raids.json` →
+  `unresolvedMonsterNames`), so those stages place nothing. The budget is pinned
+  by `worldEventContent.test.ts`; a newer creature import is the fix, not a code
+  change.
 
 ## Tests
-- Restart mid-event is idempotent — retry produces no duplicate spawns or rewards.
-- Lease prevents double-fire across a simulated crash (two managers racing one schedule fire exactly once).
-- Daily-boundary behavior is equivalent whether the server stays online or restarts across the boundary.
-- Operator controls are rejected without authorization and are audited when used.
-- Parity tests over every registered raid/global event from the import report.
+
+- Restart mid-event is idempotent — **done**.
+- Lease prevents double-fire across a simulated crash — **done**.
+- Operator controls rejected without authorization and audited when used —
+  **partly done** (audited; authorization is dev-only until Feature 96).
+- Daily-boundary equivalence online vs across a restart — pending the daily
+  content.
+- Parity tests over every registered raid/global event — **done for raids**.
 
 ## Dependencies
-- Todo-4 (spawn runtime) and todo-13/Feature 50 (event action steps).
-- Feature 96 (admin tooling — operator authorization for event controls).
-- Shares durable-scheduling infrastructure (idempotency keys/leases) with Feature 46's shop restock schedule.
+
+- Feature 96 (admin tooling) for operator authorization.
+- Shares durable-scheduling infrastructure with Feature 46's shop restock.

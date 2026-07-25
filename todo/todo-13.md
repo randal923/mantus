@@ -4,9 +4,9 @@ A large slice has shipped (see [done.md](done.md)): the world-action registry wi
 
 ## Remaining features
 
-- [ ] **Feature 50 — Remaining world-action kinds (chests, pressure plates, teleports, fields)** — New handlers for the unstarted kinds, plus recorded dropdown deviations (21298, FLAG_NOLIMIT). See [implementation](implementation-feature-50.md).
-- [ ] **Feature 51 — Use-with tool actions (fishing, machete, scythe, pick, crowbar, watch)** — Per-tool handlers with server-side RNG, transforms, and skill hooks. See [implementation](implementation-feature-51.md).
-- [ ] **Feature 52 — Registry-wide execution guarantees and flag parsing** — Cross-cutting guarantee boxes for every future handler, DAT flag parsing, deferred look/menu/hit-testing/write-map work. See [implementation](implementation-feature-52.md).
-- [ ] **Feature 53 — World-action parity inventory** — Classify-everything generator over pinned Canary registrations with a test failing on unclassified entries. See [implementation](implementation-feature-53.md).
+- [ ] **Feature 50 — Remaining world-action kinds (fields)** — Chests, pressure plates and traps shipped 2026-07-25; fields stay blocked on `ItemType.field` content, plus the recorded dropdown deviations (21298, FLAG_NOLIMIT). See [implementation](implementation-feature-50.md) · [completed](completed/implementation-feature-50-completed.md).
+- [ ] **Feature 51 — Use-with tool actions (remaining)** — Machete, scythe, pick, crowbar, watch and the fishing rod shipped 2026-07-25; rope-on-open-holes, sand digging and the toolgear jam remain. See [implementation](implementation-feature-51.md) · [completed](completed/implementation-feature-51-completed.md).
+- [ ] **Feature 52 — Registry-wide execution guarantees and flag parsing** — The shared precondition table and write-map shipped 2026-07-25; DAT flag parsing and the deferred look/menu/hit-testing work remain. See [implementation](implementation-feature-52.md) · [completed](completed/implementation-feature-52-completed.md).
+- [x] **Feature 53 — World-action parity inventory** — Shipped 2026-07-25: 313 registrations classified, 0 unclassified, gated by `worldActionParity.test.ts` and `yarn parity:check`. See [completed](completed/implementation-feature-53-completed.md).
 
 [Back to overview](README.md)

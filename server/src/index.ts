@@ -25,6 +25,8 @@ import { PgGemStore } from "./wheel/PgGemStore";
 import { PgWheelStore } from "./wheel/PgWheelStore";
 import { PgHighscoreStore } from "./social/PgHighscoreStore";
 import { PgVipStore } from "./social/PgVipStore";
+import { PgChestStore } from "./chest/PgChestStore";
+import { PgWorldEventStore } from "./event/PgWorldEventStore";
 import { PgMantusStore } from "./store/PgMantusStore";
 import { WorldItemSeeder } from "./item/WorldItemSeeder";
 import { loadServerConfig } from "./loadServerConfig";
@@ -97,6 +99,8 @@ const wheel = new PgWheelStore(pool);
 const gems = new PgGemStore(pool);
 const moderation = new PgModerationStore(pool);
 const store = new PgMantusStore(pool, itemCatalog);
+const chests = new PgChestStore(pool, itemCatalog);
+const worldEvents = new PgWorldEventStore(pool);
 const worldItemDeltas =
   serverConfig.map.source === "data"
     ? await new WorldItemSeeder(
@@ -130,6 +134,8 @@ const server = new GameServer(serverConfig, {
   gems,
   moderation,
   store,
+  chests,
+  worldEvents,
   currencyReconciler: new CurrencyReconciler(pool),
   worldItemDeltas,
 });

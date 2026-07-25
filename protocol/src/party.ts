@@ -171,6 +171,119 @@ export const partyChatDeliveredMessageSchema = z
   })
   .strict();
 
+export const partyAnalyzerPriceModeSchema = z.enum(["market", "npc"]);
+
+/**
+ * Leader-only: clears every member's hunt-session totals. Fixed size, covered
+ * by the shared 4 KiB / 30-per-second caps and the 500 ms party cooldown.
+ * Leadership is re-checked at execution time.
+ */
+export const partyResetAnalyzerMessageSchema = z
+  .object({ type: z.literal("party-reset-analyzer") })
+  .strict();
+
+/** Leader-only: picks the valuation source for loot and supply totals. */
+export const partySetAnalyzerPriceModeMessageSchema = z
+  .object({
+    type: z.literal("party-set-analyzer-price-mode"),
+    mode: partyAnalyzerPriceModeSchema,
+  })
+  .strict();
+
+/**
+ * One member's hunt-session totals. Every value is server-computed from
+ * damage, healing, loot, and supply events the server itself produced, and the
+ * projection is sent only to current members (charter rule 6).
+ */
+export const partyAnalyzerEntrySchema = z
+  .object({
+    playerId: z.string().min(1).max(192),
+    name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
+    damageDealt: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    damageTaken: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    healingDone: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    lootValue: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    supplyValue: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    balance: z
+      .number()
+      .int()
+      .min(-Number.MAX_SAFE_INTEGER)
+      .max(Number.MAX_SAFE_INTEGER),
+  })
+  .strict();
+
+export const partyAnalyzerMessageSchema = z
+  .object({
+    type: z.literal("party-analyzer"),
+    /** Time since the leader last reset the session, server-measured. */
+    elapsedMs: z
+      .number()
+      .int()
+      .min(0)
+      .max(30 * 24 * 60 * 60 * 1000),
+    priceMode: partyAnalyzerPriceModeSchema,
+    entries: z.array(partyAnalyzerEntrySchema).max(PARTY_LIMITS.maxMembers),
+  })
+  .strict();
+
+export const PARTY_FINDER_LIMITS = {
+  /** Rows one search may return; the server truncates rather than paging. */
+  maxListings: 40,
+  maxTitleLength: 64,
+} as const;
+
+/**
+ * Leader-only: advertises the party in the finder, or clears the advert when
+ * `title` is absent. Bounded by the 64-character title and the shared
+ * 4 KiB / 30-per-second caps, plus the 500 ms party cooldown. The server
+ * re-checks leadership at execution time.
+ */
+export const partyFinderAdvertiseMessageSchema = z
+  .object({
+    type: z.literal("party-finder-advertise"),
+    title: z.string().min(1).max(PARTY_FINDER_LIMITS.maxTitleLength).optional(),
+    minLevel: z.number().int().min(1).max(100_000).optional(),
+    maxLevel: z.number().int().min(1).max(100_000).optional(),
+  })
+  .strict();
+
+/** Searches advertised parties. Row count is capped server-side. */
+export const partyFinderListMessageSchema = z
+  .object({
+    type: z.literal("party-finder-list"),
+    /** Only parties whose advertised range includes this level. */
+    forOwnLevel: z.boolean().default(false),
+  })
+  .strict();
+
+/**
+ * One advertised party. Deliberately carries no position, no health, and no
+ * roster beyond its size — a searching player is entitled to the advert and
+ * nothing else (charter rule 6).
+ */
+export const partyFinderEntrySchema = z
+  .object({
+    partyId: z.string().uuid(),
+    leaderId: z.string().min(1).max(192),
+    leaderName: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
+    title: z.string().min(1).max(PARTY_FINDER_LIMITS.maxTitleLength),
+    memberCount: z.number().int().min(1).max(PARTY_LIMITS.maxMembers),
+    minLevel: z.number().int().min(1).max(100_000).nullable(),
+    maxLevel: z.number().int().min(1).max(100_000).nullable(),
+  })
+  .strict();
+
+export const partyFinderListingMessageSchema = z
+  .object({
+    type: z.literal("party-finder-listing"),
+    entries: z
+      .array(partyFinderEntrySchema)
+      .max(PARTY_FINDER_LIMITS.maxListings),
+    /** True when rows were dropped by the cap, so the client can say so. */
+    truncated: z.boolean(),
+  })
+  .strict();
+
 export const partyActionFailedMessageSchema = z
   .object({
     type: z.literal("party-action-failed"),
@@ -187,6 +300,7 @@ export const partyActionFailedMessageSchema = z
       "in-fight",
       "invalid-target",
       "rate-limited",
+      "invalid-advert",
     ]),
   })
   .strict();
@@ -225,3 +339,24 @@ export type PartyActionFailedMessage = z.infer<
   typeof partyActionFailedMessageSchema
 >;
 export type PartyActionFailedReason = PartyActionFailedMessage["reason"];
+export type PartyAnalyzerPriceMode = z.infer<
+  typeof partyAnalyzerPriceModeSchema
+>;
+export type PartyResetAnalyzerMessage = z.infer<
+  typeof partyResetAnalyzerMessageSchema
+>;
+export type PartySetAnalyzerPriceModeMessage = z.infer<
+  typeof partySetAnalyzerPriceModeMessageSchema
+>;
+export type PartyAnalyzerEntry = z.infer<typeof partyAnalyzerEntrySchema>;
+export type PartyAnalyzerMessage = z.infer<typeof partyAnalyzerMessageSchema>;
+export type PartyFinderAdvertiseMessage = z.infer<
+  typeof partyFinderAdvertiseMessageSchema
+>;
+export type PartyFinderListMessage = z.infer<
+  typeof partyFinderListMessageSchema
+>;
+export type PartyFinderEntry = z.infer<typeof partyFinderEntrySchema>;
+export type PartyFinderListingMessage = z.infer<
+  typeof partyFinderListingMessageSchema
+>;

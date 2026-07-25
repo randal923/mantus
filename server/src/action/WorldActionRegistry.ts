@@ -1,17 +1,21 @@
-import type { Position } from "@tibia/protocol";
-import { isNear } from "../item/isNear";
+import type { Position, WriteMapItemMessage } from "@tibia/protocol";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import { planTransformMapItem } from "../item/plan/planTransformMapItem";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { World } from "../World";
+import type { ChestDefinition } from "./ChestDefinition";
+import { handleChestUse } from "./handleChestUse";
+import { handleClockRead } from "./handleClockRead";
 import { handleDoorUse } from "./handleDoorUse";
 import { handleLeverUse } from "./handleLeverUse";
 import { handleMapRotate } from "./handleMapRotate";
+import { handleMapWrite } from "./handleMapWrite";
 import { handleSignRead } from "./handleSignRead";
 import { resolveWorldAction } from "./resolveWorldAction";
 import type { WorldAction } from "./WorldAction";
+import { checkWorldActionPreconditions } from "./worldActionPreconditions";
 import type { WorldActionContext } from "./WorldActionContext";
 
 type RegisteredKind = Exclude<
@@ -19,10 +23,14 @@ type RegisteredKind = Exclude<
   "map-movement" | "unsupported"
 >;
 
+type RegisteredAction = Extract<WorldAction, { kind: RegisteredKind }>;
+
 /**
  * Typed world actions behind use-map. Resolution and every requirement check
- * run at execution time inside the tick; kinds without a registered handler
- * fail closed with "item-action-failed" (charter rules 4, 5).
+ * run at execution time inside the tick, through the shared
+ * `checkWorldActionPreconditions` table so no handler can skip one; kinds
+ * without a registered handler fail closed with "item-action-failed"
+ * (charter rules 4, 5).
  */
 export class WorldActionRegistry {
   private readonly handlers: {
@@ -31,10 +39,13 @@ export class WorldActionRegistry {
       action: Extract<WorldAction, { kind: K }>,
     ) => void;
   } = {
+    chest: handleChestUse,
+    clock: handleClockRead,
     door: handleDoorUse,
     lever: handleLeverUse,
     read: handleSignRead,
     rotate: handleMapRotate,
+    write: handleMapWrite,
   };
 
   constructor(
@@ -46,38 +57,127 @@ export class WorldActionRegistry {
       characterId: string,
       position: Position,
     ) => boolean = () => true,
+    private readonly chests: ReadonlyMap<string, ChestDefinition> = new Map(),
+    private readonly lootChest?: (
+      session: Session,
+      player: Player,
+      chest: ChestDefinition,
+    ) => void,
+    private readonly wallClock: () => number = Date.now,
   ) {}
+
+  /**
+   * Chest use only. Canary registers quest chests by unique id, which outranks
+   * the default container-open behaviour of the same item type, so this runs
+   * ahead of the generic world-container path. True when consumed here.
+   */
+  handleChestUse(session: Session, position: Position, now: number): boolean {
+    const action = this.resolve(session, position);
+    if (!action || action.kind !== "chest") return false;
+    return this.run(session, position, action, now);
+  }
 
   /** True when the use was consumed here; false falls through to movement. */
   handleUseMap(session: Session, position: Position, now: number): boolean {
-    const playerId = session.playerId;
-    const player = playerId ? this.world.getPlayer(playerId) : undefined;
-    if (!playerId || !player) return false;
-    // Out-of-view probes must be indistinguishable from empty tiles
-    // (charter rule 6): fall through to the movement correction unanswered.
-    if (
-      !isNear(player.position, position) &&
-      !this.world.canSee(player.position, position, session.viewRange)
-    ) {
-      return false;
-    }
-    const action = resolveWorldAction(this.world, this.catalog, position);
-    if (!action || action.kind === "map-movement") return false;
+    const action = this.resolve(session, position);
+    if (!action) return false;
     if (action.kind === "unsupported") {
       session.sendError("item-action-failed");
       return true;
     }
-    if (session.itemOperationPending) {
+    return this.run(session, position, action, now);
+  }
+
+  /** Writes text onto a writeable map item; every value is re-validated here. */
+  handleWriteMap(
+    session: Session,
+    intent: WriteMapItemMessage,
+    now: number,
+  ): void {
+    const readable = this.resolve(session, intent.position);
+    if (
+      !readable ||
+      readable.kind !== "read" ||
+      readable.item.instanceId !== intent.itemId ||
+      !readable.type.text?.writeable
+    ) {
       session.sendError("item-action-failed");
+      return;
+    }
+    this.run(
+      session,
+      intent.position,
+      {
+        kind: "write",
+        item: readable.item,
+        type: readable.type,
+        text: intent.text,
+        expectedVersion: intent.revision,
+      },
+      now,
+    );
+  }
+
+  /** Null means nothing actionable here, or the tile is out of view entirely. */
+  private resolve(
+    session: Session,
+    position: Position,
+  ): Exclude<WorldAction, { kind: "map-movement" }> | null {
+    const playerId = session.playerId;
+    const player = playerId ? this.world.getPlayer(playerId) : undefined;
+    if (!player) return null;
+    const action = resolveWorldAction(
+      this.world,
+      this.catalog,
+      position,
+      this.chests,
+    );
+    if (!action || action.kind === "map-movement") return null;
+    return action;
+  }
+
+  /** True when the action was answered (including with a failure). */
+  private run(
+    session: Session,
+    position: Position,
+    action: RegisteredAction,
+    now: number,
+  ): boolean {
+    const playerId = session.playerId;
+    const player = playerId ? this.world.getPlayer(playerId) : undefined;
+    if (!player) return false;
+    const rejection = checkWorldActionPreconditions({
+      action,
+      player,
+      position,
+      viewRange: session.viewRange,
+      world: this.world,
+      houseAccess: this.houseAccess,
+      itemOperationPending: session.itemOperationPending,
+    });
+    // Out-of-view probes must be indistinguishable from empty tiles
+    // (charter rule 6): fall through to the movement correction unanswered.
+    if (rejection === "out-of-view") return false;
+    if (rejection === "no-house-access") {
+      session.send({
+        type: "combat-log",
+        kind: "condition",
+        text: "Only invited guests may enter this house.",
+      });
       return true;
     }
-    // Sign reading validates its own distance rule (allowDistanceRead).
-    if (action.kind !== "read" && !isNear(player.position, position)) {
+    if (rejection !== null) {
       session.sendError("item-action-failed");
       return true;
     }
     const context = this.makeContext(session, player, position, now);
     switch (action.kind) {
+      case "chest":
+        this.handlers.chest(context, action);
+        return true;
+      case "clock":
+        this.handlers.clock(context, action);
+        return true;
       case "door":
         this.handlers.door(context, action);
         return true;
@@ -89,6 +189,9 @@ export class WorldActionRegistry {
         return true;
       case "rotate":
         this.handlers.rotate(context, action);
+        return true;
+      case "write":
+        this.handlers.write(context, action);
         return true;
     }
   }
@@ -128,11 +231,13 @@ export class WorldActionRegistry {
     position: Position,
     now: number,
   ): WorldActionContext {
+    const lootChest = this.lootChest;
     return {
       session,
       player,
       position,
       now,
+      wallClockMs: this.wallClock(),
       world: this.world,
       catalog: this.catalog,
       doorLevels: this.doorLevels,
@@ -144,6 +249,12 @@ export class WorldActionRegistry {
         }
         this.items.applyWorldPlan(session, player.id, plan, now);
       },
+      ...(lootChest === undefined
+        ? {}
+        : {
+            lootChest: (chest: ChestDefinition) =>
+              lootChest(session, player, chest),
+          }),
     };
   }
 }

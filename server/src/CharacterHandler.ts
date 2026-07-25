@@ -14,6 +14,7 @@ import { CharacterError } from "./character/CharacterError";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { CharacterService } from "./character/CharacterService";
 import { getAccountStatus } from "./getAccountStatus";
+import type { CarriedCombatLocks } from "./LingeringPlayers";
 import { monotonicNow } from "./monotonicNow";
 import { Player } from "./Player";
 import type { Session } from "./Session";
@@ -58,6 +59,15 @@ export class CharacterHandler {
     private readonly bestiary: BestiaryTracker,
     private readonly wheel: WheelTracker,
     private readonly gems: GemTracker,
+    /**
+     * Reclaims a character still lingering in the world after an in-fight
+     * disconnect. Returns the combat locks to carry onto the reconnecting
+     * player, so relogging cannot shed them (charter rule 8).
+     */
+    private readonly reclaimLingering: (
+      characterId: string,
+      now: number,
+    ) => CarriedCombatLocks | null = () => null,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -164,12 +174,23 @@ export class CharacterHandler {
           return;
         }
         this.evictExistingSession(character.id, session);
+        // Retire any lingering entity before the fresh entry loads, so its
+        // damage is flushed first and there is never a second entity.
+        this.carriedLocksByCharacter.set(
+          character.id,
+          this.reclaimLingering(character.id, monotonicNow()),
+        );
         void this.resolveWorldEntry(session, accountId, character.id);
       });
     } catch (cause) {
       this.queueFailure(session, accountId, "character-load-failed", cause);
     }
   }
+
+  private readonly carriedLocksByCharacter = new Map<
+    string,
+    CarriedCombatLocks | null
+  >();
 
   private async resolveWorldEntry(
     session: Session,
@@ -296,6 +317,19 @@ export class CharacterHandler {
       account.premiumUntil,
       wheelBonuses,
     );
+    // Combat locks survive the reconnect: a killer who relogs mid-fight is
+    // still locked, and still pz-locked out of protection zones.
+    const carried = this.carriedLocksByCharacter.get(character.id) ?? null;
+    this.carriedLocksByCharacter.delete(character.id);
+    if (carried) {
+      for (const [type, durationMs] of [
+        ["combat-lock", carried.combatLockMs],
+        ["pz-lock", carried.pzLockMs],
+      ] as const) {
+        if (durationMs <= 0) continue;
+        player.conditions.apply({ type, sourceId: null, durationMs }, now);
+      }
+    }
     this.persistence.track(player, now);
     this.world.addPlayer(player);
     if (

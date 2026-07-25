@@ -17,6 +17,8 @@ export const GUILD_LIMITS = {
   maxMembers: 500,
   /** Safety bound for the projected war list (project addition). */
   maxTrackedWars: 50,
+  /** Safety bound on the shared balance (project addition). */
+  maxBalance: 1_000_000_000_000,
 } as const;
 
 /**
@@ -153,6 +155,28 @@ export const guildDeclareWarMessageSchema = z
       .min(GUILD_LIMITS.minNameLength)
       .max(GUILD_LIMITS.maxNameLength),
     fragLimit: z.number().int().min(1).max(GUILD_LIMITS.maxFragLimit),
+    /** Canary guild_wars.payment: escrowed from both guild balances. */
+    payment: z.number().int().min(0).max(GUILD_LIMITS.maxBalance).optional(),
+  })
+  .strict();
+
+/**
+ * Moves gold between the member's own bank balance and the guild balance.
+ * Fixed size, covered by the shared caps and the guild action cooldown; the
+ * amount, membership, and (for withdraw) rank capability are all re-checked
+ * inside the transaction.
+ */
+export const guildDepositMessageSchema = z
+  .object({
+    type: z.literal("guild-deposit"),
+    amount: z.number().int().min(1).max(GUILD_LIMITS.maxBalance),
+  })
+  .strict();
+
+export const guildWithdrawMessageSchema = z
+  .object({
+    type: z.literal("guild-withdraw"),
+    amount: z.number().int().min(1).max(GUILD_LIMITS.maxBalance),
   })
   .strict();
 
@@ -235,6 +259,10 @@ export const guildStateSchema = z
       .max(GUILD_LIMITS.maxNameLength),
     motd: z.string().max(GUILD_LIMITS.maxMotdLength),
     myRankLevel: z.number().int().min(1).max(3),
+    /** Shared guild balance, visible to every member. */
+    balance: z.number().int().min(0).max(GUILD_LIMITS.maxBalance),
+    points: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    level: z.number().int().min(1).max(1_000),
     ranks: z.array(guildRankEntrySchema).max(3),
     members: z.array(guildMemberEntrySchema).max(GUILD_LIMITS.maxMembers),
     invites: z
@@ -302,6 +330,8 @@ export const guildEventMessageSchema = z
       "war-accepted",
       "war-rejected",
       "war-ended",
+      "bank-deposit",
+      "bank-withdraw",
       "disbanded",
     ]),
     detail: z.string().max(64).optional(),
@@ -330,6 +360,8 @@ export const guildActionFailedMessageSchema = z
       "war-already-active",
       "cannot-war-own-guild",
       "rate-limited",
+      "insufficient-funds",
+      "invalid-amount",
       "invalid-request",
     ]),
   })
@@ -361,6 +393,8 @@ export type GuildChatMessage = z.infer<typeof guildChatMessageSchema>;
 export type GuildDeclareWarMessage = z.infer<
   typeof guildDeclareWarMessageSchema
 >;
+export type GuildDepositMessage = z.infer<typeof guildDepositMessageSchema>;
+export type GuildWithdrawMessage = z.infer<typeof guildWithdrawMessageSchema>;
 export type GuildRespondWarMessage = z.infer<
   typeof guildRespondWarMessageSchema
 >;

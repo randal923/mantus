@@ -8,20 +8,38 @@ import type { ItemCatalog } from "../item/ItemCatalog";
 import { ItemIntentHandler } from "../item/ItemIntentHandler";
 import { loadItemCatalog } from "../item/loadItemCatalog";
 import { MemoryItemStore } from "../item/MemoryItemStore";
+import type { MapItem } from "../MapItem";
 import { MovementHandler } from "../MovementHandler";
 import { Player } from "../Player";
+import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import { Session } from "../Session";
 import { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
 import { Visibility } from "../Visibility";
 import { World } from "../World";
 import { ToolUseHandler } from "./ToolUseHandler";
+import { WorldActionRng } from "./WorldActionRng";
 
 const ROPE = 3_003;
 const SHOVEL = 3_457;
+const MACHETE = 3_308;
+const SCYTHE = 3_453;
+const PICK = 3_456;
+const CROWBAR = 3_304;
+const FISHING_ROD = 3_483;
+const WORM = 3_492;
 const APPLE = 3_585;
 const STONE_PILE = 593;
 const OPEN_HOLE = 594;
+const JUNGLE_GRASS = 3_696;
+const CUT_JUNGLE_GRASS = 3_695;
+const WHEAT = 3_653;
+const CUT_WHEAT = 3_651;
+const BUNCH_OF_WHEAT = 3_605;
+const CRUSHABLE_STONE = 20_135;
+const FINE_GRAVEL = 20_133;
+const CRUSHED_STONE = 20_134;
+const WATER = 4_597;
 const ROPE_SPOT = { x: 5, y: 4, z: 7 } as const;
 const ROPE_DESTINATION = { x: 5, y: 5, z: 6 } as const;
 const PILE = { x: 4, y: 4, z: 7 } as const;
@@ -68,9 +86,39 @@ function seededPile(itemId: number) {
   };
 }
 
+function seededAt(
+  itemId: number,
+  position: Position,
+): { position: Position; item: MapItem } {
+  const instanceId = `test:${position.x}:${position.y}:${position.z}:1`;
+  return {
+    position: { ...position },
+    item: {
+      instanceId,
+      itemId,
+      stackIndex: 1,
+      mutable: true,
+      source: {
+        seedKey: instanceId,
+        mapName: "test",
+        mapVersion: "v1",
+        typeId: itemId,
+        attributes: {},
+        position: { ...position },
+        stackIndex: 1,
+        contents: [],
+      },
+    },
+  };
+}
+
 async function makeHarness(
   inventory: ReadonlyArray<Item>,
-  options: { pile?: boolean } = {},
+  options: {
+    pile?: boolean;
+    items?: ReadonlyArray<{ position: Position; item: MapItem }>;
+    seed?: number;
+  } = {},
 ) {
   const world = new World(
     gridMapData({
@@ -89,7 +137,9 @@ async function makeHarness(
           itemId: 386,
         },
       ],
-      items: options.pile ? [seededPile(STONE_PILE)] : [],
+      items: options.pile
+        ? [seededPile(STONE_PILE)]
+        : [...(options.items ?? [])],
     }),
     25,
   );
@@ -113,9 +163,29 @@ async function makeHarness(
   const persistence = {
     markDirty: vi.fn(),
     saveNow: vi.fn(),
+    beginExternalMutation: vi.fn(() => Promise.resolve(1)),
+    completeExternalMutation: vi.fn(),
+    cancelExternalMutation: vi.fn(),
   } as unknown as CharacterPersistence;
   const movement = new MovementHandler(world, visibility, persistence);
-  const toolUse = new ToolUseHandler(world, catalog, items, movement);
+  const spawned: Array<{ typeName: string; position: Position }> = [];
+  const progression = {
+    awardSkillTries: vi.fn(),
+    syncPlayer: vi.fn(),
+  } as unknown as ProgressionSystem;
+  const toolUse = new ToolUseHandler(
+    world,
+    catalog,
+    items,
+    movement,
+    visibility,
+    persistence,
+    progression,
+    new WorldActionRng(options.seed ?? 1_234),
+    (typeName, position) => {
+      spawned.push({ typeName, position: { ...position } });
+    },
+  );
 
   const player = new Player(makeCharacter("actor", "Roper"), {
     x: 5,
@@ -140,7 +210,7 @@ async function makeHarness(
   session.playerId = "actor";
   registry.add(session);
   items.attach(await items.load("actor", 400));
-  return { world, player, session, sent, toolUse };
+  return { world, items, player, session, sent, toolUse, progression, spawned };
 }
 
 const useWith = (itemId: string, revision: number, targetPosition: Position) =>
@@ -294,6 +364,206 @@ describe("ToolUseHandler", () => {
           message.type === "error" && message.code === "item-action-failed",
       ),
     ).toBe(true);
+  });
+
+  it("machete cuts jungle grass and drops nothing on the tile", async () => {
+    const harness = await makeHarness(
+      [carriedItem("44444444-4444-4444-8444-444444444444", MACHETE, "actor")],
+      { items: [seededAt(JUNGLE_GRASS, PILE)] },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("44444444-4444-4444-8444-444444444444", 1, PILE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.world.getMapItems(PILE).map((item) => item.itemId)).toEqual([
+      CUT_JUNGLE_GRASS,
+    ]);
+  });
+
+  it("scythe cuts wheat and drops one bunch on the tile", async () => {
+    const harness = await makeHarness(
+      [carriedItem("44444444-4444-4444-8444-444444444444", SCYTHE, "actor")],
+      { items: [seededAt(WHEAT, PILE)] },
+    );
+
+    harness.toolUse.handle(
+      harness.session,
+      useWith("44444444-4444-4444-8444-444444444444", 1, PILE),
+      1000,
+    );
+
+    const ids = harness.world.getMapItems(PILE).map((item) => item.itemId);
+    expect(ids).toContain(CUT_WHEAT);
+    expect(ids).toContain(BUNCH_OF_WHEAT);
+  });
+
+  it("rejects a harvest on a tile that holds nothing cuttable", async () => {
+    const harness = await makeHarness([
+      carriedItem("44444444-4444-4444-8444-444444444444", SCYTHE, "actor"),
+    ]);
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("44444444-4444-4444-8444-444444444444", 1, { x: 4, y: 5, z: 7 }),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+  });
+
+  it("rejects a forged harvest target beyond reach", async () => {
+    const harness = await makeHarness(
+      [carriedItem("44444444-4444-4444-8444-444444444444", MACHETE, "actor")],
+      { items: [seededAt(JUNGLE_GRASS, PILE)] },
+    );
+    harness.player.moveTo({ x: 9, y: 7, z: 7 });
+
+    harness.toolUse.handle(
+      harness.session,
+      useWith("44444444-4444-4444-8444-444444444444", 1, PILE),
+      1000,
+    );
+
+    expect(harness.world.getMapItems(PILE).map((item) => item.itemId)).toEqual([
+      JUNGLE_GRASS,
+    ]);
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+  });
+
+  it("pick crushes a boulder, rolling gravel or a frazzlemaw server-side", async () => {
+    const gravel = await makeHarness(
+      [carriedItem("55555555-5555-4555-8555-555555555555", PICK, "actor")],
+      { items: [seededAt(CRUSHABLE_STONE, PILE)], seed: 4 },
+    );
+    gravel.toolUse.handle(
+      gravel.session,
+      useWith("55555555-5555-4555-8555-555555555555", 1, PILE),
+      1000,
+    );
+    const gravelIds = gravel.world
+      .getMapItems(PILE)
+      .map((item) => item.itemId);
+
+    const beast = await makeHarness(
+      [carriedItem("55555555-5555-4555-8555-555555555555", PICK, "actor")],
+      { items: [seededAt(CRUSHABLE_STONE, PILE)], seed: 7 },
+    );
+    beast.toolUse.handle(
+      beast.session,
+      useWith("55555555-5555-4555-8555-555555555555", 1, PILE),
+      1000,
+    );
+    const beastIds = beast.world.getMapItems(PILE).map((item) => item.itemId);
+
+    // Whichever way each seed fell, the stone always became one of the two
+    // crushed forms and never stayed intact.
+    for (const ids of [gravelIds, beastIds]) {
+      expect(ids).toHaveLength(1);
+      expect([FINE_GRAVEL, CRUSHED_STONE]).toContain(ids[0]);
+    }
+    const spawnedFrazzlemaw = [...gravel.spawned, ...beast.spawned];
+    for (const spawn of spawnedFrazzlemaw) {
+      expect(spawn.typeName).toBe("frazzlemaw");
+    }
+  });
+
+  it("fishing rod reaches shallow water from a distance and advances the skill", async () => {
+    const harness = await makeHarness(
+      [
+        carriedItem("66666666-6666-4666-8666-666666666666", FISHING_ROD, "actor"),
+        carriedItem("77777777-7777-4777-8777-777777777777", WORM, "actor"),
+      ],
+      { items: [seededAt(WATER, { x: 8, y: 5, z: 7 })] },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("66666666-6666-4666-8666-666666666666", 1, {
+        x: 8,
+        y: 5,
+        z: 7,
+      }),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.progression.awardSkillTries).toHaveBeenCalledWith(
+      "actor",
+      expect.any(String),
+      "fishing",
+      1,
+      1000,
+    );
+  });
+
+  it("never advances fishing or catches without bait", async () => {
+    const harness = await makeHarness(
+      [carriedItem("66666666-6666-4666-8666-666666666666", FISHING_ROD, "actor")],
+      { items: [seededAt(WATER, { x: 8, y: 5, z: 7 })] },
+    );
+
+    harness.toolUse.handle(
+      harness.session,
+      useWith("66666666-6666-4666-8666-666666666666", 1, {
+        x: 8,
+        y: 5,
+        z: 7,
+      }),
+      1000,
+    );
+
+    expect(harness.progression.awardSkillTries).not.toHaveBeenCalled();
+  });
+
+  it("rejects a fishing target on another floor even within far-use range", async () => {
+    const harness = await makeHarness(
+      [carriedItem("66666666-6666-4666-8666-666666666666", FISHING_ROD, "actor")],
+      { items: [seededAt(WATER, { x: 8, y: 5, z: 6 })] },
+    );
+
+    harness.toolUse.handle(
+      harness.session,
+      useWith("66666666-6666-4666-8666-666666666666", 1, {
+        x: 8,
+        y: 5,
+        z: 6,
+      }),
+      1000,
+    );
+
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+  });
+
+  it("crowbar stays fail-closed until quest storage ships", async () => {
+    const harness = await makeHarness([
+      carriedItem("88888888-8888-4888-8888-888888888888", CROWBAR, "actor"),
+    ]);
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("88888888-8888-4888-8888-888888888888", 1, { x: 4, y: 5, z: 7 }),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
   });
 
   it("rejects a shovel dig beyond reach", async () => {

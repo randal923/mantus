@@ -64,6 +64,9 @@ const LEADER_GUILD: GuildState = {
   name: "Iron Pact",
   motd: "Rally at the depot before the hunt on Saturday.",
   myRankLevel: 3,
+  balance: 184_000,
+  points: 4_200,
+  level: 5,
   ranks: RANKS,
   members: MEMBERS,
   invites: [

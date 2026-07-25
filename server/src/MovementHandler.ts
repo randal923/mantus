@@ -138,6 +138,25 @@ export class MovementHandler {
     this.persistence.markDirty(player);
   }
 
+  /**
+   * Server-decided relocation (pressure-plate snap-back). The destination is
+   * re-validated here at execution time; an unwalkable or occupied tile leaves
+   * the player where they are rather than teleporting them into geometry.
+   */
+  teleportPlayer(
+    session: Session,
+    player: Player,
+    to: Position,
+    now: number,
+  ): void {
+    if (!this.world.isWalkable(to) || this.world.isOccupied(to)) return;
+    this.stop(session);
+    const from = this.world.relocateCreature(player, to);
+    player.nextStepAt = now;
+    this.visibility.onPlayerTeleported(session, player, from);
+    this.persistence.markDirty(player);
+  }
+
   /** Rope used on a rope-spot tile; the tool itself is validated upstream. */
   handleRopeUse(session: Session, target: Position, now: number): void {
     if (!session.playerId) {

@@ -48,6 +48,41 @@ limitations accepted during a session are recorded in the owning feature file
   no `field` payload; `ItemType.field` is declared and always undefined, so
   there is no damage or duration data to drive a field handler. The importer
   must emit it first. Owner: Feature 50.
+- **`m_transformOnUse` / `ignoreLook` still unparsed** (2026-07-25,
+  Feature 52). Capturing them means regenerating `objects.json` and the sprite
+  atlases from the pinned `Tibia.dat`/`.spr`, which live outside the repo; that
+  regeneration was deliberately not attempted while shipping the registry
+  guarantees, because it rewrites every client asset. Canary's own bidirectional
+  transform tables (`carpets.lua`, `windows.lua`, the trap-disarm action) are an
+  alternative source needing no DAT change. Owner: Feature 52.
+- **World events have no reward step kind** (2026-07-25, Feature 54). No pinned
+  raid grants an item or currency, so the engine's step kinds are announce and
+  spawn only. Restart-safety for rewards is therefore structural rather than
+  exercised; the first reward step must commit inside a run-keyed transaction
+  (the `character_chest_loot` pattern). Owner: Feature 54.
+- **`/raid` is a dev-only GM command, not real operator tooling** (2026-07-25,
+  Feature 54). Same shape as `/coins` and `/storerefund`: it exists only under
+  `DEV_COMMANDS=1` and the attempt is audited against the operator's own
+  character. Should move behind operator authorization once Feature 96 ships.
+- **The party analyzer's "market" price mode uses catalog `worth`**
+  (2026-07-25, Feature 55). Canary reads live market statistics; there is no
+  market price index to read. The `npc` mode uses real shop sell prices, so the
+  toggle is not a no-op. Owner: Feature 55.
+- **Party-finder visibility defaults to listable** (2026-07-25, Feature 56).
+  `PartyHandler` consults a `finderVisible(characterId)` hook at query execution
+  time, but the friend-system privacy setting it should read does not exist yet.
+  Owner: Feature 65.
+- **Guild withdrawal is leader-only, not rank-gated** (2026-07-25, Feature 58).
+  Canary gates it on a rank capability; there is no permission model on
+  `guild_ranks` yet, so the guild leader is the only withdrawer. Owner:
+  Feature 58.
+- **The combat-logout linger window is not covered end to end** (2026-07-25,
+  Feature 59). `LingeringPlayers.test.ts` pins the window's bookkeeping, but the
+  real exploit (killer disconnects, victim dies, frag recorded) needs two
+  headless clients in a fight — a playtest scenario, not a unit test. Also: the
+  item cache detaches with the session, which is only safe because a player
+  corpse drops nothing today; when Feature 32's death loss drops items, the
+  lingering entity must keep its inventory attached. Owner: Feature 59.
 
 - **Economy transactions retry only on `40001`/`40P01`, not on connection-level
   transients** (2026-07-25, Feature 31). `item/withSerializableTransaction`
@@ -110,8 +145,7 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Repo-wide known breakage
 
-- `yarn parity:check` (and therefore `yarn test:tools`) fails at HEAD:
-  `tools/importTibiaAssets.mjs` no longer matches its
-  `content/source-manifest.json` converter hash. Pre-existing, unrelated to any
-  current feature work — reconcile the asset importer with its manifest entry.
-  Every other converter hash verifies.
+- None. The `yarn parity:check` converter-hash drift recorded here previously
+  was reconciled 2026-07-25 (Feature 53): `importTibiaAssets.mjs`,
+  `importCanaryCreatures.mjs` and `importCanaryNpcs.mjs` had all drifted from
+  their `content/source-manifest.json` entries. `yarn test:tools` passes.

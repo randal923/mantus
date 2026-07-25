@@ -9,6 +9,7 @@ import type {
   EndWarResult,
   ExpiredWarRecord,
   GuildInviteResult,
+  GuildBankResult,
   GuildOpFailure,
   GuildOpResult,
   GuildSnapshot,
@@ -51,6 +52,21 @@ import { updateMemberRankQuery } from "./sql/updateMemberRankQuery";
 import { updateRankNameQuery } from "./sql/updateRankNameQuery";
 import { updateWarStatusQuery } from "./sql/updateWarStatusQuery";
 import { warForUpdateQuery } from "./sql/warForUpdateQuery";
+import {
+  creditGuildBalance,
+  debitGuildBalance,
+  lockGuildBalance,
+  recordGuildBankEntry,
+} from "./guildBalanceOps";
+import {
+  escrowWarPaymentQuery,
+  markWarEscrowQuery,
+  settleWarPayoutQuery,
+} from "./sql/guildBankQueries";
+import { appendBankLedger } from "../economy/appendBankLedger";
+import { creditBankBalance } from "../economy/creditBankBalance";
+import { debitBankBalance } from "../economy/debitBankBalance";
+import { lockBankBalance } from "../economy/lockBankBalance";
 
 interface MembershipRow {
   character_id: string;
@@ -95,6 +111,9 @@ export class PgGuildStore implements GuildStore {
       name: string;
       motd: string;
       owner_character_id: string;
+      balance: string;
+      points: string;
+      level: number;
     }>(guildRowQuery, [guildId]);
     const row = guild.rows[0];
     if (!row) return null;
@@ -130,6 +149,9 @@ export class PgGuildStore implements GuildStore {
       name: row.name,
       motd: row.motd,
       ownerCharacterId: row.owner_character_id,
+      balance: Number(row.balance),
+      points: Number(row.points),
+      level: row.level,
       ranks: ranks.rows.map((rank) => ({
         id: rank.id,
         level: rank.level,
@@ -491,6 +513,7 @@ export class PgGuildStore implements GuildStore {
     actorCharacterId: string;
     targetGuildName: string;
     fragLimit: number;
+    payment?: number;
   }): Promise<DeclareWarResult> {
     try {
       return await runSerializableTransaction(this.pool, async (client) => {
@@ -506,7 +529,7 @@ export class PgGuildStore implements GuildStore {
         }
         const created = await client.query<{ id: string }>(
           insertGuildWarQuery,
-          [actor.guild_id, targetRow.id, input.fragLimit],
+          [actor.guild_id, targetRow.id, input.fragLimit, input.payment ?? 0],
         );
         const warId = created.rows[0]?.id;
         if (!warId) throw this.rollback("invalid-request");
@@ -538,6 +561,28 @@ export class PgGuildStore implements GuildStore {
         throw this.rollback("war-not-found");
       }
       const status = input.accept ? WAR_ACTIVE : WAR_REJECTED;
+      // The stake is escrowed in the same transaction that activates the war:
+      // either both guilds pay in and the war starts, or neither does.
+      if (input.accept && war.payment > 0) {
+        const escrowed = await client.query<{ sides: number }>(
+          escrowWarPaymentQuery,
+          [war.payment, war.guild1_id, war.guild2_id],
+        );
+        if ((escrowed.rows[0]?.sides ?? 0) !== 2) {
+          throw this.rollback("insufficient-funds");
+        }
+        await client.query(markWarEscrowQuery, [war.id, war.payment * 2]);
+        for (const guildId of [war.guild1_id, war.guild2_id]) {
+          await recordGuildBankEntry(client, {
+            guildId,
+            characterId: null,
+            entryType: "war-stake",
+            auditType: "guild-war-stake",
+            amount: war.payment,
+            balanceAfter: await lockGuildBalance(client, guildId),
+          });
+        }
+      }
       await client.query(updateWarStatusQuery, [war.id, status, null]);
       return {
         status: input.accept ? ("war-active" as const) : ("war-rejected" as const),
@@ -562,6 +607,7 @@ export class PgGuildStore implements GuildStore {
       if (war.status === WAR_PENDING && war.guild1_id === actor.guild_id) {
         // Withdrawing an unanswered declaration cancels it without a winner.
         await client.query(updateWarStatusQuery, [war.id, WAR_CANCELED, null]);
+        await this.settleWarPayout(client, war.id, null);
         return {
           status: "war-ended" as const,
           warId: war.id,
@@ -572,6 +618,7 @@ export class PgGuildStore implements GuildStore {
       if (war.status !== WAR_ACTIVE) throw this.rollback("war-not-found");
       // Surrender: the opposing guild takes the win.
       await client.query(updateWarStatusQuery, [war.id, WAR_ENDED, otherGuildId]);
+      await this.settleWarPayout(client, war.id, otherGuildId);
       return {
         status: "war-ended" as const,
         warId: war.id,
@@ -625,6 +672,9 @@ export class PgGuildStore implements GuildStore {
         WAR_ENDED,
         input.killerGuildId,
       ]);
+      // The frag-limit end transition is already exactly-once (the active-war
+      // row lock), and the payout flag makes the money leg exactly-once too.
+      await this.settleWarPayout(client, warRow.id, input.killerGuildId);
       return {
         status: "war-ended" as const,
         warId: warRow.id,
@@ -715,6 +765,9 @@ export class PgGuildStore implements GuildStore {
     guild2_id: string;
     status: number;
     frag_limit: number;
+    payment: number;
+    escrowed_payment: number;
+    payout_settled: boolean;
   }> {
     const result = await client.query<{
       id: string;
@@ -722,10 +775,17 @@ export class PgGuildStore implements GuildStore {
       guild2_id: string;
       status: number;
       frag_limit: number;
+      payment: string;
+      escrowed_payment: string;
+      payout_settled: boolean;
     }>(warForUpdateQuery, [warId]);
     const row = result.rows[0];
     if (!row) throw this.rollback("war-not-found");
-    return row;
+    return {
+      ...row,
+      payment: Number(row.payment),
+      escrowed_payment: Number(row.escrowed_payment),
+    };
   }
 
   private async targetMembership(
@@ -741,6 +801,157 @@ export class PgGuildStore implements GuildStore {
       throw this.rollback("target-not-member");
     }
     return row;
+  }
+
+  async depositToGuildBank(input: {
+    actorCharacterId: string;
+    amount: number;
+  }): Promise<GuildBankResult> {
+    return runSerializableTransaction(this.pool, async (client) => {
+      // Membership is re-read from database truth inside the transaction, so a
+      // character kicked between intent and execution cannot fund the guild.
+      const actor = await this.actorMembership(client, input.actorCharacterId);
+      const characterBalance = await lockBankBalance(
+        client,
+        input.actorCharacterId,
+      );
+      if (characterBalance < input.amount) {
+        throw this.rollback("insufficient-funds");
+      }
+      await lockGuildBalance(client, actor.guild_id);
+      const remaining = await debitBankBalance(
+        client,
+        input.actorCharacterId,
+        input.amount,
+      );
+      await appendBankLedger(
+        client,
+        input.actorCharacterId,
+        "guild-deposit",
+        -input.amount,
+        remaining,
+      );
+      const guildBalance = await creditGuildBalance(
+        client,
+        actor.guild_id,
+        input.amount,
+      );
+      await recordGuildBankEntry(client, {
+        guildId: actor.guild_id,
+        characterId: input.actorCharacterId,
+        entryType: "deposit",
+        auditType: "guild-deposit",
+        amount: input.amount,
+        balanceAfter: guildBalance,
+      });
+      return {
+        status: "ok" as const,
+        guildBalance,
+        characterBalance: remaining,
+      };
+    });
+  }
+
+  async withdrawFromGuildBank(input: {
+    actorCharacterId: string;
+    amount: number;
+  }): Promise<GuildBankResult> {
+    return runSerializableTransaction(this.pool, async (client) => {
+      // Only the guild leader may withdraw; the capability is re-read here.
+      const actor = await this.requireOwner(client, input.actorCharacterId);
+      await lockGuildBalance(client, actor.guild_id);
+      const guildBalance = await debitGuildBalance(
+        client,
+        actor.guild_id,
+        input.amount,
+      );
+      if (guildBalance === null) throw this.rollback("insufficient-funds");
+      const characterBalance = await creditBankBalance(
+        client,
+        input.actorCharacterId,
+        input.amount,
+      );
+      await appendBankLedger(
+        client,
+        input.actorCharacterId,
+        "guild-withdraw",
+        input.amount,
+        characterBalance,
+      );
+      await recordGuildBankEntry(client, {
+        guildId: actor.guild_id,
+        characterId: input.actorCharacterId,
+        entryType: "withdraw",
+        auditType: "guild-withdraw",
+        amount: input.amount,
+        balanceAfter: guildBalance,
+      });
+      return { status: "ok" as const, guildBalance, characterBalance };
+    });
+  }
+
+  /**
+   * Pays the escrowed pot to the winner. The `payout_settled` flag flips in
+   * the same statement that reads the pot, so concurrent or retried end-war
+   * transactions pay out exactly once (charter rule 2).
+   */
+  private async settleWarPayout(
+    client: PoolClient,
+    warId: string,
+    winnerGuildId: string | null,
+  ): Promise<void> {
+    const settled = await client.query<{ pot: string }>(settleWarPayoutQuery, [
+      warId,
+    ]);
+    const pot = Number(settled.rows[0]?.pot ?? 0);
+    if (pot <= 0) return;
+    if (winnerGuildId === null) {
+      // A cancelled or drawn war refunds both sides half the pot each.
+      const half = Math.floor(pot / 2);
+      const war = await client.query<{ guild1_id: string; guild2_id: string }>(
+        "SELECT guild1_id, guild2_id FROM guild_wars WHERE id = $1",
+        [warId],
+      );
+      const row = war.rows[0];
+      if (!row) return;
+      for (const guildId of [row.guild1_id, row.guild2_id]) {
+        const balance = await creditGuildBalance(client, guildId, half);
+        await recordGuildBankEntry(client, {
+          guildId,
+          characterId: null,
+          entryType: "war-refund",
+          auditType: "guild-war-payout",
+          amount: half,
+          balanceAfter: balance,
+        });
+      }
+      return;
+    }
+    const balance = await creditGuildBalance(client, winnerGuildId, pot);
+    await recordGuildBankEntry(client, {
+      guildId: winnerGuildId,
+      characterId: null,
+      entryType: "war-payout",
+      auditType: "guild-war-payout",
+      amount: pot,
+      balanceAfter: balance,
+    });
+  }
+
+  async addGuildPoints(input: {
+    guildId: string;
+    points: number;
+  }): Promise<{ points: number; level: number } | null> {
+    const updated = await this.pool.query<{ points: string; level: number }>(
+      `UPDATE guilds
+       SET points = points + $2,
+           level = least(1000, 1 + ((points + $2) / 1000)::integer)
+       WHERE id = $1
+       RETURNING points::text AS points, level`,
+      [input.guildId, input.points],
+    );
+    const row = updated.rows[0];
+    return row ? { points: Number(row.points), level: row.level } : null;
   }
 
   private rollback(

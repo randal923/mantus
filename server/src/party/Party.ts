@@ -1,3 +1,12 @@
+import type { PartyAnalyzerPriceMode } from "@tibia/protocol";
+
+/** A leader's party-finder advert; cleared when the party disbands. */
+export interface PartyFinderAdvert {
+  readonly title: string;
+  readonly minLevel?: number;
+  readonly maxLevel?: number;
+}
+
 /**
  * One in-memory party (Canary parity: parties do not survive restarts).
  * `memberIds` excludes the leader and keeps join order — the front-most
@@ -6,6 +15,10 @@
 export class Party {
   leaderId: string;
   sharedExpActive = true;
+  /** Leader-controlled valuation source for the hunt analyzer. */
+  analyzerPriceMode: PartyAnalyzerPriceMode = "npc";
+  /** Leader-set finder advert; absent means the party is not listed. */
+  finderAdvert: PartyFinderAdvert | null = null;
   readonly memberIds: string[] = [];
   readonly inviteeIds: string[] = [];
   private readonly lastActivityAt = new Map<string, number>();

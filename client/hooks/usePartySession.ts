@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import type {
   PartyActionFailedReason,
+  PartyAnalyzerMessage,
+  PartyFinderListingMessage,
   PartyInvitationMessage,
   PartyState,
   PartyStateMessage,
@@ -15,6 +17,10 @@ export interface PartyInvitation {
 export interface PartySessionState {
   readonly party: PartyState | null;
   readonly invitation: PartyInvitation | null;
+  /** Server-computed hunt totals; null until the first projection arrives. */
+  readonly analyzer: PartyAnalyzerMessage | null;
+  /** Last finder listing the server answered with; null before searching. */
+  readonly finder: PartyFinderListingMessage | null;
   readonly pending: boolean;
   readonly error: PartyActionFailedReason | null;
 }
@@ -22,6 +28,8 @@ export interface PartySessionState {
 export interface PartySession {
   readonly state: PartySessionState;
   readonly stateReceived: (message: PartyStateMessage) => void;
+  readonly analyzerReceived: (message: PartyAnalyzerMessage) => void;
+  readonly finderReceived: (message: PartyFinderListingMessage) => void;
   readonly invitationReceived: (message: PartyInvitationMessage) => void;
   readonly invitationRevoked: (leaderId: string) => void;
   readonly fail: (reason: PartyActionFailedReason) => void;
@@ -34,6 +42,8 @@ export interface PartySession {
 const initialState: PartySessionState = {
   party: null,
   invitation: null,
+  analyzer: null,
+  finder: null,
   pending: false,
   error: null,
 };
@@ -51,9 +61,19 @@ export function usePartySession(): PartySession {
       party: message.party,
       // Joining a party voids any invitation still on screen.
       invitation: message.party ? null : current.invitation,
+      // Leaving voids the analyzer: the server stops projecting it.
+      analyzer: message.party ? current.analyzer : null,
       pending: false,
       error: null,
     }));
+  }, []);
+
+  const analyzerReceived = useCallback((message: PartyAnalyzerMessage) => {
+    setState((current) => ({ ...current, analyzer: message }));
+  }, []);
+
+  const finderReceived = useCallback((message: PartyFinderListingMessage) => {
+    setState((current) => ({ ...current, finder: message }));
   }, []);
 
   const invitationReceived = useCallback(
@@ -103,6 +123,8 @@ export function usePartySession(): PartySession {
   return {
     state,
     stateReceived,
+    analyzerReceived,
+    finderReceived,
     invitationReceived,
     invitationRevoked,
     fail,

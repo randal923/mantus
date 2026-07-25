@@ -14,7 +14,11 @@ export type PartyShieldKind =
   | "member"
   | "leader"
   | "member-shared"
-  | "leader-shared";
+  | "leader-shared"
+  /** Canary's whitish-blue shield: this player was invited by the own party. */
+  | "invitee"
+  /** Canary's whitish-yellow shield: this player's party invited the viewer. */
+  | "inviter";
 
 const PARTY_SHIELD_COLORS: Record<
   Exclude<PartyShieldKind, "none">,
@@ -25,6 +29,8 @@ const PARTY_SHIELD_COLORS: Record<
   leader: 0xd9b826,
   "member-shared": 0x2f6fdb,
   "leader-shared": 0xd9b826,
+  invitee: 0x9dc6ff,
+  inviter: 0xf2e6a0,
 };
 
 export type WarEmblemKind = "none" | "ally" | "enemy" | "other-war";

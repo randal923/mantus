@@ -96,6 +96,9 @@ async function makeHarness(options: {
   attackerLevel?: number;
   targetLevel?: number;
   noPvpZone?: boolean;
+  pvpZone?: boolean;
+  /** Position keys ("x:y:z") that carry the pvp-zone flag. */
+  pvpZoneAt?: ReadonlySet<string>;
 } = {}): Promise<Harness> {
   const base = gridMapData({
     name: "pvp-enforce",
@@ -104,12 +107,19 @@ async function makeHarness(options: {
     blocked: [],
   });
   const world = new World(
-    options.noPvpZone
+    options.noPvpZone || options.pvpZone || options.pvpZoneAt
       ? {
           ...base,
           getTile(position) {
             const tile = base.getTile(position);
-            return tile ? { ...tile, noPvpZone: true } : undefined;
+            if (!tile) return undefined;
+            const key = `${position.x}:${position.y}:${position.z}`;
+            return {
+              ...tile,
+              noPvpZone: options.noPvpZone ?? tile.noPvpZone,
+              pvpZone:
+                options.pvpZoneAt?.has(key) ?? options.pvpZone ?? tile.pvpZone,
+            };
           },
         }
       : base,
@@ -317,5 +327,50 @@ describe("PVP enforcement at combat execution", () => {
         harness.target,
       ),
     ).toBe(false);
+  });
+
+  it("assigns no skull for an unprovoked attack inside a pvp zone", async () => {
+    const harness = await makeHarness({ pvpZone: true });
+    harness.attackerSession.fightMode.secure = false;
+
+    harness.tracker.onPlayerAttack(harness.attacker, harness.target, 1_000);
+
+    // Canary parity: arena aggression is skull-free and frag-free.
+    expect(harness.attacker.skull).toBe("none");
+  });
+
+  it("assigns a white skull for the same attack outside a pvp zone", async () => {
+    const harness = await makeHarness();
+    harness.attackerSession.fightMode.secure = false;
+
+    harness.tracker.onPlayerAttack(harness.attacker, harness.target, 1_000);
+
+    expect(harness.attacker.skull).toBe("white");
+  });
+
+  it("lets secure mode and the black skull through inside a pvp zone", async () => {
+    const harness = await makeHarness({ pvpZone: true });
+    harness.attackerSession.fightMode.secure = true;
+
+    expect(
+      harness.tracker.canTarget(
+        harness.attackerSession,
+        harness.attacker,
+        harness.target,
+      ),
+    ).toBe(true);
+  });
+
+  it("requires both fighters' tiles to carry the zone flag", async () => {
+    // Only the attacker stands in the arena; the exemption must not apply, or
+    // a player could farm skull-free kills by standing on an arena edge.
+    const harness = await makeHarness({ pvpZoneAt: new Set(["1:1:7"]) });
+    harness.attackerSession.fightMode.secure = false;
+    expect(harness.world.isPvpZone(harness.attacker.position)).toBe(true);
+    expect(harness.world.isPvpZone(harness.target.position)).toBe(false);
+
+    harness.tracker.onPlayerAttack(harness.attacker, harness.target, 1_000);
+
+    expect(harness.attacker.skull).toBe("white");
   });
 });

@@ -103,7 +103,9 @@ import {
 } from "./market";
 import {
   partyActionFailedMessageSchema,
+  partyAnalyzerMessageSchema,
   partyChatDeliveredMessageSchema,
+  partyFinderListingMessageSchema,
   partyInvitationMessageSchema,
   partyInvitationRevokedMessageSchema,
   partyStateMessageSchema,
@@ -224,6 +226,8 @@ export const itemTextMessageSchema = z.object({
   text: z.string().max(3_997),
   writeable: z.boolean(),
   maxLength: z.number().int().min(0).max(3_997),
+  /** Set for map items, so a write is sent as `write-map-item`. */
+  position: positionSchema.optional(),
 });
 
 export const progressionUpdatedMessageSchema = z.object({
@@ -521,6 +525,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   partyInvitationMessageSchema,
   partyInvitationRevokedMessageSchema,
   partyChatDeliveredMessageSchema,
+  partyAnalyzerMessageSchema,
+  partyFinderListingMessageSchema,
   partyActionFailedMessageSchema,
   guildStateMessageSchema,
   guildInvitationMessageSchema,

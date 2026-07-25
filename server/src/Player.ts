@@ -10,6 +10,7 @@ import {
 } from "@tibia/protocol";
 import type { Character } from "./character/Character";
 import { CombatAnalyzerTotals } from "./combat/CombatAnalyzerTotals";
+import { PartyAnalyzerTotals } from "./party/PartyAnalyzerTotals";
 import { Creature } from "./creature/Creature";
 import { CharacterProgression } from "./progression/CharacterProgression";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
@@ -34,6 +35,8 @@ export class Player extends Creature<Character["outfit"]> {
   skullExpiresAt: number | null;
   /** Combat-analyzer counters for this session; never client-supplied. */
   readonly analyzer: CombatAnalyzerTotals;
+  /** Party hunt-session loot/supply counters; never client-supplied. */
+  readonly partyAnalyzer: PartyAnalyzerTotals;
   private currentVocation: Character["vocation"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
@@ -77,6 +80,7 @@ export class Player extends Creature<Character["outfit"]> {
       maxHealth: stats.maxHealth,
     });
     this.analyzer = new CombatAnalyzerTotals(now);
+    this.partyAnalyzer = new PartyAnalyzerTotals(now);
     this.currentWheelBonuses = wheelBonuses;
     this.currentVocation = character.vocation;
     this.premiumUntil = premiumUntil?.getTime() ?? null;

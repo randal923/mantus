@@ -654,6 +654,36 @@ export class Combat {
     }
   }
 
+  /**
+   * Immediate damage from a sprung trap tile. There is no creature source, so
+   * it carries no PVP consequence and no experience credit — the amount is
+   * rolled server-side by the shared combat formula.
+   */
+  applyTileTrapDamage(
+    creature: Creature,
+    damage: {
+      readonly minimum: number;
+      readonly maximum: number;
+      readonly type: "earth" | "physical";
+    },
+    now: number,
+  ): void {
+    if (this.world.getCreature(creature.id) !== creature) return;
+    this.damage.applyDamage(
+      creature,
+      {
+        sourceId: null,
+        // Sourceless environmental damage rides the same origin as field and
+        // poison ticks, so no new protocol origin is needed for it.
+        origin: "condition",
+        type: damage.type,
+        minimum: damage.minimum,
+        maximum: damage.maximum,
+      },
+      now,
+    );
+  }
+
   tick(now: number): void {
     this.executeQueuedMonsterAbilities(now);
     this.executeQueuedTeleports(now);

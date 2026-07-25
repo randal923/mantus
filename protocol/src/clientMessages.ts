@@ -53,6 +53,7 @@ import {
   guildCreateMessageSchema,
   guildDeclareWarMessageSchema,
   guildDemoteMessageSchema,
+  guildDepositMessageSchema,
   guildDisbandMessageSchema,
   guildEndWarMessageSchema,
   guildInviteMessageSchema,
@@ -67,6 +68,7 @@ import {
   guildSetMotdMessageSchema,
   guildSetNickMessageSchema,
   guildSetRankNameMessageSchema,
+  guildWithdrawMessageSchema,
 } from "./guild";
 import {
   bestiaryCreaturesGetMessageSchema,
@@ -104,7 +106,11 @@ import {
   partyLeaveMessageSchema,
   partyPassLeadershipMessageSchema,
   partyRespondInviteMessageSchema,
+  partyFinderAdvertiseMessageSchema,
+  partyFinderListMessageSchema,
+  partyResetAnalyzerMessageSchema,
   partyRevokeInviteMessageSchema,
+  partySetAnalyzerPriceModeMessageSchema,
   partySetSharedExpMessageSchema,
 } from "./party";
 import { shopBuyMessageSchema, shopSellMessageSchema } from "./shop";
@@ -525,6 +531,25 @@ export const writeItemMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
+/**
+ * Writes bounded text onto a writeable map item (blackboards, tombstones).
+ * Max size: the 3997-character text plus a 128-character instance id, well
+ * inside the shared 4 KiB message cap. Rate: bounded by the 200 ms use
+ * exhaust and the shared 30-per-second transport cap. The server re-checks
+ * writeability, the item's own maxLength, adjacency, and the claimed
+ * revision at execution time.
+ */
+export const writeMapItemMessageSchema = z
+  .object({
+    type: z.literal("write-map-item"),
+    /** World map-item instance id (its seed key). */
+    itemId: z.string().min(1).max(128),
+    revision: z.number().int().positive(),
+    position: positionSchema,
+    text: z.string().max(3_997),
+  })
+  .strict();
+
 /** Fixed-size account setting intent; covered by the 4 KiB/30-per-second caps. */
 export const setLanguageMessageSchema = z.object({
   type: z.literal("set-language"),
@@ -585,6 +610,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   rotateItemMessageSchema,
   moveItemMessageSchema,
   writeItemMessageSchema,
+  writeMapItemMessageSchema,
   channelListGetMessageSchema,
   channelOpenMessageSchema,
   channelCloseMessageSchema,
@@ -629,6 +655,10 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   partyKickMessageSchema,
   partyPassLeadershipMessageSchema,
   partySetSharedExpMessageSchema,
+  partyResetAnalyzerMessageSchema,
+  partySetAnalyzerPriceModeMessageSchema,
+  partyFinderAdvertiseMessageSchema,
+  partyFinderListMessageSchema,
   partyChatMessageSchema,
   guildCreateMessageSchema,
   guildInviteMessageSchema,
@@ -648,6 +678,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   guildDeclareWarMessageSchema,
   guildRespondWarMessageSchema,
   guildEndWarMessageSchema,
+  guildDepositMessageSchema,
+  guildWithdrawMessageSchema,
   houseOpenMessageSchema,
   houseBuyMessageSchema,
   houseAbandonMessageSchema,
@@ -730,6 +762,7 @@ export type SplitStackMessage = z.infer<typeof splitStackMessageSchema>;
 export type RotateItemMessage = z.infer<typeof rotateItemMessageSchema>;
 export type MoveItemMessage = z.infer<typeof moveItemMessageSchema>;
 export type WriteItemMessage = z.infer<typeof writeItemMessageSchema>;
+export type WriteMapItemMessage = z.infer<typeof writeMapItemMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;
 export type UpdateUiSettingsMessage = z.infer<
   typeof updateUiSettingsMessageSchema

@@ -8,8 +8,13 @@ import {
   type PartyLeaveMessage,
   type PartyMemberEntry,
   type PartyPassLeadershipMessage,
+  type PartyAnalyzerPriceMode,
+  type PartyFinderAdvertiseMessage,
+  type PartyFinderListMessage,
+  type PartyResetAnalyzerMessage,
   type PartyRespondInviteMessage,
   type PartyRevokeInviteMessage,
+  type PartySetAnalyzerPriceModeMessage,
   type PartySetSharedExpMessage,
   type PartyStateMessage,
 } from "@tibia/protocol";
@@ -27,6 +32,9 @@ import { isWithinPartyStatusRange } from "./isWithinPartyStatusRange";
 import { Party } from "./Party";
 import type { PartyHooks } from "./PartyHooks";
 import { PartyRegistry } from "./PartyRegistry";
+import type { ItemValuation } from "./ItemValuation";
+import { listPartyFinderEntries } from "./listPartyFinderEntries";
+import { projectPartyAnalyzer } from "./projectPartyAnalyzer";
 
 type PartyIntent =
   | PartyInviteMessage
@@ -36,10 +44,16 @@ type PartyIntent =
   | PartyKickMessage
   | PartyPassLeadershipMessage
   | PartySetSharedExpMessage
+  | PartyResetAnalyzerMessage
+  | PartySetAnalyzerPriceModeMessage
+  | PartyFinderAdvertiseMessage
+  | PartyFinderListMessage
   | PartyChatMessage;
 
 /** Live hp/mana refresh cadence for members (structural changes flush sooner). */
 const STATUS_BROADCAST_INTERVAL_MS = 1_000;
+/** Analyzer totals move slowly; a slower cadence keeps the fan-out cheap. */
+const ANALYZER_BROADCAST_INTERVAL_MS = 2_000;
 
 /**
  * Server-authoritative party system (Canary parity, in-memory only). Every
@@ -53,12 +67,21 @@ export class PartyHandler implements PartyHooks {
   private readonly chatLimiter = new ChatRateLimiter();
   private readonly dirtyParties = new Set<Party>();
   private nextStatusBroadcastAt = 0;
+  private nextAnalyzerBroadcastAt = 0;
 
   constructor(
     private readonly world: World,
     private readonly registry: SessionRegistry,
     private readonly visibility: Visibility,
     private readonly moderation?: ChatModerationHooks,
+    private readonly valuation?: ItemValuation,
+    /**
+     * Finder-visibility privacy, re-read at query execution time. The friend
+     * system owns the real setting; until it ships every online leader who
+     * advertises is listable.
+     */
+    private readonly finderVisible: (characterId: string) => boolean = () =>
+      true,
   ) {}
 
   handle(session: Session, intent: PartyIntent, now: number): void {
@@ -100,10 +123,27 @@ export class PartyHandler implements PartyHooks {
       case "party-set-shared-exp":
         this.setSharedExp(session, player, intent.enabled);
         return;
+      case "party-reset-analyzer":
+        this.resetAnalyzer(session, player, now);
+        return;
+      case "party-set-analyzer-price-mode":
+        this.setAnalyzerPriceMode(session, player, intent.mode, now);
+        return;
+      case "party-finder-advertise":
+        this.advertise(session, player, intent);
+        return;
+      case "party-finder-list":
+        this.listFinder(session, player, intent);
+        return;
     }
   }
 
   tick(now: number): void {
+    const broadcastAnalyzer = now >= this.nextAnalyzerBroadcastAt;
+    if (broadcastAnalyzer) {
+      this.nextAnalyzerBroadcastAt = now + ANALYZER_BROADCAST_INTERVAL_MS;
+      for (const party of this.parties.all()) this.sendAnalyzer(party, now);
+    }
     const broadcastAll = now >= this.nextStatusBroadcastAt;
     if (broadcastAll) {
       this.nextStatusBroadcastAt = now + STATUS_BROADCAST_INTERVAL_MS;
@@ -114,6 +154,16 @@ export class PartyHandler implements PartyHooks {
       this.sendPartyState(party, now);
     }
     this.dirtyParties.clear();
+  }
+
+  /** Records loot the server granted to one character (analyzer input). */
+  recordLoot(characterId: string, typeId: number, count: number): void {
+    this.world.getPlayer(characterId)?.partyAnalyzer.recordLoot(typeId, count);
+  }
+
+  /** Records a supply the server consumed for one character. */
+  recordSupply(characterId: string, typeId: number, count: number): void {
+    this.world.getPlayer(characterId)?.partyAnalyzer.recordSupply(typeId, count);
   }
 
   detach(session: Session): void {
@@ -375,6 +425,127 @@ export class PartyHandler implements PartyHooks {
     }
     party.sharedExpActive = enabled;
     this.markDirty(party);
+  }
+
+  /**
+   * Leader-only: publishes or clears the party's finder advert. The level
+   * range is validated here rather than trusted, and leadership is re-read at
+   * execution time.
+   */
+  private advertise(
+    session: Session,
+    player: Player,
+    intent: PartyFinderAdvertiseMessage,
+  ): void {
+    const party = this.parties.partyOf(player.id);
+    if (!party) {
+      this.fail(session, "not-in-party");
+      return;
+    }
+    if (party.leaderId !== player.id) {
+      this.fail(session, "not-leader");
+      return;
+    }
+    if (intent.title === undefined) {
+      party.finderAdvert = null;
+      this.markDirty(party);
+      return;
+    }
+    const title = intent.title.trim();
+    if (
+      title.length === 0 ||
+      (intent.minLevel !== undefined &&
+        intent.maxLevel !== undefined &&
+        intent.minLevel > intent.maxLevel)
+    ) {
+      this.fail(session, "invalid-advert");
+      return;
+    }
+    party.finderAdvert = {
+      title,
+      ...(intent.minLevel === undefined ? {} : { minLevel: intent.minLevel }),
+      ...(intent.maxLevel === undefined ? {} : { maxLevel: intent.maxLevel }),
+    };
+    this.markDirty(party);
+  }
+
+  /** Answers one finder search with a bounded, advert-only listing. */
+  private listFinder(
+    session: Session,
+    player: Player,
+    intent: PartyFinderListMessage,
+  ): void {
+    session.send(
+      listPartyFinderEntries({
+        parties: this.parties.all(),
+        searcher: player,
+        forOwnLevel: intent.forOwnLevel,
+        getPlayer: (playerId) => this.world.getPlayer(playerId),
+        finderVisible: this.finderVisible,
+      }),
+    );
+  }
+
+  /** Leader-only: clears every current member's hunt-session totals. */
+  private resetAnalyzer(session: Session, player: Player, now: number): void {
+    const party = this.parties.partyOf(player.id);
+    if (!party) {
+      this.fail(session, "not-in-party");
+      return;
+    }
+    // Leadership is re-read here, at execution time, not at enqueue.
+    if (party.leaderId !== player.id) {
+      this.fail(session, "not-leader");
+      return;
+    }
+    for (const memberId of party.allMemberIds()) {
+      this.world.getPlayer(memberId)?.partyAnalyzer.reset(now);
+    }
+    this.sendAnalyzer(party, now);
+  }
+
+  private setAnalyzerPriceMode(
+    session: Session,
+    player: Player,
+    mode: PartyAnalyzerPriceMode,
+    now: number,
+  ): void {
+    const party = this.parties.partyOf(player.id);
+    if (!party) {
+      this.fail(session, "not-in-party");
+      return;
+    }
+    if (party.leaderId !== player.id) {
+      this.fail(session, "not-leader");
+      return;
+    }
+    party.analyzerPriceMode = mode;
+    this.sendAnalyzer(party, now);
+  }
+
+  /**
+   * Sends the analyzer to current members only. A member who left is no longer
+   * in `allMemberIds`, so their client stops receiving totals immediately.
+   */
+  private sendAnalyzer(party: Party, now: number): void {
+    const valuation = this.valuation;
+    if (!valuation) return;
+    const members = party
+      .allMemberIds()
+      .map((memberId) => this.world.getPlayer(memberId))
+      .filter((member): member is Player => member !== undefined);
+    if (members.length === 0) return;
+    const message = projectPartyAnalyzer({
+      members,
+      valuation,
+      priceMode: party.analyzerPriceMode,
+      now,
+    });
+    for (const member of members) {
+      const session = this.registry.sessionFor(member.id);
+      if (!session || session.playerId !== member.id) continue;
+      session.send(message);
+    }
   }
 
   private deliverChat(

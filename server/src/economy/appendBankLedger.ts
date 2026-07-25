@@ -19,7 +19,9 @@ export async function appendBankLedger(
     | "house-purchase"
     | "house-rent"
     | "house-transfer-in"
-    | "house-transfer-out",
+    | "house-transfer-out"
+    | "guild-deposit"
+    | "guild-withdraw",
   amount: number,
   balanceAfter: number,
   counterpartyCharacterId?: string,

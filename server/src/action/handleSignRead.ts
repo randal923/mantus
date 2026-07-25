@@ -7,8 +7,9 @@ const MAX_TEXT_LENGTH = 3_997;
 
 /**
  * Sends a readable map item's text. Distance-readable types (signs) only
- * need visibility; everything else requires adjacency. Map items stay
- * read-only until a write-map path ships.
+ * need visibility; everything else requires adjacency — the type-specific
+ * rule the shared "visible" precondition deliberately leaves to this handler.
+ * `writeable` tells the client whether the write-map intent is offered.
  */
 export function handleSignRead(
   context: WorldActionContext,
@@ -36,7 +37,8 @@ export function handleSignRead(
     revision: item.revision ?? 1,
     name: type.name,
     text: typeof raw === "string" ? raw.slice(0, MAX_TEXT_LENGTH) : "",
-    writeable: false,
+    writeable: text.writeable,
     maxLength: text.maxLength,
+    position: { ...position },
   });
 }

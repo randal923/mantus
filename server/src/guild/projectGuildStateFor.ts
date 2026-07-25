@@ -40,6 +40,9 @@ export function projectGuildStateFor(input: {
     name: snapshot.name,
     motd: snapshot.motd,
     myRankLevel: me.rankLevel,
+    balance: snapshot.balance,
+    points: snapshot.points,
+    level: snapshot.level,
     ranks: snapshot.ranks.map((rank) => ({
       level: rank.level,
       name: rank.name,

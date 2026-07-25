@@ -149,6 +149,14 @@ export class World {
     return this.map.getTile(position)?.noPvpZone ?? false;
   }
 
+  /**
+   * A designated pvp-zone (arena) tile: kills inside one produce no skull and
+   * no frag, and secure mode/black-skull refusals do not apply.
+   */
+  isPvpZone(position: Position): boolean {
+    return this.map.getTile(position)?.pvpZone ?? false;
+  }
+
   hasLineOfSight(from: Position, to: Position): boolean {
     if (from.z !== to.z) return false;
     let x = from.x;

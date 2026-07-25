@@ -92,6 +92,26 @@
    "path": "data-otservbr-global/world/otservbr-house.xml",
    "commit": "691614c1a302aee776002ca3851eca399be1a82c",
    "sha256": "904439f60fa1619f52ed17dad8ae1163a9801c07add7851b867bdf19e29350c4"
+  },
+  "canaryStorages": {
+   "path": "data-otservbr-global/lib/core/storages.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "c635df067173e9638652929c9f0c21bb9872ea1c01928fe371d420402b681949"
+  },
+  "canaryChests": {
+   "path": "data-otservbr-global/startup/tables/chest.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "2b130d4196afc9700eb0b7c2f5594e331edee4d25811a0d2020fb9d8757d6cda"
+  },
+  "canaryRegisterActions": {
+   "path": "data-otservbr-global/scripts/lib/register_actions.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "43fc4eb36c5e3452038a3cc29e60f73abe7d4667eec32936f57a89931d8cfb17"
+  },
+  "canaryFishing": {
+   "path": "data-otservbr-global/scripts/actions/other/fishing.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "07b353117965cf8ec4ee9586b41554449c1ff1f79ce983f04333dbc033288364"
   }
  },
  "balanceDefinitions": {
@@ -100,7 +120,7 @@
  "converterSources": [
   {
    "path": "tools/importTibiaAssets.mjs",
-   "sha256": "8bf8b13c3c5e74a8de9eb3337199e11aeb9608b916aa086f3d8415f09de2ecfb"
+   "sha256": "0eb21ecd02ec184bab807413d8147feb9a520d3aa5314c02735f01cfcb80f361"
   },
   {
    "path": "tools/convertCanaryItems.mjs",
@@ -124,7 +144,7 @@
   },
   {
    "path": "tools/importCanaryCreatures.mjs",
-   "sha256": "cf3d0dc089143a3d620592d94174838e87e8d7e047b951f04513ad32d3f187f8"
+   "sha256": "f1fa82ce095d86f175eb7d7f61dd07964f067e389a8e2a1cbb3bfe2eeb6b2848"
   },
   {
    "path": "tools/parseCanaryCreatureContent.mjs",
@@ -148,7 +168,7 @@
   },
   {
    "path": "tools/importCanaryNpcs.mjs",
-   "sha256": "6a2d5a96a12e73820b2b663926dcf3bb7fbc43d2813f40d9b9a68e21df39aca9"
+   "sha256": "63f05fe36af73aed8979936ebec1aeb2b488ef2aa6bdc40b36f14104a26b9fcf"
   },
   {
    "path": "tools/importCanaryShops.mjs",
@@ -168,7 +188,7 @@
   },
   {
    "path": "tools/verifyCanaryParityInventory.mjs",
-   "sha256": "6b864145e86df4690d297b425316f2844ac1bff0e6f4791075bb1202f4855d87"
+   "sha256": "0b5b4aa2117865c003e62f2a7da3a8b69b0afff8a5f6dd1ef01930d1f6fac034"
   },
   {
    "path": "tools/importCanaryDoors.mjs",
@@ -181,6 +201,34 @@
   {
    "path": "tools/importCanaryHouses.mjs",
    "sha256": "fc6ed3050f1a5aa90611b468ed0fea4ef2f6936d5726eac59d71d77aa5b327e2"
+  },
+  {
+   "path": "tools/parseCanaryChestTables.mjs",
+   "sha256": "55af07eb0a9474dad8dbcb98095672b71c78f4f229f8e687c5a8f0bce5810610"
+  },
+  {
+   "path": "tools/importCanaryChests.mjs",
+   "sha256": "daf07411e8be6eb0de3aec255b22e41c6f1db2b94421ed943668aeba5ee6fae9"
+  },
+  {
+   "path": "tools/parseCanaryActionRegistrations.mjs",
+   "sha256": "9d4caa253360c33b0d05a6cb0e15da56c66709064a35e4a1697f864023a1699e"
+  },
+  {
+   "path": "tools/classifyWorldActionRegistration.mjs",
+   "sha256": "728d1ba9e3116cc5a5b4d3b2596643d6c50950af8177aa4ebbadc7b1de0b0c78"
+  },
+  {
+   "path": "tools/buildWorldActionParityInventory.mjs",
+   "sha256": "65475e7fea7e64a8871f2ae32b3fed941e3fb2288610939a65aeab27bb793d25"
+  },
+  {
+   "path": "tools/parseCanaryRaids.mjs",
+   "sha256": "893547da66615f33262c084ecce3907294510d77843855c1a81dd0cd1af6c9f0"
+  },
+  {
+   "path": "tools/importCanaryRaids.mjs",
+   "sha256": "3916a838d8c6bed26709e76203eece62cba0f427814992cbfb2f011ffce29818"
   }
  ],
  "converters": {
@@ -195,6 +243,10 @@
   "shops": 2,
   "npcDialogues": 1,
   "doors": 1,
-  "houses": 1
+  "houses": 1,
+  "chests": 1,
+  "tools": 1,
+  "worldEvents": 1,
+  "worldActionParity": 1
  }
 }

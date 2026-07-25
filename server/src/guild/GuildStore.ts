@@ -36,6 +36,9 @@ export interface GuildSnapshot {
   readonly name: string;
   readonly motd: string;
   readonly ownerCharacterId: string;
+  readonly balance: number;
+  readonly points: number;
+  readonly level: number;
   readonly ranks: ReadonlyArray<GuildRankRecord>;
   readonly members: ReadonlyArray<GuildMemberRecord>;
   readonly invites: ReadonlyArray<GuildInviteRecord>;
@@ -101,6 +104,14 @@ export type RecordWarKillResult =
       readonly winnerGuildId: string;
     }
   | { readonly status: "no-war" };
+
+export type GuildBankResult =
+  | {
+      readonly status: "ok";
+      readonly guildBalance: number;
+      readonly characterBalance: number;
+    }
+  | GuildOpFailure;
 
 export interface ExpiredWarRecord {
   readonly warId: string;
@@ -198,4 +209,26 @@ export interface GuildStore {
   }): Promise<RecordWarKillResult>;
   /** Lazily rejects pending declarations older than the 72 h expiry. */
   expirePendingWars(cutoff: Date): Promise<ReadonlyArray<ExpiredWarRecord>>;
+
+  /**
+   * Moves gold from the member's bank balance into the guild balance in one
+   * transaction, with a guild ledger row and an audit row. Money never leaves
+   * the bank leg, so no carried coins can be duplicated by the transfer.
+   */
+  depositToGuildBank(input: {
+    actorCharacterId: string;
+    amount: number;
+  }): Promise<GuildBankResult>;
+
+  /** The reverse; the actor's rank capability is re-read inside the txn. */
+  withdrawFromGuildBank(input: {
+    actorCharacterId: string;
+    amount: number;
+  }): Promise<GuildBankResult>;
+
+  /** Server-side points grant; drives the derived guild level. */
+  addGuildPoints(input: {
+    guildId: string;
+    points: number;
+  }): Promise<{ readonly points: number; readonly level: number } | null>;
 }

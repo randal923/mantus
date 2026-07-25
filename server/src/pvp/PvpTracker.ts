@@ -341,8 +341,12 @@ export class PvpTracker implements PvpHooks {
       sameGuild: this.relations.sameGuild(attacker.id, target.id),
       atWar: this.relations.atWar(attacker.id, target.id),
       secureMode,
-      // Dedicated pvp zones do not exist in the map data yet (see TODO.md).
-      inPvpZone: false,
+      // Both tiles are read here, at the instant the attack executes: a
+      // player who stepped out of the arena since the intent was queued is
+      // no longer covered by it (charter rule 4).
+      inPvpZone:
+        this.world.isPvpZone(attacker.position) &&
+        this.world.isPvpZone(target.position),
       inNoPvpZone:
         this.world.isNoPvpZone(attacker.position) ||
         this.world.isNoPvpZone(target.position),
@@ -408,7 +412,11 @@ export class PvpTracker implements PvpHooks {
       sameParty: this.relations.sameParty(killer.id, victim.id),
       sameGuild: this.relations.sameGuild(killer.id, victim.id),
       atWar: this.relations.atWar(killer.id, victim.id),
-      inPvpZone: false,
+      // Evaluated from the tiles at the death event, not from where the
+      // fight started: an arena kill costs the killer nothing.
+      inPvpZone:
+        this.world.isPvpZone(killer.position) &&
+        this.world.isPvpZone(victim.position),
       victimHasUnavengedKillOnKiller: this.hasUnavengedKillOn(
         victimState,
         killer.id,

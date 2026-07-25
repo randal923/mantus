@@ -8,6 +8,7 @@ import type {
   EndWarResult,
   ExpiredWarRecord,
   GuildInviteResult,
+  GuildBankResult,
   GuildOpFailure,
   GuildOpResult,
   GuildSnapshot,
@@ -24,6 +25,9 @@ interface MemoryGuild {
   motd: string;
   ownerCharacterId: string;
   rankNames: Map<number, string>;
+  balance: number;
+  points: number;
+  level: number;
 }
 
 interface MemoryMember {
@@ -74,6 +78,7 @@ export class MemoryGuildStore implements GuildStore {
   private readonly wars = new Map<string, MemoryWar>();
   private readonly warKills: MemoryWarKill[] = [];
   private clock = 0;
+  private readonly bankBalances = new Map<string, number>();
 
   registerCharacter(characterId: string, name: string): void {
     this.characterNames.set(characterId, name);
@@ -127,6 +132,9 @@ export class MemoryGuildStore implements GuildStore {
       id: guild.id,
       name: guild.name,
       motd: guild.motd,
+      balance: guild.balance,
+      points: guild.points,
+      level: guild.level,
       ownerCharacterId: guild.ownerCharacterId,
       ranks: [3, 2, 1].map((level) => ({
         id: `${guild.id}:${level}`,
@@ -177,6 +185,9 @@ export class MemoryGuildStore implements GuildStore {
         [2, "Vice-Leader"],
         [1, "Member"],
       ]),
+      balance: 0,
+      points: 0,
+      level: 1,
     });
     this.members.set(input.ownerCharacterId, {
       guildId,
@@ -569,6 +580,80 @@ export class MemoryGuildStore implements GuildStore {
       return this.fail("not-authorized");
     }
     return null;
+  }
+
+  /**
+   * Mirrors the Pg store's transfer without a bank ledger: `bankBalances` is
+   * the test double for the character's bank account, so service tests
+   * exercise the same insufficient-funds and rank-capability paths.
+   */
+  async depositToGuildBank(input: {
+    actorCharacterId: string;
+    amount: number;
+  }): Promise<GuildBankResult> {
+    const member = this.members.get(input.actorCharacterId);
+    const guild = member ? this.guilds.get(member.guildId) : undefined;
+    if (!member || !guild) {
+      return { status: "failed", reason: "not-in-guild" };
+    }
+    const characterBalance = this.bankBalances.get(input.actorCharacterId) ?? 0;
+    if (characterBalance < input.amount) {
+      return { status: "failed", reason: "insufficient-funds" };
+    }
+    const remaining = characterBalance - input.amount;
+    this.bankBalances.set(input.actorCharacterId, remaining);
+    guild.balance += input.amount;
+    return {
+      status: "ok",
+      guildBalance: guild.balance,
+      characterBalance: remaining,
+    };
+  }
+
+  async withdrawFromGuildBank(input: {
+    actorCharacterId: string;
+    amount: number;
+  }): Promise<GuildBankResult> {
+    const member = this.members.get(input.actorCharacterId);
+    const guild = member ? this.guilds.get(member.guildId) : undefined;
+    if (!member || !guild) {
+      return { status: "failed", reason: "not-in-guild" };
+    }
+    if (guild.ownerCharacterId !== input.actorCharacterId) {
+      return { status: "failed", reason: "not-authorized" };
+    }
+    if (guild.balance < input.amount) {
+      return { status: "failed", reason: "insufficient-funds" };
+    }
+    guild.balance -= input.amount;
+    const characterBalance =
+      (this.bankBalances.get(input.actorCharacterId) ?? 0) + input.amount;
+    this.bankBalances.set(input.actorCharacterId, characterBalance);
+    return { status: "ok", guildBalance: guild.balance, characterBalance };
+  }
+
+  async addGuildPoints(input: {
+    guildId: string;
+    points: number;
+  }): Promise<{ points: number; level: number } | null> {
+    const guild = this.guilds.get(input.guildId);
+    if (!guild) return null;
+    guild.points += input.points;
+    guild.level = Math.min(1_000, 1 + Math.floor(guild.points / 1_000));
+    return { points: guild.points, level: guild.level };
+  }
+
+  /** Test seam: sets the character's bank balance the transfer draws on. */
+  setBankBalance(characterId: string, balance: number): void {
+    this.bankBalances.set(characterId, balance);
+  }
+
+  bankBalance(characterId: string): number {
+    return this.bankBalances.get(characterId) ?? 0;
+  }
+
+  guildBalance(guildId: string): number {
+    return this.guilds.get(guildId)?.balance ?? 0;
   }
 
   private deleteInvitesFor(characterId: string): void {

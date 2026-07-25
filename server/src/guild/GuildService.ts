@@ -5,6 +5,7 @@ import {
   type GuildCreateMessage,
   type GuildDeclareWarMessage,
   type GuildDemoteMessage,
+  type GuildDepositMessage,
   type GuildDisbandMessage,
   type GuildEndWarMessage,
   type GuildEventMessage,
@@ -21,6 +22,7 @@ import {
   type ServerMessage,
   type GuildSetNickMessage,
   type GuildSetRankNameMessage,
+  type GuildWithdrawMessage,
 } from "@tibia/protocol";
 import { ChatRateLimiter } from "../chat/ChatRateLimiter";
 import type { ChatModerationHooks } from "../moderation/ChatModerationHooks";
@@ -33,6 +35,9 @@ import type { GuildHooks } from "./GuildHooks";
 import type { GuildSnapshot, GuildStore } from "./GuildStore";
 import { isValidGuildName } from "./isValidGuildName";
 import { projectGuildStateFor } from "./projectGuildStateFor";
+
+/** Guild points a recorded war frag is worth (project balance choice). */
+const WAR_KILL_GUILD_POINTS = 1;
 
 type GuildIntent =
   | GuildCreateMessage
@@ -52,7 +57,9 @@ type GuildIntent =
   | GuildChatMessage
   | GuildDeclareWarMessage
   | GuildRespondWarMessage
-  | GuildEndWarMessage;
+  | GuildEndWarMessage
+  | GuildDepositMessage
+  | GuildWithdrawMessage;
 
 interface CachedMembership {
   readonly guildId: string;
@@ -164,6 +171,12 @@ export class GuildService implements GuildHooks {
         targetGuildId,
       });
       if (result.status === "no-war") return () => {};
+      // Server-side points grant: a recorded war frag is worth one point to
+      // the killer's guild. The amount never comes from the client.
+      await store.addGuildPoints({
+        guildId: killerGuildId,
+        points: WAR_KILL_GUILD_POINTS,
+      });
       const applyKiller = await this.loadApplyGuild(killerGuildId);
       const applyTarget = await this.loadApplyGuild(targetGuildId);
       return (at: number) => {
@@ -260,6 +273,12 @@ export class GuildService implements GuildHooks {
         return;
       case "guild-end-war":
         this.endWar(session, characterId, intent.warId);
+        return;
+      case "guild-deposit":
+        this.transferBank(session, characterId, intent.amount, "deposit");
+        return;
+      case "guild-withdraw":
+        this.transferBank(session, characterId, intent.amount, "withdraw");
         return;
     }
   }
@@ -580,6 +599,7 @@ export class GuildService implements GuildHooks {
         actorCharacterId: characterId,
         targetGuildName: intent.targetGuildName,
         fragLimit: intent.fragLimit,
+        ...(intent.payment === undefined ? {} : { payment: intent.payment }),
       });
       if (result.status === "failed") return this.failLater(session, result.reason);
       const applyOwn = guildId ? await this.loadApplyGuild(guildId) : null;
@@ -599,6 +619,45 @@ export class GuildService implements GuildHooks {
           type: "guild-event",
           kind: "war-declared",
           ...(ownName ? { detail: ownName } : {}),
+        });
+      };
+    });
+  }
+
+  /**
+   * Moves gold between the actor's own bank balance and the guild balance. The
+   * store owns the whole transfer as one transaction; membership and the
+   * withdraw rank capability are re-read there, at execution time.
+   */
+  private transferBank(
+    session: Session,
+    characterId: string,
+    amount: number,
+    direction: "deposit" | "withdraw",
+  ): void {
+    const store = this.requireStore();
+    this.enqueue(characterId, async () => {
+      const result =
+        direction === "deposit"
+          ? await store.depositToGuildBank({
+              actorCharacterId: characterId,
+              amount,
+            })
+          : await store.withdrawFromGuildBank({
+              actorCharacterId: characterId,
+              amount,
+            });
+      if (result.status === "failed") {
+        return this.failLater(session, result.reason);
+      }
+      const guildId = await store.loadGuildIdFor(characterId);
+      const apply = guildId ? await this.loadApplyGuild(guildId) : null;
+      return (at: number) => {
+        apply?.(at);
+        session.send({
+          type: "guild-event",
+          kind: direction === "deposit" ? "bank-deposit" : "bank-withdraw",
+          detail: String(result.guildBalance),
         });
       };
     });

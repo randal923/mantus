@@ -99,6 +99,9 @@ databaseDescribe("PgGuildStore integration", () => {
     await pool.query("DELETE FROM guild_invites");
     await pool.query("DELETE FROM guild_members");
     await pool.query("DELETE FROM guild_ranks");
+    await pool.query("DELETE FROM guild_bank_ledger");
+    await pool.query("DELETE FROM bank_ledger");
+    await pool.query("DELETE FROM bank_accounts");
     await pool.query("DELETE FROM guilds");
     await pool.query("DELETE FROM items");
     await pool.query("DELETE FROM audit_log");
@@ -362,5 +365,186 @@ databaseDescribe("PgGuildStore integration", () => {
     );
     expect(ranks.rows).toHaveLength(0);
     expect(await warRows()).toHaveLength(0);
+  });
+
+  const seedBank = async (characterId: string, balance: number) => {
+    await pool.query(
+      `INSERT INTO bank_accounts (character_id, balance) VALUES ($1, $2)
+       ON CONFLICT (character_id) DO UPDATE SET balance = $2`,
+      [characterId, balance],
+    );
+  };
+
+  const bankBalance = async (characterId: string): Promise<number> => {
+    const row = await pool.query<{ balance: string }>(
+      "SELECT balance::text AS balance FROM bank_accounts WHERE character_id = $1",
+      [characterId],
+    );
+    return Number(row.rows[0]?.balance ?? 0);
+  };
+
+  const guildBalance = async (guildId: string): Promise<number> => {
+    const row = await pool.query<{ balance: string }>(
+      "SELECT balance::text AS balance FROM guilds WHERE id = $1",
+      [guildId],
+    );
+    return Number(row.rows[0]?.balance ?? 0);
+  };
+
+  it("conserves gold across a guild deposit and withdrawal", async () => {
+    const alice = await createCharacter("alice");
+    const guild = await store.createGuild({
+      ownerCharacterId: alice,
+      name: "Iron Pact",
+    });
+    if (guild.status !== "created") throw new Error("setup failed");
+    await seedBank(alice, 10_000);
+
+    const deposited = await store.depositToGuildBank({
+      actorCharacterId: alice,
+      amount: 4_000,
+    });
+    expect(deposited).toMatchObject({
+      status: "ok",
+      guildBalance: 4_000,
+      characterBalance: 6_000,
+    });
+    expect((await bankBalance(alice)) + (await guildBalance(guild.guildId))).toBe(
+      10_000,
+    );
+
+    const withdrawn = await store.withdrawFromGuildBank({
+      actorCharacterId: alice,
+      amount: 1_500,
+    });
+    expect(withdrawn).toMatchObject({ status: "ok", guildBalance: 2_500 });
+    expect((await bankBalance(alice)) + (await guildBalance(guild.guildId))).toBe(
+      10_000,
+    );
+    const ledger = await pool.query<{ entry_type: string }>(
+      "SELECT entry_type FROM guild_bank_ledger ORDER BY id",
+    );
+    expect(ledger.rows.map((row) => row.entry_type)).toEqual([
+      "deposit",
+      "withdraw",
+    ]);
+  });
+
+  it("racing withdrawals cannot drive the guild balance negative", async () => {
+    const alice = await createCharacter("alice");
+    const guild = await store.createGuild({
+      ownerCharacterId: alice,
+      name: "Iron Pact",
+    });
+    if (guild.status !== "created") throw new Error("setup failed");
+    await seedBank(alice, 1_000);
+    await store.depositToGuildBank({ actorCharacterId: alice, amount: 1_000 });
+
+    const [first, second] = await Promise.all([
+      store.withdrawFromGuildBank({ actorCharacterId: alice, amount: 700 }),
+      store.withdrawFromGuildBank({ actorCharacterId: alice, amount: 700 }),
+    ]);
+
+    expect([first.status, second.status].sort()).toEqual(["failed", "ok"]);
+    expect(await guildBalance(guild.guildId)).toBe(300);
+    expect(await bankBalance(alice)).toBe(700);
+  });
+
+  it("escrows a war stake on accept and pays it out exactly once", async () => {
+    const [alice, bob] = await Promise.all([
+      createCharacter("alice"),
+      createCharacter("bob"),
+    ]);
+    const one = await store.createGuild({
+      ownerCharacterId: alice,
+      name: "Iron Pact",
+    });
+    const two = await store.createGuild({
+      ownerCharacterId: bob,
+      name: "Red Rose",
+    });
+    if (one.status !== "created" || two.status !== "created") {
+      throw new Error("setup failed");
+    }
+    await seedBank(alice, 5_000);
+    await seedBank(bob, 5_000);
+    await store.depositToGuildBank({ actorCharacterId: alice, amount: 5_000 });
+    await store.depositToGuildBank({ actorCharacterId: bob, amount: 5_000 });
+
+    const declared = await store.declareWar({
+      actorCharacterId: alice,
+      targetGuildName: "Red Rose",
+      fragLimit: 1,
+      payment: 2_000,
+    });
+    if (declared.status !== "declared") throw new Error("declare failed");
+    const accepted = await store.respondWar({
+      actorCharacterId: bob,
+      warId: declared.warId,
+      accept: true,
+    });
+    expect(accepted.status).toBe("war-active");
+    // Both sides paid in; the pot is off both balances.
+    expect(await guildBalance(one.guildId)).toBe(3_000);
+    expect(await guildBalance(two.guildId)).toBe(3_000);
+
+    const [firstEnd, secondEnd] = await Promise.all([
+      store.endWar({ actorCharacterId: alice, warId: declared.warId }),
+      store.endWar({ actorCharacterId: alice, warId: declared.warId }),
+    ]);
+    expect(
+      [firstEnd.status, secondEnd.status].filter(
+        (status) => status === "war-ended",
+      ).length,
+    ).toBeGreaterThanOrEqual(1);
+
+    // Surrender hands the pot to the other guild — once, never twice.
+    expect(await guildBalance(two.guildId)).toBe(7_000);
+    expect(await guildBalance(one.guildId)).toBe(3_000);
+    const payouts = await pool.query(
+      "SELECT 1 FROM guild_bank_ledger WHERE entry_type = 'war-payout'",
+    );
+    expect(payouts.rowCount).toBe(1);
+    // The pot is conserved: 10 000 deposited, 10 000 still held.
+    expect(
+      (await guildBalance(one.guildId)) + (await guildBalance(two.guildId)),
+    ).toBe(10_000);
+  });
+
+  it("refuses to activate a war neither guild can stake", async () => {
+    const [alice, bob] = await Promise.all([
+      createCharacter("alice"),
+      createCharacter("bob"),
+    ]);
+    const one = await store.createGuild({
+      ownerCharacterId: alice,
+      name: "Iron Pact",
+    });
+    const two = await store.createGuild({
+      ownerCharacterId: bob,
+      name: "Red Rose",
+    });
+    if (one.status !== "created" || two.status !== "created") {
+      throw new Error("setup failed");
+    }
+    const declared = await store.declareWar({
+      actorCharacterId: alice,
+      targetGuildName: "Red Rose",
+      fragLimit: 1,
+      payment: 1_000,
+    });
+    if (declared.status !== "declared") throw new Error("declare failed");
+
+    expect(
+      await store.respondWar({
+        actorCharacterId: bob,
+        warId: declared.warId,
+        accept: true,
+      }),
+    ).toEqual({ status: "failed", reason: "insufficient-funds" });
+    // The war stayed pending and no balance moved.
+    expect((await warRows())[0]?.status).toBe(0);
+    expect(await guildBalance(one.guildId)).toBe(0);
+    expect(await guildBalance(two.guildId)).toBe(0);
   });
 });

@@ -37,9 +37,13 @@ const NAME_COLORS: Record<CreatureState["kind"], number> = {
 };
 
 export interface PartyView {
-  leaderId: string;
+  leaderId: string | null;
   memberIds: ReadonlyArray<string>;
   sharedExpActive: boolean;
+  /** Players the own party has invited (whitish-blue shield). */
+  inviteeIds: ReadonlyArray<string>;
+  /** Leader of a party that invited the viewer (whitish-yellow shield). */
+  invitedByLeaderId: string | null;
 }
 
 export interface GuildView {
@@ -1028,6 +1032,11 @@ export class WorldRenderer {
       if (partyView.memberIds.includes(creatureId)) {
         return partyView.sharedExpActive ? "member-shared" : "member";
       }
+      // Pending invitations outrank the public marker: Canary shows the
+      // whitish shields only to the two sides of the invitation, and both
+      // sides derive them from a projection scoped to them already.
+      if (creatureId === partyView.invitedByLeaderId) return "inviter";
+      if (partyView.inviteeIds.includes(creatureId)) return "invitee";
     }
     return publicPartyMember ? "public-member" : "none";
   }

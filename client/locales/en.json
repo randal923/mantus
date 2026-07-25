@@ -503,6 +503,32 @@
       "inactive": "A member has been inactive too long.",
       "empty-party": "Your party has no members yet."
     },
+    "analyzer": {
+      "title": "Hunt analyzer",
+      "member": "Member",
+      "loot": "Loot",
+      "supplies": "Supplies",
+      "balance": "Balance",
+      "damage": "Damage",
+      "healing": "Healing",
+      "reset": "Reset",
+      "priceMode": {
+        "npc": "NPC prices",
+        "market": "Item worth"
+      }
+    },
+    "finder": {
+      "title": "Party finder",
+      "advertPlaceholder": "Describe your hunt…",
+      "advertise": "Advertise",
+      "clearAdvert": "Unlist",
+      "myLevelOnly": "My level only",
+      "search": "Search",
+      "noResults": "No parties are advertising right now.",
+      "entryMeta": "{{leader}} • {{count}} members",
+      "contact": "Message",
+      "truncated": "More parties are advertising than fit here."
+    },
     "eligible": "Counts for shared experience",
     "notEligible": "Not eligible for shared experience",
     "invitationFrom": "{{name}} invites you to a party.",
