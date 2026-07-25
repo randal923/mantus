@@ -321,4 +321,34 @@ describe("PvpTracker", () => {
     expect(killer.skull).toBe("red");
     expect(killer.skullExpiresAt).toBe(30_000 + PVP_POLICY.redSkullDurationMs);
   });
+
+  it("reduces the death penalty when a victim is ganged, never below 20%", () => {
+    const harness = makeHarness();
+    const victim = harness.addPlayer("victim", 20);
+    const soloAttacker = harness.addPlayer("solo", 10);
+    const mob = [40, 40, 40, 40].map((level, index) =>
+      harness.addPlayer(`mob-${index}`, level),
+    );
+
+    // A weaker attacker is a fair fight: no reduction.
+    harness.tracker.recordDamageTaken(victim, soloAttacker.id, 50, 1_000);
+    expect(harness.tracker.unfairFightReduction(victim, 1_000)).toBe(100);
+
+    for (const attacker of mob) {
+      harness.tracker.recordDamageTaken(victim, attacker.id, 50, 1_000);
+    }
+    // 20 / (10 + 160) rounds to 12%, which the 20% floor lifts.
+    expect(harness.tracker.unfairFightReduction(victim, 1_000)).toBe(20);
+
+    // Attackers outside the in-fight window no longer count.
+    const stale = 1_000 + PVP_POLICY.combatLockMs + 1;
+    expect(harness.tracker.unfairFightReduction(victim, stale)).toBe(100);
+  });
+
+  it("treats a monster death as a fair fight", () => {
+    const harness = makeHarness();
+    const victim = harness.addPlayer("lonely", 20);
+
+    expect(harness.tracker.unfairFightReduction(victim, 1_000)).toBe(100);
+  });
 });

@@ -11,7 +11,10 @@ interface SpeechTextView {
 }
 
 const SPEECH_COLOR = 0xf8f358;
-/** Server-authored effect lines ("Aaaah...") float in monster orange. */
+/**
+ * Server-authored effect lines ("Aaaah...") and the words of a spell the
+ * server actually cast float in monster orange.
+ */
 const MONSTER_SAY_COLOR = 0xfe6500;
 const MIN_DURATION_MS = 2_000;
 const MS_PER_CHARACTER = 60;
@@ -44,7 +47,10 @@ export class SpeechTextRenderer {
         fontFamily: "Verdana, sans-serif",
         fontSize: 5,
         fontWeight: "bold",
-        fill: mode === "monster-say" ? MONSTER_SAY_COLOR : SPEECH_COLOR,
+        fill:
+          mode === "monster-say" || mode === "magic"
+            ? MONSTER_SAY_COLOR
+            : SPEECH_COLOR,
         stroke: { color: 0x000000, width: 1 },
         wordWrap: true,
         wordWrapWidth: TILE_SIZE * 7,

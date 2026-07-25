@@ -7,6 +7,7 @@ import type {
 } from "@tibia/protocol";
 import {
   GUILD_CHANNEL_ID,
+  publicChannelId,
   LOCAL_CHANNEL_ID,
   PARTY_CHANNEL_ID,
   SYSTEM_CHANNEL_ID,
@@ -89,10 +90,12 @@ export function GameHudOverlay() {
             ? t("chat.channels.party")
             : channel.kind === "guild"
               ? t("chat.channels.guild")
-              : (channel.counterpart ?? t("chat.channels.local")),
+              : (channel.label ??
+                channel.counterpart ??
+                t("chat.channels.local")),
         kind: channel.kind,
         canSend: true,
-        closable: channel.kind === "whisper",
+        closable: channel.kind === "whisper" || channel.kind === "public",
         unreadCount: channel.unreadCount,
         messages: channel.entries.map((entry) => toChatMessage(entry, t)),
       })),
@@ -140,8 +143,21 @@ export function GameHudOverlay() {
     [dispatchChat],
   );
   const onChatChannelClose = useCallback(
-    (channelId: string) => dispatchChat({ type: "close", channelId }),
-    [dispatchChat],
+    (channelId: string) => {
+      const channel = store
+        .getState()
+        .chatChannels.find(
+          (candidate) => publicChannelId(candidate.id) === channelId,
+        );
+      // A public channel is server-side subscription state: closing the tab
+      // unsubscribes, and the server confirms with `channel-closed`.
+      if (channel) {
+        store.getState().runtime.clientRef.current?.closeChannel(channel.id);
+        return;
+      }
+      dispatchChat({ type: "close", channelId });
+    },
+    [store, dispatchChat],
   );
   const onChatSenderSelect = useCallback(
     (sender: string) => {
@@ -162,6 +178,14 @@ export function GameHudOverlay() {
       if (channelId === GUILD_CHANNEL_ID) {
         const text = sanitizeChatText(body);
         if (text.length > 0) client?.sendGuildChat(text);
+        return;
+      }
+      const publicChannel = state.chatChannels.find(
+        (channel) => publicChannelId(channel.id) === channelId,
+      );
+      if (publicChannel) {
+        const text = sanitizeChatText(body);
+        if (text.length > 0) client?.sendChannelChat(publicChannel.id, text);
         return;
       }
       if (channelId === LOCAL_CHANNEL_ID) {

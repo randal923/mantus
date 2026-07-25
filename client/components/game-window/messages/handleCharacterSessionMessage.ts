@@ -37,6 +37,7 @@ export function handleCharacterSessionMessage(
   if (message.type !== "welcome") return false;
 
   runtime.joinedRef.current = true;
+  runtime.clientRef.current?.requestChannelList();
   state.setWorldLoading(true);
   state.setWorldLoadProgress(null);
   state.setAccountTier(message.accountTier);
@@ -109,7 +110,7 @@ export function handleCharacterSessionMessage(
   window.setTimeout(() => runtime.clientRef.current?.requestWheel(), 900);
   state.setReportSession(null);
   state.setMailboxSession(null);
-  state.setLootSession(null);
+  state.setLootSessions([]);
   state.dispatchChat({
     type: "reset",
     ownPlayerId: message.playerId,

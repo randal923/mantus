@@ -11,6 +11,8 @@ export type ItemIntent = Extract<
       | "open-container"
       | "close-container"
       | "loot-item"
+      | "open-world-container"
+      | "quick-loot"
       | "close-world-container"
       | "use-item"
       | "use-item-with"

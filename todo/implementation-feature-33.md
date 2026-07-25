@@ -5,11 +5,22 @@ Part of [Todo 9 — Death, corpses, loot, and decay](todo-9.md).
 ## Why
 Decay is complete only for ground (world) items — transform chains, capacity-shrinking stages, audited removal all shipped. Parity requires decay for inventory/equipment items and spell-created fields, plus charge-based expiry.
 
+**Shipped 2026-07-25** (see
+[completed/implementation-feature-33-completed.md](completed/implementation-feature-33-completed.md)):
+carried and equipped item decay — the equipped ring form now actually burns
+down and expires, perishables decay in a backpack, deadlines resume from the
+persisted row age across a logout, and the decay pause comes free from the
+data (only the active type carries a duration). The
+`transformEquipTo`/`transformDeEquipTo` chains themselves already shipped with
+equipment slots.
+
 ## Remaining work
-- `transformEquipTo` / `transformDeEquipTo` chains — rings/amulets activating on equip and reverting on de-equip.
-- Field items created by spells, with their full lifecycle.
-- Charge-based expiry.
-- Stop conditions (decay pauses).
+- Field items created by spells, with their full lifecycle. `CombatFieldManager`
+  keeps fields as in-memory combat state with their own expiry and no world
+  item, so nothing renders or decays on the ground; making them real decaying
+  world items touches combat, world items, and visibility together.
+- Charge-based expiry — 125 catalog types carry `charges`, but nothing spends
+  one yet, so there is nothing to expire.
 - Special decay callbacks.
 
 ## Implementation

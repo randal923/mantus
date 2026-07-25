@@ -20,9 +20,14 @@ import {
   ownCharacterStateSchema,
 } from "./character";
 import {
+  channelClosedMessageSchema,
+  channelListMessageSchema,
+  channelMessageSchema,
   chatRejectedMessageSchema,
   creatureSpokeMessageSchema,
+  ignoreListMessageSchema,
   privateChatDeliveredMessageSchema,
+  serverNoticeMessageSchema,
 } from "./chat";
 import {
   AIM_AT_TARGET_SPELL_LIMIT,
@@ -546,6 +551,11 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   creatureSpokeMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,
+  channelListMessageSchema,
+  channelMessageSchema,
+  channelClosedMessageSchema,
+  ignoreListMessageSchema,
+  serverNoticeMessageSchema,
   gmResponseMessageSchema,
   errorMessageSchema,
 ]);

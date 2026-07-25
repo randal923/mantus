@@ -5,12 +5,20 @@ Part of [Todo 9 — Death, corpses, loot, and decay](todo-9.md).
 ## Why
 The shipped v1 penalty (flat 10% total-experience loss, atomic with respawn, replay-proof via persisted `death:{uuid}` event ids) is an explicit stand-in. Canary parity needs the full stack, and most of its underlying systems (skill loss, blessings, item drop, PVP fairness) do not exist yet.
 
+**Shipped 2026-07-25** (see
+[completed/implementation-feature-32-completed.md](completed/implementation-feature-32-completed.md)):
+Canary's full loss formula as typed data (level curve, promotion, blessing and
+unfair-fight discounts), skill and magic-level loss charged from the same
+death event, and the PVP unfair-fight reduction measured from live damage
+attribution.
+
 ## Remaining work
-- Skill loss on death.
-- Blessings: purchase/state plus penalty-reduction effects.
-- Item/container loss into a player corpse, governed by blessing state.
-- Unfair-fight / PVP reductions to the penalty.
-- Vocation/level modifiers to the loss formula.
+- Blessings: purchase/state plus the blessing count feeding
+  `Player.blessings` (the formula seam already exists and reads 0). Owned with
+  Feature 72.
+- Item/container loss into a player corpse, governed by blessing state — the
+  one leg that needs a new atomic item operation (equipment plus backpack into
+  a fresh player corpse in the penalty's transaction, with audits).
 
 ## Implementation
 - Extend the player branch of `Combat.handleDeath` (`server/src/combat/Combat.ts` / `server/src/combat/DeathHandler.ts`), `Player.applyDeathPenalty`, and `CharacterProgression.loseExperience`; express penalty rules as typed data, not code branches per vocation.

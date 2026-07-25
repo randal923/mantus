@@ -6,6 +6,7 @@ import { CombatFieldManager } from "./combat/CombatFieldManager";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
 import { visibleFloorRange } from "./visibleFloorRange";
 import type { MapData } from "./MapData";
+import type { PersistSeedData } from "./item/CarriedPersistPlan";
 import type { ItemMutation } from "./item/ItemMutation";
 import type { LootOrigin } from "./item/LootOrigin";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
@@ -193,11 +194,26 @@ export class World {
     return this.mapItems.lootOrigin(itemId);
   }
 
+  seedOrigin(itemId: string) {
+    return this.mapItems.seedOrigin(itemId);
+  }
+
+  isSeedHidden(seedKey: string): boolean {
+    return this.mapItems.isSeedHidden(seedKey);
+  }
+
   registerUnpersistedLootItems(
     items: ReadonlyArray<ItemMutation["after"][number]>,
     origin: LootOrigin,
   ): void {
     this.mapItems.registerUnpersistedLootItems(items, origin);
+  }
+
+  registerUnpersistedSeedItems(
+    items: ReadonlyArray<ItemMutation["after"][number]>,
+    seed: PersistSeedData,
+  ): void {
+    this.mapItems.registerUnpersistedSeedItems(items, seed);
   }
 
   getMapAction(position: Position) {
@@ -477,6 +493,10 @@ export class World {
 
   tryUseRopeSpot(player: Player, target: Position, now: number): MoveResult {
     return this.movement.tryUseRopeSpot(player, target, now);
+  }
+
+  trySpellRopeSpot(player: Player, target: Position, now: number): MoveResult {
+    return this.movement.trySpellRopeSpot(player, target, now);
   }
 
   tryLevitate(

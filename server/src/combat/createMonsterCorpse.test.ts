@@ -12,7 +12,7 @@ describe("createMonsterCorpse loot rate", () => {
       itemType: (typeId: number) =>
         typeId === 100
           ? { id: 100, containerCapacity: 4 }
-          : { id: 200, maxCount: 100 },
+          : { id: 200, maxCount: 100, stackable: true },
       itemTypeByName: () => undefined,
       createCorpse,
     } as unknown as ItemIntentHandler;
@@ -24,7 +24,15 @@ describe("createMonsterCorpse loot rate", () => {
       position: { x: 5, y: 6, z: 7 },
       type: {
         corpseItemTypeId: 100,
-        loot: [{ itemTypeId: 200, chance: 60_000, maxCount: 4 }],
+        loot: [
+          {
+            itemTypeId: 200,
+            chance: 60_000,
+            minCount: 1,
+            maxCount: 4,
+            unique: false,
+          },
+        ],
       },
     } as unknown as Monster;
 
@@ -57,7 +65,7 @@ describe("createMonsterCorpse loot rate", () => {
       itemType: (typeId: number) =>
         typeId === 100
           ? { id: 100, containerCapacity: 4 }
-          : { id: 200, maxCount: 100 },
+          : { id: 200, maxCount: 100, stackable: true },
       itemTypeByName: () => undefined,
       createCorpse,
     } as unknown as ItemIntentHandler;
@@ -69,7 +77,15 @@ describe("createMonsterCorpse loot rate", () => {
       position: { x: 5, y: 6, z: 7 },
       type: {
         corpseItemTypeId: 100,
-        loot: [{ itemTypeId: 200, chance: 100_000, maxCount: 4 }],
+        loot: [
+          {
+            itemTypeId: 200,
+            chance: 100_000,
+            minCount: 1,
+            maxCount: 4,
+            unique: false,
+          },
+        ],
       },
     } as unknown as Monster;
 
@@ -92,6 +108,59 @@ describe("createMonsterCorpse loot rate", () => {
       0,
       100,
       [],
+      1_000,
+    );
+  });
+
+  it("drops a single non-stackable item however wide its count band", () => {
+    const createCorpse = vi.fn();
+    const items = {
+      itemType: (typeId: number) =>
+        typeId === 100
+          ? { id: 100, containerCapacity: 4 }
+          : { id: 200, maxCount: 1, stackable: false },
+      itemTypeByName: () => undefined,
+      createCorpse,
+    } as unknown as ItemIntentHandler;
+    const formula = {
+      chance: vi.fn(() => true),
+      integer: vi.fn(() => 4),
+    } as unknown as CombatFormula;
+    const monster = {
+      position: { x: 5, y: 6, z: 7 },
+      type: {
+        corpseItemTypeId: 100,
+        loot: [
+          {
+            itemTypeId: 200,
+            chance: 100_000,
+            minCount: 2,
+            maxCount: 4,
+            unique: false,
+          },
+        ],
+      },
+    } as unknown as Monster;
+
+    createMonsterCorpse(
+      { getMapItems: () => [] } as unknown as World,
+      items,
+      formula,
+      monster,
+      "killer",
+      "death:test",
+      1_000,
+      1,
+    );
+
+    expect(formula.integer).not.toHaveBeenCalled();
+    expect(createCorpse).toHaveBeenCalledWith(
+      "killer",
+      "death:test",
+      monster.position,
+      0,
+      100,
+      [{ typeId: 200, count: 1 }],
       1_000,
     );
   });

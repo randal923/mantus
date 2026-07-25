@@ -49,17 +49,18 @@ export class SpellCaster {
     private readonly partyHooks?: PartyHooks,
   ) {}
 
+  /** Reports whether the spell was actually cast; a false result was rejected. */
   executeSpell(
     session: Session,
     spell: SpellDefinition,
     targetIntent: CombatTarget,
     now: number,
     spendResources: boolean,
-  ): void {
+  ): boolean {
     const player = playerForSession(this.world, session);
     if (!player) {
       this.feedback.reject(session, now, "spell-unavailable");
-      return;
+      return false;
     }
     const rejection = this.spellRejectionCode(
       session,
@@ -70,7 +71,7 @@ export class SpellCaster {
     );
     if (rejection) {
       this.feedback.reject(session, now, rejection);
-      return;
+      return false;
     }
     const target = resolveSpellTarget(
       this.world,
@@ -81,17 +82,17 @@ export class SpellCaster {
     );
     if (!target) {
       this.feedback.reject(session, now, "spell-target-invalid");
-      return;
+      return false;
     }
     if (spendResources) {
       if (!player.spendMana(spell.manaCost)) {
         this.feedback.reject(session, now, "spell-mana-insufficient");
-        return;
+        return false;
       }
       if (!player.spendSoul(spell.soulCost)) {
         player.restoreMana(spell.manaCost);
         this.feedback.reject(session, now, "spell-soul-insufficient");
-        return;
+        return false;
       }
     }
     applySpellCooldowns(this.feedback, session, spell, now);
@@ -257,12 +258,14 @@ export class SpellCaster {
       }
     }
     this.feedback.sendFightState(session, now);
+    return true;
   }
 
   /**
    * Floor-moving spells (magic rope, levitate). The movement attempt runs
    * before resources are spent; everything here is synchronous inside the
    * tick and mana/soul were pre-checked, so success can never underpay.
+   * Reports whether the spell was cast.
    */
   executeWorldSpell(
     session: Session,
@@ -271,11 +274,11 @@ export class SpellCaster {
     attempt: (player: Player) => boolean,
     /** The intent's target; direction casts need it to pass the target check. */
     targetIntent: CombatTarget = { kind: "self" },
-  ): void {
+  ): boolean {
     const player = playerForSession(this.world, session);
     if (!player) {
       this.feedback.reject(session, now, "spell-unavailable");
-      return;
+      return false;
     }
     const rejection = this.spellRejectionCode(
       session,
@@ -286,7 +289,7 @@ export class SpellCaster {
     );
     if (rejection) {
       this.feedback.reject(session, now, rejection);
-      return;
+      return false;
     }
     if (!attempt(player)) {
       this.visibility.broadcastMagicEffect(
@@ -295,7 +298,7 @@ export class SpellCaster {
         player.id,
       );
       this.feedback.reject(session, now, "spell-not-possible");
-      return;
+      return false;
     }
     if (!player.spendMana(spell.manaCost) || !player.spendSoul(spell.soulCost)) {
       throw new Error("world spell resources diverged");
@@ -319,12 +322,15 @@ export class SpellCaster {
       );
     }
     this.feedback.sendFightState(session, now);
+    return true;
   }
 
   /**
    * Conjuring spells. `conjureOverride` carries a server-rolled item/count for
    * the random-food spell; the roll happens in the tick before this call, so
    * the client never influences which item or how many are created.
+   * Reports whether the conjuring operation was started — its own commit
+   * still owns the outcome.
    */
   executeConjure(
     session: Session,
@@ -332,12 +338,12 @@ export class SpellCaster {
     targetIntent: CombatTarget,
     now: number,
     conjureOverride?: SpellDefinition["conjure"],
-  ): void {
+  ): boolean {
     const player = playerForSession(this.world, session);
     const conjure = conjureOverride ?? spell.conjure;
     if (!player || !conjure) {
       this.feedback.reject(session, now, "spell-unavailable");
-      return;
+      return false;
     }
     const rejection = this.spellRejectionCode(
       session,
@@ -348,7 +354,7 @@ export class SpellCaster {
     );
     if (rejection) {
       this.feedback.reject(session, now, rejection);
-      return;
+      return false;
     }
     const expectedMana = player.mana;
     const expectedSoul = player.progression.soul;
@@ -402,6 +408,7 @@ export class SpellCaster {
         this.persistence.saveNow(player, failedAt);
       },
     );
+    return true;
   }
 
   canBeginSpell(

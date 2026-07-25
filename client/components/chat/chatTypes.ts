@@ -3,6 +3,8 @@ export type ChatChannelKind =
   | "whisper"
   | "guild"
   | "party"
+  /** A server-registered public channel (Help, Trade, Game Chat). */
+  | "public"
   | "system";
 
 export type ChatMessageTone =

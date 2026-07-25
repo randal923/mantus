@@ -103,9 +103,20 @@ export class MovementRules {
   }
 
   /**
+   * Magic rope (exani tera). Same destination rules as the rope tool, but the
+   * walk cooldown never applies: Canary's magic rope teleports on cast, so a
+   * cast landing mid-step must not fizzle the spell. The spell's own exhaust
+   * is what bounds it, and resources are spent only once this succeeds.
+   */
+  trySpellRopeSpot(player: Player, target: Position, now: number): MoveResult {
+    return this.tryUseAction(player, target, now, "use-with", true);
+  }
+
+  /**
    * Levitate (exani hur): float one tile forward and one floor up or down.
    * Mirrors Canary's levitate.lua — never across the surface boundary
    * (z7 <-> z8), only up with no ceiling overhead, only down over open air.
+   * Spell-only, so like magic rope it ignores the walk cooldown.
    */
   tryLevitate(
     player: Player,
@@ -121,14 +132,6 @@ export class MovementRules {
     const from = player.position;
     if (parameter === "up" ? from.z === 8 || from.z <= 0 : from.z === 7 || from.z >= 15) {
       return blocked;
-    }
-    if (now < player.nextStepAt) {
-      return {
-        moved: false,
-        turned: false,
-        reason: "cooldown",
-        retryAfterMs: player.nextStepAt - now,
-      };
     }
     const [dx, dy] = DIRECTION_DELTAS[player.direction];
     if (parameter === "up") {
@@ -165,6 +168,7 @@ export class MovementRules {
     target: Position,
     now: number,
     activation: "use" | "use-with",
+    ignoreStepCooldown = false,
   ): MoveResult {
     const from = player.position;
     // Chebyshev distance: transitions (ladders, sewers, holes) are usable
@@ -176,7 +180,7 @@ export class MovementRules {
     if (target.z !== from.z || distance > 1) {
       return { moved: false, turned: false, reason: "blocked", retryAfterMs: 0 };
     }
-    if (now < player.nextStepAt) {
+    if (!ignoreStepCooldown && now < player.nextStepAt) {
       return {
         moved: false,
         turned: false,

@@ -593,7 +593,7 @@ describe("Combat", () => {
       1_000,
     );
 
-    expect(matched).toBe(true);
+    expect(matched).toBe("cast");
     expect(harness.player.health).toBeGreaterThan(
       harness.player.maxHealth - 50,
     );
@@ -614,7 +614,7 @@ describe("Combat", () => {
       1_000,
     );
 
-    expect(matched).toBe(true);
+    expect(matched).toBe("rejected");
     expect(harness.player.mana).toBe(manaBefore);
     expect(
       harness.sent.some((message) => message.type === "error"),
@@ -632,7 +632,7 @@ describe("Combat", () => {
       1_000,
     );
 
-    expect(matched).toBe(false);
+    expect(matched).toBe("no-match");
     expect(harness.sent).toEqual([]);
   });
 
@@ -646,7 +646,7 @@ describe("Combat", () => {
 
     expect(
       harness.combat.castSpellByWords(harness.session, "exani tera", 1_000),
-    ).toBe(true);
+    ).toBe("cast");
 
     expect(magicRope).toHaveBeenCalledWith(harness.session, 1_000);
     expect(harness.player.mana).toBe(manaBefore - 20);
@@ -708,6 +708,101 @@ describe("Combat", () => {
           message.type === "error" && message.code === "spell-not-possible",
       ),
     ).toHaveLength(2);
+  });
+
+  it("casts exani hur from an action bar slot carrying its parameter", async () => {
+    const levitate = vi.fn().mockReturnValue(true);
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Knight", 3),
+      worldSpells: { magicRope: vi.fn(), levitate },
+      actionBar: actionBarWith([
+        {
+          kind: "spell",
+          spellId: "exani-hur",
+          targetMode: "self",
+          parameter: "down",
+        },
+      ]),
+    });
+
+    harness.combat.activateActionBar(
+      harness.session,
+      { type: "activate-action-bar", slotIndex: 0 },
+      1_000,
+    );
+
+    expect(levitate).toHaveBeenCalledWith(harness.session, "down", 1_000);
+  });
+
+  it("casts a spoken name parameter at the visible player it names", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(30, "Druid", 10),
+      bystanderPositions: [{ x: 4, y: 1, z: 7 }],
+    });
+    const [friend] = harness.bystanders;
+    if (!friend) throw new Error("expected a bystander");
+    harness.session.knownCreatureIds.add(friend.player.id);
+    friend.player.setHealth(friend.player.maxHealth - 100);
+    const healthBefore = friend.player.health;
+    const manaBefore = harness.player.mana;
+
+    expect(
+      harness.combat.castSpellByWords(
+        harness.session,
+        `exura sio "${friend.player.name}"`,
+        1_000,
+      ),
+    ).toBe("cast");
+
+    expect(friend.player.health).toBeGreaterThan(healthBefore);
+    expect(harness.player.mana).toBeLessThan(manaBefore);
+  });
+
+  // Charter rule 6: a name the caster cannot see must not become a cast, or
+  // the spell turns into an out-of-view player locator.
+  it("refuses a spoken name the caster cannot see", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(30, "Druid", 10),
+      bystanderPositions: [{ x: 4, y: 1, z: 7 }],
+    });
+    const [friend] = harness.bystanders;
+    if (!friend) throw new Error("expected a bystander");
+    friend.player.setHealth(friend.player.maxHealth - 100);
+    const healthBefore = friend.player.health;
+    const manaBefore = harness.player.mana;
+
+    expect(
+      harness.combat.castSpellByWords(
+        harness.session,
+        `exura sio "${friend.player.name}"`,
+        1_000,
+      ),
+    ).toBe("rejected");
+
+    expect(friend.player.health).toBe(healthBefore);
+    expect(harness.player.mana).toBe(manaBefore);
+    expect(harness.sent).toContainEqual({
+      type: "error",
+      code: "spell-parameter-invalid",
+    });
+  });
+
+  it("leaves trailing words on a parameterless spell as ordinary speech", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(30, "Druid", 10),
+    });
+    const manaBefore = harness.player.mana;
+
+    expect(
+      harness.combat.castSpellByWords(
+        harness.session,
+        "exura hello there",
+        1_000,
+      ),
+    ).toBe("no-match");
+
+    expect(harness.player.mana).toBe(manaBefore);
+    expect(harness.sent).toEqual([]);
   });
 
   it("reports execution-time Exori rejection reasons", async () => {

@@ -5,14 +5,22 @@ Part of [Todo 10 — Chat and channels](todo-10.md).
 ## Why
 Say/whisper/yell/private shipped with strict server-side enforcement; everything beyond those modes was deferred. Channels, ignore lists, and talkactions are the remaining player-visible chat surface, and talkactions must be typed server actions — never Lua.
 
+**Shipped 2026-07-25** (see
+[completed/implementation-feature-35-completed.md](completed/implementation-feature-35-completed.md)):
+the public channel system (Game Chat, Trade, Help) with membership re-checked
+per line, the bounded channel/ignore zod intents, per-character ignore lists
+that suppress every delivery path without leaking, player talkactions as typed
+server actions, the client channel tabs, and the channel/talkaction parity
+inventory test.
+
 ## Remaining work
-- All channels (guild/party/help/etc.) with membership/permission enforcement, plus the deliberately deferred channel-message zod intents (channel ids/recipients remain references, never authority).
-- Ignore lists.
-- Talkactions — player and admin — executing typed server actions.
-- NPC speech routing.
-- GM/broadcast speech modes.
-- Moderation channels and richer system-message categories.
-- Final parity test: a channel/speech/talkaction parity inventory with no unowned or unsupported registered player-visible entry.
+- Guild and party chat still ship as their own intents rather than registry
+  channels; unifying them is optional cleanup, not missing behaviour.
+- Admin talkactions (waiting on Feature 96's admin-surface conventions).
+- GM/broadcast speech modes and moderation channels; richer system-message
+  categories beyond the new `server-notice`.
+- Persisting ignore lists — they are memory-only today, so they survive a
+  relogin but not a restart.
 
 ## Implementation
 - Create the planned `server/src/chat/ChatChannelRegistry.ts` (it does not exist yet) alongside `server/src/chat/ChatHandler.ts`.

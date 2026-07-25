@@ -204,6 +204,41 @@ export function handleCommunityMessage(
     return true;
   }
 
+  if (message.type === "channel-list") {
+    state.setChatChannels(message.channels);
+    return true;
+  }
+
+  if (message.type === "channel-message") {
+    state.dispatchChat({
+      type: "channel",
+      channelId: message.channelId,
+      label:
+        state.chatChannels.find((channel) => channel.id === message.channelId)
+          ?.label ?? message.channelId,
+      speakerId: message.speakerId,
+      name: message.speakerName,
+      body: message.text,
+      time: formatChatTime(),
+    });
+    return true;
+  }
+
+  if (message.type === "channel-closed") {
+    state.dispatchChat({ type: "channel-closed", channelId: message.channelId });
+    return true;
+  }
+
+  if (message.type === "ignore-list") {
+    state.setIgnoredNames(message.names);
+    return true;
+  }
+
+  if (message.type === "server-notice") {
+    state.appendCombatLog(message.text);
+    return true;
+  }
+
   if (message.type === "chat-rejected") {
     state.dispatchChat({
       type: "rejected",

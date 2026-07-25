@@ -27,6 +27,7 @@ import { getManaForNextMagicLevel } from "./getManaForNextMagicLevel";
 import { getSkillTriesForNextLevel } from "./getSkillTriesForNextLevel";
 import { getVocation } from "./getVocation";
 import type { ProgressionEvent, ProgressionEventType } from "./ProgressionEvent";
+import type { Vocation } from "./Vocation";
 
 const MAX_AWARD_AMOUNT = 1_000_000_000;
 /**
@@ -432,6 +433,112 @@ export class CharacterProgression {
       this.currentMana = this.maxMana;
     }
     return { processed: true, changed };
+  }
+
+  /**
+   * Applies a whole death penalty — experience, magic level, and every skill —
+   * under one event id, mirroring Canary's `Player::death`. All three losses
+   * use the same fraction and land together or not at all, so a reconnect that
+   * replays the death cannot charge one of them twice.
+   */
+  applyDeathLoss(
+    eventId: string,
+    percent: number,
+  ): {
+    processed: boolean;
+    lostExperience: number;
+    lostMagicLevels: number;
+    lostSkillLevels: ReadonlyArray<{ skill: Skill; levels: number }>;
+  } {
+    this.assertEventId(eventId);
+    if (!Number.isFinite(percent) || percent < 0 || percent > 1) {
+      throw new Error("death loss percent is out of range");
+    }
+    const none = {
+      processed: false,
+      lostExperience: 0,
+      lostMagicLevels: 0,
+      lostSkillLevels: [],
+    };
+    if (!this.recordEvent(eventId, "experience")) return none;
+    const vocation = getVocation(this.vocation, this.definitionVersion);
+    const lostExperience = Math.min(
+      this.currentExperience,
+      Math.floor(this.currentExperience * percent),
+    );
+    if (lostExperience > 0) {
+      this.currentExperience -= lostExperience;
+      const level = getLevelForExperience(this.currentExperience);
+      if (level !== this.currentLevel) {
+        this.currentLevel = level;
+        this.currentMana = Math.min(this.currentMana, this.maxMana);
+      }
+    }
+    const magicBefore = this.currentMagicLevel;
+    this.applyMagicLoss(vocation, percent);
+    const lostSkillLevels: Array<{ skill: Skill; levels: number }> = [];
+    for (const skill of SKILLS) {
+      const before = this.requireSkill(skill).level;
+      this.applySkillLoss(vocation, skill, percent);
+      const levels = before - this.requireSkill(skill).level;
+      if (levels > 0) lostSkillLevels.push({ skill, levels });
+    }
+    return {
+      processed: true,
+      lostExperience,
+      lostMagicLevels: magicBefore - this.currentMagicLevel,
+      lostSkillLevels,
+    };
+  }
+
+  /** Canary drains the mana spent toward the current magic level first. */
+  private applyMagicLoss(vocation: Vocation, percent: number): void {
+    let total = this.currentManaSpent;
+    for (let level = 0; level < this.currentMagicLevel; level++) {
+      total += getManaForNextMagicLevel(vocation, level);
+    }
+    let lost = Math.floor(total * percent);
+    while (lost > this.currentManaSpent && this.currentMagicLevel > 0) {
+      lost -= this.currentManaSpent;
+      this.currentMagicLevel -= 1;
+      this.currentManaSpent = getManaForNextMagicLevel(
+        vocation,
+        this.currentMagicLevel,
+      );
+    }
+    this.currentManaSpent = Math.max(0, this.currentManaSpent - lost);
+  }
+
+  /** Skills never fall below their starting level (Canary's floor of 10). */
+  private applySkillLoss(
+    vocation: Vocation,
+    skill: Skill,
+    percent: number,
+  ): void {
+    const state = this.requireSkill(skill);
+    let level = state.level;
+    let tries = state.tries;
+    let total = tries;
+    for (let step = MIN_SKILL_LEVEL; step < level; step++) {
+      total += getSkillTriesForNextLevel(vocation, skill, step);
+    }
+    let lost = Math.floor(total * percent);
+    while (lost > tries) {
+      if (level <= MIN_SKILL_LEVEL) {
+        level = MIN_SKILL_LEVEL;
+        tries = 0;
+        lost = 0;
+        break;
+      }
+      lost -= tries;
+      level -= 1;
+      tries = getSkillTriesForNextLevel(vocation, skill, level);
+    }
+    this.skillStates.set(skill, {
+      skill,
+      level,
+      tries: Math.max(0, tries - lost),
+    });
   }
 
   loseExperience(eventId: string, amount: number): ProgressionMutation {

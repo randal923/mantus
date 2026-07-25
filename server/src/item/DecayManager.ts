@@ -15,6 +15,20 @@ export interface DecayRecord {
 }
 
 /**
+ * A decaying item inside a character's inventory or equipment — an equipped
+ * ring burning down, a torch in a backpack. Canary pauses these by keeping the
+ * duration on the *active* item type only: de-equipping transforms the ring
+ * back to a type with no duration, which drops its record here.
+ */
+export interface CarriedDecayRecord {
+  readonly itemId: string;
+  readonly characterId: string;
+  readonly typeId: number;
+  readonly version: number;
+  readonly deadlineAt: number;
+}
+
+/**
  * Tick-owned bookkeeping for world-item decay deadlines. It never mutates
  * game state itself: the tick collects due records and the item pipeline
  * executes them through the store.
@@ -29,6 +43,8 @@ export interface DecayRecord {
  */
 export class DecayManager {
   private readonly records = new Map<string, DecayRecord>();
+  private readonly carriedRecords = new Map<string, CarriedDecayRecord>();
+  private earliestCarriedDeadlineAt = Number.POSITIVE_INFINITY;
   /**
    * Lower bound on the next due deadline so the per-tick check is O(1) when
    * nothing is due. Deletions may leave it stale (too low), which only costs
@@ -47,6 +63,35 @@ export class DecayManager {
 
   observeCreated(items: ReadonlyArray<Item>, now: number): void {
     for (const item of items) this.observeItem(item, now);
+  }
+
+  /**
+   * Arms deadlines for a character's carried items. `agesMs` is how long each
+   * row has been unchanged, so a ring keeps burning across a logout instead of
+   * resetting its timer — the same durable-clock rule world decay uses. An
+   * unknown id falls back to a full duration.
+   */
+  observeCarriedLoaded(
+    characterId: string,
+    items: ReadonlyArray<Item>,
+    agesMs: ReadonlyMap<string, number> | undefined,
+    now: number,
+  ): void {
+    for (const item of items) {
+      const ageMs = agesMs?.get(item.id);
+      const armedAt =
+        ageMs !== undefined && Number.isFinite(ageMs) && ageMs >= 0
+          ? now - ageMs
+          : now;
+      this.observeItem(item, armedAt, characterId);
+    }
+  }
+
+  /** Drops every carried record for a character leaving the world. */
+  forgetCarried(characterId: string): void {
+    for (const [itemId, record] of this.carriedRecords) {
+      if (record.characterId === characterId) this.carriedRecords.delete(itemId);
+    }
   }
 
   /**
@@ -70,13 +115,27 @@ export class DecayManager {
     }
   }
 
-  /** Any mutation of an item resets its decay deadline to the full duration. */
-  observeMutation(mutation: ItemMutation, now: number): void {
-    if (mutation.before) this.records.delete(mutation.before.id);
+  /**
+   * Any mutation of an item resets its decay deadline to the full duration.
+   * `characterId` marks a carried mutation: its items belong to that
+   * character's inventory, which is what the carried schedule is keyed on.
+   */
+  observeMutation(
+    mutation: ItemMutation,
+    now: number,
+    characterId?: string,
+  ): void {
+    if (mutation.before) {
+      this.records.delete(mutation.before.id);
+      this.carriedRecords.delete(mutation.before.id);
+    }
     for (const removedId of mutation.removedItemIds ?? []) {
       this.records.delete(removedId);
+      this.carriedRecords.delete(removedId);
     }
-    for (const item of mutation.after) this.observeItem(item, now);
+    for (const item of mutation.after) {
+      this.observeItem(item, now, characterId);
+    }
   }
 
   /** Re-arms a record whose execution failed; the world state is re-checked on the next attempt. */
@@ -117,11 +176,43 @@ export class DecayManager {
     return due;
   }
 
-  private observeItem(item: Item, armedAt: number): void {
+  /** Due carried records leave the schedule; a later mutation re-adds them. */
+  collectDueCarried(now: number): CarriedDecayRecord[] {
+    if (this.carriedRecords.size === 0) {
+      this.earliestCarriedDeadlineAt = Number.POSITIVE_INFINITY;
+      return [];
+    }
+    if (now < this.earliestCarriedDeadlineAt) return [];
+    const due: CarriedDecayRecord[] = [];
+    let nextEarliest = Number.POSITIVE_INFINITY;
+    let truncated = false;
+    for (const record of this.carriedRecords.values()) {
+      if (record.deadlineAt > now) {
+        if (record.deadlineAt < nextEarliest) nextEarliest = record.deadlineAt;
+        continue;
+      }
+      due.push(record);
+      if (due.length >= this.maxDuePerTick) {
+        truncated = true;
+        break;
+      }
+    }
+    for (const record of due) this.carriedRecords.delete(record.itemId);
+    this.earliestCarriedDeadlineAt = truncated ? now : nextEarliest;
+    return due;
+  }
+
+  private observeItem(
+    item: Item,
+    armedAt: number,
+    characterId?: string,
+  ): void {
     if (item.location.kind !== "world") {
       this.records.delete(item.id);
+      this.observeCarriedItem(item, armedAt, characterId);
       return;
     }
+    this.carriedRecords.delete(item.id);
     const durationSeconds = this.catalog.get(item.typeId)?.decay
       ?.durationSeconds;
     if (durationSeconds === undefined) {
@@ -138,5 +229,34 @@ export class DecayManager {
       deadlineAt,
     });
     if (deadlineAt < this.earliestDeadlineAt) this.earliestDeadlineAt = deadlineAt;
+  }
+
+  /**
+   * Only items whose owner is known are tracked: the contents of a corpse or
+   * a world chest live in a container too, and they decay with their root
+   * rather than on their own schedule.
+   */
+  private observeCarriedItem(
+    item: Item,
+    armedAt: number,
+    characterId: string | undefined,
+  ): void {
+    const durationSeconds = this.catalog.get(item.typeId)?.decay
+      ?.durationSeconds;
+    if (characterId === undefined || durationSeconds === undefined) {
+      this.carriedRecords.delete(item.id);
+      return;
+    }
+    const deadlineAt = armedAt + durationSeconds * 1_000;
+    this.carriedRecords.set(item.id, {
+      itemId: item.id,
+      characterId,
+      typeId: item.typeId,
+      version: item.version,
+      deadlineAt,
+    });
+    if (deadlineAt < this.earliestCarriedDeadlineAt) {
+      this.earliestCarriedDeadlineAt = deadlineAt;
+    }
   }
 }

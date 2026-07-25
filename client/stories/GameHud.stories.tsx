@@ -68,6 +68,7 @@ const meta = {
           "group:healing",
         ],
         targetKind: "self",
+        parameterKind: "none",
       },
     ],
     actionBar,

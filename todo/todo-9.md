@@ -4,11 +4,11 @@ The core death pipeline shipped: exactly-once monster/player death handling, ser
 
 ## Remaining features
 
-- [ ] **Feature 29 — Monster loot-table parity import** — Import and parity-gate every pinned Canary monster loot table plus corpse and death behaviors. See [implementation](implementation-feature-29.md).
-- [ ] **Feature 30 — World-container and loot UX completions** — Nested world-container browsing, pristine seeded map chests, multi-view sessions, quick-loot affordances. See [implementation](implementation-feature-30.md).
+- [ ] **Feature 29 — Monster loot-table parity import** — lossless import, Canary roll semantics, quick-loot buckets and the aggregate parity gate over all 782 loot-bearing monsters shipped 2026-07-25 ([log](completed/implementation-feature-29-completed.md)); child containers, `unique`, reward chests and per-monster death callbacks remain. See [implementation](implementation-feature-29.md).
+- [x] **Feature 30 — World-container and loot UX completions** — nested browsing, multi-view sessions, materialize-on-open map chests and a category-filtered quick-loot sweep, all still reach- and revision-checked per tick. **Done 2026-07-25** — see [completed log](completed/implementation-feature-30-completed.md).
 - [x] **Feature 31 — Corpse persistence invariants and retry hardening** — retry consolidated into the shared economy transaction helper, all 18 integration tests replay the real migration directory, and `planDrop`/`planMoveMapItem` no longer guard unpersisted loot. **Done 2026-07-25** — see [completed log](completed/implementation-feature-31-completed.md).
-- [ ] **Feature 32 — Full Canary player-death penalty parity** — Skill loss, blessings, item/container drop into player corpse, unfair-fight/PVP and vocation/level modifiers. See [implementation](implementation-feature-32.md).
-- [ ] **Feature 33 — Carried/equipped and field-item decay** — Equip/de-equip transform chains, spell-field lifecycle, charge-based expiry, decay pauses and callbacks. See [implementation](implementation-feature-33.md).
+- [ ] **Feature 32 — Full Canary player-death penalty parity** — the loss formula, skill/magic-level loss and the unfair-fight reduction shipped 2026-07-25 ([log](completed/implementation-feature-32-completed.md)); blessings and item drop into a player corpse remain (both follow Feature 72). See [implementation](implementation-feature-32.md).
+- [ ] **Feature 33 — Carried/equipped and field-item decay** — carried/equipped decay (burning rings, perishables, logout-safe deadlines) shipped 2026-07-25 ([log](completed/implementation-feature-33-completed.md)); spell fields as world items, charge expiry and decay callbacks remain. See [implementation](implementation-feature-33.md).
 - [x] **Feature 34 — Durable decay deadlines** — boot resumes each deadline from the persisted row's age (derived from `items.updated_at`, no new column) instead of re-arming a full duration. **Done 2026-07-25** — see [completed log](completed/implementation-feature-34-completed.md).
 
 [Back to overview](README.md)

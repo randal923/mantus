@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { WebSocket } from "ws";
 import type { Position, ServerMessage } from "@tibia/protocol";
 import { ChatHandler } from "./ChatHandler";
+import type { SpokenSpellOutcome } from "../combat/SpokenSpellOutcome";
 import { gridMapData } from "../gridMapData";
 import type { ChatModerationHooks } from "../moderation/ChatModerationHooks";
 import { Player } from "../Player";
@@ -22,7 +23,11 @@ interface TestPeer {
 
 interface HarnessOptions {
   moderation?: ChatModerationHooks;
-  castSpellWords?: (session: Session, text: string, now: number) => boolean;
+  castSpellWords?: (
+    session: Session,
+    text: string,
+    now: number,
+  ) => SpokenSpellOutcome;
 }
 
 const makeHarness = (options: HarnessOptions = {}) => {
@@ -47,6 +52,12 @@ const makeHarness = (options: HarnessOptions = {}) => {
     undefined,
     options.moderation,
     options.castSpellWords,
+    () => ({
+      uptimeMs: 3_720_000,
+      onlinePlayerCount: 7,
+      experienceRate: 3,
+      lootRate: 2,
+    }),
   );
 
   const join = (name: string, position: Position, level = 1): TestPeer => {
@@ -347,8 +358,8 @@ describe("ChatHandler private messages", () => {
 });
 
 describe("ChatHandler spell words", () => {
-  it("attempts a cast for say text and still broadcasts the words", () => {
-    const castSpellWords = vi.fn().mockReturnValue(true);
+  it("broadcasts a cast spell's words in the magic speech mode", () => {
+    const castSpellWords = vi.fn().mockReturnValue("cast");
     const { chat, join } = makeHarness({ castSpellWords });
     const speaker = join("Speaker", { x: 30, y: 30, z: 7 });
     const near = join("Near", { x: 31, y: 30, z: 7 });
@@ -364,11 +375,75 @@ describe("ChatHandler spell words", () => {
       "exura",
       1_000,
     );
-    expect(spokenTo(near)).toHaveLength(1);
+    expect(spokenTo(near)).toEqual([
+      {
+        type: "creature-spoke",
+        creatureId: speaker.player.id,
+        name: "Speaker",
+        mode: "magic",
+        position: { x: 30, y: 30, z: 7 },
+        text: "exura",
+      },
+    ]);
+  });
+
+  it("speaks words the spell pipeline refused as ordinary chat", () => {
+    const castSpellWords = vi.fn().mockReturnValue("rejected");
+    const { chat, join } = makeHarness({ castSpellWords });
+    const speaker = join("Speaker", { x: 30, y: 30, z: 7 });
+    const near = join("Near", { x: 31, y: 30, z: 7 });
+
+    chat.handle(
+      speaker.session,
+      { type: "speak", mode: "say", text: "exura" },
+      1_000,
+    );
+
+    expect(spokenTo(near).at(0)).toMatchObject({ mode: "say", text: "exura" });
+  });
+
+  it("casts yelled spell words without spending the yell exhaust", () => {
+    const castSpellWords = vi.fn().mockReturnValue("cast");
+    const { chat, join } = makeHarness({ castSpellWords });
+    const speaker = join("Speaker", { x: 30, y: 30, z: 7 }, 20);
+    const far = join("Far", { x: 44, y: 30, z: 7 }, 20);
+
+    chat.handle(
+      speaker.session,
+      { type: "speak", mode: "yell", text: "exura" },
+      1_000,
+    );
+    // A yell exhaust would have been armed by a real yell; the spell cast
+    // must leave it free, so this second line still yells.
+    castSpellWords.mockReturnValue("no-match");
+    chat.handle(
+      speaker.session,
+      { type: "speak", mode: "yell", text: "hello" },
+      2_000,
+    );
+
+    expect(castSpellWords).toHaveBeenNthCalledWith(
+      1,
+      speaker.session,
+      "exura",
+      1_000,
+    );
+    // The cast is spoken at say range in magic mode, never across the map.
+    expect(spokenTo(far)).toEqual([
+      {
+        type: "creature-spoke",
+        creatureId: speaker.player.id,
+        name: "Speaker",
+        mode: "yell",
+        position: { x: 30, y: 30, z: 7 },
+        text: "HELLO",
+      },
+    ]);
+    expect(rejectionsTo(speaker)).toEqual([]);
   });
 
   it("does not attempt casts for muted speakers", () => {
-    const castSpellWords = vi.fn().mockReturnValue(true);
+    const castSpellWords = vi.fn().mockReturnValue("cast");
     const { chat, join } = makeHarness({
       castSpellWords,
       moderation: {
@@ -389,7 +464,7 @@ describe("ChatHandler spell words", () => {
   });
 
   it("does not attempt casts for private messages", () => {
-    const castSpellWords = vi.fn().mockReturnValue(true);
+    const castSpellWords = vi.fn().mockReturnValue("cast");
     const { chat, join } = makeHarness({ castSpellWords });
     const speaker = join("Speaker", { x: 30, y: 30, z: 7 });
     join("Friend", { x: 31, y: 30, z: 7 });

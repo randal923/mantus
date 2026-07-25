@@ -81,6 +81,10 @@ export class PgItemStore implements ItemStore {
     return this.reads.loadForCharacter(characterId);
   }
 
+  carriedAgesMs(characterId: string): Promise<ReadonlyMap<string, number>> {
+    return this.reads.carriedAgesMs(characterId);
+  }
+
   equip(
     characterId: string,
     itemId: string,

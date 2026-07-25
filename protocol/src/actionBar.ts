@@ -37,6 +37,13 @@ export const actionBarActionSchema = z.discriminatedUnion("kind", [
       kind: z.literal("spell"),
       spellId: z.string().min(1).max(96),
       targetMode: actionBarTargetModeSchema,
+      /**
+       * Bound word parameter for the spells Canary declares with `hasParams`
+       * (exani hur up/down, summon creature, creature illusion, mentor
+       * other). It is resolved against server-owned catalogs and visible
+       * players at cast time and never indexes anything directly.
+       */
+      parameter: z.string().min(1).max(64).optional(),
     })
     .strict(),
   z

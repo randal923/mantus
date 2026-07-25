@@ -1,8 +1,9 @@
 import type { Monster } from "../creature/Monster";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
-import type { LootItemCreation } from "../item/LootItemCreation";
 import type { World } from "../World";
 import type { CombatFormula } from "./CombatFormula";
+import { resolveMonsterLootType } from "./resolveMonsterLootType";
+import { rollMonsterLoot } from "./rollMonsterLoot";
 
 export function createMonsterCorpse(
   world: World,
@@ -16,27 +17,20 @@ export function createMonsterCorpse(
 ): void {
   const corpseType = items.itemType(monster.type.corpseItemTypeId);
   if (!corpseType || (corpseType.containerCapacity ?? 0) < 1) return;
-  const loot: LootItemCreation[] = [];
-  for (const entry of monster.type.loot) {
-    const chance = Math.min(100, (entry.chance / 1_000) * lootRate);
-    if (!formula.chance(chance)) continue;
-    const type =
-      (entry.itemTypeId
-        ? items.itemType(entry.itemTypeId)
-        : undefined) ??
-      (entry.itemName
-        ? items.itemTypeByName(entry.itemName)
-        : undefined);
-    if (!type) continue;
-    loot.push({
-      typeId: type.id,
-      count: Math.min(
-        type.maxCount,
-        formula.integer(1, entry.maxCount),
-      ),
-    });
-    if (loot.length >= (corpseType.containerCapacity ?? 0)) break;
-  }
+  const loot = rollMonsterLoot(
+    monster.type.loot,
+    corpseType.containerCapacity ?? 0,
+    lootRate,
+    {
+      resolve: (entry) =>
+        resolveMonsterLootType(entry, {
+          byId: (id) => items.itemType(id),
+          byName: (name) => items.itemTypeByName(name),
+        }),
+      chance: (percent) => formula.chance(percent),
+      integer: (minimum, maximum) => formula.integer(minimum, maximum),
+    },
+  );
   const stackIndex = Math.min(
     255,
     world

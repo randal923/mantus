@@ -1,4 +1,8 @@
-import type { ChatRejectedReason, CreatureSpeechMode } from "@tibia/protocol";
+import type {
+  ChatChannelId,
+  ChatRejectedReason,
+  CreatureSpeechMode,
+} from "@tibia/protocol";
 
 export type ChatEntry =
   | {
@@ -23,7 +27,9 @@ export type ChatEntry =
 
 export interface ChatChannelState {
   id: string;
-  kind: "world" | "whisper" | "party" | "guild";
+  kind: "world" | "whisper" | "party" | "guild" | "public";
+  /** Display label for a server-registered public channel. */
+  label?: string;
   counterpart?: string;
   unreadCount: number;
   entries: ReadonlyArray<ChatEntry>;
@@ -71,6 +77,16 @@ export type ChatAction =
       highlighted: boolean;
     }
   | { type: "guild-closed" }
+  | {
+      type: "channel";
+      channelId: ChatChannelId;
+      label: string;
+      speakerId: string;
+      name: string;
+      body: string;
+      time: string;
+    }
+  | { type: "channel-closed"; channelId: ChatChannelId }
   | {
       type: "rejected";
       reason: ChatRejectedReason;
@@ -268,6 +284,39 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         channels,
       };
     }
+    case "channel": {
+      const entry: ChatEntry = {
+        id: state.nextEntryId,
+        kind: "speech",
+        sender: action.name,
+        body: action.body,
+        time: action.time,
+        isOwn: action.speakerId === state.ownPlayerId,
+      };
+      return appendEntry(
+        ensurePublicChannel(
+          { ...state, nextEntryId: state.nextEntryId + 1 },
+          action.channelId,
+          action.label,
+        ),
+        publicChannelId(action.channelId),
+        entry,
+      );
+    }
+    case "channel-closed": {
+      const channelId = publicChannelId(action.channelId);
+      if (!state.channels.some((channel) => channel.id === channelId)) {
+        return state;
+      }
+      return {
+        ...state,
+        activeChannelId:
+          state.activeChannelId === channelId
+            ? LOCAL_CHANNEL_ID
+            : state.activeChannelId,
+        channels: state.channels.filter((channel) => channel.id !== channelId),
+      };
+    }
     case "open-private": {
       const channelId = privateChannelId(action.counterpart);
       const withChannel = ensurePrivateChannel(
@@ -278,6 +327,26 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return chatReducer(withChannel, { type: "select", channelId });
     }
   }
+}
+
+export function publicChannelId(channelId: ChatChannelId): string {
+  return `channel:${channelId}`;
+}
+
+function ensurePublicChannel(
+  state: ChatState,
+  channelId: ChatChannelId,
+  label: string,
+): ChatState {
+  const id = publicChannelId(channelId);
+  if (state.channels.some((channel) => channel.id === id)) return state;
+  return {
+    ...state,
+    channels: [
+      ...state.channels,
+      { id, kind: "public", label, unreadCount: 0, entries: [] },
+    ],
+  };
 }
 
 function ensureGuildChannel(state: ChatState): ChatState {

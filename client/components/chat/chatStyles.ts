@@ -5,6 +5,7 @@ export const CHAT_CHANNEL_MARK: Record<ChatChannelKind, string> = {
   whisper: "@",
   guild: "⚔",
   party: "✦",
+  public: "#",
   system: "•",
 };
 
@@ -13,6 +14,7 @@ export const CHAT_CHANNEL_DOT_CLASS: Record<ChatChannelKind, string> = {
   whisper: "bg-violet-400 text-violet-400",
   guild: "bg-emerald-400 text-emerald-400",
   party: "bg-blue-400 text-blue-400",
+  public: "bg-teal-400 text-teal-400",
   system: "bg-ui-gold text-ui-gold",
 };
 
@@ -21,6 +23,7 @@ export const CHAT_CHANNEL_TEXT_CLASS: Record<ChatChannelKind, string> = {
   whisper: "text-violet-400",
   guild: "text-emerald-400",
   party: "text-blue-400",
+  public: "text-teal-400",
   system: "text-ui-gold",
 };
 
@@ -29,6 +32,7 @@ export const CHAT_ACTIVE_TAB_CLASS: Record<ChatChannelKind, string> = {
   whisper: "border-violet-400/70 bg-violet-950/35 text-violet-100",
   guild: "border-emerald-400/70 bg-emerald-950/35 text-emerald-100",
   party: "border-blue-400/70 bg-blue-950/35 text-blue-100",
+  public: "border-teal-400/70 bg-teal-950/35 text-teal-100",
   system: "border-ui-gold/70 bg-ui-gold/10 text-ui-text-bright",
 };
 

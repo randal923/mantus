@@ -58,6 +58,21 @@ limitations accepted during a session are recorded in the owning feature file
   `wheelRevelation` is now enforced in `SpellCaster.spellRejectionCode`.
   Owner: Todo 15 (deferred wheel combat perks).
 
+- **38 pinned monster loot entries can never drop** (2026-07-25, Feature 29).
+  Twelve items (darklight/inferniarch-era drops) exist in the pinned Canary
+  monster tables but not in the pinned Tibia 15.11 item catalog, so the roll
+  skips them. The budget is pinned by `monsterLootParity.test.ts`, which fails
+  if a thirteenth appears. Fix: a newer asset era, not a code change.
+- **Blessings are always zero** (2026-07-25, Feature 32). The full Canary death
+  loss formula reads a blessing count through `Player.blessings`, which is a
+  seam that returns 0 until Feature 72 ships blessing purchase, persistence,
+  and consumption. Until then the penalty is only reduced by promotion and the
+  unfair-fight reduction, and no items are dropped into a player corpse.
+- **Ignore lists are memory-only** (2026-07-25, Feature 35). They survive a
+  relogin (keyed by character id for the server's lifetime) but not a restart.
+  Fix: a table alongside the other social stores; the suppression path itself
+  needs no change.
+
 ## Repo-wide known breakage
 
 - `yarn parity:check` (and therefore `yarn test:tools`) fails at HEAD:

@@ -92,6 +92,7 @@ function worldView(
       groundItems.filter((item) => item.id === rootId),
     lootOrigin: (itemId) =>
       unpersistedIds.has(itemId) ? ORIGIN : undefined,
+    seedOrigin: () => undefined,
   };
 }
 

@@ -132,7 +132,12 @@ export class DeathHandler {
     this.pvpHooks?.handlePlayerDeath(target, sourceId, deathEventId, now);
     const session = this.registry.sessionFor(target.id);
     target.conditions.clear();
-    const penalty = target.applyDeathPenalty(deathEventId);
+    // Measured before death cleanup, from the damage this life actually took:
+    // a ganged victim loses proportionally less (Canary's unfair fight).
+    const penalty = target.applyDeathPenalty(deathEventId, {
+      unfairFightReduction:
+        this.pvpHooks?.unfairFightReduction(target, now) ?? 100,
+    });
     target.restoreAfterDeath();
     // Black-skulled players respawn crippled (40 hp / 0 mana).
     this.pvpHooks?.applyRespawnState(target);
@@ -172,6 +177,24 @@ export class DeathHandler {
         type: "combat-log",
         kind: "experience",
         text: `You lost ${penalty.lostExperience} experience.`,
+      });
+    }
+    for (const loss of penalty.lostSkillLevels) {
+      session?.send({
+        type: "combat-log",
+        kind: "experience",
+        text: `You lost ${loss.levels} ${loss.skill} level${
+          loss.levels === 1 ? "" : "s"
+        }.`,
+      });
+    }
+    if (penalty.lostMagicLevels > 0) {
+      session?.send({
+        type: "combat-log",
+        kind: "experience",
+        text: `You lost ${penalty.lostMagicLevels} magic level${
+          penalty.lostMagicLevels === 1 ? "" : "s"
+        }.`,
       });
     }
     if (session) this.feedback.sendFightState(session, now);

@@ -16,6 +16,9 @@ function resolveStateAction<T>(value: SetStateAction<T>, current: T): T {
     : value;
 }
 
+/** Keeps the system log bounded; the newest lines win. */
+const COMBAT_LOG_LIMIT = 200;
+
 export function createGameWindowStore({
   accessToken,
   initialLanguage,
@@ -72,6 +75,8 @@ export function createGameWindowStore({
     combatAnalyzer: null,
     spells: [],
     combatLog: [],
+    chatChannels: [],
+    ignoredNames: [],
     levelUpNotice: null,
     chatState: initialChatState,
     chatFocusRequestId: 0,
@@ -107,7 +112,7 @@ export function createGameWindowStore({
     storeOpen: false,
     storeSession: null,
     mailboxSession: null,
-    lootSession: null,
+    lootSessions: [],
     gameMenuOpen: false,
     languageSaving: false,
     languageError: false,
@@ -182,6 +187,12 @@ export function createGameWindowStore({
     setCombatLog: (value) =>
       set((state) => ({
         combatLog: resolveStateAction(value, state.combatLog),
+      })),
+    setChatChannels: (value) => set(() => ({ chatChannels: [...value] })),
+    setIgnoredNames: (value) => set(() => ({ ignoredNames: [...value] })),
+    appendCombatLog: (text) =>
+      set((state) => ({
+        combatLog: [...state.combatLog, text].slice(-COMBAT_LOG_LIMIT),
       })),
     setLevelUpNotice: (value) =>
       set((state) => ({
@@ -330,9 +341,9 @@ export function createGameWindowStore({
       set((state) => ({
         mailboxSession: resolveStateAction(value, state.mailboxSession),
       })),
-    setLootSession: (value) =>
+    setLootSessions: (value) =>
       set((state) => ({
-        lootSession: resolveStateAction(value, state.lootSession),
+        lootSessions: resolveStateAction(value, state.lootSessions),
       })),
     setGameMenuOpen: (value) =>
       set((state) => ({
@@ -450,6 +461,8 @@ export function createGameWindowStore({
         },
         actionBarEditorRequest: null,
         combatLog: [],
+        chatChannels: [],
+        ignoredNames: [],
         chatState: chatReducer(state.chatState, {
           type: "reset",
           ownPlayerId: null,

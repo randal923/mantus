@@ -9,7 +9,16 @@ import {
   bankTransferMessageSchema,
   bankWithdrawMessageSchema,
 } from "./bank";
-import { privateChatMessageSchema, speakMessageSchema } from "./chat";
+import {
+  channelCloseMessageSchema,
+  channelListGetMessageSchema,
+  channelOpenMessageSchema,
+  channelSpeakMessageSchema,
+  ignoreAddMessageSchema,
+  ignoreRemoveMessageSchema,
+  privateChatMessageSchema,
+  speakMessageSchema,
+} from "./chat";
 import { createCharacterInputSchema } from "./character";
 import {
   AIM_AT_TARGET_SPELL_LIMIT,
@@ -108,7 +117,7 @@ import {
   tradeCancelMessageSchema,
   tradeRequestMessageSchema,
 } from "./trade";
-import { equipmentSlotSchema } from "./item";
+import { equipmentSlotSchema, quickLootFilterSchema } from "./item";
 import { positionSchema } from "./position";
 import { viewRangeSchema } from "./viewRange";
 import {
@@ -437,6 +446,34 @@ export const lootItemMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
+/**
+ * Opens a container nested inside a world container the session already has
+ * open (a bag inside a corpse or chest). The id is a reference the server
+ * re-resolves: it must still be inside an open view, in reach, and
+ * loot-unprotected at execution time. Fixed size, shared rate caps.
+ */
+export const openWorldContainerMessageSchema = z
+  .object({
+    type: z.literal("open-world-container"),
+    containerId: z.string().uuid(),
+    revision: z.number().int().nonnegative().max(2_147_483_647),
+  })
+  .strict();
+
+/**
+ * Sweeps one open world container into the carried inventory. The optional
+ * category only narrows what the server takes; the server owns which bucket
+ * an item is in, how much fits, and every reach/ownership check. One sweep per
+ * intent, bounded by the container's capacity.
+ */
+export const quickLootMessageSchema = z
+  .object({
+    type: z.literal("quick-loot"),
+    containerId: z.string().uuid(),
+    category: quickLootFilterSchema.optional(),
+  })
+  .strict();
+
 /** Closes this session's open world container view (corpse). */
 export const closeWorldContainerMessageSchema = z
   .object({
@@ -538,6 +575,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   openContainerMessageSchema,
   closeContainerMessageSchema,
   lootItemMessageSchema,
+  openWorldContainerMessageSchema,
+  quickLootMessageSchema,
   closeWorldContainerMessageSchema,
   useItemMessageSchema,
   useItemWithMessageSchema,
@@ -545,6 +584,12 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   rotateItemMessageSchema,
   moveItemMessageSchema,
   writeItemMessageSchema,
+  channelListGetMessageSchema,
+  channelOpenMessageSchema,
+  channelCloseMessageSchema,
+  channelSpeakMessageSchema,
+  ignoreAddMessageSchema,
+  ignoreRemoveMessageSchema,
   setLanguageMessageSchema,
   updateUiSettingsMessageSchema,
   updateActionBarMessageSchema,
@@ -670,6 +715,10 @@ export type DropItemMessage = z.infer<typeof dropItemMessageSchema>;
 export type OpenContainerMessage = z.infer<typeof openContainerMessageSchema>;
 export type CloseContainerMessage = z.infer<typeof closeContainerMessageSchema>;
 export type LootItemMessage = z.infer<typeof lootItemMessageSchema>;
+export type OpenWorldContainerMessage = z.infer<
+  typeof openWorldContainerMessageSchema
+>;
+export type QuickLootMessage = z.infer<typeof quickLootMessageSchema>;
 export type CloseWorldContainerMessage = z.infer<
   typeof closeWorldContainerMessageSchema
 >;

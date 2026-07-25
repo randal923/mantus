@@ -289,14 +289,27 @@ export function handleCommerceMessage(
   }
 
   if (message.type === "world-container-state") {
-    state.setLootSession(message);
+    // One window per open container: the server may hold several views at
+    // once (a corpse and the bag inside it), and each reconciles on its own.
+    state.setLootSessions((current) => {
+      const index = current.findIndex(
+        (session) =>
+          session.state.container.id === message.state.container.id,
+      );
+      if (index < 0) return [...current, message];
+      const next = [...current];
+      next[index] = message;
+      return next;
+    });
     state.setInventoryOpen(true);
     return true;
   }
 
   if (message.type === "world-container-closed") {
-    state.setLootSession((current) =>
-      current?.state.container.id === message.containerId ? null : current,
+    state.setLootSessions((current) =>
+      current.filter(
+        (session) => session.state.container.id !== message.containerId,
+      ),
     );
     return true;
   }

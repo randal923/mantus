@@ -1,5 +1,6 @@
 import {
   parseServerMessages,
+  type ChatChannelId,
   type ChatSpeechMode,
   type CreateCharacterInput,
   type ClientMessage,
@@ -14,6 +15,7 @@ import {
   type CharacterVocation,
   type InventoryItem,
   type ItemContainerDestination,
+  type QuickLootFilter,
   type Language,
   type MarketSide,
   type Position,
@@ -189,6 +191,24 @@ export class GameClient {
     });
   }
 
+  /** Browses a container nested inside an already-open world container. */
+  openWorldContainer(item: InventoryItem): boolean {
+    return this.send({
+      type: "open-world-container",
+      containerId: item.id,
+      revision: item.revision,
+    });
+  }
+
+  /** Sweeps an open world container; the server owns what is eligible. */
+  quickLoot(containerId: string, category?: QuickLootFilter): boolean {
+    return this.send({
+      type: "quick-loot",
+      containerId,
+      ...(category ? { category } : {}),
+    });
+  }
+
   closeWorldContainer(containerId: string): boolean {
     return this.send({ type: "close-world-container", containerId });
   }
@@ -225,6 +245,31 @@ export class GameClient {
 
   sendPrivateChat(to: string, text: string): boolean {
     return this.send({ type: "private-chat", to, text });
+  }
+
+  /** Asks for the public channels this character may open. */
+  requestChannelList(): boolean {
+    return this.send({ type: "channel-list-get" });
+  }
+
+  openChannel(channelId: ChatChannelId): boolean {
+    return this.send({ type: "channel-open", channelId });
+  }
+
+  closeChannel(channelId: ChatChannelId): boolean {
+    return this.send({ type: "channel-close", channelId });
+  }
+
+  sendChannelChat(channelId: ChatChannelId, text: string): boolean {
+    return this.send({ type: "channel-speak", channelId, text });
+  }
+
+  ignoreName(name: string): boolean {
+    return this.send({ type: "ignore-add", name });
+  }
+
+  unignoreName(name: string): boolean {
+    return this.send({ type: "ignore-remove", name });
   }
 
   sendNpcDialogueChoice(

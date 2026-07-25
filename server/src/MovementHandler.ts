@@ -165,7 +165,7 @@ export class MovementHandler {
   /** Movement leg of exani tera; the spell pipeline owns failure feedback. */
   handleMagicRopeSpell(session: Session, now: number): boolean {
     return this.applySpellFloorMove(session, now, (player) =>
-      this.world.tryUseRopeSpot(player, player.position, now),
+      this.world.trySpellRopeSpot(player, player.position, now),
     );
   }
 

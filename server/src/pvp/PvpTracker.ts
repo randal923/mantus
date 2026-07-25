@@ -8,6 +8,7 @@ import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import { monotonicNow } from "../monotonicNow";
+import { MIN_UNFAIR_FIGHT_REDUCTION } from "../progression/getDeathLossPercent";
 import { applyFragAndSkull } from "./applyFragAndSkull";
 import type { PvpHooks } from "./PvpHooks";
 import type { PvpPolicy } from "./PvpPolicy";
@@ -190,6 +191,29 @@ export class PvpTracker implements PvpHooks {
       amount: (entry?.amount ?? 0) + amount,
       lastAt: now,
     });
+  }
+
+  /**
+   * Canary's unfair-fight reduction: the victim's level over the summed levels
+   * of every *other player* still in the in-fight window with them, floored at
+   * 20%. Monster deaths and fair duels return 100 (no reduction).
+   */
+  unfairFightReduction(victim: Player, now: number): number {
+    const state = this.states.get(victim.id);
+    if (!state) return 100;
+    let summedLevels = 0;
+    for (const [attackerId, entry] of state.damageTaken) {
+      if (attackerId === victim.id) continue;
+      if (entry.lastAt + this.policy.combatLockMs < now) continue;
+      const attacker = this.world.getPlayer(attackerId);
+      if (!attacker) continue;
+      summedLevels += attacker.level;
+    }
+    if (summedLevels <= victim.level) return 100;
+    return Math.max(
+      MIN_UNFAIR_FIGHT_REDUCTION,
+      Math.round((victim.level / summedLevels) * 100),
+    );
   }
 
   handlePlayerDeath(

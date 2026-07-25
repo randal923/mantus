@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { clientMessageSchema } from "@tibia/protocol";
+import {
+  clientMessageSchema,
+  DEFAULT_ACTION_BOT_SETTINGS,
+} from "@tibia/protocol";
 
 describe("combat intent schemas", () => {
   it("accepts bounded target and cancel intents", () => {
@@ -104,6 +107,67 @@ describe("combat intent schemas", () => {
       clientMessageSchema.safeParse({
         type: "activate-action-bar",
         slotIndex: 18,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("bounds the spoken/bound spell parameter", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "cast-spell",
+        spellId: "exura-sio",
+        target: { kind: "attack-target" },
+        parameter: "Friend",
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "cast-spell",
+        spellId: "exura-sio",
+        target: { kind: "attack-target" },
+        parameter: "F".repeat(65),
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "cast-spell",
+        spellId: "exura-sio",
+        target: { kind: "attack-target" },
+        parameter: "",
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "update-action-bar",
+        actionBar: [
+          {
+            action: {
+              kind: "spell",
+              spellId: "exani-hur",
+              targetMode: "self",
+              parameter: "up",
+            },
+            hotkey: "Digit1",
+          },
+        ],
+        settings: DEFAULT_ACTION_BOT_SETTINGS,
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "update-action-bar",
+        actionBar: [
+          {
+            action: {
+              kind: "spell",
+              spellId: "exani-hur",
+              targetMode: "self",
+              parameter: "u".repeat(65),
+            },
+            hotkey: "Digit1",
+          },
+        ],
+        settings: DEFAULT_ACTION_BOT_SETTINGS,
       }).success,
     ).toBe(false);
   });

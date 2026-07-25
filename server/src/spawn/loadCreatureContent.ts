@@ -943,6 +943,12 @@ function parseLoot(value: unknown): MonsterLoot[] {
     const itemName =
       loot.name === undefined ? undefined : text(loot.name, "monster loot name");
     if (!itemTypeId && !itemName) throw new Error("monster loot has no item");
+    const maxCount = boundedInteger(
+      loot.maxCount ?? 1,
+      "monster loot max count",
+      1,
+      1_000,
+    );
     return {
       ...(itemTypeId ? { itemTypeId } : {}),
       ...(itemName ? { itemName } : {}),
@@ -955,12 +961,16 @@ function parseLoot(value: unknown): MonsterLoot[] {
           1_000_000,
         ),
       ),
-      maxCount: boundedInteger(
-        loot.maxCount ?? 1,
-        "monster loot max count",
+      // A table that asks for more than it allows is content drift, not a
+      // roll the server should silently reinterpret.
+      minCount: boundedInteger(
+        loot.minCount ?? 1,
+        "monster loot min count",
         1,
-        1_000,
+        maxCount,
       ),
+      maxCount,
+      unique: loot.unique === true,
     };
   });
 }

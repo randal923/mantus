@@ -15,6 +15,12 @@ import type { WorldItemSource } from "./WorldItemSource";
 
 export interface ItemStore {
   loadForCharacter(characterId: string): Promise<ReadonlyArray<Item>>;
+  /**
+   * How long each of the character's item rows has been unchanged, on the
+   * database clock. Optional: an in-memory store has no durable clock, and a
+   * missing age simply arms a full decay duration.
+   */
+  carriedAgesMs?(characterId: string): Promise<ReadonlyMap<string, number>>;
   equip(
     characterId: string,
     itemId: string,

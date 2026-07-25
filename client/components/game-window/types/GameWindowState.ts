@@ -1,6 +1,7 @@
 import type {
   AccountTier,
   ActionBar,
+  ChatChannelId,
   ActionBotSettings,
   CharacterCreationOptions,
   CharacterSummary,
@@ -55,6 +56,14 @@ export interface GameWindowState {
   combatAnalyzer: CombatAnalyzerState | null;
   spells: ReadonlyArray<SpellCatalogEntry>;
   combatLog: ReadonlyArray<string>;
+  /** Public chat channels this character may open, as the server listed them. */
+  chatChannels: ReadonlyArray<{
+    id: ChatChannelId;
+    label: string;
+    open: boolean;
+  }>;
+  /** Names this character has ignored, echoed by the server. */
+  ignoredNames: ReadonlyArray<string>;
   levelUpNotice: LevelUpNotice | null;
   chatState: ChatState;
   chatFocusRequestId: number;
@@ -90,7 +99,7 @@ export interface GameWindowState {
   storeOpen: boolean;
   storeSession: StoreSessionState | null;
   mailboxSession: MailboxSessionState | null;
-  lootSession: LootSessionState | null;
+  lootSessions: ReadonlyArray<LootSessionState>;
   gameMenuOpen: boolean;
   languageSaving: boolean;
   languageError: boolean;

@@ -21,6 +21,7 @@ const RUNE = {
   cooldownMs: 2_000,
   cooldownGroups: ["spell:avalanche-rune", "group:attack"],
   targetKind: "position",
+  parameterKind: "none",
 } as const satisfies SpellCatalogEntry;
 
 describe("getRuneCombatTarget", () => {

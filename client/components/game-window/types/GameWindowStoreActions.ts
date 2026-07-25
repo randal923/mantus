@@ -2,6 +2,7 @@ import type { SetStateAction } from "react";
 import type {
   AccountTier,
   ActionBar,
+  ChatChannelId,
   ActionBotSettings,
   CharacterCreationOptions,
   CreatureState,
@@ -62,6 +63,12 @@ export interface GameWindowStoreActions {
   ) => void;
   setSpells: (value: SetStateAction<ReadonlyArray<SpellCatalogEntry>>) => void;
   setCombatLog: (value: SetStateAction<ReadonlyArray<string>>) => void;
+  setChatChannels: (
+    value: ReadonlyArray<{ id: ChatChannelId; label: string; open: boolean }>,
+  ) => void;
+  setIgnoredNames: (value: ReadonlyArray<string>) => void;
+  /** Appends one server-authored line to the system log. */
+  appendCombatLog: (text: string) => void;
   setLevelUpNotice: (value: SetStateAction<LevelUpNotice | null>) => void;
   dispatchChat: (action: ChatAction) => void;
   requestChatFocus: () => void;
@@ -101,7 +108,9 @@ export interface GameWindowStoreActions {
   setStoreOpen: (value: SetStateAction<boolean>) => void;
   setStoreSession: (value: SetStateAction<StoreSessionState | null>) => void;
   setMailboxSession: (value: SetStateAction<MailboxSessionState | null>) => void;
-  setLootSession: (value: SetStateAction<LootSessionState | null>) => void;
+  setLootSessions: (
+    value: SetStateAction<ReadonlyArray<LootSessionState>>,
+  ) => void;
   setGameMenuOpen: (value: SetStateAction<boolean>) => void;
   setLanguageSaving: (value: SetStateAction<boolean>) => void;
   setLanguageError: (value: SetStateAction<boolean>) => void;

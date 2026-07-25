@@ -121,8 +121,16 @@ export interface MonsterSummon {
 export interface MonsterLoot {
   readonly itemTypeId?: number;
   readonly itemName?: string;
+  /** Out of 100 000, as Canary's `MAX_LOOTCHANCE` scales it. */
   readonly chance: number;
+  readonly minCount: number;
   readonly maxCount: number;
+  /**
+   * Canary's `unique` loot flag (three pinned boss entries). Carried so the
+   * import stays lossless; the roll does not model it yet — see the loot
+   * parity report.
+   */
+  readonly unique: boolean;
 }
 
 export interface MonsterType {

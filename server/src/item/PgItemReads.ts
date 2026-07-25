@@ -4,6 +4,7 @@ import type { ItemRow } from "./ItemRow";
 import { itemFromRow } from "./itemFromRow";
 import { changedSeededItemsQuery } from "./sql/changedSeededItemsQuery";
 import { incompatibleSeedsQuery } from "./sql/incompatibleSeedsQuery";
+import { ownedItemAgesQuery } from "./sql/ownedItemAgesQuery";
 import { ownedItemsQuery } from "./sql/ownedItemsQuery";
 import { worldTreeItemsQuery } from "./sql/worldTreeItemsQuery";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
@@ -19,6 +20,16 @@ export class PgItemReads {
       throw new Error(`character ${characterId} has excessive nested items`);
     }
     return result.rows.map(itemFromRow);
+  }
+
+  async carriedAgesMs(
+    characterId: string,
+  ): Promise<ReadonlyMap<string, number>> {
+    const result = await this.pool.query<{ id: string; age_ms: string }>(
+      ownedItemAgesQuery,
+      [characterId],
+    );
+    return new Map(result.rows.map((row) => [row.id, Number(row.age_ms)]));
   }
 
   async loadWorldDeltas(

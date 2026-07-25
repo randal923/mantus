@@ -2,6 +2,7 @@ import type { SpellCatalogEntry } from "@tibia/protocol";
 import type { Player } from "../Player";
 import { loadCanarySpellCatalog } from "./loadCanarySpellCatalog";
 import type { SpellDefinition } from "./Spell";
+import { spellParameterKind } from "./spellParameterKind";
 
 const normalizeSpellWords = (text: string): string =>
   text.trim().toLowerCase().replace(/\s+/g, " ");
@@ -83,6 +84,7 @@ export class SpellRegistry {
           ...spell.groups.map((group) => `group:${group}`),
         ],
         targetKind: spell.targetKind,
+        parameterKind: spellParameterKind(spell),
       }))
       .sort(
         (left, right) =>

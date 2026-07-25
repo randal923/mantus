@@ -12,8 +12,8 @@ export function GameInventoryOverlays() {
   const setMailboxSession = useGameWindowStore(
     (state) => state.setMailboxSession,
   );
-  const lootSession = useGameWindowStore((state) => state.lootSession);
-  const setLootSession = useGameWindowStore((state) => state.setLootSession);
+  const lootSessions = useGameWindowStore((state) => state.lootSessions);
+  const setLootSessions = useGameWindowStore((state) => state.setLootSessions);
   const inventory = useGameWindowStore(
     (state) => state.sessions?.inventory ?? null,
   );
@@ -77,33 +77,44 @@ export function GameInventoryOverlays() {
           }}
         />
       )}
-      {lootSession && (
+      {lootSessions.length > 0 && (
         <div
-          className={`absolute top-24 z-30 ${
+          className={`absolute top-24 z-30 flex flex-col gap-2 ${
             inventoryOpen ? "right-[26rem]" : "right-4"
           }`}
         >
-          <LootPanel
-            state={lootSession.state}
-            onLootItem={(item) =>
-              runtime.clientRef.current?.lootItem(
-                item,
-                lootSession.state.container.id,
-              )
-            }
-            onDragStart={(source) => {
-              runtime.itemDragRef.current = source;
-            }}
-            onDragEnd={() => {
-              runtime.itemDragRef.current = null;
-            }}
-            onClose={(containerId) => {
-              runtime.clientRef.current?.closeWorldContainer(containerId);
-              setLootSession((current) =>
-                current?.state.container.id === containerId ? null : current,
-              );
-            }}
-          />
+          {lootSessions.map((lootSession) => (
+            <LootPanel
+              key={lootSession.state.container.id}
+              state={lootSession.state}
+              onLootItem={(item) =>
+                runtime.clientRef.current?.lootItem(
+                  item,
+                  lootSession.state.container.id,
+                )
+              }
+              onOpenContainer={(item) =>
+                runtime.clientRef.current?.openWorldContainer(item)
+              }
+              onQuickLoot={(containerId) =>
+                runtime.clientRef.current?.quickLoot(containerId)
+              }
+              onDragStart={(source) => {
+                runtime.itemDragRef.current = source;
+              }}
+              onDragEnd={() => {
+                runtime.itemDragRef.current = null;
+              }}
+              onClose={(containerId) => {
+                runtime.clientRef.current?.closeWorldContainer(containerId);
+                setLootSessions((current) =>
+                  current.filter(
+                    (session) => session.state.container.id !== containerId,
+                  ),
+                );
+              }}
+            />
+          ))}
         </div>
       )}
       {inventoryOpen && inventory && (

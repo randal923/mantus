@@ -24,9 +24,12 @@ import type { LootItemCreation } from "./LootItemCreation";
 import type { PotionUseResult } from "./PotionUseResult";
 import type { CarriedPlan } from "./plan/CarriedPlan";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
+import { planCarriedDecay } from "./plan/planCarriedDecay";
 import { planConsume } from "./plan/planConsume";
 import { firstFreeWorldStackIndex } from "./plan/firstFreeWorldStackIndex";
+import { planLoot } from "./plan/planLoot";
 import { planPotionUse } from "./plan/planPotionUse";
+import { quickLootCategory } from "./quickLootCategory";
 import { validateItemIntentTarget } from "./validateItemIntentTarget";
 import { WorldContainerViews } from "./WorldContainerViews";
 import { WorldItemDecayRunner } from "./WorldItemDecayRunner";
@@ -79,6 +82,8 @@ export class ItemIntentHandler {
     private readonly world: World,
     private readonly visibility: Visibility,
     private readonly decay?: DecayManager,
+    /** Resolves the owner's live session for tick-owned work (carried decay). */
+    private readonly sessionFor?: (characterId: string) => Session | undefined,
   ) {
     this.inventories = new InventoryCacheManager(catalog);
     this.operations = new ItemOperationRunner(
@@ -103,19 +108,32 @@ export class ItemIntentHandler {
 
   async load(characterId: string, capacityMax: number): Promise<LoadedInventory> {
     await this.operations.pending.get(characterId);
+    const items = await this.store.loadForCharacter(characterId);
+    // Row ages come from the database clock, so a burning ring resumes where
+    // it left off instead of restarting its duration on every login.
+    const agesMs = await this.store.carriedAgesMs?.(characterId);
     return {
       characterId,
       capacityMax,
-      items: await this.store.loadForCharacter(characterId),
+      items,
+      ...(agesMs ? { agesMs } : {}),
     };
   }
 
-  attach(loaded: LoadedInventory): InventoryState {
-    return this.inventories.attach(loaded);
+  attach(loaded: LoadedInventory, now = monotonicNow()): InventoryState {
+    const state = this.inventories.attach(loaded);
+    this.decay?.observeCarriedLoaded(
+      loaded.characterId,
+      loaded.items,
+      loaded.agesMs,
+      now,
+    );
+    return state;
   }
 
   detach(characterId: string): void {
     this.inventories.detach(characterId);
+    this.decay?.forgetCarried(characterId);
   }
 
   inventorySnapshot(
@@ -664,6 +682,73 @@ export class ItemIntentHandler {
     this.enqueuePersist(session, characterId, () => this.store.persist(persist));
   }
 
+  /**
+   * Sweeps one open world container into the backpack. Each item is planned
+   * and applied on its own — a quick loot is a run of ordinary loot moves, so
+   * every one keeps its expected-version guard and its own transaction, and a
+   * sweep that runs out of room or hits a stale item simply stops there.
+   * Nothing is re-read from the client: the eligible set is derived from the
+   * live view inside this tick.
+   */
+  private quickLoot(
+    session: Session,
+    playerId: string,
+    intent: Extract<ItemIntent, { type: "quick-loot" }>,
+    now: number,
+  ): void {
+    const openRootId = this.worldContainers.rootFor(
+      session,
+      intent.containerId,
+    );
+    const rootId = openRootId ?? intent.containerId;
+    const root = this.world.getWorldItem(rootId);
+    const owner = root?.attributes.ownerCharacterId;
+    if (typeof owner === "string" && owner !== playerId) {
+      session.sendError("loot-protected");
+      return;
+    }
+    if (!openRootId || !root) {
+      session.sendError("item-action-failed");
+      return;
+    }
+    const eligible = this.worldContainers
+      .contents(session, intent.containerId)
+      .filter((item) => {
+        const category = quickLootCategory(this.catalog.require(item.typeId));
+        return (
+          category !== "none" &&
+          (intent.category === undefined || category === intent.category)
+        );
+      });
+    let taken = 0;
+    for (const item of eligible) {
+      const cache = this.inventories.get(playerId);
+      if (!cache) break;
+      const plan = planLoot({
+        characterId: playerId,
+        catalog: this.catalog,
+        carried: { items: cache.items, capacityMax: cache.capacityMax },
+        world: this.world,
+        containerId: rootId,
+        itemId: item.id,
+        expectedVersion: item.version,
+      });
+      if (!plan) continue;
+      const inventory = this.operations.applyMutation(
+        playerId,
+        plan.mutation,
+        now,
+      );
+      if (inventory && session.playerId === playerId) {
+        session.send({ type: "inventory-updated", inventory });
+      }
+      const persist = plan.persist;
+      this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+      taken += 1;
+    }
+    if (taken === 0) session.sendError("item-action-failed");
+  }
+
   /** Creates the corpse in memory synchronously; rows appear on first touch. */
   createCorpse(
     characterId: string | null,
@@ -825,6 +910,49 @@ export class ItemIntentHandler {
 
   tickDecay(now: number): void {
     this.decayRunner.tick(now);
+    this.tickCarriedDecay(now);
+  }
+
+  /**
+   * Applies every due carried/equipped decay inside the tick: the memory
+   * mutation is synchronous and the row write trails on the persist lane, like
+   * any other carried operation (charter rules 3 and 5). Each item is
+   * re-checked against live inventory state before it is touched, so a record
+   * for an item that was moved, transformed, or already destroyed does
+   * nothing.
+   */
+  private tickCarriedDecay(now: number): void {
+    if (!this.decay) return;
+    for (const record of this.decay.collectDueCarried(now)) {
+      const cache = this.inventories.get(record.characterId);
+      const session = this.sessionFor?.(record.characterId);
+      if (!cache || !session) {
+        // The owner left mid-flight: nothing to mutate, and the deadline is
+        // re-armed from the row age at their next login.
+        continue;
+      }
+      const plan = planCarriedDecay({
+        characterId: record.characterId,
+        catalog: this.catalog,
+        items: cache.items,
+        itemId: record.itemId,
+        expectedVersion: record.version,
+        expectedTypeId: record.typeId,
+      });
+      if (!plan) continue;
+      const inventory = this.operations.applyMutation(
+        record.characterId,
+        plan.mutation,
+        now,
+      );
+      if (inventory && session.playerId === record.characterId) {
+        session.send({ type: "inventory-updated", inventory });
+      }
+      const persist = plan.persist;
+      this.enqueuePersist(session, record.characterId, () =>
+        this.store.persist(persist),
+      );
+    }
   }
 
   /**
@@ -879,8 +1007,22 @@ export class ItemIntentHandler {
       session.sendError("item-action-failed");
       return;
     }
+    if (intent.type === "open-world-container") {
+      this.worldContainers.openChild(session, intent.containerId, intent.revision);
+      return;
+    }
+    if (intent.type === "quick-loot") {
+      this.quickLoot(session, playerId, intent, now);
+      return;
+    }
+    // A view may be nested (a bag inside a corpse); the plans work from the
+    // world root, which is also where loot protection lives.
+    let lootIntent = intent;
     if (intent.type === "loot-item") {
-      const owner = this.world.getWorldItem(intent.containerId)?.attributes
+      const rootId =
+        this.worldContainers.rootFor(session, intent.containerId) ??
+        intent.containerId;
+      const owner = this.world.getWorldItem(rootId)?.attributes
         .ownerCharacterId;
       if (typeof owner === "string" && owner !== playerId) {
         session.sendError("loot-protected");
@@ -890,6 +1032,7 @@ export class ItemIntentHandler {
         session.sendError("item-action-failed");
         return;
       }
+      lootIntent = { ...intent, containerId: rootId };
     }
     if (intent.type === "close-container") {
       const inventory = this.inventories.closeContainer(
@@ -970,7 +1113,7 @@ export class ItemIntentHandler {
     }
     if (
       !validateItemIntentTarget(
-        intent,
+        lootIntent,
         item,
         player.position,
         session.viewRange,
@@ -984,7 +1127,7 @@ export class ItemIntentHandler {
       return;
     }
     const planned = planCarriedIntent({
-      intent,
+      intent: lootIntent,
       item,
       items: cache.items,
       capacityMax: cache.capacityMax,

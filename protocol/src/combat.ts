@@ -107,6 +107,18 @@ export const spellTargetKindSchema = z.enum([
   "position",
 ]);
 
+/**
+ * What a spell's word parameter names, for the spells Canary declares with
+ * `hasParams`. The server owns the meaning and re-resolves the value at cast
+ * time; the client only uses this to offer the right control.
+ */
+export const spellParameterKindSchema = z.enum([
+  "none",
+  "direction",
+  "player-name",
+  "monster-name",
+]);
+
 export const spellCatalogEntrySchema = z
   .object({
     id: z.string().min(1).max(96),
@@ -124,6 +136,7 @@ export const spellCatalogEntrySchema = z
     cooldownMs: z.number().int().min(0).max(60 * 60 * 1000),
     cooldownGroups: z.array(z.string().min(1).max(128)).min(1).max(8),
     targetKind: spellTargetKindSchema,
+    parameterKind: spellParameterKindSchema,
   })
   .strict();
 
@@ -225,6 +238,7 @@ export type AreaShape = z.infer<typeof areaShapeSchema>;
 export type HitBlock = z.infer<typeof hitBlockSchema>;
 export type ConditionType = z.infer<typeof conditionTypeSchema>;
 export type CombatTarget = z.infer<typeof combatTargetSchema>;
+export type SpellParameterKind = z.infer<typeof spellParameterKindSchema>;
 export type SpellCatalogEntry = z.infer<typeof spellCatalogEntrySchema>;
 export type FightMode = z.infer<typeof fightModeSchema>;
 export type CombatConditionState = z.infer<

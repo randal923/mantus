@@ -36,7 +36,7 @@ export class ItemOperationRunner {
   ): InventoryState | null {
     const changedWorldTiles = this.world.applyItemMutation(mutation);
     this.visibility.onMapItemsChanged(changedWorldTiles);
-    this.decay?.observeMutation(mutation, now);
+    this.decay?.observeMutation(mutation, now, characterId);
     return this.inventories.applyMutation(characterId, mutation);
   }
 

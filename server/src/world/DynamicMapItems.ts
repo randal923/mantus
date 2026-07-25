@@ -6,6 +6,7 @@ import {
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
 import { visibleFloorRange } from "../visibleFloorRange";
 import { canSee } from "../canSee";
+import type { PersistSeedData } from "../item/CarriedPersistPlan";
 import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
 import type { LootOrigin } from "../item/LootOrigin";
@@ -34,6 +35,13 @@ export class DynamicMapItems {
    * unpersisted item a plan mutates MUST be materialized by that plan.
    */
   private readonly unpersistedLootOrigins = new Map<string, LootOrigin>();
+  /**
+   * The same memory-first contract for a pristine map seed materialized on
+   * open (a chest a player looked into but has not taken from). Their rows
+   * carry the seed identity, so the `items.seed_key` unique index — not this
+   * map — is what makes a first touch impossible to duplicate.
+   */
+  private readonly unpersistedSeeds = new Map<string, PersistSeedData>();
   /**
    * Tiles whose passability is owned by a stateful item (a door): the static
    * navigation bitset baked the map's placed state, so open/closed changes
@@ -136,9 +144,32 @@ export class DynamicMapItems {
     for (const item of items) this.unpersistedLootOrigins.set(item.id, origin);
   }
 
+  /** Marks a materialized map seed awaiting its first-touch row insert. */
+  registerUnpersistedSeedItems(
+    items: ReadonlyArray<Item>,
+    seed: PersistSeedData,
+  ): void {
+    for (const item of items) this.unpersistedSeeds.set(item.id, seed);
+  }
+
   /** The kill event behind an item that has no DB row yet, if any. */
   lootOrigin(itemId: string): LootOrigin | undefined {
     return this.unpersistedLootOrigins.get(itemId);
+  }
+
+  /** The map seed behind an item that has no DB row yet, if any. */
+  seedOrigin(itemId: string): PersistSeedData | undefined {
+    return this.unpersistedSeeds.get(itemId);
+  }
+
+  /**
+   * Whether a seed key was already taken out of the map (its row exists with
+   * version > 1, or its tile item was consumed this session). Materializing a
+   * pristine container must skip these, or a restart would hand the contents
+   * out a second time.
+   */
+  isSeedHidden(seedKey: string): boolean {
+    return this.hiddenMapItemIds.has(seedKey);
   }
 
   /** The materialized item behind a tile instance id (id or seed key). */
@@ -323,13 +354,19 @@ export class DynamicMapItems {
   }
 
   applyItemMutation(mutation: ItemMutation): Position[] {
-    // Any mutation of an unpersisted loot item carries its row insert in the
-    // same persist plan, so the item stops being memory-only right here.
+    // Any mutation of an unpersisted loot or seed item carries its row insert
+    // in the same persist plan, so it stops being memory-only right here. A
+    // materialized seed also becomes hidden: whatever the row says now is the
+    // truth, and re-materializing it must never hand it out twice.
     for (const item of mutation.after) {
       this.unpersistedLootOrigins.delete(item.id);
+      if (this.unpersistedSeeds.delete(item.id) && item.seedKey) {
+        this.hiddenMapItemIds.add(item.seedKey);
+      }
     }
     for (const removedId of mutation.removedItemIds ?? []) {
       this.unpersistedLootOrigins.delete(removedId);
+      this.unpersistedSeeds.delete(removedId);
     }
     const changed = new Map<string, Position>();
     if (mutation.before?.location.kind === "world") {

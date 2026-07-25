@@ -15,6 +15,30 @@ export const EQUIPMENT_SLOTS = [
 
 export const equipmentSlotSchema = z.enum(EQUIPMENT_SLOTS);
 
+/**
+ * Quick-loot buckets, Canary's `ObjectCategory` reduced to what this server
+ * distinguishes. The server derives an item's bucket from its own catalog;
+ * a client may name one to filter a sweep, never to change what an item is.
+ * `none` is server-only — it marks loot quick loot never takes.
+ */
+export const QUICK_LOOT_CATEGORIES = [
+  "none",
+  "gold",
+  "valuable",
+  "weapon",
+  "equipment",
+  "ammunition",
+  "container",
+  "rune",
+  "food",
+  "other",
+] as const;
+
+export const quickLootCategorySchema = z.enum(QUICK_LOOT_CATEGORIES);
+
+/** The buckets a client may ask a quick-loot sweep to restrict itself to. */
+export const quickLootFilterSchema = quickLootCategorySchema.exclude(["none"]);
+
 export const itemAffixSchema = z
   .object({
     text: z.string().min(1).max(200),
@@ -121,6 +145,8 @@ export const inventoryStateSchema = z
   .strict();
 
 export type EquipmentSlot = z.infer<typeof equipmentSlotSchema>;
+export type QuickLootCategory = z.infer<typeof quickLootCategorySchema>;
+export type QuickLootFilter = z.infer<typeof quickLootFilterSchema>;
 export type ItemAffix = z.infer<typeof itemAffixSchema>;
 export type ItemTooltipData = z.infer<typeof itemTooltipSchema>;
 export type InventoryItemPresentation = z.infer<

@@ -31,6 +31,7 @@ const meta = {
           "group:healing",
         ],
         targetKind: "self",
+        parameterKind: "none",
       },
       {
         id: "exori-infir-min",
@@ -51,6 +52,7 @@ const meta = {
           "group:attack",
         ],
         targetKind: "direction",
+        parameterKind: "none",
       },
     ],
     onClose: fn(),

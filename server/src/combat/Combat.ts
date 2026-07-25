@@ -45,6 +45,7 @@ import type { DamageRequest } from "./Damage";
 import { DamageResolver } from "./DamageResolver";
 import { DeathHandler } from "./DeathHandler";
 import { EventSequence } from "./EventSequence";
+import { findVisiblePlayerByName } from "./findVisiblePlayerByName";
 import { getMagicEffectId } from "./getMagicEffectId";
 import { getMissileId } from "./getMissileId";
 import { isInRange } from "./isInRange";
@@ -56,12 +57,19 @@ import { projectCombatAnalyzer } from "./projectCombatAnalyzer";
 import type { SpellDefinition } from "./Spell";
 import { SpellCaster } from "./SpellCaster";
 import { SpellRegistry } from "./SpellRegistry";
+import type { SpokenSpellOutcome } from "./SpokenSpellOutcome";
 import type { TargetingHooks } from "./TargetingHooks";
 import type { WorldSpellHooks } from "./WorldSpellHooks";
 import { ActionBot } from "./ActionBot";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
 import { drainDue } from "../drainDue";
+
+/** Spell target kinds whose spoken parameter names a creature to cast at. */
+const TARGETED_SPELL_KINDS = new Set<SpellDefinition["targetKind"]>([
+  "target",
+  "target-or-direction",
+]);
 
 const FEAR_DIRECTIONS: ReadonlyArray<readonly [Direction, number, number]> = [
   ["north", 0, -1],
@@ -371,33 +379,32 @@ export class Combat {
     return true;
   }
 
+  /** Reports whether the spell was cast; a false result was rejected. */
   castSpell(
     session: Session,
     intent: CastSpellMessage,
     now: number,
-  ): void {
+  ): boolean {
     const spell = this.spells.get(intent.spellId);
     if (!spell || spell.origin !== "spell") {
       this.feedback.reject(session, now, "spell-unavailable");
-      return;
+      return false;
     }
     const parameter = intent.parameter ?? null;
     if (spell.worldAction) {
-      this.castWorldActionSpell(session, spell, parameter, now);
-      return;
+      return this.castWorldActionSpell(session, spell, parameter, now);
     }
     if (spell.playerAction === "conjure-random-food") {
-      this.spellCaster.executeConjure(
+      return this.spellCaster.executeConjure(
         session,
         spell,
         intent.target,
         now,
         this.rollConjuredFood(),
       );
-      return;
     }
     if (spell.playerAction) {
-      this.spellCaster.executeWorldSpell(
+      return this.spellCaster.executeWorldSpell(
         session,
         spell,
         now,
@@ -405,13 +412,22 @@ export class Combat {
           this.playerActions.execute(session, player, spell, parameter, now),
         intent.target,
       );
-      return;
     }
     if (spell.conjure) {
-      this.spellCaster.executeConjure(session, spell, intent.target, now);
-      return;
+      return this.spellCaster.executeConjure(
+        session,
+        spell,
+        intent.target,
+        now,
+      );
     }
-    this.spellCaster.executeSpell(session, spell, intent.target, now, true);
+    return this.spellCaster.executeSpell(
+      session,
+      spell,
+      intent.target,
+      now,
+      true,
+    );
   }
 
   /**
@@ -435,27 +451,75 @@ export class Combat {
    * the spell — vocation, level, mana, and cooldowns are all re-checked by
    * the regular cast pipeline at execution time.
    */
-  castSpellByWords(session: Session, text: string, now: number): boolean {
+  castSpellByWords(
+    session: Session,
+    text: string,
+    now: number,
+  ): SpokenSpellOutcome {
     const match = this.spells.matchWords(text);
-    if (!match) return false;
+    if (!match) return "no-match";
     const { spell, parameter } = match;
     session.actionBotSuppressedAt = now;
     if (spell.worldAction) {
-      this.castWorldActionSpell(session, spell, parameter, now);
-      return true;
+      return this.castWorldActionSpell(session, spell, parameter, now)
+        ? "cast"
+        : "rejected";
     }
-    if (parameter !== null && !spell.playerAction) return false;
-    this.castSpell(
+    let target: CombatTarget;
+    if (parameter !== null && !spell.playerAction) {
+      // Canary only reads a spoken parameter as a name for its needTarget
+      // spells; on any other spell the leftover words never match a spell at
+      // all, so the line stays ordinary speech.
+      if (!TARGETED_SPELL_KINDS.has(spell.targetKind)) return "no-match";
+      const named = this.spokenNameTarget(session, spell, parameter, now);
+      if (!named) return "rejected";
+      target = named;
+    } else {
+      target = this.spokenSpellTarget(session, spell);
+    }
+    return this.castSpell(
       session,
       {
         type: "cast-spell",
         spellId: spell.id,
-        target: this.spokenSpellTarget(session, spell),
-        ...(parameter !== null ? { parameter } : {}),
+        target,
+        ...(parameter !== null && spell.playerAction ? { parameter } : {}),
       },
       now,
-    );
-    return true;
+    )
+      ? "cast"
+      : "rejected";
+  }
+
+  /**
+   * Resolves a spoken name parameter ('exura sio "Friend"') to a creature
+   * target. The lookup runs here inside the tick against players this session
+   * can already see, and the cast pipeline re-checks visibility again when it
+   * resolves the target, so an off-screen name can never be confirmed by a
+   * successful cast (charter rules 4 and 6).
+   */
+  private spokenNameTarget(
+    session: Session,
+    spell: SpellDefinition,
+    parameter: string,
+    now: number,
+  ): CombatTarget | null {
+    const player = playerForSession(this.world, session);
+    const named = player
+      ? findVisiblePlayerByName(
+          this.world,
+          this.registry,
+          session,
+          player,
+          parameter,
+          spell.range,
+        )
+      : null;
+    if (!named) {
+      this.feedback.reject(session, now, "spell-parameter-invalid");
+      return null;
+    }
+    return { kind: "creature", creatureId: named.id };
   }
 
   private castWorldActionSpell(
@@ -463,8 +527,8 @@ export class Combat {
     spell: SpellDefinition,
     parameter: string | null,
     now: number,
-  ): void {
-    this.spellCaster.executeWorldSpell(session, spell, now, () => {
+  ): boolean {
+    return this.spellCaster.executeWorldSpell(session, spell, now, () => {
       if (spell.worldAction === "magic-rope") {
         return this.worldSpells?.magicRope(session, now) ?? false;
       }
@@ -820,7 +884,16 @@ export class Combat {
       }
       this.castSpell(
         session,
-        { type: "cast-spell", spellId: spell.id, target },
+        {
+          type: "cast-spell",
+          spellId: spell.id,
+          target,
+          // Bound word parameter (exani hur up/down, summon creature): the
+          // slot only names it, the cast pipeline resolves and validates it.
+          ...(action.parameter !== undefined
+            ? { parameter: action.parameter }
+            : {}),
+        },
         now,
       );
       return true;

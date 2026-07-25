@@ -157,6 +157,7 @@ export class GameServer {
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
   private heartbeat: NodeJS.Timeout | undefined;
+  private readonly startedAt = monotonicNow();
   private stopPromise: Promise<void> | null = null;
 
   constructor(
@@ -210,6 +211,7 @@ export class GameServer {
       this.world,
       this.visibility,
       new DecayManager(deps.itemCatalog),
+      (characterId) => this.registry.sessionFor(characterId),
     );
     this.items.scheduleWorldDecay(
       deps.worldItemDeltas?.items ?? [],
@@ -688,6 +690,7 @@ export class GameServer {
         this.gemTracker.detachCharacter(playerId);
         this.persistence.untrack(player, now);
         this.items.detach(playerId);
+        this.chat.detach(playerId);
         this.depot.detachCharacter(playerId);
         this.world.removePlayer(playerId);
         this.visibility.announceLeave(session, player);
@@ -813,6 +816,8 @@ export class GameServer {
       case "open-container":
       case "close-container":
       case "loot-item":
+      case "open-world-container":
+      case "quick-loot":
       case "close-world-container":
       case "split-stack":
       case "rotate-item":
@@ -822,6 +827,12 @@ export class GameServer {
         return;
       case "speak":
       case "private-chat":
+      case "channel-list-get":
+      case "channel-open":
+      case "channel-close":
+      case "channel-speak":
+      case "ignore-add":
+      case "ignore-remove":
         this.chat.handle(session, intent, now);
         return;
       case "npc-dialogue-greet":

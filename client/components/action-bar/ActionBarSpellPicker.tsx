@@ -6,6 +6,7 @@ import type {
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { getSpellIconArtwork } from "../../lib/combat/getSpellIconArtwork";
+import { ActionBarSpellParameter } from "./ActionBarSpellParameter";
 import { Input } from "../ui/Input";
 import { SpellIcon } from "../spells/SpellIcon";
 
@@ -28,6 +29,10 @@ export function ActionBarSpellPicker({
       (spell.name.toLowerCase().includes(query) ||
         spell.words?.toLowerCase().includes(query)),
   );
+  const selectedSpell =
+    selected?.kind === "spell"
+      ? spells.find((spell) => spell.id === selected.spellId)
+      : undefined;
   return (
     <section className="flex flex-col gap-3">
       <Input
@@ -38,6 +43,13 @@ export function ActionBarSpellPicker({
         value={search}
         onChange={(event) => setSearch(event.currentTarget.value)}
       />
+      {selectedSpell && selected?.kind === "spell" && (
+        <ActionBarSpellParameter
+          spell={selectedSpell}
+          action={selected}
+          onChange={onSelect}
+        />
+      )}
       <ul className="grid max-h-96 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
         {visible.map((spell) => {
           const artwork = getSpellIconArtwork(spell.id);

@@ -697,6 +697,72 @@ describe("World.tryLevitate", () => {
 
     expect(world.tryLevitate(player, "up", 1000).moved).toBe(false);
   });
+
+  // Canary's levitate teleports on cast: a walk in flight must not make the
+  // spell fizzle (which would cost the exhaust with nothing to show for it).
+  it("floats mid-step instead of fizzling against the walk cooldown", () => {
+    const world = cliffWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+    player.direction = "north";
+    player.nextStepAt = 5_000;
+
+    const result = world.tryLevitate(player, "up", 1_000);
+
+    expect(result.moved).toBe(true);
+    expect(player.position).toEqual({ x: 5, y: 4, z: 6 });
+  });
+});
+
+describe("World.trySpellRopeSpot", () => {
+  const ropeWorld = () =>
+    new World(
+      gridMapData({
+        name: "magic-rope-cooldown",
+        width: 10,
+        height: 8,
+        blocked: [],
+        floors: [6, 7],
+        groundSpeed: 50,
+        actions: [
+          {
+            kind: "rope-spot",
+            activation: "use-with",
+            source: { x: 5, y: 5, z: 7 },
+            destination: { x: 5, y: 5, z: 6 },
+            itemId: 386,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+
+  it("climbs mid-step instead of fizzling against the walk cooldown", () => {
+    const world = ropeWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+    player.nextStepAt = 5_000;
+
+    expect(world.trySpellRopeSpot(player, player.position, 1_000).moved).toBe(
+      true,
+    );
+    expect(player.position).toEqual({ x: 5, y: 5, z: 6 });
+  });
+
+  // The rope *item* keeps the walk cooldown; only the spell path is exempt.
+  it("leaves the rope tool subject to the walk cooldown", () => {
+    const world = ropeWorld();
+    const player = makePlayer(5, 5);
+    world.addPlayer(player);
+    player.nextStepAt = 5_000;
+
+    const result = world.tryUseRopeSpot(player, player.position, 1_000);
+
+    expect(result.moved).toBe(false);
+    if (result.moved) throw new Error("unreachable");
+    expect(result.reason).toBe("cooldown");
+    expect(player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
 });
 
 describe("pz-lock blocks protection-zone transitions", () => {

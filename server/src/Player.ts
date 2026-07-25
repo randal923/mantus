@@ -13,7 +13,9 @@ import { CombatAnalyzerTotals } from "./combat/CombatAnalyzerTotals";
 import { Creature } from "./creature/Creature";
 import { CharacterProgression } from "./progression/CharacterProgression";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
-import { getDeathExperienceLoss } from "./progression/getDeathExperienceLoss";
+import { getDeathLossPercent } from "./progression/getDeathLossPercent";
+import { getExperienceForLevel } from "./progression/getExperienceForLevel";
+import { getVocation } from "./progression/getVocation";
 import type { SkullState } from "./pvp/SkullState";
 import { monotonicNow } from "./monotonicNow";
 
@@ -327,17 +329,61 @@ export class Player extends Creature<Character["outfit"]> {
     this.restoreMana(this.maxMana);
   }
 
-  /** Applies the pinned death penalty once per eventId; see getDeathExperienceLoss. */
-  applyDeathPenalty(eventId: string): { lostExperience: number } {
-    const loss = getDeathExperienceLoss(this.experience);
-    if (loss < 1) return { lostExperience: 0 };
+  /**
+   * Applies the whole Canary death penalty once per eventId: experience,
+   * magic level, and skills all lose the same server-computed fraction. The
+   * fraction is derived here from live state — level, promotion, blessings,
+   * and the unfair-fight reduction the caller measured this tick.
+   */
+  applyDeathPenalty(
+    eventId: string,
+    options: { unfairFightReduction?: number } = {},
+  ): {
+    lostExperience: number;
+    lostMagicLevels: number;
+    lostSkillLevels: ReadonlyArray<{ skill: Skill; levels: number }>;
+  } {
+    const percent = getDeathLossPercent({
+      level: this.level,
+      experience: this.experience,
+      levelPercent: this.levelPercent,
+      promoted: getVocation(this.vocation).promotedFrom !== null,
+      blessings: this.blessings,
+      unfairFightReduction: options.unfairFightReduction ?? 100,
+    });
     const previousLevel = this.level;
-    const result = this.progression.loseExperience(eventId, loss);
-    if (!result.processed) return { lostExperience: 0 };
+    const result = this.progression.applyDeathLoss(eventId, percent);
+    if (!result.processed) {
+      return { lostExperience: 0, lostMagicLevels: 0, lostSkillLevels: [] };
+    }
     if (this.level !== previousLevel) {
       this.setMaxHealth(this.progression.maxHealth);
     }
-    return { lostExperience: loss };
+    return {
+      lostExperience: result.lostExperience,
+      lostMagicLevels: result.lostMagicLevels,
+      lostSkillLevels: result.lostSkillLevels,
+    };
+  }
+
+  /** Progress into the current level, 0–100, as Canary's `levelPercent`. */
+  private get levelPercent(): number {
+    const start = getExperienceForLevel(this.level);
+    const next = getExperienceForLevel(this.level + 1);
+    if (next <= start) return 0;
+    return Math.min(
+      100,
+      Math.max(0, ((this.experience - start) * 100) / (next - start)),
+    );
+  }
+
+  /**
+   * Blessings carried into a death; each one reduces the penalty by 8% and,
+   * once Feature 72 ships their purchase and persistence, protects carried
+   * items. Nothing grants them yet, so this is 0 for every character.
+   */
+  get blessings(): number {
+    return 0;
   }
 
   get capacity(): number {

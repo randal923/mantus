@@ -12,6 +12,7 @@ import type { ConditionApplication } from "./Condition";
 import { ConditionSystem } from "./ConditionSystem";
 import { creaturesInArea } from "./creaturesInArea";
 import { directionDelta } from "./directionDelta";
+import { findVisiblePlayerByName } from "./findVisiblePlayerByName";
 import { isInRange } from "./isInRange";
 import type { SpellDefinition } from "./Spell";
 import type { TargetingHooks } from "./TargetingHooks";
@@ -317,27 +318,14 @@ export class PlayerSpellActions {
         ? target
         : player;
     }
-    const normalized = parameter.trim().toLowerCase();
-    for (const other of this.registry.all()) {
-      const candidate = other.playerId
-        ? this.world.getPlayer(other.playerId)
-        : undefined;
-      if (
-        !candidate ||
-        candidate.name.toLowerCase() !== normalized ||
-        !isInRange(player.position, candidate.position, spell.range) ||
-        !session.knownCreatureIds.has(candidate.id) ||
-        !this.world.canSee(
-          player.position,
-          candidate.position,
-          session.viewRange,
-        )
-      ) {
-        continue;
-      }
-      return candidate;
-    }
-    return null;
+    return findVisiblePlayerByName(
+      this.world,
+      this.registry,
+      session,
+      player,
+      parameter,
+      spell.range,
+    );
   }
 
   private tileDistance(player: Player, monster: Monster): number {

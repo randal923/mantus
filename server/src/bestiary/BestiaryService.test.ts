@@ -68,8 +68,20 @@ function makeMonsterType(overrides: Partial<MonsterType>): MonsterType {
     summons: [],
     voices: [],
     loot: [
-      { itemName: "gold coin", chance: 100_000, maxCount: 4 },
-      { itemTypeId: 3607, chance: 150, maxCount: 1 },
+      {
+        itemName: "gold coin",
+        chance: 100_000,
+        minCount: 1,
+        maxCount: 4,
+        unique: false,
+      },
+      {
+        itemTypeId: 3607,
+        chance: 150,
+        minCount: 1,
+        maxCount: 1,
+        unique: false,
+      },
     ],
     ...overrides,
   };

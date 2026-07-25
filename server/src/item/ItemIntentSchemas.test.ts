@@ -171,4 +171,48 @@ describe("item intent schemas", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("bounds the world-container browse and quick-loot intents", () => {
+    const containerId = "6bd0a0a5-8b1f-4d6a-9f2f-4d9c4a08bd21";
+    expect(
+      clientMessageSchema.safeParse({
+        type: "open-world-container",
+        containerId,
+        revision: 3,
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "open-world-container",
+        containerId: "not-a-uuid",
+        revision: 3,
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "quick-loot",
+        containerId,
+        category: "gold",
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({ type: "quick-loot", containerId }).success,
+    ).toBe(true);
+    // `none` is the server's "never quick-loot this" marker, never a filter.
+    expect(
+      clientMessageSchema.safeParse({
+        type: "quick-loot",
+        containerId,
+        category: "none",
+      }).success,
+    ).toBe(false);
+    // No client-authored outcome may ride along with a sweep.
+    expect(
+      clientMessageSchema.safeParse({
+        type: "quick-loot",
+        containerId,
+        items: ["all"],
+      }).success,
+    ).toBe(false);
+  });
 });

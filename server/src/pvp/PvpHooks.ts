@@ -23,6 +23,12 @@ export interface PvpHooks {
     amount: number,
     now: number,
   ): void;
+  /**
+   * Canary's unfair-fight reduction for a player death: 100 when the fight was
+   * fair (or not player-driven at all), scaling down to a floor of 20 when the
+   * victim was ganged. Read from live damage attribution at death time.
+   */
+  unfairFightReduction(victim: Player, now: number): number;
   /** Charges frags/sanctions for a player death; exactly once per eventId. */
   handlePlayerDeath(
     victim: Player,

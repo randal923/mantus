@@ -21,6 +21,12 @@ export interface MaterializedWorldTree {
 export function materializeWorldSource(
   catalog: ItemCatalog,
   source: WorldItemSource,
+  /**
+   * Contents already taken out of this seed (their rows exist, so the world
+   * deltas hid their seed keys at boot). Re-materializing them would hand the
+   * same map item out twice.
+   */
+  isSeedHidden: (seedKey: string) => boolean = () => false,
 ): MaterializedWorldTree | null {
   const rootState = persistedItemState(
     catalog,
@@ -57,6 +63,7 @@ export function materializeWorldSource(
       if (!state) return false;
       const id = randomUUID();
       const seedKey = `${parentSeedKey}:content:${slot}`;
+      if (isSeedHidden(seedKey)) continue;
       contents.push({
         id,
         typeId: content.typeId,

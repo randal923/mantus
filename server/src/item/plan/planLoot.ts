@@ -19,9 +19,12 @@ import type { WorldItemsView } from "./WorldItemsView";
 const MAX_CARRIED_ITEMS = 500;
 
 /**
- * Takes one direct child of a world container (corpse) into the carried
- * inventory. Ownership protection, reach, and the open view are re-checked by
- * the caller at execution time; this plans the atomic move itself.
+ * Takes one child of an open world container (corpse, chest, or a container
+ * nested inside one) into the carried inventory. `containerId` is the world
+ * root the view is anchored on; the item may sit anywhere inside that root's
+ * subtree, and its parentage is re-derived here rather than trusted.
+ * Ownership protection, reach, and the open view are re-checked by the caller
+ * at execution time; this plans the atomic move itself.
  */
 export function planLoot(input: {
   readonly characterId: string;
@@ -44,9 +47,12 @@ export function planLoot(input: {
   const item = world.getWorldItem(input.itemId);
   if (
     !item ||
+    item.id === root.id ||
     (item.location.kind !== "corpse" && item.location.kind !== "container") ||
-    item.location.containerId !== root.id ||
-    item.version !== input.expectedVersion
+    item.version !== input.expectedVersion ||
+    !world
+      .getWorldSubtree(root.id)
+      .some((candidate) => candidate.id === item.id)
   ) {
     return null;
   }
@@ -171,6 +177,7 @@ export function planLoot(input: {
     });
   }
   const origin = world.lootOrigin(item.id);
+  const seed = world.seedOrigin(item.id);
   if (origin) {
     rowOps.push({ kind: "insert", item: final });
     audits.push({
@@ -181,6 +188,10 @@ export function planLoot(input: {
       typeId: item.typeId,
       count: item.count,
     });
+  } else if (seed) {
+    // First touch of a chest a player only looked into: the row appears now,
+    // carrying the seed identity the unique index dedupes on.
+    rowOps.push({ kind: "insert", item: final, seed });
   } else {
     rowOps.push({ kind: "write", expectedVersion: item.version, item: final });
   }
