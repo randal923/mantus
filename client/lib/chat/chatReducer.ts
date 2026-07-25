@@ -1,4 +1,4 @@
-import type { ChatRejectedReason, ChatSpeechMode } from "@tibia/protocol";
+import type { ChatRejectedReason, CreatureSpeechMode } from "@tibia/protocol";
 
 export type ChatEntry =
   | {
@@ -10,6 +10,8 @@ export type ChatEntry =
       isOwn: boolean;
       /** Amber highlight for privileged speakers (guild vice+/leader). */
       highlighted?: boolean;
+      /** Absent for channels that carry only ordinary player speech. */
+      mode?: CreatureSpeechMode;
     }
   | {
       id: number;
@@ -41,7 +43,7 @@ export type ChatAction =
       type: "spoke";
       creatureId: string;
       name: string;
-      mode: ChatSpeechMode;
+      mode: CreatureSpeechMode;
       body: string;
       time: string;
     }
@@ -153,6 +155,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         body: action.body,
         time: action.time,
         isOwn: action.creatureId === state.ownPlayerId,
+        mode: action.mode,
       };
       return appendEntry(
         { ...state, nextEntryId: state.nextEntryId + 1 },

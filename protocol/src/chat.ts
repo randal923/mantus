@@ -12,6 +12,18 @@ export const CHAT_SPEECH_MODES = ["say", "whisper", "yell"] as const;
 export const chatSpeechModeSchema = z.enum(CHAT_SPEECH_MODES);
 
 /**
+ * Everything a creature can be heard saying. `monster-say` is the
+ * server-authored effect line (Canary's `TALKTYPE_MONSTER_SAY`, e.g. the
+ * `Aaaah...` a potion drinker lets out); players cannot request it — the
+ * speak intent stays restricted to {@link chatSpeechModeSchema}.
+ */
+export const CREATURE_SPEECH_MODES = [
+  ...CHAT_SPEECH_MODES,
+  "monster-say",
+] as const;
+export const creatureSpeechModeSchema = z.enum(CREATURE_SPEECH_MODES);
+
+/**
  * One line of player-authored chat. Control characters (including
  * newlines) are rejected outright; rendering layers must still treat the
  * value as plain text, never markup.
@@ -57,7 +69,7 @@ export const creatureSpokeMessageSchema = z.object({
   type: z.literal("creature-spoke"),
   creatureId: z.string().min(1).max(192),
   name: z.string().min(1).max(100),
-  mode: chatSpeechModeSchema,
+  mode: creatureSpeechModeSchema,
   position: positionSchema,
   text: chatTextSchema,
 });
@@ -92,6 +104,7 @@ export const chatRejectedMessageSchema = z.object({
 });
 
 export type ChatSpeechMode = z.infer<typeof chatSpeechModeSchema>;
+export type CreatureSpeechMode = z.infer<typeof creatureSpeechModeSchema>;
 export type SpeakMessage = z.infer<typeof speakMessageSchema>;
 export type PrivateChatMessage = z.infer<typeof privateChatMessageSchema>;
 export type CreatureSpokeMessage = z.infer<typeof creatureSpokeMessageSchema>;

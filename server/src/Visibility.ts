@@ -1,4 +1,5 @@
 import {
+  type CreatureSpeechMode,
   type DamageType,
   type HitBlock,
   PROTOCOL_LIMITS,
@@ -168,13 +169,13 @@ export class Visibility {
   broadcastCreatureSpeech(
     creature: Creature,
     text: string,
-    yell: boolean,
+    mode: CreatureSpeechMode,
   ): void {
     const message: ServerMessage = {
       type: "creature-spoke" as const,
       creatureId: creature.id,
       name: creature.name,
-      mode: yell ? ("yell" as const) : ("say" as const),
+      mode,
       position: { ...creature.position },
       text,
     };

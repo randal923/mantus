@@ -38,4 +38,5 @@ export const CHAT_MESSAGE_CLASS: Record<ChatMessageTone, string> = {
   notice: "text-ui-gold",
   combat: "text-red-300",
   loot: "text-amber-300",
+  monster: "text-orange-400",
 };

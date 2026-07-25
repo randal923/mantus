@@ -517,7 +517,11 @@ export class SpawnManager {
             this.config.ai,
             {
               speak: (monster, text, yell) =>
-                this.visibility.broadcastCreatureSpeech(monster, text, yell),
+                this.visibility.broadcastCreatureSpeech(
+                  monster,
+                  text,
+                  yell ? "yell" : "say",
+                ),
               ...(this.combat
                 ? {
                     combat: this.combat,

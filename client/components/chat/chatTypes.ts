@@ -10,7 +10,8 @@ export type ChatMessageTone =
   | "muted"
   | "notice"
   | "combat"
-  | "loot";
+  | "loot"
+  | "monster";
 
 export interface ChatMessage {
   id: string;

@@ -25,4 +25,26 @@ describe("SpeechTextRenderer", () => {
 
     renderer.destroy();
   });
+
+  it("floats server-authored monster say in its own color", () => {
+    const mapView = new MapView({} as AssetStore);
+    const speechLayer = new Container();
+    const renderer = new SpeechTextRenderer(mapView, speechLayer);
+    const position = { x: 10, y: 8, z: 7 };
+    mapView.setCenter(position.x, position.y, position.z);
+
+    renderer.showSpeech("player-1", position, "Say", "say");
+    const said = speechLayer.children[0];
+    if (!(said instanceof Text)) throw new Error("expected speech text");
+    const sayColor = said.style.fill;
+
+    renderer.showSpeech("player-1", position, "Aaaah...", "monster-say");
+    const monsterSaid = speechLayer.children[0];
+    if (!(monsterSaid instanceof Text)) throw new Error("expected speech text");
+
+    expect(speechLayer.children).toHaveLength(1);
+    expect(monsterSaid.style.fill).not.toBe(sayColor);
+
+    renderer.destroy();
+  });
 });

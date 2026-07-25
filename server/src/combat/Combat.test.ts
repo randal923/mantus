@@ -65,10 +65,18 @@ function actionBarWith(
   }));
 }
 
+/** A second connected player used to assert what observers may receive. */
+interface Bystander {
+  readonly player: Player;
+  readonly session: Session;
+  readonly sent: ServerMessage[];
+}
+
 interface Harness {
   readonly world: World;
   readonly player: Player;
   readonly session: Session;
+  readonly bystanders: ReadonlyArray<Bystander>;
   readonly sent: ServerMessage[];
   readonly store: MemoryItemStore;
   readonly items: ItemIntentHandler;
@@ -223,10 +231,45 @@ function ownedItem(
   };
 }
 
+/** Minimal session stub for observers: only what Visibility reads. */
+function makeBystander(
+  world: World,
+  index: number,
+  position: { x: number; y: number; z: number },
+): Bystander {
+  const sent: ServerMessage[] = [];
+  const player = new Player(
+    {
+      ...makeLeveledCharacter(),
+      id: `00000000-0000-4000-8000-00000000002${index}`,
+      displayName: `Bystander ${index}`,
+      normalizedName: `bystander ${index}`,
+    },
+    position,
+    0,
+  );
+  world.addPlayer(player);
+  const session = {
+    id: `session-bystander-${index}`,
+    playerId: player.id,
+    viewRange: { x: 8, y: 6 },
+    knownCreatureIds: new Set([player.id]),
+    knownMapItemTiles: new Map(),
+    attackTargetId: null,
+    combatCooldowns: new Map(),
+    send: (message: ServerMessage) => sent.push(message),
+    sendSerialized: (message: string) =>
+      sent.push(JSON.parse(message) as ServerMessage),
+    sendError: () => undefined,
+  } as unknown as Session;
+  return { player, session, sent };
+}
+
 async function makeHarness(options: {
   character?: Character;
   position?: { x: number; y: number; z: number };
   map?: MapData;
+  bystanderPositions?: ReadonlyArray<{ x: number; y: number; z: number }>;
   inventory?: ReadonlyArray<Item>;
   partyMembership?: { sameParty: boolean };
   actionBar?: ActionBar;
@@ -274,10 +317,16 @@ async function makeHarness(options: {
     },
     terminate,
   } as unknown as Session;
+  const bystanders = (options.bystanderPositions ?? []).map(
+    (position, index) => makeBystander(world, index, position),
+  );
   const registry = {
-    all: () => [session],
+    all: () => [session, ...bystanders.map((bystander) => bystander.session)],
     sessionFor: (playerId: string) =>
-      playerId === player.id ? session : undefined,
+      playerId === player.id
+        ? session
+        : bystanders.find((bystander) => bystander.player.id === playerId)
+            ?.session,
   } as unknown as SessionRegistry;
   const visibility = new Visibility(world, registry);
   const store = new MemoryItemStore(catalog);
@@ -354,6 +403,7 @@ async function makeHarness(options: {
     world,
     player,
     session,
+    bystanders,
     sent,
     store,
     items,
@@ -2174,6 +2224,53 @@ describe("Combat", () => {
         version: 2,
       }),
     );
+  });
+
+  it("says the potion line only to observers who see the drinker", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(80, "Knight"),
+      bystanderPositions: [
+        { x: 2, y: 2, z: 7 },
+        { x: 10, y: 10, z: 7 },
+      ],
+      inventory: [
+        ownedItem(POTION_ID, 239, {
+          kind: "container",
+          containerId: BACKPACK_ID,
+          slot: 0,
+        }),
+      ],
+    });
+    const [near, far] = harness.bystanders;
+    if (!near || !far) throw new Error("expected two bystanders");
+    // Both claim to know the drinker; only the one in view may hear him.
+    near.session.knownCreatureIds.add(harness.player.id);
+    far.session.knownCreatureIds.add(harness.player.id);
+    harness.player.setHealth(harness.player.maxHealth - 600);
+
+    harness.combat.usePotion(
+      harness.session,
+      {
+        type: "use-potion",
+        itemId: POTION_ID,
+        revision: 1,
+        targetPlayerId: harness.player.id,
+      },
+      1_000,
+    );
+    await settleItems(harness, 1_000);
+
+    const monsterSay = expect.objectContaining({
+      type: "creature-spoke",
+      creatureId: harness.player.id,
+      mode: "monster-say",
+      text: "Aaaah...",
+    });
+    expect(harness.sent).toContainEqual(monsterSay);
+    expect(near.sent).toContainEqual(monsterSay);
+    expect(
+      far.sent.filter((message) => message.type === "creature-spoke"),
+    ).toEqual([]);
   });
 
   it("rejects out-of-range and vocation-restricted potion targets without consuming", async () => {

@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import type { ChatMessage } from "../../components/chat/chatTypes";
 import type { ChatEntry } from "./chatReducer";
+import { speechTone } from "./speechTone";
 
 /** Localizes one stored chat entry for the ChatPanel; text stays text. */
 export function toChatMessage(entry: ChatEntry, t: TFunction): ChatMessage {
@@ -18,7 +19,7 @@ export function toChatMessage(entry: ChatEntry, t: TFunction): ChatMessage {
     id: `entry:${entry.id}`,
     body: entry.body,
     time: entry.time,
-    tone: entry.highlighted ? "loot" : "default",
+    tone: speechTone(entry),
     ...(entry.sender ? { sender: entry.sender } : {}),
     ...(entry.isOwn ? { isOwn: true } : {}),
   };

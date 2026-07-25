@@ -1,5 +1,5 @@
 import { Text, type Container } from "pixi.js";
-import type { Position } from "@tibia/protocol";
+import type { CreatureSpeechMode, Position } from "@tibia/protocol";
 import type { MapView } from "./MapView";
 import { TILE_SIZE } from "./tileSize";
 
@@ -11,6 +11,8 @@ interface SpeechTextView {
 }
 
 const SPEECH_COLOR = 0xf8f358;
+/** Server-authored effect lines ("Aaaah...") float in monster orange. */
+const MONSTER_SAY_COLOR = 0xfe6500;
 const MIN_DURATION_MS = 2_000;
 const MS_PER_CHARACTER = 60;
 const MAX_DURATION_MS = 8_000;
@@ -28,7 +30,12 @@ export class SpeechTextRenderer {
     private readonly layer: Container,
   ) {}
 
-  showSpeech(creatureId: string, position: Position, body: string): void {
+  showSpeech(
+    creatureId: string,
+    position: Position,
+    body: string,
+    mode: CreatureSpeechMode = "say",
+  ): void {
     if (this.destroyed) return;
     this.removeSpeaker(creatureId);
     const text = new Text({
@@ -37,7 +44,7 @@ export class SpeechTextRenderer {
         fontFamily: "Verdana, sans-serif",
         fontSize: 5,
         fontWeight: "bold",
-        fill: SPEECH_COLOR,
+        fill: mode === "monster-say" ? MONSTER_SAY_COLOR : SPEECH_COLOR,
         stroke: { color: 0x000000, width: 1 },
         wordWrap: true,
         wordWrapWidth: TILE_SIZE * 7,

@@ -9,6 +9,7 @@ import {
   type ChatAction,
   type ChatState,
 } from "./chatReducer";
+import { speechTone } from "./speechTone";
 
 const joinedState = (): ChatState =>
   chatReducer(initialChatState, {
@@ -42,9 +43,30 @@ describe("chatReducer", () => {
         body: "hello",
         time: "18:00",
         isOwn: true,
+        mode: "say",
       },
     ]);
     expect(local?.unreadCount).toBe(0);
+  });
+
+  it("keeps the speech mode so monster say reads apart from player say", () => {
+    const state = run(joinedState(), {
+      type: "spoke",
+      creatureId: "player-1",
+      name: "Hero",
+      mode: "monster-say",
+      body: "Aaaah...",
+      time: "18:00",
+    });
+
+    const local = state.channels.find(
+      (channel) => channel.id === LOCAL_CHANNEL_ID,
+    );
+    const entry = local?.entries[0];
+    expect(entry?.kind === "speech" && entry.mode).toBe("monster-say");
+    expect(
+      entry?.kind === "speech" ? speechTone(entry) : undefined,
+    ).toBe("monster");
   });
 
   it("creates a private channel per counterpart and echoes with own name", () => {

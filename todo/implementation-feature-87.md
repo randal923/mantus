@@ -7,7 +7,7 @@ A large slice of remaining parity is client presentation and input. The rule thr
 
 ## Remaining work
 - Lighting/day-night cycle, item/creature light sources, floor darkness, visibility-safe effects.
-- Sound/music with bounded asset loading and accessible volume/mute controls.
+- Sound/music with bounded asset loading and accessible volume/mute controls. Nothing audio-related exists yet: a potion sound (protocol message, client player, generated placeholder asset, settings volume/mute) was built for Feature 21 on 2026-07-25 and removed the same day at the product owner's request — the placeholder audio was not wanted. Restarting means real assets first, then playback plus the volume/mute controls and an unlock-on-first-user-gesture step (browsers block audio before one).
 - Hotkeys, action bars, targeting controls, mouse/touch input, context menus, drag feedback, keyboard accessibility. The current settings key mapping and bottom spell bar are visual previews only — persist validated bindings, and send bounded cast intents only after the execution path exists.
 - Battle list filters, party frames, status icons, combat log, loot channel, quest tracker, notification UX.
 - Generic bounded modal windows + typed answers for Canary modal-driven interactions — no open-ended server UI evaluator.

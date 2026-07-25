@@ -241,6 +241,7 @@ export class WorldRenderer {
           message.creatureId,
           message.position,
           message.text,
+          message.mode,
         );
         return;
       case "npc-dialogue":

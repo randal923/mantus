@@ -20,6 +20,8 @@ import { getPotionDefinition } from "./getPotionDefinition";
 const POTION_COOLDOWN_GROUP = "potion";
 const POTION_EXHAUST_MS = 1_000;
 const POTION_EFFECT_ID = 13;
+/** Canary's potion action script: the drinker lets out a monster-say. */
+const POTION_SPEECH = "Aaaah...";
 
 export class PotionService {
   constructor(
@@ -172,6 +174,11 @@ export class PotionService {
       target.position,
       POTION_EFFECT_ID,
       target.id,
+    );
+    this.visibility.broadcastCreatureSpeech(
+      target,
+      POTION_SPEECH,
+      "monster-say",
     );
     session.combatCooldowns.set(POTION_COOLDOWN_GROUP, {
       readyAt: now + POTION_EXHAUST_MS,

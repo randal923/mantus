@@ -115,7 +115,7 @@ export class MonsterEventService implements MonsterEventHooks {
       ) {
         continue;
       }
-      this.visibility.broadcastCreatureSpeech(monster, entry.message, false);
+      this.visibility.broadcastCreatureSpeech(monster, entry.message, "say");
       const from = this.world.relocateCreature(monster, entry.position);
       this.visibility.broadcastMagicEffect(from, 11, monster.id);
       this.visibility.onCreatureStepped(monster, from, 0);
@@ -333,7 +333,7 @@ export class MonsterEventService implements MonsterEventHooks {
     this.visibility.broadcastCreatureSpeech(
       monster,
       "Health restored by the mystic powers of Zarganash!",
-      false,
+      "say",
     );
     return amount;
   }
@@ -526,7 +526,7 @@ export class MonsterEventService implements MonsterEventHooks {
       this.visibility.broadcastCreatureSpeech(
         monster,
         "I WILL RETURN!! My death will just be a door to await my homecoming, my physical hull will be... my... argh...",
-        false,
+        "say",
       );
       this.scheduledItemRemovals.push({
         executeAt: now + 300_000,

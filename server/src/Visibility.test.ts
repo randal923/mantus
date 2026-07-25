@@ -249,9 +249,9 @@ describe("Visibility creature projections", () => {
     visibility.broadcastCombatText(visible, 5, "physical", "none");
     visibility.broadcastCombatText(hidden, 5, "physical", "none");
     visibility.broadcastCombatText(wrongFloor, 5, "physical", "none");
-    visibility.broadcastCreatureSpeech(visible, "Squeak!", false);
-    visibility.broadcastCreatureSpeech(hidden, "Hidden", false);
-    visibility.broadcastCreatureSpeech(wrongFloor, "Above", true);
+    visibility.broadcastCreatureSpeech(visible, "Squeak!", "say");
+    visibility.broadcastCreatureSpeech(hidden, "Hidden", "say");
+    visibility.broadcastCreatureSpeech(wrongFloor, "Above", "yell");
     visibility.sendExperienceText(viewer.id, visible, 5);
     visibility.sendExperienceText(viewer.id, hidden, 5);
     visibility.sendExperienceText(viewer.id, wrongFloor, 5);
