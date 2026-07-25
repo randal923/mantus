@@ -68,6 +68,8 @@ export function createGameWindowStore({
     worldLoadProgress: null,
     visibleCreatures: [],
     fightState: null,
+    followTargetId: null,
+    combatAnalyzer: null,
     spells: [],
     combatLog: [],
     levelUpNotice: null,
@@ -166,6 +168,14 @@ export function createGameWindowStore({
     setFightState: (value) =>
       set((state) => ({
         fightState: resolveStateAction(value, state.fightState),
+      })),
+    setFollowTargetId: (value) =>
+      set((state) => ({
+        followTargetId: resolveStateAction(value, state.followTargetId),
+      })),
+    setCombatAnalyzer: (value) =>
+      set((state) => ({
+        combatAnalyzer: resolveStateAction(value, state.combatAnalyzer),
       })),
     setSpells: (value) =>
       set((state) => ({ spells: resolveStateAction(value, state.spells) })),
@@ -430,6 +440,8 @@ export function createGameWindowStore({
         mailboxSession: null,
         visibleCreatures: [],
         fightState: null,
+        followTargetId: null,
+        combatAnalyzer: null,
         spells: [],
         actionBar: createDefaultActionBar(),
         actionBotSettings: {

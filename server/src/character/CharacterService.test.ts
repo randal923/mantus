@@ -108,6 +108,15 @@ class MemoryCharacterStore implements CharacterStore {
       actionBotSettings,
     });
   }
+
+  async updateAimAtTargetSpells(
+    characterId: string,
+    aimAtTargetSpellIds: Character["aimAtTargetSpellIds"],
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, { ...character, aimAtTargetSpellIds });
+  }
 }
 
 const makeService = () =>

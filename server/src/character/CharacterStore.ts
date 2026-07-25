@@ -31,4 +31,8 @@ export interface CharacterStore {
     actionBar: ActionBar,
     settings: ActionBotSettings,
   ): Promise<void>;
+  updateAimAtTargetSpells(
+    characterId: string,
+    spellIds: ReadonlyArray<string>,
+  ): Promise<void>;
 }

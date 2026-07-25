@@ -31,6 +31,16 @@ export interface SpellFormula {
 export interface SpellCondition {
   readonly type: ConditionType;
   readonly durationMs: number;
+  /** Canary target callbacks that refuse players outright (crippling spells). */
+  readonly monstersOnly?: boolean;
+  readonly meleePercent?: number;
+  readonly distancePercent?: number;
+  readonly defensePercent?: number;
+  readonly fistPercent?: number;
+  readonly damageDealtPercent?: number;
+  readonly damageReceivedPercent?: number;
+  readonly healingDealtPercent?: number;
+  readonly disablesDefense?: boolean;
   readonly magnitude?: number;
   readonly tickIntervalMs?: number;
   readonly tickAmounts?: ReadonlyArray<number>;
@@ -116,4 +126,22 @@ export interface SpellDefinition {
   } | null;
   /** Floor-moving support spells resolved by the movement rules, not combat. */
   readonly worldAction: "magic-rope" | "levitate" | null;
+  /**
+   * Player spells whose Canary Lua body is a reviewed TypeScript callback.
+   * The regular cast pipeline still owns vocation, level, mana, soul, range,
+   * and cooldowns; only the effect is procedural.
+   */
+  readonly playerAction: PlayerSpellAction | null;
 }
+
+export const PLAYER_SPELL_ACTIONS = [
+  "conjure-random-food",
+  "creature-illusion",
+  "challenge",
+  "chivalrous-challenge",
+  "divine-dazzle",
+  "summon-creature",
+  "mentor-other",
+] as const;
+
+export type PlayerSpellAction = (typeof PLAYER_SPELL_ACTIONS)[number];

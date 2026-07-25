@@ -477,4 +477,69 @@ describe("MonsterBrain", () => {
 
     expect(brain.targetCreatureId).toBe(first.id);
   });
+
+  it("holds a challenged target and refuses a challenger it cannot acquire", () => {
+    const type: MonsterType = {
+      ...baseType,
+      changeTarget: { intervalMs: 100, chance: 100 },
+      targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(type);
+    const near = new Player(makeCharacter("near"), { x: 3, y: 2, z: 7 });
+    const far = new Player(makeCharacter("far"), { x: 6, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(near);
+    world.addPlayer(far);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 1_000, 32);
+    expect(brain.targetCreatureId).toBe(near.id);
+
+    expect(brain.challenge(world, far, 1_000, 5_000)).toBe(true);
+    expect(brain.targetCreatureId).toBe(far.id);
+
+    // The change-target roll is suppressed for the whole focus window, so the
+    // challenge cannot be shaken off a tick later.
+    brain.tick(world, 1_500, 32);
+    brain.tick(world, 3_000, 32);
+    expect(brain.targetCreatureId).toBe(far.id);
+
+    // A challenger on another floor is never acquirable, so it is refused.
+    const upstairs = new Player(makeCharacter("upstairs"), {
+      x: 3,
+      y: 3,
+      z: 6,
+    });
+    world.addPlayer(upstairs);
+    expect(brain.challenge(world, upstairs, 3_000, 5_000)).toBe(false);
+    expect(brain.targetCreatureId).toBe(far.id);
+  });
+
+  it("only pulls a distance monster closer, never further away", () => {
+    const distanceType: MonsterType = {
+      ...baseType,
+      flags: { ...baseType.flags, targetDistance: 4, staticAttackChance: 100 },
+    };
+    const world = makeWorld();
+    const monster = makeMonster(distanceType);
+    const player = new Player(makeCharacter("target"), { x: 3, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(player);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 1_000, 32);
+    expect(brain.state).toBe("flee");
+
+    expect(brain.pullToMelee(1, 1_000, 5_000)).toBe(true);
+    brain.tick(world, 1_100, 32);
+    expect(brain.state).toBe("chase");
+
+    // A "pull" that would push the monster back out is refused outright.
+    expect(brain.pullToMelee(7, 1_100, 5_000)).toBe(false);
+
+    // Once the window lapses the monster keeps its pinned target distance.
+    brain.tick(world, 7_000, 32);
+    expect(brain.state).toBe("flee");
+  });
 });

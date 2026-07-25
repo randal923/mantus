@@ -22,7 +22,7 @@ describe("Canary spell catalog", () => {
     const magicRope = spells.find((spell) => spell.name === "Magic Rope");
     const levitate = spells.find((spell) => spell.name === "Levitate");
 
-    expect(spells).toHaveLength(153);
+    expect(spells).toHaveLength(166);
     expect(magicRope).toMatchObject({
       id: "exani-tera",
       worldAction: "magic-rope",

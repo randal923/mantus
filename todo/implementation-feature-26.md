@@ -4,12 +4,12 @@ Part of [Todo 8 — Combat, spells, and conditions](todo-8.md).
 
 ## Why
 
-The generated spell report must distinguish examples/non-content from registered gameplay definitions and reach zero disabled registered spells, zero disabled runes, zero ignored formula fields, and zero unreviewed callbacks. Current state: 236 total / 153 supported / 83 unsupported.
+The generated spell report must distinguish examples/non-content from registered gameplay definitions and reach zero disabled registered spells, zero disabled runes, zero ignored formula fields, and zero unreviewed callbacks. Current state: 236 total / 166 supported / 70 unsupported (2026-07-25).
 
 ## Remaining work
 
 - Classify examples/non-content entries explicitly so the zero target is meaningful.
-- Drive the unsupported count (currently 83) to zero via the callback and area features.
+- Drive the unsupported count (currently 70) to zero via the callback and area features.
 - Add gate assertions that lock the zero state once reached.
 
 ## Implementation

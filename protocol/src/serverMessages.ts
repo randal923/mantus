@@ -25,6 +25,8 @@ import {
   privateChatDeliveredMessageSchema,
 } from "./chat";
 import {
+  AIM_AT_TARGET_SPELL_LIMIT,
+  combatAnalyzerStateSchema,
   damageTypeSchema,
   fightStateSchema,
   hitBlockSchema,
@@ -190,6 +192,9 @@ export const welcomeMessageSchema = z.object({
   uiSettings: uiSettingsSchema,
   actionBar: actionBarSchema,
   actionBotSettings: actionBotSettingsSchema,
+  aimAtTargetSpellIds: z
+    .array(z.string().min(1).max(64))
+    .max(AIM_AT_TARGET_SPELL_LIMIT),
 });
 
 export const inventoryUpdatedMessageSchema = z.object({
@@ -269,9 +274,25 @@ export const attackTargetChangedMessageSchema = z.object({
   creatureId: z.string().min(1).max(192).nullable(),
 });
 
+export const followTargetChangedMessageSchema = z.object({
+  type: z.literal("follow-target-changed"),
+  creatureId: z.string().min(1).max(192).nullable(),
+});
+
 export const fightStateMessageSchema = z.object({
   type: z.literal("fight-state"),
   fightState: fightStateSchema,
+});
+
+/** Echoes the server-stored aim-at-target set after an accepted update. */
+export const aimAtTargetSpellsMessageSchema = z.object({
+  type: z.literal("aim-at-target-spells"),
+  spellIds: z.array(z.string().min(1).max(64)).max(AIM_AT_TARGET_SPELL_LIMIT),
+});
+
+export const combatAnalyzerMessageSchema = z.object({
+  type: z.literal("combat-analyzer"),
+  analyzer: combatAnalyzerStateSchema,
 });
 
 export const creatureHealthMessageSchema = z.object({
@@ -391,6 +412,8 @@ export const serverErrorCodeSchema = z.enum([
   "language-update-failed",
   "language-update-pending",
   "fight-mode-update-failed",
+  "aim-at-target-update-failed",
+  "aim-at-target-update-pending",
   "ui-settings-update-failed",
   "ui-settings-update-pending",
   "combat-action-failed",
@@ -410,6 +433,8 @@ export const serverErrorCodeSchema = z.enum([
   "spell-unavailable",
   "spell-vocation-restricted",
   "spell-weapon-required",
+  "spell-summon-limit",
+  "spell-parameter-invalid",
   "item-action-failed",
   "item-exhausted",
   "loot-protected",
@@ -445,7 +470,10 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   creatureMovedMessageSchema,
   positionCorrectionMessageSchema,
   attackTargetChangedMessageSchema,
+  followTargetChangedMessageSchema,
   fightStateMessageSchema,
+  aimAtTargetSpellsMessageSchema,
+  combatAnalyzerMessageSchema,
   creatureHealthMessageSchema,
   creatureStateChangedMessageSchema,
   combatTextMessageSchema,

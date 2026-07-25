@@ -7,7 +7,9 @@ import {
   DAMAGE_TYPES,
 } from "@tibia/protocol";
 import type { CharacterVocation } from "@tibia/protocol";
+import { PLAYER_SPELL_ACTIONS } from "./Spell";
 import type {
+  PlayerSpellAction,
   SpellDefinition,
   SpellCondition,
   SpellExpression,
@@ -145,7 +147,21 @@ function parseSpell(value: Record<string, unknown>): SpellDefinition {
     conjure: parseConjure(value.conjure, value.id),
     castRules: parseCastRules(value.castRules, value.id),
     worldAction: parseWorldAction(value.worldAction, value.id),
+    playerAction: parsePlayerAction(value.playerAction, value.id),
   };
+}
+
+function parsePlayerAction(
+  value: unknown,
+  id: unknown,
+): SpellDefinition["playerAction"] {
+  if (value === undefined || value === null) return null;
+  if (
+    PLAYER_SPELL_ACTIONS.includes(value as PlayerSpellAction)
+  ) {
+    return value as PlayerSpellAction;
+  }
+  throw new Error(`Canary spell ${String(id)} has an invalid player action`);
 }
 
 function parseWorldAction(
@@ -226,6 +242,33 @@ function parseCondition(value: unknown, id: unknown): SpellCondition | null {
     Number(value.durationMs) > 24 * 60 * 60 * 1_000
   ) {
     throw new Error(`Canary spell ${String(id)} has an invalid condition`);
+  }
+  for (const field of [
+    "meleePercent",
+    "distancePercent",
+    "defensePercent",
+    "fistPercent",
+    "damageDealtPercent",
+    "damageReceivedPercent",
+    "healingDealtPercent",
+  ] as const) {
+    if (
+      value[field] !== undefined &&
+      (!Number.isInteger(value[field]) ||
+        Number(value[field]) < 0 ||
+        Number(value[field]) > 1_000)
+    ) {
+      throw new Error(
+        `Canary spell ${String(id)} has an invalid condition ${field}`,
+      );
+    }
+  }
+  for (const field of ["monstersOnly", "disablesDefense"] as const) {
+    if (value[field] !== undefined && typeof value[field] !== "boolean") {
+      throw new Error(
+        `Canary spell ${String(id)} has an invalid condition ${field}`,
+      );
+    }
   }
   for (const field of ["magnitude", "tickIntervalMs", "speedTarget"] as const) {
     if (

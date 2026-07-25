@@ -10,6 +10,7 @@ export function GameMapContextMenu() {
   const store = useGameWindowStoreApi();
   const { t } = useAppTranslation();
   const menu = useGameWindowStore((state) => state.mapContextMenu);
+  const followTargetId = useGameWindowStore((state) => state.followTargetId);
   const setMapContextMenu = useGameWindowStore(
     (state) => state.setMapContextMenu,
   );
@@ -45,6 +46,19 @@ export function GameMapContextMenu() {
         id: "attack",
         label: t("contextMenu.attack"),
         onSelect: () => client?.attackTarget(attackableId),
+      });
+    }
+    if (followTargetId === attackableId) {
+      items.push({
+        id: "stop-follow",
+        label: t("contextMenu.stopFollow"),
+        onSelect: () => client?.cancelFollow(),
+      });
+    } else {
+      items.push({
+        id: "follow",
+        label: t("contextMenu.follow"),
+        onSelect: () => client?.followCreature(attackableId),
       });
     }
   }

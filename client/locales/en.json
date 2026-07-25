@@ -956,7 +956,9 @@
     "look": "Look",
     "use": "Use",
     "attack": "Attack",
-    "stopAttack": "Stop Attack"
+    "stopAttack": "Stop Attack",
+    "follow": "Follow",
+    "stopFollow": "Stop Follow"
   },
   "potions": {
     "bar": "Potion bar",

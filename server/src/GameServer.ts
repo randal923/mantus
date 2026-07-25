@@ -484,6 +484,8 @@ export class GameServer {
       this.combatSystem,
       deps.accounts,
       this.registry,
+      this.world,
+      deps.characters,
     );
     spawns =
       creatureContent && config.creatures
@@ -497,6 +499,7 @@ export class GameServer {
           )
         : null;
     this.spawns = spawns;
+    if (spawns) this.combatSystem.attachTargeting(spawns);
     const gm = config.dev.commands
       ? new GmCommandHandler(
           this.world,
@@ -669,6 +672,9 @@ export class GameServer {
         this.registry.sessionFor(playerId) === session
       ) {
         this.npcs.removePlayer(playerId);
+        // Player summons are owned creatures: they leave with their owner so
+        // an offline player can never keep monsters alive in the world.
+        this.spawns?.releaseSummonsOf(playerId);
         this.parties.detachCharacter(playerId, now);
         this.trade.detachCharacter(playerId, now);
         this.guilds.detachCharacter(playerId);
@@ -768,6 +774,10 @@ export class GameServer {
         return;
       case "attack-target":
       case "cancel-attack":
+      case "follow-creature":
+      case "cancel-follow":
+      case "reset-combat-analyzer":
+      case "set-aim-at-target-spells":
       case "set-fight-mode":
       case "cast-spell":
       case "use-rune":

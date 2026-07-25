@@ -28,7 +28,14 @@ export function areaPositions(
 ): Position[] {
   if (area.shape === "single") return [{ ...center }];
   if (area.shape === "tiles" && "offsets" in area && area.offsets) {
-    const anchor = area.directional ? origin : center;
+    // Canary anchors the matrix on the target position, never on the caster
+    // (`AreaCombat::getList`: `tmpPos = targetPos - matrixCenter`). For a
+    // direction cast the target position is already the tile ahead of the
+    // caster (`Spells::getCasterPosition`), so the matrix centre — the `3`
+    // cell, which is itself an affected tile — lands one tile ahead and a
+    // wave never covers the caster's own square. `origin` only picks the
+    // rotation.
+    const anchor = center;
     const direction = area.directional
       ? directionToward(origin, center)
       : "north";

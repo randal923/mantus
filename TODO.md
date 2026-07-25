@@ -20,3 +20,11 @@ Add a newly discovered gap to the narrowest matching todo area; add it here
 only when it needs a new area or changes the implementation order. Known
 limitations accepted during a session are recorded in the owning feature file
 (per `AGENTS.md`).
+
+## Repo-wide known breakage
+
+- `yarn parity:check` (and therefore `yarn test:tools`) fails at HEAD:
+  `tools/importTibiaAssets.mjs` no longer matches its
+  `content/source-manifest.json` converter hash. Pre-existing, unrelated to any
+  current feature work — reconcile the asset importer with its manifest entry.
+  Every other converter hash verifies.

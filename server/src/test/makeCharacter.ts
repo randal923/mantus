@@ -50,6 +50,7 @@ export function makeCharacter(id: string, displayName = id): Character {
     townId: 1,
     actionBar: createDefaultActionBar(),
     actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS },
+    aimAtTargetSpellIds: [],
     skull: "none",
     skullExpiresAt: null,
     createdAt: now,

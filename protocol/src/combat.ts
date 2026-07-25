@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { PROTOCOL_LIMITS } from "./limits";
+import { PARTY_LIMITS } from "./party";
 import { positionSchema } from "./position";
 
 export const DAMAGE_TYPES = [
@@ -125,6 +127,13 @@ export const spellCatalogEntrySchema = z
   })
   .strict();
 
+/**
+ * Upper bound on the "aim at target" spell set. Comfortably above the number
+ * of direction spells any vocation can learn, so the cap never truncates a
+ * legitimate list while still bounding the packet.
+ */
+export const AIM_AT_TARGET_SPELL_LIMIT = 64;
+
 export const fightModeSchema = z
   .object({
     attack: fightAttackModeSchema,
@@ -180,6 +189,36 @@ export const fightStateSchema = z
   })
   .strict();
 
+/**
+ * One row of the combat analyzer. Rows only ever exist for the session's own
+ * player and its current party members — the totals are aggregated from
+ * damage the server already reported to this client, so the panel can never
+ * become a source of out-of-view information (charter rule 6).
+ */
+export const combatAnalyzerEntrySchema = z
+  .object({
+    playerId: z.string().min(1).max(192),
+    name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
+    damageDealt: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    damageTaken: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    healingDone: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+  })
+  .strict();
+
+export const combatAnalyzerStateSchema = z
+  .object({
+    /** Time since the analyzer was last reset, server-measured. */
+    elapsedMs: z
+      .number()
+      .int()
+      .min(0)
+      .max(30 * 24 * 60 * 60 * 1000),
+    entries: z
+      .array(combatAnalyzerEntrySchema)
+      .max(PARTY_LIMITS.maxMembers),
+  })
+  .strict();
+
 export type DamageType = z.infer<typeof damageTypeSchema>;
 export type CombatOrigin = z.infer<typeof combatOriginSchema>;
 export type AreaShape = z.infer<typeof areaShapeSchema>;
@@ -196,3 +235,5 @@ export type CombatCooldownState = z.infer<
 >;
 export type OwnSkullState = z.infer<typeof ownSkullStateSchema>;
 export type FightState = z.infer<typeof fightStateSchema>;
+export type CombatAnalyzerEntry = z.infer<typeof combatAnalyzerEntrySchema>;
+export type CombatAnalyzerState = z.infer<typeof combatAnalyzerStateSchema>;

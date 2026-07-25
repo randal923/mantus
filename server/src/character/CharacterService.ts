@@ -118,6 +118,7 @@ export class CharacterService {
       townId: this.starter.townId,
       actionBar: createDefaultActionBar(),
       actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },
+      aimAtTargetSpellIds: [],
       skull: "none",
       skullExpiresAt: null,
       createdAt: now,

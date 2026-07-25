@@ -9,6 +9,7 @@ import {
   type WheelBonuses,
 } from "@tibia/protocol";
 import type { Character } from "./character/Character";
+import { CombatAnalyzerTotals } from "./combat/CombatAnalyzerTotals";
 import { Creature } from "./creature/Creature";
 import { CharacterProgression } from "./progression/CharacterProgression";
 import { deriveCharacterStats } from "./progression/deriveCharacterStats";
@@ -29,6 +30,8 @@ export class Player extends Creature<Character["outfit"]> {
   skull: SkullState;
   /** Epoch ms when the persistent skull expires (null while none). */
   skullExpiresAt: number | null;
+  /** Combat-analyzer counters for this session; never client-supplied. */
+  readonly analyzer: CombatAnalyzerTotals;
   private currentVocation: Character["vocation"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
@@ -71,6 +74,7 @@ export class Player extends Creature<Character["outfit"]> {
       health: Math.min(character.health, stats.maxHealth),
       maxHealth: stats.maxHealth,
     });
+    this.analyzer = new CombatAnalyzerTotals(now);
     this.currentWheelBonuses = wheelBonuses;
     this.currentVocation = character.vocation;
     this.premiumUntil = premiumUntil?.getTime() ?? null;

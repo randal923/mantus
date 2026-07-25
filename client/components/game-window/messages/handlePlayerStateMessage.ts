@@ -61,6 +61,16 @@ export function handlePlayerStateMessage(
     return false;
   }
 
+  if (message.type === "follow-target-changed") {
+    state.setFollowTargetId(message.creatureId);
+    return false;
+  }
+
+  if (message.type === "combat-analyzer") {
+    state.setCombatAnalyzer(message.analyzer);
+    return false;
+  }
+
   if (message.type === "fight-state") {
     state.setFightState(
       anchorFightStateCooldowns(message.fightState, Date.now()),

@@ -62,6 +62,20 @@ export class Session {
   bufferedMovementDirection: Direction | null = null;
   autoWalkDirections: Direction[] = [];
   attackTargetId: string | null = null;
+  /**
+   * Server-owned follow target. The client only names a creature; every step
+   * is pathed and re-validated by the server inside the tick.
+   */
+  followTargetId: string | null = null;
+  /**
+   * Spell ids whose direction cast aims at the live attack target instead of
+   * the player's facing. A preference only — it can never widen range, skip
+   * a cooldown, or pick a target the player could not target anyway.
+   */
+  aimAtTargetSpellIds: ReadonlySet<string> = new Set();
+  aimAtTargetUpdatePending = false;
+  /** Next tick at which the combat-analyzer panel may be pushed again. */
+  nextCombatAnalyzerAt = 0;
   fightMode: FightMode = { ...DEFAULT_FIGHT_MODE };
   readonly combatCooldowns = new Map<
     string,

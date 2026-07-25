@@ -73,11 +73,9 @@ function parseDefinition(definition, constants, areas) {
     ? source.match(/createCombatArea\(\s*([A-Z0-9_]+)/)?.[1] ?? null
     : null;
   const targetKind = parseTargetKind(source, variable);
-  const area = areaFor(
-    areaConstant,
-    areas,
-    targetKind === "direction",
-  );
+  const area = areaConstant
+    ? areaFor(areaConstant, areas, targetKind === "direction")
+    : areaFor(specialCombat?.areaConstant ?? null, areas, false);
   const declaredRange = numericArgument(method("range"), 0);
   const range =
     declaredRange ??
@@ -108,6 +106,7 @@ function parseDefinition(definition, constants, areas) {
     unsupportedReasons.push("field or item creation is not implemented");
   }
   if (
+    !specialCombat?.allowsProceduralCombat &&
     /CALLBACK_PARAM_(?:TARGETCREATURE|TARGETTILE|CHAINVALUE|CHAINPICKER)/.test(
       source,
     )
@@ -188,6 +187,9 @@ function parseDefinition(definition, constants, areas) {
     ...(specialCombat?.worldAction
       ? { worldAction: specialCombat.worldAction }
       : {}),
+    ...(specialCombat?.playerAction
+      ? { playerAction: specialCombat.playerAction }
+      : {}),
     supported: unsupportedReasons.length === 0,
     unsupportedReasons,
   };
@@ -243,6 +245,29 @@ function parseSpecialCombat(path) {
     effectId: 11,
     worldAction,
   });
+  /**
+   * Spells whose Lua body is a reviewed TypeScript callback on the server
+   * (`SpellDefinition.playerAction`). The cast pipeline still owns
+   * requirements, resources, and cooldowns; only the effect is procedural.
+   */
+  const playerCallback = (playerAction, extra = {}) => ({
+    damageType: "healing",
+    formula: zeroFormula,
+    dispel: null,
+    allowsProceduralCast: true,
+    allowsProceduralCombat: true,
+    playerAction,
+    ...extra,
+  });
+  /** Self-cast buff/debuff spells that are just a reviewed condition. */
+  const attributeCondition = (durationMs, attributes, extra = {}) => ({
+    damageType: "healing",
+    formula: zeroFormula,
+    dispel: null,
+    allowsProceduralCast: true,
+    condition: { type: "attributes", durationMs, ...attributes },
+    ...extra,
+  });
   const damageCondition = (
     type,
     damageType,
@@ -262,6 +287,95 @@ function parseSpecialCombat(path) {
     allowsProceduralCast: false,
   });
   const simple = {
+    // --- Reviewed player-spell callbacks (Feature 24) ---------------------
+    // Food: rolls one or two random foods from the pinned list, server-side.
+    "data/scripts/spells/support/food.lua": playerCallback(
+      "conjure-random-food",
+      { effectId: 15 },
+    ),
+    // Creature illusion: CONDITION_OUTFIT with the named monster's outfit.
+    "data/scripts/spells/support/creature_illusion.lua": playerCallback(
+      "creature-illusion",
+      { effectId: 14 },
+    ),
+    // Challenge: doChallengeCreature over the 3x3 square around the caster.
+    // The 3x3 square area comes from the pinned register_spells.lua tables.
+    "data/scripts/spells/support/challenge.lua": playerCallback("challenge", {
+      effectId: 13,
+    }),
+    // Chivalrous challenge: chains up to 5 ranged monsters, challenging and
+    // pulling each into melee for 12 s.
+    "data/scripts/spells/support/chivalrous_challenge.lua": playerCallback(
+      "chivalrous-challenge",
+      { effectId: 219 },
+    ),
+    // Divine dazzle: the same chain, pull-only (no challenge), 3 targets.
+    "data/scripts/spells/support/divine_dazzle.lua": playerCallback(
+      "divine-dazzle",
+      { effectId: 220 },
+    ),
+    // Summon creature: one summonable monster, shared summon limits.
+    "data/scripts/spells/support/summon_creature.lua": playerCallback(
+      "summon-creature",
+      { effectId: 13 },
+    ),
+    // Mentor other: a vocation-dependent 60 s buff on one player.
+    "data/scripts/spells/support/mentor_other.lua": playerCallback(
+      "mentor-other",
+      { effectId: 13 },
+    ),
+    // --- Reviewed self-buff / debuff conditions (Feature 24) --------------
+    "data/scripts/spells/support/blood_rage.lua": attributeCondition(
+      10_000,
+      {
+        meleePercent: 135,
+        damageReceivedPercent: 115,
+        disablesDefense: true,
+      },
+      { effectId: 15 },
+    ),
+    "data/scripts/spells/support/protector.lua": attributeCondition(
+      13_000,
+      {
+        defensePercent: 220,
+        damageDealtPercent: 65,
+        damageReceivedPercent: 85,
+      },
+      { effectId: 15 },
+    ),
+    "data/scripts/spells/support/charge.lua": {
+      ...support(
+        {
+          type: "haste",
+          durationMs: 5_000,
+          speedFormula: { coefficient: 1.9, base: 40 },
+        },
+        true,
+      ),
+      effectId: 15,
+    },
+    // Expose Weakness / Sap Strength debuff every monster in a 3x3 circle;
+    // Canary's target callback refuses players outright.
+    "data/scripts/spells/support/expose_weakness.lua": attributeCondition(
+      16_000,
+      { damageReceivedPercent: 105, monstersOnly: true },
+      { effectId: 18, allowsProceduralCombat: true },
+    ),
+    "data/scripts/spells/support/sap_strength.lua": attributeCondition(
+      16_000,
+      { damageDealtPercent: 90, monstersOnly: true },
+      {
+        effectId: 18,
+        allowsProceduralCombat: true,
+        // Sap Strength builds its combat through a helper, so the area
+        // constant is named here and still resolved from the pinned tables.
+        areaConstant: "AREA_CIRCLE3X3",
+      },
+    ),
+    "data/scripts/spells/attack/holy_flash.lua": {
+      ...damageCondition("dazzled", "holy", 3_000, Array(9).fill(20)),
+      missileId: 38,
+    },
     "data/scripts/spells/support/magic_rope.lua": worldMove("magic-rope"),
     "data/scripts/spells/support/levitate.lua": worldMove("levitate"),
     "data/scripts/spells/support/light.lua": support({

@@ -23,6 +23,11 @@ export class MonsterBrain {
   private readonly nextSummonAt = new Map<MonsterSummon, number>();
   private nextVoiceAt: number | null;
   private nextTargetChangeAt: number;
+  /** While set, a challenge holds the target and blocks target changes. */
+  private challengeFocusUntil = 0;
+  /** Temporary melee pull from chivalrous challenge (Canary targetDistance). */
+  private meleePullUntil = 0;
+  private meleePullDistance = 0;
   private brainState:
     | "idle"
     | "wander"
@@ -79,6 +84,46 @@ export class MonsterBrain {
     return this.targetId;
   }
 
+  /**
+   * Canary's `Monster::challengeCreature`: forces this monster onto the
+   * challenger and holds it there for `durationMs`. The caller has already
+   * re-validated the challenger at execution time; the brain re-checks that
+   * the monster can actually acquire it, so a challenge can never point a
+   * monster at something it would otherwise be unable to target.
+   */
+  challenge(
+    world: World,
+    challenger: Creature,
+    now: number,
+    durationMs: number,
+  ): boolean {
+    if (!this.monster.type.flags.hostile) return false;
+    if (!this.canAcquireTarget(world, challenger)) return false;
+    this.targetId = challenger.id;
+    this.challengeFocusUntil = now + durationMs;
+    this.nextTargetChangeAt = this.challengeFocusUntil;
+    this.clearPath();
+    return true;
+  }
+
+  /**
+   * Canary's `Monster::changeTargetDistance`: pulls a distance monster into
+   * melee for a while. Only ever reduces the distance, never increases it.
+   */
+  pullToMelee(distance: number, now: number, durationMs: number): boolean {
+    if (distance >= this.monster.type.flags.targetDistance) return false;
+    this.meleePullDistance = distance;
+    this.meleePullUntil = now + durationMs;
+    this.clearPath();
+    return true;
+  }
+
+  private targetDistanceAt(now: number): number {
+    return now < this.meleePullUntil
+      ? this.meleePullDistance
+      : this.monster.type.flags.targetDistance;
+  }
+
   tick(
     world: World,
     now: number,
@@ -105,7 +150,8 @@ export class MonsterBrain {
         target = this.acquireTarget(world, this.targetSearchStrategy());
       } else if (
         this.monster.type.changeTarget.intervalMs > 0 &&
-        now >= this.nextTargetChangeAt
+        now >= this.nextTargetChangeAt &&
+        now >= this.challengeFocusUntil
       ) {
         this.nextTargetChangeAt =
           now + this.monster.type.changeTarget.intervalMs;
@@ -113,9 +159,7 @@ export class MonsterBrain {
           // Canary lets melee-distance monsters spread aggro; distance
           // monsters switch only to the nearest visible target.
           const search =
-            this.monster.type.flags.targetDistance <= 1
-              ? "random"
-              : "nearest";
+            this.targetDistanceAt(now) <= 1 ? "random" : "nearest";
           const preferred = this.acquireTarget(world, search);
           if (preferred && preferred.id !== target.id) {
             target = preferred;
@@ -144,7 +188,7 @@ export class MonsterBrain {
         availableWork - work,
       );
       work += attacks.work;
-      const targetDistance = this.monster.type.flags.targetDistance;
+      const targetDistance = this.targetDistanceAt(now);
       const currentDistance = this.distance(
         this.monster.position,
         target.position,
@@ -406,8 +450,7 @@ export class MonsterBrain {
         z: this.monster.position.z,
       };
       if (
-        this.distance(position, target) !==
-          this.monster.type.flags.targetDistance ||
+        this.distance(position, target) !== this.targetDistanceAt(now) ||
         this.distance(position, this.monster.home) >
           this.config.despawnRadius
       ) {

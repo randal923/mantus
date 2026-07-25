@@ -138,11 +138,30 @@ export class DamageResolver {
     ) {
       amount = Math.round(amount / 2);
     }
+    // Canary buff conditions scale the roll before mitigation: the caster's
+    // outgoing buff, then the victim's incoming buff. Both are server-owned
+    // conditions, so a client can never influence either factor.
+    if (source && request.origin !== "condition") {
+      const sourcePercent =
+        request.type === "healing"
+          ? source.conditions.healingDealtPercent
+          : source.conditions.damageDealtPercent;
+      if (sourcePercent !== 100) {
+        amount = Math.max(0, Math.floor((amount * sourcePercent) / 100));
+      }
+    }
+    if (request.type !== "healing") {
+      const receivedPercent = target.conditions.damageReceivedPercent;
+      if (receivedPercent !== 100) {
+        amount = Math.max(0, Math.floor((amount * receivedPercent) / 100));
+      }
+    }
     if (request.type === "healing") {
       const before = target.health;
       target.setHealth(target.health + amount);
       const healed = target.health - before;
       this.publishDamageResult(target, request, healed, "none");
+      if (source instanceof Player) source.analyzer.recordHealingDone(healed);
       if (target instanceof Player && healed > 0) {
         this.progression.syncPlayer(target, now);
         if (source instanceof Player) {
@@ -220,6 +239,8 @@ export class DamageResolver {
       }
     }
     this.publishDamageResult(target, request, amount, mitigated.block);
+    if (source instanceof Player) source.analyzer.recordDamageDealt(amount);
+    if (target instanceof Player) target.analyzer.recordDamageTaken(amount);
     if (target instanceof Monster && source instanceof Player && amount > 0) {
       target.recordPlayerDamage(source.id, amount);
       this.partyHooks?.recordMonsterDamage(source.id, now);
@@ -392,7 +413,8 @@ export class DamageResolver {
       amount = this.formula.applyAbsorbPercent(amount, resistance);
       const checksPhysical =
         request.type === "physical" &&
-        (!request.ignoreShield || !request.ignoreArmor);
+        (!request.ignoreShield || !request.ignoreArmor) &&
+        !target.conditions.defenseDisabled;
       const usedDefenseBlock =
         checksPhysical && target.consumeDefenseBlock(now);
       if (request.type === "physical") {
@@ -449,7 +471,8 @@ export class DamageResolver {
             entry.item.location.slot === "shield",
         );
         const checksPhysical =
-          !request.ignoreShield || !request.ignoreArmor;
+          (!request.ignoreShield || !request.ignoreArmor) &&
+          !target.conditions.defenseDisabled;
         const usedDefenseBlock =
           checksPhysical && target.consumeDefenseBlock(now);
         if (!request.ignoreShield && usedDefenseBlock) {

@@ -1,4 +1,4 @@
-import type { CombatTarget, Position } from "@tibia/protocol";
+import type { CombatTarget, Direction, Position } from "@tibia/protocol";
 import type { Creature } from "../creature/Creature";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
@@ -15,12 +15,14 @@ export function resolveSpellTarget(
   session: Session,
   player: Player,
   target: CombatTarget,
+  /** Aim-at-target override for `direction` casts; defaults to the facing. */
+  castDirection?: Direction,
 ): ResolvedSpellTarget | null {
   if (target.kind === "self") {
     return { position: player.position, creature: player };
   }
   if (target.kind === "direction") {
-    const [x, y] = directionDelta(player.direction);
+    const [x, y] = directionDelta(castDirection ?? player.direction);
     return {
       position: {
         x: player.position.x + x,

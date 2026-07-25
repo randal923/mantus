@@ -22,9 +22,22 @@ export interface ConditionApplication {
   readonly capacity?: number;
   readonly naturalRegeneration?: boolean;
   readonly attributes?: Readonly<Partial<Record<
-    "meleePercent" | "distancePercent" | "defensePercent" | "magicLevelPercent" | "magicLevelDelta",
+    | "meleePercent"
+    | "distancePercent"
+    | "defensePercent"
+    | "fistPercent"
+    | "magicLevelPercent"
+    | "magicLevelDelta"
+    /** Outgoing damage scale, Canary CONDITION_PARAM_BUFF_DAMAGEDEALT. */
+    | "damageDealtPercent"
+    /** Incoming damage scale, Canary CONDITION_PARAM_BUFF_DAMAGERECEIVED. */
+    | "damageReceivedPercent"
+    /** Outgoing healing scale, Canary CONDITION_PARAM_BUFF_HEALINGDEALT. */
+    | "healingDealtPercent",
     number
   >>>;
+  /** Canary CONDITION_PARAM_DISABLE_DEFENSE: no shield/armor block while up. */
+  readonly disablesDefense?: boolean;
   readonly fearSource?: Position;
 }
 

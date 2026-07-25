@@ -3,6 +3,7 @@ import type { CharacterRow } from "./CharacterRow";
 import type { CharacterSkill } from "../progression/CharacterSkill";
 import { parseActionBar } from "./parseActionBar";
 import { parseActionBotSettings } from "./parseActionBotSettings";
+import { parseAimAtTargetSpells } from "./parseAimAtTargetSpells";
 import { skullFromCode } from "../pvp/skullFromCode";
 
 export function toCharacter(
@@ -49,6 +50,7 @@ export function toCharacter(
       row.potion_action_bar,
       actionBar,
     ),
+    aimAtTargetSpellIds: parseAimAtTargetSpells(row.aim_at_target_spells),
     skull: skullFromCode(row.skull),
     skullExpiresAt: row.skull_expires_at,
     createdAt: row.created_at,

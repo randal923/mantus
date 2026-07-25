@@ -22,4 +22,10 @@ export interface PartyHooks {
   ): ReadonlyArray<{ playerId: string; amount: number }> | null;
   /** Online party participants credited by Canary's onDeathForParty helper. */
   getQuestParticipantIds(playerId: string): ReadonlyArray<string>;
+  /**
+   * Online co-members of the player's own party, including the player, or
+   * just the player when unpartied. Drives the combat analyzer's row set, so
+   * it must never widen beyond the party the caller actually belongs to.
+   */
+  getPartyMemberIds(playerId: string): ReadonlyArray<string>;
 }

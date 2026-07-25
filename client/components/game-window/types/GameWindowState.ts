@@ -5,6 +5,7 @@ import type {
   CharacterCreationOptions,
   CharacterSummary,
   CreatureState,
+  CombatAnalyzerState,
   FightState,
   OwnCharacterState,
   ServerErrorCode,
@@ -50,6 +51,8 @@ export interface GameWindowState {
   worldLoadProgress: WorldLoadProgress | null;
   visibleCreatures: ReadonlyArray<CreatureState>;
   fightState: FightState | null;
+  followTargetId: string | null;
+  combatAnalyzer: CombatAnalyzerState | null;
   spells: ReadonlyArray<SpellCatalogEntry>;
   combatLog: ReadonlyArray<string>;
   levelUpNotice: LevelUpNotice | null;

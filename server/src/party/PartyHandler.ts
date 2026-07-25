@@ -169,6 +169,10 @@ export class PartyHandler implements PartyHooks {
   }
 
   getQuestParticipantIds(playerId: string): ReadonlyArray<string> {
+    return this.getPartyMemberIds(playerId);
+  }
+
+  getPartyMemberIds(playerId: string): ReadonlyArray<string> {
     const party = this.parties.partyOf(playerId);
     if (!party) return this.world.getPlayer(playerId) ? [playerId] : [];
     return party

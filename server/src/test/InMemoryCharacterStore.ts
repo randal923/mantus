@@ -98,6 +98,19 @@ export class InMemoryCharacterStore implements CharacterStore {
     });
   }
 
+  async updateAimAtTargetSpells(
+    characterId: string,
+    aimAtTargetSpellIds: ReadonlyArray<string>,
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, {
+      ...character,
+      aimAtTargetSpellIds: [...aimAtTargetSpellIds],
+      updatedAt: new Date(),
+    });
+  }
+
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {
     const character = this.characters.get(snapshot.characterId);
     if (!character || character.version !== snapshot.expectedVersion) {

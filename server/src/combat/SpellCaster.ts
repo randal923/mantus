@@ -1,11 +1,13 @@
 import type { CombatTarget, ServerErrorCode } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
+import { Monster } from "../creature/Monster";
 import { Player } from "../Player";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import { aimDirectionFor } from "./aimDirectionFor";
 import { areaPositions } from "./areaPositions";
 import { applySpellCooldowns } from "./applySpellCooldowns";
 import { canPlayerHarm } from "./canPlayerHarm";
@@ -75,6 +77,7 @@ export class SpellCaster {
       session,
       player,
       targetIntent,
+      aimDirectionFor(this.world, session, player, spell),
     );
     if (!target) {
       this.feedback.reject(session, now, "spell-target-invalid");
@@ -214,6 +217,11 @@ export class SpellCaster {
     }
     if (spell.condition) {
       for (const creature of affected.length > 0 ? affected : [player]) {
+        // Canary's crippling target callbacks refuse players outright, so the
+        // debuff can never be turned on another character.
+        if (spell.condition.monstersOnly && !(creature instanceof Monster)) {
+          continue;
+        }
         if (
           spell.damageType !== "healing" &&
           !canPlayerHarm(this.world, session, player, creature, this.pvpHooks)
@@ -311,14 +319,20 @@ export class SpellCaster {
     this.feedback.sendFightState(session, now);
   }
 
+  /**
+   * Conjuring spells. `conjureOverride` carries a server-rolled item/count for
+   * the random-food spell; the roll happens in the tick before this call, so
+   * the client never influences which item or how many are created.
+   */
   executeConjure(
     session: Session,
     spell: SpellDefinition,
     targetIntent: CombatTarget,
     now: number,
+    conjureOverride?: SpellDefinition["conjure"],
   ): void {
     const player = playerForSession(this.world, session);
-    const conjure = spell.conjure;
+    const conjure = conjureOverride ?? spell.conjure;
     if (!player || !conjure) {
       this.feedback.reject(session, now, "spell-unavailable");
       return;
@@ -443,7 +457,13 @@ export class SpellCaster {
     ) {
       return "spell-weapon-required";
     }
-    const resolved = resolveSpellTarget(this.world, session, player, target);
+    const resolved = resolveSpellTarget(
+      this.world,
+      session,
+      player,
+      target,
+      aimDirectionFor(this.world, session, player, spell),
+    );
     if (!resolved) return "spell-target-invalid";
     if (spell.castRules?.excludedVocations.includes(player.vocation)) {
       return "spell-vocation-restricted";

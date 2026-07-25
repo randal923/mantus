@@ -2,20 +2,31 @@ import type {
   ActivateActionBarMessage,
   AttackTargetMessage,
   CancelAttackMessage,
+  CancelFollowMessage,
   CastSpellMessage,
   FightMode,
+  FollowCreatureMessage,
+  ResetCombatAnalyzerMessage,
+  SetAimAtTargetSpellsMessage,
   SetFightModeMessage,
   UsePotionMessage,
   UseRuneMessage,
 } from "@tibia/protocol";
 import type { AccountStore } from "../AccountStore";
+import type { CharacterStore } from "../character/CharacterStore";
+import { playerForSession } from "./playerForSession";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
+import type { World } from "../World";
 import type { Combat } from "./Combat";
 
 type CombatIntent =
   | AttackTargetMessage
   | CancelAttackMessage
+  | FollowCreatureMessage
+  | CancelFollowMessage
+  | ResetCombatAnalyzerMessage
+  | SetAimAtTargetSpellsMessage
   | SetFightModeMessage
   | CastSpellMessage
   | UseRuneMessage
@@ -39,6 +50,8 @@ export class CombatIntentHandler {
     private readonly combat: Combat,
     private readonly accounts: AccountStore,
     private readonly registry: SessionRegistry,
+    private readonly world: World,
+    private readonly characters: CharacterStore,
   ) {}
 
   handle(session: Session, intent: CombatIntent, now: number): void {
@@ -56,6 +69,22 @@ export class CombatIntentHandler {
     }
     if (intent.type === "cancel-attack") {
       this.combat.cancelTarget(session, now);
+      return;
+    }
+    if (intent.type === "follow-creature") {
+      this.combat.followCreature(session, intent.creatureId, now);
+      return;
+    }
+    if (intent.type === "cancel-follow") {
+      this.combat.cancelFollow(session, now);
+      return;
+    }
+    if (intent.type === "reset-combat-analyzer") {
+      this.combat.resetCombatAnalyzer(session, now);
+      return;
+    }
+    if (intent.type === "set-aim-at-target-spells") {
+      this.handleAimAtTarget(session, intent);
       return;
     }
     if (intent.type === "set-fight-mode") {
@@ -81,6 +110,58 @@ export class CombatIntentHandler {
 
   applyResolvedOutcomes(): void {
     for (const outcome of this.outcomes.splice(0)) outcome();
+  }
+
+  /**
+   * The set is sanitized against the character's own spell list before it is
+   * stored, and applied in memory immediately so the very next cast already
+   * honours it; the durable write trails and only reports failure.
+   */
+  private handleAimAtTarget(
+    session: Session,
+    intent: SetAimAtTargetSpellsMessage,
+  ): void {
+    const player = playerForSession(this.world, session);
+    if (!player) {
+      session.sendError("join-required");
+      return;
+    }
+    if (session.aimAtTargetUpdatePending) {
+      session.sendError("aim-at-target-update-pending");
+      return;
+    }
+    const spellIds = this.combat.sanitizeAimAtTargetSpells(
+      player,
+      intent.spellIds,
+    );
+    session.aimAtTargetSpellIds = new Set(spellIds);
+    session.aimAtTargetUpdatePending = true;
+    session.send({ type: "aim-at-target-spells", spellIds: [...spellIds] });
+    void this.persistAimAtTarget(session, player.id, spellIds);
+  }
+
+  private async persistAimAtTarget(
+    session: Session,
+    characterId: string,
+    spellIds: ReadonlyArray<string>,
+  ): Promise<void> {
+    try {
+      await this.characters.updateAimAtTargetSpells(characterId, spellIds);
+      this.outcomes.push(() => {
+        session.aimAtTargetUpdatePending = false;
+      });
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(
+        `aim-at-target update failed for character ${characterId}: ${reason}`,
+      );
+      this.outcomes.push(() => {
+        session.aimAtTargetUpdatePending = false;
+        if (this.registry.contains(session)) {
+          session.sendError("aim-at-target-update-failed");
+        }
+      });
+    }
   }
 
   private queueFightModePersistence(session: Session, mode: FightMode): void {

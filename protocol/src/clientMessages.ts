@@ -11,7 +11,11 @@ import {
 } from "./bank";
 import { privateChatMessageSchema, speakMessageSchema } from "./chat";
 import { createCharacterInputSchema } from "./character";
-import { combatTargetSchema, fightModeSchema } from "./combat";
+import {
+  AIM_AT_TARGET_SPELL_LIMIT,
+  combatTargetSchema,
+  fightModeSchema,
+} from "./combat";
 import {
   closeDepotMessageSchema,
   closeMailboxMessageSchema,
@@ -211,6 +215,54 @@ export const cancelAttackMessageSchema = z
   })
   .strict();
 
+/**
+ * Follows one server-known creature without attacking it. The follow state
+ * itself lives on the server and is re-validated every tick; the client never
+ * supplies a path, a step, or a destination. Expected rate: one per click.
+ */
+export const followCreatureMessageSchema = z
+  .object({
+    type: z.literal("follow-creature"),
+    creatureId: z.string().min(1).max(192),
+  })
+  .strict();
+
+/** Clears the current follow target without supplying any replacement state. */
+export const cancelFollowMessageSchema = z
+  .object({
+    type: z.literal("cancel-follow"),
+  })
+  .strict();
+
+/**
+ * Replaces the player's "aim at target" spell set. For a direction spell in
+ * this set the server derives the cast direction from the live attack target
+ * instead of the player's facing, which is the only thing it changes — every
+ * requirement, range, and outcome stays server-owned. Expected rate: one per
+ * spell-list edit, at most a few per minute.
+ */
+export const setAimAtTargetSpellsMessageSchema = z
+  .object({
+    type: z.literal("set-aim-at-target-spells"),
+    spellIds: z
+      .array(
+        z
+          .string()
+          .min(1)
+          .max(64)
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+      )
+      .max(AIM_AT_TARGET_SPELL_LIMIT),
+  })
+  .strict();
+
+/** Resets the session's own combat-analyzer totals; carries no client data. */
+export const resetCombatAnalyzerMessageSchema = z
+  .object({
+    type: z.literal("reset-combat-analyzer"),
+  })
+  .strict();
+
 /** Updates server-owned stance, chase preference, and secure PVP mode. */
 export const setFightModeMessageSchema = z
   .object({
@@ -229,6 +281,13 @@ export const castSpellMessageSchema = z
       .max(64)
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
     target: combatTargetSchema,
+    /**
+     * Name parameter for the spells Canary declares with `hasParams` (summon
+     * creature, creature illusion, mentor other). It is looked up against the
+     * server's own catalogs and visible players; it never indexes anything
+     * directly and is ignored by every other spell.
+     */
+    parameter: z.string().min(1).max(64).optional(),
   })
   .strict();
 
@@ -462,6 +521,10 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   useMapMessageSchema,
   attackTargetMessageSchema,
   cancelAttackMessageSchema,
+  followCreatureMessageSchema,
+  cancelFollowMessageSchema,
+  setAimAtTargetSpellsMessageSchema,
+  resetCombatAnalyzerMessageSchema,
   setFightModeMessageSchema,
   castSpellMessageSchema,
   useRuneMessageSchema,
@@ -583,6 +646,16 @@ export type SetViewportMessage = z.infer<typeof setViewportMessageSchema>;
 export type UseMapMessage = z.infer<typeof useMapMessageSchema>;
 export type AttackTargetMessage = z.infer<typeof attackTargetMessageSchema>;
 export type CancelAttackMessage = z.infer<typeof cancelAttackMessageSchema>;
+export type FollowCreatureMessage = z.infer<
+  typeof followCreatureMessageSchema
+>;
+export type CancelFollowMessage = z.infer<typeof cancelFollowMessageSchema>;
+export type SetAimAtTargetSpellsMessage = z.infer<
+  typeof setAimAtTargetSpellsMessageSchema
+>;
+export type ResetCombatAnalyzerMessage = z.infer<
+  typeof resetCombatAnalyzerMessageSchema
+>;
 export type SetFightModeMessage = z.infer<typeof setFightModeMessageSchema>;
 export type CastSpellMessage = z.infer<typeof castSpellMessageSchema>;
 export type UseRuneMessage = z.infer<typeof useRuneMessageSchema>;

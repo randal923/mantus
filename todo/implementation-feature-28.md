@@ -8,7 +8,7 @@ Spell words via chat shipped (`4b332a1`, extended by `2e25fa9`): exact match aft
 
 ## Remaining work
 
-- Name-parameterized casts (`exura sio "Friend"`) are parsed then dropped without a cast. Fix: resolve the parameter to an on-screen player and pass a `creature` target.
+- Name-parameterized casts (`exura sio "Friend"`) are still dropped for ordinary spells. Partially closed 2026-07-25 (Feature 24): `cast-spell` now carries a bounded optional `parameter`, spoken casts pass it through, and the spells with a `playerAction` (summon creature, creature illusion, mentor other) resolve it server-side. Remaining fix: resolve the parameter to an on-screen player and pass a `creature` target for the ordinary targeted spells.
 - Exani hur cannot be cast from the action bar or a bare `cast-spell` intent (no parameter carried; rejects `spell-not-possible`). Fix if wanted: an up/down chooser on the slot, or two pseudo-actions.
 - Successful casts broadcast as plain `say`; there is no distinct magic/orange speech mode in the protocol.
 - Yelled spell words do not cast (yell has its own exhaust path); say and whisper do.

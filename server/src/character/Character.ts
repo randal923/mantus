@@ -48,6 +48,8 @@ export interface Character {
   readonly townId: number;
   readonly actionBar: ActionBar;
   readonly actionBotSettings: ActionBotSettings;
+  /** Spell ids whose direction cast aims at the live attack target. */
+  readonly aimAtTargetSpellIds: ReadonlyArray<string>;
   readonly skull: SkullState;
   readonly skullExpiresAt: Date | null;
   readonly createdAt: Date;

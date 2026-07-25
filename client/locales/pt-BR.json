@@ -956,7 +956,9 @@
     "look": "Olhar",
     "use": "Usar",
     "attack": "Atacar",
-    "stopAttack": "Parar ataque"
+    "stopAttack": "Parar ataque",
+    "follow": "Seguir",
+    "stopFollow": "Parar de seguir"
   },
   "potions": {
     "bar": "Barra de poções",

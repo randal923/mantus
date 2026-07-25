@@ -20,6 +20,12 @@ export class CombatFeedback {
     this.sendFightState(session, now);
   }
 
+  setFollowTarget(session: Session, creatureId: string | null): void {
+    if (session.followTargetId === creatureId) return;
+    session.followTargetId = creatureId;
+    session.send({ type: "follow-target-changed", creatureId });
+  }
+
   reject(
     session: Session,
     now: number,

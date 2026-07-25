@@ -35,10 +35,35 @@ export function spellCondition(
           ),
         )
       : undefined;
+  const attributes = {
+    ...(condition.meleePercent !== undefined
+      ? { meleePercent: condition.meleePercent }
+      : {}),
+    ...(condition.distancePercent !== undefined
+      ? { distancePercent: condition.distancePercent }
+      : {}),
+    ...(condition.defensePercent !== undefined
+      ? { defensePercent: condition.defensePercent }
+      : {}),
+    ...(condition.fistPercent !== undefined
+      ? { fistPercent: condition.fistPercent }
+      : {}),
+    ...(condition.damageDealtPercent !== undefined
+      ? { damageDealtPercent: condition.damageDealtPercent }
+      : {}),
+    ...(condition.damageReceivedPercent !== undefined
+      ? { damageReceivedPercent: condition.damageReceivedPercent }
+      : {}),
+    ...(condition.healingDealtPercent !== undefined
+      ? { healingDealtPercent: condition.healingDealtPercent }
+      : {}),
+  };
   return {
     type: condition.type,
     sourceId: source.id,
     durationMs: condition.durationMs,
+    ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
+    ...(condition.disablesDefense ? { disablesDefense: true } : {}),
     ...(magnitude !== undefined ? { magnitude } : {}),
     ...(condition.tickIntervalMs !== undefined
       ? { tickIntervalMs: condition.tickIntervalMs }

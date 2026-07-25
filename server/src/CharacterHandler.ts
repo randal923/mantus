@@ -314,6 +314,7 @@ export class CharacterHandler {
       ...character.actionBotSettings,
       rules: [...character.actionBotSettings.rules],
     };
+    session.aimAtTargetSpellIds = new Set(character.aimAtTargetSpellIds);
     this.registry.bindPlayer(session);
     const inventory = this.items.attach(loadedInventory);
     if (loadedDepot) this.depot.attach(loadedDepot);
@@ -342,6 +343,7 @@ export class CharacterHandler {
       uiSettings: session.account?.uiSettings ?? {},
       actionBar: character.actionBar,
       actionBotSettings: character.actionBotSettings,
+      aimAtTargetSpellIds: [...character.aimAtTargetSpellIds],
     });
     this.visibility.syncMapItems(session, player);
     void this.service

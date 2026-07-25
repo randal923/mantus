@@ -390,4 +390,106 @@ describe("SpawnManager", () => {
       ),
     ).toHaveLength(0);
   });
+
+  it("caps player summons, refuses unsummonable types, and releases them", () => {
+    const summonable: MonsterType = {
+      ...monsterType,
+      flags: { ...monsterType.flags, summonable: true },
+    };
+    const forbidden: MonsterType = {
+      ...monsterType,
+      id: "dragon",
+      name: "Dragon",
+      flags: { ...monsterType.flags, summonable: false },
+    };
+    const world = makeWorld();
+    const owner = world.getPlayer("viewer");
+    if (!owner) throw new Error("expected the seeded player");
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      {
+        monsterTypes: new Map([
+          [summonable.id, summonable],
+          [forbidden.id, forbidden],
+        ]),
+        npcTypes: new Map(),
+        shopCatalogs: new Map(),
+        slots: [],
+      },
+      config,
+    );
+
+    // Names are resolved against the catalog, never used to index anything.
+    expect(manager.findMonsterTypeByName("  rAt ")?.id).toBe(summonable.id);
+    expect(manager.findMonsterTypeByName("no such monster")).toBeUndefined();
+
+    // An unsummonable type is refused even though it exists.
+    expect(manager.summonForPlayer(owner, forbidden.id, 1_000)).toBeNull();
+
+    expect(manager.summonForPlayer(owner, summonable.id, 1_000)).not.toBeNull();
+    expect(manager.summonForPlayer(owner, summonable.id, 1_001)).not.toBeNull();
+    // Third summon breaches the shared cap and must be refused.
+    expect(manager.summonForPlayer(owner, summonable.id, 1_002)).toBeNull();
+    expect(manager.playerSummonCount(owner.id)).toBe(2);
+
+    manager.releaseSummonsOf(owner.id);
+    expect(manager.playerSummonCount(owner.id)).toBe(0);
+    expect(
+      [...world.allCreatures()].filter(
+        (creature) => creature.kind === "monster",
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("never lets a challenge redirect a summon or an unacquirable target", () => {
+    const summonable: MonsterType = {
+      ...monsterType,
+      flags: { ...monsterType.flags, summonable: true, hostile: true },
+    };
+    const world = makeWorld();
+    const owner = world.getPlayer("viewer");
+    if (!owner) throw new Error("expected the seeded player");
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      {
+        monsterTypes: new Map([[summonable.id, summonable]]),
+        npcTypes: new Map(),
+        shopCatalogs: new Map(),
+        slots: [
+          {
+            id: "monster:slot-1",
+            kind: "monster",
+            typeId: summonable.id,
+            home: { x: 2, y: 1, z: 7 },
+            radius: 1,
+            respawnMs: 1_000,
+            direction: "south",
+            enabled: true,
+          },
+        ],
+      },
+      config,
+    );
+    manager.tick(1_000);
+    const wildId = manager.activeCreatureId("monster:slot-1");
+    if (!wildId) throw new Error("expected the wild monster");
+    const wild = world.getCreature(wildId) as Monster;
+
+    const summon = manager.summonForPlayer(owner, summonable.id, 1_000);
+    if (!summon) throw new Error("expected a summon");
+
+    // Canary refuses to challenge an owned creature.
+    expect(manager.challengeMonster(summon, owner, 1_000, 12_000)).toBe(false);
+    expect(manager.pullMonsterToMelee(summon, 1, 1_000, 12_000)).toBe(false);
+
+    expect(manager.challengeMonster(wild, owner, 1_000, 12_000)).toBe(true);
+    // A melee monster is already at distance 1, so the pull is a no-op.
+    expect(manager.pullMonsterToMelee(wild, 1, 1_000, 12_000)).toBe(false);
+
+    // A monster that is no longer the live instance can never be challenged.
+    world.removeCreature(wild.id);
+    expect(manager.challengeMonster(wild, owner, 1_100, 12_000)).toBe(false);
+  });
 });

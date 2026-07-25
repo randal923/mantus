@@ -108,6 +108,18 @@ export class GameClient {
     this.send({ type: "cancel-attack" });
   }
 
+  followCreature(creatureId: string): void {
+    this.send({ type: "follow-creature", creatureId });
+  }
+
+  cancelFollow(): void {
+    this.send({ type: "cancel-follow" });
+  }
+
+  resetCombatAnalyzer(): void {
+    this.send({ type: "reset-combat-analyzer" });
+  }
+
   greetNpc(npcId: string): boolean {
     return this.send({ type: "npc-dialogue-greet", npcId });
   }

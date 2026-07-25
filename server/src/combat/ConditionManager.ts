@@ -200,12 +200,35 @@ export class ConditionManager {
         ? attributes?.distancePercent
         : skill === "shielding"
           ? attributes?.defensePercent
-          : skill === "club" || skill === "axe" || skill === "sword"
-            ? attributes?.meleePercent
-            : undefined;
+          : skill === "fist"
+            ? attributes?.fistPercent
+            : skill === "club" || skill === "axe" || skill === "sword"
+              ? attributes?.meleePercent
+              : undefined;
     return percent === undefined
       ? 0
       : Math.trunc(base * ((percent - 100) / 100));
+  }
+
+  /** Canary's buff percentages: 100 is neutral, 135 is +35%, 90 is -10%. */
+  get damageDealtPercent(): number {
+    return this.active.get("attributes")?.attributes?.damageDealtPercent ?? 100;
+  }
+
+  get damageReceivedPercent(): number {
+    return (
+      this.active.get("attributes")?.attributes?.damageReceivedPercent ?? 100
+    );
+  }
+
+  get healingDealtPercent(): number {
+    return (
+      this.active.get("attributes")?.attributes?.healingDealtPercent ?? 100
+    );
+  }
+
+  get defenseDisabled(): boolean {
+    return this.active.get("attributes")?.disablesDefense === true;
   }
 
   magicLevelModifier(base: number): number {

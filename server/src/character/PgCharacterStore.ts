@@ -211,6 +211,21 @@ export class PgCharacterStore implements CharacterStore {
     }
   }
 
+  async updateAimAtTargetSpells(
+    characterId: string,
+    spellIds: ReadonlyArray<string>,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET aim_at_target_spells = $2::jsonb
+       WHERE id = $1`,
+      [characterId, JSON.stringify(spellIds)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("character aim-at-target update failed");
+    }
+  }
+
   async saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number> {
     assertValidCharacterSaveSnapshot(snapshot);
     const client = await this.pool.connect();

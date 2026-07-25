@@ -1,15 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AccountStore } from "../AccountStore";
+import type { CharacterStore } from "../character/CharacterStore";
 import type { Combat } from "./Combat";
 import { CombatIntentHandler } from "./CombatIntentHandler";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
+import type { World } from "../World";
 
 describe("CombatIntentHandler", () => {
   it("routes every bounded combat intent to the tick-owned combat system", () => {
     const combat = {
       selectTarget: vi.fn(),
       cancelTarget: vi.fn(),
+      followCreature: vi.fn(),
+      cancelFollow: vi.fn(),
+      resetCombatAnalyzer: vi.fn(),
       setFightMode: vi.fn(),
       castSpell: vi.fn(),
       useRune: vi.fn(),
@@ -19,7 +24,13 @@ describe("CombatIntentHandler", () => {
     const session = {} as Session;
     const accounts = {} as AccountStore;
     const registry = {} as SessionRegistry;
-    const handler = new CombatIntentHandler(combat, accounts, registry);
+    const handler = new CombatIntentHandler(
+      combat,
+      accounts,
+      registry,
+      {} as World,
+      {} as CharacterStore,
+    );
 
     handler.handle(
       session,
@@ -27,6 +38,13 @@ describe("CombatIntentHandler", () => {
       1_000,
     );
     handler.handle(session, { type: "cancel-attack" }, 1_001);
+    handler.handle(
+      session,
+      { type: "follow-creature", creatureId: "monster" },
+      1_007,
+    );
+    handler.handle(session, { type: "cancel-follow" }, 1_008);
+    handler.handle(session, { type: "reset-combat-analyzer" }, 1_009);
     handler.handle(
       session,
       {
@@ -72,6 +90,13 @@ describe("CombatIntentHandler", () => {
 
     expect(combat.selectTarget).toHaveBeenCalledWith(session, "monster", 1_000);
     expect(combat.cancelTarget).toHaveBeenCalledWith(session, 1_001);
+    expect(combat.followCreature).toHaveBeenCalledWith(
+      session,
+      "monster",
+      1_007,
+    );
+    expect(combat.cancelFollow).toHaveBeenCalledWith(session, 1_008);
+    expect(combat.resetCombatAnalyzer).toHaveBeenCalledWith(session, 1_009);
     expect(combat.setFightMode).toHaveBeenCalledOnce();
     expect(combat.castSpell).toHaveBeenCalledOnce();
     expect(combat.useRune).toHaveBeenCalledOnce();
@@ -101,7 +126,13 @@ describe("CombatIntentHandler", () => {
       },
       sendError: vi.fn(),
     } as unknown as Session;
-    const handler = new CombatIntentHandler(combat, accounts, registry);
+    const handler = new CombatIntentHandler(
+      combat,
+      accounts,
+      registry,
+      {} as World,
+      {} as CharacterStore,
+    );
     const mode = { attack: "offensive", chase: false, secure: true } as const;
 
     handler.handle(session, { type: "set-fight-mode", mode }, 1_000);
@@ -142,7 +173,13 @@ describe("CombatIntentHandler", () => {
       },
       sendError: vi.fn(),
     } as unknown as Session;
-    const handler = new CombatIntentHandler(combat, accounts, registry);
+    const handler = new CombatIntentHandler(
+      combat,
+      accounts,
+      registry,
+      {} as World,
+      {} as CharacterStore,
+    );
     const first = { attack: "balanced", chase: true, secure: true } as const;
     const latest = { attack: "defensive", chase: false, secure: false } as const;
 

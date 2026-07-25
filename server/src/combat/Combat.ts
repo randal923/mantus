@@ -32,10 +32,15 @@ import { canMonsterAffect } from "./canMonsterAffect";
 import { canPlayerTarget } from "./canPlayerTarget";
 import { ChaseController } from "./ChaseController";
 import { CombatFeedback } from "./CombatFeedback";
-import { MISSILE_DURATION_MS } from "./combatConstants";
+import {
+  COMBAT_ANALYZER_INTERVAL_MS,
+  MISSILE_DURATION_MS,
+} from "./combatConstants";
 import { CombatFormula } from "./CombatFormula";
 import { ConditionSystem } from "./ConditionSystem";
 import { creaturesInArea } from "./creaturesInArea";
+import { directionDelta } from "./directionDelta";
+import { directionToward } from "./directionToward";
 import type { DamageRequest } from "./Damage";
 import { DamageResolver } from "./DamageResolver";
 import { DeathHandler } from "./DeathHandler";
@@ -44,10 +49,14 @@ import { getMagicEffectId } from "./getMagicEffectId";
 import { getMissileId } from "./getMissileId";
 import { isInRange } from "./isInRange";
 import { PlayerAutoAttack } from "./PlayerAutoAttack";
+import { CONJURED_FOOD_TYPE_IDS } from "./conjuredFoodTypeIds";
 import { playerForSession } from "./playerForSession";
+import { PlayerSpellActions } from "./PlayerSpellActions";
+import { projectCombatAnalyzer } from "./projectCombatAnalyzer";
 import type { SpellDefinition } from "./Spell";
 import { SpellCaster } from "./SpellCaster";
 import { SpellRegistry } from "./SpellRegistry";
+import type { TargetingHooks } from "./TargetingHooks";
 import type { WorldSpellHooks } from "./WorldSpellHooks";
 import { ActionBot } from "./ActionBot";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
@@ -78,7 +87,14 @@ export class Combat {
   private readonly autoAttack: PlayerAutoAttack;
   private readonly potions: PotionService;
   private readonly actionBot: ActionBot;
+  private readonly chase: ChaseController;
+  private readonly playerActions: PlayerSpellActions;
   private readonly formula: CombatFormula;
+  /**
+   * Set once the spawn runtime exists (it is constructed after combat).
+   * Challenge and summon spells fail closed while it is absent.
+   */
+  private targeting: TargetingHooks | null = null;
   private readonly queuedMonsterAbilities: Array<{
     readonly executeAt: number;
     readonly monsterId: string;
@@ -104,7 +120,7 @@ export class Combat {
     seed: number,
     onMonsterDeath: (monster: Monster, now: number) => boolean,
     spells = new SpellRegistry(),
-    partyHooks?: PartyHooks,
+    private readonly partyHooks?: PartyHooks,
     guildHooks?: GuildHooks,
     private readonly pvpHooks?: PvpHooks,
     experienceRate = 1,
@@ -177,7 +193,15 @@ export class Combat {
       pvpHooks,
       partyHooks,
     );
+    this.playerActions = new PlayerSpellActions(
+      world,
+      visibility,
+      registry,
+      this.feedback,
+      this.conditionSystem,
+    );
     const chase = new ChaseController(world, visibility, persistence);
+    this.chase = chase;
     this.autoAttack = new PlayerAutoAttack(
       world,
       progression,
@@ -215,6 +239,11 @@ export class Combat {
     );
   }
 
+  attachTargeting(targeting: TargetingHooks): void {
+    this.targeting = targeting;
+    this.playerActions.attachTargeting(targeting);
+  }
+
   selectTarget(session: Session, creatureId: string, now: number): void {
     const player = playerForSession(this.world, session);
     const target = this.world.getCreature(creatureId);
@@ -229,6 +258,7 @@ export class Combat {
       return;
     }
     session.pendingManualActionBarActivation = null;
+    this.feedback.setFollowTarget(session, null);
     this.feedback.setTarget(session, target.id, now);
   }
 
@@ -239,6 +269,80 @@ export class Combat {
     }
     session.pendingManualActionBarActivation = null;
     this.feedback.setTarget(session, null, now);
+  }
+
+  /**
+   * Follow is a bounded intent: the client names a creature it can already
+   * see, and the server owns the resulting movement. Canary clears the attack
+   * target when a follow starts, so the two modes never fight over stepping.
+   */
+  followCreature(session: Session, creatureId: string, now: number): void {
+    const player = playerForSession(this.world, session);
+    const target = this.world.getCreature(creatureId);
+    if (
+      !player ||
+      !target ||
+      target.id === player.id ||
+      !session.knownCreatureIds.has(target.id) ||
+      !this.world.canSee(player.position, target.position, session.viewRange)
+    ) {
+      this.feedback.reject(session, now);
+      return;
+    }
+    session.pendingManualActionBarActivation = null;
+    if (session.attackTargetId) this.feedback.setTarget(session, null, now);
+    this.feedback.setFollowTarget(session, target.id);
+  }
+
+  cancelFollow(session: Session, now: number): void {
+    if (!playerForSession(this.world, session)) {
+      session.sendError("join-required");
+      return;
+    }
+    this.feedback.setFollowTarget(session, null);
+  }
+
+  /**
+   * Replaces the session's aim-at-target spell set. Unknown ids and spells the
+   * character cannot cast are dropped rather than stored, so the persisted set
+   * can never be used to smuggle arbitrary strings into the character row.
+   */
+  sanitizeAimAtTargetSpells(
+    player: Player,
+    spellIds: ReadonlyArray<string>,
+  ): ReadonlyArray<string> {
+    const allowed = new Set<string>();
+    for (const spellId of spellIds) {
+      const spell = this.spells.get(spellId);
+      if (
+        !spell ||
+        spell.origin !== "spell" ||
+        !spell.vocations.includes(player.vocation)
+      ) {
+        continue;
+      }
+      allowed.add(spell.id);
+    }
+    return [...allowed];
+  }
+
+  resetCombatAnalyzer(session: Session, now: number): void {
+    const player = playerForSession(this.world, session);
+    if (!player) {
+      session.sendError("join-required");
+      return;
+    }
+    player.analyzer.reset(now);
+    this.sendCombatAnalyzer(session, now);
+  }
+
+  sendCombatAnalyzer(session: Session, now: number): void {
+    const player = playerForSession(this.world, session);
+    if (!player) return;
+    session.send({
+      type: "combat-analyzer",
+      analyzer: projectCombatAnalyzer(this.world, player, now, this.partyHooks),
+    });
   }
 
   setFightMode(
@@ -277,8 +381,25 @@ export class Combat {
       this.feedback.reject(session, now, "spell-unavailable");
       return;
     }
+    const parameter = intent.parameter ?? null;
     if (spell.worldAction) {
-      this.castWorldActionSpell(session, spell, null, now);
+      this.castWorldActionSpell(session, spell, parameter, now);
+      return;
+    }
+    if (spell.playerAction === "conjure-random-food") {
+      this.spellCaster.executeConjure(
+        session,
+        spell,
+        intent.target,
+        now,
+        this.rollConjuredFood(),
+      );
+      return;
+    }
+    if (spell.playerAction) {
+      this.spellCaster.executeWorldSpell(session, spell, now, (player) =>
+        this.playerActions.execute(session, player, spell, parameter, now),
+      );
       return;
     }
     if (spell.conjure) {
@@ -286,6 +407,22 @@ export class Combat {
       return;
     }
     this.spellCaster.executeSpell(session, spell, intent.target, now, true);
+  }
+
+  /**
+   * Canary's food spell rolls one or two random foods. Both rolls happen
+   * server-side with the tick's seeded RNG before the single atomic conjure.
+   */
+  private rollConjuredFood(): SpellDefinition["conjure"] {
+    const typeId =
+      CONJURED_FOOD_TYPE_IDS[
+        this.formula.integer(0, CONJURED_FOOD_TYPE_IDS.length - 1)
+      ] ?? CONJURED_FOOD_TYPE_IDS[0];
+    return {
+      sourceItemTypeId: 0,
+      targetItemTypeId: typeId,
+      count: this.formula.chance(50) ? 2 : 1,
+    };
   }
 
   /**
@@ -302,13 +439,14 @@ export class Combat {
       this.castWorldActionSpell(session, spell, parameter, now);
       return true;
     }
-    if (parameter !== null) return false;
+    if (parameter !== null && !spell.playerAction) return false;
     this.castSpell(
       session,
       {
         type: "cast-spell",
         spellId: spell.id,
         target: this.spokenSpellTarget(session, spell),
+        ...(parameter !== null ? { parameter } : {}),
       },
       now,
     );
@@ -462,7 +600,54 @@ export class Combat {
       this.activatePendingManualActionBar(session, now);
       this.actionBot.tick(session, now);
       this.autoAttack.tickPlayerAttack(session, now);
+      this.tickFollow(session, now);
+      this.tickCombatAnalyzer(session, now);
     }
+  }
+
+  /**
+   * Pushes the analyzer on a fixed cadence rather than per damage event, so a
+   * long fight cannot turn into a message flood (charter rule 10).
+   */
+  private tickCombatAnalyzer(session: Session, now: number): void {
+    if (now < session.nextCombatAnalyzerAt) return;
+    session.nextCombatAnalyzerAt = now + COMBAT_ANALYZER_INTERVAL_MS;
+    const player = playerForSession(this.world, session);
+    if (!player) return;
+    if (
+      player.analyzer.damageDealt === 0 &&
+      player.analyzer.damageTaken === 0 &&
+      player.analyzer.healingDone === 0 &&
+      !player.partyMember
+    ) {
+      return;
+    }
+    this.sendCombatAnalyzer(session, now);
+  }
+
+  /**
+   * Re-validates the follow target from live state every tick (charter rule
+   * 4): a creature that logged out, died, changed floor, or left the view
+   * range drops the follow instead of steering the player toward a position
+   * the client was never told about.
+   */
+  private tickFollow(session: Session, now: number): void {
+    const followTargetId = session.followTargetId;
+    if (!followTargetId) return;
+    const player = playerForSession(this.world, session);
+    const target = this.world.getCreature(followTargetId);
+    if (
+      !player ||
+      !target ||
+      target.health <= 0 ||
+      target.position.z !== player.position.z ||
+      !session.knownCreatureIds.has(target.id) ||
+      !this.world.canSee(player.position, target.position, session.viewRange)
+    ) {
+      this.feedback.setFollowTarget(session, null);
+      return;
+    }
+    this.chase.followTarget(session, player, target, now);
   }
 
   private activatePendingManualActionBar(
@@ -914,6 +1099,32 @@ export class Combat {
       : null;
   }
 
+  /**
+   * The position the ability's area is laid out around. Canary anchors an
+   * area on the variant position, and for an untargeted (`needDirection`)
+   * monster spell that position is `getCasterPosition(monster, direction)` —
+   * the tile *ahead* of the monster, not the victim's tile. Anchoring on the
+   * victim would drop a whole directional matrix on top of them regardless of
+   * how far away they stand; anchoring on the monster would shift the wave a
+   * tile short and put the monster inside its own area.
+   */
+  private abilityCenter(
+    monster: Monster,
+    resolvedTarget: Creature,
+    ability: MonsterAbility,
+  ): Position {
+    if (ability.target === "self") return monster.position;
+    if (ability.target !== "direction") return resolvedTarget.position;
+    const [dx, dy] = directionDelta(
+      directionToward(monster.position, resolvedTarget.position),
+    );
+    return {
+      x: monster.position.x + dx,
+      y: monster.position.y + dy,
+      z: monster.position.z,
+    };
+  }
+
   executeMonsterAbility(
     monster: Monster,
     target: Creature | null,
@@ -1001,8 +1212,7 @@ export class Combat {
       });
       return true;
     }
-    const center =
-      ability.target === "self" ? monster.position : resolvedTarget.position;
+    const center = this.abilityCenter(monster, resolvedTarget, ability);
     if (ability.missile && resolvedTarget !== monster) {
       const missileId = getMissileId(ability.missile);
       if (missileId) {

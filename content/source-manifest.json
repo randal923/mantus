@@ -136,7 +136,7 @@
   },
   {
    "path": "tools/parseCanarySpells.mjs",
-   "sha256": "96b1d72a3ca0f9f755984292496c9d5d0e2ab9c598c35ef3708bfc6a8c097bd6"
+   "sha256": "75e5ce35f472a7bfd3e29b5992918e415ff5bcc33ea7765317e5462c3866ec34"
   },
   {
    "path": "tools/importCanaryNpcs.mjs",

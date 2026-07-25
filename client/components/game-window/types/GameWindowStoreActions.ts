@@ -5,6 +5,7 @@ import type {
   ActionBotSettings,
   CharacterCreationOptions,
   CreatureState,
+  CombatAnalyzerState,
   FightState,
   OwnCharacterState,
   ServerErrorCode,
@@ -55,6 +56,10 @@ export interface GameWindowStoreActions {
     value: SetStateAction<ReadonlyArray<CreatureState>>,
   ) => void;
   setFightState: (value: SetStateAction<FightState | null>) => void;
+  setFollowTargetId: (value: SetStateAction<string | null>) => void;
+  setCombatAnalyzer: (
+    value: SetStateAction<CombatAnalyzerState | null>,
+  ) => void;
   setSpells: (value: SetStateAction<ReadonlyArray<SpellCatalogEntry>>) => void;
   setCombatLog: (value: SetStateAction<ReadonlyArray<string>>) => void;
   setLevelUpNotice: (value: SetStateAction<LevelUpNotice | null>) => void;

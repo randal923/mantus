@@ -23,13 +23,32 @@ export class ChaseController {
     now: number,
     range: number,
   ): void {
-    if (
-      !session.fightMode.chase ||
-      session.movementDirection ||
-      now < player.nextStepAt
-    ) {
-      return;
-    }
+    if (!session.fightMode.chase) return;
+    this.stepToward(session, player, target, now, range);
+  }
+
+  /**
+   * Follow mode: the same server-owned stepping as chase, but driven by the
+   * follow target instead of the attack target and independent of the chase
+   * fight-mode flag. Canary keeps the follower one tile away.
+   */
+  followTarget(
+    session: Session,
+    player: Player,
+    target: Creature,
+    now: number,
+  ): void {
+    this.stepToward(session, player, target, now, 1);
+  }
+
+  private stepToward(
+    session: Session,
+    player: Player,
+    target: Creature,
+    now: number,
+    range: number,
+  ): void {
+    if (session.movementDirection || now < player.nextStepAt) return;
     const path = findPath({
       start: player.position,
       isGoal: (position) => isInRange(position, target.position, range),

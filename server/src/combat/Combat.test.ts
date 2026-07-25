@@ -12,6 +12,7 @@ import {
 import type { AccountStore } from "../AccountStore";
 import type { Character } from "../character/Character";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
+import type { CharacterStore } from "../character/CharacterStore";
 import { Monster } from "../creature/Monster";
 import type {
   MonsterAbility,
@@ -27,6 +28,8 @@ import type { MapData } from "../MapData";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import { positionKey } from "../positionKey";
+import { aimDirectionFor } from "./aimDirectionFor";
+import { SpellRegistry } from "./SpellRegistry";
 import { ProgressionSystem } from "../progression/ProgressionSystem";
 import { deriveCharacterStats } from "../progression/deriveCharacterStats";
 import { getExperienceForLevel } from "../progression/getExperienceForLevel";
@@ -256,6 +259,8 @@ function makeBystander(
     knownCreatureIds: new Set([player.id]),
     knownMapItemTiles: new Map(),
     attackTargetId: null,
+    followTargetId: null,
+    aimAtTargetSpellIds: new Set<string>(),
     combatCooldowns: new Map(),
     send: (message: ServerMessage) => sent.push(message),
     sendSerialized: (message: string) =>
@@ -297,6 +302,9 @@ async function makeHarness(options: {
     attackTargetId: null,
     fightMode: { attack: "balanced", chase: true, secure: true },
     combatCooldowns: new Map(),
+    followTargetId: null,
+    aimAtTargetSpellIds: new Set<string>(),
+    nextCombatAnalyzerAt: 0,
     itemOperationPending: false,
     potionPersistPending: false,
     actionBar: options.actionBar ?? createDefaultActionBar(),
@@ -388,6 +396,7 @@ async function makeHarness(options: {
           recordPartnerHeal: () => undefined,
           getExperienceShares: () => null,
           getQuestParticipantIds: (playerId) => [playerId],
+          getPartyMemberIds: (playerId) => [playerId],
         } satisfies PartyHooks
       : undefined,
     undefined,
@@ -1636,6 +1645,8 @@ describe("Combat", () => {
       harness.combat,
       {} as AccountStore,
       {} as SessionRegistry,
+      harness.world,
+      {} as CharacterStore,
     );
 
     intents.handle(
@@ -3069,5 +3080,309 @@ describe("Combat", () => {
 
     expect(landed.player.health).toBeLessThan(landed.player.maxHealth);
     expect(landed.player.conditions.has("freeze")).toBe(true);
+  });
+
+  it("drops a follow whose target is forged, off-floor, or out of view", async () => {
+    const harness = await makeHarness({ map: makeMap([], [], [], [7, 8]) });
+    const monster = makeMonster("monster-instance:follow:0", {
+      x: 3,
+      y: 1,
+      z: 7,
+    });
+    harness.world.addCreature(monster);
+
+    // Never told about this creature: the follow must be refused outright.
+    harness.combat.followCreature(harness.session, monster.id, 1_000);
+    expect(harness.session.followTargetId).toBeNull();
+
+    harness.combat.followCreature(
+      harness.session,
+      "monster-instance:forged:0",
+      1_001,
+    );
+    expect(harness.session.followTargetId).toBeNull();
+
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.combat.followCreature(harness.session, monster.id, 1_002);
+    expect(harness.session.followTargetId).toBe(monster.id);
+
+    // Attacking clears the follow so only one thing steers the player.
+    harness.combat.selectTarget(harness.session, monster.id, 1_003);
+    expect(harness.session.followTargetId).toBeNull();
+
+    harness.combat.followCreature(harness.session, monster.id, 1_004);
+    expect(harness.session.followTargetId).toBe(monster.id);
+
+    // A target that changes floor is dropped at execution time, not followed.
+    harness.world.removeCreature(monster.id);
+    monster.moveTo({ x: 3, y: 1, z: 8 });
+    harness.world.addCreature(monster);
+    harness.combat.tick(1_005);
+    expect(harness.session.followTargetId).toBeNull();
+  });
+
+  it("keeps the combat analyzer to the session's own totals", async () => {
+    const harness = await makeHarness();
+    const monster = makeMonster("monster-instance:analyzed:0", {
+      x: 2,
+      y: 1,
+      z: 7,
+    });
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+
+    harness.player.analyzer.recordDamageDealt(25);
+    harness.player.analyzer.recordDamageTaken(7);
+
+    harness.combat.sendCombatAnalyzer(harness.session, 5_000);
+    const analyzer = harness.sent
+      .filter((message) => message.type === "combat-analyzer")
+      .at(-1);
+    if (analyzer?.type !== "combat-analyzer") {
+      throw new Error("expected a combat-analyzer message");
+    }
+
+    expect(analyzer.analyzer.entries).toHaveLength(1);
+    expect(analyzer.analyzer.entries[0]).toMatchObject({
+      playerId: harness.player.id,
+      damageDealt: 25,
+      damageTaken: 7,
+    });
+    expect(analyzer.analyzer.elapsedMs).toBe(5_000);
+
+    harness.combat.resetCombatAnalyzer(harness.session, 6_000);
+    expect(harness.player.analyzer.damageDealt).toBe(0);
+    expect(harness.player.analyzer.elapsedMs(6_000)).toBe(0);
+  });
+
+  it("only aims a direction spell at a target the session can still see", async () => {
+    const harness = await makeHarness();
+    const monster = makeMonster("monster-instance:aimed:0", {
+      x: 1,
+      y: 3,
+      z: 7,
+    });
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.combat.selectTarget(harness.session, monster.id, 1_000);
+
+    const exori = new SpellRegistry().get("exori");
+    if (!exori) throw new Error("expected the pinned Exori definition");
+
+    // Target due south: without opting in, the cast keeps the player's facing.
+    expect(
+      aimDirectionFor(harness.world, harness.session, harness.player, exori),
+    ).toBeUndefined();
+
+    harness.session.aimAtTargetSpellIds = new Set([exori.id]);
+    expect(
+      aimDirectionFor(harness.world, harness.session, harness.player, exori),
+    ).toBe("south");
+
+    // A target the session no longer knows falls back to the facing.
+    harness.session.knownCreatureIds.delete(monster.id);
+    expect(
+      aimDirectionFor(harness.world, harness.session, harness.player, exori),
+    ).toBeUndefined();
+  });
+
+  it("refuses aim-at-target spells the character cannot cast", async () => {
+    const harness = await makeHarness();
+
+    expect(
+      harness.combat.sanitizeAimAtTargetSpells(harness.player, [
+        "exori",
+        "not-a-spell",
+        "avalanche-rune",
+        "exori",
+      ]),
+    ).toEqual(["exori"]);
+  });
+
+  it("challenges only live, unowned monsters and never a forged one", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Elite Knight"),
+    });
+    const wild = makeMonster("monster-instance:wild:0", { x: 2, y: 1, z: 7 });
+    const summon = makeMonster("monster-instance:owned:0", {
+      x: 1,
+      y: 2,
+      z: 7,
+    });
+    for (const monster of [wild, summon]) {
+      harness.world.addCreature(monster);
+      harness.session.knownCreatureIds.add(monster.id);
+    }
+    const challenged: string[] = [];
+    harness.combat.attachTargeting({
+      challengeMonster: (monster) => {
+        if (monster.id === summon.id) return false;
+        challenged.push(monster.id);
+        return true;
+      },
+      pullMonsterToMelee: () => false,
+      isSummon: (monster) => monster.id === summon.id,
+      summonForPlayer: () => null,
+      playerSummonCount: () => 0,
+      findMonsterTypeByName: () => undefined,
+    });
+    const manaBefore = harness.player.mana;
+
+    harness.combat.castSpell(
+      harness.session,
+      { type: "cast-spell", spellId: "exeta-res", target: { kind: "self" } },
+      1_000,
+    );
+
+    expect(challenged).toEqual([wild.id]);
+    expect(harness.player.mana).toBeLessThan(manaBefore);
+  });
+
+  it("refuses an unknown illusion name without spending mana or exhausting", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Master Sorcerer", 30),
+    });
+    harness.combat.attachTargeting({
+      challengeMonster: () => false,
+      pullMonsterToMelee: () => false,
+      isSummon: () => false,
+      summonForPlayer: () => null,
+      playerSummonCount: () => 0,
+      findMonsterTypeByName: (name) =>
+        name.trim().toLowerCase() === "rat"
+          ? makeMonsterType({ flags: { ...makeMonsterType().flags, illusionable: true } })
+          : undefined,
+    });
+    const manaBefore = harness.player.mana;
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "utevo-res-ina",
+        target: { kind: "self" },
+        parameter: "not a monster",
+      },
+      1_000,
+    );
+
+    expect(harness.player.mana).toBe(manaBefore);
+    expect(harness.player.conditions.has("outfit")).toBe(false);
+    expect(
+      harness.sent.some(
+        (message) =>
+          message.type === "error" &&
+          message.code === "spell-parameter-invalid",
+      ),
+    ).toBe(true);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "utevo-res-ina",
+        target: { kind: "self" },
+        parameter: "Rat",
+      },
+      1_100,
+    );
+
+    expect(harness.player.mana).toBeLessThan(manaBefore);
+    expect(harness.player.conditions.has("outfit")).toBe(true);
+  });
+
+  it("scales damage by the server-owned dealt and received buffs", async () => {
+    const harness = await makeHarness();
+    const monster = makeMonster("monster-instance:buffed:0", {
+      x: 2,
+      y: 1,
+      z: 7,
+    });
+    harness.world.addCreature(monster);
+
+    const ability: MonsterAbility = {
+      kind: "damage",
+      intervalMs: 1_000,
+      chance: 100,
+      target: "target",
+      range: 2,
+      area: { shape: "single" },
+      damageType: "physical",
+      minimum: 40,
+      maximum: 40,
+    };
+
+    const before = harness.player.health;
+    harness.combat.executeMonsterAbility(monster, harness.player, ability, 0);
+    const unbuffed = before - harness.player.health;
+
+    harness.player.setHealth(harness.player.maxHealth);
+    harness.player.conditions.apply(
+      {
+        type: "attributes",
+        sourceId: harness.player.id,
+        durationMs: 10_000,
+        attributes: { damageReceivedPercent: 200 },
+      },
+      0,
+    );
+    const buffedBefore = harness.player.health;
+    harness.combat.executeMonsterAbility(monster, harness.player, ability, 0);
+    const buffed = buffedBefore - harness.player.health;
+
+    expect(unbuffed).toBe(40);
+    expect(buffed).toBe(80);
+  });
+
+  it("starts a monster's directional wave ahead of it, not on its victim", async () => {
+    const harness = await makeHarness({ position: { x: 5, y: 5, z: 7 } });
+    // Four tiles north of the player, so a 3-tile wave aimed south reaches
+    // the tiles between them but must not be laid out around the player.
+    const caster = makeMonster("monster-instance:waver:0", {
+      x: 5,
+      y: 1,
+      z: 7,
+    });
+    harness.world.addCreature(caster);
+    const wave: MonsterAbility = {
+      kind: "damage",
+      intervalMs: 1_000,
+      chance: 100,
+      target: "direction",
+      range: 0,
+      // Canary's matrix centre plus two rows in front of it.
+      area: {
+        shape: "tiles",
+        offsets: [
+          { x: 0, y: 0 },
+          { x: 0, y: -1 },
+          { x: 0, y: -2 },
+        ],
+        directional: true,
+      },
+      damageType: "fire",
+      minimum: 10,
+      maximum: 10,
+      effect: 6,
+    };
+
+    harness.combat.executeMonsterAbility(caster, harness.player, wave, 1_000);
+
+    const tiles = harness.sent
+      .filter((message) => message.type === "magic-effect")
+      .map((message) =>
+        message.type === "magic-effect" ? positionKey(message.position) : "",
+      );
+
+    // Anchored one tile ahead of the monster (y = 2), running toward the
+    // player at y = 5 — never on the monster's own tile, never centred on
+    // the player.
+    expect(tiles).toContain(positionKey({ x: 5, y: 2, z: 7 }));
+    expect(tiles).toContain(positionKey({ x: 5, y: 3, z: 7 }));
+    expect(tiles).toContain(positionKey({ x: 5, y: 4, z: 7 }));
+    expect(tiles).not.toContain(positionKey(caster.position));
+    expect(tiles).not.toContain(positionKey({ x: 5, y: 6, z: 7 }));
+    // The wave stops one short of the player, so it deals no damage.
+    expect(harness.player.health).toBe(harness.player.maxHealth);
   });
 });

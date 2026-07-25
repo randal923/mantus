@@ -4,6 +4,7 @@ import type { Combat } from "../combat/Combat";
 import type { Creature } from "../creature/Creature";
 import { PROTOCOL_LIMITS } from "@tibia/protocol";
 import { Monster } from "../creature/Monster";
+import type { MonsterType } from "../creature/MonsterType";
 import { Npc } from "../creature/Npc";
 import type { Visibility } from "../Visibility";
 import type { MoveResult, World } from "../World";
@@ -16,6 +17,8 @@ const SPAWN_SECTOR_SIZE = 32;
 /** Synthetic summon owner for GM-spawned monsters; never a real creature id. */
 const GM_SPAWN_OWNER_ID = "gm:spawns";
 const EVENT_SPAWN_OWNER_ID = "event:spawns";
+/** Canary's summon_creature.lua cap: at most two player summons at a time. */
+const PLAYER_MAX_SUMMONS = 2;
 
 interface SlotState {
   definition: SpawnSlotDefinition;
@@ -261,6 +264,105 @@ export class SpawnManager {
     return typeof result === "string" && result.startsWith("monster-event:")
       ? result
       : null;
+  }
+
+  challengeMonster(
+    monster: Monster,
+    challenger: Creature,
+    now: number,
+    durationMs: number,
+  ): boolean {
+    if (this.world.getCreature(monster.id) !== monster) return false;
+    if (this.isSummon(monster)) return false;
+    const brain = this.brains.get(monster.id);
+    if (!(brain instanceof MonsterBrain)) return false;
+    return brain.challenge(this.world, challenger, now, durationMs);
+  }
+
+  pullMonsterToMelee(
+    monster: Monster,
+    distance: number,
+    now: number,
+    durationMs: number,
+  ): boolean {
+    if (this.world.getCreature(monster.id) !== monster) return false;
+    if (this.isSummon(monster)) return false;
+    const brain = this.brains.get(monster.id);
+    if (!(brain instanceof MonsterBrain)) return false;
+    return brain.pullToMelee(distance, now, durationMs);
+  }
+
+  isSummon(monster: Monster): boolean {
+    const ownerId = this.summonOwnerByCreature.get(monster.id);
+    return (
+      ownerId !== undefined &&
+      ownerId !== GM_SPAWN_OWNER_ID &&
+      ownerId !== EVENT_SPAWN_OWNER_ID
+    );
+  }
+
+  playerSummonCount(ownerId: string): number {
+    return this.liveSummonIds(ownerId).length;
+  }
+
+  findMonsterTypeByName(name: string): MonsterType | undefined {
+    const normalized = name.trim().toLowerCase();
+    if (normalized.length === 0) return undefined;
+    for (const type of this.content.monsterTypes.values()) {
+      if (type.name.toLowerCase() === normalized) return type;
+    }
+    return undefined;
+  }
+
+  /**
+   * Player-owned summon (Canary's "utevo res"). Shares the summon registry
+   * with monster summons, so the same ownership bookkeeping, recursive
+   * cleanup, and per-owner cap apply. The caller has already re-validated the
+   * player and paid the cost inside the tick.
+   */
+  summonForPlayer(
+    owner: Player,
+    typeId: string,
+    now: number,
+  ): Monster | null {
+    if (this.world.getCreature(owner.id) !== owner) return null;
+    const type = this.content.monsterTypes.get(typeId);
+    if (!type || !type.flags.summonable) return null;
+    const owned = this.liveSummonIds(owner.id);
+    if (owned.length >= PLAYER_MAX_SUMMONS) return null;
+    const position = this.world.findUnoccupiedPosition(owner.position, 1);
+    if (!position) return null;
+    const summon = new Monster({
+      id: `monster-summon:${owner.id}:${this.summonGeneration++}`,
+      type,
+      position,
+      direction: owner.direction,
+      home: position,
+      spawnRadius: 0,
+    });
+    this.world.addCreature(summon);
+    this.summonOwnerByCreature.set(summon.id, owner.id);
+    const ownedIds = this.summonsByOwner.get(owner.id) ?? new Set<string>();
+    ownedIds.add(summon.id);
+    this.summonsByOwner.set(owner.id, ownedIds);
+    this.addBrain(summon, now);
+    this.visibility.announceCreatureSpawn(summon);
+    this.combat?.onMonsterSpawn?.(summon, now);
+    return summon;
+  }
+
+  /** Despawns everything a creature owns; used when a player logs out. */
+  releaseSummonsOf(ownerId: string): void {
+    this.removeOwnedSummons(ownerId);
+  }
+
+  private liveSummonIds(ownerId: string): string[] {
+    const owned = this.summonsByOwner.get(ownerId);
+    if (!owned) return [];
+    for (const summonId of [...owned]) {
+      if (!this.world.getCreature(summonId)) owned.delete(summonId);
+    }
+    return [...owned];
   }
 
   transformMonster(creatureId: string, typeId: string, now: number): boolean {
