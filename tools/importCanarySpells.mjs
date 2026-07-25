@@ -12,6 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
+import { buildSpellReport } from "./buildSpellReport.mjs";
 import { parseCanarySpells } from "./parseCanarySpells.mjs";
 
 const repoRoot = resolve(import.meta.dirname, "..");
@@ -26,7 +27,7 @@ const manifest = JSON.parse(
   readFileSync(join(repoRoot, "content/source-manifest.json"), "utf8"),
 );
 const source = manifest.sources.canarySpells;
-if (!source || manifest.converters.spells !== 2) {
+if (!source || manifest.converters.spells !== 3) {
   throw new Error("source manifest has no supported Canary spell source");
 }
 const commit = execFileSync("git", ["-C", canaryRoot, "rev-parse", "HEAD"], {
@@ -70,20 +71,11 @@ if (definitionsSha256 !== source.definitionsSha256) {
     `Canary spell sources hash ${definitionsSha256} is not pinned`,
   );
 }
-const report = {
-  total: spells.length,
-  supported: spells.filter((spell) => spell.supported).length,
-  unsupported: spells.filter((spell) => !spell.supported).length,
-  reasons: Object.fromEntries(
-    [...new Set(spells.flatMap((spell) => spell.unsupportedReasons))]
-      .sort()
-      .map((reason) => [
-        reason,
-        spells.filter((spell) => spell.unsupportedReasons.includes(reason))
-          .length,
-      ]),
-  ),
-};
+const entries = spells.map((spell) => ({
+  ...spell,
+  parity: spellParity(spell),
+}));
+const report = buildSpellReport(entries);
 const document = {
   formatVersion: manifest.converters.spells,
   source: {
@@ -91,10 +83,7 @@ const document = {
     definitionsSha256,
   },
   report,
-  spells: spells.map((spell) => ({
-    ...spell,
-    parity: spellParity(spell),
-  })),
+  spells: entries,
 };
 const target = join(repoRoot, "content/spells/canary-spells.json");
 const staging = `${target}.${process.pid}.tmp`;
@@ -104,7 +93,9 @@ writeFileSync(staging, `${JSON.stringify(document, null, 2)}\n`);
 if (statSync(staging).size === 0) throw new Error("spell catalog is empty");
 renameSync(staging, target);
 console.log(
-  `imported ${report.total} spell and rune definitions (${report.supported} supported)`,
+  `imported ${report.total} spell and rune definitions ` +
+    `(${report.registered} registered, ${report.supported} supported, ` +
+    `${report.disabled.total} disabled)`,
 );
 
 function readDefinitions(directory) {
@@ -137,7 +128,7 @@ function parseConstants(source) {
 function parseAreas(source) {
   const areas = {};
   for (const match of source.matchAll(
-    /^(AREA_[A-Z0-9_]+)\s*=\s*{([\s\S]*?)^}/gm,
+    /^(AREA[A-Z0-9_]*)\s*=\s*{([\s\S]*?)^}/gm,
   )) {
     const rows = [...match[2].matchAll(/{\s*([0-3,\s]+)\s*}/g)].map(
       (row) =>
@@ -146,8 +137,16 @@ function parseAreas(source) {
           .map((value) => Number(value.trim()))
           .filter((value) => Number.isInteger(value)),
     );
-    const centerY = rows.findIndex((row) => row.includes(3));
-    const centerX = rows[centerY]?.indexOf(3) ?? -1;
+    // Canary's `AreaCombat::createArea`: `2` and `3` both mark the matrix
+    // centre, and `1` and `3` both mark an affected tile. A `2` centre is a
+    // centre that is deliberately *not* hit (the caster's own ring stays
+    // empty), so it must be read as the anchor and left out of the offsets.
+    const centerY = rows.findIndex(
+      (row) => row.includes(3) || row.includes(2),
+    );
+    const centerX = centerY >= 0
+      ? rows[centerY].findIndex((value) => value === 3 || value === 2)
+      : -1;
     if (centerX < 0 || centerY < 0) continue;
     areas[match[1]] = rows.flatMap((row, y) =>
       row.flatMap((value, x) =>

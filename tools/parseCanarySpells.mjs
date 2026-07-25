@@ -56,6 +56,7 @@ function parseDefinition(definition, constants, areas) {
     : parseFixedFormula(source);
   const conjure = parseConjure(source);
   const castRules = reviewedCastRules(definition.path);
+  const wheelRevelation = reviewedWheelRevelation(definition.path);
   const specialCombat =
     parseSpecialCombat(definition.path) ??
     (conjure
@@ -68,14 +69,20 @@ function parseDefinition(definition, constants, areas) {
       : null);
   const effectConstant = parameter(source, "COMBAT_PARAM_EFFECT");
   const missileConstant = parameter(source, "COMBAT_PARAM_DISTANCEEFFECT");
-  const hasArea = /combat:setArea\(/.test(source);
-  const areaConstant = hasArea
-    ? source.match(/createCombatArea\(\s*([A-Z0-9_]+)/)?.[1] ?? null
-    : null;
+  const areaCall = parseAreaCall(source);
   const targetKind = parseTargetKind(source, variable);
-  const area = areaConstant
-    ? areaFor(areaConstant, areas, targetKind === "direction")
-    : areaFor(specialCombat?.areaConstant ?? null, areas, false);
+  const areaConstant = areaCall
+    ? resolveAreaArgument(source, areaCall.area)
+    : null;
+  const diagonalConstant = areaCall?.diagonal
+    ? resolveAreaArgument(source, areaCall.diagonal)
+    : null;
+  const area = areaFor(
+    areaConstant,
+    diagonalConstant,
+    areas,
+    targetKind === "direction",
+  );
   const declaredRange = numericArgument(method("range"), 0);
   const range =
     declaredRange ??
@@ -89,7 +96,8 @@ function parseDefinition(definition, constants, areas) {
   if (
     !isLiteralCombatCast(source, variable) &&
     !specialCombat?.allowsProceduralCast &&
-    !castRules
+    !castRules &&
+    !wheelRevelation
   ) {
     unsupportedReasons.push("procedural cast callback");
   }
@@ -113,10 +121,12 @@ function parseDefinition(definition, constants, areas) {
   ) {
     unsupportedReasons.push("procedural combat callback");
   }
-  if (hasArea && !areaConstant) {
+  if (areaCall && !areaConstant) {
     unsupportedReasons.push("dynamic combat area");
   } else if (areaConstant && !area) {
     unsupportedReasons.push(`unsupported combat area ${areaConstant}`);
+  } else if (diagonalConstant && !area?.diagonalOffsets) {
+    unsupportedReasons.push(`unsupported combat area ${diagonalConstant}`);
   }
 
   const cooldownMs = numericArgument(method("cooldown"), 0) ?? 0;
@@ -184,15 +194,34 @@ function parseDefinition(definition, constants, areas) {
       : null,
     conjure,
     castRules,
+    wheelRevelation,
     ...(specialCombat?.worldAction
       ? { worldAction: specialCombat.worldAction }
       : {}),
     ...(specialCombat?.playerAction
       ? { playerAction: specialCombat.playerAction }
       : {}),
+    ignoredFormulaFields: ignoredFormulaFields(source),
     supported: unsupportedReasons.length === 0,
     unsupportedReasons,
   };
+}
+
+/**
+ * Declared formula inputs that Canary applies and this importer drops.
+ *
+ * `COMBAT_FORMULA_DAMAGE` is a plain `normal_random(mina, maxa)` in
+ * `Combat::getMinMaxValues`, so its `minb`/`maxb` arguments are dead in Canary
+ * too — carrying them would change nothing and they are not reported. Any
+ * other formula type set directly on the combat brings coefficients the typed
+ * `SpellFormula` cannot express, so those are reported.
+ */
+function ignoredFormulaFields(source) {
+  const match = source.match(
+    /combat:setFormula\(\s*(COMBAT_FORMULA_[A-Z]+)\s*,/,
+  );
+  if (!match || match[1] === "COMBAT_FORMULA_DAMAGE") return [];
+  return [`${match[1]} coefficients`];
 }
 
 function reviewedCastRules(path) {
@@ -224,6 +253,27 @@ function reviewedCastRules(path) {
     },
   };
   return rules[path] ?? null;
+}
+
+/**
+ * Spells whose whole procedural body is Canary's `revelationStageWOD` gate
+ * followed by a literal `combat:execute`. The gate is the only rule in the
+ * body, so it is imported as data and enforced by the cast pipeline; the
+ * Twin Burst stage is the Druid's blue-domain revelation
+ * (`WHEEL_REVELATION_PERKS.blue.Druid`).
+ */
+function reviewedWheelRevelation(path) {
+  const gates = {
+    "data/scripts/spells/attack/ice_burst.lua": {
+      domain: "blue",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/attack/terra_burst.lua": {
+      domain: "blue",
+      minimumStage: 1,
+    },
+  };
+  return gates[path] ?? null;
 }
 
 function parseSpecialCombat(path) {
@@ -324,6 +374,12 @@ function parseSpecialCombat(path) {
       "mentor-other",
       { effectId: 13 },
     ),
+    // --- Reviewed player-spell callbacks (Feature 25) ---------------------
+    // Balanced Brawl: the target callback pulls every monster in the pinned
+    // AREA_BALANCED_BRAWL matrix into melee for 16 s. No damage, no formula,
+    // and the spell declares its own COMBAT_PARAM_EFFECT.
+    "data/scripts/spells/support/balanced_brawl.lua":
+      playerCallback("balanced-brawl"),
     // --- Reviewed self-buff / debuff conditions (Feature 24) --------------
     "data/scripts/spells/support/blood_rage.lua": attributeCondition(
       10_000,
@@ -367,9 +423,6 @@ function parseSpecialCombat(path) {
       {
         effectId: 18,
         allowsProceduralCombat: true,
-        // Sap Strength builds its combat through a helper, so the area
-        // constant is named here and still resolved from the pinned tables.
-        areaConstant: "AREA_CIRCLE3X3",
       },
     ),
     "data/scripts/spells/attack/holy_flash.lua": {
@@ -451,12 +504,14 @@ function parseSpecialCombat(path) {
       damageType: "earth",
       casterEffectId: 15,
     },
+    // The beam and wave spells build their combat inside a local helper, so
+    // only the formula and the effect ids are pinned here; the area itself is
+    // the real `AREA_*` matrix resolved from the pinned tables.
     "data/scripts/spells/attack/energy_beam.lua": {
       damageType: "energy",
       formula: levelMagicFormula(1.8, 11, 3, 19),
       effectId: 12,
       missileId: null,
-      area: { shape: "beam", length: 5 },
       dispel: null,
       allowsProceduralCast: true,
     },
@@ -465,7 +520,6 @@ function parseSpecialCombat(path) {
       formula: levelMagicFormula(4.5, 0, 9, 0),
       effectId: 38,
       missileId: 5,
-      area: { shape: "cone", length: 5, spread: 5 },
       dispel: null,
       allowsProceduralCast: true,
     },
@@ -474,7 +528,6 @@ function parseSpecialCombat(path) {
       formula: levelMagicFormula(4, 0, 7, 0),
       effectId: 38,
       missileId: null,
-      area: { shape: "beam", length: 8 },
       dispel: null,
       allowsProceduralCast: true,
     },
@@ -901,34 +954,63 @@ function originFromVariable(variable) {
   return variable === "rune" ? "rune" : "spell";
 }
 
-function areaFor(constant, areas, directional) {
+/**
+ * The `createCombatArea(area[, extArea])` call that defines a spell's shape.
+ * It is not always inline in `setArea` and its receiver is not always named
+ * `combat` — the beam and wave spells build theirs inside a local helper or
+ * assign the area to a local first — so only the call itself is matched. The
+ * optional second argument is Canary's *extended* area: the separate matrix
+ * used for diagonal casts (`AreaCombat::setupExtArea`).
+ */
+function parseAreaCall(source) {
+  const match = source.match(
+    /createCombatArea\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?:,\s*([A-Za-z_][A-Za-z0-9_]*)\s*)?\)/,
+  );
+  if (!match) return null;
+  return { area: match[1], diagonal: match[2] ?? null };
+}
+
+/**
+ * Resolves an area argument to a pinned `AREA_*` table name. Spells that
+ * upgrade with the Wheel of Destiny pass the table into a local helper and
+ * call that helper once per grade; the *first* call is the base, unupgraded
+ * combat, which is the one this catalog models. The upgraded grades are a
+ * recorded gap (see TODO.md).
+ */
+function resolveAreaArgument(source, name) {
+  if (name.startsWith("AREA")) return name;
+  const helper = [
+    ...source.matchAll(
+      /local\s+function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)/g,
+    ),
+  ]
+    .map((match) => ({
+      name: match[1],
+      parameters: splitArguments(match[2]),
+    }))
+    .find((candidate) => candidate.parameters.includes(name));
+  if (!helper) return null;
+  const call = source.match(
+    new RegExp(`=\\s*${helper.name}\\s*\\(([^)\\n]*)\\)`),
+  );
+  if (!call) return null;
+  const argument = splitArguments(call[1])[
+    helper.parameters.indexOf(name)
+  ];
+  return argument?.startsWith("AREA") ? argument : null;
+}
+
+function areaFor(constant, diagonalConstant, areas, directional) {
   if (!constant) return { shape: "single" };
   const offsets = areas[constant];
-  if (offsets) {
-    return {
-      shape: "tiles",
-      offsets,
-      directional,
-    };
-  }
-  if (constant === "AREA_CIRCLE1X1") return { shape: "circle", radius: 1 };
-  if (constant === "AREA_CIRCLE3X3") return { shape: "circle", radius: 1 };
-  if (constant === "AREA_CIRCLE5X5") return { shape: "circle", radius: 2 };
-  if (constant === "AREA_CIRCLE6X6") return { shape: "circle", radius: 3 };
-  if (constant === "AREA_SQUARE1X1") return { shape: "circle", radius: 1 };
-  if (constant === "AREA_SHORTWAVE3") {
-    return { shape: "cone", length: 3, spread: 3 };
-  }
-  if (constant === "AREA_WAVE4") {
-    return { shape: "cone", length: 4, spread: 3 };
-  }
-  if (constant === "AREA_WAVE6") {
-    return { shape: "cone", length: 6, spread: 3 };
-  }
-  if (constant === "AREA_SQUAREWAVE5") {
-    return { shape: "cone", length: 5, spread: 5 };
-  }
-  return null;
+  if (!offsets) return null;
+  const diagonalOffsets = diagonalConstant ? areas[diagonalConstant] : null;
+  return {
+    shape: "tiles",
+    offsets,
+    ...(diagonalOffsets ? { diagonalOffsets } : {}),
+    directional,
+  };
 }
 
 function conditionType(value) {

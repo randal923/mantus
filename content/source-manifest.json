@@ -132,11 +132,15 @@
   },
   {
    "path": "tools/importCanarySpells.mjs",
-   "sha256": "c8d3b3f874f74bd4aaa2b2ae934f207539b3889161b5217ed3893850c752be5d"
+   "sha256": "f0c682f59fd5d118c20dcedcfc3432a556ec97e20128d03241852a8bb8c1dcc1"
   },
   {
    "path": "tools/parseCanarySpells.mjs",
-   "sha256": "75e5ce35f472a7bfd3e29b5992918e415ff5bcc33ea7765317e5462c3866ec34"
+   "sha256": "45a950ff7d8d401a17f0b5a7d098ae51c949566cdd3f5b1616a5b948403285af"
+  },
+  {
+   "path": "tools/buildSpellReport.mjs",
+   "sha256": "be5e85e2f9c0ee424d17cbbece9cf05aed50c215bc32abe2a662bfe93de5149e"
   },
   {
    "path": "tools/importCanaryNpcs.mjs",
@@ -183,7 +187,7 @@
   "itemCatalog": 2,
   "map": 3,
   "creatures": 2,
-  "spells": 2,
+  "spells": 3,
   "shops": 2,
   "npcDialogues": 1,
   "doors": 1,

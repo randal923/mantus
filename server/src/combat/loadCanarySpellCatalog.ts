@@ -5,8 +5,10 @@ import {
   CHARACTER_VOCATIONS,
   CONDITION_TYPES,
   DAMAGE_TYPES,
+  WHEEL_DOMAINS,
+  WHEEL_REVELATION_THRESHOLDS,
 } from "@tibia/protocol";
-import type { CharacterVocation } from "@tibia/protocol";
+import type { CharacterVocation, WheelDomain } from "@tibia/protocol";
 import { PLAYER_SPELL_ACTIONS } from "./Spell";
 import type {
   PlayerSpellAction,
@@ -27,7 +29,7 @@ export function loadCanarySpellCatalog(): ReadonlyArray<SpellDefinition> {
   const value: unknown = JSON.parse(readFileSync(CATALOG_PATH, "utf8"));
   if (
     !isRecord(value) ||
-    value.formatVersion !== 2 ||
+    value.formatVersion !== 3 ||
     !isRecord(value.source) ||
     value.source.canaryCommit !== EXPECTED_COMMIT ||
     value.source.definitionsSha256 !== EXPECTED_DEFINITIONS_SHA256 ||
@@ -148,6 +150,29 @@ function parseSpell(value: Record<string, unknown>): SpellDefinition {
     castRules: parseCastRules(value.castRules, value.id),
     worldAction: parseWorldAction(value.worldAction, value.id),
     playerAction: parsePlayerAction(value.playerAction, value.id),
+    wheelRevelation: parseWheelRevelation(value.wheelRevelation, value.id),
+  };
+}
+
+function parseWheelRevelation(
+  value: unknown,
+  id: unknown,
+): SpellDefinition["wheelRevelation"] {
+  if (value === undefined || value === null) return null;
+  if (
+    !isRecord(value) ||
+    !WHEEL_DOMAINS.includes(value.domain as WheelDomain) ||
+    !Number.isInteger(value.minimumStage) ||
+    Number(value.minimumStage) < 1 ||
+    Number(value.minimumStage) > WHEEL_REVELATION_THRESHOLDS.length
+  ) {
+    throw new Error(
+      `Canary spell ${String(id)} has an invalid wheel revelation gate`,
+    );
+  }
+  return {
+    domain: value.domain as WheelDomain,
+    minimumStage: value.minimumStage as number,
   };
 }
 
@@ -403,27 +428,22 @@ function parseArea(
 ): SpellDefinition["area"] {
   const shape = value.shape as SpellDefinition["area"]["shape"];
   if (shape === "tiles") {
-    if (
-      !Array.isArray(value.offsets) ||
-      value.offsets.length < 1 ||
-      value.offsets.length > 512 ||
-      typeof value.directional !== "boolean"
-    ) {
+    if (typeof value.directional !== "boolean") {
       throw new Error(`Canary spell ${String(id)} has invalid tile area`);
     }
-    const offsets = value.offsets.map((offset) => {
-      if (
-        !isRecord(offset) ||
-        !Number.isInteger(offset.x) ||
-        !Number.isInteger(offset.y) ||
-        Math.abs(Number(offset.x)) > 32 ||
-        Math.abs(Number(offset.y)) > 32
-      ) {
-        throw new Error(`Canary spell ${String(id)} has invalid tile offset`);
-      }
-      return { x: offset.x as number, y: offset.y as number };
-    });
-    return { shape, offsets, directional: value.directional };
+    const offsets = parseOffsets(value.offsets, id);
+    // Canary's extended area (`setupExtArea`): a separate matrix used for the
+    // four diagonal cast directions instead of rotating the cardinal one.
+    const diagonalOffsets =
+      value.diagonalOffsets === undefined
+        ? null
+        : parseOffsets(value.diagonalOffsets, id);
+    return {
+      shape,
+      offsets,
+      ...(diagonalOffsets ? { diagonalOffsets } : {}),
+      directional: value.directional,
+    };
   }
   for (const field of ["radius", "length", "spread"] as const) {
     if (
@@ -447,6 +467,27 @@ function parseArea(
       ? { spread: value.spread as number }
       : {}),
   };
+}
+
+function parseOffsets(
+  value: unknown,
+  id: unknown,
+): ReadonlyArray<{ readonly x: number; readonly y: number }> {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 512) {
+    throw new Error(`Canary spell ${String(id)} has invalid tile area`);
+  }
+  return value.map((offset) => {
+    if (
+      !isRecord(offset) ||
+      !Number.isInteger(offset.x) ||
+      !Number.isInteger(offset.y) ||
+      Math.abs(Number(offset.x)) > 32 ||
+      Math.abs(Number(offset.y)) > 32
+    ) {
+      throw new Error(`Canary spell ${String(id)} has invalid tile offset`);
+    }
+    return { x: offset.x as number, y: offset.y as number };
+  });
 }
 
 function nullableInteger(value: unknown): number | null {

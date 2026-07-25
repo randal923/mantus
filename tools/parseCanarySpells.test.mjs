@@ -67,6 +67,102 @@ spell:register()
   assert.ok(spell.unsupportedReasons.includes("procedural cast callback"));
 });
 
+/**
+ * Canary's `createCombatArea(area, extArea)`: the second table is the matrix
+ * used for diagonal casts. Both must survive as typed offsets, anchored on
+ * the `2`/`3` centre cell, with only `1`/`3` cells counted as affected.
+ */
+test("imports custom tile matrices and their diagonal counterpart", () => {
+  const source = `
+local combat = Combat()
+combat:setParameter(COMBAT_PARAM_TYPE, COMBAT_FIREDAMAGE)
+combat:setArea(createCombatArea(AREA_TEST, AREADIAGONAL_TEST))
+combat:setFormula(COMBAT_FORMULA_DAMAGE, -5, 0, -9, 0)
+local spell = Spell("instant")
+function spell.onCastSpell(creature, var)
+  return combat:execute(creature, var)
+end
+spell:name("Test Wave")
+spell:words("exevo test")
+spell:needDirection(true)
+spell:register()
+`;
+  const [spell] = parseCanarySpells(
+    [{ path: "data/scripts/spells/attack/test_wave.lua", source }],
+    {},
+    {
+      AREA_TEST: [{ x: -1, y: 0 }, { x: 0, y: 0 }, { x: 1, y: 0 }],
+      AREADIAGONAL_TEST: [{ x: 0, y: 0 }, { x: -1, y: 1 }],
+    },
+  );
+
+  assert.equal(spell.supported, true);
+  assert.deepEqual(spell.combat.area, {
+    shape: "tiles",
+    offsets: [{ x: -1, y: 0 }, { x: 0, y: 0 }, { x: 1, y: 0 }],
+    diagonalOffsets: [{ x: 0, y: 0 }, { x: -1, y: 1 }],
+    directional: true,
+  });
+  assert.deepEqual(spell.ignoredFormulaFields, []);
+});
+
+/**
+ * Wheel-upgraded spells build their combat in a local helper and call it once
+ * per grade. The catalog models the base grade, which is the first call.
+ */
+test("resolves an area passed into a local combat helper", () => {
+  const source = `
+local function createCombat(area, combatFunc)
+  local initCombat = Combat()
+  initCombat:setCallback(CALLBACK_PARAM_LEVELMAGICVALUE, combatFunc)
+  initCombat:setParameter(COMBAT_PARAM_TYPE, COMBAT_ENERGYDAMAGE)
+  initCombat:setArea(createCombatArea(area))
+  return initCombat
+end
+
+local combat = createCombat(AREA_BASE, "onGetFormulaValues")
+local combatWOD = createCombat(AREA_UPGRADED, "onGetFormulaValues")
+local spell = Spell("instant")
+spell:name("Test Beam")
+spell:needDirection(true)
+spell:register()
+`;
+  const [spell] = parseCanarySpells(
+    [{ path: "data/scripts/spells/attack/test_beam.lua", source }],
+    {},
+    {
+      AREA_BASE: [{ x: 0, y: 0 }],
+      AREA_UPGRADED: [{ x: 0, y: 0 }, { x: 0, y: -1 }],
+    },
+  );
+
+  assert.deepEqual(spell.combat, null);
+  assert.ok(!spell.unsupportedReasons.includes("dynamic combat area"));
+});
+
+test("reports an area it cannot resolve instead of approximating it", () => {
+  const source = `
+local combat = Combat()
+combat:setParameter(COMBAT_PARAM_TYPE, COMBAT_FIREDAMAGE)
+combat:setArea(createCombatArea(AREA_UNKNOWN))
+combat:setFormula(COMBAT_FORMULA_DAMAGE, -5, 0, -9, 0)
+local spell = Spell("instant")
+function spell.onCastSpell(creature, var)
+  return combat:execute(creature, var)
+end
+spell:name("Test Unknown")
+spell:register()
+`;
+  const [spell] = parseCanarySpells([
+    { path: "data/scripts/spells/attack/test_unknown.lua", source },
+  ]);
+
+  assert.equal(spell.supported, false);
+  assert.ok(
+    spell.unsupportedReasons.includes("unsupported combat area AREA_UNKNOWN"),
+  );
+});
+
 test("imports literal conjuring inputs without executing the callback", () => {
   const source = `
 local spell = Spell("instant")

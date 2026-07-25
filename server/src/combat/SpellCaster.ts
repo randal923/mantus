@@ -269,6 +269,8 @@ export class SpellCaster {
     spell: SpellDefinition,
     now: number,
     attempt: (player: Player) => boolean,
+    /** The intent's target; direction casts need it to pass the target check. */
+    targetIntent: CombatTarget = { kind: "self" },
   ): void {
     const player = playerForSession(this.world, session);
     if (!player) {
@@ -279,7 +281,7 @@ export class SpellCaster {
       session,
       player,
       spell,
-      { kind: "self" },
+      targetIntent,
       now,
     );
     if (rejection) {
@@ -426,6 +428,13 @@ export class SpellCaster {
     if (player.conditions.has("mute")) return "spell-muted";
     if (!spell.vocations.includes(player.vocation)) {
       return "spell-vocation-restricted";
+    }
+    if (
+      spell.wheelRevelation &&
+      player.wheelBonuses.revelationStages[spell.wheelRevelation.domain] <
+        spell.wheelRevelation.minimumStage
+    ) {
+      return "spell-not-learned";
     }
     if (player.level < spell.requiredLevel) return "spell-level-restricted";
     if (playerMagicLevel(player, equipment) < spell.requiredMagicLevel) {

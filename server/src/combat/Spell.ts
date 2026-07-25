@@ -4,6 +4,7 @@ import type {
   CombatOrigin,
   ConditionType,
   DamageType,
+  WheelDomain,
 } from "@tibia/protocol";
 
 export type SpellExpression =
@@ -127,6 +128,15 @@ export interface SpellDefinition {
   /** Floor-moving support spells resolved by the movement rules, not combat. */
   readonly worldAction: "magic-rope" | "levitate" | null;
   /**
+   * Canary's `revelationStageWOD` gate: the spell only exists for a character
+   * that reached the given Wheel of Destiny revelation stage in a domain.
+   * Enforced server-side at cast time, like every other requirement.
+   */
+  readonly wheelRevelation: {
+    readonly domain: WheelDomain;
+    readonly minimumStage: number;
+  } | null;
+  /**
    * Player spells whose Canary Lua body is a reviewed TypeScript callback.
    * The regular cast pipeline still owns vocation, level, mana, soul, range,
    * and cooldowns; only the effect is procedural.
@@ -142,6 +152,7 @@ export const PLAYER_SPELL_ACTIONS = [
   "divine-dazzle",
   "summon-creature",
   "mentor-other",
+  "balanced-brawl",
 ] as const;
 
 export type PlayerSpellAction = (typeof PLAYER_SPELL_ACTIONS)[number];

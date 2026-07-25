@@ -1198,6 +1198,7 @@
     "spell-magic-level-restricted": "Seu nível mágico é muito baixo para lançar essa magia.",
     "spell-mana-insufficient": "Você não tem mana suficiente para lançar essa magia.",
     "spell-muted": "Você não pode lançar magias enquanto estiver silenciado.",
+    "spell-not-learned": "Você precisa aprender esta magia primeiro.",
     "spell-not-possible": "Desculpe, não é possível.",
     "spell-out-of-range": "O alvo da magia está longe demais.",
     "spell-protection-zone": "Você não pode lançar essa magia em uma zona de proteção.",

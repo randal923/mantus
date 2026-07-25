@@ -1,25 +1,36 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
     "definitionsSha256": "835255c876350bd56f5853005f3e3888074e3f71b345ebd6b0a4312142a8546d"
   },
   "report": {
     "total": 236,
-    "supported": 166,
-    "unsupported": 70,
+    "nonContent": 1,
+    "registered": 235,
+    "supported": 169,
+    "disabled": {
+      "total": 66,
+      "spells": 49,
+      "runes": 17,
+      "byOwner": {
+        "07-combat": 33,
+        "08c-decay": 12,
+        "14a-parties": 5,
+        "14d-houses": 4,
+        "14e-social-services": 2,
+        "15-optional-features": 10
+      }
+    },
+    "ignoredFormulaFields": 0,
+    "unreviewedCallbacks": 47,
     "reasons": {
       "condition mechanics require a dedicated importer": 15,
-      "dynamic combat area": 1,
-      "example definition": 1,
       "field or item creation is not implemented": 9,
-      "missing literal Spell declaration": 1,
-      "procedural cast callback": 43,
-      "procedural combat callback": 12,
-      "unsupported combat area AREA_BALANCED_BRAWL": 1,
-      "unsupported combat area AREA_RING1_BURST3": 2,
-      "unsupported or missing combat formula": 66,
-      "unsupported or missing combat type": 44
+      "procedural cast callback": 41,
+      "procedural combat callback": 11,
+      "unsupported or missing combat formula": 65,
+      "unsupported or missing combat type": 43
     }
   },
   "spells": [
@@ -63,6 +74,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -137,6 +150,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -421,6 +436,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -469,6 +486,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -523,6 +542,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -576,6 +597,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -629,6 +652,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -682,6 +707,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -734,6 +761,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -786,6 +815,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -906,6 +937,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -954,6 +987,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -1006,6 +1041,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -1058,6 +1095,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -1195,6 +1234,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -1479,6 +1520,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -1612,6 +1655,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -1737,6 +1782,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -1870,6 +1917,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -2008,6 +2057,8 @@
         "excludedVocations": [],
         "casterEffectId": 0
       },
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -2141,6 +2192,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -2189,6 +2242,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -2259,6 +2314,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -2388,6 +2445,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -2436,6 +2495,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat type",
@@ -2508,6 +2569,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -2556,6 +2619,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -2608,6 +2673,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -2660,6 +2727,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -2751,6 +2820,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -2884,6 +2955,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -3168,6 +3241,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -3301,6 +3376,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -3585,6 +3662,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -3725,6 +3804,8 @@
         ],
         "casterEffectId": 0
       },
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -3765,6 +3846,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat type",
@@ -3841,6 +3924,8 @@
         "count": 25
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "missing literal Spell declaration",
@@ -4017,6 +4102,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -4144,6 +4231,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -4340,6 +4429,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -4513,6 +4604,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -4638,6 +4731,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -4678,6 +4773,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula",
@@ -4852,12 +4949,80 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": -1,
+              "y": -5
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": -5,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -4982,6 +5147,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -5107,6 +5274,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -5147,6 +5316,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -5410,6 +5581,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -5450,6 +5623,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -5582,6 +5757,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -5622,6 +5799,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -5719,6 +5898,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -5838,13 +6019,59 @@
         "blockArmor": false,
         "blockShield": false,
         "area": {
-          "shape": "beam",
-          "length": 5
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": 0,
+              "y": -4
+            },
+            {
+              "x": 0,
+              "y": -3
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "diagonalOffsets": [
+            {
+              "x": -4,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -5972,6 +6199,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -6091,14 +6320,107 @@
         "blockArmor": false,
         "blockShield": false,
         "area": {
-          "shape": "cone",
-          "length": 5,
-          "spread": 5
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": 0,
+              "y": -4
+            },
+            {
+              "x": 1,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": 0,
+              "y": -3
+            },
+            {
+              "x": 1,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 1,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "diagonalOffsets": [
+            {
+              "x": -4,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -4
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -4,
+              "y": -3
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -6193,6 +6515,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -6551,6 +6875,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -6668,6 +6994,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -6841,6 +7169,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -7057,6 +7387,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -7227,12 +7559,80 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": -1,
+              "y": -5
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": -5,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -7360,6 +7760,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -7400,6 +7802,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -7443,6 +7847,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -7628,12 +8034,28 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": 1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -1,
+              "y": 1
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -7676,17 +8098,18 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
-        "unsupported or missing combat formula",
-        "dynamic combat area"
+        "unsupported or missing combat formula"
       ],
       "parity": {
         "ownerTodo": "07-combat",
         "status": "blocked",
         "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula, dynamic combat area."
+        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula."
       }
     },
     {
@@ -7802,13 +8225,49 @@
         "blockArmor": false,
         "blockShield": false,
         "area": {
-          "shape": "beam",
-          "length": 8
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": 0,
+              "y": -7
+            },
+            {
+              "x": 0,
+              "y": -6
+            },
+            {
+              "x": 0,
+              "y": -5
+            },
+            {
+              "x": 0,
+              "y": -4
+            },
+            {
+              "x": 0,
+              "y": -3
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -7999,12 +8458,104 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": -1,
+              "y": -6
+            },
+            {
+              "x": -2,
+              "y": -5
+            },
+            {
+              "x": -1,
+              "y": -5
+            },
+            {
+              "x": -3,
+              "y": -4
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": -4,
+              "y": -3
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": -5,
+              "y": -2
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": -6,
+              "y": -1
+            },
+            {
+              "x": -5,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -8045,6 +8596,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -8088,6 +8641,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -8399,6 +8954,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -8757,6 +9314,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -8835,6 +9394,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -8939,21 +9500,219 @@
         "missileId": null,
         "blockArmor": false,
         "blockShield": false,
-        "area": null,
+        "area": {
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": 0,
+              "y": -4
+            },
+            {
+              "x": 1,
+              "y": -4
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": 0,
+              "y": -3
+            },
+            {
+              "x": 1,
+              "y": -3
+            },
+            {
+              "x": 2,
+              "y": -3
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 1,
+              "y": -2
+            },
+            {
+              "x": 2,
+              "y": -2
+            },
+            {
+              "x": 3,
+              "y": -2
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": 2,
+              "y": -1
+            },
+            {
+              "x": 3,
+              "y": -1
+            },
+            {
+              "x": 4,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": 0
+            },
+            {
+              "x": -3,
+              "y": 0
+            },
+            {
+              "x": -2,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            },
+            {
+              "x": 4,
+              "y": 0
+            },
+            {
+              "x": -4,
+              "y": 1
+            },
+            {
+              "x": -3,
+              "y": 1
+            },
+            {
+              "x": -2,
+              "y": 1
+            },
+            {
+              "x": 2,
+              "y": 1
+            },
+            {
+              "x": 3,
+              "y": 1
+            },
+            {
+              "x": 4,
+              "y": 1
+            },
+            {
+              "x": -3,
+              "y": 2
+            },
+            {
+              "x": -2,
+              "y": 2
+            },
+            {
+              "x": -1,
+              "y": 2
+            },
+            {
+              "x": 0,
+              "y": 2
+            },
+            {
+              "x": 1,
+              "y": 2
+            },
+            {
+              "x": 2,
+              "y": 2
+            },
+            {
+              "x": 3,
+              "y": 2
+            },
+            {
+              "x": -2,
+              "y": 3
+            },
+            {
+              "x": -1,
+              "y": 3
+            },
+            {
+              "x": 0,
+              "y": 3
+            },
+            {
+              "x": 1,
+              "y": 3
+            },
+            {
+              "x": 2,
+              "y": 3
+            },
+            {
+              "x": -1,
+              "y": 4
+            },
+            {
+              "x": 0,
+              "y": 4
+            },
+            {
+              "x": 1,
+              "y": 4
+            }
+          ],
+          "directional": false
+        },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported combat area AREA_RING1_BURST3"
-      ],
+      "wheelRevelation": {
+        "domain": "blue",
+        "minimumStage": 1
+      },
+      "ignoredFormulaFields": [],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -9075,6 +9834,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -9245,12 +10006,80 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": -1,
+              "y": -5
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": -5,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -9345,6 +10174,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -9431,6 +10262,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -9548,6 +10381,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -9730,12 +10565,28 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": 1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -1,
+              "y": 1
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -9863,6 +10714,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -9988,6 +10841,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -10028,6 +10883,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -10156,6 +11013,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -10270,12 +11129,80 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": -1,
+              "y": -5
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": -5,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -10730,6 +11657,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -10900,12 +11829,80 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": -1,
+              "y": -5
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": -5,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -10946,6 +11943,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -11078,6 +12077,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -11251,6 +12252,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -11378,6 +12381,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -11505,6 +12510,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -11661,6 +12668,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -11788,6 +12797,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -11828,6 +12839,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -11873,6 +12886,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -11980,21 +12995,219 @@
         "missileId": null,
         "blockArmor": false,
         "blockShield": false,
-        "area": null,
+        "area": {
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": 0,
+              "y": -4
+            },
+            {
+              "x": 1,
+              "y": -4
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": 0,
+              "y": -3
+            },
+            {
+              "x": 1,
+              "y": -3
+            },
+            {
+              "x": 2,
+              "y": -3
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 1,
+              "y": -2
+            },
+            {
+              "x": 2,
+              "y": -2
+            },
+            {
+              "x": 3,
+              "y": -2
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": 2,
+              "y": -1
+            },
+            {
+              "x": 3,
+              "y": -1
+            },
+            {
+              "x": 4,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": 0
+            },
+            {
+              "x": -3,
+              "y": 0
+            },
+            {
+              "x": -2,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            },
+            {
+              "x": 4,
+              "y": 0
+            },
+            {
+              "x": -4,
+              "y": 1
+            },
+            {
+              "x": -3,
+              "y": 1
+            },
+            {
+              "x": -2,
+              "y": 1
+            },
+            {
+              "x": 2,
+              "y": 1
+            },
+            {
+              "x": 3,
+              "y": 1
+            },
+            {
+              "x": 4,
+              "y": 1
+            },
+            {
+              "x": -3,
+              "y": 2
+            },
+            {
+              "x": -2,
+              "y": 2
+            },
+            {
+              "x": -1,
+              "y": 2
+            },
+            {
+              "x": 0,
+              "y": 2
+            },
+            {
+              "x": 1,
+              "y": 2
+            },
+            {
+              "x": 2,
+              "y": 2
+            },
+            {
+              "x": 3,
+              "y": 2
+            },
+            {
+              "x": -2,
+              "y": 3
+            },
+            {
+              "x": -1,
+              "y": 3
+            },
+            {
+              "x": 0,
+              "y": 3
+            },
+            {
+              "x": 1,
+              "y": 3
+            },
+            {
+              "x": 2,
+              "y": 3
+            },
+            {
+              "x": -1,
+              "y": 4
+            },
+            {
+              "x": 0,
+              "y": 4
+            },
+            {
+              "x": 1,
+              "y": 4
+            }
+          ],
+          "directional": false
+        },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported combat area AREA_RING1_BURST3"
-      ],
+      "wheelRevelation": {
+        "domain": "blue",
+        "minimumStage": 1
+      },
+      "ignoredFormulaFields": [],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -12116,6 +13329,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -12266,12 +13481,60 @@
               "y": 0
             }
           ],
+          "diagonalOffsets": [
+            {
+              "x": -4,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -4
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -4,
+              "y": -3
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
           "directional": true
         },
         "dispel": null
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -12312,6 +13575,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat formula"
@@ -12442,6 +13707,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -12569,6 +13836,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -12696,6 +13965,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -12823,6 +14094,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -12972,6 +14245,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13426,6 +14701,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13493,6 +14770,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13558,6 +14837,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13623,6 +14904,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13692,6 +14975,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13757,6 +15042,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13822,6 +15109,8 @@
         "count": 10
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13887,6 +15176,8 @@
         "count": 5
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -13952,6 +15243,8 @@
         "count": 8
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14017,6 +15310,8 @@
         "count": 5
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14082,6 +15377,8 @@
         "count": 7
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14146,6 +15443,8 @@
         "count": 10
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14211,6 +15510,8 @@
         "count": 30
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14276,6 +15577,8 @@
         "count": 5
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14341,6 +15644,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14406,6 +15711,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14471,6 +15778,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14542,6 +15851,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14613,6 +15924,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14678,6 +15991,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14742,6 +16057,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14807,6 +16124,8 @@
         "count": 2
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14874,6 +16193,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -14941,6 +16262,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15008,6 +16331,8 @@
         "count": 6
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15075,6 +16400,8 @@
         "count": 2
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15142,6 +16469,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15209,6 +16538,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15274,6 +16605,8 @@
         "count": 5
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15339,6 +16672,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15406,6 +16741,8 @@
         "count": 10
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15471,6 +16808,8 @@
         "count": 5
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15536,6 +16875,8 @@
         "count": 5
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15601,6 +16942,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15668,6 +17011,8 @@
         "count": 10
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15735,6 +17080,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15808,6 +17155,8 @@
         "count": 10
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15875,6 +17224,8 @@
         "count": 10
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -15940,6 +17291,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16005,6 +17358,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16070,6 +17425,8 @@
         "count": 2
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16137,6 +17494,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16204,6 +17563,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16271,6 +17632,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16338,6 +17701,8 @@
         "count": 10
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16403,6 +17768,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16468,6 +17835,8 @@
         "count": 3
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16533,6 +17902,8 @@
         "count": 4
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16598,6 +17969,8 @@
         "count": 1
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16663,6 +18036,8 @@
         "count": 2
       },
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -16703,6 +18078,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -16748,6 +18125,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -16793,6 +18172,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -16838,6 +18219,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -16883,6 +18266,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -17005,6 +18390,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17068,6 +18455,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17129,6 +18518,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17190,6 +18581,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17251,6 +18644,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17320,6 +18715,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17445,6 +18842,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17586,6 +18985,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17716,6 +19117,8 @@
         "excludedVocations": [],
         "casterEffectId": 15
       },
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -17762,6 +19165,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat type",
@@ -17813,6 +19218,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat type",
@@ -17864,6 +19271,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "unsupported or missing combat type",
@@ -18000,6 +19409,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18070,6 +19481,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18195,6 +19608,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18326,6 +19741,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18457,6 +19874,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18497,6 +19916,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -18543,6 +19964,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -18664,6 +20087,8 @@
         "excludedVocations": [],
         "casterEffectId": 15
       },
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18733,6 +20158,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18803,6 +20230,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -18978,6 +20407,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -19103,6 +20534,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -19228,6 +20661,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -19353,6 +20788,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -19480,6 +20917,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -19605,6 +21044,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -19653,6 +21094,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -19706,6 +21149,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -19759,6 +21204,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -19812,6 +21259,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -19857,6 +21306,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -19903,6 +21354,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -19949,6 +21402,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -19995,6 +21450,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -20041,6 +21498,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -20087,6 +21546,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -20133,6 +21594,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -20179,6 +21642,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -20225,6 +21690,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -20271,6 +21738,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -20314,21 +21783,246 @@
       "targetKind": "direction",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 13,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": 0,
+              "y": -5
+            },
+            {
+              "x": -2,
+              "y": -4
+            },
+            {
+              "x": -1,
+              "y": -4
+            },
+            {
+              "x": 0,
+              "y": -4
+            },
+            {
+              "x": 1,
+              "y": -4
+            },
+            {
+              "x": 2,
+              "y": -4
+            },
+            {
+              "x": -3,
+              "y": -3
+            },
+            {
+              "x": -2,
+              "y": -3
+            },
+            {
+              "x": -1,
+              "y": -3
+            },
+            {
+              "x": 0,
+              "y": -3
+            },
+            {
+              "x": 1,
+              "y": -3
+            },
+            {
+              "x": 2,
+              "y": -3
+            },
+            {
+              "x": 3,
+              "y": -3
+            },
+            {
+              "x": -4,
+              "y": -2
+            },
+            {
+              "x": -3,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -2
+            },
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 1,
+              "y": -2
+            },
+            {
+              "x": 2,
+              "y": -2
+            },
+            {
+              "x": 3,
+              "y": -2
+            },
+            {
+              "x": 4,
+              "y": -2
+            },
+            {
+              "x": -5,
+              "y": -1
+            },
+            {
+              "x": -4,
+              "y": -1
+            },
+            {
+              "x": -3,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": -1
+            },
+            {
+              "x": 1,
+              "y": -1
+            },
+            {
+              "x": 2,
+              "y": -1
+            },
+            {
+              "x": 3,
+              "y": -1
+            },
+            {
+              "x": 4,
+              "y": -1
+            },
+            {
+              "x": 5,
+              "y": -1
+            },
+            {
+              "x": -5,
+              "y": 0
+            },
+            {
+              "x": -4,
+              "y": 0
+            },
+            {
+              "x": -3,
+              "y": 0
+            },
+            {
+              "x": -2,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            },
+            {
+              "x": 4,
+              "y": 0
+            },
+            {
+              "x": 5,
+              "y": 0
+            },
+            {
+              "x": -6,
+              "y": 1
+            },
+            {
+              "x": -5,
+              "y": 1
+            },
+            {
+              "x": -4,
+              "y": 1
+            },
+            {
+              "x": -3,
+              "y": 1
+            },
+            {
+              "x": -2,
+              "y": 1
+            },
+            {
+              "x": 2,
+              "y": 1
+            },
+            {
+              "x": 3,
+              "y": 1
+            },
+            {
+              "x": 4,
+              "y": 1
+            },
+            {
+              "x": 5,
+              "y": 1
+            },
+            {
+              "x": 6,
+              "y": 1
+            }
+          ],
+          "directional": true
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "supported": false,
-      "unsupportedReasons": [
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula",
-        "procedural combat callback",
-        "unsupported combat area AREA_BALANCED_BRAWL"
-      ],
+      "wheelRevelation": null,
+      "playerAction": "balanced-brawl",
+      "ignoredFormulaFields": [],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback, unsupported combat area AREA_BALANCED_BRAWL."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -20393,6 +22087,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -20605,6 +22301,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -20668,6 +22366,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -20767,7 +22467,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "playerAction": "challenge",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -20837,6 +22539,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -20898,7 +22602,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "playerAction": "chivalrous-challenge",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -20962,7 +22668,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "playerAction": "creature-illusion",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21024,7 +22732,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "playerAction": "divine-dazzle",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21065,6 +22775,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -21290,6 +23002,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21338,6 +23052,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -21391,6 +23107,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -21436,6 +23154,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -21481,6 +23201,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -21547,7 +23269,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "playerAction": "conjure-random-food",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21625,6 +23349,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21702,6 +23428,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21769,6 +23497,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21838,7 +23568,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "worldAction": "levitate",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21916,6 +23648,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -21985,7 +23719,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "worldAction": "magic-rope",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22058,6 +23794,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22119,7 +23857,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "playerAction": "mentor-other",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22190,6 +23930,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22410,6 +24152,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22452,6 +24196,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -22531,6 +24277,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22594,7 +24342,9 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
       "playerAction": "summon-creature",
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22637,6 +24387,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -22714,6 +24466,8 @@
       },
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": true,
       "unsupportedReasons": [],
       "parity": {
@@ -22756,6 +24510,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -22803,6 +24559,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",
@@ -22851,6 +24609,8 @@
       "combat": null,
       "conjure": null,
       "castRules": null,
+      "wheelRevelation": null,
+      "ignoredFormulaFields": [],
       "supported": false,
       "unsupportedReasons": [
         "procedural cast callback",

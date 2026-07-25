@@ -397,8 +397,13 @@ export class Combat {
       return;
     }
     if (spell.playerAction) {
-      this.spellCaster.executeWorldSpell(session, spell, now, (player) =>
-        this.playerActions.execute(session, player, spell, parameter, now),
+      this.spellCaster.executeWorldSpell(
+        session,
+        spell,
+        now,
+        (player) =>
+          this.playerActions.execute(session, player, spell, parameter, now),
+        intent.target,
       );
       return;
     }

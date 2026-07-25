@@ -5,11 +5,13 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import { aimDirectionFor } from "./aimDirectionFor";
 import { CombatFeedback } from "./CombatFeedback";
 import { SPELL_FAILURE_EFFECT_ID } from "./combatConstants";
 import type { ConditionApplication } from "./Condition";
 import { ConditionSystem } from "./ConditionSystem";
 import { creaturesInArea } from "./creaturesInArea";
+import { directionDelta } from "./directionDelta";
 import { isInRange } from "./isInRange";
 import type { SpellDefinition } from "./Spell";
 import type { TargetingHooks } from "./TargetingHooks";
@@ -25,6 +27,8 @@ const DIVINE_DAZZLE_TARGETS = 3;
 const ILLUSION_MS = 180_000;
 /** Canary mentor_other.lua: a 60 s vocation-specific buff. */
 const MENTOR_MS = 60_000;
+/** Canary balanced_brawl.lua `challengeTime`: a 16 s melee pull. */
+const BALANCED_BRAWL_PULL_MS = 16_000;
 
 /**
  * The reviewed TypeScript bodies of Canary's procedural player-spell
@@ -72,6 +76,8 @@ export class PlayerSpellActions {
         return this.summonCreature(session, player, spell, parameter, now);
       case "mentor-other":
         return this.mentorOther(session, player, spell, parameter, now);
+      case "balanced-brawl":
+        return this.balancedBrawl(session, player, spell, now);
       default:
         return false;
     }
@@ -100,6 +106,59 @@ export class PlayerSpellActions {
       }
     }
     return challenged;
+  }
+
+  /**
+   * Canary balanced_brawl.lua: the combat's target callback pulls every
+   * monster the area covers into melee for 16 s. The matrix is anchored on
+   * the tile ahead of the caster, like any other direction cast, and the
+   * monsters are re-read from the world here rather than trusted from the
+   * intent.
+   */
+  private balancedBrawl(
+    session: Session,
+    player: Player,
+    spell: SpellDefinition,
+    now: number,
+  ): boolean {
+    const targeting = this.targeting;
+    if (!targeting) return false;
+    const [x, y] = directionDelta(
+      aimDirectionFor(this.world, session, player, spell) ?? player.direction,
+    );
+    const center = {
+      x: player.position.x + x,
+      y: player.position.y + y,
+      z: player.position.z,
+    };
+    let pulled = false;
+    for (const creature of creaturesInArea(
+      this.world,
+      player.position,
+      center,
+      spell.area,
+    )) {
+      if (!(creature instanceof Monster)) continue;
+      if (
+        !targeting.pullMonsterToMelee(
+          creature,
+          1,
+          now,
+          BALANCED_BRAWL_PULL_MS,
+        )
+      ) {
+        continue;
+      }
+      pulled = true;
+      if (spell.effectId > 0) {
+        this.visibility.broadcastMagicEffect(
+          creature.position,
+          spell.effectId,
+          creature.id,
+        );
+      }
+    }
+    return pulled;
   }
 
   /**

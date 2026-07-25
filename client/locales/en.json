@@ -1198,6 +1198,7 @@
     "spell-magic-level-restricted": "Your magic level is too low to cast that spell.",
     "spell-mana-insufficient": "You do not have enough mana to cast that spell.",
     "spell-muted": "You cannot cast spells while muted.",
+    "spell-not-learned": "You need to learn this spell first.",
     "spell-not-possible": "Sorry, not possible.",
     "spell-out-of-range": "The spell target is too far away.",
     "spell-protection-zone": "You cannot cast that spell in a protection zone.",

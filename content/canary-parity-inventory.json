@@ -41710,7 +41710,7 @@
       "ownerTodo": "07-combat",
       "status": "blocked",
       "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula, dynamic combat area."
+      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula."
     },
     {
       "path": "data/scripts/spells/attack/great_energy_beam.lua",
@@ -41760,17 +41760,15 @@
       "path": "data/scripts/spells/attack/holy_flash.lua",
       "blob": "5eccb5062524eaf63fd47c13ec9514d968c965a9",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/attack/ice_burst.lua",
       "blob": "fedcd9d5a0484523fb8473864617b65212d1b846",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/attack/ice_strike.lua",
@@ -41934,9 +41932,8 @@
       "path": "data/scripts/spells/attack/terra_burst.lua",
       "blob": "15ce35c4912bc3acbccd96fbd176fd39a5fdac9f",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/attack/terra_strike.lua",
@@ -42702,17 +42699,15 @@
       "path": "data/scripts/spells/support/balanced_brawl.lua",
       "blob": "72c47a8c1e02c59bc579791663545b76a93beb1d",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback, unsupported combat area AREA_BALANCED_BRAWL."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/blood_rage.lua",
       "blob": "59143bdf589fdfa74d553029482d36b76c912eba",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/cancel_invisibility.lua",
@@ -42732,41 +42727,36 @@
       "path": "data/scripts/spells/support/challenge.lua",
       "blob": "2b29d5ba0ced5be783e6b144f6d85ab6ac43aa43",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/charge.lua",
       "blob": "bea6e2ee880d9da285e95b161e6ea59957261e26",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/chivalrous_challenge.lua",
       "blob": "8ecd006e79ca87f6e93afbfce4b9a86fe1e6ab50",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/creature_illusion.lua",
       "blob": "36b501ba8b7c4a77031571fc3d366aa0ca18ccdf",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/divine_dazzle.lua",
       "blob": "2e9aab54b052aa7e38978e58eeba567bd28bf135",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/divine_empowerment.lua",
@@ -42780,9 +42770,8 @@
       "path": "data/scripts/spells/support/expose_weakness.lua",
       "blob": "bbd24efd7d8fefba8a4ba6a8593e2af4d411f12b",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/find_fiend.lua",
@@ -42820,9 +42809,8 @@
       "path": "data/scripts/spells/support/food.lua",
       "blob": "a45cb2a19a1dc711df781a54775ae57a0234140c",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/great_light.lua",
@@ -42877,25 +42865,22 @@
       "path": "data/scripts/spells/support/mentor_other.lua",
       "blob": "e8a44e77c5689615d53c9af620686081395ccfa0",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/protector.lua",
       "blob": "294850942804d20cea262562c35c12a0492e0be3",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/sap_strength.lua",
       "blob": "0227ddaf167e27a8252f9ea1bfffd8b2cf8d20c7",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/sharpshooter.lua",
@@ -42916,9 +42901,8 @@
       "path": "data/scripts/spells/support/summon_creature.lua",
       "blob": "991e4df21103e7d488957aaf2786356fd8791702",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Imported into the executable TypeScript spell registry."
     },
     {
       "path": "data/scripts/spells/support/swift_foot.lua",
@@ -129278,7 +129262,7 @@
       "ownerTodo": "07-combat",
       "status": "blocked",
       "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula, dynamic combat area."
+      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula."
     },
     {
       "sourcePath": "data/scripts/spells/attack/great_death_beam.lua",
@@ -129286,7 +129270,7 @@
       "ownerTodo": "07-combat",
       "status": "blocked",
       "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula, dynamic combat area."
+      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula."
     },
     {
       "sourcePath": "data/scripts/spells/attack/great_energy_beam.lua",
@@ -129381,25 +129365,22 @@
       "sourcePath": "data/scripts/spells/attack/holy_flash.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/attack/ice_burst.lua",
       "name": "CALLBACK_PARAM_LEVELMAGICVALUE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/attack/ice_burst.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/attack/ice_strike.lua",
@@ -129723,17 +129704,15 @@
       "sourcePath": "data/scripts/spells/attack/terra_burst.lua",
       "name": "CALLBACK_PARAM_LEVELMAGICVALUE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/attack/terra_burst.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported combat area AREA_RING1_BURST3."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/attack/terra_strike.lua",
@@ -130715,25 +130694,22 @@
       "sourcePath": "data/scripts/spells/support/balanced_brawl.lua",
       "name": "CALLBACK_PARAM_TARGETCREATURE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback, unsupported combat area AREA_BALANCED_BRAWL."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/balanced_brawl.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback, unsupported combat area AREA_BALANCED_BRAWL."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/blood_rage.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/cancel_invisibility.lua",
@@ -130753,97 +130729,85 @@
       "sourcePath": "data/scripts/spells/support/challenge.lua",
       "name": "CALLBACK_PARAM_TARGETCREATURE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/challenge.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/charge.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/chivalrous_challenge.lua",
       "name": "CALLBACK_PARAM_CHAINPICKER",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/chivalrous_challenge.lua",
       "name": "CALLBACK_PARAM_CHAINVALUE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/chivalrous_challenge.lua",
       "name": "CALLBACK_PARAM_TARGETCREATURE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/chivalrous_challenge.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/creature_illusion.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/divine_dazzle.lua",
       "name": "CALLBACK_PARAM_CHAINPICKER",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/divine_dazzle.lua",
       "name": "CALLBACK_PARAM_CHAINVALUE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/divine_dazzle.lua",
       "name": "CALLBACK_PARAM_TARGETCREATURE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/divine_dazzle.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/divine_empowerment.lua",
@@ -130857,17 +130821,15 @@
       "sourcePath": "data/scripts/spells/support/expose_weakness.lua",
       "name": "CALLBACK_PARAM_TARGETCREATURE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/expose_weakness.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/find_fiend.lua",
@@ -130905,9 +130867,8 @@
       "sourcePath": "data/scripts/spells/support/food.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/great_light.lua",
@@ -130964,41 +130925,36 @@
       "sourcePath": "data/scripts/spells/support/mentor_other.lua",
       "name": "CALLBACK_PARAM_TARGETCREATURE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/mentor_other.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/protector.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/sap_strength.lua",
       "name": "CALLBACK_PARAM_TARGETCREATURE",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed formula callback is represented by the typed expression tree."
     },
     {
       "sourcePath": "data/scripts/spells/support/sap_strength.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/sharpshooter.lua",
@@ -131020,9 +130976,8 @@
       "sourcePath": "data/scripts/spells/support/summon_creature.lua",
       "name": "onCastSpell",
       "ownerTodo": "07-combat",
-      "status": "blocked",
-      "blockedBy": "07-combat",
-      "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+      "status": "implemented",
+      "reason": "Reviewed cast behavior is represented as typed authoritative data."
     },
     {
       "sourcePath": "data/scripts/spells/support/swift_foot.lua",

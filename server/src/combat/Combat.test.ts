@@ -2,12 +2,14 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  EMPTY_WHEEL_BONUSES,
   type ActionBar,
   type ActionBarAction,
   type ActionBotSettings,
   type CharacterVocation,
   type ServerErrorCode,
   type ServerMessage,
+  type WheelBonuses,
 } from "@tibia/protocol";
 import type { AccountStore } from "../AccountStore";
 import type { Character } from "../character/Character";
@@ -280,6 +282,7 @@ async function makeHarness(options: {
   actionBar?: ActionBar;
   actionBotSettings?: ActionBotSettings;
   worldSpells?: WorldSpellHooks;
+  wheelBonuses?: WheelBonuses;
 } = {}): Promise<Harness> {
   const world = new World(
     options.map ?? makeMap(),
@@ -289,6 +292,8 @@ async function makeHarness(options: {
     options.character ?? makeLeveledCharacter(),
     options.position ?? { x: 1, y: 1, z: 7 },
     0,
+    null,
+    options.wheelBonuses,
   );
   world.addPlayer(player);
   const sent: ServerMessage[] = [];
@@ -3236,6 +3241,117 @@ describe("Combat", () => {
 
     expect(challenged).toEqual([wild.id]);
     expect(harness.player.mana).toBeLessThan(manaBefore);
+  });
+
+  /**
+   * Ice Burst's Canary body is a `revelationStageWOD("Twin Burst")` gate. The
+   * gate is imported as data and enforced here, at execution time, against the
+   * character's own wheel bonuses — never against anything the client sends.
+   */
+  it("refuses a wheel-gated spell until its revelation stage is reached", async () => {
+    const ungated = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+    });
+    const manaBefore = ungated.player.mana;
+
+    ungated.combat.castSpell(
+      ungated.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-ulus-frigo",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    expect(ungated.player.mana).toBe(manaBefore);
+    expect(
+      ungated.sent.some(
+        (message) =>
+          message.type === "error" && message.code === "spell-not-learned",
+      ),
+    ).toBe(true);
+
+    const revealed = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 0, red: 0, blue: 1, purple: 0 },
+      },
+    });
+
+    revealed.combat.castSpell(
+      revealed.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-ulus-frigo",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    expect(revealed.player.mana).toBeLessThan(revealed.player.maxMana);
+    expect(
+      revealed.sent.some(
+        (message) =>
+          message.type === "error" && message.code === "spell-not-learned",
+      ),
+    ).toBe(false);
+  });
+
+  /**
+   * Balanced Brawl's target callback pulls every monster the pinned
+   * AREA_BALANCED_BRAWL matrix covers into melee. The matrix is anchored on
+   * the tile ahead of the caster, so the caster's own square is never in it.
+   */
+  it("pulls only the monsters the Balanced Brawl matrix covers", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(175, "Exalted Monk"),
+      position: { x: 6, y: 8, z: 7 },
+    });
+    harness.player.direction = "north";
+    // Two tiles north of the caster: inside the fan.
+    const inside = makeMonster("monster-instance:inside:0", {
+      x: 6,
+      y: 6,
+      z: 7,
+    });
+    // Directly behind the caster: the fan never reaches backwards.
+    const behind = makeMonster("monster-instance:behind:0", {
+      x: 6,
+      y: 9,
+      z: 7,
+    });
+    for (const monster of [inside, behind]) {
+      harness.world.addCreature(monster);
+      harness.session.knownCreatureIds.add(monster.id);
+    }
+    const pulled: string[] = [];
+    harness.combat.attachTargeting({
+      challengeMonster: () => false,
+      pullMonsterToMelee: (monster, distance, _now, durationMs) => {
+        pulled.push(`${monster.id}:${distance}:${durationMs}`);
+        return true;
+      },
+      isSummon: () => false,
+      summonForPlayer: () => null,
+      playerSummonCount: () => 0,
+      findMonsterTypeByName: () => undefined,
+    });
+    const manaBefore = harness.player.mana;
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exori-mas-res",
+        target: { kind: "direction" },
+      },
+      1_000,
+    );
+
+    expect(pulled).toEqual([`${inside.id}:1:16000`]);
+    expect(harness.player.mana).toBe(manaBefore - 80);
   });
 
   it("refuses an unknown illusion name without spending mana or exhausting", async () => {
