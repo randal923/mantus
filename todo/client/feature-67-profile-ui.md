@@ -1,7 +1,7 @@
 # Feature 67 (client) — profile, achievements, and bug reports
 
 Part of the [client backlog](README.md). Server side shipped:
-[completed log](../completed/implementation-feature-67-completed.md).
+[done.md record](../done.md).
 
 ## Why
 Achievements, titles, badges, the public character profile, and bug reports

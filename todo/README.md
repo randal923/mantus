@@ -1,12 +1,23 @@
 # Canary-parity backlog overview
 
-Backlog restructured 2026-07-24 from a full audit of the previous per-area todo
-files against the current repository. Completed work now lives in
-[`done.md`](done.md); everything still needed to reach full parity with the
-pinned Canary baseline is organized as numbered todo areas (`todo-1.md` …
-`todo-22.md`), each listing its remaining features. Every feature has its own
-implementation file (`implementation-feature-N.md`) with the concrete plan,
-file surface, Canary references, and required exploit/regression tests.
+Everything still needed to reach full parity with the pinned Canary baseline,
+consolidated 2026-07-25 into **13 merged area files** (`todo-1.md` …
+`todo-13.md`). Each area file carries its features' full plans inline —
+remaining work, file surface, Canary references, and required
+exploit/regression tests. There are no separate per-feature files anymore.
+
+Structure rules:
+
+- **Feature numbers are stable and never reused.** Closed features live in
+  [`done.md`](done.md) (the single permanent record — the former
+  `completed/` logs were folded into it). New work gets new numbers (108+)
+  as a `## Feature 108 — …` section inside the narrowest matching area file.
+- **68 features remain open** (of 107). † marks features whose only
+  remainder is a client surface, tracked in [`todo/client/`](client/README.md)
+  — the single index of outstanding client-side work.
+- When a feature finishes: append a dated entry to `done.md` (problem, what
+  changed, files touched, verification, residual risk), delete its section
+  from the area file, and transfer any residual sliver to a named owner.
 
 Pinned upstream snapshots:
 
@@ -15,16 +26,16 @@ Pinned upstream snapshots:
 - [OpenTibiaBR OTClient `bdea0b23`](https://github.com/opentibiabr/otclient/tree/bdea0b23b4a738809d698cb7e4f88a299dd6bffc)
   (rendering and client behavior; MIT).
 
-`AGENTS.md` and the project security charter are mandatory for every feature
-below. Features may land incrementally in dependency order, but "later" and
+`AGENTS.md` and the project security charter are mandatory for every feature.
+Features may land incrementally in dependency order, but "later" and
 "deferred" describe scheduling, not a reduced final scope.
 
 ## Rewrite boundary
 
-This project is a complete rewrite of the Tibia stack. Canary and OTClient are
-reference implementations only: inspect them for behavior, formulas, data
-layouts, content locations, and edge cases, then re-express the result in this
-repository's architecture.
+This project is a complete rewrite of the Tibia stack. Canary and OTClient
+are reference implementations only: inspect them for behavior, formulas, data
+layouts, content locations, and edge cases, then re-express the result in
+this repository's architecture.
 
 - Project-native TypeScript server, zod intent/event protocol, Postgres
   persistence, PixiJS/React client.
@@ -41,8 +52,8 @@ repository's architecture.
 
 - The server owns `Position`, health, outfits, item state, timing, and RNG;
   clients send intents and render authorized projections.
-- Static definitions (`ItemType`, `MonsterType`, `Vocation`) stay separate from
-  mutable instances; every dynamic system is z-aware.
+- Static definitions (`ItemType`, `MonsterType`, `Vocation`) stay separate
+  from mutable instances; every dynamic system is z-aware.
 - Correctness never depends on a daily global save: economy/ownership commits
   are transactional-before-acknowledgement with audit entries; ordinary
   character state persists continuously within a documented bounded window;
@@ -52,60 +63,77 @@ repository's architecture.
 
 ## Backlog index
 
-| Area | Remaining features |
+| Area | Features |
 |---|---|
-| [Todo 1 — Foundations and Canary parity ledger](todo-1.md) | 1 |
-| [Todo 2 — Characters](todo-2.md) | 2 |
-| [Todo 3 — Map and movement](todo-3.md) | 3–4 |
-| [Todo 4 — Rendering and animation](todo-4.md) | none (5–8 complete) |
-| [Todo 5 — Creatures, spawns, and AI](todo-5.md) | 9–10 |
-| [Todo 6 — Items and inventory](todo-6.md) | 11–17 |
-| [Todo 7 — Vocations, stats, and progression](todo-7.md) | 18–20 |
-| [Todo 8 — Combat, spells, and conditions](todo-8.md) | 21–28 |
-| [Todo 9 — Death, corpses, loot, and decay](todo-9.md) | 29–34 |
-| [Todo 10 — Chat and channels](todo-10.md) | 35–36 |
-| [Todo 11 — NPCs, dialogue, and travel](todo-11.md) | 37–42 |
-| [Todo 12 — Economy: shops, bank, depot, trade, market](todo-12.md) | 43–49 |
-| [Todo 13 — Typed world actions](todo-13.md) | 50–53 |
-| [Todo 14 — Raids and world events](todo-14.md) | 54 |
-| [Todo 15 — Parties, guilds, PVP, houses, social](todo-15.md) | 55–67 |
-| [Todo 16 — Remaining Canary systems and client polish](todo-16.md) | 68–89 |
-| [Todo 17 — Client and session resilience](todo-17.md) | 90–92 |
-| [Todo 18 — Operations, observability, and security](todo-18.md) | 93–100 |
-| [Todo 19 — Auth follow-ups](todo-19.md) | 101 |
-| [Todo 20 — Dev tooling](todo-20.md) | 102 |
-| [Todo 21 — Quests](todo-21.md) | 103–105 |
-| [Todo 22 — Performance follow-ups](todo-22.md) | 106–107 |
+| [Todo 1 — Canary parity ledger and gates](todo-1.md) | 1, 89 |
+| [Todo 2 — Map, world actions, and world events](todo-2.md) | 4, 50–52, 54 |
+| [Todo 3 — Creatures, spawns, and AI](todo-3.md) | 9, 10 |
+| [Todo 4 — Items and inventory](todo-4.md) | 11, 16, 17 |
+| [Todo 5 — Combat and spells](todo-5.md) | 22, 24, 26 |
+| [Todo 6 — Death, loot, and decay](todo-6.md) | 29, 32, 33 |
+| [Todo 7 — Chat, channels, and NPCs](todo-7.md) | 35, 38, 40, 41 |
+| [Todo 8 — Economy](todo-8.md) | 43, 45, 46, 48, 49 |
+| [Todo 9 — Characters, social, and houses](todo-9.md) | 2, 57–59, 62†, 65, 67 |
+| [Todo 10 — Remaining Canary systems](todo-10.md) | 68†–71†, 72–86 |
+| [Todo 11 — Client engineering](todo-11.md) | 87, 88, 90–92, 107 |
+| [Todo 12 — Operations, security, auth, dev tooling](todo-12.md) | 93–102, 106 |
+| [Todo 13 — Quests](todo-13.md) | 103–105 |
 
-Front-end work still outstanding after a feature's server side ships is
-collected in [`todo/client/`](client/README.md).
+## Known blockers
+
+None stops the majority of the backlog, but each gates a named slice:
+
+1. **No local Canary checkout.** Content transcription needs the pinned
+   `a879c931` checkout (every importer takes it as `argv[2]`/`CANARY_PATH`
+   and hard-fails on commit mismatch): Feature 41's routes, 38's callback
+   semantics, 29's child-container re-import, 89's inventory, 103–105.
+   Blobless clone takes ~30 s:
+   `git clone --filter=blob:none --no-checkout https://github.com/opentibiabr/canary.git <dir> && git -C <dir> checkout a879c9312e34381e8eedf397b8ed44510698b689`
+2. **Asset regeneration** (`Tibia.dat`/`.spr` outside the repo): re-emitting
+   `objects.json` + atlases rewrites every client asset; gates `fluidsource`
+   (11), `multiUse`/`usable` (51), `m_transformOnUse`/`ignoreLook` (52),
+   `ATTR.market` (49), `ItemType.field` payloads (50).
+3. **Asset era**: 38 loot entries (29) and 17 raid monsters (54) name content
+   absent from pinned Tibia 15.11; test-pinned budgets, closed by a newer
+   era, not code.
+4. **External data**: Blank Rune / Conjure Royal Star icons absent from
+   pinned OTClient data (22).
+5. **Product decisions**: rename/delete flows (2 — rename now blocks the
+   namelock path), payment provider (43), market expiry full-inbox behavior
+   (49), finite shop stock (46).
+6. **Dependency bottlenecks**: 72 (blessings) gates 32, 38's bless entries,
+   and the death-loss stack; 78 (forge) gates 81 and slices of 48/49; 96's
+   remainder gates 43/54 operator surfaces; 103 gates storage-gated content
+   in 38/41/50/51 and 10's variants.
 
 ## Recommended order
 
-1. Quick correctness fixes first: Feature 3 (pz-lock transition bypass),
-   Feature 12 (use exhausts), Feature 19 (event-id pruning), Feature 47
-   (40001 retry), Feature 59 (combat-logout persistence).
-2. The role/admin migration (Feature 96) early — one migration + session gate
-   unblocks Features 43, 54, 66, 101, and 102.
-3. Content-parity grinds in dependency order: creatures/items/combat gates
-   (Features 9–10, 17, 24–26), loot tables (29), NPC commands (38–40), world
-   actions (50–53), then the world event engine (54).
-4. Social/houses completions (55–67) and remaining Canary systems (68–89).
-5. Resilience and operations tracks (90–100) continuously alongside features;
-   Feature 100 is the final pre-launch gate.
-6. Quests last (103–105): the largest pure-content layer; nothing depends on
-   it.
-7. Performance follow-ups (106–107) are measure-first; do them when the
-   staging gates in Feature 100 produce real load numbers.
+1. **Feature 72 first** (todo-10) — blessings + training triggers unblock
+   more open work than anything else.
+2. **Spell closure chain** (todo-5/6): Feature 24 (Monk unit, conditions,
+   field/wall runes with Feature 33's field items) → Feature 26's gate flips
+   to zero.
+3. **Feature 96 remainder + 101/102** (todo-12) — small, converging,
+   unblocks operator surfaces.
+4. **Creature/content closure** (todo-10/3/6): 74/75/76 close Feature 9's
+   blocked buckets → Feature 10's gate; Feature 29's remainder.
+5. **NPC/economy grind as the Canary checkout allows** (todo-7/8).
+6. **Untouched systems** (todo-10) from the Feature 89 inventory; the
+   [client backlog](client/README.md) in parallel — it never blocks server
+   work.
+7. **Resilience and ops** (todo-11/12) continuously alongside; Feature 100
+   is the final pre-launch gate.
+8. **Quests last** (todo-13), then measure-first perf (106/107).
 
 Implement one feature per session/PR; never more than one economy-relevant
 system in a single PR. Add newly discovered gaps to the narrowest matching
-todo area and, if needed, a new numbered feature file.
+area file — as a bullet under an existing feature, or a new `## Feature
+108+` section.
 
 ## Completion contract
 
 Feature 1 (the parity ledger) is the cross-cutting completion contract:
 finished means zero unsupported registered gameplay definitions, zero
 unreviewed procedural callbacks, zero silently ignored gameplay fields, with
-stable classifications for non-content — verified by generated reports and CI
-gates (Feature 100).
+stable classifications for non-content — verified by generated reports and
+CI gates (Feature 100).

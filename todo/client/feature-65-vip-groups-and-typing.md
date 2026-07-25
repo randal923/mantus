@@ -1,7 +1,7 @@
 # Feature 65 (client) — VIP groups and the typing indicator
 
 Part of the [client backlog](README.md). Server side shipped:
-[completed log](../completed/implementation-feature-65-completed.md).
+[done.md record](../done.md).
 
 ## Why
 Two of Feature 65's pieces have full protocol and server support but no client

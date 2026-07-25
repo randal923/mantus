@@ -1,9 +1,16 @@
 # Completed work
 
-Everything already shipped toward pinned Canary parity, grouped by area and
-mapped to the old todo numbering. Recorded from the 2026-07-24 backlog audit.
-Remaining work lives in [`todo-1.md` … `todo-22.md`](README.md); this file is
-the permanent record of what is done.
+Everything already shipped toward pinned Canary parity. Two layers of record:
+
+1. The per-area sections below (old `todo 00`–`21` numbering), recorded from
+   the 2026-07-24 backlog audit.
+2. The [feature-numbered completion wave](#2026-07-2425-completion-wave-feature-numbered-backlog)
+   at the end, recorded from the 2026-07-25 restructure — every feature of the
+   numbered backlog that has fully closed since.
+
+This file is **the** permanent record of completed work (the former
+`todo/completed/` per-feature logs were folded in here and removed
+2026-07-25). Remaining work lives in [`todo-1.md` … `todo-13.md`](README.md).
 
 ---
 
@@ -278,3 +285,68 @@ Status note: the previously flagged uncommitted combat work was committed as `2e
 
 ## Performance follow-ups (old todo 21)
 - 2026-07-24 optimization pass landed: visibility broadcast dedup + serialize-once, quadratic tile-states batching, non-allocating occupancy checks, findPath parent-pointer reconstruction, first-visible-floor cache keyed on passability-only revision, per-tick queue drains, equipment/stats memoization, dirty-tracked skills/storage saves, client HUD re-render isolation, shared outfit texture cache, atlas-based combat effects.
+
+---
+
+## 2026-07-24/25 completion wave (feature-numbered backlog)
+
+The numbered backlog (features 1–107) replaced the per-area files on
+2026-07-24; on 2026-07-25 it was consolidated into the 13 merged area files.
+This wave closed the features below. Residual slivers were transferred to
+the named owners rather than left in archived files.
+Two whole areas closed: **todo 4 — Rendering and animation** (Features 5–8)
+and **todo 7 — Vocations, stats, and progression** (Features 18–20; Feature
+72 owns the remaining in-world training triggers).
+
+### Closed features
+
+- **Feature 3 — pz-lock on ladder/hole/rope/levitate** (2026-07-24): the pz-lock destination check holds on the walk, `tryUseAction`, and levitate paths; PZ status icon added to the HUD.
+- **Feature 5 — Asset cache-busting** (2026-07-24): content-hash `version` in a no-cache `assets/manifest.json`; `AssetStore` appends `?v=` to `objects.json`, `atlas-index.json`, and the sheets.
+- **Feature 6 — Underground multi-floor dynamic visibility** (2026-07-24): one shared `visibleFloorRange` policy gives underground viewers cover-aware z±2 creatures and tile-item states without leaking past roofs.
+- **Feature 7 — World-item seed reconciliation** (2026-07-24): offline fail-closed `yarn workspace server db:reconcile-world-seed`; deletes only in-place delta rows whose seed fixture survives, one audit row per deletion, aborts on any unclassifiable row.
+- **Feature 8 — Effects/missiles vs onTop draw order** (2026-07-24): per-floor `onTop` overlay above the transient effect layer; effects draw beneath archway tops per OTClient.
+- **Feature 12 — 200 ms use exhausts** (2026-07-24): per-session `useExhaustReadyAt` gate on `use-item`, `use-item-with`, instant `use-map`, and the action-bar path; `item-exhausted` puff client-side.
+- **Feature 13 — Trash holders** (2026-07-24): trashholder-kind tiles destroy dropped/thrown items with poff effect + audit; pristine static-seed decoration exception recorded.
+- **Feature 14 — Client walk-then-use auto-retry** (2026-07-24): `ReachActionScheduler` walks adjacent and retries exactly once on arrival; server keeps every reach check.
+- **Feature 15 — Process-kill crash durability harness** (2026-07-24): `ITEM_TX_CRASH_POINT` seam kills the process before/after COMMIT; kill-before leaves the original owner, kill-after the new one, never two. Residual map-version seed-reconciliation note moved to `TODO.md` (owner Feature 98).
+- **Feature 18 — Stamina, soul rules, training engines** (2026-07-24): stamina persistence/offline regen/hunt decay/XP multiplier, exact soul eligibility, stage + rate config, and the pure offline/exercise training conversion engines. In-world bed/statue/dummy triggers → Feature 72.
+- **Feature 19 — Progression event-id pruning** (2026-07-24): `snapshot_version` on `progression_events` (migration 037) pruned in the save transaction; compacting in-memory event queue.
+- **Feature 20 — Vocation coefficient fixtures** (2026-07-24): pinned `vocations.xml` transcribed to a fixture; drift or an unclassified field fails the test.
+- **Feature 21 — Potion target monster-say** (2026-07-25): unforgeable `monster-say` speech mode; target says `Aaaah...` to observers who see the drinker. Potion sound dropped by product decision — any future audio starts fresh under Feature 87.
+- **Feature 23 — Advanced targeting** (2026-07-25): follow, challenge/taunt, aim-at-target, and the combat analyzer, all server-side. Residuals transferred: analyzer panel + aim toggle → [client backlog](client/feature-23-combat-panels.md); reward-boss guard → Feature 76; boss difficulty/hazard/encounters → Feature 86.
+- **Feature 25 — Custom combat areas** (2026-07-25): `2`-centre matrices, extended diagonal areas, helper-indirected constants all typed; Ice Burst/Terra Burst/Balanced Brawl enabled, twelve areas corrected; 169 supported.
+- **Feature 27 — Action-bar polish** (2026-07-25): debounced action-bar/minimap saves flush on `beforeunload`/`pagehide`/teardown; rune slots already shipped with the unified bar.
+- **Feature 28 — Spell-words-via-chat completion** (2026-07-25): name-parameterized casts, `magic` speech mode, yelled words, exani hur action-bar slot, step-cooldown fizzle.
+- **Feature 30 — World-container and loot UX** (2026-07-25): bounded multi-view sessions, nested corpse browsing, materialize-on-open map chests, category-filtered quick-loot sweep — all reach/revision-checked per tick.
+- **Feature 31 — Corpse persistence/retry hardening** (2026-07-25): shared serializable-retry helper across all economy stores; integration tests replay the real migration directory; loot-origin guard on `planDrop`/`planMoveMapItem`.
+- **Feature 34 — Durable decay deadlines** (2026-07-25): boot resumes deadlines from `items.updated_at` age (no new column); `updatedAtInvariant` test protects the derivation.
+- **Feature 36 — Chat observability** (2026-07-25): flood metrics, configurable buffer limits, escalation decay, documented retention policy.
+- **Feature 37 — Typed NpcType model** (2026-07-25): every declared NPC behavior field carried typed; NPC gaps in the creature report 956 → 3.
+- **Feature 39 — NPC import validation** (2026-07-25): fail-closed import validation, whole-world destination proof, pinned parity gate.
+- **Feature 42 — Travel bank-fallback payment** (2026-07-25): fares spend carried coins first, bank covers the shortfall in the same serializable transaction with ledger + split audit.
+- **Feature 44 — Currency conservation metrics** (2026-07-25): read-only five-minute sweep checking coins vs mint/burn flow, bank vs ledger chain, coin rows vs audits. Operator surface → Feature 96; conditional escrow/rare-watchlist extensions noted in `TODO.md`.
+- **Feature 47 — Depot/market transaction hardening** (2026-07-25): persist-failure live resync (retry half closed by Feature 31); latency/deviation trade-offs documented in the log. The conditional connection-transient retry decision moved to Feature 97.
+- **Feature 53 — World-action parity inventory** (2026-07-25): 313 registrations classified, 0 unclassified, gated by `worldActionParity.test.ts` + `yarn parity:check`.
+- **Feature 55 — Party analyzer** (2026-07-25): full analyzer; accepted gaps (catalog-`worth` market mode, supplies scope) recorded in `TODO.md`.
+- **Feature 56 — Party finder** (2026-07-25): finder ships; the `finderVisible` hook defaults open until Feature 65's privacy setting exists (owner: Feature 65).
+- **Feature 60 — pvp-zone tiles** (2026-07-25): the already-converted OTBM `pvp` flag now feeds the skull/frag policy; kills inside a pvp zone produce neither. Blessing-loss modifiers → Feature 72.
+- **Feature 61 — Timed house auctions** (2026-07-25).
+- **Feature 63 — Guildhall purchase** (2026-07-25).
+- **Feature 64 — House polish** (2026-07-25): rent letters, mob blocking, eviction edges; inbox-overflow spillover kept as an audited deviation (charter rule 10).
+- **Feature 66 — Social-services hardening** (2026-07-25): GM highscore exclusion, mail rate limit, admin reachability. Locale key → [client backlog](client/cross-cutting-locales.md); role operator tooling → Feature 96.
+
+### Server half shipped — only a client surface remains
+
+These stay open in their areas, tracked entirely by [`todo/client/`](client/README.md):
+
+- **Feature 62 — House access lists** (2026-07-25): per-door lists enforced server-side; [door-list editor](client/feature-62-door-list-editor.md) missing.
+- **Feature 68 — Minimap completion** (2026-07-25): markers/walk-to shipped; [marker icon/text editing + walk feedback](client/feature-68-marker-editing.md) missing.
+- **Feature 69 — UI-settings polish** (2026-07-25): reset + cross-session sync shipped; [chat/battle-list/spell-bar panels still fixed](client/feature-69-movable-panels.md).
+- **Feature 70 — Outfits and addons** (2026-07-25): entitlements + validation shipped; [outfit window](client/feature-70-outfit-picker.md) missing (unlock sources ride with store/quests/achievements).
+- **Feature 71 — Mounts** (2026-07-25): ownership, validation, speed bonus shipped; [mounted rendering](client/feature-71-mount-rendering.md) missing.
+
+### Major partial cores shipped in the same wave (features stay open)
+
+- Feature 96: `accounts.role` migration (054), fail-closed capability model, per-command gating, audited `/goto`/`/bring`/`/inspect`; role assignment + content/event controls remain.
+- Feature 54: durable restart-safe world-event engine + the 18-raid import lane; other global events, daily resets, boosted rotations, reward steps remain.
+- Features 24/26/29/32/33/35/38/40/41/43/45/46/48/49/50/51/52/57/58/59/65/67/72: substantial slices each — see their sections in the merged area files (`todo-1.md` … `todo-13.md`) for exactly what remains.

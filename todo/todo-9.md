@@ -1,14 +1,101 @@
-# Todo 9 — Death, corpses, loot, and decay
+# Todo 9 — Characters, social, and houses
 
-The core death pipeline shipped: exactly-once monster/player death handling, server-rolled loot committed atomically with audits, memory-first corpses with reach-checked loot views, the pinned v1 player death penalty (10% XP, atomic with respawn, replay-proof), and full ground-item decay with stale-guarded transforms whose deadlines now survive a restart (see [done.md](done.md)). What remains is Canary parity breadth: full loot-table import, the complete death-penalty stack, and carried/equipped and field-item decay.
+**Features 2, 57, 58, 59, 62†, 65, 67.** Almost everything here shipped:
+parties with analyzer/finder/invite-shields, guilds with wars/emblems/bank,
+the pinned PVP policy with pvp-zone tiles and the combat-logout linger
+window, houses with auctions/access-lists/guildhalls/polish, VIP/friends
+with requests and groups, moderation hardening, and the profile projection
+stack (see [done.md](done.md)). † = client-only remainder.
 
-## Remaining features
+## Feature 2 — Character rename/delete flows with authorization tests
 
-- [ ] **Feature 29 — Monster loot-table parity import** — lossless import, Canary roll semantics, quick-loot buckets and the aggregate parity gate over all 782 loot-bearing monsters shipped 2026-07-25 ([log](completed/implementation-feature-29-completed.md)); child containers, `unique`, reward chests and per-monster death callbacks remain. See [implementation](implementation-feature-29.md).
-- [x] **Feature 30 — World-container and loot UX completions** — nested browsing, multi-view sessions, materialize-on-open map chests and a category-filtered quick-loot sweep, all still reach- and revision-checked per tick. **Done 2026-07-25** — see [completed log](completed/implementation-feature-30-completed.md).
-- [x] **Feature 31 — Corpse persistence invariants and retry hardening** — retry consolidated into the shared economy transaction helper, all 18 integration tests replay the real migration directory, and `planDrop`/`planMoveMapItem` no longer guard unpersisted loot. **Done 2026-07-25** — see [completed log](completed/implementation-feature-31-completed.md).
-- [ ] **Feature 32 — Full Canary player-death penalty parity** — the loss formula, skill/magic-level loss and the unfair-fight reduction shipped 2026-07-25 ([log](completed/implementation-feature-32-completed.md)); blessings and item drop into a player corpse remain (both follow Feature 72). See [implementation](implementation-feature-32.md).
-- [ ] **Feature 33 — Carried/equipped and field-item decay** — carried/equipped decay (burning rings, perishables, logout-safe deadlines) shipped 2026-07-25 ([log](completed/implementation-feature-33-completed.md)); spell fields as world items, charge expiry and decay callbacks remain. See [implementation](implementation-feature-33.md).
-- [x] **Feature 34 — Durable decay deadlines** — boot resumes each deadline from the persisted row's age (derived from `items.updated_at`, no new column) instead of re-arming a full duration. **Done 2026-07-25** — see [completed log](completed/implementation-feature-34-completed.md).
+No longer purely conditional: Feature 67 shipped namelock **enforcement**
+(world entry refused with `character-namelocked`), so nothing can clear a
+namelock until rename exists. Delete remains a product decision.
+
+**Implementation:** zod messages in `protocol/src/character.ts` (max size +
+rate first); handle in `server/src/character/CharacterService.ts` deriving
+the account from the session, never the body; re-check ownership at
+execution time inside the tick; one DB transaction; rename preserves
+globally unique normalized names. (`tools/deleteCharacter.mjs` is a dev
+script, not a player flow.)
+
+**Tests** (alongside `PgCharacterStore.integration.test.ts`): cross-account
+rename rejected; cross-account delete rejected; two racing renames to one
+normalized name leave exactly one winner.
+
+## Feature 57 — Party-aware spells
+
+Invite-pending shields shipped. **Blocked** on Feature 24's mass-heal /
+party-buff spells (todo-5): when they land in
+`server/src/combat/SpellRegistry.ts`/`SpellCaster.ts`, friendly-target
+selection gates on party membership **re-checked at execution time inside
+the tick** — never membership at cast enqueue. Test: a member who left
+between cast and resolution is not healed.
+
+## Feature 58 — Guild bank (remainder)
+
+Balances, deposit/withdraw intents, points/level projection shipped.
+
+**Remaining work**
+
+- **Per-rank withdrawal permission** — withdrawal is leader-only; Canary
+  gates on a rank capability, which needs a permission model on
+  `guild_ranks`.
+- **Run the four durable integration cases** against Postgres
+  (`yarn workspace server test:integration` — they are written but unrun).
+- Client deposit/withdraw controls →
+  [client backlog](client/feature-58-guild-bank-ui.md).
+
+Consumed by guildhall purchase/rent (shipped).
+
+## Feature 59 — Combat-logout completion
+
+The linger window shipped (`LingeringPlayers.test.ts` pins the bookkeeping).
+
+**Remaining work**
+
+- **End-to-end playtest scenario** in `server/src/playtest/scenarios`: two
+  headless clients fight, the killer disconnects before the victim dies,
+  frag + skull asserted against the killer afterwards.
+- **Item cache during the linger window** — the cache detaches with the
+  session, safe only because player corpses drop nothing today; when
+  Feature 32 (todo-6) drops items, the lingering entity must keep its
+  inventory attached so a death inside the window drops loot normally.
+
+## Feature 62 — House per-door access lists (client-only remainder)
+
+`house-set-list` accepts `kind: "door"` and the server enforces per-door
+lists at execution time; only the
+[door-list editor](client/feature-62-door-list-editor.md) is missing.
+
+## Feature 65 — Friend-system completion
+
+Reciprocal requests, groups, typing hints, and presence shipped.
+
+**Remaining work**
+
+- **Finder-visibility privacy setting** (absorbed from Feature 56):
+  `PartyHandler` consults `finderVisible(characterId)` at query execution
+  time, defaulting true — add the per-character privacy setting and wire the
+  hook.
+- **Exiva restrictions** — blocked: no exiva spell exists yet (todo-5).
+- VIP-group management UI →
+  [client backlog](client/feature-65-vip-groups-and-typing.md).
+- Durable ignore lists → Feature 35 (todo-7) owns them.
+
+## Feature 67 — Profile projections (remainder)
+
+Achievements/titles/badges grant tables, namelock enforcement, character
+info, and bug reports shipped server-side.
+
+**Remaining work**
+
+- **Import Canary's full achievement catalog** — today's pinned set covers
+  only the grant hooks that exist.
+- Namelock rename flow → Feature 2 (above). Livestream/casting → Feature 86
+  (todo-10). Cyclopedia display of these projections → Feature 83 (todo-10).
+- The whole client surface →
+  [client backlog](client/feature-67-profile-ui.md).
 
 [Back to overview](README.md)

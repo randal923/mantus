@@ -1,10 +1,83 @@
-# Todo 3 — Map and movement
+# Todo 3 — Creatures, spawns, and AI
 
-The converter (all floors 0-15, transition metadata, atomic versioned builds), z-aware server map model, intent-only movement with tick-time revalidation, Canary-compatible stairs/diagonals/auto-walk, floor-aware visibility policy, and the full converter/movement test suite all shipped — see [done.md](done.md). Two items remain: a verified pz-lock bypass on the ladder/hole/rope/levitate use paths, and the parity audit resolving every disabled map transition and movement action.
+**Features 9, 10.** The full creature world shipped: typed
+`MonsterType`/`NpcType` data, all 84,294 placements behind passing
+benchmarks, tick-owned `SpawnManager`, budgeted AI with z-aware A*, the
+911-monster parity audit, voices/summons, machine-verified bestiary/raceId
+coverage, and stable variant addressing (see [done.md](done.md)). Both
+remaining features are mostly blocked on other areas' typed representations.
 
-## Remaining features
+## Feature 9 — Creature importer typed-data completeness
 
-- [x] **Feature 3 — pz-lock enforcement on ladder/hole/rope/levitate transitions** — A pz-locked player can enter a protection zone via the use path, which skips the pz-lock destination check normal walking enforces. Completed 2026-07-24; see [implementation](implementation-feature-3.md) → [completed log](completed/implementation-feature-3-completed.md).
-- [ ] **Feature 4 — Disabled map transitions and movement-action parity resolution** — Individually resolve every disabled transition, movement action, zone behavior, and invalid placement so no map behavior stays silently unsupported. Disabled world actions fell 3,554 → 348 on 2026-07-25 (the name-matched hole classification was a classifier artefact, not a content gap) and every remaining one names an audited reason; unresolved floor transitions fell 5,557 → 2,225 the same day once `source-not-walkable` was split into audited exemptions (rope-hole-covered tiles, groundless tiles, non-walkable roof pieces), leaving 824 blocked-by-item plus the destination buckets for per-entry review. See [implementation](implementation-feature-4.md) · [completed](completed/implementation-feature-4-completed.md).
+The world import report must reach zero ignored gameplay assignments; every
+procedural callback becomes typed data or reviewed TypeScript — never
+executed Lua. As of 2026-07-25: 1,424 gaps `covered` (bestiary/bosstiary/
+raceId — owned by `tools/importCanaryBestiary.mjs`, with the guard test
+re-deriving coverage from `bestiary.json` rather than trusting labels),
+1 `upstream-defect` (Crypt Warrior's Bestiary block has no raceId), and
+**1,061 still `blocked`**.
+
+**Remaining work**
+
+- **Reward-boss classification** (`flags.rewardBoss`, 911 monsters) — Feature
+  76 (todo-10) owns importing `isRewardBoss` onto `MonsterType` (it also
+  needs it for the challenge/melee-pull guards); this feature closes its
+  blocked bucket when that lands.
+- **Prey classification** (`flags.isPreyExclusive` 146, `flags.isPreyable` 1)
+  — needs Feature 74 (todo-10).
+- **Three NPC entries** (`onSay` ×2, `moneyToNeedDonation`) — todo-7.
+- Already typed or resolved (do NOT redo): static mana cost, light,
+  target-change rules, hidden health, static-attack chance; all 54 registered
+  monster event names and all 15 active MonsterType callbacks have reviewed
+  runtime handlers (incl. delayed transformations and teleports); the whole
+  `NpcType` model; race/bestiary/bosstiary metadata.
+
+**Implementation**
+
+- Extend `server/src/creature/MonsterType.ts` / `NpcType.ts`; importers
+  `tools/importCanaryCreatures.mjs`, `tools/parseCanaryCreatureContent.mjs`,
+  `tools/importCanaryNpcs.mjs`; loaders in
+  `server/src/spawn/loadCreatureContent.ts`. Drive from
+  `content/world-import-report.json` and
+  `content/npcs/canary-npc-import-report.json`.
+- Offline parsing only; procedural behavior lands in
+  `server/src/creature/MonsterEventService.ts` / `MonsterEventHooks.ts`.
+
+**Tests**
+
+- `server/src/spawn/creatureImportReport.test.ts` (7 cases, incl. the
+  bestiary coverage proof and separate blocked/upstream-defect ceilings) is
+  landed — a newly ignored gameplay assignment fails the run. Add loader
+  round-trip tests for each new typed field.
+
+## Feature 10 — Placement disambiguation and creature parity gate
+
+Aggregate pins are landed (911 monster types, 956 NPC types, 83,286 monster
+placements, 1,008 NPC placements, 84,294 slots in
+`creatureParityGate.test.ts` / `CreaturePerformance.test.ts`); variant
+addressing landed 2026-07-25 (duplicates 25 → 1, ambiguous 20 → 1 — both the
+genuine Harlow collision), with ids re-derived from pinned type names so a
+normalization change fails the test.
+
+**Remaining work**
+
+- **Harlow** — the one genuine upstream duplicate: `harlow.lua` and
+  `harlow_trade.lua` both register the type name "Harlow"; the world
+  placement resolves to `harlow.lua` by file-name match. Review that choice.
+- **Import the 67 recorded variant definitions** (`variantFamilies` in the
+  report) — each has a stable id; nothing places them because their spawning
+  quest scripts are todo-13 content.
+- Review the `outOfMap` (276) and `blocked` (525) placements per entry.
+- Gate closure on zero unreviewed creature/NPC gameplay fields (waits on
+  Feature 9).
+
+**Implementation**
+
+- Work from the alias/duplicate/blocked sections of
+  `content/world-import-report.json` and
+  `content/starter-import-report.json`; variant support lives in
+  `content/monsters/world-monsters.json` + `tools/importCanaryCreatures.mjs`.
+- All resolution is offline importer/content work; runtime spawn behavior
+  stays inside the tick-owned `SpawnManager` unchanged.
 
 [Back to overview](README.md)

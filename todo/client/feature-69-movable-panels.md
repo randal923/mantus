@@ -1,7 +1,7 @@
 # Feature 69 (client) — make the remaining panels movable
 
 Part of the [client backlog](README.md). Server side shipped:
-[completed log](../completed/implementation-feature-69-completed.md).
+[done.md record](../done.md).
 
 ## Why
 `uiSettingsSchema` now stores bounded `chat`, `battleList`, and `spellBar`

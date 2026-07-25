@@ -1,20 +1,26 @@
 # TODO
 
 The backlog for full parity with the pinned Canary baseline lives under
-[`todo/`](todo/README.md). It was restructured 2026-07-24 from a full audit of
-the previous per-area files against the codebase:
+[`todo/`](todo/README.md). Restructured 2026-07-24 from a full audit;
+2026-07-25 the completion wave closed 34 features and the backlog was
+consolidated into 13 merged area files with all implementation detail
+inline:
 
-- [`todo/done.md`](todo/done.md) — everything already shipped, grouped by area.
-- [`todo/todo-1.md`](todo/todo-1.md) … [`todo/todo-22.md`](todo/todo-22.md) —
-  the 22 remaining areas, each listing its numbered features.
-- `todo/implementation-feature-N.md` — one implementation plan per remaining
-  feature (107 total): remaining work, file surface, approach, Canary
-  references, and required exploit/regression tests.
+- [`todo/done.md`](todo/done.md) — the single permanent record of everything
+  shipped (the former `todo/completed/` logs were folded in and removed).
+- [`todo/todo-1.md`](todo/todo-1.md) … [`todo/todo-13.md`](todo/todo-13.md) —
+  the merged areas; each open feature is a `## Feature N` section carrying
+  its remaining work, file surface, Canary references, and required
+  exploit/regression tests. 68 of 107 features remain open; numbers are
+  stable and never reused, new work gets 108+.
+- [`todo/client/`](todo/client/README.md) — the single index of all
+  outstanding client-side work (panels for shipped server features plus
+  pointers to the mixed tracks).
 
 Start with the [overview](todo/README.md) for the pinned upstream snapshots,
-rewrite boundary, cross-cutting rules, and recommended order. Feature 1 (the
-Canary parity ledger) is the cross-cutting completion contract; Feature 100
-(testing and release gates) is the final pre-launch gate.
+rewrite boundary, cross-cutting rules, known blockers, and recommended order.
+Feature 1 (the Canary parity ledger) is the cross-cutting completion contract;
+Feature 100 (testing and release gates) is the final pre-launch gate.
 
 Add a newly discovered gap to the narrowest matching todo area; add it here
 only when it needs a new area or changes the implementation order. Known
@@ -49,11 +55,8 @@ limitations accepted during a session are recorded in the owning feature file
   are counted in the eviction audit row. Canary mails them with `FLAG_NOLIMIT`,
   ignoring the inbox cap; matching that exactly would let an eviction push a
   character past `DEPOT_LIMITS.maxInboxItems`, i.e. unbounded per-connection
-  storage, which charter rule 10 forbids. Owner: Feature 64.
-- **Ignore lists are not durable** (2026-07-25, Feature 65). Server-side
-  suppression ships (`chat/IgnoreList.ts`, stricter than pinned Tibia's
-  client-side list) but is held in memory only, so a restart clears every
-  list. The fix is a per-character table loaded at attach. Owner: Feature 65.
+  storage, which charter rule 10 forbids. Feature 64 closed 2026-07-25 with
+  this recorded as a permanent audited deviation — not open work.
 - **Roles have no operator tooling** (2026-07-25, Feature 96; supersedes the
   earlier staff-flag gap). `accounts.role` now authorizes every admin action
   and `is_staff` is a generated column derived from it, so the two truths are
@@ -73,7 +76,8 @@ limitations accepted during a session are recorded in the owning feature file
   validation, and the server-side speed bonus ship, and creature state carries
   `mountLookType`, but `CreatureView` still draws only the rider. Drawing the
   mount under it needs a second sprite layer subject to the pattern/layer
-  rules in `client/ASSETS.md`. Owner: Feature 71.
+  rules in `client/ASSETS.md`. Owner:
+  [`todo/client/feature-71-mount-rendering.md`](todo/client/feature-71-mount-rendering.md).
 - **Fields cannot be implemented from the pinned assets** (2026-07-25,
   Feature 50). The item catalog imports `kind: "magicfield"` for 45 types but
   no `field` payload; `ItemType.field` is declared and always undefined, so
@@ -97,9 +101,12 @@ limitations accepted during a session are recorded in the owning feature file
   character. Feature 96's role-authorized surface shipped 2026-07-25; this
   needs a `world.content` capability and a handler on `AdminCommandHandler`.
 - **The party analyzer's "market" price mode uses catalog `worth`**
-  (2026-07-25, Feature 55). Canary reads live market statistics; there is no
-  market price index to read. The `npc` mode uses real shop sell prices, so the
-  toggle is not a no-op. Owner: Feature 55.
+  (2026-07-25, Feature 55 — closed; gap accepted). Canary reads live market
+  statistics; there is no market price index to read. The `npc` mode uses real
+  shop sell prices, so the toggle is not a no-op. Also accepted: supplies
+  count runes, ammunition and potions only — food and other consumables are
+  not observed. Revisit if a market price index (Feature 49's catalog work)
+  ever lands.
 - **Party-finder visibility defaults to listable** (2026-07-25, Feature 56).
   `PartyHandler` consults a `finderVisible(characterId)` hook at query execution
   time, but the friend-system privacy setting it should read does not exist yet.
@@ -125,7 +132,9 @@ limitations accepted during a session are recorded in the owning feature file
   have landed could apply a transfer twice. Serialization aborts and deadlocks
   are guaranteed rollbacks and are retried. Fix if connection-level retry is
   ever wanted: give the money legs an idempotency key (the market replay-guard
-  pattern) first. Owner: Feature 47 (depot/market transaction hardening).
+  pattern) first. Owner: Feature 97 (server error handling owns retryability
+  classification and ambiguous-COMMIT handling; reassigned when Feature 47
+  closed 2026-07-25).
 - **Untouched corpses and their loot vanish on restart** (Feature 31,
   re-affirmed 2026-07-25). Intended, matches Canary — memory-first corpses have
   no DB row until first touch. Not a bug.
@@ -149,7 +158,7 @@ limitations accepted during a session are recorded in the owning feature file
   is mis-applied. Fix: extend the catalog entry to carry a per-grade area list
   and pick the grade from `player.wheelBonuses` at cast time, the same way
   `wheelRevelation` is now enforced in `SpellCaster.spellRejectionCode`.
-  Owner: Todo 15 (deferred wheel combat perks).
+  Owner: Features 79–80 (wheel combat wiring / rule gaps).
 
 - **38 pinned monster loot entries can never drop** (2026-07-25, Feature 29).
   Twelve items (darklight/inferniarch-era drops) exist in the pinned Canary
@@ -166,10 +175,12 @@ limitations accepted during a session are recorded in the owning feature file
   slice: the `characters.blessings` bitmask column + `CharacterStore`
   load/save, then the purchase path (economy-relevant — its own PR).
   Owner: Feature 72.
-- **Ignore lists are memory-only** (2026-07-25, Feature 35). They survive a
-  relogin (keyed by character id for the server's lifetime) but not a restart.
-  Fix: a table alongside the other social stores; the suppression path itself
-  needs no change.
+- **Ignore lists are memory-only** (2026-07-25, Feature 35 — single owner
+  after the 2026-07-25 restructure; the duplicate Feature 65 entry was
+  merged here). They survive a relogin (keyed by character id for the
+  server's lifetime) but not a restart. Fix: a per-character table loaded at
+  attach alongside the durable mute; the suppression path itself needs no
+  change.
 - **Chat flood escalation is memory-only** (2026-07-25, Feature 36). The
   repeat-offender counter behind escalating mutes is keyed by character id for
   the server's lifetime, so it survives relogging but a restart forgives every
@@ -178,7 +189,8 @@ limitations accepted during a session are recorded in the owning feature file
   escalation step, and keeping it out of the database keeps the chat hot path
   free of I/O. Fix if abuse warrants: a `character_chat_escalation` row loaded
   at login next to the durable mute (`ModerationService.attachCharacter`) and
-  written behind the tick when a mute is issued. Owner: Feature 36.
+  written behind the tick when a mute is issued. Owner: Feature 35 (chat
+  remainder; Feature 36 closed 2026-07-25 with this accepted).
 
 - **233 rope holes have no reachable landing tile** (2026-07-25, Feature 51/4).
   Canary's `holeId` list now drives 4,968 working `rope-hole` actions, but 233
@@ -203,7 +215,22 @@ limitations accepted during a session are recorded in the owning feature file
   (2026-07-25, Feature 11). No `fluidSource` in the item catalog, no
   fluid-subtype model on carried items, and no non-tile `use-item-with` target
   kind. The full assessment and implementation order are in
-  `todo/implementation-feature-11.md`. Owner: Feature 11.
+  `todo/todo-4.md` (Feature 11). Owner: Feature 11.
+
+- **A future map-version upgrade needs an explicit seed reconciliation
+  migration** (recorded with Feature 7's world-seed path; carried out of
+  Feature 15 when it closed 2026-07-24). `db:reconcile-world-seed` reconciles
+  against the *current* seed fixtures; upgrading the map/content version needs
+  a deliberate migration step that re-runs reconciliation against the new
+  seed, not an implicit boot-time fix-up. Owner: Feature 98 (migration
+  policy).
+- **Conservation sweep conditionals** (carried out of Feature 44 when it
+  closed 2026-07-25). Escrow is reported, not re-derived — it leans on the
+  `market_offers` check constraint; if escrow ever stops being
+  `remaining_amount × unit_price`, add a fourth invariant. Tracked rares are
+  not covered; extend the sweep's shape to a rare-item watchlist once one
+  exists. Owners: Feature 99 (reconciliation jobs), Feature 96 (operator
+  surface).
 
 ## Repo-wide known breakage
 

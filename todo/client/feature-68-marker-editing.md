@@ -1,7 +1,7 @@
 # Feature 68 (client) — marker icons, text, and walk-to feedback
 
 Part of the [client backlog](README.md). Server side shipped:
-[completed log](../completed/implementation-feature-68-completed.md).
+[done.md record](../done.md).
 
 ## Why
 Right-clicking the minimap toggles a default flag (`icon: 0`, empty text), but

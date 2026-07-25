@@ -1,7 +1,7 @@
 # Feature 71 (client) — mounted rendering and mount selection
 
 Part of the [client backlog](README.md). Server side shipped:
-[completed log](../completed/implementation-feature-71-completed.md).
+[done.md record](../done.md).
 
 ## Why
 Mount ownership, execution-time selection validation, and the

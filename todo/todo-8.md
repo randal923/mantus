@@ -1,16 +1,111 @@
-# Todo 8 — Combat, spells, and conditions
+# Todo 8 — Economy
 
-The combat core shipped: bounded intents with execution-time re-checks, server-owned formulas/RNG, full monster-spell parity (all 171 registered monster-spell names resolved to reviewed TypeScript), conditions, potions, monster combat AI, action bars, and — most recently (`4b332a1` spell-in-chat, `2e25fa9` magic rope) — spell words castable via chat plus exani tera/exani hur as `worldAction` spells resolved by movement rules (see [done.md](done.md)). What remains is two missing spell icons, advanced targeting systems, the last player support-spell callbacks, the spell-report zero-disabled gate (currently 236 total / 235 registered / 169 supported / 66 disabled), action-bar polish, and the recorded gaps in spell-words-via-chat. Custom combat areas are done.
+**Features 43, 45, 46, 48, 49.** The economy core is complete and
+exploit-tested end to end: bank, NPC shops (8,368 offers, restock, backpack
+destinations, bank fallbacks), depot/inbox/mail/stash on the
+memory-authoritative lane, trade with orphan-restore, market with escrow +
+stash-sourced sells + live counterparty push, the Mantus Store with
+grants/refunds/history/item delivery, the conservation sweep, and the
+persist-failure live resync (see [done.md](done.md)).
 
-## Remaining features
+**Standing rules:** never touch more than one economy-relevant system per
+PR; every money/item move carries its audit entry in the same transaction
+that performs it.
 
-- [x] **Feature 21 — Potion sound and target monster-say** — the target now says `Aaaah...` via the new `monster-say` creature-speech mode, scoped to observers who see the drinker; the potion sound was dropped by decision and any future audio belongs to Feature 87. **Done 2026-07-25** — see [completed log](completed/implementation-feature-21-completed.md).
-- [ ] **Feature 22 — Spell artwork for Blank Rune and Conjure Royal Star** — client-only icon gap; pinned OTClient data lacks valid indices for these two (re-verified 2026-07-25 against `bdea0b2`). Blocked externally. See [implementation](implementation-feature-22.md).
-- [ ] **Feature 23 — Advanced targeting and encounter interactions** — follow, challenge/taunt, aim-at-target and the combat analyzer shipped 2026-07-25 ([log](completed/implementation-feature-23-completed.md)); boss difficulty, hazard and encounters stay with Todo 16 Feature 86, and the client panels plus the reward-boss guard are still open. See [implementation](implementation-feature-23.md).
-- [ ] **Feature 24 — Remaining player support-spell callbacks** — thirteen callbacks shipped 2026-07-25, 153 → 166 supported ([log](completed/implementation-feature-24-completed.md)); the Monk harmony/virtue subsystem, the field/wall runes' item-creation path, and the spells needing new condition types remain. See [implementation](implementation-feature-24.md).
-- [x] **Feature 25 — Custom combat areas for disabled player spells** — `2`-centre matrices, Canary's extended (diagonal) areas and helper-indirected area constants are all typed data now; Ice Burst, Terra Burst and Balanced Brawl enabled, twelve already-enabled spells corrected, 166 → 169 supported. **Done 2026-07-25** — see [completed log](completed/implementation-feature-25-completed.md).
-- [ ] **Feature 26 — Spell report zero-disabled gate** — classification, the parity-budget gate and the determinism check shipped 2026-07-25 ([log](completed/implementation-feature-26-completed.md)); ignored formula fields are locked at zero. Driving the remaining 66 disabled definitions to zero belongs to the features that own them. See [implementation](implementation-feature-26.md).
-- [x] **Feature 27 — Action-bar polish** — debounced action-bar/minimap saves now flush on `beforeunload`/`pagehide` and on controller teardown; rune slots were already shipped by the unified action bar. **Done 2026-07-25** — see [completed log](completed/implementation-feature-27-completed.md).
-- [x] **Feature 28 — Spell-words-via-chat completion** — all five recorded gaps closed: name-parameterized casts, exani hur on the action bar, the `magic` speech mode, yelled spell words, and the step-cooldown fizzle. **Done 2026-07-25** — see [completed log](completed/implementation-feature-28-completed.md).
+## Feature 43 — Mantus Store parity completion
+
+**Remaining work**
+
+- **Real-money purchase path.** Nothing turns money into coins: needs a
+  payment provider, webhook verification, and a grant keyed by the
+  provider's transaction id (the `request_key` column exists for exactly
+  this). Until then `/coins` is a development surface.
+- **Transferable coin balances.** Coins are account-scoped; Canary gifting
+  needs a transfer op with both legs in one transaction plus an anti-abuse
+  policy.
+- **Catalog breadth** — two categories exist; expanding is content.
+- **Load-time catalog gate** — assert every offer's `itemTypeId` exists in
+  the pinned catalog and is pickupable (mirror `loadShopCatalogs`; today a
+  bad id fails on first purchase, not at boot).
+- **Capability move:** `/coins` and `/storerefund` onto Feature 96's surface
+  behind an `economy.grant` capability (todo-12).
+- Client history UI → [client backlog](client/feature-43-store-history-ui.md).
+- When item products grant outfits/mounts, call
+  `OutfitService.grantOutfit` (see todo-10, Features 70/71 unlock sources).
+
+## Feature 45 — Bank parity gaps
+
+**Remaining work**
+
+- **`change gold` / `change platinum` conversions.** A pure carried-coin
+  transform — no bank balance touched — so it needs its own store op:
+  `BankStore.changeMoney` running `destroyItems` + `grantStackable` for the
+  two denominations in one SERIALIZABLE transaction with an `audit_log` row
+  recording both legs. Dialogue side: a third branch in
+  `server/src/npc/withBankKeywords.ts` plus a `bank-keyword` operation value;
+  the amount parser exists.
+- **`minTownIdToBankTransferFromMain`** — nothing to gate until multi-town
+  support exists.
+- Guild bank shipped with Feature 58 (todo-9) — rank permission + client UI
+  live there, not here.
+
+**Tests:** change conversions conserve carried worth exactly, under
+concurrency, in one transaction.
+
+## Feature 46 — NPC shop parity completions
+
+**Remaining work**
+
+- **Move the carry-capacity check inside the purchase transaction** (stale
+  validation, charter rule 4; the current window is one tick). Cheap now:
+  `coinOwnedItemsQuery` already loads every owned row in the transaction, so
+  weight can be summed from the catalog there — `capacityMax` rides along on
+  the server-built `ShopPurchaseRequest` (server-computed from
+  level/vocation/wheel, never client-supplied).
+- **Shopping bags sold as containers** — Canary fills the purchased bag in
+  the same transaction that created it; here a purchased container is inert.
+- **Finite stock** — plumbing, schema, and tests exist and are inert; no
+  pinned catalog entry declares `stock`, so enabling it is a content
+  decision.
+
+## Feature 48 — Player-trade parity completions
+
+**Remaining work**
+
+- **Ground-item trade offers.** Extend `trade-request` in
+  `protocol/src/trade.ts` with an optional map-position source; route through
+  the pickup reach/auto-walk validation before reserving; re-check reach and
+  ownership at execution time. Test: forged out-of-reach source rejected; a
+  trade-offer racing a pickup on the same ground item leaves exactly one
+  owner.
+- **Store-item/unique-id/house-tile restrictions.** Predicates in
+  `TradeService` / `planTradeReservation.ts` at both offer and commit time —
+  **blocked**: the attributes don't exist yet (Feature 43 store items,
+  Feature 78 forge/imbuements, todo-9 house tiles, a unique-id item model).
+- Documented deviations, no action planned: reserved-offer visibility
+  (reserved items vanish from the giver's visible inventory; conservation
+  unaffected) and index-based per-item look (full offer pushed as one
+  projection; nothing extra exposed).
+
+## Feature 49 — Market parity completions
+
+**Remaining work**
+
+- **Marketable-catalog browser** — Canary browses the full catalog from DAT
+  `ATTR.market` metadata, which the importer discards. Needs the
+  asset-import pipeline regenerated to keep `ATTR.market` (or an expanded
+  `marketCategoryOf.ts`), a paged full-catalog read op in
+  `PgMarketReadOps.ts` bounded by `MARKET_LIMITS`, and a client browser
+  list. **Blocked on the asset regeneration.**
+- **Pristineness extensions** — currently "empty attributes, no contained
+  items"; revisit as Features 43/78 add attributes that must not silently
+  make items unsellable or sellable-while-carrying-value.
+- **Expiry with a full inbox** — defers one hour and retries vs Canary's
+  capacity-bypassing insert; open decision (keep as deviation or add a
+  bypass flag to the expiry op; one transaction + audit either way).
+- Offer detail carries no level/vocation display and no anonymous flag —
+  tighter than Canary (names never exposed); parity optional.
+- Selection retention after `market-transacted` →
+  [client backlog](client/feature-49-market-selection.md).
 
 [Back to overview](README.md)

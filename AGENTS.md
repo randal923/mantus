@@ -164,13 +164,15 @@ Prefer small, cohesive files with one clear responsibility.
   stopgap, a risk accepted for now (e.g. `banned_until` was only enforced at
   login, not against online players) — record it in `TODO.md` with the reason
   and the recommended fix. Don't let known gaps live only in the conversation.
-- When you finish work on a feature under `todo/`, log it under
-  `todo/completed/implementation-feature-N-completed.md` (append a dated entry:
-  problem, what changed, files touched, how it was verified, any residual
-  risk) and remove the now-resolved items from `todo/implementation-feature-N.md`,
-  leaving a one-line pointer to the completed log. Cross-link the two files.
-  Only fully move and delete an implementation file once that feature is
-  genuinely complete — never archive an umbrella/still-open feature (e.g.
-  Feature 1, the parity ledger) as "completed", since that makes the backlog
-  assert done work that isn't. Keep such features open and log only the
-  finished sub-work.
+- The backlog lives in `todo/todo-1.md` … `todo/todo-13.md` (features inline,
+  one `## Feature N` section each; numbers are stable, new work gets 108+);
+  `todo/done.md` is the single permanent record of completed work, and
+  `todo/client/` indexes outstanding client-only work. When you finish work
+  on a feature: append a dated entry to `todo/done.md` (problem, what
+  changed, files touched, how it was verified, any residual risk), delete the
+  feature's section from its area file (or just the resolved bullets for
+  partial work), and transfer any residual sliver to a named owning feature —
+  never leave it only in the conversation. Never archive an
+  umbrella/still-open feature (e.g. Feature 1, the parity ledger) as
+  "completed", since that makes the backlog assert done work that isn't. Keep
+  such features open and record only the finished sub-work in `done.md`.

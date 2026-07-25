@@ -1,7 +1,7 @@
 # Feature 70 (client) — the outfit window
 
 Part of the [client backlog](README.md). Server side shipped:
-[completed log](../completed/implementation-feature-70-completed.md).
+[done.md record](../done.md).
 
 ## Why
 Outfit and addon entitlements, the pinned catalog, and execution-time

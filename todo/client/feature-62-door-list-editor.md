@@ -1,7 +1,7 @@
 # Feature 62 (client) — per-door access-list editor
 
 Part of the [client backlog](README.md). Server side shipped:
-[completed log](../completed/implementation-feature-62-completed.md).
+[done.md record](../done.md).
 
 ## Why
 `house-set-list` accepts `kind: "door"` with the door's tile, and
