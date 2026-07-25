@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
+import { applyMigrations } from "../test/applyMigrations";
 import { loadItemCatalog } from "./loadItemCatalog";
 
 const TEST_SCHEMA = "item_crash_harness";
@@ -96,33 +96,7 @@ databaseDescribe("PgItemStore process-kill crash durability", () => {
     await setupClient.query(`DROP SCHEMA IF EXISTS ${TEST_SCHEMA} CASCADE`);
     await setupClient.query(`CREATE SCHEMA ${TEST_SCHEMA}`);
     await setupClient.query(`SET search_path TO ${TEST_SCHEMA}`);
-    const migrationsDirectory = fileURLToPath(
-      new URL("../../db/migrations/", import.meta.url),
-    );
-    for (const migration of [
-      "001_accounts.sql",
-      "002_account_language.sql",
-      "003_characters.sql",
-      "004_audit_log.sql",
-      "005_items.sql",
-      "006_item_identity_error.sql",
-      "007_progression.sql",
-      "008_diagonal_direction.sql",
-      "009_item_interactions.sql",
-      "010_monk_vocations.sql",
-      "011_npc_travel.sql",
-      "014_character_storages.sql",
-      "015_depot_and_inbox.sql",
-      "018_pvp.sql",
-      "023_character_action_bar.sql",
-      "029_character_potion_action_bar.sql",
-      "032_remove_loose_inventory.sql",
-      "034_unified_action_bar.sql",
-    ]) {
-      await setupClient.query(
-        await readFile(`${migrationsDirectory}${migration}`, "utf8"),
-      );
-    }
+    await applyMigrations(setupClient);
     pool = new Pool({
       connectionString: databaseUrl,
       options: `-c search_path=${TEST_SCHEMA}`,

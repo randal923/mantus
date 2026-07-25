@@ -827,7 +827,7 @@ export class MemoryItemStore implements ItemStore {
     _mapName: string,
     _mapVersion: string,
   ): Promise<WorldItemDeltas> {
-    return { hiddenSeedKeys: [], items: [] };
+    return { hiddenSeedKeys: [], items: [], agesMs: new Map() };
   }
 
   async persist(plan: CarriedPersistPlan): Promise<void> {

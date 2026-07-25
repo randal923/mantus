@@ -11,7 +11,7 @@ class DeltaItemStore extends MemoryItemStore {
 
   override async loadWorldDeltas() {
     this.deltaLoads++;
-    return { hiddenSeedKeys: [], items: [] };
+    return { hiddenSeedKeys: [], items: [], agesMs: new Map() };
   }
 }
 

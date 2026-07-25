@@ -17,7 +17,6 @@ import type {
   RespondInviteResult,
   RespondWarResult,
 } from "./GuildStore";
-import { isSerializationFailure } from "./isSerializationFailure";
 import { isUniqueViolation } from "./isUniqueViolation";
 import { actorMembershipForUpdateQuery } from "./sql/actorMembershipForUpdateQuery";
 import { activeWarBetweenForUpdateQuery } from "./sql/activeWarBetweenForUpdateQuery";
@@ -71,8 +70,6 @@ const WAR_ACTIVE = 1;
 const WAR_REJECTED = 2;
 const WAR_CANCELED = 3;
 const WAR_ENDED = 4;
-const MAX_TRANSACTION_ATTEMPTS = 5;
-const RETRY_BACKOFF_MS = 15;
 
 /**
  * Postgres GuildStore. Every mutation is one SERIALIZABLE transaction that
@@ -182,7 +179,7 @@ export class PgGuildStore implements GuildStore {
     name: string;
   }): Promise<CreateGuildResult> {
     try {
-      return await this.transact(async (client) => {
+      return await runSerializableTransaction(this.pool, async (client) => {
         const existing = await client.query(guildIdForCharacterQuery, [
           input.ownerCharacterId,
         ]);
@@ -233,7 +230,7 @@ export class PgGuildStore implements GuildStore {
     targetName: string;
   }): Promise<GuildInviteResult> {
     try {
-      return await this.transact(async (client) => {
+      return await runSerializableTransaction(this.pool, async (client) => {
         const actor = await this.requireRank(client, input.actorCharacterId, 2);
         const target = await client.query<{ id: string; display_name: string }>(
           characterByNameQuery,
@@ -280,7 +277,7 @@ export class PgGuildStore implements GuildStore {
     accept: boolean;
   }): Promise<RespondInviteResult> {
     try {
-      return await this.transact(async (client) => {
+      return await runSerializableTransaction(this.pool, async (client) => {
         // Re-check the invite exists at execution time.
         const removed = await client.query(deleteGuildInviteQuery, [
           input.characterId,
@@ -323,7 +320,7 @@ export class PgGuildStore implements GuildStore {
     actorCharacterId: string;
     targetCharacterId: string;
   }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireRank(client, input.actorCharacterId, 2);
       const removed = await client.query(deleteGuildInviteQuery, [
         input.targetCharacterId,
@@ -338,7 +335,7 @@ export class PgGuildStore implements GuildStore {
     actorCharacterId: string;
     targetCharacterId: string;
   }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireRank(client, input.actorCharacterId, 2);
       const target = await this.targetMembership(
         client,
@@ -359,7 +356,7 @@ export class PgGuildStore implements GuildStore {
   }
 
   async leaveGuild(input: { characterId: string }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.actorMembership(client, input.characterId);
       if (actor.owner_character_id === input.characterId) {
         throw this.rollback("leader-cannot-leave");
@@ -390,7 +387,7 @@ export class PgGuildStore implements GuildStore {
     actorCharacterId: string;
     targetCharacterId: string;
   }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireOwner(client, input.actorCharacterId);
       if (input.targetCharacterId === input.actorCharacterId) {
         throw this.rollback("invalid-request");
@@ -430,7 +427,7 @@ export class PgGuildStore implements GuildStore {
   async disbandGuild(input: {
     actorCharacterId: string;
   }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireOwner(client, input.actorCharacterId);
       await client.query(deleteGuildQuery, [actor.guild_id]);
       return { status: "ok" as const };
@@ -441,7 +438,7 @@ export class PgGuildStore implements GuildStore {
     actorCharacterId: string;
     motd: string;
   }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireOwner(client, input.actorCharacterId);
       await client.query(updateGuildMotdQuery, [actor.guild_id, input.motd]);
       return { status: "ok" as const };
@@ -453,7 +450,7 @@ export class PgGuildStore implements GuildStore {
     targetCharacterId: string;
     nick: string;
   }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.actorMembership(client, input.actorCharacterId);
       const isSelf = input.targetCharacterId === input.actorCharacterId;
       const isLeader = actor.owner_character_id === input.actorCharacterId;
@@ -478,7 +475,7 @@ export class PgGuildStore implements GuildStore {
     level: number;
     name: string;
   }): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireOwner(client, input.actorCharacterId);
       const updated = await client.query(updateRankNameQuery, [
         actor.guild_id,
@@ -496,7 +493,7 @@ export class PgGuildStore implements GuildStore {
     fragLimit: number;
   }): Promise<DeclareWarResult> {
     try {
-      return await this.transact(async (client) => {
+      return await runSerializableTransaction(this.pool, async (client) => {
         const actor = await this.requireOwner(client, input.actorCharacterId);
         const target = await client.query<{ id: string; name: string }>(
           guildRowByNameQuery,
@@ -533,7 +530,7 @@ export class PgGuildStore implements GuildStore {
     warId: string;
     accept: boolean;
   }): Promise<RespondWarResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireOwner(client, input.actorCharacterId);
       const war = await this.lockWar(client, input.warId);
       // Only the leader of the declared-against guild answers a pending war.
@@ -554,7 +551,7 @@ export class PgGuildStore implements GuildStore {
     actorCharacterId: string;
     warId: string;
   }): Promise<EndWarResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireOwner(client, input.actorCharacterId);
       const war = await this.lockWar(client, input.warId);
       const isSide =
@@ -590,7 +587,7 @@ export class PgGuildStore implements GuildStore {
     killerGuildId: string;
     targetGuildId: string;
   }): Promise<RecordWarKillResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       // Lock the single active war between the pair: concurrent
       // limit-reaching kills serialize here, so exactly one transaction
       // observes the limit first and performs the end transition.
@@ -651,38 +648,12 @@ export class PgGuildStore implements GuildStore {
     }));
   }
 
-  /**
-   * One SERIALIZABLE transaction, retried a bounded number of times on
-   * serialization aborts so concurrent guild mutations settle rather than
-   * surfacing spurious failures (the retry re-runs every execution-time
-   * check against the winner's committed state).
-   */
-  private async transact<T>(
-    operation: (client: PoolClient) => Promise<T>,
-  ): Promise<T> {
-    let lastCause: unknown;
-    for (let attempt = 0; attempt < MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
-      if (attempt > 0) {
-        await new Promise<void>((resolve) => {
-          setTimeout(resolve, RETRY_BACKOFF_MS * attempt);
-        });
-      }
-      try {
-        return await runSerializableTransaction(this.pool, operation);
-      } catch (cause) {
-        if (!isSerializationFailure(cause)) throw cause;
-        lastCause = cause;
-      }
-    }
-    throw lastCause;
-  }
-
   private async changeRank(
     input: { actorCharacterId: string; targetCharacterId: string },
     fromLevel: number,
     toLevel: number,
   ): Promise<GuildOpResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const actor = await this.requireOwner(client, input.actorCharacterId);
       const target = await this.targetMembership(
         client,

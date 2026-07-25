@@ -12,7 +12,6 @@ import { debitBankBalance } from "../economy/debitBankBalance";
 import { lockBankBalance } from "../economy/lockBankBalance";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
-import { isSerializationFailure } from "../guild/isSerializationFailure";
 import { isUniqueViolation } from "../guild/isUniqueViolation";
 import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
@@ -118,7 +117,7 @@ export class PgHouseStore implements HouseStore {
     paidUntilMs: number;
   }): Promise<PurchaseHouseResult> {
     try {
-      return await this.transact(async (client) => {
+      return await runSerializableTransaction(this.pool, async (client) => {
         const existing = await client.query<HouseRow>(houseRowForUpdateQuery, [
           input.houseId,
         ]);
@@ -168,7 +167,7 @@ export class PgHouseStore implements HouseStore {
     mapName: string;
     tilePositions: ReadonlyArray<Position>;
   }): Promise<AbandonHouseResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const row = await this.lockHouse(client, input.houseId);
       if (row.owner_character_id !== input.ownerCharacterId) {
         throw this.rollback("not-owner");
@@ -205,7 +204,7 @@ export class PgHouseStore implements HouseStore {
     tilePositions: ReadonlyArray<Position>;
   }): Promise<TransferHouseResult> {
     try {
-      return await this.transact(async (client) => {
+      return await runSerializableTransaction(this.pool, async (client) => {
         const row = await this.lockHouse(client, input.houseId);
         if (row.owner_character_id !== input.fromCharacterId) {
           throw this.rollback("not-owner");
@@ -289,7 +288,7 @@ export class PgHouseStore implements HouseStore {
     grant: boolean;
     maxEntries: number;
   }): Promise<SetHouseAccessResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const row = await this.lockHouse(client, input.houseId);
       const kind = input.kind === "guest" ? ACCESS_GUEST : ACCESS_SUBOWNER;
       if (row.owner_character_id !== input.actorCharacterId) {
@@ -366,7 +365,7 @@ export class PgHouseStore implements HouseStore {
     mapName: string;
     tilePositions: ReadonlyArray<Position>;
   }): Promise<ChargeHouseRentResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const house = await client.query<HouseRow>(houseRowForUpdateQuery, [
         input.houseId,
       ]);
@@ -597,21 +596,6 @@ export class PgHouseStore implements HouseStore {
       characterId,
       JSON.stringify(details),
     ]);
-  }
-
-  private async transact<T>(
-    operation: (client: PoolClient) => Promise<T>,
-  ): Promise<T> {
-    let lastCause: unknown;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      try {
-        return await runSerializableTransaction(this.pool, operation);
-      } catch (cause) {
-        if (!isSerializationFailure(cause)) throw cause;
-        lastCause = cause;
-      }
-    }
-    throw lastCause;
   }
 
   private rollback(

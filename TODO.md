@@ -23,6 +23,29 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Economy transactions retry only on `40001`/`40P01`, not on connection-level
+  transients** (2026-07-25, Feature 31). `item/withSerializableTransaction`
+  retries the broader `isTransientDatabaseError` set because every item op is
+  expected-version guarded, so an ambiguous re-run misses instead of
+  double-applying. Money legs in `economy/runSerializableTransaction` are not
+  version-guarded, so retrying an `ECONNRESET`/`08*` whose COMMIT may already
+  have landed could apply a transfer twice. Serialization aborts and deadlocks
+  are guaranteed rollbacks and are retried. Fix if connection-level retry is
+  ever wanted: give the money legs an idempotency key (the market replay-guard
+  pattern) first. Owner: Feature 47 (depot/market transaction hardening).
+- **Untouched corpses and their loot vanish on restart** (Feature 31,
+  re-affirmed 2026-07-25). Intended, matches Canary — memory-first corpses have
+  no DB row until first touch. Not a bug.
+- **World decay deadlines are derived from `items.updated_at`, not a stored
+  `decay_at`** (2026-07-25, Feature 34). A deadline is always
+  `last-mutation-time + duration(type)`, so the column would be redundant and
+  would cost a DB write per world-item mutation. The derivation depends on
+  every `UPDATE items` bumping `updated_at`;
+  `server/src/item/updatedAtInvariant.test.ts` enforces that. If a future
+  decay ever needs a deadline that is *not* "full duration from the last
+  mutation" (a paused/stop-condition decay — Feature 33), that item does need a
+  stored deadline; add the column then, for those items only.
+
 - **Wheel-upgraded (WOD) combat areas are modelled at their base grade only**
   (2026-07-25, Feature 25). Spells that build one combat per Wheel of Destiny
   grade — Energy Beam (`AREA_BEAM5` → `AREA_BEAM7`), Energy Wave

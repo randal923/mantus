@@ -23,9 +23,16 @@ export class WorldItemDecayRunner {
     private readonly decay?: DecayManager,
   ) {}
 
-  /** Arms decay deadlines for world items loaded or created outside intents. */
-  schedule(items: ReadonlyArray<Item>, now: number): void {
-    this.decay?.observeCreated(items, now);
+  /**
+   * Arms decay deadlines for world items loaded from the database at boot,
+   * resuming each one from the age of its persisted row.
+   */
+  schedule(
+    items: ReadonlyArray<Item>,
+    agesMs: ReadonlyMap<string, number>,
+    now: number,
+  ): void {
+    this.decay?.observeLoaded(items, agesMs, now);
   }
 
   tick(now: number): void {

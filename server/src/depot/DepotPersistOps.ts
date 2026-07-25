@@ -1,7 +1,7 @@
 import type { Pool, PoolClient } from "pg";
 import type { DepotPersistAudit, DepotPersistPlan } from "./DepotPersistPlan";
 import { itemLocationColumns } from "../item/itemLocationColumns";
-import { runSerializableTransaction } from "./runSerializableTransaction";
+import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { claimDeliveriesForItemUpdate } from "./sql/claimDeliveriesForItemUpdate";
 import { bumpInboxRevisionUpdate } from "./sql/bumpInboxRevisionUpdate";
 import { bumpStashRevisionUpdate } from "./sql/bumpStashRevisionUpdate";

@@ -6,7 +6,7 @@ import type { DepotTxHelper } from "./DepotTxHelper";
 import type { DepotItemRow } from "./DepotItemRow";
 import { itemFromRow } from "./itemFromRow";
 import { requireItem } from "./requireItem";
-import { runSerializableTransaction } from "./runSerializableTransaction";
+import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { bumpExpiredInboxRevisionsUpdate } from "./sql/bumpExpiredInboxRevisionsUpdate";
 import { deliveryForUpdateQuery } from "./sql/deliveryForUpdateQuery";
 import { expiredCharactersLockQuery } from "./sql/expiredCharactersLockQuery";

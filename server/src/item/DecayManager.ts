@@ -19,11 +19,13 @@ export interface DecayRecord {
  * game state itself: the tick collects due records and the item pipeline
  * executes them through the store.
  *
- * Restart semantics: deadlines live in memory only. After a restart every
- * persisted world item with decay metadata is rescheduled with its full
- * duration when the world deltas load, so a transform can happen later than
- * originally scheduled but never earlier and never twice — execution is
- * version-guarded at both the world re-check and the store transaction.
+ * Restart semantics: the schedule lives in memory, but the clock it runs on is
+ * durable. A persisted item's decay started when its row was last written, so
+ * `observeLoaded` resumes each boot deadline from the row's age instead of
+ * granting a fresh full duration: an item whose duration elapsed while the
+ * server was down is due immediately, and one that was halfway through resumes
+ * with its remaining time. A transform still can never run twice — execution
+ * is version-guarded at both the world re-check and the store transaction.
  */
 export class DecayManager {
   private readonly records = new Map<string, DecayRecord>();
@@ -45,6 +47,27 @@ export class DecayManager {
 
   observeCreated(items: ReadonlyArray<Item>, now: number): void {
     for (const item of items) this.observeItem(item, now);
+  }
+
+  /**
+   * Arms boot deadlines for items loaded from the database. `agesMs` is how
+   * long each row has been unchanged; subtracting it rewinds the arm time to
+   * when the item last mutated, so the remaining duration survives the
+   * restart. An unknown id (never persisted) falls back to a full duration.
+   */
+  observeLoaded(
+    items: ReadonlyArray<Item>,
+    agesMs: ReadonlyMap<string, number>,
+    now: number,
+  ): void {
+    for (const item of items) {
+      const ageMs = agesMs.get(item.id);
+      const armedAt =
+        ageMs !== undefined && Number.isFinite(ageMs) && ageMs >= 0
+          ? now - ageMs
+          : now;
+      this.observeItem(item, armedAt);
+    }
   }
 
   /** Any mutation of an item resets its decay deadline to the full duration. */
@@ -94,7 +117,7 @@ export class DecayManager {
     return due;
   }
 
-  private observeItem(item: Item, now: number): void {
+  private observeItem(item: Item, armedAt: number): void {
     if (item.location.kind !== "world") {
       this.records.delete(item.id);
       return;
@@ -105,7 +128,7 @@ export class DecayManager {
       this.records.delete(item.id);
       return;
     }
-    const deadlineAt = now + durationSeconds * 1_000;
+    const deadlineAt = armedAt + durationSeconds * 1_000;
     this.records.set(item.id, {
       itemId: item.id,
       instanceId: item.seedKey ?? item.id,

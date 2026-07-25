@@ -7,7 +7,7 @@ import type { DepotItemRow } from "./DepotItemRow";
 import type { RewardDeliveryRequest, RewardDeliveryResult } from "./DepotStore";
 import type { DepotTxHelper } from "./DepotTxHelper";
 import { requireItem } from "./requireItem";
-import { runSerializableTransaction } from "./runSerializableTransaction";
+import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { bumpInboxRevisionUpdate } from "./sql/bumpInboxRevisionUpdate";
 import { deliveryAdvisoryLock } from "./sql/deliveryAdvisoryLock";
 import { lockCharacterQuery } from "./sql/lockCharacterQuery";

@@ -107,4 +107,57 @@ describe("DecayManager", () => {
     decay.restore(stale!, 21_000);
     expect(decay.collectDue(31_000)).toMatchObject([{ version: 1 }]);
   });
+  it("resumes a loaded deadline from the persisted row's age, not a full duration", () => {
+    const decay = new DecayManager(catalog);
+    const bootAt = 1_000_000;
+    // The corpse row was written 4s ago; 6s of its 10s duration remain.
+    decay.observeLoaded(
+      [worldItem("corpse", CORPSE_TYPE)],
+      new Map([["corpse", 4_000]]),
+      bootAt,
+    );
+
+    expect(decay.collectDue(bootAt + 5_999)).toEqual([]);
+    expect(decay.collectDue(bootAt + 6_000)).toMatchObject([
+      { itemId: "corpse", version: 1 },
+    ]);
+    expect(decay.scheduledCount).toBe(0);
+  });
+
+  it("makes a loaded item whose duration elapsed while down due immediately, once", () => {
+    const decay = new DecayManager(catalog);
+    const bootAt = 1_000_000;
+    // Down for an hour: the 10s duration lapsed long ago.
+    decay.observeLoaded(
+      [worldItem("corpse", CORPSE_TYPE)],
+      new Map([["corpse", 3_600_000]]),
+      bootAt,
+    );
+
+    expect(decay.collectDue(bootAt)).toMatchObject([{ itemId: "corpse" }]);
+    // Collected records leave the schedule, so a second tick cannot re-run it.
+    expect(decay.collectDue(bootAt)).toEqual([]);
+    expect(decay.scheduledCount).toBe(0);
+  });
+
+  it("falls back to a full duration when a loaded item has no recorded age", () => {
+    const decay = new DecayManager(catalog);
+    const bootAt = 1_000_000;
+    decay.observeLoaded([worldItem("corpse", CORPSE_TYPE)], new Map(), bootAt);
+
+    expect(decay.collectDue(bootAt + 9_999)).toEqual([]);
+    expect(decay.collectDue(bootAt + 10_000)).toHaveLength(1);
+  });
+
+  it("ignores a nonsensical negative age rather than arming the future", () => {
+    const decay = new DecayManager(catalog);
+    const bootAt = 1_000_000;
+    decay.observeLoaded(
+      [worldItem("corpse", CORPSE_TYPE)],
+      new Map([["corpse", -60_000]]),
+      bootAt,
+    );
+
+    expect(decay.collectDue(bootAt + 10_000)).toHaveLength(1);
+  });
 });

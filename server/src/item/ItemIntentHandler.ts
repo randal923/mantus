@@ -811,9 +811,16 @@ export class ItemIntentHandler {
     return true;
   }
 
-  /** Arms decay deadlines for world items loaded or created outside intents. */
-  scheduleWorldDecay(items: ReadonlyArray<Item>, now: number): void {
-    this.decayRunner.schedule(items, now);
+  /**
+   * Arms decay deadlines for the world items loaded at boot, resuming each
+   * from the age of its persisted row rather than a fresh full duration.
+   */
+  scheduleWorldDecay(
+    items: ReadonlyArray<Item>,
+    agesMs: ReadonlyMap<string, number>,
+    now: number,
+  ): void {
+    this.decayRunner.schedule(items, agesMs, now);
   }
 
   tickDecay(now: number): void {

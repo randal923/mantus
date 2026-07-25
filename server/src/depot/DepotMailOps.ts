@@ -9,7 +9,7 @@ import type { DepotTxHelper } from "./DepotTxHelper";
 import type { StorageStateRow } from "./StorageStateRow";
 import { itemFromRow } from "./itemFromRow";
 import { requireItem } from "./requireItem";
-import { runSerializableTransaction } from "./runSerializableTransaction";
+import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { bumpInboxRevisionUpdate } from "./sql/bumpInboxRevisionUpdate";
 import { characterByNormalizedNameQuery } from "./sql/characterByNormalizedNameQuery";
 import { deliveryAdvisoryLock } from "./sql/deliveryAdvisoryLock";

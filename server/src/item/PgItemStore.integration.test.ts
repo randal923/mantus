@@ -1,12 +1,11 @@
-import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import type { EquipmentSlot } from "@tibia/protocol";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
 import { PgNpcTravelStore } from "../npc/PgNpcTravelStore";
+import { applyMigrations } from "../test/applyMigrations";
 import type { Item } from "./Item";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { PgItemStore } from "./PgItemStore";
@@ -191,35 +190,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     await setupClient.query(`DROP SCHEMA IF EXISTS ${TEST_SCHEMA} CASCADE`);
     await setupClient.query(`CREATE SCHEMA ${TEST_SCHEMA}`);
     await setupClient.query(`SET search_path TO ${TEST_SCHEMA}`);
-    const migrationsDirectory = fileURLToPath(
-      new URL("../../db/migrations/", import.meta.url),
-    );
-    for (const migration of [
-      "001_accounts.sql",
-      "002_account_language.sql",
-      "003_characters.sql",
-      "004_audit_log.sql",
-      "005_items.sql",
-      "006_item_identity_error.sql",
-      "007_progression.sql",
-      "008_diagonal_direction.sql",
-      "009_item_interactions.sql",
-      "010_monk_vocations.sql",
-      "011_npc_travel.sql",
-      "014_character_storages.sql",
-      "015_depot_and_inbox.sql",
-      "018_pvp.sql",
-      "023_character_action_bar.sql",
-      "029_character_potion_action_bar.sql",
-      "032_remove_loose_inventory.sql",
-      "034_unified_action_bar.sql",
-      "035_fast_combat_item_consumption.sql",
-      "036_restrict_combat_item_consumption.sql",
-    ]) {
-      await setupClient.query(
-        await readFile(`${migrationsDirectory}${migration}`, "utf8"),
-      );
-    }
+    await applyMigrations(setupClient);
     pool = new Pool({
       connectionString: databaseUrl,
       options: `-c search_path=${TEST_SCHEMA}`,
@@ -1564,5 +1535,40 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     );
     expect(Number(balance.rows[0]?.total)).toBe(20);
     expect(await auditRows("npc-travel")).toHaveLength(1);
+  });
+
+  it("reports each world item's unchanged age so decay deadlines survive a restart", async () => {
+    const fresh = await insertItem(GOLD_TYPE, 1, {
+      kind: "world",
+      x: 300,
+      y: 300,
+      z: 7,
+      stackIndex: 0,
+    });
+    const stale = await insertItem(GOLD_TYPE, 1, {
+      kind: "world",
+      x: 300,
+      y: 300,
+      z: 7,
+      stackIndex: 1,
+    });
+    // Backdate one row: the age must come from the row, on the DB clock.
+    await pool.query(
+      "UPDATE items SET updated_at = now() - interval '90 seconds' WHERE id = $1",
+      [stale],
+    );
+
+    const deltas = await store.loadWorldDeltas("test", "any-version");
+
+    expect(deltas.items.map((item) => item.id).sort()).toEqual(
+      [fresh, stale].sort(),
+    );
+    const freshAge = deltas.agesMs.get(fresh);
+    const staleAge = deltas.agesMs.get(stale);
+    expect(freshAge).toBeGreaterThanOrEqual(0);
+    expect(freshAge).toBeLessThan(5_000);
+    expect(staleAge).toBeGreaterThanOrEqual(90_000);
+    expect(staleAge).toBeLessThan(95_000);
+    expect(Number.isInteger(staleAge)).toBe(true);
   });
 });

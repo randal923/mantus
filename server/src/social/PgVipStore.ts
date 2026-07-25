@@ -2,7 +2,6 @@ import type { Pool } from "pg";
 import { VIP_LIMITS, type CharacterVocation } from "@tibia/protocol";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
-import { isSerializationFailure } from "../guild/isSerializationFailure";
 import { isUniqueViolation } from "../guild/isUniqueViolation";
 import { countVipEntriesQuery } from "./sql/countVipEntriesQuery";
 import { deleteVipQuery } from "./sql/deleteVipQuery";
@@ -56,43 +55,38 @@ export class PgVipStore implements VipStore {
     maxEntries: number;
   }): Promise<AddVipResult> {
     try {
-      return await this.transact(async () => {
-        return runSerializableTransaction(this.pool, async (client) => {
-          const target = await client.query<{
-            id: string;
-            display_name: string;
-            level: number;
-            vocation: CharacterVocation;
-          }>(socialCharacterByNameQuery, [input.targetName]);
-          const targetRow = target.rows[0];
-          if (!targetRow) throw this.rollback("not-found");
-          if (targetRow.id === input.characterId) {
-            throw this.rollback("cannot-add-self");
-          }
-          const count = await client.query<{ total: number }>(
-            countVipEntriesQuery,
-            [input.characterId],
-          );
-          if ((count.rows[0]?.total ?? 0) >= input.maxEntries) {
-            throw this.rollback("list-full");
-          }
-          await client.query(insertVipQuery, [
-            input.characterId,
-            targetRow.id,
-          ]);
-          return {
-            status: "added" as const,
-            entry: {
-              vipCharacterId: targetRow.id,
-              name: targetRow.display_name,
-              level: targetRow.level,
-              vocation: targetRow.vocation,
-              description: "",
-              icon: 0,
-              notifyLogin: false,
-            },
-          };
-        });
+      return await runSerializableTransaction(this.pool, async (client) => {
+        const target = await client.query<{
+          id: string;
+          display_name: string;
+          level: number;
+          vocation: CharacterVocation;
+        }>(socialCharacterByNameQuery, [input.targetName]);
+        const targetRow = target.rows[0];
+        if (!targetRow) throw this.rollback("not-found");
+        if (targetRow.id === input.characterId) {
+          throw this.rollback("cannot-add-self");
+        }
+        const count = await client.query<{ total: number }>(
+          countVipEntriesQuery,
+          [input.characterId],
+        );
+        if ((count.rows[0]?.total ?? 0) >= input.maxEntries) {
+          throw this.rollback("list-full");
+        }
+        await client.query(insertVipQuery, [input.characterId, targetRow.id]);
+        return {
+          status: "added" as const,
+          entry: {
+            vipCharacterId: targetRow.id,
+            name: targetRow.display_name,
+            level: targetRow.level,
+            vocation: targetRow.vocation,
+            description: "",
+            icon: 0,
+            notifyLogin: false,
+          },
+        };
       });
     } catch (cause) {
       if (isUniqueViolation(cause, "character_vips_pkey")) {
@@ -130,20 +124,6 @@ export class PgVipStore implements VipStore {
     ]);
     if (updated.rowCount !== 1) return { status: "failed", reason: "not-found" };
     return { status: "ok" };
-  }
-
-  /** Bounded retry on serialization aborts (racing adds settle). */
-  private async transact<T>(operation: () => Promise<T>): Promise<T> {
-    let lastCause: unknown;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      try {
-        return await operation();
-      } catch (cause) {
-        if (!isSerializationFailure(cause)) throw cause;
-        lastCause = cause;
-      }
-    }
-    throw lastCause;
   }
 
   private rollback(

@@ -110,7 +110,7 @@ describe("world item decay", () => {
     };
     harness.store.seed(corpse);
     harness.world.applyCreatedWorldItems([corpse]);
-    harness.items.scheduleWorldDecay([corpse], 0);
+    harness.items.scheduleWorldDecay([corpse], new Map(), 0);
 
     // A concurrent mutation reached the world but not the decay schedule.
     harness.world.applyItemMutation({
@@ -140,7 +140,7 @@ describe("world item decay", () => {
     harness.store.seed(corpse);
     // GameServer feeds persisted world deltas through this exact path at boot.
     harness.world.applyCreatedWorldItems([corpse]);
-    harness.items.scheduleWorldDecay([corpse], 0);
+    harness.items.scheduleWorldDecay([corpse], new Map(), 0);
 
     harness.items.tickDecay(10_000);
     harness.items.tickDecay(10_000);
@@ -149,6 +149,37 @@ describe("world item decay", () => {
     expect(mapItemAt(harness)).toMatchObject([
       { itemId: CORPSE_STAGE_TWO, revision: 2 },
     ]);
+    expect(harness.decay.scheduledCount).toBe(1);
+  });
+
+  it("transforms a loaded item whose duration elapsed while down once, immediately", async () => {
+    const harness = makeHarness();
+    const corpse: Item = {
+      id: "00000000-0000-4000-8000-00000000d004",
+      typeId: CORPSE_TYPE,
+      count: 1,
+      attributes: { ownerCharacterId: "killer-1" },
+      version: 1,
+      location: { kind: "world", position: POSITION, stackIndex: 0 },
+    };
+    harness.store.seed(corpse);
+    harness.world.applyCreatedWorldItems([corpse]);
+    // The row has been unchanged for an hour: the 10s stage-one duration
+    // lapsed while the server was down, so boot owes exactly one transform.
+    harness.items.scheduleWorldDecay(
+      [corpse],
+      new Map([[corpse.id, 3_600_000]]),
+      3_600_000,
+    );
+
+    harness.items.tickDecay(3_600_000);
+    harness.items.tickDecay(3_600_000);
+    await settle(harness, 3_600_000);
+
+    expect(mapItemAt(harness)).toMatchObject([
+      { itemId: CORPSE_STAGE_TWO, revision: 2 },
+    ]);
+    // The next stage is armed fresh, not also collapsed by the same downtime.
     expect(harness.decay.scheduledCount).toBe(1);
   });
 

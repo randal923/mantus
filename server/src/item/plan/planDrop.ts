@@ -1,8 +1,13 @@
 import { randomUUID } from "node:crypto";
 import type { Position } from "@tibia/protocol";
 import { collectDescendantItems } from "../../depot/collectDescendantItems";
+import type {
+  CarriedPersistAudit,
+  CarriedPersistRowOp,
+} from "../CarriedPersistPlan";
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
+import { appendMergeTargetPersist } from "./appendMergeTargetPersist";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
 import { firstFreeWorldStackIndex } from "./firstFreeWorldStackIndex";
@@ -53,34 +58,30 @@ export function planDrop(input: {
       count: mergeTarget.count + count,
       version: mergeTarget.version + 1,
     };
+    const rowOps: CarriedPersistRowOp[] = [];
+    const audits: CarriedPersistAudit[] = [];
     if (count === item.count) {
+      appendMergeTargetPersist(world, mergeTarget, merged, rowOps, audits);
+      rowOps.push({
+        kind: "delete",
+        itemId: item.id,
+        expectedVersion: item.version,
+      });
+      audits.push({
+        kind: "merge",
+        survivorItemId: merged.id,
+        sourceItemId: item.id,
+        movedCount: count,
+        sourceRemaining: 0,
+        resultCount: merged.count,
+      });
       return {
         mutation: {
           before: item,
           after: [merged],
           removedItemIds: [item.id],
         },
-        persist: {
-          characterId,
-          rowOps: [
-            {
-              kind: "write",
-              expectedVersion: mergeTarget.version,
-              item: merged,
-            },
-            { kind: "delete", itemId: item.id, expectedVersion: item.version },
-          ],
-          audits: [
-            {
-              kind: "merge",
-              survivorItemId: merged.id,
-              sourceItemId: item.id,
-              movedCount: count,
-              sourceRemaining: 0,
-              resultCount: merged.count,
-            },
-          ],
-        },
+        persist: { characterId, rowOps, audits },
       };
     }
     const sourceAfter: Item = {
@@ -88,25 +89,23 @@ export function planDrop(input: {
       count: item.count - count,
       version: item.version + 1,
     };
+    rowOps.push({
+      kind: "write",
+      expectedVersion: item.version,
+      item: sourceAfter,
+    });
+    appendMergeTargetPersist(world, mergeTarget, merged, rowOps, audits);
+    audits.push({
+      kind: "merge",
+      survivorItemId: merged.id,
+      sourceItemId: item.id,
+      movedCount: count,
+      sourceRemaining: sourceAfter.count,
+      resultCount: merged.count,
+    });
     return {
       mutation: { before: item, after: [sourceAfter, merged] },
-      persist: {
-        characterId,
-        rowOps: [
-          { kind: "write", expectedVersion: item.version, item: sourceAfter },
-          { kind: "write", expectedVersion: mergeTarget.version, item: merged },
-        ],
-        audits: [
-          {
-            kind: "merge",
-            survivorItemId: merged.id,
-            sourceItemId: item.id,
-            movedCount: count,
-            sourceRemaining: sourceAfter.count,
-            resultCount: merged.count,
-          },
-        ],
-      },
+      persist: { characterId, rowOps, audits },
     };
   }
   const stackIndex = firstFreeWorldStackIndex(world.getMapItems(position));

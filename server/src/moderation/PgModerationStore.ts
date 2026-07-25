@@ -2,7 +2,6 @@ import type { Pool, PoolClient } from "pg";
 import type { ReportReason } from "@tibia/protocol";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
-import { isSerializationFailure } from "../guild/isSerializationFailure";
 import { monotonicNow } from "../monotonicNow";
 import { characterMuteQuery } from "./sql/characterMuteQuery";
 import { countRecentReportsQuery } from "./sql/countRecentReportsQuery";
@@ -33,8 +32,6 @@ interface TargetRow {
   account_id: string;
 }
 
-const MAX_TRANSACTION_ATTEMPTS = 5;
-const RETRY_BACKOFF_MS = 15;
 
 /**
  * Postgres ModerationStore. Each action is one SERIALIZABLE transaction
@@ -61,7 +58,7 @@ export class PgModerationStore implements ModerationStore {
     durationMs: number;
     reason: string;
   }): Promise<MuteCharacterResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const target = await this.requireTarget(client, input.targetName);
       const mutedUntil = new Date(monotonicNow() + input.durationMs);
       await client.query(upsertCharacterMuteQuery, [
@@ -90,7 +87,7 @@ export class PgModerationStore implements ModerationStore {
     actorCharacterId: string;
     targetName: string;
   }): Promise<UnmuteCharacterResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const target = await this.requireTarget(client, input.targetName);
       const removed = await client.query(deleteCharacterMuteQuery, [target.id]);
       if (removed.rowCount !== 1) throw this.rollback("not-muted");
@@ -115,7 +112,7 @@ export class PgModerationStore implements ModerationStore {
     targetName: string;
     reason: string;
   }): Promise<RecordKickResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const target = await this.requireTarget(client, input.targetName);
       await client.query(insertModerationActionQuery, [
         "kick",
@@ -139,7 +136,7 @@ export class PgModerationStore implements ModerationStore {
     durationMs: number;
     reason: string;
   }): Promise<BanAccountResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const target = await this.requireTarget(client, input.targetName);
       const expiresAt = new Date(monotonicNow() + input.durationMs);
       await client.query(updateAccountBannedUntilQuery, [
@@ -174,7 +171,7 @@ export class PgModerationStore implements ModerationStore {
     actorCharacterId: string;
     targetName: string;
   }): Promise<UnbanAccountResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const target = await this.requireTarget(client, input.targetName);
       const removed = await client.query(deleteAccountBanQuery, [
         target.account_id,
@@ -205,7 +202,7 @@ export class PgModerationStore implements ModerationStore {
     targetName: string;
     text: string;
   }): Promise<RecordNoteResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const target = await this.requireTarget(client, input.targetName);
       await client.query(insertModerationActionQuery, [
         "note",
@@ -226,7 +223,7 @@ export class PgModerationStore implements ModerationStore {
     comment: string;
     maxPerDay: number;
   }): Promise<CreateReportResult> {
-    return this.transact(async (client) => {
+    return runSerializableTransaction(this.pool, async (client) => {
       const target = await this.requireTarget(client, input.targetName);
       // Counted inside the same serializable transaction: racing reports
       // cannot push a reporter past the daily cap.
@@ -259,26 +256,6 @@ export class PgModerationStore implements ModerationStore {
     const row = result.rows[0];
     if (!row) throw this.rollback("target-not-found");
     return row;
-  }
-
-  private async transact<T>(
-    operation: (client: PoolClient) => Promise<T>,
-  ): Promise<T> {
-    let lastCause: unknown;
-    for (let attempt = 0; attempt < MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
-      if (attempt > 0) {
-        await new Promise<void>((resolve) => {
-          setTimeout(resolve, RETRY_BACKOFF_MS * attempt);
-        });
-      }
-      try {
-        return await runSerializableTransaction(this.pool, operation);
-      } catch (cause) {
-        if (!isSerializationFailure(cause)) throw cause;
-        lastCause = cause;
-      }
-    }
-    throw lastCause;
   }
 
   private rollback(

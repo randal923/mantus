@@ -1,12 +1,11 @@
-import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
 } from "@tibia/protocol";
+import { applyMigrations } from "../test/applyMigrations";
 import type { Character, CharacterSaveSnapshot } from "./Character";
 import { CharacterService } from "./CharacterService";
 import { PgCharacterStore } from "./PgCharacterStore";
@@ -79,34 +78,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     );
     await setupClient.query("CREATE SCHEMA character_store_integration");
     await setupClient.query("SET search_path TO character_store_integration");
-    const migrationsDirectory = fileURLToPath(
-      new URL("../../db/migrations/", import.meta.url),
-    );
-    for (const migration of [
-      "001_accounts.sql",
-      "002_account_language.sql",
-      "003_characters.sql",
-      "004_audit_log.sql",
-      "005_items.sql",
-      "006_item_identity_error.sql",
-      "007_progression.sql",
-      "008_diagonal_direction.sql",
-      "009_item_interactions.sql",
-      "010_monk_vocations.sql",
-      "011_npc_travel.sql",
-      "014_character_storages.sql",
-      "015_depot_and_inbox.sql",
-      "018_pvp.sql",
-      "023_character_action_bar.sql",
-      "029_character_potion_action_bar.sql",
-      "032_remove_loose_inventory.sql",
-      "034_unified_action_bar.sql",
-      "037_progression_event_pruning.sql",
-    ]) {
-      await setupClient.query(
-        await readFile(`${migrationsDirectory}${migration}`, "utf8"),
-      );
-    }
+    await applyMigrations(setupClient);
     pool = new Pool({
       connectionString: databaseUrl,
       options: `-c search_path=${TEST_SCHEMA}`,

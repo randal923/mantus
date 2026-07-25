@@ -38,14 +38,18 @@ export class PgItemReads {
       mapName,
       mapVersion,
     ]);
-    const worldTrees = await this.pool.query<ItemRow>(worldTreeItemsQuery, [
-      mapName,
-    ]);
+    const worldTrees = await this.pool.query<ItemRow & { age_ms: string }>(
+      worldTreeItemsQuery,
+      [mapName],
+    );
     return {
       hiddenSeedKeys: changed.rows.flatMap((row) =>
         row.seed_key ? [row.seed_key] : [],
       ),
       items: worldTrees.rows.map(itemFromRow),
+      agesMs: new Map(
+        worldTrees.rows.map((row) => [row.id, Number(row.age_ms)]),
+      ),
     };
   }
 }

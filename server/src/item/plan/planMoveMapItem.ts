@@ -5,6 +5,7 @@ import type {
 } from "../CarriedPersistPlan";
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
+import { appendMergeTargetPersist } from "./appendMergeTargetPersist";
 import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
@@ -112,11 +113,14 @@ export function planMoveMapItem(input: {
       },
       version: root.version + 1,
     };
-    rowOps.push({
-      kind: "delete",
-      itemId: mergeTarget.id,
-      expectedVersion: mergeTarget.version,
-    });
+    // Memory-only kill loot has no row to delete; guarding it would miss.
+    if (world.lootOrigin(mergeTarget.id) === undefined) {
+      rowOps.push({
+        kind: "delete",
+        itemId: mergeTarget.id,
+        expectedVersion: mergeTarget.version,
+      });
+    }
     if (pristine) {
       rowOps.push({ kind: "insert", item: final, seed: pristine.seed });
       for (const content of pristine.contents) {
@@ -163,24 +167,13 @@ export function planMoveMapItem(input: {
     };
     const mergeRowOps: CarriedPersistRowOp[] = [];
     const mergeAudits: CarriedPersistAudit[] = [];
-    const targetOrigin = world.lootOrigin(mergeTarget.id);
-    if (targetOrigin) {
-      mergeRowOps.push({ kind: "insert", item: merged });
-      mergeAudits.push({
-        kind: "loot-created",
-        itemId: mergeTarget.id,
-        eventId: targetOrigin.eventId,
-        killerCharacterId: targetOrigin.killerCharacterId,
-        typeId: mergeTarget.typeId,
-        count: mergeTarget.count,
-      });
-    } else {
-      mergeRowOps.push({
-        kind: "write",
-        expectedVersion: mergeTarget.version,
-        item: merged,
-      });
-    }
+    appendMergeTargetPersist(
+      world,
+      mergeTarget,
+      merged,
+      mergeRowOps,
+      mergeAudits,
+    );
     const rootOrigin = world.lootOrigin(root.id);
     if (rootOrigin) {
       // The merged-away loot never had a row; its creation is audited so the

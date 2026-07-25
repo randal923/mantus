@@ -1,9 +1,8 @@
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
+import { applyMigrations } from "../test/applyMigrations";
 import { PgPvpStore } from "./PgPvpStore";
 
 const TEST_SCHEMA = "pvp_store_integration";
@@ -67,39 +66,7 @@ databaseDescribe("PgPvpStore integration", () => {
     await setupClient.query(`DROP SCHEMA IF EXISTS ${TEST_SCHEMA} CASCADE`);
     await setupClient.query(`CREATE SCHEMA ${TEST_SCHEMA}`);
     await setupClient.query(`SET search_path TO ${TEST_SCHEMA}`);
-    const migrationsDirectory = fileURLToPath(
-      new URL("../../db/migrations/", import.meta.url),
-    );
-    for (const migration of [
-      "001_accounts.sql",
-      "002_account_language.sql",
-      "003_characters.sql",
-      "004_audit_log.sql",
-      "005_items.sql",
-      "006_item_identity_error.sql",
-      "007_progression.sql",
-      "008_diagonal_direction.sql",
-      "009_item_interactions.sql",
-      "010_monk_vocations.sql",
-      "011_npc_travel.sql",
-      "012_bank.sql",
-      "013_shops.sql",
-      "014_character_storages.sql",
-      "015_depot_and_inbox.sql",
-      "016_market.sql",
-      "017_guilds.sql",
-      "018_pvp.sql",
-      "019_houses.sql",
-      "020_social.sql",
-      "021_moderation.sql",
-      "023_character_action_bar.sql",
-      "029_character_potion_action_bar.sql",
-      "034_unified_action_bar.sql",
-    ]) {
-      await setupClient.query(
-        await readFile(`${migrationsDirectory}${migration}`, "utf8"),
-      );
-    }
+    await applyMigrations(setupClient);
     pool = new Pool({
       connectionString: databaseUrl,
       options: `-c search_path=${TEST_SCHEMA}`,

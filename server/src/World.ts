@@ -41,7 +41,11 @@ export class World {
   constructor(
     baseMap: MapData,
     tickMs: number,
-    worldItemDeltas: WorldItemDeltas = { hiddenSeedKeys: [], items: [] },
+    worldItemDeltas: WorldItemDeltas = {
+      hiddenSeedKeys: [],
+      items: [],
+      agesMs: new Map(),
+    },
     itemWeightForId: (itemId: number) => number | undefined = () => undefined,
     doorPassabilityForItemId: (
       itemId: number,

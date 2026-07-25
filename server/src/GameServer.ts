@@ -213,6 +213,7 @@ export class GameServer {
     );
     this.items.scheduleWorldDecay(
       deps.worldItemDeltas?.items ?? [],
+      deps.worldItemDeltas?.agesMs ?? new Map(),
       monotonicNow(),
     );
     this.depot = new DepotService(

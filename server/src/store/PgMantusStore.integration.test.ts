@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
+import { applyMigrations } from "../test/applyMigrations";
 import { MANTUS_STORE_CATEGORIES } from "./MANTUS_STORE_CATEGORIES";
 import { PgMantusStore } from "./PgMantusStore";
 
@@ -28,21 +27,7 @@ databaseDescribe("PgMantusStore integration", () => {
     await setupClient.query(`DROP SCHEMA IF EXISTS ${TEST_SCHEMA} CASCADE`);
     await setupClient.query(`CREATE SCHEMA ${TEST_SCHEMA}`);
     await setupClient.query(`SET search_path TO ${TEST_SCHEMA}`);
-    const migrationsDirectory = fileURLToPath(
-      new URL("../../db/migrations/", import.meta.url),
-    );
-    for (const migration of [
-      "001_accounts.sql",
-      "002_account_language.sql",
-      "003_characters.sql",
-      "004_audit_log.sql",
-      "024_account_premium.sql",
-      "033_mantus_store.sql",
-    ]) {
-      await setupClient.query(
-        await readFile(`${migrationsDirectory}${migration}`, "utf8"),
-      );
-    }
+    await applyMigrations(setupClient);
     pool = new Pool({
       connectionString: databaseUrl,
       options: `-c search_path=${TEST_SCHEMA}`,
@@ -68,13 +53,13 @@ databaseDescribe("PgMantusStore integration", () => {
     await pool.query(
       `INSERT INTO characters (
          id, account_id, display_name, normalized_name, vocation,
-         health, max_health, mana, max_mana, capacity,
+         health, mana,
          position_x, position_y, position_z, direction,
          outfit_look_type, outfit_head, outfit_body, outfit_legs, outfit_feet,
          town_id
        ) VALUES (
          $1, $2, 'Store Hero', 'store hero', 'Knight',
-         150, 150, 50, 50, 400,
+         150, 50,
          100, 100, 7, 'south',
          128, 1, 1, 1, 1,
          1

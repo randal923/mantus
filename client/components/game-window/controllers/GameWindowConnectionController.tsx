@@ -11,6 +11,7 @@ import { updateVisibleCreaturesBatch } from "../../../lib/creatures/updateVisibl
 import { isEditableTarget } from "../../../lib/hotkeys/isEditableTarget";
 import { getHeldMovementDirection } from "../../../lib/movement/getHeldMovementDirection";
 import { getKeyboardTurnDirection } from "../../../lib/movement/getKeyboardTurnDirection";
+import { flushPendingSaves } from "../../../lib/game-window/flushPendingSaves";
 import { useGameSettingsStore } from "../../../stores/useGameSettingsStore";
 import { useLanguageStore } from "../../../stores/useLanguageStore";
 import { handleCharacterSessionMessage } from "../messages/handleCharacterSessionMessage";
@@ -230,15 +231,23 @@ export function GameWindowConnectionController() {
       client?.stopMoving();
     };
 
+    // Debounced action-bar / UI-settings saves must not die with the tab.
+    const onPageHide = () => flushPendingSaves(runtime);
+
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", onBlur);
+    window.addEventListener("beforeunload", onPageHide);
+    window.addEventListener("pagehide", onPageHide);
 
     return () => {
       disposed = true;
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
+      window.removeEventListener("beforeunload", onPageHide);
+      window.removeEventListener("pagehide", onPageHide);
+      flushPendingSaves(runtime);
       resizeObserver.disconnect();
       if (creatureFrame !== null) {
         window.cancelAnimationFrame(creatureFrame);
