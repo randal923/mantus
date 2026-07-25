@@ -128,7 +128,7 @@ export class PgSpellTeacherStore implements SpellTeacherStore {
             typeId: PLATINUM_COIN_TYPE_ID,
           },
         ]) {
-          const granted = await coinOps.grantStackable(
+          const ungranted = await coinOps.grantStackable(
             grant.rows,
             grant.count,
             grant.typeId,
@@ -138,7 +138,9 @@ export class PgSpellTeacherStore implements SpellTeacherStore {
             removedItemIds,
             backpack,
           );
-          if (!granted) throw new Error("no backpack space for spell change");
+          if (ungranted > 0) {
+            throw new Error("no backpack space for spell change");
+          }
         }
       }
       if (bankPay > 0) {

@@ -45,6 +45,30 @@ const insertDepotItem = async (
   return id;
 };
 
+const setStash = async (
+  characterId: string,
+  typeId: number,
+  count: number,
+): Promise<void> => {
+  await pool.query(
+    `INSERT INTO supply_stash (character_id, item_type_id, count)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (character_id, item_type_id) DO UPDATE SET count = $3`,
+    [characterId, typeId, count],
+  );
+};
+
+const stashCount = async (
+  characterId: string,
+  typeId: number,
+): Promise<number> => {
+  const result = await pool.query<{ count: string }>(
+    "SELECT count FROM supply_stash WHERE character_id = $1 AND item_type_id = $2",
+    [characterId, typeId],
+  );
+  return Number(result.rows[0]?.count ?? 0);
+};
+
 const createCharacter = async (
   label: string,
   accountId?: string,
@@ -314,6 +338,7 @@ const sellRequest = async (
   totalPrice: amount * unitPrice,
   fee: Math.min(1_000_000, Math.max(20, Math.floor((amount * unitPrice) / 50))),
   sources: await sourcesFor(characterId, typeId, amount),
+  stashTake: 0,
   ...overrides,
 });
 
@@ -374,6 +399,7 @@ databaseDescribe("PgMarketStore integration", () => {
     await pool.query("DELETE FROM items");
     await pool.query("DELETE FROM character_depots");
     await pool.query("DELETE FROM character_storage_state");
+    await pool.query("DELETE FROM supply_stash");
     await pool.query("DELETE FROM characters");
     await pool.query("DELETE FROM accounts");
     const seller = await createCharacter("seller");
@@ -395,6 +421,79 @@ databaseDescribe("PgMarketStore integration", () => {
   });
 
   describe("sell offer creation", () => {
+    it("escrows stash stock, decrementing the counter in the same transaction", async () => {
+      await insertDepotItem(sellerId, SAPPHIRE_TYPE, 40, 0);
+      await setStash(sellerId, SAPPHIRE_TYPE, 60);
+      await setBalance(sellerId, 1_000);
+
+      const result = await store.createSellOffer({
+        ...(await sellRequest(sellerId, SAPPHIRE_TYPE, 40, 500)),
+        amount: 90,
+        totalPrice: 45_000,
+        fee: 900,
+        stashTake: 50,
+      });
+
+      expect(result.status).toBe("committed");
+      if (result.status !== "committed") return;
+      expect(result.stashSet).toEqual({ itemTypeId: SAPPHIRE_TYPE, count: 10 });
+      expect(await stashCount(sellerId, SAPPHIRE_TYPE)).toBe(10);
+      expect(await itemCountAt(sellerId, "depot", SAPPHIRE_TYPE)).toBe(0);
+      expect(await itemCountAt(sellerId, "market-escrow", SAPPHIRE_TYPE)).toBe(
+        90,
+      );
+    });
+
+    it("cannot escrow more than the stash holds when two creates race", async () => {
+      await setStash(sellerId, SAPPHIRE_TYPE, 100);
+      await setBalance(sellerId, 10_000);
+      const request = async () => ({
+        ...(await sellRequest(sellerId, SAPPHIRE_TYPE, 0, 500)),
+        amount: 100,
+        totalPrice: 50_000,
+        fee: 1_000,
+        sources: [],
+        stashTake: 100,
+      });
+
+      const outcomes = await Promise.allSettled([
+        store.createSellOffer(await request()),
+        store.createSellOffer(await request()),
+      ]);
+
+      expect(
+        outcomes.filter(
+          (outcome) =>
+            outcome.status === "fulfilled" &&
+            outcome.value.status === "committed",
+        ),
+      ).toHaveLength(1);
+      expect(await stashCount(sellerId, SAPPHIRE_TYPE)).toBe(0);
+      expect(await itemCountAt(sellerId, "market-escrow", SAPPHIRE_TYPE)).toBe(
+        100,
+      );
+    });
+
+    it("leaves the stash untouched when a stash-sourced create fails", async () => {
+      await setStash(sellerId, SAPPHIRE_TYPE, 100);
+      await setBalance(sellerId, 0);
+
+      const result = await store.createSellOffer({
+        ...(await sellRequest(sellerId, SAPPHIRE_TYPE, 0, 500)),
+        amount: 100,
+        totalPrice: 50_000,
+        fee: 1_000,
+        sources: [],
+        stashTake: 100,
+      });
+
+      expect(result.status).toBe("insufficient-funds");
+      expect(await stashCount(sellerId, SAPPHIRE_TYPE)).toBe(100);
+      expect(await itemCountAt(sellerId, "market-escrow", SAPPHIRE_TYPE)).toBe(
+        0,
+      );
+    });
+
     it("escrows items, charges the fee, and audits in one transaction", async () => {
       await insertDepotItem(sellerId, SAPPHIRE_TYPE, 100, 0);
       await setBalance(sellerId, 1_000);
@@ -551,6 +650,7 @@ databaseDescribe("PgMarketStore integration", () => {
         sources: [
           { itemId: escrowed[0]?.id ?? "", itemRevision: 2, take: 100 },
         ],
+        stashTake: 0,
       });
 
       expect(second.status).toBe("not-owned");
@@ -902,6 +1002,7 @@ databaseDescribe("PgMarketStore integration", () => {
         sellerCharacterId: sellerId,
         amount: 100,
         sources: await sourcesFor(sellerId, SAPPHIRE_TYPE, 100),
+        stashTake: 0,
       });
 
       expect(result.status).toBe("committed");
@@ -927,6 +1028,7 @@ databaseDescribe("PgMarketStore integration", () => {
         sellerCharacterId: sellerId,
         amount: 40,
         sources: await sourcesFor(sellerId, SAPPHIRE_TYPE, 40),
+        stashTake: 0,
       });
 
       expect(result.status).toBe("committed");
@@ -951,6 +1053,7 @@ databaseDescribe("PgMarketStore integration", () => {
             sellerCharacterId: sellerId,
             amount: 100,
             sources: await sourcesFor(sellerId, SAPPHIRE_TYPE, 100),
+            stashTake: 0,
           }))(),
         (async () =>
           store.acceptBuyOffer({
@@ -959,6 +1062,7 @@ databaseDescribe("PgMarketStore integration", () => {
             sellerCharacterId: rivalId,
             amount: 100,
             sources: await sourcesFor(rivalId, SAPPHIRE_TYPE, 100),
+            stashTake: 0,
           }))(),
       ]);
 
@@ -1244,6 +1348,7 @@ databaseDescribe("PgMarketStore integration", () => {
             sellerCharacterId: rivalId,
             amount: 50,
             sources: await sourcesFor(rivalId, SAPPHIRE_TYPE, 50),
+            stashTake: 0,
           }))(),
         store.cancelOffer({
           requestId: randomUUID(),

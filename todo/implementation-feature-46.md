@@ -2,24 +2,30 @@
 
 Part of [Todo 12 — Economy: shops, banking, depot, trade, and market](todo-12.md).
 
-## Why
-NPC shops shipped with the full pinned catalog import and all exploit tests, but three Canary behaviors are missing: sale proceeds that don't fit inventory should credit the bank, purchases should fill the open backpack, and finite stock has durable race-safe plumbing (`reserveShopStock.ts`) but no catalog uses it and nothing restocks.
+The three recorded gaps — sale-proceeds bank fallback, buying into backpacks,
+and the stock restock schedule — shipped 2026-07-25; see the
+[completed log](completed/implementation-feature-46-completed.md). This file
+tracks only what is still open.
 
 ## Remaining work
-- Sale proceeds bank fallback: Canary credits the bank when sale proceeds don't fit inventory; here the sale fails atomically instead.
-- Buy into backpacks/shopping bags: Canary places purchases into the open backpack (or sells shopping bags); here purchases only use existing stacks or free top-level slots.
-- Shop stock restock schedule: finite stock is durable and race-safe via `reserveShopStock.ts` but unused — no production catalog defines stock, and nothing restocks.
 
-## Implementation
-- Bank fallback: in `server/src/economy/executeShopSale.ts` / `PgShopStore.ts`, when `planMoneyGrant` cannot place all coins, credit the remainder to `bank_accounts` via `creditBankBalance.ts` + `appendBankLedger.ts` in the same SERIALIZABLE transaction; the audit entry reflects the split. This mirrors the shipped `spendMarketFunds` pattern.
-- Backpack destinations: extend destination planning in `server/src/economy/executeShopPurchase.ts` (plus `BackpackSlots.ts` / `BackpackSlotLocker.ts`) to descend into the equipped backpack, respecting the 100-item container cap and carry capacity, re-checked at execution time inside the transaction (charter rule 4). This logic is reusable for bank withdrawals (Feature 45).
-- Restock: catalog content declared via `loadShopCatalogs.ts`; restock runs as a durable server-clock schedule — idempotent and lease-keyed, the same discipline as the world event engine — updating stock rows transactionally.
-
-## Tests
-- Sale with a full inventory credits the bank exactly, conserves currency, and commits in a single transaction.
-- Purchase fills the backpack before loose slots; concurrent purchases cannot overfill one slot.
-- Restart across a restock boundary restocks exactly once (idempotency/lease test).
+- **Carry capacity is re-checked only in the tick precheck, not inside the
+  transaction.** `ShopPrechecks` compares projected weight against
+  `capacityMax` in the tick immediately before the transaction is enqueued, so
+  the window is small, but it is still stale validation (charter rule 4). The
+  fix is cheap now that grants descend the carried subtree: the transaction
+  already loads every owned row via `coinOwnedItemsQuery`, so weight can be
+  summed from the catalog inside it — `capacityMax` needs to ride along on the
+  server-built `ShopPurchaseRequest` (server-computed from level/vocation/wheel,
+  never client-supplied).
+- **No pinned catalog entry declares `stock`.** The restock plumbing, its
+  schema, and its tests exist and are inert. Canary's pinned shops have no
+  finite stock, so enabling it is a content decision, not a code one.
+- **Shopping bags are not sold as containers.** Canary lets some NPCs sell a
+  shopping bag that the purchase then fills; here a purchased container is an
+  ordinary item and grants never target it in the same transaction that created
+  it.
 
 ## Dependencies
-- Durable scheduling infrastructure (shared with Feature 54, world event engine).
-- Feature 45 reuses the backpack destination planning for withdrawals.
+
+- Feature 45 reuses the shipped backpack destination planning for withdrawals.

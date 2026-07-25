@@ -23,6 +23,32 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Shop carry capacity is re-checked only in the tick precheck, not inside the
+  transaction** (2026-07-25, Feature 46). `ShopPrechecks` compares projected
+  weight against `capacityMax` in the tick immediately before the transaction
+  is enqueued, so the stale window is one tick — but it is still stale
+  validation (charter rule 4). The fix is cheap now that grants descend the
+  carried subtree: `coinOwnedItemsQuery` already loads every owned row inside
+  the transaction, so weight can be summed there; `capacityMax` needs to ride
+  along on the server-built `ShopPurchaseRequest`. Owner: Feature 46.
+- **Mantus Store item offers have no load-time catalog gate** (2026-07-25,
+  Feature 43). Nothing asserts that every offer's `itemTypeId` exists in the
+  pinned catalog and is pickupable. `PgMantusStore` validates at purchase time
+  (`catalog.require` throws, `pickupable` is checked), so a bad id fails loudly
+  on first purchase rather than silently — but `loadShopCatalogs`-style
+  validation at boot would be better. Owner: Feature 43.
+- **`/coins` and `/storerefund` are dev-only GM commands, not real operator
+  tooling** (2026-07-25, Feature 43). They credit and refund the *operator's
+  own* account only, are audited with the operator's character id, and exist
+  only when the server runs with `DEV_COMMANDS=1` — so they are not a
+  player-reachable surface. They should move behind real operator
+  authorization once Feature 96 ships.
+- **Fields cannot be implemented from the pinned assets** (2026-07-25,
+  Feature 50). The item catalog imports `kind: "magicfield"` for 45 types but
+  no `field` payload; `ItemType.field` is declared and always undefined, so
+  there is no damage or duration data to drive a field handler. The importer
+  must emit it first. Owner: Feature 50.
+
 - **Economy transactions retry only on `40001`/`40P01`, not on connection-level
   transients** (2026-07-25, Feature 31). `item/withSerializableTransaction`
   retries the broader `isTransientDatabaseError` set because every item op is

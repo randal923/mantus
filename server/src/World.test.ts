@@ -161,6 +161,52 @@ describe("World.tryMove", () => {
     expect(player.position).toEqual({ x: 6, y: 3, z: 6 });
   });
 
+  it("keeps state coherent when two players use one teleport in a tick", () => {
+    const source = { x: 5, y: 4, z: 7 };
+    const destination = { x: 5, y: 3, z: 6 };
+    const world = new World(
+      gridMapData({
+        name: "transitions",
+        width: 10,
+        height: 8,
+        blocked: [],
+        groundSpeed: 50,
+        floors: [6, 7],
+        transitions: [
+          {
+            kind: "teleport",
+            activation: "step",
+            source,
+            destination,
+            itemId: 1387,
+          },
+        ],
+      }),
+      STEP_MS,
+    );
+    const first = makePlayer(5, 5, 7, "first");
+    const second = makePlayer(4, 4, 7, "second");
+    world.addPlayer(first);
+    world.addPlayer(second);
+
+    // Both step onto the same teleport tile in the same tick.
+    const firstMove = world.tryMove(first, "north", 1_000);
+    const secondMove = world.tryMove(second, "east", 1_000);
+
+    // Exactly one lands on the destination; the other is refused, not stacked.
+    expect(firstMove.moved).toBe(true);
+    expect(first.position).toEqual(destination);
+    expect(secondMove.moved).toBe(false);
+    expect(second.position).toEqual({ x: 4, y: 4, z: 7 });
+    expect(world.isOccupied(destination)).toBe(true);
+    expect(world.isOccupied(source)).toBe(false);
+
+    // Once the destination clears, the second player teleports normally.
+    expect(world.tryMove(first, "east", 1_000).moved).toBe(true);
+    expect(world.tryMove(second, "east", 1_000).moved).toBe(true);
+    expect(second.position).toEqual(destination);
+  });
+
   it("rejects a floor transition when its destination is occupied", () => {
     const source = { x: 5, y: 4, z: 7 };
     const destination = { x: 5, y: 3, z: 6 };

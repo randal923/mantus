@@ -11,6 +11,7 @@ import type {
   DialogueNode,
   NpcTravelOffer,
 } from "./DialogueGraph";
+import { withBankKeywords } from "./withBankKeywords";
 import { withBoatTravelRoutes } from "./withBoatTravelRoutes";
 
 const BASELINE_CONTENT_FILE = fileURLToPath(
@@ -63,7 +64,7 @@ export function loadNpcDialogueGraphs(
   // Promotion actions used to be composed in here from a hard-coded ruler
   // list; the importer now derives them from `StdModule.promotePlayer` in the
   // pinned sources, so the composition step is gone.
-  return withBoatTravelRoutes(graphs, expectedCanaryCommit);
+  return withBankKeywords(withBoatTravelRoutes(graphs, expectedCanaryCommit));
 }
 
 /**

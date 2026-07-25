@@ -6,6 +6,7 @@ export const insertShopSaleAuditQuery = `INSERT INTO audit_log(event_type, chara
              'offerId', $4::text, 'itemTypeId', $5::integer,
              'amount', $6::integer, 'totalProceeds', $7::bigint,
              'subtype', $8::integer,
-             'currencyItemTypeId', $9::integer
+             'currencyItemTypeId', $9::integer,
+             'bankCredited', $10::bigint
            )
          )`;

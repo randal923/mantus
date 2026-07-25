@@ -9,6 +9,8 @@ export async function appendBankLedger(
     | "withdraw"
     | "transfer-in"
     | "transfer-out"
+    | "shop-sale"
+    | "npc-travel"
     | "market-fee"
     | "market-escrow"
     | "market-refund"

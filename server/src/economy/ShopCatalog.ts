@@ -9,6 +9,8 @@ export interface ShopEntry {
   readonly maximumAmount: number;
   readonly subtype?: number;
   readonly stock?: number;
+  /** With `stock`: how often the offer refills. Absent ⇒ finite forever. */
+  readonly restockIntervalSeconds?: number;
   readonly minimumLevel?: number;
   readonly vocations?: ReadonlyArray<CharacterVocation>;
   readonly availability?: ReadonlyArray<ShopAvailabilityRule>;

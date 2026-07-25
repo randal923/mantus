@@ -1,3 +1,4 @@
+import type { BankActionFailedReason } from "@tibia/protocol";
 import type { Npc } from "../creature/Npc";
 import type { BankService } from "../economy/BankService";
 import type { ShopService } from "../economy/ShopService";
@@ -8,6 +9,7 @@ import { evaluateDialogueConditions } from "./evaluateDialogueConditions";
 import type { NpcConversation } from "./NpcConversation";
 import type { NpcConversations } from "./NpcConversations";
 import type { NpcDialogueFlow } from "./NpcDialogueFlow";
+import { parseBankKeywordAmount } from "./parseBankKeywordAmount";
 import { sendNpcDialogueResponses } from "./sendNpcDialogueResponses";
 import type { SpellTeacherService } from "./SpellTeacherService";
 import type { TravelService } from "./TravelService";
@@ -32,6 +34,8 @@ export class NpcDialogueExecutor {
     conversation: NpcConversation,
     node: DialogueNode,
     now: number,
+    /** The player's own line when the branch was reached by typing. */
+    input?: string,
   ): void {
     const action = node.action;
     // Every branch requirement is re-evaluated here, at execution time, from
@@ -226,6 +230,10 @@ export class NpcDialogueExecutor {
       conversation.pendingAction = false;
       const response = result === "level-too-low"
         ? `You must reach level ${offer.minimumLevel ?? 1} before I can let you go there.`
+        : result === "not-allowed"
+          // Deliberately vague: naming the gate would leak the quest storage
+          // key the route is checked against (charter rule 6).
+          ? "I am not allowed to take you there."
         : result === "pz-locked"
           ? "First get rid of those blood stains!"
           : result === "exhausted"
@@ -289,6 +297,47 @@ export class NpcDialogueExecutor {
       );
       return;
     }
+    if (action?.kind === "bank-keyword") {
+      const amount = input ? parseBankKeywordAmount(input) : null;
+      conversation.expiresAt = now + graph.timeoutMs;
+      if (amount === null) {
+        sendNpcDialogueResponses(
+          session,
+          player,
+          npc,
+          graph,
+          conversation,
+          [`Please tell me how much you want to ${action.operation}.`],
+        );
+        return;
+      }
+      conversation.pendingAction = true;
+      const answer = (line: string) => {
+        conversation.pendingAction = false;
+        if (!this.conversations.isCurrent(conversation)) return;
+        conversation.currentNodeId = node.nextNodeId ?? graph.rootNodeId;
+        conversation.expiresAt = now + graph.timeoutMs;
+        sendNpcDialogueResponses(session, player, npc, graph, conversation, [
+          line,
+        ]);
+      };
+      const started = this.bank.handleKeyword(
+        session,
+        npc,
+        action.operation,
+        amount,
+        (balance) =>
+          answer(
+            action.operation === "deposit"
+              ? `Very well. Your balance is now ${balance} gold.`
+              : `Here you are. Your balance is now ${balance} gold.`,
+          ),
+        (reason) => answer(bankKeywordFailureText(reason)),
+      );
+      if (started === "started") return;
+      conversation.pendingAction = false;
+      return;
+    }
     if (action?.kind === "shop") {
       const result = this.shops.open(session, npc, action.shopId, now);
       conversation.currentNodeId = node.nextNodeId ?? graph.rootNodeId;
@@ -342,6 +391,7 @@ export class NpcDialogueExecutor {
       node.responses,
       node,
       !node.ungreet,
+      now,
     );
     // Canary `ungreet`: the line is delivered, then the NPC drops focus.
     if (node.ungreet) this.flow.close(session, npc, conversation, "farewell");
@@ -372,4 +422,18 @@ function learnSpellFailureText(
   }
   if (reason === "busy") return "Please wait until your other action is finished.";
   return "I cannot teach you that right now.";
+}
+
+function bankKeywordFailureText(reason: BankActionFailedReason): string {
+  if (reason === "insufficient-funds") {
+    return "You do not have that much money with you.";
+  }
+  if (reason === "insufficient-balance") {
+    return "There is not enough gold on your account.";
+  }
+  if (reason === "balance-limit") return "Your account cannot hold that much.";
+  if (reason === "no-space") return "You cannot carry that many coins.";
+  if (reason === "no-capacity") return "You cannot carry that much weight.";
+  if (reason === "busy") return "Please wait until your other action is finished.";
+  return "I cannot do that right now.";
 }

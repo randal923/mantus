@@ -178,7 +178,7 @@ const makeHarness = (options?: {
     [...(options?.itemsB ?? [coins("player-b")])],
     options?.capacityB,
   );
-  return { world, registry, items, itemStore, trade, a, b };
+  return { world, registry, items, itemStore, tradeStore, trade, a, b };
 };
 
 const settle = async (harness: ReturnType<typeof makeHarness>, now: number) => {
@@ -623,5 +623,50 @@ describe("TradeService", () => {
       type: "trade-action-failed",
       reason: "already-trading",
     });
+  });
+
+  it("returns an unrestorable orphan to the owner's inbox exactly once", async () => {
+    // A full backpack leaves nowhere to put the reservation back.
+    const filler = Array.from({ length: 20 }, (_, index) => ({
+      id: `filler-${index}`,
+      typeId: SWORD_TYPE,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "container" as const,
+        containerId: equippedBackpackId("player-a"),
+        slot: index,
+      },
+    }));
+    const harness = makeHarness({ itemsA: filler });
+    const orphan: Item = {
+      id: "orphan-sword",
+      typeId: SWORD_TYPE,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "trade-reservation", characterId: "player-a", slot: 0 },
+    };
+    harness.itemStore.seed(orphan);
+
+    harness.trade.recoverOrphans(harness.a.session, "player-a");
+    await settle(harness, 1_000);
+
+    const restored = itemById(harness, "orphan-sword");
+    expect(restored?.location).toMatchObject({
+      kind: "inbox",
+      characterId: "player-a",
+    });
+    // Replaying recovery must not move or duplicate it again.
+    const versionAfterFirst = restored?.version;
+    harness.trade.recoverOrphans(harness.a.session, "player-a");
+    await settle(harness, 2_000);
+    expect(itemById(harness, "orphan-sword")?.version).toBe(versionAfterFirst);
+    expect(
+      harness.itemStore
+        .allItems()
+        .filter((item) => item.typeId === SWORD_TYPE && item.location.kind === "inbox"),
+    ).toHaveLength(1);
   });
 });

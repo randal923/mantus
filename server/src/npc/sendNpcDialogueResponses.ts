@@ -16,6 +16,7 @@ export function sendNpcDialogueResponses(
   responses: ReadonlyArray<string>,
   responseNode?: DialogueNode,
   includeOptions = true,
+  now = 0,
 ): void {
   const current = findDialogueNode(graph, conversation.currentNodeId);
   const options = includeOptions
@@ -44,7 +45,14 @@ export function sendNpcDialogueResponses(
       npcName: npc.name,
       conversationId: conversation.id,
       position: { ...npc.position },
-      text: renderNpcDialogueText(response, player, graph, responseNode),
+      text: renderNpcDialogueText(
+        response,
+        player,
+        graph,
+        responseNode,
+        session.account,
+        now,
+      ),
       options: index === responses.length - 1 ? options : [],
       ...(travelPrefetchPosition
         ? { travelPrefetchPosition: { ...travelPrefetchPosition } }

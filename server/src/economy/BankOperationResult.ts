@@ -12,7 +12,13 @@ export type BankWithdrawResult =
   | { status: "no-space" };
 
 export type BankTransferResult =
-  | { status: "committed"; balance: number; toCharacterId: string }
+  | {
+      status: "committed";
+      balance: number;
+      toCharacterId: string;
+      /** The recipient's own balance, pushed to them if they are online. */
+      toBalance: number;
+    }
   | { status: "insufficient-balance" }
   | { status: "recipient-not-found" }
   | { status: "invalid-recipient" }

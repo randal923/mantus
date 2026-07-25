@@ -1,4 +1,9 @@
+import { DEPOT_LIMITS } from "@tibia/protocol";
 import type { Pool, PoolClient } from "pg";
+import { bumpInboxRevisionUpdate } from "../depot/sql/bumpInboxRevisionUpdate";
+import { ensureStorageStateInsert } from "../depot/sql/ensureStorageStateInsert";
+import { firstFreeSlotQuery } from "../depot/sql/firstFreeSlotQuery";
+import { heldItemCountQuery } from "../depot/sql/heldItemCountQuery";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
 import { itemFromRow } from "../item/itemFromRow";
@@ -13,11 +18,13 @@ import { lockItemsQuery } from "../item/sql/lockItemsQuery";
 import { ownedItemsQuery } from "../item/sql/ownedItemsQuery";
 import { persistCarriedWriteUpdate } from "../item/sql/persistCarriedWriteUpdate";
 import { planTradeDelivery } from "./planTradeDelivery";
+import { restoreReservationToInboxQuery } from "./sql/restoreReservationToInboxQuery";
 import { tradeReservationsQuery } from "./sql/tradeReservationsQuery";
 import type {
   TradeCommitInput,
   TradeCommitLeg,
   TradeCommitResult,
+  TradeRestoreResult,
   TradeStore,
 } from "./TradeStore";
 
@@ -39,6 +46,72 @@ export class PgTradeStore implements TradeStore {
       characterId,
     ]);
     return result.rows.map(itemFromRow);
+  }
+
+  async restoreToInbox(
+    characterId: string,
+    itemId: string,
+  ): Promise<TradeRestoreResult> {
+    return runSerializableTransaction(this.pool, async (client) => {
+      await client.query(lockCharacterQuery, [characterId]);
+      await client.query(ensureStorageStateInsert, [characterId]);
+      const locked = await client.query<ItemRow>(lockItemsQuery, [[itemId]]);
+      const row = locked.rows[0];
+      if (!row || row.location_type !== "trade-reservation") {
+        // Already restored, or never reserved: a retry must not move anything.
+        throw new TransactionRollback<TradeRestoreResult>({
+          status: "not-reserved",
+        });
+      }
+      const before = itemFromRow(row);
+      const held = await client.query<{ count: string }>(heldItemCountQuery("inbox"), [
+        characterId,
+        null,
+      ]);
+      if (Number(held.rows[0]?.count ?? 0) >= DEPOT_LIMITS.maxInboxItems) {
+        throw new TransactionRollback<TradeRestoreResult>({
+          status: "inbox-full",
+        });
+      }
+      const slots = await client.query<{ slot: number }>(firstFreeSlotQuery, [
+        characterId,
+        "inbox",
+        DEPOT_LIMITS.maxInboxItems,
+        null,
+      ]);
+      const slot = slots.rows[0]?.slot;
+      if (slot === undefined) {
+        throw new TransactionRollback<TradeRestoreResult>({
+          status: "inbox-full",
+        });
+      }
+      const moved = await client.query<{ id: string; version: number }>(
+        restoreReservationToInboxQuery,
+        [itemId, characterId, slot],
+      );
+      if (moved.rowCount !== 1) {
+        throw new TransactionRollback<TradeRestoreResult>({
+          status: "not-reserved",
+        });
+      }
+      const after: Item = {
+        ...before,
+        version: (moved.rows[0]?.version ?? before.version + 1),
+        location: { kind: "inbox", characterId, slot },
+      };
+      await client.query(bumpInboxRevisionUpdate, [characterId]);
+      await client.query(insertItemTransferredAudit, [
+        characterId,
+        itemId,
+        JSON.stringify({
+          operation: "trade-restore-inbox",
+          from: before.location,
+          to: after.location,
+          count: after.count,
+        }),
+      ]);
+      return { status: "committed" as const, item: after };
+    });
   }
 
   async commitTrade(input: TradeCommitInput): Promise<TradeCommitResult> {

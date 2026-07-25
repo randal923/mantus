@@ -313,4 +313,169 @@ describe("TravelService", () => {
     ).toBe("unavailable");
     expect(harness.store.commit).not.toHaveBeenCalled();
   });
+
+  it("refuses a storage-gated route the player has not unlocked", () => {
+    const harness = makeHarness(async () => ({
+      status: "insufficient-funds",
+    }));
+    const gated = {
+      id: "yalahar",
+      cost: 100,
+      destination: { x: 20, y: 20, z: 6 },
+      conditions: [
+        {
+          kind: "storage" as const,
+          key: "Quest.Yalahar.Access",
+          operator: "gte" as const,
+          value: 1,
+        },
+      ],
+    };
+
+    expect(
+      harness.travel.start(
+        harness.session,
+        harness.npc,
+        gated,
+        1_000,
+        vi.fn(),
+        vi.fn(),
+      ),
+    ).toBe("not-allowed");
+    expect(harness.store.commit).not.toHaveBeenCalled();
+  });
+
+  it("checks the gate at confirmation, not when the route was listed", async () => {
+    const harness = makeHarness(async () => ({
+      status: "committed",
+      characterVersion: 2,
+      mutation: { after: [], removedItemIds: [] },
+    }));
+    const gated = {
+      id: "yalahar",
+      cost: 100,
+      destination: { x: 20, y: 20, z: 6 },
+      conditions: [
+        {
+          kind: "storage" as const,
+          key: "Quest.Yalahar.Access",
+          operator: "gte" as const,
+          value: 1,
+        },
+      ],
+    };
+    harness.player.setStorageValue("Quest.Yalahar.Access", 1);
+
+    expect(
+      harness.travel.start(
+        harness.session,
+        harness.npc,
+        gated,
+        1_000,
+        vi.fn(),
+        vi.fn(),
+      ),
+    ).toBe("started");
+    await nextTurn();
+    expect(harness.store.commit).toHaveBeenCalledWith(
+      harness.player.id,
+      expect.any(Number),
+      { x: 19, y: 19, z: 6 },
+      100,
+      "captain",
+      "yalahar",
+    );
+  });
+
+  it("charges the server-computed discounted fare, never the listed one", async () => {
+    const harness = makeHarness(async () => ({
+      status: "committed",
+      characterVersion: 2,
+      mutation: { after: [], removedItemIds: [] },
+    }));
+    const discounted = {
+      id: "carlin",
+      cost: 110,
+      destination: { x: 20, y: 20, z: 6 },
+      discounts: [
+        {
+          cost: 10,
+          conditions: [
+            {
+              kind: "storage" as const,
+              key: "Quest.Postman.Rank",
+              operator: "gte" as const,
+              value: 3,
+            },
+          ],
+        },
+      ],
+    };
+    harness.player.setStorageValue("Quest.Postman.Rank", 4);
+
+    expect(
+      harness.travel.start(
+        harness.session,
+        harness.npc,
+        discounted,
+        1_000,
+        vi.fn(),
+        vi.fn(),
+      ),
+    ).toBe("started");
+    await nextTurn();
+    expect(harness.store.commit).toHaveBeenCalledWith(
+      harness.player.id,
+      expect.any(Number),
+      { x: 19, y: 19, z: 6 },
+      10,
+      "captain",
+      "carlin",
+    );
+  });
+
+  it("keeps the full fare for a player who does not hold the rank", async () => {
+    const harness = makeHarness(async () => ({
+      status: "committed",
+      characterVersion: 2,
+      mutation: { after: [], removedItemIds: [] },
+    }));
+    const discounted = {
+      id: "carlin",
+      cost: 110,
+      destination: { x: 20, y: 20, z: 6 },
+      discounts: [
+        {
+          cost: 10,
+          conditions: [
+            {
+              kind: "storage" as const,
+              key: "Quest.Postman.Rank",
+              operator: "gte" as const,
+              value: 3,
+            },
+          ],
+        },
+      ],
+    };
+
+    harness.travel.start(
+      harness.session,
+      harness.npc,
+      discounted,
+      1_000,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    await nextTurn();
+    expect(harness.store.commit).toHaveBeenCalledWith(
+      harness.player.id,
+      expect.any(Number),
+      { x: 19, y: 19, z: 6 },
+      110,
+      "captain",
+      "carlin",
+    );
+  });
 });

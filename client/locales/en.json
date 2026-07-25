@@ -371,6 +371,7 @@
     "sellOffersFor": "Sell offers for {{item}}",
     "buyOffersFor": "Buy offers for {{item}}",
     "amount": "Amount",
+    "amountToTrade": "Amount of {{item}} to trade",
     "piecePrice": "Piece Price",
     "totalPrice": "Total Price",
     "endsAt": "Expires",

@@ -1,4 +1,5 @@
-import { BANK_LIMITS } from "@tibia/protocol";
+import { randomUUID } from "node:crypto";
+import { BANK_LIMITS, DEPOT_LIMITS } from "@tibia/protocol";
 import type { Pool, PoolClient } from "pg";
 import type { DepotItemRow } from "../depot/DepotItemRow";
 import { depositDepotRevisionUpdate } from "../depot/sql/depositDepotRevisionUpdate";
@@ -12,8 +13,11 @@ import { runSerializableTransaction } from "../economy/runSerializableTransactio
 import { insertBankAccountPairQuery } from "../economy/sql/insertBankAccountPairQuery";
 import { lockBankAccountPairQuery } from "../economy/sql/lockBankAccountPairQuery";
 import { TransactionRollback } from "../economy/TransactionRollback";
+import { requireItem } from "../depot/requireItem";
+import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { monotonicNow } from "../monotonicNow";
+import { drawFromStash } from "./drawFromStash";
 import { marketTotalOf } from "./marketTotalOf";
 import { spendMarketFunds } from "./spendMarketFunds";
 import type { LockedMarketOffer, MarketTxHelper } from "./MarketTxHelper";
@@ -26,6 +30,9 @@ import { childExistsQuery } from "./sql/childExistsQuery";
 import { deleteMarketEscrowItemQuery } from "./sql/deleteMarketEscrowItemQuery";
 import { deleteMarketOfferQuery } from "./sql/deleteMarketOfferQuery";
 import { lockEscrowRowsForOfferQuery } from "./sql/lockEscrowRowsForOfferQuery";
+import { insertSlottedItemQuery } from "./sql/insertSlottedItemQuery";
+import { insertStashEscrowAudit } from "./sql/insertStashEscrowAudit";
+import { marketFreeSlotsQuery } from "./sql/marketFreeSlotsQuery";
 import { updateMarketOfferFillQuery } from "./sql/updateMarketOfferFillQuery";
 
 type Rollback = TransactionRollback<AcceptOfferResult>;
@@ -227,7 +234,23 @@ export class PgMarketAcceptOps {
         coveredAmount += source.take;
         rows.push({ row, take: source.take });
       }
-      if (coveredAmount !== request.amount) {
+      if (coveredAmount + request.stashTake !== request.amount) {
+        throw this.fail("insufficient-items");
+      }
+
+      // Stash-sourced units are minted straight into the buyer's inbox in
+      // this transaction, with the counter decremented in the same step.
+      const type = this.catalog.get(offer.itemTypeId);
+      const drawn = request.stashTake > 0 && type
+        ? await drawFromStash(
+            client,
+            request.sellerCharacterId,
+            offer.itemTypeId,
+            request.stashTake,
+            type.maxCount,
+          )
+        : null;
+      if (request.stashTake > 0 && !drawn) {
         throw this.fail("insufficient-items");
       }
 
@@ -239,6 +262,46 @@ export class PgMarketAcceptOps {
         "market-fill",
         { status: "inbox-full" },
       );
+      const stashDelivered: Item[] = [];
+      if (drawn && drawn.counts.length > 0) {
+        const slots = await client.query<{ slot: number }>(
+          marketFreeSlotsQuery,
+          [
+            offer.characterId,
+            "inbox",
+            DEPOT_LIMITS.maxInboxItems,
+            drawn.counts.length,
+          ],
+        );
+        if (slots.rows.length < drawn.counts.length) {
+          throw new TransactionRollback<AcceptOfferResult>({
+            status: "inbox-full",
+          });
+        }
+        for (const [index, count] of drawn.counts.entries()) {
+          const slot = slots.rows[index]?.slot;
+          if (slot === undefined) throw new Error("market inbox slot is missing");
+          const created = await client.query<DepotItemRow>(
+            insertSlottedItemQuery,
+            [
+              randomUUID(),
+              offer.itemTypeId,
+              count,
+              "inbox",
+              offer.characterId,
+              slot,
+            ],
+          );
+          const minted = requireItem(created.rows[0]);
+          stashDelivered.push(minted);
+          await client.query(insertStashEscrowAudit, [
+            request.sellerCharacterId,
+            minted.id,
+            offer.itemTypeId,
+            count,
+          ]);
+        }
+      }
 
       const sellerBefore = await lockBankBalance(
         client,
@@ -292,11 +355,19 @@ export class PgMarketAcceptOps {
         totalPrice,
         balance: sellerAfter,
         counterpartyCharacterId: offer.characterId,
-        deliveredItems: delivery.delivered,
+        deliveredItems: [...delivery.delivered, ...stashDelivered],
         deliveredCharacterId: offer.characterId,
         depotUpserts: delivery.sourceUpserts,
         removedItemIds: delivery.removedItemIds,
         sourceDepotIds,
+        ...(drawn
+          ? {
+              stashSet: {
+                itemTypeId: offer.itemTypeId,
+                count: drawn.remaining,
+              },
+            }
+          : {}),
       };
     });
   }

@@ -427,7 +427,7 @@ databaseDescribe("PgShopStore integration", () => {
     expect(await auditCount("shop-sale")).toBe(0);
   });
 
-  it("rolls back a sale when all proceeds cannot fit", async () => {
+  it("credits the bank with sale proceeds that cannot fit", async () => {
     await insertBackpackItem(characterId, AXE_TYPE, 1, 0);
     for (let slot = 1; slot < 20; slot++) {
       await insertBackpackItem(characterId, HELMET_TYPE, 1, slot);
@@ -438,13 +438,68 @@ databaseDescribe("PgShopStore integration", () => {
       saleRequest({ unitPrice: 10_101, totalProceeds: 10_101 }),
     );
 
+    expect(result.status).toBe("committed");
+    // Every coin is accounted for exactly once: carried + bank == proceeds.
+    const carried =
+      (await itemAmount(characterId, GOLD_TYPE)) +
+      (await itemAmount(characterId, PLATINUM_TYPE)) * 100 +
+      (await itemAmount(characterId, CRYSTAL_TYPE)) * 10_000;
+    expect(carried + (await balance(characterId))).toBe(10_101);
+    // The sold axe frees exactly one slot, so the crystal coin fits and the
+    // platinum + gold remainder is what the bank takes.
+    expect(carried).toBe(10_000);
+    expect(await balance(characterId)).toBe(101);
+    expect(await itemAmount(characterId, AXE_TYPE)).toBe(0);
+    expect(await auditCount("shop-sale")).toBe(1);
+    const ledger = await pool.query<{ entry_type: string; amount: string }>(
+      "SELECT entry_type, amount FROM bank_ledger WHERE character_id = $1",
+      [characterId],
+    );
+    expect(ledger.rows).toEqual([{ entry_type: "shop-sale", amount: "101" }]);
+  });
+
+  it("keeps a non-gold currency sale all-or-nothing", async () => {
+    await insertBackpackItem(characterId, AXE_TYPE, 1, 0);
+    for (let slot = 1; slot < 20; slot++) {
+      await insertBackpackItem(characterId, HELMET_TYPE, 1, slot);
+    }
+
+    const result = await store.sell(
+      characterId,
+      // Two token stacks are needed but selling the axe frees only one slot.
+      saleRequest({
+        unitPrice: 150,
+        totalProceeds: 150,
+        currencyItemTypeId: SILVER_TOKEN_TYPE,
+        currencyMaxCount: 100,
+      }),
+    );
+
     expect(result.status).toBe("no-space");
     expect(await itemAmount(characterId, AXE_TYPE)).toBe(1);
-    expect(await itemAmount(characterId, GOLD_TYPE)).toBe(0);
-    expect(await itemAmount(characterId, PLATINUM_TYPE)).toBe(0);
-    expect(await itemAmount(characterId, CRYSTAL_TYPE)).toBe(0);
-    expect(await auditCount("item-destroyed")).toBe(0);
-    expect(await auditCount("item-created")).toBe(0);
+    expect(await itemAmount(characterId, SILVER_TOKEN_TYPE)).toBe(0);
+    expect(await balance(characterId)).toBe(0);
+    expect(await auditCount("shop-sale")).toBe(0);
+  });
+
+  it("fills a nested bag once the equipped backpack is full", async () => {
+    await setBalance(characterId, 1_000);
+    const bagId = await insertBackpackItem(characterId, BACKPACK_TYPE, 1, 0);
+    for (let slot = 1; slot < 20; slot++) {
+      await insertBackpackItem(characterId, HELMET_TYPE, 1, slot);
+    }
+
+    const result = await store.purchase(
+      characterId,
+      purchaseRequest({ unitPrice: 100, totalCost: 100 }),
+    );
+
+    expect(result.status).toBe("committed");
+    const placed = await pool.query<{ container_id: string }>(
+      "SELECT container_id FROM items WHERE item_type_id = $1",
+      [AXE_TYPE],
+    );
+    expect(placed.rows).toEqual([{ container_id: bagId }]);
   });
 
   it("lets exactly one racing purchase spend one bank balance", async () => {
@@ -497,6 +552,72 @@ databaseDescribe("PgShopStore integration", () => {
     );
     expect(stock.rows).toEqual([{ remaining_stock: 0 }]);
     expect(await auditCount("shop-purchase")).toBe(1);
+  });
+
+  it("restocks a due offer exactly once across repeated sweeps", async () => {
+    await store.seedRestockSchedules([
+      {
+        shopId: "sam",
+        offerId: "item-3274",
+        stock: 5,
+        restockIntervalSeconds: 3_600,
+      },
+    ]);
+    await pool.query(
+      `UPDATE shop_stock
+       SET remaining_stock = 1, restock_at = now() - interval '30 minutes'
+       WHERE shop_id = 'sam' AND offer_id = 'item-3274'`,
+    );
+
+    // A restart replays the seed; it must not push the due deadline out.
+    await store.seedRestockSchedules([
+      {
+        shopId: "sam",
+        offerId: "item-3274",
+        stock: 5,
+        restockIntervalSeconds: 3_600,
+      },
+    ]);
+    expect(await store.restockDueOffers()).toBe(1);
+    // The boundary is consumed: a second sweep in the same interval is a no-op.
+    expect(await store.restockDueOffers()).toBe(0);
+
+    const stock = await pool.query<{
+      remaining_stock: number;
+      due: boolean;
+    }>(
+      `SELECT remaining_stock, restock_at <= now() AS due
+       FROM shop_stock WHERE shop_id = 'sam' AND offer_id = 'item-3274'`,
+    );
+    expect(stock.rows).toEqual([{ remaining_stock: 5, due: false }]);
+  });
+
+  it("restocks once after downtime spanning several intervals", async () => {
+    await store.seedRestockSchedules([
+      {
+        shopId: "sam",
+        offerId: "item-3274",
+        stock: 5,
+        restockIntervalSeconds: 3_600,
+      },
+    ]);
+    await pool.query(
+      `UPDATE shop_stock
+       SET remaining_stock = 0, restock_at = now() - interval '10 hours'
+       WHERE shop_id = 'sam' AND offer_id = 'item-3274'`,
+    );
+
+    expect(await store.restockDueOffers()).toBe(1);
+    expect(await store.restockDueOffers()).toBe(0);
+
+    const stock = await pool.query<{
+      remaining_stock: number;
+      due: boolean;
+    }>(
+      `SELECT remaining_stock, restock_at <= now() AS due
+       FROM shop_stock WHERE shop_id = 'sam' AND offer_id = 'item-3274'`,
+    );
+    expect(stock.rows).toEqual([{ remaining_stock: 5, due: false }]);
   });
 
   it("lets exactly one racing sale consume the same item", async () => {

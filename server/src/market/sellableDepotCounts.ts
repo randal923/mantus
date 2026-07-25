@@ -1,8 +1,9 @@
 import type { DepotCache } from "../depot/DepotCache";
 
 /**
- * Counts pristine (empty attributes, no contained items) depot stock per item
- * type across all the character's depots — the amounts they could escrow.
+ * Counts pristine (empty attributes, no contained items) stock per item type
+ * across all the character's depots plus their supply stash — the amounts they
+ * could escrow. Stashed stock is pristine by construction.
  */
 export function sellableDepotCounts(
   cache: DepotCache,
@@ -23,6 +24,9 @@ export function sellableDepotCounts(
       continue;
     }
     counts.set(item.typeId, (counts.get(item.typeId) ?? 0) + item.count);
+  }
+  for (const [itemTypeId, count] of cache.stash) {
+    counts.set(itemTypeId, (counts.get(itemTypeId) ?? 0) + count);
   }
   return counts;
 }

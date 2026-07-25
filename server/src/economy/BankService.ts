@@ -10,8 +10,12 @@ import type { ItemMutation } from "../item/ItemMutation";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
+import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { BankStore } from "./BankStore";
+import { COIN_STACK_LIMIT } from "./coinStackLimit";
+import { countCarriedCoins } from "./countCarriedCoins";
+import { countFreeBackpackSlots } from "./countFreeBackpackSlots";
 import { countMoneyWorth } from "./countMoneyWorth";
 import {
   CRYSTAL_COIN_TYPE_ID,
@@ -19,14 +23,13 @@ import {
   PLATINUM_COIN_TYPE_ID,
   type CurrencyBalance,
 } from "./CurrencyBalance";
+import { inNpcTalkRange } from "./inNpcTalkRange";
 import { planMoneyGrant } from "./planMoneyGrant";
 
 type BankIntent =
   | BankDepositMessage
   | BankWithdrawMessage
   | BankTransferMessage;
-
-const COIN_STACK_LIMIT = 100;
 
 export class BankService {
   private readonly outcomes: Array<(now: number) => void> = [];
@@ -36,6 +39,7 @@ export class BankService {
     private readonly world: World,
     private readonly items: ItemIntentHandler,
     private readonly store?: BankStore,
+    private readonly registry?: SessionRegistry,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -58,7 +62,7 @@ export class BankService {
       ? this.world.getPlayer(session.playerId)
       : undefined;
     if (!player || this.world.getCreature(npc.id) !== npc) return "unavailable";
-    if (!this.isBanker(npc) || !this.inTalkRange(player, npc)) {
+    if (!this.isBanker(npc) || !inNpcTalkRange(player, npc)) {
       return "unavailable";
     }
     const operation = store.balance(player.id).then(
@@ -83,34 +87,79 @@ export class BankService {
   }
 
   handle(session: Session, intent: BankIntent): void {
-    const store = this.store;
     const player = session.playerId
       ? this.world.getPlayer(session.playerId)
       : undefined;
-    if (!store || !player) {
-      this.fail(session, "failed");
+    const npc = this.world.getCreature(intent.npcId);
+    if (!player || !(npc instanceof Npc)) {
+      this.fail(session, player ? "out-of-range" : "failed");
       return;
     }
-    const npc = this.world.getCreature(intent.npcId);
+    this.run(
+      session,
+      player,
+      npc,
+      intent,
+      (balance) => session.send({ type: "bank-updated", balance }),
+      (reason) => this.fail(session, reason),
+    );
+  }
+
+  /**
+   * Canary's free-text money keywords. The amount was typed by the player, so
+   * it runs the identical validation, precheck and store path the panel uses;
+   * only the reply surface differs.
+   */
+  handleKeyword(
+    session: Session,
+    npc: Npc,
+    operation: "deposit" | "withdraw",
+    amount: number,
+    onCommitted: (balance: number) => void,
+    onFailed: (reason: BankActionFailedReason) => void,
+  ): "started" | "unavailable" {
+    const player = session.playerId
+      ? this.world.getPlayer(session.playerId)
+      : undefined;
+    if (!player) return "unavailable";
+    const intent: BankIntent =
+      operation === "deposit"
+        ? { type: "bank-deposit", npcId: npc.id, amount }
+        : { type: "bank-withdraw", npcId: npc.id, amount };
+    return this.run(session, player, npc, intent, onCommitted, onFailed);
+  }
+
+  private run(
+    session: Session,
+    player: Player,
+    npc: Npc,
+    intent: BankIntent,
+    onCommitted: (balance: number) => void,
+    onFailed: (reason: BankActionFailedReason) => void,
+  ): "started" | "unavailable" {
+    const store = this.store;
+    if (!store) {
+      onFailed("failed");
+      return "unavailable";
+    }
     if (
-      !(npc instanceof Npc) ||
       !session.knownCreatureIds.has(npc.id) ||
       !this.isBanker(npc) ||
-      !this.inTalkRange(player, npc)
+      !inNpcTalkRange(player, npc)
     ) {
-      this.fail(session, "out-of-range");
-      return;
+      onFailed("out-of-range");
+      return "unavailable";
     }
     if (session.itemOperationPending ||
       session.itemPersistsPending > 0 ||
       session.travelOperationPending) {
-      this.fail(session, "busy");
-      return;
+      onFailed("busy");
+      return "unavailable";
     }
     const precheck = this.precheck(player, intent);
     if (precheck) {
-      this.fail(session, precheck);
-      return;
+      onFailed(precheck);
+      return "unavailable";
     }
     session.itemOperationPending = true;
     const operation = this.commit(store, player, intent).then(
@@ -118,7 +167,7 @@ export class BankService {
         this.outcomes.push((at) => {
           session.itemOperationPending = false;
           if (result.status !== "committed") {
-            this.fail(session, result.status);
+            onFailed(result.status);
             return;
           }
           if (result.mutation) {
@@ -129,19 +178,38 @@ export class BankService {
               at,
             );
           }
-          session.send({ type: "bank-updated", balance: result.balance });
+          onCommitted(result.balance);
+          if (result.recipient) {
+            this.notifyRecipient(
+              result.recipient.characterId,
+              result.recipient.balance,
+            );
+          }
         });
       },
       (cause: unknown) => {
         this.warn(player.id, cause);
         this.outcomes.push(() => {
           session.itemOperationPending = false;
-          this.fail(session, "failed");
+          onFailed("failed");
         });
       },
     );
     this.track(operation);
     this.items.trackExternalOperation(player.id, operation);
+    return "started";
+  }
+
+  /**
+   * Pushes the recipient's own new balance to their live session. Nothing
+   * about the sender travels with it beyond what the transfer itself already
+   * reveals — the recipient sees a balance, not who moved it (charter rule 6).
+   */
+  private notifyRecipient(toCharacterId: string, balance: number): void {
+    this.registry?.sessionFor(toCharacterId)?.send({
+      type: "bank-updated",
+      balance,
+    });
   }
 
   private async commit(
@@ -149,7 +217,12 @@ export class BankService {
     player: Player,
     intent: BankIntent,
   ): Promise<
-    | { status: "committed"; balance: number; mutation?: ItemMutation }
+    | {
+        status: "committed";
+        balance: number;
+        mutation?: ItemMutation;
+        recipient?: { characterId: string; balance: number };
+      }
     | { status: BankActionFailedReason }
   > {
     if (intent.type === "bank-deposit") {
@@ -178,7 +251,14 @@ export class BankService {
       intent.amount,
     );
     return result.status === "committed"
-      ? { status: "committed", balance: result.balance }
+      ? {
+          status: "committed",
+          balance: result.balance,
+          recipient: {
+            characterId: result.toCharacterId,
+            balance: result.toBalance,
+          },
+        }
       : { status: result.status };
   }
 
@@ -190,7 +270,7 @@ export class BankService {
     const snapshot = this.items.inventorySnapshot(player.id);
     if (!snapshot) return "failed";
     if (intent.type === "bank-deposit") {
-      const carried = this.countCarried(snapshot.items);
+      const carried = countCarriedCoins(snapshot.items);
       return countMoneyWorth(carried) < intent.amount
         ? "insufficient-funds"
         : null;
@@ -217,21 +297,11 @@ export class BankService {
     items: ReadonlyArray<Item>,
     grant: CurrencyBalance,
   ): boolean {
-    const backpack = items.find(
-      (item) =>
-        item.location.kind === "equipment" &&
-        item.location.slot === "backpack",
+    const freeSlots = countFreeBackpackSlots(
+      items,
+      (typeId) => this.items.itemType(typeId)?.containerCapacity,
     );
-    if (!backpack) return false;
-    const capacity = this.items.itemType(backpack.typeId)?.containerCapacity;
-    if (capacity === undefined) return false;
-    const occupied = items.filter(
-      (item) =>
-        item.location.kind === "container" &&
-        item.location.containerId === backpack.id,
-    ).length;
-    const freeSlots = capacity - occupied;
-    if (freeSlots < 0) return false;
+    if (freeSlots <= 0) return false;
     const newStacks = (typeId: number, count: number) => {
       const topUp = items
         .filter((item) => item.typeId === typeId)
@@ -249,18 +319,6 @@ export class BankService {
     );
   }
 
-  private countCarried(items: ReadonlyArray<Item>): CurrencyBalance {
-    const count = (typeId: number) =>
-      items
-        .filter((item) => item.typeId === typeId)
-        .reduce((total, item) => total + item.count, 0);
-    return {
-      gold: count(GOLD_COIN_TYPE_ID),
-      platinum: count(PLATINUM_COIN_TYPE_ID),
-      crystal: count(CRYSTAL_COIN_TYPE_ID),
-    };
-  }
-
   private coinWeight(): number {
     return this.items.itemType(GOLD_COIN_TYPE_ID)?.weight ?? 10;
   }
@@ -268,17 +326,6 @@ export class BankService {
   private isBanker(npc: Npc): boolean {
     return Boolean(
       npc.type.dialogue?.nodes.some((node) => node.action?.kind === "bank"),
-    );
-  }
-
-  private inTalkRange(player: Player, npc: Npc): boolean {
-    const range = npc.type.dialogue?.talkRange ?? 0;
-    return (
-      player.position.z === npc.position.z &&
-      Math.max(
-        Math.abs(player.position.x - npc.position.x),
-        Math.abs(player.position.y - npc.position.y),
-      ) <= range
     );
   }
 

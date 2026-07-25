@@ -633,6 +633,7 @@ describe("ShopService", () => {
     const sell = vi.fn(async () => ({
       status: "committed" as const,
       mutation: { after: [], removedItemIds: ["axe-1"] },
+      bankCredited: 0,
     }));
     const harness = makeHarness({ sell }, [
       ownedAxe("axe-1", 0),

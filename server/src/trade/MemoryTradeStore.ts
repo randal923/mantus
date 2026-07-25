@@ -1,3 +1,4 @@
+import { DEPOT_LIMITS } from "@tibia/protocol";
 import { collectReachableItemIds } from "../item/collectReachableItemIds";
 import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
@@ -8,6 +9,7 @@ import type {
   TradeCommitInput,
   TradeCommitLeg,
   TradeCommitResult,
+  TradeRestoreResult,
   TradeStore,
 } from "./TradeStore";
 
@@ -32,6 +34,42 @@ export class MemoryTradeStore implements TradeStore {
     return roots.flatMap((root) =>
       tradeOfferSubtree(all, root.id).map((entry) => entry.item),
     );
+  }
+
+  async restoreToInbox(
+    characterId: string,
+    itemId: string,
+  ): Promise<TradeRestoreResult> {
+    const item = this.items
+      .allItems()
+      .find((candidate) => candidate.id === itemId);
+    if (
+      !item ||
+      item.location.kind !== "trade-reservation" ||
+      item.location.characterId !== characterId
+    ) {
+      return { status: "not-reserved" };
+    }
+    const used = new Set(
+      this.items
+        .allItems()
+        .flatMap((candidate) =>
+          candidate.location.kind === "inbox" &&
+          candidate.location.characterId === characterId
+            ? [candidate.location.slot]
+            : [],
+        ),
+    );
+    let slot = 0;
+    while (used.has(slot)) slot += 1;
+    if (slot >= DEPOT_LIMITS.maxInboxItems) return { status: "inbox-full" };
+    const restored: Item = {
+      ...item,
+      version: item.version + 1,
+      location: { kind: "inbox", characterId, slot },
+    };
+    this.items.seed(restored);
+    return { status: "committed", item: restored };
   }
 
   async commitTrade(input: TradeCommitInput): Promise<TradeCommitResult> {

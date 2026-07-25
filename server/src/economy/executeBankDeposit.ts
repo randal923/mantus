@@ -81,7 +81,7 @@ export async function executeBankDeposit(
     },
   ];
   for (const grant of grants) {
-    const granted = await coinOps.grantStackable(
+    const ungranted = await coinOps.grantStackable(
       grant.rows,
       grant.count,
       grant.typeId,
@@ -91,7 +91,7 @@ export async function executeBankDeposit(
       removedItemIds,
       backpack,
     );
-    if (!granted) {
+    if (ungranted > 0) {
       throw new TransactionRollback<BankDepositResult>({
         status: "no-space",
       });

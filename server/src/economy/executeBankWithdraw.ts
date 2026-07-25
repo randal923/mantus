@@ -51,7 +51,7 @@ export async function executeBankWithdraw(
     { rows: coins.gold, count: grant.gold, typeId: GOLD_COIN_TYPE_ID },
   ];
   for (const entry of grants) {
-    const granted = await coinOps.grantStackable(
+    const ungranted = await coinOps.grantStackable(
       entry.rows,
       entry.count,
       entry.typeId,
@@ -61,7 +61,7 @@ export async function executeBankWithdraw(
       [],
       backpack,
     );
-    if (!granted) {
+    if (ungranted > 0) {
       // a partial grant may already be written; roll everything back
       throw new TransactionRollback<BankWithdrawResult>({
         status: "no-space",

@@ -19,6 +19,9 @@ import { BankService } from "./economy/BankService";
 import { DepotService } from "./depot/DepotService";
 import type { DepotStore } from "./depot/DepotStore";
 import type { BankStore } from "./economy/BankStore";
+import { CurrencyConservationRunner } from "./economy/CurrencyConservationRunner";
+import type { CurrencyReconciler } from "./economy/CurrencyReconciler";
+import { ShopRestockRunner } from "./economy/ShopRestockRunner";
 import { ShopService } from "./economy/ShopService";
 import type { ShopStore } from "./economy/ShopStore";
 import { GmCommandHandler } from "./gm/GmCommandHandler";
@@ -48,6 +51,7 @@ import { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { ItemCatalog } from "./item/ItemCatalog";
 import type { ItemStore } from "./item/ItemStore";
 import type { WorldItemDeltas } from "./item/WorldItemDeltas";
+import { PersistResyncRunner } from "./item/PersistResyncRunner";
 import { MovementHandler } from "./MovementHandler";
 import { monotonicNow } from "./monotonicNow";
 import { NpcHandler } from "./npc/NpcHandler";
@@ -77,6 +81,7 @@ import type { HighscoreStore } from "./social/HighscoreStore";
 import { VipService } from "./social/VipService";
 import type { VipStore } from "./social/VipStore";
 import { MantusStoreService } from "./store/MantusStoreService";
+import { StoreOperatorService } from "./store/StoreOperatorService";
 import type { MantusStoreStore } from "./store/MantusStoreStore";
 import { loadCreatureContent } from "./spawn/loadCreatureContent";
 import { SpawnManager } from "./spawn/SpawnManager";
@@ -109,6 +114,8 @@ export interface GameServerDeps {
   gems?: GemStore;
   moderation?: ModerationStore;
   store?: MantusStoreStore;
+  /** Read-only money-supply sweep; absent in tests and memory-only runs. */
+  currencyReconciler?: CurrencyReconciler;
   worldItemDeltas?: WorldItemDeltas;
 }
 
@@ -138,7 +145,10 @@ export class GameServer {
   private readonly spellTeacher: SpellTeacherService;
   private readonly bank: BankService;
   private readonly shops: ShopService;
+  private readonly shopRestock: ShopRestockRunner;
+  private readonly currencyConservation: CurrencyConservationRunner;
   private readonly depot: DepotService;
+  private readonly persistResync: PersistResyncRunner;
   private readonly market: MarketService;
   private readonly trade: TradeService;
   private readonly parties: PartyHandler;
@@ -156,6 +166,7 @@ export class GameServer {
   private readonly gemDrops: GemDropHooks;
   private readonly moderation: ModerationService;
   private readonly store: MantusStoreService;
+  private readonly storeOperator: StoreOperatorService;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -228,11 +239,20 @@ export class GameServer {
       deps.itemCatalog,
       deps.depot,
     );
+    this.persistResync = new PersistResyncRunner(
+      this.items,
+      this.depot,
+      this.registry,
+    );
+    this.items.setPersistResync((session, characterId) =>
+      this.persistResync.start(session, characterId),
+    );
     this.market = new MarketService(
       this.items,
       deps.itemCatalog,
       this.depot,
       deps.market,
+      this.registry,
     );
     this.trade = new TradeService(
       this.world,
@@ -241,6 +261,7 @@ export class GameServer {
       deps.items,
       deps.itemCatalog,
       deps.trade,
+      this.depot,
     );
     this.moderation = new ModerationService(
       this.registry,
@@ -251,7 +272,9 @@ export class GameServer {
       this.world,
       this.registry,
       deps.store,
+      this.depot,
     );
+    this.storeOperator = new StoreOperatorService(this.registry, deps.store);
     this.vips = new VipService(this.world, this.registry, deps.vip);
     this.highscores = new HighscoreService(this.world, deps.highscores);
     const creatureContent =
@@ -374,12 +397,24 @@ export class GameServer {
       this.items,
       deps.spellTeacher,
     );
-    this.bank = new BankService(this.world, this.items, deps.bank);
+    this.bank = new BankService(
+      this.world,
+      this.items,
+      deps.bank,
+      this.registry,
+    );
     this.shops = new ShopService(
       this.world,
       this.items,
       creatureContent?.shopCatalogs ?? new Map(),
       deps.shop,
+    );
+    this.shopRestock = new ShopRestockRunner(
+      creatureContent?.shopCatalogs ?? new Map(),
+      deps.shop,
+    );
+    this.currencyConservation = new CurrencyConservationRunner(
+      deps.currencyReconciler,
     );
     this.npcs = new NpcHandler(
       this.world,
@@ -527,6 +562,7 @@ export class GameServer {
           this.items,
           spawns,
           this.moderation,
+          this.storeOperator,
         )
       : undefined;
     this.chat = new ChatHandler(
@@ -575,6 +611,12 @@ export class GameServer {
     this.wss.on("connection", (socket, request) =>
       this.onConnection(socket, request),
     );
+    // Off-tick and idempotent: reconciles finite shop stock with the catalog
+    // before the first purchase can reserve any of it.
+    void this.shopRestock.seed().catch((cause: unknown) => {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(`shop restock seeding failed: ${reason}`);
+    });
     this.loop.start();
     this.heartbeat = setInterval(
       () => this.pingSessions(),
@@ -630,6 +672,7 @@ export class GameServer {
       this.bank.applyResolvedOutcomes(now);
       this.shops.applyResolvedOutcomes(now);
       this.depot.applyResolvedOutcomes();
+      this.persistResync.applyResolvedOutcomes();
       this.market.applyResolvedOutcomes(now);
       this.trade.applyResolvedOutcomes(now);
       this.guilds.applyResolvedOutcomes(now);
@@ -639,6 +682,7 @@ export class GameServer {
       this.moderation.applyResolvedOutcomes(now);
       this.moderation.tick(now);
       this.store.applyResolvedOutcomes(now);
+      this.storeOperator.applyResolvedOutcomes();
       this.gems.applyResolvedOutcomes(now);
       this.language.applyResolvedOutcomes();
       this.uiSettings.applyResolvedOutcomes();
@@ -671,6 +715,8 @@ export class GameServer {
       this.items.tickDecay(now);
       this.items.tickWorldContainers();
       this.depot.tick(now);
+      this.shopRestock.tick(now);
+      this.currencyConservation.tick(now);
       this.market.tick(now);
       this.trade.tick(now);
       this.parties.tick(now);
@@ -941,6 +987,7 @@ export class GameServer {
         return;
       case "store-open":
       case "store-purchase":
+      case "store-history":
         this.store.handle(session, intent, now);
         return;
       case "highscores-get":
@@ -1009,6 +1056,8 @@ export class GameServer {
     this.bank.applyResolvedOutcomes(monotonicNow());
     await this.shops.stop();
     this.shops.applyResolvedOutcomes(monotonicNow());
+    await this.shopRestock.stop();
+    await this.currencyConservation.stop();
     await this.market.stop();
     this.market.applyResolvedOutcomes(monotonicNow());
     await this.trade.stop();
@@ -1025,6 +1074,8 @@ export class GameServer {
     this.moderation.applyResolvedOutcomes(monotonicNow());
     await this.store.stop();
     this.store.applyResolvedOutcomes(monotonicNow());
+    await this.storeOperator.stop();
+    this.storeOperator.applyResolvedOutcomes();
     await this.pvp.stop();
     await this.bestiaryTracker.stop();
     await this.wheelTracker.stop();
@@ -1035,6 +1086,8 @@ export class GameServer {
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();
     this.items.applyResolvedOutcomes(monotonicNow());
+    await this.persistResync.stop();
+    this.persistResync.applyResolvedOutcomes();
     await this.persistence.stop();
     if (this.persistence.unsavedPlayerCount > 0) {
       console.error(

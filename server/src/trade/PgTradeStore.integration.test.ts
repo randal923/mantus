@@ -338,4 +338,43 @@ databaseDescribe("PgTradeStore integration", () => {
       reserved.find((item) => item.id === backpack.id)?.location.kind,
     ).toBe("trade-reservation");
   });
+
+  it("restores an unrestorable reservation to the inbox exactly once", async () => {
+    const backpack = await insertReservedItem(traderA, BACKPACK_TYPE, 1);
+    const nested = await insertContainedItem(backpack.id, HELMET_TYPE, 1);
+
+    const first = await store.restoreToInbox(traderA, backpack.id);
+    const replay = await store.restoreToInbox(traderA, backpack.id);
+
+    expect(first.status).toBe("committed");
+    // The reservation guard makes a retry a no-op, not a second move.
+    expect(replay).toEqual({ status: "not-reserved" });
+    const rows = await pool.query<{
+      id: string;
+      location_type: string;
+      character_id: string;
+      container_id: string | null;
+    }>(
+      "SELECT id, location_type, character_id, container_id FROM items WHERE id = ANY($1)",
+      [[backpack.id, nested.id]],
+    );
+    const root = rows.rows.find((row) => row.id === backpack.id);
+    const child = rows.rows.find((row) => row.id === nested.id);
+    expect(root).toMatchObject({
+      location_type: "inbox",
+      character_id: traderA,
+    });
+    // Contents follow the root untouched — one move, no copy-then-delete.
+    expect(child).toMatchObject({
+      location_type: "container",
+      container_id: backpack.id,
+    });
+    const audits = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM audit_log
+       WHERE event_type = 'item-transferred' AND item_id = $1
+         AND details->>'operation' = 'trade-restore-inbox'`,
+      [backpack.id],
+    );
+    expect(audits.rows[0]?.count).toBe("1");
+  });
 });

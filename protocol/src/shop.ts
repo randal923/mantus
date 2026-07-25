@@ -95,6 +95,11 @@ export const shopTransactedMessageSchema = z
     name: z.string().min(1).max(120),
     amount: z.number().int().min(1).max(100),
     totalPrice: z.number().int().min(0).max(100_000_000_000),
+    /**
+     * Sale proceeds that did not fit in the backpack and were credited to the
+     * seller's own bank instead. Their own data only.
+     */
+    bankCredited: z.number().int().min(0).max(100_000_000_000).optional(),
   })
   .strict();
 

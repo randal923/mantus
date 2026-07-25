@@ -1,7 +1,7 @@
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { SpriteIcon } from "../inventory/SpriteIcon";
-import { Button } from "../ui/Button";
+import { AuctionOfferRow } from "./AuctionOfferRow";
 import type {
   AuctionHouseItem,
   AuctionOffer,
@@ -125,72 +125,16 @@ export function AuctionOrderBook({
                       </tr>
                     </thead>
                     <tbody>
-                      {sellOffers.map((offer) => {
-                        const total = offer.amount * offer.pricePerItem;
-                        const disabledReason = offer.mine
-                          ? t("auction.tooltips.ownOffer")
-                          : goldBalance < total
-                            ? t("auction.tooltips.insufficientGold")
-                            : undefined;
-
-                        return (
-                          <tr
-                            key={offer.id}
-                            className="border-t border-ui-stone-light/10 transition-colors hover:bg-white/3"
-                          >
-                            <td className="px-3 py-2.5 font-semibold tabular-nums text-ui-text-bright">
-                              {offer.amount.toLocaleString(language)}
-                            </td>
-                            <td className="px-3 py-2.5 tabular-nums text-ui-text">
-                              {offer.pricePerItem.toLocaleString(language)}
-                            </td>
-                            <td className="px-3 py-2.5 tabular-nums text-ui-gold">
-                              {total.toLocaleString(language)}
-                            </td>
-                            <td className="px-3 py-2.5 tabular-nums text-ui-muted">
-                              {new Date(offer.expiresAt).toLocaleDateString(
-                                language,
-                                { month: "short", day: "numeric" },
-                              )}
-                            </td>
-                            <td className="px-3 py-2 text-right">
-                              <span className="flex items-center justify-end gap-2">
-                                {offer.mine && (
-                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-xs tracking-wider text-ui-gold uppercase">
-                                    {t("auction.yours")}
-                                  </span>
-                                )}
-                                {/* Disabled buttons swallow pointer events, so
-                                    the tooltip lives on a wrapping span. */}
-                                <span title={disabledReason}>
-                                  <Button
-                                    size="sm"
-                                    variant="primary"
-                                    disabled={
-                                      !onAcceptOffer ||
-                                      offer.mine === true ||
-                                      goldBalance < total
-                                    }
-                                    aria-label={t("auction.buyOfferAction", {
-                                      count: offer.amount,
-                                      item: item.name,
-                                      total: total.toLocaleString(language),
-                                    })}
-                                    onClick={() =>
-                                      onAcceptOffer?.({
-                                        offerId: offer.id,
-                                        amount: offer.amount,
-                                      })
-                                    }
-                                  >
-                                    {t("auction.buy")}
-                                  </Button>
-                                </span>
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {sellOffers.map((offer) => (
+                        <AuctionOfferRow
+                          key={offer.id}
+                          offer={offer}
+                          item={item}
+                          action="buy"
+                          goldBalance={goldBalance}
+                          {...(onAcceptOffer ? { onAcceptOffer } : {})}
+                        />
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -248,69 +192,16 @@ export function AuctionOrderBook({
                       </tr>
                     </thead>
                     <tbody>
-                      {buyOffers.map((offer) => {
-                        const total = offer.amount * offer.pricePerItem;
-                        const disabledReason = offer.mine
-                          ? t("auction.tooltips.ownOffer")
-                          : item.ownedCount < offer.amount
-                            ? t("auction.tooltips.insufficientItems")
-                            : undefined;
-
-                        return (
-                          <tr
-                            key={offer.id}
-                            className="border-t border-ui-stone-light/10 transition-colors hover:bg-white/3"
-                          >
-                            <td className="px-3 py-2.5 font-semibold tabular-nums text-ui-text-bright">
-                              {offer.amount.toLocaleString(language)}
-                            </td>
-                            <td className="px-3 py-2.5 tabular-nums text-ui-text">
-                              {offer.pricePerItem.toLocaleString(language)}
-                            </td>
-                            <td className="px-3 py-2.5 tabular-nums text-ui-gold">
-                              {total.toLocaleString(language)}
-                            </td>
-                            <td className="px-3 py-2.5 tabular-nums text-ui-muted">
-                              {new Date(offer.expiresAt).toLocaleDateString(
-                                language,
-                                { month: "short", day: "numeric" },
-                              )}
-                            </td>
-                            <td className="px-3 py-2 text-right">
-                              <span className="flex items-center justify-end gap-2">
-                                {offer.mine && (
-                                  <span className="rounded-full border border-ui-gold/25 bg-black/30 px-2 py-0.5 text-xs tracking-wider text-ui-gold uppercase">
-                                    {t("auction.yours")}
-                                  </span>
-                                )}
-                                <span title={disabledReason}>
-                                  <Button
-                                    size="sm"
-                                    disabled={
-                                      !onAcceptOffer ||
-                                      offer.mine === true ||
-                                      item.ownedCount < offer.amount
-                                    }
-                                    aria-label={t("auction.sellOfferAction", {
-                                      count: offer.amount,
-                                      item: item.name,
-                                      total: total.toLocaleString(language),
-                                    })}
-                                    onClick={() =>
-                                      onAcceptOffer?.({
-                                        offerId: offer.id,
-                                        amount: offer.amount,
-                                      })
-                                    }
-                                  >
-                                    {t("auction.sell")}
-                                  </Button>
-                                </span>
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {buyOffers.map((offer) => (
+                        <AuctionOfferRow
+                          key={offer.id}
+                          offer={offer}
+                          item={item}
+                          action="sell"
+                          goldBalance={goldBalance}
+                          {...(onAcceptOffer ? { onAcceptOffer } : {})}
+                        />
+                      ))}
                     </tbody>
                   </table>
                 </div>

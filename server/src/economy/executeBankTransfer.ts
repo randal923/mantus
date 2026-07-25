@@ -65,5 +65,10 @@ export async function executeBankTransfer(
     toCharacterId,
     balanceAfter,
   ]);
-  return { status: "committed", balance: balanceAfter, toCharacterId };
+  return {
+    status: "committed",
+    balance: balanceAfter,
+    toCharacterId,
+    toBalance: recipientAfter,
+  };
 }

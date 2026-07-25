@@ -64,6 +64,8 @@ export interface CreateSellOfferRequest {
   readonly totalPrice: number;
   readonly fee: number;
   readonly sources: ReadonlyArray<EscrowSource>;
+  /** Units drawn from the supply stash once `sources` run out. */
+  readonly stashTake: number;
 }
 
 export interface CreateBuyOfferRequest {
@@ -103,6 +105,8 @@ export type CreateOfferResult =
       readonly removedItemIds: ReadonlyArray<string>;
       /** Depots the escrowed rows came from (their revisions were bumped). */
       readonly sourceDepotIds: ReadonlyArray<number>;
+      /** The stash counter after a stash-sourced escrow, when one happened. */
+      readonly stashSet?: { readonly itemTypeId: number; readonly count: number };
       /** Carried-coin legs of the payment (spends and change), if any. */
       readonly mutation?: ItemMutation;
     }
@@ -121,6 +125,8 @@ export interface AcceptBuyOfferRequest {
   readonly sellerCharacterId: string;
   readonly amount: number;
   readonly sources: ReadonlyArray<EscrowSource>;
+  /** Units drawn from the supply stash once `sources` run out. */
+  readonly stashTake: number;
 }
 
 export type AcceptOfferResult =
@@ -142,6 +148,8 @@ export type AcceptOfferResult =
       readonly removedItemIds: ReadonlyArray<string>;
       /** Depots the sold rows came from (their revisions were bumped). */
       readonly sourceDepotIds: ReadonlyArray<number>;
+      /** The seller's stash counter after a stash-sourced fill, if any. */
+      readonly stashSet?: { readonly itemTypeId: number; readonly count: number };
       /** Carried-coin legs of the acceptor's payment, if any. */
       readonly mutation?: ItemMutation;
     }

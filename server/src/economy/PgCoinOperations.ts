@@ -94,8 +94,8 @@ export class PgCoinOperations {
 
   /**
    * Grants `count` units of a stackable type: tops up existing stacks, then
-   * creates new stacks in free backpack slots. Returns false when the slots
-   * run out; the caller must roll the whole transaction back.
+   * creates new stacks in free backpack slots (descending into nested bags).
+   * Returns how many units did not fit; 0 means all were granted.
    */
   grantStackable(
     rows: ReadonlyArray<OwnedItemRow>,
@@ -106,7 +106,7 @@ export class PgCoinOperations {
     after: Map<string, Item>,
     removedItemIds: ReadonlyArray<string>,
     backpack: BackpackSlots,
-  ): Promise<boolean> {
+  ): Promise<number> {
     return this.granter.grantStackable(
       rows,
       count,

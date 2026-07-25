@@ -8,7 +8,9 @@ import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import type { NpcTravelOffer } from "./DialogueGraph";
+import { evaluateDialogueConditions } from "./evaluateDialogueConditions";
 import type { NpcTravelStore } from "./NpcTravelStore";
+import { travelFareFor } from "./travelFareFor";
 
 const TRAVEL_EXHAUST_MS = 3_000;
 const DESTINATION_FALLBACK_RADIUS = 2;
@@ -49,6 +51,7 @@ export class TravelService {
     | "busy"
     | "exhausted"
     | "level-too-low"
+    | "not-allowed"
     | "pz-locked"
     | "unavailable" {
     const store = this.store;
@@ -60,6 +63,18 @@ export class TravelService {
     if (!this.inTalkRange(player, npc)) return "unavailable";
     if (offer.minimumLevel && player.level < offer.minimumLevel) {
       return "level-too-low";
+    }
+    // The gate is checked here, at confirmation, not when the route was
+    // listed: quest state can move between the two (charter rule 4).
+    if (
+      !evaluateDialogueConditions(
+        offer.conditions,
+        player,
+        session.account,
+        now,
+      )
+    ) {
+      return "not-allowed";
     }
     if (player.conditions.has("pz-lock")) return "pz-locked";
     if (now < (this.nextTravelAt.get(player.id) ?? 0)) return "exhausted";
@@ -77,6 +92,8 @@ export class TravelService {
       DESTINATION_FALLBACK_RADIUS,
     );
     if (!destination) return "unavailable";
+    // Server-owned fare, resolved now — the client supplies only the offer id.
+    const fare = travelFareFor(offer, player, session.account, now);
     const reservationId = `npc-travel:${player.id}:${npc.id}:${offer.id}`;
     if (!this.world.reservePosition(destination, reservationId)) {
       return "unavailable";
@@ -99,7 +116,7 @@ export class TravelService {
         player.id,
         version,
         destination,
-        offer.cost,
+        fare,
         npc.type.id,
         offer.id,
       ),

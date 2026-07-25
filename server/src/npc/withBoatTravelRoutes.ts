@@ -117,6 +117,8 @@ export function withBoatTravelRoutes(
       ...(offer.minimumLevel !== undefined
         ? { minimumLevel: offer.minimumLevel }
         : {}),
+      ...(offer.conditions ? { conditions: offer.conditions } : {}),
+      ...(offer.discounts ? { discounts: offer.discounts } : {}),
     }));
 
     result.set(definition.typeId, {

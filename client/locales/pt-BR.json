@@ -371,6 +371,7 @@
     "sellOffersFor": "Ofertas de venda de {{item}}",
     "buyOffersFor": "Ofertas de compra de {{item}}",
     "amount": "Quantidade",
+    "amountToTrade": "Quantidade de {{item}} a negociar",
     "piecePrice": "Preço Unitário",
     "totalPrice": "Preço Total",
     "endsAt": "Expira",

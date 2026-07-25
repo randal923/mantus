@@ -18,6 +18,7 @@ const EXECUTABLE_ACTIONS: ReadonlyArray<DialogueAction["kind"]> = [
   "promote",
   "shop",
   "bank",
+  "bank-keyword",
   "learn-spell",
   "hint",
 ];

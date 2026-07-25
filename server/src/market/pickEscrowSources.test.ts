@@ -19,9 +19,12 @@ const depotItem = (
   location: { kind: "depot", characterId: "char-1", depotId: 1, slot },
 });
 
-const cacheOf = (items: Item[]): DepotCache => ({
+const cacheOf = (
+  items: Item[],
+  stash: ReadonlyMap<number, number> = new Map(),
+): DepotCache => ({
   items,
-  stash: new Map(),
+  stash: new Map(stash),
   depotRevisions: new Map(),
   inboxRevision: 1,
   stashRevision: 1,
@@ -34,18 +37,51 @@ describe("pickEscrowSources", () => {
       depotItem("b", 675, 100, 1),
     ]);
 
-    const sources = pickEscrowSources(cache, 675, 150);
+    const plan = pickEscrowSources(cache, 675, 150);
 
-    expect(sources).toEqual([
-      { itemId: "a", itemRevision: 1, take: 100 },
-      { itemId: "b", itemRevision: 1, take: 50 },
-    ]);
+    expect(plan).toEqual({
+      sources: [
+        { itemId: "a", itemRevision: 1, take: 100 },
+        { itemId: "b", itemRevision: 1, take: 50 },
+      ],
+      stashTake: 0,
+    });
   });
 
-  it("returns null when depot stock cannot cover the amount", () => {
+  it("returns null when depot and stash stock cannot cover the amount", () => {
     const cache = cacheOf([depotItem("a", 675, 40, 0)]);
 
     expect(pickEscrowSources(cache, 675, 41)).toBeNull();
+  });
+
+  it("draws the shortfall from the stash", () => {
+    const cache = cacheOf(
+      [depotItem("a", 675, 40, 0)],
+      new Map([[675, 60]]),
+    );
+
+    expect(pickEscrowSources(cache, 675, 90)).toEqual({
+      sources: [{ itemId: "a", itemRevision: 1, take: 40 }],
+      stashTake: 50,
+    });
+  });
+
+  it("sells purely from the stash when no depot row qualifies", () => {
+    const cache = cacheOf([], new Map([[675, 60]]));
+
+    expect(pickEscrowSources(cache, 675, 25)).toEqual({
+      sources: [],
+      stashTake: 25,
+    });
+  });
+
+  it("counts stash stock as sellable", () => {
+    const cache = cacheOf(
+      [depotItem("a", 675, 40, 0)],
+      new Map([[675, 60]]),
+    );
+
+    expect(sellableDepotCounts(cache).get(675)).toBe(100);
   });
 
   it("skips worn items and container contents but sells from any depot", () => {
@@ -72,8 +108,8 @@ describe("pickEscrowSources", () => {
       child,
     ]);
 
-    const sources = pickEscrowSources(cache, 675, 10);
-    expect(sources).toEqual([
+    const plan = pickEscrowSources(cache, 675, 10);
+    expect(plan?.sources).toEqual([
       { itemId: "elsewhere", itemRevision: 1, take: 10 },
     ]);
     const counts = sellableDepotCounts(cache);
@@ -83,10 +119,10 @@ describe("pickEscrowSources", () => {
   it("never selects an item twice even when takes are small", () => {
     const cache = cacheOf([depotItem("a", 675, 100, 0)]);
 
-    const sources = pickEscrowSources(cache, 675, 100);
+    const plan = pickEscrowSources(cache, 675, 100);
 
-    expect(sources).toHaveLength(1);
-    const ids = new Set(sources?.map((source) => source.itemId));
-    expect(ids.size).toBe(sources?.length);
+    expect(plan?.sources).toHaveLength(1);
+    const ids = new Set(plan?.sources.map((source) => source.itemId));
+    expect(ids.size).toBe(plan?.sources.length);
   });
 });

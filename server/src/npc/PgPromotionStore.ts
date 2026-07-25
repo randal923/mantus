@@ -108,7 +108,7 @@ export class PgPromotionStore implements PromotionStore {
             typeId: PLATINUM_COIN_TYPE_ID,
           },
         ]) {
-          const granted = await coinOps.grantStackable(
+          const ungranted = await coinOps.grantStackable(
             grant.rows,
             grant.count,
             grant.typeId,
@@ -118,7 +118,9 @@ export class PgPromotionStore implements PromotionStore {
             removedItemIds,
             backpack,
           );
-          if (!granted) throw new Error("no backpack space for promotion change");
+          if (ungranted > 0) {
+            throw new Error("no backpack space for promotion change");
+          }
         }
       }
       if (bankPay > 0) {

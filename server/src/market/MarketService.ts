@@ -17,6 +17,7 @@ import { getAccountStatus } from "../getAccountStatus";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
+import type { SessionRegistry } from "../SessionRegistry";
 import { monotonicNow } from "../monotonicNow";
 import { marketCategoryOf } from "./marketCategoryOf";
 import { marketFeeOf } from "./marketFeeOf";
@@ -58,6 +59,7 @@ export class MarketService {
     private readonly catalog: ItemCatalog,
     private readonly depot: DepotService,
     private readonly store?: MarketStore,
+    private readonly registry?: SessionRegistry,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -382,14 +384,19 @@ export class MarketService {
     let commit: () => Promise<CreateOfferResult>;
     if (intent.side === "sell") {
       const cache = this.depot.cacheFor(characterId);
-      const sources = cache
+      const plan = cache
         ? pickEscrowSources(cache, intent.itemTypeId, intent.amount)
         : null;
-      if (!sources) {
+      if (!plan) {
         this.fail(session, "insufficient-items");
         return;
       }
-      commit = () => store.createSellOffer({ ...base, sources });
+      commit = () =>
+        store.createSellOffer({
+          ...base,
+          sources: plan.sources,
+          stashTake: plan.stashTake,
+        });
     } else {
       commit = () => store.createBuyOffer(base);
     }
@@ -414,10 +421,14 @@ export class MarketService {
             this.depot.applyCacheEvent(characterId, {
               upserts: result.depotUpserts,
               removedItemIds: result.removedItemIds,
-              bumps: result.sourceDepotIds.map((depotId) => ({
-                kind: "depot" as const,
-                depotId,
-              })),
+              bumps: [
+                ...result.sourceDepotIds.map((depotId) => ({
+                  kind: "depot" as const,
+                  depotId,
+                })),
+                ...(result.stashSet ? [{ kind: "stash" as const }] : []),
+              ],
+              ...(result.stashSet ? { stashSets: [result.stashSet] } : {}),
             });
           }
           session.send({
@@ -485,10 +496,10 @@ export class MarketService {
             return;
           }
           const cache = this.depot.cacheFor(characterId);
-          const sources = cache
+          const plan = cache
             ? pickEscrowSources(cache, offer.itemTypeId, intent.amount)
             : null;
-          if (!sources) {
+          if (!plan) {
             session.itemOperationPending = false;
             this.fail(session, "insufficient-items");
             return;
@@ -499,7 +510,8 @@ export class MarketService {
               offerId: intent.offerId,
               sellerCharacterId: characterId,
               amount: intent.amount,
-              sources,
+              sources: plan.sources,
+              stashTake: plan.stashTake,
             }),
           );
         });
@@ -541,16 +553,27 @@ export class MarketService {
             upserts: result.deliveredItems,
             bumps: [{ kind: "inbox" }],
           });
-          if (result.removedItemIds.length > 0 || result.depotUpserts.length > 0) {
+          if (
+            result.removedItemIds.length > 0 ||
+            result.depotUpserts.length > 0 ||
+            result.stashSet
+          ) {
             this.depot.applyCacheEvent(characterId, {
               upserts: result.depotUpserts,
               removedItemIds: result.removedItemIds,
-              bumps: result.sourceDepotIds.map((depotId) => ({
-                kind: "depot" as const,
-                depotId,
-              })),
+              bumps: [
+                ...result.sourceDepotIds.map((depotId) => ({
+                  kind: "depot" as const,
+                  depotId,
+                })),
+                ...(result.stashSet ? [{ kind: "stash" as const }] : []),
+              ],
+              ...(result.stashSet ? { stashSets: [result.stashSet] } : {}),
             });
           }
+          // The counterparty learns their offer filled without re-opening the
+          // market: their own balance and nothing else (charter rule 6).
+          this.notifyCounterparty(result.counterpartyCharacterId);
           const side = result.deliveredCharacterId === characterId ? "buy" : "sell";
           session.send({
             type: "market-transacted",
@@ -576,6 +599,33 @@ export class MarketService {
     );
     this.track(operation);
     this.items.trackExternalOperation(characterId, operation);
+  }
+
+  /**
+   * Pushes a fresh `bank-updated` to the counterparty's live session so a
+   * filled offer shows up immediately. Their own balance only — nothing about
+   * the acceptor, the offer, or the price travels with it.
+   */
+  private notifyCounterparty(counterpartyCharacterId: string): void {
+    const store = this.store;
+    const session = this.registry?.sessionFor(counterpartyCharacterId);
+    if (!store || !session) return;
+    const operation = store
+      .openData(counterpartyCharacterId)
+      .then(({ balance }) => {
+        this.outcomes.push(() => {
+          if (this.registry?.sessionFor(counterpartyCharacterId) !== session) {
+            return;
+          }
+          session.send({ type: "bank-updated", balance });
+        });
+      })
+      .catch((cause: unknown) => {
+        // A missed notification is cosmetic: the fill is already committed and
+        // the next market/bank open shows the true balance.
+        this.warn(counterpartyCharacterId, cause);
+      });
+    this.track(operation);
   }
 
   private cancelOffer(

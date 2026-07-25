@@ -107,6 +107,15 @@ function parseEntries(value: unknown, shopId: string): ShopEntry[] {
       65_535,
     );
     const stock = optionalInteger(row.stock, "shop entry stock", 1, 1_000_000_000);
+    const restockIntervalSeconds = optionalInteger(
+      row.restockIntervalSeconds,
+      "shop entry restock interval",
+      60,
+      2_592_000,
+    );
+    if (restockIntervalSeconds !== undefined && stock === undefined) {
+      throw new Error(`shop ${shopId} offer ${offerId} restocks without stock`);
+    }
     const minimumLevel = optionalInteger(
       row.minimumLevel,
       "shop entry minimum level",
@@ -123,6 +132,9 @@ function parseEntries(value: unknown, shopId: string): ShopEntry[] {
       maximumAmount,
       ...(subtype === undefined ? {} : { subtype }),
       ...(stock === undefined ? {} : { stock }),
+      ...(restockIntervalSeconds === undefined
+        ? {}
+        : { restockIntervalSeconds }),
       ...(minimumLevel === undefined ? {} : { minimumLevel }),
       ...(vocations === undefined ? {} : { vocations }),
       ...(availability === undefined ? {} : { availability }),

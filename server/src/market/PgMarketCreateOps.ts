@@ -31,6 +31,8 @@ import { reduceItemCountUpdate } from "./sql/reduceItemCountUpdate";
 import { randomUUID } from "node:crypto";
 import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
+import { drawFromStash } from "./drawFromStash";
+import { insertStashEscrowAudit } from "./sql/insertStashEscrowAudit";
 import { spendMarketFunds } from "./spendMarketFunds";
 
 type Rollback = TransactionRollback<CreateOfferResult>;
@@ -92,17 +94,40 @@ export class PgMarketCreateOps {
         coveredAmount += source.take;
         lockedRows.push({ row, take: source.take });
       }
-      if (coveredAmount !== request.amount) {
+      if (coveredAmount + request.stashTake !== request.amount) {
         throw this.fail("insufficient-items");
       }
 
+      // Whatever the depot rows did not cover comes out of the stash counter,
+      // re-read and decremented here, not from the memory plan.
+      const drawn = request.stashTake > 0
+        ? await drawFromStash(
+            client,
+            request.characterId,
+            request.itemTypeId,
+            request.stashTake,
+            type.maxCount,
+          )
+        : null;
+      if (request.stashTake > 0 && !drawn) {
+        throw this.fail("insufficient-items");
+      }
+      const stashRowCount = drawn?.counts.length ?? 0;
+      if (
+        existingEscrow + lockedRows.length + stashRowCount >
+        MARKET_LIMITS.maxEscrowItemsPerCharacter
+      ) {
+        throw this.fail("escrow-full");
+      }
       const slots = await client.query<{ slot: number }>(marketFreeSlotsQuery, [
         request.characterId,
         "market-escrow",
         MARKET_LIMITS.maxEscrowItemsPerCharacter,
-        lockedRows.length,
+        lockedRows.length + stashRowCount,
       ]);
-      if (slots.rows.length < lockedRows.length) throw this.fail("escrow-full");
+      if (slots.rows.length < lockedRows.length + stashRowCount) {
+        throw this.fail("escrow-full");
+      }
 
       const offer = await client.query<{ id: string; expires_at: Date }>(
         insertMarketOfferQuery,
@@ -140,6 +165,32 @@ export class PgMarketCreateOps {
           offerRow.id,
         ]);
       }
+      for (const [index, count] of (drawn?.counts ?? []).entries()) {
+        const slot = slots.rows[lockedRows.length + index]?.slot;
+        if (slot === undefined) throw new Error("market escrow slot is missing");
+        const created = await client.query<DepotItemRow>(
+          insertSlottedItemQuery,
+          [
+            randomUUID(),
+            request.itemTypeId,
+            count,
+            "market-escrow",
+            request.characterId,
+            slot,
+          ],
+        );
+        const minted = requireItem(created.rows[0]);
+        await client.query(insertStashEscrowAudit, [
+          request.characterId,
+          minted.id,
+          request.itemTypeId,
+          count,
+        ]);
+        await client.query(insertMarketEscrowItemQuery, [
+          minted.id,
+          offerRow.id,
+        ]);
+      }
       const sourceDepotIds = [
         ...new Set(
           lockedRows.flatMap((locked) =>
@@ -163,7 +214,8 @@ export class PgMarketCreateOps {
         fee: request.fee,
         feeFromCarried: payment.carriedPaid,
         feeFromBank: payment.bankPaid,
-        escrowItems: lockedRows.length,
+        escrowItems: lockedRows.length + stashRowCount,
+        stashItems: request.stashTake,
       });
       return {
         status: "committed",
@@ -173,6 +225,14 @@ export class PgMarketCreateOps {
         depotUpserts,
         removedItemIds,
         sourceDepotIds,
+        ...(drawn
+          ? {
+              stashSet: {
+                itemTypeId: request.itemTypeId,
+                count: drawn.remaining,
+              },
+            }
+          : {}),
         ...(payment.mutation ? { mutation: payment.mutation } : {}),
       };
     });

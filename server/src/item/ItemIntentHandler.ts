@@ -69,11 +69,21 @@ export class ItemIntentHandler {
   private housePolicy:
     | ((characterId: string, position: Position) => boolean)
     | null = null;
+  /** Rebuilds a poisoned character's caches from the DB; unset ⇒ disconnect. */
+  private persistResync:
+    | ((session: Session, characterId: string) => void)
+    | null = null;
 
   setHousePolicy(
     policy: (characterId: string, position: Position) => boolean,
   ): void {
     this.housePolicy = policy;
+  }
+
+  setPersistResync(
+    resync: (session: Session, characterId: string) => void,
+  ): void {
+    this.persistResync = resync;
   }
 
   constructor(
@@ -445,7 +455,7 @@ export class ItemIntentHandler {
         this.poisonedPersistCharacters.add(actorCharacterId);
         const reason = cause instanceof Error ? cause.message : "unknown";
         console.error(
-          `potion persist failed for character ${actorCharacterId}: ${reason}; disconnecting to resync from DB`,
+          `potion persist failed for character ${actorCharacterId}: ${reason}`,
         );
         this.outcomes.push((failedAt) => {
           session.potionPersistPending = false;
@@ -454,7 +464,7 @@ export class ItemIntentHandler {
           if (session.playerId === actorCharacterId) {
             session.sendError("combat-action-failed");
           }
-          session.terminate();
+          this.recoverFromPersistFailure(session, actorCharacterId);
         });
       });
     this.persistChain = settled;
@@ -563,8 +573,9 @@ export class ItemIntentHandler {
   /**
    * Queues the DB write behind an already-applied memory mutation (depot or
    * carried or world). Writes run strictly in enqueue order; a failed write
-   * poisons the character, skips their remaining writes, and disconnects the
-   * session so the next login reloads authoritative state from the DB.
+   * poisons the character and skips their remaining writes, then hands the
+   * session to the resync path, which rebuilds their caches from committed DB
+   * state in place (or disconnects when no resync is wired).
    */
   enqueuePersist(
     session: Session,
@@ -599,10 +610,8 @@ export class ItemIntentHandler {
           const reason = cause instanceof Error ? cause.message : "unknown";
           this.outcomes.push(() => {
             this.finishPersist(session);
-            console.error(
-              `item persist failed for ${characterId}: ${reason}; disconnecting to resync from DB`,
-            );
-            session.terminate();
+            console.error(`item persist failed for ${characterId}: ${reason}`);
+            this.recoverFromPersistFailure(session, characterId);
           });
         },
       );
@@ -631,6 +640,22 @@ export class ItemIntentHandler {
 
   isPersistPoisoned(characterId: string): boolean {
     return this.poisonedPersistCharacters.has(characterId);
+  }
+
+  /**
+   * The character stays poisoned until the resync re-attaches committed state,
+   * so no queued write can commit the diverged memory in the meantime.
+   */
+  private recoverFromPersistFailure(
+    session: Session,
+    characterId: string,
+  ): void {
+    const resync = this.persistResync;
+    if (!resync) {
+      session.terminate();
+      return;
+    }
+    resync(session, characterId);
   }
 
   clearPersistState(characterId: string): void {

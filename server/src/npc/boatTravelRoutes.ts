@@ -6,6 +6,13 @@ interface BoatTravelRouteOffer extends NpcTravelOffer {
   readonly response?: string;
 }
 
+/**
+ * Gated routes (`conditions`) and rank discounts (`discounts`) are carried
+ * straight through to the offer; `TravelService` evaluates both at
+ * confirmation execution time, so listing a route never authorizes it and a
+ * quoted fare is never the charged fare.
+ */
+
 interface BoatTravelRouteDefinition {
   readonly typeId: string;
   readonly sourcePath: string;

@@ -19,6 +19,7 @@ import { getVocation } from "../progression/getVocation";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { Session } from "../Session";
 import type { SpawnManager } from "../spawn/SpawnManager";
+import type { StoreOperatorService } from "../store/StoreOperatorService";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 
@@ -45,6 +46,7 @@ export class GmCommandHandler {
     private readonly items: ItemIntentHandler,
     private readonly spawns: SpawnManager | null,
     private readonly moderation: ModerationService | null,
+    private readonly storeOperator: StoreOperatorService | null = null,
   ) {}
 
   /** Returns true when the text was a slash command and has been consumed. */
@@ -112,14 +114,47 @@ export class GmCommandHandler {
       case "note":
         this.note(session, player, args);
         break;
+      case "coins":
+        this.grantCoins(session, player, args);
+        break;
+      case "storerefund":
+        this.refundStorePurchase(session, player, args);
+        break;
       default:
         this.reply(
           session,
           false,
-          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note",
+          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note, /coins <amount>, /storerefund <ledgerEntryId>",
         );
     }
     return true;
+  }
+
+  /** Credits the operator's own account; never an id from the message. */
+  private grantCoins(session: Session, player: Player, args: string[]): void {
+    const operator = this.storeOperator;
+    if (!operator) {
+      this.reply(session, false, "The store is unavailable.");
+      return;
+    }
+    operator.grant(session, player.id, Number(args[0]), (target, ok, text) =>
+      this.reply(target, ok, text),
+    );
+  }
+
+  private refundStorePurchase(
+    session: Session,
+    player: Player,
+    args: string[],
+  ): void {
+    const operator = this.storeOperator;
+    if (!operator) {
+      this.reply(session, false, "The store is unavailable.");
+      return;
+    }
+    operator.refund(session, player.id, args[0] ?? "", (target, ok, text) =>
+      this.reply(target, ok, text),
+    );
   }
 
   private mute(session: Session, player: Player, args: string[]): void {

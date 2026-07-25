@@ -7,6 +7,7 @@ import { DevTokenVerifier } from "./DevTokenVerifier";
 import { SupabaseTokenVerifier } from "./SupabaseTokenVerifier";
 import { loadItemCatalog } from "./item/loadItemCatalog";
 import { PgItemStore } from "./item/PgItemStore";
+import { CurrencyReconciler } from "./economy/CurrencyReconciler";
 import { PgBankStore } from "./economy/PgBankStore";
 import { PgShopStore } from "./economy/PgShopStore";
 import { PgNpcTravelStore } from "./npc/PgNpcTravelStore";
@@ -95,7 +96,7 @@ const bestiary = new PgBestiaryStore(pool);
 const wheel = new PgWheelStore(pool);
 const gems = new PgGemStore(pool);
 const moderation = new PgModerationStore(pool);
-const store = new PgMantusStore(pool);
+const store = new PgMantusStore(pool, itemCatalog);
 const worldItemDeltas =
   serverConfig.map.source === "data"
     ? await new WorldItemSeeder(
@@ -129,6 +130,7 @@ const server = new GameServer(serverConfig, {
   gems,
   moderation,
   store,
+  currencyReconciler: new CurrencyReconciler(pool),
   worldItemDeltas,
 });
 server.start();

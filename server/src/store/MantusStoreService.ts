@@ -1,9 +1,12 @@
+import { randomUUID } from "node:crypto";
 import {
   STORE_LIMITS,
   type StoreActionFailedReason,
+  type StoreHistoryMessage,
   type StoreOpenMessage,
   type StorePurchaseMessage,
 } from "@tibia/protocol";
+import type { DepotService } from "../depot/DepotService";
 import { getAccountStatus } from "../getAccountStatus";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -11,7 +14,7 @@ import type { World } from "../World";
 import { MANTUS_STORE_CATEGORIES } from "./MANTUS_STORE_CATEGORIES";
 import type { MantusStoreStore } from "./MantusStoreStore";
 
-type StoreIntent = StoreOpenMessage | StorePurchaseMessage;
+type StoreIntent = StoreOpenMessage | StorePurchaseMessage | StoreHistoryMessage;
 
 export class MantusStoreService {
   private readonly outcomes: Array<(now: number) => void> = [];
@@ -22,6 +25,8 @@ export class MantusStoreService {
     private readonly world: World,
     private readonly registry: SessionRegistry,
     private readonly store?: MantusStoreStore,
+    /** Injects a delivered product into the buyer's live inbox cache. */
+    private readonly depot?: DepotService,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -52,6 +57,10 @@ export class MantusStoreService {
       });
       return;
     }
+    if (intent.type === "store-history") {
+      this.sendHistory(session, account.id, characterId, now);
+      return;
+    }
     const readyAt = this.cooldownBySession.get(session.id) ?? 0;
     if (now < readyAt || session.storeOperationPending) {
       this.fail(session, "rate-limited");
@@ -79,6 +88,7 @@ export class MantusStoreService {
         accountId: account.id,
         characterId,
         offer,
+        requestId: randomUUID(),
       })
       .then((result) => {
         this.outcomes.push((committedAt) => {
@@ -98,16 +108,22 @@ export class MantusStoreService {
             mantusCoins: result.balance,
             premiumUntil: result.premiumUntil,
           };
-          this.world
-            .getPlayer(characterId)
-            ?.setPremiumUntil(result.premiumUntil);
+          if (result.premiumUntil) {
+            this.world
+              .getPlayer(characterId)
+              ?.setPremiumUntil(result.premiumUntil);
+          }
+          if (result.deliveredItem) {
+            this.depot?.injectDelivery(characterId, result.deliveredItem);
+          }
           const status = getAccountStatus(session.account, committedAt);
           session.send({
             type: "store-purchase-completed",
             offerId: offer.id,
             balance: result.balance,
-            accountTier: "premium",
+            accountTier: status.accountTier,
             premiumDaysRemaining: status.premiumDaysRemaining,
+            ...(result.deliveredItem ? { deliveredToInbox: true } : {}),
           });
         });
       })
@@ -116,6 +132,57 @@ export class MantusStoreService {
         console.warn(`store purchase failed for account ${account.id}: ${reason}`);
         this.outcomes.push(() => {
           session.storeOperationPending = false;
+          if (this.registry.sessionFor(characterId) === session) {
+            this.fail(session, "failed");
+          }
+        });
+      });
+    this.pendingOperations.add(operation);
+    void operation.finally(() => this.pendingOperations.delete(operation));
+  }
+
+  private sendHistory(
+    session: Session,
+    accountId: string,
+    characterId: string,
+    now: number,
+  ): void {
+    const store = this.store;
+    if (!store) {
+      this.fail(session, "unavailable");
+      return;
+    }
+    const readyAt = this.cooldownBySession.get(session.id) ?? 0;
+    if (now < readyAt) {
+      this.fail(session, "rate-limited");
+      return;
+    }
+    this.cooldownBySession.set(
+      session.id,
+      now + STORE_LIMITS.actionCooldownMs,
+    );
+    // The account is the session's own, never one named in the message.
+    const operation = store
+      .history(accountId, STORE_LIMITS.maxHistoryEntries)
+      .then((entries) => {
+        this.outcomes.push(() => {
+          if (
+            this.registry.sessionFor(characterId) !== session ||
+            !session.account
+          ) {
+            return;
+          }
+          session.send({
+            type: "store-history-state",
+            balance: session.account.mantusCoins,
+            entries: [...entries],
+          });
+        });
+      })
+      .catch((cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.warn(`store history failed for account ${accountId}: ${reason}`);
+        this.outcomes.push(() => {
           if (this.registry.sessionFor(characterId) === session) {
             this.fail(session, "failed");
           }

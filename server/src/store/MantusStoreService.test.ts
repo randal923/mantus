@@ -11,6 +11,15 @@ import type { MantusStoreStore } from "./MantusStoreStore";
 
 const CHARACTER_ID = "00000000-0000-4000-8000-000000000001";
 
+const storeWith = (
+  purchase: MantusStoreStore["purchase"],
+): MantusStoreStore => ({
+  purchase,
+  grant: vi.fn(),
+  refund: vi.fn(),
+  history: vi.fn(async () => []),
+});
+
 describe("MantusStoreService", () => {
   it("serves the server catalog and resolves price from the offer id", async () => {
     const world = new World(
@@ -55,8 +64,9 @@ describe("MantusStoreService", () => {
       status: "committed",
       balance: 250,
       premiumUntil: new Date(30 * 24 * 60 * 60 * 1_000),
+      deliveredItem: null,
     });
-    const service = new MantusStoreService(world, registry, { purchase });
+    const service = new MantusStoreService(world, registry, storeWith(purchase));
 
     service.handle(session, { type: "store-open" }, 0);
     const state = sent.at(-1);
@@ -90,6 +100,8 @@ describe("MantusStoreService", () => {
         premiumDays: 30,
         featured: true,
       },
+      // Server-minted idempotency key; a retried purchase reuses it.
+      requestId: expect.any(String),
     });
     expect(session.account?.mantusCoins).toBe(250);
     expect(player.accountTierAt(0)).toBe("premium");
@@ -136,7 +148,7 @@ describe("MantusStoreService", () => {
       sessionFor: () => session,
     } as unknown as SessionRegistry;
     const purchase = vi.fn<MantusStoreStore["purchase"]>();
-    const service = new MantusStoreService(world, registry, { purchase });
+    const service = new MantusStoreService(world, registry, storeWith(purchase));
 
     service.handle(
       session,

@@ -11,6 +11,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { ItemStore } from "../item/ItemStore";
 import { projectItem } from "../item/projectItem";
 import type { Session } from "../Session";
+import type { DepotService } from "../depot/DepotService";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import { planTradeReservation } from "./planTradeReservation";
@@ -45,6 +46,8 @@ export class TradeService {
     private readonly itemStore: ItemStore,
     private readonly catalog: ItemCatalog,
     private readonly store?: TradeStore,
+    /** Injects an inbox-restored reservation into the owner's live cache. */
+    private readonly depot?: DepotService,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -148,12 +151,11 @@ export class TradeService {
               (entry) => entry.item,
             );
             if (!this.restoreSnapshot(characterId, snapshot, now)) {
-              // No space to restore; keep trading blocked so the occupied
-              // reservation slot cannot collide with a fresh offer.
+              // Nowhere to carry it: fall back to their own inbox rather than
+              // leaving the reservation stuck and trading blocked. Keep the
+              // block until that delivery commits.
               this.recoveryPending.add(characterId);
-              console.warn(
-                `trade recovery for ${characterId} found no free inventory slot; retrying at next login`,
-              );
+              this.restoreToInbox(characterId, root.id);
             }
           }
         });
@@ -403,6 +405,35 @@ export class TradeService {
   private restoreSide(side: TradeSide, now: number): void {
     if (!side.offer) return;
     this.restoreSnapshot(side.characterId, side.offer, now);
+  }
+
+  /**
+   * Last-resort return path for a reservation its owner cannot carry. The
+   * store guards on the row still being reserved, so a recovery that runs
+   * twice delivers once. Trading stays blocked until it commits.
+   */
+  private restoreToInbox(characterId: string, itemId: string): void {
+    const store = this.store;
+    if (!store) return;
+    const operation = store.restoreToInbox(characterId, itemId).then(
+      (result) => {
+        this.outcomes.push(() => {
+          if (result.status === "inbox-full") {
+            console.warn(
+              `trade recovery for ${characterId} could not reach carried or inbox space; retrying at next login`,
+            );
+            return;
+          }
+          this.recoveryPending.delete(characterId);
+          if (result.status !== "committed") return;
+          this.depot?.injectDelivery(characterId, result.item);
+        });
+      },
+      (cause: unknown) => {
+        this.warn(characterId, cause);
+      },
+    );
+    this.track(operation);
   }
 
   private restoreSnapshot(

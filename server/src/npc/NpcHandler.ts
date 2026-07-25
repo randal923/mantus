@@ -109,6 +109,7 @@ export class NpcHandler {
           conversation,
           node,
           now,
+          text,
         );
       }
     }

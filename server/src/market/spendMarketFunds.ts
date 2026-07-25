@@ -99,7 +99,7 @@ export async function spendMarketFunds(
     const backpack = await coinOps.lockBackpackSlots();
     if (!backpack) return { status: "no-space" };
     for (const grant of changeGrants) {
-      const granted = await coinOps.grantStackable(
+      const ungranted = await coinOps.grantStackable(
         grant.rows,
         grant.count,
         grant.typeId,
@@ -109,7 +109,7 @@ export async function spendMarketFunds(
         removedItemIds,
         backpack,
       );
-      if (!granted) return { status: "no-space" };
+      if (ungranted > 0) return { status: "no-space" };
     }
   }
   return { status: "ok", carriedPaid, bankPaid, after, removedItemIds };

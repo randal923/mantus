@@ -1,17 +1,27 @@
 import type { DepotCache } from "../depot/DepotCache";
 import type { EscrowSource } from "./MarketStore";
 
+export interface EscrowPlan {
+  /** Pristine depot rows, split at most on the last one. */
+  readonly sources: ReadonlyArray<EscrowSource>;
+  /** Units the stash covers once the depot rows run out. */
+  readonly stashTake: number;
+}
+
 /**
- * Chooses pristine depot rows (empty attributes, no contained items) from any
- * of the character's depots to cover `amount`, splitting at most the last
- * row. Pure memory-side planning; the store re-verifies every row inside the
- * transaction at execution time.
+ * Chooses stock to cover `amount`: pristine depot rows (empty attributes, no
+ * contained items) from any of the character's depots first, then the supply
+ * stash for whatever is left. Stashed stock is pristine by construction —
+ * only attribute-free stowable items can enter it.
+ *
+ * Pure memory-side planning; the store re-verifies every row and re-reads the
+ * stash counter inside the transaction at execution time.
  */
 export function pickEscrowSources(
   cache: DepotCache,
   itemTypeId: number,
   amount: number,
-): ReadonlyArray<EscrowSource> | null {
+): EscrowPlan | null {
   const parentIds = new Set<string>();
   for (const item of cache.items) {
     if (item.location.kind === "container" || item.location.kind === "corpse") {
@@ -35,5 +45,8 @@ export function pickEscrowSources(
     sources.push({ itemId: item.id, itemRevision: item.version, take });
     remaining -= take;
   }
-  return remaining > 0 ? null : sources;
+  if (remaining <= 0) return { sources, stashTake: 0 };
+  const stashed = cache.stash.get(itemTypeId) ?? 0;
+  if (stashed < remaining) return null;
+  return { sources, stashTake: remaining };
 }

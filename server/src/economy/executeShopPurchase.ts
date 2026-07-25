@@ -110,7 +110,7 @@ export async function executeShopPurchase(
     },
   ];
   for (const grant of changeGrants) {
-    const granted = await coinOps.grantStackable(
+    const ungranted = await coinOps.grantStackable(
       grant.rows,
       grant.count,
       grant.typeId,
@@ -120,7 +120,7 @@ export async function executeShopPurchase(
       removedItemIds,
       backpack,
     );
-    if (!granted) {
+    if (ungranted > 0) {
       throw new TransactionRollback<ShopPurchaseResult>({
         status: "no-space",
       });
@@ -131,7 +131,7 @@ export async function executeShopPurchase(
     .rowsOfType(owned, request.itemTypeId)
     .filter((row) => ownedRowHasAttributes(row, itemAttributes));
   const granted = request.stackable
-    ? await coinOps.grantStackable(
+    ? (await coinOps.grantStackable(
         matchingRows,
         request.amount,
         request.itemTypeId,
@@ -140,7 +140,7 @@ export async function executeShopPurchase(
         after,
         removedItemIds,
         backpack,
-      )
+      )) === 0
     : await coinOps.grantSingles(
         request.amount,
         request.itemTypeId,

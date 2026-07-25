@@ -2,33 +2,36 @@
 
 Part of [Todo 12 — Economy: shops, banking, depot, trade, and market](todo-12.md).
 
-## Why
-The bank core (balances, ledger, nonnegative invariants, all four exploit tests) shipped, but several Canary parity flows and UX behaviors are missing or accepted as limitations, and `BankService` carries duplicated helpers that should be deduped.
+The live recipient push, the `deposit`/`withdraw` free-text keywords, the
+nested-bag withdrawal precheck and the helper dedup shipped 2026-07-25 — see
+the [completed log](completed/implementation-feature-45-completed.md). This
+file tracks only what is still open.
 
 ## Remaining work
-- Canary free-text keyword flows not implemented: "deposit 500" in chat, `change gold/...` conversions. The panel via the NPC `bank` action covers the same operations, so this is parity, not capability.
-- Guild bank absent (needs guilds).
-- Online transfer recipient is not notified live — fix by pushing `bank-updated` to the recipient session on commit.
-- `minTownIdToBankTransferFromMain` restriction not implemented (only one effective town exists today).
-- Withdrawn coins land in loose `inventory` slots instead of the backpack.
-- NPC travel fares have no bank fallback (also tracked as Feature 42).
-- Refactor: `BankService` keeps private copies of `COIN_STACK_LIMIT`, `countCarried`, and `inTalkRange` (lines 29/252/274) duplicating `coinStackLimit.ts`, `countCarriedCoins.ts`, and `inNpcTalkRange.ts` — mechanical swap guarded by `BankService.test.ts`.
 
-## Implementation
-- Live notify: on commit in `server/src/economy/executeBankTransfer.ts` / `server/src/economy/BankService.ts`, push the existing `bank-updated` projection to the recipient's online session — own balance only, nothing about the sender beyond what the transfer already reveals (charter rule 6).
-- Keyword flows: hook NPC dialogue (old todo 10b lane) into existing `BankService` intents; the server re-validates amount/range at execution time, and every balance change keeps the shipped one-SERIALIZABLE-transaction ledger + `audit_log` coupling.
-- Travel bank fallback: mirror `server/src/market/spendMarketFunds.ts` — carried coins first, bank remainder, in the same transaction with ledger + audit.
-- Backpack-destination withdrawals: reuse the shop buy-into-backpack destination planning from Feature 46.
-- Helper dedup: mechanical swap in `BankService.ts` to the shared `coinStackLimit.ts`, `countCarriedCoins.ts`, `inNpcTalkRange.ts` modules; `BankService.test.ts` guards behavior.
+- **`change gold` / `change platinum` conversions.** Canary lets a banker
+  convert carried denominations ("change 100 gold" → 1 platinum, and back).
+  This touches no bank balance at all — it is a pure carried-coin transform —
+  so it needs its own store operation rather than reusing deposit/withdraw:
+  a `BankStore.changeMoney` running `destroyItems` + `grantStackable` for the
+  two denominations in one SERIALIZABLE transaction, with an `audit_log` row
+  recording both legs. The dialogue side is a third branch in
+  `server/src/npc/withBankKeywords.ts` plus a `bank-keyword` operation value;
+  the amount parser already exists. Conservation test: carried worth before ==
+  carried worth after.
+- **Guild bank.** Needs guild-owned balances and an authorization model on top
+  of the shipped guild ranks.
+- **`minTownIdToBankTransferFromMain`.** Only one effective town exists today,
+  so the restriction has nothing to gate.
 
 ## Tests
-- Live-notify push carries only the recipient's own balance.
-- Keyword-flow amounts are integer-validated and bounds-checked server-side; forged/oversized amounts rejected.
-- Travel fare fallback conserves currency (carried + bank before == after + fare) under concurrency, single transaction.
-- `BankService.test.ts` stays green across the helper-dedup refactor.
+
+- Change conversions conserve carried worth exactly, under concurrency, in one
+  transaction.
+- Guild-bank withdrawals are authorized against the session's own guild rank,
+  never a guild id from the message body.
 
 ## Dependencies
+
 - Guilds (Feature 58 — guild bank).
 - Multi-town support (for `minTownIdToBankTransferFromMain`).
-- Feature 46 (backpack destination logic).
-- Feature 42 (travel bank fallback is the NPC-side twin of this work).

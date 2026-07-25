@@ -40,10 +40,24 @@ export interface ShopSaleRequest {
   readonly subtype?: ShopItemSubtype;
 }
 
+/** One finite-stock offer's durable refill schedule, owned by the catalog. */
+export interface ShopRestockSchedule {
+  readonly shopId: string;
+  readonly offerId: string;
+  readonly stock: number;
+  readonly restockIntervalSeconds?: number;
+}
+
 export interface ShopStore {
   purchase(
     characterId: string,
     request: ShopPurchaseRequest,
   ): Promise<ShopPurchaseResult>;
   sell(characterId: string, request: ShopSaleRequest): Promise<ShopSaleResult>;
+  /** Reconciles the durable stock rows with the catalog at startup. */
+  seedRestockSchedules?(
+    schedules: ReadonlyArray<ShopRestockSchedule>,
+  ): Promise<void>;
+  /** Refills every offer past its deadline; returns how many rows changed. */
+  restockDueOffers?(): Promise<number>;
 }

@@ -64,6 +64,16 @@ export type DialogueAction =
       readonly kind: "hint";
       readonly storageKey: string;
       readonly hints: ReadonlyArray<ReadonlyArray<string>>;
+    }
+  | {
+      /**
+       * Canary's free-text money keywords ("deposit 500", "withdraw 100").
+       * The amount is read from the player's own line, so it is untrusted
+       * input: it is parsed, bounds-checked, and then re-validated by the
+       * same `BankService` path the panel uses.
+       */
+      readonly kind: "bank-keyword";
+      readonly operation: "deposit" | "withdraw";
     };
 
 export interface DialogueNode {
@@ -99,6 +109,23 @@ export interface NpcTravelOffer {
     readonly destination: Position;
   };
   readonly minimumLevel?: number;
+  /**
+   * Access gate (quest storage, level, premium). Evaluated when the player
+   * confirms, never when the route was listed — state can move between the
+   * two (charter rule 4). Keys are server-side quest paths and never reach a
+   * client: a gated route the player cannot take is simply refused.
+   */
+  readonly conditions?: ReadonlyArray<DialogueCondition>;
+  /**
+   * Server-owned fare reductions (Postman ranks and friends). The first entry
+   * whose conditions hold sets the fare; the client never supplies a price.
+   */
+  readonly discounts?: ReadonlyArray<TravelDiscount>;
+}
+
+export interface TravelDiscount {
+  readonly conditions: ReadonlyArray<DialogueCondition>;
+  readonly cost: number;
 }
 
 export interface DialogueGraph {

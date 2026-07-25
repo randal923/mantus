@@ -301,7 +301,11 @@ export class ShopService {
     player: Player,
     operation: {
       run: () => Promise<
-        | { status: "committed"; mutation: ItemMutation }
+        | {
+            status: "committed";
+            mutation: ItemMutation;
+            bankCredited?: number;
+          }
         | { status: Exclude<ShopActionFailedReason, never> }
       >;
       kind: "purchase" | "sale";
@@ -338,6 +342,9 @@ export class ShopService {
             name: operation.name,
             amount: operation.amount,
             totalPrice: operation.totalPrice,
+            ...(result.bankCredited
+              ? { bankCredited: result.bankCredited }
+              : {}),
           });
         });
       },

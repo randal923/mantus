@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { DepotLocation, Position } from "@tibia/protocol";
+import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
@@ -68,6 +69,33 @@ export class DepotService {
   detachCharacter(characterId: string): void {
     this.caches.detach(characterId);
     this.items.clearPersistState(characterId);
+  }
+
+  /**
+   * Injects an already-committed inbox delivery into the recipient's live
+   * cache. Buffered when they are mid-login; id-keyed, so replaying a delivery
+   * the load already saw is a no-op.
+   */
+  injectDelivery(characterId: string, item: Item): void {
+    this.caches.applyExternal(characterId, {
+      upserts: [item],
+      bumps: [{ kind: "inbox" }],
+    });
+  }
+
+  /**
+   * Drops an open depot/mailbox view after a cache resync so the client
+   * discards the page it was showing and re-opens against rebuilt state.
+   */
+  closeStorageView(session: Session): void {
+    const access = this.tracker.get(session);
+    if (!access) return;
+    this.tracker.detach(session);
+    if (access.kind === "depot") {
+      failDepot(session, "stale");
+      return;
+    }
+    failMail(session, "failed");
   }
 
   handleMapUse(session: Session, position: Position): boolean {

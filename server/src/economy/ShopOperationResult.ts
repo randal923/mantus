@@ -12,6 +12,11 @@ export type ShopPurchaseResult =
   | { status: "no-space" };
 
 export type ShopSaleResult =
-  | { status: "committed"; mutation: ItemMutation }
+  | {
+      status: "committed";
+      mutation: ItemMutation;
+      /** Proceeds that did not fit in the backpack and went to the bank. */
+      bankCredited: number;
+    }
   | { status: "not-owned" }
   | { status: "no-space" };
