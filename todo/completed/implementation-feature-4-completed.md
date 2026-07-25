@@ -58,3 +58,50 @@ Features 61-64 (house/zone ownership for `requires-content-action` sources).
 entries are correctly disabled (no reachable/valid destination) but each still
 needs individual review before the ledger can assert zero silently-unsupported
 map behaviors. Lower the ceilings in this test as those features land.
+
+---
+
+## 2026-07-25 — Hole classification resolved; ceilings lowered
+
+**Problem.** The largest disabled bucket was not a content gap at all. 3,439
+of the 3,554 disabled world actions were `rope-or-shovel` entries produced by a
+`name.includes("hole")` match in the converter, which swept in every "lava
+hole", "tree hole", "small hole" and even "ornate door with a keyhole" on the
+map. The audit read as 3,554 unsupported map behaviors when the real number was
+two orders of magnitude smaller.
+
+**What changed.** Feature 51 replaced the name match with Canary's pinned
+`holeId` table and implemented the rope-through-hole pull, so those placements
+became working `rope-hole` actions instead of disabled metadata — see
+[implementation-feature-51-completed.md](implementation-feature-51-completed.md).
+Two further classification fixes landed here:
+
+- Actions disabled purely because the floor they reach is outside the map now
+  say so (`no-floor-above` at z0, `no-floor-below` at z15) instead of carrying
+  no reason at all. Nine entries were previously unlabelled.
+- `mapParityCeiling.test.ts` gained a third gate: **every** disabled action must
+  name an audited reason, with a per-reason ceiling. An unlabelled entry, or a
+  new reason category, now fails the test the same way a new kind does.
+
+**Result.** Disabled world actions 3,554 → 348: dropdown 82, rope-hole 233,
+ladder 20, rope-spot 13. By reason: blocked-destination 207, missing-destination
+74, no-floor-below 53, duplicate-action 9, requires-content-action 4,
+no-floor-above 1. Unresolved floor transitions are unchanged at 5,557 — nothing
+in this pass touched step-transition classification.
+
+**Files touched.** `server/src/mapParityCeiling.test.ts`, `tools/convertOtbm.mjs`,
+`content/source-manifest.json`, regenerated `server/data/otservbr.*`.
+
+**Verification.** `yarn workspace server test` → 1113 passed (the ceiling test's
+5 cases included); `yarn test:tools` → 69 passed + `parity:check` clean.
+
+**Residual risk / remaining work (keeps the feature open).** 348 disabled
+actions and 5,557 unresolved transitions remain. The disabled actions are now
+individually explained and none is a classifier artefact, but the two large
+transition buckets still need review: `source-not-walkable` (4,156) is dominated
+by roof pieces (1,830 across ids 5033/5035/5037/5039) and by holes 7515-7522
+(~1,400) whose tiles cannot be stood on — the latter are now covered by the
+`rope-hole` action instead, which is the resolution for that subset and should
+be reflected the next time this bucket is audited. `missing-destination` (892)
+and `blocked-destination` (182) still need per-entry review, and
+`requires-content-action` (323) waits on scripted-action ownership.

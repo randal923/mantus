@@ -10,6 +10,13 @@ export const DEPOT_LIMITS = {
   pageSize: 24,
   maxSearchLength: 60,
   mailExpiryDays: 30,
+  /**
+   * Mail send limits, mirroring the `/report` limiter: a short per-session
+   * interval plus a durable daily cap counted inside the send transaction, so
+   * client pacing cannot beat either (charter rule 8).
+   */
+  mailMinIntervalMs: 2_000,
+  mailMaxPerDay: 100,
 } as const;
 
 /**
@@ -215,6 +222,7 @@ export const mailActionFailedMessageSchema = z
       "invalid-recipient",
       "not-owned",
       "inbox-full",
+      "rate-limited",
       "failed",
     ]),
   })

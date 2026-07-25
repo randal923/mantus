@@ -185,6 +185,7 @@ export function GameWindowSessionController() {
       },
       vip: {
         stateReceived: vip.stateReceived,
+        friendStateReceived: vip.friendStateReceived,
         statusChanged: vip.statusChanged,
         begin: vip.begin,
         fail: vip.fail,

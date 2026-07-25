@@ -35,5 +35,7 @@ export interface CharacterRow {
   created_at: Date;
   updated_at: Date;
   last_login_at: Date | null;
+  namelocked: boolean;
+  mount_id: number;
   version: number;
 }

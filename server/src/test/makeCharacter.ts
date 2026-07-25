@@ -56,6 +56,8 @@ export function makeCharacter(id: string, displayName = id): Character {
     createdAt: now,
     updatedAt: now,
     lastLoginAt: null,
+    namelocked: false,
+    mountId: 0,
     version: 1,
   };
 }

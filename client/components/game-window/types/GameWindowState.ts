@@ -20,6 +20,7 @@ import type { GameWindowRuntime } from "./GameWindowRuntime";
 import type { GameWindowSessionActions } from "./GameWindowSessionActions";
 import type { GameWindowSessions } from "./GameWindowSessions";
 import type { GuildToast } from "./GuildToast";
+import type { MinimapMarker } from "@tibia/protocol";
 import type { HouseToast } from "./HouseToast";
 import type { ItemTextState } from "./ItemTextState";
 import type { LevelUpNotice } from "./LevelUpNotice";
@@ -64,6 +65,8 @@ export interface GameWindowState {
   }>;
   /** Names this character has ignored, echoed by the server. */
   ignoredNames: ReadonlyArray<string>;
+  /** The character's own persisted minimap waypoint flags. */
+  mapMarkers: ReadonlyArray<MinimapMarker>;
   levelUpNotice: LevelUpNotice | null;
   chatState: ChatState;
   chatFocusRequestId: number;

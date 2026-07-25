@@ -4,7 +4,7 @@ The core item system shipped: a typed `ItemType` catalog pinned to source hashes
 
 ## Remaining features
 
-- [ ] **Feature 11 — Typed world-interaction behaviors (delegated umbrella)** — doors, switches, fields, decay, beds, depots, and quest actions as typed server behaviors; mostly delegated, with direct gaps in sorting, browse-field, and fluids. See [implementation](implementation-feature-11.md).
+- [ ] **Feature 11 — Typed world-interaction behaviors (delegated umbrella)** — doors, switches, fields, decay, beds, depots, and quest actions as typed server behaviors; mostly delegated, with direct gaps in sorting, browse-field, and fluids. Fluids assessed 2026-07-25 and blocked on three prerequisites (no `fluidSource` in the item catalog, no fluid-subtype model, no non-tile `use-item-with` target kinds) — the sequence is recorded in the implementation file. See [implementation](implementation-feature-11.md).
 - [x] **Feature 12 — Server-side use exhausts (200 ms parity)** — Canary applies a 200 ms exhaust per generic item use; we only have the potions' 1 s exhaust plus incidental throttles. **Done 2026-07-24** — see [completed log](completed/implementation-feature-12-completed.md).
 - [x] **Feature 13 — Trash holders** — 79 catalog types with `kind: "trashholder"` must destroy dropped/thrown items with effect and audit entry. **Done 2026-07-24** — see [completed log](completed/implementation-feature-13-completed.md).
 - [x] **Feature 14 — Client walk-then-use auto-retry** — auto-walk adjacent and retry once when a use/pickup target is out of reach; client-only. **Done 2026-07-24** — see [completed log](completed/implementation-feature-14-completed.md).

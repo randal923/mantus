@@ -348,13 +348,31 @@ const stats = {
   floorTiles: new Map(),
 };
 /**
- * Rope-spot grounds/items, from Canary's ropeSpots tables (data/global.lua
- * and data-canary/scripts/lib/register_actions.lua). Using a rope on one
- * teleports the player one floor up, landing one tile south like a ladder.
+ * Rope-spot grounds/items, from Canary's `ropeSpots` + `specialRopeSpots`
+ * tables (data/global.lua, pinned a879c931). Using a rope on one teleports the
+ * player one floor up, landing one tile south like a ladder.
  */
 const ROPE_SPOT_IDS = new Set([
-  386, 421, 7762, 12202, 12935, 12936, 14238, 17238, 21501, 21965, 21966,
-  21967, 21968, 23363,
+  386, 421, 7762, 12202, 12935, 12936, 14238, 17238, 21965, 21966, 21967,
+  21968, 23363,
+]);
+
+/**
+ * Canary's `holeId` table (data-otservbr-global/scripts/lib/register_actions.lua,
+ * pinned a879c931): open holes a rope reaches *through* — the top thing on the
+ * floor below is lifted out beside the hole, so the destination is on the
+ * hole's own floor. Keep in sync with ROPE_HOLE_IDS in
+ * server/src/action/ropeHoleIds.ts, which is the execution-time authority.
+ *
+ * This replaced a `name.includes("hole")` heuristic that classified 3,439
+ * placements as unsupported rope/shovel targets — almost all of them scenery
+ * (lava holes, tree holes, "ornate door with a keyhole").
+ */
+const ROPE_HOLE_IDS = new Set([
+  294, 369, 370, 385, 394, 411, 412, 413, 432, 433, 435, 482, 483, 594, 595,
+  609, 610, 615, 868, 874, 1156, 4824, 7515, 7516, 7517, 7518, 7519, 7520,
+  7521, 7522, 7737, 7755, 7762, 7767, 7768, 8144, 8690, 8709, 12203, 12961,
+  17239, 19220, 23364,
 ]);
 
 /** "rx,ry,z" -> array of pre-serialized "[dx,dy,ground,...items]" strings. */
@@ -513,6 +531,7 @@ function finishTile(tile) {
         destination: z > 0 ? { x, y: y + 1, z: z - 1 } : null,
         itemId: placedItem.id,
         enabled: z > 0 && !restricted,
+        ...(z <= 0 ? { reason: "no-floor-above" } : {}),
         ...(restricted ? { reason: "requires-content-action" } : {}),
       });
     }
@@ -530,6 +549,7 @@ function finishTile(tile) {
         destination: z < 15 ? { x, y, z: z + 1 } : null,
         itemId: placedItem.id,
         enabled: z < 15 && !restricted,
+        ...(z >= 15 ? { reason: "no-floor-below" } : {}),
         ...(restricted ? { reason: "requires-content-action" } : {}),
       });
     }
@@ -544,21 +564,28 @@ function finishTile(tile) {
         destination: z > 0 ? { x, y: y + 1, z: z - 1 } : null,
         itemId: placedItem.id,
         enabled: z > 0 && !restricted,
+        ...(z <= 0 ? { reason: "no-floor-above" } : {}),
         ...(restricted ? { reason: "requires-content-action" } : {}),
       });
     }
-    if (
-      staticItem.name?.toLowerCase().includes("hole") &&
-      !itemFloorChange
-    ) {
+    // Rope through an open hole: the thing standing one floor *below* is
+    // lifted out beside the hole, so unlike a ladder the destination stays on
+    // the hole's own floor and it is the floor below that must exist. Canary
+    // registers this on the item id regardless of any step floor change, so a
+    // hole you can fall into can also be roped through.
+    if (ROPE_HOLE_IDS.has(placedItem.id)) {
+      const restricted =
+        placedItem.attributes.actionId !== undefined ||
+        placedItem.attributes.uniqueId !== undefined;
       worldActions.push({
-        kind: "rope-or-shovel",
+        kind: "rope-hole",
         activation: "use-with",
         source: { x, y, z },
-        destination: z > 0 ? { x, y: y + 1, z: z - 1 } : null,
+        destination: z < 15 ? { x, y: y + 1, z } : null,
         itemId: placedItem.id,
-        enabled: false,
-        reason: "requires-authoritative-tool-and-content-action",
+        enabled: z < 15 && !restricted,
+        ...(z >= 15 ? { reason: "no-floor-below" } : {}),
+        ...(restricted ? { reason: "requires-content-action" } : {}),
       });
     }
   }
@@ -896,19 +923,12 @@ const LADDER_FALLBACK_OFFSETS = [
   [-1, -1],
   [1, -1],
 ];
+/** Kinds whose landing tile follows Canary's moveUpstairs neighbour scan. */
+const FALLBACK_SCAN_KINDS = new Set(["ladder", "rope-spot", "rope-hole"]);
 for (const action of worldActions) {
-  if (
-    (action.kind !== "ladder" &&
-      action.kind !== "dropdown" &&
-      action.kind !== "rope-spot") ||
-    !action.enabled ||
-    !action.destination
-  ) {
-    continue;
-  }
+  if (!action.enabled || !action.destination) continue;
   if (isWalkable(action.destination)) continue;
-  // Rope spots share Canary's moveUpstairs neighbour scan with ladders.
-  if (action.kind === "ladder" || action.kind === "rope-spot") {
+  if (FALLBACK_SCAN_KINDS.has(action.kind)) {
     const fallback = LADDER_FALLBACK_OFFSETS.map(([dx, dy]) => ({
       x: action.source.x + dx,
       y: action.source.y + dy,
@@ -924,27 +944,26 @@ for (const action of worldActions) {
     ? "blocked-destination"
     : "missing-destination";
 }
-// The server loads exactly one action per tile; when a rope spot collides
-// with a ladder/dropdown on the same tile, the use-activated one wins.
+// The server loads one action per tile *per activation*, so a sewer grate can
+// be both a `use` dropdown and a `use-with` rope hole. Within one activation
+// the more specific registration wins, matching the order Canary's handlers
+// test in: a rope spot before a rope hole, a ladder before a dropdown.
 {
-  const enabledBySource = new Set();
-  for (const action of worldActions) {
+  const KIND_PRECEDENCE = ["ladder", "rope-spot", "dropdown", "rope-hole"];
+  const claimed = new Set();
+  const ordered = [...worldActions].sort(
+    (left, right) =>
+      KIND_PRECEDENCE.indexOf(left.kind) - KIND_PRECEDENCE.indexOf(right.kind),
+  );
+  for (const action of ordered) {
     if (!action.enabled) continue;
-    if (action.kind !== "rope-spot") {
-      enabledBySource.add(
-        `${action.source.x},${action.source.y},${action.source.z}`,
-      );
-    }
-  }
-  for (const action of worldActions) {
-    if (!action.enabled || action.kind !== "rope-spot") continue;
-    const key = `${action.source.x},${action.source.y},${action.source.z}`;
-    if (enabledBySource.has(key)) {
+    const key = `${action.source.x},${action.source.y},${action.source.z},${action.activation}`;
+    if (claimed.has(key)) {
       action.enabled = false;
       action.reason = "duplicate-action";
-    } else {
-      enabledBySource.add(key);
+      continue;
     }
+    claimed.add(key);
   }
 }
 const byPosition = (a, b) => {

@@ -48,6 +48,15 @@ export class Player extends Creature<Character["outfit"]> {
   private bloodHitCount = 0;
   private shieldBlockCount = 0;
   private speedModifier = 0;
+  /**
+   * The mount the character is riding (0 = none) and the catalog speed it
+   * grants. Both are server truth: the client's displayed speed is
+   * decoration (charter rule 8).
+   */
+  mountId = 0;
+  /** The mount's outfit sprite; set together with the speed bonus. */
+  mountLookType = 0;
+  private mountSpeedBonus = 0;
   private currentWheelBonuses: WheelBonuses;
 
   constructor(
@@ -85,6 +94,7 @@ export class Player extends Creature<Character["outfit"]> {
     this.currentVocation = character.vocation;
     this.premiumUntil = premiumUntil?.getTime() ?? null;
     this.townId = character.townId;
+    this.mountId = character.mountId;
     this.skull = character.skull;
     this.skullExpiresAt = character.skullExpiresAt?.getTime() ?? null;
     this.lastLoginAt = character.lastLoginAt;
@@ -202,6 +212,9 @@ export class Player extends Creature<Character["outfit"]> {
     const state = super.toState();
     return {
       ...state,
+      ...(this.mountLookType > 0
+        ? { mountLookType: this.mountLookType }
+        : {}),
       ...(this.partyMember ? { partyStatus: "member" as const } : {}),
       ...(this.guildName
         ? { guildName: this.guildName, atWar: this.guildAtWar }
@@ -397,8 +410,18 @@ export class Player extends Creature<Character["outfit"]> {
   override get stepSpeed(): number {
     return Math.max(
       10,
-      this.progression.speed + this.speedModifier + this.conditions.speedModifier,
+      this.progression.speed +
+        this.speedModifier +
+        this.mountSpeedBonus +
+        this.conditions.speedModifier,
     );
+  }
+
+  setMountSpeedBonus(bonus: number): void {
+    if (!Number.isInteger(bonus) || bonus < 0) {
+      throw new Error("mount speed bonus must be a non-negative integer");
+    }
+    this.mountSpeedBonus = bonus;
   }
 
   setSpeedModifier(modifier: number): void {

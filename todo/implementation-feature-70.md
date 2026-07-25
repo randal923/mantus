@@ -1,22 +1,19 @@
 # Feature 70 — Outfits and addons
 
-Part of [Todo 16 — Remaining Canary systems and client polish](todo-16.md).
+Shipped 2026-07-25 — see
+[completed/implementation-feature-70-completed.md](completed/implementation-feature-70-completed.md)
+for what landed and how it was verified. Only the items below remain.
 
-## Why
-Outfit rendering in public creature state exists, but there is no server-owned record of which outfits/addons a character is entitled to — a modified client could select anything.
+Client-side work is tracked separately in [client/feature-70-outfit-picker.md](client/feature-70-outfit-picker.md).
 
 ## Remaining work
-- Server-owned outfit/addon entitlement storage.
-- Unlock paths (quests, achievements, store).
-- Selection validation — validate the chosen outfit/addon against entitlements before projecting it into public creature state.
 
-## Implementation
-- Entitlement table (new migration) keyed by character; grants happen server-side from unlock sources.
-- Selection intent (bounded zod schema in `protocol/`) validated at execution time against the entitlement table before the outfit enters the creature projection.
-
-## Tests
-- Forged outfit/addon ids rejected; unentitled selections never reach other clients' view.
+- Unlock sources: the store (Feature 43), quests (todo-21), and achievements
+  (Feature 67) each need to call `OutfitService.grantOutfit`.
+- The outfit-picker UI; `outfit-get` / `outfit-state` / `outfit-select` are in
+  place for it.
 
 ## Dependencies
+
 - Quest/achievement unlock sources (todo-21 quests, Feature 67 achievements, Feature 43 store).
 - Feeds Feature 71 (mounts reuse the entitlement pattern).

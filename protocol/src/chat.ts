@@ -68,6 +68,33 @@ export const privateChatMessageSchema = z
   })
   .strict();
 
+/**
+ * Ephemeral "is typing" hint for one private conversation. Nothing is
+ * persisted and nothing is echoed back: the server rate-limits it and
+ * forwards it only to the named partner, so it can reveal no more than a
+ * private message the sender was about to send anyway.
+ */
+export const chatTypingMessageSchema = z
+  .object({
+    type: z.literal("chat-typing"),
+    to: z
+      .string()
+      .min(PROTOCOL_LIMITS.minCharacterNameLength)
+      .max(PROTOCOL_LIMITS.maxCharacterNameLength),
+  })
+  .strict();
+
+/** Typing hint delivered to the conversation partner only. */
+export const chatTypingStateMessageSchema = z
+  .object({
+    type: z.literal("chat-typing-state"),
+    counterpart: z
+      .string()
+      .min(1)
+      .max(PROTOCOL_LIMITS.maxCharacterNameLength),
+  })
+  .strict();
+
 /** Local speech from a creature the receiving client can already see. */
 export const creatureSpokeMessageSchema = z.object({
   type: z.literal("creature-spoke"),
@@ -223,6 +250,10 @@ export const chatRejectedMessageSchema = z.object({
 export type ChatSpeechMode = z.infer<typeof chatSpeechModeSchema>;
 export type CreatureSpeechMode = z.infer<typeof creatureSpeechModeSchema>;
 export type SpeakMessage = z.infer<typeof speakMessageSchema>;
+export type ChatTypingMessage = z.infer<typeof chatTypingMessageSchema>;
+export type ChatTypingStateMessage = z.infer<
+  typeof chatTypingStateMessageSchema
+>;
 export type PrivateChatMessage = z.infer<typeof privateChatMessageSchema>;
 export type CreatureSpokeMessage = z.infer<typeof creatureSpokeMessageSchema>;
 export type PrivateChatDeliveredMessage = z.infer<

@@ -64,3 +64,61 @@ owners — Todo 11 (Features 37–42, NPC behavior/shops) and Todo 16 (Features
 owner-todo lands, extend `MonsterType`/`NpcType` + the importers to capture the
 now-supported fields, prune this test's allowlists, and lower its ceilings.
 Feature 10's aggregate parity gate builds on this same report.
+
+---
+
+## 2026-07-25 — Bestiary ownership recorded; stale bestiary content refreshed
+
+**Problem.** The report claimed 1,424 gameplay fields were `blocked` on a
+future feature when they were already imported and in use. `Bestiary`,
+`bosstiary` and `raceId` are owned by `tools/importCanaryBestiary.mjs` and feed
+the shipped bestiary/bosstiary system — the creature importer simply does not
+duplicate them. Reporting that as "blocked" made the parity ledger overstate the
+outstanding work by more than half, and hid the fields that really are owed.
+
+Re-running the bestiary importer against the pinned checkout also revealed that
+`content/monsters/bestiary.json` was **stale**: five Soul War apparitions
+(raceIds 1946-1949) and one archfoe (`raging-mage`, raceId 718) were missing, so
+those creatures could be killed with no bestiary progress at all.
+
+**What changed.**
+
+- `COVERED_ELSEWHERE` in `tools/importCanaryCreatures.mjs` maps those three
+  field names to the importer that owns them; their gaps are now
+  `status: "covered"` with a `coveredBy` path instead of `blocked`.
+- A `Bestiary` block with no `monster.raceId` cannot be addressed by any
+  importer — Canary has no id to track kills against. That is reported as
+  `status: "upstream-defect"`. Exactly one monster upstream is affected
+  (Crypt Warrior).
+- `tools/verifyCanaryParityInventory.mjs` accepts the two new statuses and
+  requires `coveredBy` on `covered`, so `yarn parity:check` still refuses an
+  unowned gap.
+- Regenerated `content/monsters/bestiary.json` (686 bestiary + 46 bosstiary
+  entries, 689 monster ids tracked, up from 682 + 45 / 684).
+
+**Result.** Gap statuses: 1,424 `covered`, 1 `upstream-defect`, 1,061 `blocked`.
+What remains blocked is now legible: `flags.rewardBoss` (911 — Todo 16
+Features 76/84), `flags.isPreyExclusive`/`isPreyable` (147 — Todo 16 Feature 74),
+and three NPC entries (`onSay` ×2, `moneyToNeedDonation`). Unsupported
+definitions 1,867 → 914 and ignored assignments 4,926 → 2,484 against the
+previously-pinned ceilings — most of that drop was Feature 37's NPC typing,
+which had never been reflected in the ceilings.
+
+**Files touched.** `tools/importCanaryCreatures.mjs`,
+`tools/verifyCanaryParityInventory.mjs`,
+`server/src/spawn/creatureImportReport.test.ts`,
+`content/source-manifest.json`, regenerated
+`content/spawns/world-import-report.json` and `content/monsters/bestiary.json`.
+
+**How it was verified.** `creatureImportReport.test.ts` grew from 5 to 7 cases.
+The important one does not take the label on trust: it re-derives coverage from
+`bestiary.json` and fails if a monster claiming `covered` is not actually
+tracked there — which is what caught the stale content. Ceilings for blocked and
+upstream-defect gaps are pinned separately so a "covered" reclassification can
+never be used to hide real work. `yarn workspace server test` → 1115 passed;
+`yarn test:tools` → 69 passed + `parity:check` clean.
+
+**Residual risk / remaining work (keeps the feature open).** 1,061 blocked gaps
+remain, all owned by Todo 16: prey flags (Feature 74) and reward-boss flags
+(Features 76/84) must define their typed representation before those fields can
+move out of the report. The three NPC entries wait on Todo 11.

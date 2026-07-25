@@ -140,15 +140,15 @@
   },
   {
    "path": "tools/convertOtbm.mjs",
-   "sha256": "f99209069de7b0bc4b770e47de80c4aa2ad8b6c28249389518f06344b521079c"
+   "sha256": "a3e7876eb849167b4fe533b86aea568f3db0f520502201839de82d594f74629c"
   },
   {
    "path": "tools/importCanaryCreatures.mjs",
-   "sha256": "f1fa82ce095d86f175eb7d7f61dd07964f067e389a8e2a1cbb3bfe2eeb6b2848"
+   "sha256": "24c71d8fef6809d9285b43d475874fe6b71ced5d5ba936a3f1a6190c4835bd7a"
   },
   {
    "path": "tools/parseCanaryCreatureContent.mjs",
-   "sha256": "0182094d413c7b7fdb0f4d611e20ec283de91055bb3940ec705fe8e0b111358b"
+   "sha256": "56ad9f273fec1a8a6207728fcc76a525872e57c6514dd6915f3f1abf477f9701"
   },
   {
    "path": "tools/parseCanaryMonsterSpells.mjs",
@@ -188,7 +188,7 @@
   },
   {
    "path": "tools/verifyCanaryParityInventory.mjs",
-   "sha256": "0b5b4aa2117865c003e62f2a7da3a8b69b0afff8a5f6dd1ef01930d1f6fac034"
+   "sha256": "a03fde6bff43110c993a210af4c393d05cf4c9b8fa8085cbe1729f665011a27a"
   },
   {
    "path": "tools/importCanaryDoors.mjs",

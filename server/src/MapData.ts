@@ -27,7 +27,14 @@ export interface MapData {
     position: Position,
     direction: Direction,
   ): MapTransition | undefined;
-  getAction(position: Position): MapAction | undefined;
+  /**
+   * One action per tile *per activation*: a sewer grate is both a `use`
+   * dropdown and a `use-with` rope hole, exactly as Canary registers it.
+   */
+  getAction(
+    position: Position,
+    activation: MapAction["activation"],
+  ): MapAction | undefined;
   getItems(position: Position): ReadonlyArray<MapItem>;
   getTownName?(townId: number): string | undefined;
   /** House id owning this tile, when the map ships house metadata. */

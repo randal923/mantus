@@ -14,9 +14,12 @@ import { Player } from "../Player";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import { Session } from "../Session";
 import { SessionRegistry } from "../SessionRegistry";
+import { Npc } from "../creature/Npc";
 import { makeCharacter } from "../test/makeCharacter";
+import { makeNpcType } from "../test/makeNpcType";
 import { Visibility } from "../Visibility";
 import { World } from "../World";
+import { RopePullHandler } from "./RopePullHandler";
 import { ToolUseHandler } from "./ToolUseHandler";
 import { WorldActionRng } from "./WorldActionRng";
 
@@ -42,6 +45,10 @@ const CRUSHED_STONE = 20_134;
 const WATER = 4_597;
 const ROPE_SPOT = { x: 5, y: 4, z: 7 } as const;
 const ROPE_DESTINATION = { x: 5, y: 5, z: 6 } as const;
+/** An open hole beside the actor; the rope reaches through it downward. */
+const ROPE_HOLE = { x: 6, y: 5, z: 7 } as const;
+const BELOW_ROPE_HOLE = { x: 6, y: 5, z: 8 } as const;
+const ROPE_HOLE_DESTINATION = { x: 6, y: 6, z: 7 } as const;
 const PILE = { x: 4, y: 4, z: 7 } as const;
 const BELOW_PILE = { x: 4, y: 4, z: 8 } as const;
 const BACKPACK_ID = "00000000-0000-4000-8000-000000000099";
@@ -118,6 +125,7 @@ async function makeHarness(
     pile?: boolean;
     items?: ReadonlyArray<{ position: Position; item: MapItem }>;
     seed?: number;
+    protectionZones?: ReadonlyArray<readonly [number, number, number]>;
   } = {},
 ) {
   const world = new World(
@@ -128,6 +136,9 @@ async function makeHarness(
       blocked: [],
       floors: [6, 7, 8],
       groundSpeed: 50,
+      ...(options.protectionZones
+        ? { protectionZones: options.protectionZones }
+        : {}),
       actions: [
         {
           kind: "rope-spot",
@@ -135,6 +146,13 @@ async function makeHarness(
           source: ROPE_SPOT,
           destination: ROPE_DESTINATION,
           itemId: 386,
+        },
+        {
+          kind: "rope-hole",
+          activation: "use-with",
+          source: ROPE_HOLE,
+          destination: ROPE_HOLE_DESTINATION,
+          itemId: OPEN_HOLE,
         },
       ],
       items: options.pile
@@ -181,6 +199,14 @@ async function makeHarness(
     visibility,
     persistence,
     progression,
+    new RopePullHandler(
+      world,
+      catalog,
+      items,
+      registry,
+      visibility,
+      persistence,
+    ),
     new WorldActionRng(options.seed ?? 1_234),
     (typeName, position) => {
       spawned.push({ typeName, position: { ...position } });
@@ -584,5 +610,157 @@ describe("ToolUseHandler", () => {
       harness.world.getMapItems(PILE).map((item) => item.itemId),
     ).toContain(STONE_PILE);
     expect(harness.player.position).toEqual({ x: 8, y: 7, z: 7 });
+  });
+
+  it("rope on an open hole lifts the player below out beside it", async () => {
+    const harness = await makeHarness([
+      carriedItem("11111111-1111-4111-8111-111111111111", ROPE, "actor"),
+    ]);
+    const stuck = new Player(
+      makeCharacter("stuck", "Stuck"),
+      { ...BELOW_ROPE_HOLE },
+    );
+    harness.world.addPlayer(stuck);
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("11111111-1111-4111-8111-111111111111", 1, ROPE_HOLE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(stuck.position).toEqual(ROPE_HOLE_DESTINATION);
+    // The roper stays put: only the thing below moves.
+    expect(harness.player.position).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("rope on an open hole never lifts a non-player creature", async () => {
+    const harness = await makeHarness([
+      carriedItem("11111111-1111-4111-8111-111111111111", ROPE, "actor"),
+    ]);
+    const monster = new Npc({
+      id: "caught",
+      type: makeNpcType({ id: "caught" }),
+      position: { ...BELOW_ROPE_HOLE },
+      direction: "south",
+      home: { ...BELOW_ROPE_HOLE },
+      spawnRadius: 0,
+    });
+    harness.world.addCreature(monster);
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("11111111-1111-4111-8111-111111111111", 1, ROPE_HOLE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(monster.position).toEqual(BELOW_ROPE_HOLE);
+    expect(
+      harness.sent.some(
+        (message) =>
+          message.type === "error" && message.code === "item-action-failed",
+      ),
+    ).toBe(true);
+  });
+
+  it("rope on an open hole never pulls a pz-locked player into a pz", async () => {
+    const harness = await makeHarness(
+      [carriedItem("11111111-1111-4111-8111-111111111111", ROPE, "actor")],
+      {
+        protectionZones: [
+          [
+            ROPE_HOLE_DESTINATION.x,
+            ROPE_HOLE_DESTINATION.y,
+            ROPE_HOLE_DESTINATION.z,
+          ],
+        ],
+      },
+    );
+    const stuck = new Player(
+      makeCharacter("stuck", "Stuck"),
+      { ...BELOW_ROPE_HOLE },
+    );
+    stuck.conditions.apply(
+      { type: "pz-lock", sourceId: "actor", durationMs: 60_000 },
+      1000,
+    );
+    harness.world.addPlayer(stuck);
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("11111111-1111-4111-8111-111111111111", 1, ROPE_HOLE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(stuck.position).toEqual(BELOW_ROPE_HOLE);
+  });
+
+  it("rope on an open hole lifts the top movable item exactly once", async () => {
+    const harness = await makeHarness(
+      [carriedItem("11111111-1111-4111-8111-111111111111", ROPE, "actor")],
+      { items: [seededAt(APPLE, BELOW_ROPE_HOLE)] },
+    );
+
+    for (const _attempt of [0, 1]) {
+      harness.toolUse.handle(
+        harness.session,
+        useWith("11111111-1111-4111-8111-111111111111", 1, ROPE_HOLE),
+        1000,
+      );
+    }
+
+    expect(
+      harness.world
+        .getMapItems(ROPE_HOLE_DESTINATION)
+        .filter((item) => item.itemId === APPLE),
+    ).toHaveLength(1);
+    expect(
+      harness.world
+        .getMapItems(BELOW_ROPE_HOLE)
+        .filter((item) => item.itemId === APPLE),
+    ).toHaveLength(0);
+  });
+
+  it("rope on a hole with nothing below reports the failure", async () => {
+    const harness = await makeHarness([
+      carriedItem("11111111-1111-4111-8111-111111111111", ROPE, "actor"),
+    ]);
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("11111111-1111-4111-8111-111111111111", 1, ROPE_HOLE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(
+      harness.sent.some(
+        (message) =>
+          message.type === "error" && message.code === "item-action-failed",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects a forged rope-hole target beyond reach", async () => {
+    const harness = await makeHarness([
+      carriedItem("11111111-1111-4111-8111-111111111111", ROPE, "actor"),
+    ]);
+    const stuck = new Player(
+      makeCharacter("stuck", "Stuck"),
+      { ...BELOW_ROPE_HOLE },
+    );
+    harness.world.addPlayer(stuck);
+    harness.player.moveTo({ x: 1, y: 1, z: 7 });
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("11111111-1111-4111-8111-111111111111", 1, ROPE_HOLE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(stuck.position).toEqual(BELOW_ROPE_HOLE);
   });
 });

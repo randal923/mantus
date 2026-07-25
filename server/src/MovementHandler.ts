@@ -1,11 +1,15 @@
-import type {
-  AutoWalkMessage,
-  Direction,
-  MoveMessage,
-  Position,
-  TurnMessage,
-  UseMapMessage,
+import {
+  MINIMAP_LIMITS,
+  PROTOCOL_LIMITS,
+  type AutoWalkMessage,
+  type Direction,
+  type MoveMessage,
+  type Position,
+  type TurnMessage,
+  type UseMapMessage,
+  type WalkToMessage,
 } from "@tibia/protocol";
+import { findPath } from "./pathfinding/findPath";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { Player } from "./Player";
 import type { Session } from "./Session";
@@ -13,6 +17,19 @@ import type { Visibility } from "./Visibility";
 import type { World } from "./World";
 
 export class MovementHandler {
+  /** Per-session pacing for server-computed paths; search is not free. */
+  private readonly walkToReadyAt = new Map<string, number>();
+  private housePolicy:
+    | ((player: Player, position: Position) => boolean)
+    | null = null;
+
+  /** Wires the same house authorization the step rules use into pathfinding. */
+  setHousePolicy(
+    policy: (player: Player, position: Position) => boolean,
+  ): void {
+    this.housePolicy = policy;
+  }
+
   constructor(
     private readonly world: World,
     private readonly visibility: Visibility,
@@ -85,6 +102,61 @@ export class MovementHandler {
       return;
     }
     session.autoWalkDirections = [...intent.directions];
+    this.continueAutoWalk(session, player, now);
+  }
+
+  /**
+   * Minimap click-to-walk. The client names a destination and nothing else:
+   * the server computes the route itself with bounded breadth-first search
+   * over its own walkability, then feeds it through the very same auto-walk
+   * step loop, which re-validates every step at execution time. A client that
+   * clicks an unreachable or out-of-range tile simply gets no path — it can
+   * never supply one (charter rules 1 and 4).
+   */
+  handleWalkTo(session: Session, intent: WalkToMessage, now: number): void {
+    if (!session.playerId) {
+      session.sendError("join-required");
+      return;
+    }
+    const player = this.world.getPlayer(session.playerId);
+    if (!player) return;
+    if (session.travelOperationPending || session.promotionOperationPending) {
+      this.stop(session);
+      return;
+    }
+    const readyAt = this.walkToReadyAt.get(session.id) ?? 0;
+    if (now < readyAt) return;
+    this.walkToReadyAt.set(session.id, now + MINIMAP_LIMITS.walkToCooldownMs);
+    session.movementDirection = null;
+    session.bufferedMovementDirection = null;
+    session.autoWalkDirections = [];
+    const from = player.position;
+    const target = intent.position;
+    // Same floor and within the search box; anything else is not a walk.
+    if (
+      target.z !== from.z ||
+      Math.max(Math.abs(target.x - from.x), Math.abs(target.y - from.y)) >
+        MINIMAP_LIMITS.maxWalkToDistance
+    ) {
+      return;
+    }
+    const { directions } = findPath({
+      start: from,
+      isGoal: (position) =>
+        position.x === target.x && position.y === target.y,
+      canStep: (position) =>
+        Math.max(Math.abs(position.x - from.x), Math.abs(position.y - from.y)) <=
+          MINIMAP_LIMITS.maxWalkToDistance &&
+        this.world.isWalkable(position) &&
+        !this.world.isOccupied(position) &&
+        this.canWalkOn(player, position),
+      maxVisited: MINIMAP_LIMITS.maxWalkToVisited,
+    });
+    if (directions.length === 0) return;
+    session.autoWalkDirections = directions.slice(
+      0,
+      PROTOCOL_LIMITS.maxAutoWalkSteps,
+    );
     this.continueAutoWalk(session, player, now);
   }
 
@@ -243,6 +315,11 @@ export class MovementHandler {
     ) {
       session.bufferedMovementDirection = null;
     }
+  }
+
+  /** House-tile authorization, so a path never routes through a locked house. */
+  private canWalkOn(player: Player, position: Position): boolean {
+    return this.housePolicy?.(player, position) ?? true;
   }
 
   private continueAutoWalk(

@@ -335,14 +335,31 @@ function parseSpawns(xml, kind) {
   return groups;
 }
 
-function definitionNames(source, kind) {
+/**
+ * The name a definition registers itself under. Canary distinguishes location
+ * variants of one NPC by their *type* name — `Game.createNpcType("Buddel
+ * (Helheim)")` — while every variant keeps the same `internalNpcName`
+ * ("Buddel") because that is the name shown in game. Indexing both collapsed
+ * all five Buddels onto one id; the type name is the identity.
+ */
+function definitionTypeName(source, kind) {
   if (kind === "monster") {
-    const name = source.match(/Game\.createMonsterType\(\s*(["'])(.*?)\1\s*\)/)?.[2];
-    return name ? [name] : [];
+    return source.match(/Game\.createMonsterType\(\s*(["'])(.*?)\1\s*\)/)?.[2];
   }
-  const internalName = source.match(/local\s+internalNpcName\s*=\s*(["'])(.*?)\1/)?.[2];
   const typeName = source.match(/Game\.createNpcType\(\s*(["'])(.*?)\1\s*\)/)?.[2];
-  return [...new Set([internalName, typeName].filter(Boolean))];
+  // `Game.createNpcType(internalNpcName)` is the base variant: unquoted, so the
+  // regex above misses it and the internal name is the type name.
+  if (typeName) return typeName;
+  return source.match(/local\s+internalNpcName\s*=\s*(["'])(.*?)\1/)?.[2];
+}
+
+/** The in-game display name, which variants of one NPC share. */
+function definitionDisplayName(source, kind) {
+  if (kind === "monster") return definitionTypeName(source, kind);
+  return (
+    source.match(/local\s+internalNpcName\s*=\s*(["'])(.*?)\1/)?.[2] ??
+    definitionTypeName(source, kind)
+  );
 }
 
 function numberValue(value, fallback) {
@@ -791,29 +808,60 @@ function npcVoices(value) {
 function indexDefinitions(definitions, kind) {
   const indexed = new Map();
   const pathIndexed = new Map();
+  /** Display name -> the definitions sharing it, i.e. one NPC's variants. */
+  const displayIndexed = new Map();
   const duplicates = [];
   for (const definition of definitions) {
-    const names = definitionNames(definition.source, kind);
-    if (names.length === 0) continue;
-    for (const name of names) {
-      const id = normalizeName(name);
-      const entries = indexed.get(id) ?? [];
-      entries.push({ ...definition, name });
-      indexed.set(id, entries);
-      if (entries.length === 2) {
-        duplicates.push({ kind, typeId: id, paths: entries.map((entry) => entry.path) });
-      } else if (entries.length > 2) {
-        duplicates.find((duplicate) => duplicate.typeId === id).paths.push(definition.path);
-      }
+    const typeName = definitionTypeName(definition.source, kind);
+    if (!typeName) continue;
+    const id = normalizeName(typeName);
+    const entries = indexed.get(id) ?? [];
+    entries.push({ ...definition, name: typeName });
+    indexed.set(id, entries);
+    if (entries.length === 2) {
+      duplicates.push({ kind, typeId: id, paths: entries.map((entry) => entry.path) });
+    } else if (entries.length > 2) {
+      duplicates.find((duplicate) => duplicate.typeId === id).paths.push(definition.path);
+    }
+    const displayName = definitionDisplayName(definition.source, kind);
+    if (displayName && displayName !== typeName) {
+      const shared = displayIndexed.get(normalizeName(displayName)) ?? [];
+      shared.push({ ...definition, name: typeName });
+      displayIndexed.set(normalizeName(displayName), shared);
     }
     const pathId = normalizeName(
       definition.path.split("/").at(-1)?.replace(/\.lua$/, "") ?? "",
     );
     const pathEntries = pathIndexed.get(pathId) ?? [];
-    pathEntries.push({ ...definition, name: names[0] });
+    pathEntries.push({ ...definition, name: typeName });
     pathIndexed.set(pathId, pathEntries);
   }
-  return { indexed, pathIndexed, duplicates };
+  return { indexed, pathIndexed, displayIndexed, duplicates };
+}
+
+/**
+ * Variant families: one display name registered by several type names. Each
+ * variant is addressable by its own id; the family is reported so a location
+ * variant with no map placement is recorded rather than silently dropped.
+ */
+function variantFamilies(index, kind) {
+  const families = [];
+  for (const [displayId, entries] of index.displayIndexed) {
+    const base = index.indexed.get(displayId) ?? [];
+    if (base.length + entries.length < 2) continue;
+    families.push({
+      kind,
+      displayId,
+      variants: [...base, ...entries]
+        .map((entry) => ({
+          typeId: normalizeName(entry.name),
+          name: entry.name,
+          path: entry.path,
+        }))
+        .sort((left, right) => left.typeId.localeCompare(right.typeId)),
+    });
+  }
+  return families.sort((left, right) => left.displayId.localeCompare(right.displayId));
 }
 
 /** Parses static creature content without executing Canary Lua. */
@@ -856,7 +904,13 @@ export function parseCanaryCreatureContent(options) {
   for (const slot of [...selected, ...definitionOnlyMonsters]) {
     const definitions = slot.kind === "monster" ? monsterIndex.indexed : npcIndex.indexed;
     const index = slot.kind === "monster" ? monsterIndex : npcIndex;
-    const matches = definitions.get(slot.typeId) ?? index.pathIndexed.get(slot.typeId);
+    // Exact type name first, then the file name, then the shared display name —
+    // a placement naming "Buddel" must land on the base Buddel, never on a
+    // location variant that happens to share the display name.
+    const matches =
+      definitions.get(slot.typeId) ??
+      index.pathIndexed.get(slot.typeId) ??
+      index.displayIndexed.get(slot.typeId);
     if (!matches) {
       throw new Error(`${slot.kind} spawn ${slot.id} references unknown type ${slot.rawName}`);
     }
@@ -963,6 +1017,14 @@ export function parseCanaryCreatureContent(options) {
       ),
       duplicates,
       duplicateDefinitions: [...monsterIndex.duplicates, ...npcIndex.duplicates],
+      // Canary's location variants of one NPC, each addressable by its own
+      // type id. Variants with no map placement are not imported as types (the
+      // quest scripts that spawn them are not converted yet) but are recorded
+      // here so the set is known rather than lost.
+      variantFamilies: [
+        ...variantFamilies(monsterIndex, "monster"),
+        ...variantFamilies(npcIndex, "npc"),
+      ],
       ambiguousDefinitions,
       outOfMap,
       blocked,

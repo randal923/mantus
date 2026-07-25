@@ -7,6 +7,7 @@ import { characterMuteQuery } from "./sql/characterMuteQuery";
 import { countRecentReportsQuery } from "./sql/countRecentReportsQuery";
 import { deleteAccountBanQuery } from "./sql/deleteAccountBanQuery";
 import { deleteCharacterMuteQuery } from "./sql/deleteCharacterMuteQuery";
+import { setNamelockUpdate } from "../profile/sql/profileQueries";
 import { insertModerationActionQuery } from "./sql/insertModerationActionQuery";
 import { insertPlayerReportQuery } from "./sql/insertPlayerReportQuery";
 import { moderationCharacterByNameQuery } from "./sql/moderationCharacterByNameQuery";
@@ -211,6 +212,26 @@ export class PgModerationStore implements ModerationStore {
         target.id,
         input.actorCharacterId,
         input.text,
+        null,
+        null,
+      ]);
+      return { status: "recorded" as const, targetName: target.display_name };
+    });
+  }
+
+  async namelockCharacter(input: {
+    actorCharacterId: string;
+    targetName: string;
+    reason: string;
+  }): Promise<RecordNoteResult> {
+    return runSerializableTransaction(this.pool, async (client) => {
+      const target = await this.requireTarget(client, input.targetName);
+      await client.query(setNamelockUpdate, [target.id, true]);
+      await client.query(insertModerationActionQuery, [
+        "namelock",
+        target.id,
+        input.actorCharacterId,
+        input.reason,
         null,
         null,
       ]);

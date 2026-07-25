@@ -16,7 +16,9 @@ export abstract class Creature<
   readonly id: string;
   readonly kind: CreatureKind;
   readonly name: string;
-  readonly outfit: TOutfit;
+  /** Server-owned; a player's outfit changes only through a committed
+   * entitlement check (Feature 70). */
+  outfit: TOutfit;
   readonly conditions = new ConditionManager();
   private readonly activeConditions = new Set<string>();
   private deathHandled = false;

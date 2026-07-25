@@ -93,7 +93,18 @@ export function HouseBrowserSection({
                     {entry.rent.toLocaleString(i18n.language)}
                   </td>
                   <td className="py-1 pr-2">
-                    {entry.ownerName ?? t("house.unowned")}
+                    {entry.auction ? (
+                      <span className="text-ui-gold">
+                        {t("house.auction.standing", {
+                          amount: entry.auction.bid.toLocaleString(
+                            i18n.language,
+                          ),
+                          name: entry.auction.bidderName,
+                        })}
+                      </span>
+                    ) : (
+                      (entry.ownerName ?? t("house.unowned"))
+                    )}
                   </td>
                   <td className="py-1 text-right">
                     <Button

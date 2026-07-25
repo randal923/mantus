@@ -169,7 +169,10 @@ export const MinimapAnchoredBottomRight: Story = {
           width: 300,
           height: 240,
         }}
+        mapMarkers={[]}
         onLayoutChange={fn()}
+        onWalkTo={fn()}
+        onToggleMarker={fn()}
       />
     ),
   },

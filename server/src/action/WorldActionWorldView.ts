@@ -4,7 +4,10 @@ import type { WorldItemsView } from "../item/plan/WorldItemsView";
 
 /** The slice of World state the world-action resolution and handlers read. */
 export interface WorldActionWorldView extends WorldItemsView {
-  getMapAction(position: Position): MapAction | undefined;
+  getMapAction(
+    position: Position,
+    activation: MapAction["activation"],
+  ): MapAction | undefined;
   canSee(viewer: Position, target: Position, range: ViewRange): boolean;
   isOccupied(position: Position): boolean;
   getHouseId?(position: Position): number | undefined;

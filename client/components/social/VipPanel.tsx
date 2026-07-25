@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import type { VipEntry } from "@tibia/protocol";
+import type { FriendStateMessage, VipEntry } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { CloseButton } from "../ui/CloseButton";
 import { AddFriendModal } from "./AddFriendModal";
+import { FriendRequestsSection } from "./FriendRequestsSection";
 import { VipEntryRow } from "./VipEntryRow";
 
 interface VipPanelProps {
   entries: ReadonlyArray<VipEntry>;
+  friends: FriendStateMessage | null;
   pending: boolean;
   error: string | null;
   hasParty: boolean;
@@ -20,6 +22,10 @@ interface VipPanelProps {
     edits: { description?: string; icon?: number; notifyLogin?: boolean },
   ) => void;
   onRemove: (targetCharacterId: string) => void;
+  onRequestFriend: (name: string) => void;
+  onRespondFriend: (fromCharacterId: string, accept: boolean) => void;
+  onRemoveFriend: (targetCharacterId: string) => void;
+  onSetFinderVisible: (visible: boolean) => void;
   onClose: () => void;
 }
 
@@ -29,6 +35,7 @@ interface VipPanelProps {
  */
 export function VipPanel({
   entries,
+  friends,
   pending,
   error,
   hasParty,
@@ -37,6 +44,10 @@ export function VipPanel({
   onChat,
   onEdit,
   onRemove,
+  onRequestFriend,
+  onRespondFriend,
+  onRemoveFriend,
+  onSetFinderVisible,
   onClose,
 }: VipPanelProps) {
   const { t } = useAppTranslation();
@@ -160,6 +171,15 @@ export function VipPanel({
           ))}
         </ul>
       )}
+
+      <FriendRequestsSection
+        friends={friends}
+        pending={pending}
+        onRequest={onRequestFriend}
+        onRespond={onRespondFriend}
+        onRemove={onRemoveFriend}
+        onSetFinderVisible={onSetFinderVisible}
+      />
 
       {addModalOpen && (
         <AddFriendModal

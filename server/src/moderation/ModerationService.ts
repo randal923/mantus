@@ -386,6 +386,38 @@ export class ModerationService implements ChatModerationHooks {
     });
   }
 
+  /**
+   * Namelocks a character. The flag is durable and checked at world entry,
+   * so a namelocked character stays out until the rename flow (Feature 2)
+   * clears it — logging out and back in changes nothing.
+   */
+  gmNamelock(
+    session: Session,
+    actorCharacterId: string,
+    targetName: string,
+    reason: string,
+  ): void {
+    const store = this.store;
+    if (!store) {
+      this.reply(session, false, "Moderation storage is not configured.");
+      return;
+    }
+    this.enqueue(`namelock:${actorCharacterId}`, async () => {
+      const result = await store.namelockCharacter({
+        actorCharacterId,
+        targetName,
+        reason,
+      });
+      return () => {
+        if (result.status === "failed") {
+          this.reply(session, false, this.failureText(result.reason));
+          return;
+        }
+        this.reply(session, true, `Namelocked ${result.targetName}.`);
+      };
+    });
+  }
+
   private failureText(
     reason: "target-not-found" | "not-muted" | "not-banned" | "rate-limited",
   ): string {

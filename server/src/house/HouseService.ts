@@ -2,6 +2,8 @@ import {
   HOUSE_LIMITS,
   type HouseAbandonMessage,
   type HouseActionFailedReason,
+  type HouseAuction,
+  type HouseBidMessage,
   type HouseBrowseMessage,
   type HouseBuyMessage,
   type HouseEventMessage,
@@ -9,6 +11,8 @@ import {
   type HouseListEntry,
   type HouseOpenMessage,
   type HouseSetAccessMessage,
+  type HouseSetListMessage,
+  type HouseTextList,
   type HouseTransferCancelMessage,
   type HouseTransferOfferMessage,
   type HouseTransferRespondMessage,
@@ -21,25 +25,45 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import type { HouseAccessSubject } from "./HouseAccessList";
 import type { HouseInfo } from "./HouseInfo";
 import { HouseRegistry } from "./HouseRegistry";
 import type {
   ChargeHouseRentResult,
+  CloseHouseAuctionResult,
+  HouseAuctionSnapshot,
   HouseEvictionDelivery,
   HouseStore,
 } from "./HouseStore";
 import { projectHouseStateFor } from "./projectHouseStateFor";
+import { rentWarningLetterText } from "./rentWarningLetterText";
 
 type HouseIntent =
   | HouseOpenMessage
   | HouseBuyMessage
+  | HouseBidMessage
   | HouseAbandonMessage
   | HouseTransferOfferMessage
   | HouseTransferRespondMessage
   | HouseTransferCancelMessage
   | HouseSetAccessMessage
+  | HouseSetListMessage
   | HouseKickMessage
   | HouseBrowseMessage;
+
+/**
+ * Runs a server-internal database operation through the item write lane, so
+ * it commits after every in-flight memory-first world-item persist.
+ */
+export type OrderedWrite = <T>(operation: () => Promise<T>) => Promise<T>;
+
+/** Resolves a character's live guild identity for access and guildhall checks. */
+export type GuildIdentityLookup = (characterId: string) => {
+  guildId: string;
+  guildName: string;
+  rankName: string;
+  isLeader: boolean;
+} | null;
 
 interface PendingHouseTransfer {
   readonly fromCharacterId: string;
@@ -51,8 +75,11 @@ interface PendingHouseTransfer {
 
 const RENT_SCAN_INTERVAL_MS = 60_000;
 const RENT_BATCH_LIMIT = 20;
+const AUCTION_SCAN_INTERVAL_MS = 10_000;
+const AUCTION_BATCH_LIMIT = 20;
 const DAY_MS = 24 * 3600 * 1000;
 const RENT_PERIOD_MS = HOUSE_LIMITS.rentPeriodDays * DAY_MS;
+const AUCTION_DURATION_MS = HOUSE_LIMITS.auctionDurationDays * DAY_MS;
 
 /**
  * Server-authoritative house system. Ownership, rent, and access live in
@@ -70,8 +97,20 @@ export class HouseService {
   private readonly opPendingByCharacter = new Set<string>();
   private readonly houses = new HouseRegistry();
   private readonly pendingTransfers = new Map<number, PendingHouseTransfer>();
+  /** Running auctions, mirrored from store outcomes inside the tick. */
+  private readonly auctions = new Map<number, HouseAuctionSnapshot>();
   private nextRentScanAt = 0;
   private rentScanActive = false;
+  private nextAuctionScanAt = 0;
+  private auctionScanActive = false;
+  private guildIdentity: GuildIdentityLookup | null = null;
+  /**
+   * Item-eviction transactions run through this so a world item whose tile
+   * persist is still queued is already committed when the sweep reads the
+   * tiles — otherwise the sweep could miss it and leave it behind.
+   */
+  private orderedWrite: OrderedWrite = (operation) => operation();
+  private grantAchievement: (characterId: string, id: string) => void = () => {};
   private loaded = false;
 
   constructor(
@@ -121,6 +160,21 @@ export class HouseService {
     }
   }
 
+  /** Wires the live guild lookup used by `@guild` access-list entries. */
+  setGuildIdentityLookup(lookup: GuildIdentityLookup): void {
+    this.guildIdentity = lookup;
+  }
+
+  /** Wires the item write lane every item-moving house transaction runs on. */
+  setOrderedWrite(orderedWrite: OrderedWrite): void {
+    this.orderedWrite = orderedWrite;
+  }
+
+  /** Wires achievement grants fired from committed house outcomes. */
+  setAchievementHook(grant: (characterId: string, id: string) => void): void {
+    this.grantAchievement = grant;
+  }
+
   /**
    * Execution-time tile authorization: true when the position is not a house
    * tile, or the character is at least a guest of the (owned) house. Unowned
@@ -129,7 +183,40 @@ export class HouseService {
   canUseHouseTile(characterId: string, position: Position): boolean {
     const houseId = this.world.getHouseId(position);
     if (houseId === undefined) return true;
-    return this.houses.accessLevel(houseId, characterId) !== "none";
+    return (
+      this.houses.accessLevel(
+        houseId,
+        characterId,
+        this.subjectFor(characterId),
+      ) !== "none"
+    );
+  }
+
+  /**
+   * Execution-time door authorization. House-wide access is required, and a
+   * door carrying its own list additionally has to match it. Both are read
+   * fresh here — a character who just left the listed guild fails the very
+   * next use (charter rule 4).
+   */
+  canUseHouseDoor(characterId: string, position: Position): boolean {
+    const houseId = this.world.getHouseId(position);
+    if (houseId === undefined) return true;
+    const subject = this.subjectFor(characterId);
+    const level = this.houses.accessLevel(houseId, characterId, subject);
+    return this.houses.doorAllows(houseId, level, position, subject);
+  }
+
+  /** Live identity for text-list evaluation; undefined when offline. */
+  private subjectFor(characterId: string): HouseAccessSubject | undefined {
+    const player = this.world.getPlayer(characterId);
+    if (!player) return undefined;
+    const guild = this.guildIdentity?.(characterId) ?? null;
+    return {
+      name: player.name,
+      guildId: guild?.guildId ?? null,
+      guildName: guild?.guildName ?? null,
+      guildRankName: guild?.rankName ?? null,
+    };
   }
 
   handle(session: Session, intent: HouseIntent, now: number): void {
@@ -161,6 +248,9 @@ export class HouseService {
       case "house-buy":
         this.buy(session, characterId, player, intent.houseId, now);
         return;
+      case "house-bid":
+        this.bid(session, characterId, player, intent, now);
+        return;
       case "house-abandon":
         this.abandon(session, characterId);
         return;
@@ -176,6 +266,9 @@ export class HouseService {
       case "house-set-access":
         this.setAccess(session, characterId, intent);
         return;
+      case "house-set-list":
+        this.setTextList(session, characterId, intent);
+        return;
       case "house-kick":
         this.kick(session, characterId, player, intent, now);
         return;
@@ -183,6 +276,53 @@ export class HouseService {
   }
 
   tick(now: number): void {
+    this.scanAuctions(now);
+    this.scanRent(now);
+  }
+
+  /**
+   * Durable auction close. `listDueAuctionIds` reads the same rows the close
+   * transaction deletes, so a crash between the two just re-reads the row on
+   * the next scan; the delete-and-insert inside one transaction is what makes
+   * the close exactly-once.
+   */
+  private scanAuctions(now: number): void {
+    const store = this.store;
+    if (
+      !store ||
+      !this.loaded ||
+      this.auctionScanActive ||
+      now < this.nextAuctionScanAt
+    ) {
+      return;
+    }
+    this.nextAuctionScanAt = now + AUCTION_SCAN_INTERVAL_MS;
+    this.auctionScanActive = true;
+    const operation = (async () => {
+      const dueIds = await store.listDueAuctionIds(
+        new Date(now),
+        AUCTION_BATCH_LIMIT,
+      );
+      for (const houseId of dueIds) {
+        const info = this.content.get(houseId);
+        if (!info) continue;
+        const result = await store.closeAuction({
+          houseId,
+          now: new Date(now),
+          paidUntilMs: now + RENT_PERIOD_MS,
+          buyLevel: HOUSE_LIMITS.buyLevel,
+        });
+        this.outcomes.push(() => this.applyAuctionClose(houseId, info, result));
+      }
+    })()
+      .catch((cause: unknown) => this.warn("auction-scan", cause))
+      .finally(() => {
+        this.auctionScanActive = false;
+      });
+    this.track(operation);
+  }
+
+  private scanRent(now: number): void {
     const store = this.store;
     if (
       !store ||
@@ -201,16 +341,20 @@ export class HouseService {
         if (!info) continue;
         // Each house charges in its own transaction guarded on current DB
         // state, so a crash between houses or a replay cannot double-charge.
-        const result = await store.chargeRent({
-          houseId,
-          rent: info.rent,
-          now: new Date(now),
-          rentPeriodMs: RENT_PERIOD_MS,
-          warningGraceMs: DAY_MS,
-          maxWarnings: HOUSE_LIMITS.maxWarnings,
-          mapName: this.world.mapName,
-          tilePositions: this.world.getHouseTiles(houseId),
-        });
+        const result = await this.orderedWrite(() =>
+          store.chargeRent({
+            houseId,
+            rent: info.rent,
+            now: new Date(now),
+            rentPeriodMs: RENT_PERIOD_MS,
+            warningGraceMs: DAY_MS,
+            maxWarnings: HOUSE_LIMITS.maxWarnings,
+            mapName: this.world.mapName,
+            tilePositions: this.world.getHouseTiles(houseId),
+            warningLetterText: (warningsLeft) =>
+              rentWarningLetterText(info, warningsLeft),
+          }),
+        );
         this.outcomes.push((at) =>
           this.applyRentResult(houseId, info, result, at),
         );
@@ -241,6 +385,7 @@ export class HouseService {
   }
 
   private browse(session: Session, intent: HouseBrowseMessage): void {
+    const viewerCharacterId = session.playerId;
     const entries: HouseListEntry[] = [];
     const towns = new Map<number, string | undefined>();
     for (const info of this.content.values()) {
@@ -258,6 +403,7 @@ export class HouseService {
         ...(townName ? { townName } : {}),
         guildhall: info.guildhall,
         ownerName: this.houses.get(info.houseId)?.ownerName ?? null,
+        ...this.auctionProjection(info.houseId, viewerCharacterId),
       });
     }
     entries.sort((left, right) => left.houseId - right.houseId);
@@ -301,7 +447,7 @@ export class HouseService {
     // Pre-screens on the registry cache; the store re-checks ownership and
     // funds inside the transaction at execution time (charter rule 4).
     if (info.guildhall) {
-      this.fail(session, "guildhall");
+      this.buyGuildhall(session, characterId, player, info, houseId, now);
       return;
     }
     if (player.level < HOUSE_LIMITS.buyLevel) {
@@ -310,6 +456,12 @@ export class HouseService {
     }
     if (this.houses.get(houseId)) {
       this.fail(session, "already-owned");
+      return;
+    }
+    if (this.auctions.has(houseId)) {
+      // A house under auction is acquired by bidding; a direct purchase would
+      // strand the escrowed bids.
+      this.fail(session, "auction-active");
       return;
     }
     if (this.houses.ownedBy(characterId) !== undefined) {
@@ -332,12 +484,134 @@ export class HouseService {
       if (result.status === "failed") return this.failLater(session, result.reason);
       return () => {
         this.houses.set(houseId, result.snapshot);
+        this.grantAchievement(characterId, "landlord");
         this.sendHouseState(session, characterId, houseId);
         session.send({
           type: "house-event",
           kind: "purchased",
           houseName: info.name,
         });
+      };
+    });
+  }
+
+  /**
+   * Buys a guildhall out of the guild balance. Leadership is pre-screened
+   * against the live guild cache and re-verified inside the store's
+   * transaction, which is the only authority on whether the gold moved.
+   */
+  private buyGuildhall(
+    session: Session,
+    characterId: string,
+    player: Player,
+    info: HouseInfo,
+    houseId: number,
+    now: number,
+  ): void {
+    const guild = this.guildIdentity?.(characterId) ?? null;
+    if (!guild || !guild.isLeader) {
+      this.fail(session, "not-authorized");
+      return;
+    }
+    if (this.houses.get(houseId)) {
+      this.fail(session, "already-owned");
+      return;
+    }
+    if (!this.isAtHouse(player.position, houseId)) {
+      this.fail(session, "not-at-entry");
+      return;
+    }
+    const store = this.requireStore();
+    const guildId = guild.guildId;
+    this.enqueue(characterId, async () => {
+      const result = await store.purchaseGuildhall({
+        houseId,
+        characterId,
+        guildId,
+        price: info.size * HOUSE_LIMITS.pricePerSqm,
+        paidUntilMs: now + RENT_PERIOD_MS,
+      });
+      if (result.status === "failed") return this.failLater(session, result.reason);
+      return () => {
+        this.houses.set(houseId, result.snapshot);
+        this.sendHouseState(session, characterId, houseId);
+        session.send({
+          type: "house-event",
+          kind: "purchased",
+          houseName: info.name,
+        });
+      };
+    });
+  }
+
+  /**
+   * Places one auction bid. Everything here is a pre-screen for a fast
+   * rejection; the store re-reads ownership, the standing bid, and the
+   * bidder's funds inside one serializable transaction and is the only
+   * authority on whether the bid was accepted (charter rule 4).
+   */
+  private bid(
+    session: Session,
+    characterId: string,
+    player: Player,
+    intent: HouseBidMessage,
+    now: number,
+  ): void {
+    if (!player.isPremiumAt(now)) {
+      this.fail(session, "premium-required");
+      return;
+    }
+    const info = this.content.get(intent.houseId);
+    if (!info) {
+      this.fail(session, "not-found");
+      return;
+    }
+    if (info.guildhall) {
+      this.fail(session, "guildhall");
+      return;
+    }
+    if (player.level < HOUSE_LIMITS.buyLevel) {
+      this.fail(session, "level-too-low");
+      return;
+    }
+    if (this.houses.get(intent.houseId)) {
+      this.fail(session, "already-owned");
+      return;
+    }
+    if (this.houses.ownedBy(characterId) !== undefined) {
+      this.fail(session, "own-house-exists");
+      return;
+    }
+    const store = this.requireStore();
+    const houseId = intent.houseId;
+    this.enqueue(characterId, async () => {
+      const result = await store.placeBid({
+        houseId,
+        characterId,
+        amount: intent.amount,
+        minimumBid: info.size * HOUSE_LIMITS.pricePerSqm,
+        minIncrement: HOUSE_LIMITS.minBidIncrement,
+        endsAtMs: now + AUCTION_DURATION_MS,
+        now: new Date(now),
+      });
+      if (result.status === "failed") return this.failLater(session, result.reason);
+      return () => {
+        this.auctions.set(houseId, result.auction);
+        if (result.refunded) {
+          this.sendEventTo(result.refunded.characterId, {
+            type: "house-event",
+            kind: "outbid",
+            houseName: info.name,
+            amount: result.refunded.amount,
+          });
+        }
+        session.send({
+          type: "house-event",
+          kind: "bid-placed",
+          houseName: info.name,
+          amount: result.auction.bid,
+        });
+        this.sendHouseState(session, characterId, houseId);
       };
     });
   }
@@ -350,12 +624,14 @@ export class HouseService {
     }
     const store = this.requireStore();
     this.enqueue(characterId, async () => {
-      const result = await store.abandon({
-        houseId,
-        ownerCharacterId: characterId,
-        mapName: this.world.mapName,
-        tilePositions: this.world.getHouseTiles(houseId),
-      });
+      const result = await this.orderedWrite(() =>
+        store.abandon({
+          houseId,
+          ownerCharacterId: characterId,
+          mapName: this.world.mapName,
+          tilePositions: this.world.getHouseTiles(houseId),
+        }),
+      );
       if (result.status === "failed") return this.failLater(session, result.reason);
       return (at: number) => {
         this.clearPendingTransfer(houseId);
@@ -378,6 +654,12 @@ export class HouseService {
     const info = houseId === undefined ? undefined : this.content.get(houseId);
     if (houseId === undefined || !info) {
       this.fail(session, "not-owner");
+      return;
+    }
+    if (this.houses.get(houseId)?.guildId) {
+      // A guildhall belongs to the guild, not the leader; it changes hands
+      // with the guild's leadership, never through a personal offer.
+      this.fail(session, "guildhall");
       return;
     }
     if (this.pendingTransfers.has(houseId)) {
@@ -456,15 +738,17 @@ export class HouseService {
     const store = this.requireStore();
     const houseId = intent.houseId;
     this.enqueue(characterId, async () => {
-      const result = await store.transfer({
-        houseId,
-        fromCharacterId: pending.fromCharacterId,
-        toCharacterId: characterId,
-        price: pending.price,
-        paidUntilMs: now + RENT_PERIOD_MS,
-        mapName: this.world.mapName,
-        tilePositions: this.world.getHouseTiles(houseId),
-      });
+      const result = await this.orderedWrite(() =>
+        store.transfer({
+          houseId,
+          fromCharacterId: pending.fromCharacterId,
+          toCharacterId: characterId,
+          price: pending.price,
+          paidUntilMs: now + RENT_PERIOD_MS,
+          mapName: this.world.mapName,
+          tilePositions: this.world.getHouseTiles(houseId),
+        }),
+      );
       if (result.status === "failed") {
         return () => {
           // A stale offer (the seller lost the house meanwhile) is dropped.
@@ -544,6 +828,51 @@ export class HouseService {
     });
   }
 
+  /**
+   * Replaces one text access list. The body arrived bounded by the zod
+   * schema; the store re-checks who may edit which list inside its
+   * transaction, and the parsed result only ever reaches the registry
+   * through the tick outcome.
+   */
+  private setTextList(
+    session: Session,
+    characterId: string,
+    intent: HouseSetListMessage,
+  ): void {
+    const houseId = this.houseManagedBy(
+      characterId,
+      intent.kind === "subowner" ? "subowner" : "guest",
+    );
+    if (houseId === undefined) {
+      this.fail(session, "not-authorized");
+      return;
+    }
+    if (intent.kind === "door") {
+      if (!intent.door || this.world.getHouseId(intent.door) !== houseId) {
+        this.fail(session, "not-a-door");
+        return;
+      }
+    }
+    const store = this.requireStore();
+    this.enqueue(characterId, async () => {
+      const result = await store.setTextList({
+        houseId,
+        actorCharacterId: characterId,
+        kind: intent.kind,
+        body: intent.body,
+        ...(intent.door ? { door: intent.door } : {}),
+        maxDoorLists: HOUSE_LIMITS.maxDoorLists,
+      });
+      if (result.status === "failed") return this.failLater(session, result.reason);
+      return (at: number) => {
+        this.houses.set(houseId, result.snapshot);
+        // A narrowed list can strand visitors who no longer qualify.
+        this.sweepUnauthorizedOccupants(houseId, at);
+        this.sendHouseState(session, characterId, houseId);
+      };
+    });
+  }
+
   private kick(
     session: Session,
     characterId: string,
@@ -597,6 +926,34 @@ export class HouseService {
     return undefined;
   }
 
+  private applyAuctionClose(
+    houseId: number,
+    info: HouseInfo,
+    result: CloseHouseAuctionResult,
+  ): void {
+    if (result.status === "skip") return;
+    this.auctions.delete(houseId);
+    if (result.status === "refunded") {
+      this.sendEventTo(result.auction.bidderCharacterId, {
+        type: "house-event",
+        kind: "auction-refunded",
+        houseName: info.name,
+        amount: result.auction.bid,
+        detail: result.reason,
+      });
+      return;
+    }
+    this.houses.set(houseId, result.snapshot);
+    this.grantAchievement(result.snapshot.ownerCharacterId, "landlord");
+    this.grantAchievement(result.snapshot.ownerCharacterId, "big-spender");
+    this.sendEventTo(result.snapshot.ownerCharacterId, {
+      type: "house-event",
+      kind: "auction-won",
+      houseName: info.name,
+      amount: result.auction.bid,
+    });
+  }
+
   private applyRentResult(
     houseId: number,
     info: HouseInfo,
@@ -615,6 +972,12 @@ export class HouseService {
     }
     if (result.status === "warned") {
       this.houses.set(houseId, result.snapshot);
+      if (result.letter) {
+        this.depot.applyExternalCacheEvent(result.snapshot.ownerCharacterId, {
+          upserts: [result.letter],
+          bumps: [{ kind: "inbox" }],
+        });
+      }
       this.sendEventTo(result.snapshot.ownerCharacterId, {
         type: "house-event",
         kind: "rent-warning",
@@ -669,7 +1032,7 @@ export class HouseService {
   private sweepUnauthorizedOccupants(houseId: number, now: number): void {
     for (const player of this.world.allPlayers()) {
       if (this.world.getHouseId(player.position) !== houseId) continue;
-      if (this.houses.accessLevel(houseId, player.id) !== "none") continue;
+      if (this.canUseHouseTile(player.id, player.position)) continue;
       this.teleportToEntry(player, houseId, now);
     }
   }
@@ -710,6 +1073,7 @@ export class HouseService {
         info,
         snapshot,
         viewerCharacterId: characterId,
+        ...this.auctionProjection(houseId, characterId),
         ...(this.world.townName(info.townId)
           ? { townName: this.world.townName(info.townId) }
           : {}),
@@ -723,6 +1087,23 @@ export class HouseService {
           : {}),
       }),
     });
+  }
+
+  /** Public auction row for a house, scoped to the viewer's own relation. */
+  private auctionProjection(
+    houseId: number,
+    viewerCharacterId: string | null,
+  ): { auction?: HouseAuction } {
+    const auction = this.auctions.get(houseId);
+    if (!auction) return {};
+    return {
+      auction: {
+        bid: auction.bid,
+        bidderName: auction.bidderName,
+        endsAt: auction.endsAtMs,
+        mine: auction.bidderCharacterId === viewerCharacterId,
+      },
+    };
   }
 
   private clearPendingTransfer(houseId: number): void {
@@ -769,11 +1150,14 @@ export class HouseService {
       this.loaded = true;
       return;
     }
-    const operation = store.loadAll().then(
-      (snapshots) => {
+    const operation = Promise.all([store.loadAll(), store.loadAuctions()]).then(
+      ([snapshots, auctions]) => {
         this.outcomes.push(() => {
           for (const snapshot of snapshots) {
             this.houses.set(snapshot.houseId, snapshot);
+          }
+          for (const auction of auctions) {
+            this.auctions.set(auction.houseId, auction);
           }
           this.loaded = true;
         });

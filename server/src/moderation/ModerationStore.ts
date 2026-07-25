@@ -112,6 +112,16 @@ export interface ModerationStore {
     targetName: string;
     text: string;
   }): Promise<RecordNoteResult>;
+  /**
+   * Namelocks a character: they cannot enter the world until renamed. The
+   * flag and the audit row are written in one transaction, so the trail
+   * cannot drift from what is actually enforced.
+   */
+  namelockCharacter(input: {
+    actorCharacterId: string;
+    targetName: string;
+    reason: string;
+  }): Promise<RecordNoteResult>;
   createReport(input: {
     reporterCharacterId: string;
     targetName: string;

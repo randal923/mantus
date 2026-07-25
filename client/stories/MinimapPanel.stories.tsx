@@ -27,7 +27,10 @@ const meta = {
   args: {
     mapName: "otservbr",
     layout: null,
+    mapMarkers: [],
     onLayoutChange: fn(),
+    onWalkTo: fn(),
+    onToggleMarker: fn(),
     ownPlayerId: "player",
     ownPosition: { x: 32069, y: 31901, z: 6 },
     creatures: [

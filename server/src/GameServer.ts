@@ -34,6 +34,7 @@ import { ClockHandler } from "./action/ClockHandler";
 import { loadChestDefinitions } from "./action/loadChestDefinitions";
 import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
 import { PressurePlateRegistry } from "./action/PressurePlateRegistry";
+import { RopePullHandler } from "./action/RopePullHandler";
 import { ToolUseHandler } from "./action/ToolUseHandler";
 import { WorldActionRegistry } from "./action/WorldActionRegistry";
 import { WorldActionRng } from "./action/WorldActionRng";
@@ -44,6 +45,7 @@ import { WorldEventManager } from "./event/WorldEventManager";
 import type { WorldEventStore } from "./event/WorldEventStore";
 import { MarketService } from "./market/MarketService";
 import type { MarketStore } from "./market/MarketStore";
+import { ModerationCommandHandler } from "./moderation/ModerationCommandHandler";
 import { ModerationService } from "./moderation/ModerationService";
 import type { ModerationStore } from "./moderation/ModerationStore";
 import { ItemValuation } from "./party/ItemValuation";
@@ -90,6 +92,14 @@ import type { WheelStore } from "./wheel/WheelStore";
 import { WheelTracker } from "./wheel/WheelTracker";
 import { HighscoreService } from "./social/HighscoreService";
 import type { HighscoreStore } from "./social/HighscoreStore";
+import { MarkerService } from "./minimap/MarkerService";
+import { OutfitService } from "./outfit/OutfitService";
+import type { OutfitStore } from "./outfit/OutfitStore";
+import type { MarkerStore } from "./minimap/MarkerStore";
+import { ProfileService } from "./profile/ProfileService";
+import type { ProfileStore } from "./profile/ProfileStore";
+import { FriendService } from "./social/FriendService";
+import type { FriendStore } from "./social/FriendStore";
 import { VipService } from "./social/VipService";
 import type { VipStore } from "./social/VipStore";
 import { MantusStoreService } from "./store/MantusStoreService";
@@ -120,6 +130,10 @@ export interface GameServerDeps {
   pvp?: PvpStore;
   house?: HouseStore;
   vip?: VipStore;
+  friends?: FriendStore;
+  profiles?: ProfileStore;
+  markers?: MarkerStore;
+  outfits?: OutfitStore;
   highscores?: HighscoreStore;
   bestiary?: BestiaryStore;
   wheel?: WheelStore;
@@ -174,6 +188,10 @@ export class GameServer {
   private readonly pvp: PvpTracker;
   private readonly houses: HouseService;
   private readonly vips: VipService;
+  private readonly friends: FriendService;
+  private readonly profiles: ProfileService;
+  private readonly markers: MarkerService;
+  private readonly outfits: OutfitService;
   private readonly highscores: HighscoreService;
   private readonly bestiary: BestiaryService;
   private readonly bestiaryTracker: BestiaryTracker;
@@ -295,6 +313,21 @@ export class GameServer {
     );
     this.storeOperator = new StoreOperatorService(this.registry, deps.store);
     this.vips = new VipService(this.world, this.registry, deps.vip);
+    this.friends = new FriendService(this.world, this.registry, deps.friends);
+    this.markers = new MarkerService(this.world, this.registry, deps.markers);
+    this.outfits = new OutfitService(
+      this.world,
+      this.registry,
+      this.visibility,
+      this.persistence,
+      deps.outfits,
+    );
+    this.profiles = new ProfileService(
+      this.world,
+      this.registry,
+      (characterId) => this.guilds.guildIdentityOf(characterId)?.guildName ?? null,
+      deps.profiles,
+    );
     this.highscores = new HighscoreService(this.world, deps.highscores);
     const creatureContent =
       config.creatures && config.map.source === "data"
@@ -373,6 +406,10 @@ export class GameServer {
       this.guilds,
       this.pvp,
       this.vips,
+      this.friends,
+      this.profiles,
+      this.markers,
+      this.outfits,
       this.moderation,
       this.bestiaryTracker,
       this.wheelTracker,
@@ -463,6 +500,26 @@ export class GameServer {
     this.items.setHousePolicy((characterId, position) =>
       this.houses.canUseHouseTile(characterId, position),
     );
+    // `@guild` / `rank@guild` access-list entries resolve against live
+    // membership at every check, never a snapshot from when the list was
+    // written.
+    this.houses.setGuildIdentityLookup((characterId) =>
+      this.guilds.guildIdentityOf(characterId),
+    );
+    // Eviction sweeps read the item rows on the house tiles, so they must run
+    // behind every queued memory-first world-item persist; otherwise an item
+    // whose tile write is still in flight is missed and left behind.
+    this.houses.setOrderedWrite((operation) =>
+      this.items.runOrderedInternalOperation(operation),
+    );
+    // Achievement grants fire from committed outcomes only; the store's key
+    // makes a repeat harmless, so a retried outcome cannot double-award.
+    this.houses.setAchievementHook((characterId, achievementId) =>
+      this.profiles.grant(characterId, achievementId),
+    );
+    this.guilds.setAchievementHook((characterId, achievementId) =>
+      this.profiles.grant(characterId, achievementId),
+    );
     this.movement = new MovementHandler(
       this.world,
       this.visibility,
@@ -485,6 +542,11 @@ export class GameServer {
         }
       },
     );
+    // Server-computed paths honour the same house authorization every step
+    // check uses, so a route can never lead through a locked house.
+    this.movement.setHousePolicy((player, position) =>
+      this.houses.canUseHouseTile(player.id, position),
+    );
     this.chests = new ChestService(
       this.items,
       deps.itemCatalog,
@@ -496,8 +558,10 @@ export class GameServer {
       deps.itemCatalog,
       this.items,
       loadDoorLevelRequirements(this.world.mapName),
+      // World actions on a house tile use the door-aware check: a door with
+      // its own access list is narrower than the house it stands in.
       (characterId, position) =>
-        this.houses.canUseHouseTile(characterId, position),
+        this.houses.canUseHouseDoor(characterId, position),
       loadChestDefinitions(this.world.mapName),
       (session, player, chest) => this.chests.loot(session, player, chest),
     );
@@ -519,6 +583,14 @@ export class GameServer {
       this.visibility,
       this.persistence,
       this.progression,
+      new RopePullHandler(
+        this.world,
+        deps.itemCatalog,
+        this.items,
+        this.registry,
+        this.visibility,
+        this.persistence,
+      ),
       new WorldActionRng(config.combatSeed ^ 0x5f37_5a86),
       (typeName, position, now) => {
         spawns?.spawnEventMonsterNear(typeName, position, now);
@@ -533,6 +605,9 @@ export class GameServer {
         deps.itemCatalog,
         creatureContent?.shopCatalogs ?? new Map(),
       ),
+      // Read at query time, so flipping the switch hides an advert on the
+      // very next listing rather than on the next relogin (Feature 65).
+      (characterId) => this.friends.isFinderVisible(characterId),
     );
     // The analyzer's loot and supply totals come only from mutations the item
     // handler itself applied (charter rule 1).
@@ -649,6 +724,7 @@ export class GameServer {
       this.visibility,
       this.npcs,
       gm,
+      new ModerationCommandHandler(this.moderation),
       this.moderation,
       (session, text, now) =>
         this.combatSystem.castSpellByWords(session, text, now),
@@ -762,6 +838,11 @@ export class GameServer {
       this.guilds.applyResolvedOutcomes(now);
       this.houses.applyResolvedOutcomes(now);
       this.vips.applyResolvedOutcomes(now);
+      this.friends.applyResolvedOutcomes(now);
+      this.profiles.applyResolvedOutcomes(now);
+      this.markers.applyResolvedOutcomes();
+      this.outfits.applyResolvedOutcomes();
+      this.profiles.tick(now);
       this.highscores.applyResolvedOutcomes(now);
       this.moderation.applyResolvedOutcomes(now);
       this.moderation.tick(now);
@@ -847,6 +928,10 @@ export class GameServer {
       this.guilds.detach(session);
       this.houses.detach(session);
       this.vips.detach(session);
+      this.friends.detach(session);
+      this.profiles.detach(session);
+      this.markers.detach(session);
+      this.outfits.detach(session);
       this.highscores.detach(session);
       this.bestiary.detach(session);
       this.wheel.detach(session);
@@ -894,6 +979,9 @@ export class GameServer {
     this.guilds.detachCharacter(playerId);
     this.houses.detachCharacter(playerId);
     this.vips.detachCharacter(playerId);
+    this.friends.detachCharacter(playerId);
+    this.profiles.detachCharacter(playerId);
+    this.outfits.detachCharacter(playerId);
     this.moderation.detachCharacter(playerId);
     this.pvp.detachCharacter(playerId);
     this.bestiaryTracker.detachCharacter(playerId);
@@ -1054,6 +1142,7 @@ export class GameServer {
         return;
       case "speak":
       case "private-chat":
+      case "chat-typing":
       case "channel-list-get":
       case "channel-open":
       case "channel-close":
@@ -1139,11 +1228,13 @@ export class GameServer {
         return;
       case "house-open":
       case "house-buy":
+      case "house-bid":
       case "house-abandon":
       case "house-transfer-offer":
       case "house-transfer-respond":
       case "house-transfer-cancel":
       case "house-set-access":
+      case "house-set-list":
       case "house-kick":
       case "house-browse":
         this.houses.handle(session, intent, now);
@@ -1151,7 +1242,32 @@ export class GameServer {
       case "vip-add":
       case "vip-remove":
       case "vip-edit":
+      case "vip-group-create":
+      case "vip-group-delete":
+      case "vip-assign-group":
         this.vips.handle(session, intent, now);
+        return;
+      case "friend-request":
+      case "friend-respond":
+      case "friend-remove":
+      case "social-set-settings":
+        this.friends.handle(session, intent, now);
+        return;
+      case "character-profile-get":
+      case "profile-select-title":
+      case "bug-report":
+        this.profiles.handle(session, intent, now);
+        return;
+      case "walk-to":
+        this.movement.handleWalkTo(session, intent, now);
+        return;
+      case "minimap-marker-set":
+      case "minimap-marker-delete":
+        this.markers.handle(session, intent, now);
+        return;
+      case "outfit-get":
+      case "outfit-select":
+        this.outfits.handle(session, intent, now);
         return;
       case "store-open":
       case "store-purchase":
@@ -1236,6 +1352,14 @@ export class GameServer {
     this.houses.applyResolvedOutcomes(monotonicNow());
     await this.vips.stop();
     this.vips.applyResolvedOutcomes(monotonicNow());
+    await this.friends.stop();
+    this.friends.applyResolvedOutcomes(monotonicNow());
+    await this.profiles.stop();
+    this.profiles.applyResolvedOutcomes(monotonicNow());
+    await this.markers.stop();
+    this.markers.applyResolvedOutcomes();
+    await this.outfits.stop();
+    this.outfits.applyResolvedOutcomes();
     await this.highscores.stop();
     this.highscores.applyResolvedOutcomes(monotonicNow());
     await this.moderation.stop();

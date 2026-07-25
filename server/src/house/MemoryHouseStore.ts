@@ -1,24 +1,37 @@
 import { randomUUID } from "node:crypto";
-import type { Position } from "@tibia/protocol";
+import type { HouseListKind, Position } from "@tibia/protocol";
 import { positionKey } from "../positionKey";
+import { STAMPED_LETTER_TYPE_ID } from "./deliverHouseLetter";
 import type { Item } from "../item/Item";
 import type {
   AbandonHouseResult,
   ChargeHouseRentResult,
+  CloseHouseAuctionResult,
   HouseAccessRecord,
+  HouseAuctionSnapshot,
   HouseEvictionDelivery,
   HouseSnapshot,
   HouseStore,
+  HouseTextListRecord,
+  PlaceHouseBidResult,
   PurchaseHouseResult,
   SetHouseAccessResult,
+  SetHouseTextListResult,
   TransferHouseResult,
 } from "./HouseStore";
 
 interface MemoryHouseRow {
   ownerCharacterId: string;
+  guildId: string | null;
   tenancyId: string;
   paidUntilMs: number;
   rentWarnings: number;
+}
+
+interface MemoryAuctionRow {
+  bidderCharacterId: string;
+  bid: number;
+  endsAtMs: number;
 }
 
 interface MemoryAccessRow {
@@ -36,7 +49,13 @@ export class MemoryHouseStore implements HouseStore {
   private readonly characterNames = new Map<string, string>();
   private readonly balances = new Map<string, number>();
   private readonly rows = new Map<number, MemoryHouseRow>();
+  private readonly auctions = new Map<number, MemoryAuctionRow>();
+  private readonly levels = new Map<string, number>();
+  private readonly premiumUntil = new Map<string, number>();
   private readonly access = new Map<number, MemoryAccessRow[]>();
+  private readonly textLists = new Map<number, HouseTextListRecord[]>();
+  private readonly guildOwners = new Map<string, string>();
+  private readonly guildBalances = new Map<string, number>();
   private readonly worldItems = new Map<string, Item>();
   private readonly deliveredKeys = new Set<string>();
   private readonly inboxes = new Map<string, Item[]>();
@@ -45,8 +64,17 @@ export class MemoryHouseStore implements HouseStore {
     private readonly isMovable: (typeId: number) => boolean = () => true,
   ) {}
 
-  registerCharacter(characterId: string, name: string): void {
+  registerCharacter(
+    characterId: string,
+    name: string,
+    eligibility?: { level?: number; premiumUntilMs?: number },
+  ): void {
     this.characterNames.set(characterId, name);
+    this.levels.set(characterId, eligibility?.level ?? 1_000);
+    this.premiumUntil.set(
+      characterId,
+      eligibility?.premiumUntilMs ?? Number.MAX_SAFE_INTEGER,
+    );
   }
 
   setBalance(characterId: string, balance: number): void {
@@ -83,7 +111,9 @@ export class MemoryHouseStore implements HouseStore {
       return { status: "failed", reason: "already-owned" };
     }
     for (const row of this.rows.values()) {
-      if (row.ownerCharacterId === input.characterId) {
+      // Mirrors the partial unique index: a guildhall does not count against
+      // the leader's one personal house.
+      if (row.guildId === null && row.ownerCharacterId === input.characterId) {
         return { status: "failed", reason: "own-house-exists" };
       }
     }
@@ -94,6 +124,50 @@ export class MemoryHouseStore implements HouseStore {
     this.balances.set(input.characterId, balance - input.price);
     this.rows.set(input.houseId, {
       ownerCharacterId: input.characterId,
+      guildId: null,
+      tenancyId: randomUUID(),
+      paidUntilMs: input.paidUntilMs,
+      rentWarnings: 0,
+    });
+    this.access.set(input.houseId, []);
+    return { status: "purchased", snapshot: this.snapshotOf(input.houseId)! };
+  }
+
+  registerGuild(guildId: string, ownerCharacterId: string, balance: number): void {
+    this.guildOwners.set(guildId, ownerCharacterId);
+    this.guildBalances.set(guildId, balance);
+  }
+
+  guildBalanceOf(guildId: string): number {
+    return this.guildBalances.get(guildId) ?? 0;
+  }
+
+  async purchaseGuildhall(input: {
+    houseId: number;
+    characterId: string;
+    guildId: string;
+    price: number;
+    paidUntilMs: number;
+  }): Promise<PurchaseHouseResult> {
+    if (this.rows.has(input.houseId)) {
+      return { status: "failed", reason: "already-owned" };
+    }
+    if (this.guildOwners.get(input.guildId) !== input.characterId) {
+      return { status: "failed", reason: "not-authorized" };
+    }
+    for (const row of this.rows.values()) {
+      if (row.guildId === input.guildId) {
+        return { status: "failed", reason: "own-house-exists" };
+      }
+    }
+    const balance = this.guildBalanceOf(input.guildId);
+    if (balance < input.price) {
+      return { status: "failed", reason: "insufficient-funds" };
+    }
+    this.guildBalances.set(input.guildId, balance - input.price);
+    this.rows.set(input.houseId, {
+      ownerCharacterId: input.characterId,
+      guildId: input.guildId,
       tenancyId: randomUUID(),
       paidUntilMs: input.paidUntilMs,
       rentWarnings: 0,
@@ -120,6 +194,7 @@ export class MemoryHouseStore implements HouseStore {
     );
     this.rows.delete(input.houseId);
     this.access.delete(input.houseId);
+    this.textLists.delete(input.houseId);
     return { status: "abandoned", evicted };
   }
 
@@ -161,11 +236,13 @@ export class MemoryHouseStore implements HouseStore {
     );
     this.rows.set(input.houseId, {
       ownerCharacterId: input.toCharacterId,
+      guildId: null,
       tenancyId: randomUUID(),
       paidUntilMs: input.paidUntilMs,
       rentWarnings: 0,
     });
     this.access.set(input.houseId, []);
+    this.textLists.delete(input.houseId);
     return {
       status: "transferred",
       snapshot: this.snapshotOf(input.houseId)!,
@@ -229,6 +306,168 @@ export class MemoryHouseStore implements HouseStore {
     };
   }
 
+  async setTextList(input: {
+    houseId: number;
+    actorCharacterId: string;
+    kind: HouseListKind;
+    body: string;
+    door?: Position;
+    maxDoorLists: number;
+  }): Promise<SetHouseTextListResult> {
+    const row = this.rows.get(input.houseId);
+    if (!row) return { status: "failed", reason: "not-found" };
+    if (row.ownerCharacterId !== input.actorCharacterId) {
+      const isSubowner = (this.access.get(input.houseId) ?? []).some(
+        (entry) =>
+          entry.kind === "subowner" &&
+          entry.characterId === input.actorCharacterId,
+      );
+      if (!isSubowner || input.kind === "subowner") {
+        return { status: "failed", reason: "not-authorized" };
+      }
+    }
+    const door = input.kind === "door" ? input.door : undefined;
+    if (input.kind === "door" && !door) {
+      return { status: "failed", reason: "not-a-door" };
+    }
+    const lists = this.textLists.get(input.houseId) ?? [];
+    const sameSlot = (entry: HouseTextListRecord) =>
+      entry.kind === input.kind &&
+      (!door ||
+        (entry.door?.x === door.x &&
+          entry.door?.y === door.y &&
+          entry.door?.z === door.z));
+    const index = lists.findIndex(sameSlot);
+    if (!input.body.trim()) {
+      if (index >= 0) lists.splice(index, 1);
+    } else if (index >= 0) {
+      lists[index] = { kind: input.kind, body: input.body, ...(door ? { door } : {}) };
+    } else {
+      if (
+        door &&
+        lists.filter((entry) => entry.kind === "door").length >=
+          input.maxDoorLists
+      ) {
+        return { status: "failed", reason: "access-limit" };
+      }
+      lists.push({ kind: input.kind, body: input.body, ...(door ? { door } : {}) });
+    }
+    this.textLists.set(input.houseId, lists);
+    return { status: "ok", snapshot: this.snapshotOf(input.houseId)! };
+  }
+
+  async loadAuctions(): Promise<ReadonlyArray<HouseAuctionSnapshot>> {
+    return [...this.auctions.keys()].map((houseId) =>
+      this.auctionOf(houseId)!,
+    );
+  }
+
+  async placeBid(input: {
+    houseId: number;
+    characterId: string;
+    amount: number;
+    minimumBid: number;
+    minIncrement: number;
+    endsAtMs: number;
+    now: Date;
+  }): Promise<PlaceHouseBidResult> {
+    if (this.rows.has(input.houseId)) {
+      return { status: "failed", reason: "already-owned" };
+    }
+    const previous = this.auctions.get(input.houseId);
+    if (previous && previous.endsAtMs <= input.now.getTime()) {
+      return { status: "failed", reason: "auction-closed" };
+    }
+    const floor = previous ? previous.bid + input.minIncrement : input.minimumBid;
+    if (input.amount < floor) return { status: "failed", reason: "bid-too-low" };
+    const escrow =
+      previous?.bidderCharacterId === input.characterId
+        ? input.amount - previous.bid
+        : input.amount;
+    const balance = this.balanceOf(input.characterId);
+    if (balance < escrow) {
+      return { status: "failed", reason: "insufficient-funds" };
+    }
+    this.balances.set(input.characterId, balance - escrow);
+    let refunded: { characterId: string; amount: number } | null = null;
+    if (previous && previous.bidderCharacterId !== input.characterId) {
+      this.balances.set(
+        previous.bidderCharacterId,
+        this.balanceOf(previous.bidderCharacterId) + previous.bid,
+      );
+      refunded = {
+        characterId: previous.bidderCharacterId,
+        amount: previous.bid,
+      };
+    }
+    this.auctions.set(input.houseId, {
+      bidderCharacterId: input.characterId,
+      bid: input.amount,
+      endsAtMs: previous?.endsAtMs ?? input.endsAtMs,
+    });
+    return {
+      status: "bid",
+      auction: this.auctionOf(input.houseId)!,
+      refunded,
+    };
+  }
+
+  async listDueAuctionIds(
+    now: Date,
+    limit: number,
+  ): Promise<ReadonlyArray<number>> {
+    return [...this.auctions.entries()]
+      .filter(([, row]) => row.endsAtMs <= now.getTime())
+      .sort((left, right) => left[1].endsAtMs - right[1].endsAtMs)
+      .slice(0, limit)
+      .map(([houseId]) => houseId);
+  }
+
+  async closeAuction(input: {
+    houseId: number;
+    now: Date;
+    paidUntilMs: number;
+    buyLevel: number;
+  }): Promise<CloseHouseAuctionResult> {
+    const row = this.auctions.get(input.houseId);
+    if (!row || row.endsAtMs > input.now.getTime()) return { status: "skip" };
+    const auction = this.auctionOf(input.houseId)!;
+    const ownsHouse = [...this.rows.values()].some(
+      (candidate) => candidate.ownerCharacterId === row.bidderCharacterId,
+    );
+    const blocked = this.rows.has(input.houseId)
+      ? ("already-owned" as const)
+      : ownsHouse
+        ? ("own-house-exists" as const)
+        : (this.levels.get(row.bidderCharacterId) ?? 1) < input.buyLevel
+          ? ("level-too-low" as const)
+          : (this.premiumUntil.get(row.bidderCharacterId) ?? 0) <=
+              input.now.getTime()
+            ? ("premium-required" as const)
+            : null;
+    this.auctions.delete(input.houseId);
+    if (blocked) {
+      this.balances.set(
+        row.bidderCharacterId,
+        this.balanceOf(row.bidderCharacterId) + row.bid,
+      );
+      return { status: "refunded", auction, reason: blocked };
+    }
+    this.rows.set(input.houseId, {
+      ownerCharacterId: row.bidderCharacterId,
+      guildId: null,
+      tenancyId: randomUUID(),
+      paidUntilMs: input.paidUntilMs,
+      rentWarnings: 0,
+    });
+    this.access.set(input.houseId, []);
+    return {
+      status: "sold",
+      snapshot: this.snapshotOf(input.houseId)!,
+      auction,
+    };
+  }
+
   async listDueHouseIds(
     now: Date,
     limit: number,
@@ -249,14 +488,22 @@ export class MemoryHouseStore implements HouseStore {
     maxWarnings: number;
     mapName: string;
     tilePositions: ReadonlyArray<Position>;
+    warningLetterText: (warningsLeft: number) => string;
   }): Promise<ChargeHouseRentResult> {
     const row = this.rows.get(input.houseId);
     if (!row || row.paidUntilMs > input.now.getTime()) {
       return { status: "skip" };
     }
-    const balance = this.balanceOf(row.ownerCharacterId);
+    // A guildhall's rent comes out of the guild balance.
+    const balance = row.guildId
+      ? this.guildBalanceOf(row.guildId)
+      : this.balanceOf(row.ownerCharacterId);
     if (balance >= input.rent) {
-      this.balances.set(row.ownerCharacterId, balance - input.rent);
+      if (row.guildId) {
+        this.guildBalances.set(row.guildId, balance - input.rent);
+      } else {
+        this.balances.set(row.ownerCharacterId, balance - input.rent);
+      }
       row.paidUntilMs += input.rentPeriodMs;
       row.rentWarnings = 0;
       return { status: "paid", snapshot: this.snapshotOf(input.houseId)! };
@@ -271,6 +518,7 @@ export class MemoryHouseStore implements HouseStore {
       );
       this.rows.delete(input.houseId);
       this.access.delete(input.houseId);
+      this.textLists.delete(input.houseId);
       return {
         status: "evicted",
         ownerCharacterId: row.ownerCharacterId,
@@ -279,7 +527,35 @@ export class MemoryHouseStore implements HouseStore {
     }
     row.rentWarnings = warnings;
     row.paidUntilMs = input.now.getTime() + input.warningGraceMs;
-    return { status: "warned", snapshot: this.snapshotOf(input.houseId)! };
+    const key = `house-rent-letter:${input.houseId}:${row.tenancyId}:${warnings}`;
+    let letter: Item | null = null;
+    if (!this.deliveredKeys.has(key)) {
+      this.deliveredKeys.add(key);
+      const inbox = this.inboxes.get(row.ownerCharacterId) ?? [];
+      letter = {
+        id: randomUUID(),
+        typeId: STAMPED_LETTER_TYPE_ID,
+        count: 1,
+        attributes: {
+          text: input.warningLetterText(
+            Math.max(input.maxWarnings - warnings, 0),
+          ),
+        },
+        version: 1,
+        location: {
+          kind: "inbox",
+          characterId: row.ownerCharacterId,
+          slot: inbox.length,
+        },
+      };
+      inbox.push(letter);
+      this.inboxes.set(row.ownerCharacterId, inbox);
+    }
+    return {
+      status: "warned",
+      snapshot: this.snapshotOf(input.houseId)!,
+      letter,
+    };
   }
 
   private evictItems(
@@ -321,6 +597,18 @@ export class MemoryHouseStore implements HouseStore {
     };
   }
 
+  private auctionOf(houseId: number): HouseAuctionSnapshot | null {
+    const row = this.auctions.get(houseId);
+    if (!row) return null;
+    return {
+      houseId,
+      bidderCharacterId: row.bidderCharacterId,
+      bidderName: this.characterNames.get(row.bidderCharacterId) ?? "?",
+      bid: row.bid,
+      endsAtMs: row.endsAtMs,
+    };
+  }
+
   private snapshotOf(houseId: number): HouseSnapshot | null {
     const row = this.rows.get(houseId);
     if (!row) return null;
@@ -336,11 +624,13 @@ export class MemoryHouseStore implements HouseStore {
       houseId,
       ownerCharacterId: row.ownerCharacterId,
       ownerName: this.characterNames.get(row.ownerCharacterId) ?? "?",
+      guildId: row.guildId,
       tenancyId: row.tenancyId,
       paidUntilMs: row.paidUntilMs,
       rentWarnings: row.rentWarnings,
       guests: records("guest"),
       subowners: records("subowner"),
+      textLists: [...(this.textLists.get(houseId) ?? [])],
     };
   }
 }

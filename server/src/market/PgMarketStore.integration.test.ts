@@ -1260,6 +1260,7 @@ databaseDescribe("PgMarketStore integration", () => {
         itemRevision: 2,
         normalizedRecipientName: "trader buyer",
         expiresAt: new Date(Date.now() + 86_400_000),
+        maxPerDay: 100,
       });
 
       expect(result.status).toBe("not-owned");

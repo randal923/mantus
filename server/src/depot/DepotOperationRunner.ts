@@ -20,6 +20,8 @@ import { failMail } from "./failMail";
 export class DepotOperationRunner {
   private readonly outcomes: Array<() => void> = [];
   private readonly pendingOperations = new Set<Promise<void>>();
+  /** Per-session mail pacing; the durable daily cap is in the transaction. */
+  private readonly nextMailAtBySession = new Map<string, number>();
 
   constructor(
     private readonly items: ItemIntentHandler,
@@ -79,8 +81,20 @@ export class DepotOperationRunner {
       return;
     }
     const characterId = session.playerId;
+    // Per-session pacing; the durable daily cap lives in the transaction, so
+    // a reconnecting client cannot reset it (charter rule 8).
+    const now = monotonicNow();
+    const readyAt = this.nextMailAtBySession.get(session.id) ?? 0;
+    if (now < readyAt) {
+      failMail(session, "rate-limited");
+      return;
+    }
+    this.nextMailAtBySession.set(
+      session.id,
+      now + DEPOT_LIMITS.mailMinIntervalMs,
+    );
     const expiresAt = new Date(
-      monotonicNow() + DEPOT_LIMITS.mailExpiryDays * 24 * 60 * 60 * 1_000,
+      now + DEPOT_LIMITS.mailExpiryDays * 24 * 60 * 60 * 1_000,
     );
     session.itemOperationPending = true;
     session.depotOperationPending = true;
@@ -91,6 +105,7 @@ export class DepotOperationRunner {
       itemRevision: intent.itemRevision,
       normalizedRecipientName: recipient.normalizedName,
       expiresAt,
+      maxPerDay: DEPOT_LIMITS.mailMaxPerDay,
     });
     const resolution = operation
       .then((result) => {

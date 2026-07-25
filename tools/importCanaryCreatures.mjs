@@ -16,6 +16,19 @@ import { parseCanaryCreatureContent } from "./parseCanaryCreatureContent.mjs";
 import { parseCanaryMonsterSpells } from "./parseCanaryMonsterSpells.mjs";
 import { readMapNavigation } from "./readMapNavigation.mjs";
 
+/**
+ * Fields this importer does not type because a different pinned importer owns
+ * them, and the project already consumes the result. They are not silently
+ * ignored, so they are reported `covered` rather than `blocked` — with the
+ * owning converter named, so the claim is checkable (and is checked, in
+ * `server/src/spawn/creatureImportReport.test.ts`).
+ */
+const COVERED_ELSEWHERE = new Map([
+  ["Bestiary", "tools/importCanaryBestiary.mjs"],
+  ["bosstiary", "tools/importCanaryBestiary.mjs"],
+  ["raceId", "tools/importCanaryBestiary.mjs"],
+]);
+
 const repoRoot = join(import.meta.dirname, "..");
 const canaryRoot = process.argv.find((argument, index) =>
   index >= 2 && !argument.startsWith("--")
@@ -293,20 +306,48 @@ function parseAreas(source) {
 }
 
 function addGapOwnership(definition) {
+  // A Bestiary block with no monster.raceId cannot be addressed by the
+  // bestiary importer — Canary itself has no id to track kills against. The
+  // one such monster upstream is Crypt Warrior; the block is unusable data,
+  // not work this project owes.
+  const upstreamDefect =
+    definition.ignoredAssignments.includes("Bestiary") &&
+    !definition.ignoredAssignments.includes("raceId");
   return {
     ...definition,
     gaps: [
       ...definition.ignoredAssignments.map((name) =>
-        creatureGap(definition.kind, "field", name),
+        creatureGap(definition.kind, "field", name, upstreamDefect),
       ),
       ...definition.proceduralCallbacks.map((name) =>
-        creatureGap(definition.kind, "callback", name),
+        creatureGap(definition.kind, "callback", name, false),
       ),
     ],
   };
 }
 
-function creatureGap(kind, gapKind, name) {
+function creatureGap(kind, gapKind, name, upstreamDefect) {
+  const coveredBy = COVERED_ELSEWHERE.get(name);
+  if (coveredBy) {
+    if (upstreamDefect) {
+      return {
+        kind: gapKind,
+        name,
+        ownerTodo: "04-creatures-spawns-and-ai",
+        status: "upstream-defect",
+        reason:
+          "Bestiary block without monster.raceId: the pinned source provides no race id to track kills against, so there is nothing to import.",
+      };
+    }
+    return {
+      kind: gapKind,
+      name,
+      ownerTodo: "04-creatures-spawns-and-ai",
+      status: "covered",
+      coveredBy,
+      reason: `Imported as typed content by ${coveredBy}; this importer deliberately does not duplicate it.`,
+    };
+  }
   const blockedBy = creatureGapOwner(kind, name);
   return {
     kind: gapKind,
@@ -327,7 +368,6 @@ function creatureGap(kind, gapKind, name) {
 
 function creatureGapOwner(kind, name) {
   if (
-    ["Bestiary", "bosstiary", "race", "raceId"].includes(name) ||
     name.startsWith("flags.rewardBoss") ||
     name.startsWith("flags.isPrey") ||
     name.startsWith("flags.forge")

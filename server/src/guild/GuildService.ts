@@ -89,6 +89,7 @@ export class GuildService implements GuildHooks {
   private readonly activeWarPairs = new Set<string>();
   private readonly opPendingByCharacter = new Set<string>();
   private nextWarExpiryCheckAt = 0;
+  private grantAchievement: (characterId: string, id: string) => void = () => {};
 
   constructor(
     private readonly world: World,
@@ -126,9 +127,40 @@ export class GuildService implements GuildHooks {
     this.sendGuildState(membership.guildId);
   }
 
+  /** Wires achievement grants fired from committed guild outcomes. */
+  setAchievementHook(grant: (characterId: string, id: string) => void): void {
+    this.grantAchievement = grant;
+  }
+
   /** Loads the character's guild (or invitations) after world entry. */
   attachCharacter(session: Session, characterId: string): void {
     this.sendOwnState(session, characterId);
+  }
+
+  /**
+   * Live guild name and rank name for an online character, or null when they
+   * are unguilded or offline. The membership cache this reads is refreshed
+   * from every store outcome, so a character kicked or promoted a tick ago
+   * resolves to their new identity — house access lists depend on that.
+   */
+  guildIdentityOf(characterId: string): {
+    guildId: string;
+    guildName: string;
+    rankName: string;
+    isLeader: boolean;
+  } | null {
+    const membership = this.membershipByCharacter.get(characterId);
+    if (!membership) return null;
+    const snapshot = this.snapshotByGuild.get(membership.guildId);
+    const rank = snapshot?.ranks.find(
+      (entry) => entry.level === membership.rankLevel,
+    );
+    return {
+      guildId: membership.guildId,
+      guildName: membership.guildName,
+      rankName: rank?.name ?? "",
+      isLeader: snapshot?.ownerCharacterId === characterId,
+    };
   }
 
   /** True when both characters are in the same guild (both online). */
@@ -326,7 +358,11 @@ export class GuildService implements GuildHooks {
         name,
       });
       if (result.status === "failed") return this.failLater(session, result.reason);
-      return this.loadApplyGuild(result.guildId);
+      const apply = await this.loadApplyGuild(result.guildId);
+      return (now: number) => {
+        apply(now);
+        this.grantAchievement(characterId, "guild-founder");
+      };
     });
   }
 

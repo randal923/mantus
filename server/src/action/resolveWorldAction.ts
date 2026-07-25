@@ -21,9 +21,9 @@ export function resolveWorldAction(
   position: Position,
   chests: ReadonlyMap<string, ChestDefinition> = new Map(),
 ): WorldAction | null {
-  // Use-with actions (rope spots) never resolve from a bare use-map: they
-  // require the authoritative tool check in ToolUseHandler.
-  if (world.getMapAction(position)?.activation === "use") {
+  // Use-with actions (rope spots, rope holes) never resolve from a bare
+  // use-map: they require the authoritative tool check in ToolUseHandler.
+  if (world.getMapAction(position, "use")) {
     return { kind: "map-movement" };
   }
   const items = [...world.getMapItems(position)].sort(

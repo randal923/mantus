@@ -1,13 +1,18 @@
 import { useCallback, useRef, useState } from "react";
 import type {
+  FriendStateMessage,
   VipActionFailedReason,
   VipEntry,
+  VipGroup,
   VipStateMessage,
   VipStatusChangedMessage,
 } from "@tibia/protocol";
 
 export interface VipSessionState {
   readonly entries: ReadonlyArray<VipEntry>;
+  readonly groups: ReadonlyArray<VipGroup>;
+  /** Reciprocal friendships and pending requests (Feature 65). */
+  readonly friends: FriendStateMessage | null;
   readonly pending: boolean;
   readonly error: VipActionFailedReason | null;
 }
@@ -15,6 +20,7 @@ export interface VipSessionState {
 export interface VipSession {
   readonly state: VipSessionState;
   readonly stateReceived: (message: VipStateMessage) => void;
+  readonly friendStateReceived: (message: FriendStateMessage) => void;
   /** Returns the affected entry so callers can surface login notices. */
   readonly statusChanged: (
     message: VipStatusChangedMessage,
@@ -28,6 +34,8 @@ export interface VipSession {
 
 const initialState: VipSessionState = {
   entries: [],
+  groups: [],
+  friends: null,
   pending: false,
   error: null,
 };
@@ -46,6 +54,16 @@ export function useVipSession(): VipSession {
     setState((current) => ({
       ...current,
       entries: message.entries,
+      groups: message.groups,
+      pending: false,
+      error: null,
+    }));
+  }, []);
+
+  const friendStateReceived = useCallback((message: FriendStateMessage) => {
+    setState((current) => ({
+      ...current,
+      friends: message,
       pending: false,
       error: null,
     }));
@@ -94,6 +112,7 @@ export function useVipSession(): VipSession {
   return {
     state,
     stateReceived,
+    friendStateReceived,
     statusChanged,
     begin,
     fail,

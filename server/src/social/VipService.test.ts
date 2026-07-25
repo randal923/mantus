@@ -171,6 +171,7 @@ describe("VipService", () => {
         description: "",
         icon: 0,
         notifyLogin: false,
+        groupId: null,
       },
     ]);
     // Over-share check: nothing about Alice's list ever reaches Bob.

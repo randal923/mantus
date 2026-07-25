@@ -33,6 +33,10 @@ import type { GuildService } from "./guild/GuildService";
 import type { ModerationService } from "./moderation/ModerationService";
 import type { PvpTracker } from "./pvp/PvpTracker";
 import type { PvpKillRecord } from "./pvp/PvpStore";
+import type { MarkerService } from "./minimap/MarkerService";
+import type { OutfitService } from "./outfit/OutfitService";
+import type { ProfileService } from "./profile/ProfileService";
+import type { FriendService } from "./social/FriendService";
 import type { VipService } from "./social/VipService";
 import { equippedGemsOf } from "./wheel/equippedGemsOf";
 import type { GemCharacterData } from "./wheel/GemStore";
@@ -55,6 +59,10 @@ export class CharacterHandler {
     private readonly guilds: GuildService,
     private readonly pvp: PvpTracker,
     private readonly vips: VipService,
+    private readonly friends: FriendService,
+    private readonly profiles: ProfileService,
+    private readonly markers: MarkerService,
+    private readonly outfits: OutfitService,
     private readonly moderation: ModerationService,
     private readonly bestiary: BestiaryTracker,
     private readonly wheel: WheelTracker,
@@ -173,6 +181,13 @@ export class CharacterHandler {
           session.sendError("character-not-found");
           return;
         }
+        // A namelocked character stays out of the world until renamed;
+        // relogging does not clear the flag (Feature 67).
+        if (character.namelocked) {
+          this.finishOperation(session, accountId);
+          session.sendError("character-namelocked");
+          return;
+        }
         this.evictExistingSession(character.id, session);
         // Retire any lingering entity before the fresh entry loads, so its
         // damage is flushed first and there is never a second entity.
@@ -251,6 +266,13 @@ export class CharacterHandler {
         if (!character) {
           this.finishOperation(session, accountId);
           session.sendError("character-not-found");
+          return;
+        }
+        // A namelocked character stays out of the world until renamed;
+        // relogging does not clear the flag (Feature 67).
+        if (character.namelocked) {
+          this.finishOperation(session, accountId);
+          session.sendError("character-namelocked");
           return;
         }
         const existing = this.registry.sessionFor(characterId);
@@ -355,6 +377,10 @@ export class CharacterHandler {
     this.trade.recoverOrphans(session, player.id);
     this.guilds.attachCharacter(session, player.id);
     this.vips.attachCharacter(session, player.id);
+    this.friends.attachCharacter(session, player.id);
+    this.profiles.attachCharacter(session, player.id);
+    this.markers.attachCharacter(session, player.id);
+    this.outfits.attachCharacter(session, player.id);
     this.moderation.attachCharacter(player.id);
     this.bestiary.attach(player.id, bestiaryKills);
     this.wheel.attach(player.id, wheelSlices);

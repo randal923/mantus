@@ -55,6 +55,10 @@ export interface Character {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly lastLoginAt: Date | null;
+  /** Blocks world entry until the character is renamed (Feature 67). */
+  readonly namelocked: boolean;
+  /** Mount being ridden (0 = none); owned by the outfit entitlements. */
+  readonly mountId: number;
   readonly version: number;
 }
 

@@ -20,6 +20,8 @@ export async function appendBankLedger(
     | "house-rent"
     | "house-transfer-in"
     | "house-transfer-out"
+    | "house-bid-escrow"
+    | "house-bid-refund"
     | "guild-deposit"
     | "guild-withdraw",
   amount: number,

@@ -43,6 +43,30 @@ limitations accepted during a session are recorded in the owning feature file
   only when the server runs with `DEV_COMMANDS=1` — so they are not a
   player-reachable surface. They should move behind real operator
   authorization once Feature 96 ships.
+- **Inbox-overflow spillover deviates from Canary** (2026-07-25, Feature 64).
+  Items that do not fit an evicted owner's inbox stay on the house tiles and
+  are counted in the eviction audit row. Canary mails them with `FLAG_NOLIMIT`,
+  ignoring the inbox cap; matching that exactly would let an eviction push a
+  character past `DEPOT_LIMITS.maxInboxItems`, i.e. unbounded per-connection
+  storage, which charter rule 10 forbids. Owner: Feature 64.
+- **Ignore lists are not durable** (2026-07-25, Feature 65). Server-side
+  suppression ships (`chat/IgnoreList.ts`, stricter than pinned Tibia's
+  client-side list) but is held in memory only, so a restart clears every
+  list. The fix is a per-character table loaded at attach. Owner: Feature 65.
+- **The staff flag has no operator tooling** (2026-07-25, Feature 66).
+  `accounts.is_staff` gates highscore exclusion and the production moderation
+  commands, but can only be set with direct SQL until Feature 96 lands roles;
+  derive it from the role column then rather than keeping two truths.
+  Owner: Feature 96.
+- **Namelock has no rename flow** (2026-07-25, Feature 67). A namelocked
+  character is held out of the world with `character-namelocked`, which is the
+  enforcement half; nothing clears the flag in-game. The rename infrastructure
+  is Feature 2. Owner: Feature 67.
+- **Mounts do not render** (2026-07-25, Feature 71). Ownership, selection
+  validation, and the server-side speed bonus ship, and creature state carries
+  `mountLookType`, but `CreatureView` still draws only the rider. Drawing the
+  mount under it needs a second sprite layer subject to the pattern/layer
+  rules in `client/ASSETS.md`. Owner: Feature 71.
 - **Fields cannot be implemented from the pinned assets** (2026-07-25,
   Feature 50). The item catalog imports `kind: "magicfield"` for 45 types but
   no `field` payload; `ItemType.field` is declared and always undefined, so
@@ -142,6 +166,31 @@ limitations accepted during a session are recorded in the owning feature file
   free of I/O. Fix if abuse warrants: a `character_chat_escalation` row loaded
   at login next to the durable mute (`ModerationService.attachCharacter`) and
   written behind the tick when a mute is issued. Owner: Feature 36.
+
+- **233 rope holes have no reachable landing tile** (2026-07-25, Feature 51/4).
+  Canary's `holeId` list now drives 4,968 working `rope-hole` actions, but 233
+  placements are disabled because no neighbour of the hole is walkable (207
+  blocked, 74 missing, 53 at z15 with no floor below). These need map-content
+  review rather than code; they are pinned by kind and reason in
+  `server/src/mapParityCeiling.test.ts`. Owner: Feature 4.
+- **Two "Harlow" NPC definitions collide upstream** (2026-07-25, Feature 10).
+  `harlow.lua` and `harlow_trade.lua` both register the Canary type name
+  "Harlow"; the world placement resolves to `harlow.lua` by file-name match.
+  Every other former duplicate was Canary's location-variant convention and is
+  now addressable by its own id. Owner: Feature 10.
+- **67 NPC location variants are recorded but not imported** (2026-07-25,
+  Feature 10). `variantFamilies` in the world import report lists each variant
+  with a stable id; they have no map placement because the quest scripts that
+  spawn them are not converted. Owner: Features 103-105.
+- **Canary's Crypt Warrior has an unusable bestiary entry** (2026-07-25,
+  Feature 9). Its `Bestiary` block declares no `monster.raceId`, so there is no
+  id to track kills against — an upstream data defect, reported as
+  `status: "upstream-defect"` and capped at one monster.
+- **Fluid containers are unimplemented and blocked on three prerequisites**
+  (2026-07-25, Feature 11). No `fluidSource` in the item catalog, no
+  fluid-subtype model on carried items, and no non-tile `use-item-with` target
+  kind. The full assessment and implementation order are in
+  `todo/implementation-feature-11.md`. Owner: Feature 11.
 
 ## Repo-wide known breakage
 

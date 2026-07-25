@@ -4,6 +4,7 @@ import type {
   ChannelOpenMessage,
   ChannelSpeakMessage,
   ChatChannelId,
+  ChatTypingMessage,
   CreatureSpeechMode,
   IgnoreAddMessage,
   IgnoreRemoveMessage,
@@ -12,6 +13,7 @@ import type {
 } from "@tibia/protocol";
 import type { SpokenSpellOutcome } from "../combat/SpokenSpellOutcome";
 import type { GmCommandHandler } from "../gm/GmCommandHandler";
+import type { ModerationCommandHandler } from "../moderation/ModerationCommandHandler";
 import type { ChatModerationHooks } from "../moderation/ChatModerationHooks";
 import type { Player } from "../Player";
 import type { NpcHandler } from "../npc/NpcHandler";
@@ -32,12 +34,16 @@ import { TalkactionRegistry } from "./TalkactionRegistry";
 type ChatIntent =
   | SpeakMessage
   | PrivateChatMessage
+  | ChatTypingMessage
   | ChannelListGetMessage
   | ChannelOpenMessage
   | ChannelCloseMessage
   | ChannelSpeakMessage
   | IgnoreAddMessage
   | IgnoreRemoveMessage;
+
+/** One typing hint per second per session; purely ephemeral. */
+const TYPING_INTERVAL_MS = 1_000;
 
 /** Whisper text is audible only from adjacent tiles; farther viewers hear this. */
 const WHISPER_MUFFLED_TEXT = "pspsps";
@@ -63,6 +69,8 @@ export class ChatHandler {
   private readonly channels = new ChatChannelRegistry();
   private readonly talkactions = new TalkactionRegistry();
   private readonly ignores = new IgnoreList();
+  /** Per-session typing-hint cooldown; ephemeral, like the hint itself. */
+  private readonly typingReadyAt = new Map<string, number>();
   /** Open channels per character id; membership is still re-checked per line. */
   private readonly subscriptions = new Map<string, Set<ChatChannelId>>();
 
@@ -72,6 +80,7 @@ export class ChatHandler {
     private readonly visibility: Visibility,
     private readonly npcs?: NpcHandler,
     private readonly gm?: GmCommandHandler,
+    private readonly moderationCommands?: ModerationCommandHandler,
     private readonly moderation?: ChatModerationHooks,
     private readonly castSpellWords?: (
       session: Session,
@@ -127,6 +136,10 @@ export class ChatHandler {
       this.updateIgnoreList(session, speaker, intent);
       return;
     }
+    if (intent.type === "chat-typing") {
+      this.forwardTyping(session, speaker, intent.to, now);
+      return;
+    }
     const text = intent.text.trim();
     if (text.length === 0) return;
     // Dev-only GM commands are consumed before the chat pipeline so they are
@@ -134,6 +147,14 @@ export class ChatHandler {
     if (
       intent.type === "speak" &&
       this.gm?.tryHandle(session, speaker, text, now)
+    ) {
+      return;
+    }
+    // The production moderation surface: same audited actions, authorized
+    // from the session's own staff flag rather than a dev switch.
+    if (
+      intent.type === "speak" &&
+      this.moderationCommands?.tryHandle(session, speaker, text)
     ) {
       return;
     }
@@ -369,6 +390,33 @@ export class ChatHandler {
       }
       this.registry.sessionFor(listener.id)?.sendSerialized(serialized);
     }
+  }
+
+  /**
+   * Forwards an ephemeral typing hint to one partner. Nothing is stored and
+   * the sender gets no echo, so it reveals nothing the private message that
+   * follows would not; an ignored sender is silently dropped, exactly as
+   * their message would be (charter rule 6). Rate-limited per session so it
+   * cannot be used as a cheap presence probe.
+   */
+  private forwardTyping(
+    session: Session,
+    sender: Player,
+    recipientName: string,
+    now: number,
+  ): void {
+    const readyAt = this.typingReadyAt.get(session.id) ?? 0;
+    if (now < readyAt) return;
+    this.typingReadyAt.set(session.id, now + TYPING_INTERVAL_MS);
+    const recipient = this.findOnlinePlayerByName(recipientName);
+    if (!recipient || recipient.id === sender.id) return;
+    if (this.ignores.ignores(recipient.id, sender.name)) return;
+    const recipientSession = this.registry.sessionFor(recipient.id);
+    if (recipientSession?.playerId !== recipient.id) return;
+    recipientSession.send({
+      type: "chat-typing-state",
+      counterpart: sender.name,
+    });
   }
 
   private deliverPrivate(

@@ -60,7 +60,9 @@ export async function recordGuildBankEntry(
       | "withdraw"
       | "war-stake"
       | "war-payout"
-      | "war-refund";
+      | "war-refund"
+      | "guildhall-purchase"
+      | "guildhall-rent";
     readonly auditType:
       | "guild-deposit"
       | "guild-withdraw"

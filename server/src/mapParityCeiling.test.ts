@@ -26,6 +26,7 @@ interface UnresolvedTransition {
 }
 interface DisabledWorldAction {
   kind: string;
+  reason?: string;
 }
 interface ContentDocument {
   unresolvedTransitions?: UnresolvedTransition[];
@@ -55,12 +56,31 @@ const UNRESOLVED_TRANSITIONS_BY_REASON: Record<string, number> = {
   "source-not-walkable": 4156,
 };
 
-const DISABLED_WORLD_ACTION_TOTAL = 3554;
+// Lowered 2026-07-25 (Feature 51 + Feature 4): the `rope-or-shovel` bucket was
+// produced by a `name.includes("hole")` match that swept 3,439 scenery pieces
+// (lava holes, tree holes, "ornate door with a keyhole") into "unsupported".
+// Replacing it with Canary's pinned `holeId` list turned 4,968 placements into
+// working `rope-hole` actions and left 233 genuinely unresolvable ones.
+const DISABLED_WORLD_ACTION_TOTAL = 348;
 const DISABLED_WORLD_ACTIONS_BY_KIND: Record<string, number> = {
   dropdown: 82,
   ladder: 20,
-  "rope-or-shovel": 3439,
+  "rope-hole": 233,
   "rope-spot": 13,
+};
+
+// Every disabled action names why. These are the audited categories:
+// the landing tile is missing or blocked and the moveUpstairs neighbour scan
+// found nothing; the floor the action would reach is outside the map; a second
+// registration of the same activation on one tile; or a scripted action/unique
+// id, which stays fail-closed by design.
+const DISABLED_WORLD_ACTIONS_BY_REASON: Record<string, number> = {
+  "blocked-destination": 207,
+  "duplicate-action": 9,
+  "missing-destination": 74,
+  "no-floor-above": 1,
+  "no-floor-below": 53,
+  "requires-content-action": 4,
 };
 
 describe("map parity ceiling (Feature 4)", () => {
@@ -102,6 +122,22 @@ describe("map parity ceiling (Feature 4)", () => {
       expect(count, `disabled-world-action kind "${kind}"`).toBeLessThanOrEqual(
         ceiling ?? 0,
       );
+    }
+  });
+
+  it("every disabled world action names an audited reason", () => {
+    expect(actions.filter((action) => !action.reason)).toEqual([]);
+    const byReason = countBy(actions, (action) => action.reason ?? "none");
+    for (const [reason, count] of byReason) {
+      const ceiling = DISABLED_WORLD_ACTIONS_BY_REASON[reason];
+      expect(
+        ceiling,
+        `unaudited disabled-world-action reason "${reason}" (${count} entries)`,
+      ).toBeDefined();
+      expect(
+        count,
+        `disabled-world-action reason "${reason}"`,
+      ).toBeLessThanOrEqual(ceiling ?? 0);
     }
   });
 });

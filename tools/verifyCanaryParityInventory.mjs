@@ -171,8 +171,14 @@ for (const definition of creatureReport.unsupportedDefinitions ?? []) {
     if (
       typeof gap.name !== "string" ||
       typeof gap.ownerTodo !== "string" ||
-      !["blocked", "non-content"].includes(gap.status) ||
+      // `covered` names the pinned importer that already turns the field into
+      // typed content; `upstream-defect` records a field the pinned source
+      // itself cannot supply. Both are resolutions, not open work.
+      !["blocked", "non-content", "covered", "upstream-defect"].includes(
+        gap.status,
+      ) ||
       (gap.status === "blocked" && typeof gap.blockedBy !== "string") ||
+      (gap.status === "covered" && typeof gap.coveredBy !== "string") ||
       typeof gap.reason !== "string"
     ) {
       throw new Error(

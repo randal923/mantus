@@ -65,6 +65,28 @@ export function GameSettingsOverlay() {
     [setUiSettings, store],
   );
 
+  /**
+   * Drops every stored panel layout, keeping the non-layout preferences. The
+   * server persists the result immediately (no debounce) and echoes it to
+   * every live session of the account.
+   */
+  const onResetLayout = () => {
+    const currentRuntime = store.getState().runtime;
+    const { minimap, chat, battleList, spellBar, ...kept } =
+      currentRuntime.uiSettingsRef.current;
+    void minimap;
+    void chat;
+    void battleList;
+    void spellBar;
+    currentRuntime.uiSettingsRef.current = kept;
+    setUiSettings(kept);
+    if (currentRuntime.uiSettingsSaveTimerRef.current) {
+      clearTimeout(currentRuntime.uiSettingsSaveTimerRef.current);
+      currentRuntime.uiSettingsSaveTimerRef.current = null;
+    }
+    currentRuntime.clientRef.current?.updateUiSettings(kept);
+  };
+
   if (!gameMenuOpen) return null;
 
   return (
@@ -79,6 +101,7 @@ export function GameSettingsOverlay() {
       onDiagonalWalkingChange={setDiagonalWalking}
       turnModifier={turnModifier}
       onTurnModifierChange={onTurnModifierChange}
+      onResetLayout={onResetLayout}
       onChangeLanguage={(nextLanguage) => {
         setLanguage(nextLanguage);
         setLanguageSaving(true);

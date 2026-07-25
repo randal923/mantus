@@ -20,12 +20,14 @@ function makeSession(account: Account | null) {
   return { session, sent, errors };
 }
 
-async function seededHandler(session: Session) {
+async function seededHandler(session: Session, peers: Session[] = []) {
   const store = new InMemoryAccountStore();
   const account = await store.findOrCreateBySupabaseId("user-1", null, "en");
   session.account = account;
+  for (const peer of peers) peer.account = account;
   const registry = {
     contains: () => true,
+    all: () => [session, ...peers],
   } as unknown as SessionRegistry;
   return { store, handler: new UiSettingsHandler(registry, store) };
 }
@@ -38,7 +40,10 @@ async function settle(handler: UiSettingsHandler) {
 describe("UiSettingsHandler", () => {
   it("rejects unauthenticated sessions", () => {
     const { session, errors } = makeSession(null);
-    const registry = { contains: () => true } as unknown as SessionRegistry;
+    const registry = {
+      contains: () => true,
+      all: () => [session],
+    } as unknown as SessionRegistry;
     const handler = new UiSettingsHandler(registry, new InMemoryAccountStore());
     handler.handle(session, {
       type: "update-ui-settings",
@@ -87,5 +92,26 @@ describe("UiSettingsHandler", () => {
     expect(sent).toEqual([]);
     expect(errors).toEqual(["ui-settings-update-failed"]);
     expect(session.uiSettingsUpdatePending).toBe(false);
+  });
+
+  it("acks every live session of the same account", async () => {
+    const first = makeSession(null);
+    const second = makeSession(null);
+    const { handler } = await seededHandler(first.session, [second.session]);
+
+    handler.handle(first.session, {
+      type: "update-ui-settings",
+      settings: { minimap: LAYOUT },
+    });
+    await settle(handler);
+
+    // The second client converges without relogging.
+    for (const peer of [first, second]) {
+      expect(peer.sent.at(-1)).toEqual({
+        type: "ui-settings-updated",
+        settings: { minimap: LAYOUT },
+      });
+      expect(peer.session.account?.uiSettings).toEqual({ minimap: LAYOUT });
+    }
   });
 });

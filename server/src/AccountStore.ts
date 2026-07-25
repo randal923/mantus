@@ -5,6 +5,8 @@ export interface Account {
   supabaseUserId: string;
   email: string | null;
   bannedUntil: Date | null;
+  /** Staff accounts are hidden from highscores and may moderate in-game. */
+  isStaff: boolean;
   premiumUntil: Date | null;
   mantusCoins: number;
   language: Language;

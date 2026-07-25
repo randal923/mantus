@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { AccountTier, Position, ServerMessage } from "@tibia/protocol";
+import {
+  HOUSE_LIMITS,
+  type AccountTier,
+  type Position,
+  type ServerMessage,
+} from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { DepotCacheEvent } from "../depot/DepotCacheEvent";
 import type { DepotService } from "../depot/DepotService";
+import { Monster } from "../creature/Monster";
 import { gridMapData } from "../gridMapData";
 import type { Item } from "../item/Item";
 import type { MapData } from "../MapData";
@@ -16,7 +22,12 @@ import { Visibility } from "../Visibility";
 import { World } from "../World";
 import type { HouseInfo } from "./HouseInfo";
 import { HouseService } from "./HouseService";
+import { STAMPED_LETTER_TYPE_ID } from "./deliverHouseLetter";
 import { MemoryHouseStore } from "./MemoryHouseStore";
+
+const DAY_MS = 24 * 3600 * 1000;
+/** Longer than HouseService's auction scan interval, so a second scan runs. */
+const AUCTION_SCAN_GAP_MS = 11_000;
 
 const A = "00000000-0000-4000-8000-00000000000a";
 const B = "00000000-0000-4000-8000-00000000000b";
@@ -31,6 +42,13 @@ const HOUSE_TILES: ReadonlyMap<number, ReadonlyArray<Position>> = new Map([
     ],
   ],
   [2, [{ x: 60, y: 50, z: 7 }]],
+  [
+    3,
+    [
+      { x: 70, y: 50, z: 7 },
+      { x: 70, y: 51, z: 7 },
+    ],
+  ],
 ]);
 
 const CONTENT: ReadonlyMap<number, HouseInfo> = new Map([
@@ -98,6 +116,11 @@ interface Harness {
   readonly world: World;
   readonly store: MemoryHouseStore;
   readonly service: HouseService;
+  /** Live guild identities the access lists resolve against. */
+  readonly guilds: Map<
+    string,
+    { guildId: string; guildName: string; rankName: string; isLeader: boolean }
+  >;
   readonly depotEvents: Array<{ characterId: string; upserts: number }>;
   join(
     id: string,
@@ -156,11 +179,19 @@ function makeHarness(): Harness {
   world.setHousePolicy((player, position) =>
     service.canUseHouseTile(player.id, position),
   );
+  const guilds = new Map<
+    string,
+    { guildId: string; guildName: string; rankName: string; isLeader: boolean }
+  >();
+  service.setGuildIdentityLookup((characterId) =>
+    guilds.get(characterId) ?? null,
+  );
   let nextSpawnX = 20;
   return {
     world,
     store,
     service,
+    guilds,
     depotEvents,
     join(id, name, position, level = 100, accountTier = "premium") {
       nextSpawnX += 2;
@@ -201,6 +232,64 @@ function makeHarness(): Harness {
       }
     },
   };
+}
+
+function makeMonster(position: Position): Monster {
+  return new Monster({
+    id: `rat-${position.x}-${position.y}`,
+    type: {
+      id: "rat",
+      name: "Rat",
+      description: "a rat",
+      outfit: { lookType: 21, head: 0, body: 0, legs: 0, feet: 0, addons: 0 },
+      health: 20,
+      maxHealth: 20,
+      speed: 200,
+      manaCost: 0,
+      changeTarget: { intervalMs: 4_000, chance: 0 },
+      light: { intensity: 0, color: 0 },
+      experience: 5,
+      corpseItemTypeId: 5964,
+      race: "blood",
+      faction: "default",
+      enemyFactions: [],
+      flags: {
+        attackable: true,
+        hostile: true,
+        pushable: true,
+        summonable: false,
+        convinceable: false,
+        illusionable: false,
+        canPushItems: false,
+        canPushCreatures: false,
+        targetDistance: 1,
+        runHealth: 5,
+        staticAttackChance: 95,
+        healthHidden: false,
+        canWalkOnEnergy: false,
+        canWalkOnFire: false,
+        canWalkOnPoison: false,
+        isBlockable: true,
+      },
+      targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
+      attacks: [],
+      defenses: [],
+      elements: {},
+      immunities: [],
+      reflects: {},
+      heals: {},
+      events: [],
+      callbacks: [],
+      maxSummons: 0,
+      summons: [],
+      voices: [],
+      loot: [],
+    },
+    position,
+    direction: "south",
+    home: position,
+    spawnRadius: 10,
+  });
 }
 
 function messagesOf<TType extends ServerMessage["type"]>(
@@ -290,7 +379,7 @@ describe("HouseService", () => {
     ).toBe(true);
   });
 
-  it("rejects guildhalls, forged ids, double buys, and second houses", async () => {
+  it("rejects forged ids, double buys, and second houses", async () => {
     const harness = makeHarness();
     const clock = { now: 0 };
     await harness.flush();
@@ -309,7 +398,8 @@ describe("HouseService", () => {
       { type: "house-buy", houseId: 3 },
       clock.now,
     );
-    expect(lastFailure(alice)?.reason).toBe("guildhall");
+    // A guildhall is bought by a guild leader out of the guild balance.
+    expect(lastFailure(alice)?.reason).toBe("not-authorized");
     await buyHouseOne(harness, alice, clock);
 
     const bob = harness.join(B, "Bob", { x: 50, y: 52, z: 7 });
@@ -593,9 +683,18 @@ describe("HouseService", () => {
       clock.now += DAY + 61_000;
     }
     expect(await harness.store.loadSnapshot(1)).toBeNull();
-    expect(harness.store.inboxOf(A).map((item) => item.id)).toEqual([
-      "itm-bed",
-    ]);
+    expect(
+      harness.store
+        .inboxOf(A)
+        .filter((item) => item.typeId === 42)
+        .map((item) => item.id),
+    ).toEqual(["itm-bed"]);
+    // Six missed periods mailed six warning letters; the seventh evicted.
+    expect(
+      harness.store
+        .inboxOf(A)
+        .filter((item) => item.typeId === STAMPED_LETTER_TYPE_ID),
+    ).toHaveLength(HOUSE_LIMITS.maxWarnings - 1);
     expect(
       messagesOf(alice, "house-event").some((event) => event.kind === "evicted"),
     ).toBe(true);
@@ -604,9 +703,10 @@ describe("HouseService", () => {
       false,
     );
     // A replayed scan after eviction is a no-op.
+    const delivered = harness.store.inboxOf(A).length;
     harness.service.tick(clock.now);
     await harness.flush(clock.now);
-    expect(harness.store.inboxOf(A)).toHaveLength(1);
+    expect(harness.store.inboxOf(A)).toHaveLength(delivered);
   });
 
   it("keeps house lists public-only and scopes state to the viewer", async () => {
@@ -654,5 +754,325 @@ describe("HouseService", () => {
     expect(
       list?.entries.find((entry) => entry.houseId === 1)?.ownerName,
     ).toBe("Alice");
+  });
+
+  it("escrows a bid, refunds the outbid holder, and blocks direct purchase", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    const bob = harness.join(B, "Bob", { x: 50, y: 50, z: 7 });
+    harness.store.setBalance(A, 100_000);
+    harness.store.setBalance(B, 100_000);
+
+    clock.now += 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-bid", houseId: 1, amount: 20_000 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    expect(harness.store.balanceOf(A)).toBe(80_000);
+
+    // A house under auction cannot be bought out from under the bidders.
+    clock.now += 1_100;
+    harness.service.handle(
+      bob.session,
+      { type: "house-buy", houseId: 1 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    expect(lastFailure(bob)?.reason).toBe("auction-active");
+
+    // Beating the standing bid by less than the increment is rejected.
+    clock.now += 1_100;
+    harness.service.handle(
+      bob.session,
+      { type: "house-bid", houseId: 1, amount: 20_500 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    expect(lastFailure(bob)?.reason).toBe("bid-too-low");
+    expect(harness.store.balanceOf(B)).toBe(100_000);
+
+    clock.now += 1_100;
+    harness.service.handle(
+      bob.session,
+      { type: "house-bid", houseId: 1, amount: 25_000 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    expect(harness.store.balanceOf(B)).toBe(75_000);
+    // The outbid holder is made whole in the same transaction.
+    expect(harness.store.balanceOf(A)).toBe(100_000);
+    expect(
+      messagesOf(alice, "house-event").at(-1),
+    ).toMatchObject({ kind: "outbid", amount: 20_000 });
+
+    clock.now += 1_100;
+    harness.service.handle(
+      bob.session,
+      { type: "house-open", houseId: 1 },
+      clock.now,
+    );
+    expect(messagesOf(bob, "house-state").at(-1)?.house?.auction).toMatchObject({
+      bid: 25_000,
+      bidderName: "Bob",
+      mine: true,
+    });
+  });
+
+  it("closes an auction exactly once across replayed scans", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 100_000);
+
+    clock.now += 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-bid", houseId: 1, amount: 20_000 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+
+    const afterClose = clock.now + HOUSE_LIMITS.auctionDurationDays * DAY_MS + 1;
+    harness.service.tick(afterClose);
+    await harness.flush(afterClose);
+    harness.service.tick(afterClose + AUCTION_SCAN_GAP_MS);
+    await harness.flush(afterClose + AUCTION_SCAN_GAP_MS);
+
+    const won = messagesOf(alice, "house-event").filter(
+      (event) => event.kind === "auction-won",
+    );
+    expect(won).toHaveLength(1);
+    // The escrow paid for the house; no second debit, no refund.
+    expect(harness.store.balanceOf(A)).toBe(80_000);
+
+    clock.now = afterClose + AUCTION_SCAN_GAP_MS + 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-open", houseId: 1 },
+      clock.now,
+    );
+    const state = messagesOf(alice, "house-state").at(-1)?.house;
+    expect(state?.ownerName).toBe("Alice");
+    expect(state?.myAccess).toBe("owner");
+    expect(state?.auction).toBeUndefined();
+  });
+
+  it("keeps monsters out of house tiles while letting them walk back out", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 100_000);
+    await buyHouseOne(harness, alice, clock);
+
+    // Standing just west of the house tile (50, 50).
+    const rat = makeMonster({ x: 49, y: 50, z: 7 });
+    harness.world.addCreature(rat);
+    expect(
+      harness.world.tryMoveCreature(rat, "east", clock.now + 10_000).moved,
+    ).toBe(false);
+    expect(rat.position).toEqual({ x: 49, y: 50, z: 7 });
+
+    // A creature already inside — spawned or teleported there — walks out.
+    harness.world.relocateCreature(rat, { x: 50, y: 50, z: 7 });
+    expect(
+      harness.world.tryMoveCreature(rat, "west", clock.now + 20_000).moved,
+    ).toBe(true);
+    expect(rat.position).toEqual({ x: 49, y: 50, z: 7 });
+  });
+
+  it("sells a guildhall to the leader out of the guild balance and opens it to members", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const leader = harness.join(A, "Alice", { x: 71, y: 50, z: 7 });
+    const member = harness.join(B, "Bob", { x: 71, y: 51, z: 7 });
+    harness.store.setBalance(A, 10_000_000);
+    harness.store.registerGuild("guild-red-rose", A, 500_000);
+    harness.guilds.set(A, {
+      guildId: "guild-red-rose",
+      guildName: "Red Rose",
+      rankName: "Leader",
+      isLeader: true,
+    });
+    harness.guilds.set(B, {
+      guildId: "guild-red-rose",
+      guildName: "Red Rose",
+      rankName: "Member",
+      isLeader: false,
+    });
+
+    // A member cannot spend the guild's gold.
+    clock.now += 1_100;
+    harness.service.handle(
+      member.session,
+      { type: "house-buy", houseId: 3 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    expect(lastFailure(member)?.reason).toBe("not-authorized");
+    expect(harness.store.guildBalanceOf("guild-red-rose")).toBe(500_000);
+
+    clock.now += 1_100;
+    harness.service.handle(
+      leader.session,
+      { type: "house-buy", houseId: 3 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    // The price left the guild balance, never the leader's own account.
+    expect(harness.store.guildBalanceOf("guild-red-rose")).toBe(200_000);
+    expect(harness.store.balanceOf(A)).toBe(10_000_000);
+
+    // Guildhall tiles are open to the owning guild without an explicit list.
+    const hall = { x: 70, y: 50, z: 7 };
+    expect(harness.service.canUseHouseTile(B, hall)).toBe(true);
+    harness.guilds.delete(B);
+    expect(harness.service.canUseHouseTile(B, hall)).toBe(false);
+
+    // The hall belongs to the guild: no personal transfer offer.
+    clock.now += 1_100;
+    harness.service.handle(
+      leader.session,
+      { type: "house-transfer-offer", targetName: "Bob", price: 0 },
+      clock.now,
+    );
+    expect(lastFailure(leader)?.reason).toBe("guildhall");
+  });
+
+  it("grants guild access from a text list and revokes it the moment the guild is left", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 100_000);
+    await buyHouseOne(harness, alice, clock);
+
+    const bob = harness.join(B, "Bob", { x: 49, y: 50, z: 7 });
+    harness.guilds.set(B, {
+      guildId: "guild-red-rose",
+      guildName: "Red Rose",
+      rankName: "Member",
+      isLeader: false,
+    });
+
+    clock.now += 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-set-list", kind: "guest", body: "@Red Rose" },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+
+    const tile = { x: 50, y: 50, z: 7 };
+    expect(harness.service.canUseHouseTile(B, tile)).toBe(true);
+    expect(harness.service.canUseHouseDoor(B, tile)).toBe(true);
+
+    // Leaving the guild is not cached anywhere: the next check fails.
+    harness.guilds.delete(B);
+    expect(harness.service.canUseHouseTile(B, tile)).toBe(false);
+    expect(harness.service.canUseHouseDoor(B, tile)).toBe(false);
+    expect(bob.player.id).toBe(B);
+  });
+
+  it("enforces a per-door list independently of the house-wide list", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 100_000);
+    await buyHouseOne(harness, alice, clock);
+    harness.join(B, "Bob", { x: 49, y: 50, z: 7 });
+
+    const door = { x: 50, y: 50, z: 7 };
+    const plain = { x: 50, y: 51, z: 7 };
+    clock.now += 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-set-list", kind: "guest", body: "Bob" },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    clock.now += 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-set-list", kind: "door", body: "Cara", door },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+
+    // House-wide access still holds; only the listed door is narrower.
+    expect(harness.service.canUseHouseTile(B, door)).toBe(true);
+    expect(harness.service.canUseHouseDoor(B, plain)).toBe(true);
+    expect(harness.service.canUseHouseDoor(B, door)).toBe(false);
+    // The owner is never locked out of their own door.
+    expect(harness.service.canUseHouseDoor(A, door)).toBe(true);
+  });
+
+  it("refuses a door list for a tile outside the managed house", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 100_000);
+    await buyHouseOne(harness, alice, clock);
+
+    clock.now += 1_100;
+    harness.service.handle(
+      alice.session,
+      {
+        type: "house-set-list",
+        kind: "door",
+        body: "Cara",
+        door: { x: 60, y: 50, z: 7 },
+      },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    expect(lastFailure(alice)?.reason).toBe("not-a-door");
+  });
+
+  it("refunds the winner in full when eligibility lapsed before the close", async () => {
+    const harness = makeHarness();
+    const clock = { now: 0 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 100_000);
+
+    clock.now += 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-bid", houseId: 1, amount: 20_000 },
+      clock.now,
+    );
+    await harness.flush(clock.now);
+    // Premium lapses between bid time and close time.
+    harness.store.registerCharacter(A, "Alice", { premiumUntilMs: clock.now });
+
+    const afterClose = clock.now + HOUSE_LIMITS.auctionDurationDays * DAY_MS + 1;
+    harness.service.tick(afterClose);
+    await harness.flush(afterClose);
+
+    expect(messagesOf(alice, "house-event").at(-1)).toMatchObject({
+      kind: "auction-refunded",
+      amount: 20_000,
+      detail: "premium-required",
+    });
+    expect(harness.store.balanceOf(A)).toBe(100_000);
+
+    clock.now = afterClose + 1_100;
+    harness.service.handle(
+      alice.session,
+      { type: "house-open", houseId: 1 },
+      clock.now,
+    );
+    const state = messagesOf(alice, "house-state").at(-1)?.house;
+    expect(state?.ownerName).toBeNull();
+    expect(state?.auction).toBeUndefined();
   });
 });

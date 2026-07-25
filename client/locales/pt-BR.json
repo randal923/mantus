@@ -670,7 +670,7 @@
     "paidUntil": "Aluguel pago até",
     "warnings": "{{count}} aviso(s) de aluguel",
     "guildhall": "Sede de guilda",
-    "guildhallNote": "Sedes de guilda ainda não podem ser compradas.",
+    "guildhallNote": "Uma sede de guilda é comprada pelo líder e paga com o saldo da guilda.",
     "buy": "Comprar por {{price}} de ouro",
     "buyConfirm": "Pagar {{price}} de ouro da sua conta bancária?",
     "confirm": "Confirmar",
@@ -713,7 +713,11 @@
       "rent-paid": "O aluguel de {{house}} foi pago da sua conta bancária.",
       "rent-warning": "O aluguel de {{house}} está atrasado! Deposite ouro ou perca a casa em {{warningsLeft}} dia(s).",
       "evicted": "Você foi despejado de {{house}}. Seus pertences estão na sua caixa de entrada.",
-      "transfer-cancelled": "A oferta de transferência de {{house}} foi retirada."
+      "transfer-cancelled": "A oferta de transferência de {{house}} foi retirada.",
+      "bid-placed": "Você deu um lance de {{amount}} de ouro em {{house}}.",
+      "outbid": "Você foi superado em {{house}}. {{amount}} de ouro voltou para o seu banco.",
+      "auction-won": "Você venceu o leilão de {{house}} com {{amount}} de ouro.",
+      "auction-refunded": "O leilão de {{house}} foi cancelado. {{amount}} de ouro voltou para o seu banco."
     },
     "errors": {
       "not-found": "Esta casa não existe.",
@@ -732,8 +736,29 @@
       "offer-not-found": "Esta oferta de transferência não existe.",
       "access-limit": "A lista de acesso está cheia.",
       "rate-limited": "Aguarde um momento antes de tentar novamente.",
-      "invalid-request": "Desculpe, não é possível."
-    }
+      "invalid-request": "Desculpe, não é possível.",
+      "auction-active": "Esta casa está em leilão. Dê um lance.",
+      "auction-closed": "Este leilão já foi encerrado.",
+      "bid-too-low": "Seu lance não supera o lance atual.",
+      "list-too-long": "Essa lista de acesso é longa demais.",
+      "not-a-door": "Isso não é uma porta desta casa."
+    },
+    "auction": {
+      "title": "Leilão",
+      "none": "Nenhum leilão em andamento. Faça o primeiro lance para abrir um.",
+      "standing": "Lance atual: {{amount}} de ouro por {{name}}.",
+      "endsAt": "Encerra em {{date}}.",
+      "mine": "Você tem o lance atual.",
+      "minimum": "Seu lance (mín. {{amount}} de ouro)",
+      "bid": "Dar lance"
+    },
+    "textLists": {
+      "title": "Listas de acesso",
+      "help": "Uma entrada por linha. Use @Guilda para a guilda inteira, Rank@Guilda para um cargo, * e ? como curingas, ! para negar e # para comentários.",
+      "save": "Salvar lista",
+      "doorCount": "{{count}} lista(s) de porta definida(s)"
+    },
+    "buyGuildhallConfirm": "Pagar {{price}} de ouro do saldo da guilda?"
   },
   "bank": {
     "title": "Banco — {{npcName}}",
@@ -1176,7 +1201,8 @@
     "currentPassword": "Senha Atual",
     "newPassword": "Nova Senha",
     "updateEmail": "Atualizar E-mail",
-    "updatePassword": "Atualizar Senha"
+    "updatePassword": "Atualizar Senha",
+    "resetLayout": "Redefinir layout dos painéis"
   },
   "hotkeys": {
     "title": "Mapeamento de Teclas",
@@ -1290,6 +1316,17 @@
       "cannot-add-self": "Você não pode adicionar a si mesmo.",
       "rate-limited": "Aguarde um momento.",
       "invalid-request": "Essa ação VIP não é possível."
+    },
+    "friendsSection": {
+      "title": "Amigos",
+      "incoming": "{{name}} quer ser seu amigo.",
+      "outgoing": "Aguardando: {{names}}",
+      "accept": "Aceitar",
+      "decline": "Recusar",
+      "remove": "Desfazer amizade",
+      "request": "Pedir",
+      "placeholder": "Nome do personagem…",
+      "finderVisible": "Mostrar-me no localizador de grupo"
     }
   },
   "highscores": {

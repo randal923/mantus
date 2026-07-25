@@ -69,12 +69,14 @@ const LIST: HouseListMessage = {
 const handlers = {
   onClose: fn(),
   onBuy: fn(),
+  onBid: fn(),
   onAbandon: fn(),
   onOfferTransfer: fn(),
   onRespondOffer: fn(),
   onCancelTransfer: fn(),
   onSetAccess: fn(),
   onKick: fn(),
+  onSetList: fn(),
   onBrowse: fn(),
   onOpenHouse: fn(),
 };

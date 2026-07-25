@@ -24,6 +24,19 @@ export const HOUSE_LIMITS = {
   maxTransferPrice: BANK_LIMITS.maxTransactionAmount,
   maxHouseNameLength: 100,
   maxHouseSize: 100_000,
+  /** Canary skips access-list lines longer than this instead of failing. */
+  maxAccessListLineLength: 100,
+  maxAccessListLines: 100,
+  /** Whole-list cap, enforced by the schema before the text is parsed. */
+  maxAccessListLength: 2_000,
+  /** Per-door text lists a house may carry. */
+  maxDoorLists: 64,
+  /** The first accepted bid opens the auction; it closes this long after. */
+  auctionDurationDays: 3,
+  /** Every later bid must beat the standing one by at least this much. */
+  minBidIncrement: 1_000,
+  /** Bids are escrowed from the bank, so one bank transaction bounds them. */
+  maxBid: BANK_LIMITS.maxTransactionAmount,
 } as const;
 
 const houseIdSchema = z.number().int().min(1).max(1_000_000);
@@ -53,6 +66,19 @@ export const houseBuyMessageSchema = z
   .object({
     type: z.literal("house-buy"),
     houseId: houseIdSchema,
+  })
+  .strict();
+
+/**
+ * Bids on an unowned house. The amount is escrowed from the bank when the
+ * server accepts the bid; the standing bid is refunded to its holder in the
+ * same transaction. The first accepted bid opens the auction.
+ */
+export const houseBidMessageSchema = z
+  .object({
+    type: z.literal("house-bid"),
+    houseId: houseIdSchema,
+    amount: z.number().int().min(1).max(HOUSE_LIMITS.maxBid),
   })
   .strict();
 
@@ -94,6 +120,22 @@ export const houseSetAccessMessageSchema = z
   })
   .strict();
 
+export const houseListKindSchema = z.enum(["guest", "subowner", "door"]);
+
+/**
+ * Owner (subowners may edit the guest and door lists): replaces one text
+ * access list. The body is bounded here, before the parser ever sees it;
+ * `door` lists additionally carry the door tile they belong to.
+ */
+export const houseSetListMessageSchema = z
+  .object({
+    type: z.literal("house-set-list"),
+    kind: houseListKindSchema,
+    body: z.string().max(HOUSE_LIMITS.maxAccessListLength),
+    door: positionSchema.optional(),
+  })
+  .strict();
+
 /** Owner/subowner: teleports a visitor to the entry; omitted target = self. */
 export const houseKickMessageSchema = z
   .object({
@@ -125,6 +167,33 @@ export const houseAccessEntrySchema = z
   })
   .strict();
 
+/**
+ * One text access list. Sent only to viewers who may edit it (owner, and
+ * subowners for guest/door lists) — a list names guests and guilds, so it is
+ * never public (charter rule 6).
+ */
+export const houseTextListSchema = z
+  .object({
+    kind: houseListKindSchema,
+    body: z.string().max(HOUSE_LIMITS.maxAccessListLength),
+    door: positionSchema.optional(),
+  })
+  .strict();
+
+/**
+ * Public auction state: the standing bid, who holds it, and when the auction
+ * closes. Canary shows all three on the house list, so none of it is private;
+ * `mine` is the viewer's own relation to the standing bid.
+ */
+export const houseAuctionSchema = z
+  .object({
+    bid: z.number().int().min(1).max(HOUSE_LIMITS.maxBid),
+    bidderName: characterNameSchema,
+    endsAt: z.number().int().min(0),
+    mine: z.boolean(),
+  })
+  .strict();
+
 export const housePendingTransferSchema = z
   .object({
     targetName: characterNameSchema,
@@ -152,6 +221,8 @@ export const houseStateSchema = z
     /** Purchase price in gold when unowned. */
     price: z.number().int().min(0).max(BANK_LIMITS.maxTransactionAmount),
     ownerName: characterNameSchema.nullable(),
+    /** Present while an auction is running on this (unowned) house. */
+    auction: houseAuctionSchema.optional(),
     myAccess: houseAccessLevelSchema,
     /** Epoch ms the rent is paid until; owner/subowner only. */
     paidUntil: z.number().int().min(0).optional(),
@@ -168,6 +239,11 @@ export const houseStateSchema = z
     subowners: z
       .array(houseAccessEntrySchema)
       .max(HOUSE_LIMITS.maxAccessEntries)
+      .optional(),
+    /** Text access lists; owner/subowner only, like the entry lists above. */
+    textLists: z
+      .array(houseTextListSchema)
+      .max(HOUSE_LIMITS.maxDoorLists + 2)
       .optional(),
     pendingTransfer: housePendingTransferSchema.optional(),
   })
@@ -192,6 +268,7 @@ export const houseListEntrySchema = z
     townName: z.string().max(64).optional(),
     guildhall: z.boolean(),
     ownerName: characterNameSchema.nullable(),
+    auction: houseAuctionSchema.optional(),
   })
   .strict();
 
@@ -235,6 +312,10 @@ export const houseEventMessageSchema = z
       "rent-warning",
       "evicted",
       "transfer-cancelled",
+      "bid-placed",
+      "outbid",
+      "auction-won",
+      "auction-refunded",
     ]),
     houseName: z.string().min(1).max(HOUSE_LIMITS.maxHouseNameLength),
     detail: z.string().max(64).optional(),
@@ -244,6 +325,8 @@ export const houseEventMessageSchema = z
       .min(0)
       .max(HOUSE_LIMITS.maxWarnings)
       .optional(),
+    /** Gold moved by the event (bid escrowed, outbid/close refund). */
+    amount: z.number().int().min(0).max(HOUSE_LIMITS.maxBid).optional(),
   })
   .strict();
 
@@ -266,6 +349,11 @@ export const houseActionFailedMessageSchema = z
       "target-has-house",
       "offer-not-found",
       "access-limit",
+      "list-too-long",
+      "not-a-door",
+      "auction-active",
+      "auction-closed",
+      "bid-too-low",
       "rate-limited",
       "invalid-request",
     ]),
@@ -274,6 +362,8 @@ export const houseActionFailedMessageSchema = z
 
 export type HouseOpenMessage = z.infer<typeof houseOpenMessageSchema>;
 export type HouseBuyMessage = z.infer<typeof houseBuyMessageSchema>;
+export type HouseBidMessage = z.infer<typeof houseBidMessageSchema>;
+export type HouseAuction = z.infer<typeof houseAuctionSchema>;
 export type HouseAbandonMessage = z.infer<typeof houseAbandonMessageSchema>;
 export type HouseTransferOfferMessage = z.infer<
   typeof houseTransferOfferMessageSchema
@@ -285,6 +375,9 @@ export type HouseTransferCancelMessage = z.infer<
   typeof houseTransferCancelMessageSchema
 >;
 export type HouseSetAccessMessage = z.infer<typeof houseSetAccessMessageSchema>;
+export type HouseListKind = z.infer<typeof houseListKindSchema>;
+export type HouseSetListMessage = z.infer<typeof houseSetListMessageSchema>;
+export type HouseTextList = z.infer<typeof houseTextListSchema>;
 export type HouseKickMessage = z.infer<typeof houseKickMessageSchema>;
 export type HouseBrowseMessage = z.infer<typeof houseBrowseMessageSchema>;
 export type HouseAccessLevel = z.infer<typeof houseAccessLevelSchema>;

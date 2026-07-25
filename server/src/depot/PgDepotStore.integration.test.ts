@@ -389,6 +389,43 @@ databaseDescribe("PgDepotStore integration", () => {
     expect(await auditCount("stash-withdrawal", "item-created")).toBe(1);
   });
 
+  it("refuses a mail send past the durable daily cap", async () => {
+    const senderId = await createCharacter("Capped");
+    await createCharacter("CapTarget");
+    const first = await insertBackpackItem(senderId, AXE_TYPE, 1, 0);
+    const second = await insertBackpackItem(senderId, AXE_TYPE, 1, 1);
+
+    const sent = await store.sendMail({
+      deliveryKey: `mail:${senderId}:${randomUUID()}`,
+      senderCharacterId: senderId,
+      itemId: first,
+      itemRevision: 1,
+      normalizedRecipientName: "depot captarget",
+      expiresAt: new Date(Date.now() + 60_000),
+      maxPerDay: 1,
+    });
+    expect(sent.status).toBe("committed");
+
+    // The cap is counted inside the transaction, so a fresh session or a
+    // reconnect cannot get around it.
+    const blocked = await store.sendMail({
+      deliveryKey: `mail:${senderId}:${randomUUID()}`,
+      senderCharacterId: senderId,
+      itemId: second,
+      itemRevision: 1,
+      normalizedRecipientName: "depot captarget",
+      expiresAt: new Date(Date.now() + 60_000),
+      maxPerDay: 1,
+    });
+    expect(blocked).toEqual({ status: "rate-limited" });
+    // The blocked item never moved.
+    const row = await pool.query<{ location_type: string }>(
+      "SELECT location_type FROM items WHERE id = $1",
+      [second],
+    );
+    expect(row.rows[0]?.location_type).toBe("container");
+  });
+
   it("delivers mail with the recipient id and subtree for cache injection", async () => {
     const senderId = await createCharacter("Sender");
     const recipientId = await createCharacter("Recipient");
@@ -401,6 +438,7 @@ databaseDescribe("PgDepotStore integration", () => {
       itemRevision: 1,
       normalizedRecipientName: "depot recipient",
       expiresAt: new Date(Date.now() + 60_000),
+      maxPerDay: 100,
     });
 
     if (result.status !== "committed") {
@@ -449,6 +487,7 @@ databaseDescribe("PgDepotStore integration", () => {
       itemRevision: 1,
       normalizedRecipientName: "depot ghost",
       expiresAt: new Date(Date.now() - 1_000),
+      maxPerDay: 100,
     });
     if (sent.status !== "committed") throw new Error("mail failed");
     expect(sent.recipientCharacterId).toBe(recipientId);
@@ -479,6 +518,7 @@ databaseDescribe("PgDepotStore integration", () => {
       itemRevision: 1,
       normalizedRecipientName: "depot collector",
       expiresAt: new Date(Date.now() + 60_000),
+      maxPerDay: 100,
     });
     if (sent.status !== "committed") throw new Error("mail failed");
     const loaded = await store.loadForCharacter(recipientId);
@@ -523,6 +563,7 @@ databaseDescribe("PgDepotStore integration", () => {
       itemRevision: 1,
       normalizedRecipientName: "depot replayed",
       expiresAt: new Date(Date.now() + 60_000),
+      maxPerDay: 100,
     };
 
     const first = await store.sendMail(request);
@@ -560,6 +601,7 @@ databaseDescribe("PgDepotStore integration", () => {
       itemRevision: 1,
       normalizedRecipientName: "depot race target",
       expiresAt: new Date(Date.now() + 60_000),
+      maxPerDay: 100,
     });
 
     const results = await Promise.allSettled([

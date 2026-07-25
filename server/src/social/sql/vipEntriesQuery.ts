@@ -6,7 +6,8 @@ export const vipEntriesQuery = `
     c.vocation,
     v.description,
     v.icon,
-    v.notify_login
+    v.notify_login,
+    v.group_id
   FROM character_vips v
   JOIN characters c ON c.id = v.vip_character_id
   WHERE v.character_id = $1

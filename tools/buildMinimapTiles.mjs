@@ -10,7 +10,15 @@
 // mirroring OTclient's "topmost automap color wins" rule.
 //
 //   yarn minimap:build
-import { readFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  readFileSync,
+  readdirSync,
+  mkdirSync,
+  existsSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -312,7 +320,25 @@ async function buildMap(name, items) {
       }
     }
   }
-  console.log(`[${name}] wrote ${written} minimap region tiles`);
+  // Stamp a version derived from the bytes actually written, so a rebuild
+  // busts the client's long-lived tile cache even when the map itself (and
+  // therefore manifest.version) did not change.
+  const digest = createHash("sha1");
+  for (const { z } of floors) {
+    const outDir = join(mapDir, "minimap", `z${z}`);
+    if (!existsSync(outDir)) continue;
+    for (const file of readdirSync(outDir).sort()) {
+      digest.update(`${z}/${file}:${statSync(join(outDir, file)).size};`);
+    }
+  }
+  manifest.minimapVersion = digest.digest("hex").slice(0, 12);
+  writeFileSync(
+    join(mapDir, "manifest.json"),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+  console.log(
+    `[${name}] wrote ${written} minimap region tiles (version ${manifest.minimapVersion})`,
+  );
 }
 
 const items = loadItems();

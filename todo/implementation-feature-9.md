@@ -2,15 +2,15 @@
 
 Part of [Todo 5 — Creatures, spawns, and AI](todo-5.md).
 
-> **Status: open.** The importer (`creatureGapOwner`) classifies every remaining
-> ignored assignment as `blocked`, owned by Todo 11 (NPC behavior/shops) and
-> Todo 16 (bestiary/bosstiary/forge) — those owner-todos must define the target
-> representation before the fields can be typed. Finished self-contained guard
-> work (the "gap cannot silently reopen" report assertion + typed-scalar
-> round-trip) is logged in
-> [completed/implementation-feature-9-completed.md](completed/implementation-feature-9-completed.md)
-> as `server/src/spawn/creatureImportReport.test.ts`. Do not archive until the
-> ignored-assignment surface reaches zero.
+> **Status: open.** As of 2026-07-25 the report classifies 1,424 gaps `covered`
+> (bestiary/bosstiary/raceId — owned by `tools/importCanaryBestiary.mjs`, and the
+> guard test re-derives that coverage from `bestiary.json` rather than trusting
+> the label), 1 `upstream-defect` (a Bestiary block with no raceId), and 1,061
+> still `blocked` on Todo 16 (prey flags → Feature 74, reward-boss flags →
+> Features 76/84) plus three NPC entries on Todo 11. Finished sub-work is logged
+> in
+> [completed/implementation-feature-9-completed.md](completed/implementation-feature-9-completed.md).
+> Do not archive until the blocked surface reaches zero.
 
 ## Why
 
@@ -18,10 +18,21 @@ The world import report still lists ignored gameplay assignments; parity require
 
 ## Remaining work
 
-- Extend `MonsterType`, `NpcType`, and the importers to represent the remaining ignored assignments: race/bestiary/bosstiary metadata, forge and reward-boss classifications.
-- Already typed (do NOT redo): static mana cost, light, target-change rules, hidden health, static-attack chance; all 54 registered monster event names and all 15 active MonsterType callbacks already have reviewed runtime handlers, including delayed transformations and teleports.
-- Delegated blockers stay with their owners: loot/corpse/reward-boss callbacks → Todo 9 (Features 29–31); NPC behavior → Todo 11 (Features 37–42); bestiary/bosstiary/forge classifications → Todo 16 (Features 77–78).
-- Add report assertions that fail when a new ignored assignment appears, so the gap cannot silently reopen.
+- **Reward-boss classification** (`flags.rewardBoss`, 911 monsters) — needs the
+  typed representation from Todo 16 Features 76/84.
+- **Prey classification** (`flags.isPreyExclusive` 146, `flags.isPreyable` 1) —
+  needs Todo 16 Feature 74.
+- **Three NPC entries** (`onSay` ×2, `moneyToNeedDonation`) — Todo 11.
+- Already typed or resolved (do NOT redo): static mana cost, light,
+  target-change rules, hidden health, static-attack chance; all 54 registered
+  monster event names and all 15 active MonsterType callbacks have reviewed
+  runtime handlers, including delayed transformations and teleports; the whole
+  `NpcType` model (Feature 37); race/bestiary/bosstiary metadata, which
+  `tools/importCanaryBestiary.mjs` owns and the report now marks `covered`.
+- ~~Add report assertions that fail when a new ignored assignment appears.~~
+  Landed: `server/src/spawn/creatureImportReport.test.ts` (7 cases), including a
+  coverage proof against `bestiary.json` and separate ceilings for blocked vs
+  upstream-defect gaps.
 
 ## Implementation
 

@@ -7,6 +7,7 @@ const account = (premiumUntil: Date | null): Account => ({
   supabaseUserId: "user-id",
   email: null,
   bannedUntil: null,
+  isStaff: false,
   premiumUntil,
   mantusCoins: 0,
   language: "en",

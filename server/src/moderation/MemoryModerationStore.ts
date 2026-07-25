@@ -45,6 +45,7 @@ export class MemoryModerationStore implements ModerationStore {
   >();
   private readonly mutes = new Map<string, ActiveMuteRecord>();
   private readonly bans = new Map<string, { expiresAt: Date }>();
+  private readonly namelocked = new Set<string>();
 
   /**
    * Mirrors the Pg store's same-transaction update of
@@ -169,6 +170,22 @@ export class MemoryModerationStore implements ModerationStore {
     if (!target) return { status: "failed", reason: "target-not-found" };
     this.record("note", target.id, input.actorCharacterId, input.text);
     return { status: "recorded", targetName: target.name };
+  }
+
+  async namelockCharacter(input: {
+    actorCharacterId: string;
+    targetName: string;
+    reason: string;
+  }): Promise<RecordNoteResult> {
+    const target = this.resolve(input.targetName);
+    if (!target) return { status: "failed", reason: "target-not-found" };
+    this.namelocked.add(target.id);
+    this.record("namelock", target.id, input.actorCharacterId, input.reason);
+    return { status: "recorded", targetName: target.name };
+  }
+
+  isNamelocked(characterId: string): boolean {
+    return this.namelocked.has(characterId);
   }
 
   /**

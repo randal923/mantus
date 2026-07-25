@@ -69,14 +69,17 @@ export function HouseOverviewSection({
       {house.guildhall && (
         <p className="text-sm text-ui-gold">{t("house.guildhallNote")}</p>
       )}
-      {house.ownerName === null && !house.guildhall && (
+      {house.ownerName === null && (
         <div className="flex items-center gap-2">
           {confirming === "buy" ? (
             <>
               <span className="text-sm text-ui-muted">
-                {t("house.buyConfirm", {
-                  price: house.price.toLocaleString(locale),
-                })}
+                {t(
+                  house.guildhall
+                    ? "house.buyGuildhallConfirm"
+                    : "house.buyConfirm",
+                  { price: house.price.toLocaleString(locale) },
+                )}
               </span>
               <Button
                 variant="primary"

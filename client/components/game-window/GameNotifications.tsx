@@ -8,7 +8,7 @@ const SCREEN_MESSAGE_MS = 3_500;
 const LEVEL_UP_NOTICE_MS = 4_200;
 
 export function GameNotifications() {
-  const { t } = useAppTranslation();
+  const { t, i18n } = useAppTranslation();
   const status = useGameWindowStore((state) => state.status);
   const characterId = useGameWindowStore(
     (state) => state.ownCharacter?.id ?? null,
@@ -109,6 +109,7 @@ export function GameNotifications() {
             house: houseToast.houseName,
             detail: houseToast.detail,
             warningsLeft: houseToast.warningsLeft ?? 0,
+            amount: (houseToast.amount ?? 0).toLocaleString(i18n.language),
           })}
           onDismiss={() => setHouseToast(null)}
         />

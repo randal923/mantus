@@ -3,15 +3,11 @@
 Part of [Todo 13 — Typed world actions](todo-13.md).
 
 Machete, scythe, pick, crowbar, watch/clock and the fishing rod shipped
-2026-07-25 — see the
+2026-07-25; rope on open holes shipped 2026-07-25 — see the
 [completed log](completed/implementation-feature-51-completed.md).
 
 ## Remaining work
 
-- **Rope on open holes.** Canary's `holeId` list pulls players and movable
-  items *up* from the floor below; that needs a pull-through-floor move, which
-  `MovementHandler` does not have. Name-matched `rope-or-shovel` converter
-  actions stay disabled — the list is too noisy.
 - **Shovel sand digging (item 231).** Scarab coins/spawns and quest digs; needs
   the loot RNG plus spawn hooks from todo-9.
 - **Toolgear jam.** Canary's 9594/9596/9598 multi-tools jam 5 % of uses,
@@ -36,6 +32,9 @@ Machete, scythe, pick, crowbar, watch/clock and the fishing rod shipped
 - Replayed fishing use consumes exactly one worm — **done** (the worm and the
   catch are one conjure).
 - Skill/catch roll is never client-influenced — **done**.
+- A rope pull never moves a creature that is not a player, and never lands a
+  pulled player somewhere their own step could not go — **done**.
+- A replayed rope pull moves exactly one item — **done**.
 
 ## Dependencies
 

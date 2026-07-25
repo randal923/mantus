@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { HouseListKind } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import type { HouseSessionState } from "../../hooks/useHouseSession";
 import { Modal } from "../ui/Modal";
 import { HouseAccessSection } from "./HouseAccessSection";
+import { HouseAuctionSection } from "./HouseAuctionSection";
+import { HouseTextListSection } from "./HouseTextListSection";
 import { HouseBrowserSection } from "./HouseBrowserSection";
 import { HouseOffersList } from "./HouseOffersList";
 import { HouseOverviewSection } from "./HouseOverviewSection";
@@ -18,6 +21,7 @@ interface HouseModalProps {
   error: string | null;
   onClose: () => void;
   onBuy: (houseId: number) => void;
+  onBid: (houseId: number, amount: number) => void;
   onAbandon: () => void;
   onOfferTransfer: (targetName: string, price: number) => void;
   onRespondOffer: (houseId: number, accept: boolean) => void;
@@ -28,6 +32,7 @@ interface HouseModalProps {
     grant: boolean,
   ) => void;
   onKick: (targetCharacterId: string) => void;
+  onSetList: (kind: HouseListKind, body: string) => void;
   onBrowse: (townId?: number, page?: number) => void;
   onOpenHouse: (houseId: number) => void;
 }
@@ -43,12 +48,14 @@ export function HouseModal({
   error,
   onClose,
   onBuy,
+  onBid,
   onAbandon,
   onOfferTransfer,
   onRespondOffer,
   onCancelTransfer,
   onSetAccess,
   onKick,
+  onSetList,
   onBrowse,
   onOpenHouse,
 }: HouseModalProps) {
@@ -114,6 +121,16 @@ export function HouseModal({
                 onBuy={onBuy}
                 onAbandon={onAbandon}
               />
+              {house.ownerName === null && !house.guildhall && (
+                <>
+                  <div aria-hidden className="ui-divider" />
+                  <HouseAuctionSection
+                    house={house}
+                    pending={session.pending}
+                    onBid={onBid}
+                  />
+                </>
+              )}
               {canManage && (
                 <>
                   <div aria-hidden className="ui-divider" />
@@ -122,6 +139,12 @@ export function HouseModal({
                     pending={session.pending}
                     onSetAccess={onSetAccess}
                     onKick={onKick}
+                  />
+                  <div aria-hidden className="ui-divider" />
+                  <HouseTextListSection
+                    house={house}
+                    pending={session.pending}
+                    onSetList={onSetList}
                   />
                 </>
               )}

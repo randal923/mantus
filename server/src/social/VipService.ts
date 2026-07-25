@@ -2,17 +2,26 @@ import {
   VIP_LIMITS,
   type VipActionFailedReason,
   type VipAddMessage,
+  type VipAssignGroupMessage,
   type VipEditMessage,
   type VipEntry,
+  type VipGroupCreateMessage,
+  type VipGroupDeleteMessage,
   type VipRemoveMessage,
 } from "@tibia/protocol";
 import { getAccountStatus } from "../getAccountStatus";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
-import type { VipEntryRecord, VipStore } from "./VipStore";
+import type { VipEntryRecord, VipGroupRecord, VipStore } from "./VipStore";
 
-type VipIntent = VipAddMessage | VipRemoveMessage | VipEditMessage;
+type VipIntent =
+  | VipAddMessage
+  | VipRemoveMessage
+  | VipEditMessage
+  | VipGroupCreateMessage
+  | VipGroupDeleteMessage
+  | VipAssignGroupMessage;
 
 /**
  * Server-authoritative VIP/friends lists on durable storage. Lists are
@@ -28,6 +37,7 @@ export class VipService {
   private readonly cooldownBySession = new Map<string, number>();
   private readonly opPendingByCharacter = new Set<string>();
   private readonly entriesByCharacter = new Map<string, VipEntryRecord[]>();
+  private readonly groupsByCharacter = new Map<string, VipGroupRecord[]>();
   /** characterId -> online characters whose list contains it. */
   private readonly watchersByCharacter = new Map<string, Set<string>>();
 
@@ -57,10 +67,14 @@ export class VipService {
     const store = this.store;
     if (!store) return;
     this.enqueue(characterId, async () => {
-      const entries = await store.loadEntries(characterId);
+      const [entries, groups] = await Promise.all([
+        store.loadEntries(characterId),
+        store.loadGroups(characterId),
+      ]);
       return () => {
         if (this.registry.sessionFor(characterId) !== session) return;
         this.entriesByCharacter.set(characterId, [...entries]);
+        this.groupsByCharacter.set(characterId, [...groups]);
         for (const entry of entries) {
           this.addWatcherEdge(entry.vipCharacterId, characterId);
         }
@@ -79,6 +93,7 @@ export class VipService {
       }
     }
     this.entriesByCharacter.delete(characterId);
+    this.groupsByCharacter.delete(characterId);
     this.opPendingByCharacter.delete(characterId);
   }
 
@@ -107,6 +122,15 @@ export class VipService {
         return;
       case "vip-edit":
         this.edit(session, characterId, intent);
+        return;
+      case "vip-group-create":
+        this.createGroup(session, characterId, intent.name);
+        return;
+      case "vip-group-delete":
+        this.deleteGroup(session, characterId, intent.groupId);
+        return;
+      case "vip-assign-group":
+        this.assignGroup(session, characterId, intent);
         return;
     }
   }
@@ -205,6 +229,87 @@ export class VipService {
     });
   }
 
+  private createGroup(
+    session: Session,
+    characterId: string,
+    name: string,
+  ): void {
+    const store = this.requireStore();
+    this.enqueue(characterId, async () => {
+      const result = await store.createGroup({
+        characterId,
+        name,
+        maxGroups: VIP_LIMITS.maxGroups,
+      });
+      if (result.status === "failed") return this.failLater(session, result.reason);
+      return () => {
+        if (this.registry.sessionFor(characterId) !== session) return;
+        const groups = this.groupsByCharacter.get(characterId) ?? [];
+        groups.push(result.group);
+        groups.sort((a, b) => a.name.localeCompare(b.name));
+        this.groupsByCharacter.set(characterId, groups);
+        this.sendState(session, characterId);
+      };
+    });
+  }
+
+  private deleteGroup(
+    session: Session,
+    characterId: string,
+    groupId: string,
+  ): void {
+    const store = this.requireStore();
+    this.enqueue(characterId, async () => {
+      const result = await store.deleteGroup({ characterId, groupId });
+      if (result.status === "failed") return this.failLater(session, result.reason);
+      return () => {
+        if (this.registry.sessionFor(characterId) !== session) return;
+        this.groupsByCharacter.set(
+          characterId,
+          (this.groupsByCharacter.get(characterId) ?? []).filter(
+            (group) => group.groupId !== groupId,
+          ),
+        );
+        // Entries fall back to the ungrouped list, as the FK does in the DB.
+        this.entriesByCharacter.set(
+          characterId,
+          (this.entriesByCharacter.get(characterId) ?? []).map((entry) =>
+            entry.groupId === groupId ? { ...entry, groupId: null } : entry,
+          ),
+        );
+        this.sendState(session, characterId);
+      };
+    });
+  }
+
+  private assignGroup(
+    session: Session,
+    characterId: string,
+    intent: VipAssignGroupMessage,
+  ): void {
+    const store = this.requireStore();
+    this.enqueue(characterId, async () => {
+      const result = await store.assignGroup({
+        characterId,
+        vipCharacterId: intent.targetCharacterId,
+        groupId: intent.groupId,
+      });
+      if (result.status === "failed") return this.failLater(session, result.reason);
+      return () => {
+        if (this.registry.sessionFor(characterId) !== session) return;
+        this.entriesByCharacter.set(
+          characterId,
+          (this.entriesByCharacter.get(characterId) ?? []).map((entry) =>
+            entry.vipCharacterId === intent.targetCharacterId
+              ? { ...entry, groupId: intent.groupId }
+              : entry,
+          ),
+        );
+        this.sendState(session, characterId);
+      };
+    });
+  }
+
   /** Presence push to exactly the online watchers of this character. */
   private pushStatus(characterId: string, online: boolean): void {
     const watchers = this.watchersByCharacter.get(characterId);
@@ -228,8 +333,13 @@ export class VipService {
       description: entry.description,
       icon: entry.icon,
       notifyLogin: entry.notifyLogin,
+      groupId: entry.groupId,
     }));
-    session.send({ type: "vip-state", entries });
+    session.send({
+      type: "vip-state",
+      entries,
+      groups: [...(this.groupsByCharacter.get(characterId) ?? [])],
+    });
   }
 
   private isOnline(characterId: string): boolean {

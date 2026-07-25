@@ -38,6 +38,8 @@ export interface SendMailRequest {
   readonly itemRevision: number;
   readonly normalizedRecipientName: string;
   readonly expiresAt: Date;
+  /** Durable daily send cap, counted inside the send transaction. */
+  readonly maxPerDay: number;
 }
 
 export type SendMailResult =
@@ -55,7 +57,8 @@ export type SendMailResult =
         | "recipient-not-found"
         | "invalid-recipient"
         | "not-owned"
-        | "inbox-full";
+        | "inbox-full"
+        | "rate-limited";
     };
 
 export interface RewardDeliveryRequest {

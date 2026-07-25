@@ -44,7 +44,10 @@ export function gridMapData(config: GridMapConfig): MapData {
     ]),
   );
   const actions = new Map(
-    (config.actions ?? []).map((action) => [positionKey(action.source), action]),
+    (config.actions ?? []).map((action) => [
+      `${positionKey(action.source)}|${action.activation}`,
+      action,
+    ]),
   );
   const voids = new Set(
     (config.voids ?? []).map(([x, y, z]) => positionKey({ x, y, z })),
@@ -118,8 +121,8 @@ export function gridMapData(config: GridMapConfig): MapData {
     getTransition(position) {
       return transitions.get(positionKey(position));
     },
-    getAction(position) {
-      return actions.get(positionKey(position));
+    getAction(position, activation) {
+      return actions.get(`${positionKey(position)}|${activation}`);
     },
     getItems(position) {
       return items.get(positionKey(position)) ?? [];

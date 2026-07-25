@@ -50,6 +50,7 @@ const makeHarness = (options: HarnessOptions = {}) => {
     visibility,
     undefined,
     undefined,
+    undefined,
     options.moderation,
     options.castSpellWords,
     () => ({

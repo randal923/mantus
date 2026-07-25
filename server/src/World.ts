@@ -5,6 +5,7 @@ import { Monster } from "./creature/Monster";
 import { CombatFieldManager } from "./combat/CombatFieldManager";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
 import { visibleFloorRange } from "./visibleFloorRange";
+import type { MapAction } from "./MapAction";
 import type { MapData } from "./MapData";
 import type { PersistSeedData } from "./item/CarriedPersistPlan";
 import type { ItemMutation } from "./item/ItemMutation";
@@ -224,8 +225,8 @@ export class World {
     this.mapItems.registerUnpersistedSeedItems(items, seed);
   }
 
-  getMapAction(position: Position) {
-    return this.map.getAction(position);
+  getMapAction(position: Position, activation: MapAction["activation"]) {
+    return this.map.getAction(position, activation);
   }
 
   getDoorOverride(position: Position) {
@@ -501,6 +502,10 @@ export class World {
 
   tryUseRopeSpot(player: Player, target: Position, now: number): MoveResult {
     return this.movement.tryUseRopeSpot(player, target, now);
+  }
+
+  canPlayerEnter(player: Player, destination: Position): boolean {
+    return this.movement.canPlayerEnter(player, destination);
   }
 
   trySpellRopeSpot(player: Player, target: Position, now: number): MoveResult {

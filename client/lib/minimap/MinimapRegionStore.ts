@@ -1,6 +1,16 @@
+export interface MinimapTown {
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+}
+
 interface MinimapManifest {
   regionSize: number;
   version?: string;
+  /** Stamped by `yarn minimap:build`; changes whenever the tiles change. */
+  minimapVersion?: string;
+  towns?: MinimapTown[];
   regions: Record<string, [number, number][]>;
 }
 
@@ -20,6 +30,7 @@ export class MinimapRegionStore {
   private readonly lastUse = new Map<string, number>();
   private regionSizeValue = 256;
   private version = "";
+  private townList: ReadonlyArray<MinimapTown> = [];
   private useTick = 0;
   private disposed = false;
 
@@ -40,7 +51,10 @@ export class MinimapRegionStore {
       const manifest = (await response.json()) as MinimapManifest;
       if (this.disposed) return false;
       this.regionSizeValue = manifest.regionSize;
-      this.version = manifest.version ?? "";
+      // Prefer the minimap build's own stamp: re-baking the tiles without
+      // re-converting the map must still bust the browser cache.
+      this.version = manifest.minimapVersion ?? manifest.version ?? "";
+      this.townList = manifest.towns ?? [];
       for (const [z, regions] of Object.entries(manifest.regions)) {
         this.available.set(
           Number(z),
@@ -60,6 +74,10 @@ export class MinimapRegionStore {
 
   get regionSize(): number {
     return this.regionSizeValue;
+  }
+
+  get towns(): ReadonlyArray<MinimapTown> {
+    return this.townList;
   }
 
   /** Returns the decoded region image, or null while absent or loading. */

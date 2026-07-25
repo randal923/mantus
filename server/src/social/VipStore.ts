@@ -12,7 +12,19 @@ export interface VipEntryRecord {
   readonly description: string;
   readonly icon: number;
   readonly notifyLogin: boolean;
+  /** Null when the entry sits in the ungrouped list. */
+  readonly groupId: string | null;
 }
+
+/** One named bucket on a character's own VIP list. */
+export interface VipGroupRecord {
+  readonly groupId: string;
+  readonly name: string;
+}
+
+export type CreateVipGroupResult =
+  | { readonly status: "created"; readonly group: VipGroupRecord }
+  | VipOpFailure;
 
 export interface VipOpFailure {
   readonly status: "failed";
@@ -33,6 +45,23 @@ export type VipOpResult = { readonly status: "ok" } | VipOpFailure;
  */
 export interface VipStore {
   loadEntries(characterId: string): Promise<ReadonlyArray<VipEntryRecord>>;
+  loadGroups(characterId: string): Promise<ReadonlyArray<VipGroupRecord>>;
+  createGroup(input: {
+    characterId: string;
+    name: string;
+    maxGroups: number;
+  }): Promise<CreateVipGroupResult>;
+  /** Scoped to the owner, so another list's group id matches no row. */
+  deleteGroup(input: {
+    characterId: string;
+    groupId: string;
+  }): Promise<VipOpResult>;
+  /** Moves one own entry into one of the owner's own groups, or out of all. */
+  assignGroup(input: {
+    characterId: string;
+    vipCharacterId: string;
+    groupId: string | null;
+  }): Promise<VipOpResult>;
   addVip(input: {
     characterId: string;
     targetName: string;

@@ -2,23 +2,18 @@
 
 Part of [Todo 15 — Parties, guilds, PVP, houses, and social services](todo-15.md).
 
-## Why
-Three recorded caveats from the shipped social core: highscores can list staff characters, mail has no time-based send limit, and moderation actions are not reachable from a production admin surface.
+Server side shipped 2026-07-25 — see
+[completed/implementation-feature-66-completed.md](completed/implementation-feature-66-completed.md).
 
 ## Remaining work
-- Highscore GM exclusion — needs a staff/GM flag; coordinate with admin roles (Feature 96).
-- Mail send time-based rate limit — the pattern already exists (`/report` is 1/min + 20/day); mail currently has only the per-session mutex.
-- Production moderation reachability — expose mutes/kicks/bans/notes through the admin path; no new game logic required.
 
-## Implementation
-- Staff-flag migration + filter in `server/src/social/PgHighscoreStore.ts` (keep queries parameterized and bounded as today).
-- Rate check at execution time in the mail send handler (todo-12 mail path), mirroring the `/report` limiter.
-- Route the Feature 96 admin surface to `server/src/moderation/ModerationService.ts` — reuse the existing authorized/audited actions.
-
-## Tests
-- Staff characters excluded from all 9 highscore categories.
-- Mail sends beyond the rate limit rejected server-side regardless of client pacing.
-- Admin moderation calls are authorized and land in `moderation_actions` exactly as in-game commands do.
+- `mail.errors.rate-limited` has no translation, so the new mail cap renders
+  as a generic failure. Tracked in
+  [client/cross-cutting-locales.md](client/cross-cutting-locales.md).
+- Setting `accounts.is_staff` needs operator tooling; it is direct SQL until
+  Feature 96 lands roles, at which point derive it from the role column rather
+  than maintaining two truths.
 
 ## Dependencies
+
 - Feature 96 (admin tooling / staff roles).

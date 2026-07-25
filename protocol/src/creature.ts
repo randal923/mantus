@@ -45,6 +45,13 @@ export const creatureStateSchema = z.object({
   positionRevision: z.number().int().nonnegative(),
   direction: z.enum(DIRECTIONS),
   outfit: creatureOutfitSchema,
+  /**
+   * The outfit sprite of the mount being ridden, drawn under the rider.
+   * Absent when unmounted; public, like the outfit itself. The server sends
+   * the *sprite*, not the entitlement id, so a viewer learns only what it
+   * must render (charter rule 6).
+   */
+  mountLookType: z.number().int().min(1).max(65_535).optional(),
   healthPercent: z.number().int().min(0).max(100).nullable(),
   /**
    * Public "is in a party" marker (gray shield), visible to everyone like in

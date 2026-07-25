@@ -1,4 +1,8 @@
-import type { CreatureState, Position } from "@tibia/protocol";
+import type {
+  CreatureState,
+  MinimapMarker as MapMarker,
+  Position,
+} from "@tibia/protocol";
 import type { MinimapRegionStore } from "./MinimapRegionStore";
 
 export interface MinimapMarker {
@@ -18,6 +22,11 @@ export interface MinimapDrawInput {
   creatures: ReadonlyArray<CreatureState>;
   ownPlayerId: string;
   ownPosition: Position | null;
+  /** The character's own persisted waypoint flags. */
+  mapMarkers?: ReadonlyArray<MapMarker>;
+  /** Town anchors from the map manifest; drawn only when zoomed out. */
+  towns?: ReadonlyArray<{ name: string; x: number; y: number; z: number }>;
+  showTownLabels?: boolean;
 }
 
 /** Unexplored/absent terrain is black, like the classic automap. */
@@ -28,6 +37,8 @@ const MONSTER_COLOR = "#ff7777";
 const PLAYER_COLOR = "#44dd44";
 const OWN_COLOR = "#f2efe6";
 const OUTLINE_COLOR = "rgba(0, 0, 0, 0.85)";
+const FLAG_COLOR = "#ffd166";
+const TOWN_LABEL_COLOR = "rgba(242, 239, 230, 0.9)";
 
 /**
  * Renders terrain and creature markers onto the minimap canvas and returns
@@ -69,6 +80,43 @@ export function drawMinimap(input: MinimapDrawInput): MinimapMarker[] {
         edge((ry + 1) * size, top) - y0,
       );
     }
+  }
+
+  // Town names at low zoom, where individual tiles are unreadable anyway.
+  if (input.showTownLabels && input.towns) {
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = OUTLINE_COLOR;
+    ctx.fillStyle = TOWN_LABEL_COLOR;
+    for (const town of input.towns) {
+      const x = (town.x + 0.5 - left) * pixelsPerTile;
+      const y = (town.y + 0.5 - top) * pixelsPerTile;
+      if (x < 0 || y < 0 || x > width || y > height) continue;
+      ctx.strokeText(town.name, x, y);
+      ctx.fillText(town.name, x, y);
+    }
+  }
+
+  // Player-placed flags sit under the creature markers so a creature is never
+  // hidden by one.
+  for (const flag of input.mapMarkers ?? []) {
+    if (flag.position.z !== floor) continue;
+    const x = (flag.position.x + 0.5 - left) * pixelsPerTile;
+    const y = (flag.position.y + 0.5 - top) * pixelsPerTile;
+    if (x < 0 || y < 0 || x > width || y > height) continue;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 5);
+    ctx.lineTo(x, y - 6);
+    ctx.lineTo(x + 7, y - 3);
+    ctx.lineTo(x, y);
+    ctx.closePath();
+    ctx.fillStyle = FLAG_COLOR;
+    ctx.strokeStyle = OUTLINE_COLOR;
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
   }
 
   const markers: MinimapMarker[] = [];

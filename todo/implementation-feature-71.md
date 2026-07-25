@@ -1,24 +1,20 @@
 # Feature 71 — Mounts
 
-Part of [Todo 16 — Remaining Canary systems and client polish](todo-16.md).
+Shipped 2026-07-25 — see
+[completed/implementation-feature-71-completed.md](completed/implementation-feature-71-completed.md)
+for what landed and how it was verified. Only the items below remain.
 
-## Why
-Mounts are entitlements with a gameplay effect: a server-side speed bonus and distinct rendering. The speed bonus especially must be server-authoritative.
+Client-side work is tracked separately in [client/feature-71-mount-rendering.md](client/feature-71-mount-rendering.md).
 
 ## Remaining work
-- Mount ownership (entitlement storage).
-- Selection validation.
-- Speed bonus applied server-side.
-- Client rendering of mounted outfits.
 
-## Implementation
-- Same entitlement pattern as Feature 70 (table + server-side grants + execution-time selection validation).
-- Speed bonus in the server movement speed calculation (`server/src/world/MovementRules.ts` area) — the client's displayed speed is decoration (charter rule 8).
-- Mount sprite layering in the client renderer — beware the pattern/layer gotchas documented in the asset-format memory (`client/ASSETS.md`).
-
-## Tests
-- Forged mount ids rejected.
-- Walk-step validation uses the server-computed mounted speed; a client claiming mounted speed while unmounted is snapped back.
+- Client rendering of mounted outfits: draw the mount's sprite under the
+  rider in `CreatureView`. The sprites exist (mount look types 368-377 are
+  ordinary outfit objects) and creature state already carries
+  `mountLookType`; the work is the second sprite layer, subject to the
+  pattern/layer rules in `client/ASSETS.md`.
+- Mount unlock sources, alongside Feature 70's.
 
 ## Dependencies
+
 - Feature 70 (outfit/entitlement infrastructure).

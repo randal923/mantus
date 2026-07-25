@@ -42,12 +42,17 @@ export class MovementRules {
     this.housePolicy = policy;
   }
 
+  /**
+   * House tiles authorize players against the live access state and are
+   * closed to everything else. Canary's tile flags refuse monsters and NPCs
+   * outright, so a summon or a lured creature can never follow a player
+   * inside — and a creature already standing in a house can still walk out.
+   */
   private houseBlocked(creature: Creature, destination: Position): boolean {
-    return (
-      creature instanceof Player &&
-      this.housePolicy !== null &&
-      !this.housePolicy(creature, destination)
-    );
+    if (!(creature instanceof Player)) {
+      return this.map.getHouseId?.(destination) !== undefined;
+    }
+    return this.housePolicy !== null && !this.housePolicy(creature, destination);
   }
 
   /**
@@ -95,6 +100,22 @@ export class MovementRules {
 
   tryUseMap(player: Player, target: Position, now: number): MoveResult {
     return this.tryUseAction(player, target, now, "use");
+  }
+
+  /**
+   * Whether a server-initiated relocation may put this player here. Same
+   * gates a walk applies — walkable ground, the pz-lock destination rule
+   * (charter rules 4, 8), house authorization, and occupancy — so a rope
+   * pulling someone out of a hole can never bypass what a step enforces.
+   */
+  canPlayerEnter(player: Player, destination: Position): boolean {
+    return (
+      this.map.isWalkable(destination) &&
+      Boolean(this.map.getGroundSpeed(destination)) &&
+      !this.pzBlocked(player, destination) &&
+      !this.houseBlocked(player, destination) &&
+      !this.occupancy.isOccupied(destination)
+    );
   }
 
   /** Rope on a rope spot: same rules as a ladder, but only via use-with. */
@@ -188,10 +209,12 @@ export class MovementRules {
         retryAfterMs: player.nextStepAt - now,
       };
     }
-    const action = this.map.getAction(target);
+    const action = this.map.getAction(target, activation);
+    // A rope hole is a use-with action that lifts whoever stands below out
+    // beside it; it never moves the player holding the rope.
     if (
       !action ||
-      action.activation !== activation ||
+      action.kind === "rope-hole" ||
       !this.map.isWalkable(action.destination)
     ) {
       return {

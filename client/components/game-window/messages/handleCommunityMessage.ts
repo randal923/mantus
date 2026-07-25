@@ -160,6 +160,7 @@ export function handleCommunityMessage(
       ...(message.warningsLeft !== undefined
         ? { warningsLeft: message.warningsLeft }
         : {}),
+      ...(message.amount !== undefined ? { amount: message.amount } : {}),
     });
     return true;
   }
@@ -177,6 +178,11 @@ export function handleCommunityMessage(
   if (message.type === "vip-status-changed") {
     const entry = actions.vip.statusChanged(message);
     if (entry?.online && entry.notifyLogin) state.setVipToast(entry.name);
+    return true;
+  }
+
+  if (message.type === "friend-state") {
+    actions.vip.friendStateReceived(message);
     return true;
   }
 
@@ -252,6 +258,11 @@ export function handleCommunityMessage(
 
   if (message.type === "channel-closed") {
     state.dispatchChat({ type: "channel-closed", channelId: message.channelId });
+    return true;
+  }
+
+  if (message.type === "minimap-markers") {
+    state.setMapMarkers(message.markers);
     return true;
   }
 

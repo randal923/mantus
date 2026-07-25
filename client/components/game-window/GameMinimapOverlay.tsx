@@ -16,6 +16,7 @@ export function GameMinimapOverlay() {
     (state) => state.uiSettings.minimap ?? null,
   );
   const setUiSettings = useGameWindowStore((state) => state.setUiSettings);
+  const mapMarkers = useGameWindowStore((state) => state.mapMarkers);
   if (!mapName || !ownCharacter) return null;
 
   const onLayoutChange = (layout: MinimapLayout) => {
@@ -41,7 +42,22 @@ export function GameMinimapOverlay() {
       ownPosition={ownCharacter.position}
       creatures={visibleCreatures}
       layout={minimapLayout}
+      mapMarkers={mapMarkers}
       onLayoutChange={onLayoutChange}
+      onWalkTo={(position) =>
+        store.getState().runtime.clientRef.current?.walkTo(position)
+      }
+      onToggleMarker={(position) => {
+        const client = store.getState().runtime.clientRef.current;
+        const existing = mapMarkers.some(
+          (marker) =>
+            marker.position.x === position.x &&
+            marker.position.y === position.y &&
+            marker.position.z === position.z,
+        );
+        if (existing) client?.deleteMapMarker(position);
+        else client?.setMapMarker(position, 0, "");
+      }}
     />
   );
 }

@@ -52,8 +52,8 @@ export function overrideMapData(
         map.getTransition(position, direction)
       );
     },
-    getAction(position) {
-      return map.getAction(position);
+    getAction(position, activation) {
+      return map.getAction(position, activation);
     },
     getItems(position) {
       return map.getItems(position);

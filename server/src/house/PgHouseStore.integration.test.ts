@@ -133,6 +133,27 @@ const houseRow = async (houseId: number) => {
   return result.rows[0] ?? null;
 };
 
+/** Makes a character pass the close-time eligibility re-read. */
+const setEligible = async (characterId: string, level = 100) => {
+  await pool.query("UPDATE characters SET level = $2 WHERE id = $1", [
+    characterId,
+    level,
+  ]);
+  await pool.query(
+    `UPDATE accounts SET premium_until = now() + interval '30 days'
+     WHERE id = (SELECT account_id FROM characters WHERE id = $1)`,
+    [characterId],
+  );
+};
+
+const auctionRow = async (houseId: number) => {
+  const result = await pool.query<{ bidder_character_id: string; bid: string }>(
+    "SELECT bidder_character_id, bid FROM house_auctions WHERE house_id = $1",
+    [houseId],
+  );
+  return result.rows[0] ?? null;
+};
+
 const auditCount = async (eventType: string): Promise<number> => {
   const result = await pool.query<{ total: string }>(
     "SELECT count(*) AS total FROM audit_log WHERE event_type = $1",
@@ -179,6 +200,7 @@ databaseDescribe("PgHouseStore integration", () => {
     if (!databaseUrl) return;
     await pool.query("DELETE FROM inbox_deliveries");
     await pool.query("DELETE FROM house_access");
+    await pool.query("DELETE FROM house_auctions");
     await pool.query("DELETE FROM houses");
     await pool.query("DELETE FROM items");
     await pool.query("DELETE FROM bank_ledger");
@@ -396,6 +418,7 @@ databaseDescribe("PgHouseStore integration", () => {
       maxWarnings: 7,
       mapName: MAP_NAME,
       tilePositions: HOUSE_TILES,
+      warningLetterText: (left: number) => `warning, ${left} left`,
     };
 
     expect(await store.listDueHouseIds(now, 10)).toEqual([41]);
@@ -435,10 +458,19 @@ databaseDescribe("PgHouseStore integration", () => {
       maxWarnings: 2,
       mapName: MAP_NAME,
       tilePositions: HOUSE_TILES,
+      warningLetterText: (left: number) => `warning, ${left} left`,
     };
 
     const warned = await store.chargeRent({ ...base, now: new Date() });
     expect(warned.status).toBe("warned");
+    // The warning mailed exactly one stamped letter carrying its text.
+    const letters = await pool.query<{ id: string; attributes: unknown }>(
+      `SELECT id, attributes FROM items
+       WHERE character_id = $1 AND item_type_id = 3506`,
+      [owner],
+    );
+    expect(letters.rows).toHaveLength(1);
+    expect(letters.rows[0]?.attributes).toEqual({ text: "warning, 1 left" });
     // Within the grace window nothing happens.
     expect(
       (await store.chargeRent({ ...base, now: new Date() })).status,
@@ -447,14 +479,15 @@ databaseDescribe("PgHouseStore integration", () => {
     const evicted = await store.chargeRent({ ...base, now: afterGrace });
     expect(evicted.status).toBe("evicted");
     expect(await houseRow(51)).toBeNull();
-    expect(await inboxItemIds(owner)).toEqual([movable]);
+    const letterId = letters.rows[0]!.id;
+    expect(await inboxItemIds(owner)).toEqual([letterId, movable]);
     expect(await globalItemTotal(GOLD_TYPE)).toBe(itemsBefore);
     expect(await auditCount("house-eviction")).toBe(1);
     // Replays after the eviction are no-ops.
     expect(
       (await store.chargeRent({ ...base, now: afterGrace })).status,
     ).toBe("skip");
-    expect(await inboxItemIds(owner)).toEqual([movable]);
+    expect(await inboxItemIds(owner)).toEqual([letterId, movable]);
   });
 
   it("skips items whose eviction delivery key was already consumed", async () => {
@@ -560,5 +593,328 @@ databaseDescribe("PgHouseStore integration", () => {
     expect(snapshot?.guests.map((entry) => entry.characterId)).toEqual([
       stranger,
     ]);
+  });
+
+  it("buys a guildhall from the guild balance and rejects non-leaders", async () => {
+    const leader = await createCharacter("hall-leader");
+    const member = await createCharacter("hall-member");
+    const guild = await pool.query<{ id: string }>(
+      `INSERT INTO guilds (name, owner_character_id, balance)
+       VALUES ($1, $2, 300000)
+       RETURNING id`,
+      [`Red Rose ${alphaSuffix()}`, leader],
+    );
+    const guildId = guild.rows[0]!.id;
+    await setBalance(leader, 100_000);
+    const personalGoldBefore = await globalGoldTotal();
+
+    // A member cannot spend the guild's gold, even with the right guild id.
+    expect(
+      await store.purchaseGuildhall({
+        houseId: 95,
+        characterId: member,
+        guildId,
+        price: 100_000,
+        paidUntilMs: Date.now() + PERIOD_MS,
+      }),
+    ).toEqual({ status: "failed", reason: "not-authorized" });
+
+    const bought = await store.purchaseGuildhall({
+      houseId: 95,
+      characterId: leader,
+      guildId,
+      price: 100_000,
+      paidUntilMs: Date.now() + PERIOD_MS,
+    });
+    expect(bought.status).toBe("purchased");
+    const guildBalance = async () =>
+      Number(
+        (
+          await pool.query<{ balance: string }>(
+            "SELECT balance FROM guilds WHERE id = $1",
+            [guildId],
+          )
+        ).rows[0]?.balance ?? 0,
+      );
+    expect(await guildBalance()).toBe(200_000);
+    // Personal bank accounts are untouched by a guildhall purchase.
+    expect(await globalGoldTotal()).toBe(personalGoldBefore);
+
+    // The leader may still own a personal house: the unique index is partial.
+    const personal = await store.purchase({
+      houseId: 96,
+      characterId: leader,
+      price: 20_000,
+      paidUntilMs: Date.now() + PERIOD_MS,
+    });
+    expect(personal.status).toBe("purchased");
+
+    // One guildhall per guild, enforced by the partial unique index.
+    expect(
+      await store.purchaseGuildhall({
+        houseId: 97,
+        characterId: leader,
+        guildId,
+        price: 1_000,
+        paidUntilMs: Date.now() + PERIOD_MS,
+      }),
+    ).toEqual({ status: "failed", reason: "own-house-exists" });
+    expect(await guildBalance()).toBe(200_000);
+
+    // Rent for a guildhall comes out of the guild balance too.
+    await pool.query(
+      "UPDATE houses SET paid_until = now() - interval '1 day' WHERE house_id = 95",
+    );
+    const charged = await store.chargeRent({
+      houseId: 95,
+      rent: 50_000,
+      now: new Date(),
+      rentPeriodMs: PERIOD_MS,
+      warningGraceMs: DAY_MS,
+      maxWarnings: 7,
+      mapName: MAP_NAME,
+      tilePositions: [],
+      warningLetterText: (left: number) => `warning, ${left} left`,
+    });
+    expect(charged.status).toBe("paid");
+    expect(await guildBalance()).toBe(150_000);
+    expect(await globalGoldTotal()).toBe(personalGoldBefore - 20_000);
+  });
+
+  it("stores text lists per house/door and gates who may edit which", async () => {
+    const owner = await createCharacter("list-owner");
+    const helper = await createCharacter("list-helper");
+    const stranger = await createCharacter("list-stranger");
+    await setBalance(owner, 30_000);
+    await store.purchase({
+      houseId: 91,
+      characterId: owner,
+      price: 20_000,
+      paidUntilMs: Date.now() + PERIOD_MS,
+    });
+    const helperName = (
+      await pool.query<{ display_name: string }>(
+        "SELECT display_name FROM characters WHERE id = $1",
+        [helper],
+      )
+    ).rows[0]!.display_name;
+    await store.setAccess({
+      houseId: 91,
+      actorCharacterId: owner,
+      kind: "subowner",
+      targetName: helperName,
+      grant: true,
+      maxEntries: 100,
+    });
+
+    expect(
+      await store.setTextList({
+        houseId: 91,
+        actorCharacterId: stranger,
+        kind: "guest",
+        body: "@Red Rose",
+        maxDoorLists: 64,
+      }),
+    ).toEqual({ status: "failed", reason: "not-authorized" });
+    // A subowner curates guests and doors but never the subowner list.
+    expect(
+      await store.setTextList({
+        houseId: 91,
+        actorCharacterId: helper,
+        kind: "subowner",
+        body: "@Red Rose",
+        maxDoorLists: 64,
+      }),
+    ).toEqual({ status: "failed", reason: "not-authorized" });
+
+    await store.setTextList({
+      houseId: 91,
+      actorCharacterId: helper,
+      kind: "guest",
+      body: "@Red Rose",
+      maxDoorLists: 64,
+    });
+    await store.setTextList({
+      houseId: 91,
+      actorCharacterId: owner,
+      kind: "door",
+      body: "Leader@Red Rose",
+      door: { x: 100, y: 100, z: 7 },
+      maxDoorLists: 64,
+    });
+    const snapshot = await store.loadSnapshot(91);
+    expect(snapshot?.textLists).toEqual([
+      { kind: "guest", body: "@Red Rose" },
+      {
+        kind: "door",
+        body: "Leader@Red Rose",
+        door: { x: 100, y: 100, z: 7 },
+      },
+    ]);
+
+    // An empty body deletes the list rather than storing a blank one.
+    await store.setTextList({
+      houseId: 91,
+      actorCharacterId: owner,
+      kind: "guest",
+      body: "  ",
+      maxDoorLists: 64,
+    });
+    expect((await store.loadSnapshot(91))?.textLists).toHaveLength(1);
+
+    // A door list may not outnumber its cap.
+    expect(
+      await store.setTextList({
+        houseId: 91,
+        actorCharacterId: owner,
+        kind: "door",
+        body: "Bob",
+        door: { x: 100, y: 101, z: 7 },
+        maxDoorLists: 1,
+      }),
+    ).toEqual({ status: "failed", reason: "access-limit" });
+  });
+
+  it("resolves racing bids to exactly one winner and conserves gold", async () => {
+    const first = await createCharacter("bid-a");
+    const second = await createCharacter("bid-b");
+    await setBalance(first, 100_000);
+    await setBalance(second, 100_000);
+    const goldBefore = await globalGoldTotal();
+    const now = new Date();
+
+    const results = await Promise.allSettled([
+      store.placeBid({
+        houseId: 81,
+        characterId: first,
+        amount: 20_000,
+        minimumBid: 20_000,
+        minIncrement: 1_000,
+        endsAtMs: now.getTime() + DAY_MS,
+        now,
+      }),
+      store.placeBid({
+        houseId: 81,
+        characterId: second,
+        amount: 20_000,
+        minimumBid: 20_000,
+        minIncrement: 1_000,
+        endsAtMs: now.getTime() + DAY_MS,
+        now,
+      }),
+    ]);
+    const accepted = results.filter(
+      (result) => result.status === "fulfilled" && result.value.status === "bid",
+    );
+    // Both bids are 20_000, so whichever lands second cannot reach the
+    // increment floor: exactly one opens the auction.
+    expect(accepted).toHaveLength(1);
+    const row = await auctionRow(81);
+    expect(row).not.toBeNull();
+    // The escrow left exactly one bank account; nothing was minted.
+    expect(await globalGoldTotal()).toBe(goldBefore - 20_000);
+    expect(await ledgerCount("house-bid-escrow")).toBe(1);
+
+    // The loser outbids and gets the standing escrow back in the same
+    // transaction that takes theirs.
+    const loser = row!.bidder_character_id === first ? second : first;
+    const outbid = await store.placeBid({
+      houseId: 81,
+      characterId: loser,
+      amount: 30_000,
+      minimumBid: 20_000,
+      minIncrement: 1_000,
+      endsAtMs: now.getTime() + DAY_MS,
+      now,
+    });
+    expect(outbid.status).toBe("bid");
+    expect(await globalGoldTotal()).toBe(goldBefore - 30_000);
+    expect((await balanceOf(first)) + (await balanceOf(second))).toBe(170_000);
+    expect(await auditCount("house-auction-bid")).toBe(2);
+  });
+
+  it("settles a due auction exactly once across replays", async () => {
+    const winner = await createCharacter("auction-winner");
+    await setBalance(winner, 100_000);
+    await setEligible(winner);
+    const goldBefore = await globalGoldTotal();
+    const opened = new Date(Date.now() - 2 * DAY_MS);
+
+    const bid = await store.placeBid({
+      houseId: 82,
+      characterId: winner,
+      amount: 20_000,
+      minimumBid: 20_000,
+      minIncrement: 1_000,
+      endsAtMs: opened.getTime() + DAY_MS,
+      now: opened,
+    });
+    expect(bid.status).toBe("bid");
+
+    const now = new Date();
+    expect(await store.listDueAuctionIds(now, 10)).toEqual([82]);
+    const first = await store.closeAuction({
+      houseId: 82,
+      now,
+      paidUntilMs: now.getTime() + PERIOD_MS,
+      buyLevel: 100,
+    });
+    expect(first.status).toBe("sold");
+    // Replay: the auction row is the lease and it is already gone.
+    const replay = await store.closeAuction({
+      houseId: 82,
+      now,
+      paidUntilMs: now.getTime() + PERIOD_MS,
+      buyLevel: 100,
+    });
+    expect(replay).toEqual({ status: "skip" });
+
+    expect((await houseRow(82))?.owner_character_id).toBe(winner);
+    // The escrow paid for the house: no refund, no second debit.
+    expect(await globalGoldTotal()).toBe(goldBefore - 20_000);
+    expect(await ledgerCount("house-bid-refund")).toBe(0);
+    expect(await auditCount("house-auction-settled")).toBe(1);
+    expect(await store.listDueAuctionIds(now, 10)).toEqual([]);
+  });
+
+  it("refunds the winner in full when eligibility lapsed before the close", async () => {
+    const winner = await createCharacter("auction-lapsed");
+    await setBalance(winner, 100_000);
+    await setEligible(winner);
+    const goldBefore = await globalGoldTotal();
+    const opened = new Date(Date.now() - 2 * DAY_MS);
+
+    await store.placeBid({
+      houseId: 83,
+      characterId: winner,
+      amount: 20_000,
+      minimumBid: 20_000,
+      minIncrement: 1_000,
+      endsAtMs: opened.getTime() + DAY_MS,
+      now: opened,
+    });
+    // Premium lapses between the bid and the close.
+    await pool.query(
+      `UPDATE accounts SET premium_until = now() - interval '1 day'
+       WHERE id = (SELECT account_id FROM characters WHERE id = $1)`,
+      [winner],
+    );
+
+    const now = new Date();
+    const closed = await store.closeAuction({
+      houseId: 83,
+      now,
+      paidUntilMs: now.getTime() + PERIOD_MS,
+      buyLevel: 100,
+    });
+    expect(closed).toMatchObject({
+      status: "refunded",
+      reason: "premium-required",
+    });
+    expect(await houseRow(83)).toBeNull();
+    expect(await auctionRow(83)).toBeNull();
+    // Every escrowed coin came back.
+    expect(await globalGoldTotal()).toBe(goldBefore);
+    expect(await balanceOf(winner)).toBe(100_000);
   });
 });

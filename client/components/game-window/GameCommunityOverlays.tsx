@@ -128,6 +128,9 @@ export function GameCommunityOverlays() {
           }
           onClose={() => setHouseModalOpen(false)}
           onBuy={(houseId) => runtime.clientRef.current?.buyHouse(houseId)}
+          onBid={(houseId, amount) =>
+            runtime.clientRef.current?.bidOnHouse(houseId, amount)
+          }
           onAbandon={() => runtime.clientRef.current?.abandonHouse()}
           onOfferTransfer={(targetName, price) =>
             runtime.clientRef.current?.offerHouseTransfer(targetName, price)
@@ -144,6 +147,9 @@ export function GameCommunityOverlays() {
           }
           onKick={(targetCharacterId) =>
             runtime.clientRef.current?.kickFromHouse(targetCharacterId)
+          }
+          onSetList={(kind, body) =>
+            runtime.clientRef.current?.setHouseList(kind, body)
           }
           onBrowse={(townId, page) =>
             runtime.clientRef.current?.browseHouses(townId, page)
@@ -183,6 +189,7 @@ export function GameCommunityOverlays() {
         <div className="absolute top-24 bottom-4 left-4 z-30">
           <VipPanel
             entries={vipSession.entries}
+            friends={vipSession.friends}
             pending={vipSession.pending}
             hasParty={Boolean(partySession.party)}
             onOpenParty={() => {
@@ -207,6 +214,21 @@ export function GameCommunityOverlays() {
             }
             onRemove={(targetCharacterId) =>
               runtime.clientRef.current?.removeVip(targetCharacterId)
+            }
+            onRequestFriend={(name) =>
+              runtime.clientRef.current?.requestFriend(name)
+            }
+            onRespondFriend={(fromCharacterId, accept) =>
+              runtime.clientRef.current?.respondToFriendRequest(
+                fromCharacterId,
+                accept,
+              )
+            }
+            onRemoveFriend={(targetCharacterId) =>
+              runtime.clientRef.current?.removeFriend(targetCharacterId)
+            }
+            onSetFinderVisible={(visible) =>
+              runtime.clientRef.current?.setSocialSettings(visible)
             }
             onClose={() => setVipPanelVisible(false)}
           />

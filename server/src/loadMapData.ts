@@ -110,7 +110,8 @@ function parseAction(value: unknown): MapAction {
   const source = positionSchema.safeParse(action.source);
   const destination = positionSchema.safeParse(action.destination);
   const useKinds = action.kind === "ladder" || action.kind === "dropdown";
-  const useWithKinds = action.kind === "rope-spot";
+  const useWithKinds =
+    action.kind === "rope-spot" || action.kind === "rope-hole";
   if (
     !(useKinds && action.activation === "use") &&
     !(useWithKinds && action.activation === "use-with")
@@ -310,7 +311,7 @@ export function loadMapData(
   const actions = new Map<string, MapAction>();
   for (const value of meta.worldActions ?? []) {
     const action = parseAction(value);
-    const key = positionKey(action.source);
+    const key = `${positionKey(action.source)}|${action.activation}`;
     if (actions.has(key) || !getTile(action.destination)?.walkable) {
       throw new Error(`${name} has duplicate or invalid map action at ${key}`);
     }
@@ -345,8 +346,8 @@ export function loadMapData(
     getTransition(position) {
       return transitions.get(positionKey(position));
     },
-    getAction(position) {
-      return actions.get(positionKey(position));
+    getAction(position, activation) {
+      return actions.get(`${positionKey(position)}|${activation}`);
     },
     getItems,
     getTownName(townId) {

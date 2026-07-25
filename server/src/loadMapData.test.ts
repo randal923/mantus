@@ -258,14 +258,14 @@ describe("loadMapData", () => {
         },
       },
     ]);
-    expect(map.getAction({ x: 1, y: 2, z: 7 })).toEqual({
+    expect(map.getAction({ x: 1, y: 2, z: 7 }, "use")).toEqual({
       kind: "ladder",
       activation: "use",
       source: { x: 1, y: 2, z: 7 },
       destination: { x: 1, y: 2, z: 7 },
       itemId: 1948,
     });
-    expect(map.getAction({ x: 2, y: 2, z: 7 })).toEqual({
+    expect(map.getAction({ x: 2, y: 2, z: 7 }, "use")).toEqual({
       kind: "dropdown",
       activation: "use",
       source: { x: 2, y: 2, z: 7 },

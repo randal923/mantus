@@ -32,10 +32,18 @@ export const MAX_CHARACTERS_PER_ACCOUNT = 5;
 export const characterVocationSchema = z.enum(CHARACTER_VOCATIONS);
 export const starterVocationSchema = z.enum(STARTER_VOCATIONS);
 
-export const characterLookTypeSchema = z.union([
+/**
+ * The two citizen outfits a character may be *created* with. Everything
+ * beyond them is an entitlement granted server-side (Feature 70), so the
+ * creation intent stays deliberately narrow.
+ */
+export const starterLookTypeSchema = z.union([
   z.literal(CHARACTER_OUTFIT_LOOK_TYPES[0]),
   z.literal(CHARACTER_OUTFIT_LOOK_TYPES[1]),
 ]);
+
+/** A displayed look type; ownership is enforced by the entitlement check. */
+export const characterLookTypeSchema = z.number().int().min(1).max(65_535);
 
 const outfitPaletteIndexSchema = z
   .number()
@@ -75,7 +83,7 @@ export const characterCreationOptionsSchema = z.object({
   outfits: z
     .array(
       z.object({
-        lookType: characterLookTypeSchema,
+        lookType: starterLookTypeSchema,
         label: z.enum(["citizen-male", "citizen-female"]),
       }),
     )
@@ -90,12 +98,13 @@ export const createCharacterInputSchema = z
       .min(PROTOCOL_LIMITS.minCharacterNameLength)
       .max(PROTOCOL_LIMITS.maxCharacterNameLength),
     vocation: starterVocationSchema,
-    lookType: characterLookTypeSchema,
+    lookType: starterLookTypeSchema,
   })
   .strict();
 
 export type CharacterVocation = z.infer<typeof characterVocationSchema>;
 export type StarterVocation = z.infer<typeof starterVocationSchema>;
+export type StarterLookType = z.infer<typeof starterLookTypeSchema>;
 export type CharacterLookType = z.infer<typeof characterLookTypeSchema>;
 export type CharacterOutfit = z.infer<typeof characterOutfitSchema>;
 export type CharacterSummary = z.infer<typeof characterSummarySchema>;

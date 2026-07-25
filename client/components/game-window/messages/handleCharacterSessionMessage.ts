@@ -34,6 +34,14 @@ export function handleCharacterSessionMessage(
     return true;
   }
 
+  // Settings are account-wide: a second live session on this account gets the
+  // same ack, so both clients converge without relogging (Feature 69).
+  if (message.type === "ui-settings-updated") {
+    state.setUiSettings(message.settings);
+    runtime.uiSettingsRef.current = message.settings;
+    return true;
+  }
+
   if (message.type !== "welcome") return false;
 
   runtime.joinedRef.current = true;

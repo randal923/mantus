@@ -12,6 +12,7 @@ import { makeCharacter } from "../test/makeCharacter";
 import { Visibility } from "../Visibility";
 import { World } from "../World";
 import { MemoryModerationStore } from "./MemoryModerationStore";
+import { ModerationCommandHandler } from "./ModerationCommandHandler";
 import { ModerationService } from "./ModerationService";
 
 const A = "00000000-0000-4000-8000-00000000000a";
@@ -76,6 +77,7 @@ function makeHarness(): Harness {
     visibility,
     undefined,
     undefined,
+    new ModerationCommandHandler(moderation),
     moderation,
   );
   let nextSpawnX = 40;

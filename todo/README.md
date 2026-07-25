@@ -57,7 +57,7 @@ repository's architecture.
 | [Todo 1 — Foundations and Canary parity ledger](todo-1.md) | 1 |
 | [Todo 2 — Characters](todo-2.md) | 2 |
 | [Todo 3 — Map and movement](todo-3.md) | 3–4 |
-| [Todo 4 — Rendering and animation](todo-4.md) | 5–8 |
+| [Todo 4 — Rendering and animation](todo-4.md) | none (5–8 complete) |
 | [Todo 5 — Creatures, spawns, and AI](todo-5.md) | 9–10 |
 | [Todo 6 — Items and inventory](todo-6.md) | 11–17 |
 | [Todo 7 — Vocations, stats, and progression](todo-7.md) | 18–20 |
@@ -76,6 +76,9 @@ repository's architecture.
 | [Todo 20 — Dev tooling](todo-20.md) | 102 |
 | [Todo 21 — Quests](todo-21.md) | 103–105 |
 | [Todo 22 — Performance follow-ups](todo-22.md) | 106–107 |
+
+Front-end work still outstanding after a feature's server side ships is
+collected in [`todo/client/`](client/README.md).
 
 ## Recommended order
 

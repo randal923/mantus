@@ -12,6 +12,7 @@ import {
   type FightMode,
   type GemAction,
   type HighscoreCategory,
+  type HouseListKind,
   type CharacterVocation,
   type InventoryItem,
   type ItemContainerDestination,
@@ -629,6 +630,10 @@ export class GameClient {
     return this.send({ type: "house-buy", houseId });
   }
 
+  bidOnHouse(houseId: number, amount: number): boolean {
+    return this.send({ type: "house-bid", houseId, amount });
+  }
+
   abandonHouse(): boolean {
     return this.send({ type: "house-abandon" });
   }
@@ -645,12 +650,69 @@ export class GameClient {
     return this.send({ type: "house-transfer-cancel" });
   }
 
+  walkTo(position: Position): boolean {
+    return this.send({ type: "walk-to", position });
+  }
+
+  setMapMarker(position: Position, icon: number, text: string): boolean {
+    return this.send({ type: "minimap-marker-set", position, icon, text });
+  }
+
+  deleteMapMarker(position: Position): boolean {
+    return this.send({ type: "minimap-marker-delete", position });
+  }
+
+  createVipGroup(name: string): boolean {
+    return this.send({ type: "vip-group-create", name });
+  }
+
+  deleteVipGroup(groupId: string): boolean {
+    return this.send({ type: "vip-group-delete", groupId });
+  }
+
+  assignVipGroup(targetCharacterId: string, groupId: string | null): boolean {
+    return this.send({ type: "vip-assign-group", targetCharacterId, groupId });
+  }
+
+  requestFriend(name: string): boolean {
+    return this.send({ type: "friend-request", name });
+  }
+
+  respondToFriendRequest(fromCharacterId: string, accept: boolean): boolean {
+    return this.send({ type: "friend-respond", fromCharacterId, accept });
+  }
+
+  removeFriend(targetCharacterId: string): boolean {
+    return this.send({ type: "friend-remove", targetCharacterId });
+  }
+
+  setSocialSettings(finderVisible: boolean): boolean {
+    return this.send({ type: "social-set-settings", finderVisible });
+  }
+
+  sendTypingHint(to: string): boolean {
+    return this.send({ type: "chat-typing", to });
+  }
+
   setHouseAccess(
     kind: "guest" | "subowner",
     targetName: string,
     grant: boolean,
   ): boolean {
     return this.send({ type: "house-set-access", kind, targetName, grant });
+  }
+
+  setHouseList(
+    kind: HouseListKind,
+    body: string,
+    door?: { x: number; y: number; z: number },
+  ): boolean {
+    return this.send({
+      type: "house-set-list",
+      kind,
+      body,
+      ...(door ? { door } : {}),
+    });
   }
 
   kickFromHouse(targetCharacterId?: string): boolean {

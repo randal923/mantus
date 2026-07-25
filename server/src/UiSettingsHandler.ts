@@ -44,8 +44,14 @@ export class UiSettingsHandler {
         ) {
           return;
         }
-        session.account = { ...session.account, uiSettings: settings };
-        session.send({ type: "ui-settings-updated", settings });
+        // Settings are account-wide, so every live session of this account
+        // is updated and told — otherwise a second client keeps rendering a
+        // layout the account no longer has until it relogs.
+        for (const peer of this.registry.all()) {
+          if (peer.account?.id !== accountId) continue;
+          peer.account = { ...peer.account, uiSettings: settings };
+          peer.send({ type: "ui-settings-updated", settings });
+        }
       });
     } catch (cause) {
       const reason = cause instanceof Error ? cause.message : "unknown";

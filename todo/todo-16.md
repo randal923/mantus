@@ -4,10 +4,10 @@ These systems are later in implementation order but they are **not optional in f
 
 ## Remaining features
 
-- [ ] **Feature 68 — Minimap completion** — Click-to-autowalk, server-pushed and player-placed markers, minimap cache-busting, town labels. See [implementation](implementation-feature-68.md).
-- [ ] **Feature 69 — UI-settings polish** — Reset-layout control, cross-session layout sync, more movable panels. See [implementation](implementation-feature-69.md).
-- [ ] **Feature 70 — Outfits and addons** — Server-owned outfit/addon entitlements, unlock paths, selection validation. See [implementation](implementation-feature-70.md).
-- [ ] **Feature 71 — Mounts** — Mount ownership, selection validation, server-side speed bonus, client rendering. See [implementation](implementation-feature-71.md).
+- [ ] **Feature 68 — Minimap completion** — Shipped 2026-07-25; marker icon/text editing remains. See [implementation](implementation-feature-68.md) · [completed](completed/implementation-feature-68-completed.md).
+- [ ] **Feature 69 — UI-settings polish** — Reset control and cross-session sync shipped 2026-07-25; the chat/battle-list/spell-bar layouts are stored but those panels are still fixed. See [implementation](implementation-feature-69.md) · [completed](completed/implementation-feature-69-completed.md).
+- [ ] **Feature 70 — Outfits and addons** — Entitlements and selection validation shipped 2026-07-25; unlock sources (store/quests/achievements) and the picker UI remain. See [implementation](implementation-feature-70.md) · [completed](completed/implementation-feature-70-completed.md).
+- [ ] **Feature 71 — Mounts** — Ownership, validation, and the server-side speed bonus shipped 2026-07-25; client mounted rendering remains. See [implementation](implementation-feature-71.md) · [completed](completed/implementation-feature-71-completed.md).
 - [ ] **Feature 72 — Beds, sleep, stamina, training, blessings, regeneration** — Offline systems with abuse-safe server-clock timing and exact Canary persistence (absorbs the old houses beds/sleep item). See [implementation](implementation-feature-72.md).
 - [ ] **Feature 73 — Charm spending** — Spend earned charm points on runes; server-rolled charm procs in combat. See [implementation](implementation-feature-73.md).
 - [ ] **Feature 74 — Prey system** — Prey slots, reroll costs, wildcards, combat/loot/exp bonuses. See [implementation](implementation-feature-74.md).

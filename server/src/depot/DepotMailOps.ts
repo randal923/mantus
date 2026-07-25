@@ -12,6 +12,7 @@ import { requireItem } from "./requireItem";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { bumpInboxRevisionUpdate } from "./sql/bumpInboxRevisionUpdate";
 import { characterByNormalizedNameQuery } from "./sql/characterByNormalizedNameQuery";
+import { countRecentMailQuery } from "./sql/countRecentMailQuery";
 import { deliveryAdvisoryLock } from "./sql/deliveryAdvisoryLock";
 import { lockMailCharactersQuery } from "./sql/lockMailCharactersQuery";
 import { mailDeliveryByKeyQuery } from "./sql/mailDeliveryByKeyQuery";
@@ -49,6 +50,15 @@ export class DepotMailOps {
           deliveredItems: [],
           idempotent: true,
         };
+      }
+      const sentToday = await client.query<{ total: number }>(
+        countRecentMailQuery,
+        [request.senderCharacterId],
+      );
+      if ((sentToday.rows[0]?.total ?? 0) >= request.maxPerDay) {
+        throw new TransactionRollback<SendMailResult>({
+          status: "rate-limited",
+        });
       }
       const recipient = await client.query<{ id: string; display_name: string }>(
         characterByNormalizedNameQuery,

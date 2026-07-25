@@ -62,6 +62,8 @@ export class CharacterService {
       level: character.level,
       outfit: character.outfit,
       lastLoginAt: character.lastLoginAt?.toISOString() ?? null,
+      namelocked: false,
+      mountId: 0,
     }));
   }
 
@@ -124,6 +126,8 @@ export class CharacterService {
       createdAt: now,
       updatedAt: now,
       lastLoginAt: null,
+      namelocked: false,
+      mountId: 0,
       version: 1,
     };
     await this.store.create(

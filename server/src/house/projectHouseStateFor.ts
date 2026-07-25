@@ -1,5 +1,6 @@
 import {
   HOUSE_LIMITS,
+  type HouseAuction,
   type HouseState,
   type HousePendingTransfer,
 } from "@tibia/protocol";
@@ -16,6 +17,7 @@ export function projectHouseStateFor(input: {
   snapshot: HouseSnapshot | undefined;
   viewerCharacterId: string;
   townName?: string;
+  auction?: HouseAuction;
   pendingTransfer?: HousePendingTransfer;
 }): HouseState {
   const { info, snapshot, viewerCharacterId } = input;
@@ -45,6 +47,7 @@ export function projectHouseStateFor(input: {
     beds: info.beds,
     price: info.size * HOUSE_LIMITS.pricePerSqm,
     ownerName: snapshot?.ownerName ?? null,
+    ...(input.auction ? { auction: input.auction } : {}),
     myAccess,
     ...(snapshot && myAccess === "owner"
       ? {
@@ -59,6 +62,11 @@ export function projectHouseStateFor(input: {
       ? {
           guests: snapshot.guests.map((entry) => ({ ...entry })),
           subowners: snapshot.subowners.map((entry) => ({ ...entry })),
+          textLists: snapshot.textLists.map((list) => ({
+            kind: list.kind,
+            body: list.body,
+            ...(list.door ? { door: list.door } : {}),
+          })),
         }
       : {}),
   };

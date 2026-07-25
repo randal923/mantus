@@ -16,6 +16,7 @@ import { handleFishingUse } from "./handleFishingUse";
 import { handleMacheteUse } from "./handleMacheteUse";
 import { handlePickUse } from "./handlePickUse";
 import { handleScytheUse } from "./handleScytheUse";
+import type { RopePullHandler } from "./RopePullHandler";
 import { SHOVEL_HOLE_PAIRS } from "./shovelHolePairs";
 import type { ToolUseContext } from "./ToolUseContext";
 import type { WorldActionRng } from "./WorldActionRng";
@@ -39,6 +40,7 @@ export class ToolUseHandler {
     private readonly visibility: Visibility,
     private readonly persistence: CharacterPersistence,
     private readonly progression: ProgressionSystem,
+    private readonly ropePull: RopePullHandler,
     private readonly rng: WorldActionRng,
     private readonly spawnMonster?: (
       typeName: string,
@@ -63,12 +65,17 @@ export class ToolUseHandler {
     const tool = getToolDefinition(item.typeId);
     if (!tool) return false;
     const target = intent.targetPosition;
-    if (tool.kind === "rope") {
-      this.movement.handleRopeUse(session, target, now);
-      return true;
-    }
     if (!this.inReach(player, target, tool.allowFarUse ?? false)) {
       session.sendError("item-action-failed");
+      return true;
+    }
+    if (tool.kind === "rope") {
+      // Canary's onUseRope order: a rope spot climbs the user out, otherwise
+      // an open hole lifts whoever is below it. The two are mutually exclusive
+      // per tile — the converter gives a rope spot precedence, as Canary does.
+      if (!this.ropePull.handle(session, target, now)) {
+        this.movement.handleRopeUse(session, target, now);
+      }
       return true;
     }
     if (tool.kind === "shovel") {

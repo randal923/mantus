@@ -26,6 +26,7 @@ import {
   chatRejectedMessageSchema,
   creatureSpokeMessageSchema,
   ignoreListMessageSchema,
+  chatTypingStateMessageSchema,
   privateChatDeliveredMessageSchema,
   serverNoticeMessageSchema,
 } from "./chat";
@@ -128,7 +129,19 @@ import {
   tradeClosedMessageSchema,
   tradeStateMessageSchema,
 } from "./trade";
+import { minimapMarkersMessageSchema } from "./minimap";
 import {
+  outfitActionFailedMessageSchema,
+  outfitStateMessageSchema,
+} from "./outfit";
+import {
+  achievementGrantedMessageSchema,
+  characterProfileMessageSchema,
+  profileActionFailedMessageSchema,
+  profileStateMessageSchema,
+} from "./profile";
+import {
+  friendStateMessageSchema,
   vipActionFailedMessageSchema,
   vipStateMessageSchema,
   vipStatusChangedMessageSchema,
@@ -416,6 +429,7 @@ export const serverErrorCodeSchema = z.enum([
   "character-name-invalid",
   "character-name-taken",
   "character-not-found",
+  "character-namelocked",
   "character-operation-pending",
   "invalid-message",
   "join-required",
@@ -541,6 +555,14 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   vipStateMessageSchema,
   vipStatusChangedMessageSchema,
   vipActionFailedMessageSchema,
+  friendStateMessageSchema,
+  profileStateMessageSchema,
+  characterProfileMessageSchema,
+  achievementGrantedMessageSchema,
+  profileActionFailedMessageSchema,
+  minimapMarkersMessageSchema,
+  outfitStateMessageSchema,
+  outfitActionFailedMessageSchema,
   highscoresStateMessageSchema,
   highscoresActionFailedMessageSchema,
   bestiaryCreaturesStateMessageSchema,
@@ -557,6 +579,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   reportReceivedMessageSchema,
   reportActionFailedMessageSchema,
   creatureSpokeMessageSchema,
+  chatTypingStateMessageSchema,
   privateChatDeliveredMessageSchema,
   chatRejectedMessageSchema,
   channelListMessageSchema,

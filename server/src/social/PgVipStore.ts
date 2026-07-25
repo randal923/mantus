@@ -9,9 +9,18 @@ import { insertVipQuery } from "./sql/insertVipQuery";
 import { socialCharacterByNameQuery } from "./sql/socialCharacterByNameQuery";
 import { updateVipQuery } from "./sql/updateVipQuery";
 import { vipEntriesQuery } from "./sql/vipEntriesQuery";
+import {
+  assignVipGroupQuery,
+  countVipGroupsQuery,
+  deleteVipGroupQuery,
+  insertVipGroupQuery,
+  vipGroupRowsQuery,
+} from "./sql/vipGroupQueries";
 import type {
   AddVipResult,
+  CreateVipGroupResult,
   VipEntryRecord,
+  VipGroupRecord,
   VipOpFailure,
   VipOpResult,
   VipStore,
@@ -37,6 +46,7 @@ export class PgVipStore implements VipStore {
       description: string;
       icon: number;
       notify_login: boolean;
+      group_id: string | null;
     }>(vipEntriesQuery, [characterId, VIP_LIMITS.maxEntries]);
     return result.rows.map((row) => ({
       vipCharacterId: row.vip_character_id,
@@ -46,7 +56,77 @@ export class PgVipStore implements VipStore {
       description: row.description,
       icon: row.icon,
       notifyLogin: row.notify_login,
+      groupId: row.group_id,
     }));
+  }
+
+  async loadGroups(
+    characterId: string,
+  ): Promise<ReadonlyArray<VipGroupRecord>> {
+    const result = await this.pool.query<{ id: string; name: string }>(
+      vipGroupRowsQuery,
+      [characterId, VIP_LIMITS.maxGroups],
+    );
+    return result.rows.map((row) => ({ groupId: row.id, name: row.name }));
+  }
+
+  async createGroup(input: {
+    characterId: string;
+    name: string;
+    maxGroups: number;
+  }): Promise<CreateVipGroupResult> {
+    try {
+      return await runSerializableTransaction(this.pool, async (client) => {
+        const count = await client.query<{ total: number }>(
+          countVipGroupsQuery,
+          [input.characterId],
+        );
+        if ((count.rows[0]?.total ?? 0) >= input.maxGroups) {
+          throw this.rollback("list-full");
+        }
+        const created = await client.query<{ id: string; name: string }>(
+          insertVipGroupQuery,
+          [input.characterId, input.name],
+        );
+        const row = created.rows[0];
+        if (!row) throw this.rollback("invalid-request");
+        return {
+          status: "created" as const,
+          group: { groupId: row.id, name: row.name },
+        };
+      });
+    } catch (cause) {
+      if (isUniqueViolation(cause, "character_vip_groups_character_id_name_key")) {
+        return { status: "failed", reason: "already-added" };
+      }
+      throw cause;
+    }
+  }
+
+  async deleteGroup(input: {
+    characterId: string;
+    groupId: string;
+  }): Promise<VipOpResult> {
+    const deleted = await this.pool.query(deleteVipGroupQuery, [
+      input.characterId,
+      input.groupId,
+    ]);
+    if (deleted.rowCount !== 1) return { status: "failed", reason: "not-found" };
+    return { status: "ok" };
+  }
+
+  async assignGroup(input: {
+    characterId: string;
+    vipCharacterId: string;
+    groupId: string | null;
+  }): Promise<VipOpResult> {
+    const updated = await this.pool.query(assignVipGroupQuery, [
+      input.characterId,
+      input.vipCharacterId,
+      input.groupId,
+    ]);
+    if (updated.rowCount !== 1) return { status: "failed", reason: "not-found" };
+    return { status: "ok" };
   }
 
   async addVip(input: {
@@ -85,6 +165,7 @@ export class PgVipStore implements VipStore {
             description: "",
             icon: 0,
             notifyLogin: false,
+            groupId: null,
           },
         };
       });

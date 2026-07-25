@@ -56,6 +56,8 @@ export function toCharacter(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lastLoginAt: row.last_login_at,
+    namelocked: row.namelocked ?? false,
+    mountId: row.mount_id ?? 0,
     version: row.version,
   };
 }

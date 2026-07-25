@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type {
   CharacterCreationOptions,
-  CharacterLookType,
+  StarterLookType,
   CreateCharacterInput,
   StarterVocation,
 } from "@tibia/protocol";
@@ -32,7 +32,7 @@ export function CreateCharacterForm({
   const [vocation, setVocation] = useState<StarterVocation | null>(
     creationOptions.vocations[0] ?? null,
   );
-  const [lookType, setLookType] = useState<CharacterLookType | null>(
+  const [lookType, setLookType] = useState<StarterLookType | null>(
     creationOptions.outfits[0]?.lookType ?? null,
   );
 

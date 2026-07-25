@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { CreatureState, MinimapLayout, Position } from "@tibia/protocol";
+import type {
+  CreatureState,
+  MinimapLayout,
+  MinimapMarker as MapMarker,
+  Position,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { MinimapRegionStore } from "../../lib/minimap/MinimapRegionStore";
 import { drawMinimap, type MinimapMarker } from "../../lib/minimap/drawMinimap";
@@ -58,7 +63,12 @@ interface MinimapPanelProps {
   ownPosition: Position;
   creatures: ReadonlyArray<CreatureState>;
   layout: MinimapLayout | null;
+  /** The character's own persisted waypoint flags, from the server. */
+  mapMarkers: ReadonlyArray<MapMarker>;
   onLayoutChange: (layout: MinimapLayout) => void;
+  /** Sends a walk-to intent; the server computes and validates the path. */
+  onWalkTo: (position: Position) => void;
+  onToggleMarker: (position: Position) => void;
 }
 
 export function MinimapPanel({
@@ -67,7 +77,10 @@ export function MinimapPanel({
   ownPosition,
   creatures,
   layout,
+  mapMarkers,
   onLayoutChange,
+  onWalkTo,
+  onToggleMarker,
 }: MinimapPanelProps) {
   const { t } = useAppTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -129,10 +142,14 @@ export function MinimapPanel({
       creatures,
       ownPlayerId,
       ownPosition,
+      mapMarkers,
+      towns: store.towns,
+      showTownLabels: pixelsPerTile <= 2,
     });
   }, [
     store,
     regionVersion,
+    mapMarkers,
     centerX,
     centerY,
     floor,
@@ -201,8 +218,35 @@ export function MinimapPanel({
     setHover(nearest);
   };
 
+  /** Canvas pixel -> world tile, using the same transform drawMinimap uses. */
+  const tileAt = (
+    event: ReactPointerEvent<HTMLCanvasElement>,
+  ): Position => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return {
+      x: Math.round(
+        centerX + (event.clientX - rect.left - rect.width / 2) / pixelsPerTile,
+      ),
+      y: Math.round(
+        centerY + (event.clientY - rect.top - rect.height / 2) / pixelsPerTile,
+      ),
+      z: floor,
+    };
+  };
+
   const onPointerEnd = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
+    const drag = dragRef.current;
+    if (drag?.pointerId === event.pointerId) {
+      dragRef.current = null;
+      // A click that did not pan is a walk-to request. The client only names
+      // the tile; the server routes and re-validates every step.
+      if (!drag.moved && floor === ownPosition.z) onWalkTo(tileAt(event));
+    }
+  };
+
+  const onContextMenu = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    onToggleMarker(tileAt(event));
   };
 
   const beginPanelDrag = (
@@ -276,6 +320,7 @@ export function MinimapPanel({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerEnd}
           onPointerCancel={onPointerEnd}
+          onContextMenu={onContextMenu}
           onPointerLeave={(event) => {
             onPointerEnd(event);
             setHover(null);

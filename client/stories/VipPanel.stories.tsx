@@ -13,6 +13,7 @@ const ENTRIES: VipEntry[] = [
     description: "Hunt partner",
     icon: 4,
     notifyLogin: true,
+    groupId: null,
   },
   {
     characterId: "00000000-0000-4000-8000-000000000002",
@@ -23,6 +24,7 @@ const ENTRIES: VipEntry[] = [
     description: "",
     icon: 0,
     notifyLogin: false,
+    groupId: null,
   },
   {
     characterId: "00000000-0000-4000-8000-000000000003",
@@ -33,6 +35,7 @@ const ENTRIES: VipEntry[] = [
     description: "Guild banker",
     icon: 7,
     notifyLogin: false,
+    groupId: null,
   },
 ];
 
@@ -41,6 +44,7 @@ const meta = {
   component: VipPanel,
   args: {
     entries: ENTRIES,
+    friends: null,
     pending: false,
     error: null,
     hasParty: false,
@@ -49,6 +53,10 @@ const meta = {
     onChat: fn(),
     onEdit: fn(),
     onRemove: fn(),
+    onRequestFriend: fn(),
+    onRespondFriend: fn(),
+    onRemoveFriend: fn(),
+    onSetFinderVisible: fn(),
     onClose: fn(),
   },
 } satisfies Meta<typeof VipPanel>;

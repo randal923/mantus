@@ -16,6 +16,7 @@ import {
   channelSpeakMessageSchema,
   ignoreAddMessageSchema,
   ignoreRemoveMessageSchema,
+  chatTypingMessageSchema,
   privateChatMessageSchema,
   speakMessageSchema,
 } from "./chat";
@@ -85,16 +86,32 @@ import {
 } from "./gemAtelierMessages";
 import {
   houseAbandonMessageSchema,
+  houseBidMessageSchema,
   houseBrowseMessageSchema,
   houseBuyMessageSchema,
   houseKickMessageSchema,
   houseOpenMessageSchema,
   houseSetAccessMessageSchema,
+  houseSetListMessageSchema,
   houseTransferCancelMessageSchema,
   houseTransferOfferMessageSchema,
   houseTransferRespondMessageSchema,
 } from "./house";
+import {
+  minimapMarkerDeleteMessageSchema,
+  minimapMarkerSetMessageSchema,
+  walkToMessageSchema,
+} from "./minimap";
+import {
+  outfitGetMessageSchema,
+  outfitSelectMessageSchema,
+} from "./outfit";
 import { reportPlayerMessageSchema } from "./moderation";
+import {
+  bugReportMessageSchema,
+  characterProfileGetMessageSchema,
+  profileSelectTitleMessageSchema,
+} from "./profile";
 import {
   npcDialogueChoiceMessageSchema,
   npcDialogueGreetMessageSchema,
@@ -128,8 +145,15 @@ import { equipmentSlotSchema, quickLootFilterSchema } from "./item";
 import { positionSchema } from "./position";
 import { viewRangeSchema } from "./viewRange";
 import {
+  friendRemoveMessageSchema,
+  friendRequestMessageSchema,
+  friendRespondMessageSchema,
+  socialSetSettingsMessageSchema,
   vipAddMessageSchema,
+  vipAssignGroupMessageSchema,
   vipEditMessageSchema,
+  vipGroupCreateMessageSchema,
+  vipGroupDeleteMessageSchema,
   vipRemoveMessageSchema,
 } from "./vip";
 
@@ -682,16 +706,33 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   guildWithdrawMessageSchema,
   houseOpenMessageSchema,
   houseBuyMessageSchema,
+  houseBidMessageSchema,
   houseAbandonMessageSchema,
   houseTransferOfferMessageSchema,
   houseTransferRespondMessageSchema,
   houseTransferCancelMessageSchema,
   houseSetAccessMessageSchema,
+  houseSetListMessageSchema,
   houseKickMessageSchema,
   houseBrowseMessageSchema,
   vipAddMessageSchema,
   vipRemoveMessageSchema,
   vipEditMessageSchema,
+  vipGroupCreateMessageSchema,
+  vipGroupDeleteMessageSchema,
+  vipAssignGroupMessageSchema,
+  friendRequestMessageSchema,
+  friendRespondMessageSchema,
+  friendRemoveMessageSchema,
+  socialSetSettingsMessageSchema,
+  characterProfileGetMessageSchema,
+  profileSelectTitleMessageSchema,
+  bugReportMessageSchema,
+  walkToMessageSchema,
+  minimapMarkerSetMessageSchema,
+  minimapMarkerDeleteMessageSchema,
+  outfitGetMessageSchema,
+  outfitSelectMessageSchema,
   highscoresGetMessageSchema,
   bestiaryCreaturesGetMessageSchema,
   bestiaryMonsterGetMessageSchema,
@@ -704,6 +745,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   gemActionMessageSchema,
   reportPlayerMessageSchema,
   speakMessageSchema,
+  chatTypingMessageSchema,
   privateChatMessageSchema,
 ]);
 

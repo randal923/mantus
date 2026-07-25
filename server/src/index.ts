@@ -24,6 +24,10 @@ import { PgBestiaryStore } from "./bestiary/PgBestiaryStore";
 import { PgGemStore } from "./wheel/PgGemStore";
 import { PgWheelStore } from "./wheel/PgWheelStore";
 import { PgHighscoreStore } from "./social/PgHighscoreStore";
+import { PgMarkerStore } from "./minimap/PgMarkerStore";
+import { PgOutfitStore } from "./outfit/PgOutfitStore";
+import { PgProfileStore } from "./profile/PgProfileStore";
+import { PgFriendStore } from "./social/PgFriendStore";
 import { PgVipStore } from "./social/PgVipStore";
 import { PgChestStore } from "./chest/PgChestStore";
 import { PgWorldEventStore } from "./event/PgWorldEventStore";
@@ -93,6 +97,10 @@ const guild = new PgGuildStore(pool);
 const pvp = new PgPvpStore(pool);
 const house = new PgHouseStore(pool, itemCatalog);
 const vip = new PgVipStore(pool);
+const friends = new PgFriendStore(pool);
+const profiles = new PgProfileStore(pool);
+const markers = new PgMarkerStore(pool);
+const outfits = new PgOutfitStore(pool);
 const highscores = new PgHighscoreStore(pool);
 const bestiary = new PgBestiaryStore(pool);
 const wheel = new PgWheelStore(pool);
@@ -128,6 +136,10 @@ const server = new GameServer(serverConfig, {
   pvp,
   house,
   vip,
+  friends,
+  profiles,
+  markers,
+  outfits,
   highscores,
   bestiary,
   wheel,

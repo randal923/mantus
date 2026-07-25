@@ -670,7 +670,7 @@
     "paidUntil": "Rent paid until",
     "warnings": "{{count}} rent warning(s)",
     "guildhall": "Guildhall",
-    "guildhallNote": "Guildhalls cannot be purchased yet.",
+    "guildhallNote": "A guildhall is bought by a guild leader and paid for from the guild balance.",
     "buy": "Buy for {{price}} gold",
     "buyConfirm": "Pay {{price}} gold from your bank account?",
     "confirm": "Confirm",
@@ -713,7 +713,11 @@
       "rent-paid": "The rent for {{house}} was paid from your bank account.",
       "rent-warning": "Rent for {{house}} is overdue! Deposit gold or lose it in {{warningsLeft}} day(s).",
       "evicted": "You were evicted from {{house}}. Your belongings are in your inbox.",
-      "transfer-cancelled": "The transfer offer for {{house}} was withdrawn."
+      "transfer-cancelled": "The transfer offer for {{house}} was withdrawn.",
+      "bid-placed": "You bid {{amount}} gold on {{house}}.",
+      "outbid": "You were outbid on {{house}}. {{amount}} gold went back to your bank account.",
+      "auction-won": "You won the auction for {{house}} with {{amount}} gold.",
+      "auction-refunded": "The auction for {{house}} was cancelled. {{amount}} gold went back to your bank account."
     },
     "errors": {
       "not-found": "There is no such house.",
@@ -732,8 +736,29 @@
       "offer-not-found": "There is no such transfer offer.",
       "access-limit": "The access list is full.",
       "rate-limited": "Wait a moment before doing that again.",
-      "invalid-request": "Sorry, not possible."
-    }
+      "invalid-request": "Sorry, not possible.",
+      "auction-active": "This house is being auctioned. Place a bid instead.",
+      "auction-closed": "This auction has already closed.",
+      "bid-too-low": "Your bid does not beat the standing one.",
+      "list-too-long": "That access list is too long.",
+      "not-a-door": "That is not a door of this house."
+    },
+    "auction": {
+      "title": "Auction",
+      "none": "No auction is running. Place the first bid to open one.",
+      "standing": "Standing bid: {{amount}} gold by {{name}}.",
+      "endsAt": "Closes {{date}}.",
+      "mine": "You hold the standing bid.",
+      "minimum": "Your bid (min {{amount}} gold)",
+      "bid": "Place bid"
+    },
+    "textLists": {
+      "title": "Access lists",
+      "help": "One entry per line. Use @Guild for a whole guild, Rank@Guild for one rank, * and ? as wildcards, ! to deny, and # for comments.",
+      "save": "Save list",
+      "doorCount": "{{count}} door list(s) set"
+    },
+    "buyGuildhallConfirm": "Pay {{price}} gold from the guild balance?"
   },
   "bank": {
     "title": "Bank — {{npcName}}",
@@ -1176,7 +1201,8 @@
     "currentPassword": "Current Password",
     "newPassword": "New Password",
     "updateEmail": "Update Email",
-    "updatePassword": "Update Password"
+    "updatePassword": "Update Password",
+    "resetLayout": "Reset panel layout"
   },
   "hotkeys": {
     "title": "Hotkey Mapping",
@@ -1290,6 +1316,17 @@
       "cannot-add-self": "You cannot add yourself.",
       "rate-limited": "Please wait a moment.",
       "invalid-request": "That VIP action is not possible."
+    },
+    "friendsSection": {
+      "title": "Friends",
+      "incoming": "{{name}} wants to be friends.",
+      "outgoing": "Waiting on: {{names}}",
+      "accept": "Accept",
+      "decline": "Decline",
+      "remove": "Unfriend",
+      "request": "Ask",
+      "placeholder": "Character name…",
+      "finderVisible": "Show me in the party finder"
     }
   },
   "highscores": {

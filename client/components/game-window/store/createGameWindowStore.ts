@@ -77,6 +77,7 @@ export function createGameWindowStore({
     combatLog: [],
     chatChannels: [],
     ignoredNames: [],
+    mapMarkers: [],
     levelUpNotice: null,
     chatState: initialChatState,
     chatFocusRequestId: 0,
@@ -190,6 +191,7 @@ export function createGameWindowStore({
       })),
     setChatChannels: (value) => set(() => ({ chatChannels: [...value] })),
     setIgnoredNames: (value) => set(() => ({ ignoredNames: [...value] })),
+    setMapMarkers: (value) => set(() => ({ mapMarkers: [...value] })),
     appendCombatLog: (text) =>
       set((state) => ({
         combatLog: [...state.combatLog, text].slice(-COMBAT_LOG_LIMIT),
@@ -463,6 +465,7 @@ export function createGameWindowStore({
         combatLog: [],
         chatChannels: [],
         ignoredNames: [],
+        mapMarkers: [],
         chatState: chatReducer(state.chatState, {
           type: "reset",
           ownPlayerId: null,

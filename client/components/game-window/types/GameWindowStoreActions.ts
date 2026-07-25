@@ -20,6 +20,7 @@ import type { GameWindowSessionActions } from "./GameWindowSessionActions";
 import type { GameWindowSessions } from "./GameWindowSessions";
 import type { GameWindowState } from "./GameWindowState";
 import type { GuildToast } from "./GuildToast";
+import type { MinimapMarker } from "@tibia/protocol";
 import type { HouseToast } from "./HouseToast";
 import type { ItemTextState } from "./ItemTextState";
 import type { LevelUpNotice } from "./LevelUpNotice";
@@ -67,6 +68,7 @@ export interface GameWindowStoreActions {
     value: ReadonlyArray<{ id: ChatChannelId; label: string; open: boolean }>,
   ) => void;
   setIgnoredNames: (value: ReadonlyArray<string>) => void;
+  setMapMarkers: (value: ReadonlyArray<MinimapMarker>) => void;
   /** Appends one server-authored line to the system log. */
   appendCombatLog: (text: string) => void;
   setLevelUpNotice: (value: SetStateAction<LevelUpNotice | null>) => void;

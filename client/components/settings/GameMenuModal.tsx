@@ -50,6 +50,8 @@ interface GameMenuModalProps {
   onDiagonalWalkingChange?: (enabled: boolean) => void;
   turnModifier?: TurnModifier;
   onTurnModifierChange?: (modifier: TurnModifier) => void;
+  /** Drops every stored panel layout back to the client defaults. */
+  onResetLayout?: () => void;
   languageSaving?: boolean;
   languageError?: boolean;
   initialView?: MenuView;
@@ -87,6 +89,7 @@ export function GameMenuModal({
   diagonalWalking = true,
   onDiagonalWalkingChange,
   turnModifier = "Shift",
+  onResetLayout,
   onTurnModifierChange,
   languageSaving = false,
   languageError = false,
@@ -286,6 +289,15 @@ export function GameMenuModal({
 
           <Button className="w-full" onClick={() => setView("hotkeys")}>
             {t("settings.hotkeyMapping")}
+          </Button>
+
+          <Button
+            variant="secondary"
+            className="w-full"
+            disabled={!onResetLayout}
+            onClick={() => onResetLayout?.()}
+          >
+            {t("settings.resetLayout")}
           </Button>
 
           <section className="flex flex-col gap-2">

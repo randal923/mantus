@@ -2,6 +2,57 @@ import { describe, expect, it } from "vitest";
 import { clientMessageSchema, PROTOCOL_LIMITS } from "@tibia/protocol";
 
 describe("movement intent schemas", () => {
+  it("accepts a destination-only walk-to intent", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "walk-to",
+        position: { x: 100, y: 200, z: 7 },
+      }).success,
+    ).toBe(true);
+    for (const intent of [
+      // The client never supplies a route, a step count, or a revision.
+      {
+        type: "walk-to",
+        position: { x: 1, y: 1, z: 7 },
+        directions: ["north"],
+      },
+      { type: "walk-to" },
+      { type: "walk-to", position: { x: 1, y: 1 } },
+      { type: "walk-to", position: { x: -1, y: 1, z: 7 } },
+      { type: "walk-to", position: { x: 1, y: 1, z: 16 } },
+    ]) {
+      expect(clientMessageSchema.safeParse(intent).success).toBe(false);
+    }
+  });
+
+  it("accepts bounded minimap marker intents only", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "minimap-marker-set",
+        position: { x: 1, y: 1, z: 7 },
+        icon: 0,
+        text: "here",
+      }).success,
+    ).toBe(true);
+    for (const intent of [
+      {
+        type: "minimap-marker-set",
+        position: { x: 1, y: 1, z: 7 },
+        icon: 21,
+        text: "",
+      },
+      {
+        type: "minimap-marker-set",
+        position: { x: 1, y: 1, z: 7 },
+        icon: 0,
+        text: "a".repeat(41),
+      },
+      { type: "minimap-marker-delete" },
+    ]) {
+      expect(clientMessageSchema.safeParse(intent).success).toBe(false);
+    }
+  });
+
   it("accepts a direction-only turn intent", () => {
     expect(
       clientMessageSchema.safeParse({

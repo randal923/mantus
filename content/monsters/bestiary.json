@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
-    "definitionsSha256": "a13eb40058ae424f55c9b3143c6a325f0a569dfc65cb4991a34b18434e065cb3"
+    "definitionsSha256": "6e4c4bc5de9050569eb761eb01b563b767353c3df3b88706a5a50425da9e3293"
   },
   "bestiary": [
     {
@@ -8128,6 +8128,63 @@
       ]
     },
     {
+      "raceId": 1946,
+      "class": "Undead",
+      "stars": 5,
+      "occurrence": 0,
+      "charmPoints": 100,
+      "firstUnlock": 200,
+      "secondUnlock": 2000,
+      "toKill": 5000,
+      "locations": "Mirrored Nightmare.",
+      "monsterIds": [
+        "druid-s-apparition",
+        "monk-s-apparition"
+      ]
+    },
+    {
+      "raceId": 1947,
+      "class": "Undead",
+      "stars": 5,
+      "occurrence": 0,
+      "charmPoints": 100,
+      "firstUnlock": 200,
+      "secondUnlock": 2000,
+      "toKill": 5000,
+      "locations": "Mirrored Nightmare.",
+      "monsterIds": [
+        "knight-s-apparition"
+      ]
+    },
+    {
+      "raceId": 1948,
+      "class": "Undead",
+      "stars": 5,
+      "occurrence": 0,
+      "charmPoints": 100,
+      "firstUnlock": 200,
+      "secondUnlock": 2000,
+      "toKill": 5000,
+      "locations": "Mirrored Nightmare.",
+      "monsterIds": [
+        "paladin-s-apparition"
+      ]
+    },
+    {
+      "raceId": 1949,
+      "class": "Undead",
+      "stars": 5,
+      "occurrence": 0,
+      "charmPoints": 100,
+      "firstUnlock": 200,
+      "secondUnlock": 2000,
+      "toKill": 5000,
+      "locations": "Mirrored Nightmare.",
+      "monsterIds": [
+        "sorcerer-s-apparition"
+      ]
+    },
+    {
       "raceId": 1962,
       "class": "Undead",
       "stars": 5,
@@ -9744,6 +9801,13 @@
       "category": "bane",
       "monsterIds": [
         "heoni"
+      ]
+    },
+    {
+      "raceId": 718,
+      "category": "archfoe",
+      "monsterIds": [
+        "raging-mage"
       ]
     },
     {
