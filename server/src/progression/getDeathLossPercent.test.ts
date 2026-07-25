@@ -17,13 +17,52 @@ function percentFor(
 }
 
 describe("getDeathLossPercent", () => {
-  it("charges a flat tenth below level 25", () => {
+  it("charges a flat tenth below level 24", () => {
     expect(percentFor()).toBeCloseTo(0.1, 10);
-    expect(percentFor({ level: 24, experience: getExperienceForLevel(24) })).
+    expect(percentFor({ level: 23, experience: getExperienceForLevel(23) })).
       toBeCloseTo(0.1, 10);
   });
 
-  it("follows Canary's curve from level 25 up", () => {
+  it("takes the curve from level 24, as Canary does", () => {
+    // getLostPercent() branches on `level >= 24`; level 24 itself is on the
+    // curve, not on the flat low-level percentage.
+    const level = 24;
+    const experience = getExperienceForLevel(level);
+    const expected =
+      ((level + 50) * 50 * (level * level - 5 * level + 8)) / experience / 100;
+    expect(percentFor({ level, experience })).toBeCloseTo(expected, 12);
+    expect(percentFor({ level, experience })).not.toBeCloseTo(0.1, 4);
+  });
+
+  it("rounds a large low-level blessing discount up to 50%", () => {
+    // Below the curve threshold Canary clamps a reduction that already reaches
+    // 40% up to 50%, before promotion is added.
+    const low = { level: 20, experience: getExperienceForLevel(20) };
+    const base = percentFor(low);
+
+    // Four blessings is 32% — under the trigger, so still linear.
+    expect(percentFor({ ...low, blessings: 4 })).toBeCloseTo(base * 0.68, 12);
+    // Five is 40% — clamped to 50%.
+    expect(percentFor({ ...low, blessings: 5 })).toBeCloseTo(base * 0.5, 12);
+    expect(percentFor({ ...low, blessings: 7 })).toBeCloseTo(base * 0.5, 12);
+    // Promotion is added after the clamp, so it is never swallowed by it.
+    expect(percentFor({ ...low, blessings: 5, promoted: true })).toBeCloseTo(
+      base * 0.2,
+      12,
+    );
+  });
+
+  it("does not clamp the discount once on the curve", () => {
+    const level = 100;
+    const experience = getExperienceForLevel(level);
+    const base = percentFor({ level, experience });
+    expect(percentFor({ level, experience, blessings: 5 })).toBeCloseTo(
+      base * 0.6,
+      12,
+    );
+  });
+
+  it("follows Canary's curve from level 24 up", () => {
     const level = 100;
     const experience = getExperienceForLevel(level);
     const expected =
@@ -37,16 +76,26 @@ describe("getDeathLossPercent", () => {
   });
 
   it("discounts promotion by 30% and each blessing by 8%", () => {
-    const base = percentFor();
+    // On the curve, where the low-level clamp does not apply.
+    const onCurve = { level: 100, experience: getExperienceForLevel(100) };
+    const base = percentFor(onCurve);
 
-    expect(percentFor({ promoted: true })).toBeCloseTo(base * 0.7, 12);
-    expect(percentFor({ blessings: 1 })).toBeCloseTo(base * 0.92, 12);
-    expect(percentFor({ blessings: 5 })).toBeCloseTo(base * 0.6, 12);
-    // Reductions stack additively: 8 blessings plus a promotion leave 6%.
-    expect(percentFor({ blessings: 8, promoted: true })).toBeCloseTo(
-      base * 0.06,
+    expect(percentFor({ ...onCurve, promoted: true })).toBeCloseTo(
+      base * 0.7,
       12,
     );
+    expect(percentFor({ ...onCurve, blessings: 1 })).toBeCloseTo(
+      base * 0.92,
+      12,
+    );
+    expect(percentFor({ ...onCurve, blessings: 5 })).toBeCloseTo(
+      base * 0.6,
+      12,
+    );
+    // Reductions stack additively: 8 blessings plus a promotion leave 6%.
+    expect(
+      percentFor({ ...onCurve, blessings: 8, promoted: true }),
+    ).toBeCloseTo(base * 0.06, 12);
   });
 
   it("scales the whole penalty by the unfair-fight reduction", () => {

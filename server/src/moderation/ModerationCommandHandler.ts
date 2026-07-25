@@ -1,3 +1,4 @@
+import { hasCapability, type AdminCapability } from "../auth/AccountRole";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { ModerationService } from "./ModerationService";
@@ -6,26 +7,31 @@ const MAX_MUTE_MINUTES = 43_200;
 const MAX_BAN_DAYS = 3_650;
 const MAX_MODERATION_TEXT = 200;
 
-const COMMANDS = new Set([
-  "mute",
-  "unmute",
-  "kick",
-  "ban",
-  "unban",
-  "note",
-  "namelock",
-]);
+/**
+ * The capability each command needs. Naming them per command rather than
+ * gating the whole set on one flag is the point of Feature 96: a tutor may
+ * mute and note, but cannot kick, ban, or namelock anyone.
+ */
+const REQUIRED_CAPABILITY: Readonly<Record<string, AdminCapability>> = {
+  mute: "moderate.mute",
+  unmute: "moderate.mute",
+  kick: "moderate.kick",
+  ban: "moderate.ban",
+  unban: "moderate.ban",
+  note: "moderate.note",
+  namelock: "moderate.namelock",
+};
 
 /**
  * The production moderation surface: the same audited `ModerationService`
- * actions the dev GM handler exposes, reachable on a real server but only to
- * a session whose *account* carries the staff flag. Authorization is read
- * from the session's own account at execution time — never from anything the
- * message body names (charter rule 9) — and a non-staff session gets no reply
- * at all, so the command set is not discoverable by probing.
+ * actions the dev GM handler exposes, reachable on a real server but only to a
+ * session whose *account* holds the capability that specific command requires
+ * (Feature 96). Authorization is read from the session's own account at
+ * execution time — never from anything the message body names (charter rule 9)
+ * — and an unauthorized session gets no reply at all, so the command set is
+ * not discoverable by probing, and neither is the boundary between roles.
  *
- * This is what an admin console routes to when Feature 96 lands; it adds no
- * game logic of its own.
+ * This is what an admin console routes to; it adds no game logic of its own.
  */
 export class ModerationCommandHandler {
   constructor(private readonly moderation: ModerationService) {}
@@ -35,10 +41,11 @@ export class ModerationCommandHandler {
     if (!text.startsWith("/")) return false;
     const [rawCommand, ...args] = text.slice(1).trim().split(/\s+/);
     const command = (rawCommand ?? "").toLowerCase();
-    if (!COMMANDS.has(command)) return false;
-    // Silence, not a refusal: a non-staff player must not learn the command
-    // exists, so the line falls through to ordinary speech.
-    if (!session.account?.isStaff) return false;
+    const capability = REQUIRED_CAPABILITY[command];
+    if (!capability) return false;
+    // Silence, not a refusal: an unauthorized player must not learn the
+    // command exists, so the line falls through to ordinary speech.
+    if (!hasCapability(session.account?.role, capability)) return false;
     switch (command) {
       case "mute":
         return this.mute(session, player, args);

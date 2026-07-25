@@ -40,6 +40,7 @@ function makeHarness() {
     undefined,
     undefined,
     undefined,
+    undefined,
     () => ({
       uptimeMs: 3_720_000,
       onlinePlayerCount: 7,

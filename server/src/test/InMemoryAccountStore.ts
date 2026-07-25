@@ -42,6 +42,7 @@ export class InMemoryAccountStore implements AccountStore {
       supabaseUserId,
       email,
       bannedUntil: null,
+      role: "player" as const,
       isStaff: false,
       premiumUntil: null,
       mantusCoins: 0,

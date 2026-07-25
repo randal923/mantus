@@ -61,6 +61,9 @@ export type RecordNoteResult =
   | { readonly status: "recorded"; readonly targetName: string }
   | ModerationOpFailure;
 
+/** Admin actions beyond moderation that still owe the audit trail a row. */
+export type AdminActionKind = "teleport" | "inspect";
+
 export type CreateReportResult =
   | { readonly status: "created" }
   | ModerationOpFailure;
@@ -121,6 +124,18 @@ export interface ModerationStore {
     actorCharacterId: string;
     targetName: string;
     reason: string;
+  }): Promise<RecordNoteResult>;
+  /**
+   * Records an admin action against a named target. The target is resolved by
+   * name inside the transaction, so a row is only written for a character that
+   * actually exists — the same rule the moderation actions follow.
+   */
+  recordAdminAction(input: {
+    actorCharacterId: string;
+    action: AdminActionKind;
+    targetName: string;
+    reason: string;
+    detail: Readonly<Record<string, unknown>>;
   }): Promise<RecordNoteResult>;
   createReport(input: {
     reporterCharacterId: string;

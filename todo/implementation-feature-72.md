@@ -5,12 +5,29 @@ Part of [Todo 16 — Remaining Canary systems and client polish](todo-16.md).
 ## Why
 These are the offline/timed systems: they all share the same abuse surface (clock manipulation) and the same fix (server-clock-only durable timers with exact Canary persistence). This feature also absorbs the beds/sleep item from the old houses todo (14d), and it unblocks blessing-dependent behavior elsewhere: Feature 32's death penalty and Feature 60's blessing-loss extras.
 
+> **Status: open.** The blessing data layer shipped 2026-07-25 — see the
+> [completed log](completed/implementation-feature-72-completed.md).
+
 ## Remaining work
 - Beds/sleep: house authorization through the existing `HouseService` gates; server-side sleep state persisted; regeneration math server-only. (Absorbed from old todo 14d — beds were N/A there because no bed system existed.)
-- Offline training and exercise training.
-- Stamina.
-- Blessings — purchase via bank transaction + audit (charter rule 11).
-- Food/soul regeneration with exact Canary persistence.
+- Offline training and exercise training **in-world triggers only** — the
+  conversion engines already exist (Feature 18); do not re-derive the math.
+- ~~Stamina.~~ Shipped with Feature 18 (2026-07-24).
+- Blessings:
+  - ~~Pinned catalog, both cost curves, equipment-loss table as typed data.~~
+    Shipped 2026-07-25 (`server/src/progression/blessings.ts`).
+  - **Persistence** — `characters.blessings` bitmask column, `CharacterStore`
+    load/save, `Player.blessings` reading `lossReducingBlessingCount(mask)`
+    instead of the literal 0 it returns today.
+  - **Purchase via bank transaction + audit** (charter rule 11). Canary uses
+    `removeMoneyBank` (carried gold first, then bank) and refuses while
+    pz-locked outside a protection zone — re-check both at execution time.
+    Economy-relevant, so it gets its own PR.
+  - **Consumption on death** — feeds Feature 32's item drop into a player
+    corpse, including the amulet-of-loss and red/black-skull branches from
+    `Blessings.PlayerDeath`.
+- Food/soul regeneration with exact Canary persistence (soul eligibility
+  shipped with Feature 18).
 
 ## Implementation
 - Durable per-character timers persisted in Postgres, advanced by the server clock at login/tick — never client-reported time.

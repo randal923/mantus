@@ -8,6 +8,7 @@ import { countRecentReportsQuery } from "./sql/countRecentReportsQuery";
 import { deleteAccountBanQuery } from "./sql/deleteAccountBanQuery";
 import { deleteCharacterMuteQuery } from "./sql/deleteCharacterMuteQuery";
 import { setNamelockUpdate } from "../profile/sql/profileQueries";
+import { insertAdminActionQuery } from "./sql/insertAdminActionQuery";
 import { insertModerationActionQuery } from "./sql/insertModerationActionQuery";
 import { insertPlayerReportQuery } from "./sql/insertPlayerReportQuery";
 import { moderationCharacterByNameQuery } from "./sql/moderationCharacterByNameQuery";
@@ -17,6 +18,7 @@ import { upsertAccountBanQuery } from "./sql/upsertAccountBanQuery";
 import { upsertCharacterMuteQuery } from "./sql/upsertCharacterMuteQuery";
 import type {
   ActiveMuteRecord,
+  AdminActionKind,
   BanAccountResult,
   CreateReportResult,
   ModerationOpFailure,
@@ -285,6 +287,26 @@ export class PgModerationStore implements ModerationStore {
       reports: Number(row?.reports ?? 0),
       actions: Number(row?.actions ?? 0),
     };
+  }
+
+  async recordAdminAction(input: {
+    actorCharacterId: string;
+    action: AdminActionKind;
+    targetName: string;
+    reason: string;
+    detail: Readonly<Record<string, unknown>>;
+  }): Promise<RecordNoteResult> {
+    return runSerializableTransaction(this.pool, async (client) => {
+      const target = await this.requireTarget(client, input.targetName);
+      await client.query(insertAdminActionQuery, [
+        input.action,
+        target.id,
+        input.actorCharacterId,
+        input.reason,
+        JSON.stringify(input.detail),
+      ]);
+      return { status: "recorded" as const, targetName: target.display_name };
+    });
   }
 
   private async requireTarget(

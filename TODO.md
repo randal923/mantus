@@ -41,8 +41,9 @@ limitations accepted during a session are recorded in the owning feature file
   tooling** (2026-07-25, Feature 43). They credit and refund the *operator's
   own* account only, are audited with the operator's character id, and exist
   only when the server runs with `DEV_COMMANDS=1` — so they are not a
-  player-reachable surface. They should move behind real operator
-  authorization once Feature 96 ships.
+  player-reachable surface. Feature 96 shipped the role-authorized surface they
+  should move onto (2026-07-25); they need an `economy.grant` capability added
+  to `AdminCapability` and a handler on `AdminCommandHandler`.
 - **Inbox-overflow spillover deviates from Canary** (2026-07-25, Feature 64).
   Items that do not fit an evicted owner's inbox stay on the house tiles and
   are counted in the eviction audit row. Canary mails them with `FLAG_NOLIMIT`,
@@ -53,11 +54,17 @@ limitations accepted during a session are recorded in the owning feature file
   suppression ships (`chat/IgnoreList.ts`, stricter than pinned Tibia's
   client-side list) but is held in memory only, so a restart clears every
   list. The fix is a per-character table loaded at attach. Owner: Feature 65.
-- **The staff flag has no operator tooling** (2026-07-25, Feature 66).
-  `accounts.is_staff` gates highscore exclusion and the production moderation
-  commands, but can only be set with direct SQL until Feature 96 lands roles;
-  derive it from the role column then rather than keeping two truths.
-  Owner: Feature 96.
+- **Roles have no operator tooling** (2026-07-25, Feature 96; supersedes the
+  earlier staff-flag gap). `accounts.role` now authorizes every admin action
+  and `is_staff` is a generated column derived from it, so the two truths are
+  gone — but the role itself is still only settable with direct SQL. A real
+  admin console or CLI is the remaining half of "never hand-edit production
+  data as routine administration". Owner: Feature 96.
+- **Content/event controls are still dev-only** (2026-07-25, Feature 96).
+  `/raid`, `/coins` and `/storerefund` live in the `DEV_COMMANDS`-gated
+  `GmCommandHandler` rather than the role-authorized surface. Each needs a
+  capability (`world.content`, `economy.grant`) before it can move. Owners:
+  Feature 43 (coins/refund), Feature 54 (raid).
 - **Namelock has no rename flow** (2026-07-25, Feature 67). A namelocked
   character is held out of the world with `character-namelocked`, which is the
   enforcement half; nothing clears the flag in-game. The rename infrastructure
@@ -87,7 +94,8 @@ limitations accepted during a session are recorded in the owning feature file
 - **`/raid` is a dev-only GM command, not real operator tooling** (2026-07-25,
   Feature 54). Same shape as `/coins` and `/storerefund`: it exists only under
   `DEV_COMMANDS=1` and the attempt is audited against the operator's own
-  character. Should move behind operator authorization once Feature 96 ships.
+  character. Feature 96's role-authorized surface shipped 2026-07-25; this
+  needs a `world.content` capability and a handler on `AdminCommandHandler`.
 - **The party analyzer's "market" price mode uses catalog `worth`**
   (2026-07-25, Feature 55). Canary reads live market statistics; there is no
   market price index to read. The `npc` mode uses real shop sell prices, so the
@@ -148,11 +156,16 @@ limitations accepted during a session are recorded in the owning feature file
   monster tables but not in the pinned Tibia 15.11 item catalog, so the roll
   skips them. The budget is pinned by `monsterLootParity.test.ts`, which fails
   if a thirteenth appears. Fix: a newer asset era, not a code change.
-- **Blessings are always zero** (2026-07-25, Feature 32). The full Canary death
-  loss formula reads a blessing count through `Player.blessings`, which is a
-  seam that returns 0 until Feature 72 ships blessing purchase, persistence,
-  and consumption. Until then the penalty is only reduced by promotion and the
-  unfair-fight reduction, and no items are dropped into a player corpse.
+- **Blessings are always zero** (2026-07-25, Features 32/72). The full Canary
+  death loss formula reads a blessing count through `Player.blessings`, which
+  is a seam that still returns 0. The pinned blessing catalog, both cost curves
+  and the equipment-loss table now exist as typed data
+  (`server/src/progression/blessings.ts`, Feature 72), but nothing persists or
+  grants a blessing yet, so the penalty is still only reduced by promotion and
+  the unfair-fight reduction and no items drop into a player corpse. Next
+  slice: the `characters.blessings` bitmask column + `CharacterStore`
+  load/save, then the purchase path (economy-relevant — its own PR).
+  Owner: Feature 72.
 - **Ignore lists are memory-only** (2026-07-25, Feature 35). They survive a
   relogin (keyed by character id for the server's lifetime) but not a restart.
   Fix: a table alongside the other social stores; the suppression path itself

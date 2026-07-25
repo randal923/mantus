@@ -6,9 +6,18 @@ export const MIN_UNFAIR_FIGHT_REDUCTION = 20;
 const PROMOTION_REDUCTION_PERCENT = 30;
 /** Canary's per-blessing discount on every death loss. */
 const BLESSING_REDUCTION_PERCENT = 8;
-/** Below level 25 the loss is a flat percentage instead of the curve. */
+/** Below level 24 the loss is a flat percentage instead of the curve. */
 const LOW_LEVEL_LOSS_PERCENT = 10;
-const LOW_LEVEL_THRESHOLD = 25;
+/** Canary's `Player::getLostPercent()` takes the curve from `level >= 24`. */
+const LOW_LEVEL_THRESHOLD = 24;
+/**
+ * Below the curve threshold Canary rounds a large blessing discount up:
+ * a reduction that already reaches 40% becomes 50% before promotion is added.
+ * Low-level characters with five or more blessings therefore lose noticeably
+ * less than the linear 8%-each would suggest.
+ */
+const LOW_LEVEL_REDUCTION_TRIGGER_PERCENT = 40;
+const LOW_LEVEL_REDUCTION_PERCENT = 50;
 
 export interface DeathLossInput {
   readonly level: number;
@@ -64,13 +73,19 @@ export function getDeathLossPercent(input: DeathLossInput): number {
   ) {
     throw new Error("unfair fight reduction is out of range");
   }
-  const basePercent =
-    level >= LOW_LEVEL_THRESHOLD && experience > 0
-      ? curveLossPercent(level + levelPercent / 100, experience)
-      : LOW_LEVEL_LOSS_PERCENT;
+  const onCurve = level >= LOW_LEVEL_THRESHOLD && experience > 0;
+  const basePercent = onCurve
+    ? curveLossPercent(level + levelPercent / 100, experience)
+    : LOW_LEVEL_LOSS_PERCENT;
+  // Canary applies the blessing discount first, clamps it on the low-level
+  // branch, and only then adds promotion — so promotion is never clamped.
+  const blessingReduction = blessings * BLESSING_REDUCTION_PERCENT;
+  const clampedBlessingReduction =
+    !onCurve && blessingReduction >= LOW_LEVEL_REDUCTION_TRIGGER_PERCENT
+      ? LOW_LEVEL_REDUCTION_PERCENT
+      : blessingReduction;
   const reduction =
-    (promoted ? PROMOTION_REDUCTION_PERCENT : 0) +
-    blessings * BLESSING_REDUCTION_PERCENT;
+    (promoted ? PROMOTION_REDUCTION_PERCENT : 0) + clampedBlessingReduction;
   const percent =
     (basePercent * Math.max(0, 1 - reduction / 100) * unfairFightReduction) /
     10_000;

@@ -12,6 +12,7 @@ import type {
   SpeakMessage,
 } from "@tibia/protocol";
 import type { SpokenSpellOutcome } from "../combat/SpokenSpellOutcome";
+import type { AdminCommandHandler } from "../admin/AdminCommandHandler";
 import type { GmCommandHandler } from "../gm/GmCommandHandler";
 import type { ModerationCommandHandler } from "../moderation/ModerationCommandHandler";
 import type { ChatModerationHooks } from "../moderation/ChatModerationHooks";
@@ -81,6 +82,7 @@ export class ChatHandler {
     private readonly npcs?: NpcHandler,
     private readonly gm?: GmCommandHandler,
     private readonly moderationCommands?: ModerationCommandHandler,
+    private readonly adminCommands?: AdminCommandHandler,
     private readonly moderation?: ChatModerationHooks,
     private readonly castSpellWords?: (
       session: Session,
@@ -151,10 +153,19 @@ export class ChatHandler {
       return;
     }
     // The production moderation surface: same audited actions, authorized
-    // from the session's own staff flag rather than a dev switch.
+    // per command against the session's own account role rather than a dev
+    // switch (Feature 96).
     if (
       intent.type === "speak" &&
       this.moderationCommands?.tryHandle(session, speaker, text)
+    ) {
+      return;
+    }
+    // Production admin surface beyond moderation: teleport and read-only
+    // inspection, each gated on its own capability and audited.
+    if (
+      intent.type === "speak" &&
+      this.adminCommands?.tryHandle(session, speaker, text, now)
     ) {
       return;
     }

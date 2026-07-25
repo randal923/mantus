@@ -266,6 +266,10 @@ function createSector() {
   return {
     present: new Uint8Array(bitsetBytes),
     walkable: new Uint8Array(bitsetBytes),
+    // Audit-only (deliberately absent from `binaryProperties`, so the map
+    // binary format is unchanged): lets the transition audit tell "no ground
+    // here at all" apart from "ground, but something solid stands on it".
+    hasGround: new Uint8Array(bitsetBytes),
     blocksProjectile: new Uint8Array(bitsetBytes),
     blocksPath: new Uint8Array(bitsetBytes),
     limitsFloorView: new Uint8Array(bitsetBytes),
@@ -436,6 +440,7 @@ function finishTile(tile) {
   let floorChangeItemId = null;
   let floorChangeKind = "floor-change";
   let floorChangeRestricted = false;
+  let floorChangeItemBlocks = false;
   validatePlacedItems(items);
   for (const [stackIndex, placedItem] of items.entries()) {
     const appearance = itemsById.get(placedItem.id);
@@ -483,7 +488,13 @@ function finishTile(tile) {
         });
       }
       floorChange ??= itemFloorChange;
-      floorChangeItemId ??= placedItem.id;
+      if (floorChangeItemId === null) {
+        floorChangeItemId = placedItem.id;
+        // Roof pieces and similar scenery carry a floor-change flag but are
+        // themselves non-walkable, so no player can ever trigger the step.
+        // Recorded for the transition audit (Feature 4).
+        floorChangeItemBlocks = semantics.blocksSolid;
+      }
       floorChangeRestricted ||=
         placedItem.attributes.actionId !== undefined ||
         placedItem.attributes.uniqueId !== undefined;
@@ -514,6 +525,7 @@ function finishTile(tile) {
           source: { x, y, z },
           destination: teleportDestination,
           itemId: placedItem.id,
+          itemBlocks: semantics.blocksSolid,
           restricted:
             placedItem.attributes.actionId !== undefined ||
             placedItem.attributes.uniqueId !== undefined,
@@ -614,6 +626,7 @@ function finishTile(tile) {
   setBit(sector.present, bit, true);
   const walkable = hasGround && !blocksSolid;
   setBit(sector.walkable, bit, walkable);
+  setBit(sector.hasGround, bit, hasGround);
   setBit(sector.blocksProjectile, bit, blocksProjectile);
   setBit(sector.blocksPath, bit, blocksPath);
   setBit(sector.limitsFloorView, bit, limitsFloorView);
@@ -636,6 +649,8 @@ function finishTile(tile) {
       floorChange,
       itemId: floorChangeItemId,
       walkable,
+      hasGround,
+      itemBlocks: floorChangeItemBlocks,
       restricted: floorChangeRestricted,
     });
   }
@@ -809,6 +824,13 @@ for (const conflict of transitionConflicts) {
     floorChange: selected.floorChange,
     itemId: selected.itemId,
     walkable: floorChanges.get(key)?.walkable ?? false,
+    hasGround: floorChanges.get(key)?.hasGround ?? false,
+    // Recomputed for the *selected* item, which is not necessarily the one
+    // whose value the tile loop recorded.
+    itemBlocks: Boolean(
+      itemsById.get(selected.itemId)?.flags?.notWalkable ||
+        itemSemantics.items[selected.itemId]?.blocking === true,
+    ),
     restricted: floorChanges.get(key)?.restricted ?? false,
   });
   unusedOverrides.delete(key);
@@ -908,7 +930,11 @@ for (const teleport of teleports.values()) {
     continue;
   }
   transitionSources.add(sourceKey);
-  const { restricted: _restricted, ...enabledTeleport } = teleport;
+  const {
+    restricted: _restricted,
+    itemBlocks: _itemBlocks,
+    ...enabledTeleport
+  } = teleport;
   transitions.push(enabledTeleport);
 }
 // Canary's Position:moveUpstairs tries the tile south of the ladder first,
@@ -964,6 +990,53 @@ for (const action of worldActions) {
       continue;
     }
     claimed.add(key);
+  }
+}
+// Feature 4 — separate "correctly has no step transition" from "we could not
+// resolve this". A floor-change item on a tile nobody can stand on never fires
+// a step transition, so it is not a parity gap; lumping it in with genuinely
+// unresolved entries overstated the audit by an order of magnitude. Runs after
+// the world-action passes above so `enabled` is final.
+const TRANSITION_EXEMPT_REASONS = new Set([
+  "covered-by-world-action",
+  "source-has-no-ground",
+  "source-item-not-walkable",
+]);
+{
+  const hasGround = (position) => hasSectorBit(position, "hasGround");
+  const enabledActionTiles = new Set(
+    worldActions
+      .filter((action) => action.enabled)
+      .map((action) => `${action.source.x},${action.source.y},${action.source.z}`),
+  );
+  for (const transition of invalidTransitions) {
+    if (transition.reason !== "source-not-walkable") continue;
+    const { x, y, z } = transition.source;
+    // The tile's interaction is a rope pull / ladder climb / dropdown, not a
+    // step. Canary registers those on the item id independently of any step
+    // floor change, so the missing step transition is the correct outcome.
+    if (enabledActionTiles.has(`${x},${y},${z}`)) {
+      transition.reason = "covered-by-world-action";
+      continue;
+    }
+    // No ground on the tile at all — scenery carrying a floor-change flag.
+    // Nothing can ever occupy it, so no step transition can exist.
+    if (!hasGround(transition.source)) {
+      transition.reason = "source-has-no-ground";
+      continue;
+    }
+    // The floor-change item is itself non-walkable (roof pieces are the bulk):
+    // the flag describes which way the roof slopes for rendering, not a step a
+    // player can take. Correctly transition-less.
+    if (transition.itemBlocks) {
+      transition.reason = "source-item-not-walkable";
+      continue;
+    }
+    // Ground exists, the floor-change item is walkable, but something else
+    // solid stands on the tile. That is either deliberate (a ramp walled off
+    // behind content) or a map defect, so it stays an unresolved gap pending
+    // per-entry review.
+    transition.reason = "source-blocked-by-item";
   }
 }
 const byPosition = (a, b) => {
@@ -1130,15 +1203,26 @@ const contentDocument = JSON.stringify({
   tileMetadata: mapTileMetadata,
   worldItemAttributes,
   disabledWorldActions: worldActions.filter((action) => !action.enabled),
-  unresolvedTransitions: invalidTransitions.map(
-    ({ kind, source, destination, itemId, reason }) => ({
+  unresolvedTransitions: invalidTransitions
+    .filter(({ reason }) => !TRANSITION_EXEMPT_REASONS.has(reason))
+    .map(({ kind, source, destination, itemId, reason }) => ({
       kind,
       source,
       destination,
       itemId,
       reason,
-    }),
-  ),
+    })),
+  // Audited as correctly transition-less rather than unresolved. Emitted so
+  // the exemption stays visible and countable, never silently dropped.
+  transitionExemptions: invalidTransitions
+    .filter(({ reason }) => TRANSITION_EXEMPT_REASONS.has(reason))
+    .map(({ kind, source, destination, itemId, reason }) => ({
+      kind,
+      source,
+      destination,
+      itemId,
+      reason,
+    })),
 });
 writeFileSync(serverContentStage, contentDocument);
 writeFileSync(
@@ -1201,4 +1285,12 @@ console.log(
 );
 console.log(`enabled step transitions written: ${transitions.length}`);
 console.log(`world actions written: ${worldActions.length}`);
-console.log(`unresolved floor transitions written: ${invalidTransitions.length}`);
+console.log(
+  `unresolved floor transitions written: ${
+    invalidTransitions.filter(({ reason }) => !TRANSITION_EXEMPT_REASONS.has(reason))
+      .length
+  } (plus ${
+    invalidTransitions.filter(({ reason }) => TRANSITION_EXEMPT_REASONS.has(reason))
+      .length
+  } audited as correctly transition-less)`,
+);

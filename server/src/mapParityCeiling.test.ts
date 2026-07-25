@@ -30,6 +30,7 @@ interface DisabledWorldAction {
 }
 interface ContentDocument {
   unresolvedTransitions?: UnresolvedTransition[];
+  transitionExemptions?: UnresolvedTransition[];
   disabledWorldActions?: DisabledWorldAction[];
 }
 
@@ -47,13 +48,38 @@ const countBy = <T>(items: T[], key: (item: T) => string): Map<string, number> =
 };
 
 // Ceilings pinned 2026-07-24 against the committed otservbr content document.
-const UNRESOLVED_TRANSITION_TOTAL = 5557;
+//
+// Lowered 2026-07-25 (Feature 4): the `source-not-walkable` bucket (4,156)
+// conflated "we could not resolve this" with "a step transition correctly does
+// not exist here". A floor-change flag on a tile nobody can stand on never
+// fires, so it is not a parity gap. The converter now splits that bucket and
+// moves the audited-correct part to `transitionExemptions`, leaving only the
+// 824 entries whose tile *is* standable ground blocked by some other item —
+// those are still genuine per-entry review work.
+const UNRESOLVED_TRANSITION_TOTAL = 2225;
 const UNRESOLVED_TRANSITIONS_BY_REASON: Record<string, number> = {
   "blocked-destination": 182,
   "missing-destination": 892,
   "out-of-range-destination": 4,
   "requires-content-action": 323,
-  "source-not-walkable": 4156,
+  "source-blocked-by-item": 824,
+};
+
+// Audited as correctly transition-less rather than unresolved. These are
+// ceilings for the same reason the unresolved ones are: the exemption set is a
+// claim about the map, so it must not silently grow. A new exemption reason —
+// i.e. the classifier deciding on its own that something needs no transition —
+// fails the gate.
+const TRANSITION_EXEMPTION_TOTAL = 3332;
+const TRANSITION_EXEMPTIONS_BY_REASON: Record<string, number> = {
+  // The tile's interaction is a rope pull / ladder climb / dropdown, which
+  // Canary registers on the item id independently of any step floor change.
+  "covered-by-world-action": 1352,
+  // No ground on the tile at all: nothing can ever occupy it.
+  "source-has-no-ground": 945,
+  // The floor-change item is itself non-walkable — roof pieces are the bulk,
+  // where the flag describes which way the roof slopes for rendering.
+  "source-item-not-walkable": 1035,
 };
 
 // Lowered 2026-07-25 (Feature 51 + Feature 4): the `rope-or-shovel` bucket was
@@ -85,6 +111,7 @@ const DISABLED_WORLD_ACTIONS_BY_REASON: Record<string, number> = {
 
 describe("map parity ceiling (Feature 4)", () => {
   const transitions = content.unresolvedTransitions ?? [];
+  const exemptions = content.transitionExemptions ?? [];
   const actions = content.disabledWorldActions ?? [];
 
   it("unresolved floor transitions do not exceed the pinned ceiling", () => {
@@ -104,6 +131,33 @@ describe("map parity ceiling (Feature 4)", () => {
       expect(count, `unresolved-transition reason "${reason}"`).toBeLessThanOrEqual(
         ceiling ?? 0,
       );
+    }
+  });
+
+  it("transition exemptions do not exceed the pinned ceiling", () => {
+    expect(exemptions.length).toBeLessThanOrEqual(TRANSITION_EXEMPTION_TOTAL);
+  });
+
+  it("every transition exemption names an audited reason", () => {
+    const byReason = countBy(exemptions, (exemption) => exemption.reason);
+    for (const [reason, count] of byReason) {
+      const ceiling = TRANSITION_EXEMPTIONS_BY_REASON[reason];
+      expect(
+        ceiling,
+        `unaudited transition-exemption reason "${reason}" (${count} entries)`,
+      ).toBeDefined();
+      expect(count, `transition-exemption reason "${reason}"`).toBeLessThanOrEqual(
+        ceiling ?? 0,
+      );
+    }
+  });
+
+  it("no exempted reason also appears as unresolved", () => {
+    // The two sets are a partition: an entry is either a gap or audited away,
+    // never classified as both.
+    const unresolvedReasons = new Set(transitions.map((t) => t.reason));
+    for (const reason of Object.keys(TRANSITION_EXEMPTIONS_BY_REASON)) {
+      expect(unresolvedReasons.has(reason), `"${reason}" leaked`).toBe(false);
     }
   });
 

@@ -18,19 +18,24 @@ Every disabled transition, movement action, zone behavior, and invalid placement
 
 ## Remaining work
 As of 2026-07-25 the audit stands at **348 disabled world actions** (was 3,554)
-and **5,557 unresolved floor transitions**. Every disabled action now names an
-audited reason, gated by `mapParityCeiling.test.ts`.
+and **2,225 unresolved floor transitions** (was 5,557), plus 3,332 transitions
+audited as correctly transition-less. Every disabled action and every exemption
+names an audited reason, gated by `mapParityCeiling.test.ts`.
 
 - The 348 disabled actions each need a content decision, not a classifier fix:
   207 `blocked-destination` and 74 `missing-destination` (no walkable landing
   tile even after the moveUpstairs neighbour scan), 53 `no-floor-below` /
   1 `no-floor-above` (correctly disabled at the map's floor limits),
   9 `duplicate-action`, 4 `requires-content-action`.
-- Re-audit the `source-not-walkable` transition bucket (4,156). Two groups
-  dominate and both may be correctly transition-less rather than unresolved:
-  roof pieces 5033/5035/5037/5039 (1,830) and holes 7515-7522 (~1,400), the
-  latter now covered by the `rope-hole` use-with action instead of a step
-  transition.
+- ~~Re-audit the `source-not-walkable` transition bucket (4,156).~~ Done
+  2026-07-25 — split into `covered-by-world-action` (1,352, the rope-hole
+  tiles), `source-has-no-ground` (945), `source-item-not-walkable` (1,035, the
+  roof pieces) and `source-blocked-by-item` (824). The first three are
+  exemptions; see the [completed log](completed/implementation-feature-4-completed.md).
+- `source-blocked-by-item` (824) needs per-entry review — standable ground with
+  something solid on it, which is either deliberate content or a map defect.
+  Dominated by small boat (285), ramp (204), cave entrance (132), hole (55) and
+  stairs (53).
 - `missing-destination` (892) and `blocked-destination` (182) transitions still
   need per-entry review; `requires-content-action` (323) waits on scripted
   action/unique-id ownership.

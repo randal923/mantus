@@ -5,11 +5,30 @@ Part of [Todo 18 — Operations, observability, and security](todo-18.md).
 ## Why
 A significant moderation implementation already exists: `server/src/moderation/` (ModerationService, PgModerationStore, ChatModerationHooks, with tests) implements kick/ban/unban/mute/unmute with immediate live-session kick and a `moderation_actions` audit row in the same transaction; `server/src/gm/GmCommandHandler.ts` wires `/kick`, `/ban`, `/mute`. But it is gated only by `DEV_COMMANDS=1` (never enabled in production per `server/src/config.ts:37`) — there is no per-account role authorization, so none of it is usable in production. One role-column migration plus a session gate closes gaps in three areas at once: this feature, todo-19's instant-ban residual, and todo-20's server-wide-GM-commands gap.
 
+> **Status: open.** The role migration, the capability model, per-command
+> gating and the teleport/inspect surface shipped 2026-07-25 — see the
+> [completed log](completed/implementation-feature-96-completed.md). What
+> remains is operator tooling to assign roles and moving the content/event
+> controls off the dev switch.
+
 ## Remaining work
-- Authenticated, role-authorized admin actions: kick, ban, mute, teleport, content/event controls, read-only inspection.
-- Audit every action with actor, target, reason, before/after state, and result.
-- Never hand-edit production data as routine administration.
-- Add role-authorization tests.
+- ~~Authenticated, role-authorized admin actions: kick, ban, mute, teleport, read-only inspection.~~
+  Shipped 2026-07-25: `server/src/auth/AccountRole.ts` capabilities,
+  `ModerationCommandHandler` per-command gating, `AdminCommandHandler`
+  (`/goto`, `/bring`, `/inspect`).
+- **Content/event controls** are still `DEV_COMMANDS`-only (`/raid`, `/coins`,
+  `/storerefund` in `GmCommandHandler`). Each needs a capability
+  (`world.content`, `economy.grant` are the obvious additions) and a move onto
+  the production surface. Owners: Feature 43 (coins/refund), Feature 54 (raid).
+- **Operator tooling to set a role.** `accounts.role` still has to be set with
+  direct SQL; that is the last piece of "never hand-edit production data as
+  routine administration".
+- ~~Audit every action with actor, target, reason, before/after state, and result.~~
+  Shipped: `moderation_actions` gained `teleport`/`inspect` and a `detail`
+  jsonb column carrying before/after positions.
+- ~~Add role-authorization tests.~~ Shipped: `AccountRole.test.ts` (6 cases
+  including fail-closed and ladder monotonicity), `AdminCommandHandler.test.ts`
+  (6 cases), and the rewritten `ModerationCommandHandler.test.ts`.
 
 ## Implementation
 - Account role column (new migration) plus a per-session role gate in `server/src/gm/GmCommandHandler.ts` — exactly the fix for todo-20's "server-wide GM commands" gap; also unblocks todo-19's instant-ban production path, Feature 66's moderation reachability, and the highscore staff flag.

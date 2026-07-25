@@ -181,6 +181,7 @@ const makeHarness = (
     supabaseUserId: "market-user",
     email: null,
     bannedUntil: null,
+    role: "player" as const,
     isStaff: false,
     premiumUntil,
     mantusCoins: 0,

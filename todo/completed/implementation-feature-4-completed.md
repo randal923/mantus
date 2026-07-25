@@ -105,3 +105,70 @@ by roof pieces (1,830 across ids 5033/5035/5037/5039) and by holes 7515-7522
 be reflected the next time this bucket is audited. `missing-destination` (892)
 and `blocked-destination` (182) still need per-entry review, and
 `requires-content-action` (323) waits on scripted-action ownership.
+
+---
+
+## 2026-07-25 — `source-not-walkable` re-audited; unresolved transitions 5,557 → 2,225
+
+**Problem.** The largest unresolved-transition bucket, `source-not-walkable`
+(4,156), conflated two different things: entries we genuinely cannot resolve,
+and entries where a step transition *correctly does not exist*. A floor-change
+flag on a tile no player can ever stand on never fires, so it is not a parity
+gap at all. The previous pass flagged this ("both may be correctly
+transition-less rather than unresolved") but left the bucket intact, so the
+audit claimed 5,557 unsupported map behaviors when most of them were not
+behaviors at all.
+
+**What changed.**
+
+- `tools/convertOtbm.mjs` splits the bucket into audited categories in a pass
+  that runs *after* world-action resolution (so `enabled` is final):
+  - `covered-by-world-action` (1,352) — an enabled world action already owns the
+    tile. These are the holes 7515-7522: Canary registers the rope pull on the
+    item id independently of any step floor change, so the rope action *is* the
+    resolution, exactly as the previous pass predicted.
+  - `source-has-no-ground` (945) — no ground on the tile at all; nothing can
+    ever occupy it.
+  - `source-item-not-walkable` (1,035) — the floor-change item is itself
+    non-walkable. Roof pieces 5033/5035/5037/5039 are the bulk: their
+    `floorChange` describes which way the roof slopes for rendering, not a step.
+  - `source-blocked-by-item` (824) — standable ground, walkable floor-change
+    item, but something *else* solid on the tile. Left unresolved: this is the
+    one sub-bucket that can hide a map defect, and it needs per-entry review.
+- The three audited-correct categories move to a new `transitionExemptions`
+  array in the content document. They are emitted, not dropped, so the exemption
+  stays visible and countable.
+- Two audit-only inputs feed the split: a `hasGround` sector bitset (deliberately
+  absent from `binaryProperties`, so the map binary format is unchanged) and an
+  `itemBlocks` flag on the floor-change/teleport record. Both are stripped from
+  the published payloads — `mapParityCeiling.test.ts` asserts no leakage.
+- `server/src/mapParityCeiling.test.ts` gained three gates: an exemption total,
+  a per-reason exemption ceiling (a *new* exemption reason fails — the classifier
+  must not decide on its own that something needs no transition), and a
+  partition check that no reason appears in both arrays.
+
+**Result.** Unresolved floor transitions 5,557 → **2,225**: missing-destination
+892, source-blocked-by-item 824, requires-content-action 323,
+blocked-destination 182, out-of-range-destination 4. Plus 3,332 audited
+exemptions. Disabled world actions unchanged at 348.
+
+**Files touched.** `tools/convertOtbm.mjs`,
+`server/src/mapParityCeiling.test.ts`, `content/source-manifest.json`
+(re-pinned converter hash), regenerated `server/data/otservbr.{content,map}.json`
+and `client/public/assets/map/otservbr/manifest.json`.
+
+**Verification.** `yarn workspace server test` → 1,120 passed; `yarn test:tools`
+→ 69 passed + `parity:check` clean; `yarn typecheck` clean. Minimap PNGs
+rebuilt with `node tools/buildMinimapTiles.mjs` — running `convertOtbm.mjs`
+alone deletes them, so the pair must always run together.
+
+**Residual risk / remaining work (keeps the feature open).** 2,225 unresolved
+transitions and 348 disabled actions remain, all needing content decisions
+rather than classifier fixes:
+- `source-blocked-by-item` (824) — small boat 285, ramp 204, cave entrance 132,
+  hole 55, stairs 53, and a long tail. A ramp with a wall on it is either
+  deliberate content or a map defect; only per-entry review can tell.
+- `missing-destination` (892) and `blocked-destination` (182) are unchanged and
+  still need per-entry review.
+- `requires-content-action` (323) still waits on scripted-action/unique-id
+  ownership (Features 103-105).

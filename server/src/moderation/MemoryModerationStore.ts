@@ -2,6 +2,7 @@ import type { ReportReason } from "@tibia/protocol";
 import { monotonicNow } from "../monotonicNow";
 import type {
   ActiveMuteRecord,
+  AdminActionKind,
   BanAccountResult,
   CreateReportResult,
   ModerationPruneResult,
@@ -18,6 +19,7 @@ export interface MemoryModerationAction {
   readonly targetCharacterId: string;
   readonly issuedByCharacterId: string;
   readonly reason: string;
+  readonly detail?: Readonly<Record<string, unknown>>;
 }
 
 interface MemoryReport {
@@ -262,12 +264,38 @@ export class MemoryModerationStore implements ModerationStore {
     return null;
   }
 
+  async recordAdminAction(input: {
+    actorCharacterId: string;
+    action: AdminActionKind;
+    targetName: string;
+    reason: string;
+    detail: Readonly<Record<string, unknown>>;
+  }): Promise<RecordNoteResult> {
+    const target = this.resolve(input.targetName);
+    if (!target) return { status: "failed", reason: "target-not-found" };
+    this.record(
+      input.action,
+      target.id,
+      input.actorCharacterId,
+      input.reason,
+      input.detail,
+    );
+    return { status: "recorded", targetName: target.name };
+  }
+
   private record(
     action: string,
     targetCharacterId: string,
     issuedByCharacterId: string,
     reason: string,
+    detail?: Readonly<Record<string, unknown>>,
   ): void {
-    this.actions.push({ action, targetCharacterId, issuedByCharacterId, reason });
+    this.actions.push({
+      action,
+      targetCharacterId,
+      issuedByCharacterId,
+      reason,
+      ...(detail ? { detail } : {}),
+    });
   }
 }

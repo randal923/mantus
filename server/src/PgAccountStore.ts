@@ -6,12 +6,14 @@ import {
 } from "@tibia/protocol";
 import type { FightMode, Language, UiSettings } from "@tibia/protocol";
 import type { Account, AccountStore } from "./AccountStore";
+import { isAccountRole } from "./auth/AccountRole";
 
 interface AccountRow {
   id: string;
   supabase_user_id: string;
   email: string | null;
   banned_until: Date | null;
+  role: string;
   is_staff: boolean;
   premium_until: Date | null;
   mantus_coins: string;
@@ -44,7 +46,7 @@ export class PgAccountStore implements AccountStore {
        VALUES ($1, $2, $3)
        ON CONFLICT (supabase_user_id)
        DO UPDATE SET email = EXCLUDED.email
-       RETURNING id, supabase_user_id, email, banned_until, is_staff,
+       RETURNING id, supabase_user_id, email, banned_until, role, is_staff,
          premium_until, mantus_coins, language, ui_settings, fight_mode`,
       [supabaseUserId, email, language],
     );
@@ -55,6 +57,8 @@ export class PgAccountStore implements AccountStore {
       supabaseUserId: row.supabase_user_id,
       email: row.email,
       bannedUntil: row.banned_until,
+      // Fail closed: a role this build does not know grants nothing.
+      role: isAccountRole(row.role) ? row.role : "player",
       isStaff: row.is_staff,
       premiumUntil: row.premium_until,
       mantusCoins: Number(row.mantus_coins ?? 0),

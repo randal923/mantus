@@ -24,6 +24,7 @@ import type { CurrencyReconciler } from "./economy/CurrencyReconciler";
 import { ShopRestockRunner } from "./economy/ShopRestockRunner";
 import { ShopService } from "./economy/ShopService";
 import type { ShopStore } from "./economy/ShopStore";
+import { AdminCommandHandler } from "./admin/AdminCommandHandler";
 import { GmCommandHandler } from "./gm/GmCommandHandler";
 import { GuildService } from "./guild/GuildService";
 import type { GuildStore } from "./guild/GuildStore";
@@ -725,6 +726,13 @@ export class GameServer {
       this.npcs,
       gm,
       new ModerationCommandHandler(this.moderation),
+      new AdminCommandHandler(
+        this.world,
+        this.visibility,
+        this.persistence,
+        this.registry,
+        deps.moderation ?? null,
+      ),
       this.moderation,
       (session, text, now) =>
         this.combatSystem.castSpellByWords(session, text, now),

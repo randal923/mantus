@@ -78,6 +78,7 @@ function makeHarness(): Harness {
     undefined,
     undefined,
     new ModerationCommandHandler(moderation),
+    undefined,
     moderation,
   );
   let nextSpawnX = 40;
