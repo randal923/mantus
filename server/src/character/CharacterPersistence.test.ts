@@ -376,6 +376,28 @@ describe("CharacterPersistence", () => {
     error.mockRestore();
   });
 
+  it("stamps last_seen_at with a final save when a clean character logs out", async () => {
+    const snapshots: CharacterSaveSnapshot[] = [];
+    const store = makeStore(async (snapshot) => {
+      snapshots.push(snapshot);
+      return snapshot.expectedVersion + 1;
+    });
+    const persistence = new CharacterPersistence(store, 30_000, 0, 0);
+    const player = new Player(makeCharacter("character-id"), {
+      x: 0,
+      y: 0,
+      z: 7,
+    });
+
+    // Never marked dirty: an idle session that would otherwise never save.
+    persistence.track(player, 0);
+    persistence.untrack(player, 90_000);
+    await persistence.flushCharacter(player.id);
+
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0]?.lastSeenAt).toEqual(new Date(90_000));
+  });
+
   it("flushes dirty online characters during shutdown", async () => {
     const snapshots: CharacterSaveSnapshot[] = [];
     const store = makeStore(async (snapshot) => {

@@ -32,6 +32,10 @@ export interface Character {
   readonly health: number;
   readonly mana: number;
   readonly soul: number;
+  /** Stamina in minutes (Canary: 0..2520). */
+  readonly stamina: number;
+  /** Wall-clock time of the last durable save; null for an unsaved character. */
+  readonly lastSeenAt: Date | null;
   readonly skills: ReadonlyArray<CharacterSkill>;
   readonly progressionDefinitionVersion: number;
   readonly progressionEventIds: ReadonlyArray<string>;
@@ -77,6 +81,9 @@ export interface CharacterSaveSnapshot {
   readonly health: number;
   readonly mana: number;
   readonly soul: number;
+  readonly stamina: number;
+  /** Wall-clock time of this save; drives offline accrual on next login. */
+  readonly lastSeenAt: Date;
   readonly skills: ReadonlyArray<CharacterSkill>;
   /** False lets the store skip rewriting rows that match the last save. */
   readonly skillsChanged: boolean;

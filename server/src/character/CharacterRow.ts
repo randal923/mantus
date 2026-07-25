@@ -13,6 +13,8 @@ export interface CharacterRow {
   health: number;
   mana: number;
   soul: number;
+  stamina: number;
+  last_seen_at: Date;
   progression_definition_version: number;
   position_x: number;
   position_y: number;

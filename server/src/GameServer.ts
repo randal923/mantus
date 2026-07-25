@@ -340,6 +340,7 @@ export class GameServer {
       this.persistence,
       this.items,
       config.rates,
+      config.progression.useStages,
     );
     this.travel = new TravelService(
       this.world,
@@ -476,6 +477,8 @@ export class GameServer {
         levitate: (session, parameter, now) =>
           this.movement.handleLevitateSpell(session, parameter, now),
       },
+      config.progression.staminaSystem,
+      config.progression.useStages,
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,

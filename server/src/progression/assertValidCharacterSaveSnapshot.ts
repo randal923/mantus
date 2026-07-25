@@ -2,6 +2,7 @@ import {
   MAX_CHARACTER_LEVEL,
   MAX_MAGIC_LEVEL,
   MAX_SKILL_LEVEL,
+  MAX_STAMINA_MINUTES,
   MIN_SKILL_LEVEL,
   SKILLS,
 } from "@tibia/protocol";
@@ -66,7 +67,10 @@ export function assertValidCharacterSaveSnapshot(
     snapshot.mana > stats.maxMana ||
     !Number.isInteger(snapshot.soul) ||
     snapshot.soul < 0 ||
-    snapshot.soul > vocation.maxSoul
+    snapshot.soul > vocation.maxSoul ||
+    !Number.isInteger(snapshot.stamina) ||
+    snapshot.stamina < 0 ||
+    snapshot.stamina > MAX_STAMINA_MINUTES
   ) {
     throw new Error("character snapshot current stats are invalid");
   }

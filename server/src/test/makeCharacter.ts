@@ -1,6 +1,7 @@
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  MAX_STAMINA_MINUTES,
 } from "@tibia/protocol";
 import type { Character } from "../character/Character";
 import { createInitialSkills } from "../progression/createInitialSkills";
@@ -28,6 +29,8 @@ export function makeCharacter(id: string, displayName = id): Character {
     health: stats.maxHealth,
     mana: stats.maxMana,
     soul: getVocation("Knight").maxSoul,
+    stamina: MAX_STAMINA_MINUTES,
+    lastSeenAt: null,
     skills: createInitialSkills(),
     progressionDefinitionVersion: PROGRESSION_DEFINITION_VERSION,
     progressionEventIds: [],

@@ -16,7 +16,7 @@ These are the offline/timed systems: they all share the same abuse surface (cloc
 - Durable per-character timers persisted in Postgres, advanced by the server clock at login/tick — never client-reported time.
 - Bed use authorized at execution time via `server/src/house/HouseService.canUseHouseTile`; sleep state and offline-regen accrual computed server-side on next login.
 - Blessing purchases as single ACID bank transactions with ledger + audit rows; blessing state consumed by the Feature 32 death path and `server/src/pvp/PvpHooks.ts` (Feature 60).
-- Stamina/exercise-training overlap with Feature 18 (combat-progression stamina/training) — coordinate so the timer substrate is shared, not duplicated.
+- Stamina/exercise-training overlap with Feature 18 (combat-progression stamina/training) — coordinate so the timer substrate is shared, not duplicated. **Feature 18 shipped 2026-07-24**: stamina is fully done (persistence, offline regen, hunt decay, XP multiplier — do not re-implement); the parity math for offline and exercise training already lives in `server/src/progression/offlineTraining.ts` (`computeOfflineTraining`) and `server/src/progression/exerciseTraining.ts` (`computeExerciseTrainingGain`) with config knobs `rates.offlineTraining`/`rates.exerciseTraining`. This feature only needs to add the in-world triggers: the offline-training bar column + statue action + transactional login conversion, and the exercise-weapon/dummy charge-consuming, PZ-gated, exhausted action loop. Reuse those engines; do not re-derive the formulas. See [completed log](completed/implementation-feature-18-completed.md).
 
 ## Tests
 - Clock manipulation/replay cannot mint stamina, sleep regen, or training time (login with skewed client clock changes nothing).

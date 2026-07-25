@@ -21,6 +21,9 @@ const CHARACTER: OwnCharacterState = {
   capacity: 1_550,
   soul: 78,
   maxSoul: 100,
+  stamina: 2520,
+  maxStamina: 2520,
+  staminaBonusPercent: 100,
   speed: 156,
   attackSpeedMs: 2_000,
   healthRegeneration: { amount: 1, intervalMs: 6_000 },
@@ -81,5 +84,19 @@ export const MaxedMagicLevel: Story = {
       manaSpent: 0,
       manaSpentForNextMagicLevel: 0,
     },
+  },
+};
+
+/** Premium character above 39h stamina: green bar, +50% experience. */
+export const GreenStamina: Story = {
+  args: {
+    character: { ...CHARACTER, stamina: 2_460, staminaBonusPercent: 150 },
+  },
+};
+
+/** Below the 14h band: red bar, halved experience. */
+export const OrangeStamina: Story = {
+  args: {
+    character: { ...CHARACTER, stamina: 600, staminaBonusPercent: 50 },
   },
 };

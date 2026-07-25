@@ -1,5 +1,6 @@
 import {
   EMPTY_WHEEL_BONUSES,
+  MAX_STAMINA_MINUTES,
   type AccountTier,
   type CreatureState,
   type HitBlock,
@@ -79,6 +80,13 @@ export class Player extends Creature<Character["outfit"]> {
     this.lastLoginAt = character.lastLoginAt;
     this.version = character.version;
     this.storageValues = { ...character.storageValues };
+    const offlineSeconds =
+      character.lastSeenAt === null
+        ? 0
+        : Math.max(
+            0,
+            Math.floor((now - character.lastSeenAt.getTime()) / 1_000),
+          );
     this.progression = new CharacterProgression(
       character.vocation,
       character.progressionDefinitionVersion,
@@ -90,12 +98,39 @@ export class Player extends Creature<Character["outfit"]> {
         manaSpent: Number(character.manaSpent),
         mana: character.mana,
         soul: character.soul,
+        stamina: character.stamina,
+        offlineSeconds,
         skills: character.skills,
         processedEventIds: character.progressionEventIds,
       },
       now,
       wheelBonuses,
     );
+  }
+
+  get stamina(): number {
+    return this.progression.stamina;
+  }
+
+  get maxStamina(): number {
+    return MAX_STAMINA_MINUTES;
+  }
+
+  /** Experience multiplier from stamina at `now` (respects premium tier). */
+  staminaExperienceMultiplier(now: number): number {
+    return this.progression.staminaExperienceMultiplier(
+      this.isPremiumAt(now),
+    );
+  }
+
+  /** Decays hunting stamina once per kill that awarded experience. */
+  decayHuntStamina(now: number): boolean {
+    return this.progression.decayHuntStamina(now);
+  }
+
+  /** Arms soul regeneration after a qualifying kill (exp ≥ level). */
+  armSoulRegeneration(now: number): void {
+    this.progression.armSoulRegeneration(now);
   }
 
   get wheelBonuses(): WheelBonuses {
@@ -335,15 +370,15 @@ export class Player extends Creature<Character["outfit"]> {
     return this.progression.awardSkillTries(eventId, skill, amount);
   }
 
-  tickProgression(now: number): boolean {
+  tickProgression(now: number, inProtectionZone = false): boolean {
     const regenerationBlocked =
       !this.conditions.allowsNaturalRegeneration ||
       this.hasCondition("no-regeneration");
     const tick = this.progression.tick(
       now,
       regenerationBlocked,
-      this.hasCondition("no-regeneration") ||
-        this.conditions.has("combat-lock"),
+      this.hasCondition("no-regeneration"),
+      inProtectionZone,
       this.accountTierAt(now),
     );
     const healthBefore = this.health;

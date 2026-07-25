@@ -15,6 +15,8 @@ export const MAX_MAGIC_LEVEL = 200;
 export const MAX_SKILL_LEVEL = 200;
 export const MIN_SKILL_LEVEL = 10;
 export const MAX_PROGRESSION_VALUE = Number.MAX_SAFE_INTEGER;
+/** Stamina is stored in minutes; 2520 minutes = 42 hours (Canary max/start). */
+export const MAX_STAMINA_MINUTES = 2_520;
 
 export const skillSchema = z.enum(SKILLS);
 
@@ -53,6 +55,15 @@ export const ownProgressionStateSchema = z.object({
   capacity: z.number().int().nonnegative(),
   soul: z.number().int().min(0).max(200),
   maxSoul: z.number().int().min(0).max(200),
+  stamina: z.number().int().min(0).max(MAX_STAMINA_MINUTES),
+  maxStamina: z.literal(MAX_STAMINA_MINUTES),
+  /** Stamina's current effect on experience gain, as a percentage (0/50/100/150). */
+  staminaBonusPercent: z.union([
+    z.literal(0),
+    z.literal(50),
+    z.literal(100),
+    z.literal(150),
+  ]),
   speed: z.number().int().positive(),
   attackSpeedMs: z.number().int().positive(),
   healthRegeneration: z.object({

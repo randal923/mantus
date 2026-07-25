@@ -117,6 +117,8 @@ export class Combat {
       now: number,
     ) => boolean,
     private readonly worldSpells?: WorldSpellHooks,
+    staminaSystem = false,
+    useStages = false,
   ) {
     this.spells = spells;
     this.formula = new CombatFormula(seed);
@@ -138,6 +140,8 @@ export class Combat {
       lootRate,
       bestiaryHooks,
       monsterEventHooks,
+      staminaSystem,
+      useStages,
     );
     this.damage = new DamageResolver(
       world,

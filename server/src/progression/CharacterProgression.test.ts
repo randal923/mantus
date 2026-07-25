@@ -197,6 +197,9 @@ describe("CharacterProgression", () => {
     free.feed(60, 0);
     promoted.feed(60, 0);
     promoted.promote("Master Sorcerer", 0);
+    // Soul only regenerates while armed by a recent qualifying kill.
+    free.armSoulRegeneration(0);
+    promoted.armSoulRegeneration(0);
 
     free.tickProgression(6_000);
     promoted.tickProgression(6_000);
@@ -304,6 +307,62 @@ describe("CharacterProgression", () => {
       lostExperience: 0,
     });
     expect(reconnected.experience).toBe(experienceBefore);
+  });
+
+  it("regenerates stamina from the offline span at login, not on reconnect", () => {
+    // Logged out at t=0 holding 2000 stamina; log in 780 real seconds later.
+    const base = {
+      ...makeCharacter("hunter"),
+      stamina: 2_000,
+      lastSeenAt: new Date(0),
+    };
+    const rested = new Player(base, { x: 0, y: 0, z: 7 }, 780_000);
+    expect(rested.stamina).toBe(2_001);
+
+    // An instant reconnect (offline span ~0) manufactures no stamina.
+    const reconnected = new Player(
+      { ...base, lastSeenAt: new Date(780_000) },
+      { x: 0, y: 0, z: 7 },
+      781_000,
+    );
+    expect(reconnected.stamina).toBe(2_000);
+  });
+
+  it("decays hunting stamina and reports the premium experience multiplier", () => {
+    const player = new Player(
+      { ...makeCharacter("hunter"), stamina: 2_400 },
+      { x: 0, y: 0, z: 7 },
+      0,
+      new Date(9_999_999_999_999),
+    );
+    expect(player.staminaExperienceMultiplier(0)).toBe(1.5);
+    // First hunt after login removes two stamina (Canary seed).
+    expect(player.decayHuntStamina(1_000_000)).toBe(true);
+    expect(player.stamina).toBe(2_398);
+  });
+
+  it("suspends soul regeneration inside a protection zone and after expiry", () => {
+    const character = {
+      ...makeCharacter("mage"),
+      vocation: "Master Sorcerer" as const,
+      soul: 0,
+      mana: 0,
+      health: 100,
+    };
+    const player = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    player.armSoulRegeneration(0);
+
+    // Armed, but inside a protection zone: no soul regeneration.
+    player.tickProgression(15_000, true);
+    expect(player.progression.soul).toBe(0);
+
+    // Outside the zone and still armed: regenerates (15s interval, promoted).
+    player.tickProgression(30_000, false);
+    expect(player.progression.soul).toBe(1);
+
+    // Past the 4-minute eligibility window: regeneration stops again.
+    player.tickProgression(400_000, false);
+    expect(player.progression.soul).toBe(1);
   });
 
   it("bounds scheduled training work and drops schedules on reconnect", () => {

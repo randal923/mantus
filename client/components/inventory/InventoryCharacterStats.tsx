@@ -21,6 +21,26 @@ export function InventoryCharacterStats({
     character.experience - character.experienceForCurrentLevel;
   const experienceForLevel =
     character.experienceForNextLevel - character.experienceForCurrentLevel;
+  const staminaBonusLabel =
+    character.staminaBonusPercent === 100
+      ? null
+      : character.staminaBonusPercent > 100
+        ? `+${character.staminaBonusPercent - 100}%`
+        : character.staminaBonusPercent === 0
+          ? "0%"
+          : `−${100 - character.staminaBonusPercent}%`;
+  const staminaValue = t("characterStats.staminaValue", {
+    hours: Math.floor(character.stamina / 60),
+    minutes: String(character.stamina % 60).padStart(2, "0"),
+  });
+  // Green while the premium XP bonus is active, red once the ≤14h penalty
+  // band starts (staminaBonusPercent < 100), natural otherwise.
+  const staminaFillClassName =
+    character.staminaBonusPercent > 100
+      ? "from-ui-success to-ui-success/65"
+      : character.staminaBonusPercent < 100
+        ? "from-ui-health to-ui-health/65"
+        : "from-ui-gold to-ui-gold/65";
 
   return (
     <aside
@@ -77,6 +97,24 @@ export function InventoryCharacterStats({
             }
             fillClassName="from-ui-mana-light to-ui-mana"
           />
+          <ProgressionBar
+            label={t("stats.stamina")}
+            value={character.stamina}
+            max={character.maxStamina}
+            valueLabel={
+              staminaBonusLabel
+                ? `${staminaValue} (${staminaBonusLabel})`
+                : staminaValue
+            }
+            fillClassName={staminaFillClassName}
+          />
+          <ProgressionBar
+            label={t("stats.soul")}
+            value={character.soul}
+            max={character.maxSoul}
+            valueLabel={`${character.soul.toLocaleString(language)} / ${character.maxSoul.toLocaleString(language)}`}
+            fillClassName="from-ui-gold to-ui-gold/65"
+          />
         </section>
 
         <section>
@@ -110,11 +148,6 @@ export function InventoryCharacterStats({
             <dd className="text-right font-semibold tabular-nums text-ui-text">
               {capacityUsed.toLocaleString(language)} /{" "}
               {character.capacity.toLocaleString(language)}
-            </dd>
-            <dt className="text-ui-muted">{t("stats.soul")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {character.soul.toLocaleString(language)} /{" "}
-              {character.maxSoul.toLocaleString(language)}
             </dd>
             <dt className="text-ui-muted">{t("stats.soulRegeneration")}</dt>
             <dd className="text-right font-semibold tabular-nums text-ui-text">

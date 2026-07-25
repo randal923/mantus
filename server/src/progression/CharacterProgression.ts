@@ -3,12 +3,18 @@ import {
   MAX_MAGIC_LEVEL,
   MAX_PROGRESSION_VALUE,
   MAX_SKILL_LEVEL,
+  MAX_STAMINA_MINUTES,
   MIN_SKILL_LEVEL,
   SKILLS,
   type AccountTier,
   type CharacterVocation,
   type Skill,
 } from "@tibia/protocol";
+import {
+  decayHuntStamina,
+  getStaminaExperienceMultiplier,
+  regenerateOfflineStamina,
+} from "./staminaRules";
 import type { CharacterSkill } from "./CharacterSkill";
 import {
   deriveCharacterStats,
@@ -33,6 +39,12 @@ const MAX_SCHEDULES = 4;
 const MIN_TRAINING_INTERVAL_MS = 250;
 const MAX_SCHEDULE_TICKS_PER_SERVER_TICK = 5;
 const EVENT_ID_PATTERN = /^[A-Za-z0-9:_-]{1,128}$/;
+/**
+ * A qualifying kill arms soul regeneration for this long (Canary's 4-minute
+ * CONDITION_SOUL). Soul only regenerates while the window is open and the
+ * player is outside a protection zone.
+ */
+export const SOUL_ELIGIBILITY_MS = 4 * 60 * 1_000;
 
 interface ProgressionMutation {
   readonly processed: boolean;
@@ -65,6 +77,11 @@ export class CharacterProgression {
   private currentManaSpent: number;
   private currentMana: number;
   private currentSoul: number;
+  private currentStamina: number;
+  /** Seeded at 0 so the first hunt after login costs two stamina (Canary). */
+  private nextStaminaDecayAt = 0;
+  /** Soul regenerates only while `now` is before this armed-by-kill deadline. */
+  private soulEligibleUntil = 0;
   private readonly skillStates = new Map<Skill, CharacterSkill>();
   private readonly processedEventIds: Set<string>;
   private readonly sessionEvents: ProgressionEvent[] = [];
@@ -97,6 +114,9 @@ export class CharacterProgression {
       manaSpent: number;
       mana: number;
       soul: number;
+      stamina: number;
+      /** Real seconds since this character was last persisted (offline span). */
+      offlineSeconds: number;
       skills: ReadonlyArray<CharacterSkill>;
       processedEventIds: ReadonlyArray<string>;
     },
@@ -159,6 +179,13 @@ export class CharacterProgression {
     ) {
       throw new Error("persisted soul is out of range");
     }
+    if (
+      !Number.isInteger(state.stamina) ||
+      state.stamina < 0 ||
+      state.stamina > MAX_STAMINA_MINUTES
+    ) {
+      throw new Error("persisted stamina is out of range");
+    }
     if (state.skills.length !== SKILLS.length) {
       throw new Error("persisted skill set is incomplete");
     }
@@ -207,6 +234,13 @@ export class CharacterProgression {
     this.currentManaSpent = state.manaSpent;
     this.currentMana = state.mana;
     this.currentSoul = state.soul;
+    // Offline regeneration is applied once, at load, from the durable span
+    // between the last save and now. A too-short reconnect regenerates nothing,
+    // so a client cannot manufacture stamina by relogging (charter rule 8).
+    this.currentStamina = regenerateOfflineStamina(
+      state.stamina,
+      state.offlineSeconds,
+    );
     this.processedEventIds = new Set(state.processedEventIds);
     this.nextHealthAt = now + this.regeneration.healthIntervalMs;
     this.nextManaAt = now + this.regeneration.manaIntervalMs;
@@ -275,6 +309,36 @@ export class CharacterProgression {
 
   get maxSoul(): number {
     return getVocation(this.vocation, this.definitionVersion).maxSoul;
+  }
+
+  get stamina(): number {
+    return this.currentStamina;
+  }
+
+  /** Experience multiplier from current stamina (0 / 0.5 / 1 / 1.5). */
+  staminaExperienceMultiplier(isPremium: boolean): number {
+    return getStaminaExperienceMultiplier(this.currentStamina, isPremium);
+  }
+
+  /**
+   * Applies one hunting stamina decrement, throttled to at most one per minute
+   * of real hunting time. Call once per kill that awarded experience.
+   */
+  decayHuntStamina(now: number): boolean {
+    const result = decayHuntStamina(
+      this.currentStamina,
+      this.nextStaminaDecayAt,
+      now,
+    );
+    this.nextStaminaDecayAt = result.nextDecayAt;
+    if (!result.changed) return false;
+    this.currentStamina = result.staminaMinutes;
+    return true;
+  }
+
+  /** Arms soul regeneration for the next {@link SOUL_ELIGIBILITY_MS}. */
+  armSoulRegeneration(now: number): void {
+    this.soulEligibleUntil = now + SOUL_ELIGIBILITY_MS;
   }
 
   get skills(): ReadonlyArray<CharacterSkill> {
@@ -468,14 +532,21 @@ export class CharacterProgression {
     now: number,
     healthManaRegenerationBlocked: boolean,
     soulRegenerationBlocked = false,
+    inProtectionZone = false,
     accountTier = this.accountTier,
   ): ProgressionTick {
     const regenerationChanged = this.syncRegeneration(accountTier, now);
+    // Soul only regenerates while a recent qualifying kill keeps it armed and
+    // the player is outside a protection zone (Canary CONDITION_SOUL rules).
+    const soulBlocked =
+      soulRegenerationBlocked ||
+      inProtectionZone ||
+      now >= this.soulEligibleUntil;
     if (healthManaRegenerationBlocked) {
       this.nextHealthAt = now + this.regeneration.healthIntervalMs;
       this.nextManaAt = now + this.regeneration.manaIntervalMs;
     }
-    if (soulRegenerationBlocked) {
+    if (soulBlocked) {
       this.nextSoulAt = now + this.regeneration.soulIntervalMs;
     }
     const health = healthManaRegenerationBlocked
@@ -492,7 +563,7 @@ export class CharacterProgression {
           this.nextManaAt,
           this.regeneration.manaIntervalMs,
         );
-    const soul = soulRegenerationBlocked
+    const soul = soulBlocked
       ? { count: 0, nextAt: this.nextSoulAt }
       : this.dueTicks(
           now,

@@ -206,7 +206,13 @@ export class CharacterPersistence {
       this.states.delete(player.id);
       return;
     }
-    if (state.dirty && !state.failed && !state.externalMutationPending) {
+    // Force a final save so `last_seen_at` advances to the true logout moment
+    // on every clean logout/disconnect. Otherwise an idle character (no dirty
+    // state, so never saved) would keep a stale anchor, and logging out and
+    // straight back in would credit that online-idle time as offline stamina
+    // regeneration (charter rule 8: the server clock is the real one).
+    if (!state.failed && !state.externalMutationPending) {
+      state.dirty = true;
       this.enqueueSnapshot(state, now);
     }
     this.removeSettledState(player.id, state);
@@ -257,6 +263,7 @@ export class CharacterPersistence {
     const snapshot = this.snapshot(
       state.player,
       state.nextExpectedVersion,
+      now,
       storageValues,
       skillsFingerprint !== state.lastSkillsFingerprint,
       storageFingerprint !== state.lastStorageFingerprint,
@@ -318,6 +325,7 @@ export class CharacterPersistence {
   private snapshot(
     player: Player,
     expectedVersion: number,
+    now: number,
     storageValues: Readonly<Record<string, number>>,
     skillsChanged: boolean,
     storageChanged: boolean,
@@ -334,6 +342,10 @@ export class CharacterPersistence {
       health: player.health,
       mana: player.mana,
       soul: player.progression.soul,
+      stamina: player.stamina,
+      // App wall-clock of this save; the next login measures offline time from
+      // it (server clock only — never a client-reported timestamp).
+      lastSeenAt: new Date(now),
       skills: player.progression.skills,
       skillsChanged,
       progressionEvents: player.progression.reserveUnpersistedEvents(),

@@ -8,6 +8,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
+import { EXPERIENCE_STAGES, getStageRate } from "../progression/stageRates";
 import type { PvpHooks } from "../pvp/PvpHooks";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
@@ -35,6 +36,8 @@ export class DeathHandler {
     private readonly lootRate = 1,
     private readonly bestiaryHooks?: BestiaryHooks,
     private readonly monsterEventHooks?: MonsterEventHooks,
+    private readonly staminaSystem = false,
+    private readonly useStages = false,
   ) {}
 
   handleDeath(
@@ -51,7 +54,8 @@ export class DeathHandler {
         (sourceId && this.world.getPlayer(sourceId)?.id) ??
         target.topDamagerId();
       const experience = Math.floor(
-        target.type.experience * this.experienceRate,
+        target.type.experience *
+          this.experienceRateFor(killerId),
       );
       if (killerId && experience > 0) {
         // Party shares are recomputed at this instant — members who left or
@@ -64,45 +68,24 @@ export class DeathHandler {
           ) ?? null;
         if (shares) {
           for (const share of shares) {
-            // awardExperience is idempotent per player and eventId, so the
-            // shared deathEventId cannot double-award any member.
-            if (
-              !this.progression.awardExperience(
-                share.playerId,
-                deathEventId,
-                share.amount,
-                now,
-              )
-            ) {
-              continue;
-            }
-            this.registry.sessionFor(share.playerId)?.send({
-              type: "combat-log",
-              kind: "experience",
-              text: `You gained ${share.amount} experience (party share).`,
-            });
-            this.visibility.sendExperienceText(
+            this.awardHuntExperience(
               share.playerId,
-              target,
               share.amount,
+              deathEventId,
+              now,
+              target,
+              true,
             );
           }
         } else {
-          if (
-            this.progression.awardExperience(
-              killerId,
-              deathEventId,
-              experience,
-              now,
-            )
-          ) {
-            this.registry.sessionFor(killerId)?.send({
-              type: "combat-log",
-              kind: "experience",
-              text: `You gained ${experience} experience.`,
-            });
-            this.visibility.sendExperienceText(killerId, target, experience);
-          }
+          this.awardHuntExperience(
+            killerId,
+            experience,
+            deathEventId,
+            now,
+            target,
+            false,
+          );
         }
       }
       // Bestiary credit follows Canary: every damage participant counts,
@@ -192,5 +175,56 @@ export class DeathHandler {
       });
     }
     if (session) this.feedback.sendFightState(session, now);
+  }
+
+  /** Experience rate for a kill, using the killer's stage band when enabled. */
+  private experienceRateFor(killerId: string | null): number {
+    if (!this.useStages) return this.experienceRate;
+    const killerLevel = killerId
+      ? this.world.getPlayer(killerId)?.level
+      : undefined;
+    if (killerLevel === undefined) return this.experienceRate;
+    return getStageRate(EXPERIENCE_STAGES, killerLevel, this.experienceRate);
+  }
+
+  /**
+   * Credits one recipient with hunting experience. Stamina (green +50% /
+   * orange -50% / 0 = none) scales the award and each kill decays the
+   * recipient's stamina; a qualifying kill (base exp ≥ level) also arms soul
+   * regeneration. The idempotent `deathEventId` keeps a shared party kill from
+   * double-awarding any member.
+   */
+  private awardHuntExperience(
+    recipientId: string,
+    baseAmount: number,
+    eventId: string,
+    now: number,
+    target: Creature,
+    partyShare: boolean,
+  ): void {
+    const recipient = this.world.getPlayer(recipientId);
+    if (!recipient) {
+      this.progression.awardExperience(recipientId, eventId, baseAmount, now);
+      return;
+    }
+    if (baseAmount >= recipient.level) recipient.armSoulRegeneration(now);
+    let amount = baseAmount;
+    if (this.staminaSystem) {
+      amount = Math.floor(
+        baseAmount * recipient.staminaExperienceMultiplier(now),
+      );
+      recipient.decayHuntStamina(now);
+    }
+    if (amount < 1) return;
+    if (!this.progression.awardExperience(recipientId, eventId, amount, now)) {
+      return;
+    }
+    const suffix = partyShare ? " (party share)" : "";
+    this.registry.sessionFor(recipientId)?.send({
+      type: "combat-log",
+      kind: "experience",
+      text: `You gained ${amount} experience${suffix}.`,
+    });
+    this.visibility.sendExperienceText(recipientId, target, amount);
   }
 }

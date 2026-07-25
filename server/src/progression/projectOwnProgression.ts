@@ -1,5 +1,6 @@
 import {
   MAX_CHARACTER_LEVEL,
+  MAX_STAMINA_MINUTES,
   type OwnProgressionState,
 } from "@tibia/protocol";
 import type { Player } from "../Player";
@@ -45,6 +46,11 @@ export function projectOwnProgression(
     capacity: player.capacity,
     soul: progression.soul,
     maxSoul: progression.maxSoul,
+    stamina: player.stamina,
+    maxStamina: MAX_STAMINA_MINUTES,
+    staminaBonusPercent: (Math.round(
+      player.staminaExperienceMultiplier(now) * 100,
+    ) as 0 | 50 | 100 | 150),
     speed: progression.speed,
     attackSpeedMs: progression.attackSpeedMs,
     healthRegeneration: {

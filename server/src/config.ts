@@ -60,6 +60,13 @@ export interface ServerConfig {
     magic: number;
     loot: number;
     spawn: number;
+    soulRegen: number;
+    offlineTraining: number;
+    exerciseTraining: number;
+  };
+  progression: {
+    staminaSystem: boolean;
+    useStages: boolean;
   };
   starterTownId: number;
   characterSaveIntervalMs: number;

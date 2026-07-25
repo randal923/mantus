@@ -25,6 +25,8 @@ export function toCharacter(
     health: row.health,
     mana: row.mana,
     soul: row.soul,
+    stamina: row.stamina,
+    lastSeenAt: row.last_seen_at,
     skills,
     progressionDefinitionVersion: row.progression_definition_version,
     progressionEventIds,

@@ -5,6 +5,7 @@ import type { Player } from "../Player";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import { projectOwnProgression } from "./projectOwnProgression";
+import { MAGIC_STAGES, SKILL_STAGES, getStageRate } from "./stageRates";
 
 export class ProgressionSystem {
   private nextTickAt = 0;
@@ -17,6 +18,7 @@ export class ProgressionSystem {
       skill: 1,
       magic: 1,
     },
+    private readonly useStages = false,
   ) {}
 
   awardExperience(
@@ -42,7 +44,7 @@ export class ProgressionSystem {
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
-    const progress = this.scaledProgress(manaSpent, this.rates.magic);
+    const progress = this.scaledProgress(manaSpent, this.magicRate(player));
     if (progress < 1) {
       this.syncPlayer(player, now, true);
       return true;
@@ -67,7 +69,10 @@ export class ProgressionSystem {
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
-    const progress = this.scaledProgress(tries, this.rates.skill);
+    const progress = this.scaledProgress(
+      tries,
+      this.skillRate(player, skill),
+    );
     if (progress < 1) return false;
     return this.persistAward(
       player,
@@ -88,7 +93,10 @@ export class ProgressionSystem {
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
-    const tries = this.scaledProgress(options.tries, this.rates.skill);
+    const tries = this.scaledProgress(
+      options.tries,
+      this.skillRate(player, options.skill),
+    );
     if (tries < 1) return false;
     return player.progression.startTraining({ ...options, tries, now });
   }
@@ -116,7 +124,8 @@ export class ProgressionSystem {
     this.nextTickAt = now + 100;
     for (const player of this.world.allPlayers()) {
       if (this.persistence.isExternalMutationPending(player)) continue;
-      if (!player.tickProgression(now)) continue;
+      const inProtectionZone = this.world.isProtectionZone(player.position);
+      if (!player.tickProgression(now, inProtectionZone)) continue;
       this.persistence.markDirty(player);
       this.sendProgression(player, now);
     }
@@ -148,6 +157,23 @@ export class ProgressionSystem {
       playerId: player.id,
       progression: projectOwnProgression(player, now),
     });
+  }
+
+  private skillRate(player: Player, skill: Skill): number {
+    if (!this.useStages) return this.rates.skill;
+    const level =
+      player.progression.skills.find((state) => state.skill === skill)?.level ??
+      0;
+    return getStageRate(SKILL_STAGES, level, this.rates.skill);
+  }
+
+  private magicRate(player: Player): number {
+    if (!this.useStages) return this.rates.magic;
+    return getStageRate(
+      MAGIC_STAGES,
+      player.progression.magicLevel,
+      this.rates.magic,
+    );
   }
 
   private scaledProgress(amount: number, rate: number): number {

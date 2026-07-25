@@ -299,7 +299,8 @@
     "speed": "Move speed",
     "attackSpeed": "Attack speed",
     "healthAbbreviation": "HP",
-    "manaAbbreviation": "MP"
+    "manaAbbreviation": "MP",
+    "stamina": "Stamina"
   },
   "inventory": {
     "label": "{{name}}'s inventory",
@@ -822,7 +823,8 @@
     "skills": "Skills",
     "maximum": "Maximum",
     "regeneration": "{{amount}} every {{seconds}}s",
-    "seconds": "{{seconds}}s"
+    "seconds": "{{seconds}}s",
+    "staminaValue": "{{hours}}h {{minutes}}m"
   },
   "skills": {
     "fist": "Fist Fighting",

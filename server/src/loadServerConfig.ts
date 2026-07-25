@@ -81,6 +81,15 @@ const serverConfigFileSchema = z
         magic: rateSchema,
         loot: rateSchema,
         spawn: positiveRateSchema,
+        soulRegen: rateSchema,
+        offlineTraining: rateSchema,
+        exerciseTraining: rateSchema,
+      })
+      .strict(),
+    progression: z
+      .object({
+        staminaSystem: z.boolean(),
+        useStages: z.boolean(),
       })
       .strict(),
     characters: z
@@ -198,6 +207,7 @@ export async function loadServerConfig(
     maxProtocolViolations: config.network.maxProtocolViolations,
     combatSeed: config.combat.seed,
     rates: config.rates,
+    progression: config.progression,
     starterTownId: config.characters.starterTownId,
     characterSaveIntervalMs: config.characters.saveIntervalMs,
     maxCharacterSaveRetries: config.characters.maxSaveRetries,

@@ -6,14 +6,38 @@ Part of [Todo 7 — Vocations, stats, and progression](todo-7.md).
 
 These are the remaining persistent progression modifiers after core XP/skills/vocations shipped. Stamina is explicitly required parity.
 
-## Remaining work
+## Status
 
-- Stamina: persistence plus regeneration/logout rules.
-- Exact soul eligibility rules.
-- Offline training.
-- Exercise training.
-- Configurable skill stages/rates.
-- Delegated: blessings/death-loss → Todo 9 (Feature 32); party-shared training modifiers → Todo 15 (Features 55–57); Wheel/animus modifiers → Todo 16 (Features 79–82).
+Rules layer shipped 2026-07-24 — see
+[completed log](completed/implementation-feature-18-completed.md).
+
+Done (fully wired + tested):
+
+- Stamina: persistence (`stamina`/`last_seen_at` columns), offline regen,
+  hunt-driven online decay, green/orange/premium XP multiplier, client
+  projection. Offline anchor is the server-clock `last_seen_at`; a forced
+  logout save prevents idle-relog stamina minting.
+- Exact soul eligibility: armed by qualifying kills (exp ≥ level), suspended
+  in protection zones, 4-minute window, no longer always-on.
+- Configurable skill/magic/exp stages (`progression.useStages`) + rate knobs
+  (`rates.soulRegen`/`offlineTraining`/`exerciseTraining`) in `config.yml`.
+- Offline-training and exercise-training **conversion engines** (pure,
+  parity-correct, unit-tested).
+
+## Remaining work (delegated to Feature 72 — shared bed/statue/dummy substrate)
+
+- Offline training **in-world**: durable offline-training bar column, statue
+  trigger that selects the skill + logs out, and the transactional login
+  conversion (apply `computeOfflineTraining` inside the load transaction).
+- Exercise training **in-world**: exercise-weapon/dummy action loop —
+  charge-consuming, PZ-gated, exhausted, scheduled ticks calling
+  `computeExerciseTrainingGain`.
+- These reuse `server/src/progression/offlineTraining.ts` and
+  `exerciseTraining.ts`; do not re-derive the math. See
+  [implementation-feature-72.md](implementation-feature-72.md).
+- Delegated (unchanged): blessings/death-loss → Todo 9 (Feature 32);
+  party-shared training modifiers → Todo 15 (Features 55–57); Wheel/animus
+  modifiers → Todo 16 (Features 79–82).
 
 ## Implementation
 

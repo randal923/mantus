@@ -115,9 +115,37 @@ describe("ProgressionSystem rates", () => {
   });
 });
 
+describe("ProgressionSystem stages", () => {
+  it("applies level-banded stage multipliers when enabled", () => {
+    const harness = makeHarness({ skill: 1, magic: 1 }, [], true);
+
+    // Skill level 10 sits in the 15× band; magic level 0 in the 10× band.
+    harness.progression.awardSkillTries(
+      PLAYER_ID,
+      "stage:sword:1",
+      "sword",
+      2,
+      1_000,
+    );
+    harness.progression.awardMagicProgress(
+      PLAYER_ID,
+      "stage:spell:1",
+      3,
+      1_000,
+    );
+
+    expect(
+      harness.player.progression.skills.find(({ skill }) => skill === "sword")
+        ?.tries,
+    ).toBe(30);
+    expect(harness.player.progression.manaSpent).toBe(30);
+  });
+});
+
 function makeHarness(
   rates: { skill: number; magic: number },
   progressionEventIds: ReadonlyArray<string> = [],
+  useStages = false,
 ) {
   const world = new World(
     gridMapData({
@@ -145,6 +173,7 @@ function makeHarness(
     persistence,
     { updateCapacity: () => null } as unknown as ItemIntentHandler,
     rates,
+    useStages,
   );
   return { player, persistence, progression };
 }

@@ -299,7 +299,8 @@
     "speed": "Velocidade de movimento",
     "attackSpeed": "Velocidade de ataque",
     "healthAbbreviation": "PV",
-    "manaAbbreviation": "PM"
+    "manaAbbreviation": "PM",
+    "stamina": "Stamina"
   },
   "inventory": {
     "label": "Inventário de {{name}}",
@@ -822,7 +823,8 @@
     "skills": "Habilidades",
     "maximum": "Máximo",
     "regeneration": "{{amount}} a cada {{seconds}}s",
-    "seconds": "{{seconds}}s"
+    "seconds": "{{seconds}}s",
+    "staminaValue": "{{hours}}h {{minutes}}m"
   },
   "skills": {
     "fist": "Combate sem Armas",

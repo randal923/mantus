@@ -32,6 +32,17 @@ rates:
   magic: 1000
   loot: 1000
   spawn: 5
+  # Soul regeneration, offline-training, and exercise-weapon training speeds.
+  soulRegen: 1
+  offlineTraining: 1
+  exerciseTraining: 1
+
+progression:
+  # Stamina gates hunting experience (green +50% / orange -50% / 0 = none).
+  staminaSystem: true
+  # Use the level-banded experience/skill/magic stage tables (stageRates.ts)
+  # instead of the flat rates above.
+  useStages: false
 
 characters:
   starterTownId: 1
