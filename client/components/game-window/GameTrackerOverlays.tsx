@@ -19,9 +19,6 @@ export function GameTrackerOverlays() {
 
   const bestiaryEntries = tracker.bestiary ?? [];
   const bosstiaryEntries = tracker.bosstiary ?? [];
-  if (bestiaryEntries.length === 0 && bosstiaryEntries.length === 0) {
-    return null;
-  }
 
   return (
     <div className="pointer-events-none absolute top-24 bottom-4 left-4 z-20 flex items-start">

@@ -25,7 +25,6 @@ export function BattleList({
       left.name.localeCompare(right.name) ||
       left.id.localeCompare(right.id),
     );
-  if (visible.length === 0) return null;
   return (
     <section
       aria-label={title}
@@ -34,6 +33,9 @@ export function BattleList({
       <h2 className="mb-2 text-sm font-medium tracking-wide text-ui-text-bright uppercase">
         {title}
       </h2>
+      {visible.length === 0 && (
+        <p className="text-xs text-ui-muted">{t("hud.battleListEmpty")}</p>
+      )}
       <ul className="max-h-64 space-y-2 overflow-hidden">
         {visible.map((creature) => (
           <li

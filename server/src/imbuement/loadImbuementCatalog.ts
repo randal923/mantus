@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type {
   ImbuementBase,
   ImbuementCatalog,
@@ -8,7 +9,8 @@ import type {
 } from "./ImbuementCatalog";
 
 const CONTENT_DIR =
-  process.env.CONTENT_DIR ?? join(__dirname, "../../../content");
+  process.env.CONTENT_DIR ??
+  fileURLToPath(new URL("../../../content", import.meta.url));
 
 /**
  * Loads the pinned imbuement catalog (content/imbuements.json, transcribed

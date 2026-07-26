@@ -1134,6 +1134,7 @@
   },
   "hud": {
     "battleList": "Lista de Batalha",
+    "battleListEmpty": "Nenhuma criatura à vista.",
     "levelUpTitle": "Nível {{level}}!",
     "levelUpDescription": "Sua vida máxima, mana e capacidade aumentaram.",
     "minimap": {
@@ -2080,6 +2081,7 @@
   "tracker": {
     "title": "Rastreador de Abates",
     "close": "Fechar rastreador",
+    "empty": "Nada rastreado ainda. Rastreie criaturas no Bestiário ou Bosstiário para acompanhar os abates aqui.",
     "scope": {
       "bestiary": "Bestiário",
       "bosstiary": "Bosstiário"

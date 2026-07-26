@@ -105,7 +105,7 @@ export function createGameWindowStore({
     forgeOpen: false,
     proficiencyOpen: false,
     imbuementItemId: null,
-    trackerVisible: true,
+    trackerVisible: false,
     preyWindowOpen: false,
     huntingTasksOpen: false,
     outfitWindowOpen: false,

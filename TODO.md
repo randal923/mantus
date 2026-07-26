@@ -29,6 +29,16 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **The Postgres connection budget is per-process, not shared** (2026-07-26).
+  The pg pool default dropped 20 → 10 because the Supabase session pooler
+  (`pooler.supabase.com:5432`) refuses clients beyond its `pool_size` (15),
+  which was failing login-burst loads/persists with `EMAXCONNSESSION`. Each
+  server process budgets independently, so a dev server plus a playtest
+  server or long-running tools can still jointly exceed the cap. Durable fix
+  per `server/.env.example`: a direct connection where available; the
+  transaction pooler (port 6543) is also compatible today — the only advisory
+  lock is `pg_advisory_xact_lock` and nothing uses LISTEN/NOTIFY or named
+  prepared statements.
 - **Four pre-existing Postgres integration failures at HEAD** (updated
   2026-07-26: the six `PgChestStore.integration.test.ts` failures are
   fixed — the store was always correct; the tests asserted `character_id`
@@ -285,6 +295,38 @@ limitations accepted during a session are recorded in the owning feature file
   not covered; extend the sweep's shape to a rare-item watchlist once one
   exists. Owners: Feature 99 (reconciliation jobs), Feature 96 (operator
   surface).
+- **The rest of the magic-carpet travel network still has no routes**
+  (2026-07-26, found while fixing Chemar). `importCanaryNpcs.mjs` cannot read
+  travel keywords registered through a file-local `addTravelKeyword` helper,
+  so it emitted Chemar with 2 nodes and dropped all 8 rides — and recorded
+  `unsupportedKeywordActions: []` for it, so the import ledger claims a clean
+  import. The same holds for every other carpet NPC: `cael`, `gewen`,
+  `guide-behil`, `henricus`, `iyad`, `melian`, `miraia`, `ongulf`, `pino`,
+  `razan`, `tanyt`, `uzon`, `uzon-back`, `ziyad` all load with
+  `travelOffers: []`. Chemar is now a reviewed override in
+  `content/npcs/canary-dialogues.json`; the others are still dead ends.
+  Recommended fix: teach the importer to resolve local travel-keyword helpers
+  (which also closes the silent-drop hole in the report), rather than hand-
+  authoring 14 more overrides. Owner: `todo/todo-12.md` (world actions/NPC
+  parity).
+- **A blocked travel branch answers with the generic refusal line**
+  (2026-07-26, with Chemar's Farmine gate). `NpcDialogueExecutor` says "I
+  cannot help you with that right now." for every failed node condition,
+  where Canary's Chemar says "Never heard about a place like this." Shared by
+  all 93 gated baseline nodes, so it is a per-node refusal-message field, not
+  a Chemar fix. Deliberately vague messages are also what keeps a gate from
+  leaking its storage key (charter rule 6), so any per-node message must stay
+  content-authored, never derived from the condition. Owner: Feature 40
+  (dialogue-graph engine).
+- **The kill tracker panel overlaps the left HUD indicator column**
+  (2026-07-26). `GameTrackerOverlays` docks at `top-24 left-4` and
+  `GameWorldOverlayParent` paints after `GameWorldHudParent` at the same
+  `z-20`, so an open tracker covers the protection-zone / condition / skull
+  stack `GameHud` renders at the same origin. Pre-existing, but now reachable
+  on demand since the panel no longer hides itself when nothing is tracked.
+  Recommended fix: give the left column and the tracker distinct docks (or
+  flow the tracker below the indicator stack) rather than nudging `top-*`.
+  Owner: `todo/client/`.
 
 ## Repo-wide known breakage
 

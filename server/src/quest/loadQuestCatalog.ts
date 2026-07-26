@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type {
   QuestDefinition,
   QuestMissionDefinition,
@@ -7,7 +8,8 @@ import type {
 } from "./QuestDefinition";
 
 const CONTENT_DIR =
-  process.env.CONTENT_DIR ?? join(__dirname, "../../../content");
+  process.env.CONTENT_DIR ??
+  fileURLToPath(new URL("../../../content", import.meta.url));
 const STORAGE_KEY = /^[A-Za-z0-9_:.-]+$/;
 const MIN_VALUE = -2_147_483_648;
 const MAX_VALUE = 2_147_483_647;

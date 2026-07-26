@@ -1134,6 +1134,7 @@
   },
   "hud": {
     "battleList": "Battle List",
+    "battleListEmpty": "No creatures in view.",
     "levelUpTitle": "Level {{level}}!",
     "levelUpDescription": "Your maximum health, mana, and capacity increased.",
     "minimap": {
@@ -2080,6 +2081,7 @@
   "tracker": {
     "title": "Kill Tracker",
     "close": "Close tracker",
+    "empty": "Nothing tracked yet. Track creatures from the Bestiary or Bosstiary to follow their kill counts here.",
     "scope": {
       "bestiary": "Bestiary",
       "bosstiary": "Bosstiary"

@@ -43,6 +43,9 @@ export function TrackerPanel({
         <CloseButton label={t("tracker.close")} onClick={onClose} />
       </header>
       <div className="ui-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
+        {sections.length === 0 && (
+          <p className="text-xs text-ui-muted">{t("tracker.empty")}</p>
+        )}
         {sections.map((section) => (
           <div key={section.scope} className="mb-3 last:mb-0">
             <h3 className="mb-1 text-xs tracking-widest text-ui-gold uppercase">

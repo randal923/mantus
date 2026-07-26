@@ -106,6 +106,58 @@ describe("loadNpcDialogueGraphs", () => {
     });
   });
 
+  it("flies Chemar's carpet routes and keeps Farmine behind its quest gate", () => {
+    const graph = loadNpcDialogueGraphs(CANARY_COMMIT).get("chemar");
+
+    expect(graph).toBeDefined();
+    if (!graph) return;
+    const prompt = matchNpcDialogueNode(graph, graph.rootNodeId, "fly");
+    // Canary registers every destination as a top-level keyword, so asking
+    // for one without asking to {fly} first has to work too.
+    const edron = matchNpcDialogueNode(graph, graph.rootNodeId, "edron");
+    const confirmation = edron
+      ? matchNpcDialogueNode(graph, edron.id, "yes")
+      : undefined;
+    const hills = prompt
+      ? matchNpcDialogueNode(graph, prompt.id, "femor hills")
+      : undefined;
+
+    expect(prompt?.choices).toHaveLength(7);
+    expect(edron?.offerId).toBe("edron");
+    expect(confirmation?.action).toEqual({ kind: "travel", offerId: "edron" });
+    expect(hills?.offerId).toBe("femor-hills");
+    // The alias Canary adds with addAliasKeyword, not just the full name.
+    expect(matchNpcDialogueNode(graph, graph.rootNodeId, "kazor")?.offerId)
+      .toBe("kazordoon");
+    expect(graph.travelOffers).toHaveLength(7);
+    expect(graph.travelOffers.find((offer) => offer.id === "issavi")).toEqual({
+      id: "issavi",
+      cost: 100,
+      destination: { x: 33957, y: 31515, z: 0 },
+    });
+
+    // The New Frontier gate has to survive the load and sit on the offer, not
+    // only on the branch: TravelService re-checks it when the fare is charged.
+    const gate = [
+      {
+        kind: "storage",
+        key: "Quest.U8_54.TheNewFrontier.Mission10",
+        operator: "eq",
+        value: 2,
+      },
+    ];
+    const farmine = matchNpcDialogueNode(graph, graph.rootNodeId, "zao");
+
+    expect(farmine?.offerId).toBe("farmine");
+    expect(farmine?.conditions).toEqual(gate);
+    expect(graph.travelOffers.find((offer) => offer.id === "farmine")).toEqual({
+      id: "farmine",
+      cost: 60,
+      destination: { x: 32983, y: 31539, z: 1 },
+      conditions: gate,
+    });
+  });
+
   it("imports the Canary promotion confirmation for all five rulers", () => {
     const graphs = loadNpcDialogueGraphs(CANARY_COMMIT);
 
@@ -160,9 +212,10 @@ describe("loadNpcDialogueGraphs", () => {
       ...(offer.diversion ? [offer.diversion.destination] : []),
     ]);
 
-    // 90 reviewed boat routes plus the travel and kick destinations the
-    // importer now derives from the pinned sources.
-    expect(offers).toHaveLength(104);
+    // 90 reviewed boat routes, Chemar's 7 reviewed carpet routes, plus the
+    // travel and kick destinations the importer derives from the pinned
+    // sources.
+    expect(offers).toHaveLength(111);
     expect(
       destinations.filter(
         (destination) => !world.findUnoccupiedPosition(destination, 2),

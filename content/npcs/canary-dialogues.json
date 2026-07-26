@@ -20,7 +20,8 @@
       "data-otservbr-global/npc/quero.lua",
       "data-otservbr-global/npc/sam.lua",
       "data-otservbr-global/npc/sherry_mcronald.lua",
-      "data-otservbr-global/npc/xodet.lua"
+      "data-otservbr-global/npc/xodet.lua",
+      "data-otservbr-global/npc/chemar.lua"
     ]
   },
   "dialogues": [
@@ -1512,6 +1513,533 @@
         }
       ],
       "travelOffers": []
+    },
+    {
+      "typeId": "chemar",
+      "talkRange": 4,
+      "timeoutMs": 30000,
+      "greetingKeywords": [
+        "hi",
+        "hello"
+      ],
+      "farewellKeywords": [
+        "bye",
+        "farewell"
+      ],
+      "greeting": [
+        "Daraman's blessings, traveller |PLAYERNAME|."
+      ],
+      "farewell": [
+        "It was a pleasure to help you, |PLAYERNAME|."
+      ],
+      "walkAway": [
+        "It was a pleasure to help you, |PLAYERNAME|."
+      ],
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "matches": [],
+          "responses": [],
+          "children": [
+            "trade",
+            "fly",
+            "offer-edron",
+            "offer-issavi",
+            "offer-svargrond",
+            "offer-kazordoon",
+            "offer-femor-hills",
+            "offer-marapur",
+            "offer-farmine"
+          ],
+          "choices": [
+            {
+              "nodeId": "trade",
+              "label": "Trade"
+            },
+            {
+              "nodeId": "fly",
+              "label": "Fly"
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "matches": [
+            [
+              "trade"
+            ],
+            [
+              "offers"
+            ]
+          ],
+          "responses": [
+            "Of course, just browse through my wares."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root",
+          "action": {
+            "kind": "shop",
+            "shopId": "chemar"
+          }
+        },
+        {
+          "id": "fly",
+          "matches": [
+            [
+              "fly"
+            ]
+          ],
+          "responses": [
+            "I can fly you to {Edron}, {Issavi}, {Svargrond}, {Kazordoon}, {Zao}, {Femor Hills} or to {Marapur} if you like. Where do you want to go?"
+          ],
+          "children": [
+            "offer-edron",
+            "offer-issavi",
+            "offer-svargrond",
+            "offer-kazordoon",
+            "offer-femor-hills",
+            "offer-marapur",
+            "offer-farmine"
+          ],
+          "choices": [
+            {
+              "nodeId": "offer-edron",
+              "label": "Edron"
+            },
+            {
+              "nodeId": "offer-issavi",
+              "label": "Issavi"
+            },
+            {
+              "nodeId": "offer-svargrond",
+              "label": "Svargrond"
+            },
+            {
+              "nodeId": "offer-kazordoon",
+              "label": "Kazordoon"
+            },
+            {
+              "nodeId": "offer-femor-hills",
+              "label": "Femor Hills"
+            },
+            {
+              "nodeId": "offer-marapur",
+              "label": "Marapur"
+            },
+            {
+              "nodeId": "offer-farmine",
+              "label": "Zao"
+            }
+          ]
+        },
+        {
+          "id": "offer-edron",
+          "matches": [
+            [
+              "edron"
+            ]
+          ],
+          "responses": [
+            "Do you seek a ride to Edron for |TRAVELCOST|?"
+          ],
+          "children": [
+            "confirm-edron",
+            "decline-travel"
+          ],
+          "choices": [
+            {
+              "nodeId": "confirm-edron",
+              "label": "Yes"
+            },
+            {
+              "nodeId": "decline-travel",
+              "label": "No"
+            }
+          ],
+          "offerId": "edron"
+        },
+        {
+          "id": "confirm-edron",
+          "matches": [
+            [
+              "yes"
+            ]
+          ],
+          "responses": [
+            "Hold on!"
+          ],
+          "children": [],
+          "choices": [],
+          "action": {
+            "kind": "travel",
+            "offerId": "edron"
+          }
+        },
+        {
+          "id": "offer-issavi",
+          "matches": [
+            [
+              "issavi"
+            ]
+          ],
+          "responses": [
+            "Do you seek a ride to Issavi for |TRAVELCOST|?"
+          ],
+          "children": [
+            "confirm-issavi",
+            "decline-travel"
+          ],
+          "choices": [
+            {
+              "nodeId": "confirm-issavi",
+              "label": "Yes"
+            },
+            {
+              "nodeId": "decline-travel",
+              "label": "No"
+            }
+          ],
+          "offerId": "issavi"
+        },
+        {
+          "id": "confirm-issavi",
+          "matches": [
+            [
+              "yes"
+            ]
+          ],
+          "responses": [
+            "Hold on!"
+          ],
+          "children": [],
+          "choices": [],
+          "action": {
+            "kind": "travel",
+            "offerId": "issavi"
+          }
+        },
+        {
+          "id": "offer-svargrond",
+          "matches": [
+            [
+              "svargrond"
+            ]
+          ],
+          "responses": [
+            "Do you seek a ride to Svargrond for |TRAVELCOST|?"
+          ],
+          "children": [
+            "confirm-svargrond",
+            "decline-travel"
+          ],
+          "choices": [
+            {
+              "nodeId": "confirm-svargrond",
+              "label": "Yes"
+            },
+            {
+              "nodeId": "decline-travel",
+              "label": "No"
+            }
+          ],
+          "offerId": "svargrond"
+        },
+        {
+          "id": "confirm-svargrond",
+          "matches": [
+            [
+              "yes"
+            ]
+          ],
+          "responses": [
+            "Hold on!"
+          ],
+          "children": [],
+          "choices": [],
+          "action": {
+            "kind": "travel",
+            "offerId": "svargrond"
+          }
+        },
+        {
+          "id": "offer-kazordoon",
+          "matches": [
+            [
+              "kazordoon"
+            ],
+            [
+              "kazor"
+            ]
+          ],
+          "responses": [
+            "Do you seek a ride to Kazordoon for |TRAVELCOST|?"
+          ],
+          "children": [
+            "confirm-kazordoon",
+            "decline-travel"
+          ],
+          "choices": [
+            {
+              "nodeId": "confirm-kazordoon",
+              "label": "Yes"
+            },
+            {
+              "nodeId": "decline-travel",
+              "label": "No"
+            }
+          ],
+          "offerId": "kazordoon"
+        },
+        {
+          "id": "confirm-kazordoon",
+          "matches": [
+            [
+              "yes"
+            ]
+          ],
+          "responses": [
+            "Hold on!"
+          ],
+          "children": [],
+          "choices": [],
+          "action": {
+            "kind": "travel",
+            "offerId": "kazordoon"
+          }
+        },
+        {
+          "id": "offer-femor-hills",
+          "matches": [
+            [
+              "femor hills"
+            ],
+            [
+              "hills"
+            ]
+          ],
+          "responses": [
+            "Do you seek a ride to Femor Hills for |TRAVELCOST|?"
+          ],
+          "children": [
+            "confirm-femor-hills",
+            "decline-travel"
+          ],
+          "choices": [
+            {
+              "nodeId": "confirm-femor-hills",
+              "label": "Yes"
+            },
+            {
+              "nodeId": "decline-travel",
+              "label": "No"
+            }
+          ],
+          "offerId": "femor-hills"
+        },
+        {
+          "id": "confirm-femor-hills",
+          "matches": [
+            [
+              "yes"
+            ]
+          ],
+          "responses": [
+            "Hold on!"
+          ],
+          "children": [],
+          "choices": [],
+          "action": {
+            "kind": "travel",
+            "offerId": "femor-hills"
+          }
+        },
+        {
+          "id": "offer-marapur",
+          "matches": [
+            [
+              "marapur"
+            ]
+          ],
+          "responses": [
+            "Do you seek a ride to Marapur for |TRAVELCOST|?"
+          ],
+          "children": [
+            "confirm-marapur",
+            "decline-travel"
+          ],
+          "choices": [
+            {
+              "nodeId": "confirm-marapur",
+              "label": "Yes"
+            },
+            {
+              "nodeId": "decline-travel",
+              "label": "No"
+            }
+          ],
+          "offerId": "marapur"
+        },
+        {
+          "id": "confirm-marapur",
+          "matches": [
+            [
+              "yes"
+            ]
+          ],
+          "responses": [
+            "Hold on!"
+          ],
+          "children": [],
+          "choices": [],
+          "action": {
+            "kind": "travel",
+            "offerId": "marapur"
+          }
+        },
+        {
+          "id": "offer-farmine",
+          "matches": [
+            [
+              "farmine"
+            ],
+            [
+              "zao"
+            ]
+          ],
+          "responses": [
+            "Do you seek a ride to Zao for |TRAVELCOST|?"
+          ],
+          "children": [
+            "confirm-farmine",
+            "decline-travel"
+          ],
+          "choices": [
+            {
+              "nodeId": "confirm-farmine",
+              "label": "Yes"
+            },
+            {
+              "nodeId": "decline-travel",
+              "label": "No"
+            }
+          ],
+          "offerId": "farmine",
+          "conditions": [
+            {
+              "kind": "storage",
+              "key": "Quest.U8_54.TheNewFrontier.Mission10",
+              "operator": "eq",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "id": "confirm-farmine",
+          "matches": [
+            [
+              "yes"
+            ]
+          ],
+          "responses": [
+            "Hold on!"
+          ],
+          "children": [],
+          "choices": [],
+          "action": {
+            "kind": "travel",
+            "offerId": "farmine"
+          }
+        },
+        {
+          "id": "decline-travel",
+          "matches": [
+            [
+              "no"
+            ]
+          ],
+          "responses": [
+            "You shouldn't miss the experience."
+          ],
+          "children": [],
+          "choices": [],
+          "nextNodeId": "root"
+        }
+      ],
+      "travelOffers": [
+        {
+          "id": "edron",
+          "cost": 60,
+          "destination": {
+            "x": 33193,
+            "y": 31784,
+            "z": 3
+          }
+        },
+        {
+          "id": "issavi",
+          "cost": 100,
+          "destination": {
+            "x": 33957,
+            "y": 31515,
+            "z": 0
+          }
+        },
+        {
+          "id": "svargrond",
+          "cost": 60,
+          "destination": {
+            "x": 32253,
+            "y": 31097,
+            "z": 4
+          }
+        },
+        {
+          "id": "kazordoon",
+          "cost": 80,
+          "destination": {
+            "x": 32588,
+            "y": 31941,
+            "z": 0
+          }
+        },
+        {
+          "id": "femor-hills",
+          "cost": 60,
+          "destination": {
+            "x": 32536,
+            "y": 31837,
+            "z": 4
+          }
+        },
+        {
+          "id": "marapur",
+          "cost": 70,
+          "destination": {
+            "x": 33805,
+            "y": 32767,
+            "z": 2
+          }
+        },
+        {
+          "id": "farmine",
+          "cost": 60,
+          "destination": {
+            "x": 32983,
+            "y": 31539,
+            "z": 1
+          },
+          "conditions": [
+            {
+              "kind": "storage",
+              "key": "Quest.U8_54.TheNewFrontier.Mission10",
+              "operator": "eq",
+              "value": 2
+            }
+          ]
+        }
+      ]
     }
   ]
 }

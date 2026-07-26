@@ -356,6 +356,19 @@ function parseOffer(value: unknown): NpcTravelOffer {
             10_000,
           ),
         }),
+    // Without this the gate on a reviewed route would be dropped on load and
+    // the route would be open to everyone; `TravelService` re-checks it at
+    // confirmation (charter rule 4).
+    ...(offer.conditions === undefined
+      ? {}
+      : {
+          conditions: array(
+            offer.conditions,
+            "NPC travel offer conditions",
+            1,
+            8,
+          ).map(parseCondition),
+        }),
   };
 }
 

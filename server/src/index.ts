@@ -50,7 +50,9 @@ const serverConfig = await loadServerConfig();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const databaseUrl = process.env.DATABASE_URL;
-const postgresPoolMax = Number(process.env.PG_POOL_MAX ?? 20);
+// Supabase's session pooler refuses clients beyond its pool_size (15 by
+// default), so stay below that with headroom for migrations/tools.
+const postgresPoolMax = Number(process.env.PG_POOL_MAX ?? 10);
 
 if (!databaseUrl || (!supabaseUrl && !serverConfig.dev.auth)) {
   console.error(
