@@ -41,6 +41,12 @@ export const WORLD_ACTION_REQUIREMENTS: Readonly<
     houseAccess: false,
     exclusive: false,
   },
+  "daily-shrine": {
+    reach: "adjacent",
+    itemStillPlaced: true,
+    houseAccess: false,
+    exclusive: false,
+  },
   door: {
     reach: "adjacent",
     itemStillPlaced: true,
@@ -48,6 +54,12 @@ export const WORLD_ACTION_REQUIREMENTS: Readonly<
     exclusive: true,
   },
   lever: {
+    reach: "adjacent",
+    itemStillPlaced: true,
+    houseAccess: true,
+    exclusive: true,
+  },
+  podium: {
     reach: "adjacent",
     itemStillPlaced: true,
     houseAccess: true,

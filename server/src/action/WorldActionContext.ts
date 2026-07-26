@@ -1,6 +1,7 @@
 import type { Position } from "@tibia/protocol";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { CarriedPlan } from "../item/plan/CarriedPlan";
+import type { MapItem } from "../MapItem";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { ChestDefinition } from "./ChestDefinition";
@@ -21,6 +22,10 @@ export interface WorldActionContext {
   readonly houseAccess: (characterId: string, position: Position) => boolean;
   /** Applies a transform plan in-tick and persists it; null fails the intent. */
   readonly applyPlan: (plan: CarriedPlan | null) => void;
+  /** Present when a podium service is wired; opens the edit window. */
+  readonly openPodium?: (item: MapItem) => void;
+  /** Present when the daily-reward service is wired; projects claim state. */
+  readonly openDailyRewards?: () => void;
   /** Grants a chest reward atomically; absent without a chest store. */
   readonly lootChest?: (chest: ChestDefinition) => void;
 }

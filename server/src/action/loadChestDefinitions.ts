@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { positionKey } from "../positionKey";
-import type { ChestDefinition, ChestReward } from "./ChestDefinition";
+import type {
+  ChestDefinition,
+  ChestReward,
+  ChestStorageWrite,
+} from "./ChestDefinition";
 
 const CHESTS_PATH = fileURLToPath(
   new URL("../../data/chests.json", import.meta.url),
@@ -20,6 +24,29 @@ function requireRewards(value: unknown, label: string): ChestReward[] {
       throw new Error(`chests.json ${label} has an invalid reward`);
     }
     return { typeId: Number(typeId), count: Number(count) };
+  });
+}
+
+function requireStorageWrites(
+  value: unknown,
+  uniqueId: unknown,
+): ChestStorageWrite[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`chests.json chest ${String(uniqueId)} storageWrites invalid`);
+  }
+  return value.map((entry) => {
+    const { key, value: storageValue } = entry as Record<string, unknown>;
+    if (
+      typeof key !== "string" ||
+      key.length === 0 ||
+      key.length > 192 ||
+      !Number.isInteger(storageValue)
+    ) {
+      throw new Error(
+        `chests.json chest ${String(uniqueId)} has an invalid storage write`,
+      );
+    }
+    return { key, value: Number(storageValue) };
   });
 }
 
@@ -56,6 +83,7 @@ export function loadChestDefinitions(
       randomReward,
       containerTypeId,
       cooldownHours,
+      storageWrites,
     } = entry as Record<string, unknown>;
     if (
       !Number.isInteger(uniqueId) ||
@@ -87,6 +115,9 @@ export function loadChestDefinitions(
       ...(cooldownHours === undefined
         ? {}
         : { cooldownHours: Number(cooldownHours) }),
+      ...(storageWrites === undefined
+        ? {}
+        : { storageWrites: requireStorageWrites(storageWrites, uniqueId) }),
     };
     if (
       definition.reward.length === 0 &&

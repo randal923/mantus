@@ -127,6 +127,11 @@
    "path": "data/items/proficiencies.json",
    "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
    "sha256": "1a915dffd9265cd1c18d39e55da7ede691b2e58add534bc186238ae028a73f22"
+  },
+  "canaryQuestCatalog": {
+   "path": "data-otservbr-global/lib/core/quests/catalog/init.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "3aa5d65945fe182cf17dc2e747464bf71d6abfec9fbfd52f420a426b114ff0e1"
   }
  },
  "balanceDefinitions": {
@@ -206,6 +211,10 @@
    "sha256": "239b3af526094781cd1368ca051ba5f1cdbc23054375c68ee520a1a9a86bad46"
   },
   {
+   "path": "tools/importCanaryQuests.mjs",
+   "sha256": "6524f0f4e4fe0e26900ef03d9def20f3879f004f498a6988e3ddd55d63a4e84f"
+  },
+  {
    "path": "tools/importCanaryRaids.mjs",
    "sha256": "3916a838d8c6bed26709e76203eece62cba0f427814992cbfb2f011ffce29818"
   },
@@ -258,6 +267,10 @@
    "sha256": "79076ab141e6d247d583b1c7b38394838c70910d86564ca9afe2586034e78cfb"
   },
   {
+   "path": "tools/parseCanaryQuestCatalog.mjs",
+   "sha256": "bf6310454cd8b59c89b4af742a5f5b053256992c5b02e984f50d8daeb4d95358"
+  },
+  {
    "path": "tools/parseCanaryRaids.mjs",
    "sha256": "893547da66615f33262c084ecce3907294510d77843855c1a81dd0cd1af6c9f0"
   },
@@ -290,6 +303,7 @@
   "achievements": 1,
   "appearanceFlags": 1,
   "imbuements": 1,
-  "proficiencies": 1
+  "proficiencies": 1,
+  "quests": 1
  }
 }

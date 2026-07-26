@@ -12,8 +12,10 @@ import {
 const REGISTERED_KINDS = [
   "chest",
   "clock",
+  "daily-shrine",
   "door",
   "lever",
+  "podium",
   "read",
   "rotate",
   "write",
@@ -87,7 +89,10 @@ describe("worldActionPreconditions", () => {
 
   it("requires every mutating kind to be exclusive and item-checked", () => {
     for (const kind of REGISTERED_KINDS) {
-      if (kind === "clock" || kind === "read") continue;
+      // Clock/sign reads and shrine/window opens mutate nothing.
+      if (kind === "clock" || kind === "read" || kind === "daily-shrine") {
+        continue;
+      }
       expect(WORLD_ACTION_REQUIREMENTS[kind].exclusive).toBe(true);
       expect(WORLD_ACTION_REQUIREMENTS[kind].itemStillPlaced).toBe(true);
       expect(WORLD_ACTION_REQUIREMENTS[kind].houseAccess).toBe(true);

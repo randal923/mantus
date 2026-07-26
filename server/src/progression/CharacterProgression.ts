@@ -97,10 +97,12 @@ export class CharacterProgression {
   private accountTier: AccountTier;
   private regeneration: ReturnType<typeof getAccountRegeneration>;
   private wheelModifier: DerivedStatModifier;
+  private equipmentModifier: DerivedStatModifier = {};
   private cachedStats: {
     vocation: CharacterVocation;
     level: number;
     wheel: DerivedStatModifier;
+    equipment: DerivedStatModifier;
     value: ReturnType<typeof deriveCharacterStats>;
   } | null = null;
 
@@ -739,7 +741,8 @@ export class CharacterProgression {
       cached &&
       cached.vocation === this.vocation &&
       cached.level === this.currentLevel &&
-      cached.wheel === this.wheelModifier
+      cached.wheel === this.wheelModifier &&
+      cached.equipment === this.equipmentModifier
     ) {
       return cached.value;
     }
@@ -747,12 +750,14 @@ export class CharacterProgression {
       vocation: this.vocation,
       definitionVersion: this.definitionVersion,
       level: this.currentLevel,
+      equipment: [this.equipmentModifier],
       wheel: this.wheelModifier,
     });
     this.cachedStats = {
       vocation: this.vocation,
       level: this.currentLevel,
       wheel: this.wheelModifier,
+      equipment: this.equipmentModifier,
       value,
     };
     return value;
@@ -761,6 +766,28 @@ export class CharacterProgression {
   setWheelModifier(modifier: DerivedStatModifier): void {
     this.wheelModifier = modifier;
     this.currentMana = Math.min(this.currentMana, this.maxMana);
+  }
+
+  /**
+   * Equipment-derived stat bonuses (imbuement Swiftness/Featherweight).
+   * Value-compared so the per-tick sync only invalidates the memoized stats
+   * when a bonus actually changed; returns whether it did.
+   */
+  setEquipmentModifier(modifier: DerivedStatModifier): boolean {
+    const current = this.equipmentModifier;
+    if (
+      (current.maxHealth ?? 0) === (modifier.maxHealth ?? 0) &&
+      (current.maxMana ?? 0) === (modifier.maxMana ?? 0) &&
+      (current.capacity ?? 0) === (modifier.capacity ?? 0) &&
+      (current.capacityPercentOfBase ?? 0) ===
+        (modifier.capacityPercentOfBase ?? 0) &&
+      (current.speed ?? 0) === (modifier.speed ?? 0)
+    ) {
+      return false;
+    }
+    this.equipmentModifier = modifier;
+    this.currentMana = Math.min(this.currentMana, this.maxMana);
+    return true;
   }
 
   private addSkillTries(skill: Skill, amount: number): boolean {

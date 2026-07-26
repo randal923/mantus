@@ -109,6 +109,17 @@ export function createGameWindowStore({
     preyWindowOpen: false,
     huntingTasksOpen: false,
     outfitWindowOpen: false,
+    podiumWindow: null,
+    podiumError: null,
+    rewardChest: null,
+    rewardError: null,
+    rewardChestOpenedAtMs: 0,
+    dailyRewards: null,
+    dailyError: null,
+    questLogOpen: false,
+    questLog: null,
+    questLine: null,
+    questLogError: null,
     profileWindowOpen: false,
     publicProfileOpen: false,
     bugReportOpen: false,
@@ -337,6 +348,27 @@ export function createGameWindowStore({
       set((state) => ({
         outfitWindowOpen: resolveStateAction(value, state.outfitWindowOpen),
       })),
+    setPodiumWindow: (value) =>
+      set(() => ({ podiumWindow: value, podiumError: null })),
+    setPodiumError: (value) => set(() => ({ podiumError: value })),
+    setRewardChest: (value) =>
+      set(() => ({
+        rewardChest: value,
+        rewardError: null,
+        rewardChestOpenedAtMs: Date.now(),
+      })),
+    setRewardError: (value) => set(() => ({ rewardError: value })),
+    setDailyRewards: (value) =>
+      set(() => ({ dailyRewards: value, dailyError: null })),
+    setDailyError: (value) => set(() => ({ dailyError: value })),
+    setQuestLogOpen: (value) =>
+      set((state) => ({
+        questLogOpen: resolveStateAction(value, state.questLogOpen),
+      })),
+    setQuestLog: (value) =>
+      set(() => ({ questLog: value, questLogError: null })),
+    setQuestLine: (value) => set(() => ({ questLine: value })),
+    setQuestLogError: (value) => set(() => ({ questLogError: value })),
     setProfileWindowOpen: (value) =>
       set((state) => ({
         profileWindowOpen: resolveStateAction(
@@ -523,6 +555,17 @@ export function createGameWindowStore({
         preyWindowOpen: false,
         huntingTasksOpen: false,
         outfitWindowOpen: false,
+        podiumWindow: null,
+        podiumError: null,
+        rewardChest: null,
+        rewardError: null,
+        rewardChestOpenedAtMs: 0,
+        dailyRewards: null,
+        dailyError: null,
+        questLogOpen: false,
+        questLog: null,
+        questLine: null,
+        questLogError: null,
         profileWindowOpen: false,
         publicProfileOpen: false,
         bugReportOpen: false,

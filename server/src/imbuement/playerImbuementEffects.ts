@@ -17,6 +17,17 @@ export interface PlayerImbuementEffects {
   readonly absorb: Readonly<Record<string, ReadonlyArray<number>>>;
   /** Feet-slot vibrancy: paralysis removal chance, percent. */
   readonly paralysisRemoveChancePercent: number;
+  /** Feet-slot vibrancy: deflects player-cast paralysis (Canary condition.cpp:96-136). */
+  readonly paralysisPvpDeflect: boolean;
+  /** Swiftness: flat walk-speed bonus, additive across items (Canary player.cpp:3260). */
+  readonly speed: number;
+  /**
+   * Featherweight: percent of *base* capacity (Canary player.cpp:3266).
+   * Canary overwrites its single `bonusCapacity` per apply event, which is
+   * order-dependent with mixed tiers; the deterministic equivalent here is
+   * the highest equipped percent.
+   */
+  readonly capacityPercent: number;
 }
 
 const EMPTY: PlayerImbuementEffects = {
@@ -29,6 +40,9 @@ const EMPTY: PlayerImbuementEffects = {
   elementalDamage: null,
   absorb: {},
   paralysisRemoveChancePercent: 0,
+  paralysisPvpDeflect: false,
+  speed: 0,
+  capacityPercent: 0,
 };
 
 /**
@@ -52,6 +66,9 @@ export function playerImbuementEffects(
   let elementalDamage: PlayerImbuementEffects["elementalDamage"] = null;
   const absorb: Record<string, number[]> = {};
   let paralysisRemoveChancePercent = 0;
+  let paralysisPvpDeflect = false;
+  let speed = 0;
+  let capacityPercent = 0;
   let any = false;
   for (const entry of equipment) {
     for (const state of itemImbuementsOf(entry.item)) {
@@ -99,7 +116,14 @@ export function playerImbuementEffects(
               paralysisRemoveChancePercent,
               effect.removeChancePercent,
             );
+            paralysisPvpDeflect = paralysisPvpDeflect || effect.pvpDeflect;
           }
+          break;
+        case "speed":
+          speed += effect.amount;
+          break;
+        case "capacity":
+          capacityPercent = Math.max(capacityPercent, effect.percent);
           break;
         default:
           break;
@@ -117,5 +141,8 @@ export function playerImbuementEffects(
     elementalDamage,
     absorb,
     paralysisRemoveChancePercent,
+    paralysisPvpDeflect,
+    speed,
+    capacityPercent,
   };
 }

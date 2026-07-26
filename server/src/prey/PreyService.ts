@@ -264,6 +264,19 @@ export class PreyService implements PreyHooks {
     if (session) this.sendState(session, recipientId);
   }
 
+  /**
+   * Applies a wildcard balance another transaction already committed (the
+   * daily-reward claim); refresh-only, never a second grant.
+   */
+  applyWildcardBalance(characterId: string, balance: number): void {
+    this.outcomes.push(() => {
+      if (!this.slotsByCharacter.has(characterId)) return;
+      this.wildcardsByCharacter.set(characterId, balance);
+      const session = this.registry.sessionFor(characterId);
+      if (session) this.sendState(session, characterId);
+    });
+  }
+
   /** Store/daily-reward integration point; capped like Canary's store path. */
   grantWildcards(characterId: string, amount: number): void {
     const store = this.store;

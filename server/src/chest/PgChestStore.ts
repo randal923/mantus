@@ -7,6 +7,7 @@ import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { claimChestLootQuery } from "./sql/claimChestLootQuery";
 import { insertChestLootAuditQuery } from "./sql/insertChestLootAuditQuery";
+import { insertQuestRewardAuditQuery } from "./sql/insertQuestRewardAuditQuery";
 import type {
   ChestLootRequest,
   ChestLootResult,
@@ -92,6 +93,18 @@ export class PgChestStore implements ChestStore {
         ),
         request.container?.typeId ?? null,
       ]);
+      if (request.storageWrites && request.storageWrites.length > 0) {
+        // The quest-flag transition is part of the economy event's audit
+        // trail (Feature 104); the live write applies in the same resolved
+        // outcome as the grant.
+        await client.query(insertQuestRewardAuditQuery, [
+          characterId,
+          JSON.stringify({
+            chestUniqueId: request.uniqueId,
+            writes: request.storageWrites,
+          }),
+        ]);
+      }
       return {
         status: "committed" as const,
         mutation: { after: [...after.values()] },

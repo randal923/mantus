@@ -170,31 +170,24 @@ Five recorded deviations to retire, all in
 **Tests:** mixed bank+carried payment conserves gold under races; reveal
 outside a temple rejected; destroy distribution matches `normal_random`.
 
-## Feature 84 — Rewards and loot QoL
+## Feature 84 — Rewards and loot QoL (remainder)
 
-**Remaining:** reward bosses + reward chests (per-player instanced container
-on the item-ownership model, following the depot pattern); quick loot +
-loot-container assignment (server-validated intents respecting the
-memory-first corpse invariant — first touch drives persistence); quick-loot
-routing into the supply stash; daily rewards with durable server-clock
-streak timers — including Canary's day-3/day-5 prey wildcard grants (1 free
-/ 2 premium) through the shipped capped
-`PreyService.grantWildcards`/`PreyStore.grantWildcards` path (Feature 74's
-only wildcard sources are this and Feature 43's store packs); all grants in
-single audited transactions.
+Reward chests and daily rewards shipped 2026-07-26 (see
+[done.md](done.md)), including the bosstiary-slot/boosted loot-bonus
+application. What remains is the loot-routing QoL:
 
-**Absorbed residuals (2026-07-26, from Features 76/78):**
-
-- Apply the bosstiary slot loot bonus (`BossSlotService` computes it,
-  including the +25 mastery extra) and the boosted-boss +250% roll bonus to
-  reward-chest loot rolls when they land (Canary reward_chest.lua:84-101).
-- Imbuement astral sources are consumed from carried items only; Canary
-  also auto-withdraws the remainder from the supply stash
-  (player.cpp:2707-2728) — wire that when quick-loot stash routing lands.
+- **Loot-container assignment** — durable per-category container
+  assignments (`quickLootFilter` categories), server-validated intents
+  respecting the memory-first corpse invariant; the sweep then routes per
+  category instead of backpack-first.
+- **Quick-loot routing into the supply stash** for stowable categories.
+- **Imbuement astral stash auto-draw** (absorbed from Feature 78):
+  astral sources are consumed from carried items only; Canary also
+  auto-withdraws the remainder from the supply stash
+  (player.cpp:2707-2728) — wire it when stash routing lands.
 
 **Tests:** quick-loot races conserve every item under the memory-first
-invariant; daily claims exactly-once per day (clock manipulation cannot
-advance streaks); reward-chest grants atomic with boss-kill credit.
+invariant; assignment routing honors the durable table at execution time.
 
 ## Feature 85 — Familiars, hirelings, and summons
 
@@ -205,36 +198,84 @@ through the NPC system, skills/outfits); player summons (ownership links,
 server-side leash/return rules). Hireling economy services go through the
 same ACID + audit paths as regular NPCs.
 
+**Groundwork mapped 2026-07-26 (nothing shipped yet):**
+
+- The five familiar spells (`utevo gran res ven/dru/sac/eq/tio`, level
+  200, mana 3000/3000/2000/1000/1500) sit in `canary-spells.json` as
+  `supported: false` — enabling them is the importer lane (reviewed
+  `playerAction` in `tools/parseCanarySpells.mjs`, catalog regen,
+  converter-hash re-pin), the same lane Feature 79's avatars need.
+- The familiar monster types (`data-otservbr-global/monster/familiars/`,
+  e.g. druid familiar: 20k HP, exp 0, corpse 0, familiar flag, melee to
+  −300) are **not** in `world-monsters.json`; the creature import must
+  include that directory (regen + re-pin) or a reviewed content file must
+  carry them.
+- Exact pinned numbers: premium required; blocked while any summon is up
+  (`#getSummons() >= 1`); duration 15 min (`60*familiarTime/2`,
+  familiarTime 30); cooldown = duration × 2 minus the VIP reduction;
+  warnings at T−60 s/T−10 s; death zeroes the remaining time; login
+  re-creates with the remainder for premium level-200+; C++ traits:
+  PZ entry only while the master has no target, no target acquisition in
+  PZ, teleport to master at >15 tiles or any z-diff, walk-through, full
+  exp passthrough (no summon halving), master may use potions on it.
+- Mantus summon-runtime gaps to close first (mapped in
+  `spawn/SpawnManager`): no master link reachable from combat/AI
+  (ownership lives in two private maps), `canMonsterAffect` is
+  faction-only so a summon has no friend/foe notion of its master, no
+  follow/leash (home frozen at the summon tile), summons survive master
+  death (only logout releases them), and no runtime NPC creation path
+  exists for hirelings (`new Npc` only in `SpawnManager.createCreature`);
+  `DialogueAction` has no hireling-service kind. Hireling pinned facts:
+  lamp 29432, service ids 1001-1004, dress looktypes 1109-1132, placement
+  owner-only inside a house, one per tile, `returnToLamp` to the store
+  inbox, `checkHouseAccess` re-lamps on owner change; prices are store
+  catalog copy (150/250/900/250/250).
+
 **Tests:** forged control intents for others' summons rejected; hireling
 placement/removal follows house ownership at execution (eviction removes
 hirelings safely).
 
 ## Feature 86 — Modern-systems long tail
 
-Each entry the Feature 89 inventory (todo-1) finds ships as its own bounded
-unit: hazard levels, concoctions, encounter/boss difficulty selection
-(absorbed from Feature 23), resource balances, podium/show-off objects, and
-every other registered modern system. Standard order per unit: protocol
-schema + size/rate limits first, server-authoritative execution with
-execution-time re-checks, durable state, audits for anything
-economy-relevant, per-system exploit tests.
+Podiums, the imbuement speed/capacity stats, and vibrancy's deflect leg
+shipped 2026-07-26; boss/encounter difficulty selection closed as a no-op
+(pinned Canary's `parseBossDifficultySelection` drains the packet and does
+nothing, protocolgame.cpp:3260-3266). See [done.md](done.md). Each
+remaining entry ships as its own bounded unit — protocol schema first,
+server-authoritative execution with execution-time re-checks, durable
+state, audits where economy-relevant, per-system exploit tests:
 
-**Absorbed residuals (2026-07-26, from Features 78/82):**
-
-- Imbuement `speed`/`capacity` effects (Swiftness/Featherweight) decay
-  correctly but apply no stat yet — needs equip-state plumbing into
-  `Player.stepSpeed` and the capacity pipeline (Featherweight is a percent
-  of base capacity, Canary player.cpp:3266).
-- Vibrancy's PvP-deflect leg (paralysis cloned back onto a non-vibrant
-  player attacker, condition.cpp:95-136); the removal-chance roll shipped.
-- Inert proficiency perk families with no mantus mechanism yet:
+- **Hazard system** — zones (Gnomprona `hazard_primal.lua` bounds, max
+  level 12), per-player current/max level (Canary keeps them in KV;
+  level-up on Primal Menace kill, manual lowering via NPC), party-lowest
+  points, and the exact combat legs: +2 % boss damage per point, hazard
+  crit +50 % base +0.25 %/point at 7.5 % chance per 2 s, 0.85 % dodge per
+  point, +3.5 % exp per point, loot `4 × points`% extra-roll chance with
+  the ceil/floor fractional idiom, Primal Pod (0.87 %/point, hatches a
+  Fungosaurus, timed 5 % max-HP +500 life drain) and Plunder Patriarch
+  (0.025 %/point) spawns; reward bosses exempt. Config defaults
+  transcribed from configmanager.cpp:278-289.
+- **Concoctions** — the 20 items 36723-36742 (ids verified present in the
+  item catalog), 1 h duration / 24 h cooldown, per-concoction durable
+  TimeLeft + LastActivatedAt (Canary keeps them in player storages; drain
+  online-only in 60 s ticks, survive death/logout, re-apply on login).
+  Wiring map per effect: StaminaExtension +60 min stamina instantly;
+  KooldownAid clears spell cooldowns; StrikeEnhancement +5 % crit into
+  the crit aggregation; WealthDuplex one extra corpse roll
+  (`createMonsterCorpse`, party-diminished per
+  ondroploot_wealth_duplex.lua); BestiaryBetterment ×2 bestiary kills
+  (`BestiaryTracker`); 7 resiliences −8 % absorb legs and 7
+  amplifications +8 % dealt legs into `DamageResolver`; CharmUpgrade +5
+  charm chance is blocked on Feature 73 (charm procs don't exist yet).
+- **Inert proficiency perk families** with no mantus mechanism yet:
   `bestiary-damage`, `perfect-shot-damage`, `elemental-hit-chance`,
-  rune/elemental crit legs, `mana/life-gain-on-hit/-kill`, and Canary's own
-  dead types 28-31 (kept inert upstream too).
-- Animus mastery earn path: Canary grants it through Soul Pit encounters
-  (soul cores drop 5% from fiendish monsters, ondroploot_soul_core.lua);
-  mantus ships state/bonus/projection with `AnimusService.grant` as the
-  only server-side surface until an encounter system exists.
+  rune/elemental crit legs, `mana/life-gain-on-hit/-kill`, and Canary's
+  own dead types 28-31 (kept inert upstream too).
+- **Animus mastery earn path**: Canary grants it through Soul Pit
+  encounters (soul cores drop 5 % from fiendish monsters,
+  ondroploot_soul_core.lua); mantus ships state/bonus/projection with
+  `AnimusService.grant` as the only server-side surface until an
+  encounter system exists.
 
 **Excluded by product decision (2026-07-25): livestream/casting.** Pinned
 Canary ships it (`src/creatures/players/livestream/`), deliberately out of

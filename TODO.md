@@ -29,18 +29,38 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
-- **Ten pre-existing Postgres integration failures at HEAD** (discovered
-  2026-07-26 while landing Features 74/75; verified present with the new
-  migration removed, so unrelated to it). Six in
-  `PgChestStore.integration.test.ts` — chest grants report `committed` but
-  the granted gold never lands in the carried inventory (`goldCarried()`
-  stays 0); owner: the chest work in todo-2/Feature 84's reward path. Three
-  in `PgGuildStore.integration.test.ts` — `bank_ledger_amount_check`
+- **Four pre-existing Postgres integration failures at HEAD** (updated
+  2026-07-26: the six `PgChestStore.integration.test.ts` failures are
+  fixed — the store was always correct; the tests asserted `character_id`
+  on container rows, which the schema keeps NULL). Three in
+  `PgGuildStore.integration.test.ts` — `bank_ledger_amount_check`
   violations from `appendBankLedger` (recorded on Feature 58, todo-9). One
   in `PgSocialStores.integration.test.ts` — the staff-highscore test inserts
   a non-DEFAULT value into the generated `is_staff` column (fixture broken
   since the roles migration; owner: Feature 96, todo-12). Everything else in
   `test:integration` passes.
+- **Daily rewards deviations** (2026-07-26, Feature 84, all recorded in
+  done.md): reward items grant into carried slots via the chest pattern
+  instead of Canary's store inbox (inbox routing can ride Feature 43/49);
+  the day boundary is the server-local calendar day instead of Canary's
+  25 h server-save window (mantus has no global save — charter rule); the
+  day-7 XP boost drains by wall clock while Canary drains it with hunting
+  time only; offline boss-fight participants collect base reward rolls
+  because bosstiary slot records only exist for attached characters;
+  day-6 training weapons grant without Canary's 50-charge stamp (charges
+  are not modeled on these items yet). Panel (non-shrine) claiming needs
+  Feature 43's collection tokens.
+- **Podium display rendering** (2026-07-26, Feature 86 → 87): the tile
+  overlay bakes a static south-facing outfit frame — stored direction,
+  mounts, lookTypeEx monsters, and the platform-hide flag are not
+  rendered yet; map-side right-click rotation is not wired (the edit
+  window's direction buttons cover rotation).
+- **Chest quest-flag window** (2026-07-26, Feature 104): a chest's
+  `storageWrites` are audited inside the grant transaction but applied to
+  the live player in the resolved outcome; a crash between commit and the
+  next character save can keep the item grant while losing the flag
+  transition. The chest gate stays claimed either way (no re-grant), and
+  the window is the same class as the shipped progression persist flow.
 - **Prey/hunting-task gold is bank-only, not carried-coins-first**
   (2026-07-26, Features 74/75). Canary's `removeMoney(..., useBalance=true)`
   spends inventory coins before the bank; mantus charges list

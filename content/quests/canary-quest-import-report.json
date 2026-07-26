@@ -1,0 +1,478 @@
+{
+ "formatVersion": 1,
+ "source": {
+  "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
+  "catalogInitSha256": "3aa5d65945fe182cf17dc2e747464bf71d6abfec9fbfd52f420a426b114ff0e1",
+  "storagesSha256": "c635df067173e9638652929c9f0c21bb9872ea1c01928fe371d420402b681949"
+ },
+ "counts": {
+  "questModules": 51,
+  "quests": 51,
+  "missions": 456,
+  "storageNames": 2148,
+  "globalStorageNames": 49,
+  "storageAliases": 0,
+  "numericOnlyStorageKeys": 71,
+  "tableReferenceKeys": 9,
+  "dynamicDescriptions": 90,
+  "questScriptDirectories": 114
+ },
+ "questScriptDirectories": [
+  {
+   "name": "a_pirates_tail",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "adventures_of_galthen",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "alawars_vault",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "an_uneasy_alliance",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "assassin_outfit",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "barbarian_test",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "behemoth",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "bigfoot_burden",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "chayenne_realm",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "children_of_the_revolution",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "cradle_of_monsters",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "cults_of_tibia",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "dangerous_depth",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "dark_trails",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "dawnport",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "deeper_fibula",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "deeplings_worldchange",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "demon_helmet",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "demon_oak",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "desert_dungeon_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "devil_helmet",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "draconia",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "dreamers_challenge_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "druid_outfits_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "edron_rope",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "elemental_spheres",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "extension_mota",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "fathers_burden",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "feaster_of_souls",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "ferumbras_ascension",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "forgotten_knowledge",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "formogar_mine_hoist",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "giant_smithhammer",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "grave_danger_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "grimvale",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "heart_of_destruction",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "hero_of_rathleton",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "hidden_threats",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "hot_cuisine",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "hunter_outfits_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "in_service_of_yalahar",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "killing_in_the_name_of",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "kilmaresh_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "koshei_the_deathless_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "krailos",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "lions_rock",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "liquid_black",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "marapur",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "mintwallin_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "mysterious_ornate",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "no_rest_for_the_wicked",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "oramond",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "others",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "parchment_room",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "primal_ordeal_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "raging_mage_tower",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "roshamuul_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "rotten_blood_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "rottin_wood_and_married_men",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "sea_of_light",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "secret_service",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "soul_war",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "soulpit",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "spike_tasks",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "spirit_hunters",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "svargrond_arena",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "thais_lighthouse",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "thais_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_ancient_tombs",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_annihilator",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_ape_city",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_cursed_crystal",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_djinn_war_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_dream_courts_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_explorer_society",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_first_dragon",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_gravedigger_of_drefia",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_great_dragon_hunt_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_hidden_city_of_beregar",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_hunt_for_the_sea_serpent",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_ice_islands_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_inquisition_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_lost_brother",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_new_frontier",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_order_of_lion",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_outlaw_camp",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_paradox_tower",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_pits_of_inferno_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_postman_missions_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_primal_ordeal",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_queen_of_the_banshees",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_rookie_guard",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_secret_library_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_shattered_isles_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_spike_tasks",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_tainted_soul",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_thieves_guild_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_travelling_trader",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "the_way_of_the_monk",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "their_masters_voice",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "thieves_guild",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "threatened_dreams",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "tibia_tales",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "tinder_box_quest_chyllfroest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "to_blind_the_enemy_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "too_hot_to_handle_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "tower_defence_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "triangle_tower_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "troll_sabotage",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "unnatural_selection",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "waterfall",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "what_a_foolish_quest",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "white_pearl",
+   "status": "pending-behavior"
+  },
+  {
+   "name": "wrath_of_the_emperor",
+   "status": "pending-behavior"
+  }
+ ]
+}

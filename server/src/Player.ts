@@ -242,6 +242,11 @@ export class Player extends Creature<Character["outfit"]> {
     ) {
       throw new Error("character storage value is invalid");
     }
+    // Canary semantics: -1 is "unset", and writing it erases the row.
+    if (value === -1) {
+      delete this.storageValues[key];
+      return;
+    }
     this.storageValues[key] = value;
   }
 

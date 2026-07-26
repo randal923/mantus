@@ -11,6 +11,8 @@ import { precheckShopSale } from "../../lib/shop/precheckShopSale";
 import { AuctionHouseModal } from "../auction/AuctionHouseModal";
 import { BankPanel } from "../bank/BankPanel";
 import { DepotModal } from "../depot/DepotModal";
+import { DailyRewardsModal } from "../daily/DailyRewardsModal";
+import { RewardChestModal } from "../reward/RewardChestModal";
 import { ShopPanel } from "../shop/ShopPanel";
 import { StoreModal } from "../store/StoreModal";
 import { useGameWindowStore } from "./store/useGameWindowStore";
@@ -38,6 +40,15 @@ export function GameCommerceOverlays() {
     (state) => state.sessions?.market ?? null,
   );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
+  const rewardChest = useGameWindowStore((state) => state.rewardChest);
+  const rewardError = useGameWindowStore((state) => state.rewardError);
+  const rewardChestOpenedAtMs = useGameWindowStore(
+    (state) => state.rewardChestOpenedAtMs,
+  );
+  const setRewardChest = useGameWindowStore((state) => state.setRewardChest);
+  const dailyRewards = useGameWindowStore((state) => state.dailyRewards);
+  const dailyError = useGameWindowStore((state) => state.dailyError);
+  const setDailyRewards = useGameWindowStore((state) => state.setDailyRewards);
   const marketSelectedItem = useGameWindowStore(
     (state) => state.marketSelectedItem,
   );
@@ -362,6 +373,39 @@ export function GameCommerceOverlays() {
                   sessionActions.market.begin(sent);
                 }
           }
+        />
+      )}
+      {rewardChest && (
+        <RewardChestModal
+          state={rewardChest}
+          nowMs={rewardChestOpenedAtMs}
+          error={
+            rewardError
+              ? t(`rewardChest.errors.${rewardError}`, {
+                  defaultValue: t("rewardChest.errors.invalid-request"),
+                })
+              : null
+          }
+          onCollect={(bagId, itemId) => {
+            runtime.clientRef.current?.collectReward(bagId, itemId);
+          }}
+          onClose={() => setRewardChest(null)}
+        />
+      )}
+      {dailyRewards && (
+        <DailyRewardsModal
+          state={dailyRewards}
+          error={
+            dailyError
+              ? t(`dailyRewards.errors.${dailyError}`, {
+                  defaultValue: t("dailyRewards.errors.invalid-request"),
+                })
+              : null
+          }
+          onClaim={(picks) => {
+            runtime.clientRef.current?.claimDailyReward(picks);
+          }}
+          onClose={() => setDailyRewards(null)}
         />
       )}
     </>

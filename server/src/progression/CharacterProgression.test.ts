@@ -391,4 +391,36 @@ describe("CharacterProgression", () => {
       reconnected.progression.skills.find((state) => state.skill === "sword"),
     ).toMatchObject({ level: 10, tries: 0 });
   });
+
+  it("folds equipment modifiers into derived stats with change detection", () => {
+    const player = new Player(makeCharacter("hero"), { x: 0, y: 0, z: 7 }, 0);
+    const baseCapacity = player.capacity;
+    const baseSpeed = player.stepSpeed;
+
+    expect(
+      player.progression.setEquipmentModifier({ speed: 0, capacityPercentOfBase: 0 }),
+    ).toBe(false);
+    expect(
+      player.progression.setEquipmentModifier({
+        speed: 15,
+        capacityPercentOfBase: 9,
+      }),
+    ).toBe(true);
+    expect(player.capacity).toBe(
+      baseCapacity + Math.floor((baseCapacity * 9) / 100),
+    );
+    expect(player.stepSpeed).toBe(baseSpeed + 15);
+
+    expect(
+      player.progression.setEquipmentModifier({
+        speed: 15,
+        capacityPercentOfBase: 9,
+      }),
+    ).toBe(false);
+    expect(
+      player.progression.setEquipmentModifier({ speed: 0, capacityPercentOfBase: 0 }),
+    ).toBe(true);
+    expect(player.capacity).toBe(baseCapacity);
+    expect(player.stepSpeed).toBe(baseSpeed);
+  });
 });

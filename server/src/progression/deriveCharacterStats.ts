@@ -5,6 +5,8 @@ export interface DerivedStatModifier {
   readonly maxHealth?: number;
   readonly maxMana?: number;
   readonly capacity?: number;
+  /** Featherweight-style bonus: percent of the level/vocation base capacity (Canary player.cpp:3266). */
+  readonly capacityPercentOfBase?: number;
   readonly speed?: number;
 }
 
@@ -44,11 +46,15 @@ export function deriveCharacterStats(options: {
       maxHealth: total.maxHealth + (modifier.maxHealth ?? 0),
       maxMana: total.maxMana + (modifier.maxMana ?? 0),
       capacity: total.capacity + (modifier.capacity ?? 0),
+      capacityPercentOfBase:
+        total.capacityPercentOfBase + (modifier.capacityPercentOfBase ?? 0),
       speed: total.speed + (modifier.speed ?? 0),
     }),
-    { maxHealth: 0, maxMana: 0, capacity: 0, speed: 0 },
+    { maxHealth: 0, maxMana: 0, capacity: 0, capacityPercentOfBase: 0, speed: 0 },
   );
   const gainedLevels = options.level - 1;
+  const baseCapacity =
+    BASE_CAPACITY + vocation.gains.capacity * gainedLevels;
   return {
     maxHealth: Math.max(
       1,
@@ -60,8 +66,8 @@ export function deriveCharacterStats(options: {
     ),
     capacity: Math.max(
       0,
-      BASE_CAPACITY +
-        vocation.gains.capacity * gainedLevels +
+      baseCapacity +
+        Math.floor((baseCapacity * bonus.capacityPercentOfBase) / 100) +
         bonus.capacity,
     ),
     speed: Math.max(

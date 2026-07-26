@@ -128,6 +128,13 @@ import {
   outfitGetMessageSchema,
   outfitSelectMessageSchema,
 } from "./outfit";
+import { dailyClaimMessageSchema } from "./dailyRewards";
+import { podiumSetMessageSchema } from "./podium";
+import {
+  questLineGetMessageSchema,
+  questLogGetMessageSchema,
+} from "./questLog";
+import { rewardCollectMessageSchema } from "./rewardChest";
 import { reportPlayerMessageSchema } from "./moderation";
 import {
   bugReportMessageSchema,
@@ -759,6 +766,11 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   minimapMarkerDeleteMessageSchema,
   outfitGetMessageSchema,
   outfitSelectMessageSchema,
+  podiumSetMessageSchema,
+  rewardCollectMessageSchema,
+  dailyClaimMessageSchema,
+  questLogGetMessageSchema,
+  questLineGetMessageSchema,
   highscoresGetMessageSchema,
   bestiaryCreaturesGetMessageSchema,
   bestiaryMonsterGetMessageSchema,
@@ -845,6 +857,11 @@ export type RotateItemMessage = z.infer<typeof rotateItemMessageSchema>;
 export type MoveItemMessage = z.infer<typeof moveItemMessageSchema>;
 export type WriteItemMessage = z.infer<typeof writeItemMessageSchema>;
 export type WriteMapItemMessage = z.infer<typeof writeMapItemMessageSchema>;
+export type PodiumSetMessage = z.infer<typeof podiumSetMessageSchema>;
+export type RewardCollectMessage = z.infer<typeof rewardCollectMessageSchema>;
+export type DailyClaimMessage = z.infer<typeof dailyClaimMessageSchema>;
+export type QuestLogGetMessage = z.infer<typeof questLogGetMessageSchema>;
+export type QuestLineGetMessage = z.infer<typeof questLineGetMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;
 export type UpdateUiSettingsMessage = z.infer<
   typeof updateUiSettingsMessageSchema

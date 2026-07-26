@@ -126,9 +126,9 @@ export interface MonsterLoot {
   readonly minCount: number;
   readonly maxCount: number;
   /**
-   * Canary's `unique` loot flag (three pinned boss entries). Carried so the
-   * import stays lossless; the roll does not model it yet — see the loot
-   * parity report.
+   * Canary's `unique` loot flag (three pinned boss entries). The corpse roll
+   * does not model it (see the loot parity report); boss reward rolls gate
+   * unique entries to the top scorer (Feature 84).
    */
   readonly unique: boolean;
 }

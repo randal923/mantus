@@ -2,16 +2,19 @@ import type { Position, WriteMapItemMessage } from "@tibia/protocol";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import { planTransformMapItem } from "../item/plan/planTransformMapItem";
+import type { MapItem } from "../MapItem";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import type { ChestDefinition } from "./ChestDefinition";
 import { handleChestUse } from "./handleChestUse";
 import { handleClockRead } from "./handleClockRead";
+import { handleDailyShrineUse } from "./handleDailyShrineUse";
 import { handleDoorUse } from "./handleDoorUse";
 import { handleLeverUse } from "./handleLeverUse";
 import { handleMapRotate } from "./handleMapRotate";
 import { handleMapWrite } from "./handleMapWrite";
+import { handlePodiumUse } from "./handlePodiumUse";
 import { handleSignRead } from "./handleSignRead";
 import { resolveWorldAction } from "./resolveWorldAction";
 import type { WorldAction } from "./WorldAction";
@@ -41,8 +44,10 @@ export class WorldActionRegistry {
   } = {
     chest: handleChestUse,
     clock: handleClockRead,
+    "daily-shrine": handleDailyShrineUse,
     door: handleDoorUse,
     lever: handleLeverUse,
+    podium: handlePodiumUse,
     read: handleSignRead,
     rotate: handleMapRotate,
     write: handleMapWrite,
@@ -64,6 +69,18 @@ export class WorldActionRegistry {
       chest: ChestDefinition,
     ) => void,
     private readonly wallClock: () => number = Date.now,
+    private readonly openPodium?: (
+      session: Session,
+      player: Player,
+      position: Position,
+      item: MapItem,
+    ) => void,
+    private readonly openDailyRewards?: (
+      session: Session,
+      player: Player,
+      position: Position,
+      now: number,
+    ) => void,
   ) {}
 
   /**
@@ -178,11 +195,17 @@ export class WorldActionRegistry {
       case "clock":
         this.handlers.clock(context, action);
         return true;
+      case "daily-shrine":
+        this.handlers["daily-shrine"](context, action);
+        return true;
       case "door":
         this.handlers.door(context, action);
         return true;
       case "lever":
         this.handlers.lever(context, action);
+        return true;
+      case "podium":
+        this.handlers.podium(context, action);
         return true;
       case "read":
         this.handlers.read(context, action);
@@ -254,6 +277,18 @@ export class WorldActionRegistry {
         : {
             lootChest: (chest: ChestDefinition) =>
               lootChest(session, player, chest),
+          }),
+      ...(this.openPodium === undefined
+        ? {}
+        : {
+            openPodium: (item: MapItem) =>
+              this.openPodium?.(session, player, position, item),
+          }),
+      ...(this.openDailyRewards === undefined
+        ? {}
+        : {
+            openDailyRewards: () =>
+              this.openDailyRewards?.(session, player, position, now),
           }),
     };
   }

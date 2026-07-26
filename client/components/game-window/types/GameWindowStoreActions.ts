@@ -8,7 +8,16 @@ import type {
   CreatureState,
   CombatAnalyzerState,
   FightState,
+  DailyActionFailedReason,
+  DailyRewardsStateMessage,
   OwnCharacterState,
+  PodiumActionFailedReason,
+  PodiumWindowMessage,
+  QuestLineMessage,
+  QuestLogFailedReason,
+  QuestLogMessage,
+  RewardActionFailedReason,
+  RewardChestStateMessage,
   ServerErrorCode,
   SpellCatalogEntry,
   TradeClosedReason,
@@ -107,6 +116,16 @@ export interface GameWindowStoreActions {
   setPreyWindowOpen: (value: SetStateAction<boolean>) => void;
   setHuntingTasksOpen: (value: SetStateAction<boolean>) => void;
   setOutfitWindowOpen: (value: SetStateAction<boolean>) => void;
+  setPodiumWindow: (value: PodiumWindowMessage | null) => void;
+  setPodiumError: (value: PodiumActionFailedReason | null) => void;
+  setRewardChest: (value: RewardChestStateMessage | null) => void;
+  setRewardError: (value: RewardActionFailedReason | null) => void;
+  setDailyRewards: (value: DailyRewardsStateMessage | null) => void;
+  setDailyError: (value: DailyActionFailedReason | null) => void;
+  setQuestLogOpen: (value: SetStateAction<boolean>) => void;
+  setQuestLog: (value: QuestLogMessage | null) => void;
+  setQuestLine: (value: QuestLineMessage | null) => void;
+  setQuestLogError: (value: QuestLogFailedReason | null) => void;
   setProfileWindowOpen: (value: SetStateAction<boolean>) => void;
   setPublicProfileOpen: (value: SetStateAction<boolean>) => void;
   setBugReportOpen: (value: SetStateAction<boolean>) => void;

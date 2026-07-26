@@ -39,6 +39,8 @@ import { PgHuntingTaskStore } from "./huntingTasks/PgHuntingTaskStore";
 import { PgFriendStore } from "./social/PgFriendStore";
 import { PgVipStore } from "./social/PgVipStore";
 import { PgChestStore } from "./chest/PgChestStore";
+import { PgRewardStore } from "./reward/PgRewardStore";
+import { PgDailyRewardStore } from "./daily/PgDailyRewardStore";
 import { PgWorldEventStore } from "./event/PgWorldEventStore";
 import { PgMantusStore } from "./store/PgMantusStore";
 import { WorldItemSeeder } from "./item/WorldItemSeeder";
@@ -126,6 +128,8 @@ const gems = new PgGemStore(pool);
 const moderation = new PgModerationStore(pool);
 const store = new PgMantusStore(pool, itemCatalog);
 const chests = new PgChestStore(pool, itemCatalog);
+const rewards = new PgRewardStore(pool, itemCatalog);
+const daily = new PgDailyRewardStore(pool, itemCatalog);
 const worldEvents = new PgWorldEventStore(pool);
 const worldItemDeltas =
   serverConfig.map.source === "data"
@@ -174,6 +178,8 @@ const server = new GameServer(serverConfig, {
   moderation,
   store,
   chests,
+  rewards,
+  daily,
   worldEvents,
   currencyReconciler: new CurrencyReconciler(pool),
   worldItemDeltas,

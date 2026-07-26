@@ -24,7 +24,9 @@ import {
   type QuickLootFilter,
   type Language,
   type MarketSide,
+  type DailyRewardPick,
   type OutfitSelectMessage,
+  type PodiumSetMessage,
   type PartyAnalyzerPriceMode,
   type Position,
   type PreyActionMessage,
@@ -887,6 +889,33 @@ export class GameClient {
   /** Every id is a request; the server re-validates entitlements. */
   selectOutfit(selection: Omit<OutfitSelectMessage, "type">): boolean {
     return this.send({ type: "outfit-select", ...selection });
+  }
+
+  /** Podium edits are intents; the server re-validates every entitlement. */
+  setPodium(selection: Omit<PodiumSetMessage, "type">): boolean {
+    return this.send({ type: "podium-set", ...selection });
+  }
+
+  /** Collects one reward item or a whole bag; the server re-checks reach. */
+  collectReward(bagId: string, itemId?: string): boolean {
+    return this.send({
+      type: "reward-collect",
+      bagId,
+      ...(itemId === undefined ? {} : { itemId }),
+    });
+  }
+
+  /** Claims today's daily reward; picks are re-validated server-side. */
+  claimDailyReward(picks: ReadonlyArray<DailyRewardPick>): boolean {
+    return this.send({ type: "daily-claim", picks: [...picks] });
+  }
+
+  requestQuestLog(): boolean {
+    return this.send({ type: "quest-log-get" });
+  }
+
+  requestQuestLine(questId: number): boolean {
+    return this.send({ type: "quest-line-get", questId });
   }
 
   saveWheel(requestId: string, slices: ReadonlyArray<number>): boolean {

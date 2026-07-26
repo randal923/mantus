@@ -1852,6 +1852,89 @@
       "invalid-request": "Essa seleção não é possível."
     }
   },
+  "questLog": {
+    "title": "Registro de Missões",
+    "loading": "Carregando suas missões…",
+    "empty": "Você ainda não começou nenhuma missão.",
+    "selectPrompt": "Selecione uma missão para ver seus objetivos.",
+    "completed": "Concluída",
+    "completedSuffix": "(concluída)",
+    "errors": {
+      "invalid-request": "Essa missão não está no seu registro.",
+      "rate-limited": "Aguarde um momento."
+    }
+  },
+  "dailyRewards": {
+    "title": "Recompensas Diárias",
+    "day": "Dia {{day}}",
+    "kinds": {
+      "vocation-items": "Suprimentos",
+      "wildcards": "Curingas de Presa",
+      "training-items": "Arma de Treino",
+      "xp-boost": "Bônus de XP"
+    },
+    "streakLevel": "Nível de sequência {{level}}",
+    "jokerTokens": "{{count}} ficha(s) coringa",
+    "missedDays": "{{count}} dia(s) perdido(s)",
+    "boostActive": "Bônus de XP ativo",
+    "pickPrompt": "Escolha suas recompensas ({{picked}}/{{allowance}} unidades)",
+    "wildcardsToday": "Hoje concede {{count}} curinga(s) de presa.",
+    "boostToday": "Hoje concede um bônus de 50% de XP por {{minutes}} minutos.",
+    "streakHint": "Bônus de descanso crescem com sua sequência, até regeneração de alma no nível {{soulLevel}}.",
+    "add": "Adicionar {{name}}",
+    "remove": "Remover {{name}}",
+    "close": "Fechar",
+    "claim": "Coletar",
+    "claimed": "Coletado hoje",
+    "errors": {
+      "invalid-request": "Isso não é possível.",
+      "already-claimed": "Você já coletou a recompensa de hoje.",
+      "invalid-picks": "Essas escolhas não correspondem à recompensa de hoje.",
+      "no-space": "Você não tem espaço para a recompensa.",
+      "out-of-reach": "Aproxime-se de um santuário de recompensas primeiro.",
+      "rate-limited": "Aguarde um momento.",
+      "busy": "Termine sua ação atual primeiro."
+    }
+  },
+  "rewardChest": {
+    "title": "Baú de Recompensas",
+    "empty": "Seu baú de recompensas está vazio.",
+    "expiresIn": "Expira em {{remaining}}",
+    "collect": "Pegar",
+    "collectAll": "Pegar tudo",
+    "errors": {
+      "invalid-request": "Isso não é possível.",
+      "not-found": "Essa recompensa não está mais lá.",
+      "no-space": "Você não tem espaço para pegar isso.",
+      "too-heavy": "Está pesado demais para carregar.",
+      "out-of-reach": "Aproxime-se do baú de recompensas primeiro.",
+      "rate-limited": "Aguarde um momento.",
+      "busy": "Termine sua ação atual primeiro."
+    }
+  },
+  "podium": {
+    "title": {
+      "renown": "Pódio de Renome",
+      "vigour": "Pódio de Vigor",
+      "tenacity": "Pódio de Tenacidade"
+    },
+    "empty": "Nada em exibição.",
+    "direction": "Direção",
+    "showPlatform": "Mostrar pódio",
+    "showMonster": "Mostrar monstro",
+    "noMonster": "Nenhum monstro",
+    "close": "Fechar",
+    "apply": "Aplicar",
+    "errors": {
+      "invalid-request": "Essa exibição não é possível.",
+      "not-owned": "Você ainda não desbloqueou essa exibição.",
+      "out-of-reach": "Você está longe demais.",
+      "stale-item": "O pódio mudou — abra-o novamente.",
+      "no-house-access": "Somente convidados podem editar este pódio.",
+      "rate-limited": "Aguarde um momento antes de editar novamente.",
+      "busy": "Termine sua ação atual primeiro."
+    }
+  },
   "prey": {
     "title": "Presas",
     "loading": "Carregando dados de presas…",

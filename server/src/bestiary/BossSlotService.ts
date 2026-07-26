@@ -208,6 +208,30 @@ export class BossSlotService {
     );
   }
 
+  /**
+   * Reward-chest read (Canary reward_chest.lua:90-93): the slotted boss's
+   * loot bonus for this character, or null when the boss isn't slotted.
+   * Only attached (online) characters have slot records; an offline
+   * participant collects base rolls.
+   */
+  lootBonusPercentFor(characterId: string, raceId: number): number | null {
+    const record = this.recordsByCharacter.get(characterId);
+    if (
+      !record ||
+      (record.slotOneRaceId !== raceId && record.slotTwoRaceId !== raceId)
+    ) {
+      return null;
+    }
+    const boss = this.catalog.bossesByRaceId.get(raceId);
+    const count = this.kills.killsFor(characterId).get(raceId) ?? 0;
+    const mastery =
+      boss !== undefined && getBossMilestones(boss.category, count).reached === 3;
+    return (
+      bossPointsLootBonus(this.bossPoints(characterId)) +
+      (mastery ? BOSS_SLOT_RULES.masteryLootBonus : 0)
+    );
+  }
+
   private projectState(characterId: string): BossSlotsStateMessage {
     const record = this.recordsByCharacter.get(characterId) ?? emptyRecord();
     const kills = this.kills.killsFor(characterId);

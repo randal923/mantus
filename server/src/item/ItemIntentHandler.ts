@@ -228,6 +228,9 @@ export class ItemIntentHandler {
 
   setImbuementCatalog(catalog: ImbuementCatalog): void {
     this.imbuementCatalog = catalog;
+    // The Pg store folds Featherweight into transactional capacity checks
+    // from the same catalog, so DB-side limits cannot drift from live ones.
+    this.store.setImbuementCatalog?.(catalog);
   }
 
   /** Running imbuement effects for combat reads, memoized like equipment. */

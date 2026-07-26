@@ -8,7 +8,16 @@ import type {
   CreatureState,
   CombatAnalyzerState,
   FightState,
+  DailyActionFailedReason,
+  DailyRewardsStateMessage,
   OwnCharacterState,
+  PodiumActionFailedReason,
+  PodiumWindowMessage,
+  QuestLineMessage,
+  QuestLogFailedReason,
+  QuestLogMessage,
+  RewardActionFailedReason,
+  RewardChestStateMessage,
   ServerErrorCode,
   SpellCatalogEntry,
   TradeClosedReason,
@@ -101,6 +110,21 @@ export interface GameWindowState {
   preyWindowOpen: boolean;
   huntingTasksOpen: boolean;
   outfitWindowOpen: boolean;
+  /** Open podium edit window; pushed by the server on podium use. */
+  podiumWindow: PodiumWindowMessage | null;
+  podiumError: PodiumActionFailedReason | null;
+  /** Open reward chest; pushed by the server on reward-chest use. */
+  rewardChest: RewardChestStateMessage | null;
+  rewardError: RewardActionFailedReason | null;
+  /** Wall clock captured when the chest state arrived; drives expiry labels. */
+  rewardChestOpenedAtMs: number;
+  /** Open daily-rewards window; pushed by the server on shrine use. */
+  dailyRewards: DailyRewardsStateMessage | null;
+  dailyError: DailyActionFailedReason | null;
+  questLogOpen: boolean;
+  questLog: QuestLogMessage | null;
+  questLine: QuestLineMessage | null;
+  questLogError: QuestLogFailedReason | null;
   profileWindowOpen: boolean;
   publicProfileOpen: boolean;
   bugReportOpen: boolean;

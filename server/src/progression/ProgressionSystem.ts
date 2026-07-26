@@ -124,11 +124,35 @@ export class ProgressionSystem {
     this.nextTickAt = now + 100;
     for (const player of this.world.allPlayers()) {
       if (this.persistence.isExternalMutationPending(player)) continue;
+      const equipmentChanged = this.syncEquipmentStats(player);
       const inProtectionZone = this.world.isProtectionZone(player.position);
-      if (!player.tickProgression(now, inProtectionZone)) continue;
-      this.persistence.markDirty(player);
-      this.sendProgression(player, now);
+      const ticked = player.tickProgression(now, inProtectionZone);
+      if (ticked) this.persistence.markDirty(player);
+      if (ticked || equipmentChanged) this.sendProgression(player, now);
     }
+  }
+
+  /**
+   * Push equipment-derived bonuses (imbuement Swiftness/Featherweight) into
+   * the progression stats. Effects are memoized per inventory cache, so the
+   * per-tick call is a lookup unless equipment actually changed; derived
+   * stats are never persisted, so no dirty mark.
+   */
+  private syncEquipmentStats(player: Player): boolean {
+    const effects = this.items.imbuementEffects(player.id);
+    const changed = player.progression.setEquipmentModifier({
+      speed: effects.speed,
+      capacityPercentOfBase: effects.capacityPercent,
+    });
+    if (!changed) return false;
+    const inventory = this.items.updateCapacity(player.id, player.capacity);
+    if (inventory) {
+      this.registry.sessionFor(player.id)?.send({
+        type: "inventory-updated",
+        inventory,
+      });
+    }
+    return true;
   }
 
   private persistAward(

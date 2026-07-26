@@ -12,6 +12,7 @@ import type { PreyHooks } from "../prey/PreyHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import { EXPERIENCE_STAGES, getStageRate } from "../progression/stageRates";
 import type { PvpHooks } from "../pvp/PvpHooks";
+import type { RewardHooks } from "../reward/RewardHooks";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
@@ -47,6 +48,10 @@ export class DeathHandler {
     },
     private readonly deathHistoryHooks?: {
       record(characterId: string, level: number, cause: string): void;
+    },
+    private readonly rewardHooks?: RewardHooks,
+    private readonly dailyHooks?: {
+      xpBoostPercent(recipientId: string, nowMs: number): number;
     },
   ) {}
 
@@ -116,6 +121,11 @@ export class DeathHandler {
         target.topDamagerId() ?? killerId,
         now,
       );
+      if (target.type.flags.rewardBoss) {
+        // Reward bags are rolled and granted per participant, keyed by this
+        // death event so a crash replay cannot grant twice (Feature 84).
+        this.rewardHooks?.onRewardBossDeath(target, deathEventId, now);
+      }
       createMonsterCorpse(
         this.world,
         this.items,
@@ -274,6 +284,13 @@ export class DeathHandler {
       if (preyPercent && preyPercent > 0) {
         amount = Math.ceil((amount * (100 + preyPercent)) / 100);
       }
+    }
+    // Daily-reward XP boost: an additive multiplier after boosted/prey and
+    // before stamina and the base rate, Canary player.lua:548-601 (mantus
+    // has no low-level bonus term).
+    const xpBoostPercent = this.dailyHooks?.xpBoostPercent(recipientId, now) ?? 0;
+    if (xpBoostPercent > 0) {
+      amount = Math.floor(amount * (1 + xpBoostPercent / 100));
     }
     if (this.staminaSystem) {
       amount = Math.floor(

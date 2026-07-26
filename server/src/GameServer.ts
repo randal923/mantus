@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
-import { PROTOCOL_LIMITS, type ClientMessage } from "@tibia/protocol";
+import {
+  PROTOCOL_LIMITS,
+  type ClientMessage,
+  type PodiumRaceEntry,
+} from "@tibia/protocol";
 import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
 import { CharacterHandler } from "./CharacterHandler";
@@ -41,6 +45,13 @@ import { WorldActionRegistry } from "./action/WorldActionRegistry";
 import { WorldActionRng } from "./action/WorldActionRng";
 import { ChestService } from "./chest/ChestService";
 import type { ChestStore } from "./chest/ChestStore";
+import { RewardChestService } from "./reward/RewardChestService";
+import type { RewardStore } from "./reward/RewardStore";
+import { DailyRewardService } from "./daily/DailyRewardService";
+import type { DailyRewardStore } from "./daily/DailyRewardStore";
+import { QuestService } from "./quest/QuestService";
+import { loadQuestCatalog } from "./quest/loadQuestCatalog";
+import { loadQuestStorageAliases } from "./quest/loadQuestStorageAliases";
 import { loadWorldEventContent } from "./event/loadWorldEventContent";
 import { WorldEventManager } from "./event/WorldEventManager";
 import type { WorldEventStore } from "./event/WorldEventStore";
@@ -95,6 +106,9 @@ import { HighscoreService } from "./social/HighscoreService";
 import type { HighscoreStore } from "./social/HighscoreStore";
 import { MarkerService } from "./minimap/MarkerService";
 import { OutfitService } from "./outfit/OutfitService";
+import { getBossMilestones } from "./bestiary/getBossMilestones";
+import type { PodiumHooks } from "./podium/PodiumHooks";
+import { PodiumService } from "./podium/PodiumService";
 import type { OutfitStore } from "./outfit/OutfitStore";
 import type { MarkerStore } from "./minimap/MarkerStore";
 import { BoostedService } from "./boosted/BoostedService";
@@ -173,6 +187,8 @@ export interface GameServerDeps {
   moderation?: ModerationStore;
   store?: MantusStoreStore;
   chests?: ChestStore;
+  rewards?: RewardStore;
+  daily?: DailyRewardStore;
   worldEvents?: WorldEventStore;
   /** Read-only money-supply sweep; absent in tests and memory-only runs. */
   currencyReconciler?: CurrencyReconciler;
@@ -195,6 +211,9 @@ export class GameServer {
   private readonly pressurePlates: PressurePlateRegistry;
   private readonly clocks: ClockHandler;
   private readonly chests: ChestService;
+  private readonly rewards: RewardChestService;
+  private readonly daily: DailyRewardService;
+  private readonly quests: QuestService;
   private readonly worldEvents: WorldEventManager;
   private readonly toolUse: ToolUseHandler;
   private readonly chat: ChatHandler;
@@ -235,6 +254,7 @@ export class GameServer {
   private readonly cyclopedia: CyclopediaService;
   private readonly markers: MarkerService;
   private readonly outfits: OutfitService;
+  private readonly podium: PodiumService;
   private readonly highscores: HighscoreService;
   private readonly bestiary: BestiaryService;
   private readonly bestiaryTracker: BestiaryTracker;
@@ -486,6 +506,17 @@ export class GameServer {
       new WorldActionRng(config.combatSeed ^ 0x51ab_3c7d),
       deps.prey,
     );
+    this.daily = new DailyRewardService(
+      this.world,
+      this.registry,
+      this.items,
+      deps.itemCatalog,
+      {
+        applyWildcardBalance: (characterId, balance) =>
+          this.prey.applyWildcardBalance(characterId, balance),
+      },
+      deps.daily,
+    );
     this.huntingTasks = new HuntingTaskService(
       this.world,
       this.registry,
@@ -559,6 +590,7 @@ export class GameServer {
       this.friends,
       this.profiles,
       this.prey,
+      this.daily,
       this.huntingTasks,
       this.boosted,
       this.trackers,
@@ -631,6 +663,11 @@ export class GameServer {
     this.currencyConservation = new CurrencyConservationRunner(
       deps.currencyReconciler,
     );
+    this.quests = new QuestService(
+      this.persistence,
+      loadQuestStorageAliases(),
+      loadQuestCatalog(),
+    );
     this.npcs = new NpcHandler(
       this.world,
       this.registry,
@@ -640,6 +677,7 @@ export class GameServer {
       this.shops,
       this.promotion,
       this.spellTeacher,
+      this.quests,
     );
     this.houses = new HouseService(
       this.world,
@@ -710,6 +748,54 @@ export class GameServer {
       deps.itemCatalog,
       new WorldActionRng(config.combatSeed),
       deps.chests,
+      this.quests,
+    );
+    const podiumHooks: PodiumHooks = {
+      outfits: (characterId) =>
+        this.outfits.entitlementsFor(characterId).outfits,
+      mounts: (characterId) =>
+        this.outfits.entitlementsFor(characterId).mounts,
+      // Canary getBosstiaryFinished(player, 2): bosses at level 2+.
+      bossRaces: (characterId) => {
+        const kills = this.bestiaryTracker.killsFor(characterId);
+        const races: PodiumRaceEntry[] = [];
+        for (const [raceId, boss] of bestiaryCatalog.bossesByRaceId) {
+          const milestones = getBossMilestones(
+            boss.category,
+            kills.get(raceId) ?? 0,
+          );
+          if (milestones.reached < 2) continue;
+          races.push({
+            raceId,
+            name: boss.monsterType.name,
+            outfit: boss.monsterType.outfit,
+          });
+        }
+        return races;
+      },
+      // Canary getBestiaryFinished: fully completed bestiary races.
+      bestiaryRaces: (characterId) => {
+        const kills = this.bestiaryTracker.killsFor(characterId);
+        const races: PodiumRaceEntry[] = [];
+        for (const [raceId, entry] of bestiaryCatalog.entriesByRaceId) {
+          if ((kills.get(raceId) ?? 0) < entry.toKill) continue;
+          races.push({
+            raceId,
+            name: entry.monsterType.name,
+            outfit: entry.monsterType.outfit,
+          });
+        }
+        return races;
+      },
+    };
+    this.podium = new PodiumService(
+      this.world,
+      this.items,
+      deps.itemCatalog,
+      podiumHooks,
+      // Podium edits follow furniture rules: guest+ access on the tile.
+      (characterId, position) =>
+        this.houses.canUseHouseTile(characterId, position),
     );
     this.worldActions = new WorldActionRegistry(
       this.world,
@@ -722,6 +808,11 @@ export class GameServer {
         this.houses.canUseHouseDoor(characterId, position),
       loadChestDefinitions(this.world.mapName),
       (session, player, chest) => this.chests.loot(session, player, chest),
+      Date.now,
+      (session, player, position, item) =>
+        this.podium.open(session, player, position, item),
+      (session, player, position, now) =>
+        this.daily.openShrine(session, player, position, now),
     );
     this.clocks = new ClockHandler(this.items);
     this.pressurePlates = new PressurePlateRegistry(
@@ -793,6 +884,22 @@ export class GameServer {
         spawns?.transformMonster(creatureId, typeId, transformAt) ?? false,
       this.parties,
     );
+    this.rewards = new RewardChestService(
+      this.world,
+      this.registry,
+      this.items,
+      deps.itemCatalog,
+      {
+        slotLootBonusPercent: (characterId, raceId) =>
+          this.bossSlots.lootBonusPercentFor(characterId, raceId),
+        boostedBossRaceId: () => this.boosted.boostedBossRaceId(),
+        raceIdOf: (monster) =>
+          bestiaryCatalog.raceIdByMonsterTypeId.get(monster.type.id),
+      },
+      config.combatSeed,
+      config.rates.loot,
+      deps.rewards,
+    );
     this.combatSystem = new Combat(
       this.world,
       this.visibility,
@@ -848,6 +955,11 @@ export class GameServer {
       {
         record: (characterId, level, cause) =>
           this.cyclopedia.recordDeath(characterId, level, cause),
+      },
+      this.rewards,
+      {
+        xpBoostPercent: (recipientId, nowMs) =>
+          this.daily.xpBoostPercent(recipientId, nowMs),
       },
     );
     this.combat = new CombatIntentHandler(
@@ -1028,6 +1140,8 @@ export class GameServer {
       this.characters.applyResolvedOutcomes();
       this.items.applyResolvedOutcomes(now);
       this.chests.applyResolvedOutcomes(now);
+      this.rewards.applyResolvedOutcomes(now);
+      this.daily.applyResolvedOutcomes(now);
       this.travel.applyResolvedOutcomes(now);
       this.promotion.applyResolvedOutcomes(now);
       this.spellTeacher.applyResolvedOutcomes(now);
@@ -1199,12 +1313,14 @@ export class GameServer {
     this.spawns?.releaseSummonsOf(playerId);
     this.parties.detachCharacter(playerId, now);
     this.trade.detachCharacter(playerId, now);
+    this.rewards.detachCharacter(playerId);
     this.guilds.detachCharacter(playerId);
     this.houses.detachCharacter(playerId);
     this.vips.detachCharacter(playerId);
     this.friends.detachCharacter(playerId);
     this.profiles.detachCharacter(playerId);
     this.prey.detachCharacter(playerId);
+    this.daily.detachCharacter(playerId);
     this.huntingTasks.detachCharacter(playerId);
     this.trackers.detachCharacter(playerId);
     this.bossSlots.detachCharacter(playerId);
@@ -1297,6 +1413,12 @@ export class GameServer {
             return;
           }
           if (this.depot.handleMapUse(session, intent.position)) {
+            session.armUseExhaust(now);
+            return;
+          }
+          // The reward chest is a normal-looking container on the map, so it
+          // must be claimed before the generic world-container open path.
+          if (this.rewards.handleMapUse(session, intent.position, now)) {
             session.armUseExhaust(now);
             return;
           }
@@ -1506,6 +1628,31 @@ export class GameServer {
       case "outfit-select":
         this.outfits.handle(session, intent, now);
         return;
+      case "podium-set":
+        this.podium.handleSet(session, intent, now);
+        return;
+      case "reward-collect":
+        this.rewards.handleCollect(session, intent, now);
+        return;
+      case "daily-claim":
+        this.daily.handleClaim(session, intent, now);
+        return;
+      case "quest-log-get": {
+        const questPlayer = session.playerId
+          ? this.world.getPlayer(session.playerId)
+          : undefined;
+        if (questPlayer) this.quests.handleLogGet(session, questPlayer, now);
+        return;
+      }
+      case "quest-line-get": {
+        const questPlayer = session.playerId
+          ? this.world.getPlayer(session.playerId)
+          : undefined;
+        if (questPlayer) {
+          this.quests.handleLineGet(session, questPlayer, intent, now);
+        }
+        return;
+      }
       case "store-open":
       case "store-purchase":
       case "store-history":
@@ -1669,6 +1816,10 @@ export class GameServer {
     this.storeOperator.applyResolvedOutcomes();
     await this.chests.stop();
     this.chests.applyResolvedOutcomes(monotonicNow());
+    await this.rewards.stop();
+    this.rewards.applyResolvedOutcomes(monotonicNow());
+    await this.daily.stop();
+    this.daily.applyResolvedOutcomes(monotonicNow());
     await this.worldEvents.stop();
     await this.pvp.stop();
     await this.bestiaryTracker.stop();

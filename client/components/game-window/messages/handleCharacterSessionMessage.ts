@@ -53,6 +53,55 @@ export function handleCharacterSessionMessage(
     return true;
   }
 
+  // Pushed when this session uses a podium; lists only its own unlocks.
+  if (message.type === "podium-window") {
+    state.setPodiumWindow(message);
+    return true;
+  }
+
+  if (message.type === "podium-action-failed") {
+    state.setPodiumError(message.reason);
+    return true;
+  }
+
+  // Pushed after opening a reward chest or collecting from it.
+  if (message.type === "reward-chest-state") {
+    state.setRewardChest(message);
+    return true;
+  }
+
+  if (message.type === "reward-action-failed") {
+    state.setRewardError(message.reason);
+    return true;
+  }
+
+  // Pushed after using a reward shrine or claiming the daily reward.
+  if (message.type === "daily-rewards-state") {
+    state.setDailyRewards(message);
+    return true;
+  }
+
+  if (message.type === "daily-action-failed") {
+    state.setDailyError(message.reason);
+    return true;
+  }
+
+  // Server-evaluated quest projections; requested when the log opens.
+  if (message.type === "quest-log") {
+    state.setQuestLog(message);
+    return true;
+  }
+
+  if (message.type === "quest-line") {
+    state.setQuestLine(message);
+    return true;
+  }
+
+  if (message.type === "quest-log-failed") {
+    state.setQuestLogError(message.reason);
+    return true;
+  }
+
   if (message.type === "profile-state") {
     actions.profile.stateReceived(message);
     return true;

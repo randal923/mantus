@@ -11,6 +11,7 @@ export type ItemLocation =
       readonly slot: number;
     }
   | { readonly kind: "inbox"; readonly characterId: string; readonly slot: number }
+  | { readonly kind: "reward"; readonly characterId: string; readonly slot: number }
   | { readonly kind: "house"; readonly position: Position; readonly stackIndex: number }
   | { readonly kind: "trade-reservation"; readonly characterId: string; readonly slot: number }
   | { readonly kind: "market-escrow"; readonly characterId: string; readonly slot: number }

@@ -3,6 +3,7 @@ import type {
   ItemContainerDestination,
   Position,
 } from "@tibia/protocol";
+import type { ImbuementCatalog } from "../imbuement/ImbuementCatalog";
 import type { Item } from "./Item";
 import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import type { ConjureItemResult } from "./ConjureItemResult";
@@ -14,6 +15,11 @@ import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
 
 export interface ItemStore {
+  /**
+   * Lets the Pg store fold Featherweight into transactional capacity checks;
+   * optional because an in-memory store derives nothing from the database.
+   */
+  setImbuementCatalog?(catalog: ImbuementCatalog): void;
   loadForCharacter(characterId: string): Promise<ReadonlyArray<Item>>;
   /**
    * How long each of the character's item rows has been unchanged, on the

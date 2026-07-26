@@ -4,6 +4,8 @@ import { positionKey } from "../positionKey";
 import type { ChestDefinition } from "./ChestDefinition";
 import { MAP_CLOCK_ITEM_IDS } from "./clockItemIds";
 import { LEVER_TOGGLE_PAIRS } from "./leverTogglePairs";
+import { DAILY_SHRINE_ITEM_IDS } from "../daily/dailyShrineItemIds";
+import { PODIUM_DEFINITIONS } from "../podium/PodiumDefinition";
 import { mapItemAttributes } from "./mapItemAttributes";
 import type { WorldAction } from "./WorldAction";
 import type { WorldActionWorldView } from "./WorldActionWorldView";
@@ -56,6 +58,15 @@ export function resolveWorldAction(
     if (leverTarget !== undefined) {
       if (scripted) return { kind: "unsupported" };
       return { kind: "lever", item, toTypeId: leverTarget };
+    }
+    const podium = PODIUM_DEFINITIONS.get(item.itemId);
+    if (podium) {
+      if (scripted) return { kind: "unsupported" };
+      return { kind: "podium", item, podium };
+    }
+    if (DAILY_SHRINE_ITEM_IDS.has(item.itemId)) {
+      if (scripted) return { kind: "unsupported" };
+      return { kind: "daily-shrine", item };
     }
     if (type.text?.readable) {
       if (scripted) return { kind: "unsupported" };

@@ -8,6 +8,9 @@ import type {
 import type { AssetStore, TibiaObject } from "./AssetStore";
 import { AnimatedMapItemRegistry } from "./AnimatedMapItemRegistry";
 import { getFirstVisibleFloor } from "./getFirstVisibleFloor";
+import { getMapObjectZ } from "./getMapObjectZ";
+import { getOutfitAnimationFrames } from "./getOutfitAnimationFrames";
+import { TILE_SIZE } from "./tileSize";
 import { getMapRegionKeys } from "./getMapRegionKeys";
 import { getItemInstanceSeed } from "./getItemInstanceSeed";
 import { getMapItemPattern } from "./getMapItemPattern";
@@ -54,6 +57,24 @@ interface RenderedTile {
   animatedItemIds: string[];
 }
 
+function podiumTextureKey(display: {
+  lookType: number;
+  head: number;
+  body: number;
+  legs: number;
+  feet: number;
+  addons: number;
+}): string {
+  return [
+    display.lookType,
+    display.head,
+    display.body,
+    display.legs,
+    display.feet,
+    display.addons,
+  ].join(":");
+}
+
 /**
  * Streams the public static map, merges server-authorized mutable items, and
  * renders only the floor windows visible from the authoritative camera tile.
@@ -71,6 +92,8 @@ export class MapView {
   private readonly regionUse = new Map<string, number>();
   private readonly drawnTiles = new Map<string, RenderedTile>();
   private readonly tileElevations = new Map<string, number>();
+  /** Baked static podium outfit frames; null marks a bake in flight. */
+  private readonly podiumTextures = new Map<string, Texture | null>();
   private readonly dynamicRequests = new Map<string, TileState>();
   /** Optimistic per-tile projections; every authoritative tile state wins. */
   private readonly tileOverrides = new Map<string, TileState>();
@@ -365,14 +388,42 @@ export class MapView {
     }
 
     const appearances = new Map<number, TibiaObject>();
+    const podiumBakes: Promise<void>[] = [];
     for (const state of visible) {
       for (const item of state.items) {
         appearances.set(item.itemId, this.store.item(item.itemId));
+        // Podium show-off outfits are baked to a static south-facing frame
+        // before the redraw, so drawTile can stay synchronous.
+        const display = item.display;
+        if (!display || display.lookType <= 0) continue;
+        const key = podiumTextureKey(display);
+        if (this.podiumTextures.has(key)) continue;
+        this.podiumTextures.set(key, null);
+        podiumBakes.push(
+          getOutfitAnimationFrames({
+            lookType: display.lookType,
+            head: display.head,
+            body: display.body,
+            legs: display.legs,
+            feet: display.feet,
+            addons: display.addons,
+          })
+            .then((frames) => {
+              const frame = frames.frames[0];
+              if (frame) this.podiumTextures.set(key, Texture.from(frame));
+            })
+            .catch(() => {
+              this.podiumTextures.delete(key);
+            }),
+        );
       }
     }
-    await this.store.preload(
-      [...appearances.values()].flatMap((object) => object.sprites),
-    );
+    await Promise.all([
+      this.store.preload(
+        [...appearances.values()].flatMap((object) => object.sprites),
+      ),
+      ...podiumBakes,
+    ]);
     for (const key of changed) {
       if (!this.drawnTiles.has(key) && !this.isTileInWindow(key)) continue;
       this.redrawTileKey(key);
@@ -567,7 +618,36 @@ export class MapView {
         hooks,
       );
     }
+    this.drawPodiumDisplays(key, x, y, z, floor.objects, rendered);
     this.drawnTiles.set(key, rendered);
+  }
+
+  /** Show-off outfits on podiums: one pre-baked static frame per outfit. */
+  private drawPodiumDisplays(
+    key: string,
+    x: number,
+    y: number,
+    z: number,
+    layer: Container,
+    rendered: RenderedTile,
+  ): void {
+    const state =
+      this.tileOverrides.get(key) ?? this.dynamicRequests.get(key);
+    if (!state) return;
+    for (const item of state.items) {
+      const display = item.display;
+      if (!display || display.lookType <= 0) continue;
+      const texture = this.podiumTextures.get(podiumTextureKey(display));
+      if (!texture) continue;
+      const elevation = this.tileElevations.get(key) ?? 0;
+      const sprite = new Sprite(texture);
+      // Bottom-right anchored on the tile with the standard creature offset.
+      sprite.x = x * TILE_SIZE + TILE_SIZE - texture.width - 8 - elevation;
+      sprite.y = y * TILE_SIZE + TILE_SIZE - texture.height - 8 - elevation;
+      sprite.zIndex = getMapObjectZ(x, y, 5);
+      layer.addChild(sprite);
+      rendered.sprites.push(sprite);
+    }
   }
 
   private drawItem(

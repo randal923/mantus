@@ -14,6 +14,8 @@ import type { WorldItemDeltas } from "../item/WorldItemDeltas";
 import type { MapData } from "../MapData";
 import type { MapItem } from "../MapItem";
 import type { MapTransition } from "../MapTransition";
+import { PODIUM_DEFINITIONS } from "../podium/PodiumDefinition";
+import { podiumDisplayOf } from "../podium/podiumDisplayOf";
 import { positionKey } from "../positionKey";
 
 export interface TilePassabilityOverride {
@@ -343,6 +345,13 @@ export class DynamicMapItems {
 
   private toMapItemState(item: MapItem) {
     const weight = this.weightForItemId(item.itemId);
+    const display = PODIUM_DEFINITIONS.has(item.itemId)
+      ? podiumDisplayOf(
+          this.getWorldItem(item.instanceId)?.attributes ??
+            item.source?.attributes ??
+            {},
+        )
+      : undefined;
     return {
       instanceId: item.instanceId,
       itemId: item.itemId,
@@ -350,6 +359,7 @@ export class DynamicMapItems {
       revision: item.revision ?? 1,
       count: item.count ?? 1,
       ...(weight !== undefined ? { weight } : {}),
+      ...(display !== undefined ? { display } : {}),
     };
   }
 

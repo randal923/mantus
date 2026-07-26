@@ -19,12 +19,14 @@ export class ConditionSystem {
     /** Vibrancy roll source; wired by Combat after construction. */
     private vibrancy?: {
       paralysisRemoveChancePercent(characterId: string): number;
+      pvpDeflect(characterId: string): boolean;
       roll(percent: number): boolean;
     },
   ) {}
 
   setVibrancyHook(hook: {
     paralysisRemoveChancePercent(characterId: string): number;
+    pvpDeflect(characterId: string): boolean;
     roll(percent: number): boolean;
   }): void {
     this.vibrancy = hook;
@@ -42,23 +44,37 @@ export class ConditionSystem {
       this.visibility.broadcastMagicEffect(target.position, 4, target.id);
       return false;
     }
-    // Feet-slot vibrancy: a chance to shrug the paralysis off entirely,
-    // rolled server-side at application (Canary condition.cpp:95-136; the
-    // PvP deflection leg is a recorded residual).
+    // Feet-slot vibrancy (Canary condition.cpp:96-136): the deflect leg
+    // clones player-cast paralysis onto a non-vibrant player attacker
+    // (ownerless, so it cannot ping-pong) and the vibrant target never
+    // receives it even when the removal roll fails; the removal roll also
+    // strips any paralysis already running.
     if (
       application.type === "paralyze" &&
       target instanceof Player &&
-      this.vibrancy &&
-      this.vibrancy.roll(
-        this.vibrancy.paralysisRemoveChancePercent(target.id),
-      )
+      this.vibrancy
     ) {
-      this.registry.sessionFor(target.id)?.send({
-        type: "combat-log",
-        kind: "condition",
-        text: "You are unparalyzed by vibrancy.",
-      });
-      return false;
+      const attacker = application.sourceId
+        ? this.world.getPlayer(application.sourceId)
+        : undefined;
+      const targetDeflects = this.vibrancy.pvpDeflect(target.id);
+      if (targetDeflects && attacker && !this.vibrancy.pvpDeflect(attacker.id)) {
+        this.applyCondition(attacker, { ...application, sourceId: null }, now);
+      }
+      if (
+        this.vibrancy.roll(
+          this.vibrancy.paralysisRemoveChancePercent(target.id),
+        )
+      ) {
+        this.removeCondition(target, "paralyze", now);
+        this.registry.sessionFor(target.id)?.send({
+          type: "combat-log",
+          kind: "condition",
+          text: "You are unparalyzed by vibrancy.",
+        });
+        return false;
+      }
+      if (targetDeflects && attacker) return false;
     }
     target.conditions.apply(application, now);
     if (application.effectId) {

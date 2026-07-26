@@ -6,6 +6,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import type { PreyHooks } from "../prey/PreyHooks";
+import type { RewardHooks } from "../reward/RewardHooks";
 import type { ProficiencyHooks } from "../proficiency/ProficiencyHooks";
 import { getVocation } from "../progression/getVocation";
 import type { PvpHooks } from "../pvp/PvpHooks";
@@ -60,6 +61,7 @@ export class DamageResolver {
     private readonly monsterEventHooks?: MonsterEventHooks,
     private readonly preyHooks?: PreyHooks,
     private readonly proficiencyHooks?: ProficiencyHooks,
+    private readonly rewardHooks?: RewardHooks,
   ) {}
 
   applyDamage(
@@ -242,6 +244,7 @@ export class DamageResolver {
         this.progression.syncPlayer(target, now);
         if (source instanceof Player) {
           this.partyHooks?.recordPartnerHeal(source.id, target.id, now);
+          this.rewardHooks?.onPlayerHealed(source.id, target.id, healed);
         }
       }
       return {
@@ -371,6 +374,14 @@ export class DamageResolver {
     this.publishDamageResult(target, request, amount, mitigated.block);
     if (source instanceof Player) source.analyzer.recordDamageDealt(amount);
     if (target instanceof Player) target.analyzer.recordDamageTaken(amount);
+    if (
+      target instanceof Player &&
+      source instanceof Monster &&
+      source.type.flags.rewardBoss &&
+      amount > 0
+    ) {
+      this.rewardHooks?.onBossDamageTaken(source, target.id, amount);
+    }
     if (target instanceof Monster && source instanceof Player && amount > 0) {
       target.recordPlayerDamage(source.id, amount);
       this.partyHooks?.recordMonsterDamage(source.id, now);

@@ -6,6 +6,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { ChestLootRequest, ChestStore } from "./ChestStore";
+import type { QuestService } from "../quest/QuestService";
 
 const SECONDS_PER_HOUR = 3_600;
 
@@ -25,6 +26,7 @@ export class ChestService {
     private readonly catalog: ItemCatalog,
     private readonly rng: WorldActionRng,
     private readonly store?: ChestStore,
+    private readonly quests?: QuestService,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -70,6 +72,11 @@ export class ChestService {
           if (session.playerId !== player.id) return;
           session.itemOperationPending = false;
           if (result.status === "committed") {
+            // Quest flags land through the platform in the same outcome as
+            // the grant (Feature 104); the tx already audited them.
+            for (const write of chest.storageWrites ?? []) {
+              this.quests?.setStorageValue(player, write.key, write.value);
+            }
             this.say(session, this.rewardMessage(request));
             return;
           }
@@ -131,6 +138,9 @@ export class ChestService {
       lootedKey: chest.lootedKey,
       rewards,
       ...(container === undefined ? {} : { container }),
+      ...(chest.storageWrites === undefined
+        ? {}
+        : { storageWrites: chest.storageWrites }),
       ...(chest.cooldownHours === undefined
         ? {}
         : {

@@ -7,7 +7,12 @@ import {
   type RevealedGem,
 } from "@tibia/protocol";
 import type { PoolClient } from "pg";
-import { deriveCharacterStats } from "../progression/deriveCharacterStats";
+import type { ImbuementCatalog } from "../imbuement/ImbuementCatalog";
+import { playerImbuementEffects } from "../imbuement/playerImbuementEffects";
+import {
+  deriveCharacterStats,
+  type DerivedStatModifier,
+} from "../progression/deriveCharacterStats";
 import { selectGemGradesQuery } from "../wheel/sql/selectGemGradesQuery";
 import { selectGemRowsQuery } from "../wheel/sql/selectGemRowsQuery";
 import { selectWheelSlicesQuery } from "../wheel/sql/selectWheelSlicesQuery";
@@ -15,7 +20,9 @@ import type { CharacterItemRow } from "./CharacterItemRow";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemRow } from "./ItemRow";
 import { requireRow } from "./requireRow";
+import { itemFromRow } from "./itemFromRow";
 import { containerSlotIndexesQuery } from "./sql/containerSlotIndexesQuery";
+import { equipmentItemRowsQuery } from "./sql/equipmentItemRowsQuery";
 import { lockBackpackQuery } from "./sql/lockBackpackQuery";
 import { lockCharacterQuery } from "./sql/lockCharacterQuery";
 import { lockContainerMergeTargetQuery } from "./sql/lockContainerMergeTargetQuery";
@@ -29,10 +36,16 @@ import { stagingSlotIndexesQuery } from "./sql/stagingSlotIndexesQuery";
 import { worldStackIndexesQuery } from "./sql/worldStackIndexesQuery";
 
 export class PgItemLocks {
+  private imbuementCatalog: ImbuementCatalog | undefined;
+
   constructor(
     private readonly catalog: ItemCatalog,
     private readonly mapName: string,
   ) {}
+
+  setImbuementCatalog(catalog: ImbuementCatalog): void {
+    this.imbuementCatalog = catalog;
+  }
 
   async lockCharacter(
     client: PoolClient,
@@ -50,9 +63,35 @@ export class PgItemLocks {
         vocation: row.vocation,
         definitionVersion: row.progression_definition_version,
         level: row.level,
+        equipment: [
+          await this.equipmentCapacityModifier(client, characterId),
+        ],
         wheel: await this.wheelCapacityBonus(client, characterId, row),
       }).capacity,
     };
+  }
+
+  /**
+   * Featherweight's percent-of-base capacity, folded from the same equipment
+   * rows the online path reads so transactional capacity checks match the
+   * live player's limit. Reads after the character row lock, so the rows are
+   * stable for the transaction.
+   */
+  private async equipmentCapacityModifier(
+    client: PoolClient,
+    characterId: string,
+  ): Promise<DerivedStatModifier> {
+    if (!this.imbuementCatalog) return {};
+    const rows = await client.query<ItemRow>(equipmentItemRowsQuery, [
+      characterId,
+    ]);
+    const effects = playerImbuementEffects(
+      rows.rows.map((row) => ({ item: itemFromRow(row) })),
+      this.imbuementCatalog,
+    );
+    return effects.capacityPercent > 0
+      ? { capacityPercentOfBase: effects.capacityPercent }
+      : {};
   }
 
   /**

@@ -21,6 +21,7 @@ import { NpcDialogueFlow } from "./NpcDialogueFlow";
 import type { TravelService } from "./TravelService";
 import type { PromotionService } from "./PromotionService";
 import type { SpellTeacherService } from "./SpellTeacherService";
+import type { QuestService } from "../quest/QuestService";
 
 const MAX_TALK_RANGE = 8;
 
@@ -38,6 +39,7 @@ export class NpcHandler {
     private readonly shops: ShopService,
     promotion?: PromotionService,
     spellTeacher?: SpellTeacherService,
+    quests?: QuestService,
   ) {
     this.flow = new NpcDialogueFlow(this.conversations, visibility, shops);
     this.executor = new NpcDialogueExecutor(
@@ -48,6 +50,7 @@ export class NpcHandler {
       shops,
       promotion,
       spellTeacher,
+      quests,
     );
   }
 

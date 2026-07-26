@@ -4,6 +4,7 @@ import type {
   Position,
 } from "@tibia/protocol";
 import type { Pool } from "pg";
+import type { ImbuementCatalog } from "../imbuement/ImbuementCatalog";
 import type { Item } from "./Item";
 import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import type { ConjureItemResult } from "./ConjureItemResult";
@@ -30,6 +31,7 @@ import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
 
 export class PgItemStore implements ItemStore {
+  private readonly locks: PgItemLocks;
   private readonly reads: PgItemReads;
   private readonly equipment: PgEquipmentOps;
   private readonly world: PgWorldItemOps;
@@ -42,6 +44,7 @@ export class PgItemStore implements ItemStore {
 
   constructor(pool: Pool, catalog: ItemCatalog, mapName: string) {
     const locks = new PgItemLocks(catalog, mapName);
+    this.locks = locks;
     const guards = new PgItemGuards(catalog);
     const audit = new PgItemAudit();
     const materializer = new PgWorldItemMaterializer(catalog, mapName, locks);
@@ -75,6 +78,10 @@ export class PgItemStore implements ItemStore {
     );
     this.decays = new PgDecayOps(pool, catalog, locks, audit);
     this.persists = new PgItemPersistOps(pool, mapName);
+  }
+
+  setImbuementCatalog(catalog: ImbuementCatalog): void {
+    this.locks.setImbuementCatalog(catalog);
   }
 
   loadForCharacter(characterId: string): Promise<ReadonlyArray<Item>> {

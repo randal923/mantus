@@ -773,3 +773,144 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   Verified: client typecheck, eslint 0 errors, 257 unit tests, story
   tests for WikiModal/WikiCharacter/WikiItems/WikiItemDetails green.
   Residual → Feature 87 (combat view refreshes only on revisit).
+
+## 2026-07-26 reward chests + daily rewards, podium + stat residuals, quest platform/log/catalog
+
+- **Feature 84 — Boss reward chests + daily rewards (server+client)**
+  (2026-07-26): closes the whole status row. Reward chests: per-player
+  instanced bags on the item-ownership model — migration
+  `060_reward_chest.sql` adds the `reward` item location (constraint
+  bodies restate migration 032's current shapes; an earlier draft
+  restated 015's and broke staging tests — fixed same session),
+  `reward_grants` (grant-key claim = exactly-once, Canary
+  reward_chest.lua score split `computeBossRewardShares`, crowd penalty
+  `1/cbrt(n)`, top-scorer uniques via the previously-unread
+  `MonsterLoot.unique` flag, bonus-roll count from the bosstiary slot
+  bonus — new `BossSlotService.lootBonusPercentFor` — or the boosted
+  +250% with probabilistic fraction, equipment-only extra passes per
+  monster.lua:187-227, chance×factor×jitter(0.95–1.05) rolls). Fight
+  contributions tracked in-tick by `reward/RewardBossTracker` fed from
+  `DamageResolver` (boss damage taken + player-to-player heals gated on
+  fight membership); `DeathHandler` fires `onRewardBossDeath` keyed by
+  the death event id. `PgRewardStore` grants/loads/collects in
+  SERIALIZABLE transactions (7-day expiry deleted on open + audited;
+  collect moves the same rows into locked backpack slots, all-or-nothing;
+  audits `boss-reward`/`reward-collect`/`reward-expired`).
+  `RewardChestService` intercepts map-use of chest 19250 ahead of the
+  generic container path, projects owner-only `reward-chest-state`, and
+  runs collects through the chest pattern (pending-op guard,
+  `applyCommittedMutation`, `trackExternalOperation`). Daily rewards:
+  migration `061_daily_rewards.sql` `character_daily_rewards` row is the
+  once-per-day lease; `assessDailyStreak`/`claimDailyStreak` transcribe
+  daily_reward.lua streak/joker rules (monthly joker cap 3, jokers absorb
+  misses one-for-one else only streak LEVEL resets — position keeps
+  cycling, a pinned Canary quirk); the 7-day table and per-vocation item
+  pools are verbatim in `protocol/src/dailyRewards.ts` +
+  `daily/dailyRewardPools.ts`; claims validate picks against pool and
+  unit allowance, grant carried items via `PgCoinOperations`, prey
+  wildcards through the shipped capped `grantWildcardsQuery` + new
+  `PreyService.applyWildcardBalance` refresh, and the day-7 XP boost as a
+  DB deadline read by `DeathHandler` at Canary's exact stacking point
+  (player.lua:548-601, after boosted/prey, before stamina/base rate).
+  Reward shrines (25720-25723/25802/25803) are a new fail-closed world
+  action kind `daily-shrine`. Client: `RewardChestModal` +
+  `DailyRewardsModal` in `GameCommerceOverlays`, store slices, GameClient
+  intents, locales en+pt-BR, stories. Also fixed the six recorded
+  pre-existing `PgChestStore.integration.test.ts` failures: the store was
+  always correct — the tests asserted `character_id` on container rows,
+  which is NULL by schema shape. Verified: protocol/server/client
+  typecheck 0 errors, 1290 server + 257 client unit tests, reward + daily
+  + chest integration suites green against docker Postgres (exactly-once
+  under concurrent grants/claims, double-collect conserves items,
+  cross-owner isolation, wildcard cap, XP-boost stacking); migrations
+  060-062 pending `yarn db:migrate`. Residuals stay in todo-10/Feature
+  84: quick-loot container assignment + stash routing + imbuement astral
+  stash auto-draw; accepted deviations recorded in TODO.md (items grant
+  carried instead of Canary's store inbox, server-local calendar-day
+  boundary instead of the 25 h server-save window, XP boost drains by
+  wall clock while Canary drains hunting time only, offline participants
+  collect base rolls because slot records are online-only).
+- **Feature 86 — Podium unit + difficulty classification + stat
+  residuals** (2026-07-26): three of the long-tail units. Imbuement
+  Swiftness/Featherweight now apply: `playerImbuementEffects` folds
+  `speed` (additive) and `capacityPercent` (highest equipped percent —
+  Canary's single `bonusCapacity` slot is order-dependent on mixed
+  tiers, player.cpp:3260-3306), `deriveCharacterStats` gained
+  `capacityPercentOfBase` off the pre-bonus base, `CharacterProgression`
+  an equipment modifier with change detection, `ProgressionSystem.tick`
+  a cheap memoized per-tick sync, and `PgItemLocks.lockCharacter` folds
+  the same percent from in-transaction equipment rows (imbuement catalog
+  forwarded via `ItemStore.setImbuementCatalog`), so DB capacity checks
+  cannot drift from live ones. Vibrancy's PvP-deflect leg ships exactly
+  per condition.cpp:96-136: a vibrant target never receives player-cast
+  paralysis, the clone lands ownerless on a non-vibrant player attacker
+  (no ping-pong), and a successful removal roll now also strips running
+  paralysis. Podiums (renown 35973/35974, vigour 38707, tenacity
+  42367/42368): new world-action kind `podium` opens an owner-scoped
+  edit window (outfit/mount entitlements via new
+  `OutfitService.entitlementsFor`; vigour lists bosstiary level-2+
+  bosses, tenacity completed bestiary races — protocolgame.cpp:11308);
+  `podium-set` re-checks reach/house-access/revision/entitlements at
+  execution and writes the attribute bag through
+  `planSetPodiumMapItem` (planWriteMapItem's shape); monster looks are
+  always copied server-side from the pinned type. Tile state carries a
+  server-authored `display` payload; `MapView` bakes a static
+  south-facing frame per outfit and draws it over the podium. Client
+  `PodiumModal` + store + locales + stories. Boss/encounter difficulty
+  selection is closed as **no-op upstream**: pinned Canary's
+  `parseBossDifficultySelection` drains the packet and does nothing
+  (protocolgame.cpp:3260-3266) — nothing to build. Verified: typechecks
+  0, podium exploit tests (forged outfits/races, stale revision,
+  reach/house/rate limits), vibrancy matrix, fold/derive/progression
+  tests, full suites green. Residuals → Feature 87 (podium display
+  renders south-facing static, no mount/lookTypeEx layer, platform-hide
+  flag unrendered; map-side right-click rotate not wired) and Feature 86
+  (hazard, concoctions, inert perk families, animus earn path).
+- **Feature 103 — Quest state and storage platform** (2026-07-26): the
+  platform exists (`server/src/quest/`). `QuestService` is the one
+  gameplay storage write path: alias canonicalization (pinned map,
+  identity until aliases exist at this pin), bounded int32 values,
+  Canary `-1`-erases semantics now implemented in
+  `Player.setStorageValue`, in-tick mutation + dirty-marked persistence,
+  and a change hook for quest-log refreshes. `QuestDefinition` +
+  fail-closed `loadQuestCatalog`/`loadQuestStorageAliases` mirror
+  Canary's catalog.lua integrity rules (per-quest mission ids, start
+  storage unique by key). `NpcDialogueExecutor` effects now route
+  through the platform. Tests: round-trip/erase, canonical alias
+  sharing, out-of-range rejection, no-op writes skip persistence.
+- **Feature 104 — Atomic quest rewards + quest-log protocol/UI**
+  (2026-07-26): quest-log evaluation is a value-for-value transcription
+  of quests.lua:1005-1198 (`evaluateQuestState`: started/completed
+  windows, ignoreendvalue, hideWhenNextStarted, end-storage override,
+  states-by-exact-value with the clamp and Canary's literal missing-state
+  fallback). `quest-log-get`/`quest-line-get` project only the owner's
+  started quests/missions (rate-limited; forged quest ids refused).
+  Rewards: chest loot gained atomic quest-flag transitions —
+  `ChestDefinition.storageWrites` audited as the new `quest-reward`
+  event (migration `062_quest_rewards.sql`) in the grant transaction and
+  applied through the platform in the same resolved outcome. Client:
+  `QuestLogModal` (list + mission detail) wired to the previously inert
+  nav button, locales, stories. Tests: evaluation matrix, projection
+  isolation, rate limits.
+- **Feature 105 — Quest-content inventory + parity gate (platform
+  slice)** (2026-07-26): `tools/importCanaryQuests.mjs` +
+  `parseCanaryQuestCatalog.mjs` (structural Lua reader: block comments,
+  \z continuations, single-quoted strings, mixed positional tables,
+  keyword-balanced skipping of dynamic `function` descriptions/states)
+  import the full pinned catalog: 51 quest modules, **456 missions**
+  (the oft-quoted 457 includes a commented-out placeholder in
+  031_tibia_tales.lua:303), 2148 Storage names + 41 GlobalStorage names,
+  zero character-storage aliases at this pin, raw numeric ids resolved
+  to named keys, upstream table-reference bugs carried losslessly as
+  dead keys, and all 114 quest script directories inventoried as
+  `pending-behavior` in `content/quests/canary-quest-import-report.json`.
+  Content keys follow the dialogue convention (dotted, no `Storage.`
+  root) so every consumer shares rows. `questCatalogParity.test.ts`
+  pins the counts and evaluates every quest against empty storages;
+  tool tests + `parity:check` green; manifest gained
+  `converters.quests`, the `canaryQuestCatalog` source pin, and both
+  tool hashes. The quest log now serves the real catalog end-to-end.
+  Remaining (feature stays open): the 114 directories' behavior
+  (storage-gated doors/tiles/chest placements, quest NPC branches,
+  creature variants), dynamic mission descriptions, and the KV quest
+  tracker.

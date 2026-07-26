@@ -163,6 +163,24 @@ import {
   outfitStateMessageSchema,
 } from "./outfit";
 import {
+  podiumActionFailedMessageSchema,
+  podiumDisplaySchema,
+  podiumWindowMessageSchema,
+} from "./podium";
+import {
+  rewardActionFailedMessageSchema,
+  rewardChestStateMessageSchema,
+} from "./rewardChest";
+import {
+  dailyActionFailedMessageSchema,
+  dailyRewardsStateMessageSchema,
+} from "./dailyRewards";
+import {
+  questLineMessageSchema,
+  questLogFailedMessageSchema,
+  questLogMessageSchema,
+} from "./questLog";
+import {
   achievementGrantedMessageSchema,
   characterProfileMessageSchema,
   profileActionFailedMessageSchema,
@@ -420,6 +438,8 @@ export const mapItemStateSchema = z.object({
   count: z.number().int().positive().max(100),
   /** Unit weight in hundredths of oz, for client capacity pre-checks. */
   weight: z.number().int().nonnegative().optional(),
+  /** Podium show-off state, server-derived from the item's attributes. */
+  display: podiumDisplaySchema.optional(),
 });
 
 export const tileStateSchema = z.object({
@@ -603,6 +623,15 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   minimapMarkersMessageSchema,
   outfitStateMessageSchema,
   outfitActionFailedMessageSchema,
+  podiumWindowMessageSchema,
+  podiumActionFailedMessageSchema,
+  rewardChestStateMessageSchema,
+  rewardActionFailedMessageSchema,
+  dailyRewardsStateMessageSchema,
+  dailyActionFailedMessageSchema,
+  questLogMessageSchema,
+  questLineMessageSchema,
+  questLogFailedMessageSchema,
   highscoresStateMessageSchema,
   highscoresActionFailedMessageSchema,
   bestiaryCreaturesStateMessageSchema,
@@ -652,6 +681,27 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 export type MapInfo = z.infer<typeof mapInfoSchema>;
 export type MapItemState = z.infer<typeof mapItemStateSchema>;
 export type TileState = z.infer<typeof tileStateSchema>;
+export type PodiumWindowMessage = z.infer<typeof podiumWindowMessageSchema>;
+export type PodiumActionFailedMessage = z.infer<
+  typeof podiumActionFailedMessageSchema
+>;
+export type RewardChestStateMessage = z.infer<
+  typeof rewardChestStateMessageSchema
+>;
+export type RewardActionFailedMessage = z.infer<
+  typeof rewardActionFailedMessageSchema
+>;
+export type DailyRewardsStateMessage = z.infer<
+  typeof dailyRewardsStateMessageSchema
+>;
+export type DailyActionFailedMessage = z.infer<
+  typeof dailyActionFailedMessageSchema
+>;
+export type QuestLogMessage = z.infer<typeof questLogMessageSchema>;
+export type QuestLineMessage = z.infer<typeof questLineMessageSchema>;
+export type QuestLogFailedMessage = z.infer<
+  typeof questLogFailedMessageSchema
+>;
 export type CharacterListMessage = z.infer<typeof characterListMessageSchema>;
 export type WelcomeMessage = z.infer<typeof welcomeMessageSchema>;
 export type WorldContainerStateMessage = z.infer<

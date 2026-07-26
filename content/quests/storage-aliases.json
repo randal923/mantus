@@ -1,0 +1,9 @@
+{
+ "formatVersion": 1,
+ "source": {
+  "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
+  "catalogInitSha256": "3aa5d65945fe182cf17dc2e747464bf71d6abfec9fbfd52f420a426b114ff0e1",
+  "storagesSha256": "c635df067173e9638652929c9f0c21bb9872ea1c01928fe371d420402b681949"
+ },
+ "aliases": {}
+}

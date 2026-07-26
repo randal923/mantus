@@ -21,6 +21,11 @@ export interface ChestLootRequest {
   readonly rewards: ReadonlyArray<ChestRewardGrant>;
   /** Rewards land inside a freshly granted container of this type. */
   readonly container?: { readonly typeId: number; readonly capacity: number };
+  /** Quest flags this loot sets; audited as quest-reward (Feature 104). */
+  readonly storageWrites?: ReadonlyArray<{
+    readonly key: string;
+    readonly value: number;
+  }>;
 }
 
 export type ChestLootResult =

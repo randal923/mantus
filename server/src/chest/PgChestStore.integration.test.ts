@@ -33,10 +33,12 @@ const request = (
 });
 
 const goldCarried = async (): Promise<number> => {
+  // Granted rows land in the backpack container chain, where character_id
+  // is NULL by schema shape; the schema holds one character, so the type
+  // alone identifies the carried gold.
   const rows = await pool.query<{ total: string | null }>(
-    `SELECT sum(count)::text AS total FROM items
-     WHERE character_id = $1 AND item_type_id = $2`,
-    [characterId, GOLD_COIN],
+    `SELECT sum(count)::text AS total FROM items WHERE item_type_id = $1`,
+    [GOLD_COIN],
   );
   return Number(rows.rows[0]?.total ?? 0);
 };
@@ -174,9 +176,10 @@ databaseDescribe("PgChestStore integration", () => {
     );
 
     expect(result.status).toBe("committed");
+    // The bag lands in the backpack chain (container row, character_id NULL).
     const bag = await pool.query<{ id: string }>(
-      "SELECT id FROM items WHERE character_id = $1 AND item_type_id = $2",
-      [characterId, BAG],
+      "SELECT id FROM items WHERE item_type_id = $1",
+      [BAG],
     );
     expect(bag.rowCount).toBe(1);
     const inside = await pool.query<{ item_type_id: number }>(

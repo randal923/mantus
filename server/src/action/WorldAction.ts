@@ -1,6 +1,7 @@
 import type { ChestDefinition } from "./ChestDefinition";
 import type { ItemType } from "../item/ItemType";
 import type { MapItem } from "../MapItem";
+import type { PodiumDefinition } from "../podium/PodiumDefinition";
 
 /**
  * A use-map intent resolved against the tile's current state. "map-movement"
@@ -27,6 +28,17 @@ export type WorldAction =
       readonly item: MapItem;
     }
   | { readonly kind: "lever"; readonly item: MapItem; readonly toTypeId: number }
+  | {
+      /** A show-off podium: use opens the owner-scoped edit window. */
+      readonly kind: "podium";
+      readonly item: MapItem;
+      readonly podium: PodiumDefinition;
+    }
+  | {
+      /** A daily reward shrine: use projects the owner's claim state. */
+      readonly kind: "daily-shrine";
+      readonly item: MapItem;
+    }
   | { readonly kind: "read"; readonly item: MapItem; readonly type: ItemType }
   | { readonly kind: "rotate"; readonly item: MapItem; readonly toTypeId: number }
   | {

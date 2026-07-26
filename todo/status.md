@@ -72,16 +72,16 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Wheel of Destiny + Gem Atelier (79–81)                   | ◐      | ✅     | Revelation actives (avatars + 5 procedural spells), periodic conviction majors, Monk perks (need harmony), gem long tail, extra point sources, 5 gem deviations |
 | Outfits + mounts (70, 71)                                | ✅     | ✅     | Nothing — unlock sources ride with store/achievements/quests (43, 67)       |
 | Profiles: achievements, titles, badges, char info (67)   | ✅     | ✅     | Nothing — closed; rename flow (2) and Cyclopedia display (83) live elsewhere |
-| Prey (74)                                                | ✅     | ✅     | Wildcard/third-slot sources ride with 43 (store) + 84 (daily rewards); party-shared loot boost → 77 |
+| Prey (74)                                                | ✅     | ✅     | Third-slot source rides with 43 (store); daily-reward wildcards ship (84); party-shared loot boost → 77 |
 | Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |
-| Boosted creatures/bosses + reward-boss flag (76)         | ✅     | ✅     | Slot/boosted loot-bonus consumption rides with reward chests (84)           |
-| Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Speed/capacity imbuement stats + stash material auto-draw ride with 84/86   |
+| Boosted creatures/bosses + reward-boss flag (76)         | ✅     | ✅     | Nothing — slot/boosted loot bonuses now feed reward-chest rolls (84)        |
+| Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Stash material auto-draw rides with 84's stash routing (speed/capacity stats shipped) |
 | Weapon proficiency + animus mastery (82)                 | ✅     | ✅     | Spell-facing perk families ride 79, inert families + Soul Pit earn path ride 86; locked-row thresholds/animus race list → 87 |
 | Cyclopedia views (83)                                    | ✅     | ✅     | Map view (stub upstream, skipped); combat-view live refresh while open → 87 |
-| Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards (sweep already ships)                                |
-| Familiars, hirelings (85)                                | ❌     | ❌     | Everything (summon runtime exists)                                          |
-| Long tail: hazard, concoctions, difficulty, podium (86)  | ❌     | ❌     | Everything; livestream **excluded** (product decision)                      |
-| Quests (103–105)                                         | ❌     | ❌     | Platform → rewards/log → 114 quest dirs (storage substrate ✅)              |
+| Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards ✅ (2026-07-26); loot-container assignment + stash routing remain |
+| Familiars, hirelings (85)                                | ❌     | ❌     | Everything (summon runtime exists; importer lanes + runtime gaps mapped in todo-10) |
+| Long tail: hazard, concoctions, difficulty, podium (86)  | ◐      | ◐      | Hazard + concoctions + inert perks/animus earn; podium + stat residuals ✅, difficulty = upstream no-op; livestream **excluded** (product decision) |
+| Quests (103–105)                                         | ◐      | ◐      | Platform + rewards/log + catalog+parity gate ✅ (2026-07-26); 114 script-dir behaviors + dynamic descriptions + tracker remain |
 
 ## Engineering & launch
 
@@ -103,9 +103,11 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 The shipped core is deep — world, items, economy, combat, social, houses,
 all exploit-tested. The gaps cluster in four places:
 
-1. **Not-started modern systems**: familiars, quests (85, 103–105);
+1. **Not-started modern systems**: familiars/hirelings (85) and the
+   hazard/concoction units of 86; reward chests + daily rewards (84) and
+   the quest platform/log/catalog (103–105) closed 2026-07-26 alongside
    boosted, the forge, proficiency/animus, and the Cyclopedia (76, 78,
-   82, 83) closed server+client 2026-07-26.
+   82, 83).
 2. **The NPC content grind**: 611 procedural entries (38/40/41).
 3. **Client surfaces**: only small panels remain (the profile, prey, and
    hunting-task windows shipped 2026-07-26); the

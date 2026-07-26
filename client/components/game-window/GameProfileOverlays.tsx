@@ -2,6 +2,7 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { BugReportModal } from "../profile/BugReportModal";
 import { ProfileModal } from "../profile/ProfileModal";
 import { PublicProfileModal } from "../profile/PublicProfileModal";
+import { QuestLogModal } from "../quest/QuestLogModal";
 import { useGameWindowStore } from "./store/useGameWindowStore";
 import { useGameWindowStoreApi } from "./store/useGameWindowStoreApi";
 
@@ -30,6 +31,14 @@ export function GameProfileOverlays() {
   const setBugReportOpen = useGameWindowStore(
     (state) => state.setBugReportOpen,
   );
+  const questLogOpen = useGameWindowStore((state) => state.questLogOpen);
+  const questLog = useGameWindowStore((state) => state.questLog);
+  const questLine = useGameWindowStore((state) => state.questLine);
+  const questLogError = useGameWindowStore((state) => state.questLogError);
+  const setQuestLogOpen = useGameWindowStore(
+    (state) => state.setQuestLogOpen,
+  );
+  const setQuestLine = useGameWindowStore((state) => state.setQuestLine);
   if (!ownCharacter || !profileSession || !sessionActions) return null;
 
   const error = profileSession.error
@@ -87,6 +96,26 @@ export function GameProfileOverlays() {
           onClose={() => {
             setBugReportOpen(false);
             sessionActions.profile.dismissError();
+          }}
+        />
+      )}
+      {questLogOpen && (
+        <QuestLogModal
+          log={questLog}
+          line={questLine}
+          error={
+            questLogError
+              ? t(`questLog.errors.${questLogError}`, {
+                  defaultValue: t("questLog.errors.invalid-request"),
+                })
+              : null
+          }
+          onSelectQuest={(questId) => {
+            runtime.clientRef.current?.requestQuestLine(questId);
+          }}
+          onClose={() => {
+            setQuestLogOpen(false);
+            setQuestLine(null);
           }}
         />
       )}

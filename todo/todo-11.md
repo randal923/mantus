@@ -138,6 +138,16 @@ bounded schema.
 - `ImbuementModal` shows `remainingSeconds` as sent; it does not tick down
   client-side between `imbuement-window-state` pushes.
 
+**Absorbed residuals (2026-07-26, from Features 84/86):**
+
+- Podium tile display renders a baked static south-facing outfit frame:
+  stored direction, mounts, `lookTypeEx` monsters, and the platform-hide
+  flag are not rendered; map-side right-click rotation is not wired (the
+  edit window's direction buttons cover rotation).
+- `RewardChestModal` expiry labels are captured at open
+  (`rewardChestOpenedAtMs`) and do not tick down while the window stays
+  open; `DailyRewardsModal` has no live countdown to the next day.
+
 **Absorbed residuals (2026-07-26, from Features 82/83's client surfaces):**
 
 - `ProficiencyModal` shows an XP threshold only on the next locked level

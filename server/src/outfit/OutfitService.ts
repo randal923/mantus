@@ -215,10 +215,17 @@ export class OutfitService {
     );
   }
 
-  private sendState(session: Session, characterId: string): void {
+  /**
+   * The character's granted outfits/mounts as catalog-resolved entitlement
+   * entries; empty until the login load resolves. Read by the podium's
+   * execution-time ownership re-checks as well as the outfit window.
+   */
+  entitlementsFor(characterId: string): {
+    outfits: OutfitEntitlement[];
+    mounts: MountEntitlement[];
+  } {
     const snapshot = this.snapshots.get(characterId);
-    const player = this.world.getPlayer(characterId);
-    if (!snapshot || !player) return;
+    if (!snapshot) return { outfits: [], mounts: [] };
     const outfits: OutfitEntitlement[] = snapshot.outfits.flatMap((entry) => {
       const definition = OUTFITS.get(entry.lookType);
       return definition
@@ -244,6 +251,14 @@ export class OutfitService {
           ]
         : [];
     });
+    return { outfits, mounts };
+  }
+
+  private sendState(session: Session, characterId: string): void {
+    const snapshot = this.snapshots.get(characterId);
+    const player = this.world.getPlayer(characterId);
+    if (!snapshot || !player) return;
+    const { outfits, mounts } = this.entitlementsFor(characterId);
     session.send({
       type: "outfit-state",
       outfits,

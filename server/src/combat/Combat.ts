@@ -23,6 +23,7 @@ import type { PreyHooks } from "../prey/PreyHooks";
 import type { ProficiencyHooks } from "../proficiency/ProficiencyHooks";
 import { Player } from "../Player";
 import type { PvpHooks } from "../pvp/PvpHooks";
+import type { RewardHooks } from "../reward/RewardHooks";
 import { PotionService } from "../potion/PotionService";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import type { Session } from "../Session";
@@ -159,6 +160,10 @@ export class Combat {
     deathHistoryHooks?: {
       record(characterId: string, level: number, cause: string): void;
     },
+    rewardHooks?: RewardHooks,
+    dailyHooks?: {
+      xpBoostPercent(recipientId: string, nowMs: number): number;
+    },
   ) {
     this.spells = spells;
     this.formula = new CombatFormula(seed);
@@ -186,6 +191,8 @@ export class Combat {
       boostedHooks,
       animusHooks,
       deathHistoryHooks,
+      rewardHooks,
+      dailyHooks,
     );
     this.damage = new DamageResolver(
       world,
@@ -202,6 +209,7 @@ export class Combat {
       monsterEventHooks,
       preyHooks,
       proficiencyHooks,
+      rewardHooks,
     );
     this.conditionSystem = new ConditionSystem(
       world,
@@ -213,6 +221,8 @@ export class Combat {
     this.conditionSystem.setVibrancyHook({
       paralysisRemoveChancePercent: (characterId) =>
         items.imbuementEffects(characterId).paralysisRemoveChancePercent,
+      pvpDeflect: (characterId) =>
+        items.imbuementEffects(characterId).paralysisPvpDeflect,
       roll: (percent) => percent > 0 && this.formula.chance(percent),
     });
     this.spellCaster = new SpellCaster(

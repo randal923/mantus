@@ -36,6 +36,7 @@ export function GameNavigation() {
   );
   const trackerVisible = useGameWindowStore((state) => state.trackerVisible);
   const preyWindowOpen = useGameWindowStore((state) => state.preyWindowOpen);
+  const questLogOpen = useGameWindowStore((state) => state.questLogOpen);
   const huntingTasksOpen = useGameWindowStore(
     (state) => state.huntingTasksOpen,
   );
@@ -98,6 +99,9 @@ export function GameNavigation() {
   const setTrackerVisible = useGameWindowStore(
     (state) => state.setTrackerVisible,
   );
+  const setQuestLogOpen = useGameWindowStore(
+    (state) => state.setQuestLogOpen,
+  );
   const setPreyWindowOpen = useGameWindowStore(
     (state) => state.setPreyWindowOpen,
   );
@@ -142,10 +146,12 @@ export function GameNavigation() {
                 ? "forge"
                 : proficiencyOpen
                   ? "proficiency"
-                  : preyWindowOpen
-                    ? "prey"
-                    : huntingTasksOpen
-                      ? "huntingTasks"
+                  : questLogOpen
+                    ? "quests"
+                    : preyWindowOpen
+                      ? "prey"
+                      : huntingTasksOpen
+                        ? "huntingTasks"
                       : outfitWindowOpen
                         ? "outfit"
                         : profileWindowOpen
@@ -319,6 +325,18 @@ export function GameNavigation() {
           setHuntingTasksOpen(false);
           // No fetch: prey-state is pushed at login and after every change.
           setPreyWindowOpen((open) => !open);
+        }}
+        onQuests={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          setQuestLogOpen((open) => {
+            if (!open) {
+              // The log is evaluated on demand from the owner's storages.
+              runtime.clientRef.current?.requestQuestLog();
+            }
+            return !open;
+          });
         }}
         onHuntingTasks={() => {
           setGameMenuOpen(false);

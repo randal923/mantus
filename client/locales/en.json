@@ -1852,6 +1852,89 @@
       "invalid-request": "That selection is not possible."
     }
   },
+  "questLog": {
+    "title": "Quest Log",
+    "loading": "Loading your quests…",
+    "empty": "You have not started any quests yet.",
+    "selectPrompt": "Select a quest to see its missions.",
+    "completed": "Completed",
+    "completedSuffix": "(completed)",
+    "errors": {
+      "invalid-request": "That quest is not in your log.",
+      "rate-limited": "Please wait a moment."
+    }
+  },
+  "dailyRewards": {
+    "title": "Daily Rewards",
+    "day": "Day {{day}}",
+    "kinds": {
+      "vocation-items": "Supplies",
+      "wildcards": "Prey Wildcards",
+      "training-items": "Training Weapon",
+      "xp-boost": "XP Boost"
+    },
+    "streakLevel": "Streak level {{level}}",
+    "jokerTokens": "{{count}} joker token(s)",
+    "missedDays": "{{count}} missed day(s)",
+    "boostActive": "XP boost active",
+    "pickPrompt": "Pick your rewards ({{picked}}/{{allowance}} units)",
+    "wildcardsToday": "Today grants {{count}} prey wildcard(s).",
+    "boostToday": "Today grants a {{minutes}}-minute 50% XP boost.",
+    "streakHint": "Rest bonuses grow with your streak, up to soul regeneration at level {{soulLevel}}.",
+    "add": "Add {{name}}",
+    "remove": "Remove {{name}}",
+    "close": "Close",
+    "claim": "Claim",
+    "claimed": "Claimed today",
+    "errors": {
+      "invalid-request": "That is not possible.",
+      "already-claimed": "You already collected today's reward.",
+      "invalid-picks": "Those picks do not match today's reward.",
+      "no-space": "You have no room for the reward.",
+      "out-of-reach": "Step next to a reward shrine first.",
+      "rate-limited": "Please wait a moment.",
+      "busy": "Finish your current action first."
+    }
+  },
+  "rewardChest": {
+    "title": "Reward Chest",
+    "empty": "Your reward chest is empty.",
+    "expiresIn": "Expires in {{remaining}}",
+    "collect": "Take",
+    "collectAll": "Take all",
+    "errors": {
+      "invalid-request": "That is not possible.",
+      "not-found": "That reward is no longer there.",
+      "no-space": "You have no room to take it.",
+      "too-heavy": "It is too heavy to carry.",
+      "out-of-reach": "Step next to the reward chest first.",
+      "rate-limited": "Please wait a moment.",
+      "busy": "Finish your current action first."
+    }
+  },
+  "podium": {
+    "title": {
+      "renown": "Podium of Renown",
+      "vigour": "Podium of Vigour",
+      "tenacity": "Podium of Tenacity"
+    },
+    "empty": "Nothing on display.",
+    "direction": "Facing direction",
+    "showPlatform": "Show podium",
+    "showMonster": "Show monster",
+    "noMonster": "No monster",
+    "close": "Close",
+    "apply": "Apply",
+    "errors": {
+      "invalid-request": "That display is not possible.",
+      "not-owned": "You have not unlocked that display.",
+      "out-of-reach": "You are too far away.",
+      "stale-item": "The podium changed — open it again.",
+      "no-house-access": "Only invited guests may edit this podium.",
+      "rate-limited": "Please wait a moment before editing again.",
+      "busy": "Finish your current action first."
+    }
+  },
   "prey": {
     "title": "Prey",
     "loading": "Loading prey data…",

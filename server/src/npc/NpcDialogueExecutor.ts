@@ -12,6 +12,7 @@ import type { NpcDialogueFlow } from "./NpcDialogueFlow";
 import { parseBankKeywordAmount } from "./parseBankKeywordAmount";
 import { sendNpcDialogueResponses } from "./sendNpcDialogueResponses";
 import type { SpellTeacherService } from "./SpellTeacherService";
+import type { QuestService } from "../quest/QuestService";
 import type { TravelService } from "./TravelService";
 import type { PromotionService } from "./PromotionService";
 
@@ -24,6 +25,7 @@ export class NpcDialogueExecutor {
     private readonly shops: ShopService,
     private readonly promotion?: PromotionService,
     private readonly spellTeacher?: SpellTeacherService,
+    private readonly quests?: QuestService,
   ) {}
 
   executeNode(
@@ -400,7 +402,13 @@ export class NpcDialogueExecutor {
   /** State a branch writes once its action (if any) has committed. */
   private applyEffects(player: Player, node: DialogueNode): void {
     for (const effect of node.effects ?? []) {
-      player.setStorageValue(effect.key, effect.value);
+      // The quest platform is the one storage write path: canonical keys,
+      // dirty-marked persistence, quest-log refresh (Feature 103).
+      if (this.quests) {
+        this.quests.setStorageValue(player, effect.key, effect.value);
+      } else {
+        player.setStorageValue(effect.key, effect.value);
+      }
     }
   }
 }

@@ -36,6 +36,7 @@ import type { PvpKillRecord } from "./pvp/PvpStore";
 import type { MarkerService } from "./minimap/MarkerService";
 import type { OutfitService } from "./outfit/OutfitService";
 import type { PreyService } from "./prey/PreyService";
+import type { DailyRewardService } from "./daily/DailyRewardService";
 import type { HuntingTaskService } from "./huntingTasks/HuntingTaskService";
 import type { BoostedService } from "./boosted/BoostedService";
 import type { BossSlotService } from "./bestiary/BossSlotService";
@@ -70,6 +71,7 @@ export class CharacterHandler {
     private readonly friends: FriendService,
     private readonly profiles: ProfileService,
     private readonly prey: PreyService,
+    private readonly daily: DailyRewardService,
     private readonly huntingTasks: HuntingTaskService,
     private readonly boosted: BoostedService,
     private readonly trackers: TrackerService,
@@ -396,6 +398,7 @@ export class CharacterHandler {
     this.friends.attachCharacter(session, player.id);
     this.profiles.attachCharacter(session, player.id);
     this.prey.attachCharacter(session, player.id);
+    this.daily.attachCharacter(session, player.id);
     this.huntingTasks.attachCharacter(session, player.id);
     this.trackers.attachCharacter(session, player.id);
     this.bossSlots.attachCharacter(session, player.id);

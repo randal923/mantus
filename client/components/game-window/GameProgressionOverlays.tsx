@@ -1,5 +1,6 @@
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { OutfitModal } from "../outfit/OutfitModal";
+import { PodiumModal } from "../podium/PodiumModal";
 import { HighscoresModal } from "../social/HighscoresModal";
 import { WheelModal } from "../wheel/WheelModal";
 import { WikiModal } from "../wiki/WikiModal";
@@ -18,6 +19,11 @@ export function GameProgressionOverlays() {
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
   const outfitWindowOpen = useGameWindowStore(
     (state) => state.outfitWindowOpen,
+  );
+  const podiumWindow = useGameWindowStore((state) => state.podiumWindow);
+  const podiumError = useGameWindowStore((state) => state.podiumError);
+  const setPodiumWindow = useGameWindowStore(
+    (state) => state.setPodiumWindow,
   );
   const highscoresSession = useGameWindowStore(
     (state) => state.sessions?.highscores ?? null,
@@ -271,6 +277,27 @@ export function GameProgressionOverlays() {
             sessionActions.outfit.begin(sent);
           }}
           onClose={() => setOutfitWindowOpen(false)}
+        />
+      )}
+      {podiumWindow && (
+        <PodiumModal
+          window={podiumWindow}
+          error={
+            podiumError
+              ? t(`podium.errors.${podiumError}`, {
+                  defaultValue: t("podium.errors.invalid-request"),
+                })
+              : null
+          }
+          onApply={(selection) => {
+            runtime.clientRef.current?.setPodium({
+              itemId: podiumWindow.itemId,
+              revision: podiumWindow.revision,
+              position: podiumWindow.position,
+              ...selection,
+            });
+          }}
+          onClose={() => setPodiumWindow(null)}
         />
       )}
     </>
