@@ -17,7 +17,9 @@ Structure rules:
   — the single index of outstanding client-side work.
 - When a feature finishes: append a dated entry to `done.md` (problem, what
   changed, files touched, verification, residual risk), delete its section
-  from the area file, and transfer any residual sliver to a named owner.
+  from the area file, transfer any residual sliver to a named owner, and
+  update the affected row in [`status.md`](status.md) — the at-a-glance
+  per-system server/client status table.
 
 Pinned upstream snapshots:
 
@@ -84,7 +86,8 @@ this repository's architecture.
 None stops the majority of the backlog, but each gates a named slice:
 
 1. **Canary checkout — resolved 2026-07-26:** a standing pinned clone lives
-   at `~/code/canary` (`a879c931`, blobless). Every importer takes it as
+   at `<repo>/canary` (`a879c931`, gitignored, never committed or executed).
+   Every importer takes it as
    `argv[2]`/`CANARY_PATH` and hard-fails on commit mismatch; it feeds
    Feature 41's routes, 38's callback semantics, 29's child-container
    re-import, 89's inventory, 103–105. If it goes missing, re-clone:

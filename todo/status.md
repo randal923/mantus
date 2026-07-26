@@ -1,0 +1,115 @@
+# Parity status — server and client, per system
+
+At-a-glance view of what ships and what's missing, per system, split into
+server and client columns. Derived from [`done.md`](done.md) (the permanent
+record) and the area files ([`todo-1.md` … `todo-13.md`](README.md)) — when
+they disagree, they win and this file needs an update.
+
+**Maintenance:** when a feature ships (or a big slice lands), update the
+affected row's status and "Still missing" cell in the same change that
+updates `done.md`, and bump the date below. Feature numbers reference the
+area files; the [client backlog](client/README.md) details every
+client-only remainder.
+
+Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
+
+**Last updated:** 2026-07-26
+
+## World & engine
+
+| System (features)                                                                                   | Server | Client | Still missing                                                                                              |
+| --------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------- |
+| Map conversion, multi-floor movement, visibility (4)                                                | ✅     | ✅     | Per-entry content review: 348 disabled map actions, 2,225 unresolved floor transitions                     |
+| Rendering, animation, floors, occlusion (5–8)                                                       | —      | ✅     | Nothing — area closed                                                                                      |
+| Creatures, spawns, AI, all 84,294 placements (9, 10)                                                | ✅     | ✅     | Typed-data buckets (reward-boss → 76, prey → 74, 3 NPC entries), placement review, Harlow duplicate        |
+| World actions: doors, levers, readables, rope, shovel, chests, plates, traps, teleports (12, 50–52) | ✅     | ✅     | Fields (50), trap disarm, tool remainder + sand digging (51), transform-on-use/look flags (asset pass 108) |
+| World events engine + 18 raids (54)                                                                 | ◐      | —      | Other global events, daily resets/boosted rotations, reward steps, `/raid` capability                      |
+| Exhausts, trash holders, pz-lock, crash harness (3, 12–15)                                          | ✅     | ✅     | Nothing — closed                                                                                           |
+
+## Items & economy
+
+| System (features)                                                                    | Server | Client | Still missing                                                                                                 |
+| ------------------------------------------------------------------------------------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------- |
+| Item core: catalog, single-owner ops, containers, equipment, drag queue (11, 16, 17) | ✅     | ✅     | Fluids (11), container sorting/browse-field, 7-tile throw range (16), item parity gate (17)                   |
+| NPC shops — 8,368 offers (46)                                                        | ✅     | ✅     | Capacity check inside the transaction, shopping-bag fill, finite stock (product decision)                     |
+| Bank (45)                                                                            | ✅     | ✅     | `change gold`/`change platinum` conversions                                                                   |
+| Depot, inbox, mail, supply stash (11c)                                               | ✅     | ✅     | Nothing                                                                                                       |
+| Player trade (48)                                                                    | ✅     | ✅     | Ground-item offers; store/unique/house-tile restrictions (wait on 43/78/houses)                               |
+| Market with escrow (49)                                                              | ✅     | ✅     | Full-catalog browser (asset pass 108), pristineness extensions, expiry decision; selection retention (client) |
+| Mantus Store: coins + premium (43)                                                   | ◐      | ◐      | Payment provider (product), coin transfers, catalog breadth; history tab (client)                             |
+
+## Progression & combat
+
+| System (features)                                                                          | Server | Client | Still missing                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------ | ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vocations, stats, progression, promotion, Monk (18–20)                                     | ✅     | ✅     | Nothing — closed (in-world triggers moved to 72)                                                                                                                                                   |
+| Combat core, conditions, potions, all 171 monster spells, action bars, spell words (22–28) | ✅     | ✅     | 66 disabled player spells: Monk harmony unit + 2 conditions + Divine Empowerment + 17 field/wall runes + mass heals (24), house words (109), exiva (65), familiars' 10 (85); 2 icons external (22) |
+| Monster death, loot rolls, corpses, quick-loot sweep (29–31)                               | ✅     | ✅     | Child loot containers, `unique` flag, loot subType, reward-boss rules, 175 death callbacks                                                                                                         |
+| Player death penalty — full Canary formula (32)                                            | ◐      | ✅     | Blessing consumption + item/container drop into player corpse (needs 72)                                                                                                                           |
+| Decay: carried + world (33, 34)                                                            | ✅     | —      | Spell fields as real world items, charge expiry                                                                                                                                                    |
+| Stamina, soul, training engines (18) → in-world triggers (72)                              | ◐      | ◐      | Beds/sleep, statue/dummy triggers, blessings persistence+purchase, food/soul regen persistence                                                                                                     |
+| PVP: skulls, frags, pvp-zones, combat logout (59, 60)                                      | ✅     | ✅     | E2E logout playtest; linger-window inventory (lands with 32)                                                                                                                                       |
+
+## Social
+
+| System (features)                                                       | Server | Client | Still missing                                                                                 |
+| ----------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------------------------------------- |
+| Parties, shared exp, analyzer, finder (55–57)                           | ✅     | ✅     | Party-spell target gating (co-lands with 24)                                                  |
+| Guilds, wars, emblems, guild bank (58, 63)                              | ✅     | ◐      | Per-rank withdraw permission, run 4 integration tests; bank UI section                        |
+| Houses: buy, rent, transfer, auctions, access lists, guildhalls (61–64) | ✅     | ◐      | House spell words (109); door-list editor UI (62)                                             |
+| VIP/friends, groups, requests, typing (65)                              | ✅     | ◐      | Finder privacy setting, exiva spells; VIP-group UI                                            |
+| Chat, channels, talkactions, flood control (35, 36)                     | ✅     | ✅     | Admin talkactions, GM/broadcast modes, durable ignore lists                                   |
+| Moderation + role-authorized admin core (66, 96)                        | ✅     | —      | Role-assignment tooling, `/coins`+`/raid` capabilities, `/conservation` view                  |
+| NPC dialogue engine, travel, 6 typed command families (37–42)           | ◐      | ✅     | The 611-entry procedural grind (38), new condition/effect kinds (40), gated/quest routes (41) |
+
+## Modern systems
+
+| System (features)                                        | Server | Client | Still missing                                                               |
+| -------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------------------- |
+| Minimap (68)                                             | ✅     | ◐      | Marker editing + walk feedback                                              |
+| UI settings sync (69)                                    | ✅     | ◐      | Movable chat/battle-list/spell-bar panels                                   |
+| Bestiary + bosstiary + charm earning (73, 77)            | ✅     | ✅     | Charm **spending**, shared-exp kill credit                                  |
+| Wheel of Destiny + Gem Atelier (79–81)                   | ◐      | ✅     | Combat wiring (mitigation, leech, revelations), rule gaps, 5 gem deviations |
+| Outfits + mounts entitlements (70, 71)                   | ✅     | ❌     | Outfit window, mounted rendering                                            |
+| Profiles: achievements, titles, badges, char info (67)   | ◐      | ❌     | Full achievement catalog; entire profile UI                                 |
+| Prey (74)                                                | ❌     | ❌     | Everything                                                                  |
+| Hunting tasks (75)                                       | ❌     | ❌     | Everything                                                                  |
+| Boosted creatures/bosses + reward-boss flag (76)         | ❌     | ❌     | Everything                                                                  |
+| Imbuements, tiers, Exaltation Forge (78)                 | ❌     | ❌     | Everything                                                                  |
+| Weapon proficiency + animus mastery (82)                 | ❌     | ❌     | Everything                                                                  |
+| Cyclopedia views (83)                                    | ❌     | ❌     | Everything                                                                  |
+| Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards (sweep already ships)                                |
+| Familiars, hirelings (85)                                | ❌     | ❌     | Everything (summon runtime exists)                                          |
+| Long tail: hazard, concoctions, difficulty, podium (86)  | ❌     | ❌     | Everything; livestream **excluded** (product decision)                      |
+| Quests (103–105)                                         | ❌     | ❌     | Platform → rewards/log → 114 quest dirs (storage substrate ✅)              |
+
+## Engineering & launch
+
+| System (features)                                               | Server | Client | Still missing                                                                                            |
+| --------------------------------------------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------------- |
+| Reconnect/resync, state bounds, error taxonomy (90–92)          | ❌     | ❌     | All (freeze probes ship as regression gates)                                                             |
+| Client polish: lighting, sound, hotkey persistence, modals (87) | —      | ❌     | All                                                                                                      |
+| Performance budgets + deferred items (88, 106, 107)             | ◐      | ◐      | Measure-first list                                                                                       |
+| Network/resource limits (93)                                    | ◐      | —      | TLS/origin policy, per-intent rates, per-IP caps, idle timeouts                                          |
+| Structured logging + metrics/alerting (94, 95)                  | ❌     | —      | All                                                                                                      |
+| Error handling, durability/drain, DB audit/recovery (97–99)     | ❌     | —      | All                                                                                                      |
+| Testing + release gates, CI (100)                               | ◐      | ◐      | Staging soak, fuzz, full CI pipeline, launch runbook                                                     |
+| Auth follow-ups (101)                                           | ◐      | ◐      | Captcha, production rate limits, reauth forms, coin funding                                              |
+| Dev tooling (102)                                               | ◐      | ◐      | AI-detach fix, delete audit event, gm-response rendering                                                 |
+| Parity ledger + gates (1, 17, 26, 89)                           | ◐      | —      | Importer surface extensions; inventory generator (89, unblocked by the pinned checkout since 2026-07-26) |
+
+## The shape of what's left
+
+The shipped core is deep — world, items, economy, combat, social, houses,
+all exploit-tested. The gaps cluster in four places:
+
+1. **Not-started modern systems**: prey, hunting tasks, boosted, forge,
+   proficiency/animus, Cyclopedia, familiars, quests (74–76, 78, 82–85,
+   103–105).
+2. **The NPC content grind**: 611 procedural entries (38/40/41).
+3. **Client surfaces**: outfit window and profile UI are the two big ones;
+   the [client backlog](client/README.md) lists the rest.
+4. **Launch hardening**: logging, metrics, error handling, durability,
+   release gates (93–100).
+
+[Back to overview](README.md)

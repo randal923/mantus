@@ -171,8 +171,9 @@ Prefer small, cohesive files with one clear responsibility.
   on a feature: append a dated entry to `todo/done.md` (problem, what
   changed, files touched, how it was verified, any residual risk), delete the
   feature's section from its area file (or just the resolved bullets for
-  partial work), and transfer any residual sliver to a named owning feature —
-  never leave it only in the conversation. Never archive an
+  partial work), transfer any residual sliver to a named owning feature —
+  never leave it only in the conversation — and update the affected row in
+  `todo/status.md` (the per-system server/client status table). Never archive an
   umbrella/still-open feature (e.g. Feature 1, the parity ledger) as
   "completed", since that makes the backlog assert done work that isn't. Keep
   such features open and record only the finished sub-work in `done.md`.
