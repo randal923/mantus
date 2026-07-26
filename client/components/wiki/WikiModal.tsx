@@ -2,17 +2,26 @@
 
 import { useState } from "react";
 import type {
+  AnimusStateMessage,
   BestiaryCreaturesStateMessage,
   BestiaryMonsterStateMessage,
   BoostedStateMessage,
   BossSlotsStateMessage,
   BosstiaryBossStateMessage,
   BosstiaryStateMessage,
+  CyclopediaCombatStateMessage,
+  CyclopediaDeathsStateMessage,
+  CyclopediaItemSummaryStateMessage,
+  CyclopediaPvpKillsStateMessage,
+  CyclopediaView,
+  OwnCharacterState,
+  ProfileStateMessage,
   WikiItemSource,
   WikiItemSourcesStateMessage,
 } from "@tibia/protocol";
 import { WikiBestiary } from "./WikiBestiary";
 import { WikiBosstiary } from "./WikiBosstiary";
+import { WikiCharacter } from "./WikiCharacter";
 import { WikiItems } from "./WikiItems";
 import type { WikiTab } from "./WikiModalFrame";
 
@@ -24,22 +33,35 @@ interface WikiModalProps {
   boss: BosstiaryBossStateMessage | null;
   itemSources: WikiItemSourcesStateMessage | null;
   boosted: BoostedStateMessage | null;
+  /** Animus mastery projection (mastered races + current bonus). */
+  animus: AnimusStateMessage | null;
   trackedBestiaryRaceIds: ReadonlyArray<number>;
   trackedBosstiaryRaceIds: ReadonlyArray<number>;
   bossSlots: BossSlotsStateMessage | null;
+  /** Own character state for the Cyclopedia character tab. */
+  character: OwnCharacterState;
+  capacityUsed: number | null;
+  combat: CyclopediaCombatStateMessage | null;
+  deaths: CyclopediaDeathsStateMessage | null;
+  pvpKills: CyclopediaPvpKillsStateMessage | null;
+  itemSummary: CyclopediaItemSummaryStateMessage | null;
+  profile: ProfileStateMessage | null;
   bestiaryPending: boolean;
   bosstiaryPending: boolean;
   itemSourcesPending: boolean;
   bossSlotsPending: boolean;
+  cyclopediaPending: boolean;
   bestiaryError: string | null;
   bosstiaryError: string | null;
   bossSlotsError: string | null;
+  cyclopediaError: string | null;
   onRequestBestiary: () => void;
   onRequestMonster: (raceId: number) => void;
   onRequestBosstiary: () => void;
   onRequestBoss: (raceId: number) => void;
   onRequestItemSources: (itemTypeId: number) => void;
   onRequestBossSlots: () => void;
+  onRequestCyclopedia: (view: CyclopediaView, page?: number) => void;
   onToggleTrack: (
     scope: "bestiary" | "bosstiary",
     raceId: number,
@@ -58,22 +80,33 @@ export function WikiModal({
   boss,
   itemSources,
   boosted,
+  animus,
   trackedBestiaryRaceIds,
   trackedBosstiaryRaceIds,
   bossSlots,
+  character,
+  capacityUsed,
+  combat,
+  deaths,
+  pvpKills,
+  itemSummary,
+  profile,
   bestiaryPending,
   bosstiaryPending,
   itemSourcesPending,
   bossSlotsPending,
+  cyclopediaPending,
   bestiaryError,
   bosstiaryError,
   bossSlotsError,
+  cyclopediaError,
   onRequestBestiary,
   onRequestMonster,
   onRequestBosstiary,
   onRequestBoss,
   onRequestItemSources,
   onRequestBossSlots,
+  onRequestCyclopedia,
   onToggleTrack,
   onAssignBossSlot,
   onClearBossSlot,
@@ -105,12 +138,32 @@ export function WikiModal({
           setTarget(source);
           if (source.scope === "bestiary") {
             onRequestMonster(source.raceId);
-            setTab("bestiary");
+            selectTab("bestiary");
             return;
           }
           onRequestBoss(source.raceId);
-          setTab("bosstiary");
+          selectTab("bosstiary");
         }}
+        onSelectTab={selectTab}
+        onClose={onClose}
+      />
+    );
+  }
+
+  if (tab === "character") {
+    return (
+      <WikiCharacter
+        activeTab={tab}
+        character={character}
+        capacityUsed={capacityUsed}
+        combat={combat}
+        deaths={deaths}
+        pvpKills={pvpKills}
+        itemSummary={itemSummary}
+        cyclopediaPending={cyclopediaPending}
+        cyclopediaError={cyclopediaError}
+        profile={profile}
+        onRequestCyclopedia={onRequestCyclopedia}
         onSelectTab={selectTab}
         onClose={onClose}
       />
@@ -125,6 +178,7 @@ export function WikiModal({
         creatures={creatures}
         monster={monster}
         boosted={boosted}
+        animus={animus}
         trackedRaceIds={trackedBestiaryRaceIds}
         pending={bestiaryPending}
         error={bestiaryError}

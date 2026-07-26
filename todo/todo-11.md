@@ -130,6 +130,27 @@ appropriate; hotkey/action-bar persistence reuses the
 `023`/`029` migration patterns; modal answers typed and validated against a
 bounded schema.
 
+**Absorbed residuals (2026-07-26, from Feature 78's client surfaces):**
+
+- The imbuement hover badge (`ItemSlot.onImbue`) is only wired for
+  backpack/container slots; equipped items in `EquipmentPaperdoll` have no
+  imbue affordance and must be unequipped first.
+- `ImbuementModal` shows `remainingSeconds` as sent; it does not tick down
+  client-side between `imbuement-window-state` pushes.
+
+**Absorbed residuals (2026-07-26, from Features 82/83's client surfaces):**
+
+- `ProficiencyModal` shows an XP threshold only on the next locked level
+  (the server's `nextLevelExperience`); deeper locked rows say "Locked"
+  because the weapon's XP family (crossbow/knight/standard) is not
+  derivable client-side — fix by projecting the family or per-level
+  thresholds into `proficiency-state`.
+- The Cyclopedia combat sub-tab fetches on first visit only; it does not
+  refresh while open when equipment changes (revisit/reopen refetches) —
+  fix with a server push or a refetch-on-equipment-revision hook.
+- Animus mastery renders as a bestiary-header chip and a per-monster
+  sheet line; there is no dedicated list of mastered races by name.
+
 **Tests:** persisted bindings survive relogin; settings stick after closing
 the modal; no polish path introduces a client-enforced-only limit.
 

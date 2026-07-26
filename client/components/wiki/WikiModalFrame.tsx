@@ -5,7 +5,7 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Modal, type ModalPagination } from "../ui/Modal";
 import { WikiTabIcon } from "./WikiTabIcon";
 
-export type WikiTab = "items" | "bestiary" | "bosstiary";
+export type WikiTab = "items" | "bestiary" | "bosstiary" | "character";
 
 interface WikiModalFrameProps {
   activeTab: WikiTab;
@@ -48,6 +48,11 @@ export function WikiModalFrame({
             id: "bosstiary",
             label: t("wiki.tabs.bosstiary"),
             icon: <WikiTabIcon name="bosstiary" />,
+          },
+          {
+            id: "character",
+            label: t("wiki.tabs.character"),
+            icon: <WikiTabIcon name="character" />,
           },
         ],
         onSelect: (id) => onSelectTab(id as WikiTab),

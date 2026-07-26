@@ -1,9 +1,11 @@
 import { useCallback, useLayoutEffect, useMemo } from "react";
 import type { DepotStateMessage, InventoryState } from "@tibia/protocol";
+import { useAnimusSession } from "../../../hooks/useAnimusSession";
 import { useBestiarySession } from "../../../hooks/useBestiarySession";
 import { useBoostedSession } from "../../../hooks/useBoostedSession";
 import { useBossSlotsSession } from "../../../hooks/useBossSlotsSession";
 import { useBosstiarySession } from "../../../hooks/useBosstiarySession";
+import { useCyclopediaSession } from "../../../hooks/useCyclopediaSession";
 import { useDepotSession } from "../../../hooks/useDepotSession";
 import { useForgeSession } from "../../../hooks/useForgeSession";
 import { useImbuementSession } from "../../../hooks/useImbuementSession";
@@ -17,6 +19,7 @@ import { useOptimisticInventory } from "../../../hooks/useOptimisticInventory";
 import { useOutfitSession } from "../../../hooks/useOutfitSession";
 import { usePartySession } from "../../../hooks/usePartySession";
 import { usePreySession } from "../../../hooks/usePreySession";
+import { useProficiencySession } from "../../../hooks/useProficiencySession";
 import { useProfileSession } from "../../../hooks/useProfileSession";
 import { useTradeSession } from "../../../hooks/useTradeSession";
 import { useTrackerSession } from "../../../hooks/useTrackerSession";
@@ -132,6 +135,9 @@ export function GameWindowSessionController() {
   const bossSlots = useBossSlotsSession();
   const forge = useForgeSession();
   const imbuement = useImbuementSession();
+  const proficiency = useProficiencySession();
+  const animus = useAnimusSession();
+  const cyclopedia = useCyclopediaSession();
 
   const sessionActions = useMemo<GameWindowSessionActions>(
     () => ({
@@ -308,9 +314,32 @@ export function GameWindowSessionController() {
         dismissError: imbuement.dismissError,
         reset: imbuement.reset,
       },
+      proficiency: {
+        stateReceived: proficiency.stateReceived,
+        begin: proficiency.begin,
+        fail: proficiency.fail,
+        dismissError: proficiency.dismissError,
+        reset: proficiency.reset,
+      },
+      animus: {
+        stateReceived: animus.stateReceived,
+        reset: animus.reset,
+      },
+      cyclopedia: {
+        combatReceived: cyclopedia.combatReceived,
+        deathsReceived: cyclopedia.deathsReceived,
+        pvpKillsReceived: cyclopedia.pvpKillsReceived,
+        itemSummaryReceived: cyclopedia.itemSummaryReceived,
+        begin: cyclopedia.begin,
+        fail: cyclopedia.fail,
+        dismissError: cyclopedia.dismissError,
+        reset: cyclopedia.reset,
+      },
       dispatchItemOpChecked,
     }),
     [
+      animus.reset,
+      animus.stateReceived,
       bestiary.begin,
       bestiary.beginSources,
       bestiary.creaturesReceived,
@@ -332,6 +361,14 @@ export function GameWindowSessionController() {
       bosstiary.fail,
       bosstiary.reset,
       bosstiary.stateReceived,
+      cyclopedia.begin,
+      cyclopedia.combatReceived,
+      cyclopedia.deathsReceived,
+      cyclopedia.dismissError,
+      cyclopedia.fail,
+      cyclopedia.itemSummaryReceived,
+      cyclopedia.pvpKillsReceived,
+      cyclopedia.reset,
       depot.beginBrowse,
       depot.close,
       depot.confirm,
@@ -416,6 +453,11 @@ export function GameWindowSessionController() {
       prey.fail,
       prey.reset,
       prey.stateReceived,
+      proficiency.begin,
+      proficiency.dismissError,
+      proficiency.fail,
+      proficiency.reset,
+      proficiency.stateReceived,
       profile.begin,
       profile.clearPublicProfile,
       profile.dismissError,
@@ -469,14 +511,19 @@ export function GameWindowSessionController() {
         bossSlots: bossSlots.state,
         forge: forge.state,
         imbuement: imbuement.state,
+        proficiency: proficiency.state,
+        animus: animus.state,
+        cyclopedia: cyclopedia.state,
       },
       sessionActions,
     );
   }, [
+    animus.state,
     bestiary.state,
     boosted.state,
     bossSlots.state,
     bosstiary.state,
+    cyclopedia.state,
     depot.session,
     forge.state,
     imbuement.state,
@@ -490,6 +537,7 @@ export function GameWindowSessionController() {
     outfit.state,
     party.state,
     prey.state,
+    proficiency.state,
     profile.state,
     sessionActions,
     store,

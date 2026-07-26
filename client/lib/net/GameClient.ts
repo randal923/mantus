@@ -6,6 +6,7 @@ import {
   type CreateCharacterInput,
   type ClientMessage,
   type CombatTarget,
+  type CyclopediaView,
   type Direction,
   type DepotItemEntry,
   type DepotLocation,
@@ -28,6 +29,7 @@ import {
   type Position,
   type PreyActionMessage,
   type PreyOption,
+  type ProficiencySelection,
   type ReportReason,
   type TaskHuntingActionMessage,
   type TrackerSetMessage,
@@ -831,6 +833,31 @@ export class GameClient {
 
   requestForgeHistory(page: number): boolean {
     return this.send({ type: "forge-history-get", page });
+  }
+
+  requestProficiencies(): boolean {
+    return this.send({ type: "proficiency-get" });
+  }
+
+  /** Full replacement of one weapon's perk picks; the server re-validates. */
+  selectProficiencyPerks(
+    proficiencyId: number,
+    selections: ReadonlyArray<ProficiencySelection>,
+  ): boolean {
+    return this.send({
+      type: "proficiency-select",
+      proficiencyId,
+      selections: [...selections],
+    });
+  }
+
+  /** Requests one authorized own-character cyclopedia view. */
+  requestCyclopediaCharacter(view: CyclopediaView, page?: number): boolean {
+    return this.send({
+      type: "cyclopedia-character-get",
+      view,
+      ...(page !== undefined ? { page } : {}),
+    });
   }
 
   requestImbuementWindow(itemId: string): boolean {

@@ -79,7 +79,7 @@ export function ForgeFusionTab({
                   </span>
                   <span className="block text-xs text-ui-muted">
                     {t("forge.tier", { tier: pair.tier })} ·{" "}
-                    {t("forge.fusion.carried", { count: pair.count })}
+                    {t("forge.fusion.carried", { owned: pair.count })}
                   </span>
                 </span>
                 <span className="shrink-0 text-xs text-ui-gold">

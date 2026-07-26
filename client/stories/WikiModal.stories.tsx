@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { WikiModal } from "../components/wiki/WikiModal";
+import {
+  ANIMUS_STATE,
+  CYCLOPEDIA_PROFILE,
+  OWN_CHARACTER,
+} from "./cyclopediaFixtures";
 import { BOOSTED_STATE, BOSS_SLOTS_STATE } from "./trackerFixtures";
 import {
   WIKI_BOSS,
@@ -21,22 +26,33 @@ const meta = {
     boss: WIKI_BOSS,
     itemSources: WIKI_ITEM_SOURCES,
     boosted: BOOSTED_STATE,
+    animus: ANIMUS_STATE,
     trackedBestiaryRaceIds: [21],
     trackedBosstiaryRaceIds: [],
     bossSlots: BOSS_SLOTS_STATE,
+    character: OWN_CHARACTER,
+    capacityUsed: 320,
+    combat: null,
+    deaths: null,
+    pvpKills: null,
+    itemSummary: null,
+    profile: CYCLOPEDIA_PROFILE,
     bestiaryPending: false,
     bosstiaryPending: false,
     itemSourcesPending: false,
     bossSlotsPending: false,
+    cyclopediaPending: false,
     bestiaryError: null,
     bosstiaryError: null,
     bossSlotsError: null,
+    cyclopediaError: null,
     onRequestBestiary: fn(),
     onRequestMonster: fn(),
     onRequestBosstiary: fn(),
     onRequestBoss: fn(),
     onRequestItemSources: fn(),
     onRequestBossSlots: fn(),
+    onRequestCyclopedia: fn(),
     onToggleTrack: fn(),
     onAssignBossSlot: fn(),
     onClearBossSlot: fn(),
@@ -61,6 +77,17 @@ export const Bestiary: Story = {
     await expect(dialog.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       window.innerHeight,
     );
+    await expect(canvas.getByText(/Animus Mastery: 2/)).toBeVisible();
+  },
+};
+
+export const CharacterTab: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("tab", { name: "Character" }));
+    await expect(
+      await canvas.findByText(/Sword Fighting · 61/),
+    ).toBeVisible();
   },
 };
 

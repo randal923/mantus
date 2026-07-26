@@ -10,12 +10,9 @@ export function GameProgressionOverlays() {
   const { t } = useAppTranslation();
   const store = useGameWindowStoreApi();
   const runtime = store.getState().runtime;
-  const vocation = useGameWindowStore(
-    (state) => state.ownCharacter?.vocation ?? null,
-  );
-  const ownOutfit = useGameWindowStore(
-    (state) => state.ownCharacter?.outfit ?? null,
-  );
+  const ownCharacter = useGameWindowStore((state) => state.ownCharacter);
+  const vocation = ownCharacter?.vocation ?? null;
+  const ownOutfit = ownCharacter?.outfit ?? null;
   const highscoresOpen = useGameWindowStore((state) => state.highscoresOpen);
   const wikiOpen = useGameWindowStore((state) => state.wikiOpen);
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
@@ -33,6 +30,18 @@ export function GameProgressionOverlays() {
   );
   const boostedSession = useGameWindowStore(
     (state) => state.sessions?.boosted ?? null,
+  );
+  const animusSession = useGameWindowStore(
+    (state) => state.sessions?.animus ?? null,
+  );
+  const cyclopediaSession = useGameWindowStore(
+    (state) => state.sessions?.cyclopedia ?? null,
+  );
+  const profileSession = useGameWindowStore(
+    (state) => state.sessions?.profile ?? null,
+  );
+  const capacityUsed = useGameWindowStore(
+    (state) => state.sessions?.inventory?.capacityUsed ?? null,
   );
   const trackerSession = useGameWindowStore(
     (state) => state.sessions?.tracker ?? null,
@@ -59,11 +68,15 @@ export function GameProgressionOverlays() {
     (state) => state.setOutfitWindowOpen,
   );
   if (
+    !ownCharacter ||
     !vocation ||
     !highscoresSession ||
     !bestiarySession ||
     !bosstiarySession ||
     !boostedSession ||
+    !animusSession ||
+    !cyclopediaSession ||
+    !profileSession ||
     !trackerSession ||
     !bossSlotsSession ||
     !wheelSession ||
@@ -107,6 +120,7 @@ export function GameProgressionOverlays() {
           boss={bosstiarySession.boss}
           itemSources={bestiarySession.itemSources}
           boosted={boostedSession.state}
+          animus={animusSession.state}
           trackedBestiaryRaceIds={(trackerSession.bestiary ?? []).map(
             (entry) => entry.raceId,
           )}
@@ -114,10 +128,18 @@ export function GameProgressionOverlays() {
             (entry) => entry.raceId,
           )}
           bossSlots={bossSlotsSession.state}
+          character={ownCharacter}
+          capacityUsed={capacityUsed}
+          combat={cyclopediaSession.combat}
+          deaths={cyclopediaSession.deaths}
+          pvpKills={cyclopediaSession.pvpKills}
+          itemSummary={cyclopediaSession.itemSummary}
+          profile={profileSession.profile}
           bestiaryPending={bestiarySession.pending}
           bosstiaryPending={bosstiarySession.pending}
           itemSourcesPending={bestiarySession.sourcesPending}
           bossSlotsPending={bossSlotsSession.pending}
+          cyclopediaPending={cyclopediaSession.pending}
           bestiaryError={bestiarySession.error}
           bosstiaryError={bosstiarySession.error}
           bossSlotsError={
@@ -127,10 +149,25 @@ export function GameProgressionOverlays() {
                 })
               : null
           }
+          cyclopediaError={
+            cyclopediaSession.error
+              ? t(`wiki.character.errors.${cyclopediaSession.error}`, {
+                  defaultValue: t("wiki.character.errors.invalid-request"),
+                })
+              : null
+          }
           onRequestBossSlots={() => {
             const sent =
               runtime.clientRef.current?.requestBossSlots() ?? false;
             sessionActions.bossSlots.begin(sent);
+          }}
+          onRequestCyclopedia={(view, page) => {
+            const sent =
+              runtime.clientRef.current?.requestCyclopediaCharacter(
+                view,
+                page,
+              ) ?? false;
+            sessionActions.cyclopedia.begin(sent);
           }}
           onToggleTrack={(scope, raceId, enabled) => {
             runtime.clientRef.current?.setTracker(scope, raceId, enabled);

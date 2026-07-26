@@ -241,6 +241,7 @@
     "prey": "Prey",
     "huntingTasks": "Hunting Tasks",
     "forge": "Exaltation Forge",
+    "proficiency": "Proficiency",
     "tracker": "Kill Tracker"
   },
   "currency": {
@@ -892,7 +893,8 @@
     "axe": "Axe Fighting",
     "distance": "Distance Fighting",
     "shielding": "Shielding",
-    "fishing": "Fishing"
+    "fishing": "Fishing",
+    "magic": "Magic Level"
   },
   "items": {
     "steelHelmet": "steel helmet",
@@ -1455,7 +1457,8 @@
     "tabs": {
       "items": "Items",
       "bestiary": "Bestiary",
-      "bosstiary": "Bosstiary"
+      "bosstiary": "Bosstiary",
+      "character": "Character"
     },
     "bestiary": {
       "classes": "Creature Classes"
@@ -1521,7 +1524,77 @@
         "imbuementSlots": "Imbuement Slots",
         "capacity": "Capacity",
         "charges": "Charges",
-        "speed": "Speed"
+        "speed": "Speed",
+        "classification": "Classification"
+      }
+    },
+    "character": {
+      "loading": "Loading…",
+      "tabs": {
+        "general": "General",
+        "combat": "Combat",
+        "deaths": "Deaths",
+        "pvp": "PvP Kills",
+        "items": "Items",
+        "achievements": "Achievements"
+      },
+      "general": {
+        "progress": "Progression",
+        "level": "Level",
+        "hitpoints": "Hitpoints",
+        "mana": "Mana",
+        "capacity": "Capacity",
+        "speed": "Speed",
+        "experience": "Experience"
+      },
+      "combat": {
+        "stats": "Combat Stats",
+        "unavailable": "Combat stats are not loaded.",
+        "criticalChance": "Critical Chance",
+        "criticalDamage": "Critical Extra Damage",
+        "lifeLeech": "Life Leech",
+        "manaLeech": "Mana Leech",
+        "attackSkill": "Attack Skill",
+        "attackValue": "Attack Value",
+        "defenseValue": "Defense Value",
+        "armorValue": "Armor",
+        "mitigation": "Mitigation",
+        "onslaught": "Onslaught",
+        "ruse": "Ruse",
+        "momentum": "Momentum",
+        "absorbs": "Damage Absorption",
+        "noAbsorbs": "No elemental absorption from equipment."
+      },
+      "deaths": {
+        "unavailable": "The death log is not loaded.",
+        "empty": "No deaths in the last {{days}} days.",
+        "level": "Level {{level}}"
+      },
+      "pvp": {
+        "unavailable": "The PvP kill log is not loaded.",
+        "empty": "No PvP kills in the last {{days}} days.",
+        "justified": "Justified",
+        "unjustified": "Unjustified"
+      },
+      "items": {
+        "unavailable": "The item summary is not loaded.",
+        "count": "{{count}} entries",
+        "empty": "Nothing stored here.",
+        "carried": "Carried",
+        "depot": "Depot",
+        "inbox": "Inbox",
+        "stash": "Stash",
+        "tier": "T{{tier}}"
+      },
+      "achievements": {
+        "titlesHint": "Change your displayed title in the Profile window.",
+        "noTitles": "No titles yet.",
+        "selected": "Selected"
+      },
+      "errors": {
+        "rate-limited": "Too many requests. Try again shortly.",
+        "unavailable": "The Cyclopedia is unavailable right now.",
+        "invalid-request": "That request is not possible."
       }
     }
   },
@@ -1580,6 +1653,11 @@
       "semiRare": "Semi-Rare",
       "rare": "Rare",
       "veryRare": "Very Rare"
+    },
+    "animus": {
+      "title": "Animus Mastery",
+      "chip": "Animus Mastery: {{masteries}} · +{{bonus}}% XP",
+      "bonus": "Animus Mastery: +{{bonus}}% experience"
     }
   },
   "bosstiary": {
@@ -2086,6 +2164,66 @@
       "insufficient-gold": "You do not have enough gold.",
       "rate-limited": "Please wait a moment before trying again.",
       "invalid-request": "That imbuement action is not possible."
+    }
+  },
+  "proficiency": {
+    "title": "Weapon Proficiency",
+    "weapons": "Tracked Weapons",
+    "experience": "Weapon XP",
+    "mastered": "Mastered",
+    "unlockedLevels": "Perk levels unlocked: {{levels}}",
+    "levelLabel": "Level {{level}}",
+    "locked": "Locked",
+    "unlocksAt": "Unlocks at {{experience}} XP",
+    "apply": "Apply",
+    "revert": "Revert",
+    "empty": "Kill monsters with a weapon equipped to accrue proficiency.",
+    "loading": "Loading proficiencies…",
+    "catalogLoading": "Loading perk tables…",
+    "catalogError": "The perk tables could not be loaded.",
+    "noProfile": "No perk table is available for this weapon.",
+    "errors": {
+      "unknown-weapon": "That weapon has no tracked proficiency.",
+      "level-locked": "That perk level is not unlocked yet.",
+      "invalid-perk": "That perk does not exist.",
+      "duplicate-level": "Only one perk may be picked per level.",
+      "rate-limited": "Please wait a moment before trying again.",
+      "invalid-request": "That proficiency action is not possible."
+    },
+    "perks": {
+      "generic": "{{label}} {{value}}",
+      "attack-damage": "{{value}} Attack Damage",
+      "defense-bonus": "{{value}} Defense",
+      "weapon-shield-modifier": "{{value}} Weapon & Shield Defense",
+      "skill-bonus": "{{value}} {{skill}}",
+      "specialized-magic-level": "{{value}} Specialized Magic Level",
+      "spell-augment": "Spell Enhancement {{value}}",
+      "bestiary-damage": "{{value}} Damage vs. {{name}}",
+      "powerful-foe-bonus": "{{value}} Damage vs. Powerful Foes",
+      "critical-hit-chance": "{{value}} Critical Hit Chance",
+      "elemental-hit-chance": "{{value}} Elemental Hit Chance",
+      "rune-critical-hit-chance": "{{value}} Rune Critical Hit Chance",
+      "auto-attack-critical-hit-chance": "{{value}} Auto Attack Critical Chance",
+      "critical-extra-damage": "{{value}} Critical Extra Damage",
+      "elemental-critical-extra-damage": "{{value}} Elemental Critical Extra Damage",
+      "rune-critical-extra-damage": "{{value}} Rune Critical Extra Damage",
+      "auto-attack-critical-extra-damage": "{{value}} Auto Attack Critical Extra Damage",
+      "mana-leech": "{{value}} Mana Leech",
+      "life-leech": "{{value}} Life Leech",
+      "mana-gain-on-hit": "{{value}} Mana on Hit",
+      "life-gain-on-hit": "{{value}} Life on Hit",
+      "mana-gain-on-kill": "{{value}} Mana on Kill",
+      "life-gain-on-kill": "{{value}} Life on Kill",
+      "perfect-shot-damage": "{{value}} Perfect Shot Damage (range {{range}})",
+      "ranged-hit-chance": "{{value}} Ranged Hit Chance",
+      "attack-range": "{{value}} Attack Range",
+      "skill-percentage-auto-attack": "{{value}} of {{skill}} to Auto Attacks",
+      "skill-percentage-spell-damage": "{{value}} of {{skill}} to Spell Damage",
+      "skill-percentage-spell-healing": "{{value}} of {{skill}} to Spell Healing",
+      "alpha-strike-extra-damage": "{{value}} Alpha Strike Extra Damage",
+      "omega-strike-extra-damage": "{{value}} Omega Strike Extra Damage",
+      "armor-penetration": "{{value}} Armor Penetration",
+      "elemental-pierce": "{{value}} Elemental Pierce"
     }
   }
 }

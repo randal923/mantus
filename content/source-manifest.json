@@ -146,6 +146,10 @@
    "sha256": "be5e85e2f9c0ee424d17cbbece9cf05aed50c215bc32abe2a662bfe93de5149e"
   },
   {
+   "path": "tools/buildWikiItemCatalog.mjs",
+   "sha256": "02b86584e07c1505087f2d07c045092c16f27e1b2f0fe83f12d8a96779d63520"
+  },
+  {
    "path": "tools/buildWorldActionParityInventory.mjs",
    "sha256": "65475e7fea7e64a8871f2ae32b3fed941e3fb2288610939a65aeab27bb793d25"
   },

@@ -115,6 +115,48 @@ export function handleProgressionCatalogMessage(
     return true;
   }
 
+  // Pushed at login, after kills that change progress, and after selects.
+  if (message.type === "proficiency-state") {
+    actions.proficiency.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "proficiency-action-failed") {
+    actions.proficiency.fail(message.reason);
+    return true;
+  }
+
+  // Pushed at login and on grants; never requested.
+  if (message.type === "animus-state") {
+    actions.animus.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "cyclopedia-combat-state") {
+    actions.cyclopedia.combatReceived(message);
+    return true;
+  }
+
+  if (message.type === "cyclopedia-deaths-state") {
+    actions.cyclopedia.deathsReceived(message);
+    return true;
+  }
+
+  if (message.type === "cyclopedia-pvp-kills-state") {
+    actions.cyclopedia.pvpKillsReceived(message);
+    return true;
+  }
+
+  if (message.type === "cyclopedia-item-summary-state") {
+    actions.cyclopedia.itemSummaryReceived(message);
+    return true;
+  }
+
+  if (message.type === "cyclopedia-action-failed") {
+    actions.cyclopedia.fail(message.reason);
+    return true;
+  }
+
   if (message.type === "wheel-state") {
     actions.wheel.stateReceived(message);
     return true;

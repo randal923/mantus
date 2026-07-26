@@ -31,6 +31,9 @@ export function GameNavigation() {
   const wikiOpen = useGameWindowStore((state) => state.wikiOpen);
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
   const forgeOpen = useGameWindowStore((state) => state.forgeOpen);
+  const proficiencyOpen = useGameWindowStore(
+    (state) => state.proficiencyOpen,
+  );
   const trackerVisible = useGameWindowStore((state) => state.trackerVisible);
   const preyWindowOpen = useGameWindowStore((state) => state.preyWindowOpen);
   const huntingTasksOpen = useGameWindowStore(
@@ -64,6 +67,9 @@ export function GameNavigation() {
   const forgeLoaded = useGameWindowStore(
     (state) => Boolean(state.sessions?.forge.state),
   );
+  const proficiencyLoaded = useGameWindowStore(
+    (state) => Boolean(state.sessions?.proficiency.state),
+  );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
   const setGameMenuOpen = useGameWindowStore(
     (state) => state.setGameMenuOpen,
@@ -86,6 +92,9 @@ export function GameNavigation() {
   const setWikiOpen = useGameWindowStore((state) => state.setWikiOpen);
   const setWheelOpen = useGameWindowStore((state) => state.setWheelOpen);
   const setForgeOpen = useGameWindowStore((state) => state.setForgeOpen);
+  const setProficiencyOpen = useGameWindowStore(
+    (state) => state.setProficiencyOpen,
+  );
   const setTrackerVisible = useGameWindowStore(
     (state) => state.setTrackerVisible,
   );
@@ -131,19 +140,21 @@ export function GameNavigation() {
               ? "wheel"
               : forgeOpen
                 ? "forge"
-                : preyWindowOpen
-                  ? "prey"
-                  : huntingTasksOpen
-                    ? "huntingTasks"
-                    : outfitWindowOpen
-                      ? "outfit"
-                      : profileWindowOpen
-                        ? "profile"
-                        : characterStatsOpen
-                          ? "character"
-                          : inventoryOpen
-                            ? "inventory"
-                            : undefined;
+                : proficiencyOpen
+                  ? "proficiency"
+                  : preyWindowOpen
+                    ? "prey"
+                    : huntingTasksOpen
+                      ? "huntingTasks"
+                      : outfitWindowOpen
+                        ? "outfit"
+                        : profileWindowOpen
+                          ? "profile"
+                          : characterStatsOpen
+                            ? "character"
+                            : inventoryOpen
+                              ? "inventory"
+                              : undefined;
 
   return (
     <div className="absolute inset-x-0 top-0 z-40">
@@ -279,6 +290,23 @@ export function GameNavigation() {
               // Idempotent refresh; forge-state is also pushed at login.
               const sent = runtime.clientRef.current?.requestForge() ?? false;
               sessionActions.forge.begin(sent);
+            }
+            return !open;
+          });
+        }}
+        onProficiency={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          setWikiOpen(false);
+          setWheelOpen(false);
+          setForgeOpen(false);
+          setProficiencyOpen((open) => {
+            if (!open && !proficiencyLoaded) {
+              // Idempotent refresh; proficiency-state is pushed at login.
+              const sent =
+                runtime.clientRef.current?.requestProficiencies() ?? false;
+              sessionActions.proficiency.begin(sent);
             }
             return !open;
           });

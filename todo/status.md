@@ -74,10 +74,10 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Profiles: achievements, titles, badges, char info (67)   | ✅     | ✅     | Nothing — closed; rename flow (2) and Cyclopedia display (83) live elsewhere |
 | Prey (74)                                                | ✅     | ✅     | Wildcard/third-slot sources ride with 43 (store) + 84 (daily rewards); party-shared loot boost → 77 |
 | Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |
-| Boosted creatures/bosses + reward-boss flag (76)         | ❌     | ❌     | Everything                                                                  |
-| Imbuements, tiers, Exaltation Forge (78)                 | ❌     | ❌     | Everything                                                                  |
-| Weapon proficiency + animus mastery (82)                 | ❌     | ❌     | Everything                                                                  |
-| Cyclopedia views (83)                                    | ❌     | ❌     | Everything                                                                  |
+| Boosted creatures/bosses + reward-boss flag (76)         | ✅     | ✅     | Slot/boosted loot-bonus consumption rides with reward chests (84)           |
+| Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Speed/capacity imbuement stats + stash material auto-draw ride with 84/86   |
+| Weapon proficiency + animus mastery (82)                 | ✅     | ✅     | Spell-facing perk families ride 79, inert families + Soul Pit earn path ride 86; locked-row thresholds/animus race list → 87 |
+| Cyclopedia views (83)                                    | ✅     | ✅     | Map view (stub upstream, skipped); combat-view live refresh while open → 87 |
 | Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards (sweep already ships)                                |
 | Familiars, hirelings (85)                                | ❌     | ❌     | Everything (summon runtime exists)                                          |
 | Long tail: hazard, concoctions, difficulty, podium (86)  | ❌     | ❌     | Everything; livestream **excluded** (product decision)                      |
@@ -103,8 +103,9 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 The shipped core is deep — world, items, economy, combat, social, houses,
 all exploit-tested. The gaps cluster in four places:
 
-1. **Not-started modern systems**: boosted, forge, proficiency/animus,
-   Cyclopedia, familiars, quests (76, 78, 82–85, 103–105).
+1. **Not-started modern systems**: familiars, quests (85, 103–105);
+   boosted, the forge, proficiency/animus, and the Cyclopedia (76, 78,
+   82, 83) closed server+client 2026-07-26.
 2. **The NPC content grind**: 611 procedural entries (38/40/41).
 3. **Client surfaces**: only small panels remain (the profile, prey, and
    hunting-task windows shipped 2026-07-26); the

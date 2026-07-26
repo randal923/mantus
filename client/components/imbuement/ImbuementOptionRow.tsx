@@ -64,7 +64,7 @@ export function ImbuementOptionRow({
               {t("imbuement.material", {
                 name: material.name,
                 available: material.available,
-                count: material.count,
+                required: material.count,
               })}
             </li>
           ))}

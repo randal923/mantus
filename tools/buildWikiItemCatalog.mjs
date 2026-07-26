@@ -7,7 +7,7 @@ const catalog = JSON.parse(
   await readFile(join(repoRoot, "server/data/item-catalog.json"), "utf8"),
 );
 
-if (catalog.formatVersion !== 2 || !catalog.items) {
+if (catalog.formatVersion !== 3 || !catalog.items) {
   throw new Error("server item catalog has an unsupported format");
 }
 
@@ -46,6 +46,9 @@ const wikiItems = Object.values(catalog.items)
       : {}),
     ...(item.charges !== undefined ? { charges: item.charges } : {}),
     ...(item.speed !== undefined ? { speed: item.speed } : {}),
+    ...(item.classification !== undefined
+      ? { classification: item.classification }
+      : {}),
     ...(item.requirements ? { requirements: item.requirements } : {}),
   }))
   .sort(

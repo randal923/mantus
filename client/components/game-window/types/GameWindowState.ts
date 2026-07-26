@@ -93,6 +93,7 @@ export interface GameWindowState {
   wikiOpen: boolean;
   wheelOpen: boolean;
   forgeOpen: boolean;
+  proficiencyOpen: boolean;
   /** Carried item whose imbuement window is open, or null when closed. */
   imbuementItemId: string | null;
   /** The docked kill-tracker panel toggle; renders only with entries. */

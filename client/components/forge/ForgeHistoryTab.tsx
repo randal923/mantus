@@ -60,7 +60,7 @@ export function ForgeHistoryTab({ history }: ForgeHistoryTabProps) {
               cores: entry.costCores,
             })}
             {entry.gained > 0
-              ? ` · ${t("forge.history.gained", { count: entry.gained })}`
+              ? ` · ${t("forge.history.gained", { amount: entry.gained })}`
               : ""}
           </p>
         </li>

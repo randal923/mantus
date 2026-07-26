@@ -77,7 +77,7 @@ export function ImbuementModal({
                 {itemName ?? t("imbuement.item")}
               </span>
               <span className="block text-xs text-ui-muted">
-                {t("imbuement.slotCount", { count: windowState.slotCount })}
+                {t("imbuement.slotCount", { slots: windowState.slotCount })}
               </span>
             </span>
           </div>

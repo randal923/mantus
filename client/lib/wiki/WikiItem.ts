@@ -23,6 +23,7 @@ export interface WikiItem {
   readonly containerCapacity?: number;
   readonly charges?: number;
   readonly speed?: number;
+  readonly classification?: number;
   readonly requirements?: {
     readonly level?: number;
     readonly vocations?: ReadonlyArray<string>;

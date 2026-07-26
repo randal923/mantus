@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type {
+  AnimusStateMessage,
   BestiaryCreatureEntry,
   BestiaryClass,
   BestiaryCreaturesStateMessage,
@@ -34,6 +35,8 @@ interface WikiBestiaryProps {
   creatures: BestiaryCreaturesStateMessage | null;
   monster: BestiaryMonsterStateMessage | null;
   boosted?: BoostedStateMessage | null;
+  /** Animus mastery projection (mastered races + current bonus). */
+  animus?: AnimusStateMessage | null;
   /** Races on the own kill tracker (server projection). */
   trackedRaceIds?: ReadonlyArray<number>;
   pending: boolean;
@@ -50,6 +53,7 @@ export function WikiBestiary({
   creatures,
   monster,
   boosted = null,
+  animus = null,
   trackedRaceIds = [],
   pending,
   error,
@@ -170,14 +174,27 @@ export function WikiBestiary({
           </span>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
-          {creatures && (
-            <span className="flex items-center gap-2 self-start rounded-full border border-ui-gold/25 bg-black/25 px-3 py-1 text-sm text-ui-gold sm:self-auto">
-              <WikiCurrencyIcon name="charm" />
-              {t("bestiary.charmPoints", {
-                points: creatures.charmPoints.toLocaleString(),
-              })}
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {creatures && (
+              <span className="flex items-center gap-2 rounded-full border border-ui-gold/25 bg-black/25 px-3 py-1 text-sm text-ui-gold">
+                <WikiCurrencyIcon name="charm" />
+                {t("bestiary.charmPoints", {
+                  points: creatures.charmPoints.toLocaleString(),
+                })}
+              </span>
+            )}
+            {animus && animus.raceIds.length > 0 && (
+              <span
+                title={t("bestiary.animus.title")}
+                className="rounded-full border border-ui-accent-light/30 bg-black/25 px-3 py-1 text-sm text-ui-accent-light"
+              >
+                {t("bestiary.animus.chip", {
+                  masteries: animus.raceIds.length,
+                  bonus: (animus.bonusTenthsPercent / 10).toFixed(1),
+                })}
+              </span>
+            )}
+          </div>
           {view.kind !== "monster" && (
             <input
               type="search"
@@ -251,6 +268,11 @@ export function WikiBestiary({
           <BestiaryMonsterSheet
             monster={monster}
             tracked={trackedRaceIds.includes(monster.raceId)}
+            animusBonusTenthsPercent={
+              animus?.raceIds.includes(monster.raceId)
+                ? animus.bonusTenthsPercent
+                : null
+            }
             onToggleTrack={
               onToggleTrack
                 ? (enabled) => onToggleTrack(monster.raceId, enabled)

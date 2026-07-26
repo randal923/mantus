@@ -48,6 +48,10 @@ export function WikiItemDetails({
     },
     { label: t("wiki.items.stats.charges"), value: item.charges },
     { label: t("wiki.items.stats.speed"), value: item.speed },
+    {
+      label: t("wiki.items.stats.classification"),
+      value: item.classification,
+    },
   ].filter((stat) => stat.value !== undefined);
 
   return (

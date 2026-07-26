@@ -17,6 +17,7 @@ type NavigationPanel =
   | "wiki"
   | "wheel"
   | "forge"
+  | "proficiency"
   | "prey"
   | "huntingTasks"
   | "outfit"
@@ -57,6 +58,7 @@ interface TopNavigationBarProps {
   onWiki?: () => void;
   onWheel?: () => void;
   onForge?: () => void;
+  onProficiency?: () => void;
   onPrey?: () => void;
   onHuntingTasks?: () => void;
   onOutfits?: () => void;
@@ -97,6 +99,7 @@ export function TopNavigationBar({
   onWiki,
   onWheel,
   onForge,
+  onProficiency,
   onPrey,
   onHuntingTasks,
   onOutfits,
@@ -421,6 +424,28 @@ export function TopNavigationBar({
             <path d="M4 9.5h9.5v3.5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" />
             <path d="M13.5 10.5 20 5.5l-1.5 5h-5" />
             <path d="M6.5 17v3.5M11 17v3.5M4.5 20.5h9" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.proficiency")}
+          active={activePanel === "proficiency"}
+          disabled={!onProficiency}
+          onClick={onProficiency}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m5 19 8.5-8.5" />
+            <path d="M13 4.5 19.5 4l-.5 6.5L9.5 20 4 14.5z" />
+            <path d="M16 8.5 18.5 6" />
           </svg>
         </NavigationIconButton>
 

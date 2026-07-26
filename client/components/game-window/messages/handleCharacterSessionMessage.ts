@@ -139,6 +139,10 @@ export function handleCharacterSessionMessage(
   state.setForgeOpen(false);
   actions.imbuement.reset();
   state.setImbuementItemId(null);
+  actions.proficiency.reset();
+  actions.animus.reset();
+  state.setProficiencyOpen(false);
+  actions.cyclopedia.reset();
   actions.prey.reset();
   state.setPreyWindowOpen(false);
   actions.huntingTasks.reset();

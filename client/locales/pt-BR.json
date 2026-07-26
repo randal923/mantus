@@ -241,6 +241,7 @@
     "prey": "Presas",
     "huntingTasks": "Tarefas de Caça",
     "forge": "Forja da Exaltação",
+    "proficiency": "Proficiência",
     "tracker": "Rastreador de Abates"
   },
   "currency": {
@@ -892,7 +893,8 @@
     "axe": "Combate com Machados",
     "distance": "Combate à Distância",
     "shielding": "Defesa com Escudo",
-    "fishing": "Pesca"
+    "fishing": "Pesca",
+    "magic": "Nível Mágico"
   },
   "items": {
     "steelHelmet": "capacete de aço",
@@ -1455,7 +1457,8 @@
     "tabs": {
       "items": "Itens",
       "bestiary": "Bestiário",
-      "bosstiary": "Bosstiário"
+      "bosstiary": "Bosstiário",
+      "character": "Personagem"
     },
     "bestiary": {
       "classes": "Classes de Criaturas"
@@ -1521,7 +1524,77 @@
         "imbuementSlots": "Espaços de Imbuimento",
         "capacity": "Capacidade",
         "charges": "Cargas",
-        "speed": "Velocidade"
+        "speed": "Velocidade",
+        "classification": "Classificação"
+      }
+    },
+    "character": {
+      "loading": "Carregando…",
+      "tabs": {
+        "general": "Geral",
+        "combat": "Combate",
+        "deaths": "Mortes",
+        "pvp": "Abates PvP",
+        "items": "Itens",
+        "achievements": "Conquistas"
+      },
+      "general": {
+        "progress": "Progressão",
+        "level": "Nível",
+        "hitpoints": "Pontos de vida",
+        "mana": "Mana",
+        "capacity": "Capacidade",
+        "speed": "Velocidade",
+        "experience": "Experiência"
+      },
+      "combat": {
+        "stats": "Atributos de Combate",
+        "unavailable": "Os atributos de combate não foram carregados.",
+        "criticalChance": "Chance de Crítico",
+        "criticalDamage": "Dano Crítico Extra",
+        "lifeLeech": "Roubo de Vida",
+        "manaLeech": "Roubo de Mana",
+        "attackSkill": "Habilidade de Ataque",
+        "attackValue": "Valor de Ataque",
+        "defenseValue": "Valor de Defesa",
+        "armorValue": "Armadura",
+        "mitigation": "Mitigação",
+        "onslaught": "Onslaught",
+        "ruse": "Ruse",
+        "momentum": "Momentum",
+        "absorbs": "Absorção de Dano",
+        "noAbsorbs": "Nenhuma absorção elemental do equipamento."
+      },
+      "deaths": {
+        "unavailable": "O registro de mortes não foi carregado.",
+        "empty": "Nenhuma morte nos últimos {{days}} dias.",
+        "level": "Nível {{level}}"
+      },
+      "pvp": {
+        "unavailable": "O registro de abates PvP não foi carregado.",
+        "empty": "Nenhum abate PvP nos últimos {{days}} dias.",
+        "justified": "Justificado",
+        "unjustified": "Injustificado"
+      },
+      "items": {
+        "unavailable": "O resumo de itens não foi carregado.",
+        "count": "{{count}} entradas",
+        "empty": "Nada guardado aqui.",
+        "carried": "Carregado",
+        "depot": "Depósito",
+        "inbox": "Caixa de Entrada",
+        "stash": "Estoque",
+        "tier": "T{{tier}}"
+      },
+      "achievements": {
+        "titlesHint": "Altere o título exibido na janela de Perfil.",
+        "noTitles": "Nenhum título ainda.",
+        "selected": "Selecionado"
+      },
+      "errors": {
+        "rate-limited": "Muitas requisições. Tente novamente em instantes.",
+        "unavailable": "A Cyclopedia está indisponível no momento.",
+        "invalid-request": "Essa requisição não é possível."
       }
     }
   },
@@ -1580,6 +1653,11 @@
       "semiRare": "Semirraro",
       "rare": "Raro",
       "veryRare": "Muito raro"
+    },
+    "animus": {
+      "title": "Maestria de Animus",
+      "chip": "Maestria de Animus: {{masteries}} · +{{bonus}}% de XP",
+      "bonus": "Maestria de Animus: +{{bonus}}% de experiência"
     }
   },
   "bosstiary": {
@@ -2086,6 +2164,66 @@
       "insufficient-gold": "Você não tem ouro suficiente.",
       "rate-limited": "Aguarde um momento antes de tentar novamente.",
       "invalid-request": "Essa ação de imbuimento não é possível."
+    }
+  },
+  "proficiency": {
+    "title": "Proficiência com Armas",
+    "weapons": "Armas Rastreadas",
+    "experience": "XP da Arma",
+    "mastered": "Maestria",
+    "unlockedLevels": "Níveis de vantagem desbloqueados: {{levels}}",
+    "levelLabel": "Nível {{level}}",
+    "locked": "Bloqueado",
+    "unlocksAt": "Desbloqueia com {{experience}} de XP",
+    "apply": "Aplicar",
+    "revert": "Reverter",
+    "empty": "Derrote monstros com uma arma equipada para acumular proficiência.",
+    "loading": "Carregando proficiências…",
+    "catalogLoading": "Carregando tabelas de vantagens…",
+    "catalogError": "Não foi possível carregar as tabelas de vantagens.",
+    "noProfile": "Nenhuma tabela de vantagens disponível para esta arma.",
+    "errors": {
+      "unknown-weapon": "Essa arma não tem proficiência rastreada.",
+      "level-locked": "Esse nível de vantagem ainda não foi desbloqueado.",
+      "invalid-perk": "Essa vantagem não existe.",
+      "duplicate-level": "Apenas uma vantagem pode ser escolhida por nível.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente.",
+      "invalid-request": "Essa ação de proficiência não é possível."
+    },
+    "perks": {
+      "generic": "{{label}} {{value}}",
+      "attack-damage": "{{value}} de Dano de Ataque",
+      "defense-bonus": "{{value}} de Defesa",
+      "weapon-shield-modifier": "{{value}} de Defesa de Arma e Escudo",
+      "skill-bonus": "{{value}} de {{skill}}",
+      "specialized-magic-level": "{{value}} de Nível Mágico Especializado",
+      "spell-augment": "Aprimoramento de Feitiço {{value}}",
+      "bestiary-damage": "{{value}} de Dano contra {{name}}",
+      "powerful-foe-bonus": "{{value}} de Dano contra Inimigos Poderosos",
+      "critical-hit-chance": "{{value}} de Chance de Acerto Crítico",
+      "elemental-hit-chance": "{{value}} de Chance de Acerto Elemental",
+      "rune-critical-hit-chance": "{{value}} de Chance de Crítico com Runas",
+      "auto-attack-critical-hit-chance": "{{value}} de Chance de Crítico em Ataques Automáticos",
+      "critical-extra-damage": "{{value}} de Dano Crítico Extra",
+      "elemental-critical-extra-damage": "{{value}} de Dano Crítico Elemental Extra",
+      "rune-critical-extra-damage": "{{value}} de Dano Crítico Extra com Runas",
+      "auto-attack-critical-extra-damage": "{{value}} de Dano Crítico Extra em Ataques Automáticos",
+      "mana-leech": "{{value}} de Roubo de Mana",
+      "life-leech": "{{value}} de Roubo de Vida",
+      "mana-gain-on-hit": "{{value}} de Mana ao Acertar",
+      "life-gain-on-hit": "{{value}} de Vida ao Acertar",
+      "mana-gain-on-kill": "{{value}} de Mana ao Abater",
+      "life-gain-on-kill": "{{value}} de Vida ao Abater",
+      "perfect-shot-damage": "{{value}} de Dano de Tiro Perfeito (alcance {{range}})",
+      "ranged-hit-chance": "{{value}} de Chance de Acerto à Distância",
+      "attack-range": "{{value}} de Alcance de Ataque",
+      "skill-percentage-auto-attack": "{{value}} de {{skill}} em Ataques Automáticos",
+      "skill-percentage-spell-damage": "{{value}} de {{skill}} em Dano de Feitiços",
+      "skill-percentage-spell-healing": "{{value}} de {{skill}} em Cura de Feitiços",
+      "alpha-strike-extra-damage": "{{value}} de Dano Extra de Golpe Alfa",
+      "omega-strike-extra-damage": "{{value}} de Dano Extra de Golpe Ômega",
+      "armor-penetration": "{{value}} de Penetração de Armadura",
+      "elemental-pierce": "{{value}} de Perfuração Elemental"
     }
   }
 }

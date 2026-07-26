@@ -16,6 +16,8 @@ interface BestiaryMonsterSheetProps {
   monster: BestiaryMonsterStateMessage;
   /** Whether this race is on the own kill tracker (server projection). */
   tracked?: boolean;
+  /** Animus bonus in tenths of a percent when this race is mastered. */
+  animusBonusTenthsPercent?: number | null;
   onToggleTrack?: (enabled: boolean) => void;
 }
 
@@ -23,6 +25,7 @@ interface BestiaryMonsterSheetProps {
 export function BestiaryMonsterSheet({
   monster,
   tracked = false,
+  animusBonusTenthsPercent = null,
   onToggleTrack,
 }: BestiaryMonsterSheetProps) {
   const { t } = useAppTranslation();
@@ -109,6 +112,13 @@ export function BestiaryMonsterSheet({
               toKill={monster.toKill}
             />
           </div>
+          {animusBonusTenthsPercent !== null && (
+            <p className="mt-3 text-sm text-ui-accent-light">
+              {t("bestiary.animus.bonus", {
+                bonus: (animusBonusTenthsPercent / 10).toFixed(1),
+              })}
+            </p>
+          )}
           {onToggleTrack && (
             <div className="mt-4">
               <Button

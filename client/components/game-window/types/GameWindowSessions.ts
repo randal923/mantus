@@ -1,7 +1,9 @@
+import type { AnimusSessionState } from "../../../hooks/useAnimusSession";
 import type { BestiarySessionState } from "../../../hooks/useBestiarySession";
 import type { BoostedSessionState } from "../../../hooks/useBoostedSession";
 import type { BossSlotsSessionState } from "../../../hooks/useBossSlotsSession";
 import type { BosstiarySessionState } from "../../../hooks/useBosstiarySession";
+import type { CyclopediaSessionState } from "../../../hooks/useCyclopediaSession";
 import type { DepotSessionState } from "../../../hooks/useDepotSession";
 import type { ForgeSessionState } from "../../../hooks/useForgeSession";
 import type { ImbuementSessionState } from "../../../hooks/useImbuementSession";
@@ -15,6 +17,7 @@ import type { OptimisticInventory } from "../../../hooks/useOptimisticInventory"
 import type { OutfitSessionState } from "../../../hooks/useOutfitSession";
 import type { PartySessionState } from "../../../hooks/usePartySession";
 import type { PreySessionState } from "../../../hooks/usePreySession";
+import type { ProficiencySessionState } from "../../../hooks/useProficiencySession";
 import type { ProfileSessionState } from "../../../hooks/useProfileSession";
 import type { TradeSessionState } from "../../../hooks/useTradeSession";
 import type { TrackerSessionState } from "../../../hooks/useTrackerSession";
@@ -44,4 +47,7 @@ export interface GameWindowSessions {
   bossSlots: BossSlotsSessionState;
   forge: ForgeSessionState;
   imbuement: ImbuementSessionState;
+  proficiency: ProficiencySessionState;
+  animus: AnimusSessionState;
+  cyclopedia: CyclopediaSessionState;
 }

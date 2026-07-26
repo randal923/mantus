@@ -62,7 +62,7 @@ export function TrackerPanel({
             {section.entries.length > MAX_ROWS_PER_SCOPE && (
               <p className="mt-1 text-center text-xs text-ui-muted">
                 {t("tracker.more", {
-                  count: section.entries.length - MAX_ROWS_PER_SCOPE,
+                  extra: section.entries.length - MAX_ROWS_PER_SCOPE,
                 })}
               </p>
             )}

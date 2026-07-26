@@ -502,3 +502,274 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   integration cases predate this work — verified by re-running without
   migration 055 — and are recorded in `TODO.md`). Migration 055 pending
   `yarn db:migrate` alongside 043-054.
+
+## 2026-07-26 boosted/reward-boss, forge complex, proficiency/animus, cyclopedia (server)
+
+- **Feature 76 — Boosted creatures/bosses, kill trackers, reward-boss flag
+  (server)** (2026-07-26): daily boosted pair on its own day-keyed
+  `boosted_daily` table — the row is the selection, `INSERT … ON CONFLICT
+  DO NOTHING` then read, so racing processes/restarts converge
+  exactly-once; creature picked with Canary's bell-curved `normal_random`
+  over the race-id-sorted bestiary excluding yesterday's race
+  (game.cpp:770-844), boss uniformly from archfoes only
+  (io_bosstiary.cpp:55-71); rotation happens at the server-clock day
+  boundary inside the tick (deviation: Canary only rotates at restart) and
+  clears the new boosted boss out of every character's slots. Modifiers at
+  execution time: kill exp ×2 before the prey ceil (player.lua:563-574
+  order), one extra full loot roll in `createMonsterCorpse` skipped for
+  reward bosses (ondroploot_boosted.lua), respawn interval ÷2 via a
+  SpawnManager hook, bosstiary kill increment ×3 in `BestiaryTracker`
+  (player.cpp:6565; the display-vs-applied 4-vs-3 upstream mismatch is
+  resolved to ×3 both ways). Kill trackers: `tracker-set`/`tracker-state`
+  mirroring Canary 0x2A/0xB9 (255/list cap silently enforced, boss
+  tracking gated on a kill), rows in `character_monster_trackers`, own
+  counts only. Boss slots: `character_boss_slots` with Prowess-gated
+  assignment, slot two at 1500 boss points, Canary's removal curve
+  (300000·n−500000, first two free) charged as a conditional bank debit +
+  ledger + audit in one transaction — deliberately fixing upstream's
+  unchecked `removeMoney` (game.cpp:11229); loot-bonus application rides
+  Feature 84. `flags.rewardBoss` imported onto `MonsterType` (44 bosses;
+  the 911-monster blocked bucket closed, report ceilings lowered to
+  739/1573/150, converter hashes re-pinned) and `challengeMonster`/
+  `pullMonsterToMelee` gate on it. Deviation: boosted matching is by race
+  id, so look-variants sharing a race are all boosted where Canary
+  compares the primary name. Migration 056. Tests: selection
+  exactly-once/day-boundary/adoption, modifiers only for the selected
+  race, corpse extra-roll + reward-boss exemption, tracker gates/caps/rate
+  limit, slot pricing incl. insufficient-gold refusal and the
+  boosted-slot guards, reward-boss challenge/pull refusal.
+- **Feature 78 — Imbuements, item tiers, Exaltation Forge (server)**
+  (2026-07-26): imbuement catalog transcribed from the pinned
+  data/XML/imbuements.xml (72 entries, exact prices/effect values;
+  `tools/importCanaryImbuements.mjs` → `content/imbuements.json`);
+  per-item category gates from items.xml sub-attributes
+  (`imbuementTypes` slugs on the item catalog). Shrine-gated
+  `imbuement-window-get`/`apply`/`clear`: one SERIALIZABLE transaction
+  covers the astral-source destruction, the bank gold leg, the
+  version-guarded attribute write, and the audit row; mirrored Canary
+  quirk: no success roll (upstream never rolls its XML `percent`).
+  Stricter than Canary: shrine adjacency is re-checked at apply time.
+  Decay follows imbuements.cpp:473-497 — aggressive categories burn only
+  in-fight outside PZ, non-aggressive whenever worn — via a per-second
+  service ledger with durable checkpoints every 60 qualifying seconds, at
+  expiry, and on detach. Combat effects at execution time: skill/ML
+  boosts, crit, always-on leech (vestigial chance ignored like
+  game.cpp:8983), first-imbuement elemental conversion of the physical
+  share, sequential elemental protections (player.cpp:3872), feet-slot
+  vibrancy paralysis-removal roll. Classification extracted from the
+  appearances protobuf (`tools/extractCanaryAppearanceFlags.mjs`, 971
+  items, fields 48/61) with items.xml proficiency override; tier lives in
+  `items.attributes` behind an immutable-identity row. Tier bonuses from
+  the exact quadratics (item.cpp:559-617): weapon onslaught +60% proc
+  after crit, armor ruse folded into the dodge roll, helmet momentum −2 s
+  spell cooldowns on even seconds in-fight, boots amplification
+  multiplying all three; transcendence chance computed but consumption
+  rides Feature 79's avatars. Exaltation Forge: fusion with Canary's
+  exact bonus table (tools.cpp:1847-1882) and skip semantics (dust kept
+  on 1, cores on 2, gold on 3, second item kept at −1/=/+1 on 4/5/6,
+  double tier on 7 capped by classification, failure keeps the first item
+  and drops the second a tier unless the loss core saves it), transfer
+  (donor ≥2 → tier-0 receiver at −1, convergence keeps the tier),
+  conversions (60 dust→3 slivers, 50 slivers→1 core, cap raise at
+  `dustLevel−75` to 225) — each one SERIALIZABLE transaction over
+  version-guarded item rows, the dust balance, the bank leg, the
+  `forge_history` row, and the audit row, with all RNG rolled server-side
+  pre-transaction; intents are refused while any item write is in flight
+  so guarded rows match validated memory. Influenced/fiendish monsters:
+  10 s sweep assigns states server-side (influenced `normal_random(1,5)`,
+  fiendish stack 15 for 1 h), health ×(1+(15·stack+35)/100), attack/
+  defense multipliers and the deliberate integer-division exp quirk
+  ((stack+10)/10) at execution time, kill dust `random(stack, 3·stack)`
+  clamped to the cap in SQL for every damager, fiendish corpse slivers
+  uniform(3,7); caps scale with the live eligible population (deviation:
+  Canary's absolute 300/4 assume a fully-live world; mantus activates
+  spawns near players). The gem-drop deviation is retired: `GemDropHooks`
+  now keys on real instance states + archfoe bosses. Deviations noted:
+  bank-only gold legs (consistent with gem atelier/prey), fusion results
+  stay in place instead of a conjured exaltation chest, no scroll-item
+  flow. Migration 057. Tests: bonus-table boundaries, tier quadratics,
+  fusion/transfer validation (imbued items refused, tier caps), unfunded
+  refusals, plus 4 Postgres race tests — atomic fusion commit
+  (history==audit one-to-one), unfunded-leg rollback, racing fusions
+  leave exactly one winner, racing conversions conserve dust and mint
+  exactly the committed slivers.
+- **Feature 82 — Weapon proficiency + animus mastery (server)**
+  (2026-07-26): perk tables transcribed from the pinned
+  data/items/proficiencies.json (420 profiles;
+  `tools/importCanaryProficiencies.mjs` → `content/proficiencies.json` +
+  the client asset) and item→profile ids from the appearances protobuf.
+  Accrual only from server-side monster deaths for the killer's wielded
+  weapon: bosstiary rarity 500/5000/15000 plus the bestiary-star
+  polynomial values [1,30,70,100,165,240], each ×0.33
+  (weapon_proficiency.cpp:788-808, cpp:51-59), against the
+  crossbow/knight/standard XP tables with mastery two tiers past the last
+  perk level. `proficiency-select` re-validates every pick against earned
+  progress at execution time (one per level, index bounds); rows persist
+  monotonically (`GREATEST` upsert) in `character_weapon_proficiencies`.
+  Combat application of the wielded weapon's selected perks: flat attack,
+  defense/shield modifier, skill/ML boosts, crit chance/damage, always-on
+  leech, powerful-foe % vs bosses and forge-state monsters, ranged hit
+  chance, attack range, and the skill-percentage flat auto-attack leg;
+  spell-facing families ride Feature 79 and the remaining inert families
+  Feature 86 (recorded). Animus mastery: `character_animus_masteries`
+  rows, `AnimusService.grant` as the only earn surface (Soul Pit deferred
+  to Feature 86), and Canary's exact multiplier
+  min(4, 1+(2+⌊N/10⌋·0.1)/100) composed LAST in the exp pipeline
+  (player.cpp:3588-3603), only on kills of mastered races. Migration
+  058. Tests: killer-only accrual with exact values, no gain without a
+  wielded profile weapon, selection locks/bounds, effects gated on
+  unlocks, animus multiplier + idempotent/unknown-race grant refusal.
+- **Feature 83 — Cyclopedia views (server)** (2026-07-26): bounded,
+  authorized own-only projections behind Canary's ownership gate. Combat
+  view computed from live equipment/wheel/imbuement/proficiency/tier
+  state at request time; item summary aggregates the character's own
+  memory-authoritative caches (carried + depot + inbox + stash) by
+  (type, tier); recent deaths from a new `character_deaths` table written
+  write-behind by the death path before penalties ("Died at level X by
+  Y."), 30-day window; PvP kills from the existing `character_kills`
+  frags, 70-day window, justified/unjustified status — all through fixed
+  parameterized queries with `CYCLOPEDIA_LIMITS` paging (15/page, page
+  clamp), a per-session cooldown, and single-flight page queries.
+  General/achievements/titles/badges/outfits/monster/house tabs reuse the
+  shipped own-state and profile/bestiary/house projections; Canary's map
+  view is a stub upstream (protocolgame.cpp:3275-3291) and is skipped
+  knowingly. Migration 059. Tests: summary aggregation from own caches
+  only, death paging, PvP status mapping, rate limiting.
+- **Cross-cutting verification** (2026-07-26): protocol + server
+  typecheck clean; 1,241 server unit tests green; `test:integration` runs
+  237 tests with only the 10 pre-existing chest/guild/social failures
+  (recorded in TODO.md) — the 4 new forge race tests green; tools 74/74
+  and `parity:check` green after the inventory regen. Migrations 056-059
+  pending `yarn db:migrate` alongside 043-055.
+
+## 2026-07-26 boosted/tracker/boss-slot + forge/imbuement client surfaces
+
+- **Feature 76 — Boosted creatures/bosses, kill trackers, boss slots
+  (client)** (2026-07-26): the server+protocol shipped earlier the same
+  day; this closes the client surface. New sessions
+  `useBoostedSession`/`useTrackerSession`/`useBossSlotsSession` hold the
+  `boosted-state`/`tracker-state`/`boss-slots-state` projections (branches
+  in `handleProgressionCatalogMessage`, reset on welcome and reconnect;
+  live kills merge through the existing `bestiary-entry-changed` push).
+  Surfaces: "Today's Boost" section (`components/boosted/
+  BoostedTodaySection.tsx`) in the wiki bestiary list header plus a compact
+  variant in the bosstiary tab; Track/Untrack buttons in
+  `BestiaryMonsterSheet`/`BosstiaryBossSheet` sending `tracker-set` (the
+  boss toggle disables at 0 kills, mirroring the server rule); a docked
+  kill-tracker overlay (`components/tracker/TrackerPanel.tsx` +
+  `TrackerEntryRow`, rendered by `GameTrackerOverlays`, toggled from the
+  nav bar, capped at 12 rendered rows per scope with a +N-more line);
+  and a boss-slot section in the bosstiary tab
+  (`components/bestiary/BossSlotsSection.tsx` + `BossSlotCard` +
+  `BossSlotPicker`): unlock states, assigned boss with sprite/kills/loot
+  bonus, inactive marker, the boosted third slot, boss points via
+  `bossPointsLootBonus`, next removal price, assignment picker over
+  `unlockedRaceIds`, `boss-slot-set` sends and localized
+  `boss-slot-failed` errors. Boss slots load lazily on the bosstiary tab
+  (`boss-slots-get`), including the item-source jump path. Files also:
+  `GameClient` senders, `GameWindowSessions`/`SessionActions`/store
+  fields (`trackerVisible`), locales en+pt-BR, stories
+  `TrackerPanel`/`BossSlotsSection` + `trackerFixtures`. Verified: client
+  typecheck, eslint 0 errors, 248 unit tests green.
+- **Feature 78 — Imbuements, tiers, Exaltation Forge (client)**
+  (2026-07-26): closes the client surface. `useForgeSession`/
+  `useImbuementSession` over `forge-state`/`forge-result`/
+  `forge-history-state`/`imbuement-window-state` and both failure
+  messages. `components/forge/ForgeModal.tsx` (nav "Forge" button) with
+  fusion/transfer/conversion/history tabs, a dust/sliver/core resource
+  bar, and cost previews from `FORGE_TIER_PRICES`/`FORGE_RULES` matching
+  `server/src/forge/ForgeService.ts` exactly (fusion cores =
+  usedCore + reduceTierLoss at 1 each, success 50%+15%; transfer pays the
+  receiver's resulting tier — donor tier −1, or equal under convergence —
+  plus that tier's corePrice; conversions 60 dust→3 slivers, 50
+  slivers→1 core, dust-limit raise at `dustLimit−75`). Result banner
+  renders `forge-result` with the bonus-roll texts (1–8). Candidate
+  derivation is pure display logic in `client/lib/forge/`
+  (`collectFusionPairs`, `collectTransferDonors/Receivers`,
+  `itemClassificationOf` parsing the server-authored "Classification: X
+  Tier: Y" affix; `itemImbuementSlotCountOf` parsing "Imbuement Slots N")
+  with unit tests — the server re-validates every id. Imbuements open from
+  a hover badge on imbuable inventory slots (`ItemSlot.onImbue` →
+  `imbuement-window-get`); `components/imbuement/ImbuementModal.tsx`
+  renders occupied slots (name, time left, clear at `removeCostGold`) and
+  empty-slot options grouped by category with material availability,
+  price, premium badge, and `canApply` gating. Forge monster markers ship
+  on both surfaces: battle-list stack badge and a `CreatureView` nameplate
+  glyph (influenced diamond + stack number, fiendish star; plate-child
+  test updated). Locales en+pt-BR; stories `ForgeModal`/`ImbuementModal` +
+  `forgeFixtures`. Verified: client typecheck, eslint 0 errors, 248 unit
+  tests green (6 new for the forge libs). Residuals → Feature 87: imbue
+  badge reachable only on backpack/container slots (not the equipped
+  paperdoll) and the imbuement time-left is static between window pushes.
+  Accepted: fusion submits the first two carried copies of a group (no
+  per-copy picker; server re-validates).
+
+## 2026-07-26 proficiency + cyclopedia client surfaces
+
+- **Feature 82 — Weapon proficiency + animus mastery (client)**
+  (2026-07-26): the server+protocol shipped earlier the same day; this
+  closes the client surface. `useProficiencySession`/`useAnimusSession`
+  hold the `proficiency-state`/`animus-state` projections (branches in
+  `handleProgressionCatalogMessage`, welcome/reconnect resets in
+  `handleCharacterSessionMessage` + `createGameWindowStore`). The static
+  perk-table asset loads through `client/lib/proficiency/`
+  (`parseProficiencyCatalog` hard-validates
+  `public/assets/proficiencies.json` like the wiki-item catalog;
+  `useProficiencyCatalog` fetches it) and `formatProficiencyPerk` renders
+  localized short labels for all 32 slug families (fraction families as
+  percentages, flat families as integers, skill/bestiary interpolation)
+  with a generic slug-derived fallback for unknown families.
+  `components/proficiency/ProficiencyModal.tsx` (nav "Proficiency"
+  button, `proficiencyOpen` store flag, `GameProficiencyOverlays`):
+  tracked-weapon list (catalog name, `ProgressionBar` toward
+  `nextLevelExperience`, "Mastered" badge) and a per-level radio-style
+  perk grid — locked rows dimmed ("Locked", with the server's
+  `nextLevelExperience` threshold shown only on the next unlockable row),
+  picks kept as a local draft and submitted whole via
+  `proficiency-select` (WheelModal draft-then-save UX; Revert/Apply,
+  localized `proficiency-action-failed` reasons). Animus display:
+  bestiary header chip (mastered count + current bonus, next to the charm
+  chip) and an "Animus Mastery: +X.X% experience" line in
+  `BestiaryMonsterSheet` when the sheet's race is mastered. Files also:
+  `GameClient.requestProficiencies/selectProficiencyPerks`, session
+  wiring (`GameWindowSessions`/`SessionActions`/controller), nav button
+  (`TopNavigationBar` + `GameNavigation`), locales en+pt-BR (incl. all
+  perk templates), stories `ProficiencyModal` + `proficiencyFixtures`
+  (perk pick → exact `onSelect` payload, locked thresholds, mastered,
+  failure, empty), unit tests for the parser and formatter. Verified:
+  client typecheck, eslint 0 errors, 257 unit tests, 17 story tests for
+  the new surfaces. Residuals → Feature 87 (locked-row thresholds beyond
+  the next level, no mastered-race list).
+- **Feature 83 — Cyclopedia character views (client)** (2026-07-26):
+  closes the client surface inside the wiki modal (the wiki IS the
+  Cyclopedia). `WikiTab` gains a fourth "character" tab (`WikiTabIcon`
+  maps it to the existing `/assets/cyclopedia/stats/hitpoints.png`; no
+  asset importers run). `components/wiki/WikiCharacter.tsx` renders six
+  sub-tabs: **General** from the own-character projection with no
+  round-trip (XP/magic/stamina/soul bars, skills, stat tiles with
+  `BestiaryStatIcon` art, capacity from the inventory projection),
+  **Combat** (server-computed grid incl. onslaught/ruse/momentum tier
+  rows and absorb rows with `BestiaryResistanceIcon`, negatives red),
+  **Deaths**/**PvP Kills** (paged through the modal pagination bar,
+  `toLocaleString` timestamps, justified green / unjustified red),
+  **Items** (carried/depot/inbox/stash sections via
+  `WikiCharacterItemSection`: wiki-catalog sprite + name, ×count, "T{n}"
+  tier badge), **Achievements** (read-only reuse of the profile
+  projection: `AchievementList` + title list with Selected/Locked chips;
+  selection stays in ProfileModal). `useCyclopediaSession` holds per-view
+  state with lazy first-visit fetches and page-change fetches
+  (`cyclopedia-character-get` via
+  `GameClient.requestCyclopediaCharacter`; `cyclopedia-*-state` +
+  `cyclopedia-action-failed` branches in
+  `handleProgressionCatalogMessage`); wiki props flow through
+  `GameProgressionOverlays`. Bonus: `classification` projected into the
+  wiki item catalog (`tools/buildWikiItemCatalog.mjs` updated to the v3
+  server catalog and re-run — 971 items gained the field, zero other
+  diffs; `parseWikiItemCatalog`/`WikiItem`/`WikiItemDetails` stat row;
+  builder hash added to `content/source-manifest.json` converterSources,
+  `parity:check` verifier green). Locales en+pt-BR; stories
+  `WikiCharacter` + `cyclopediaFixtures` and updated `WikiModal` stories
+  (lazy-fetch call assertions, paging, tier badges, animus chip).
+  Verified: client typecheck, eslint 0 errors, 257 unit tests, story
+  tests for WikiModal/WikiCharacter/WikiItems/WikiItemDetails green.
+  Residual → Feature 87 (combat view refreshes only on revisit).
