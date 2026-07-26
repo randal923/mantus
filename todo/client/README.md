@@ -58,6 +58,10 @@ their areas:
 - [Features 90–92 — Session resilience](../todo-11.md): revisioned stream,
   connection state machine, error taxonomy — protocol + server + client
   together.
+- [Feature 77 — Bestiary accepted-limitation fixes](../todo-10.md): its
+  client slivers (route `bestiary-action-failed` to both modals, queue a
+  second sheet request inside the cooldown) ride with the server
+  kill-credit fix.
 - [Feature 22 — two spell icons](../todo-5.md): blocked on
   external OTClient data.
 

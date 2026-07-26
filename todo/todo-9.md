@@ -1,6 +1,6 @@
 # Todo 9 — Characters, social, and houses
 
-**Features 2, 57, 58, 59, 62†, 65, 67.** Almost everything here shipped:
+**Features 2, 57, 58, 59, 62†, 65, 67, 109.** Almost everything here shipped:
 parties with analyzer/finder/invite-shields, guilds with wars/emblems/bank,
 the pinned PVP policy with pvp-zone tiles and the combat-logout linger
 window, houses with auctions/access-lists/guildhalls/polish, VIP/friends
@@ -11,7 +11,9 @@ stack (see [done.md](done.md)). † = client-only remainder.
 
 No longer purely conditional: Feature 67 shipped namelock **enforcement**
 (world entry refused with `character-namelocked`), so nothing can clear a
-namelock until rename exists. Delete remains a product decision.
+namelock until rename exists. Delete remains a product decision. Guard: do
+not add an in-game namelock *setter* to moderation before rename ships — a
+namelocked character would be dead-ended.
 
 **Implementation:** zod messages in `protocol/src/character.ts` (max size +
 rate first); handle in `server/src/character/CharacterService.ts` deriving
@@ -79,7 +81,16 @@ Reciprocal requests, groups, typing hints, and presence shipped.
   `PartyHandler` consults `finderVisible(characterId)` at query execution
   time, defaulting true — add the per-character privacy setting and wire the
   hook.
-- **Exiva restrictions** — blocked: no exiva spell exists yet (todo-5).
+- **Exiva spells — owned here** (todo-5 delegates both; transcribed from
+  pinned `find_person.lua` / `find_fiend.lua`): `exiva "name"` (Find
+  Person, level 8, 20 mana) computes the distance band (<5 beside, <101
+  close, <275 far, else very far), octant direction, and z-level relation
+  server-side and sends one private text line; staff targets stay
+  invisible to non-staff casters. Implementable now on the shipped spell
+  infrastructure. `exiva moe res` (Find Fiend, level 25) points at the
+  nearest **fiendish** monster with a bestiary-kills difficulty string —
+  blocked on Feature 78's fiendish monster states (todo-10); bestiary
+  thresholds already ship.
 - VIP-group management UI →
   [client backlog](client/feature-65-vip-groups-and-typing.md).
 - Durable ignore lists → Feature 35 (todo-7) owns them.
@@ -93,9 +104,43 @@ info, and bug reports shipped server-side.
 
 - **Import Canary's full achievement catalog** — today's pinned set covers
   only the grant hooks that exist.
-- Namelock rename flow → Feature 2 (above). Livestream/casting → Feature 86
-  (todo-10). Cyclopedia display of these projections → Feature 83 (todo-10).
+- Namelock rename flow → Feature 2 (above). Livestream/casting: excluded by
+  product decision (recorded in Feature 86, todo-10). Cyclopedia display of
+  these projections → Feature 83 (todo-10).
 - The whole client surface →
   [client backlog](client/feature-67-profile-ui.md).
+
+## Feature 109 — House spell words (guest/subowner/door lists and kick)
+
+Owns the four disabled `14d-houses` spells in Feature 26's budget (todo-5).
+The House modal shipped as the management surface, but the spell words stay
+player-visible parity. All four: support group, level 8, all vocations, 2 s
+cooldown, non-aggressive. Transcribed from pinned
+`data/scripts/spells/house/`:
+
+- `aleta sio` (House Guest List) / `aleta som` (House Subowner List) —
+  standing on a house tile with edit rights for that list opens its editor;
+  otherwise cancel + poff.
+- `aleta grav` (House Door List) — resolves the door on the tile the caster
+  faces (falling back to the caster's own tile) and opens that door's list
+  editor. Server enforcement shipped with Feature 62; the editor UI is the
+  [door-list editor](client/feature-62-door-list-editor.md).
+- `alana sio "name"` (House Kick) — without a name (or naming yourself),
+  teleports the caster from inside a house to its exit; with a name, a
+  caster standing in a house whose guest list they can edit kicks the named
+  player out of the house that player stands in (kick re-validated against
+  the target's house).
+
+**Implementation:** enable via the reviewed overlays in
+`tools/parseCanarySpells.mjs`; callbacks in
+`server/src/combat/PlayerSpellActions.ts` calling the shipped
+`HouseService` list/kick/exit operations — authorization re-checked at
+execution time inside the tick, list edits through the same validation as
+the House modal. Drop the `14d-houses` line from Feature 26's budget when
+they enable.
+
+**Tests:** non-owner/non-subowner casts rejected; kick follows current
+access state at execution; the door is derived server-side from the
+caster's facing, never from a client position.
 
 [Back to overview](README.md)

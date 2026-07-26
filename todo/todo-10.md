@@ -32,7 +32,9 @@ table already exist as typed data (`server/src/progression/blessings.ts`).
 - **Blessing purchase** via bank transaction + audit (charter rule 11;
   economy-relevant — its own PR). Canary uses `removeMoneyBank` (carried
   first, then bank) and refuses while pz-locked outside a PZ — re-check both
-  at execution time.
+  at execution time. The player-facing surface is Feature 38's
+  `StdModule.bless` NPC family (todo-7): land persistence + consumption
+  first, or co-implement one minimal bless dialogue command.
 - **Consumption on death** — feeds Feature 32's item drop, including
   amulet-of-loss and red/black-skull branches from `Blessings.PlayerDeath`;
   apply the loss-reducing count in the death formula and
@@ -248,11 +250,15 @@ hirelings safely).
 
 Each entry the Feature 89 inventory (todo-1) finds ships as its own bounded
 unit: hazard levels, concoctions, encounter/boss difficulty selection
-(absorbed from Feature 23), resource balances, podium/show-off objects,
-livestream/casting (also referenced by Feature 67), and every other
-registered modern system. Standard order per unit: protocol schema +
-size/rate limits first, server-authoritative execution with execution-time
-re-checks, durable state, audits for anything economy-relevant, per-system
-exploit tests.
+(absorbed from Feature 23), resource balances, podium/show-off objects, and
+every other registered modern system. Standard order per unit: protocol
+schema + size/rate limits first, server-authoritative execution with
+execution-time re-checks, durable state, audits for anything
+economy-relevant, per-system exploit tests.
+
+**Excluded by product decision (2026-07-25): livestream/casting.** Pinned
+Canary ships it (`src/creatures/players/livestream/`), deliberately out of
+scope here; the Feature 89 inventory classifies it
+`excluded-product-decision`, never silently.
 
 [Back to overview](README.md)

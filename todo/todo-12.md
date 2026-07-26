@@ -7,9 +7,10 @@ core — the `accounts.role` migration (054), fail-closed capabilities,
 per-command gating, audited `/goto`/`/bring`/`/inspect` (see
 [done.md](done.md)). Everything else is not started: the server logs via
 `console.*`, no metrics, no drain path, no typed errors, no backup
-automation. Order: 93 and 97 protect the live game first; 96's residue is
-small and unblocks 43/54/101/102; 100 is the final pre-launch gate and
-assumes 93–99 plus Feature 1's ledger closure.
+automation. Order: Feature 96's residue first — small, converging, unblocks
+43/54/101/102 (README step 3); then 93 and 97, which protect the live game;
+100 is the final pre-launch gate and assumes 93–99 plus Feature 1's ledger
+closure.
 
 ## Feature 93 — Network and resource limits
 

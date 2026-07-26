@@ -1,8 +1,11 @@
 # Todo 13 — Quests
 
-**Features 103, 104, 105.** Deliberately last: quests consume character
-storage, world-action hooks (todo-2), NPC dialogue gates (todo-7), and
-spawns — nothing depends on them. The quest platform does not exist
+**Features 103, 104, 105.** Quest *content* (104/105) is deliberately last:
+it consumes world-action hooks (todo-2), NPC dialogue gates (todo-7), and
+spawns. The Feature 103 *platform* is not last — it is small on the shipped
+storage substrate and unblocks the storage-gated slices deferred from
+Features 38/41/50/51 and Feature 10's variants, so schedule it before or
+alongside the NPC grind (README step 5). The quest platform does not exist
 (`server/src/quest/` is absent), but the **storage substrate does**
 (corrected 2026-07-25): migration `014_character_storages.sql` plus the
 dirty-tracked character-store save path

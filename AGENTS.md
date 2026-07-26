@@ -165,7 +165,7 @@ Prefer small, cohesive files with one clear responsibility.
   login, not against online players) — record it in `TODO.md` with the reason
   and the recommended fix. Don't let known gaps live only in the conversation.
 - The backlog lives in `todo/todo-1.md` … `todo/todo-13.md` (features inline,
-  one `## Feature N` section each; numbers are stable, new work gets 108+);
+  one `## Feature N` section each; numbers are stable, new work gets 110+);
   `todo/done.md` is the single permanent record of completed work, and
   `todo/client/` indexes outstanding client-only work. When you finish work
   on a feature: append a dated entry to `todo/done.md` (problem, what

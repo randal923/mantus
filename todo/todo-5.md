@@ -57,10 +57,11 @@ rest feeds Feature 26's zero-disabled gate.
   57 (todo-9) gates their friendly-target selection on party membership.
 - Monster-only healing scripts (`458`, `459`, `462`) are non-content for
   players — classify, don't implement.
-- Delegated branches: house spells → todo-9; find-person/find-fiend →
-  todo-9; party spells → todo-9; familiar/avatar → Feature 85 (todo-10);
-  Wheel/animus → Features 79–82 (todo-10). Monk *attack* spells remain
-  blocked on their formulas.
+- Delegated branches: house spells → Feature 109 (todo-9);
+  find-person/find-fiend → Feature 65 (todo-9, owns implementing both
+  spells); party spells → Feature 57 (todo-9); familiar/avatar → Feature 85
+  (todo-10); Wheel/animus → Features 79–82 (todo-10). Monk *attack* spells
+  remain blocked on their formulas.
 
 **Implementation**
 
@@ -91,7 +92,7 @@ remaining work list IS the `disabled.byOwner` budget:
 | `07-combat` | 33 | Feature 24 (Monk unit, mass heals, chain/grenade spells) |
 | `08c-decay` | 12 | Field/wall/bomb runes — item-creation + decay path (F24 + F33) |
 | `14a-parties` | 5 | Party spell callbacks (todo-9, F57) |
-| `14d-houses` | 4 | House list/kick spell callbacks (todo-9) |
+| `14d-houses` | 4 | House list/kick spell callbacks (todo-9, F109) |
 | `14e-social-services` | 2 | `find person`, `find fiend` (todo-9, F65) |
 | `15-optional-features` | 10 | Familiars and avatars (todo-10, F85) |
 

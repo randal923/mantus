@@ -96,7 +96,7 @@ concurrency, in one transaction.
   asset-import pipeline regenerated to keep `ATTR.market` (or an expanded
   `marketCategoryOf.ts`), a paged full-catalog read op in
   `PgMarketReadOps.ts` bounded by `MARKET_LIMITS`, and a client browser
-  list. **Blocked on the asset regeneration.**
+  list. **Blocked on the asset regeneration (Feature 108, todo-4).**
 - **Pristineness extensions** — currently "empty attributes, no contained
   items"; revisit as Features 43/78 add attributes that must not silently
   make items unsellable or sellable-while-carrying-value.

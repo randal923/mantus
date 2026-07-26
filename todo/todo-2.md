@@ -60,7 +60,8 @@ recorded deviations remain.
 - **Fields (fire/energy/poison).** Blocked on content: the catalog imports
   `kind: "magicfield"` for 45 types but no `field` payload —
   `tools/importTibiaAssets.mjs` must emit `ItemType.field` (declared, always
-  undefined today) before the combat-damage hook can be written.
+  undefined today) before the combat-damage hook can be written. The
+  regeneration is owned by Feature 108 (todo-4).
 - **Trap disarm on use** (3482 → 3481 transform; step-in half ships in
   `PressurePlateRegistry`). Classified `deferred` in
   `content/canary-world-action-parity.json`.
@@ -91,7 +92,8 @@ pinned `holeId` table — 4,968 working rope actions).
   transform-and-decay path (Feature 33's machinery in todo-6).
 - **Tool list is curated:** `getToolDefinition` is an id list, not DAT
   `multiUse`/`usable` bits — `importTibiaAssets.mjs` parses but drops those
-  flags; capturing them means regenerating `objects.json`.
+  flags; capturing them means regenerating `objects.json` (Feature 108,
+  todo-4).
 - **Use-with targets beyond a map tile:** no tool-on-ground-item,
   tool-on-creature, or tool-on-inventory-item — shared prerequisite with
   Feature 11's fluids (todo-4).
@@ -115,7 +117,8 @@ kind lacks a row) and the write-map path shipped.
 - **Asset-flag parsing, blocked on regeneration:** `m_transformOnUse` and
   `ignoreLook` are parsed-and-dropped by `tools/importTibiaAssets.mjs`;
   capturing them means regenerating `objects.json` + atlases from the pinned
-  `Tibia.dat`/`.spr` (outside the repo). Until then use-transforms beyond
+  `Tibia.dat`/`.spr` (outside the repo; the pass is owned by Feature 108,
+  todo-4). Until then use-transforms beyond
   `rotateTo` stay unregistered and fail closed. Canary's own bidirectional
   transform tables (`carpets.lua`, `windows.lua`, trap disarm) are an
   alternative source needing no DAT change.
@@ -139,9 +142,11 @@ operator attempts) and the 21-raid revscript import lane shipped.
 - **Import the other global events:** `data/scripts/globalevents`
   (`encounters.lua`, `global_server_save.lua`, `online_record.lua`,
   `save_interval.lua`, `server_initialization.lua`,
-  `update_guild_war_status.lua`) and the `data-otservbr-global` tree (spawn
-  sweeps, VIP, world update) — each with the same classify-everything report
-  the raid importer emits.
+  `update_guild_war_status.lua`, plus `hireling_save.lua` — a bare
+  `SaveHirelings()` shutdown hook, i.e. global-save architecture; expect to
+  classify it non-content since persistence here is continuous) and the
+  `data-otservbr-global` tree (spawn sweeps, VIP, world update) — each with
+  the same classify-everything report the raid importer emits.
 - **Daily resets and boosted rotations:** the schedule table carries them
   (`next_check_at` + idempotency key) but no content is imported and the
   daily-boundary step kinds don't exist; `daily_reward_shrine.lua` is

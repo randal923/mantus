@@ -1,6 +1,6 @@
 # Todo 4 — Items and inventory
 
-**Features 11, 16, 17.** The core item system shipped: typed pinned catalog,
+**Features 11, 16, 17, 108.** The core item system shipped: typed pinned catalog,
 single-owner `items` table with audited transactions, bounded intents with
 execution-time re-checks, memory-first ops with guarded single-transaction
 persistence, the optimistic drag queue, the dupe/race/replay exploit suite,
@@ -31,7 +31,8 @@ items → todo-9; forge/imbuements/show-off → todo-10.
   Missing first:
   1. `ItemType.fluidSource` — zero catalog types carry it;
      `tools/convertCanaryItems.mjs` doesn't parse `fluidsource` from
-     `items.xml` (importer change + full catalog rebuild).
+     `items.xml` (importer change + full catalog rebuild — the rebuild is
+     owned by Feature 108 below).
   2. A fluid-subtype model on carried items — `Item` has `count` +
      `attributes`; must not conflict with
      `server/src/economy/shopSubtypeAttributes.ts`.
@@ -56,7 +57,9 @@ intact.
 ## Feature 16 — Optimistic-queue and persistence-path refinements
 
 Umbrella ledger of accepted limitations, each with a recorded fix (throw/drop
-LOS lock and the nonce echo already shipped).
+LOS lock and the nonce echo already shipped). Engineering quality, not
+parity-gating — except the `THROW_RANGE` bullet, which is player-visible
+Canary behavior.
 
 **Remaining work**
 
@@ -115,5 +118,36 @@ attributes.
 delegated areas — this feature owns the inventory tooling and the gate test
 (zero-unreviewed entries, deterministic re-runs against the pinned checkout),
 following the creature-gate pattern (Feature 10).
+
+## Feature 108 — Asset/catalog regeneration pass (single owner)
+
+Five features are blocked on flag families the import pipeline currently
+parses-and-drops (or never parses). Re-emitting `objects.json` + atlases
+rewrites every client asset, so this ships as **one** coordinated
+regeneration, never five separate rebuilds:
+
+- `fluidsource` from `items.xml` via `tools/convertCanaryItems.mjs` →
+  Feature 11's fluids (this file). The source is the pinned Canary
+  checkout, not the DAT — check whether this family can rebuild without
+  the external assets and unblock fluids early.
+- DAT `multiUse`/`usable` bits → Feature 51's curated tool list (todo-2).
+- DAT `m_transformOnUse` / `ignoreLook` → Feature 52 (todo-2).
+- DAT `ATTR.market` metadata → Feature 49's catalog browser (todo-8).
+- `ItemType.field` payloads → Feature 50's fields (todo-2).
+
+**Blockers:** the pinned `Tibia.dat`/`.spr` live outside the repo (README
+known blocker 2) — the DAT-derived families wait until they are supplied.
+
+**Implementation:** extend `tools/importTibiaAssets.mjs` /
+`convertCanaryItems.mjs` to emit all five families in the same run
+(`yarn assets:import`, `yarn items:convert`, then the `items:catalog`
+chain); update converter hashes in `content/source-manifest.json` or
+`yarn parity:check` fails; run the full map chain afterwards —
+`convertOtbm` alone wipes the minimap PNGs.
+
+**Tests:** aggregate-count regression — the regenerated catalog may not
+lose types or flags relative to the shipped one; every shipped-handler
+suite stays green (`WorldActionRegistry.test.ts`, per Feature 52's note);
+each dependent feature's fixtures activate only as its flag family lands.
 
 [Back to overview](README.md)
