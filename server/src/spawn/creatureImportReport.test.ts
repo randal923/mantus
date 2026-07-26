@@ -70,14 +70,13 @@ const trackedMonsterIds = new Set(
   ),
 );
 
-// Pinned 2026-07-24. Every ignored assignment name currently emitted, per kind.
+// Pinned 2026-07-26. Every ignored assignment name currently emitted, per kind.
 const ALLOWED_IGNORED_ASSIGNMENTS: Record<string, ReadonlySet<string>> = {
   monster: new Set([
     "Bestiary",
     "bosstiary",
     "flags.isPreyExclusive",
     "flags.isPreyable",
-    "flags.rewardBoss",
     "raceId",
   ]),
   npc: new Set([
@@ -115,15 +114,14 @@ const ALLOWED_OWNERS = new Set([
 /** The only importers that may claim to cover a creature field. */
 const ALLOWED_COVERING_IMPORTERS = new Set(["tools/importCanaryBestiary.mjs"]);
 
-// Ceilings lowered 2026-07-25: the NPC surface fell to 3 definitions when
-// Feature 37 typed the NpcType model, and bestiary/bosstiary/raceId gaps became
-// `covered` once the bestiary importer's ownership was recorded. What is left
-// blocked is flags.rewardBoss (911, Todo 16 Features 76/84), flags.isPrey*
-// (147, Todo 16 Feature 74), and three NPC entries.
-const UNSUPPORTED_DEFINITIONS_CEILING = 914;
-const IGNORED_ASSIGNMENTS_CEILING = 2484;
+// Ceilings lowered 2026-07-26: Feature 76 imported flags.rewardBoss onto
+// MonsterType, closing the 911-monster blocked bucket. What is left blocked
+// is flags.isPrey* (147, Todo 16 Feature 74's typed-data tail) and three NPC
+// entries.
+const UNSUPPORTED_DEFINITIONS_CEILING = 739;
+const IGNORED_ASSIGNMENTS_CEILING = 1573;
 const PROCEDURAL_CALLBACKS_CEILING = 2;
-const BLOCKED_GAPS_CEILING = 1061;
+const BLOCKED_GAPS_CEILING = 150;
 /** Canary's Crypt Warrior: a Bestiary block with no raceId to track. */
 const UPSTREAM_DEFECT_CEILING = 1;
 

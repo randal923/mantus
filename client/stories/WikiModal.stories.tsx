@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { WikiModal } from "../components/wiki/WikiModal";
+import { BOOSTED_STATE, BOSS_SLOTS_STATE } from "./trackerFixtures";
 import {
   WIKI_BOSS,
   WIKI_BOSSES,
@@ -19,16 +20,26 @@ const meta = {
     bosses: WIKI_BOSSES,
     boss: WIKI_BOSS,
     itemSources: WIKI_ITEM_SOURCES,
+    boosted: BOOSTED_STATE,
+    trackedBestiaryRaceIds: [21],
+    trackedBosstiaryRaceIds: [],
+    bossSlots: BOSS_SLOTS_STATE,
     bestiaryPending: false,
     bosstiaryPending: false,
     itemSourcesPending: false,
+    bossSlotsPending: false,
     bestiaryError: null,
     bosstiaryError: null,
+    bossSlotsError: null,
     onRequestBestiary: fn(),
     onRequestMonster: fn(),
     onRequestBosstiary: fn(),
     onRequestBoss: fn(),
     onRequestItemSources: fn(),
+    onRequestBossSlots: fn(),
+    onToggleTrack: fn(),
+    onAssignBossSlot: fn(),
+    onClearBossSlot: fn(),
     onClose: fn(),
   },
 } satisfies Meta<typeof WikiModal>;
@@ -83,6 +94,8 @@ export const Loading: Story = {
     bosses: null,
     boss: null,
     itemSources: null,
+    boosted: null,
+    bossSlots: null,
     bestiaryPending: true,
     bosstiaryPending: true,
   },

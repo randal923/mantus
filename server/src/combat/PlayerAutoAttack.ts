@@ -14,6 +14,7 @@ import { isInRange } from "./isInRange";
 import { playerAttackPlan, type PlayerAttackPlan } from "./playerAttackPlan";
 import { playerForSession } from "./playerForSession";
 import type { PlayerSpecials } from "./playerSpecials";
+import type { ProficiencyHooks } from "../proficiency/ProficiencyHooks";
 import type { PvpHooks } from "../pvp/PvpHooks";
 
 export class PlayerAutoAttack {
@@ -27,6 +28,7 @@ export class PlayerAutoAttack {
     private readonly damage: DamageResolver,
     private readonly chase: ChaseController,
     private readonly pvpHooks?: PvpHooks,
+    private readonly proficiencyHooks?: ProficiencyHooks,
   ) {}
 
   tickPlayerAttack(session: Session, now: number): void {
@@ -48,6 +50,7 @@ export class PlayerAutoAttack {
       session,
       player,
       target,
+      this.proficiencyHooks?.effectsFor(player.id),
     );
     if (!plan) {
       this.feedback.reject(session, now);
@@ -149,6 +152,14 @@ export class PlayerAutoAttack {
                   100),
           );
         }
+        // Proficiency skill-percentage flat damage joins the roll before
+        // the multiplicative procs.
+        total += plan.weaponRoll.flatBonusDamage;
+        // Weapon-tier onslaught: +60% damage on proc, composing after the
+        // critical exactly like Canary combat.cpp:2597-2601.
+        if (this.formula.chance(plan.weaponRoll.fatalChancePercent)) {
+          total += Math.round(total * 0.6);
+        }
         requests = requests.map((entry, index) => {
           const amount = Math.max(
             0,
@@ -180,6 +191,8 @@ export class PlayerAutoAttack {
         totalDamage,
         plan.weaponRoll.specials,
         now,
+        plan.weaponRoll.proficiencyLifeLeechPercent,
+        plan.weaponRoll.proficiencyManaLeechPercent,
       );
     }
     if (plan.training) {
@@ -206,19 +219,29 @@ export class PlayerAutoAttack {
     damage: number,
     specials: PlayerSpecials,
     now: number,
+    proficiencyLifePercent = 0,
+    proficiencyManaPercent = 0,
   ): void {
-    // Equipment leech keeps its chance roll; wheel and gem leech always
-    // apply (Canary folds WheelStat_t leech into the leech skills,
-    // player.cpp:7360-7363). Single-target, so no multi-target falloff.
+    // Equipment leech keeps its chance roll; wheel, gem, and imbuement
+    // leech always apply (Canary folds WheelStat_t and imbuement leech into
+    // the leech skills, player.cpp:7360-7363, and never rolls the vestigial
+    // imbuement chance — game.cpp:8983). Single-target, so no falloff.
     const wheel = player.wheelBonuses;
+    const imbuements = this.items.imbuementEffects(player.id);
     const lifePercent =
       (this.formula.chance(specials.lifeLeechChance)
         ? specials.lifeLeechPercent
-        : 0) + wheel.lifeLeechPercent;
+        : 0) +
+      wheel.lifeLeechPercent +
+      imbuements.lifeLeechPercent +
+      proficiencyLifePercent;
     const manaPercent =
       (this.formula.chance(specials.manaLeechChance)
         ? specials.manaLeechPercent
-        : 0) + wheel.manaLeechPercent;
+        : 0) +
+      wheel.manaLeechPercent +
+      imbuements.manaLeechPercent +
+      proficiencyManaPercent;
     const health = Math.min(
       damage,
       Math.max(0, Math.round((damage * lifePercent) / 100)),

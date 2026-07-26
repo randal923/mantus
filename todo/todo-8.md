@@ -87,8 +87,10 @@ concurrency, in one transaction.
   owner.
 - **Store-item/unique-id/house-tile restrictions.** Predicates in
   `TradeService` / `planTradeReservation.ts` at both offer and commit time —
-  **blocked**: the attributes don't exist yet (Feature 43 store items,
-  Feature 78 forge/imbuements, todo-9 house tiles, a unique-id item model).
+  partially unblocked 2026-07-26: Feature 78's tier/imbuement attributes now
+  exist on item rows (`attributes.tier`/`attributes.imbuements`), so
+  tiered/imbued-item trade predicates can land; still waiting on Feature 43
+  store items, todo-9 house tiles, and a unique-id item model.
 - Documented deviations, no action planned: reserved-offer visibility
   (reserved items vanish from the giver's visible inventory; conservation
   unaffected) and index-based per-item look (full offer pushed as one

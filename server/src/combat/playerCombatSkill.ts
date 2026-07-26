@@ -6,6 +6,8 @@ export function playerCombatSkill(
   player: Player,
   equipment: ReadonlyArray<{ item: unknown; type: ItemType }>,
   skill: Skill,
+  /** Flat additions from running imbuements (Feature 78). */
+  imbuementBoost = 0,
 ): number {
   const modifierKey =
     skill === "distance"
@@ -21,5 +23,5 @@ export function playerCombatSkill(
         : (entry.type.skillModifiers?.[modifierKey] ?? 0)),
     0,
   );
-  return Math.max(0, player.skillLevel(skill) + modifier);
+  return Math.max(0, player.skillLevel(skill) + modifier + imbuementBoost);
 }

@@ -1,0 +1,4705 @@
+{
+ "formatVersion": 1,
+ "source": {
+  "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
+  "path": "data/items/appearances.dat",
+  "sha256": "aa44a154f30c7ed59acc25f246286396e4043851ef0b54ef3cf3951e46d1ce50"
+ },
+ "entries": [
+  {
+   "clientId": 645,
+   "classification": 2
+  },
+  {
+   "clientId": 811,
+   "classification": 2
+  },
+  {
+   "clientId": 812,
+   "classification": 2
+  },
+  {
+   "clientId": 813,
+   "classification": 2
+  },
+  {
+   "clientId": 818,
+   "classification": 2
+  },
+  {
+   "clientId": 819,
+   "classification": 2
+  },
+  {
+   "clientId": 820,
+   "classification": 2
+  },
+  {
+   "clientId": 821,
+   "classification": 2
+  },
+  {
+   "clientId": 822,
+   "classification": 2
+  },
+  {
+   "clientId": 823,
+   "classification": 2
+  },
+  {
+   "clientId": 824,
+   "classification": 2
+  },
+  {
+   "clientId": 825,
+   "classification": 2
+  },
+  {
+   "clientId": 826,
+   "classification": 2
+  },
+  {
+   "clientId": 827,
+   "classification": 2
+  },
+  {
+   "clientId": 828,
+   "classification": 2
+  },
+  {
+   "clientId": 829,
+   "classification": 2
+  },
+  {
+   "clientId": 830,
+   "classification": 2
+  },
+  {
+   "clientId": 860,
+   "classification": 1,
+   "proficiencyId": 239
+  },
+  {
+   "clientId": 875,
+   "classification": 1
+  },
+  {
+   "clientId": 894,
+   "classification": 2
+  },
+  {
+   "clientId": 1781,
+   "proficiencyId": 125
+  },
+  {
+   "clientId": 2992,
+   "proficiencyId": 126
+  },
+  {
+   "clientId": 3065,
+   "classification": 1,
+   "proficiencyId": 293
+  },
+  {
+   "clientId": 3066,
+   "classification": 1,
+   "proficiencyId": 271
+  },
+  {
+   "clientId": 3067,
+   "classification": 1,
+   "proficiencyId": 313
+  },
+  {
+   "clientId": 3069,
+   "classification": 1,
+   "proficiencyId": 287
+  },
+  {
+   "clientId": 3070,
+   "classification": 1,
+   "proficiencyId": 273
+  },
+  {
+   "clientId": 3071,
+   "classification": 1,
+   "proficiencyId": 312
+  },
+  {
+   "clientId": 3072,
+   "classification": 1,
+   "proficiencyId": 286
+  },
+  {
+   "clientId": 3073,
+   "classification": 1,
+   "proficiencyId": 292
+  },
+  {
+   "clientId": 3074,
+   "classification": 1,
+   "proficiencyId": 272
+  },
+  {
+   "clientId": 3075,
+   "classification": 1,
+   "proficiencyId": 274
+  },
+  {
+   "clientId": 3079,
+   "classification": 2
+  },
+  {
+   "clientId": 3208,
+   "classification": 2,
+   "proficiencyId": 250
+  },
+  {
+   "clientId": 3210,
+   "classification": 2
+  },
+  {
+   "clientId": 3246,
+   "classification": 4
+  },
+  {
+   "clientId": 3264,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3265,
+   "classification": 1,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 3266,
+   "classification": 1,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3267,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3268,
+   "classification": 1,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3269,
+   "classification": 1,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3270,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3271,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3272,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3273,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3274,
+   "classification": 1,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3275,
+   "classification": 1,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3276,
+   "classification": 1,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3277,
+   "proficiencyId": 127
+  },
+  {
+   "clientId": 3278,
+   "classification": 4,
+   "proficiencyId": 310
+  },
+  {
+   "clientId": 3279,
+   "classification": 1,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 3280,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3281,
+   "classification": 2,
+   "proficiencyId": 289
+  },
+  {
+   "clientId": 3282,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3283,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3284,
+   "proficiencyId": 161
+  },
+  {
+   "clientId": 3285,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3286,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3287,
+   "proficiencyId": 128
+  },
+  {
+   "clientId": 3288,
+   "classification": 2,
+   "proficiencyId": 238
+  },
+  {
+   "clientId": 3289,
+   "classification": 1,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 3290,
+   "classification": 1,
+   "proficiencyId": 231
+  },
+  {
+   "clientId": 3291,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3292,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3293,
+   "classification": 1,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3294,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3295,
+   "classification": 2,
+   "proficiencyId": 366
+  },
+  {
+   "clientId": 3296,
+   "classification": 4,
+   "proficiencyId": 311
+  },
+  {
+   "clientId": 3297,
+   "classification": 1,
+   "proficiencyId": 232
+  },
+  {
+   "clientId": 3298,
+   "proficiencyId": 129
+  },
+  {
+   "clientId": 3299,
+   "classification": 1,
+   "proficiencyId": 233
+  },
+  {
+   "clientId": 3300,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3301,
+   "classification": 1,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 3302,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3303,
+   "classification": 3,
+   "proficiencyId": 360
+  },
+  {
+   "clientId": 3304,
+   "classification": 1,
+   "proficiencyId": 243
+  },
+  {
+   "clientId": 3305,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3306,
+   "classification": 2,
+   "proficiencyId": 343
+  },
+  {
+   "clientId": 3307,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3308,
+   "classification": 1,
+   "proficiencyId": 234
+  },
+  {
+   "clientId": 3309,
+   "classification": 4,
+   "proficiencyId": 432
+  },
+  {
+   "clientId": 3310,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3311,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3312,
+   "classification": 3,
+   "proficiencyId": 339
+  },
+  {
+   "clientId": 3313,
+   "classification": 1,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3314,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3315,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3316,
+   "classification": 1,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3317,
+   "classification": 1,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3318,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3319,
+   "classification": 2,
+   "proficiencyId": 414
+  },
+  {
+   "clientId": 3320,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3321,
+   "proficiencyId": 423
+  },
+  {
+   "clientId": 3322,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3323,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3324,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3325,
+   "classification": 4,
+   "proficiencyId": 424
+  },
+  {
+   "clientId": 3326,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 3327,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3328,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3329,
+   "classification": 4,
+   "proficiencyId": 344
+  },
+  {
+   "clientId": 3330,
+   "classification": 1,
+   "proficiencyId": 235
+  },
+  {
+   "clientId": 3331,
+   "classification": 3,
+   "proficiencyId": 350
+  },
+  {
+   "clientId": 3332,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 3333,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3334,
+   "classification": 3,
+   "proficiencyId": 275
+  },
+  {
+   "clientId": 3335,
+   "classification": 3,
+   "proficiencyId": 353
+  },
+  {
+   "clientId": 3336,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3337,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 3338,
+   "classification": 1,
+   "proficiencyId": 236
+  },
+  {
+   "clientId": 3339,
+   "classification": 3,
+   "proficiencyId": 268
+  },
+  {
+   "clientId": 3340,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 3341,
+   "classification": 2,
+   "proficiencyId": 436
+  },
+  {
+   "clientId": 3342,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3343,
+   "classification": 4,
+   "proficiencyId": 258
+  },
+  {
+   "clientId": 3344,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 3345,
+   "classification": 1,
+   "proficiencyId": 218
+  },
+  {
+   "clientId": 3346,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 3347,
+   "proficiencyId": 131
+  },
+  {
+   "clientId": 3348,
+   "classification": 2,
+   "proficiencyId": 248
+  },
+  {
+   "clientId": 3349,
+   "classification": 1,
+   "proficiencyId": 228
+  },
+  {
+   "clientId": 3350,
+   "classification": 1,
+   "proficiencyId": 228
+  },
+  {
+   "clientId": 3351,
+   "classification": 1
+  },
+  {
+   "clientId": 3352,
+   "classification": 1
+  },
+  {
+   "clientId": 3353,
+   "classification": 1
+  },
+  {
+   "clientId": 3354,
+   "classification": 1
+  },
+  {
+   "clientId": 3355,
+   "classification": 1
+  },
+  {
+   "clientId": 3356,
+   "classification": 2
+  },
+  {
+   "clientId": 3357,
+   "classification": 1
+  },
+  {
+   "clientId": 3358,
+   "classification": 1
+  },
+  {
+   "clientId": 3359,
+   "classification": 1
+  },
+  {
+   "clientId": 3360,
+   "classification": 2
+  },
+  {
+   "clientId": 3361,
+   "classification": 1
+  },
+  {
+   "clientId": 3362,
+   "classification": 1
+  },
+  {
+   "clientId": 3363,
+   "classification": 4
+  },
+  {
+   "clientId": 3364,
+   "classification": 2
+  },
+  {
+   "clientId": 3365,
+   "classification": 4
+  },
+  {
+   "clientId": 3366,
+   "classification": 2
+  },
+  {
+   "clientId": 3367,
+   "classification": 1
+  },
+  {
+   "clientId": 3368,
+   "classification": 4
+  },
+  {
+   "clientId": 3369,
+   "classification": 2
+  },
+  {
+   "clientId": 3370,
+   "classification": 2
+  },
+  {
+   "clientId": 3371,
+   "classification": 1
+  },
+  {
+   "clientId": 3372,
+   "classification": 1
+  },
+  {
+   "clientId": 3373,
+   "classification": 1
+  },
+  {
+   "clientId": 3374,
+   "classification": 2
+  },
+  {
+   "clientId": 3375,
+   "classification": 1
+  },
+  {
+   "clientId": 3376,
+   "classification": 1
+  },
+  {
+   "clientId": 3377,
+   "classification": 1
+  },
+  {
+   "clientId": 3378,
+   "classification": 1
+  },
+  {
+   "clientId": 3379,
+   "classification": 1
+  },
+  {
+   "clientId": 3380,
+   "classification": 1
+  },
+  {
+   "clientId": 3381,
+   "classification": 2
+  },
+  {
+   "clientId": 3382,
+   "classification": 2
+  },
+  {
+   "clientId": 3383,
+   "classification": 1
+  },
+  {
+   "clientId": 3384,
+   "classification": 1
+  },
+  {
+   "clientId": 3385,
+   "classification": 2
+  },
+  {
+   "clientId": 3386,
+   "classification": 2
+  },
+  {
+   "clientId": 3387,
+   "classification": 2
+  },
+  {
+   "clientId": 3388,
+   "classification": 2
+  },
+  {
+   "clientId": 3389,
+   "classification": 4
+  },
+  {
+   "clientId": 3390,
+   "classification": 4
+  },
+  {
+   "clientId": 3391,
+   "classification": 2
+  },
+  {
+   "clientId": 3392,
+   "classification": 2
+  },
+  {
+   "clientId": 3393,
+   "classification": 4
+  },
+  {
+   "clientId": 3394,
+   "classification": 4
+  },
+  {
+   "clientId": 3395,
+   "classification": 4
+  },
+  {
+   "clientId": 3396,
+   "classification": 3
+  },
+  {
+   "clientId": 3397,
+   "classification": 3
+  },
+  {
+   "clientId": 3398,
+   "classification": 3
+  },
+  {
+   "clientId": 3399,
+   "classification": 3
+  },
+  {
+   "clientId": 3400,
+   "classification": 3
+  },
+  {
+   "clientId": 3401,
+   "classification": 3
+  },
+  {
+   "clientId": 3402,
+   "classification": 4
+  },
+  {
+   "clientId": 3403,
+   "classification": 1
+  },
+  {
+   "clientId": 3404,
+   "classification": 2
+  },
+  {
+   "clientId": 3405,
+   "classification": 1
+  },
+  {
+   "clientId": 3406,
+   "classification": 1
+  },
+  {
+   "clientId": 3407,
+   "classification": 1
+  },
+  {
+   "clientId": 3408,
+   "classification": 2
+  },
+  {
+   "clientId": 3453,
+   "classification": 1,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 3550,
+   "classification": 4
+  },
+  {
+   "clientId": 3551,
+   "classification": 1
+  },
+  {
+   "clientId": 3552,
+   "classification": 1
+  },
+  {
+   "clientId": 3553,
+   "classification": 4
+  },
+  {
+   "clientId": 3554,
+   "classification": 2
+  },
+  {
+   "clientId": 3555,
+   "classification": 3
+  },
+  {
+   "clientId": 3556,
+   "classification": 2
+  },
+  {
+   "clientId": 3557,
+   "classification": 1
+  },
+  {
+   "clientId": 3558,
+   "classification": 1
+  },
+  {
+   "clientId": 3559,
+   "classification": 1
+  },
+  {
+   "clientId": 3561,
+   "classification": 1
+  },
+  {
+   "clientId": 3562,
+   "classification": 1
+  },
+  {
+   "clientId": 3563,
+   "classification": 1
+  },
+  {
+   "clientId": 3565,
+   "classification": 1
+  },
+  {
+   "clientId": 3566,
+   "classification": 1
+  },
+  {
+   "clientId": 3567,
+   "classification": 2
+  },
+  {
+   "clientId": 3571,
+   "classification": 1
+  },
+  {
+   "clientId": 3573,
+   "classification": 3
+  },
+  {
+   "clientId": 3574,
+   "classification": 1
+  },
+  {
+   "clientId": 3575,
+   "classification": 2
+  },
+  {
+   "clientId": 3576,
+   "classification": 1
+  },
+  {
+   "clientId": 4033,
+   "classification": 2
+  },
+  {
+   "clientId": 5461,
+   "classification": 1
+  },
+  {
+   "clientId": 5741,
+   "classification": 2
+  },
+  {
+   "clientId": 5803,
+   "classification": 2,
+   "proficiencyId": 372
+  },
+  {
+   "clientId": 5903,
+   "classification": 4
+  },
+  {
+   "clientId": 5917,
+   "classification": 1
+  },
+  {
+   "clientId": 5918,
+   "classification": 1
+  },
+  {
+   "clientId": 6095,
+   "classification": 1
+  },
+  {
+   "clientId": 6096,
+   "classification": 1
+  },
+  {
+   "clientId": 6101,
+   "classification": 3,
+   "proficiencyId": 443
+  },
+  {
+   "clientId": 6527,
+   "classification": 2,
+   "proficiencyId": 308
+  },
+  {
+   "clientId": 6531,
+   "classification": 1
+  },
+  {
+   "clientId": 6553,
+   "classification": 2,
+   "proficiencyId": 355
+  },
+  {
+   "clientId": 6578,
+   "classification": 1
+  },
+  {
+   "clientId": 7366,
+   "proficiencyId": 132
+  },
+  {
+   "clientId": 7367,
+   "proficiencyId": 133
+  },
+  {
+   "clientId": 7368,
+   "proficiencyId": 149
+  },
+  {
+   "clientId": 7378,
+   "proficiencyId": 150
+  },
+  {
+   "clientId": 7379,
+   "classification": 1,
+   "proficiencyId": 328
+  },
+  {
+   "clientId": 7380,
+   "classification": 2,
+   "proficiencyId": 384
+  },
+  {
+   "clientId": 7381,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7382,
+   "classification": 2,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 7383,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 7384,
+   "classification": 2,
+   "proficiencyId": 374
+  },
+  {
+   "clientId": 7385,
+   "classification": 1,
+   "proficiencyId": 239
+  },
+  {
+   "clientId": 7386,
+   "classification": 2,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 7387,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7388,
+   "classification": 2,
+   "proficiencyId": 284
+  },
+  {
+   "clientId": 7389,
+   "classification": 2,
+   "proficiencyId": 375
+  },
+  {
+   "clientId": 7390,
+   "classification": 2,
+   "proficiencyId": 377
+  },
+  {
+   "clientId": 7391,
+   "classification": 2,
+   "proficiencyId": 288
+  },
+  {
+   "clientId": 7392,
+   "classification": 2,
+   "proficiencyId": 383
+  },
+  {
+   "clientId": 7402,
+   "classification": 2,
+   "proficiencyId": 285
+  },
+  {
+   "clientId": 7403,
+   "classification": 2,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 7404,
+   "classification": 2,
+   "proficiencyId": 240
+  },
+  {
+   "clientId": 7405,
+   "classification": 3,
+   "proficiencyId": 307
+  },
+  {
+   "clientId": 7406,
+   "classification": 2,
+   "proficiencyId": 385
+  },
+  {
+   "clientId": 7407,
+   "classification": 2,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 7408,
+   "classification": 2,
+   "proficiencyId": 266
+  },
+  {
+   "clientId": 7409,
+   "classification": 2,
+   "proficiencyId": 342
+  },
+  {
+   "clientId": 7410,
+   "classification": 3,
+   "proficiencyId": 425
+  },
+  {
+   "clientId": 7411,
+   "classification": 2,
+   "proficiencyId": 284
+  },
+  {
+   "clientId": 7412,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 7413,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 7414,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 7415,
+   "classification": 2,
+   "proficiencyId": 376
+  },
+  {
+   "clientId": 7416,
+   "classification": 2,
+   "proficiencyId": 241
+  },
+  {
+   "clientId": 7417,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 7418,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 7419,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 7420,
+   "classification": 3,
+   "proficiencyId": 415
+  },
+  {
+   "clientId": 7421,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7422,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7423,
+   "classification": 3,
+   "proficiencyId": 439
+  },
+  {
+   "clientId": 7424,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 7425,
+   "classification": 1,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 7426,
+   "classification": 2,
+   "proficiencyId": 330
+  },
+  {
+   "clientId": 7427,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 7428,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 7429,
+   "classification": 2,
+   "proficiencyId": 380
+  },
+  {
+   "clientId": 7430,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7431,
+   "classification": 3,
+   "proficiencyId": 430
+  },
+  {
+   "clientId": 7432,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7433,
+   "classification": 4,
+   "proficiencyId": 404
+  },
+  {
+   "clientId": 7434,
+   "classification": 2,
+   "proficiencyId": 379
+  },
+  {
+   "clientId": 7435,
+   "classification": 3,
+   "proficiencyId": 417
+  },
+  {
+   "clientId": 7436,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 7437,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7438,
+   "classification": 2,
+   "proficiencyId": 333
+  },
+  {
+   "clientId": 7449,
+   "classification": 1,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 7450,
+   "classification": 4,
+   "proficiencyId": 437
+  },
+  {
+   "clientId": 7451,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 7452,
+   "classification": 2,
+   "proficiencyId": 329
+  },
+  {
+   "clientId": 7453,
+   "classification": 3,
+   "proficiencyId": 354
+  },
+  {
+   "clientId": 7454,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 7455,
+   "classification": 4,
+   "proficiencyId": 416
+  },
+  {
+   "clientId": 7456,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 7457,
+   "classification": 2
+  },
+  {
+   "clientId": 7458,
+   "classification": 3
+  },
+  {
+   "clientId": 7459,
+   "classification": 2
+  },
+  {
+   "clientId": 7461,
+   "classification": 1
+  },
+  {
+   "clientId": 7462,
+   "classification": 1
+  },
+  {
+   "clientId": 7463,
+   "classification": 2
+  },
+  {
+   "clientId": 7464,
+   "classification": 2
+  },
+  {
+   "clientId": 7773,
+   "classification": 1,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 7774,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 7991,
+   "classification": 1
+  },
+  {
+   "clientId": 7992,
+   "classification": 1
+  },
+  {
+   "clientId": 8021,
+   "classification": 2,
+   "proficiencyId": 362
+  },
+  {
+   "clientId": 8022,
+   "classification": 4,
+   "proficiencyId": 378
+  },
+  {
+   "clientId": 8023,
+   "classification": 3,
+   "proficiencyId": 393
+  },
+  {
+   "clientId": 8024,
+   "classification": 4,
+   "proficiencyId": 388
+  },
+  {
+   "clientId": 8025,
+   "classification": 2,
+   "proficiencyId": 382
+  },
+  {
+   "clientId": 8026,
+   "classification": 3,
+   "proficiencyId": 338
+  },
+  {
+   "clientId": 8027,
+   "classification": 2,
+   "proficiencyId": 340
+  },
+  {
+   "clientId": 8028,
+   "classification": 4,
+   "proficiencyId": 405
+  },
+  {
+   "clientId": 8029,
+   "classification": 2,
+   "proficiencyId": 336
+  },
+  {
+   "clientId": 8030,
+   "classification": 4,
+   "proficiencyId": 403
+  },
+  {
+   "clientId": 8037,
+   "classification": 4
+  },
+  {
+   "clientId": 8038,
+   "classification": 4
+  },
+  {
+   "clientId": 8039,
+   "classification": 2
+  },
+  {
+   "clientId": 8040,
+   "classification": 2
+  },
+  {
+   "clientId": 8041,
+   "classification": 2
+  },
+  {
+   "clientId": 8042,
+   "classification": 1
+  },
+  {
+   "clientId": 8043,
+   "classification": 2
+  },
+  {
+   "clientId": 8044,
+   "classification": 1
+  },
+  {
+   "clientId": 8049,
+   "classification": 2
+  },
+  {
+   "clientId": 8050,
+   "classification": 2
+  },
+  {
+   "clientId": 8051,
+   "classification": 2
+  },
+  {
+   "clientId": 8052,
+   "classification": 2
+  },
+  {
+   "clientId": 8053,
+   "classification": 2
+  },
+  {
+   "clientId": 8054,
+   "classification": 4
+  },
+  {
+   "clientId": 8055,
+   "classification": 2
+  },
+  {
+   "clientId": 8056,
+   "classification": 4
+  },
+  {
+   "clientId": 8057,
+   "classification": 2
+  },
+  {
+   "clientId": 8058,
+   "classification": 4
+  },
+  {
+   "clientId": 8059,
+   "classification": 2
+  },
+  {
+   "clientId": 8060,
+   "classification": 3
+  },
+  {
+   "clientId": 8061,
+   "classification": 2
+  },
+  {
+   "clientId": 8062,
+   "classification": 2
+  },
+  {
+   "clientId": 8063,
+   "classification": 2
+  },
+  {
+   "clientId": 8064,
+   "classification": 1
+  },
+  {
+   "clientId": 8082,
+   "classification": 1,
+   "proficiencyId": 326
+  },
+  {
+   "clientId": 8083,
+   "classification": 1,
+   "proficiencyId": 291
+  },
+  {
+   "clientId": 8084,
+   "classification": 1,
+   "proficiencyId": 319
+  },
+  {
+   "clientId": 8092,
+   "classification": 1,
+   "proficiencyId": 321
+  },
+  {
+   "clientId": 8093,
+   "classification": 1,
+   "proficiencyId": 290
+  },
+  {
+   "clientId": 8094,
+   "classification": 1,
+   "proficiencyId": 327
+  },
+  {
+   "clientId": 8095,
+   "classification": 1
+  },
+  {
+   "clientId": 8096,
+   "classification": 3,
+   "proficiencyId": 418
+  },
+  {
+   "clientId": 8097,
+   "classification": 4,
+   "proficiencyId": 419
+  },
+  {
+   "clientId": 8098,
+   "classification": 3,
+   "proficiencyId": 359
+  },
+  {
+   "clientId": 8099,
+   "classification": 4,
+   "proficiencyId": 433
+  },
+  {
+   "clientId": 8100,
+   "classification": 3,
+   "proficiencyId": 408
+  },
+  {
+   "clientId": 8101,
+   "classification": 3,
+   "proficiencyId": 440
+  },
+  {
+   "clientId": 8102,
+   "classification": 3,
+   "proficiencyId": 389
+  },
+  {
+   "clientId": 8103,
+   "classification": 4,
+   "proficiencyId": 317
+  },
+  {
+   "clientId": 8104,
+   "classification": 3,
+   "proficiencyId": 309
+  },
+  {
+   "clientId": 8862,
+   "classification": 2
+  },
+  {
+   "clientId": 8863,
+   "classification": 2
+  },
+  {
+   "clientId": 8864,
+   "classification": 2
+  },
+  {
+   "clientId": 9013,
+   "classification": 1
+  },
+  {
+   "clientId": 9014,
+   "classification": 1
+  },
+  {
+   "clientId": 9017,
+   "classification": 1
+  },
+  {
+   "clientId": 9103,
+   "classification": 2
+  },
+  {
+   "clientId": 9373,
+   "classification": 2,
+   "proficiencyId": 244
+  },
+  {
+   "clientId": 9374,
+   "classification": 2
+  },
+  {
+   "clientId": 9375,
+   "classification": 2,
+   "proficiencyId": 259
+  },
+  {
+   "clientId": 9376,
+   "classification": 2,
+   "proficiencyId": 246
+  },
+  {
+   "clientId": 9378,
+   "classification": 2,
+   "proficiencyId": 331
+  },
+  {
+   "clientId": 9379,
+   "classification": 2
+  },
+  {
+   "clientId": 9381,
+   "classification": 2
+  },
+  {
+   "clientId": 9382,
+   "classification": 2
+  },
+  {
+   "clientId": 9383,
+   "classification": 2
+  },
+  {
+   "clientId": 9384,
+   "classification": 2,
+   "proficiencyId": 345
+  },
+  {
+   "clientId": 9385,
+   "classification": 2,
+   "proficiencyId": 245
+  },
+  {
+   "clientId": 9386,
+   "classification": 2,
+   "proficiencyId": 346
+  },
+  {
+   "clientId": 9387,
+   "classification": 2,
+   "proficiencyId": 260
+  },
+  {
+   "clientId": 9396,
+   "classification": 2,
+   "proficiencyId": 242
+  },
+  {
+   "clientId": 9399,
+   "classification": 2
+  },
+  {
+   "clientId": 9653,
+   "classification": 2
+  },
+  {
+   "clientId": 10200,
+   "classification": 4
+  },
+  {
+   "clientId": 10201,
+   "classification": 4
+  },
+  {
+   "clientId": 10323,
+   "classification": 2
+  },
+  {
+   "clientId": 10384,
+   "classification": 2
+  },
+  {
+   "clientId": 10385,
+   "classification": 2
+  },
+  {
+   "clientId": 10386,
+   "classification": 2
+  },
+  {
+   "clientId": 10387,
+   "classification": 2
+  },
+  {
+   "clientId": 10388,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 10389,
+   "classification": 2,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 10390,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 10391,
+   "classification": 2,
+   "proficiencyId": 400
+  },
+  {
+   "clientId": 10392,
+   "classification": 1,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 10406,
+   "classification": 1,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 10438,
+   "classification": 2
+  },
+  {
+   "clientId": 10439,
+   "classification": 2
+  },
+  {
+   "clientId": 10451,
+   "classification": 2
+  },
+  {
+   "clientId": 11651,
+   "classification": 2
+  },
+  {
+   "clientId": 11657,
+   "classification": 2,
+   "proficiencyId": 225
+  },
+  {
+   "clientId": 11674,
+   "classification": 2
+  },
+  {
+   "clientId": 11686,
+   "classification": 3
+  },
+  {
+   "clientId": 11687,
+   "classification": 3
+  },
+  {
+   "clientId": 11689,
+   "classification": 3
+  },
+  {
+   "clientId": 11692,
+   "classification": 3,
+   "proficiencyId": 431
+  },
+  {
+   "clientId": 11693,
+   "classification": 2,
+   "proficiencyId": 387
+  },
+  {
+   "clientId": 11700,
+   "classification": 1
+  },
+  {
+   "clientId": 11701,
+   "classification": 3
+  },
+  {
+   "clientId": 12599,
+   "classification": 4
+  },
+  {
+   "clientId": 12603,
+   "classification": 4,
+   "proficiencyId": 320
+  },
+  {
+   "clientId": 12673,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 12683,
+   "classification": 2,
+   "proficiencyId": 334
+  },
+  {
+   "clientId": 12731,
+   "proficiencyId": 357
+  },
+  {
+   "clientId": 12732,
+   "proficiencyId": 352
+  },
+  {
+   "clientId": 12733,
+   "proficiencyId": 356
+  },
+  {
+   "clientId": 12741,
+   "proficiencyId": 351
+  },
+  {
+   "clientId": 13987,
+   "classification": 2,
+   "proficiencyId": 332
+  },
+  {
+   "clientId": 13991,
+   "classification": 2,
+   "proficiencyId": 337
+  },
+  {
+   "clientId": 13993,
+   "classification": 2
+  },
+  {
+   "clientId": 13994,
+   "classification": 2
+  },
+  {
+   "clientId": 13996,
+   "classification": 2
+  },
+  {
+   "clientId": 13997,
+   "classification": 3
+  },
+  {
+   "clientId": 13999,
+   "classification": 2
+  },
+  {
+   "clientId": 14001,
+   "classification": 2,
+   "proficiencyId": 341
+  },
+  {
+   "clientId": 14040,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 14043,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 14086,
+   "classification": 2
+  },
+  {
+   "clientId": 14087,
+   "classification": 2
+  },
+  {
+   "clientId": 14089,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 14246,
+   "classification": 2,
+   "proficiencyId": 348
+  },
+  {
+   "clientId": 14247,
+   "classification": 2,
+   "proficiencyId": 373
+  },
+  {
+   "clientId": 14250,
+   "classification": 2,
+   "proficiencyId": 422
+  },
+  {
+   "clientId": 14768,
+   "classification": 3,
+   "proficiencyId": 391
+  },
+  {
+   "clientId": 16096,
+   "classification": 2,
+   "proficiencyId": 324
+  },
+  {
+   "clientId": 16104,
+   "classification": 2
+  },
+  {
+   "clientId": 16105,
+   "classification": 2
+  },
+  {
+   "clientId": 16106,
+   "classification": 2
+  },
+  {
+   "clientId": 16109,
+   "classification": 2
+  },
+  {
+   "clientId": 16110,
+   "classification": 2
+  },
+  {
+   "clientId": 16111,
+   "classification": 2
+  },
+  {
+   "clientId": 16112,
+   "classification": 2
+  },
+  {
+   "clientId": 16115,
+   "classification": 2,
+   "proficiencyId": 325
+  },
+  {
+   "clientId": 16117,
+   "classification": 2,
+   "proficiencyId": 322
+  },
+  {
+   "clientId": 16118,
+   "classification": 2,
+   "proficiencyId": 323
+  },
+  {
+   "clientId": 16160,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 16161,
+   "classification": 2,
+   "proficiencyId": 406
+  },
+  {
+   "clientId": 16162,
+   "classification": 2,
+   "proficiencyId": 283
+  },
+  {
+   "clientId": 16163,
+   "classification": 2,
+   "proficiencyId": 386
+  },
+  {
+   "clientId": 16164,
+   "classification": 2,
+   "proficiencyId": 361
+  },
+  {
+   "clientId": 16175,
+   "classification": 2,
+   "proficiencyId": 316
+  },
+  {
+   "clientId": 17812,
+   "classification": 1,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 17813,
+   "classification": 1,
+   "proficiencyId": 249
+  },
+  {
+   "clientId": 17824,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 17828,
+   "classification": 2,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 17829,
+   "classification": 2
+  },
+  {
+   "clientId": 17846,
+   "classification": 1
+  },
+  {
+   "clientId": 17852,
+   "classification": 2
+  },
+  {
+   "clientId": 17859,
+   "classification": 1,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 19356,
+   "classification": 4,
+   "proficiencyId": 381
+  },
+  {
+   "clientId": 19358,
+   "classification": 3
+  },
+  {
+   "clientId": 19362,
+   "classification": 2,
+   "proficiencyId": 335
+  },
+  {
+   "clientId": 19366,
+   "classification": 4
+  },
+  {
+   "clientId": 19372,
+   "classification": 3
+  },
+  {
+   "clientId": 19374,
+   "classification": 4
+  },
+  {
+   "clientId": 19391,
+   "classification": 4
+  },
+  {
+   "clientId": 20064,
+   "classification": 2,
+   "proficiencyId": 103
+  },
+  {
+   "clientId": 20065,
+   "classification": 3,
+   "proficiencyId": 111
+  },
+  {
+   "clientId": 20066,
+   "classification": 4,
+   "proficiencyId": 119
+  },
+  {
+   "clientId": 20067,
+   "classification": 2,
+   "proficiencyId": 106
+  },
+  {
+   "clientId": 20068,
+   "classification": 3,
+   "proficiencyId": 114
+  },
+  {
+   "clientId": 20069,
+   "classification": 4,
+   "proficiencyId": 122
+  },
+  {
+   "clientId": 20070,
+   "classification": 2,
+   "proficiencyId": 102
+  },
+  {
+   "clientId": 20071,
+   "classification": 3,
+   "proficiencyId": 110
+  },
+  {
+   "clientId": 20072,
+   "classification": 4,
+   "proficiencyId": 118
+  },
+  {
+   "clientId": 20073,
+   "classification": 2,
+   "proficiencyId": 105
+  },
+  {
+   "clientId": 20074,
+   "classification": 3,
+   "proficiencyId": 113
+  },
+  {
+   "clientId": 20075,
+   "classification": 4,
+   "proficiencyId": 121
+  },
+  {
+   "clientId": 20076,
+   "classification": 2,
+   "proficiencyId": 101
+  },
+  {
+   "clientId": 20077,
+   "classification": 3,
+   "proficiencyId": 109
+  },
+  {
+   "clientId": 20078,
+   "classification": 4,
+   "proficiencyId": 117
+  },
+  {
+   "clientId": 20079,
+   "classification": 2,
+   "proficiencyId": 104
+  },
+  {
+   "clientId": 20080,
+   "classification": 3,
+   "proficiencyId": 112
+  },
+  {
+   "clientId": 20081,
+   "classification": 4,
+   "proficiencyId": 120
+  },
+  {
+   "clientId": 20082,
+   "classification": 2,
+   "proficiencyId": 108
+  },
+  {
+   "clientId": 20083,
+   "classification": 3,
+   "proficiencyId": 130
+  },
+  {
+   "clientId": 20084,
+   "classification": 4,
+   "proficiencyId": 124
+  },
+  {
+   "clientId": 20085,
+   "classification": 2,
+   "proficiencyId": 453
+  },
+  {
+   "clientId": 20086,
+   "classification": 3,
+   "proficiencyId": 452
+  },
+  {
+   "clientId": 20087,
+   "classification": 4,
+   "proficiencyId": 451
+  },
+  {
+   "clientId": 21158,
+   "proficiencyId": 157
+  },
+  {
+   "clientId": 21164,
+   "classification": 2
+  },
+  {
+   "clientId": 21165,
+   "classification": 2
+  },
+  {
+   "clientId": 21166,
+   "classification": 2
+  },
+  {
+   "clientId": 21167,
+   "classification": 2
+  },
+  {
+   "clientId": 21168,
+   "classification": 2
+  },
+  {
+   "clientId": 21169,
+   "classification": 2
+  },
+  {
+   "clientId": 21171,
+   "classification": 2,
+   "proficiencyId": 227
+  },
+  {
+   "clientId": 21172,
+   "classification": 2,
+   "proficiencyId": 420
+  },
+  {
+   "clientId": 21173,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 21174,
+   "classification": 2,
+   "proficiencyId": 224
+  },
+  {
+   "clientId": 21176,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 21177,
+   "classification": 2,
+   "proficiencyId": 219
+  },
+  {
+   "clientId": 21178,
+   "proficiencyId": 411
+  },
+  {
+   "clientId": 21179,
+   "proficiencyId": 413
+  },
+  {
+   "clientId": 21180,
+   "proficiencyId": 412
+  },
+  {
+   "clientId": 21219,
+   "classification": 4,
+   "proficiencyId": 435
+  },
+  {
+   "clientId": 21348,
+   "classification": 1,
+   "proficiencyId": 269
+  },
+  {
+   "clientId": 21350,
+   "classification": 1,
+   "proficiencyId": 270
+  },
+  {
+   "clientId": 21892,
+   "classification": 2
+  },
+  {
+   "clientId": 21981,
+   "classification": 2
+  },
+  {
+   "clientId": 22085,
+   "classification": 2
+  },
+  {
+   "clientId": 22086,
+   "classification": 2
+  },
+  {
+   "clientId": 22087,
+   "classification": 2
+  },
+  {
+   "clientId": 22171,
+   "classification": 2,
+   "proficiencyId": 226
+  },
+  {
+   "clientId": 22172,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 22183,
+   "classification": 2,
+   "proficiencyId": 318
+  },
+  {
+   "clientId": 22192,
+   "classification": 2
+  },
+  {
+   "clientId": 22518,
+   "classification": 2
+  },
+  {
+   "clientId": 22519,
+   "classification": 2
+  },
+  {
+   "clientId": 22520,
+   "classification": 2
+  },
+  {
+   "clientId": 22521,
+   "classification": 2
+  },
+  {
+   "clientId": 22522,
+   "classification": 2
+  },
+  {
+   "clientId": 22523,
+   "classification": 2
+  },
+  {
+   "clientId": 22524,
+   "classification": 2
+  },
+  {
+   "clientId": 22525,
+   "classification": 2
+  },
+  {
+   "clientId": 22526,
+   "classification": 2
+  },
+  {
+   "clientId": 22527,
+   "classification": 2
+  },
+  {
+   "clientId": 22528,
+   "classification": 2
+  },
+  {
+   "clientId": 22529,
+   "classification": 2
+  },
+  {
+   "clientId": 22530,
+   "classification": 2
+  },
+  {
+   "clientId": 22531,
+   "classification": 2
+  },
+  {
+   "clientId": 22532,
+   "classification": 2
+  },
+  {
+   "clientId": 22533,
+   "classification": 2
+  },
+  {
+   "clientId": 22534,
+   "classification": 2
+  },
+  {
+   "clientId": 22535,
+   "classification": 2
+  },
+  {
+   "clientId": 22536,
+   "classification": 2
+  },
+  {
+   "clientId": 22537,
+   "classification": 2
+  },
+  {
+   "clientId": 22727,
+   "classification": 2,
+   "proficiencyId": 223
+  },
+  {
+   "clientId": 22754,
+   "classification": 4
+  },
+  {
+   "clientId": 22756,
+   "classification": 4
+  },
+  {
+   "clientId": 22757,
+   "classification": 4
+  },
+  {
+   "clientId": 22759,
+   "classification": 4,
+   "proficiencyId": 407
+  },
+  {
+   "clientId": 22760,
+   "classification": 4,
+   "proficiencyId": 370
+  },
+  {
+   "clientId": 22762,
+   "classification": 3,
+   "proficiencyId": 409
+  },
+  {
+   "clientId": 22764,
+   "proficiencyId": 434
+  },
+  {
+   "clientId": 22765,
+   "proficiencyId": 441
+  },
+  {
+   "clientId": 22766,
+   "proficiencyId": 442
+  },
+  {
+   "clientId": 22866,
+   "classification": 2,
+   "proficiencyId": 363
+  },
+  {
+   "clientId": 22867,
+   "classification": 2,
+   "proficiencyId": 392
+  },
+  {
+   "clientId": 24397,
+   "classification": 1
+  },
+  {
+   "clientId": 24402,
+   "classification": 1
+  },
+  {
+   "clientId": 24404,
+   "classification": 1
+  },
+  {
+   "clientId": 24405,
+   "classification": 1
+  },
+  {
+   "clientId": 24409,
+   "classification": 1
+  },
+  {
+   "clientId": 25088,
+   "classification": 2
+  },
+  {
+   "clientId": 25700,
+   "classification": 2,
+   "proficiencyId": 222
+  },
+  {
+   "clientId": 25735,
+   "proficiencyId": 158
+  },
+  {
+   "clientId": 25759,
+   "proficiencyId": 159
+  },
+  {
+   "clientId": 25760,
+   "proficiencyId": 358
+  },
+  {
+   "clientId": 25779,
+   "classification": 2
+  },
+  {
+   "clientId": 25915,
+   "classification": 1,
+   "proficiencyId": 305
+  },
+  {
+   "clientId": 25916,
+   "classification": 1,
+   "proficiencyId": 305
+  },
+  {
+   "clientId": 25917,
+   "classification": 1,
+   "proficiencyId": 305
+  },
+  {
+   "clientId": 25918,
+   "classification": 1,
+   "proficiencyId": 305
+  },
+  {
+   "clientId": 25919,
+   "classification": 1,
+   "proficiencyId": 305
+  },
+  {
+   "clientId": 25920,
+   "classification": 1,
+   "proficiencyId": 304
+  },
+  {
+   "clientId": 25921,
+   "classification": 1,
+   "proficiencyId": 304
+  },
+  {
+   "clientId": 25922,
+   "classification": 1,
+   "proficiencyId": 304
+  },
+  {
+   "clientId": 25923,
+   "classification": 1,
+   "proficiencyId": 304
+  },
+  {
+   "clientId": 25924,
+   "classification": 1,
+   "proficiencyId": 304
+  },
+  {
+   "clientId": 25925,
+   "classification": 1,
+   "proficiencyId": 303
+  },
+  {
+   "clientId": 25926,
+   "classification": 1,
+   "proficiencyId": 303
+  },
+  {
+   "clientId": 25927,
+   "classification": 1,
+   "proficiencyId": 303
+  },
+  {
+   "clientId": 25928,
+   "classification": 1,
+   "proficiencyId": 303
+  },
+  {
+   "clientId": 25929,
+   "classification": 1,
+   "proficiencyId": 303
+  },
+  {
+   "clientId": 25930,
+   "classification": 1,
+   "proficiencyId": 302
+  },
+  {
+   "clientId": 25931,
+   "classification": 1,
+   "proficiencyId": 302
+  },
+  {
+   "clientId": 25932,
+   "classification": 1,
+   "proficiencyId": 302
+  },
+  {
+   "clientId": 25933,
+   "classification": 1,
+   "proficiencyId": 302
+  },
+  {
+   "clientId": 25934,
+   "classification": 1,
+   "proficiencyId": 302
+  },
+  {
+   "clientId": 25935,
+   "classification": 1,
+   "proficiencyId": 301
+  },
+  {
+   "clientId": 25936,
+   "classification": 1,
+   "proficiencyId": 301
+  },
+  {
+   "clientId": 25937,
+   "classification": 1,
+   "proficiencyId": 301
+  },
+  {
+   "clientId": 25938,
+   "classification": 1,
+   "proficiencyId": 301
+  },
+  {
+   "clientId": 25939,
+   "classification": 1,
+   "proficiencyId": 301
+  },
+  {
+   "clientId": 25940,
+   "classification": 1,
+   "proficiencyId": 300
+  },
+  {
+   "clientId": 25941,
+   "classification": 1,
+   "proficiencyId": 300
+  },
+  {
+   "clientId": 25942,
+   "classification": 1,
+   "proficiencyId": 300
+  },
+  {
+   "clientId": 25943,
+   "classification": 1,
+   "proficiencyId": 300
+  },
+  {
+   "clientId": 25944,
+   "classification": 1,
+   "proficiencyId": 300
+  },
+  {
+   "clientId": 25945,
+   "classification": 1,
+   "proficiencyId": 296
+  },
+  {
+   "clientId": 25946,
+   "classification": 1,
+   "proficiencyId": 296
+  },
+  {
+   "clientId": 25947,
+   "classification": 1,
+   "proficiencyId": 296
+  },
+  {
+   "clientId": 25948,
+   "classification": 1,
+   "proficiencyId": 296
+  },
+  {
+   "clientId": 25949,
+   "classification": 1,
+   "proficiencyId": 296
+  },
+  {
+   "clientId": 25950,
+   "classification": 1,
+   "proficiencyId": 295
+  },
+  {
+   "clientId": 25951,
+   "classification": 1,
+   "proficiencyId": 295
+  },
+  {
+   "clientId": 25952,
+   "classification": 1,
+   "proficiencyId": 295
+  },
+  {
+   "clientId": 25953,
+   "classification": 1,
+   "proficiencyId": 295
+  },
+  {
+   "clientId": 25954,
+   "classification": 1,
+   "proficiencyId": 295
+  },
+  {
+   "clientId": 25955,
+   "classification": 1,
+   "proficiencyId": 294
+  },
+  {
+   "clientId": 25956,
+   "classification": 1,
+   "proficiencyId": 294
+  },
+  {
+   "clientId": 25957,
+   "classification": 1,
+   "proficiencyId": 294
+  },
+  {
+   "clientId": 25958,
+   "classification": 1,
+   "proficiencyId": 294
+  },
+  {
+   "clientId": 25959,
+   "classification": 1,
+   "proficiencyId": 294
+  },
+  {
+   "clientId": 25960,
+   "classification": 1,
+   "proficiencyId": 299
+  },
+  {
+   "clientId": 25961,
+   "classification": 1,
+   "proficiencyId": 299
+  },
+  {
+   "clientId": 25962,
+   "classification": 1,
+   "proficiencyId": 299
+  },
+  {
+   "clientId": 25963,
+   "classification": 1,
+   "proficiencyId": 299
+  },
+  {
+   "clientId": 25964,
+   "classification": 1,
+   "proficiencyId": 299
+  },
+  {
+   "clientId": 25965,
+   "classification": 1,
+   "proficiencyId": 298
+  },
+  {
+   "clientId": 25966,
+   "classification": 1,
+   "proficiencyId": 298
+  },
+  {
+   "clientId": 25967,
+   "classification": 1,
+   "proficiencyId": 298
+  },
+  {
+   "clientId": 25968,
+   "classification": 1,
+   "proficiencyId": 298
+  },
+  {
+   "clientId": 25969,
+   "classification": 1,
+   "proficiencyId": 298
+  },
+  {
+   "clientId": 25970,
+   "classification": 1,
+   "proficiencyId": 297
+  },
+  {
+   "clientId": 25971,
+   "classification": 1,
+   "proficiencyId": 297
+  },
+  {
+   "clientId": 25972,
+   "classification": 1,
+   "proficiencyId": 297
+  },
+  {
+   "clientId": 25973,
+   "classification": 1,
+   "proficiencyId": 297
+  },
+  {
+   "clientId": 25974,
+   "classification": 1,
+   "proficiencyId": 297
+  },
+  {
+   "clientId": 25983,
+   "classification": 1,
+   "proficiencyId": 181
+  },
+  {
+   "clientId": 25984,
+   "classification": 1,
+   "proficiencyId": 181
+  },
+  {
+   "clientId": 25985,
+   "classification": 1,
+   "proficiencyId": 181
+  },
+  {
+   "clientId": 25986,
+   "classification": 1,
+   "proficiencyId": 181
+  },
+  {
+   "clientId": 25987,
+   "classification": 1,
+   "proficiencyId": 181
+  },
+  {
+   "clientId": 25988,
+   "classification": 1,
+   "proficiencyId": 181
+  },
+  {
+   "clientId": 25989,
+   "classification": 1,
+   "proficiencyId": 180
+  },
+  {
+   "clientId": 25990,
+   "classification": 1,
+   "proficiencyId": 180
+  },
+  {
+   "clientId": 25991,
+   "classification": 1,
+   "proficiencyId": 180
+  },
+  {
+   "clientId": 25992,
+   "classification": 1,
+   "proficiencyId": 180
+  },
+  {
+   "clientId": 25993,
+   "classification": 1,
+   "proficiencyId": 180
+  },
+  {
+   "clientId": 25994,
+   "classification": 1,
+   "proficiencyId": 180
+  },
+  {
+   "clientId": 25995,
+   "classification": 1,
+   "proficiencyId": 179
+  },
+  {
+   "clientId": 25996,
+   "classification": 1,
+   "proficiencyId": 179
+  },
+  {
+   "clientId": 25997,
+   "classification": 1,
+   "proficiencyId": 179
+  },
+  {
+   "clientId": 25998,
+   "classification": 1,
+   "proficiencyId": 179
+  },
+  {
+   "clientId": 25999,
+   "classification": 1,
+   "proficiencyId": 179
+  },
+  {
+   "clientId": 26000,
+   "classification": 1,
+   "proficiencyId": 179
+  },
+  {
+   "clientId": 26001,
+   "classification": 1,
+   "proficiencyId": 178
+  },
+  {
+   "clientId": 26002,
+   "classification": 1,
+   "proficiencyId": 178
+  },
+  {
+   "clientId": 26003,
+   "classification": 1,
+   "proficiencyId": 178
+  },
+  {
+   "clientId": 26004,
+   "classification": 1,
+   "proficiencyId": 178
+  },
+  {
+   "clientId": 26005,
+   "classification": 1,
+   "proficiencyId": 178
+  },
+  {
+   "clientId": 26006,
+   "classification": 1,
+   "proficiencyId": 178
+  },
+  {
+   "clientId": 26007,
+   "classification": 1,
+   "proficiencyId": 177
+  },
+  {
+   "clientId": 26008,
+   "classification": 1,
+   "proficiencyId": 177
+  },
+  {
+   "clientId": 26009,
+   "classification": 1,
+   "proficiencyId": 177
+  },
+  {
+   "clientId": 26010,
+   "classification": 1,
+   "proficiencyId": 177
+  },
+  {
+   "clientId": 26011,
+   "classification": 1,
+   "proficiencyId": 177
+  },
+  {
+   "clientId": 26012,
+   "classification": 1,
+   "proficiencyId": 177
+  },
+  {
+   "clientId": 26014,
+   "classification": 1,
+   "proficiencyId": 196
+  },
+  {
+   "clientId": 26015,
+   "classification": 1,
+   "proficiencyId": 196
+  },
+  {
+   "clientId": 26016,
+   "classification": 1,
+   "proficiencyId": 196
+  },
+  {
+   "clientId": 26017,
+   "classification": 1,
+   "proficiencyId": 196
+  },
+  {
+   "clientId": 26018,
+   "classification": 1,
+   "proficiencyId": 196
+  },
+  {
+   "clientId": 26019,
+   "classification": 1,
+   "proficiencyId": 196
+  },
+  {
+   "clientId": 26020,
+   "classification": 1,
+   "proficiencyId": 195
+  },
+  {
+   "clientId": 26021,
+   "classification": 1,
+   "proficiencyId": 195
+  },
+  {
+   "clientId": 26022,
+   "classification": 1,
+   "proficiencyId": 195
+  },
+  {
+   "clientId": 26023,
+   "classification": 1,
+   "proficiencyId": 195
+  },
+  {
+   "clientId": 26024,
+   "classification": 1,
+   "proficiencyId": 195
+  },
+  {
+   "clientId": 26025,
+   "classification": 1,
+   "proficiencyId": 195
+  },
+  {
+   "clientId": 26026,
+   "classification": 1,
+   "proficiencyId": 194
+  },
+  {
+   "clientId": 26027,
+   "classification": 1,
+   "proficiencyId": 194
+  },
+  {
+   "clientId": 26028,
+   "classification": 1,
+   "proficiencyId": 194
+  },
+  {
+   "clientId": 26029,
+   "classification": 1,
+   "proficiencyId": 194
+  },
+  {
+   "clientId": 26030,
+   "classification": 1,
+   "proficiencyId": 194
+  },
+  {
+   "clientId": 26031,
+   "classification": 1,
+   "proficiencyId": 194
+  },
+  {
+   "clientId": 26032,
+   "classification": 1,
+   "proficiencyId": 193
+  },
+  {
+   "clientId": 26033,
+   "classification": 1,
+   "proficiencyId": 193
+  },
+  {
+   "clientId": 26034,
+   "classification": 1,
+   "proficiencyId": 193
+  },
+  {
+   "clientId": 26035,
+   "classification": 1,
+   "proficiencyId": 193
+  },
+  {
+   "clientId": 26036,
+   "classification": 1,
+   "proficiencyId": 193
+  },
+  {
+   "clientId": 26037,
+   "classification": 1,
+   "proficiencyId": 193
+  },
+  {
+   "clientId": 26038,
+   "classification": 1,
+   "proficiencyId": 192
+  },
+  {
+   "clientId": 26039,
+   "classification": 1,
+   "proficiencyId": 192
+  },
+  {
+   "clientId": 26040,
+   "classification": 1,
+   "proficiencyId": 192
+  },
+  {
+   "clientId": 26041,
+   "classification": 1,
+   "proficiencyId": 192
+  },
+  {
+   "clientId": 26042,
+   "classification": 1,
+   "proficiencyId": 192
+  },
+  {
+   "clientId": 26043,
+   "classification": 1,
+   "proficiencyId": 192
+  },
+  {
+   "clientId": 26044,
+   "classification": 1,
+   "proficiencyId": 166
+  },
+  {
+   "clientId": 26045,
+   "classification": 1,
+   "proficiencyId": 166
+  },
+  {
+   "clientId": 26046,
+   "classification": 1,
+   "proficiencyId": 166
+  },
+  {
+   "clientId": 26047,
+   "classification": 1,
+   "proficiencyId": 166
+  },
+  {
+   "clientId": 26048,
+   "classification": 1,
+   "proficiencyId": 166
+  },
+  {
+   "clientId": 26049,
+   "classification": 1,
+   "proficiencyId": 166
+  },
+  {
+   "clientId": 26050,
+   "classification": 1,
+   "proficiencyId": 165
+  },
+  {
+   "clientId": 26051,
+   "classification": 1,
+   "proficiencyId": 165
+  },
+  {
+   "clientId": 26052,
+   "classification": 1,
+   "proficiencyId": 165
+  },
+  {
+   "clientId": 26053,
+   "classification": 1,
+   "proficiencyId": 165
+  },
+  {
+   "clientId": 26054,
+   "classification": 1,
+   "proficiencyId": 165
+  },
+  {
+   "clientId": 26055,
+   "classification": 1,
+   "proficiencyId": 165
+  },
+  {
+   "clientId": 26056,
+   "classification": 1,
+   "proficiencyId": 164
+  },
+  {
+   "clientId": 26057,
+   "classification": 1,
+   "proficiencyId": 164
+  },
+  {
+   "clientId": 26058,
+   "classification": 1,
+   "proficiencyId": 164
+  },
+  {
+   "clientId": 26059,
+   "classification": 1,
+   "proficiencyId": 164
+  },
+  {
+   "clientId": 26060,
+   "classification": 1,
+   "proficiencyId": 164
+  },
+  {
+   "clientId": 26061,
+   "classification": 1,
+   "proficiencyId": 164
+  },
+  {
+   "clientId": 26062,
+   "classification": 1,
+   "proficiencyId": 163
+  },
+  {
+   "clientId": 26063,
+   "classification": 1,
+   "proficiencyId": 163
+  },
+  {
+   "clientId": 26064,
+   "classification": 1,
+   "proficiencyId": 163
+  },
+  {
+   "clientId": 26065,
+   "classification": 1,
+   "proficiencyId": 163
+  },
+  {
+   "clientId": 26066,
+   "classification": 1,
+   "proficiencyId": 163
+  },
+  {
+   "clientId": 26067,
+   "classification": 1,
+   "proficiencyId": 163
+  },
+  {
+   "clientId": 26068,
+   "classification": 1,
+   "proficiencyId": 162
+  },
+  {
+   "clientId": 26069,
+   "classification": 1,
+   "proficiencyId": 162
+  },
+  {
+   "clientId": 26070,
+   "classification": 1,
+   "proficiencyId": 162
+  },
+  {
+   "clientId": 26071,
+   "classification": 1,
+   "proficiencyId": 162
+  },
+  {
+   "clientId": 26072,
+   "classification": 1,
+   "proficiencyId": 162
+  },
+  {
+   "clientId": 26073,
+   "classification": 1,
+   "proficiencyId": 162
+  },
+  {
+   "clientId": 27449,
+   "classification": 2,
+   "proficiencyId": 210
+  },
+  {
+   "clientId": 27450,
+   "classification": 2,
+   "proficiencyId": 212
+  },
+  {
+   "clientId": 27451,
+   "classification": 2,
+   "proficiencyId": 209
+  },
+  {
+   "clientId": 27452,
+   "classification": 2,
+   "proficiencyId": 211
+  },
+  {
+   "clientId": 27453,
+   "classification": 2,
+   "proficiencyId": 208
+  },
+  {
+   "clientId": 27454,
+   "classification": 2,
+   "proficiencyId": 207
+  },
+  {
+   "clientId": 27455,
+   "classification": 2,
+   "proficiencyId": 215
+  },
+  {
+   "clientId": 27456,
+   "classification": 2,
+   "proficiencyId": 215
+  },
+  {
+   "clientId": 27457,
+   "classification": 2,
+   "proficiencyId": 216
+  },
+  {
+   "clientId": 27458,
+   "classification": 2,
+   "proficiencyId": 214
+  },
+  {
+   "clientId": 27523,
+   "proficiencyId": 247
+  },
+  {
+   "clientId": 27525,
+   "proficiencyId": 446
+  },
+  {
+   "clientId": 27647,
+   "classification": 3
+  },
+  {
+   "clientId": 27648,
+   "classification": 3
+  },
+  {
+   "clientId": 27649,
+   "classification": 3
+  },
+  {
+   "clientId": 27651,
+   "classification": 3,
+   "proficiencyId": 367
+  },
+  {
+   "clientId": 28714,
+   "classification": 4
+  },
+  {
+   "clientId": 28715,
+   "classification": 4
+  },
+  {
+   "clientId": 28716,
+   "classification": 4,
+   "proficiencyId": 155
+  },
+  {
+   "clientId": 28717,
+   "classification": 4,
+   "proficiencyId": 156
+  },
+  {
+   "clientId": 28718,
+   "classification": 4,
+   "proficiencyId": 148
+  },
+  {
+   "clientId": 28719,
+   "classification": 4
+  },
+  {
+   "clientId": 28720,
+   "classification": 4
+  },
+  {
+   "clientId": 28723,
+   "classification": 4,
+   "proficiencyId": 145
+  },
+  {
+   "clientId": 28724,
+   "classification": 4,
+   "proficiencyId": 146
+  },
+  {
+   "clientId": 28725,
+   "classification": 4,
+   "proficiencyId": 144
+  },
+  {
+   "clientId": 28825,
+   "classification": 3,
+   "proficiencyId": 221
+  },
+  {
+   "clientId": 28826,
+   "classification": 3,
+   "proficiencyId": 220
+  },
+  {
+   "clientId": 28829,
+   "classification": 3,
+   "proficiencyId": 429
+  },
+  {
+   "clientId": 28830,
+   "classification": 3,
+   "proficiencyId": 428
+  },
+  {
+   "clientId": 28831,
+   "classification": 3,
+   "proficiencyId": 427
+  },
+  {
+   "clientId": 28832,
+   "classification": 3,
+   "proficiencyId": 426
+  },
+  {
+   "clientId": 29286,
+   "classification": 1,
+   "proficiencyId": 237
+  },
+  {
+   "clientId": 29417,
+   "classification": 3,
+   "proficiencyId": 364
+  },
+  {
+   "clientId": 29418,
+   "classification": 3
+  },
+  {
+   "clientId": 29419,
+   "classification": 3,
+   "proficiencyId": 438
+  },
+  {
+   "clientId": 29421,
+   "classification": 3,
+   "proficiencyId": 369
+  },
+  {
+   "clientId": 29422,
+   "classification": 3,
+   "proficiencyId": 368
+  },
+  {
+   "clientId": 29423,
+   "classification": 3
+  },
+  {
+   "clientId": 29424,
+   "classification": 3
+  },
+  {
+   "clientId": 29425,
+   "classification": 3,
+   "proficiencyId": 217
+  },
+  {
+   "clientId": 29427,
+   "classification": 3
+  },
+  {
+   "clientId": 30196,
+   "classification": 2
+  },
+  {
+   "clientId": 30283,
+   "classification": 2,
+   "proficiencyId": 347
+  },
+  {
+   "clientId": 30393,
+   "classification": 4,
+   "proficiencyId": 138
+  },
+  {
+   "clientId": 30394,
+   "classification": 4
+  },
+  {
+   "clientId": 30395,
+   "classification": 4,
+   "proficiencyId": 134
+  },
+  {
+   "clientId": 30396,
+   "classification": 4,
+   "proficiencyId": 135
+  },
+  {
+   "clientId": 30397,
+   "classification": 4
+  },
+  {
+   "clientId": 30398,
+   "classification": 4,
+   "proficiencyId": 136
+  },
+  {
+   "clientId": 30399,
+   "classification": 4,
+   "proficiencyId": 152
+  },
+  {
+   "clientId": 30400,
+   "classification": 4,
+   "proficiencyId": 151
+  },
+  {
+   "clientId": 31577,
+   "classification": 3
+  },
+  {
+   "clientId": 31578,
+   "classification": 3
+  },
+  {
+   "clientId": 31579,
+   "classification": 3
+  },
+  {
+   "clientId": 31580,
+   "classification": 3,
+   "proficiencyId": 410
+  },
+  {
+   "clientId": 31581,
+   "classification": 3,
+   "proficiencyId": 365
+  },
+  {
+   "clientId": 31582,
+   "classification": 3
+  },
+  {
+   "clientId": 31583,
+   "classification": 3
+  },
+  {
+   "clientId": 31614,
+   "classification": 2,
+   "proficiencyId": 449
+  },
+  {
+   "clientId": 31617,
+   "classification": 3
+  },
+  {
+   "clientId": 32616,
+   "classification": 3,
+   "proficiencyId": 349
+  },
+  {
+   "clientId": 32617,
+   "classification": 3
+  },
+  {
+   "clientId": 32618,
+   "classification": 3
+  },
+  {
+   "clientId": 32619,
+   "classification": 3
+  },
+  {
+   "clientId": 32628,
+   "classification": 3
+  },
+  {
+   "clientId": 34082,
+   "classification": 4,
+   "proficiencyId": 29
+  },
+  {
+   "clientId": 34083,
+   "classification": 4,
+   "proficiencyId": 30
+  },
+  {
+   "clientId": 34084,
+   "classification": 4,
+   "proficiencyId": 27
+  },
+  {
+   "clientId": 34085,
+   "classification": 4,
+   "proficiencyId": 32
+  },
+  {
+   "clientId": 34086,
+   "classification": 4,
+   "proficiencyId": 28
+  },
+  {
+   "clientId": 34087,
+   "classification": 4,
+   "proficiencyId": 31
+  },
+  {
+   "clientId": 34088,
+   "classification": 4,
+   "proficiencyId": 34
+  },
+  {
+   "clientId": 34089,
+   "classification": 4,
+   "proficiencyId": 448
+  },
+  {
+   "clientId": 34090,
+   "classification": 4,
+   "proficiencyId": 36
+  },
+  {
+   "clientId": 34091,
+   "classification": 4,
+   "proficiencyId": 35
+  },
+  {
+   "clientId": 34092,
+   "classification": 4
+  },
+  {
+   "clientId": 34093,
+   "classification": 4
+  },
+  {
+   "clientId": 34094,
+   "classification": 4
+  },
+  {
+   "clientId": 34095,
+   "classification": 4
+  },
+  {
+   "clientId": 34096,
+   "classification": 4
+  },
+  {
+   "clientId": 34097,
+   "classification": 4
+  },
+  {
+   "clientId": 34098,
+   "classification": 4
+  },
+  {
+   "clientId": 34150,
+   "classification": 4,
+   "proficiencyId": 143
+  },
+  {
+   "clientId": 34151,
+   "classification": 4,
+   "proficiencyId": 153
+  },
+  {
+   "clientId": 34152,
+   "classification": 4,
+   "proficiencyId": 154
+  },
+  {
+   "clientId": 34155,
+   "classification": 4,
+   "proficiencyId": 141
+  },
+  {
+   "clientId": 34156,
+   "classification": 4
+  },
+  {
+   "clientId": 34157,
+   "classification": 4
+  },
+  {
+   "clientId": 34253,
+   "classification": 4,
+   "proficiencyId": 140
+  },
+  {
+   "clientId": 34254,
+   "classification": 4,
+   "proficiencyId": 139
+  },
+  {
+   "clientId": 35514,
+   "classification": 4,
+   "proficiencyId": 263
+  },
+  {
+   "clientId": 35515,
+   "classification": 4,
+   "proficiencyId": 264
+  },
+  {
+   "clientId": 35516,
+   "classification": 4
+  },
+  {
+   "clientId": 35517,
+   "classification": 4
+  },
+  {
+   "clientId": 35518,
+   "classification": 4,
+   "proficiencyId": 265
+  },
+  {
+   "clientId": 35519,
+   "classification": 4
+  },
+  {
+   "clientId": 35520,
+   "classification": 4
+  },
+  {
+   "clientId": 35521,
+   "classification": 4,
+   "proficiencyId": 261
+  },
+  {
+   "clientId": 35522,
+   "classification": 4,
+   "proficiencyId": 262
+  },
+  {
+   "clientId": 36657,
+   "classification": 4,
+   "proficiencyId": 89
+  },
+  {
+   "clientId": 36658,
+   "classification": 4,
+   "proficiencyId": 96
+  },
+  {
+   "clientId": 36659,
+   "classification": 4,
+   "proficiencyId": 87
+  },
+  {
+   "clientId": 36660,
+   "classification": 4,
+   "proficiencyId": 94
+  },
+  {
+   "clientId": 36661,
+   "classification": 4,
+   "proficiencyId": 88
+  },
+  {
+   "clientId": 36662,
+   "classification": 4,
+   "proficiencyId": 95
+  },
+  {
+   "clientId": 36663,
+   "classification": 4
+  },
+  {
+   "clientId": 36664,
+   "classification": 4,
+   "proficiencyId": 91
+  },
+  {
+   "clientId": 36665,
+   "classification": 4,
+   "proficiencyId": 98
+  },
+  {
+   "clientId": 36667,
+   "classification": 4
+  },
+  {
+   "clientId": 36668,
+   "classification": 4,
+   "proficiencyId": 93
+  },
+  {
+   "clientId": 36669,
+   "classification": 4,
+   "proficiencyId": 99
+  },
+  {
+   "clientId": 36670,
+   "classification": 4
+  },
+  {
+   "clientId": 36671,
+   "classification": 4
+  },
+  {
+   "clientId": 36674,
+   "classification": 4,
+   "proficiencyId": 92
+  },
+  {
+   "clientId": 36675,
+   "classification": 4,
+   "proficiencyId": 100
+  },
+  {
+   "clientId": 37607,
+   "classification": 4
+  },
+  {
+   "clientId": 37608,
+   "classification": 4
+  },
+  {
+   "clientId": 37609,
+   "classification": 4
+  },
+  {
+   "clientId": 37610,
+   "classification": 4
+  },
+  {
+   "clientId": 39147,
+   "classification": 4
+  },
+  {
+   "clientId": 39148,
+   "classification": 4
+  },
+  {
+   "clientId": 39149,
+   "classification": 4
+  },
+  {
+   "clientId": 39151,
+   "classification": 4
+  },
+  {
+   "clientId": 39153,
+   "classification": 4
+  },
+  {
+   "clientId": 39155,
+   "classification": 4,
+   "proficiencyId": 254
+  },
+  {
+   "clientId": 39156,
+   "classification": 4,
+   "proficiencyId": 251
+  },
+  {
+   "clientId": 39157,
+   "classification": 4,
+   "proficiencyId": 252
+  },
+  {
+   "clientId": 39158,
+   "classification": 4
+  },
+  {
+   "clientId": 39159,
+   "classification": 4,
+   "proficiencyId": 256
+  },
+  {
+   "clientId": 39161,
+   "classification": 4
+  },
+  {
+   "clientId": 39162,
+   "classification": 4,
+   "proficiencyId": 255
+  },
+  {
+   "clientId": 39163,
+   "classification": 4,
+   "proficiencyId": 253
+  },
+  {
+   "clientId": 39164,
+   "classification": 4
+  },
+  {
+   "clientId": 39165,
+   "classification": 4
+  },
+  {
+   "clientId": 39166,
+   "classification": 4
+  },
+  {
+   "clientId": 39167,
+   "classification": 4
+  },
+  {
+   "clientId": 40530,
+   "proficiencyId": 421
+  },
+  {
+   "clientId": 40535,
+   "proficiencyId": 445
+  },
+  {
+   "clientId": 40588,
+   "classification": 4
+  },
+  {
+   "clientId": 40589,
+   "classification": 4
+  },
+  {
+   "clientId": 40590,
+   "classification": 4
+  },
+  {
+   "clientId": 40591,
+   "classification": 4
+  },
+  {
+   "clientId": 40592,
+   "classification": 4
+  },
+  {
+   "clientId": 40593,
+   "classification": 4
+  },
+  {
+   "clientId": 40595,
+   "classification": 4
+  },
+  {
+   "clientId": 43864,
+   "classification": 4,
+   "proficiencyId": 6
+  },
+  {
+   "clientId": 43865,
+   "classification": 4,
+   "proficiencyId": 19
+  },
+  {
+   "clientId": 43866,
+   "classification": 4,
+   "proficiencyId": 9
+  },
+  {
+   "clientId": 43867,
+   "classification": 4,
+   "proficiencyId": 18
+  },
+  {
+   "clientId": 43868,
+   "classification": 4,
+   "proficiencyId": 8
+  },
+  {
+   "clientId": 43869,
+   "classification": 4,
+   "proficiencyId": 17
+  },
+  {
+   "clientId": 43870,
+   "classification": 4,
+   "proficiencyId": 10
+  },
+  {
+   "clientId": 43871,
+   "classification": 4,
+   "proficiencyId": 20
+  },
+  {
+   "clientId": 43872,
+   "classification": 4,
+   "proficiencyId": 12
+  },
+  {
+   "clientId": 43873,
+   "classification": 4,
+   "proficiencyId": 21
+  },
+  {
+   "clientId": 43874,
+   "classification": 4,
+   "proficiencyId": 11
+  },
+  {
+   "clientId": 43875,
+   "classification": 4,
+   "proficiencyId": 22
+  },
+  {
+   "clientId": 43876,
+   "classification": 4
+  },
+  {
+   "clientId": 43877,
+   "classification": 4,
+   "proficiencyId": 13
+  },
+  {
+   "clientId": 43878,
+   "classification": 4,
+   "proficiencyId": 23
+  },
+  {
+   "clientId": 43879,
+   "classification": 4,
+   "proficiencyId": 447
+  },
+  {
+   "clientId": 43880,
+   "classification": 4,
+   "proficiencyId": 450
+  },
+  {
+   "clientId": 43881,
+   "classification": 4
+  },
+  {
+   "clientId": 43882,
+   "classification": 4,
+   "proficiencyId": 15
+  },
+  {
+   "clientId": 43883,
+   "classification": 4,
+   "proficiencyId": 26
+  },
+  {
+   "clientId": 43884,
+   "classification": 4
+  },
+  {
+   "clientId": 43885,
+   "classification": 4,
+   "proficiencyId": 16
+  },
+  {
+   "clientId": 43886,
+   "classification": 4,
+   "proficiencyId": 25
+  },
+  {
+   "clientId": 43887,
+   "classification": 4
+  },
+  {
+   "clientId": 44619,
+   "classification": 4
+  },
+  {
+   "clientId": 44620,
+   "classification": 4
+  },
+  {
+   "clientId": 44621,
+   "classification": 4
+  },
+  {
+   "clientId": 44622,
+   "classification": 4
+  },
+  {
+   "clientId": 44623,
+   "classification": 4
+  },
+  {
+   "clientId": 44624,
+   "classification": 4
+  },
+  {
+   "clientId": 44636,
+   "classification": 4
+  },
+  {
+   "clientId": 44637,
+   "classification": 4
+  },
+  {
+   "clientId": 44642,
+   "classification": 4
+  },
+  {
+   "clientId": 44643,
+   "classification": 4
+  },
+  {
+   "clientId": 44648,
+   "classification": 4
+  },
+  {
+   "clientId": 44649,
+   "classification": 4
+  },
+  {
+   "clientId": 47368,
+   "classification": 4,
+   "proficiencyId": 42
+  },
+  {
+   "clientId": 47369,
+   "classification": 4,
+   "proficiencyId": 41
+  },
+  {
+   "clientId": 47370,
+   "classification": 4,
+   "proficiencyId": 40
+  },
+  {
+   "clientId": 47371,
+   "classification": 4,
+   "proficiencyId": 44
+  },
+  {
+   "clientId": 47372,
+   "classification": 4,
+   "proficiencyId": 46
+  },
+  {
+   "clientId": 47373,
+   "classification": 4,
+   "proficiencyId": 45
+  },
+  {
+   "clientId": 47374,
+   "classification": 4,
+   "proficiencyId": 37
+  },
+  {
+   "clientId": 47375,
+   "classification": 4,
+   "proficiencyId": 38
+  },
+  {
+   "clientId": 47376,
+   "classification": 4,
+   "proficiencyId": 39
+  },
+  {
+   "clientId": 47377,
+   "classification": 4,
+   "proficiencyId": 315
+  },
+  {
+   "clientId": 49520,
+   "classification": 4,
+   "proficiencyId": 54
+  },
+  {
+   "clientId": 49522,
+   "classification": 4,
+   "proficiencyId": 54
+  },
+  {
+   "clientId": 49523,
+   "classification": 4,
+   "proficiencyId": 48
+  },
+  {
+   "clientId": 49524,
+   "classification": 4,
+   "proficiencyId": 51
+  },
+  {
+   "clientId": 49525,
+   "classification": 4,
+   "proficiencyId": 47
+  },
+  {
+   "clientId": 49526,
+   "classification": 4,
+   "proficiencyId": 50
+  },
+  {
+   "clientId": 49527,
+   "classification": 4,
+   "proficiencyId": 49
+  },
+  {
+   "clientId": 49528,
+   "classification": 4,
+   "proficiencyId": 55
+  },
+  {
+   "clientId": 49529,
+   "classification": 4,
+   "proficiencyId": 56
+  },
+  {
+   "clientId": 49530,
+   "classification": 4,
+   "proficiencyId": 52
+  },
+  {
+   "clientId": 49531,
+   "classification": 4
+  },
+  {
+   "clientId": 49532,
+   "classification": 4
+  },
+  {
+   "clientId": 49533,
+   "classification": 4
+  },
+  {
+   "clientId": 49534,
+   "classification": 4
+  },
+  {
+   "clientId": 49858,
+   "classification": 4,
+   "proficiencyId": 64
+  },
+  {
+   "clientId": 49859,
+   "classification": 4,
+   "proficiencyId": 74
+  },
+  {
+   "clientId": 49860,
+   "classification": 4,
+   "proficiencyId": 86
+  },
+  {
+   "clientId": 49861,
+   "classification": 4,
+   "proficiencyId": 64
+  },
+  {
+   "clientId": 49862,
+   "classification": 4,
+   "proficiencyId": 74
+  },
+  {
+   "clientId": 49863,
+   "classification": 4,
+   "proficiencyId": 86
+  },
+  {
+   "clientId": 49864,
+   "classification": 4,
+   "proficiencyId": 61
+  },
+  {
+   "clientId": 49865,
+   "classification": 4,
+   "proficiencyId": 71
+  },
+  {
+   "clientId": 49866,
+   "classification": 4,
+   "proficiencyId": 81
+  },
+  {
+   "clientId": 49867,
+   "classification": 4,
+   "proficiencyId": 58
+  },
+  {
+   "clientId": 49868,
+   "classification": 4,
+   "proficiencyId": 68
+  },
+  {
+   "clientId": 49869,
+   "classification": 4,
+   "proficiencyId": 78
+  },
+  {
+   "clientId": 49870,
+   "classification": 4,
+   "proficiencyId": 60
+  },
+  {
+   "clientId": 49871,
+   "classification": 4,
+   "proficiencyId": 70
+  },
+  {
+   "clientId": 49872,
+   "classification": 4,
+   "proficiencyId": 80
+  },
+  {
+   "clientId": 49873,
+   "classification": 4,
+   "proficiencyId": 57
+  },
+  {
+   "clientId": 49874,
+   "classification": 4,
+   "proficiencyId": 67
+  },
+  {
+   "clientId": 49875,
+   "classification": 4,
+   "proficiencyId": 77
+  },
+  {
+   "clientId": 49876,
+   "classification": 4,
+   "proficiencyId": 62
+  },
+  {
+   "clientId": 49877,
+   "classification": 4,
+   "proficiencyId": 72
+  },
+  {
+   "clientId": 49878,
+   "classification": 4,
+   "proficiencyId": 82
+  },
+  {
+   "clientId": 49879,
+   "classification": 4,
+   "proficiencyId": 59
+  },
+  {
+   "clientId": 49880,
+   "classification": 4,
+   "proficiencyId": 69
+  },
+  {
+   "clientId": 49881,
+   "classification": 4,
+   "proficiencyId": 79
+  },
+  {
+   "clientId": 49882,
+   "classification": 4,
+   "proficiencyId": 65
+  },
+  {
+   "clientId": 49883,
+   "classification": 4,
+   "proficiencyId": 76
+  },
+  {
+   "clientId": 49884,
+   "classification": 4,
+   "proficiencyId": 84
+  },
+  {
+   "clientId": 49885,
+   "classification": 4,
+   "proficiencyId": 66
+  },
+  {
+   "clientId": 49886,
+   "classification": 4,
+   "proficiencyId": 75
+  },
+  {
+   "clientId": 49887,
+   "classification": 4,
+   "proficiencyId": 85
+  },
+  {
+   "clientId": 50146,
+   "classification": 4
+  },
+  {
+   "clientId": 50157,
+   "classification": 4,
+   "proficiencyId": 14
+  },
+  {
+   "clientId": 50158,
+   "classification": 4,
+   "proficiencyId": 24
+  },
+  {
+   "clientId": 50159,
+   "classification": 4,
+   "proficiencyId": 33
+  },
+  {
+   "clientId": 50160,
+   "classification": 4,
+   "proficiencyId": 257
+  },
+  {
+   "clientId": 50161,
+   "classification": 4,
+   "proficiencyId": 147
+  },
+  {
+   "clientId": 50162,
+   "classification": 4,
+   "proficiencyId": 142
+  },
+  {
+   "clientId": 50163,
+   "classification": 2,
+   "proficiencyId": 107
+  },
+  {
+   "clientId": 50164,
+   "classification": 3,
+   "proficiencyId": 115
+  },
+  {
+   "clientId": 50165,
+   "classification": 4,
+   "proficiencyId": 123
+  },
+  {
+   "clientId": 50166,
+   "classification": 1,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 50167,
+   "classification": 4,
+   "proficiencyId": 137
+  },
+  {
+   "clientId": 50168,
+   "classification": 2,
+   "proficiencyId": 213
+  },
+  {
+   "clientId": 50169,
+   "classification": 4,
+   "proficiencyId": 90
+  },
+  {
+   "clientId": 50170,
+   "classification": 4,
+   "proficiencyId": 97
+  },
+  {
+   "clientId": 50171,
+   "classification": 1,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 50176,
+   "classification": 4,
+   "proficiencyId": 401
+  },
+  {
+   "clientId": 50181,
+   "classification": 1,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 50182,
+   "classification": 1,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 50183,
+   "classification": 1,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 50184,
+   "classification": 4
+  },
+  {
+   "clientId": 50185,
+   "classification": 3
+  },
+  {
+   "clientId": 50186,
+   "classification": 4
+  },
+  {
+   "clientId": 50187,
+   "classification": 2
+  },
+  {
+   "clientId": 50188,
+   "classification": 4
+  },
+  {
+   "clientId": 50189,
+   "classification": 4
+  },
+  {
+   "clientId": 50190,
+   "classification": 3
+  },
+  {
+   "clientId": 50193,
+   "classification": 2
+  },
+  {
+   "clientId": 50194,
+   "classification": 1
+  },
+  {
+   "clientId": 50239,
+   "classification": 4,
+   "proficiencyId": 43
+  },
+  {
+   "clientId": 50240,
+   "classification": 4
+  },
+  {
+   "clientId": 50250,
+   "classification": 4,
+   "proficiencyId": 53
+  },
+  {
+   "clientId": 50251,
+   "classification": 4,
+   "proficiencyId": 63
+  },
+  {
+   "clientId": 50252,
+   "classification": 4,
+   "proficiencyId": 73
+  },
+  {
+   "clientId": 50253,
+   "classification": 4,
+   "proficiencyId": 83
+  },
+  {
+   "clientId": 50254,
+   "classification": 4
+  },
+  {
+   "clientId": 50255,
+   "classification": 4
+  },
+  {
+   "clientId": 50257,
+   "classification": 1
+  },
+  {
+   "clientId": 50258,
+   "classification": 1
+  },
+  {
+   "clientId": 50259,
+   "classification": 2
+  },
+  {
+   "clientId": 50260,
+   "classification": 3
+  },
+  {
+   "clientId": 50261,
+   "classification": 2
+  },
+  {
+   "clientId": 50262,
+   "classification": 4
+  },
+  {
+   "clientId": 50263,
+   "classification": 3
+  },
+  {
+   "clientId": 50264,
+   "classification": 4
+  },
+  {
+   "clientId": 50266,
+   "classification": 4
+  },
+  {
+   "clientId": 50267,
+   "classification": 1
+  },
+  {
+   "clientId": 50268,
+   "classification": 1
+  },
+  {
+   "clientId": 50269,
+   "classification": 1
+  },
+  {
+   "clientId": 50270,
+   "classification": 4,
+   "proficiencyId": 402
+  },
+  {
+   "clientId": 50271,
+   "classification": 1,
+   "proficiencyId": 399
+  },
+  {
+   "clientId": 50272,
+   "classification": 1,
+   "proficiencyId": 397
+  },
+  {
+   "clientId": 50273,
+   "classification": 1,
+   "proficiencyId": 398
+  },
+  {
+   "clientId": 50274,
+   "classification": 1
+  },
+  {
+   "clientId": 50275,
+   "classification": 4
+  },
+  {
+   "clientId": 50276,
+   "classification": 2
+  },
+  {
+   "clientId": 50277,
+   "classification": 2
+  },
+  {
+   "clientId": 50278,
+   "classification": 2
+  },
+  {
+   "clientId": 50279,
+   "classification": 2
+  },
+  {
+   "clientId": 50280,
+   "classification": 2
+  },
+  {
+   "clientId": 50289,
+   "classification": 2
+  },
+  {
+   "clientId": 50290,
+   "classification": 3
+  },
+  {
+   "clientId": 50291,
+   "classification": 4
+  },
+  {
+   "clientId": 51119,
+   "classification": 1,
+   "proficiencyId": 229
+  },
+  {
+   "clientId": 51260,
+   "classification": 4
+  },
+  {
+   "clientId": 51261,
+   "classification": 4
+  },
+  {
+   "clientId": 51262,
+   "classification": 4
+  },
+  {
+   "clientId": 51263,
+   "classification": 4
+  },
+  {
+   "clientId": 51264,
+   "classification": 4
+  },
+  {
+   "clientId": 51265,
+   "classification": 4
+  },
+  {
+   "clientId": 51266,
+   "classification": 4
+  },
+  {
+   "clientId": 51267,
+   "classification": 4
+  },
+  {
+   "clientId": 51268,
+   "classification": 4
+  },
+  {
+   "clientId": 51269,
+   "classification": 4
+  },
+  {
+   "clientId": 51294,
+   "classification": 2
+  },
+  {
+   "clientId": 51475,
+   "proficiencyId": 444
+  },
+  {
+   "clientId": 51666,
+   "classification": 1,
+   "proficiencyId": 371
+  },
+  {
+   "clientId": 51760,
+   "classification": 1,
+   "proficiencyId": 228
+  },
+  {
+   "clientId": 52332,
+   "classification": 4,
+   "proficiencyId": 461
+  },
+  {
+   "clientId": 52333,
+   "classification": 4,
+   "proficiencyId": 458
+  },
+  {
+   "clientId": 52334,
+   "classification": 4,
+   "proficiencyId": 459
+  },
+  {
+   "clientId": 52335,
+   "classification": 4,
+   "proficiencyId": 460
+  },
+  {
+   "clientId": 52336,
+   "classification": 4,
+   "proficiencyId": 462
+  },
+  {
+   "clientId": 52337,
+   "classification": 4,
+   "proficiencyId": 463
+  },
+  {
+   "clientId": 52338,
+   "classification": 4,
+   "proficiencyId": 457
+  },
+  {
+   "clientId": 52348,
+   "classification": 4
+  },
+  {
+   "clientId": 52349,
+   "classification": 4
+  },
+  {
+   "clientId": 52350,
+   "classification": 4
+  },
+  {
+   "clientId": 52351,
+   "classification": 4
+  },
+  {
+   "clientId": 52352,
+   "classification": 4
+  },
+  {
+   "clientId": 52353,
+   "classification": 4
+  },
+  {
+   "clientId": 52354,
+   "classification": 4
+  },
+  {
+   "clientId": 52964,
+   "classification": 2
+  }
+ ]
+}

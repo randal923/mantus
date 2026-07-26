@@ -76,6 +76,8 @@ export const inventoryItemPresentationSchema = z
     useKind: z
       .enum(["rune", "potion", "container", "rotate", "read", "food", "useWith"])
       .optional(),
+    /** Forge tier (0 = untiered); only classified items ever carry one. */
+    tier: z.number().int().min(0).max(10).optional(),
     potionResources: z
       .array(z.enum(["health", "mana"]))
       .min(1)

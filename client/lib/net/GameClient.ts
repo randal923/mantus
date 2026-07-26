@@ -11,6 +11,9 @@ import {
   type DepotLocation,
   type DepotStateMessage,
   type FightMode,
+  type ForgeConversionMessage,
+  type ForgeFusionMessage,
+  type ForgeTransferMessage,
   type GemAction,
   type HighscoreCategory,
   type HouseListKind,
@@ -27,6 +30,7 @@ import {
   type PreyOption,
   type ReportReason,
   type TaskHuntingActionMessage,
+  type TrackerSetMessage,
   type ServerErrorCode,
   type ServerMessage,
   type ActionBar,
@@ -786,6 +790,63 @@ export class GameClient {
 
   requestWikiItemSources(itemTypeId: number): boolean {
     return this.send({ type: "wiki-item-sources-get", itemTypeId });
+  }
+
+  /** Toggles one kill-tracker entry; the server re-sends the full list. */
+  setTracker(
+    scope: TrackerSetMessage["scope"],
+    raceId: number,
+    enabled: boolean,
+  ): boolean {
+    return this.send({ type: "tracker-set", scope, raceId, enabled });
+  }
+
+  requestBossSlots(): boolean {
+    return this.send({ type: "boss-slots-get" });
+  }
+
+  /** Assigns (raceId) or clears (null) one boss slot; server re-validates. */
+  setBossSlot(slot: number, raceId: number | null): boolean {
+    return this.send({ type: "boss-slot-set", slot, raceId });
+  }
+
+  requestForge(): boolean {
+    return this.send({ type: "forge-get" });
+  }
+
+  /** Item ids only; the server rolls outcomes and charges all costs. */
+  forgeFusion(intent: Omit<ForgeFusionMessage, "type">): boolean {
+    return this.send({ type: "forge-fusion", ...intent });
+  }
+
+  forgeTransfer(intent: Omit<ForgeTransferMessage, "type">): boolean {
+    return this.send({ type: "forge-transfer", ...intent });
+  }
+
+  forgeConversion(
+    conversion: ForgeConversionMessage["conversion"],
+  ): boolean {
+    return this.send({ type: "forge-conversion", conversion });
+  }
+
+  requestForgeHistory(page: number): boolean {
+    return this.send({ type: "forge-history-get", page });
+  }
+
+  requestImbuementWindow(itemId: string): boolean {
+    return this.send({ type: "imbuement-window-get", itemId });
+  }
+
+  applyImbuement(
+    itemId: string,
+    slot: number,
+    imbuementId: number,
+  ): boolean {
+    return this.send({ type: "imbuement-apply", itemId, slot, imbuementId });
+  }
+
+  clearImbuement(itemId: string, slot: number): boolean {
+    return this.send({ type: "imbuement-clear", itemId, slot });
   }
 
   requestWheel(): boolean {

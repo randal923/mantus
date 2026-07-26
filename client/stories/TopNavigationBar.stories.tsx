@@ -36,6 +36,7 @@ const meta = {
     },
     battleListVisible: true,
     minimapVisible: true,
+    trackerVisible: false,
     vipVisible: false,
     partyVisible: false,
     gold: 5_228,

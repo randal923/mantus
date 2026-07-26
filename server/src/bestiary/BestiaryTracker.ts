@@ -1,3 +1,4 @@
+import type { BoostedHooks } from "../boosted/BoostedHooks";
 import type { Monster } from "../creature/Monster";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { BestiaryCatalog } from "./BestiaryCatalog";
@@ -19,6 +20,7 @@ export class BestiaryTracker implements BestiaryHooks {
     private readonly catalog: BestiaryCatalog,
     private readonly registry: SessionRegistry,
     private readonly store?: BestiaryStore,
+    private readonly boostedHooks?: BoostedHooks,
   ) {}
 
   async load(characterId: string): Promise<ReadonlyMap<number, number>> {
@@ -50,13 +52,18 @@ export class BestiaryTracker implements BestiaryHooks {
     void now;
     const raceId = this.catalog.raceIdByMonsterTypeId.get(monster.type.id);
     if (raceId === undefined) return;
+    // The boosted boss counts triple (Canary player.cpp:6565-6567); the
+    // multiplier only ever applies to bosstiary races.
+    const increment = this.catalog.bossesByRaceId.has(raceId)
+      ? this.boostedHooks?.bossKillIncrement(raceId) ?? 1
+      : 1;
     for (const characterId of new Set(damagerIds)) {
       const kills = this.killsByCharacter.get(characterId);
       if (!kills) continue;
-      const after = (kills.get(raceId) ?? 0) + 1;
+      const after = (kills.get(raceId) ?? 0) + increment;
       kills.set(raceId, after);
       this.announceKill(characterId, raceId, after);
-      this.persist(characterId, raceId);
+      this.persist(characterId, raceId, increment);
     }
   }
 
@@ -90,10 +97,10 @@ export class BestiaryTracker implements BestiaryHooks {
     });
   }
 
-  private persist(characterId: string, raceId: number): void {
+  private persist(characterId: string, raceId: number, amount: number): void {
     const store = this.store;
     if (!store) return;
-    const write = store.addKills(characterId, raceId, 1).catch((cause: unknown) => {
+    const write = store.addKills(characterId, raceId, amount).catch((cause: unknown) => {
       const reason = cause instanceof Error ? cause.message : "unknown";
       console.warn(
         `failed to persist bestiary kill ${raceId} for ${characterId}: ${reason}`,

@@ -30,6 +30,8 @@ export function GameNavigation() {
   const highscoresOpen = useGameWindowStore((state) => state.highscoresOpen);
   const wikiOpen = useGameWindowStore((state) => state.wikiOpen);
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
+  const forgeOpen = useGameWindowStore((state) => state.forgeOpen);
+  const trackerVisible = useGameWindowStore((state) => state.trackerVisible);
   const preyWindowOpen = useGameWindowStore((state) => state.preyWindowOpen);
   const huntingTasksOpen = useGameWindowStore(
     (state) => state.huntingTasksOpen,
@@ -59,6 +61,9 @@ export function GameNavigation() {
   const wheelLoaded = useGameWindowStore(
     (state) => Boolean(state.sessions?.wheel.wheel),
   );
+  const forgeLoaded = useGameWindowStore(
+    (state) => Boolean(state.sessions?.forge.state),
+  );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
   const setGameMenuOpen = useGameWindowStore(
     (state) => state.setGameMenuOpen,
@@ -80,6 +85,10 @@ export function GameNavigation() {
   );
   const setWikiOpen = useGameWindowStore((state) => state.setWikiOpen);
   const setWheelOpen = useGameWindowStore((state) => state.setWheelOpen);
+  const setForgeOpen = useGameWindowStore((state) => state.setForgeOpen);
+  const setTrackerVisible = useGameWindowStore(
+    (state) => state.setTrackerVisible,
+  );
   const setPreyWindowOpen = useGameWindowStore(
     (state) => state.setPreyWindowOpen,
   );
@@ -120,19 +129,21 @@ export function GameNavigation() {
             ? "wiki"
             : wheelOpen
               ? "wheel"
-              : preyWindowOpen
-                ? "prey"
-                : huntingTasksOpen
-                  ? "huntingTasks"
-                  : outfitWindowOpen
-                    ? "outfit"
-                    : profileWindowOpen
-                      ? "profile"
-                      : characterStatsOpen
-                        ? "character"
-                        : inventoryOpen
-                          ? "inventory"
-                          : undefined;
+              : forgeOpen
+                ? "forge"
+                : preyWindowOpen
+                  ? "prey"
+                  : huntingTasksOpen
+                    ? "huntingTasks"
+                    : outfitWindowOpen
+                      ? "outfit"
+                      : profileWindowOpen
+                        ? "profile"
+                        : characterStatsOpen
+                          ? "character"
+                          : inventoryOpen
+                            ? "inventory"
+                            : undefined;
 
   return (
     <div className="absolute inset-x-0 top-0 z-40">
@@ -145,6 +156,7 @@ export function GameNavigation() {
         fightMode={fightMode}
         battleListVisible={battleListVisible}
         minimapVisible={minimapVisible}
+        trackerVisible={trackerVisible}
         vipVisible={vipPanelVisible}
         partyVisible={partyPanelVisible}
         gold={inventory ? countMoneyWorth(inventory) : 0}
@@ -256,6 +268,22 @@ export function GameNavigation() {
             return !open;
           });
         }}
+        onForge={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          setWikiOpen(false);
+          setWheelOpen(false);
+          setForgeOpen((open) => {
+            if (!open && !forgeLoaded) {
+              // Idempotent refresh; forge-state is also pushed at login.
+              const sent = runtime.clientRef.current?.requestForge() ?? false;
+              sessionActions.forge.begin(sent);
+            }
+            return !open;
+          });
+        }}
+        onTracker={() => setTrackerVisible((visible) => !visible)}
         onPrey={() => {
           setGameMenuOpen(false);
           setInventoryOpen(false);

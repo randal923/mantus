@@ -57,6 +57,18 @@ const SKULL_MARK_COLORS: Record<
   black: { fill: 0x141414, stroke: 0xdadada, eyes: 0xffffff },
 };
 
+/**
+ * Forge monster-state marker colors (project-drawn vector glyphs). The
+ * state is public creature data pushed by the server; display only.
+ */
+const FORGE_MARK_COLORS: Record<
+  NonNullable<CreatureState["forgeState"]>["kind"],
+  { fill: number; stroke: number }
+> = {
+  influenced: { fill: 0xc23bd9, stroke: 0x2b0b30 },
+  fiendish: { fill: 0xf0b62e, stroke: 0x3a2a05 },
+};
+
 const DIR_INDEX: Record<Direction, number> = {
   north: 0,
   east: 1,
@@ -85,6 +97,8 @@ export class CreatureView {
   private readonly partyShield = new Graphics();
   private readonly warEmblem = new Graphics();
   private readonly skullMark = new Graphics();
+  private readonly forgeMark = new Graphics();
+  private readonly forgeStackText: Text;
   private readonly name: Text;
   private publicPartyMember: boolean;
   private publicGuildName: string | null;
@@ -162,6 +176,19 @@ export class CreatureView {
     name.anchor.set(0.5, 1);
     name.position.y = -5;
     this.name = name;
+    const forgeStackText = new Text({
+      text: "",
+      style: {
+        fontFamily: "Verdana, sans-serif",
+        fontSize: 8,
+        fontWeight: "bold",
+        fill: 0xffffff,
+        stroke: { color: 0x000000, width: 2 },
+      },
+    });
+    forgeStackText.resolution = 2;
+    forgeStackText.anchor.set(0.5, 0.5);
+    this.forgeStackText = forgeStackText;
     this.appearance = { ...state.outfit };
     this.mountLookType = state.mountLookType ?? 0;
     this.publicPartyMember = state.partyStatus === "member";
@@ -173,8 +200,11 @@ export class CreatureView {
       this.partyShield,
       this.warEmblem,
       this.skullMark,
+      this.forgeMark,
+      forgeStackText,
     );
     this.drawSkullMark(state.skull);
+    this.drawForgeMark(state.forgeState);
     this.updateHealth(state.healthPercent);
     this.updateLight(state.light);
     this.updateFrame();
@@ -224,6 +254,7 @@ export class CreatureView {
     this.publicGuildName = state.guildName ?? null;
     this.publicAtWar = state.atWar ?? false;
     this.drawSkullMark(state.skull);
+    this.drawForgeMark(state.forgeState);
     this.updateHealth(state.healthPercent);
     this.updateLight(state.light);
   }
@@ -316,6 +347,43 @@ export class CreatureView {
       .circle(x - 1.4, y - 0.6, 0.8)
       .circle(x + 1.4, y - 0.6, 0.8)
       .fill({ color: colors.eyes });
+  }
+
+  /**
+   * Draws the influenced/fiendish marker to the left of the plate
+   * (opposite the skull slot). Influenced shows its stack number; the
+   * state arrives as public creature data, so rebuilding the view on
+   * creature-state-changed keeps it current.
+   */
+  private drawForgeMark(state: CreatureState["forgeState"]): void {
+    this.forgeMark.clear();
+    this.forgeStackText.text = "";
+    if (!state) return;
+    const colors = FORGE_MARK_COLORS[state.kind];
+    const x = -this.name.width / 2 - 19;
+    const y = -15;
+    if (state.kind === "influenced") {
+      this.forgeMark
+        .poly([x, y - 5, x + 5, y, x, y + 5, x - 5, y])
+        .fill({ color: colors.fill })
+        .stroke({ color: colors.stroke, width: 1 });
+      this.forgeStackText.text = String(state.stack);
+      this.forgeStackText.position.set(x, y + 0.5);
+      return;
+    }
+    this.forgeMark
+      .poly([
+        x, y - 5.5,
+        x + 1.6, y - 1.6,
+        x + 5.5, y,
+        x + 1.6, y + 1.6,
+        x, y + 5.5,
+        x - 1.6, y + 1.6,
+        x - 5.5, y,
+        x - 1.6, y - 1.6,
+      ])
+      .fill({ color: colors.fill })
+      .stroke({ color: colors.stroke, width: 1 });
   }
 
   updateHealth(healthPercent: number | null): void {

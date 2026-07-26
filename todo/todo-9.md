@@ -95,8 +95,8 @@ Reciprocal requests, groups, typing hints, and presence shipped.
   invisible to non-staff casters. Implementable now on the shipped spell
   infrastructure. `exiva moe res` (Find Fiend, level 25) points at the
   nearest **fiendish** monster with a bestiary-kills difficulty string —
-  blocked on Feature 78's fiendish monster states (todo-10); bestiary
-  thresholds already ship.
+  unblocked 2026-07-26: Feature 78 shipped per-instance fiendish states
+  (`Monster.forgeStack`/`forgeKind`); bestiary thresholds already ship.
 - VIP-group management UI →
   [client backlog](client/feature-65-vip-groups-and-typing.md).
 - Durable ignore lists → Feature 35 (todo-7) owns them.

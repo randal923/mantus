@@ -24,7 +24,7 @@ const output = resolve(
 const source = await readFile(resolve(input));
 const items = parseCanaryItemSemantics(source.toString("latin1"));
 const converted = {
-  formatVersion: 2,
+  formatVersion: 3,
   source: {
     canaryCommit: commit,
     sha256: createHash("sha256").update(source).digest("hex"),

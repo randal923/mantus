@@ -102,6 +102,9 @@ export function createGameWindowStore({
     highscoresOpen: false,
     wikiOpen: false,
     wheelOpen: false,
+    forgeOpen: false,
+    imbuementItemId: null,
+    trackerVisible: true,
     preyWindowOpen: false,
     huntingTasksOpen: false,
     outfitWindowOpen: false,
@@ -305,6 +308,18 @@ export function createGameWindowStore({
       set((state) => ({
         wheelOpen: resolveStateAction(value, state.wheelOpen),
       })),
+    setForgeOpen: (value) =>
+      set((state) => ({
+        forgeOpen: resolveStateAction(value, state.forgeOpen),
+      })),
+    setImbuementItemId: (value) =>
+      set((state) => ({
+        imbuementItemId: resolveStateAction(value, state.imbuementItemId),
+      })),
+    setTrackerVisible: (value) =>
+      set((state) => ({
+        trackerVisible: resolveStateAction(value, state.trackerVisible),
+      })),
     setPreyWindowOpen: (value) =>
       set((state) => ({
         preyWindowOpen: resolveStateAction(value, state.preyWindowOpen),
@@ -456,6 +471,11 @@ export function createGameWindowStore({
       actions.gems.reset();
       actions.prey.reset();
       actions.huntingTasks.reset();
+      actions.boosted.reset();
+      actions.tracker.reset();
+      actions.bossSlots.reset();
+      actions.forge.reset();
+      actions.imbuement.reset();
       runtime.actionBarRef.current = createDefaultActionBar();
       runtime.actionBotSettingsRef.current = {
         ...DEFAULT_ACTION_BOT_SETTINGS,
@@ -492,6 +512,8 @@ export function createGameWindowStore({
         highscoresOpen: false,
         wikiOpen: false,
         wheelOpen: false,
+        forgeOpen: false,
+        imbuementItemId: null,
         preyWindowOpen: false,
         huntingTasksOpen: false,
         outfitWindowOpen: false,

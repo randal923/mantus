@@ -205,6 +205,7 @@ function parseMonsterType(value: unknown): MonsterType {
       canWalkOnFire: bool(flags.canWalkOnFire, "canWalkOnFire"),
       canWalkOnPoison: bool(flags.canWalkOnPoison, "canWalkOnPoison"),
       isBlockable: bool(flags.isBlockable, "isBlockable"),
+      rewardBoss: bool(flags.rewardBoss, "rewardBoss"),
     },
     race: text(type.race, "monster race"),
     faction: text(type.faction, "monster faction"),

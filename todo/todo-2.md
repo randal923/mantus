@@ -147,10 +147,13 @@ operator attempts) and the 21-raid revscript import lane shipped.
   classify it non-content since persistence here is continuous) and the
   `data-otservbr-global` tree (spawn sweeps, VIP, world update) — each with
   the same classify-everything report the raid importer emits.
-- **Daily resets and boosted rotations:** the schedule table carries them
-  (`next_check_at` + idempotency key) but no content is imported and the
-  daily-boundary step kinds don't exist; `daily_reward_shrine.lua` is
-  classified `deferred` here. Feature 76 (todo-10) consumes the daily boost.
+- **Daily resets:** the schedule table carries them (`next_check_at` +
+  idempotency key) but no content is imported and the daily-boundary step
+  kinds don't exist; `daily_reward_shrine.lua` is classified `deferred`
+  here. (The boosted creature/boss rotation shipped 2026-07-26 with Feature
+  76 on its own day-keyed `boosted_daily` table — the row is the selection,
+  exactly-once across processes — so it no longer waits on an engine step
+  kind.)
 - **Reward steps:** no pinned raid grants an item/currency, so no reward step
   kind exists. The first one must commit inside a run-keyed transaction (the
   `character_chest_loot` pattern) so a retry cannot double-pay.

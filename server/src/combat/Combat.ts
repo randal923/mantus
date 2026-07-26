@@ -18,7 +18,9 @@ import type { BestiaryHooks } from "../bestiary/BestiaryHooks";
 import type { GuildHooks } from "../guild/GuildHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
+import type { BoostedHooks } from "../boosted/BoostedHooks";
 import type { PreyHooks } from "../prey/PreyHooks";
+import type { ProficiencyHooks } from "../proficiency/ProficiencyHooks";
 import { Player } from "../Player";
 import type { PvpHooks } from "../pvp/PvpHooks";
 import { PotionService } from "../potion/PotionService";
@@ -54,6 +56,7 @@ import { isInRange } from "./isInRange";
 import { PlayerAutoAttack } from "./PlayerAutoAttack";
 import { CONJURED_FOOD_TYPE_IDS } from "./conjuredFoodTypeIds";
 import { playerForSession } from "./playerForSession";
+import { playerTierBonuses } from "./playerTierBonuses";
 import { PlayerSpellActions } from "./PlayerSpellActions";
 import { projectCombatAnalyzer } from "./projectCombatAnalyzer";
 import type { SpellDefinition } from "./Spell";
@@ -120,6 +123,7 @@ export class Combat {
   }> = [];
   private readonly lastFieldByCreature = new WeakMap<Creature, string>();
   private readonly nextGiftOfLifeTickAt = new WeakMap<Player, number>();
+  private readonly nextMomentumRollAt = new WeakMap<Player, number>();
 
   constructor(
     private readonly world: World,
@@ -147,6 +151,14 @@ export class Combat {
     staminaSystem = false,
     useStages = false,
     preyHooks?: PreyHooks,
+    boostedHooks?: BoostedHooks,
+    animusHooks?: {
+      multiplierFor(recipientId: string, monster: Monster): number;
+    },
+    private readonly proficiencyHooks?: ProficiencyHooks,
+    deathHistoryHooks?: {
+      record(characterId: string, level: number, cause: string): void;
+    },
   ) {
     this.spells = spells;
     this.formula = new CombatFormula(seed);
@@ -171,6 +183,9 @@ export class Combat {
       staminaSystem,
       useStages,
       preyHooks,
+      boostedHooks,
+      animusHooks,
+      deathHistoryHooks,
     );
     this.damage = new DamageResolver(
       world,
@@ -186,6 +201,7 @@ export class Combat {
       pvpHooks,
       monsterEventHooks,
       preyHooks,
+      proficiencyHooks,
     );
     this.conditionSystem = new ConditionSystem(
       world,
@@ -194,6 +210,11 @@ export class Combat {
       this.feedback,
       this.damage,
     );
+    this.conditionSystem.setVibrancyHook({
+      paralysisRemoveChancePercent: (characterId) =>
+        items.imbuementEffects(characterId).paralysisRemoveChancePercent,
+      roll: (percent) => percent > 0 && this.formula.chance(percent),
+    });
     this.spellCaster = new SpellCaster(
       world,
       visibility,
@@ -228,6 +249,7 @@ export class Combat {
       this.damage,
       chase,
       pvpHooks,
+      proficiencyHooks,
     );
     this.potions = new PotionService(
       world,
@@ -710,7 +732,43 @@ export class Combat {
       this.tickFollow(session, now);
       this.tickCombatAnalyzer(session, now);
       this.tickGiftOfLifeCooldown(session, now);
+      this.tickMomentum(session, now);
     }
+  }
+
+  /**
+   * Helmet-tier momentum (Feature 78, Canary player.cpp:10885-10927): rolls
+   * on even seconds while in a fight outside protection zones; a proc takes
+   * 2000 ms off every running per-spell cooldown.
+   */
+  private tickMomentum(session: Session, now: number): void {
+    const player = playerForSession(this.world, session);
+    if (!player) return;
+    if (now < (this.nextMomentumRollAt.get(player) ?? 0)) return;
+    this.nextMomentumRollAt.set(player, now + 1_000);
+    if (Math.floor(now / 1_000) % 2 !== 0) return;
+    if (!player.conditions.has("combat-lock")) return;
+    if (this.world.isProtectionZone(player.position)) return;
+    const chance = playerTierBonuses(
+      this.items.combatEquipment(player.id),
+    ).momentumChancePercent;
+    if (chance <= 0 || !this.formula.chance(chance)) return;
+    let reducedAny = false;
+    for (const [group, cooldown] of session.combatCooldowns) {
+      if (!group.startsWith("spell:") || cooldown.readyAt <= now) continue;
+      session.combatCooldowns.set(group, {
+        readyAt: Math.max(now, cooldown.readyAt - 2_000),
+        totalMs: cooldown.totalMs,
+      });
+      reducedAny = true;
+    }
+    if (!reducedAny) return;
+    session.send({
+      type: "combat-log",
+      kind: "condition",
+      text: "Momentum was triggered.",
+    });
+    this.feedback.sendFightState(session, now);
   }
 
   /**
@@ -1500,6 +1558,10 @@ export class Combat {
       return true;
     }
     if (ability.kind === "effect") return true;
+    // Influenced/fiendish monsters hit harder (Canary monster.cpp:3550-3556:
+    // x1.35 + 0.1 per extra stack), applied at execution to damage only.
+    const attackMultiplier =
+      ability.kind === "healing" ? 1 : monster.forgeAttackMultiplier;
     const request: DamageRequest = {
       sourceId: monster.id,
       origin: "monster",
@@ -1507,8 +1569,10 @@ export class Combat {
         ability.kind === "healing"
           ? "healing"
           : (ability.damageType ?? "physical"),
-      minimum: ability.minimum ?? 0,
-      maximum: ability.maximum ?? ability.minimum ?? 0,
+      minimum: Math.round((ability.minimum ?? 0) * attackMultiplier),
+      maximum: Math.round(
+        (ability.maximum ?? ability.minimum ?? 0) * attackMultiplier,
+      ),
       ...(ability.area.shape === "single" && effectId !== undefined
         ? { effectId }
         : {}),

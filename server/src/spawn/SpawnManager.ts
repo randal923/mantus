@@ -40,6 +40,7 @@ interface Brain {
 /** Tick-owned lifecycle for ordinary ephemeral creature spawn slots. */
 export class SpawnManager {
   private readonly slots = new Map<string, SlotState>();
+  private respawnDivisorHook: ((monsterTypeId: string) => number) | null = null;
   private readonly sectorSlots = new Map<string, SlotState[]>();
   private readonly sectorCursors = new Map<string, number>();
   private readonly creatureToSlot = new Map<string, SlotState>();
@@ -274,6 +275,7 @@ export class SpawnManager {
   ): boolean {
     if (this.world.getCreature(monster.id) !== monster) return false;
     if (this.isSummon(monster)) return false;
+    if (monster.type.flags.rewardBoss) return false;
     const brain = this.brains.get(monster.id);
     if (!(brain instanceof MonsterBrain)) return false;
     return brain.challenge(this.world, challenger, now, durationMs);
@@ -287,6 +289,7 @@ export class SpawnManager {
   ): boolean {
     if (this.world.getCreature(monster.id) !== monster) return false;
     if (this.isSummon(monster)) return false;
+    if (monster.type.flags.rewardBoss) return false;
     const brain = this.brains.get(monster.id);
     if (!(brain instanceof MonsterBrain)) return false;
     return brain.pullToMelee(distance, now, durationMs);
@@ -422,11 +425,20 @@ export class SpawnManager {
   removeCreature(creatureId: string, now: number): boolean {
     const slot = this.creatureToSlot.get(creatureId);
     if (!slot) return this.removeSummon(creatureId);
-    return this.detachCreature(
-      creatureId,
-      now + slot.scaledRespawnMs,
-      false,
-    );
+    // The daily boosted creature respawns at half interval (Canary
+    // spawn_monster.cpp:361-369); the divisor is read at scheduling time so
+    // a rotation mid-day applies to the very next respawn.
+    const divisor = this.respawnDivisorHook?.(slot.definition.typeId) ?? 1;
+    const delay =
+      divisor > 1
+        ? Math.max(1, Math.floor(slot.scaledRespawnMs / divisor))
+        : slot.scaledRespawnMs;
+    return this.detachCreature(creatureId, now + delay, false);
+  }
+
+  /** Optional per-type respawn-interval divisor (boosted creature = 2). */
+  setRespawnDivisorHook(hook: (monsterTypeId: string) => number): void {
+    this.respawnDivisorHook = hook;
   }
 
   private detachCreature(

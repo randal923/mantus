@@ -46,6 +46,7 @@ const MONSTER_FLAG_FIELDS = new Set([
   "canWalkOnFire",
   "canWalkOnPoison",
   "isBlockable",
+  "rewardBoss",
 ]);
 const LOCALLY_SUPPORTED_MONSTER_ABILITIES = new Set([
   "combat",
@@ -546,6 +547,7 @@ function parseMonsterDefinition(
         canWalkOnFire: booleanValue(flags.canWalkOnFire, true),
         canWalkOnPoison: booleanValue(flags.canWalkOnPoison, true),
         isBlockable: booleanValue(flags.isBlockable, true),
+        rewardBoss: booleanValue(flags.rewardBoss),
       },
       race: String(assignment(source, "monster", "race") ?? "RACE_BLOOD"),
       faction: String(assignment(source, "monster", "faction") ?? "FACTION_DEFAULT"),

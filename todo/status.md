@@ -21,9 +21,9 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | --------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------- |
 | Map conversion, multi-floor movement, visibility (4)                                                | ✅     | ✅     | Per-entry content review: 348 disabled map actions, 2,225 unresolved floor transitions                     |
 | Rendering, animation, floors, occlusion (5–8)                                                       | —      | ✅     | Nothing — area closed                                                                                      |
-| Creatures, spawns, AI, all 84,294 placements (9, 10)                                                | ✅     | ✅     | Typed-data buckets (reward-boss → 76, 3 NPC entries; prey bucket closed 2026-07-26), placement review, Harlow duplicate |
+| Creatures, spawns, AI, all 84,294 placements (9, 10)                                                | ✅     | ✅     | Typed-data buckets (3 NPC entries; reward-boss + prey buckets closed 2026-07-26), placement review, Harlow duplicate |
 | World actions: doors, levers, readables, rope, shovel, chests, plates, traps, teleports (12, 50–52) | ✅     | ✅     | Fields (50), trap disarm, tool remainder + sand digging (51), transform-on-use/look flags (asset pass 108) |
-| World events engine + 18 raids (54)                                                                 | ◐      | —      | Other global events, daily resets/boosted rotations, reward steps, `/raid` capability                      |
+| World events engine + 18 raids (54)                                                                 | ◐      | —      | Other global events, daily resets (boosted rotation shipped with 76), reward steps, `/raid` capability     |
 | Exhausts, trash holders, pz-lock, crash harness (3, 12–15)                                          | ✅     | ✅     | Nothing — closed                                                                                           |
 
 ## Items & economy

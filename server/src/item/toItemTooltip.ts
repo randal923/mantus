@@ -1,4 +1,7 @@
 import type { ItemTooltipData } from "@tibia/protocol";
+import { itemImbuementsOf } from "../forge/itemImbuementsOf";
+import { itemTierOf } from "../forge/itemTierOf";
+import type { Item } from "./Item";
 import type { ItemType } from "./ItemType";
 
 function titleCase(value: string): string {
@@ -21,7 +24,10 @@ function itemTypeLine(item: ItemType): string {
   return "item";
 }
 
-export function toItemTooltip(item: ItemType): ItemTooltipData {
+export function toItemTooltip(
+  item: ItemType,
+  instance?: Item,
+): ItemTooltipData {
   const headline: string[] = [];
   if (item.attack !== undefined) headline.push(`Attack ${item.attack}`);
   if (item.defense !== undefined) headline.push(`Defense ${item.defense}`);
@@ -85,6 +91,25 @@ export function toItemTooltip(item: ItemType): ItemTooltipData {
   }
   if (item.manaLeechAmount !== undefined) {
     affixes.push({ text: `Mana Leech Amount ${signed(item.manaLeechAmount)}%` });
+  }
+  // Instance state: forge classification/tier and running imbuements are
+  // server-authored display lines (the client renders, never computes).
+  if (item.classification !== undefined) {
+    const tier = instance ? itemTierOf(instance) : 0;
+    affixes.push({
+      text: `Classification: ${item.classification} Tier: ${tier}`,
+    });
+  }
+  if (instance) {
+    for (const imbuement of itemImbuementsOf(instance)) {
+      const hours = Math.floor(imbuement.remainingSeconds / 3_600);
+      const minutes = Math.floor((imbuement.remainingSeconds % 3_600) / 60);
+      affixes.push({
+        text: `${imbuement.name ?? "Imbuement"} ${hours}:${String(
+          minutes,
+        ).padStart(2, "0")}h`,
+      });
+    }
   }
 
   return {

@@ -11,18 +11,19 @@ remaining features are mostly blocked on other areas' typed representations.
 
 The world import report must reach zero ignored gameplay assignments; every
 procedural callback becomes typed data or reviewed TypeScript — never
-executed Lua. As of 2026-07-25: 1,424 gaps `covered` (bestiary/bosstiary/
-raceId — owned by `tools/importCanaryBestiary.mjs`, with the guard test
-re-deriving coverage from `bestiary.json` rather than trusting labels),
-1 `upstream-defect` (Crypt Warrior's Bestiary block has no raceId), and
-**1,061 still `blocked`**.
+executed Lua. As of 2026-07-26: gaps `covered` by the bestiary importer
+(with the guard test re-deriving coverage from `bestiary.json` rather than
+trusting labels), 1 `upstream-defect` (Crypt Warrior's Bestiary block has
+no raceId), and **150 still `blocked`** (ceilings pinned in
+`creatureImportReport.test.ts`: 739 definitions / 1,573 ignored / 150
+blocked).
 
 **Remaining work**
 
-- **Reward-boss classification** (`flags.rewardBoss`, 911 monsters) — Feature
-  76 (todo-10) owns importing `isRewardBoss` onto `MonsterType` (it also
-  needs it for the challenge/melee-pull guards); this feature closes its
-  blocked bucket when that lands.
+- ~~Reward-boss classification~~ — resolved 2026-07-26 with Feature 76:
+  `flags.rewardBoss` is imported onto `MonsterType` (44 reward bosses), the
+  911-monster blocked bucket closed, and the challenge/melee-pull guards
+  ship with it.
 - ~~Prey classification~~ — resolved 2026-07-26 with Feature 74:
   `isPreyExclusive` is imported onto bestiary entries
   (`tools/parseCanaryBestiary.mjs` → `BestiaryCatalogEntry.preyExclusive`);

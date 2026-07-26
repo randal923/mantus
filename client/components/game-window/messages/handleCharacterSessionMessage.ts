@@ -132,6 +132,13 @@ export function handleCharacterSessionMessage(
   actions.wheel.reset();
   actions.gems.reset();
   state.setWheelOpen(false);
+  actions.boosted.reset();
+  actions.tracker.reset();
+  actions.bossSlots.reset();
+  actions.forge.reset();
+  state.setForgeOpen(false);
+  actions.imbuement.reset();
+  state.setImbuementItemId(null);
   actions.prey.reset();
   state.setPreyWindowOpen(false);
   actions.huntingTasks.reset();

@@ -169,6 +169,12 @@ export interface MonsterType {
     canWalkOnFire: boolean;
     canWalkOnPoison: boolean;
     isBlockable: boolean;
+    /**
+     * Canary's `flags.rewardBoss`: instanced-reward bosses. Gates challenge
+     * and melee-pull targeting, forge-state eligibility, and the boosted
+     * extra loot roll; reward-chest instancing itself is Feature 84.
+     */
+    rewardBoss: boolean;
   };
   race: string;
   faction: string;

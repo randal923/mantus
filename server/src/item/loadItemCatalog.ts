@@ -66,6 +66,32 @@ function parseItem(value: unknown, key: string): ItemType {
   ) {
     throw new Error(`item catalog entry ${key} has an invalid equipment slot`);
   }
+  if (
+    value.classification !== undefined &&
+    (!Number.isInteger(value.classification) ||
+      Number(value.classification) < 1 ||
+      Number(value.classification) > 4)
+  ) {
+    throw new Error(`item catalog entry ${key} has an invalid classification`);
+  }
+  if (
+    value.proficiencyId !== undefined &&
+    (!Number.isInteger(value.proficiencyId) || Number(value.proficiencyId) < 1)
+  ) {
+    throw new Error(`item catalog entry ${key} has an invalid proficiency id`);
+  }
+  if (value.imbuementTypes !== undefined) {
+    if (!isRecord(value.imbuementTypes)) {
+      throw new Error(`item catalog entry ${key} has invalid imbuement types`);
+    }
+    for (const level of Object.values(value.imbuementTypes)) {
+      if (!Number.isInteger(level) || Number(level) < 1 || Number(level) > 3) {
+        throw new Error(
+          `item catalog entry ${key} has an invalid imbuement level`,
+        );
+      }
+    }
+  }
   return value as unknown as ItemType;
 }
 
@@ -75,7 +101,7 @@ export async function loadItemCatalog(): Promise<ItemCatalog> {
     readFile(STOWABLE_TYPES_PATH, "utf8"),
   ]);
   const parsed: unknown = JSON.parse(catalogContents);
-  if (!isRecord(parsed) || parsed.formatVersion !== 2) {
+  if (!isRecord(parsed) || parsed.formatVersion !== 3) {
     throw new Error("item catalog has an unsupported format version");
   }
   if (!isRecord(parsed.source)) {

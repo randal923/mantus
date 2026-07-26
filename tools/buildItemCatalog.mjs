@@ -18,9 +18,15 @@ const foodsDocument = JSON.parse(
 const doorsDocument = JSON.parse(
   await readFile(join(repoRoot, "content/items/canary-doors.json"), "utf8"),
 );
+const appearanceFlagsDocument = JSON.parse(
+  await readFile(
+    join(repoRoot, "content/items/canary-appearance-flags.json"),
+    "utf8",
+  ),
+);
 
-if (sourceManifest.converters.itemCatalog !== 2) {
-  throw new Error("source manifest does not declare item catalog version 2");
+if (sourceManifest.converters.itemCatalog !== 3) {
+  throw new Error("source manifest does not declare item catalog version 3");
 }
 if (
   semanticsDocument.formatVersion !== sourceManifest.converters.canaryItems ||
@@ -53,6 +59,22 @@ if (
 ) {
   throw new Error("Canary doors do not match the pinned source manifest");
 }
+if (
+  appearanceFlagsDocument.formatVersion !==
+    sourceManifest.converters.appearanceFlags ||
+  appearanceFlagsDocument.source?.canaryCommit !==
+    sourceManifest.sources.canaryAppearances.commit ||
+  appearanceFlagsDocument.source?.sha256 !==
+    sourceManifest.sources.canaryAppearances.sha256
+) {
+  throw new Error(
+    "Canary appearance flags do not match the pinned source manifest",
+  );
+}
+
+const appearanceFlagsByClientId = new Map(
+  appearanceFlagsDocument.entries.map((entry) => [entry.clientId, entry]),
+);
 
 const doorInfoById = new Map();
 for (const pair of doorsDocument.doors) {
@@ -174,6 +196,27 @@ for (const appearance of appearancesDocument.objects) {
       : {}),
     ...(semantics.imbuementSlots !== undefined
       ? { imbuementSlots: semantics.imbuementSlots }
+      : {}),
+    ...(semantics.imbuementTypes
+      ? { imbuementTypes: semantics.imbuementTypes }
+      : {}),
+    ...(appearanceFlagsByClientId.get(appearance.clientId)?.classification !==
+    undefined
+      ? {
+          classification: appearanceFlagsByClientId.get(appearance.clientId)
+            .classification,
+        }
+      : {}),
+    // items.xml `proficiency` overrides the appearance mapping, exactly like
+    // Canary item_parse.cpp:998-1010.
+    ...(semantics.proficiencyId !== undefined ||
+    appearanceFlagsByClientId.get(appearance.clientId)?.proficiencyId !==
+      undefined
+      ? {
+          proficiencyId:
+            semantics.proficiencyId ??
+            appearanceFlagsByClientId.get(appearance.clientId).proficiencyId,
+        }
       : {}),
     ...(semantics.containerSize !== undefined
       ? { containerCapacity: semantics.containerSize }

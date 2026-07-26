@@ -3,16 +3,20 @@
 import { useMemo, useState } from "react";
 import {
   BOSS_CATEGORIES,
+  type BoostedStateMessage,
   type BossCategory,
+  type BossSlotsStateMessage,
   type BosstiaryBossStateMessage,
   type BosstiaryEntry,
   type BosstiaryStateMessage,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { BossSlotsSection } from "../bestiary/BossSlotsSection";
 import { BosstiaryCard } from "../bestiary/BosstiaryCard";
 import { BosstiaryBossSheet } from "../bestiary/BosstiaryBossSheet";
 import { BosstiaryCategoryIcon } from "../bestiary/BosstiaryCategoryIcon";
 import { BosstiaryMilestoneIcon } from "../bestiary/BosstiaryMilestoneIcon";
+import { BoostedTodaySection } from "../boosted/BoostedTodaySection";
 import { Button } from "../ui/Button";
 import { WikiModalFrame, type WikiTab } from "./WikiModalFrame";
 
@@ -23,10 +27,19 @@ interface WikiBosstiaryProps {
   activeTab: WikiTab;
   bosses: BosstiaryStateMessage | null;
   boss: BosstiaryBossStateMessage | null;
+  boosted?: BoostedStateMessage | null;
+  /** Bosses on the own kill tracker (server projection). */
+  trackedRaceIds?: ReadonlyArray<number>;
+  bossSlots?: BossSlotsStateMessage | null;
   pending: boolean;
+  bossSlotsPending?: boolean;
   error: string | null;
+  bossSlotsError?: string | null;
   initialRaceId?: number;
   onRequestBoss: (raceId: number) => void;
+  onToggleTrack?: (raceId: number, enabled: boolean) => void;
+  onAssignBossSlot?: (slot: number, raceId: number) => void;
+  onClearBossSlot?: (slot: number) => void;
   onSelectTab: (tab: WikiTab) => void;
   onClose: () => void;
 }
@@ -35,10 +48,18 @@ export function WikiBosstiary({
   activeTab,
   bosses,
   boss,
+  boosted = null,
+  trackedRaceIds = [],
+  bossSlots = null,
   pending,
+  bossSlotsPending = false,
   error,
+  bossSlotsError = null,
   initialRaceId,
   onRequestBoss,
+  onToggleTrack,
+  onAssignBossSlot,
+  onClearBossSlot,
   onSelectTab,
   onClose,
 }: WikiBosstiaryProps) {
@@ -94,7 +115,15 @@ export function WikiBosstiary({
             {t("bestiary.back")}
           </Button>
           {bossReady ? (
-            <BosstiaryBossSheet boss={boss} />
+            <BosstiaryBossSheet
+              boss={boss}
+              tracked={trackedRaceIds.includes(boss.raceId)}
+              onToggleTrack={
+                onToggleTrack
+                  ? (enabled) => onToggleTrack(boss.raceId, enabled)
+                  : undefined
+              }
+            />
           ) : (
             <p className="py-12 text-center text-sm text-ui-muted">
               {t("bestiary.loading")}
@@ -108,6 +137,9 @@ export function WikiBosstiary({
         </div>
       ) : (
       <>
+      <div className="mb-4">
+        <BoostedTodaySection boosted={boosted} compact />
+      </div>
       <section className="ui-panel-inset rounded-sm border border-ui-stone-light/15 p-4">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div>
@@ -188,6 +220,17 @@ export function WikiBosstiary({
           )}
         </div>
       </section>
+
+      {onAssignBossSlot && onClearBossSlot && (
+        <BossSlotsSection
+          slots={bossSlots}
+          bosses={bosses}
+          pending={bossSlotsPending}
+          error={bossSlotsError}
+          onAssign={onAssignBossSlot}
+          onClear={onClearBossSlot}
+        />
+      )}
 
       {!bosses && (
         <p className="py-12 text-center text-sm text-ui-muted">

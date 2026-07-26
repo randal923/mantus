@@ -1,6 +1,10 @@
 import type { BestiarySession } from "../../../hooks/useBestiarySession";
+import type { BoostedSession } from "../../../hooks/useBoostedSession";
+import type { BossSlotsSession } from "../../../hooks/useBossSlotsSession";
 import type { BosstiarySession } from "../../../hooks/useBosstiarySession";
 import type { DepotSession } from "../../../hooks/useDepotSession";
+import type { ForgeSession } from "../../../hooks/useForgeSession";
+import type { ImbuementSession } from "../../../hooks/useImbuementSession";
 import type { GemSession } from "../../../hooks/useGemSession";
 import type { GuildSession } from "../../../hooks/useGuildSession";
 import type { HighscoresSession } from "../../../hooks/useHighscoresSession";
@@ -13,6 +17,7 @@ import type { PartySession } from "../../../hooks/usePartySession";
 import type { PreySession } from "../../../hooks/usePreySession";
 import type { ProfileSession } from "../../../hooks/useProfileSession";
 import type { TradeSession } from "../../../hooks/useTradeSession";
+import type { TrackerSession } from "../../../hooks/useTrackerSession";
 import type { VipSession } from "../../../hooks/useVipSession";
 import type { WheelSession } from "../../../hooks/useWheelSession";
 import type { PendingItemOp } from "../../../lib/inventory/PendingItemOp";
@@ -35,5 +40,10 @@ export interface GameWindowSessionActions {
   profile: Omit<ProfileSession, "state">;
   prey: Omit<PreySession, "state">;
   huntingTasks: Omit<HuntingTasksSession, "state">;
+  boosted: Omit<BoostedSession, "state">;
+  tracker: Omit<TrackerSession, "state">;
+  bossSlots: Omit<BossSlotsSession, "state">;
+  forge: Omit<ForgeSession, "state">;
+  imbuement: Omit<ImbuementSession, "state">;
   dispatchItemOpChecked: (op: PendingItemOp) => boolean;
 }

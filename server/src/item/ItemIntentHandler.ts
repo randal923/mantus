@@ -7,6 +7,11 @@ import type {
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import type { ImbuementCatalog } from "../imbuement/ImbuementCatalog";
+import {
+  playerImbuementEffects,
+  type PlayerImbuementEffects,
+} from "../imbuement/playerImbuementEffects";
 import { monotonicNow } from "../monotonicNow";
 import { CorpseCreator } from "./CorpseCreator";
 import type { DecayManager } from "./DecayManager";
@@ -62,6 +67,11 @@ export class ItemIntentHandler {
   private readonly equipmentByItems = new WeakMap<
     ReadonlyArray<Item>,
     ReadonlyArray<{ item: Item; type: ItemType }>
+  >();
+  private imbuementCatalog?: ImbuementCatalog;
+  private readonly imbuementEffectsByItems = new WeakMap<
+    ReadonlyArray<Item>,
+    PlayerImbuementEffects
   >();
   private readonly poisonedPersistCharacters = new Set<string>();
   private readonly pendingPersistOperations = new Set<Promise<void>>();
@@ -214,6 +224,24 @@ export class ItemIntentHandler {
     );
     this.equipmentByItems.set(cache.items, equipment);
     return equipment;
+  }
+
+  setImbuementCatalog(catalog: ImbuementCatalog): void {
+    this.imbuementCatalog = catalog;
+  }
+
+  /** Running imbuement effects for combat reads, memoized like equipment. */
+  imbuementEffects(characterId: string): PlayerImbuementEffects {
+    const cache = this.inventories.get(characterId);
+    if (!cache) return playerImbuementEffects([], this.imbuementCatalog);
+    const memoized = this.imbuementEffectsByItems.get(cache.items);
+    if (memoized) return memoized;
+    const effects = playerImbuementEffects(
+      this.combatEquipment(characterId),
+      this.imbuementCatalog,
+    );
+    this.imbuementEffectsByItems.set(cache.items, effects);
+    return effects;
   }
 
   itemType(itemTypeId: number): ItemType | undefined {

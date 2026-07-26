@@ -100,6 +100,9 @@ export interface GameWindowStoreActions {
   setHighscoresOpen: (value: SetStateAction<boolean>) => void;
   setWikiOpen: (value: SetStateAction<boolean>) => void;
   setWheelOpen: (value: SetStateAction<boolean>) => void;
+  setForgeOpen: (value: SetStateAction<boolean>) => void;
+  setImbuementItemId: (value: SetStateAction<string | null>) => void;
+  setTrackerVisible: (value: SetStateAction<boolean>) => void;
   setPreyWindowOpen: (value: SetStateAction<boolean>) => void;
   setHuntingTasksOpen: (value: SetStateAction<boolean>) => void;
   setOutfitWindowOpen: (value: SetStateAction<boolean>) => void;

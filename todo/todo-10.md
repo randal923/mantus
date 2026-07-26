@@ -1,14 +1,18 @@
 # Todo 10 — Remaining Canary systems
 
-**Features 68†–69†, 72–73, 76–86.** Later in order but **not optional in
-final scope**. Shipped cores: minimap with markers/click-to-walk, account UI
-settings with reset/sync, bestiary/bosstiary, Wheel core + passive/augment
-combat wiring, Gem Atelier, the Mantus Store slice, outfits/mounts complete
-(entitlements, window, mounted rendering; unlock sources ride with Features
-43/67/quests — each calls `OutfitService.grantOutfit`), prey and hunting
-tasks complete server+client (74/75, 2026-07-26; wildcard/point *sources*
-ride with Features 43/80/84), and the blessing data layer (see
-[done.md](done.md)).
+**Features 68†–69†, 72–73, 77, 79–81, 84–86.** Later in order but **not
+optional in final scope**. Shipped cores: minimap with markers/click-to-walk,
+account UI settings with reset/sync, bestiary/bosstiary, Wheel core +
+passive/augment combat wiring, Gem Atelier, the Mantus Store slice,
+outfits/mounts complete (entitlements, window, mounted rendering; unlock
+sources ride with Features 43/67/quests — each calls
+`OutfitService.grantOutfit`), prey and hunting tasks complete server+client
+(74/75, 2026-07-26; wildcard/point *sources* ride with Features 43/80/84),
+the blessing data layer, and — 2026-07-26 — boosted creatures/bosses with
+kill trackers, boss slots, and the reward-boss flag (76), imbuements +
+tiers + the Exaltation Forge with influenced/fiendish monsters (78), weapon
+proficiency + animus mastery (82), and the Cyclopedia views (83); see
+[done.md](done.md).
 **Feature 72 is the highest-leverage unblocker in the whole backlog.**
 
 ## Client-only remainders (server + protocol ship)
@@ -69,26 +73,6 @@ combat procs rolled in `Combat.ts`/`DamageResolver` with server RNG at
 damage execution; balances re-checked at spend execution inside the tick.
 **Tests:** spend races cannot double-spend; procs never client-influenced.
 
-## Feature 76 — Boosted creatures/bosses, kill trackers, reward-boss flag
-
-**Remaining**
-
-- Daily boosted creature/boss selection with exp/loot modifiers —
-  server-selected with server RNG, scheduled through Feature 54's engine
-  (todo-2), applied in kill-reward and loot-roll paths at execution time.
-- Client kill trackers and boss slots — projections bounded to the
-  requesting character's own counts.
-- **Import `isRewardBoss` onto `MonsterType`** (with Feature 84 this owns
-  the typed reward-boss representation) — closes Feature 9's blocked bucket
-  (911 monsters).
-- **Reward-boss combat guards** (absorbed from Feature 23): gate
-  `challengeMonster` / `pullMonsterToMelee` once the flag exists (only the
-  summon guard is enforced today).
-
-**Tests:** modifiers apply only to the selected race/boss on the current
-day; trackers expose only own counts; reward bosses cannot be challenged or
-melee-pulled.
-
 ## Feature 77 — Bestiary accepted-limitation fixes
 
 **Remaining:** kill credit should also cover no-damage party members under
@@ -103,28 +87,6 @@ Feature 74 (shipped 2026-07-26): Canary's party-shared prey **loot** boost
 factor) — mantus applies only the corpse owner's improved-loot prey today.
 **Tests:** no-damage eligible member credited, ineligible not; client queues
 within the cooldown window.
-
-## Feature 78 — Imbuements, item tiers, and Exaltation Forge
-
-The forge complex — heavy economy exposure; every conversion atomic and
-audited. Unblocks Feature 81's drop classification and slices of Features
-48/49 (todo-8).
-
-**Remaining:** imbuements; classification/tiering; Exaltation Forge +
-history; dust/slivers/cores; influenced/fiendish monsters; atomic
-conversions throughout; retire the gem-drop deviation (bestiary stars →
-forge states) once monster states exist.
-
-**Implementation:** item attribute extensions (tier, imbuement
-slots/charges) on single-owner rows with single-step mutations; each
-conversion (fusion, transfer, exchanges) one ACID transaction with audit
-rows and in-transaction server-RNG rolls; forge history written in the same
-transactions; influenced/fiendish assigned server-side at spawn; bounded zod
-intents first; costs/prerequisites re-checked at execution.
-
-**Tests:** conversion races conserve resources; failed fusions consume
-exactly what Canary consumes; tier rolls server-side; history rows match
-audit rows one-to-one.
 
 ## Feature 79 — Wheel combat wiring (revelation actives + periodic passives)
 
@@ -157,6 +119,17 @@ and the periodic majors:
   the 30 spell-supreme gem augments (`computeGemBonuses` `case "spell"` is
   still a no-op), and `m_modsMaxGrade` (each grade-3 gem mod adds one wheel
   point and one point to every quadrant's stage total).
+- **Absorbed from Feature 78 (2026-07-26): transcendence tier proc.** The
+  legs-slot chance (quadratic + boots amplification) is computed in
+  `playerTierBonuses` but nothing consumes it — the proc grants the
+  vocation avatar (7 s outfit + reductions), which is this feature's avatar
+  work. Wire `triggerTranscendence` when avatars land.
+- **Absorbed from Feature 82 (2026-07-26): spell-facing proficiency
+  perks.** `spell-augment` (per-spell damage/crit/cooldown boosts),
+  `specialized-magic-level`, and the `skill-percentage-spell-damage/
+  -healing` families are stored and selectable but inert
+  (`proficiencyPerkEffects` skips them); they belong with this feature's
+  spell augment plumbing (`wheelSpellAugments`-style, applied at cast).
 
 **Tests:** avatar reduction/crit verified in damage resolution; majors zero
 outside fights; forged intents still change nothing (bonuses only ever read
@@ -188,39 +161,14 @@ Five recorded deviations to retire, all in
   + audit intact).
 - Temple-tile check on reveal at execution time.
 - `normal_random` destroy yields (server RNG) instead of uniform.
-- Drop classification switch to forge monster states once Feature 78 lands.
 - Item-ification of gems/fragments only if 8.6-era sprites become available;
   otherwise keep balances and the recorded deviation.
+  (The drop-classification deviation was retired 2026-07-26 with Feature
+  78: `GemDropHooks` now keys on real influenced/fiendish instance states
+  and archfoe bosses, not bestiary stars.)
 
 **Tests:** mixed bank+carried payment conserves gold under races; reveal
 outside a temple rejected; destroy distribution matches `normal_random`.
-
-## Feature 82 — Weapon proficiency and animus mastery
-
-**Remaining:** proficiency and animus tracking in progression (durable
-per-character state, server-side accrual from combat events); combat
-application in `server/src/combat/` at execution time; bounded perk
-selection intents. Canary reference for perk tables and accrual rates.
-**Tests:** accrual only from server combat events; selections validated
-against earned progress at execution.
-
-## Feature 83 — Cyclopedia views
-
-The danger is over-sharing: every view is an authorized bounded projection,
-never a raw game-state query.
-
-**Remaining:** character/map/house/item/monster views;
-achievements/titles/badges display (Feature 67's tables); attached effects;
-authorized tracker projections.
-
-**Implementation:** bounded read models per view following the
-`HighscoreService` pattern (fixed parameterized queries, row limits, no
-private state); client modals in `client/components/` (reuse Feature 67's
-list components); house view ties to auction data; monster view builds on
-stage-gated bestiary projections.
-
-**Tests:** each view exposes only authorized data; queries bounded
-regardless of client parameters.
 
 ## Feature 84 — Rewards and loot QoL
 
@@ -234,6 +182,15 @@ streak timers — including Canary's day-3/day-5 prey wildcard grants (1 free
 `PreyService.grantWildcards`/`PreyStore.grantWildcards` path (Feature 74's
 only wildcard sources are this and Feature 43's store packs); all grants in
 single audited transactions.
+
+**Absorbed residuals (2026-07-26, from Features 76/78):**
+
+- Apply the bosstiary slot loot bonus (`BossSlotService` computes it,
+  including the +25 mastery extra) and the boosted-boss +250% roll bonus to
+  reward-chest loot rolls when they land (Canary reward_chest.lua:84-101).
+- Imbuement astral sources are consumed from carried items only; Canary
+  also auto-withdraws the remainder from the supply stash
+  (player.cpp:2707-2728) — wire that when quick-loot stash routing lands.
 
 **Tests:** quick-loot races conserve every item under the memory-first
 invariant; daily claims exactly-once per day (clock manipulation cannot
@@ -261,6 +218,23 @@ every other registered modern system. Standard order per unit: protocol
 schema + size/rate limits first, server-authoritative execution with
 execution-time re-checks, durable state, audits for anything
 economy-relevant, per-system exploit tests.
+
+**Absorbed residuals (2026-07-26, from Features 78/82):**
+
+- Imbuement `speed`/`capacity` effects (Swiftness/Featherweight) decay
+  correctly but apply no stat yet — needs equip-state plumbing into
+  `Player.stepSpeed` and the capacity pipeline (Featherweight is a percent
+  of base capacity, Canary player.cpp:3266).
+- Vibrancy's PvP-deflect leg (paralysis cloned back onto a non-vibrant
+  player attacker, condition.cpp:95-136); the removal-chance roll shipped.
+- Inert proficiency perk families with no mantus mechanism yet:
+  `bestiary-damage`, `perfect-shot-damage`, `elemental-hit-chance`,
+  rune/elemental crit legs, `mana/life-gain-on-hit/-kill`, and Canary's own
+  dead types 28-31 (kept inert upstream too).
+- Animus mastery earn path: Canary grants it through Soul Pit encounters
+  (soul cores drop 5% from fiendish monsters, ondroploot_soul_core.lua);
+  mantus ships state/bonus/projection with `AnimusService.grant` as the
+  only server-side surface until an encounter system exists.
 
 **Excluded by product decision (2026-07-25): livestream/casting.** Pinned
 Canary ships it (`src/creatures/players/livestream/`), deliberately out of

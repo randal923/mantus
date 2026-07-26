@@ -164,4 +164,61 @@ describe("createMonsterCorpse loot rate", () => {
       1_000,
     );
   });
+
+  it("rolls one extra pass for the boosted creature, never for reward bosses", () => {
+    const makeHarness = (rewardBoss: boolean, boosted: boolean) => {
+      const createCorpse = vi.fn();
+      const items = {
+        itemType: (typeId: number) =>
+          typeId === 100
+            ? { id: 100, containerCapacity: 4 }
+            : { id: 200, maxCount: 100, stackable: false },
+        itemTypeByName: () => undefined,
+        createCorpse,
+      } as unknown as ItemIntentHandler;
+      const formula = {
+        chance: vi.fn(() => true),
+        integer: vi.fn(() => 1),
+      } as unknown as CombatFormula;
+      const monster = {
+        position: { x: 5, y: 6, z: 7 },
+        type: {
+          corpseItemTypeId: 100,
+          flags: { rewardBoss },
+          loot: [
+            {
+              itemTypeId: 200,
+              chance: 100_000,
+              minCount: 1,
+              maxCount: 1,
+              unique: false,
+            },
+          ],
+        },
+      } as unknown as Monster;
+      createMonsterCorpse(
+        { getMapItems: () => [] } as unknown as World,
+        items,
+        formula,
+        monster,
+        "killer",
+        "death:test",
+        1_000,
+        1,
+        undefined,
+        {
+          isBoostedCreature: () => boosted,
+          bossKillIncrement: () => 1,
+          respawnDelayDivisor: () => 1,
+          boostedBossRaceId: () => null,
+        },
+      );
+      const call = createCorpse.mock.calls[0];
+      return (call?.[5] as Array<unknown>).length;
+    };
+
+    expect(makeHarness(false, false)).toBe(1);
+    expect(makeHarness(false, true)).toBe(2);
+    expect(makeHarness(true, true)).toBe(1);
+  });
 });

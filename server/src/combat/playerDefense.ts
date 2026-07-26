@@ -1,4 +1,4 @@
-import type { FightMode } from "@tibia/protocol";
+import type { FightMode, Skill } from "@tibia/protocol";
 import type { Item } from "../item/Item";
 import type { ItemType } from "../item/ItemType";
 import type { Player } from "../Player";
@@ -11,6 +11,8 @@ export function playerDefense(
   equipment: ReadonlyArray<{ item: Item; type: ItemType }>,
   mode: FightMode["attack"],
   now: number,
+  /** Flat skill additions from running imbuements (Feature 78). */
+  imbuementSkills: Readonly<Partial<Record<Skill, number>>> = {},
 ): number {
   const weapon = equipment.find(
     (entry) =>
@@ -26,14 +28,17 @@ export function playerDefense(
     player,
     equipment,
     "fist",
+    imbuementSkills.fist ?? 0,
   );
   let defenseValue = 7;
   let scaling = 0.15;
   if (weapon) {
+    const weaponSkill = skillForWeapon(weapon.type.weaponType);
     defenseSkill = playerCombatSkill(
       player,
       equipment,
-      skillForWeapon(weapon.type.weaponType),
+      weaponSkill,
+      imbuementSkills[weaponSkill] ?? 0,
     );
     defenseValue =
       (weapon.type.defense ?? 0) + (weapon.type.extraDefense ?? 0);
@@ -44,6 +49,7 @@ export function playerDefense(
       player,
       equipment,
       "shielding",
+      imbuementSkills.shielding ?? 0,
     );
     defenseValue =
       (shield.type.defense ?? 0) + (weapon?.type.extraDefense ?? 0);

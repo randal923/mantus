@@ -1,3 +1,5 @@
+import { FORGE_RULES } from "@tibia/protocol";
+import type { BoostedHooks } from "../boosted/BoostedHooks";
 import type { Monster } from "../creature/Monster";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PreyHooks } from "../prey/PreyHooks";
@@ -16,6 +18,7 @@ export function createMonsterCorpse(
   now: number,
   lootRate = 1,
   preyHooks?: PreyHooks,
+  boostedHooks?: BoostedHooks,
 ): void {
   const corpseType = items.itemType(monster.type.corpseItemTypeId);
   if (!corpseType || (corpseType.containerCapacity ?? 0) < 1) return;
@@ -44,6 +47,32 @@ export function createMonsterCorpse(
       roll,
     );
     loot.push(...extra);
+  }
+  // Today's boosted creature drops one extra full loot roll (Canary
+  // ondroploot_boosted.lua, factor 1.0); reward bosses are exempt exactly
+  // like the upstream callback dispatch (monster.cpp:3430).
+  if (
+    boostedHooks?.isBoostedCreature(monster) &&
+    !monster.type.flags.rewardBoss
+  ) {
+    const extra = rollMonsterLoot(
+      monster.type.loot,
+      Math.max(0, capacity - loot.length),
+      lootRate,
+      roll,
+    );
+    loot.push(...extra);
+  }
+  // Fiendish corpses carry uniform(3, 7) exalted slivers — fiendish only,
+  // never influenced (Canary monster.cpp:3414-3429).
+  if (monster.forgeKind === "fiendish" && loot.length < capacity) {
+    loot.push({
+      typeId: FORGE_RULES.sliverItemTypeId,
+      count: formula.integer(
+        FORGE_RULES.fiendishMinSlivers,
+        FORGE_RULES.fiendishMaxSlivers,
+      ),
+    });
   }
   const stackIndex = Math.min(
     255,

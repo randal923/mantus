@@ -2,6 +2,7 @@
 
 import type { BestiaryMonsterStateMessage } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { Button } from "../ui/Button";
 import { AnimatedOutfit } from "./AnimatedOutfit";
 import { BestiaryKillProgressBar } from "./BestiaryKillProgressBar";
 import { BestiaryLootList } from "./BestiaryLootList";
@@ -13,10 +14,17 @@ import {
 
 interface BestiaryMonsterSheetProps {
   monster: BestiaryMonsterStateMessage;
+  /** Whether this race is on the own kill tracker (server projection). */
+  tracked?: boolean;
+  onToggleTrack?: (enabled: boolean) => void;
 }
 
 /** Public creature catalog detail; kills only drive charm completion. */
-export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
+export function BestiaryMonsterSheet({
+  monster,
+  tracked = false,
+  onToggleTrack,
+}: BestiaryMonsterSheetProps) {
   const { t } = useAppTranslation();
   const stats: ReadonlyArray<{
     key: string;
@@ -101,6 +109,17 @@ export function BestiaryMonsterSheet({ monster }: BestiaryMonsterSheetProps) {
               toKill={monster.toKill}
             />
           </div>
+          {onToggleTrack && (
+            <div className="mt-4">
+              <Button
+                size="sm"
+                variant={tracked ? "secondary" : "primary"}
+                onClick={() => onToggleTrack(!tracked)}
+              >
+                {tracked ? t("tracker.untrack") : t("tracker.track")}
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

@@ -49,9 +49,16 @@ export function playerMitigation(
   player: Player,
   equipment: ReadonlyArray<{ item: Item; type: ItemType }>,
   mode: FightMode["attack"],
+  /** Flat shielding addition from running imbuements (Feature 78). */
+  imbuementShielding = 0,
 ): number {
   const constants = MITIGATION_FACTORS[WHEEL_BASE_VOCATION[player.vocation]];
-  const skill = playerCombatSkill(player, equipment, "shielding");
+  const skill = playerCombatSkill(
+    player,
+    equipment,
+    "shielding",
+    imbuementShielding,
+  );
   const fightFactor =
     mode === "offensive" ? 0.8 : mode === "defensive" ? 1.2 : 1.0;
   let shieldFactor = 1.0;

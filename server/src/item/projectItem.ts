@@ -1,4 +1,5 @@
 import type { InventoryItem } from "@tibia/protocol";
+import { itemTierOf } from "../forge/itemTierOf";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
@@ -53,6 +54,7 @@ export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
     Object.keys(item.attributes).length === 0
       ? { stowable: true }
       : {}),
-    tooltip: toItemTooltip(type),
+    ...(itemTierOf(item) > 0 ? { tier: itemTierOf(item) } : {}),
+    tooltip: toItemTooltip(type, item),
   };
 }

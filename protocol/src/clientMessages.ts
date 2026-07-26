@@ -76,8 +76,30 @@ import {
   bestiaryMonsterGetMessageSchema,
   bosstiaryBossGetMessageSchema,
   bosstiaryGetMessageSchema,
+  trackerSetMessageSchema,
   wikiItemSourcesGetMessageSchema,
 } from "./bestiary";
+import {
+  bossSlotSetMessageSchema,
+  bossSlotsGetMessageSchema,
+} from "./bosstiarySlots";
+import {
+  forgeConversionMessageSchema,
+  forgeFusionMessageSchema,
+  forgeGetMessageSchema,
+  forgeHistoryGetMessageSchema,
+  forgeTransferMessageSchema,
+} from "./forge";
+import {
+  imbuementApplyMessageSchema,
+  imbuementClearMessageSchema,
+  imbuementWindowGetMessageSchema,
+} from "./imbuements";
+import {
+  proficiencyGetMessageSchema,
+  proficiencySelectMessageSchema,
+} from "./proficiency";
+import { cyclopediaCharacterGetMessageSchema } from "./cyclopedia";
 import { highscoresGetMessageSchema } from "./highscores";
 import { wheelGetMessageSchema, wheelSaveMessageSchema } from "./wheel";
 import {
@@ -742,6 +764,20 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   bestiaryMonsterGetMessageSchema,
   bosstiaryGetMessageSchema,
   bosstiaryBossGetMessageSchema,
+  trackerSetMessageSchema,
+  bossSlotsGetMessageSchema,
+  bossSlotSetMessageSchema,
+  forgeGetMessageSchema,
+  forgeFusionMessageSchema,
+  forgeTransferMessageSchema,
+  forgeConversionMessageSchema,
+  forgeHistoryGetMessageSchema,
+  imbuementWindowGetMessageSchema,
+  imbuementApplyMessageSchema,
+  imbuementClearMessageSchema,
+  proficiencyGetMessageSchema,
+  proficiencySelectMessageSchema,
+  cyclopediaCharacterGetMessageSchema,
   wikiItemSourcesGetMessageSchema,
   wheelGetMessageSchema,
   wheelSaveMessageSchema,

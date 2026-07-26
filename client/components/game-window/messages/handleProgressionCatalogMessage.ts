@@ -59,6 +59,59 @@ export function handleProgressionCatalogMessage(
   if (message.type === "bestiary-entry-changed") {
     actions.bestiary.entryChanged(message);
     actions.bosstiary.entryChanged(message);
+    actions.tracker.entryChanged(message);
+    return true;
+  }
+
+  // Pushed at login and again on each daily rotation; never requested.
+  if (message.type === "boosted-state") {
+    actions.boosted.stateReceived(message);
+    return true;
+  }
+
+  // Pushed at login and after every tracker-set mutation.
+  if (message.type === "tracker-state") {
+    actions.tracker.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "boss-slots-state") {
+    actions.bossSlots.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "boss-slot-failed") {
+    actions.bossSlots.fail(message.reason);
+    return true;
+  }
+
+  if (message.type === "forge-state") {
+    actions.forge.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "forge-result") {
+    actions.forge.resultReceived(message);
+    return true;
+  }
+
+  if (message.type === "forge-history-state") {
+    actions.forge.historyReceived(message);
+    return true;
+  }
+
+  if (message.type === "forge-action-failed") {
+    actions.forge.fail(message.reason);
+    return true;
+  }
+
+  if (message.type === "imbuement-window-state") {
+    actions.imbuement.windowReceived(message);
+    return true;
+  }
+
+  if (message.type === "imbuement-action-failed") {
+    actions.imbuement.fail(message.reason);
     return true;
   }
 

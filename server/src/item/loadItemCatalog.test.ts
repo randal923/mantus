@@ -16,7 +16,12 @@ describe("loadItemCatalog", () => {
       name: "Sabre",
       typeLine: "Sword Weapons",
       primaryStat: "Attack 12 · Defense 10",
-      affixes: [{ text: "Extra Defense +1" }],
+      // The classification line comes from the appearances protobuf
+      // (Feature 78); without an instance the tier reads 0.
+      affixes: [
+        { text: "Extra Defense +1" },
+        { text: "Classification: 1 Tier: 0" },
+      ],
       weight: 2500,
     });
     expect(toItemTooltip(catalog.require(3074))).toMatchObject({

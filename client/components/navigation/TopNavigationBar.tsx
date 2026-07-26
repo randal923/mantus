@@ -16,6 +16,7 @@ type NavigationPanel =
   | "highscores"
   | "wiki"
   | "wheel"
+  | "forge"
   | "prey"
   | "huntingTasks"
   | "outfit"
@@ -38,6 +39,7 @@ interface TopNavigationBarProps {
   fightMode: FightMode | null;
   battleListVisible: boolean;
   minimapVisible: boolean;
+  trackerVisible: boolean;
   vipVisible: boolean;
   partyVisible: boolean;
   gold: number;
@@ -54,6 +56,7 @@ interface TopNavigationBarProps {
   onHighscores?: () => void;
   onWiki?: () => void;
   onWheel?: () => void;
+  onForge?: () => void;
   onPrey?: () => void;
   onHuntingTasks?: () => void;
   onOutfits?: () => void;
@@ -61,6 +64,7 @@ interface TopNavigationBarProps {
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
   onMinimap: () => void;
+  onTracker?: () => void;
   onStore: () => void;
   onMarket?: () => void;
   onSettings?: () => void;
@@ -75,6 +79,7 @@ export function TopNavigationBar({
   fightMode,
   battleListVisible,
   minimapVisible,
+  trackerVisible,
   vipVisible,
   partyVisible,
   gold,
@@ -91,6 +96,7 @@ export function TopNavigationBar({
   onHighscores,
   onWiki,
   onWheel,
+  onForge,
   onPrey,
   onHuntingTasks,
   onOutfits,
@@ -98,6 +104,7 @@ export function TopNavigationBar({
   onFightModeChange,
   onBattleList,
   onMinimap,
+  onTracker,
   onStore,
   onMarket,
   onSettings,
@@ -396,6 +403,28 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
+          label={t("navigation.forge")}
+          active={activePanel === "forge"}
+          disabled={!onForge}
+          onClick={onForge}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 9.5h9.5v3.5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" />
+            <path d="M13.5 10.5 20 5.5l-1.5 5h-5" />
+            <path d="M6.5 17v3.5M11 17v3.5M4.5 20.5h9" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
           label={t("navigation.prey")}
           active={activePanel === "prey"}
           disabled={!onPrey}
@@ -501,6 +530,28 @@ export function TopNavigationBar({
             <circle cx="5.5" cy="12" r="1.5" />
             <circle cx="5.5" cy="17.5" r="1.5" />
             <path d="M9.5 6.5H20M9.5 12H20M9.5 17.5H20" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.tracker")}
+          active={trackerVisible}
+          disabled={!onTracker}
+          onClick={onTracker}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="6.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4" />
           </svg>
         </NavigationIconButton>
 

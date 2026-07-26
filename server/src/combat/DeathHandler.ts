@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { BestiaryHooks } from "../bestiary/BestiaryHooks";
+import type { BoostedHooks } from "../boosted/BoostedHooks";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { MonsterEventHooks } from "../creature/MonsterEventHooks";
@@ -40,6 +41,13 @@ export class DeathHandler {
     private readonly staminaSystem = false,
     private readonly useStages = false,
     private readonly preyHooks?: PreyHooks,
+    private readonly boostedHooks?: BoostedHooks,
+    private readonly animusHooks?: {
+      multiplierFor(recipientId: string, monster: Monster): number;
+    },
+    private readonly deathHistoryHooks?: {
+      record(characterId: string, level: number, cause: string): void;
+    },
   ) {}
 
   handleDeath(
@@ -55,8 +63,11 @@ export class DeathHandler {
       const killerId =
         (sourceId && this.world.getPlayer(sourceId)?.id) ??
         target.topDamagerId();
+      // Forge-state monsters multiply base exp before ratio/shares, exactly
+      // like Canary's getLostExperience (monster.cpp:872-875).
       const experience = Math.floor(
         target.type.experience *
+          target.forgeExperienceMultiplier *
           this.experienceRateFor(killerId),
       );
       if (killerId && experience > 0) {
@@ -115,6 +126,7 @@ export class DeathHandler {
         now,
         this.lootRate,
         this.preyHooks,
+        this.boostedHooks,
       );
       if (!this.onMonsterDeath(target, now)) {
         this.world.removeCreature(target.id);
@@ -133,6 +145,16 @@ export class DeathHandler {
     // relations at this instant — before death cleanup wipes them. The
     // deathEventId keys the exactly-once guard (memory and durable row).
     this.pvpHooks?.handlePlayerDeath(target, sourceId, deathEventId, now);
+    // The Cyclopedia recent-deaths row, written before penalties change the
+    // level (Canary formats "Died at level {} by {}").
+    const slayer = sourceId ? this.world.getCreature(sourceId) : undefined;
+    this.deathHistoryHooks?.record(
+      target.id,
+      target.level,
+      slayer
+        ? `Died at level ${target.level} by ${slayer.name}.`
+        : `Died at level ${target.level}.`,
+    );
     const session = this.registry.sessionFor(target.id);
     target.conditions.clear();
     // Measured before death cleanup, from the damage this life actually took:
@@ -240,6 +262,11 @@ export class DeathHandler {
     this.preyHooks?.onHuntExperienceGained(recipientId, now);
     let amount = baseAmount;
     if (target instanceof Monster) {
+      // Boosted-creature doubling composes before the prey percentage,
+      // matching Canary's onGainExperience order (player.lua:563-574).
+      if (this.boostedHooks?.isBoostedCreature(target)) {
+        amount *= 2;
+      }
       const preyPercent = this.preyHooks?.experienceBonusPercent(
         recipientId,
         target,
@@ -253,6 +280,12 @@ export class DeathHandler {
         amount * recipient.staminaExperienceMultiplier(now),
       );
       recipient.decayHuntStamina(now);
+    }
+    // Animus mastery composes last, after every other multiplier, exactly
+    // like Canary player.cpp:3588-3603.
+    if (target instanceof Monster && this.animusHooks) {
+      const multiplier = this.animusHooks.multiplierFor(recipientId, target);
+      if (multiplier > 1) amount = Math.floor(amount * multiplier);
     }
     if (amount < 1) return;
     if (!this.progression.awardExperience(recipientId, eventId, amount, now)) {

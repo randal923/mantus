@@ -12,7 +12,12 @@ import { effectForDamage } from "./effectForDamage";
 import { meetsItemRequirements } from "./meetsItemRequirements";
 import { missileForItem } from "./missileForItem";
 import { playerCombatSkill } from "./playerCombatSkill";
+import {
+  EMPTY_PROFICIENCY_EFFECTS,
+  type ProficiencyPerkEffects,
+} from "../proficiency/ProficiencyPerkEffects";
 import { playerSpecials, type PlayerSpecials } from "./playerSpecials";
+import { playerTierBonuses } from "./playerTierBonuses";
 import { protocolDamageType } from "./protocolDamageType";
 import { skillForWeapon } from "./skillForWeapon";
 
@@ -32,6 +37,12 @@ export interface PlayerAttackPlan {
     readonly shares: ReadonlyArray<number>;
     readonly hitChance: number;
     readonly specials: PlayerSpecials;
+    /** Weapon-tier onslaught chance (amplified), percent; +60% on proc. */
+    readonly fatalChancePercent: number;
+    /** Proficiency skill-percentage flat damage, added after the roll. */
+    readonly flatBonusDamage: number;
+    readonly proficiencyLifeLeechPercent: number;
+    readonly proficiencyManaLeechPercent: number;
   };
   readonly consume?: {
     readonly itemId: string;
@@ -51,6 +62,7 @@ export function playerAttackPlan(
   session: Session,
   player: Player,
   target: Creature,
+  proficiency: ProficiencyPerkEffects = EMPTY_PROFICIENCY_EFFECTS,
 ): PlayerAttackPlan | null {
   const equipment = items.combatEquipment(player.id);
   const weapon = equipment.find(
@@ -58,7 +70,22 @@ export function playerAttackPlan(
       entry.item.location.kind === "equipment" &&
       entry.item.location.slot === "weapon",
   );
-  const specials = playerSpecials(equipment, player);
+  const equipmentSpecials = playerSpecials(equipment, player);
+  // Running imbuements add rolled criticals on top of the equipment stats
+  // (Feature 78); their always-on leech rides the wheel-style leg in
+  // PlayerAutoAttack so the equipment leech keeps its own chance roll.
+  const imbuementSpecials = items.imbuementEffects(player.id);
+  const specials: PlayerSpecials = {
+    ...equipmentSpecials,
+    criticalChance:
+      equipmentSpecials.criticalChance +
+      imbuementSpecials.criticalChancePercent +
+      proficiency.criticalChancePercent,
+    criticalDamagePercent:
+      equipmentSpecials.criticalDamagePercent +
+      imbuementSpecials.criticalDamagePercent +
+      proficiency.criticalDamagePercent,
+  };
   if (weapon && !meetsItemRequirements(player, weapon.type)) {
     return null;
   }
@@ -96,8 +123,10 @@ export function playerAttackPlan(
   );
   // Canary: an unarmed fist attacks with value 7, but a weapon without an
   // attack stat (bow, crossbow) contributes 0 — the ammunition carries it.
-  let attack = weapon ? (weapon.type.attack ?? 0) : 7;
-  const range = distance ? (weapon?.type.range ?? 3) : 1;
+  // Proficiency flat attack joins the combined attack (weapons.cpp:646).
+  let attack = (weapon ? (weapon.type.attack ?? 0) : 7) + proficiency.attackDamage;
+  const range =
+    (distance ? (weapon?.type.range ?? 3) : 1) + proficiency.attackRange;
   let hitChanceType = weapon?.type;
   let hitChanceBonus = 0;
   let missileId = distance ? missileForItem(weapon?.type) : undefined;
@@ -133,7 +162,13 @@ export function playerAttackPlan(
     0,
   );
   const totalAttack = attack + elementAttack;
-  const skillLevel = playerCombatSkill(player, equipment, skill);
+  const imbuements = items.imbuementEffects(player.id);
+  const skillLevel = playerCombatSkill(
+    player,
+    equipment,
+    skill,
+    (imbuements.skills[skill] ?? 0) + (proficiency.skills[skill] ?? 0),
+  );
   const rolled = distance
     ? formula.playerDistanceDamage({
         level: player.level,
@@ -170,7 +205,9 @@ export function playerAttackPlan(
             : weapon?.type.ammoType
               ? { maxHitChance: 90 }
               : {}),
-        }) + hitChanceBonus,
+        }) +
+          hitChanceBonus +
+          proficiency.rangedHitChancePercent,
       )
     : 100;
   const requests: DamageRequest[] = [
@@ -200,6 +237,27 @@ export function playerAttackPlan(
       ignoreShield: true,
     });
   }
+  // Elemental-damage imbuement: converts a share of the physical roll into
+  // the imbued element — only the first one, only off a physical component
+  // (Canary combat.cpp:833-874).
+  if (imbuements.elementalDamage && shares[0] && shares[0] > 0) {
+    const converted = shares[0] * (imbuements.elementalDamage.percent / 100);
+    shares[0] -= converted;
+    const damageType = protocolDamageType(
+      imbuements.elementalDamage.element as CatalogDamageType,
+    );
+    shares.push(converted);
+    requests.push({
+      sourceId: player.id,
+      origin: distance ? "distance" : "melee",
+      type: damageType,
+      minimum: 0,
+      maximum: 0,
+      effectId: effectForDamage(damageType),
+      ignoreArmor: true,
+      ignoreShield: true,
+    });
+  }
   return {
     targetId: target.id,
     range,
@@ -211,6 +269,14 @@ export function playerAttackPlan(
       shares,
       hitChance,
       specials,
+      fatalChancePercent: playerTierBonuses(equipment).fatalChancePercent,
+      // Proficiency skill-percentage: a fraction of the weapon skill as
+      // flat auto-attack damage, plus its always-on leech legs.
+      flatBonusDamage: Math.floor(
+        skillLevel * proficiency.skillPercentAutoAttack,
+      ),
+      proficiencyLifeLeechPercent: proficiency.lifeLeechPercent,
+      proficiencyManaLeechPercent: proficiency.manaLeechPercent,
     },
     training: {
       skill,

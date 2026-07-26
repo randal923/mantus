@@ -143,17 +143,20 @@ export class SpellCaster {
         entry.item.location.kind === "equipment" &&
         entry.item.location.slot === "ammo",
     );
+    const imbuements = this.items.imbuementEffects(player.id);
+    const weaponSkill = skillForWeapon(weapon?.type.weaponType);
     const variables = {
       level: player.level,
       magicLevel: this.runicMasteryMagicLevel(
         player,
         spell,
-        playerMagicLevel(player, equipment),
+        playerMagicLevel(player, equipment, imbuements.magicLevel),
       ),
       skill: playerCombatSkill(
         player,
         equipment,
-        skillForWeapon(weapon?.type.weaponType),
+        weaponSkill,
+        imbuements.skills[weaponSkill] ?? 0,
       ),
       attack:
         (weapon?.type.attack ?? 7) +
@@ -568,7 +571,13 @@ export class SpellCaster {
       return "spell-not-learned";
     }
     if (player.level < spell.requiredLevel) return "spell-level-restricted";
-    if (playerMagicLevel(player, equipment) < spell.requiredMagicLevel) {
+    if (
+      playerMagicLevel(
+        player,
+        equipment,
+        this.items.imbuementEffects(player.id).magicLevel,
+      ) < spell.requiredMagicLevel
+    ) {
       return "spell-magic-level-restricted";
     }
     const manaCost = Math.max(

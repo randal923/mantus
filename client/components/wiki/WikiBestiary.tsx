@@ -6,10 +6,12 @@ import type {
   BestiaryClass,
   BestiaryCreaturesStateMessage,
   BestiaryMonsterStateMessage,
+  BoostedStateMessage,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { BestiaryCreatureCell } from "../bestiary/BestiaryCreatureCell";
 import { BestiaryMonsterSheet } from "../bestiary/BestiaryMonsterSheet";
+import { BoostedTodaySection } from "../boosted/BoostedTodaySection";
 import { Button } from "../ui/Button";
 import { WikiBestiaryClassCard } from "./WikiBestiaryClassCard";
 import { WikiCurrencyIcon } from "./WikiCurrencyIcon";
@@ -31,10 +33,14 @@ interface WikiBestiaryProps {
   activeTab: WikiTab;
   creatures: BestiaryCreaturesStateMessage | null;
   monster: BestiaryMonsterStateMessage | null;
+  boosted?: BoostedStateMessage | null;
+  /** Races on the own kill tracker (server projection). */
+  trackedRaceIds?: ReadonlyArray<number>;
   pending: boolean;
   error: string | null;
   initialRaceId?: number;
   onRequestMonster: (raceId: number) => void;
+  onToggleTrack?: (raceId: number, enabled: boolean) => void;
   onSelectTab: (tab: WikiTab) => void;
   onClose: () => void;
 }
@@ -43,10 +49,13 @@ export function WikiBestiary({
   activeTab,
   creatures,
   monster,
+  boosted = null,
+  trackedRaceIds = [],
   pending,
   error,
   initialRaceId,
   onRequestMonster,
+  onToggleTrack,
   onSelectTab,
   onClose,
 }: WikiBestiaryProps) {
@@ -122,6 +131,11 @@ export function WikiBestiary({
       onClose={onClose}
     >
       <>
+      {view.kind !== "monster" && (
+        <div className="mb-4">
+          <BoostedTodaySection boosted={boosted} />
+        </div>
+      )}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           {view.kind !== "classes" && (
@@ -234,7 +248,15 @@ export function WikiBestiary({
 
       {view.kind === "monster" &&
         (monsterReady ? (
-          <BestiaryMonsterSheet monster={monster} />
+          <BestiaryMonsterSheet
+            monster={monster}
+            tracked={trackedRaceIds.includes(monster.raceId)}
+            onToggleTrack={
+              onToggleTrack
+                ? (enabled) => onToggleTrack(monster.raceId, enabled)
+                : undefined
+            }
+          />
         ) : (
           <p className="py-12 text-center text-sm text-ui-muted">
             {t("bestiary.loading")}

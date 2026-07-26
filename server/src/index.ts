@@ -28,6 +28,13 @@ import { PgMarkerStore } from "./minimap/PgMarkerStore";
 import { PgOutfitStore } from "./outfit/PgOutfitStore";
 import { PgProfileStore } from "./profile/PgProfileStore";
 import { PgPreyStore } from "./prey/PgPreyStore";
+import { PgBoostedStore } from "./boosted/PgBoostedStore";
+import { PgBossSlotStore } from "./bestiary/PgBossSlotStore";
+import { PgTrackerStore } from "./bestiary/PgTrackerStore";
+import { PgForgeStore } from "./forge/PgForgeStore";
+import { PgImbuementStore } from "./imbuement/PgImbuementStore";
+import { PgProficiencyStore } from "./proficiency/PgProficiencyStore";
+import { PgCyclopediaStore } from "./cyclopedia/PgCyclopediaStore";
 import { PgHuntingTaskStore } from "./huntingTasks/PgHuntingTaskStore";
 import { PgFriendStore } from "./social/PgFriendStore";
 import { PgVipStore } from "./social/PgVipStore";
@@ -103,6 +110,13 @@ const friends = new PgFriendStore(pool);
 const profiles = new PgProfileStore(pool);
 const prey = new PgPreyStore(pool);
 const huntingTasks = new PgHuntingTaskStore(pool);
+const boosted = new PgBoostedStore(pool);
+const trackers = new PgTrackerStore(pool);
+const bossSlots = new PgBossSlotStore(pool);
+const forge = new PgForgeStore(pool, itemCatalog);
+const imbuements = new PgImbuementStore(pool, itemCatalog);
+const proficiency = new PgProficiencyStore(pool);
+const cyclopedia = new PgCyclopediaStore(pool);
 const markers = new PgMarkerStore(pool);
 const outfits = new PgOutfitStore(pool);
 const highscores = new PgHighscoreStore(pool);
@@ -144,6 +158,13 @@ const server = new GameServer(serverConfig, {
   profiles,
   prey,
   huntingTasks,
+  boosted,
+  trackers,
+  bossSlots,
+  forge,
+  imbuements,
+  proficiency,
+  cyclopedia,
   markers,
   outfits,
   highscores,

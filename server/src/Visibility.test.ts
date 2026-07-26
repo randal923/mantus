@@ -43,6 +43,7 @@ const monsterType: MonsterType = {
     canWalkOnFire: false,
     canWalkOnPoison: false,
     isBlockable: true,
+    rewardBoss: false,
   },
   targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
   attacks: [],

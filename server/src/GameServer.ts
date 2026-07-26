@@ -97,6 +97,24 @@ import { MarkerService } from "./minimap/MarkerService";
 import { OutfitService } from "./outfit/OutfitService";
 import type { OutfitStore } from "./outfit/OutfitStore";
 import type { MarkerStore } from "./minimap/MarkerStore";
+import { BoostedService } from "./boosted/BoostedService";
+import type { BoostedStore } from "./boosted/BoostedStore";
+import { ForgeMonsterManager } from "./forge/ForgeMonsterManager";
+import { ForgeService } from "./forge/ForgeService";
+import type { ForgeStore } from "./forge/ForgeStore";
+import { ImbuementService } from "./imbuement/ImbuementService";
+import type { ImbuementStore } from "./imbuement/ImbuementStore";
+import { loadImbuementCatalog } from "./imbuement/loadImbuementCatalog";
+import { AnimusService } from "./proficiency/AnimusService";
+import { loadProficiencyCatalog } from "./proficiency/loadProficiencyCatalog";
+import { ProficiencyService } from "./proficiency/ProficiencyService";
+import type { ProficiencyStore } from "./proficiency/ProficiencyStore";
+import { CyclopediaService } from "./cyclopedia/CyclopediaService";
+import type { CyclopediaStore } from "./cyclopedia/CyclopediaStore";
+import { BossSlotService } from "./bestiary/BossSlotService";
+import type { BossSlotStore } from "./bestiary/BossSlotStore";
+import { TrackerService } from "./bestiary/TrackerService";
+import type { TrackerStore } from "./bestiary/TrackerStore";
 import { PreyService } from "./prey/PreyService";
 import type { PreyStore } from "./prey/PreyStore";
 import { HuntingTaskService } from "./huntingTasks/HuntingTaskService";
@@ -139,6 +157,13 @@ export interface GameServerDeps {
   profiles?: ProfileStore;
   prey?: PreyStore;
   huntingTasks?: HuntingTaskStore;
+  boosted?: BoostedStore;
+  trackers?: TrackerStore;
+  bossSlots?: BossSlotStore;
+  forge?: ForgeStore;
+  imbuements?: ImbuementStore;
+  proficiency?: ProficiencyStore;
+  cyclopedia?: CyclopediaStore;
   markers?: MarkerStore;
   outfits?: OutfitStore;
   highscores?: HighscoreStore;
@@ -199,6 +224,15 @@ export class GameServer {
   private readonly profiles: ProfileService;
   private readonly prey: PreyService;
   private readonly huntingTasks: HuntingTaskService;
+  private readonly boosted: BoostedService;
+  private readonly trackers: TrackerService;
+  private readonly bossSlots: BossSlotService;
+  private readonly forge: ForgeService;
+  private readonly forgeMonsters: ForgeMonsterManager | null;
+  private readonly imbuements: ImbuementService;
+  private readonly proficiency: ProficiencyService;
+  private readonly animus: AnimusService;
+  private readonly cyclopedia: CyclopediaService;
   private readonly markers: MarkerService;
   private readonly outfits: OutfitService;
   private readonly highscores: HighscoreService;
@@ -345,10 +379,99 @@ export class GameServer {
     const bestiaryCatalog = loadBestiaryCatalog(
       creatureContent?.monsterTypes ?? new Map(),
     );
+    this.boosted = new BoostedService(
+      this.registry,
+      bestiaryCatalog,
+      new WorldActionRng(config.combatSeed ^ 0x1c8d_44e3),
+      deps.boosted,
+    );
     this.bestiaryTracker = new BestiaryTracker(
       bestiaryCatalog,
       this.registry,
       deps.bestiary,
+      this.boosted,
+    );
+    this.trackers = new TrackerService(
+      this.registry,
+      bestiaryCatalog,
+      this.bestiaryTracker,
+      deps.trackers,
+    );
+    this.bossSlots = new BossSlotService(
+      this.registry,
+      bestiaryCatalog,
+      this.bestiaryTracker,
+      this.boosted,
+      deps.bossSlots,
+    );
+    // A rotating boosted boss leaves every character's slots, online or not
+    // (the store cleared offline rows inside the rotation already).
+    this.boosted.onRotated = (record) => {
+      if (record.bossRaceId !== null) {
+        this.bossSlots.onBoostedBossRotated(record.bossRaceId);
+      }
+    };
+    this.forge = new ForgeService(
+      this.world,
+      this.registry,
+      this.items,
+      deps.itemCatalog,
+      new WorldActionRng(config.combatSeed ^ 0x6b43_9d17),
+      deps.forge,
+    );
+    let imbuementCatalog: ReturnType<typeof loadImbuementCatalog> | undefined;
+    try {
+      imbuementCatalog = loadImbuementCatalog();
+      this.items.setImbuementCatalog(imbuementCatalog);
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(`imbuement catalog unavailable: ${reason}`);
+    }
+    this.imbuements = new ImbuementService(
+      this.world,
+      this.registry,
+      this.items,
+      deps.itemCatalog,
+      imbuementCatalog,
+      deps.imbuements,
+    );
+    let proficiencyCatalog: ReturnType<typeof loadProficiencyCatalog> | undefined;
+    try {
+      proficiencyCatalog = loadProficiencyCatalog();
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(`proficiency catalog unavailable: ${reason}`);
+    }
+    this.proficiency = new ProficiencyService(
+      this.registry,
+      this.items,
+      deps.itemCatalog,
+      bestiaryCatalog,
+      proficiencyCatalog,
+      deps.proficiency,
+    );
+    this.animus = new AnimusService(
+      this.registry,
+      bestiaryCatalog,
+      deps.proficiency,
+    );
+    this.cyclopedia = new CyclopediaService(
+      this.world,
+      this.registry,
+      this.items,
+      this.depot,
+      {
+        effectsFor: (characterId) => this.proficiency.effectsFor(characterId),
+        isBoss: (monster) => {
+          const raceId = bestiaryCatalog.raceIdByMonsterTypeId.get(
+            monster.type.id,
+          );
+          return (
+            raceId !== undefined && bestiaryCatalog.bossesByRaceId.has(raceId)
+          );
+        },
+      },
+      deps.cyclopedia,
     );
     this.bestiary = new BestiaryService(
       this.world,
@@ -437,6 +560,12 @@ export class GameServer {
       this.profiles,
       this.prey,
       this.huntingTasks,
+      this.boosted,
+      this.trackers,
+      this.bossSlots,
+      this.forge,
+      this.proficiency,
+      this.animus,
       this.markers,
       this.outfits,
       this.moderation,
@@ -684,6 +813,13 @@ export class GameServer {
           this.bestiaryTracker.onMonsterKilled(damagerIds, monster, killedAt);
           this.gemDrops.onMonsterKilled(damagerIds, monster, killedAt);
           this.huntingTasks.onMonsterKilled(damagerIds, monster, killedAt);
+          if (monster.forgeStack > 0) {
+            // Forge-state kills credit dust to every damager (clamped to
+            // each cap in SQL) and start the replenish delay.
+            this.forge.creditDusts(damagerIds, monster.forgeStack);
+            this.forgeMonsters?.onForgeMonsterDied(monster, killedAt);
+          }
+          this.proficiency.onMonsterKilled(monster, killedAt);
         },
       },
       this.monsterEvents,
@@ -697,6 +833,22 @@ export class GameServer {
       config.progression.staminaSystem,
       config.progression.useStages,
       this.prey,
+      this.boosted,
+      this.animus,
+      {
+        effectsFor: (characterId) => this.proficiency.effectsFor(characterId),
+        isBoss: (monster) => {
+          const raceId = bestiaryCatalog.raceIdByMonsterTypeId.get(
+            monster.type.id,
+          );
+          return raceId !== undefined &&
+            bestiaryCatalog.bossesByRaceId.has(raceId);
+        },
+      },
+      {
+        record: (characterId, level, cause) =>
+          this.cyclopedia.recordDeath(characterId, level, cause),
+      },
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,
@@ -718,6 +870,18 @@ export class GameServer {
         : null;
     this.spawns = spawns;
     if (spawns) this.combatSystem.attachTargeting(spawns);
+    spawns?.setRespawnDivisorHook((monsterTypeId) =>
+      this.boosted.respawnDelayDivisor(monsterTypeId),
+    );
+    this.forgeMonsters = spawns
+      ? new ForgeMonsterManager(
+          this.world,
+          this.visibility,
+          bestiaryCatalog,
+          new WorldActionRng(config.combatSeed ^ 0x3d91_c2af),
+          (monster) => spawns.isSummon(monster),
+        )
+      : null;
     const monsterTypeIdByName = new Map(
       [...(creatureContent?.monsterTypes ?? new Map())].map(([id, type]) => [
         type.name.toLowerCase(),
@@ -880,6 +1044,14 @@ export class GameServer {
       this.profiles.applyResolvedOutcomes(now);
       this.prey.applyResolvedOutcomes(now);
       this.huntingTasks.applyResolvedOutcomes(now);
+      this.boosted.applyResolvedOutcomes(now);
+      this.trackers.applyResolvedOutcomes(now);
+      this.bossSlots.applyResolvedOutcomes(now);
+      this.forge.applyResolvedOutcomes(now);
+      this.imbuements.applyResolvedOutcomes(now);
+      this.proficiency.applyResolvedOutcomes(now);
+      this.animus.applyResolvedOutcomes(now);
+      this.cyclopedia.applyResolvedOutcomes(now);
       this.markers.applyResolvedOutcomes();
       this.outfits.applyResolvedOutcomes();
       this.profiles.tick(now);
@@ -917,6 +1089,9 @@ export class GameServer {
       this.monsterEvents.tick(now);
       this.spawns?.tick(now);
       this.worldEvents.tick(now);
+      this.boosted.tick(now);
+      this.forgeMonsters?.tick(now);
+      this.imbuements.tick(now);
       this.npcs.tick(now);
       this.items.tickDecay(now);
       this.items.tickWorldContainers();
@@ -972,6 +1147,12 @@ export class GameServer {
       this.profiles.detach(session);
       this.prey.detach(session);
       this.huntingTasks.detach(session);
+      this.trackers.detach(session);
+      this.bossSlots.detach(session);
+      this.forge.detach(session);
+      this.imbuements.detach(session);
+      this.proficiency.detach(session);
+      this.cyclopedia.detach(session);
       this.markers.detach(session);
       this.outfits.detach(session);
       this.highscores.detach(session);
@@ -1025,6 +1206,12 @@ export class GameServer {
     this.profiles.detachCharacter(playerId);
     this.prey.detachCharacter(playerId);
     this.huntingTasks.detachCharacter(playerId);
+    this.trackers.detachCharacter(playerId);
+    this.bossSlots.detachCharacter(playerId);
+    this.forge.detachCharacter(playerId);
+    this.imbuements.detachCharacter(playerId, now);
+    this.proficiency.detachCharacter(playerId);
+    this.animus.detachCharacter(playerId);
     this.outfits.detachCharacter(playerId);
     this.moderation.detachCharacter(playerId);
     this.pvp.detachCharacter(playerId);
@@ -1342,6 +1529,48 @@ export class GameServer {
       case "wiki-item-sources-get":
         this.bestiary.handleItemSources(session, intent, now);
         return;
+      case "tracker-set":
+        this.trackers.handle(session, intent, now);
+        return;
+      case "boss-slots-get":
+        this.bossSlots.handleGet(session, now);
+        return;
+      case "boss-slot-set":
+        this.bossSlots.handleSet(session, intent, now);
+        return;
+      case "forge-get":
+        this.forge.handleGet(session, now);
+        return;
+      case "forge-fusion":
+        this.forge.handleFusion(session, intent, now);
+        return;
+      case "forge-transfer":
+        this.forge.handleTransfer(session, intent, now);
+        return;
+      case "forge-conversion":
+        this.forge.handleConversion(session, intent, now);
+        return;
+      case "forge-history-get":
+        this.forge.handleHistory(session, intent, now);
+        return;
+      case "imbuement-window-get":
+        this.imbuements.handleWindowGet(session, intent, now);
+        return;
+      case "imbuement-apply":
+        this.imbuements.handleApply(session, intent, now);
+        return;
+      case "imbuement-clear":
+        this.imbuements.handleClear(session, intent, now);
+        return;
+      case "proficiency-get":
+        this.proficiency.handleGet(session, now);
+        return;
+      case "proficiency-select":
+        this.proficiency.handleSelect(session, intent, now);
+        return;
+      case "cyclopedia-character-get":
+        this.cyclopedia.handle(session, intent, now);
+        return;
       case "wheel-get":
         this.wheel.handleGet(session, now);
         return;
@@ -1410,6 +1639,22 @@ export class GameServer {
     this.prey.applyResolvedOutcomes(monotonicNow());
     await this.huntingTasks.stop();
     this.huntingTasks.applyResolvedOutcomes(monotonicNow());
+    await this.boosted.stop();
+    this.boosted.applyResolvedOutcomes(monotonicNow());
+    await this.trackers.stop();
+    this.trackers.applyResolvedOutcomes(monotonicNow());
+    await this.bossSlots.stop();
+    this.bossSlots.applyResolvedOutcomes(monotonicNow());
+    await this.forge.stop();
+    this.forge.applyResolvedOutcomes(monotonicNow());
+    await this.imbuements.stop();
+    this.imbuements.applyResolvedOutcomes(monotonicNow());
+    await this.proficiency.stop();
+    this.proficiency.applyResolvedOutcomes(monotonicNow());
+    await this.animus.stop();
+    this.animus.applyResolvedOutcomes(monotonicNow());
+    await this.cyclopedia.stop();
+    this.cyclopedia.applyResolvedOutcomes(monotonicNow());
     await this.markers.stop();
     this.markers.applyResolvedOutcomes();
     await this.outfits.stop();

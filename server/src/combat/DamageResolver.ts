@@ -6,6 +6,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import type { PreyHooks } from "../prey/PreyHooks";
+import type { ProficiencyHooks } from "../proficiency/ProficiencyHooks";
 import { getVocation } from "../progression/getVocation";
 import type { PvpHooks } from "../pvp/PvpHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
@@ -14,6 +15,7 @@ import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import { applyCombatLocks } from "./applyCombatLocks";
 import { blessingOfTheGroveBonus } from "./blessingOfTheGroveBonus";
+import { playerTierBonuses } from "./playerTierBonuses";
 import { catalogDamageType } from "./catalogDamageType";
 import { CombatFeedback } from "./CombatFeedback";
 import { MISSILE_DURATION_MS } from "./combatConstants";
@@ -57,6 +59,7 @@ export class DamageResolver {
     private readonly pvpHooks?: PvpHooks,
     private readonly monsterEventHooks?: MonsterEventHooks,
     private readonly preyHooks?: PreyHooks,
+    private readonly proficiencyHooks?: ProficiencyHooks,
   ) {}
 
   applyDamage(
@@ -130,16 +133,20 @@ export class DamageResolver {
         manaChanged: false,
       };
     }
-    // Gem-supreme dodge: a server-rolled full avoid before any reduction
-    // (Canary Game::combatBlockHit, game.cpp:7874-7882; Canary's BLOCK_DODGE
-    // is published as a miss here). Condition ticks bypass it, like every
-    // Canary block step.
+    // Gem-supreme dodge plus armor-tier ruse: one server-rolled full avoid
+    // before any reduction (Canary Game::combatBlockHit, game.cpp:7874-7882;
+    // Canary's BLOCK_DODGE is published as a miss here). Condition ticks
+    // bypass it, like every Canary block step.
     if (
       target instanceof Player &&
       request.type !== "healing" &&
       request.type !== "mana-drain" &&
       request.origin !== "condition" &&
-      this.formula.chance(target.wheelBonuses.dodgePercent)
+      this.formula.chance(
+        target.wheelBonuses.dodgePercent +
+          playerTierBonuses(this.items.combatEquipment(target.id))
+            .dodgeChancePercent,
+      )
     ) {
       this.publishDamageResult(target, request, 0, "miss");
       return {
@@ -287,6 +294,20 @@ export class DamageResolver {
         );
         if (reduction > 0) amount -= Math.floor((amount * reduction) / 100);
       }
+    }
+    // Proficiency powerful-foe: extra damage against bosses and forge-state
+    // monsters (Canary weapon_proficiency.cpp:1302-1315).
+    if (
+      source instanceof Player &&
+      target instanceof Monster &&
+      amount > 0 &&
+      this.proficiencyHooks &&
+      (target.forgeStack > 0 || this.proficiencyHooks.isBoss(target))
+    ) {
+      const percent = this.proficiencyHooks.effectsFor(
+        source.id,
+      ).powerfulFoePercent;
+      if (percent > 0) amount += Math.floor((amount * percent) / 100);
     }
     // Wheel damage lands after every block step, in Canary's order: the
     // augment multiplier first, then the flat revelation-stage bonus
@@ -596,19 +617,26 @@ export class DamageResolver {
       const usedDefenseBlock =
         checksPhysical && target.consumeDefenseBlock(now);
       if (request.type === "physical") {
+        // Influenced/fiendish monsters defend harder (Canary
+        // monster.cpp:3558-3564: x1 + 0.1 per stack).
+        const forgeDefense = target.forgeDefenseMultiplier;
         if (
           !request.ignoreShield &&
           usedDefenseBlock &&
           (stats?.defense ?? 0) > 0
         ) {
-          amount -= this.formula.defenseReduction(stats?.defense ?? 0);
+          amount -= this.formula.defenseReduction(
+            Math.round((stats?.defense ?? 0) * forgeDefense),
+          );
           if (amount <= 0) {
             amount = 0;
             block = "shield";
           }
         }
         if (!request.ignoreArmor && amount > 0 && (stats?.armor ?? 0) > 0) {
-          amount -= this.formula.armorReduction(stats?.armor ?? 0);
+          amount -= this.formula.armorReduction(
+            Math.round((stats?.armor ?? 0) * forgeDefense),
+          );
           if (amount <= 0) {
             amount = 0;
             block = "armor";
@@ -641,6 +669,20 @@ export class DamageResolver {
         ) + (request.type === "healing" ? 0 : (gemResistances[request.type] ?? 0));
       if (absorb >= 100) return { amount: 0, block: "immunity" };
       amount = this.formula.applyAbsorbPercent(amount, absorb);
+      // Elemental-protection imbuements reduce sequentially per running
+      // imbuement, each `damage -= ceil(damage * pct / 100)` — Canary
+      // player.cpp:3872-3884, multiplicative stacking.
+      if (request.type !== "healing" && amount > 0) {
+        const reductions =
+          this.items.imbuementEffects(target.id).absorb[request.type] ?? [];
+        for (const percent of reductions) {
+          amount -= Math.ceil((amount * percent) / 100);
+          if (amount <= 0) {
+            amount = 0;
+            break;
+          }
+        }
+      }
       if (request.type === "physical") {
         const session = this.registry.sessionFor(target.id);
         const shield = equipment.find(
@@ -654,13 +696,23 @@ export class DamageResolver {
         const usedDefenseBlock =
           checksPhysical && target.consumeDefenseBlock(now);
         if (!request.ignoreShield && usedDefenseBlock) {
+          // Proficiency defense/shield-modifier perks join the weapon's own
+          // defense value (player.cpp:781-817).
+          const proficiencyDefense = this.proficiencyHooks
+            ? this.proficiencyHooks.effectsFor(target.id)
+            : undefined;
           amount -= this.formula.defenseReduction(
             playerDefense(
               target,
               equipment,
               session?.fightMode.attack ?? "offensive",
               now,
-            ),
+              this.items.imbuementEffects(target.id).skills,
+            ) +
+              Math.round(
+                (proficiencyDefense?.defenseBonus ?? 0) +
+                  (proficiencyDefense?.shieldModifier ?? 0),
+              ),
           );
           if (amount <= 0) {
             amount = 0;
@@ -720,6 +772,7 @@ export class DamageResolver {
           target,
           equipment,
           fightSession?.fightMode?.attack ?? "balanced",
+          this.items.imbuementEffects(target.id).skills.shielding ?? 0,
         );
         if (mitigation > 0) {
           amount = Math.max(

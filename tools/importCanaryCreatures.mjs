@@ -368,7 +368,6 @@ function creatureGap(kind, gapKind, name, upstreamDefect) {
 
 function creatureGapOwner(kind, name) {
   if (
-    name.startsWith("flags.rewardBoss") ||
     name.startsWith("flags.isPrey") ||
     name.startsWith("flags.forge")
   ) {

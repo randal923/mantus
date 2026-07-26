@@ -55,8 +55,36 @@ import {
   bestiaryMonsterStateMessageSchema,
   bosstiaryBossStateMessageSchema,
   bosstiaryStateMessageSchema,
+  trackerStateMessageSchema,
   wikiItemSourcesStateMessageSchema,
 } from "./bestiary";
+import { boostedStateMessageSchema } from "./boosted";
+import {
+  bossSlotFailedMessageSchema,
+  bossSlotsStateMessageSchema,
+} from "./bosstiarySlots";
+import {
+  forgeActionFailedMessageSchema,
+  forgeHistoryStateMessageSchema,
+  forgeResultMessageSchema,
+  forgeStateMessageSchema,
+} from "./forge";
+import {
+  imbuementActionFailedMessageSchema,
+  imbuementWindowStateMessageSchema,
+} from "./imbuements";
+import {
+  animusStateMessageSchema,
+  proficiencyActionFailedMessageSchema,
+  proficiencyStateMessageSchema,
+} from "./proficiency";
+import {
+  cyclopediaActionFailedMessageSchema,
+  cyclopediaCombatStateMessageSchema,
+  cyclopediaDeathsStateMessageSchema,
+  cyclopediaItemSummaryStateMessageSchema,
+  cyclopediaPvpKillsStateMessageSchema,
+} from "./cyclopedia";
 import {
   highscoresActionFailedMessageSchema,
   highscoresStateMessageSchema,
@@ -584,6 +612,24 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   wikiItemSourcesStateMessageSchema,
   bestiaryEntryChangedMessageSchema,
   bestiaryActionFailedMessageSchema,
+  trackerStateMessageSchema,
+  boostedStateMessageSchema,
+  bossSlotsStateMessageSchema,
+  bossSlotFailedMessageSchema,
+  forgeStateMessageSchema,
+  forgeResultMessageSchema,
+  forgeHistoryStateMessageSchema,
+  forgeActionFailedMessageSchema,
+  imbuementWindowStateMessageSchema,
+  imbuementActionFailedMessageSchema,
+  proficiencyStateMessageSchema,
+  proficiencyActionFailedMessageSchema,
+  animusStateMessageSchema,
+  cyclopediaCombatStateMessageSchema,
+  cyclopediaDeathsStateMessageSchema,
+  cyclopediaPvpKillsStateMessageSchema,
+  cyclopediaItemSummaryStateMessageSchema,
+  cyclopediaActionFailedMessageSchema,
   wheelStateMessageSchema,
   wheelActionFailedMessageSchema,
   gemStateMessageSchema,

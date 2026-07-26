@@ -47,6 +47,12 @@ export interface ItemType {
   readonly wandType?: string;
   readonly breakChance?: number;
   readonly imbuementSlots?: number;
+  /** Allowed imbuement categories -> max power level (1..3), by slug. */
+  readonly imbuementTypes?: Readonly<Record<string, number>>;
+  /** Canary `upgrade_classification` 1..4; absent = not tierable. */
+  readonly classification?: number;
+  /** Weapon-proficiency profile id from the appearances protobuf. */
+  readonly proficiencyId?: number;
   readonly containerCapacity?: number;
   readonly pickupable: boolean;
   readonly movable: boolean;

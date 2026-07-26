@@ -1,6 +1,10 @@
 import type { BestiarySessionState } from "../../../hooks/useBestiarySession";
+import type { BoostedSessionState } from "../../../hooks/useBoostedSession";
+import type { BossSlotsSessionState } from "../../../hooks/useBossSlotsSession";
 import type { BosstiarySessionState } from "../../../hooks/useBosstiarySession";
 import type { DepotSessionState } from "../../../hooks/useDepotSession";
+import type { ForgeSessionState } from "../../../hooks/useForgeSession";
+import type { ImbuementSessionState } from "../../../hooks/useImbuementSession";
 import type { GemSessionState } from "../../../hooks/useGemSession";
 import type { GuildSessionState } from "../../../hooks/useGuildSession";
 import type { HighscoresSessionState } from "../../../hooks/useHighscoresSession";
@@ -13,6 +17,7 @@ import type { PartySessionState } from "../../../hooks/usePartySession";
 import type { PreySessionState } from "../../../hooks/usePreySession";
 import type { ProfileSessionState } from "../../../hooks/useProfileSession";
 import type { TradeSessionState } from "../../../hooks/useTradeSession";
+import type { TrackerSessionState } from "../../../hooks/useTrackerSession";
 import type { VipSessionState } from "../../../hooks/useVipSession";
 import type { WheelSessionState } from "../../../hooks/useWheelSession";
 
@@ -34,4 +39,9 @@ export interface GameWindowSessions {
   profile: ProfileSessionState;
   prey: PreySessionState;
   huntingTasks: HuntingTasksSessionState;
+  boosted: BoostedSessionState;
+  tracker: TrackerSessionState;
+  bossSlots: BossSlotsSessionState;
+  forge: ForgeSessionState;
+  imbuement: ImbuementSessionState;
 }

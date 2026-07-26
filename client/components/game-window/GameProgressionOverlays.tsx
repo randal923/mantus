@@ -31,6 +31,15 @@ export function GameProgressionOverlays() {
   const bosstiarySession = useGameWindowStore(
     (state) => state.sessions?.bosstiary ?? null,
   );
+  const boostedSession = useGameWindowStore(
+    (state) => state.sessions?.boosted ?? null,
+  );
+  const trackerSession = useGameWindowStore(
+    (state) => state.sessions?.tracker ?? null,
+  );
+  const bossSlotsSession = useGameWindowStore(
+    (state) => state.sessions?.bossSlots ?? null,
+  );
   const wheelSession = useGameWindowStore(
     (state) => state.sessions?.wheel ?? null,
   );
@@ -54,6 +63,9 @@ export function GameProgressionOverlays() {
     !highscoresSession ||
     !bestiarySession ||
     !bosstiarySession ||
+    !boostedSession ||
+    !trackerSession ||
+    !bossSlotsSession ||
     !wheelSession ||
     !gemSession ||
     !outfitSession ||
@@ -94,11 +106,45 @@ export function GameProgressionOverlays() {
           bosses={bosstiarySession.bosses}
           boss={bosstiarySession.boss}
           itemSources={bestiarySession.itemSources}
+          boosted={boostedSession.state}
+          trackedBestiaryRaceIds={(trackerSession.bestiary ?? []).map(
+            (entry) => entry.raceId,
+          )}
+          trackedBosstiaryRaceIds={(trackerSession.bosstiary ?? []).map(
+            (entry) => entry.raceId,
+          )}
+          bossSlots={bossSlotsSession.state}
           bestiaryPending={bestiarySession.pending}
           bosstiaryPending={bosstiarySession.pending}
           itemSourcesPending={bestiarySession.sourcesPending}
+          bossSlotsPending={bossSlotsSession.pending}
           bestiaryError={bestiarySession.error}
           bosstiaryError={bosstiarySession.error}
+          bossSlotsError={
+            bossSlotsSession.error
+              ? t(`bossSlots.errors.${bossSlotsSession.error}`, {
+                  defaultValue: t("bossSlots.errors.invalid-request"),
+                })
+              : null
+          }
+          onRequestBossSlots={() => {
+            const sent =
+              runtime.clientRef.current?.requestBossSlots() ?? false;
+            sessionActions.bossSlots.begin(sent);
+          }}
+          onToggleTrack={(scope, raceId, enabled) => {
+            runtime.clientRef.current?.setTracker(scope, raceId, enabled);
+          }}
+          onAssignBossSlot={(slot, raceId) => {
+            const sent =
+              runtime.clientRef.current?.setBossSlot(slot, raceId) ?? false;
+            sessionActions.bossSlots.begin(sent);
+          }}
+          onClearBossSlot={(slot) => {
+            const sent =
+              runtime.clientRef.current?.setBossSlot(slot, null) ?? false;
+            sessionActions.bossSlots.begin(sent);
+          }}
           onRequestBestiary={() => {
             const sent =
               runtime.clientRef.current?.requestBestiaryCreatures() ?? false;

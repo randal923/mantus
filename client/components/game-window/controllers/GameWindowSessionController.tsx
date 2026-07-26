@@ -1,8 +1,12 @@
 import { useCallback, useLayoutEffect, useMemo } from "react";
 import type { DepotStateMessage, InventoryState } from "@tibia/protocol";
 import { useBestiarySession } from "../../../hooks/useBestiarySession";
+import { useBoostedSession } from "../../../hooks/useBoostedSession";
+import { useBossSlotsSession } from "../../../hooks/useBossSlotsSession";
 import { useBosstiarySession } from "../../../hooks/useBosstiarySession";
 import { useDepotSession } from "../../../hooks/useDepotSession";
+import { useForgeSession } from "../../../hooks/useForgeSession";
+import { useImbuementSession } from "../../../hooks/useImbuementSession";
 import { useGemSession } from "../../../hooks/useGemSession";
 import { useGuildSession } from "../../../hooks/useGuildSession";
 import { useHighscoresSession } from "../../../hooks/useHighscoresSession";
@@ -15,6 +19,7 @@ import { usePartySession } from "../../../hooks/usePartySession";
 import { usePreySession } from "../../../hooks/usePreySession";
 import { useProfileSession } from "../../../hooks/useProfileSession";
 import { useTradeSession } from "../../../hooks/useTradeSession";
+import { useTrackerSession } from "../../../hooks/useTrackerSession";
 import { useVipSession } from "../../../hooks/useVipSession";
 import { useWheelSession } from "../../../hooks/useWheelSession";
 import { i18n } from "../../../i18n/i18n";
@@ -122,6 +127,11 @@ export function GameWindowSessionController() {
   const profile = useProfileSession();
   const prey = usePreySession();
   const huntingTasks = useHuntingTasksSession();
+  const boosted = useBoostedSession();
+  const tracker = useTrackerSession();
+  const bossSlots = useBossSlotsSession();
+  const forge = useForgeSession();
+  const imbuement = useImbuementSession();
 
   const sessionActions = useMemo<GameWindowSessionActions>(
     () => ({
@@ -265,6 +275,39 @@ export function GameWindowSessionController() {
         dismissError: huntingTasks.dismissError,
         reset: huntingTasks.reset,
       },
+      boosted: {
+        stateReceived: boosted.stateReceived,
+        reset: boosted.reset,
+      },
+      tracker: {
+        stateReceived: tracker.stateReceived,
+        entryChanged: tracker.entryChanged,
+        reset: tracker.reset,
+      },
+      bossSlots: {
+        stateReceived: bossSlots.stateReceived,
+        begin: bossSlots.begin,
+        fail: bossSlots.fail,
+        dismissError: bossSlots.dismissError,
+        reset: bossSlots.reset,
+      },
+      forge: {
+        stateReceived: forge.stateReceived,
+        historyReceived: forge.historyReceived,
+        resultReceived: forge.resultReceived,
+        begin: forge.begin,
+        fail: forge.fail,
+        dismissError: forge.dismissError,
+        dismissResult: forge.dismissResult,
+        reset: forge.reset,
+      },
+      imbuement: {
+        windowReceived: imbuement.windowReceived,
+        begin: imbuement.begin,
+        fail: imbuement.fail,
+        dismissError: imbuement.dismissError,
+        reset: imbuement.reset,
+      },
       dispatchItemOpChecked,
     }),
     [
@@ -276,6 +319,13 @@ export function GameWindowSessionController() {
       bestiary.itemSourcesReceived,
       bestiary.monsterReceived,
       bestiary.reset,
+      boosted.reset,
+      boosted.stateReceived,
+      bossSlots.begin,
+      bossSlots.dismissError,
+      bossSlots.fail,
+      bossSlots.reset,
+      bossSlots.stateReceived,
       bosstiary.begin,
       bosstiary.bossReceived,
       bosstiary.entryChanged,
@@ -290,6 +340,14 @@ export function GameWindowSessionController() {
       depot.reject,
       depot.reset,
       dispatchItemOpChecked,
+      forge.begin,
+      forge.dismissError,
+      forge.dismissResult,
+      forge.fail,
+      forge.historyReceived,
+      forge.reset,
+      forge.resultReceived,
+      forge.stateReceived,
       gems.begin,
       gems.fail,
       gems.reset,
@@ -318,6 +376,11 @@ export function GameWindowSessionController() {
       huntingTasks.fail,
       huntingTasks.reset,
       huntingTasks.stateReceived,
+      imbuement.begin,
+      imbuement.dismissError,
+      imbuement.fail,
+      imbuement.reset,
+      imbuement.windowReceived,
       market.begin,
       market.fail,
       market.historyReceived,
@@ -360,6 +423,9 @@ export function GameWindowSessionController() {
       profile.publicProfileReceived,
       profile.reset,
       profile.stateReceived,
+      tracker.entryChanged,
+      tracker.reset,
+      tracker.stateReceived,
       trade.begin,
       trade.fail,
       trade.reset,
@@ -398,13 +464,22 @@ export function GameWindowSessionController() {
         profile: profile.state,
         prey: prey.state,
         huntingTasks: huntingTasks.state,
+        boosted: boosted.state,
+        tracker: tracker.state,
+        bossSlots: bossSlots.state,
+        forge: forge.state,
+        imbuement: imbuement.state,
       },
       sessionActions,
     );
   }, [
     bestiary.state,
+    boosted.state,
+    bossSlots.state,
     bosstiary.state,
     depot.session,
+    forge.state,
+    imbuement.state,
     gems.state,
     guild.state,
     highscores.state,
@@ -418,6 +493,7 @@ export function GameWindowSessionController() {
     profile.state,
     sessionActions,
     store,
+    tracker.state,
     trade.session,
     vip.state,
     wheel.state,

@@ -1,4 +1,5 @@
 import type { CreatureState } from "@tibia/protocol";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const MAX_RENDERED_CREATURES = 24;
 
@@ -15,6 +16,7 @@ export function BattleList({
   ownPlayerId,
   attackTargetId,
 }: BattleListProps) {
+  const { t } = useAppTranslation();
   const visible = creatures
     .filter((creature) => creature.id !== ownPlayerId)
     .slice(0, MAX_RENDERED_CREATURES)
@@ -43,7 +45,29 @@ export function BattleList({
             }
           >
             <div className="flex items-center justify-between gap-2 text-sm">
-              <span className="truncate text-ui-text">{creature.name}</span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                {creature.forgeState && (
+                  <span
+                    title={
+                      creature.forgeState.kind === "influenced"
+                        ? t("hud.forgeState.influenced", {
+                            stack: creature.forgeState.stack,
+                          })
+                        : t("hud.forgeState.fiendish")
+                    }
+                    className={`shrink-0 rounded-sm border px-1 text-xs leading-4 font-semibold ${
+                      creature.forgeState.kind === "influenced"
+                        ? "border-fuchsia-400/60 bg-fuchsia-500/20 text-fuchsia-300"
+                        : "border-amber-400/60 bg-amber-500/20 text-amber-300"
+                    }`}
+                  >
+                    {creature.forgeState.kind === "influenced"
+                      ? creature.forgeState.stack
+                      : "★"}
+                  </span>
+                )}
+                <span className="truncate text-ui-text">{creature.name}</span>
+              </span>
               <span className="text-ui-muted">
                 {creature.healthPercent === null
                   ? "?"

@@ -14,6 +14,8 @@ export const BESTIARY_LIMITS = {
   maxNameLength: 100,
   /** One bestiary/bosstiary request per session per this window. */
   actionCooldownMs: 300,
+  /** Canary caps each cyclopedia tracker list at 255 entries. */
+  maxTrackedEntries: 255,
 } as const;
 
 /** Canary's BestiaryType_t race classes; the content pipeline validates against this list. */
@@ -260,6 +262,49 @@ export const bestiaryActionFailedMessageSchema = z
   })
   .strict();
 
+/**
+ * Kill-tracker mutation (Feature 76), mirroring Canary's 0x2A packet: one
+ * race toggled per message. Tracking a boss requires at least one kill;
+ * both lists cap at `maxTrackedEntries` and overflow is a silent no-op,
+ * exactly like Canary player.cpp:927-945.
+ */
+export const trackerSetMessageSchema = z
+  .object({
+    type: z.literal("tracker-set"),
+    scope: z.enum(["bestiary", "bosstiary"]),
+    raceId: raceIdSchema,
+    enabled: z.boolean(),
+  })
+  .strict();
+
+const trackerEntrySchema = z
+  .object({
+    raceId: raceIdSchema,
+    name: z.string().min(1).max(BESTIARY_LIMITS.maxNameLength),
+    kills: killsSchema,
+    /** Bestiary unlock thresholds; boss milestones come from the shared table. */
+    firstUnlock: z.number().int().min(1).max(BESTIARY_LIMITS.maxKills),
+    secondUnlock: z.number().int().min(1).max(BESTIARY_LIMITS.maxKills),
+    toKill: z.number().int().min(1).max(BESTIARY_LIMITS.maxKills),
+    completed: z.boolean(),
+  })
+  .strict();
+
+/**
+ * The requesting character's own tracked kills. Per-kill updates ride the
+ * existing `bestiary-entry-changed` push; this message re-sends the full
+ * list after login and every tracker mutation.
+ */
+export const trackerStateMessageSchema = z
+  .object({
+    type: z.literal("tracker-state"),
+    scope: z.enum(["bestiary", "bosstiary"]),
+    entries: z
+      .array(trackerEntrySchema)
+      .max(BESTIARY_LIMITS.maxTrackedEntries),
+  })
+  .strict();
+
 export type BestiaryClass = z.infer<typeof bestiaryClassSchema>;
 export type BossCategory = z.infer<typeof bossCategorySchema>;
 export type BestiaryCreaturesGetMessage = z.infer<
@@ -301,3 +346,6 @@ export type BestiaryActionFailedMessage = z.infer<
 >;
 export type BestiaryActionFailedReason =
   BestiaryActionFailedMessage["reason"];
+export type TrackerSetMessage = z.infer<typeof trackerSetMessageSchema>;
+export type TrackerEntry = z.infer<typeof trackerEntrySchema>;
+export type TrackerStateMessage = z.infer<typeof trackerStateMessageSchema>;

@@ -68,6 +68,17 @@ export const creatureStateSchema = z.object({
   guildName: z.string().min(3).max(29).optional(),
   atWar: z.boolean().optional(),
   skull: skullMarkSchema.optional(),
+  /**
+   * Exaltation Forge monster state (Feature 78): public creature icon like
+   * Canary's 0x8B push. Influenced carries its 1..5 stack; fiendish shows
+   * no stack number (Canary sends count 0 for fiends).
+   */
+  forgeState: z
+    .object({
+      kind: z.enum(["influenced", "fiendish"]),
+      stack: z.number().int().min(0).max(15),
+    })
+    .optional(),
   light: z
     .object({
       intensity: z.number().int().min(0).max(255),

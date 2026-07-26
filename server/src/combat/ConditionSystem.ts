@@ -16,7 +16,19 @@ export class ConditionSystem {
     private readonly registry: SessionRegistry,
     private readonly feedback: CombatFeedback,
     private readonly damage: DamageResolver,
+    /** Vibrancy roll source; wired by Combat after construction. */
+    private vibrancy?: {
+      paralysisRemoveChancePercent(characterId: string): number;
+      roll(percent: number): boolean;
+    },
   ) {}
+
+  setVibrancyHook(hook: {
+    paralysisRemoveChancePercent(characterId: string): number;
+    roll(percent: number): boolean;
+  }): void {
+    this.vibrancy = hook;
+  }
 
   applyCondition(
     target: Creature,
@@ -28,6 +40,24 @@ export class ConditionSystem {
       target.type.immunities.includes(application.type)
     ) {
       this.visibility.broadcastMagicEffect(target.position, 4, target.id);
+      return false;
+    }
+    // Feet-slot vibrancy: a chance to shrug the paralysis off entirely,
+    // rolled server-side at application (Canary condition.cpp:95-136; the
+    // PvP deflection leg is a recorded residual).
+    if (
+      application.type === "paralyze" &&
+      target instanceof Player &&
+      this.vibrancy &&
+      this.vibrancy.roll(
+        this.vibrancy.paralysisRemoveChancePercent(target.id),
+      )
+    ) {
+      this.registry.sessionFor(target.id)?.send({
+        type: "combat-log",
+        kind: "condition",
+        text: "You are unparalyzed by vibrancy.",
+      });
       return false;
     }
     target.conditions.apply(application, now);

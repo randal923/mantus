@@ -43,6 +43,7 @@ const monsterType: MonsterType = {
     canWalkOnFire: false,
     canWalkOnPoison: false,
     isBlockable: true,
+    rewardBoss: false,
   },
   targetStrategy: { nearest: 100, health: 0, damage: 0, random: 0 },
   attacks: [],
@@ -491,5 +492,49 @@ describe("SpawnManager", () => {
     // A monster that is no longer the live instance can never be challenged.
     world.removeCreature(wild.id);
     expect(manager.challengeMonster(wild, owner, 1_100, 12_000)).toBe(false);
+  });
+
+  it("never lets a reward boss be challenged or melee-pulled (Feature 76)", () => {
+    const rewardBoss: MonsterType = {
+      ...monsterType,
+      flags: {
+        ...monsterType.flags,
+        hostile: true,
+        rewardBoss: true,
+        targetDistance: 4,
+      },
+    };
+    const world = makeWorld();
+    const owner = world.getPlayer("viewer");
+    if (!owner) throw new Error("expected the seeded player");
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      {
+        monsterTypes: new Map([[rewardBoss.id, rewardBoss]]),
+        npcTypes: new Map(),
+        shopCatalogs: new Map(),
+        slots: [
+          {
+            id: "monster:slot-1",
+            kind: "monster",
+            typeId: rewardBoss.id,
+            home: { x: 2, y: 1, z: 7 },
+            radius: 1,
+            respawnMs: 1_000,
+            direction: "south",
+            enabled: true,
+          },
+        ],
+      },
+      config,
+    );
+    manager.tick(1_000);
+    const bossId = manager.activeCreatureId("monster:slot-1");
+    if (!bossId) throw new Error("expected the reward boss");
+    const boss = world.getCreature(bossId) as Monster;
+
+    expect(manager.challengeMonster(boss, owner, 1_000, 12_000)).toBe(false);
+    expect(manager.pullMonsterToMelee(boss, 1, 1_000, 12_000)).toBe(false);
   });
 });

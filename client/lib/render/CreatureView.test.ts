@@ -239,8 +239,9 @@ describe("CreatureView", () => {
       x: 10 * TILE_SIZE - 16,
       y: 10 * TILE_SIZE - 16,
     });
-    // Name text, health bar, party shield, war emblem, and skull graphics.
-    expect(view.plate.children).toHaveLength(5);
+    // Name text, health bar, party shield, war emblem, skull graphics,
+    // and the forge mark (glyph + stack text).
+    expect(view.plate.children).toHaveLength(7);
     view.destroy();
   });
 

@@ -31,6 +31,24 @@ export class ItemCatalog {
     return this.itemsByName.get(name.trim().toLowerCase());
   }
 
+  /** Lowest-id item mapped to a weapon-proficiency profile (Feature 82). */
+  findByProficiencyId(proficiencyId: number): ItemType | undefined {
+    if (!this.itemsByProficiencyId) {
+      const byProficiency = new Map<number, ItemType>();
+      for (const item of [...this.items.values()].sort(
+        (left, right) => left.id - right.id,
+      )) {
+        if (item.proficiencyId !== undefined && !byProficiency.has(item.proficiencyId)) {
+          byProficiency.set(item.proficiencyId, item);
+        }
+      }
+      this.itemsByProficiencyId = byProficiency;
+    }
+    return this.itemsByProficiencyId.get(proficiencyId);
+  }
+
+  private itemsByProficiencyId?: Map<number, ItemType>;
+
   searchByName(query: string): ReadonlyArray<ItemType> {
     const normalized = query.trim().toLowerCase();
     if (normalized.length === 0) return [];

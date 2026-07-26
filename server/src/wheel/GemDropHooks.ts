@@ -14,10 +14,10 @@ interface GemDropRoll {
 }
 
 /**
- * Unrevealed gems drop as kill credit, mirroring Canary's chances. We have
- * no forge classifications, so bestiary stars stand in (TODO.md):
- * bosstiary bosses roll the archfoe table, 5-star monsters the fiendish
- * table, 4-star monsters the influenced table.
+ * Unrevealed gems drop as kill credit, mirroring Canary's chances keyed on
+ * the killed monster's real forge state (Feature 78 retired the old
+ * bestiary-star stand-in): archfoe bosses roll the archfoe table, fiendish
+ * and influenced instances their own tables.
  */
 const ARCHFOE_ROLLS: ReadonlyArray<GemDropRoll> = [
   { key: "regularGems", chance: 0.09, rolls: 2 },
@@ -46,9 +46,7 @@ export class GemDropHooks implements BestiaryHooks {
     monster: Monster,
     now: number,
   ): void {
-    const raceId = this.catalog.raceIdByMonsterTypeId.get(monster.type.id);
-    if (raceId === undefined) return;
-    const table = this.tableFor(raceId);
+    const table = this.tableFor(monster);
     if (!table) return;
     for (const characterId of new Set(damagerIds)) {
       const deltas: Partial<Record<GemDropKey, number>> = {};
@@ -65,12 +63,13 @@ export class GemDropHooks implements BestiaryHooks {
     }
   }
 
-  private tableFor(raceId: number): ReadonlyArray<GemDropRoll> | null {
-    if (this.catalog.bossesByRaceId.has(raceId)) return ARCHFOE_ROLLS;
-    const entry = this.catalog.entriesByRaceId.get(raceId);
-    if (!entry) return null;
-    if (entry.stars >= 5) return FIENDISH_ROLLS;
-    if (entry.stars >= 4) return INFLUENCED_ROLLS;
-    return null;
+  private tableFor(monster: Monster): ReadonlyArray<GemDropRoll> | null {
+    if (monster.forgeKind === "fiendish") return FIENDISH_ROLLS;
+    if (monster.forgeKind === "influenced") return INFLUENCED_ROLLS;
+    const raceId = this.catalog.raceIdByMonsterTypeId.get(monster.type.id);
+    if (raceId === undefined) return null;
+    return this.catalog.bossesByRaceId.get(raceId)?.category === "archfoe"
+      ? ARCHFOE_ROLLS
+      : null;
   }
 }

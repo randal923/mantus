@@ -239,7 +239,9 @@
     "outfit": "Outfits",
     "profile": "Profile",
     "prey": "Prey",
-    "huntingTasks": "Hunting Tasks"
+    "huntingTasks": "Hunting Tasks",
+    "forge": "Exaltation Forge",
+    "tracker": "Kill Tracker"
   },
   "currency": {
     "wallet": "Currency wallet",
@@ -334,7 +336,8 @@
       "out-of-range": "You are too far away.",
       "too-far": "You cannot throw the item that far.",
       "too-heavy": "You cannot carry that much weight."
-    }
+    },
+    "imbue": "Imbue {{name}}"
   },
   "auction": {
     "title": "Auction House",
@@ -1159,6 +1162,10 @@
         "potions": "Potions",
         "supplies": "Supplies"
       }
+    },
+    "forgeState": {
+      "influenced": "Influenced monster (stack {{stack}})",
+      "fiendish": "Fiendish monster"
     }
   },
   "npc": {
@@ -1900,6 +1907,185 @@
       "goal-not-met": "You have not reached the kill goal yet.",
       "invalid-request": "That task action is not possible.",
       "rate-limited": "Please wait a moment before trying again."
+    }
+  },
+  "boosted": {
+    "title": "Today's Boost",
+    "creature": "Boosted Creature",
+    "boss": "Boosted Boss",
+    "creatureBonus": "{{multiplier}}x experience & extra loot",
+    "bossBonus": "{{multiplier}}x bosstiary kills"
+  },
+  "tracker": {
+    "title": "Kill Tracker",
+    "close": "Close tracker",
+    "scope": {
+      "bestiary": "Bestiary",
+      "bosstiary": "Bosstiary"
+    },
+    "remove": "Stop tracking {{name}}",
+    "more": "+{{extra}} more tracked",
+    "track": "Track kills",
+    "untrack": "Untrack",
+    "needsKill": "Defeat this boss once before tracking it."
+  },
+  "bossSlots": {
+    "title": "Boss Slots",
+    "loading": "Loading boss slots…",
+    "points": "Boss Points: {{points}} (+{{percent}}% loot bonus)",
+    "slotLabel": "Slot {{slot}}",
+    "slotOneLocked": "Reach Prowess with any boss to unlock this slot.",
+    "slotTwoLocked": "Reach 1,500 boss points to unlock this slot.",
+    "empty": "No boss assigned.",
+    "assign": "Assign boss",
+    "unknownBoss": "Unknown boss",
+    "kills": "Kills: {{kills}}",
+    "lootBonus": "Loot bonus +{{percent}}%",
+    "inactive": "Inactive (today's boosted boss)",
+    "clearFree": "Remove (free)",
+    "clearPriced": "Remove ({{gold}} gold)",
+    "boostedSlot": "Boosted Slot",
+    "boostedBonus": "{{multiplier}}x kills · +{{percent}}% loot",
+    "noBoosted": "No boosted boss today.",
+    "pickerTitle": "Choose a boss",
+    "noneUnlocked": "Reach Prowess with a boss to assign it here.",
+    "errors": {
+      "slot-locked": "That slot is still locked.",
+      "not-unlocked": "You have not unlocked that boss yet.",
+      "already-slotted": "That boss is already in a slot.",
+      "boosted-boss": "Today's boosted boss cannot be slotted.",
+      "insufficient-gold": "You do not have enough gold.",
+      "invalid-request": "That boss slot action is not possible.",
+      "rate-limited": "Please wait a moment before trying again."
+    }
+  },
+  "forge": {
+    "title": "Exaltation Forge",
+    "sections": "Forge sections",
+    "loading": "Loading forge…",
+    "tabs": {
+      "fusion": "Fusion",
+      "transfer": "Transfer",
+      "conversion": "Conversion",
+      "history": "History"
+    },
+    "dust": "Dust",
+    "slivers": "Slivers",
+    "cores": "Cores",
+    "tier": "Tier {{tier}}",
+    "convergence": "Convergence",
+    "cost": {
+      "gold": "Gold",
+      "dust": "Dust",
+      "cores": "Cores",
+      "success": "Success"
+    },
+    "fusion": {
+      "hint": "Fuse two identical items of the same tier to raise the first item's tier. The second item is consumed on success and may lose a tier on failure.",
+      "noPairs": "You are not carrying two identical classified items of the same tier.",
+      "carried": "{{owned}} carried",
+      "target": "→ Tier {{tier}}",
+      "useCore": "Use an exalted core (+{{percent}}% success)",
+      "reduceTierLoss": "Use an exalted core to halve tier loss on failure",
+      "submit": "Fuse"
+    },
+    "transfer": {
+      "hint": "Transfer a tier from a tier 2+ donor onto a tier 0 item of the same classification and slot. The donor is consumed.",
+      "noDonors": "You are not carrying a classified item of tier 2 or higher.",
+      "donor": "Donor",
+      "receiver": "Receiver",
+      "pickDonorFirst": "Pick a donor first.",
+      "noReceivers": "No carried tier 0 item matches this donor.",
+      "becomes": "→ Tier {{tier}}",
+      "submit": "Transfer"
+    },
+    "conversion": {
+      "dustToSlivers": "{{dust}} dust → {{slivers}} slivers",
+      "dustToSliversDetail": "Grind stored dust into slivers.",
+      "sliversToCores": "{{slivers}} slivers → 1 exalted core",
+      "sliversToCoresDetail": "Compress slivers into an exalted core.",
+      "increaseDustLimit": "{{dust}} dust → dust limit {{limit}}",
+      "increaseDustLimitDetail": "Permanently raise your dust cap by one.",
+      "dustLimitMaxed": "Dust limit is at its maximum ({{limit}}).",
+      "submit": "Convert"
+    },
+    "history": {
+      "loading": "Loading history…",
+      "empty": "No forge actions recorded yet.",
+      "success": "Success",
+      "failure": "Failed",
+      "action": {
+        "fusion": "Fusion",
+        "transfer": "Transfer",
+        "dust-to-slivers": "Dust to slivers",
+        "slivers-to-cores": "Slivers to core",
+        "increase-dust-limit": "Dust limit raised"
+      },
+      "costs": "{{gold}} gold · {{dust}} dust · {{cores}} cores",
+      "gained": "gained {{amount}}"
+    },
+    "result": {
+      "fusionSuccess": "Fusion succeeded: {{name}} is now tier {{tier}}.",
+      "transferSuccess": "Transfer succeeded: {{name}} is now tier {{tier}}.",
+      "failure": "The attempt failed; {{name}} was not upgraded.",
+      "item": "item"
+    },
+    "bonus": {
+      "1": "Bonus: the dust was not consumed.",
+      "2": "Bonus: the cores were not consumed.",
+      "3": "Bonus: the gold was not consumed.",
+      "4": "Bonus: the second item only lost one tier.",
+      "5": "Bonus: the second item was kept.",
+      "6": "Bonus: the second item was upgraded too.",
+      "7": "Bonus: the item gained two tiers.",
+      "8": "The second item kept its tier."
+    },
+    "errors": {
+      "invalid-item": "Those items cannot be used for that.",
+      "item-imbued": "Imbued items cannot be forged.",
+      "tier-limit": "That item is already at its tier limit.",
+      "not-convergible": "That item cannot use convergence.",
+      "insufficient-dust": "You do not have enough dust.",
+      "insufficient-slivers": "You do not have enough slivers.",
+      "insufficient-cores": "You do not have enough exalted cores.",
+      "insufficient-gold": "You do not have enough gold.",
+      "dust-limit-reached": "Your dust limit is already at its maximum.",
+      "backpack-full": "Your backpack cannot hold the result.",
+      "rate-limited": "Please wait a moment before trying again.",
+      "invalid-request": "That forge action is not possible."
+    }
+  },
+  "imbuement": {
+    "title": "Imbuement Shrine",
+    "loading": "Loading imbuements…",
+    "item": "Item",
+    "slotCount": "{{slots}} imbuement slots",
+    "slotLabel": "Slot {{slot}}",
+    "emptySlot": "Empty slot",
+    "choose": "Choose imbuement",
+    "selected": "Selected",
+    "timeLeft": "{{time}} remaining",
+    "clear": "Clear ({{gold}} gold)",
+    "premium": "Premium",
+    "price": "{{gold}} gold",
+    "apply": "Apply",
+    "material": "{{name}} {{available}}/{{required}}",
+    "optionsFor": "Available imbuements for slot {{slot}}",
+    "noOptions": "No imbuements can be applied to this item.",
+    "noSlots": "This item has no imbuement slots.",
+    "errors": {
+      "invalid-item": "That item cannot be imbued.",
+      "no-shrine": "You must stand next to an imbuement shrine.",
+      "invalid-slot": "That imbuement slot does not exist.",
+      "slot-occupied": "That slot already holds an imbuement.",
+      "slot-empty": "That slot is already empty.",
+      "wrong-category": "That imbuement does not fit this item.",
+      "duplicate-imbuement": "This item already has that imbuement type.",
+      "premium-required": "That imbuement requires a premium account.",
+      "insufficient-materials": "You do not have the required materials.",
+      "insufficient-gold": "You do not have enough gold.",
+      "rate-limited": "Please wait a moment before trying again.",
+      "invalid-request": "That imbuement action is not possible."
     }
   }
 }

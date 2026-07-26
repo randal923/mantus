@@ -37,6 +37,12 @@ import type { MarkerService } from "./minimap/MarkerService";
 import type { OutfitService } from "./outfit/OutfitService";
 import type { PreyService } from "./prey/PreyService";
 import type { HuntingTaskService } from "./huntingTasks/HuntingTaskService";
+import type { BoostedService } from "./boosted/BoostedService";
+import type { BossSlotService } from "./bestiary/BossSlotService";
+import type { TrackerService } from "./bestiary/TrackerService";
+import type { ForgeService } from "./forge/ForgeService";
+import type { AnimusService } from "./proficiency/AnimusService";
+import type { ProficiencyService } from "./proficiency/ProficiencyService";
 import type { ProfileService } from "./profile/ProfileService";
 import type { FriendService } from "./social/FriendService";
 import type { VipService } from "./social/VipService";
@@ -65,6 +71,12 @@ export class CharacterHandler {
     private readonly profiles: ProfileService,
     private readonly prey: PreyService,
     private readonly huntingTasks: HuntingTaskService,
+    private readonly boosted: BoostedService,
+    private readonly trackers: TrackerService,
+    private readonly bossSlots: BossSlotService,
+    private readonly forge: ForgeService,
+    private readonly proficiency: ProficiencyService,
+    private readonly animus: AnimusService,
     private readonly markers: MarkerService,
     private readonly outfits: OutfitService,
     private readonly moderation: ModerationService,
@@ -385,6 +397,12 @@ export class CharacterHandler {
     this.profiles.attachCharacter(session, player.id);
     this.prey.attachCharacter(session, player.id);
     this.huntingTasks.attachCharacter(session, player.id);
+    this.trackers.attachCharacter(session, player.id);
+    this.bossSlots.attachCharacter(session, player.id);
+    this.forge.attachCharacter(session, player.id);
+    this.proficiency.attachCharacter(session, player.id);
+    this.animus.attachCharacter(session, player.id);
+    this.boosted.announceTo(session);
     this.markers.attachCharacter(session, player.id);
     this.outfits.attachCharacter(session, player.id);
     this.moderation.attachCharacter(player.id);

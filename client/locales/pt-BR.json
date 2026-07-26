@@ -239,7 +239,9 @@
     "outfit": "Visuais",
     "profile": "Perfil",
     "prey": "Presas",
-    "huntingTasks": "Tarefas de Caça"
+    "huntingTasks": "Tarefas de Caça",
+    "forge": "Forja da Exaltação",
+    "tracker": "Rastreador de Abates"
   },
   "currency": {
     "wallet": "Carteira de moedas",
@@ -334,7 +336,8 @@
       "out-of-range": "Você está longe demais.",
       "too-far": "Você não pode jogar o item tão longe.",
       "too-heavy": "Você não pode carregar tanto peso."
-    }
+    },
+    "imbue": "Imbuir {{name}}"
   },
   "auction": {
     "title": "Casa de Leilões",
@@ -1159,6 +1162,10 @@
         "potions": "Poções",
         "supplies": "Suprimentos"
       }
+    },
+    "forgeState": {
+      "influenced": "Monstro influenciado (nível {{stack}})",
+      "fiendish": "Monstro diabólico"
     }
   },
   "npc": {
@@ -1900,6 +1907,185 @@
       "goal-not-met": "Você ainda não atingiu a meta de abates.",
       "invalid-request": "Essa ação de tarefa não é possível.",
       "rate-limited": "Aguarde um momento antes de tentar novamente."
+    }
+  },
+  "boosted": {
+    "title": "Impulso do Dia",
+    "creature": "Criatura Impulsionada",
+    "boss": "Chefe Impulsionado",
+    "creatureBonus": "{{multiplier}}x experiência e saque extra",
+    "bossBonus": "{{multiplier}}x abates no bosstiário"
+  },
+  "tracker": {
+    "title": "Rastreador de Abates",
+    "close": "Fechar rastreador",
+    "scope": {
+      "bestiary": "Bestiário",
+      "bosstiary": "Bosstiário"
+    },
+    "remove": "Parar de rastrear {{name}}",
+    "more": "+{{extra}} rastreados",
+    "track": "Rastrear abates",
+    "untrack": "Parar de rastrear",
+    "needsKill": "Derrote este chefe uma vez antes de rastreá-lo."
+  },
+  "bossSlots": {
+    "title": "Vagas de Chefes",
+    "loading": "Carregando vagas de chefes…",
+    "points": "Pontos de Chefe: {{points}} (+{{percent}}% de bônus de saque)",
+    "slotLabel": "Vaga {{slot}}",
+    "slotOneLocked": "Alcance Proeza com qualquer chefe para desbloquear esta vaga.",
+    "slotTwoLocked": "Alcance 1.500 pontos de chefe para desbloquear esta vaga.",
+    "empty": "Nenhum chefe atribuído.",
+    "assign": "Atribuir chefe",
+    "unknownBoss": "Chefe desconhecido",
+    "kills": "Abates: {{kills}}",
+    "lootBonus": "Bônus de saque +{{percent}}%",
+    "inactive": "Inativa (chefe impulsionado de hoje)",
+    "clearFree": "Remover (grátis)",
+    "clearPriced": "Remover ({{gold}} de ouro)",
+    "boostedSlot": "Vaga Impulsionada",
+    "boostedBonus": "{{multiplier}}x abates · +{{percent}}% de saque",
+    "noBoosted": "Nenhum chefe impulsionado hoje.",
+    "pickerTitle": "Escolha um chefe",
+    "noneUnlocked": "Alcance Proeza com um chefe para atribuí-lo aqui.",
+    "errors": {
+      "slot-locked": "Essa vaga ainda está bloqueada.",
+      "not-unlocked": "Você ainda não desbloqueou esse chefe.",
+      "already-slotted": "Esse chefe já está em uma vaga.",
+      "boosted-boss": "O chefe impulsionado de hoje não pode ser colocado em vaga.",
+      "insufficient-gold": "Você não tem ouro suficiente.",
+      "invalid-request": "Essa ação de vaga de chefe não é possível.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente."
+    }
+  },
+  "forge": {
+    "title": "Forja da Exaltação",
+    "sections": "Seções da forja",
+    "loading": "Carregando forja…",
+    "tabs": {
+      "fusion": "Fusão",
+      "transfer": "Transferência",
+      "conversion": "Conversão",
+      "history": "Histórico"
+    },
+    "dust": "Pó",
+    "slivers": "Lascas",
+    "cores": "Núcleos",
+    "tier": "Nível {{tier}}",
+    "convergence": "Convergência",
+    "cost": {
+      "gold": "Ouro",
+      "dust": "Pó",
+      "cores": "Núcleos",
+      "success": "Sucesso"
+    },
+    "fusion": {
+      "hint": "Funda dois itens idênticos do mesmo nível para aumentar o nível do primeiro item. O segundo item é consumido em caso de sucesso e pode perder um nível em caso de falha.",
+      "noPairs": "Você não carrega dois itens classificados idênticos do mesmo nível.",
+      "carried": "{{owned}} na mochila",
+      "target": "→ Nível {{tier}}",
+      "useCore": "Usar um núcleo exaltado (+{{percent}}% de sucesso)",
+      "reduceTierLoss": "Usar um núcleo exaltado para reduzir pela metade a perda de nível em falha",
+      "submit": "Fundir"
+    },
+    "transfer": {
+      "hint": "Transfira um nível de um doador de nível 2+ para um item de nível 0 da mesma classificação e slot. O doador é consumido.",
+      "noDonors": "Você não carrega um item classificado de nível 2 ou superior.",
+      "donor": "Doador",
+      "receiver": "Receptor",
+      "pickDonorFirst": "Escolha um doador primeiro.",
+      "noReceivers": "Nenhum item de nível 0 na mochila corresponde a este doador.",
+      "becomes": "→ Nível {{tier}}",
+      "submit": "Transferir"
+    },
+    "conversion": {
+      "dustToSlivers": "{{dust}} de pó → {{slivers}} lascas",
+      "dustToSliversDetail": "Triture o pó armazenado em lascas.",
+      "sliversToCores": "{{slivers}} lascas → 1 núcleo exaltado",
+      "sliversToCoresDetail": "Comprima lascas em um núcleo exaltado.",
+      "increaseDustLimit": "{{dust}} de pó → limite de pó {{limit}}",
+      "increaseDustLimitDetail": "Aumente permanentemente seu limite de pó em um.",
+      "dustLimitMaxed": "O limite de pó está no máximo ({{limit}}).",
+      "submit": "Converter"
+    },
+    "history": {
+      "loading": "Carregando histórico…",
+      "empty": "Nenhuma ação da forja registrada ainda.",
+      "success": "Sucesso",
+      "failure": "Falhou",
+      "action": {
+        "fusion": "Fusão",
+        "transfer": "Transferência",
+        "dust-to-slivers": "Pó em lascas",
+        "slivers-to-cores": "Lascas em núcleo",
+        "increase-dust-limit": "Limite de pó aumentado"
+      },
+      "costs": "{{gold}} de ouro · {{dust}} de pó · {{cores}} núcleos",
+      "gained": "ganhou {{amount}}"
+    },
+    "result": {
+      "fusionSuccess": "Fusão bem-sucedida: {{name}} agora é nível {{tier}}.",
+      "transferSuccess": "Transferência bem-sucedida: {{name}} agora é nível {{tier}}.",
+      "failure": "A tentativa falhou; {{name}} não foi aprimorado.",
+      "item": "item"
+    },
+    "bonus": {
+      "1": "Bônus: o pó não foi consumido.",
+      "2": "Bônus: os núcleos não foram consumidos.",
+      "3": "Bônus: o ouro não foi consumido.",
+      "4": "Bônus: o segundo item perdeu apenas um nível.",
+      "5": "Bônus: o segundo item foi mantido.",
+      "6": "Bônus: o segundo item também foi aprimorado.",
+      "7": "Bônus: o item ganhou dois níveis.",
+      "8": "O segundo item manteve seu nível."
+    },
+    "errors": {
+      "invalid-item": "Esses itens não podem ser usados para isso.",
+      "item-imbued": "Itens imbuídos não podem ser forjados.",
+      "tier-limit": "Esse item já está no limite de nível.",
+      "not-convergible": "Esse item não pode usar convergência.",
+      "insufficient-dust": "Você não tem pó suficiente.",
+      "insufficient-slivers": "Você não tem lascas suficientes.",
+      "insufficient-cores": "Você não tem núcleos exaltados suficientes.",
+      "insufficient-gold": "Você não tem ouro suficiente.",
+      "dust-limit-reached": "Seu limite de pó já está no máximo.",
+      "backpack-full": "Sua mochila não comporta o resultado.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente.",
+      "invalid-request": "Essa ação da forja não é possível."
+    }
+  },
+  "imbuement": {
+    "title": "Santuário de Imbuimento",
+    "loading": "Carregando imbuimentos…",
+    "item": "Item",
+    "slotCount": "{{slots}} slots de imbuimento",
+    "slotLabel": "Slot {{slot}}",
+    "emptySlot": "Slot vazio",
+    "choose": "Escolher imbuimento",
+    "selected": "Selecionado",
+    "timeLeft": "{{time}} restante",
+    "clear": "Limpar ({{gold}} de ouro)",
+    "premium": "Premium",
+    "price": "{{gold}} de ouro",
+    "apply": "Aplicar",
+    "material": "{{name}} {{available}}/{{required}}",
+    "optionsFor": "Imbuimentos disponíveis para o slot {{slot}}",
+    "noOptions": "Nenhum imbuimento pode ser aplicado a este item.",
+    "noSlots": "Este item não tem slots de imbuimento.",
+    "errors": {
+      "invalid-item": "Esse item não pode ser imbuído.",
+      "no-shrine": "Você precisa estar ao lado de um santuário de imbuimento.",
+      "invalid-slot": "Esse slot de imbuimento não existe.",
+      "slot-occupied": "Esse slot já possui um imbuimento.",
+      "slot-empty": "Esse slot já está vazio.",
+      "wrong-category": "Esse imbuimento não serve para este item.",
+      "duplicate-imbuement": "Este item já possui esse tipo de imbuimento.",
+      "premium-required": "Esse imbuimento requer uma conta premium.",
+      "insufficient-materials": "Você não tem os materiais necessários.",
+      "insufficient-gold": "Você não tem ouro suficiente.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente.",
+      "invalid-request": "Essa ação de imbuimento não é possível."
     }
   }
 }

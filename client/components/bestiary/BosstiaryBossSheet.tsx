@@ -5,6 +5,7 @@ import {
   type BosstiaryBossStateMessage,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { Button } from "../ui/Button";
 import { AnimatedOutfit } from "./AnimatedOutfit";
 import { BestiaryLootList } from "./BestiaryLootList";
 import { BestiaryResistanceIcon } from "./BestiaryResistanceIcon";
@@ -16,9 +17,16 @@ const MILESTONE_METALS = ["bronze", "silver", "gold"] as const;
 
 interface BosstiaryBossSheetProps {
   boss: BosstiaryBossStateMessage;
+  /** Whether this boss is on the own kill tracker (server projection). */
+  tracked?: boolean;
+  onToggleTrack?: (enabled: boolean) => void;
 }
 
-export function BosstiaryBossSheet({ boss }: BosstiaryBossSheetProps) {
+export function BosstiaryBossSheet({
+  boss,
+  tracked = false,
+  onToggleTrack,
+}: BosstiaryBossSheetProps) {
   const { t } = useAppTranslation();
   const milestones = BOSSTIARY_MILESTONES[boss.category];
   const finalMilestone = milestones[milestones.length - 1];
@@ -105,6 +113,23 @@ export function BosstiaryBossSheet({ boss }: BosstiaryBossSheetProps) {
             <span className="mt-4 text-center text-sm text-ui-gold">
               {t("bosstiary.bossPoints", { points: points.toLocaleString() })}
             </span>
+            {onToggleTrack && (
+              <span className="mt-3 flex justify-center">
+                <Button
+                  size="sm"
+                  variant={tracked ? "secondary" : "primary"}
+                  disabled={!tracked && boss.kills === 0}
+                  title={
+                    !tracked && boss.kills === 0
+                      ? t("tracker.needsKill")
+                      : undefined
+                  }
+                  onClick={() => onToggleTrack(!tracked)}
+                >
+                  {tracked ? t("tracker.untrack") : t("tracker.track")}
+                </Button>
+              </span>
+            )}
           </div>
 
           <div className="grid content-center gap-4">

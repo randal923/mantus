@@ -117,6 +117,16 @@
    "path": "data/scripts/lib/register_achievements.lua",
    "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
    "sha256": "de33d7341d17e3410da5346c229ce68317526d70785b0a2e277f3fff546f1f7d"
+  },
+  "canaryImbuements": {
+   "path": "data/XML/imbuements.xml",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "82ea7b6c28b47b1b3d631ecff6d0015d5019d41327656945609d84340bf95d63"
+  },
+  "canaryProficiencies": {
+   "path": "data/items/proficiencies.json",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "1a915dffd9265cd1c18d39e55da7ede691b2e58add534bc186238ae028a73f22"
   }
  },
  "balanceDefinitions": {
@@ -124,132 +134,144 @@
  },
  "converterSources": [
   {
-   "path": "tools/importTibiaAssets.mjs",
-   "sha256": "0eb21ecd02ec184bab807413d8147feb9a520d3aa5314c02735f01cfcb80f361"
-  },
-  {
-   "path": "tools/convertCanaryItems.mjs",
-   "sha256": "2c79a0d8996b715c4358fa2635ae68ca1c95c41c79e79ac51b77284966e1e1fe"
+   "path": "tools/buildCanaryParityInventory.mjs",
+   "sha256": "175635baa0773a1c1469d6185a2a671b93f68905320c9e0d497aa7c97fa11dfd"
   },
   {
    "path": "tools/buildItemCatalog.mjs",
-   "sha256": "eab842e20e99cb425b6b373c74d1aa5b8a114de59ef86612b467fe6c67b49e47"
-  },
-  {
-   "path": "tools/importCanaryFoods.mjs",
-   "sha256": "d34b4c6a2e629b6c131b3e053ef5f35104ed6ac838cc2f4b4d955780cc3989f8"
-  },
-  {
-   "path": "tools/importCanaryStowableItems.mjs",
-   "sha256": "dfe97a1a0bc3cead4ee5cb9c2688aa10faadf3ebf1bdf7ff9662a82595a305ad"
-  },
-  {
-   "path": "tools/convertOtbm.mjs",
-   "sha256": "d3bd7cc25a171d3891b3a6422805f7577537903cdd786ea2d48278dc0d079440"
-  },
-  {
-   "path": "tools/importCanaryCreatures.mjs",
-   "sha256": "24c71d8fef6809d9285b43d475874fe6b71ced5d5ba936a3f1a6190c4835bd7a"
-  },
-  {
-   "path": "tools/parseCanaryCreatureContent.mjs",
-   "sha256": "56ad9f273fec1a8a6207728fcc76a525872e57c6514dd6915f3f1abf477f9701"
-  },
-  {
-   "path": "tools/parseCanaryMonsterSpells.mjs",
-   "sha256": "3f9fca602ee57da7896181ad76be9b90e6fd5bc2671bd3708937c1516843d0a2"
-  },
-  {
-   "path": "tools/importCanarySpells.mjs",
-   "sha256": "f0c682f59fd5d118c20dcedcfc3432a556ec97e20128d03241852a8bb8c1dcc1"
-  },
-  {
-   "path": "tools/parseCanarySpells.mjs",
-   "sha256": "45a950ff7d8d401a17f0b5a7d098ae51c949566cdd3f5b1616a5b948403285af"
+   "sha256": "1767016806d0b41bd7783dfafdc8cd4e494b52a77d56de56eeb95435aa05330f"
   },
   {
    "path": "tools/buildSpellReport.mjs",
    "sha256": "be5e85e2f9c0ee424d17cbbece9cf05aed50c215bc32abe2a662bfe93de5149e"
   },
   {
-   "path": "tools/importCanaryNpcs.mjs",
-   "sha256": "63f05fe36af73aed8979936ebec1aeb2b488ef2aa6bdc40b36f14104a26b9fcf"
-  },
-  {
-   "path": "tools/importCanaryShops.mjs",
-   "sha256": "b615e65f051b8b23376017042d22d520debb806f6e18efe645775c66970ab3e1"
-  },
-  {
-   "path": "tools/parseCanaryNpcShops.mjs",
-   "sha256": "79076ab141e6d247d583b1c7b38394838c70910d86564ca9afe2586034e78cfb"
-  },
-  {
-   "path": "tools/parseCanaryNpcDialogues.mjs",
-   "sha256": "7bb8a59a13bcb2db7593fd36980cfe22be8bad0c022e4f43c878613c8804ef36"
-  },
-  {
-   "path": "tools/buildCanaryParityInventory.mjs",
-   "sha256": "175635baa0773a1c1469d6185a2a671b93f68905320c9e0d497aa7c97fa11dfd"
-  },
-  {
-   "path": "tools/verifyCanaryParityInventory.mjs",
-   "sha256": "a03fde6bff43110c993a210af4c393d05cf4c9b8fa8085cbe1729f665011a27a"
-  },
-  {
-   "path": "tools/importCanaryDoors.mjs",
-   "sha256": "9201912df2df0b3ede0db2f338ba338cb30c9b3dcb03d5dbb45a90cc6a15122e"
-  },
-  {
-   "path": "tools/parseCanaryDoorTables.mjs",
-   "sha256": "14f9273bace5e3ddc345ade4a8707c0b2404cde0c985a041140d0d5cb78076f2"
-  },
-  {
-   "path": "tools/importCanaryHouses.mjs",
-   "sha256": "fc6ed3050f1a5aa90611b468ed0fea4ef2f6936d5726eac59d71d77aa5b327e2"
-  },
-  {
-   "path": "tools/parseCanaryChestTables.mjs",
-   "sha256": "55af07eb0a9474dad8dbcb98095672b71c78f4f229f8e687c5a8f0bce5810610"
-  },
-  {
-   "path": "tools/importCanaryChests.mjs",
-   "sha256": "daf07411e8be6eb0de3aec255b22e41c6f1db2b94421ed943668aeba5ee6fae9"
-  },
-  {
-   "path": "tools/parseCanaryActionRegistrations.mjs",
-   "sha256": "9d4caa253360c33b0d05a6cb0e15da56c66709064a35e4a1697f864023a1699e"
+   "path": "tools/buildWorldActionParityInventory.mjs",
+   "sha256": "65475e7fea7e64a8871f2ae32b3fed941e3fb2288610939a65aeab27bb793d25"
   },
   {
    "path": "tools/classifyWorldActionRegistration.mjs",
    "sha256": "728d1ba9e3116cc5a5b4d3b2596643d6c50950af8177aa4ebbadc7b1de0b0c78"
   },
   {
-   "path": "tools/buildWorldActionParityInventory.mjs",
-   "sha256": "65475e7fea7e64a8871f2ae32b3fed941e3fb2288610939a65aeab27bb793d25"
+   "path": "tools/convertCanaryItems.mjs",
+   "sha256": "debbb60ab40b24861a9f4cf9915d0ae2993ef4d7bcd156ec3c3d1b02e6b2eedb"
   },
   {
-   "path": "tools/parseCanaryRaids.mjs",
-   "sha256": "893547da66615f33262c084ecce3907294510d77843855c1a81dd0cd1af6c9f0"
+   "path": "tools/convertOtbm.mjs",
+   "sha256": "d3bd7cc25a171d3891b3a6422805f7577537903cdd786ea2d48278dc0d079440"
   },
   {
-   "path": "tools/importCanaryRaids.mjs",
-   "sha256": "3916a838d8c6bed26709e76203eece62cba0f427814992cbfb2f011ffce29818"
+   "path": "tools/extractCanaryAppearanceFlags.mjs",
+   "sha256": "c3366d2be4265adb2aae96c57324b1901cfe5880e0259290bef036266eefc461"
   },
   {
    "path": "tools/importCanaryAchievements.mjs",
    "sha256": "63f1e5ed1f723571421421b39c2a6b86237b80d7b2ff214150a6bd542362c4d3"
   },
   {
+   "path": "tools/importCanaryChests.mjs",
+   "sha256": "daf07411e8be6eb0de3aec255b22e41c6f1db2b94421ed943668aeba5ee6fae9"
+  },
+  {
+   "path": "tools/importCanaryCreatures.mjs",
+   "sha256": "1879b176d5b364fb94fdc38bf34df7a85b097b038721e1984d3210d45a428ebf"
+  },
+  {
+   "path": "tools/importCanaryDoors.mjs",
+   "sha256": "9201912df2df0b3ede0db2f338ba338cb30c9b3dcb03d5dbb45a90cc6a15122e"
+  },
+  {
+   "path": "tools/importCanaryFoods.mjs",
+   "sha256": "d34b4c6a2e629b6c131b3e053ef5f35104ed6ac838cc2f4b4d955780cc3989f8"
+  },
+  {
+   "path": "tools/importCanaryHouses.mjs",
+   "sha256": "fc6ed3050f1a5aa90611b468ed0fea4ef2f6936d5726eac59d71d77aa5b327e2"
+  },
+  {
+   "path": "tools/importCanaryImbuements.mjs",
+   "sha256": "f157ee70e1e4601b3ea150b9df772de4569b7608ab73ac309dd7ec10f781c54e"
+  },
+  {
+   "path": "tools/importCanaryNpcs.mjs",
+   "sha256": "63f05fe36af73aed8979936ebec1aeb2b488ef2aa6bdc40b36f14104a26b9fcf"
+  },
+  {
+   "path": "tools/importCanaryProficiencies.mjs",
+   "sha256": "239b3af526094781cd1368ca051ba5f1cdbc23054375c68ee520a1a9a86bad46"
+  },
+  {
+   "path": "tools/importCanaryRaids.mjs",
+   "sha256": "3916a838d8c6bed26709e76203eece62cba0f427814992cbfb2f011ffce29818"
+  },
+  {
+   "path": "tools/importCanaryShops.mjs",
+   "sha256": "b615e65f051b8b23376017042d22d520debb806f6e18efe645775c66970ab3e1"
+  },
+  {
+   "path": "tools/importCanarySpells.mjs",
+   "sha256": "f0c682f59fd5d118c20dcedcfc3432a556ec97e20128d03241852a8bb8c1dcc1"
+  },
+  {
+   "path": "tools/importCanaryStowableItems.mjs",
+   "sha256": "dfe97a1a0bc3cead4ee5cb9c2688aa10faadf3ebf1bdf7ff9662a82595a305ad"
+  },
+  {
+   "path": "tools/importTibiaAssets.mjs",
+   "sha256": "0eb21ecd02ec184bab807413d8147feb9a520d3aa5314c02735f01cfcb80f361"
+  },
+  {
    "path": "tools/parseCanaryAchievements.mjs",
    "sha256": "5182dfda7fa456ab36d22b72a7b566705b56877b23ef9db91684f46c91f278a6"
+  },
+  {
+   "path": "tools/parseCanaryActionRegistrations.mjs",
+   "sha256": "9d4caa253360c33b0d05a6cb0e15da56c66709064a35e4a1697f864023a1699e"
+  },
+  {
+   "path": "tools/parseCanaryChestTables.mjs",
+   "sha256": "55af07eb0a9474dad8dbcb98095672b71c78f4f229f8e687c5a8f0bce5810610"
+  },
+  {
+   "path": "tools/parseCanaryCreatureContent.mjs",
+   "sha256": "da7c5b45a17e1d33f302f2d22e704169b2f56bc2794822a9d21ed74bb00fca8d"
+  },
+  {
+   "path": "tools/parseCanaryDoorTables.mjs",
+   "sha256": "14f9273bace5e3ddc345ade4a8707c0b2404cde0c985a041140d0d5cb78076f2"
+  },
+  {
+   "path": "tools/parseCanaryMonsterSpells.mjs",
+   "sha256": "3f9fca602ee57da7896181ad76be9b90e6fd5bc2671bd3708937c1516843d0a2"
+  },
+  {
+   "path": "tools/parseCanaryNpcDialogues.mjs",
+   "sha256": "7bb8a59a13bcb2db7593fd36980cfe22be8bad0c022e4f43c878613c8804ef36"
+  },
+  {
+   "path": "tools/parseCanaryNpcShops.mjs",
+   "sha256": "79076ab141e6d247d583b1c7b38394838c70910d86564ca9afe2586034e78cfb"
+  },
+  {
+   "path": "tools/parseCanaryRaids.mjs",
+   "sha256": "893547da66615f33262c084ecce3907294510d77843855c1a81dd0cd1af6c9f0"
+  },
+  {
+   "path": "tools/parseCanarySpells.mjs",
+   "sha256": "45a950ff7d8d401a17f0b5a7d098ae51c949566cdd3f5b1616a5b948403285af"
+  },
+  {
+   "path": "tools/verifyCanaryParityInventory.mjs",
+   "sha256": "a03fde6bff43110c993a210af4c393d05cf4c9b8fa8085cbe1729f665011a27a"
   }
  ],
  "converters": {
   "assets": 2,
-  "canaryItems": 2,
+  "canaryItems": 3,
   "foods": 1,
   "stowableItems": 1,
-  "itemCatalog": 2,
+  "itemCatalog": 3,
   "map": 3,
   "creatures": 3,
   "spells": 3,
@@ -261,6 +283,9 @@
   "tools": 1,
   "worldEvents": 1,
   "worldActionParity": 1,
-  "achievements": 1
+  "achievements": 1,
+  "appearanceFlags": 1,
+  "imbuements": 1,
+  "proficiencies": 1
  }
 }

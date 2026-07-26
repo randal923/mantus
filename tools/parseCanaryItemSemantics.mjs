@@ -163,6 +163,9 @@ function applyAttribute(semantics, attributes, itemLabel) {
     case "imbuementslot":
       setNumber(semantics, "imbuementSlots", value, itemLabel);
       return;
+    case "proficiency":
+      setNumber(semantics, "proficiencyId", value, itemLabel);
+      return;
     case "decayto":
       setNumber(semantics, "decayTo", value, itemLabel);
       return;
@@ -285,6 +288,49 @@ function applyAttribute(semantics, attributes, itemLabel) {
   }
 }
 
+// Canary item_parse.hpp ImbuementsTypeMap, as stable slugs shared with
+// content/imbuements.json category slugs.
+const IMBUEMENT_CATEGORY_SLUGS = new Map([
+  ["elemental damage", "elemental-damage"],
+  ["life leech", "life-leech"],
+  ["mana leech", "mana-leech"],
+  ["critical hit", "critical-hit"],
+  ["elemental protection death", "protection-death"],
+  ["elemental protection earth", "protection-earth"],
+  ["elemental protection fire", "protection-fire"],
+  ["elemental protection ice", "protection-ice"],
+  ["elemental protection energy", "protection-energy"],
+  ["elemental protection holy", "protection-holy"],
+  ["increase speed", "speed"],
+  ["skillboost fist", "skill-fist"],
+  ["skillboost axe", "skill-axe"],
+  ["skillboost sword", "skill-sword"],
+  ["skillboost club", "skill-club"],
+  ["skillboost shielding", "skill-shielding"],
+  ["skillboost distance", "skill-distance"],
+  ["skillboost magic level", "magic-level"],
+  ["increase capacity", "capacity"],
+  ["paralysis deflection", "paralysis-deflection"],
+  ["vibrancy", "paralysis-deflection"],
+  ["paralysis removal", "paralysis-deflection"],
+]);
+
+function applyImbuementTypeAttribute(semantics, attributes, itemLabel) {
+  const key = attributes.get("key")?.toLowerCase();
+  const rawValue = attributes.get("value");
+  if (!key || rawValue === undefined) return;
+  const slug = IMBUEMENT_CATEGORY_SLUGS.get(key);
+  if (!slug) {
+    throw new Error(`${itemLabel} has unknown imbuement category "${key}"`);
+  }
+  // Canary caps the per-category power level at IMBUEMENT_MAX_TIER = 3.
+  const level = Math.min(3, integer(rawValue, `${itemLabel} imbuement level`));
+  semantics.imbuementTypes = {
+    ...(semantics.imbuementTypes ?? {}),
+    [slug]: Math.max(level, semantics.imbuementTypes?.[slug] ?? 0),
+  };
+}
+
 function applyScriptAttribute(semantics, attributes, itemLabel) {
   const key = attributes.get("key")?.toLowerCase();
   const rawValue = attributes.get("value");
@@ -392,6 +438,12 @@ export function parseCanaryItemSemantics(xml) {
       );
     } else if (current.attributeKeys[0] === "script") {
       applyScriptAttribute(
+        current.semantics,
+        attributes,
+        `item ${current.ids[0]}`,
+      );
+    } else if (current.attributeKeys[0] === "imbuementslot") {
+      applyImbuementTypeAttribute(
         current.semantics,
         attributes,
         `item ${current.ids[0]}`,

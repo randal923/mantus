@@ -11,6 +11,8 @@ interface ItemSlotProps {
   item?: InventoryItem;
   placeholderSpriteId?: number;
   onActivate?: () => void;
+  /** Shows a hover badge that opens the item's imbuement window. */
+  onImbue?: () => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onDrop?: () => void;
@@ -21,6 +23,7 @@ export function ItemSlot({
   item,
   placeholderSpriteId,
   onActivate,
+  onImbue,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -37,7 +40,7 @@ export function ItemSlot({
   const emptyDragImageRef = useRef<HTMLSpanElement>(null);
 
   return (
-    <>
+    <span className="group/slot relative inline-flex">
       <button
         type="button"
         disabled={!item && !onDrop}
@@ -134,6 +137,21 @@ export function ItemSlot({
           </span>
         )}
       </button>
+      {item && !optimistic && onImbue && (
+        <button
+          type="button"
+          aria-label={t("inventory.imbue", { name: item.name })}
+          title={t("inventory.imbue", { name: item.name })}
+          onClick={(event) => {
+            event.stopPropagation();
+            setAnchor(null);
+            onImbue();
+          }}
+          className="absolute -top-1 -right-1 z-10 hidden size-5 items-center justify-center rounded-full border border-ui-gold/50 bg-black/85 text-xs text-ui-gold shadow-md shadow-black/60 group-hover/slot:flex hover:brightness-125 focus-visible:flex"
+        >
+          ✦
+        </button>
+      )}
       <span
         ref={emptyDragImageRef}
         aria-hidden
@@ -160,6 +178,6 @@ export function ItemSlot({
           </div>,
           document.body,
         )}
-    </>
+    </span>
   );
 }
