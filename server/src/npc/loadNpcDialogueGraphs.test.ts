@@ -24,6 +24,18 @@ const COASTAL_BOAT_ROUTE_COUNTS = {
   petros: 7,
   scrutinon: 4,
 } as const;
+/** The magic-carpet network, whose rides the importer cannot read. */
+const CARPET_ROUTE_COUNTS = {
+  chemar: 7,
+  gewen: 7,
+  iyad: 7,
+  melian: 7,
+  pino: 7,
+  tanyt: 7,
+  uzon: 7,
+  "uzon-back": 1,
+  ziyad: 7,
+} as const;
 const PROMOTION_NPCS = [
   "emperor-kruzak",
   "emperor-rehal",
@@ -158,6 +170,84 @@ describe("loadNpcDialogueGraphs", () => {
     });
   });
 
+  it("gives every carpet pilot a bookable ride behind its route list", () => {
+    const graphs = loadNpcDialogueGraphs(CANARY_COMMIT);
+
+    for (const [typeId, routeCount] of Object.entries(CARPET_ROUTE_COUNTS)) {
+      const graph = graphs.get(typeId);
+      expect(graph, typeId).toBeDefined();
+      if (!graph) continue;
+      expect(graph.travelOffers, typeId).toHaveLength(routeCount);
+
+      // Every listed route has to be bookable: reachable by naming it, priced
+      // by an offer that exists, and confirmable into a travel action.
+      for (const offer of graph.travelOffers) {
+        const branch = graph.nodes.find(
+          (node) => node.offerId === offer.id,
+        );
+        const keyword = branch?.matches[0]?.[0];
+        const label = `${typeId}/${offer.id}`;
+        expect(branch, label).toBeDefined();
+        expect(keyword, label).toBeDefined();
+        if (!branch || !keyword) continue;
+        expect(
+          matchNpcDialogueNode(graph, graph.rootNodeId, keyword)?.id,
+          label,
+        ).toBe(branch.id);
+        expect(
+          matchNpcDialogueNode(graph, branch.id, "yes")?.action,
+          label,
+        ).toEqual({ kind: "travel", offerId: offer.id });
+        expect(
+          matchNpcDialogueNode(graph, branch.id, "no")?.responses.length,
+          label,
+        ).toBeGreaterThan(0);
+      }
+
+      // The pilot's "I can fly you to ..." answer carries the buttons.
+      const prompt = matchNpcDialogueNode(graph, graph.rootNodeId, "fly");
+      expect(prompt?.choices.length, typeId).toBe(routeCount);
+    }
+
+    // Grafting routes on must not shadow the imported flavour. Melian answers
+    // for Zao and Farmine but flies to neither, so a ride that swallowed those
+    // keywords would silently eat the imported lines.
+    const melian = graphs.get("melian");
+    const zao = melian
+      ? matchNpcDialogueNode(melian, melian.rootNodeId, "zao")
+      : undefined;
+
+    expect(zao?.offerId).toBeUndefined();
+    expect(zao?.responses[0]).toBe(
+      "What a strange and bizarre continent. I'm glad my landing place is far away from all the mess I've seen from above.",
+    );
+  });
+
+  it("keeps Uzon's Eclipse ride inside The Inquisition's questline window", () => {
+    const graph = loadNpcDialogueGraphs(CANARY_COMMIT).get("uzon");
+    const eclipse = graph?.travelOffers.find((offer) => offer.id === "eclipse");
+
+    // Canary refuses unless the questline reads 4 or 5. A pair of inclusive
+    // bounds is that disjunction, and both have to survive onto the offer or
+    // an unholy shortcut opens for everyone.
+    expect(eclipse?.conditions).toEqual([
+      {
+        kind: "storage",
+        key: "Quest.U8_2.TheInquisitionQuest.Questline",
+        operator: "gte",
+        value: 4,
+      },
+      {
+        kind: "storage",
+        key: "Quest.U8_2.TheInquisitionQuest.Questline",
+        operator: "lte",
+        value: 5,
+      },
+    ]);
+    expect(eclipse?.cost).toBe(110);
+    expect(eclipse?.destination).toEqual({ x: 32659, y: 31915, z: 0 });
+  });
+
   it("imports the Canary promotion confirmation for all five rulers", () => {
     const graphs = loadNpcDialogueGraphs(CANARY_COMMIT);
 
@@ -212,10 +302,9 @@ describe("loadNpcDialogueGraphs", () => {
       ...(offer.diversion ? [offer.diversion.destination] : []),
     ]);
 
-    // 90 reviewed boat routes, Chemar's 7 reviewed carpet routes, plus the
-    // travel and kick destinations the importer derives from the pinned
-    // sources.
-    expect(offers).toHaveLength(111);
+    // 90 reviewed boat routes, 57 reviewed carpet routes, plus the travel and
+    // kick destinations the importer derives from the pinned sources.
+    expect(offers).toHaveLength(161);
     expect(
       destinations.filter(
         (destination) => !world.findUnoccupiedPosition(destination, 2),

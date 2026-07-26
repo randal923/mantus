@@ -295,26 +295,44 @@ limitations accepted during a session are recorded in the owning feature file
   not covered; extend the sweep's shape to a rare-item watchlist once one
   exists. Owners: Feature 99 (reconciliation jobs), Feature 96 (operator
   surface).
-- **The rest of the magic-carpet travel network still has no routes**
-  (2026-07-26, found while fixing Chemar). `importCanaryNpcs.mjs` cannot read
-  travel keywords registered through a file-local `addTravelKeyword` helper,
-  so it emitted Chemar with 2 nodes and dropped all 8 rides — and recorded
-  `unsupportedKeywordActions: []` for it, so the import ledger claims a clean
-  import. The same holds for every other carpet NPC: `cael`, `gewen`,
-  `guide-behil`, `henricus`, `iyad`, `melian`, `miraia`, `ongulf`, `pino`,
-  `razan`, `tanyt`, `uzon`, `uzon-back`, `ziyad` all load with
-  `travelOffers: []`. Chemar is now a reviewed override in
-  `content/npcs/canary-dialogues.json`; the others are still dead ends.
-  Recommended fix: teach the importer to resolve local travel-keyword helpers
-  (which also closes the silent-drop hole in the report), rather than hand-
-  authoring 14 more overrides. Owner: `todo/todo-12.md` (world actions/NPC
-  parity).
+- **The NPC importer still drops travel keywords silently** (2026-07-26,
+  found while fixing Chemar). `parseCanaryNpcDialogues.mjs` only matches
+  `keywordHandler:addKeyword` calls written at column 0, so the 56 NPCs that
+  register rides through a file-local `addTravelKeyword` helper lose every
+  route — and the import report records `unsupportedKeywordActions: []` for
+  them, so the ledger reads as a clean import. The carpet network (9 pilots)
+  and the boat network are now carried as reviewed route content
+  (`carpetTravelRoutes.ts`, `boatTravelRoutes.ts`), which covers the NPCs the
+  pinned world spawns, but the hole itself is open: a re-import will keep
+  dropping helper-registered keywords without saying so. Recommended fix:
+  teach the parser to inline a local travel-keyword helper (substituting the
+  call site's literal arguments for its parameters) and to report what it
+  still cannot type, so the route content can shrink back toward zero. Owner:
+  `todo/todo-12.md` (world actions/NPC parity).
+- **Uzon's Edron ride no longer advances The Postman Missions** (2026-07-26,
+  with the carpet routes). The pinned `uzon.lua` passes an `action` callback
+  that moves `Quest.U7_24.ThePostmanMissions.Mission01` from 2 to 3 when the
+  player flies to Edron. `DialogueEffect` is an unconditional `set-storage`,
+  so applying it as-is would stomp the mission from any other value; the
+  effect is omitted instead and the ride works without it. Nothing else in
+  the server drives that quest today, so nothing regressed. Recommended fix:
+  give `DialogueEffect` the same optional `conditions` the offers already
+  carry, evaluated in `NpcDialogueExecutor.applyEffects`. Owner: Feature 40
+  (dialogue-graph engine).
+- **`StdModule.kick` with a list of destinations is not imported**
+  (2026-07-26, seen on `tanyt` and `ziyad`). Both register
+  `keywordHandler:addKeyword({ "kick" }, StdModule.kick, { destination = {
+  Position(...), Position(...) } })`, and neither baseline graph has a
+  teleport branch — the importer types a single `Position` but not a table of
+  them. Low impact (the kick is a convenience exit from the carpet landing
+  pad), but it is a dropped branch, not a deliberate omission. Owner:
+  `todo/todo-12.md` (world actions/NPC parity).
 - **A blocked travel branch answers with the generic refusal line**
-  (2026-07-26, with Chemar's Farmine gate). `NpcDialogueExecutor` says "I
-  cannot help you with that right now." for every failed node condition,
-  where Canary's Chemar says "Never heard about a place like this." Shared by
-  all 93 gated baseline nodes, so it is a per-node refusal-message field, not
-  a Chemar fix. Deliberately vague messages are also what keeps a gate from
+  (2026-07-26, with the carpet Farmine/Eclipse gates). `NpcDialogueExecutor`
+  says "I cannot help you with that right now." for every failed node
+  condition, where the carpet pilots say "Never heard about a place like
+  this." Shared by all 93 gated baseline nodes, so it is a per-node
+  refusal-message field, not a per-NPC fix. Deliberately vague messages are also what keeps a gate from
   leaking its storage key (charter rule 6), so any per-node message must stay
   content-authored, never derived from the condition. Owner: Feature 40
   (dialogue-graph engine).
