@@ -16,7 +16,10 @@ type NavigationPanel =
   | "highscores"
   | "wiki"
   | "wheel"
+  | "prey"
+  | "huntingTasks"
   | "outfit"
+  | "profile"
   | "market";
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
@@ -51,7 +54,10 @@ interface TopNavigationBarProps {
   onHighscores?: () => void;
   onWiki?: () => void;
   onWheel?: () => void;
+  onPrey?: () => void;
+  onHuntingTasks?: () => void;
   onOutfits?: () => void;
+  onProfile?: () => void;
   onFightModeChange: (mode: FightMode) => void;
   onBattleList: () => void;
   onMinimap: () => void;
@@ -85,7 +91,10 @@ export function TopNavigationBar({
   onHighscores,
   onWiki,
   onWheel,
+  onPrey,
+  onHuntingTasks,
   onOutfits,
+  onProfile,
   onFightModeChange,
   onBattleList,
   onMinimap,
@@ -387,6 +396,51 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
+          label={t("navigation.prey")}
+          active={activePanel === "prey"}
+          disabled={!onPrey}
+          onClick={onPrey}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="6" cy="9.5" r="1.8" />
+            <circle cx="12" cy="7" r="1.8" />
+            <circle cx="18" cy="9.5" r="1.8" />
+            <path d="M12 12c2.9 0 5.2 2.3 5.2 4.8 0 1.5-1.1 2.7-2.6 2.7-1 0-1.7-.6-2.6-.6s-1.6.6-2.6.6c-1.5 0-2.6-1.2-2.6-2.7 0-2.5 2.3-4.8 5.2-4.8z" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.huntingTasks")}
+          active={activePanel === "huntingTasks"}
+          disabled={!onHuntingTasks}
+          onClick={onHuntingTasks}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9.5 4.5h5V7h-5z" />
+            <path d="M9.5 5.5H6.5v15h11v-15h-3" />
+            <path d="m9 13.5 2 2 4-4.5" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
           label={t("navigation.outfit")}
           active={activePanel === "outfit"}
           disabled={!onOutfits}
@@ -403,6 +457,28 @@ export function TopNavigationBar({
             strokeLinejoin="round"
           >
             <path d="M9 4.5 5 7l1.5 3.5L8 9.5V20h8V9.5l1.5 1L19 7l-4-2.5a3 3 0 0 1-6 0z" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.profile")}
+          active={activePanel === "profile"}
+          disabled={!onProfile}
+          onClick={onProfile}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="9" r="4.5" />
+            <path d="m9.5 12.8-2 7.2 4.5-2.5 4.5 2.5-2-7.2" />
+            <path d="M12 7v2.5l1.5 1" />
           </svg>
         </NavigationIconButton>
 

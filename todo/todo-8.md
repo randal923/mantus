@@ -23,7 +23,14 @@ that performs it.
 - **Transferable coin balances.** Coins are account-scoped; Canary gifting
   needs a transfer op with both legs in one transaction plus an anti-abuse
   policy.
-- **Catalog breadth** — two categories exist; expanding is content.
+- **Catalog breadth** — two categories exist; expanding is content. Owed to
+  Feature 74/75 (shipped 2026-07-26): the Canary prey offers — "Permanent
+  Prey Slot" / "Permanent Hunting Task Slot" (900 coins, unlock slot 2…3 by
+  flipping the slot out of `locked`), "Prey Wildcard" packs (5 for 50 coins,
+  balance cap 50 — call the shipped capped
+  `PreyService.grantWildcards`/`PreyStore.grantWildcards`), and Instant
+  Reward Access. Until these exist the third prey/task slots stay locked and
+  wildcards have no source besides Feature 84's daily rewards.
 - **Load-time catalog gate** — assert every offer's `itemTypeId` exists in
   the pinned catalog and is pickupable (mirror `loadShopCatalogs`; today a
   bad id fails on first purchase, not at boot).

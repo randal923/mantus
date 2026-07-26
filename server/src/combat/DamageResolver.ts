@@ -5,6 +5,7 @@ import type { MonsterEventHooks } from "../creature/MonsterEventHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
+import type { PreyHooks } from "../prey/PreyHooks";
 import { getVocation } from "../progression/getVocation";
 import type { PvpHooks } from "../pvp/PvpHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
@@ -55,6 +56,7 @@ export class DamageResolver {
     private readonly partyHooks?: PartyHooks,
     private readonly pvpHooks?: PvpHooks,
     private readonly monsterEventHooks?: MonsterEventHooks,
+    private readonly preyHooks?: PreyHooks,
   ) {}
 
   applyDamage(
@@ -263,6 +265,29 @@ export class DamageResolver {
     }
     const mitigated = this.mitigate(target, request, amount, now);
     amount = mitigated.amount;
+    // Prey bonuses land right after the block steps (Canary doCombatHealth,
+    // combat.cpp:778-800): the attacker's damage-boost prey, then the
+    // defender's damage-reduction prey, each floor(amount * pct / 100).
+    // Both re-read the live slot state at execution time; condition ticks
+    // and mana drains never carry prey bonuses.
+    if (
+      amount > 0 &&
+      request.type !== "mana-drain" &&
+      request.origin !== "condition" &&
+      this.preyHooks
+    ) {
+      if (source instanceof Player && target instanceof Monster) {
+        const boost = this.preyHooks.damageBoostPercent(source.id, target);
+        if (boost > 0) amount += Math.floor((amount * boost) / 100);
+      }
+      if (source instanceof Monster && target instanceof Player) {
+        const reduction = this.preyHooks.damageReductionPercent(
+          target.id,
+          source,
+        );
+        if (reduction > 0) amount -= Math.floor((amount * reduction) / 100);
+      }
+    }
     // Wheel damage lands after every block step, in Canary's order: the
     // augment multiplier first, then the flat revelation-stage bonus
     // (Game::applyWheelOfDestinyEffectsToDamage, game.cpp:8273-8288 inside

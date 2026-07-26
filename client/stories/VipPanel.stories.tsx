@@ -51,6 +51,7 @@ const meta = {
     onOpenParty: fn(),
     onAdd: fn(),
     onChat: fn(),
+    onViewProfile: fn(),
     onEdit: fn(),
     onRemove: fn(),
     onRequestFriend: fn(),

@@ -141,6 +141,14 @@ import {
   profileStateMessageSchema,
 } from "./profile";
 import {
+  preyActionFailedMessageSchema,
+  preyStateMessageSchema,
+} from "./prey";
+import {
+  taskHuntingActionFailedMessageSchema,
+  taskHuntingStateMessageSchema,
+} from "./huntingTasks";
+import {
   friendStateMessageSchema,
   vipActionFailedMessageSchema,
   vipStateMessageSchema,
@@ -560,6 +568,10 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   characterProfileMessageSchema,
   achievementGrantedMessageSchema,
   profileActionFailedMessageSchema,
+  preyStateMessageSchema,
+  preyActionFailedMessageSchema,
+  taskHuntingStateMessageSchema,
+  taskHuntingActionFailedMessageSchema,
   minimapMarkersMessageSchema,
   outfitStateMessageSchema,
   outfitActionFailedMessageSchema,

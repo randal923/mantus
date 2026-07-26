@@ -40,4 +40,26 @@ describe("resolveHotkey", () => {
   it("ignores auto-repeat from a held key", () => {
     expect(resolveHotkey(press("KeyI", { repeat: true }))).toBeNull();
   });
+
+  it("maps Ctrl+Z to openBugReport", () => {
+    expect(resolveHotkey(press("KeyZ", { ctrlKey: true }))).toBe(
+      "openBugReport",
+    );
+  });
+
+  it("leaves plain Z unbound", () => {
+    expect(resolveHotkey(press("KeyZ"))).toBeNull();
+  });
+
+  it("ignores Ctrl+Z combined with further modifiers", () => {
+    expect(
+      resolveHotkey(press("KeyZ", { ctrlKey: true, shiftKey: true })),
+    ).toBeNull();
+    expect(
+      resolveHotkey(press("KeyZ", { ctrlKey: true, altKey: true })),
+    ).toBeNull();
+    expect(
+      resolveHotkey(press("KeyZ", { ctrlKey: true, metaKey: true })),
+    ).toBeNull();
+  });
 });

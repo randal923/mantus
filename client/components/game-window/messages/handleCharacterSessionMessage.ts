@@ -53,6 +53,25 @@ export function handleCharacterSessionMessage(
     return true;
   }
 
+  if (message.type === "profile-state") {
+    actions.profile.stateReceived(message);
+    return true;
+  }
+
+  // At most once per achievement; the server never re-grants.
+  if (message.type === "achievement-granted") {
+    state.setAchievementToast({
+      name: message.name,
+      points: message.points,
+    });
+    return true;
+  }
+
+  if (message.type === "profile-action-failed") {
+    actions.profile.fail(message.reason);
+    return true;
+  }
+
   if (message.type !== "welcome") return false;
 
   runtime.joinedRef.current = true;
@@ -113,8 +132,17 @@ export function handleCharacterSessionMessage(
   actions.wheel.reset();
   actions.gems.reset();
   state.setWheelOpen(false);
+  actions.prey.reset();
+  state.setPreyWindowOpen(false);
+  actions.huntingTasks.reset();
+  state.setHuntingTasksOpen(false);
   actions.outfit.reset();
   state.setOutfitWindowOpen(false);
+  actions.profile.reset();
+  state.setProfileWindowOpen(false);
+  state.setPublicProfileOpen(false);
+  state.setBugReportOpen(false);
+  state.setAchievementToast(null);
 
   window.setTimeout(
     () => runtime.clientRef.current?.browseHouses(undefined, 0),

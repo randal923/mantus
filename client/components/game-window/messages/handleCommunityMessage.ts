@@ -191,6 +191,12 @@ export function handleCommunityMessage(
     return true;
   }
 
+  // Someone else's public projection; rendered exactly as received.
+  if (message.type === "character-profile") {
+    actions.profile.publicProfileReceived(message);
+    return true;
+  }
+
   if (message.type === "report-received") {
     state.setReportSession((current) =>
       current

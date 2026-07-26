@@ -11,6 +11,8 @@ export interface BestiaryCatalogEntry {
   readonly secondUnlock: number;
   readonly toKill: number;
   readonly locations: string;
+  /** Never offered in the random prey/task grids; wildcard-list only. */
+  readonly preyExclusive: boolean;
   /** Primary monster type for name/outfit/stats/loot display. */
   readonly monsterType: MonsterType;
 }

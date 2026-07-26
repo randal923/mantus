@@ -97,6 +97,10 @@ import { MarkerService } from "./minimap/MarkerService";
 import { OutfitService } from "./outfit/OutfitService";
 import type { OutfitStore } from "./outfit/OutfitStore";
 import type { MarkerStore } from "./minimap/MarkerStore";
+import { PreyService } from "./prey/PreyService";
+import type { PreyStore } from "./prey/PreyStore";
+import { HuntingTaskService } from "./huntingTasks/HuntingTaskService";
+import type { HuntingTaskStore } from "./huntingTasks/HuntingTaskStore";
 import { ProfileService } from "./profile/ProfileService";
 import type { ProfileStore } from "./profile/ProfileStore";
 import { FriendService } from "./social/FriendService";
@@ -133,6 +137,8 @@ export interface GameServerDeps {
   vip?: VipStore;
   friends?: FriendStore;
   profiles?: ProfileStore;
+  prey?: PreyStore;
+  huntingTasks?: HuntingTaskStore;
   markers?: MarkerStore;
   outfits?: OutfitStore;
   highscores?: HighscoreStore;
@@ -191,6 +197,8 @@ export class GameServer {
   private readonly vips: VipService;
   private readonly friends: FriendService;
   private readonly profiles: ProfileService;
+  private readonly prey: PreyService;
+  private readonly huntingTasks: HuntingTaskService;
   private readonly markers: MarkerService;
   private readonly outfits: OutfitService;
   private readonly highscores: HighscoreService;
@@ -348,6 +356,21 @@ export class GameServer {
       this.bestiaryTracker,
       this.items,
     );
+    this.prey = new PreyService(
+      this.world,
+      this.registry,
+      bestiaryCatalog,
+      new WorldActionRng(config.combatSeed ^ 0x51ab_3c7d),
+      deps.prey,
+    );
+    this.huntingTasks = new HuntingTaskService(
+      this.world,
+      this.registry,
+      bestiaryCatalog,
+      new WorldActionRng(config.combatSeed ^ 0x77e1_9b25),
+      (characterId) => this.bestiaryTracker.killsFor(characterId),
+      deps.huntingTasks,
+    );
     this.wheelTracker = new WheelTracker(deps.wheel);
     this.gemTracker = new GemTracker(deps.gems);
     this.wheel = new WheelService(
@@ -412,6 +435,8 @@ export class GameServer {
       this.vips,
       this.friends,
       this.profiles,
+      this.prey,
+      this.huntingTasks,
       this.markers,
       this.outfits,
       this.moderation,
@@ -658,6 +683,7 @@ export class GameServer {
         onMonsterKilled: (damagerIds, monster, killedAt) => {
           this.bestiaryTracker.onMonsterKilled(damagerIds, monster, killedAt);
           this.gemDrops.onMonsterKilled(damagerIds, monster, killedAt);
+          this.huntingTasks.onMonsterKilled(damagerIds, monster, killedAt);
         },
       },
       this.monsterEvents,
@@ -670,6 +696,7 @@ export class GameServer {
       },
       config.progression.staminaSystem,
       config.progression.useStages,
+      this.prey,
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,
@@ -851,6 +878,8 @@ export class GameServer {
       this.vips.applyResolvedOutcomes(now);
       this.friends.applyResolvedOutcomes(now);
       this.profiles.applyResolvedOutcomes(now);
+      this.prey.applyResolvedOutcomes(now);
+      this.huntingTasks.applyResolvedOutcomes(now);
       this.markers.applyResolvedOutcomes();
       this.outfits.applyResolvedOutcomes();
       this.profiles.tick(now);
@@ -941,6 +970,8 @@ export class GameServer {
       this.vips.detach(session);
       this.friends.detach(session);
       this.profiles.detach(session);
+      this.prey.detach(session);
+      this.huntingTasks.detach(session);
       this.markers.detach(session);
       this.outfits.detach(session);
       this.highscores.detach(session);
@@ -992,6 +1023,8 @@ export class GameServer {
     this.vips.detachCharacter(playerId);
     this.friends.detachCharacter(playerId);
     this.profiles.detachCharacter(playerId);
+    this.prey.detachCharacter(playerId);
+    this.huntingTasks.detachCharacter(playerId);
     this.outfits.detachCharacter(playerId);
     this.moderation.detachCharacter(playerId);
     this.pvp.detachCharacter(playerId);
@@ -1269,6 +1302,12 @@ export class GameServer {
       case "bug-report":
         this.profiles.handle(session, intent, now);
         return;
+      case "prey-action":
+        this.prey.handle(session, intent, now);
+        return;
+      case "hunting-task-action":
+        this.huntingTasks.handle(session, intent, now);
+        return;
       case "walk-to":
         this.movement.handleWalkTo(session, intent, now);
         return;
@@ -1367,6 +1406,10 @@ export class GameServer {
     this.friends.applyResolvedOutcomes(monotonicNow());
     await this.profiles.stop();
     this.profiles.applyResolvedOutcomes(monotonicNow());
+    await this.prey.stop();
+    this.prey.applyResolvedOutcomes(monotonicNow());
+    await this.huntingTasks.stop();
+    this.huntingTasks.applyResolvedOutcomes(monotonicNow());
     await this.markers.stop();
     this.markers.applyResolvedOutcomes();
     await this.outfits.stop();

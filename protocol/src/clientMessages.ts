@@ -112,6 +112,8 @@ import {
   characterProfileGetMessageSchema,
   profileSelectTitleMessageSchema,
 } from "./profile";
+import { preyActionMessageSchema } from "./prey";
+import { taskHuntingActionMessageSchema } from "./huntingTasks";
 import {
   npcDialogueChoiceMessageSchema,
   npcDialogueGreetMessageSchema,
@@ -728,6 +730,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   characterProfileGetMessageSchema,
   profileSelectTitleMessageSchema,
   bugReportMessageSchema,
+  preyActionMessageSchema,
+  taskHuntingActionMessageSchema,
   walkToMessageSchema,
   minimapMarkerSetMessageSchema,
   minimapMarkerDeleteMessageSchema,

@@ -31,6 +31,9 @@ export function GameWindowHotkeyController() {
   const setHouseModalOpen = useGameWindowStore(
     (state) => state.setHouseModalOpen,
   );
+  const setBugReportOpen = useGameWindowStore(
+    (state) => state.setBugReportOpen,
+  );
   const setGameMenuOpen = useGameWindowStore(
     (state) => state.setGameMenuOpen,
   );
@@ -72,6 +75,11 @@ export function GameWindowHotkeyController() {
         }
         return !open;
       });
+      return;
+    }
+    if (action === "openBugReport") {
+      if (gameMenuOpen) return;
+      setBugReportOpen(true);
       return;
     }
     if (action === "toggleCharacterStats") {

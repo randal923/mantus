@@ -82,6 +82,27 @@ export function handleProgressionCatalogMessage(
     return true;
   }
 
+  // Pushed at login and after every prey/task mutation; never requested.
+  if (message.type === "prey-state") {
+    actions.prey.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "prey-action-failed") {
+    actions.prey.fail(message.reason);
+    return true;
+  }
+
+  if (message.type === "hunting-tasks-state") {
+    actions.huntingTasks.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "hunting-task-action-failed") {
+    actions.huntingTasks.fail(message.reason);
+    return true;
+  }
+
   if (message.type === "bestiary-action-failed") {
     actions.bestiary.fail(message.reason);
     actions.bosstiary.fail(message.reason);

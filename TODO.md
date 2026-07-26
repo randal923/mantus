@@ -29,6 +29,40 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Ten pre-existing Postgres integration failures at HEAD** (discovered
+  2026-07-26 while landing Features 74/75; verified present with the new
+  migration removed, so unrelated to it). Six in
+  `PgChestStore.integration.test.ts` — chest grants report `committed` but
+  the granted gold never lands in the carried inventory (`goldCarried()`
+  stays 0); owner: the chest work in todo-2/Feature 84's reward path. Three
+  in `PgGuildStore.integration.test.ts` — `bank_ledger_amount_check`
+  violations from `appendBankLedger` (recorded on Feature 58, todo-9). One
+  in `PgSocialStores.integration.test.ts` — the staff-highscore test inserts
+  a non-DEFAULT value into the generated `is_staff` column (fixture broken
+  since the roles migration; owner: Feature 96, todo-12). Everything else in
+  `test:integration` passes.
+- **Prey/hunting-task gold is bank-only, not carried-coins-first**
+  (2026-07-26, Features 74/75). Canary's `removeMoney(..., useBalance=true)`
+  spends inventory coins before the bank; mantus charges list
+  rerolls/cancels from the bank balance alone, matching the shipped
+  gem-atelier pattern (whose identical deviation is recorded under Feature
+  81). Retire together with Feature 81's payment-leg unification.
+- **Prey hunting time drains whenever prey is enabled, not only under
+  `STAMINA_SYSTEM`** (2026-07-26, Feature 74). Canary couples the 60/120 s
+  exp-gain drain to the stamina helper (data/events/scripts/player.lua),
+  so with stamina off prey never expires there; mantus drains on every
+  kill-experience gain regardless of `progression.staminaSystem`, keeping
+  the 2 h hunting-time semantics on stamina-less worlds. Deliberate.
+- **Prey option renewals charge optimistically** (2026-07-26, Feature 74).
+  An auto-reroll/lock expiry renews the bonus in-tick from the in-memory
+  wildcard balance and settles the durable debit asynchronously; if the DB
+  debit reports insufficient funds the service erases the bonus and
+  restores the balance next tick. The drift window is one in-flight write;
+  intent-driven spends stay fully transactional.
+- **No chat-line notices for prey/task events** (2026-07-26, Features
+  74/75). Canary sends flavor text ("Your prey bonus has expired.", claim
+  congratulations); mantus pushes the full state message instead and the
+  client windows render the change. Add strings if playtesting misses them.
 - **Shop carry capacity is re-checked only in the tick precheck, not inside the
   transaction** (2026-07-25, Feature 46). `ShopPrechecks` compares projected
   weight against `capacityMax` in the tick immediately before the transaction

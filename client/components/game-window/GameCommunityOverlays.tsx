@@ -48,6 +48,9 @@ export function GameCommunityOverlays() {
   const setPartyPanelVisible = useGameWindowStore(
     (state) => state.setPartyPanelVisible,
   );
+  const setPublicProfileOpen = useGameWindowStore(
+    (state) => state.setPublicProfileOpen,
+  );
   if (
     !ownPlayerId ||
     !guildSession ||
@@ -208,6 +211,14 @@ export function GameCommunityOverlays() {
               dispatchChat({ type: "open-private", counterpart: name });
               requestChatFocus();
               setVipPanelVisible(false);
+            }}
+            onViewProfile={(name) => {
+              sessionActions.profile.clearPublicProfile();
+              const sent =
+                runtime.clientRef.current?.getCharacterProfile(name) ??
+                false;
+              sessionActions.profile.begin(sent);
+              setPublicProfileOpen(true);
             }}
             onEdit={(targetCharacterId, edits) =>
               runtime.clientRef.current?.editVip(targetCharacterId, edits)

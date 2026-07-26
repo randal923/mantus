@@ -236,7 +236,10 @@
     "bestiary": "Bestiário",
     "bosstiary": "Bosstiário",
     "wheel": "Roda",
-    "outfit": "Visuais"
+    "outfit": "Visuais",
+    "profile": "Perfil",
+    "prey": "Presas",
+    "huntingTasks": "Tarefas de Caça"
   },
   "currency": {
     "wallet": "Carteira de moedas",
@@ -1012,7 +1015,8 @@
     "stopAttack": "Parar ataque",
     "follow": "Seguir",
     "stopFollow": "Parar de seguir",
-    "setOutfit": "Mudar visual"
+    "setOutfit": "Mudar visual",
+    "viewProfile": "Ver perfil"
   },
   "potions": {
     "bar": "Barra de poções",
@@ -1242,6 +1246,7 @@
     "character-load-failed": "Não foi possível entrar no mundo com esse personagem. Tente novamente.",
     "character-name-invalid": "Use de 3 a 20 letras com espaços simples e evite nomes reservados da equipe.",
     "character-name-taken": "Já existe um personagem com esse nome.",
+    "character-namelocked": "Este personagem teve o nome bloqueado. O nome precisa ser alterado antes de entrar no mundo.",
     "character-not-found": "Esse personagem não pertence a esta conta.",
     "character-operation-pending": "Aguarde a conclusão da solicitação de personagem atual.",
     "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
@@ -1303,6 +1308,7 @@
     "online": "Online",
     "offline": "Offline",
     "chat": "Conversar com {{name}}",
+    "viewProfile": "Ver perfil de {{name}}",
     "edit": "Editar {{name}}",
     "remove": "Remover {{name}}",
     "description": "Notas",
@@ -1357,6 +1363,60 @@
       "rate-limited": "Aguarde um momento.",
       "invalid-request": "Essa página não está disponível.",
       "unavailable": "Os recordes estão indisponíveis no momento."
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "publicTitle": "Perfil do Personagem",
+    "tabsLabel": "Seções do perfil",
+    "tabs": {
+      "achievements": "Conquistas",
+      "titles": "Títulos",
+      "badges": "Insígnias"
+    },
+    "levelVocation": "Nível {{level}} • {{vocation}}",
+    "guild": "Guilda: {{guild}}",
+    "currentTitle": "Título: {{title}}",
+    "pointsLabel": "Pontos de conquista",
+    "points": "{{points}} pts",
+    "progress": "{{granted}} / {{total}} desbloqueadas",
+    "hiddenCount": "Conquistas secretas ainda ocultas: {{count}}",
+    "loading": "Carregando perfil…",
+    "achievementsLabel": "Conquistas",
+    "noAchievements": "Nenhuma conquista para mostrar.",
+    "granted": "Desbloqueada",
+    "notGranted": "Bloqueada",
+    "secretName": "???",
+    "secretDescription": "Esta conquista secreta se revela ao ser desbloqueada.",
+    "titlePicker": {
+      "label": "Título exibido",
+      "none": "Sem título",
+      "locked": "Bloqueado"
+    },
+    "badgesLabel": "Insígnias",
+    "noBadges": "Nenhuma insígnia conquistada ainda.",
+    "achievementToast": "Conquista desbloqueada: {{name}} (+{{points}} pontos)",
+    "bugReport": {
+      "title": "Reportar um Bug",
+      "category": "Categoria",
+      "categories": {
+        "bug": "Bug",
+        "typo": "Erro de texto",
+        "map": "Problema no mapa",
+        "other": "Outro"
+      },
+      "message": "Descrição",
+      "counter": "{{used}}/{{max}}",
+      "hint": "A posição do seu personagem é anexada automaticamente. Um reporte por minuto.",
+      "submit": "Enviar reporte",
+      "cancel": "Cancelar",
+      "sent": "Obrigado, seu reporte foi registrado."
+    },
+    "errors": {
+      "not-found": "Não existe personagem com esse nome.",
+      "not-granted": "Você ainda não conquistou esse título.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente.",
+      "invalid-request": "Essa ação de perfil não é possível."
     }
   },
   "report": {
@@ -1705,6 +1765,141 @@
       "not-owned": "Você não possui esse visual ou montaria.",
       "rate-limited": "Aguarde um momento antes de mudar novamente.",
       "invalid-request": "Essa seleção não é possível."
+    }
+  },
+  "prey": {
+    "title": "Presas",
+    "loading": "Carregando dados de presas…",
+    "wildcardsLabel": "Cartas-Curinga",
+    "listRerollPriceLabel": "Nova lista",
+    "slotLabel": "Vaga de presa {{slot}}",
+    "states": {
+      "locked": "Bloqueada",
+      "inactive": "Inativa",
+      "selection": "Escolha um monstro",
+      "selection-change-monster": "Escolha um novo monstro",
+      "list-selection": "Lista completa",
+      "active": "Caçando"
+    },
+    "unlock": {
+      "premium": "Desbloqueia com uma conta Premium.",
+      "store": "Esta vaga pode ser desbloqueada na Loja."
+    },
+    "emptyGrid": "Nenhum monstro disponível para esta vaga no momento.",
+    "selectMonster": "Selecionar {{name}}",
+    "currentBonus": "Bônus atual",
+    "bonus": {
+      "damage": "Bônus de Dano",
+      "defense": "Redução de Dano",
+      "experience": "Bônus de Experiência",
+      "loot": "Saque Aprimorado"
+    },
+    "bonusValue": "+{{percentage}}%",
+    "stars": "Raridade {{value}} de {{max}}",
+    "timeLeft": "Tempo restante: {{time}}",
+    "optionLabel": "Quando o tempo acabar",
+    "options": {
+      "none": "Não fazer nada",
+      "auto-reroll": "Sortear automaticamente",
+      "lock": "Travar presa"
+    },
+    "bonusReroll": "Sortear novo bônus",
+    "listReroll": "Nova lista",
+    "wildcardList": "Escolher entre todos",
+    "freeRerollIn": "Nova lista grátis em {{time}}",
+    "listSelectionHint": "Escolha qualquer monstro na lista completa abaixo.",
+    "cost": {
+      "free": "grátis",
+      "gold": "{{gold}} de ouro",
+      "wildcards_one": "{{count}} Carta-Curinga",
+      "wildcards_other": "{{count}} Cartas-Curinga",
+      "wildcardsPerExpiry_one": "{{count}} Carta-Curinga por expiração",
+      "wildcardsPerExpiry_other": "{{count}} Cartas-Curinga por expiração"
+    },
+    "fullList": {
+      "title": "Lista completa de monstros",
+      "slot": "Escolhendo para a vaga {{slot}}",
+      "searchLabel": "Buscar monstros",
+      "searchPlaceholder": "Digite o nome do monstro…",
+      "empty": "Nenhum monstro corresponde à busca.",
+      "select": "Selecionar"
+    },
+    "errors": {
+      "slot-locked": "Essa vaga de presa está bloqueada.",
+      "not-selectable": "Esse monstro não pode ser selecionado agora.",
+      "already-active": "Esta vaga já tem uma presa ativa.",
+      "duplicate-race": "Outra vaga já caça esse monstro.",
+      "insufficient-gold": "Você não tem ouro suficiente.",
+      "insufficient-wildcards": "Você não tem Cartas-Curinga suficientes.",
+      "invalid-request": "Essa ação de presa não é possível.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente."
+    }
+  },
+  "huntingTasks": {
+    "title": "Tarefas de Caça",
+    "loading": "Carregando tarefas de caça…",
+    "pointsLabel": "Pontos de Tarefa de Caça",
+    "rerollPriceLabel": "Sortear ou cancelar",
+    "slotLabel": "Vaga de tarefa {{slot}}",
+    "states": {
+      "locked": "Bloqueada",
+      "inactive": "Descansando",
+      "selection": "Escolha uma tarefa",
+      "list-selection": "Lista completa",
+      "active": "Em andamento",
+      "completed": "Concluída"
+    },
+    "unlock": {
+      "premium": "Desbloqueia com uma conta Premium.",
+      "store": "Esta vaga pode ser desbloqueada na Loja."
+    },
+    "exhaustedFor": "Disponível novamente em {{time}}",
+    "emptyGrid": "Nenhuma tarefa disponível para esta vaga no momento.",
+    "rarity": "Raridade da recompensa {{value}} de {{max}}",
+    "stars": "Dificuldade {{value}} de {{max}} estrelas",
+    "difficulty": {
+      "easy": "Fácil",
+      "medium": "Média",
+      "hard": "Difícil"
+    },
+    "tier": "{{kills}} abates · {{points}} pts",
+    "tierFirst": "Meta padrão",
+    "tierSecond": "Meta ampliada",
+    "upgradeLocked": "Complete o registro deste monstro no bestiário para liberar a meta ampliada.",
+    "selectTask": "Caçar {{name}}",
+    "progress": "{{kills}} / {{goal}} abates",
+    "rewardPoints": "Recompensa: {{points}} pontos",
+    "starReroll": "Sortear estrelas",
+    "cancel": "Cancelar tarefa",
+    "claim": "Resgatar {{points}} pontos",
+    "listReroll": "Nova lista",
+    "wildcardList": "Escolher entre todos",
+    "freeRerollIn": "Nova lista grátis em {{time}}",
+    "listSelectionHint": "Escolha qualquer monstro na lista completa abaixo.",
+    "cost": {
+      "free": "grátis",
+      "gold": "{{gold}} de ouro",
+      "wildcards_one": "{{count}} Carta-Curinga",
+      "wildcards_other": "{{count}} Cartas-Curinga"
+    },
+    "fullList": {
+      "title": "Lista completa de monstros",
+      "slot": "Escolhendo para a vaga {{slot}}",
+      "searchLabel": "Buscar monstros",
+      "searchPlaceholder": "Digite o nome do monstro…",
+      "empty": "Nenhum monstro corresponde à busca."
+    },
+    "errors": {
+      "slot-locked": "Essa vaga de tarefa está bloqueada.",
+      "exhausted": "Esta vaga ainda está descansando após uma tarefa resgatada.",
+      "not-selectable": "Essa tarefa não pode ser selecionada agora.",
+      "already-active": "Esta vaga já tem uma tarefa ativa.",
+      "duplicate-race": "Outra vaga já acompanha esse monstro.",
+      "insufficient-gold": "Você não tem ouro suficiente.",
+      "insufficient-wildcards": "Você não tem Cartas-Curinga suficientes.",
+      "goal-not-met": "Você ainda não atingiu a meta de abates.",
+      "invalid-request": "Essa ação de tarefa não é possível.",
+      "rate-limited": "Aguarde um momento antes de tentar novamente."
     }
   }
 }

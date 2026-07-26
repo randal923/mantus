@@ -17,6 +17,7 @@ interface VipPanelProps {
   onOpenParty: () => void;
   onAdd: (name: string) => void;
   onChat: (name: string) => void;
+  onViewProfile: (name: string) => void;
   onEdit: (
     targetCharacterId: string,
     edits: { description?: string; icon?: number; notifyLogin?: boolean },
@@ -42,6 +43,7 @@ export function VipPanel({
   onOpenParty,
   onAdd,
   onChat,
+  onViewProfile,
   onEdit,
   onRemove,
   onRequestFriend,
@@ -165,6 +167,7 @@ export function VipPanel({
               key={entry.characterId}
               entry={entry}
               onChat={onChat}
+              onViewProfile={onViewProfile}
               onEdit={onEdit}
               onRemove={onRemove}
             />

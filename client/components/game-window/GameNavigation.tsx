@@ -30,8 +30,15 @@ export function GameNavigation() {
   const highscoresOpen = useGameWindowStore((state) => state.highscoresOpen);
   const wikiOpen = useGameWindowStore((state) => state.wikiOpen);
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
+  const preyWindowOpen = useGameWindowStore((state) => state.preyWindowOpen);
+  const huntingTasksOpen = useGameWindowStore(
+    (state) => state.huntingTasksOpen,
+  );
   const outfitWindowOpen = useGameWindowStore(
     (state) => state.outfitWindowOpen,
+  );
+  const profileWindowOpen = useGameWindowStore(
+    (state) => state.profileWindowOpen,
   );
   const vipPanelVisible = useGameWindowStore(
     (state) => state.vipPanelVisible,
@@ -73,8 +80,17 @@ export function GameNavigation() {
   );
   const setWikiOpen = useGameWindowStore((state) => state.setWikiOpen);
   const setWheelOpen = useGameWindowStore((state) => state.setWheelOpen);
+  const setPreyWindowOpen = useGameWindowStore(
+    (state) => state.setPreyWindowOpen,
+  );
+  const setHuntingTasksOpen = useGameWindowStore(
+    (state) => state.setHuntingTasksOpen,
+  );
   const setOutfitWindowOpen = useGameWindowStore(
     (state) => state.setOutfitWindowOpen,
+  );
+  const setProfileWindowOpen = useGameWindowStore(
+    (state) => state.setProfileWindowOpen,
   );
   const setVipPanelVisible = useGameWindowStore(
     (state) => state.setVipPanelVisible,
@@ -104,13 +120,19 @@ export function GameNavigation() {
             ? "wiki"
             : wheelOpen
               ? "wheel"
-              : outfitWindowOpen
-                ? "outfit"
-                : characterStatsOpen
-                  ? "character"
-                  : inventoryOpen
-                    ? "inventory"
-                    : undefined;
+              : preyWindowOpen
+                ? "prey"
+                : huntingTasksOpen
+                  ? "huntingTasks"
+                  : outfitWindowOpen
+                    ? "outfit"
+                    : profileWindowOpen
+                      ? "profile"
+                      : characterStatsOpen
+                        ? "character"
+                        : inventoryOpen
+                          ? "inventory"
+                          : undefined;
 
   return (
     <div className="absolute inset-x-0 top-0 z-40">
@@ -234,6 +256,22 @@ export function GameNavigation() {
             return !open;
           });
         }}
+        onPrey={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          setHuntingTasksOpen(false);
+          // No fetch: prey-state is pushed at login and after every change.
+          setPreyWindowOpen((open) => !open);
+        }}
+        onHuntingTasks={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          setPreyWindowOpen(false);
+          // No fetch: hunting-tasks-state is pushed like prey-state.
+          setHuntingTasksOpen((open) => !open);
+        }}
         onOutfits={() => {
           setGameMenuOpen(false);
           setInventoryOpen(false);
@@ -246,6 +284,13 @@ export function GameNavigation() {
             }
             return !open;
           });
+        }}
+        onProfile={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          // No fetch: profile-state is pushed at login and after changes.
+          setProfileWindowOpen((open) => !open);
         }}
         onBattleList={() => setBattleListVisible((visible) => !visible)}
         onMinimap={() => setMinimapVisible((visible) => !visible)}

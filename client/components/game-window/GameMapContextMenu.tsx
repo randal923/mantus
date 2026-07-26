@@ -23,6 +23,7 @@ export function GameMapContextMenu() {
     runtime,
     sessionActions,
     setOutfitWindowOpen,
+    setPublicProfileOpen,
   } = store.getState();
   const client = runtime.clientRef.current;
   const creature = menu.creatureId
@@ -67,6 +68,23 @@ export function GameMapContextMenu() {
         onSelect: () => client?.followCreature(attackableId),
       });
     }
+  }
+  if (
+    creature &&
+    creature.kind === "player" &&
+    creature.id !== ownCharacter?.id
+  ) {
+    items.push({
+      id: "view-profile",
+      label: t("contextMenu.viewProfile"),
+      onSelect: () => {
+        sessionActions?.profile.clearPublicProfile();
+        const sent =
+          client?.getCharacterProfile(creature.name) ?? false;
+        sessionActions?.profile.begin(sent);
+        setPublicProfileOpen(true);
+      },
+    });
   }
   if (creature && creature.id === ownCharacter?.id) {
     items.push({

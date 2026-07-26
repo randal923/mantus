@@ -1,11 +1,13 @@
 # Todo 9 — Characters, social, and houses
 
-**Features 2, 57, 58, 59, 62†, 65, 67, 109.** Almost everything here shipped:
+**Features 2, 57, 58, 59, 62†, 65, 109.** Almost everything here shipped:
 parties with analyzer/finder/invite-shields, guilds with wars/emblems/bank,
 the pinned PVP policy with pvp-zone tiles and the combat-logout linger
 window, houses with auctions/access-lists/guildhalls/polish, VIP/friends
-with requests and groups, moderation hardening, and the profile projection
-stack (see [done.md](done.md)). † = client-only remainder.
+with requests and groups, moderation hardening, and the complete profile
+stack — projections, the full imported achievement catalog, and the whole
+client surface (Feature 67, closed 2026-07-26; see [done.md](done.md)).
+† = client-only remainder.
 
 ## Feature 2 — Character rename/delete flows with authorization tests
 
@@ -44,8 +46,12 @@ Balances, deposit/withdraw intents, points/level projection shipped.
 - **Per-rank withdrawal permission** — withdrawal is leader-only; Canary
   gates on a rank capability, which needs a permission model on
   `guild_ranks`.
-- **Run the four durable integration cases** against Postgres
-  (`yarn workspace server test:integration` — they are written but unrun).
+- **Fix and re-run the durable integration cases** — first executed
+  2026-07-26: three fail with `bank_ledger_amount_check` violations from
+  `appendBankLedger` (`PgGuildStore.ts:827`) in the deposit/withdraw
+  conservation, racing-withdrawal, and war-stake-escrow tests — the guild
+  flows write ledger amounts the 012 constraint rejects (sign convention);
+  fix the amounts or the rows, then keep the suite green.
 - Client deposit/withdraw controls →
   [client backlog](client/feature-58-guild-bank-ui.md).
 
@@ -94,21 +100,6 @@ Reciprocal requests, groups, typing hints, and presence shipped.
 - VIP-group management UI →
   [client backlog](client/feature-65-vip-groups-and-typing.md).
 - Durable ignore lists → Feature 35 (todo-7) owns them.
-
-## Feature 67 — Profile projections (remainder)
-
-Achievements/titles/badges grant tables, namelock enforcement, character
-info, and bug reports shipped server-side.
-
-**Remaining work**
-
-- **Import Canary's full achievement catalog** — today's pinned set covers
-  only the grant hooks that exist.
-- Namelock rename flow → Feature 2 (above). Livestream/casting: excluded by
-  product decision (recorded in Feature 86, todo-10). Cyclopedia display of
-  these projections → Feature 83 (todo-10).
-- The whole client surface →
-  [client backlog](client/feature-67-profile-ui.md).
 
 ## Feature 109 — House spell words (guest/subowner/door lists and kick)
 

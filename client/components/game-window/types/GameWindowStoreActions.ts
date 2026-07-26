@@ -15,6 +15,7 @@ import type {
   UiSettings,
 } from "@tibia/protocol";
 import type { ChatAction } from "../../../lib/chat/chatReducer";
+import type { AchievementToast } from "./AchievementToast";
 import type { BankSessionState } from "./BankSessionState";
 import type { GameWindowSessionActions } from "./GameWindowSessionActions";
 import type { GameWindowSessions } from "./GameWindowSessions";
@@ -99,7 +100,15 @@ export interface GameWindowStoreActions {
   setHighscoresOpen: (value: SetStateAction<boolean>) => void;
   setWikiOpen: (value: SetStateAction<boolean>) => void;
   setWheelOpen: (value: SetStateAction<boolean>) => void;
+  setPreyWindowOpen: (value: SetStateAction<boolean>) => void;
+  setHuntingTasksOpen: (value: SetStateAction<boolean>) => void;
   setOutfitWindowOpen: (value: SetStateAction<boolean>) => void;
+  setProfileWindowOpen: (value: SetStateAction<boolean>) => void;
+  setPublicProfileOpen: (value: SetStateAction<boolean>) => void;
+  setBugReportOpen: (value: SetStateAction<boolean>) => void;
+  setAchievementToast: (
+    value: SetStateAction<AchievementToast | null>,
+  ) => void;
   setReportSession: (value: SetStateAction<ReportSessionState | null>) => void;
   setHouseToast: (value: SetStateAction<HouseToast | null>) => void;
   setTradeToast: (value: SetStateAction<TradeClosedReason | null>) => void;

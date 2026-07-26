@@ -63,6 +63,7 @@ export function loadBestiaryCatalog(
         typeof entry.locations === "string"
           ? entry.locations.slice(0, BESTIARY_LIMITS.maxLocationsLength)
           : "",
+      preyExclusive: entry.preyExclusive === true,
       monsterType,
     });
     registerMonsterIds(entry, monsterTypes, raceId, raceIdByMonsterTypeId);

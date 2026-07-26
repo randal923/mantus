@@ -79,6 +79,9 @@ export function parseCanaryBestiary(luaSource, sourcePath) {
         secondUnlock,
         toKill,
         locations: locations ?? "",
+        // Prey pool flag (Feature 74): exclusives never appear in the random
+        // prey/task grids but stay selectable from the wildcard full list.
+        preyExclusive: /isPreyExclusive\s*=\s*true/.test(luaSource),
       };
     }
   }

@@ -102,7 +102,13 @@ export function createGameWindowStore({
     highscoresOpen: false,
     wikiOpen: false,
     wheelOpen: false,
+    preyWindowOpen: false,
+    huntingTasksOpen: false,
     outfitWindowOpen: false,
+    profileWindowOpen: false,
+    publicProfileOpen: false,
+    bugReportOpen: false,
+    achievementToast: null,
     reportSession: null,
     houseToast: null,
     tradeToast: null,
@@ -299,9 +305,39 @@ export function createGameWindowStore({
       set((state) => ({
         wheelOpen: resolveStateAction(value, state.wheelOpen),
       })),
+    setPreyWindowOpen: (value) =>
+      set((state) => ({
+        preyWindowOpen: resolveStateAction(value, state.preyWindowOpen),
+      })),
+    setHuntingTasksOpen: (value) =>
+      set((state) => ({
+        huntingTasksOpen: resolveStateAction(value, state.huntingTasksOpen),
+      })),
     setOutfitWindowOpen: (value) =>
       set((state) => ({
         outfitWindowOpen: resolveStateAction(value, state.outfitWindowOpen),
+      })),
+    setProfileWindowOpen: (value) =>
+      set((state) => ({
+        profileWindowOpen: resolveStateAction(
+          value,
+          state.profileWindowOpen,
+        ),
+      })),
+    setPublicProfileOpen: (value) =>
+      set((state) => ({
+        publicProfileOpen: resolveStateAction(
+          value,
+          state.publicProfileOpen,
+        ),
+      })),
+    setBugReportOpen: (value) =>
+      set((state) => ({
+        bugReportOpen: resolveStateAction(value, state.bugReportOpen),
+      })),
+    setAchievementToast: (value) =>
+      set((state) => ({
+        achievementToast: resolveStateAction(value, state.achievementToast),
       })),
     setReportSession: (value) =>
       set((state) => ({
@@ -418,6 +454,8 @@ export function createGameWindowStore({
       actions.bosstiary.reset();
       actions.wheel.reset();
       actions.gems.reset();
+      actions.prey.reset();
+      actions.huntingTasks.reset();
       runtime.actionBarRef.current = createDefaultActionBar();
       runtime.actionBotSettingsRef.current = {
         ...DEFAULT_ACTION_BOT_SETTINGS,
@@ -454,7 +492,13 @@ export function createGameWindowStore({
         highscoresOpen: false,
         wikiOpen: false,
         wheelOpen: false,
+        preyWindowOpen: false,
+        huntingTasksOpen: false,
         outfitWindowOpen: false,
+        profileWindowOpen: false,
+        publicProfileOpen: false,
+        bugReportOpen: false,
+        achievementToast: null,
         reportSession: null,
         mailboxSession: null,
         visibleCreatures: [],

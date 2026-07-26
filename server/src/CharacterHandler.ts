@@ -35,6 +35,8 @@ import type { PvpTracker } from "./pvp/PvpTracker";
 import type { PvpKillRecord } from "./pvp/PvpStore";
 import type { MarkerService } from "./minimap/MarkerService";
 import type { OutfitService } from "./outfit/OutfitService";
+import type { PreyService } from "./prey/PreyService";
+import type { HuntingTaskService } from "./huntingTasks/HuntingTaskService";
 import type { ProfileService } from "./profile/ProfileService";
 import type { FriendService } from "./social/FriendService";
 import type { VipService } from "./social/VipService";
@@ -61,6 +63,8 @@ export class CharacterHandler {
     private readonly vips: VipService,
     private readonly friends: FriendService,
     private readonly profiles: ProfileService,
+    private readonly prey: PreyService,
+    private readonly huntingTasks: HuntingTaskService,
     private readonly markers: MarkerService,
     private readonly outfits: OutfitService,
     private readonly moderation: ModerationService,
@@ -379,6 +383,8 @@ export class CharacterHandler {
     this.vips.attachCharacter(session, player.id);
     this.friends.attachCharacter(session, player.id);
     this.profiles.attachCharacter(session, player.id);
+    this.prey.attachCharacter(session, player.id);
+    this.huntingTasks.attachCharacter(session, player.id);
     this.markers.attachCharacter(session, player.id);
     this.outfits.attachCharacter(session, player.id);
     this.moderation.attachCharacter(player.id);

@@ -106,6 +106,7 @@ function makeCatalog(): BestiaryCatalog {
     secondUnlock: 100,
     toKill: 250,
     locations: "Sewers near towns.",
+    preyExclusive: false,
     monsterType: ratType,
   };
   const butterflyEntry = {

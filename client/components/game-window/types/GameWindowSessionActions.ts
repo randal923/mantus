@@ -5,10 +5,13 @@ import type { GemSession } from "../../../hooks/useGemSession";
 import type { GuildSession } from "../../../hooks/useGuildSession";
 import type { HighscoresSession } from "../../../hooks/useHighscoresSession";
 import type { HouseSession } from "../../../hooks/useHouseSession";
+import type { HuntingTasksSession } from "../../../hooks/useHuntingTasksSession";
 import type { MarketSession } from "../../../hooks/useMarketSession";
 import type { OptimisticInventory } from "../../../hooks/useOptimisticInventory";
 import type { OutfitSession } from "../../../hooks/useOutfitSession";
 import type { PartySession } from "../../../hooks/usePartySession";
+import type { PreySession } from "../../../hooks/usePreySession";
+import type { ProfileSession } from "../../../hooks/useProfileSession";
 import type { TradeSession } from "../../../hooks/useTradeSession";
 import type { VipSession } from "../../../hooks/useVipSession";
 import type { WheelSession } from "../../../hooks/useWheelSession";
@@ -29,5 +32,8 @@ export interface GameWindowSessionActions {
   wheel: Omit<WheelSession, "state">;
   gems: Omit<GemSession, "state">;
   outfit: Omit<OutfitSession, "state">;
+  profile: Omit<ProfileSession, "state">;
+  prey: Omit<PreySession, "state">;
+  huntingTasks: Omit<HuntingTasksSession, "state">;
   dispatchItemOpChecked: (op: PendingItemOp) => boolean;
 }

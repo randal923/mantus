@@ -3,12 +3,12 @@ import { characterVocationSchema } from "./character";
 import { PROTOCOL_LIMITS } from "./limits";
 
 export const PROFILE_LIMITS = {
-  maxAchievements: 500,
+  maxAchievements: 600,
   maxTitles: 200,
   maxBadges: 100,
   maxIdLength: 64,
   maxNameLength: 64,
-  maxDescriptionLength: 160,
+  maxDescriptionLength: 256,
   /** One profile lookup per second per session. */
   lookupCooldownMs: 1_000,
   /** Bug reports mirror the player-report limiter. */
@@ -53,8 +53,10 @@ export const achievementEntrySchema = z
     achievementId: idSchema,
     name: nameSchema,
     description: z.string().max(PROFILE_LIMITS.maxDescriptionLength),
-    grade: z.number().int().min(1).max(3),
+    grade: z.number().int().min(1).max(4),
     points: z.number().int().min(0).max(100),
+    /** Canary secret achievements; ungranted ones render hidden client-side. */
+    secret: z.boolean(),
     granted: z.boolean(),
   })
   .strict();

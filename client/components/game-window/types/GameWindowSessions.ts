@@ -5,10 +5,13 @@ import type { GemSessionState } from "../../../hooks/useGemSession";
 import type { GuildSessionState } from "../../../hooks/useGuildSession";
 import type { HighscoresSessionState } from "../../../hooks/useHighscoresSession";
 import type { HouseSessionState } from "../../../hooks/useHouseSession";
+import type { HuntingTasksSessionState } from "../../../hooks/useHuntingTasksSession";
 import type { MarketSessionState } from "../../../hooks/useMarketSession";
 import type { OptimisticInventory } from "../../../hooks/useOptimisticInventory";
 import type { OutfitSessionState } from "../../../hooks/useOutfitSession";
 import type { PartySessionState } from "../../../hooks/usePartySession";
+import type { PreySessionState } from "../../../hooks/usePreySession";
+import type { ProfileSessionState } from "../../../hooks/useProfileSession";
 import type { TradeSessionState } from "../../../hooks/useTradeSession";
 import type { VipSessionState } from "../../../hooks/useVipSession";
 import type { WheelSessionState } from "../../../hooks/useWheelSession";
@@ -28,4 +31,7 @@ export interface GameWindowSessions {
   wheel: WheelSessionState;
   gems: GemSessionState;
   outfit: OutfitSessionState;
+  profile: ProfileSessionState;
+  prey: PreySessionState;
+  huntingTasks: HuntingTasksSessionState;
 }

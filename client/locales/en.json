@@ -236,7 +236,10 @@
     "bestiary": "Bestiary",
     "bosstiary": "Bosstiary",
     "wheel": "Wheel",
-    "outfit": "Outfits"
+    "outfit": "Outfits",
+    "profile": "Profile",
+    "prey": "Prey",
+    "huntingTasks": "Hunting Tasks"
   },
   "currency": {
     "wallet": "Currency wallet",
@@ -1012,7 +1015,8 @@
     "stopAttack": "Stop Attack",
     "follow": "Follow",
     "stopFollow": "Stop Follow",
-    "setOutfit": "Set outfit"
+    "setOutfit": "Set outfit",
+    "viewProfile": "View Profile"
   },
   "potions": {
     "bar": "Potion bar",
@@ -1242,6 +1246,7 @@
     "character-load-failed": "That character could not enter the world. Please try again.",
     "character-name-invalid": "Use 3–20 letters with single spaces, and avoid reserved staff names.",
     "character-name-taken": "A character with that name already exists.",
+    "character-namelocked": "This character is namelocked. Its name must be changed before it can enter the world.",
     "character-not-found": "That character does not belong to this account.",
     "character-operation-pending": "Wait for the current character request to finish.",
     "invalid-message": "The game server rejected an invalid request.",
@@ -1303,6 +1308,7 @@
     "online": "Online",
     "offline": "Offline",
     "chat": "Chat with {{name}}",
+    "viewProfile": "View {{name}}'s profile",
     "edit": "Edit {{name}}",
     "remove": "Remove {{name}}",
     "description": "Notes",
@@ -1357,6 +1363,60 @@
       "rate-limited": "Please wait a moment.",
       "invalid-request": "That page is not available.",
       "unavailable": "Highscores are unavailable right now."
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "publicTitle": "Character Profile",
+    "tabsLabel": "Profile sections",
+    "tabs": {
+      "achievements": "Achievements",
+      "titles": "Titles",
+      "badges": "Badges"
+    },
+    "levelVocation": "Level {{level}} • {{vocation}}",
+    "guild": "Guild: {{guild}}",
+    "currentTitle": "Title: {{title}}",
+    "pointsLabel": "Achievement points",
+    "points": "{{points}} pts",
+    "progress": "{{granted}} / {{total}} unlocked",
+    "hiddenCount": "Secret achievements still hidden: {{count}}",
+    "loading": "Loading profile…",
+    "achievementsLabel": "Achievements",
+    "noAchievements": "No achievements to show.",
+    "granted": "Unlocked",
+    "notGranted": "Locked",
+    "secretName": "???",
+    "secretDescription": "This secret achievement reveals itself when unlocked.",
+    "titlePicker": {
+      "label": "Displayed title",
+      "none": "No title",
+      "locked": "Locked"
+    },
+    "badgesLabel": "Badges",
+    "noBadges": "No badges earned yet.",
+    "achievementToast": "Achievement unlocked: {{name}} (+{{points}} points)",
+    "bugReport": {
+      "title": "Report a Bug",
+      "category": "Category",
+      "categories": {
+        "bug": "Bug",
+        "typo": "Typo",
+        "map": "Map issue",
+        "other": "Other"
+      },
+      "message": "Description",
+      "counter": "{{used}}/{{max}}",
+      "hint": "Your character's position is attached automatically. One report per minute.",
+      "submit": "Send report",
+      "cancel": "Cancel",
+      "sent": "Thank you, your report has been recorded."
+    },
+    "errors": {
+      "not-found": "No character by that name exists.",
+      "not-granted": "You have not earned that title yet.",
+      "rate-limited": "Please wait a moment before trying again.",
+      "invalid-request": "That profile action is not possible."
     }
   },
   "report": {
@@ -1705,6 +1765,141 @@
       "not-owned": "You do not own that outfit or mount.",
       "rate-limited": "Please wait a moment before changing again.",
       "invalid-request": "That selection is not possible."
+    }
+  },
+  "prey": {
+    "title": "Prey",
+    "loading": "Loading prey data…",
+    "wildcardsLabel": "Prey Wildcards",
+    "listRerollPriceLabel": "List reroll",
+    "slotLabel": "Prey slot {{slot}}",
+    "states": {
+      "locked": "Locked",
+      "inactive": "Inactive",
+      "selection": "Pick a monster",
+      "selection-change-monster": "Pick a new monster",
+      "list-selection": "Full list",
+      "active": "Hunting"
+    },
+    "unlock": {
+      "premium": "Unlocks with a Premium account.",
+      "store": "This slot can be unlocked in the Store."
+    },
+    "emptyGrid": "No monsters are available for this slot right now.",
+    "selectMonster": "Select {{name}}",
+    "currentBonus": "Current bonus",
+    "bonus": {
+      "damage": "Damage Boost",
+      "defense": "Damage Reduction",
+      "experience": "XP Bonus",
+      "loot": "Improved Loot"
+    },
+    "bonusValue": "+{{percentage}}%",
+    "stars": "Rarity {{value}} of {{max}}",
+    "timeLeft": "Time left: {{time}}",
+    "optionLabel": "When the time runs out",
+    "options": {
+      "none": "Do nothing",
+      "auto-reroll": "Auto-reroll",
+      "lock": "Lock prey"
+    },
+    "bonusReroll": "Reroll bonus",
+    "listReroll": "New list",
+    "wildcardList": "Pick from all monsters",
+    "freeRerollIn": "Free reroll in {{time}}",
+    "listSelectionHint": "Pick any monster from the full list below.",
+    "cost": {
+      "free": "free",
+      "gold": "{{gold}} gold",
+      "wildcards_one": "{{count}} Wildcard",
+      "wildcards_other": "{{count}} Wildcards",
+      "wildcardsPerExpiry_one": "{{count}} Wildcard per expiry",
+      "wildcardsPerExpiry_other": "{{count}} Wildcards per expiry"
+    },
+    "fullList": {
+      "title": "Full monster list",
+      "slot": "Choosing for slot {{slot}}",
+      "searchLabel": "Search monsters",
+      "searchPlaceholder": "Type a monster name…",
+      "empty": "No monsters match your search.",
+      "select": "Select"
+    },
+    "errors": {
+      "slot-locked": "That prey slot is locked.",
+      "not-selectable": "That monster cannot be selected right now.",
+      "already-active": "This slot already has an active prey.",
+      "duplicate-race": "Another slot already hunts that monster.",
+      "insufficient-gold": "You do not have enough gold.",
+      "insufficient-wildcards": "You do not have enough Prey Wildcards.",
+      "invalid-request": "That prey action is not possible.",
+      "rate-limited": "Please wait a moment before trying again."
+    }
+  },
+  "huntingTasks": {
+    "title": "Hunting Tasks",
+    "loading": "Loading hunting tasks…",
+    "pointsLabel": "Hunting Task Points",
+    "rerollPriceLabel": "Reroll or cancel",
+    "slotLabel": "Task slot {{slot}}",
+    "states": {
+      "locked": "Locked",
+      "inactive": "Resting",
+      "selection": "Pick a task",
+      "list-selection": "Full list",
+      "active": "In progress",
+      "completed": "Completed"
+    },
+    "unlock": {
+      "premium": "Unlocks with a Premium account.",
+      "store": "This slot can be unlocked in the Store."
+    },
+    "exhaustedFor": "Available again in {{time}}",
+    "emptyGrid": "No tasks are available for this slot right now.",
+    "rarity": "Reward rarity {{value}} of {{max}}",
+    "stars": "Difficulty {{value}} of {{max}} stars",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "tier": "{{kills}} kills · {{points}} pts",
+    "tierFirst": "Standard goal",
+    "tierSecond": "Upgraded goal",
+    "upgradeLocked": "Complete this monster's bestiary entry to unlock the upgraded goal.",
+    "selectTask": "Hunt {{name}}",
+    "progress": "{{kills}} / {{goal}} kills",
+    "rewardPoints": "Reward: {{points}} points",
+    "starReroll": "Reroll stars",
+    "cancel": "Cancel task",
+    "claim": "Claim {{points}} points",
+    "listReroll": "New list",
+    "wildcardList": "Pick from all monsters",
+    "freeRerollIn": "Free reroll in {{time}}",
+    "listSelectionHint": "Pick any monster from the full list below.",
+    "cost": {
+      "free": "free",
+      "gold": "{{gold}} gold",
+      "wildcards_one": "{{count}} Wildcard",
+      "wildcards_other": "{{count}} Wildcards"
+    },
+    "fullList": {
+      "title": "Full monster list",
+      "slot": "Choosing for slot {{slot}}",
+      "searchLabel": "Search monsters",
+      "searchPlaceholder": "Type a monster name…",
+      "empty": "No monsters match your search."
+    },
+    "errors": {
+      "slot-locked": "That task slot is locked.",
+      "exhausted": "This slot is still resting after a claimed task.",
+      "not-selectable": "That task cannot be selected right now.",
+      "already-active": "This slot already has an active task.",
+      "duplicate-race": "Another slot already tracks that monster.",
+      "insufficient-gold": "You do not have enough gold.",
+      "insufficient-wildcards": "You do not have enough Prey Wildcards.",
+      "goal-not-met": "You have not reached the kill goal yet.",
+      "invalid-request": "That task action is not possible.",
+      "rate-limited": "Please wait a moment before trying again."
     }
   }
 }

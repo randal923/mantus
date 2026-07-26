@@ -1,12 +1,14 @@
 # Todo 10 — Remaining Canary systems
 
-**Features 68†–69†, 72–86.** Later in order but **not optional in final
-scope**. Shipped cores: minimap with markers/click-to-walk, account UI
+**Features 68†–69†, 72–73, 76–86.** Later in order but **not optional in
+final scope**. Shipped cores: minimap with markers/click-to-walk, account UI
 settings with reset/sync, bestiary/bosstiary, Wheel core + passive/augment
 combat wiring, Gem Atelier, the Mantus Store slice, outfits/mounts complete
 (entitlements, window, mounted rendering; unlock sources ride with Features
-43/67/quests — each calls `OutfitService.grantOutfit`), and the blessing
-data layer (see [done.md](done.md)).
+43/67/quests — each calls `OutfitService.grantOutfit`), prey and hunting
+tasks complete server+client (74/75, 2026-07-26; wildcard/point *sources*
+ride with Features 43/80/84), and the blessing data layer (see
+[done.md](done.md)).
 **Feature 72 is the highest-leverage unblocker in the whole backlog.**
 
 ## Client-only remainders (server + protocol ship)
@@ -67,30 +69,6 @@ combat procs rolled in `Combat.ts`/`DamageResolver` with server RNG at
 damage execution; balances re-checked at spend execution inside the tick.
 **Tests:** spend races cannot double-spend; procs never client-influenced.
 
-## Feature 74 — Prey system
-
-Per-slot creature bonuses modifying combat/loot/exp, with paid rerolls.
-Unblocks Feature 9's prey bucket (todo-3).
-
-**Remaining:** new `server/src/prey/` module with durable slot state
-(migration + store); reroll debits via bank transactions with ledger + audit;
-durable wildcard balances; bonuses applied server-side at kill-reward and
-damage execution (re-checked at execution, not cached from selection);
-bounded select/reroll/lock intents with rate limits.
-**Tests:** reroll races cannot double-debit or double-roll; bonuses apply
-only to the slot's race at kill execution; reroll RNG server-side.
-
-## Feature 75 — Hunting tasks
-
-Kill goals with rewards and points — a Wheel point source (Feature 80).
-
-**Remaining:** kill tracking off the same death hooks as bestiary
-(`BestiaryHooks.ts` pattern); durable task state; reward grants in single
-audited transactions; bounded select/reroll/claim intents with execution-time
-re-checks (goal met, not already claimed).
-**Tests:** claim races cannot double-grant; kill credit follows the server
-death path only.
-
 ## Feature 76 — Boosted creatures/bosses, kill trackers, reward-boss flag
 
 **Remaining**
@@ -115,9 +93,14 @@ melee-pulled.
 
 **Remaining:** kill credit should also cover no-damage party members under
 active shared exp (compute the credit set in `BestiaryHooks.ts` from
-`getPartyExperienceShares.ts` — execution-time membership); route
+`getPartyExperienceShares.ts` — execution-time membership) — the same
+widened credit set must then feed hunting-task kills
+(`HuntingTaskService.onMonsterKilled` rides the same composite hook); route
 `bestiary-action-failed` to both modals client-side; queue a second sheet
-request inside the 300 ms cooldown instead of erroring.
+request inside the 300 ms cooldown instead of erroring. Also absorbed from
+Feature 74 (shipped 2026-07-26): Canary's party-shared prey **loot** boost
+(`PARTY_SHARE_LOOT_BOOSTS` summing member percentages with the diminishing
+factor) — mantus applies only the corpse owner's improved-loot prey today.
 **Tests:** no-damage eligible member credited, ineligible not; client queues
 within the cooldown window.
 
@@ -187,9 +170,11 @@ boosted skill projection shipped 2026-07-26 (see [done.md](done.md)).
 **Remaining:** extra point sources — promotion scrolls (items 43946-43950,
 +3/5/9/13/20, unlocked once each; needs store/quest item delivery, Feature
 43), the Monk quest bonus (+10 behind the shrine storage count; needs
-quests), and hunting-task points (Feature 75). `getUnusedPoints` must then
-include them the way Canary's `getExtraPoints` does
-(player_wheel.cpp:1931-1963).
+quests), and hunting-task points (the durable balance ships with Feature 75
+since 2026-07-26 — `HuntingTaskService.taskPointsOf(characterId)` /
+`character_prey_resources.task_points`; only this wheel-side read is
+missing). `getUnusedPoints` must then include them the way Canary's
+`getExtraPoints` does (player_wheel.cpp:1931-1963).
 **Tests:** point-source grants exactly-once (scroll consumption atomic with
 grant).
 
@@ -244,7 +229,11 @@ on the item-ownership model, following the depot pattern); quick loot +
 loot-container assignment (server-validated intents respecting the
 memory-first corpse invariant — first touch drives persistence); quick-loot
 routing into the supply stash; daily rewards with durable server-clock
-streak timers; all grants in single audited transactions.
+streak timers — including Canary's day-3/day-5 prey wildcard grants (1 free
+/ 2 premium) through the shipped capped
+`PreyService.grantWildcards`/`PreyStore.grantWildcards` path (Feature 74's
+only wildcard sources are this and Feature 43's store packs); all grants in
+single audited transactions.
 
 **Tests:** quick-loot races conserve every item under the memory-first
 invariant; daily claims exactly-once per day (clock manipulation cannot

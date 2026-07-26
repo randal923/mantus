@@ -112,6 +112,11 @@
    "path": "data-otservbr-global/scripts/actions/other/fishing.lua",
    "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
    "sha256": "07b353117965cf8ec4ee9586b41554449c1ff1f79ce983f04333dbc033288364"
+  },
+  "canaryAchievements": {
+   "path": "data/scripts/lib/register_achievements.lua",
+   "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
+   "sha256": "de33d7341d17e3410da5346c229ce68317526d70785b0a2e277f3fff546f1f7d"
   }
  },
  "balanceDefinitions": {
@@ -229,6 +234,14 @@
   {
    "path": "tools/importCanaryRaids.mjs",
    "sha256": "3916a838d8c6bed26709e76203eece62cba0f427814992cbfb2f011ffce29818"
+  },
+  {
+   "path": "tools/importCanaryAchievements.mjs",
+   "sha256": "63f1e5ed1f723571421421b39c2a6b86237b80d7b2ff214150a6bd542362c4d3"
+  },
+  {
+   "path": "tools/parseCanaryAchievements.mjs",
+   "sha256": "5182dfda7fa456ab36d22b72a7b566705b56877b23ef9db91684f46c91f278a6"
   }
  ],
  "converters": {
@@ -247,6 +260,7 @@
   "chests": 1,
   "tools": 1,
   "worldEvents": 1,
-  "worldActionParity": 1
+  "worldActionParity": 1,
+  "achievements": 1
  }
 }

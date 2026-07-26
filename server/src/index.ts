@@ -27,6 +27,8 @@ import { PgHighscoreStore } from "./social/PgHighscoreStore";
 import { PgMarkerStore } from "./minimap/PgMarkerStore";
 import { PgOutfitStore } from "./outfit/PgOutfitStore";
 import { PgProfileStore } from "./profile/PgProfileStore";
+import { PgPreyStore } from "./prey/PgPreyStore";
+import { PgHuntingTaskStore } from "./huntingTasks/PgHuntingTaskStore";
 import { PgFriendStore } from "./social/PgFriendStore";
 import { PgVipStore } from "./social/PgVipStore";
 import { PgChestStore } from "./chest/PgChestStore";
@@ -99,6 +101,8 @@ const house = new PgHouseStore(pool, itemCatalog);
 const vip = new PgVipStore(pool);
 const friends = new PgFriendStore(pool);
 const profiles = new PgProfileStore(pool);
+const prey = new PgPreyStore(pool);
+const huntingTasks = new PgHuntingTaskStore(pool);
 const markers = new PgMarkerStore(pool);
 const outfits = new PgOutfitStore(pool);
 const highscores = new PgHighscoreStore(pool);
@@ -138,6 +142,8 @@ const server = new GameServer(serverConfig, {
   vip,
   friends,
   profiles,
+  prey,
+  huntingTasks,
   markers,
   outfits,
   highscores,

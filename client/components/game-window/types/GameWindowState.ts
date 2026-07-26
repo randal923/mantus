@@ -15,6 +15,7 @@ import type {
   UiSettings,
 } from "@tibia/protocol";
 import type { ChatState } from "../../../lib/chat/chatReducer";
+import type { AchievementToast } from "./AchievementToast";
 import type { BankSessionState } from "./BankSessionState";
 import type { GameWindowRuntime } from "./GameWindowRuntime";
 import type { GameWindowSessionActions } from "./GameWindowSessionActions";
@@ -91,7 +92,13 @@ export interface GameWindowState {
   highscoresOpen: boolean;
   wikiOpen: boolean;
   wheelOpen: boolean;
+  preyWindowOpen: boolean;
+  huntingTasksOpen: boolean;
   outfitWindowOpen: boolean;
+  profileWindowOpen: boolean;
+  publicProfileOpen: boolean;
+  bugReportOpen: boolean;
+  achievementToast: AchievementToast | null;
   reportSession: ReportSessionState | null;
   houseToast: HouseToast | null;
   tradeToast: TradeClosedReason | null;

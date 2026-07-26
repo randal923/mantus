@@ -15,17 +15,14 @@ Add to **both** `client/locales/en.json` and `client/locales/pt-BR.json`:
 - `vip.errors.already-friends`, `vip.errors.request-pending`,
   `vip.errors.request-not-found` — new `vipActionFailedMessageSchema` reasons
   from Feature 65. The existing six keys are present; these three are not.
-- `serverErrors.character-namelocked` — Feature 67 refuses world entry for a
-  namelocked character with this code; today it renders as "unknown".
 - `mail.errors.rate-limited` — Feature 66's mail cap. The other seven
   `mailActionFailedMessageSchema` reasons are already translated under
   `mail.errors`.
 - `house.errors.list-too-long`, `house.errors.not-a-door` are already added;
   no action.
-- A new `profile.*` section — see
-  [feature-67-profile-ui.md](feature-67-profile-ui.md), which owns its own
-  key list. (The `outfit.*` section shipped 2026-07-26 with the outfit
-  window.)
+- (`serverErrors.character-namelocked` and the whole `profile.*` section
+  shipped 2026-07-26 with the Feature 67 profile UI; the `outfit.*` section
+  shipped 2026-07-26 with the outfit window.)
 
 ## Implementation
 Keys only. Keep the two locale files structurally identical; the repo has no

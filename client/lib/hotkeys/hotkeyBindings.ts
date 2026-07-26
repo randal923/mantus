@@ -7,7 +7,8 @@ export type HotkeyAction =
   | "toggleGuildModal"
   | "toggleHouseModal"
   | "toggleVipPanel"
-  | "toggleGameMenu";
+  | "toggleGameMenu"
+  | "openBugReport";
 
 /** Keyed by KeyboardEvent.code so bindings are keyboard-layout independent. */
 export const HOTKEY_BINDINGS: Readonly<Record<string, HotkeyAction>> = {
@@ -18,4 +19,9 @@ export const HOTKEY_BINDINGS: Readonly<Record<string, HotkeyAction>> = {
   KeyH: "toggleHouseModal",
   KeyV: "toggleVipPanel",
   Escape: "toggleGameMenu",
+};
+
+/** Ctrl-only combos (no Alt/Meta/Shift); other combos stay with the browser. */
+export const CTRL_HOTKEY_BINDINGS: Readonly<Record<string, HotkeyAction>> = {
+  KeyZ: "openBugReport",
 };

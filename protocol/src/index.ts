@@ -14,6 +14,8 @@ export * from "./highscores";
 export * from "./house";
 export * from "./minimap";
 export * from "./outfit";
+export * from "./prey";
+export * from "./huntingTasks";
 export * from "./profile";
 export * from "./moderation";
 export * from "./vip";

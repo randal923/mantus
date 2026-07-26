@@ -18,6 +18,7 @@ import type { BestiaryHooks } from "../bestiary/BestiaryHooks";
 import type { GuildHooks } from "../guild/GuildHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
+import type { PreyHooks } from "../prey/PreyHooks";
 import { Player } from "../Player";
 import type { PvpHooks } from "../pvp/PvpHooks";
 import { PotionService } from "../potion/PotionService";
@@ -145,6 +146,7 @@ export class Combat {
     private readonly worldSpells?: WorldSpellHooks,
     staminaSystem = false,
     useStages = false,
+    preyHooks?: PreyHooks,
   ) {
     this.spells = spells;
     this.formula = new CombatFormula(seed);
@@ -168,6 +170,7 @@ export class Combat {
       monsterEventHooks,
       staminaSystem,
       useStages,
+      preyHooks,
     );
     this.damage = new DamageResolver(
       world,
@@ -182,6 +185,7 @@ export class Combat {
       partyHooks,
       pvpHooks,
       monsterEventHooks,
+      preyHooks,
     );
     this.conditionSystem = new ConditionSystem(
       world,

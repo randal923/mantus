@@ -21,7 +21,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | --------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------- |
 | Map conversion, multi-floor movement, visibility (4)                                                | ✅     | ✅     | Per-entry content review: 348 disabled map actions, 2,225 unresolved floor transitions                     |
 | Rendering, animation, floors, occlusion (5–8)                                                       | —      | ✅     | Nothing — area closed                                                                                      |
-| Creatures, spawns, AI, all 84,294 placements (9, 10)                                                | ✅     | ✅     | Typed-data buckets (reward-boss → 76, prey → 74, 3 NPC entries), placement review, Harlow duplicate        |
+| Creatures, spawns, AI, all 84,294 placements (9, 10)                                                | ✅     | ✅     | Typed-data buckets (reward-boss → 76, 3 NPC entries; prey bucket closed 2026-07-26), placement review, Harlow duplicate |
 | World actions: doors, levers, readables, rope, shovel, chests, plates, traps, teleports (12, 50–52) | ✅     | ✅     | Fields (50), trap disarm, tool remainder + sand digging (51), transform-on-use/look flags (asset pass 108) |
 | World events engine + 18 raids (54)                                                                 | ◐      | —      | Other global events, daily resets/boosted rotations, reward steps, `/raid` capability                      |
 | Exhausts, trash holders, pz-lock, crash harness (3, 12–15)                                          | ✅     | ✅     | Nothing — closed                                                                                           |
@@ -55,7 +55,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | System (features)                                                       | Server | Client | Still missing                                                                                 |
 | ----------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------------------------------------- |
 | Parties, shared exp, analyzer, finder (55–57)                           | ✅     | ✅     | Party-spell target gating (co-lands with 24)                                                  |
-| Guilds, wars, emblems, guild bank (58, 63)                              | ✅     | ◐      | Per-rank withdraw permission, run 4 integration tests; bank UI section                        |
+| Guilds, wars, emblems, guild bank (58, 63)                              | ✅     | ◐      | Per-rank withdraw permission; fix 3 ledger-constraint integration tests (first run 2026-07-26); bank UI section |
 | Houses: buy, rent, transfer, auctions, access lists, guildhalls (61–64) | ✅     | ◐      | House spell words (109); door-list editor UI (62)                                             |
 | VIP/friends, groups, requests, typing (65)                              | ✅     | ◐      | Finder privacy setting, exiva spells; VIP-group UI                                            |
 | Chat, channels, talkactions, flood control (35, 36)                     | ✅     | ✅     | Admin talkactions, GM/broadcast modes, durable ignore lists                                   |
@@ -71,9 +71,9 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Bestiary + bosstiary + charm earning (73, 77)            | ✅     | ✅     | Charm **spending**, shared-exp kill credit                                  |
 | Wheel of Destiny + Gem Atelier (79–81)                   | ◐      | ✅     | Revelation actives (avatars + 5 procedural spells), periodic conviction majors, Monk perks (need harmony), gem long tail, extra point sources, 5 gem deviations |
 | Outfits + mounts (70, 71)                                | ✅     | ✅     | Nothing — unlock sources ride with store/achievements/quests (43, 67)       |
-| Profiles: achievements, titles, badges, char info (67)   | ◐      | ❌     | Full achievement catalog; entire profile UI                                 |
-| Prey (74)                                                | ❌     | ❌     | Everything                                                                  |
-| Hunting tasks (75)                                       | ❌     | ❌     | Everything                                                                  |
+| Profiles: achievements, titles, badges, char info (67)   | ✅     | ✅     | Nothing — closed; rename flow (2) and Cyclopedia display (83) live elsewhere |
+| Prey (74)                                                | ✅     | ✅     | Wildcard/third-slot sources ride with 43 (store) + 84 (daily rewards); party-shared loot boost → 77 |
+| Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |
 | Boosted creatures/bosses + reward-boss flag (76)         | ❌     | ❌     | Everything                                                                  |
 | Imbuements, tiers, Exaltation Forge (78)                 | ❌     | ❌     | Everything                                                                  |
 | Weapon proficiency + animus mastery (82)                 | ❌     | ❌     | Everything                                                                  |
@@ -103,11 +103,11 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 The shipped core is deep — world, items, economy, combat, social, houses,
 all exploit-tested. The gaps cluster in four places:
 
-1. **Not-started modern systems**: prey, hunting tasks, boosted, forge,
-   proficiency/animus, Cyclopedia, familiars, quests (74–76, 78, 82–85,
-   103–105).
+1. **Not-started modern systems**: boosted, forge, proficiency/animus,
+   Cyclopedia, familiars, quests (76, 78, 82–85, 103–105).
 2. **The NPC content grind**: 611 procedural entries (38/40/41).
-3. **Client surfaces**: the profile UI is the big one left; the
+3. **Client surfaces**: only small panels remain (the profile, prey, and
+   hunting-task windows shipped 2026-07-26); the
    [client backlog](client/README.md) lists the rest.
 4. **Launch hardening**: logging, metrics, error handling, durability,
    release gates (93–100).

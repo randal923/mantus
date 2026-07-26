@@ -15,6 +15,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Orc Fortress, Foreigner Quarter, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-warlord"
       ]
@@ -29,6 +30,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Orc Fort, the Orc Peninsula, Magician Tower and northwest tower or south underground of Thais, Zao steppe encaged, Vengoth.",
+      "preyExclusive": false,
       "monsterIds": [
         "war-wolf"
       ]
@@ -43,6 +45,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Orc Fort, Orc Peninsula, near Dark Cathedral, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-rider"
       ]
@@ -57,6 +60,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ulderek's Rock, Edron Orc Cave, Ancient Temple, Ice Islands, Venore Orc Cave, z\n\t\tRookgaard Orc Fortress, Rookgaard main cave, Fibula Dungeon, Elvenbane, Foreigner Quarter, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc"
       ]
@@ -71,6 +75,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Edron Orc Cave, Temple of Xayepocax, below Point of No Return in Outlaw Camp, Venore Orc Cave, z\n\t\tMaze of Lost Souls, Orc Fort, north west of Thais, Elvenbane, Plains Of Havoc, Foreigner Quarter, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-shaman"
       ]
@@ -85,6 +90,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ancient Temple in Thais, Orc Fort, below Point of No Return in Outlaw Camp and inside a z\n\t\tmountain north of it, Orc Peninsula, Folda, Edron Orc cave, Maze of Lost Souls, Elvenbane Castle, z\n\t\tForeigner Quarter, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-warrior"
       ]
@@ -99,6 +105,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Orc Fort, Dwacatra, Orc Peninsula, Elvenbane, Edron Orc Cave, Plains of Havoc, below Point of No Return in Outlaw Camp, Maze of Lost Souls, Cyclopolis, Desert Dungeon, Ancient Temple, Foreigner Quarter, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-berserker"
       ]
@@ -113,6 +120,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "All the Tombs, Lich Hell, Drefia, Medusa Shield Quest room, Old Fortress, Old Masonry, z\n\t\tbeneath Fenrock, Cemetery Quarter and Magician Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "necromancer"
       ]
@@ -127,6 +135,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Demona, Ghostland (Banshee Quest area), Temple of Xayepocax, Oasis Tomb, Kharos, Magician Quarter, z\n\t\tbeneath Fenrock, The Arcanum.",
+      "preyExclusive": false,
       "monsterIds": [
         "warlock"
       ]
@@ -141,6 +150,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "North of Mount Sternum, Plains of Havoc, Outlaw Camp, Dark Cathedral, Femor Hills, z\n\t\tMaze of Lost Souls, north of the Amazon Camp, at the entrance and in the Hero Cave, z\n\t\ta castle tower at Elvenbane, Trade Quarter, Smuggler camp on Tyrsung, Formorgar Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "hunter"
       ]
@@ -155,6 +165,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Amazon Camp (Venore), Amazon Camp (Carlin), Amazonia, z\n\t\tsingle respawn to the north west of Thais, Foreigner Quarter in Yalahar.",
+      "preyExclusive": false,
       "monsterIds": [
         "valkyrie"
       ]
@@ -169,6 +180,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Femor Hills, cultist cave in Liberty Bay, Drefia.",
+      "preyExclusive": true,
       "monsterIds": [
         "black-sheep"
       ]
@@ -183,6 +195,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In Rookgaard Sheep field, Greenshore and other farms like the one in Thais, east of Carlin. They can also be found wandering the fields of Edron, and some can be found along with a Black Sheep with the Hunter in Femor Hills.",
+      "preyExclusive": true,
       "monsterIds": [
         "sheep"
       ]
@@ -197,6 +210,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In many dungeons around Tibia like the troll cave in Thais, south of Carlin (out the east z\n\t\texit and down the hole), Island of Destiny, Edron Troll Cave, and in Ab'Dendriel. Also found in Rookgaard.",
+      "preyExclusive": false,
       "monsterIds": [
         "troll"
       ]
@@ -211,6 +225,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Several spawns near Kazordoon, Femor Hills, north of Thais, near the White Flower Temple, z\n\t\tRookgaard Bear Cave, Bear Room Quest in Rookgaard, Rookgaard Bear Mountain, South of Villa Scapula, z\n\t\tFerngrims Gate, North of Carlin, Fields of Glory, Edron Troll Cave, south of Venore, Desert Dungeon, z\n\t\tfirst floor of the Orc Fort mountain and west of Outlaw Camp.",
+      "preyExclusive": false,
       "monsterIds": [
         "bear"
       ]
@@ -225,6 +240,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ancient Temple, Alatar Lake, Mount Sternum Undead Cave, Desert Dungeon, Hellgate, z\n\t\tHelheim, Fibula Dungeon, Villa Scapula, Hero Cave before Dragons, Eastern Drefia, Folda hidden cave, z\n\t\tMaze of Lost Souls, way to Mintwallin, before Kazordoon city entrance, abandoned building east of Venore, z\n\t\tGreen Claw Swamp, north of the Venore Amazon Camp, Below Point of No Return in Outlaw Camp, Vandura Bonelord Cave, z\n\t\tTriangle Tower, Hidden cave north of Port Hope, Deeper Banuta, Dark Cathedral, Shadow Tomb, Ancient Ruins Tomb, z\n\t\tTarpit Tomb, Mountain Tomb, Peninsula Tomb, Oasis Tomb and beneath Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "bonelord"
       ]
@@ -239,6 +255,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ancient Temple in the Skeleton area, way to Mintwallin, Old Mintwallin Quest, z\n\t\tAlatar Lake, Magician Tower, Mount Sternum Undead Cave, Ghostlands, Hellgate, z\n\t\tMaze of Lost Souls, below Point of No Return in Outlaw Camp, Plains of Havoc in Necromant House, z\n\t\tDrefia and Drefia's underground caves, Edron ghoul hill, Venore Amazon Camp underground, z\n\t\tVenore Swamp Troll cave, Ghostship between Venore and Darashia, Triangle Tower, Dark Cathedral, z\n\t\tAnkrahmun tombs, Isle of the Kings, Treasure Island, Nargor Undead Cave, Helheim, Lion's Rock, z\n\t\tThe Witches' Cliff (only accessible during a quest) and a cave northeast of Ab'Dendriel. z\n\t\tAlso found behind a wall in both Rookgaard and Paradox Tower, although they cannot be reached.",
+      "preyExclusive": false,
       "monsterIds": [
         "ghoul"
       ]
@@ -253,6 +270,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ancient Temple under the Rotworm area, under White Flower Temple, z\n\t\tMount Sternum Undead Cave on the last floor, Thais Troll Cave, Bonelord cave in Drefia, z\n\t\tGreen Claw Swamp, Dwarf Mines, Villa Scapula, Ankrahmun Tombs, Dark Cathedral, north of Port Hope, z\n\t\tDeeper Banuta, on Folda on the floor above the Water Elementals, Hellgate, Vengoth, Alchemist Quarter, z\n\t\tYalahar and Carlin sewers, Ghostlands, Desert Dungeon, Dusalk's Troll Clan Cave, Nargor, z\n\t\tand in a cave northeast of Ab'Dendriel.",
+      "preyExclusive": true,
       "monsterIds": [
         "slime"
       ]
@@ -267,6 +285,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Rookgaard and Mainland, in most sewers and caves near towns. They can be found almost everywhere in Tibia.",
+      "preyExclusive": false,
       "monsterIds": [
         "rat"
       ]
@@ -281,6 +300,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Plains of Havoc, Mount Sternum, Femor Hills, Cyclops Camp, Cyclopolis, Ancient Temple, Shadowthorn, z\n\tOrc Fort, Mistrock, Foreigner Quarter, Outlaw Camp and in the Cyclops version of the Forsaken Mine. ",
+      "preyExclusive": false,
       "monsterIds": [
         "cyclops"
       ]
@@ -295,6 +315,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Cyclopolis, Mintwallin, Maze of Lost Souls, Dark Pyramid, Folda (hidden cave), z\n\t\tKazordoon (The Horned Fox's hideout), the Plains of Havoc, Point of No Return south of Outlaw Camp, z\n\t\tElvenbane, the depths of Fibula Dungeon (level 50+), cave east from Dwarf Bridge, Foreigner Quarter, z\n\t\tRookgaard Minotaur Hell (not reachable).",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-mage"
       ]
@@ -309,6 +330,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ancient Temple, way to Mintwallin, Folda Underground Cave, Outlaw Camp, Plains of Havoc, z\n\t\tKazordoon Minotaur Tower, Daramian Minotaur Pyramid, Deeper Fibula Dungeon (level 50+ to open the door), z\n\t\tHero Cave, Foreigner Quarter and Elvenbane.",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-archer"
       ]
@@ -323,6 +345,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Mino Hell (Rookgaard), Two outside Bear Room Quest, (Rookgaard) and also 2x on the premium side, z\n\t\tMintwallin, Folda, Minotaur Pyramid, Outlaw Camp, Kazordoon minotaur cave, Plains of Havoc, Elven Bane, z\n\t\tDeeper Fibula Dungeon (level 50+ to open the door), Ancient Temple, Maze of Lost Souls, z\n\t\tThais Minotaur Camp, Foreigner Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur"
       ]
@@ -337,6 +360,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Almost everywhere, like Ancient Temple, Vandura, Folda dungeon, Fibula Dungeon, z\n\t\tcaves connecting Edron and Cormaya, Venore Swamp Troll cave, Thais Troll cave, Ferngrims Gate, z\n\t\tDwarf Mines, Hellgate, below the graves in eastern Rookgaard, spider cave in western Rookgaard, z\n\t\tcave northeast of Ab'Dendriel, Darashia Rotworm Caves, Liberty Bay, Fenrock, z\n\t\tbelow Green Claw Swamp and some other places.",
+      "preyExclusive": false,
       "monsterIds": [
         "rotworm"
       ]
@@ -351,6 +375,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In almost all grass areas in Tibia, also found in Rookgaard and Dawnport.",
+      "preyExclusive": false,
       "monsterIds": [
         "wolf"
       ]
@@ -365,6 +390,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In almost all grassy areas of Tibia. Also found in Rookgaard.",
+      "preyExclusive": true,
       "monsterIds": [
         "snake"
       ]
@@ -379,6 +405,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ancient Temple, Mintwallin, Minotaur Pyramid, Maze of Lost Souls, Folda, Cyclopolis, z\n\t\tDeeper Fibula Dungeon (level 50+ to open the door), Hero Cave, underground of Elvenbane, z\n\t\tPlains of Havoc, Kazordoon Minotaur Cave, Foreigner Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-guard"
       ]
@@ -393,6 +420,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Almost everywhere, in grass areas, sewers like Carlin sewers, z\n\t\tcaves like as Ancient Temple, Rookgaard and the Tiquanda Tarantula Caves.",
+      "preyExclusive": false,
       "monsterIds": [
         "spider"
       ]
@@ -407,6 +435,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Darama (Devourer, Kha'labal), in most grassy areas of Tibia, also found in z\n\t\tRookgaard and on Tutorial Island. There are also 2 unreachable Deer found near Fiehonja's protection zone.",
+      "preyExclusive": true,
       "monsterIds": [
         "deer"
       ]
@@ -421,6 +450,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Isle of the Kings, North of the Thais temple, Lubos house, west of Carlin (with sheep), z\n\t\tEdron north of castle and one south towards Ivory Towers, Liberty Bay (Silverhand Manor), z\n\t\tMintwallin central park and on the way to the old Mintwallin area, Factory Quarter (Yalahar).",
+      "preyExclusive": true,
       "monsterIds": [
         "dog"
       ]
@@ -435,6 +465,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "In many dungeons around Tibia, like the Ancient Temple and Ghostlands. z\n\t\tAlso found in Rookgaard tombs and north east of Port Hope, in the jungle of Tiquanda, z\n\t\tbeneath Fenrock and in the desert Tombs, Vengoth Castle.",
+      "preyExclusive": false,
       "monsterIds": [
         "skeleton"
       ]
@@ -449,6 +480,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Thais Ancient Temple, Darashia Dragon Lair, Mount Sternum Dragon Cave, Mintwallin, z\n\t\tdeep in Fibula Dungeon, Kazordoon Dragon Lair (near Dwarf Bridge), Plains of Havoc, Elven Bane castle, z\n\t\tMaze of Lost Souls, southern cave and dragon tower in Shadowthorn, Orc Fortress, Venore Dragon Lair, z\n\t\tPits of Inferno, Behemoth Quest room in Edron, Hero Cave, deep Cyclopolis, Edron Dragon Lair, Goroma, z\n\t\tAnkrahmun Dragon Lairs, Draconia, Dragonblaze Peaks, some Ankrahmun Tombs, z\n\t\tunderground of Fenrock (on the way to Beregar), Krailos Steppe and Crystal Lakes.",
+      "preyExclusive": false,
       "monsterIds": [
         "dragon"
       ]
@@ -463,6 +495,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Hero Cave, Ferumbras' Citadel, Goroma, Ghostlands Warlock area unreachable, Liberty Bay hidden underground passage unreachable, Razachai, deep in Pits of Inferno (found in every throneroom except Verminor's), deep Formorgar Mines, Demon Forge, Alchemist Quarter, Magician Quarter, Chyllfroest, Oramond Dungeon, Abandoned Sewers, Hell Hub and Halls of Ascension.",
+      "preyExclusive": false,
       "monsterIds": [
         "demon"
       ]
@@ -477,6 +510,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Found in various caves and plains around Tibia (including Rookgaard).",
+      "preyExclusive": false,
       "monsterIds": [
         "poison-spider"
       ]
@@ -491,6 +525,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Triangle Tower, Hellgate, Draconia, Plains of Havoc, Pits of Inferno, Thais Ancient Temple, z\n\t\tFibula Dungeon, Mintwallin, Mount Sternum hidden cave, Drefia, Ghost Ship, Edron Hero Cave, Shadowthorn, z\n\t\tElvenbane, Ghostlands, Femor Hills, White Flower Temple, Isle of the Kings, Dark Cathedral, Ankrahmun Tombs, z\n\t\tRamoa, Helheim, Vengoth, Upper Spike, Lion's Rock.",
+      "preyExclusive": false,
       "monsterIds": [
         "demon-skeleton"
       ]
@@ -505,6 +540,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Plains of Havoc, Point of no Return in Outlaw Camp, Ghostlands, Hellgate, z\n\tMintwallin Secret Laboratory, Mad Mage Room deep below Ancient Temple, Mount Sternum Undead Cave, z\n\tGreen Claw Swamp, Maze of Lost Souls, Crusader Helmet Quest in the Dwarf Mines, Mushroom Gardens, z\n\twest Drillworm Caves, Edron Hero Cave, Edron Orc Cave, on a hill near Drefia, z\n\ton a hill north-west of Ankrahmun (inaccessible), Forbidden Lands, Deeper Banuta, Malada, Ramoa, z\n\t Arena and Zoo Quarter, second floor up of Cemetery Quarter, beneath Fenrock, Vengoth Castle, z\n\t Vandura Mountain, in a cave in Robson Isle, Chyllfroest, Spider Caves, second floor of Krailos Spider Lair, Caverna Exanima.",
+      "preyExclusive": false,
       "monsterIds": [
         "giant-spider"
       ]
@@ -519,6 +555,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Ankrahmun Dragon Lairs, Banshee Quest final room (level 60+ to open the door), z\n\tDeeper Cyclopolis past the Dragon Spawn (level 30+ to open the door), Draconia, Edron Dragon Lair, z\n\tFibula Dungeon (level 50+ to open the door), Maze of Lost Souls (level 30+ to open the door), z\n\tPits of Inferno Dragon Lair, Dragon Lord hole in Plains of Havoc, Carlin Dragon Lair, z\n\tThais Dragon Lair, Goroma Dragon Lairs, Hot Spot, Venore Dragon Lair, Arena and Zoo Quarter(Yalahar), z\n\tbeneath Fenrock, Darashia Dragon Lair, Razachai, Dragonblaze Peaks, Ferumbras Citadel, Fury Dungeon, z\n\tLower Spike, Krailos Steppe.",
+      "preyExclusive": false,
       "monsterIds": [
         "dragon-lord"
       ]
@@ -533,6 +570,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Desert Dungeon, Ancient Temple, Magician Tower, Shadow Tomb, Ghostlands, Goroma, z\n\tPlains of Havoc at Ornamented Shield Quest, Spike Sword Quest.",
+      "preyExclusive": false,
       "monsterIds": [
         "fire-devil"
       ]
@@ -547,6 +585,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Jakundaf Desert, Darama, Arena Quarter, Venore Amazon Camp.",
+      "preyExclusive": false,
       "monsterIds": [
         "lion"
       ]
@@ -561,6 +600,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ice Islands.",
+      "preyExclusive": false,
       "monsterIds": [
         "polar-bear"
       ]
@@ -575,6 +615,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Near Thais Troll Cave, Plague Spike, Drefia, Jakundaf Desert, z\n\t\tGreen Claw Swamp, beneath Folda, Maze of Lost Souls, Plains of Havoc, z\n\t\tVenore and Ankrahmun Dragon Lairs, beneath Edron Graveyard, Ancient Temple, z\n\t\tHellgate, Mad Mage Room, Ankrahmun Tombs, Treasure Island, Mal'ouquah, Ramoa, z\n\t\tCyclopolis, Ghostlands, Vengoth, Lion's Rock.",
+      "preyExclusive": false,
       "monsterIds": [
         "scorpion"
       ]
@@ -589,6 +630,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "South of Thais, west of Ab'Dendriel, northeastern Cormaya, z\n\t\tGreen Claw Swamp between Kazordoon and Venore, Wasp Tower in Rookgaard, z\n\t\tWasp Towers in Darashia, all over Tiquanda, and all over Vandura, roaming around Marapur.",
+      "preyExclusive": false,
       "monsterIds": [
         "wasp"
       ]
@@ -603,6 +645,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In many parts around Tibia, including Rookgaard.",
+      "preyExclusive": false,
       "monsterIds": [
         "bug"
       ]
@@ -617,6 +660,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Dark Cathedral, Outlaw Camp, North of Thais, Cyclopolis, in Edron Hero Cave and around it, z\n\t\tthe small camp near Femor Hills, in Ghostlands disguised as a statue.",
+      "preyExclusive": false,
       "monsterIds": [
         "wild-warrior"
       ]
@@ -631,6 +675,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ghost Ship, Drefia, Ankrahmun Tombs, Mount Sternum Undead Cave between Thais and Kazordoon, z\n\t\tDark Cathedral, under Treasure Island, Isle of the Kings, Grothmok tunnels (in Dwarven Mines), Goroma, z\n\t\tRamoa, Lich Hell, Upper Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "ghost"
       ]
@@ -645,6 +690,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cyclopolis, Hero Cave in Edron, Ankrahmun tombs, Serpentine Tower, Factory Quarter in Yalahar, z\n\t\tDeeper Banuta, Goroma inside the volcano and beneath Fenrock.",
+      "preyExclusive": true,
       "monsterIds": [
         "fire-elemental"
       ]
@@ -659,6 +705,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Orc Fortress, Folda Dungeon, Edron Orc Cave and around it, Ancient Temple, z\n\t\tVenore Orc Cave, below the Point of No Return in Outlaw Camp, Plains of Havoc, z\n\t\tNorth of Thais in the Orc Peninsula, Elvenbane and Orc Camp in Foreigner Quarter. z\n\t\tAlso found in Rookgaard West plains, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-spearman"
       ]
@@ -673,6 +720,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Mal'ouquah, Oasis Tomb, under the Ankrahmun Library Tomb, z\n\t\tSerpentine Tower last floor behind the Magic Walls, Deeper Banuta, Goroma underground, Magician Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "green-djinn"
       ]
@@ -687,6 +735,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Ice Islands.",
+      "preyExclusive": false,
       "monsterIds": [
         "winter-wolf"
       ]
@@ -701,6 +750,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Ice Islands, Svargrond and Edron.",
+      "preyExclusive": false,
       "monsterIds": [
         "frost-troll"
       ]
@@ -715,6 +765,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Vandura, west of the Dwarf Mines in a small house, Amazon Tower north of Carlin, z\n\t\tTriangle Tower, Temple of Xayepocax, Green Claw Swamp and Amazon Camp (Venore), z\n\t\tDark Cathedral (2 levels underground), Goroma Volcano (underground), west from Necromant House, z\n\t\tMammoth Shearing Factory, Trade Quarter in Yalahar, The Witches' Cliff (only accessible during a quest).",
+      "preyExclusive": false,
       "monsterIds": [
         "witch"
       ]
@@ -729,6 +780,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cyclopolis, deepest part of Tarpit Tomb after the flame, Forbidden Lands, Vandura Mountain, z\n\t\tDeeper Banuta, Serpentine Tower (unreachable), deep into the Formorgar Mines, Arena and Zoo Quarter, z\n\t\tThe Dark Path, Lower Spike, Chyllfroest, Medusa Tower and Underground Glooth Factory (west side).",
+      "preyExclusive": false,
       "monsterIds": [
         "behemoth"
       ]
@@ -743,6 +795,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Almost everywhere in tibia, they seem to have a nest-like place in Greenshore, z\n\t\ta semi-large spawn at the entrance to the Port Hope troll cave and in cave near Ankrahmun ship. z\n\t\tAlso appears in Rat Plague in Thais and Rat Plague in Rookgaard.",
+      "preyExclusive": false,
       "monsterIds": [
         "cave-rat"
       ]
@@ -757,6 +810,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Edron Hero Cave, Triangle Tower near Thais, Maze of Lost Souls, Deeper Dark Cathedral, z\n\t\tIsle of the Kings, Trade Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "monk"
       ]
@@ -771,6 +825,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Hero Cave, Drefia ruins, Lich Hell, Tombs, Magician Quarter in Yalahar, Vengoth Castle.",
+      "preyExclusive": false,
       "monsterIds": [
         "priestess"
       ]
@@ -785,6 +840,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Orc Fort, Edron Orc Cave, South of the temple in PoH, Maze of Lost Souls, Cyclopolis, Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-leader"
       ]
@@ -799,6 +855,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Rookgaard, Orc Fort, under Femor Hills with Goblins, some farms like Donald McRonaldThe McRonalds Farm, Liberty Bay slums and Nargor, Foreigner Quarter in Yalahar, Isle of the Kings, cells in The Pits of Inferno QuestTafariels throneroom in Pits of Inferno, Gardens of Night Mapper Coords129.18126.125104texthere, unreachable.",
+      "preyExclusive": true,
       "monsterIds": [
         "pig"
       ]
@@ -813,6 +870,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Femor Hills, north east of Carlin, Edron Goblin Cave, Rookgaard (Premium Area), z\n\t\tMaze of Lost Souls and Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "goblin"
       ]
@@ -827,6 +885,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Yalahar Foreigner Quarter and Trade Quarter, Maze of Lost Souls, Orc Fort (unreachable), z\n\t\tHellgate, Shadowthorn, Ab'Dendriel elf caves, Elvenbane, north of Thais.",
+      "preyExclusive": false,
       "monsterIds": [
         "elf"
       ]
@@ -841,6 +900,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Yalahar Foreigner Quarter, Demona, Shadowthorn, northwest of Ab'Dendriel, Maze of Lost Souls, z\n\t\tCyclopolis, Elvenbane, near Mount Sternum.",
+      "preyExclusive": false,
       "monsterIds": [
         "elf-arcanist"
       ]
@@ -855,6 +915,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Yalahar Foreigner Quarter, Shadowthorn, northwest of Ab'Dendriel, north and west of Mount Sternum, z\n\t\tHellgate, Maze of Lost Souls, near Knightwatch Tower in the Plains of Havoc. z\n\t\tTwo may also spawn when a Desperate White Deer or an Enraged White Deer is killed.",
+      "preyExclusive": false,
       "monsterIds": [
         "elf-scout"
       ]
@@ -869,6 +930,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Drefia, Darama's Dark Pyramid, Draconia, Mount Sternum Undead Cave, Green Claw Swamp, z\n\t\tVenore Amazon Camp underground, Helheim, Upper Spike, all Tombs, Dark Cathedral, Lion's Rock.",
+      "preyExclusive": false,
       "monsterIds": [
         "mummy"
       ]
@@ -883,6 +945,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Mount Sternum Undead Cave, Dwarf Mines, Circle Room in Kazordoon, Triangle Tower, z\n\t\tTiquanda Dwarf Cave, Cormaya Dwarven Cave, Beregar Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "dwarf-geomancer"
       ]
@@ -897,6 +960,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Maze of Lost Souls, in and around Ashta daramai, Formorgar Mines, z\n\t\tMad Technomancer room, Dark Cathedral, Demona, Goroma, Tarpit Tomb, Peninsula Tomb, z\n\t\tDeeper Banuta, Forbidden Lands, Beregar Mines, Farmine Mines, Drillworm Caves, 2 caves on Hrodmir, z\n\t\tOrc Fortress (single spawn) and Medusa Tower.",
+      "preyExclusive": false,
       "monsterIds": [
         "stone-golem"
       ]
@@ -911,6 +975,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drefia, Ghost Ship between Venore and Darashia, some Ankrahmun Tombs, Lich Hell, z\n\t\tSerpentine Tower (unreachable), Ghostlands (unreachable). House between Plains of Havoc and Dark Cathedral, z\n\t\tHellgate (only during Zevelon Duskbringer raid), Edron Undead Cave, Vengoth Castle (and mountains before door), z\n\t\tEdron Vampire Crypt.",
+      "preyExclusive": false,
       "monsterIds": [
         "vampire"
       ]
@@ -925,6 +990,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Kazordoon Dwarf Mines, Dwarf Bridge, deep Elvenbane, Tiquanda Dwarf Cave, Cormaya Dwarf Cave, z\n\t\tIsland of Destiny (Knights area), Beregar.",
+      "preyExclusive": false,
       "monsterIds": [
         "dwarf"
       ]
@@ -939,6 +1005,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Kazordoon Dwarf Mines, Dwacatra, Ferngrims Gate, Cyclopolis, Mount Sternum Undead Cave, z\n\t\tStonehome Rotworm cave (near Edron), Maze of Lost Souls, Tiquanda Dwarf Cave, Beregar, Cormaya Dwarf Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "dwarf-guard"
       ]
@@ -953,6 +1020,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Kazordoon Dwarf Mines, Cyclopolis, Dwacatra, Ferngrims Gate, Dwarf Bridge, z\n\t\tMount Sternum Undead Cave, Beregar, Tiquanda Dwarf Cave, Cormaya Dwarf Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "dwarf-soldier"
       ]
@@ -967,6 +1035,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Triangle Tower, Drefia, Edron Hero Cave in the Warlock room, White Flower Temple, z\n\t\tGhostlands, Shadow Tomb, Ancient Ruins Tomb, Tarpit Tomb, Stone Tomb, Mountain Tomb, Peninsula Tomb, z\n\t\tOasis Tomb, Yalahar Trade Quarter and Isle of the Kings.",
+      "preyExclusive": false,
       "monsterIds": [
         "stalker"
       ]
@@ -981,6 +1050,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "In Hero Cave in Edron, it has many rooms with many kinds of monsters and different amounts of Heroes. z\n\t\tAlso in Magician Quarter, accompanied by other monsters. Old Fortress.",
+      "preyExclusive": false,
       "monsterIds": [
         "hero"
       ]
@@ -995,6 +1065,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In most grass areas of Tibia, for example on Tutorial Island.",
+      "preyExclusive": true,
       "monsterIds": [
         "rabbit"
       ]
@@ -1009,6 +1080,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Port Hope Swamp Trolls, Venore Swamp Troll Cave, all around north area of Port Hope, z\n\t\tsmall spawn north-west of Venore and in cave south-east of Thais, also one in Foreigner Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "swamp-troll"
       ]
@@ -1023,6 +1095,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Venore Amazon Camp, Carlin Amazon Camp, Amazon Tower, east of Carlin, underneath the Fields of Glory, west of Venore, Oasis Tomb, on the smallest of the Laguna Islands, Foreigner Quarter and Trade Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "amazon"
       ]
@@ -1037,6 +1110,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Single one under the White Flower Temple in Thais (respawn takes about 20-25 minutes), z\n\t\tBanshee Quest area in Ghostlands (also accesible by Isle of the Kings), Demon Quest Room, Drefia, z\n\t\tAncient Ruins Tomb, Desert Dungeon (unreachable), Pits of Inferno in Tafariel's Throne room, z\n\t\tCemetery Quarter in Yalahar, Vengoth Castle, one in Robson Isle.",
+      "preyExclusive": false,
       "monsterIds": [
         "banshee"
       ]
@@ -1051,6 +1125,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Ankrahmun Library Tomb, Stone Tomb, Peninsula Tomb, Mother of Scarabs Lair, Kha'zeel Scarab Lair, z\n\tdeep in Larva Caves (found beneath steps underground), Lion's Rock, Arena and Zoo Quarter and beneath Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "ancient-scarab"
       ]
@@ -1065,6 +1140,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Kha'zeel, Magician Quarter, Forgotten Tomb.",
+      "preyExclusive": false,
       "monsterIds": [
         "blue-djinn"
       ]
@@ -1079,6 +1155,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ankrahmun Library Tomb, Tarpit Tomb, Mountain Tomb, Peninsula Tomb, Darama, Tiquanda, z\n\t\tDrefia, Forbidden Lands, Arena Quarter, Lion's Rock.",
+      "preyExclusive": false,
       "monsterIds": [
         "cobra"
       ]
@@ -1093,6 +1170,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Larva Caves, Ankrahmun Tombs, Lions Rock, Gardens of Night (unreachable)",
+      "preyExclusive": false,
       "monsterIds": [
         "larva"
       ]
@@ -1107,6 +1185,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ankrahmun Tombs, the sand around Ankrahmun (use a shovel), deep in Larva caves, z\n\t\tthe path leading to Chor, beneath Fenrock, Lion's Rock.",
+      "preyExclusive": false,
       "monsterIds": [
         "scarab"
       ]
@@ -1121,6 +1200,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Desert areas like those around Ankrahmun and Darashia.",
+      "preyExclusive": false,
       "monsterIds": [
         "hyaena"
       ]
@@ -1135,6 +1215,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Meriana Gargoyle Cave, Ankrahmun Tombs, Mal'ouquah, Goroma, Deeper Banuta, z\n\t\tFormorgar Mines, Vengoth, Farmine Mines, Upper Spike and Medusa Tower.",
+      "preyExclusive": false,
       "monsterIds": [
         "gargoyle"
       ]
@@ -1149,6 +1230,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Ankrahmun Library Tomb, Ancient Ruins Tomb, Oasis Tomb, Mountain Tomb, Drefia, Kharos, z\n\t\tPits of Inferno, Lich Hell in Ramoa, Cemetery Quarter in Yalahar, underground of Fenrock (on the way to Beregar). z\n\t\tCan also be seen during an undead raid in Darashia or Carlin.",
+      "preyExclusive": false,
       "monsterIds": [
         "lich"
       ]
@@ -1163,6 +1245,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ankrahmun Tombs, Trapwood, Ramoa, Hellgate, Helheim, Mount Sternum Undead Cave, Deeper Catacombs, z\n\t\tCemetery Quarter, Treasure Island, Upper Spike, Lion's Rock.",
+      "preyExclusive": false,
       "monsterIds": [
         "crypt-shambler"
       ]
@@ -1177,6 +1260,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Old Fortress, Ankrahmun Tombs, Helheim, Ramoa, Lich Hell, beneath Fenrock, Deeper Banuta, z\n\t\tVengoth Castle, Vandura Mountain, Robson's Isle, Middle Spike, Lion's Rock, Mother of Scarabs Lair, Caverna Exanima.",
+      "preyExclusive": false,
       "monsterIds": [
         "bonebeast"
       ]
@@ -1191,6 +1275,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Mal'ouquah, Deeper Banuta, Goromas Cult Cave (in the classroom), Magician Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "efreet"
       ]
@@ -1205,6 +1290,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Kha'zeel, Magician Quarter, Djinn battle island through the Haunted Tomb.",
+      "preyExclusive": false,
       "monsterIds": [
         "marid"
       ]
@@ -1219,6 +1305,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Hrodmir, southern Tiquanda, unannounced raid in Ab'Dendriel and Edron.",
+      "preyExclusive": false,
       "monsterIds": [
         "badger"
       ]
@@ -1233,6 +1320,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Unannounced raid in Edron outside the depot, Tiquanda, Shattered Isles, z\n\t\tLiberty Bay, south gate of Thais.",
+      "preyExclusive": true,
       "monsterIds": [
         "skunk"
       ]
@@ -1247,6 +1335,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Hellgate, near the Hellgate Library, Deeper Banuta, behind piano in Cult Cave to the z\n\t\tnortheast of Liberty Bay, Vandura Bonelord Cave, Goroma, Helheim, z\n\t\tunderground of Fenrock (on the way to Beregar), Vengoth.",
+      "preyExclusive": false,
       "monsterIds": [
         "elder-bonelord"
       ]
@@ -1261,6 +1350,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Hellgate bonelord cave, Vandura Bonelord Cave, also anywhere Elder Bonelords exist, as summons.",
+      "preyExclusive": true,
       "monsterIds": [
         "gazer"
       ]
@@ -1275,6 +1365,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Sabrehaven, Rookgaard, The McRonalds Farm in Thais, Northport, z\n\t\tFibula, Carlin (killable but unreachable), Greenshore, Krimhorn, Orc Fortress, z\n\t\tFactory Quarter, also theres one in the farm near Edron.",
+      "preyExclusive": true,
       "monsterIds": [
         "chicken"
       ]
@@ -1289,6 +1380,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Various locations like Goroma, Edron, Port Hope, Nargor and other Shattered Isles. z\n\t\tThere is also one located underwater by The Tibianic, however it is unreachable.",
+      "preyExclusive": false,
       "monsterIds": [
         "crab"
       ]
@@ -1303,6 +1395,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Chor, the lizard city south-east from Port Hope. They can also be found in Yalahar's z\n\t\tForeigner Quarter and in Zzaion.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-templar"
       ]
@@ -1317,6 +1410,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Chor, Zzaion and Foreigner Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-sentinel"
       ]
@@ -1331,6 +1425,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Chor, Forbidden Temple.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-snakecharmer"
       ]
@@ -1345,6 +1440,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "In Banuta, northeast of Port Hope, Arena and Zoo Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "kongra"
       ]
@@ -1359,6 +1455,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Banuta, north-east of Port Hope.",
+      "preyExclusive": false,
       "monsterIds": [
         "merlkin"
       ]
@@ -1373,6 +1470,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "In Banuta, north-east of Port Hope.",
+      "preyExclusive": false,
       "monsterIds": [
         "sibang"
       ]
@@ -1387,6 +1485,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "In the crocodile cave and the jungle east of Port Hope as well as the swamp to the north, z\n\t\tFenrock, Arena and Zoo Quarter, Trade Quarter, Talahu, also located on Meriana and Laguna Islands.",
+      "preyExclusive": false,
       "monsterIds": [
         "crocodile"
       ]
@@ -1401,6 +1500,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Deep inside the Tiquanda Jungle including Tiquanda Laboratory and a small cave, z\n\t\tForbidden Lands, Deeper Banuta, Arena and Zoo quarter in Yalahar.",
+      "preyExclusive": false,
       "monsterIds": [
         "carniphila"
       ]
@@ -1415,6 +1515,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Northern Hydra Mountain in east Tiquanda, southern Hydra Mountain, Hydra Egg Quest in Tiquanda z\n\tnorth-east of the Elephant Tusk Quest, Forbidden Lands hydra cave, Deeper Banuta, Talahu surface, z\n\tFerumbras Citadel, Yalahar Arena and Zoo Quarter, Yalahar Foreigner Quarter (Crystal Lake), Oramond Hydra/Bog Raider Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "hydra"
       ]
@@ -1429,6 +1530,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Dark Cathedral, Tiquanda, Drefia, Mount Sternum, Folda, Ghostlands, Kazordoon, z\n\t\tFemor Hills, Thais Bat Dungeon, Thais Bandit Cave and in many other caves.",
+      "preyExclusive": false,
       "monsterIds": [
         "bat"
       ]
@@ -1443,6 +1545,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "South of Port Hope around Trapwood, as well as a lone specimen in the Arena Quarter.",
+      "preyExclusive": true,
       "monsterIds": [
         "panda"
       ]
@@ -1457,6 +1560,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "All around Port Hope and Tiquanda, Dark Cathedral, Vandura, Meriana, Razzachai, z\n\tSlime cave east of Venore, Arena and Zoo Quarter, Gnarlhound Caves.",
+      "preyExclusive": false,
       "monsterIds": [
         "centipede"
       ]
@@ -1471,6 +1575,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Tiquanda, Meriana, Arena and Zoo Quarter. Three unreachable ones are found in the Rookgaard Academy, z\n\t\tbelow Ankrahmun (during the Nomads Land Quest), and on Charles's ship.",
+      "preyExclusive": false,
       "monsterIds": [
         "tiger"
       ]
@@ -1485,6 +1590,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "East of Port Hope close to Grizzly Adams, deep in the jungle, z\n\t\tArena and Zoo Quarter, Mammoth Shearing Factory.",
+      "preyExclusive": false,
       "monsterIds": [
         "elephant"
       ]
@@ -1499,6 +1605,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Tiquanda, Shattered Isles, Gardens of Night.",
+      "preyExclusive": true,
       "monsterIds": [
         "flamingo"
       ]
@@ -1513,6 +1620,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Ab'Dendriel, Ab'Dendriel Surroundings, Carlin, Cormaya, Edron Surroundings, z\n\t\tFeyrist Meadows, Fibula, Fields of Glory, Green Claw Swamp, Issavi, Kazordoon Surroundings, Meriana, z\n\t\tOutlaw Camp, Port Hope Surroundings, Stonehome, Thais Surroundings, Venore Southern Swamp, Venore Surroundings.",
+      "preyExclusive": false,
       "monsterIds": [
         "pink-butterfly",
         "purple-butterfly"
@@ -1528,6 +1636,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "South of Port Hope around Trapwood. There is also a group of 3 voodoomasters z\n\t\tand 2 crypt shamblers on the shore east of Trapwood.",
+      "preyExclusive": false,
       "monsterIds": [
         "dworc-voodoomaster"
       ]
@@ -1542,6 +1651,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "South of Port Hope (Trapwood) on ground level and underground.",
+      "preyExclusive": false,
       "monsterIds": [
         "dworc-fleshhunter"
       ]
@@ -1556,6 +1666,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "South of Port Hope (Trapwood) on ground level and underground and on Foreigner Quarter of Yalahar.",
+      "preyExclusive": false,
       "monsterIds": [
         "dworc-venomsniper"
       ]
@@ -1570,6 +1681,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In the jungle of Tiquanda, Liberty Bay, the Shattered Isles, and as a house pet in Meriana.",
+      "preyExclusive": true,
       "monsterIds": [
         "parrot"
       ]
@@ -1584,6 +1696,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Around Port Hope, Arena and Zoo Quarter in Yalahar, few on Zao steppes.",
+      "preyExclusive": false,
       "monsterIds": [
         "terror-bird"
       ]
@@ -1598,6 +1711,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Tiquanda Tarantula Caves, Spider Caves, Trapwood ground level and underground, z\n\t\tin 2 small caves South of Thais, Dark Cathedral, single spawn on top of Crocodile den north of Port Hope, z\n\t\tPlains of Havoc, underground Liberty Bay, Nargor Undead Cave and other constituents of the Shattered Isles, z\n\t\tGreen Claw Swamp, first floor up in the big building in the Cemetery Quarter, Robson Isle, Vengoth. z\n\t\tAfter the summer update of 2876, tarantulas can be seen on the beginner's island of Rookgaard.",
+      "preyExclusive": false,
       "monsterIds": [
         "tarantula"
       ]
@@ -1612,6 +1726,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Deeper Banuta, Forbidden Islands: Talahu (Medusa Cave) and Kharos (at level -1), Razzachai, z\n\t\tDeep below the Crystal Lakes in Foreigner Quarter, Cult's cave in the Magician Quarter, Medusa Tower.",
+      "preyExclusive": false,
       "monsterIds": [
         "serpent-spawn"
       ]
@@ -1626,6 +1741,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Tiquanda, Trapwood, the outskirts of Chor and Forbidden Lands, Alchemist Quarter in Yalahar, z\n\t\tTiquanda Laboratory.",
+      "preyExclusive": false,
       "monsterIds": [
         "spit-nettle"
       ]
@@ -1640,6 +1756,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Around Dark Cathedral, Tiquanda Bandit Caves, the Outlaw Camp, Tyrsung, Yalahar and Nargor.",
+      "preyExclusive": false,
       "monsterIds": [
         "smuggler"
       ]
@@ -1654,6 +1771,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Dark Cathedral, Tiquanda Bandit Caves, Outlaw Camp, mountain pass west of Ankrahmun, z\n\t\tTyrsung, Thais Bandit Cave, Formorgar Mines. Also summoned by Gamel.",
+      "preyExclusive": false,
       "monsterIds": [
         "bandit"
       ]
@@ -1668,6 +1786,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Dark Cathedral, Trade Quarter, Factory Quarter, Foreigner Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "assassin"
       ]
@@ -1682,6 +1801,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Dark Cathedral, Vandura (Cult Cave), Foreigner Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "dark-monk"
       ]
@@ -1696,6 +1816,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Ab'Dendriel, Ab'Dendriel Surroundings, Carlin, Cormaya, Edron Surroundings, z\n\t\tFeyrist Meadows, Fibula, Fields of Glory, Green Claw Swamp, Issavi, Kazordoon Surroundings, Meriana, z\n\t\tOutlaw Camp, Port Hope Surroundings, Stonehome, Thais Surroundings, Venore Southern Swamp, Venore Surroundings.",
+      "preyExclusive": false,
       "monsterIds": [
         "blue-butterfly",
         "butterfly"
@@ -1711,6 +1832,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Banuta, Carlin Surroundings, Feyrist Meadows, Grimvale, Liberty Bay City, z\n\t\tLiberty Bay Surroundings, Meriana, Plains of Havoc, Port Hope Surroundings, z\n\t\tYalahar Arena Quarter, Yalahar Centre, Yalahar Magician Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "red-butterfly"
       ]
@@ -1725,6 +1847,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Ab'Dendriel, Carlin Surroundings, Cormaya, Feyrist Meadows, Grimvale, Issavi, z\n\t\tKazordoon Surroundings, Liberty Bay City, Liberty Bay Surroundings, Meriana, Plains of Havoc, z\n\t\tPort Hope Surroundings, Yalahar Arena Quarter, Yalahar Centre, Yalahar Magician Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "yellow-butterfly"
       ]
@@ -1739,6 +1862,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Water Elemental Cave in Port Hope, Water Elemental Dungeon, Deeper Banuta, Malada, Ramoa, z\n\t\tTalahu, Folda (7 spawn on the 3rd floor), Water Elemental Cave in Outlaw Camp (only during the Down the z\n\t\tDrain Mini World Change), Krailos Steppe underwater cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "water-elemental"
       ]
@@ -1753,6 +1877,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Calassa, Frozen Trench, Sunken Quarter, Alchemist Quarter (unreachable), z\n\t\tThe Inquisition Quest, Seacrest Grounds.",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-predator"
       ]
@@ -1767,6 +1892,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Malada, Hrodmir Quara Scout Caves, Quara Grotto, Oramond.",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-predator-scout"
       ]
@@ -1781,6 +1907,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Calassa, Frozen Trench underwater sites, Yalahar (Sunken Quarter).",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-constrictor"
       ]
@@ -1795,6 +1922,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Malada, Arena Quarter, Treasure Island Eastern Caves, z\n\t\tHrodmir Quara Scout Caves, Quara Grotto, Oramond.",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-constrictor-scout"
       ]
@@ -1809,6 +1937,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Calassa, Frozen Trench, Yalahar (Sunken Quarter).",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-mantassin"
       ]
@@ -1823,6 +1952,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Malada, Water Elemental Cave near Port Hope, Hrodmir Quara Scout Caves, Quara Grotto, Oramond.",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-mantassin-scout"
       ]
@@ -1837,6 +1967,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Calassa, Frozen Trench, Yalahar (Sunken Quarter).",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-hydromancer"
       ]
@@ -1851,6 +1982,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Malada, Hrodmir Quara Scout Caves, Quara Grotto, Oramond.",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-hydromancer-scout"
       ]
@@ -1865,6 +1997,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Calassa, Frozen Trench, Yalahar (Sunken Quarter).",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-pincher"
       ]
@@ -1879,6 +2012,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Malada, Hrodmir Quara Scout Caves, Quara Grotto, Oramond.",
+      "preyExclusive": false,
       "monsterIds": [
         "quara-pincher-scout"
       ]
@@ -1893,6 +2027,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Nargor, Tyrsung, Yalahar, Krailos Steppe, The Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "pirate-marauder"
       ]
@@ -1907,6 +2042,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Nargor, Tyrsung on the ship, Yalahar, Krailos Steppe and The Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "pirate-cutthroat"
       ]
@@ -1921,6 +2057,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Nargor, Tyrsung on the ship, Yalahar Foreign Quarter, Krailos Steppe and The Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "pirate-buccaneer"
       ]
@@ -1935,6 +2072,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Nargor, Trade Quarter, Foreigner Quarter Dock, Krailos Steppe During a World Change.",
+      "preyExclusive": false,
       "monsterIds": [
         "pirate-corsair"
       ]
@@ -1949,6 +2087,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Edron, Cormaya, Drillworm Caves, Venore Swamps, Liberty Bay, Vandura, Hellgate, z\n\tFibula Dungeon, Stonehome, Kazordoon, Darashia Rotworm Caves, Port Hope, Ancient Temple, z\n\tFenrock, Arena and Zoo Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "carrion-worm"
       ]
@@ -1963,6 +2102,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Goroma, Formorgar Mines, Magician Quarter, Forbidden Temple.",
+      "preyExclusive": false,
       "monsterIds": [
         "enlightened-of-the-cult"
       ]
@@ -1977,6 +2117,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Goroma, Deeper Cult Cave, Formorgar Mines, Magician Quarter, Forbidden Temple.",
+      "preyExclusive": false,
       "monsterIds": [
         "acolyte-of-the-cult"
       ]
@@ -1991,6 +2132,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Goroma, Liberty Bay's deeper cult dungeon, Formorgar Mines, Magician Quarter, Forbidden Temple.",
+      "preyExclusive": false,
       "monsterIds": [
         "adept-of-the-cult"
       ]
@@ -2005,6 +2147,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Liberty Bay Cult Cave, Formorgar Mines, Yalahar Magician Quarter, z\n\t\tin the caves on top of the Hrodmir mountains.",
+      "preyExclusive": false,
       "monsterIds": [
         "novice-of-the-cult"
       ]
@@ -2019,6 +2162,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Nargor Undead Cave, Goroma, Treasure Island, Drefia, The Cave, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "pirate-skeleton"
       ]
@@ -2033,6 +2177,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Drefia, Goroma, Nargor Undead Cave, hidden caves under Treasure Island, z\n\t\tsingle spawn at Liberty Bay ruins, Chyllfroest (unreachable).",
+      "preyExclusive": false,
       "monsterIds": [
         "pirate-ghost"
       ]
@@ -2047,6 +2192,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Laguna Islands, Fenrock, Port Hope and also can be found behind a wall below the center of Liberty Bay. These cannot be reached.",
+      "preyExclusive": false,
       "monsterIds": [
         "tortoise"
       ]
@@ -2061,6 +2207,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Laguna Islands, Meriana Gargoyle Cave and one on Nargor.",
+      "preyExclusive": false,
       "monsterIds": [
         "thornback-tortoise"
       ]
@@ -2075,6 +2222,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Formorgar Glacier, Tyrsung, around the Barbarian Settlements, Mammoth Shearing Factory, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "mammoth"
       ]
@@ -2089,6 +2237,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Goroma (beyond electric barrier), Laguna Islands, Shattered Isles, Underground Port Hope, z\n\t\tMistrock, Treasure Island. There is also one underwater next to The Tibianic, however it is unreachable.",
+      "preyExclusive": false,
       "monsterIds": [
         "blood-crab"
       ]
@@ -2103,6 +2252,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "The Laguna Islands, Arena and Zoo Quarter, TiquandaTarantula Caves, Shadowthorn Bog God Temple, Northern Zao Plantations, Northern Brimstone Bug CavesBrimstone Bug Cave, Tainted Caves.",
+      "preyExclusive": false,
       "monsterIds": [
         "toad"
       ]
@@ -2117,6 +2267,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Various locations, sighted in the Shattered Isles, Venore, Thais, Femor Hills, z\n\t\tCormaya, Edron Troll-Goblin Peninsula, Liberty Bay, Port Hope, Fibula, Drefia, Factory Quarter, z\n\t\tbordering Orc Fort, Rookgaard Premium Zone (not reachable), AbDendriel elf caves, z\n\t\tNorthern coast of Tibia between Dalbrect and Northport.",
+      "preyExclusive": true,
       "monsterIds": [
         "seagull"
       ]
@@ -2131,6 +2282,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Deep in the Pits of Inferno, in Verminor's throne room. Also in the Demon Forge (The Vats and The Hive).",
+      "preyExclusive": true,
       "monsterIds": [
         "son-of-verminor"
       ]
@@ -2145,6 +2297,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Meriana and other Shattered Isles, Port Hope caves, The Witches Cliff (only accessible during a quest).",
+      "preyExclusive": true,
       "monsterIds": [
         "green-frog"
       ]
@@ -2159,6 +2312,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Meriana, Laguna Islands, and other Shattered Isles.",
+      "preyExclusive": true,
       "monsterIds": [
         "azure-frog"
       ]
@@ -2173,6 +2327,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Meriana, Laguna Islands, and other Shattered Isles.",
+      "preyExclusive": true,
       "monsterIds": [
         "coral-frog"
       ]
@@ -2187,6 +2342,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Meriana, Laguna Islands, and other Shattered Isles.",
+      "preyExclusive": true,
       "monsterIds": [
         "crimson-frog"
       ]
@@ -2201,6 +2357,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Meriana, Laguna Islands, and other Shattered Isles.",
+      "preyExclusive": true,
       "monsterIds": [
         "orchid-frog"
       ]
@@ -2215,6 +2372,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Goroma.",
+      "preyExclusive": true,
       "monsterIds": [
         "island-troll"
       ]
@@ -2229,6 +2387,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Calassa, Frozen Trench, Water Elemental Dungeon through the water channels, before Zugurosh in The Inquisition Quest.",
+      "preyExclusive": false,
       "monsterIds": [
         "massive-water-elemental"
       ]
@@ -2243,6 +2402,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno, The Battlefield, The Arcanum, The Blood Halls and The Crystal Caves.",
+      "preyExclusive": false,
       "monsterIds": [
         "hand-of-cursed-fate"
       ]
@@ -2257,6 +2417,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Helheim (single, isolated spawn), Pits of Inferno (Ashfalor's throneroom), z\n\t\tDemon Forge (The Shadow Nexus and The Arcanum), under Razachai (including the Inner Sanctum), z\n\t\tChyllfroest, Oramond Fury Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "undead-dragon"
       ]
@@ -2271,6 +2432,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pits of Inferno, Formorgar Mines, Helheim, Roshamuul Prison and in The Arcanum Part of the Inquisition quest, Oramond Fury Dungeon",
+      "preyExclusive": false,
       "monsterIds": [
         "lost-soul"
       ]
@@ -2285,6 +2447,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pits of Inferno, Helheim, The Inquisition Quest, Roshamuul Prison, Oramond Fury Dungeon",
+      "preyExclusive": false,
       "monsterIds": [
         "betrayed-wraith"
       ]
@@ -2299,6 +2462,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno, Vengoth, The Inquisition Quest's Blood Halls, Oramond Dungeon, z\n\tOramond Fury Dungeon, Roshamuul Prison, Grounds of Damnation and Halls of Ascension.",
+      "preyExclusive": false,
       "monsterIds": [
         "dark-torturer"
       ]
@@ -2313,6 +2477,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pits of Inferno, The Crystal Caves and The Soul Well in The Inquisition Quest, z\n\t\tDrefia Grim Reaper Dungeons, as well in Vengoth.",
+      "preyExclusive": false,
       "monsterIds": [
         "spectre"
       ]
@@ -2327,6 +2492,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pits of Inferno, Formorgar Mines, Alchemist Quarter, Oramond Dungeon and Grounds of Destruction.",
+      "preyExclusive": false,
       "monsterIds": [
         "destroyer"
       ]
@@ -2341,6 +2507,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Inquisition, Pits of Inferno, Fenrock, Fury Dungeon and inside the Hellgore volcano z\n\ton Goroma during the Fire from the Earth Mini World Change.",
+      "preyExclusive": false,
       "monsterIds": [
         "diabolic-imp"
       ]
@@ -2355,6 +2522,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno, The Inquisition Quest (The Vats) and Grounds of Plague.",
+      "preyExclusive": false,
       "monsterIds": [
         "defiler"
       ]
@@ -2369,6 +2537,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Beregar, Black Knight's Villa, Chor, Ghostlands, Chyllfroest, Crystal Gardens, z\n\t\tCrystal Grounds, Dragon Lair (Edron), Drillworm Cave, Folda, Hero Fortress, Kazordoon, z\n\t\tGreen Djinn Tower, Mushroom Fields,Paradox Tower, Plains of Havoc, Plague Spike, z\n\t\tPoachers' Camp (Ferngrims Gate), Stonehome, Tiquanda, Truffels Garden, z\n\t\tVandura Mountain, Vega, Venore, Wyvern Cave (Ferngrims Gate), Wyvern Hill and Wyvern Ulderek's Rock Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "wyvern"
       ]
@@ -2383,6 +2552,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno (Apocalypse's Throne Room), The Inquisition Quest (The Shadow Nexus, Battlefield), z\n\tVengoth, Fury Dungeon, Oramond Fury Dungeon, The Extension Site, Grounds of Destruction and Halls of Ascension.",
+      "preyExclusive": false,
       "monsterIds": [
         "fury"
       ]
@@ -2397,6 +2567,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno, The Inquisition Quest, Deeper Banuta.",
+      "preyExclusive": false,
       "monsterIds": [
         "phantasm"
       ]
@@ -2411,6 +2582,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno (Infernatil's Throneroom), The Inquisition Quest Area, Hellgorge, z\n\tRoshamuul Prison, Chyllfroest, Oramond Dungeon, The Extension Site and Asura Vaults.",
+      "preyExclusive": false,
       "monsterIds": [
         "hellhound"
       ]
@@ -2425,6 +2597,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno, Demon Forge, Fury Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "hellfire-fighter"
       ]
@@ -2439,6 +2612,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Deep in Pits of Inferno (Apocalypse's throne room), The Dark Path, The Blood Halls, z\n\tThe Vats, The Hive, The Shadow Nexus, a room deep in Formorgar Mines, Roshamuul Prison, z\n\tOramond Dungeon, Grounds of Destruction and Halls of Ascension.",
+      "preyExclusive": false,
       "monsterIds": [
         "juggernaut"
       ]
@@ -2453,6 +2627,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Pits of Inferno, Edron (In the Vats during The Inquisition Quest), Roshamuul Prison, Grounds of Undeath.",
+      "preyExclusive": false,
       "monsterIds": [
         "blightwalker"
       ]
@@ -2467,6 +2642,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pits of Inferno, Formorgar Mines, Cemetery Quarter, Edron z\n\t\t(In multiple places during The Inquisition Quest), Alchemist Quarter, Vengoth Castle, Deeper Banuta, Krailos Ruins, Grounds of Deceit.",
+      "preyExclusive": false,
       "monsterIds": [
         "nightmare"
       ]
@@ -2481,6 +2657,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ankrahmun Pharaoh Tombs, Deeper Drefia, Kha'zeel Mountains, Northern Darama Desert, z\n\t\tSouthern Darama Desert, Yalahar Foreigner Quarter, Yalahar Trade Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "nomad"
       ]
@@ -2495,6 +2672,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Demon Forge, Deeper Banuta, Hero Cave, Hot Spot, Fury Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "massive-fire-elemental"
       ]
@@ -2509,6 +2687,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pits of Inferno, Formorgar Mines, Edron Demon Forge (The Vats, The Foundry), z\n\tMagician Quarter, Alchemist Quarter, Roshamuul Prison, Grounds of Plague and Halls of Ascension.",
+      "preyExclusive": false,
       "monsterIds": [
         "plaguesmith"
       ]
@@ -2523,6 +2702,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Okolnir, Razachai, Ice Witch Temple, Frost Dragon Tunnel, z\n\tYakchal Crypt (only during Yakchals awakening ritual), Dragonblaze Peaks, Deeper Banuta, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "frost-dragon"
       ]
@@ -2537,6 +2717,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "In and north of Formorgar Glacier, Nibelor, Helheim, Grimlund, south of Svargrond, Chyllfroest.",
+      "preyExclusive": true,
       "monsterIds": [
         "penguin"
       ]
@@ -2551,6 +2732,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Inukaya, Chyllfroest, Chakoya Iceberg, Nibelor (during a quest).",
+      "preyExclusive": false,
       "monsterIds": [
         "chakoya-tribewarden"
       ]
@@ -2565,6 +2747,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Helheim, Demon Forge (The Arcanum), beneath Fenrock, Vandura Bonelord Cave, z\n\t\tAlchemist Quarter and Cemetery Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "braindeath"
       ]
@@ -2579,6 +2762,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Ragnir, Krimhorn, Bittermor, and Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "barbarian-skullhunter"
       ]
@@ -2593,6 +2777,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Krimhorn, Bittermor, Ragnir, Arena and Zoo Quarter inside the Arena.",
+      "preyExclusive": false,
       "monsterIds": [
         "barbarian-bloodwalker"
       ]
@@ -2607,6 +2792,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Tyrsung (in the Jotunar mountain), Formorgar Glacier (single spawn), z\n\t\tMammoth Shearing Factory, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "frost-giant"
       ]
@@ -2621,6 +2807,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Svargrond and Nibelor.",
+      "preyExclusive": true,
       "monsterIds": [
         "husky"
       ]
@@ -2635,6 +2822,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Formorgar Glacier, Formorgar Mines, Nibelor Ice Cave, Ice Witch Temple, z\n\t\tDeeper Banuta, Crystal Caves, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "ice-golem"
       ]
@@ -2649,6 +2837,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "A lot of places on the Ice Islands and one on Rookgaard (unreachable).",
+      "preyExclusive": true,
       "monsterIds": [
         "silver-rabbit"
       ]
@@ -2663,6 +2852,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Inukaya, Chyllfroest, Chakoya Iceberg.",
+      "preyExclusive": false,
       "monsterIds": [
         "chakoya-toolshaper"
       ]
@@ -2677,6 +2867,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Inukaya, Chyllfroest, Chakoya Iceberg.",
+      "preyExclusive": false,
       "monsterIds": [
         "chakoya-windcaller"
       ]
@@ -2691,6 +2882,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Atop of the Formorgar Glacier and deep inside Formorgar Mines, Frost Dragon Tunnel, z\n\tIce Witch Temple, Nibelor Ice Cave, the Crystal Caves in The Inquisition Quest, Mushroom Gardens, z\n\tCrystal Gardens.",
+      "preyExclusive": false,
       "monsterIds": [
         "crystal-spider"
       ]
@@ -2705,6 +2897,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Ice Witch Temple, tower in Krimhorn, caves around Hrodmir ('camps' area), z\n\t\tFormorgar Glacier deepest mines, Magician Quarter in Yalahar (Level 60 Requirement Door).",
+      "preyExclusive": false,
       "monsterIds": [
         "ice-witch"
       ]
@@ -2719,6 +2912,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Krimhorn, Bittermor, Ragnir, and Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "barbarian-brutetamer"
       ]
@@ -2733,6 +2927,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Krimhorn, Bittermor, Ragnir, and Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "barbarian-headsplitter"
       ]
@@ -2747,6 +2942,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Tyrsung (in the Jotunar mountain), Formorgar Glacier (single spawn), z\n\t\tMammoth Shearing Factory, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "frost-giantess"
       ]
@@ -2761,6 +2957,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Any place with penguins like, Formorgar Glacier, Helheim, Tyrsung or Svargrond. z\n\t\tKnown spawn locations: west of Svargrond, up the Formorgar Glacier.",
+      "preyExclusive": true,
       "monsterIds": [
         "dire-penguin"
       ]
@@ -2775,6 +2972,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Hero Cave (Edron), Magician Tower, Dark Cathedral and Yalahar Academy of Magic in z\n\t\tMagician Quarter and a single one on The Witches' Cliff (only accessible during a quest).",
+      "preyExclusive": false,
       "monsterIds": [
         "dark-magician"
       ]
@@ -2789,6 +2987,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Magician Tower, Dark Cathedral, Hero Cave, Magician Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "dark-apprentice"
       ]
@@ -2803,6 +3002,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "South of Elvenbane and Ab'Dendriel, Ferngrims Gate, Northeast of Carlin, z\n\t\tEdron Hunter Camps, Yalahar - Trade Quarter and Foreigner Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "poacher"
       ]
@@ -2817,6 +3017,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Way to Beregar, below Femor Hills (Tower Defence Quest), near Femor Hills during Goblin raid.",
+      "preyExclusive": true,
       "monsterIds": [
         "goblin-leader"
       ]
@@ -2831,6 +3032,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Dryads appear in forest areas of Edron, Port Hope, Carlin and Cormaya during raids in June. z\n\t\tThere are 5 total waves, the initial one with the raid message and the rest every 15 minutes during next hour.",
+      "preyExclusive": true,
       "monsterIds": [
         "dryad"
       ]
@@ -2845,6 +3047,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "North of Carlin, Northwest of Thais, East of Kazordoon, Yalahar, Dawnport, Edron Hunters Camp, Plains of Havoc and other Tibian woods.",
+      "preyExclusive": true,
       "monsterIds": [
         "squirrel"
       ]
@@ -2859,6 +3062,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Thais Dragon Lair, beneath Fenrock, Darashia Dragon Lair, Venore Dragon Lair, z\n\tEdron Dragon Lair, Dragonblaze Peaks, Krailos Steppe. Also summoned by Lizard Dragon Priests.",
+      "preyExclusive": false,
       "monsterIds": [
         "dragon-hatchling"
       ]
@@ -2873,6 +3077,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Thais Dragon Lair, Venore Dragon Lair, Edron Dragon Lair by the Fire Axe Quest, z\n\t\ton the way to Pythius the Rotten, Razzachai, Dragonblaze Peaks.",
+      "preyExclusive": false,
       "monsterIds": [
         "dragon-lord-hatchling"
       ]
@@ -2887,6 +3092,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Carlin, Rookgaard, Factory Quarter, Yalahar, z\n\t\tThe Witches' Cliff (only accessible during a quest), probably more areas.",
+      "preyExclusive": true,
       "monsterIds": [
         "cat"
       ]
@@ -2901,6 +3107,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cyclopolis second floor and below, Mistrock, Mount Sternum, z\n\t\tCyclops Camp second floor and in the Cyclops version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "cyclops-smith"
       ]
@@ -2915,6 +3122,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cyclopolis, Mount Sternum, Mistrock and in the Cyclops version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "cyclops-drone"
       ]
@@ -2929,6 +3137,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Edron Troll-Goblin Peninsula, Ab'dendriel Shadow Caves, Thais South-East Troll Caves, z\n\t\tDusalk's Troll Clan Cave, Island of Destiny in Paladin's guild.",
+      "preyExclusive": false,
       "monsterIds": [
         "troll-champion"
       ]
@@ -2943,6 +3152,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Okolnir, Factory Quarter (Yalahar), Dragonblaze Peaks, Ice Witch Temple, Frost Dragon Tunnel, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "frost-dragon-hatchling"
       ]
@@ -2957,6 +3167,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Svargrond Sea Serpent Area, Drefia. There is also one under Rookgaard Academy, however it is unreachable.",
+      "preyExclusive": true,
       "monsterIds": [
         "deepsea-blood-crab"
       ]
@@ -2971,6 +3182,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Sea Serpent Area and Seacrest Grounds.",
+      "preyExclusive": false,
       "monsterIds": [
         "sea-serpent"
       ]
@@ -2985,6 +3197,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Sea Serpent Area.",
+      "preyExclusive": false,
       "monsterIds": [
         "young-sea-serpent"
       ]
@@ -2999,6 +3212,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Island of Destiny, Drefia, Ghostland and beneath Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "skeleton-warrior"
       ]
@@ -3013,6 +3227,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Forbidden Lands, on top of a hill in the northern part of the Arena and Zoo Quarter, z\n\t\tLower Spike, Truffels Garden and Mushroom Gardens.",
+      "preyExclusive": false,
       "monsterIds": [
         "massive-earth-elemental"
       ]
@@ -3027,6 +3242,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "North west of Ankrahmun, you must Levitate to hunt. Two can also be found in the Asura Palace.",
+      "preyExclusive": true,
       "monsterIds": [
         "massive-energy-elemental"
       ]
@@ -3041,6 +3257,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Khazeel, Energy Elemental Lair, Vandura Mountain, Vengoths mountain.",
+      "preyExclusive": false,
       "monsterIds": [
         "energy-elemental"
       ]
@@ -3055,6 +3272,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Edron Earth Elemental Cave, Vandura Mountain, Deeper Banuta, Vengoth Castle, Robson Isle, z\n\tDrillworm Caves, Crystal Grounds, Middle Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "earth-elemental"
       ]
@@ -3069,6 +3287,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Underneath Malada and Talahu, Edron Bog Raider Cave in Stonehome, z\n\t\tEdron Earth Elemental Cave, Alchemist Quarter, Vengoth Castle, Robson Isle. Oramond Hydra/Bog Raider Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "bog-raider"
       ]
@@ -3083,6 +3302,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drefia Wyrm Lair (after the Medusa Shield Quest room), Darashia Wyrm Hills, Arena and Zoo Quarter,  z\n\tbeneath Fenrock, Deeper Razachai, Lower Spike, Vandura Wyrm Cave and Vandura Mountain in Liberty Bay.",
+      "preyExclusive": false,
       "monsterIds": [
         "wyrm"
       ]
@@ -3097,6 +3317,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "All around Tiquanda and Feyrist. Several groups of Wisps can be found in and around z\n\t\tthe forests north of Edron. West of Hardek. Inside the Cyclops Camp. North of the triple z\n\t\tWyvern spawn outside Kazordoon. West of Ab'Dendriel. West of Venore Amazon Camp. z\n\t\tA few spawns around Venore, 2 spawn on the Formorgar Glacier, and on Krimhorn.",
+      "preyExclusive": true,
       "monsterIds": [
         "wisp"
       ]
@@ -3111,6 +3332,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Femor Hills, Edron Goblin Cave and Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "goblin-assassin"
       ]
@@ -3125,6 +3347,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Femor Hills, Edron Goblin Cave, and Fenrock.",
+      "preyExclusive": false,
       "monsterIds": [
         "goblin-scavenger"
       ]
@@ -3139,6 +3362,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Drefia Grim Reaper Dungeons, deep in Drefia Wyrm Lair (after the Medusa Shield Quest), z\n\t\tEdron (Hero Cave), Yalahar (Cemetery Quarter), Oramond Dungeon, z\n\t\t  Abandoned Sewers and optionally in the Demon Oak Quest.",
+      "preyExclusive": false,
       "monsterIds": [
         "grim-reaper"
       ]
@@ -3153,6 +3377,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drefia and Vampire Castle on Vengoth, Edron Vampire Crypt.",
+      "preyExclusive": false,
       "monsterIds": [
         "vampire-bride"
       ]
@@ -3167,6 +3392,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Alchemist Quarter, Arena and Zoo Quarter (Inside the arena with other mutated creatures), z\n\t\tRazzachai, Vampire Castle on Vengoth, Robson's Isle, Mushroom Gardens, Souleater Mountains, z\n\t\tNorthern Zao Plantations, Middle Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "mutated-rat"
       ]
@@ -3181,6 +3407,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Factory Quarter.",
+      "preyExclusive": true,
       "monsterIds": [
         "worker-golem"
       ]
@@ -3195,6 +3422,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Arena and Zoo Quarter, Krailos.",
+      "preyExclusive": false,
       "monsterIds": [
         "undead-gladiator"
       ]
@@ -3209,6 +3437,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cemetery Quarter (around 10 underground on the west side along with banshees, z\n\t\tand 4 bats on the church roof), Alchemist Quarter (4 found on top of roofs), z\n\t\tArena and Zoo Quarter (2 under the arena with other mutated creatures), z\n\t\tRazzachai, Northern Zao Plantations, Souleater Mountains, Middle Spike, Vengoth and Vengoth Castle.",
+      "preyExclusive": false,
       "monsterIds": [
         "mutated-bat"
       ]
@@ -3223,6 +3452,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Vengoth Castle, Vengoth Werewolf Cave, Grimvale, were-beasts cave south-west of Edron.",
+      "preyExclusive": false,
       "monsterIds": [
         "werewolf"
       ]
@@ -3237,6 +3467,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Vengoth surface, Vengoth Castle (Boreth's tower), Northern Zao Plantations, Tiquanda Laboratory, z\n\t\tDryad Gardens.",
+      "preyExclusive": false,
       "monsterIds": [
         "haunted-treeling"
       ]
@@ -3251,6 +3482,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cemetery Quarter, Drefia, Vampire Castle, Treasure Island, Isle of Evil, Upper Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "zombie"
       ]
@@ -3265,6 +3497,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Alchemist Quarter, Deeper Banuta.",
+      "preyExclusive": true,
       "monsterIds": [
         "acid-blob"
       ]
@@ -3279,6 +3512,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Alchemist Quarter, Drefia, Razzachai, Souleater Mountains, z\n\t\tNorthern Zao Plantations and Raging Mage tower.",
+      "preyExclusive": false,
       "monsterIds": [
         "death-blob"
       ]
@@ -3293,6 +3527,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Alchemist Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "mercury-blob"
       ]
@@ -3307,6 +3542,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Alchemist Quarter, Arena and Zoo Quarter (Inside with other mutated creatures), z\n\t\tMuggy Plains, Souleater Mountains and Northern Zao Plantations.",
+      "preyExclusive": false,
       "monsterIds": [
         "mutated-tiger"
       ]
@@ -3321,6 +3557,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cemetery Quarter, Alchemist Quarter and in the Arena and Zoo Quarter (unreachable), z\n\t\tVengoth Castle, Formorgar Mines, Lower Spike, Robson Isle (single respawn), Krailos Ruins.",
+      "preyExclusive": false,
       "monsterIds": [
         "nightmare-scion"
       ]
@@ -3335,6 +3572,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Magician Quarter, Vengoth, Deeper Banuta, Formorgar Minese, Chyllfroest, Oramond Dungeon, Asura Palace, Asura Vaults.",
+      "preyExclusive": false,
       "monsterIds": [
         "hellspawn"
       ]
@@ -3349,6 +3587,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Cemetery Quarter, Vengoth Castle, Vandura Mountain, Robson Isle.",
+      "preyExclusive": false,
       "monsterIds": [
         "nightstalker"
       ]
@@ -3363,6 +3602,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Alchemist Quarter and Factory Quarter (Yalahar), Robson's Isle, Tiquanda Laboratory.",
+      "preyExclusive": false,
       "monsterIds": [
         "mutated-human"
       ]
@@ -3377,6 +3617,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Magician Quarter, cave in Beregar, Farmine Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "gozzler"
       ]
@@ -3391,6 +3632,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Factory Quarter.",
+      "preyExclusive": true,
       "monsterIds": [
         "damaged-worker-golem"
       ]
@@ -3405,6 +3647,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Factory, Foreigner, and Trade Quarters in Yalahar.",
+      "preyExclusive": false,
       "monsterIds": [
         "crazed-beggar"
       ]
@@ -3419,6 +3662,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Throughout the Foreigner, Factory, and Trade Quarters in Yalahar.",
+      "preyExclusive": false,
       "monsterIds": [
         "gang-member"
       ]
@@ -3433,6 +3677,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Trade Quarter, Arena and Zoo Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "gladiator"
       ]
@@ -3447,6 +3692,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Magician Quarter, Trade Quarter, Factory Quarter,Isle of Evil, Tiquanda Laboratory.",
+      "preyExclusive": false,
       "monsterIds": [
         "mad-scientist"
       ]
@@ -3461,6 +3707,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Magician Quarter, Hero Cave, Demona, Fury Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "infernalist"
       ]
@@ -3475,6 +3722,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Factory Quarter.",
+      "preyExclusive": false,
       "monsterIds": [
         "war-golem"
       ]
@@ -3489,6 +3737,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Old Beregar mines.",
+      "preyExclusive": true,
       "monsterIds": [
         "furious-troll"
       ]
@@ -3503,6 +3752,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Old Beregar mines. In group with Furious Trolls almost all the time.",
+      "preyExclusive": true,
       "monsterIds": [
         "troll-legionnaire"
       ]
@@ -3517,6 +3767,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Isle of Evil.",
+      "preyExclusive": true,
       "monsterIds": [
         "evil-sheep"
       ]
@@ -3531,6 +3782,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Isle of Evil.",
+      "preyExclusive": true,
       "monsterIds": [
         "hot-dog"
       ]
@@ -3545,6 +3797,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Isle of Evil on the surface.",
+      "preyExclusive": true,
       "monsterIds": [
         "vampire-pig"
       ]
@@ -3559,6 +3812,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Isle of Evil.",
+      "preyExclusive": true,
       "monsterIds": [
         "doom-deer"
       ]
@@ -3573,6 +3827,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Isle of Evil.",
+      "preyExclusive": true,
       "monsterIds": [
         "killer-rabbit"
       ]
@@ -3587,6 +3842,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Isle of Evil.",
+      "preyExclusive": true,
       "monsterIds": [
         "berserker-chicken"
       ]
@@ -3601,6 +3857,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Isle of Evil.",
+      "preyExclusive": true,
       "monsterIds": [
         "demon-parrot"
       ]
@@ -3615,6 +3872,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Isle of Evil, Drefia.",
+      "preyExclusive": true,
       "monsterIds": [
         "infernal-frog"
       ]
@@ -3629,6 +3887,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Vandura Mountain (single spawn), Talahu (Medusa Cave), Deeper Banuta, Medusa Tower.",
+      "preyExclusive": false,
       "monsterIds": [
         "medusa"
       ]
@@ -3643,6 +3902,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "West of Edron in the Lost Mines.",
+      "preyExclusive": true,
       "monsterIds": [
         "undead-mine-worker"
       ]
@@ -3657,6 +3917,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "West of Edron, in a some Lost Mines.",
+      "preyExclusive": true,
       "monsterIds": [
         "undead-prospector"
       ]
@@ -3671,6 +3932,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zao Orc Land.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-marauder"
       ]
@@ -3685,6 +3947,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "North-east Muggy Plains, Deeper Banuta.",
+      "preyExclusive": true,
       "monsterIds": [
         "eternal-guardian"
       ]
@@ -3699,6 +3962,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zzaion, Zao Palace, Muggy Plains, Zao Orc Land (in fort), Razzachai, Temple of Equilibrium.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-zaogun"
       ]
@@ -3713,6 +3977,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zao Palace, Chazorai, Razzachai, and Zzaion.",
+      "preyExclusive": false,
       "monsterIds": [
         "draken-warmaster"
       ]
@@ -3727,6 +3992,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Zao Palace, Razachai, and Zzaion.",
+      "preyExclusive": false,
       "monsterIds": [
         "draken-spellweaver"
       ]
@@ -3741,6 +4007,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Temple of Equilibrium (Zao) Hidden stairs, Fire Dragon Dojo, Corruption Hole, Razzachai.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-chosen"
       ]
@@ -3755,6 +4022,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Zao Steppe, Northern Zao Plantations and the Horestis Tomb z\n\t\t(only when the curse of Horestis is not active).",
+      "preyExclusive": true,
       "monsterIds": [
         "insect-swarm"
       ]
@@ -3769,6 +4037,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zzaion, Zao Palace and its antechambers, Muggy Plains, Corruption Hole, Razachai, z\n\t\tTemple of Equilibrium, Northern Zao Plantations.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-dragon-priest"
       ]
@@ -3783,6 +4052,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zzaion, Zao Palace and its antechambers, Muggy Plains, Zao Orc Land (in fort), z\n\t\tCorruption Hole, Razachai, Temple of Equilibrium, Northern Zao Plantations.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-legionnaire"
       ]
@@ -3797,6 +4067,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zzaion, Zao Palace and its antechambers, Muggy Plains, Zao Orc Land (single spawn in fort), z\n\t\tCorruption Hole, Razachai, Temple of Equilibrium, Northern Zao Plantations.",
+      "preyExclusive": false,
       "monsterIds": [
         "lizard-high-guard"
       ]
@@ -3811,6 +4082,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Northern Zao Plantations, Souleater Mountains, Muggy Plains, z\n\t\tKiller Caiman Cave in the Zao Steppe, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "killer-caiman"
       ]
@@ -3825,6 +4097,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Zao Steppe, Raging Mage Tower, Gnarlhound Caves. z\n\t\tFour inaccessible ones can be seen in Telas's basement.",
+      "preyExclusive": false,
       "monsterIds": [
         "gnarlhound"
       ]
@@ -3839,6 +4112,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Steppe of Zao, Lion's Rock, Zao Terramite Caves, Darama Terramite Cave, z\n\t\tTerramite Breeding Tunnels. Also raids desert north of Ankrahmun.",
+      "preyExclusive": false,
       "monsterIds": [
         "terramite"
       ]
@@ -3853,6 +4127,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zao Wailing Widow Cave, Northern Zao Plantations, Northern Brimstone Bug Cave, z\n\t\tRazzachai, Chyllfroest, Krailos Spider Lair.",
+      "preyExclusive": false,
       "monsterIds": [
         "wailing-widow"
       ]
@@ -3867,6 +4142,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Zao Wailing Widow Cave, Muggy Plains (during raid), Razzachai, z\n\t\tNorthern Zao Plantations, Northern Brimstone Bug Cave, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "lancer-beetle"
       ]
@@ -3881,6 +4157,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Zao Steppe, Raging Mage tower, Ankrahmun Desert, Darashia Desert, Drefia.",
+      "preyExclusive": false,
       "monsterIds": [
         "sandcrawler"
       ]
@@ -3895,6 +4172,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ghastly Dragon Lair, Corruption Hole, Razachai including the Inner Sanctum, Zao Palace, Deeper Banuta single spawn, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "ghastly-dragon"
       ]
@@ -3909,6 +4187,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Razzachai.",
+      "preyExclusive": true,
       "monsterIds": [
         "lizard-magistratus"
       ]
@@ -3923,6 +4202,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Razzachai.",
+      "preyExclusive": true,
       "monsterIds": [
         "lizard-noble"
       ]
@@ -3937,6 +4217,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Razachai, including the Crystal Column chambers in the Inner Sanctum.",
+      "preyExclusive": false,
       "monsterIds": [
         "draken-elite"
       ]
@@ -3951,6 +4232,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Razachai including the Inner Sanctum.",
+      "preyExclusive": false,
       "monsterIds": [
         "draken-abomination"
       ]
@@ -3965,6 +4247,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Beneath Razachai, Northern Zao Plantations, Brimstone Bug Cave, Chyllfroest, Krailos Spider Lair",
+      "preyExclusive": false,
       "monsterIds": [
         "brimstone-bug"
       ]
@@ -3979,6 +4262,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Razzachai, Northern Zao Plantations, Souleater Mountains, Deeper Banuta.",
+      "preyExclusive": false,
       "monsterIds": [
         "souleater"
       ]
@@ -3993,6 +4277,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Green Claw Swamp underground, near the big witches' cauldron.",
+      "preyExclusive": true,
       "monsterIds": [
         "bane-bringer"
       ]
@@ -4007,6 +4292,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Forest around Outlaw Camp.",
+      "preyExclusive": false,
       "monsterIds": [
         "boar"
       ]
@@ -4021,6 +4307,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Stampor Cave on the Muggy Plains, Chyllfroest.",
+      "preyExclusive": false,
       "monsterIds": [
         "stampor"
       ]
@@ -4035,6 +4322,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Calassa, Treasure Island , Seacrest Grounds. z\n\t\tIn the Seacrest Grounds the spawns are Varying Monster Spawns in which the common creature is an Abyssal Calamary. z\n\t\tThe chance to spawn a Crustacea Gigantica seems to be around 1%-2%.",
+      "preyExclusive": true,
       "monsterIds": [
         "crustacea-gigantica"
       ]
@@ -4049,6 +4337,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Edron.",
+      "preyExclusive": true,
       "monsterIds": [
         "iron-servant"
       ]
@@ -4063,6 +4352,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Edron.",
+      "preyExclusive": true,
       "monsterIds": [
         "golden-servant"
       ]
@@ -4077,6 +4367,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Edron.",
+      "preyExclusive": true,
       "monsterIds": [
         "diamond-servant"
       ]
@@ -4091,6 +4382,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb.",
+      "preyExclusive": true,
       "monsterIds": [
         "ghoulish-hyaena"
       ]
@@ -4105,6 +4397,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb.",
+      "preyExclusive": true,
       "monsterIds": [
         "sandstone-scorpion"
       ]
@@ -4119,6 +4412,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb, Middle Spike, Medusa Tower.",
+      "preyExclusive": false,
       "monsterIds": [
         "clay-guardian"
       ]
@@ -4133,6 +4427,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb.",
+      "preyExclusive": true,
       "monsterIds": [
         "grave-guard"
       ]
@@ -4147,6 +4442,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb",
+      "preyExclusive": true,
       "monsterIds": [
         "tomb-servant"
       ]
@@ -4161,6 +4457,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb (third floor and lower).",
+      "preyExclusive": true,
       "monsterIds": [
         "sacred-spider"
       ]
@@ -4175,6 +4472,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb.",
+      "preyExclusive": true,
       "monsterIds": [
         "death-priest"
       ]
@@ -4189,6 +4487,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Horestis Tomb.",
+      "preyExclusive": true,
       "monsterIds": [
         "elder-mummy"
       ]
@@ -4203,6 +4502,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "In another dimension, through a portal in the Raging Mage tower, southern Zao.",
+      "preyExclusive": false,
       "monsterIds": [
         "yielothax"
       ]
@@ -4217,6 +4517,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Around AbDendriel, Carlin east from Lothar, Femor Hills and Ferngrims Gate, usually in pairs. They will appear when they're not overhunted.",
+      "preyExclusive": true,
       "monsterIds": [
         "white-deer"
       ]
@@ -4231,6 +4532,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "East, west and south-west of the Femor Hills.",
+      "preyExclusive": true,
       "monsterIds": [
         "starving-wolf"
       ]
@@ -4245,6 +4547,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Demonwar Crypt.",
+      "preyExclusive": true,
       "monsterIds": [
         "shaburak-demon"
       ]
@@ -4259,6 +4562,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Demonwar Crypt teleporter before vampire shield quest.",
+      "preyExclusive": true,
       "monsterIds": [
         "askarak-demon"
       ]
@@ -4273,6 +4577,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "South-east of Venore, Swamp Troll Cave.",
+      "preyExclusive": true,
       "monsterIds": [
         "slug"
       ]
@@ -4287,6 +4592,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "West and south of Greenshore.",
+      "preyExclusive": true,
       "monsterIds": [
         "insectoid-scout"
       ]
@@ -4301,6 +4607,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Ankrahmun near the way to Darashia, Ankrahmun near sea, around Darashia, Issavi.",
+      "preyExclusive": true,
       "monsterIds": [
         "dromedary"
       ]
@@ -4315,6 +4622,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja, Sunken Mines near Dwarf Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "deepling-scout"
       ]
@@ -4329,6 +4637,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Shadowthorn, during the Thornfire World Change.",
+      "preyExclusive": true,
       "monsterIds": [
         "firestarter"
       ]
@@ -4343,6 +4652,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Shadowthorn in the bog god's temple, Drefia, around Lake Equivocolao when it's dirty.",
+      "preyExclusive": true,
       "monsterIds": [
         "bog-frog"
       ]
@@ -4357,6 +4667,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Shadowthorn.",
+      "preyExclusive": true,
       "monsterIds": [
         "thornfire-wolf"
       ]
@@ -4371,6 +4682,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Shadowthorn",
+      "preyExclusive": true,
       "monsterIds": [
         "crystal-wolf"
       ]
@@ -4385,6 +4697,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Shadowthorn",
+      "preyExclusive": true,
       "monsterIds": [
         "elf-overseer"
       ]
@@ -4399,6 +4712,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Rookgaard and in Thais during raids",
+      "preyExclusive": true,
       "monsterIds": [
         "troll-guard"
       ]
@@ -4413,6 +4727,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "South-east, east and north-east of Thais depending on the Horse Station World Change; z\n\t\tone near Roswitha in Rathleton.",
+      "preyExclusive": false,
       "monsterIds": [
         "horse"
       ]
@@ -4427,6 +4742,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "South-east, east and north-east of Thais depending on the Horse Station World Change.",
+      "preyExclusive": false,
       "monsterIds": [
         "brown-horse"
       ]
@@ -4441,6 +4757,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja.",
+      "preyExclusive": false,
       "monsterIds": [
         "deepling-warrior"
       ]
@@ -4455,6 +4772,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja. During Deeplings stage 1 around 10 spawns exist. z\n\t\tAlso may spawn during the gemcutting mission. Many more spawns in almost all areas of Deepling stage 2 and 3.",
+      "preyExclusive": false,
       "monsterIds": [
         "deepling-guard"
       ]
@@ -4469,6 +4787,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja.",
+      "preyExclusive": false,
       "monsterIds": [
         "deepling-spellsinger"
       ]
@@ -4483,6 +4802,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Drefia, Ankrahmun.",
+      "preyExclusive": false,
       "monsterIds": [
         "nomad-female"
       ]
@@ -4497,6 +4817,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "The Hive surface during the Hive Born World Change's third stage.",
+      "preyExclusive": true,
       "monsterIds": [
         "ladybug"
       ]
@@ -4511,6 +4832,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja only in stage 3 in a large room.",
+      "preyExclusive": true,
       "monsterIds": [
         "manta-ray"
       ]
@@ -4525,6 +4847,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Fiehonja.",
+      "preyExclusive": true,
       "monsterIds": [
         "calamary"
       ]
@@ -4539,6 +4862,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Fiehonja, Krailos Steppe underwater cave.",
+      "preyExclusive": true,
       "monsterIds": [
         "jellyfish"
       ]
@@ -4553,6 +4877,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja, Seacrest Grounds, Krailos Steppe underwater cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "shark"
       ]
@@ -4567,6 +4892,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Fiehonja.",
+      "preyExclusive": false,
       "monsterIds": [
         "northern-pike"
       ]
@@ -4581,6 +4907,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Fiehonja.",
+      "preyExclusive": false,
       "monsterIds": [
         "fish"
       ]
@@ -4595,6 +4922,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Hive, Hive Outpost.",
+      "preyExclusive": false,
       "monsterIds": [
         "crawler"
       ]
@@ -4609,6 +4937,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Hive, Hive Outpost.",
+      "preyExclusive": false,
       "monsterIds": [
         "spidris"
       ]
@@ -4623,6 +4952,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Hive, Hive Outpost.",
+      "preyExclusive": false,
       "monsterIds": [
         "kollos"
       ]
@@ -4637,6 +4967,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "The Hive, Hive Outpost.",
+      "preyExclusive": false,
       "monsterIds": [
         "swarmer"
       ]
@@ -4651,6 +4982,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "The Hive, Hive Outpost.",
+      "preyExclusive": false,
       "monsterIds": [
         "spitter"
       ]
@@ -4665,6 +4997,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "The Hive, Hive Outpost.",
+      "preyExclusive": false,
       "monsterIds": [
         "waspoid"
       ]
@@ -4679,6 +5012,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Fiehonja, Coral mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "deepling-worker"
       ]
@@ -4693,6 +5027,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Hive, Hive Outpost.",
+      "preyExclusive": false,
       "monsterIds": [
         "insectoid-worker"
       ]
@@ -4707,6 +5042,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "The Hive: east tower (beyond gates), west tower (including beyond gates), z\n\t\talso anywhere Hive Overseers are found (as summons), Hive Outpost.",
+      "preyExclusive": true,
       "monsterIds": [
         "spidris-elite"
       ]
@@ -4721,6 +5057,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "The Hive towers: on the highest floor of each tower, z\n\t\tand in many of the closed rooms accessed with pheromones; z\n\t\tmany in the large underground room of the west tower. z\n\tLiberty Bay Hive Outpost: one spawn on the second floor underground.",
+      "preyExclusive": true,
       "monsterIds": [
         "hive-overseer"
       ]
@@ -4735,6 +5072,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja.",
+      "preyExclusive": true,
       "monsterIds": [
         "deepling-brawler"
       ]
@@ -4749,6 +5087,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja.",
+      "preyExclusive": true,
       "monsterIds": [
         "deepling-master-librarian"
       ]
@@ -4763,6 +5102,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Fiehonja.",
+      "preyExclusive": true,
       "monsterIds": [
         "deepling-tyrant"
       ]
@@ -4777,6 +5117,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fiehonja (Tanjis lair).",
+      "preyExclusive": true,
       "monsterIds": [
         "deepling-elite"
       ]
@@ -4791,6 +5132,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Horestis Tomb.",
+      "preyExclusive": true,
       "monsterIds": [
         "grave-robber"
       ]
@@ -4805,6 +5147,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Crystal Grounds, Mushroom Farms, Middle Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "crystalcrusher"
       ]
@@ -4819,6 +5162,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Truffels Garden.",
+      "preyExclusive": true,
       "monsterIds": [
         "mushroom-sniffer"
       ]
@@ -4833,6 +5177,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "It raids every four hours, starting at server save, in groups of one to three at z\n\t\tvarious places around Venore swamp, especially near the southern production site.",
+      "preyExclusive": true,
       "monsterIds": [
         "water-buffalo"
       ]
@@ -4847,6 +5192,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Golem Workshop.",
+      "preyExclusive": true,
       "monsterIds": [
         "enraged-crystal-golem"
       ]
@@ -4861,6 +5207,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Golem Workshop in Gnomebase Alpha",
+      "preyExclusive": true,
       "monsterIds": [
         "damaged-crystal-golem"
       ]
@@ -4875,6 +5222,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "South of Stonehome, deep under Telas's house.",
+      "preyExclusive": true,
       "monsterIds": [
         "modified-gnarlhound"
       ]
@@ -4889,6 +5237,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drillworm Caves, Lower Spike, Lost Dwarf version of the Forsaken Mine, Oramond Factory Raids and Warzone 4.",
+      "preyExclusive": false,
       "monsterIds": [
         "drillworm"
       ]
@@ -4903,6 +5252,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 1.",
+      "preyExclusive": false,
       "monsterIds": [
         "stone-devourer"
       ]
@@ -4917,6 +5267,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 1.",
+      "preyExclusive": false,
       "monsterIds": [
         "armadile"
       ]
@@ -4931,6 +5282,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 1, Rathleton Sewers, unreachable location in Tiquanda Laboratory.",
+      "preyExclusive": false,
       "monsterIds": [
         "humongous-fungus"
       ]
@@ -4945,6 +5297,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 2.",
+      "preyExclusive": true,
       "monsterIds": [
         "weeper"
       ]
@@ -4959,6 +5312,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 3.",
+      "preyExclusive": false,
       "monsterIds": [
         "orewalker"
       ]
@@ -4973,6 +5327,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 2.",
+      "preyExclusive": true,
       "monsterIds": [
         "lava-golem"
       ]
@@ -4987,6 +5342,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 2.",
+      "preyExclusive": false,
       "monsterIds": [
         "magma-crawler"
       ]
@@ -5001,6 +5357,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Caves of the Lost and Lower Spike.",
+      "preyExclusive": true,
       "monsterIds": [
         "enslaved-dwarf"
       ]
@@ -5015,6 +5372,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzones 2 and 3.",
+      "preyExclusive": false,
       "monsterIds": [
         "lost-berserker"
       ]
@@ -5029,6 +5387,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 3.",
+      "preyExclusive": true,
       "monsterIds": [
         "cliff-strider"
       ]
@@ -5043,6 +5402,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 3.",
+      "preyExclusive": false,
       "monsterIds": [
         "ironblight"
       ]
@@ -5057,6 +5417,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 1, Rathleton Sewers, unreachable location in Tiquanda Laboratory.",
+      "preyExclusive": false,
       "monsterIds": [
         "hideous-fungus"
       ]
@@ -5071,6 +5432,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Fury Dungeon and Goroma volcano (surface floor, inner volcano) only during the z\n\t\tFire from the Earth Mini World Change.",
+      "preyExclusive": true,
       "monsterIds": [
         "dragonling"
       ]
@@ -5085,6 +5447,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 2.",
+      "preyExclusive": true,
       "monsterIds": [
         "infected-weeper"
       ]
@@ -5099,6 +5462,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Hot Spot (in Gnomebase Alpha) and Lower Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "vulcongra"
       ]
@@ -5113,6 +5477,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Can be found in Truffels Garden as well as the Mushroom Gardens.",
+      "preyExclusive": false,
       "monsterIds": [
         "wiggler"
       ]
@@ -5127,6 +5492,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Venore Salamander Cave, Dryad Gardens.",
+      "preyExclusive": false,
       "monsterIds": [
         "emerald-damselfly"
       ]
@@ -5141,6 +5507,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Shadowthorn in the bog god's temple, Drefia, around Lake Equivocolao when it's dirty.",
+      "preyExclusive": false,
       "monsterIds": [
         "salamander"
       ]
@@ -5155,6 +5522,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Venore swamp surface, Venore Salamander Cave, Dryad Gardens.",
+      "preyExclusive": false,
       "monsterIds": [
         "marsh-stalker"
       ]
@@ -5169,6 +5537,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Streets of Venore, Gardens of Night.",
+      "preyExclusive": true,
       "monsterIds": [
         "pigeon"
       ]
@@ -5183,6 +5552,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Venore Corym Cave, Tiquanda Corym Cave, Corym Black Market, z\n\t\tCarlin Corym Cave/Dwarf Mines Diggers Depths Mine, Upper Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "corym-charlatan"
       ]
@@ -5197,6 +5567,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Venore Corym Cave, Tiquanda Corym Cave, Corym Black Market, z\n\t\tCarlin Corym Cave/Dwarf Mines Diggers Depths Mine, Upper Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "corym-skirmisher"
       ]
@@ -5211,6 +5582,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Venore Corym Cave, Tiquanda Corym Cave, Corym Black Market, z\n\t\tCarlin Corym Cave/Dwarf Mines Diggers Depths Mine, Upper Spike.",
+      "preyExclusive": false,
       "monsterIds": [
         "corym-vanguard"
       ]
@@ -5225,6 +5597,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Venore swamp area, Venore Salamander Cave, Tiquanda Laboratory.",
+      "preyExclusive": false,
       "monsterIds": [
         "swampling"
       ]
@@ -5239,6 +5612,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Venore marshes.",
+      "preyExclusive": true,
       "monsterIds": [
         "little-corym-charlatan"
       ]
@@ -5253,6 +5627,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Venore swamp.",
+      "preyExclusive": true,
       "monsterIds": [
         "adventurer"
       ]
@@ -5267,6 +5642,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Caves of the Lost, Lower Spike and in the Lost Dwarf version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "lost-husher"
       ]
@@ -5281,6 +5657,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Caves of the Lost, Lower Spike and in the Lost Dwarf version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "lost-basher"
       ]
@@ -5295,6 +5672,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Caves of the Lost, Lower Spike and in the Lost Dwarf version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "lost-thrower"
       ]
@@ -5309,6 +5687,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drefia, Edron Vampire Crypt.",
+      "preyExclusive": false,
       "monsterIds": [
         "vampire-viscount"
       ]
@@ -5323,6 +5702,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Deep under Drefia.",
+      "preyExclusive": true,
       "monsterIds": [
         "vicious-manbat"
       ]
@@ -5337,6 +5717,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drefia.",
+      "preyExclusive": false,
       "monsterIds": [
         "shadow-pupil"
       ]
@@ -5351,6 +5732,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drefia and Old Fortress.",
+      "preyExclusive": false,
       "monsterIds": [
         "blood-priest"
       ]
@@ -5365,6 +5747,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Drefia.",
+      "preyExclusive": true,
       "monsterIds": [
         "white-shade"
       ]
@@ -5379,6 +5762,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Drefia Wyrm Lair, Vandura Wyrm Cave, Oramond Factory Raids (west), Warzone 4.",
+      "preyExclusive": false,
       "monsterIds": [
         "elder-wyrm"
       ]
@@ -5393,6 +5777,7 @@
       "secondUnlock": 3,
       "toKill": 5,
       "locations": "Deep under Drefia.",
+      "preyExclusive": true,
       "monsterIds": [
         "nightfiend"
       ]
@@ -5407,6 +5792,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Drefia.",
+      "preyExclusive": false,
       "monsterIds": [
         "blood-hand"
       ]
@@ -5421,6 +5807,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Around the higher level areas of Drefia, z\n\t\tincluding the Drefia Grim Reaper Dungeons and the Drefia Vampire Crypt.",
+      "preyExclusive": false,
       "monsterIds": [
         "gravedigger"
       ]
@@ -5435,6 +5822,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Drefia.",
+      "preyExclusive": true,
       "monsterIds": [
         "tarnished-spirit"
       ]
@@ -5449,6 +5837,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "South-west of Ulderek's Rock and in the Rorc version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "rorc"
       ]
@@ -5463,6 +5852,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Leaf dungeon in Hellgate, Lair of the Treeling Witch, Forest Fury Camp and in the z\n\t\tForest Fury version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "leaf-golem"
       ]
@@ -5477,6 +5867,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Forest Fury Camp and in the Forest Fury version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "forest-fury"
       ]
@@ -5491,6 +5882,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Lion's Rock a few floors down.",
+      "preyExclusive": false,
       "monsterIds": [
         "roaring-lion"
       ]
@@ -5505,6 +5897,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Forest Fury Camp, Lair of the Treeling Witch and in the Forest Fury version of the Forsaken Mine.",
+      "preyExclusive": false,
       "monsterIds": [
         "wilting-leaf-golem"
       ]
@@ -5519,6 +5912,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Sparsely in eastern Lower Roshamuu and southern Guzzlemaw Valley.",
+      "preyExclusive": false,
       "monsterIds": [
         "shock-head"
       ]
@@ -5533,6 +5927,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Dark Grounds, Guzzlemaw Valley (if less than 100 Blowing Horns tasks z\n\t\thave been done the day before) and the Silencer Plateau (when Silencer Resonating Chambers are used there).",
+      "preyExclusive": true,
       "monsterIds": [
         "sight-of-surrender"
       ]
@@ -5547,6 +5942,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Guzzlemaw Valley, and a single spawn in a tower in Upper Roshamuul (south of the Depot and west of the entrance to Roshamuul Prison).",
+      "preyExclusive": false,
       "monsterIds": [
         "guzzlemaw"
       ]
@@ -5561,6 +5957,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "All over the Roshamuul surface and Nightmare Isles.",
+      "preyExclusive": false,
       "monsterIds": [
         "silencer"
       ]
@@ -5575,6 +5972,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "All over the surface of Upper Roshamuul and Nightmare Isles.",
+      "preyExclusive": false,
       "monsterIds": [
         "choking-fear"
       ]
@@ -5589,6 +5987,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Roshamuul Mines, Roshamuul Cistern.",
+      "preyExclusive": false,
       "monsterIds": [
         "terrorsleep"
       ]
@@ -5603,6 +6002,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "All over the surface of Upper Roshamuul and Nightmare Isles.",
+      "preyExclusive": false,
       "monsterIds": [
         "retching-horror"
       ]
@@ -5617,6 +6017,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Roshamuul Prison.",
+      "preyExclusive": false,
       "monsterIds": [
         "demon-outcast"
       ]
@@ -5631,6 +6032,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Roshamuul Mines, Roshamuul Cistern.",
+      "preyExclusive": false,
       "monsterIds": [
         "feversleep"
       ]
@@ -5645,6 +6047,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Lower Roshamuul, Guzzlemaw Valley, the entrance to Upper Roshamuul.",
+      "preyExclusive": false,
       "monsterIds": [
         "frazzlemaw"
       ]
@@ -5659,6 +6062,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Glooth Factory, Underground Glooth Factory, Rathleton Sewers, Jaccus Maxxens Dungeon, z\n\t\tOramond Dungeon (depending on Magistrate votes).",
+      "preyExclusive": false,
       "monsterIds": [
         "glooth-golem"
       ]
@@ -5673,6 +6077,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Workshop Quarter, Glooth Factory, Underground Glooth Factory, Abandoned Sewers, z\n\t\tOramond Dungeon (depending on Magistrate votes), Jaccus Maxxens Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "metal-gargoyle"
       ]
@@ -5687,6 +6092,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Oramond/Southern Plains, Lower Rathleton, Oramond/Western Plains, z\n\t\tUnderground Glooth Factory, Jaccus Maxxen's Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "blood-beast"
       ]
@@ -5701,6 +6107,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Workshop Quarter, Glooth Factory, Underground Glooth Factory, z\n\t\tOramond Dungeon (depending on Magistrate votes), Jaccus Maxxens Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "rustheap-golem"
       ]
@@ -5715,6 +6122,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Rathleton Sewers, Underground Glooth Factory, Jaccus Maxxen's Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "glooth-anemone"
       ]
@@ -5729,6 +6137,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "A few spawns in the Underground Glooth Factory, Glooth Factory, and Rathleton Sewers.",
+      "preyExclusive": true,
       "monsterIds": [
         "walker"
       ]
@@ -5743,6 +6152,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Oramond Mountain Hideout, Oramond Minotaur Camp (northern camp), z\n\t\tUnderground Glooth Factory, Oramond Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "moohtant"
       ]
@@ -5757,6 +6167,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Underground Glooth Factory, Oramond Minotaur Camp, Oramond Dungeon",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-amazon"
       ]
@@ -5771,6 +6182,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Oramond Mountain Hideout, Oramond Minotaur Camp (northern camp), z\n\t\tUnderground Glooth Factory, Oramond Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "execowtioner"
       ]
@@ -5785,6 +6197,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Oramond/Southern Plains, Minotaur Hills, z\n\t\tOramond Dungeon (depending on Magistrate votes), Underground Glooth Factory.",
+      "preyExclusive": false,
       "monsterIds": [
         "mooh-tah-warrior"
       ]
@@ -5799,6 +6212,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Oramond/Southern Plains, Minotaur Hills, z\n\t\tOramond Dungeon (depending on Magistrate votes), Underground Glooth Factory.",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-hunter"
       ]
@@ -5813,6 +6227,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Oramond/Southern Plains, Minotaur Hills, z\n\t\tOramond Dungeon (depending on Magistrate votes), Underground Glooth Factory, Oramond Fury Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "worm-priestess"
       ]
@@ -5827,6 +6242,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Oramond/Western Plains, Lower Rathleton, Glooth Factory, Underground Glooth Factory, Rathleton Sewers.",
+      "preyExclusive": false,
       "monsterIds": [
         "glooth-blob"
       ]
@@ -5841,6 +6257,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Rathleton Sewers, Glooth Factory, Lower Rathleton, Oramond/Western Plains, Jaccus Maxxen's Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "rot-elemental"
       ]
@@ -5855,6 +6272,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Rathleton Sewers, Lower Rathleton, Oramond/Western Plains, z\n\t\tUnderground Glooth Factory, Jaccus Maxxen's Dungeon.",
+      "preyExclusive": false,
       "monsterIds": [
         "devourer"
       ]
@@ -5869,6 +6287,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Seacrest Grounds when Quara Renegades are not spawning.",
+      "preyExclusive": false,
       "monsterIds": [
         "seacrest-serpent"
       ]
@@ -5883,6 +6302,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Second floor Glooth Underground Factory, east side during the Oramond Minotaurs raid.",
+      "preyExclusive": true,
       "monsterIds": [
         "minotaur-invader"
       ]
@@ -5897,6 +6317,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "South side of the second floor of Underground Glooth Factory, Warzone 5",
+      "preyExclusive": true,
       "monsterIds": [
         "high-voltage-elemental"
       ]
@@ -5911,6 +6332,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Lion's Rock temple.",
+      "preyExclusive": true,
       "monsterIds": [
         "noble-lion"
       ]
@@ -5925,6 +6347,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Underground Glooth Factory.",
+      "preyExclusive": false,
       "monsterIds": [
         "glooth-bandit"
       ]
@@ -5939,6 +6362,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Underground Glooth Factory.",
+      "preyExclusive": false,
       "monsterIds": [
         "glooth-brigand"
       ]
@@ -5953,6 +6377,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Asura Palace.",
+      "preyExclusive": false,
       "monsterIds": [
         "dawnfire-asura"
       ]
@@ -5967,6 +6392,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Asura Palace.",
+      "preyExclusive": false,
       "monsterIds": [
         "midnight-asura"
       ]
@@ -5981,6 +6407,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Tainted Caves in the Green Claw Swamp.",
+      "preyExclusive": true,
       "monsterIds": [
         "tainted-soul"
       ]
@@ -5995,6 +6422,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Tainted Caves, Poacher Caves/Gloomy.",
+      "preyExclusive": false,
       "monsterIds": [
         "gloom-wolf"
       ]
@@ -6009,6 +6437,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Tiquanda Medusa Tower.",
+      "preyExclusive": true,
       "monsterIds": [
         "omnivora"
       ]
@@ -6023,6 +6452,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Grimvale underground, were-beasts cave south-west of Edron and in the Last Sanctum east of Cormaya.",
+      "preyExclusive": false,
       "monsterIds": [
         "werebear"
       ]
@@ -6037,6 +6467,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Grimvale underground, were-beasts cave south-west of Edron and in the Last Sanctum east of Cormaya.",
+      "preyExclusive": false,
       "monsterIds": [
         "wereboar"
       ]
@@ -6051,6 +6482,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Grimvale: -1 floor from ground level, also seen on surface during full moon (12th-14th of every month). z\n\t\tAlso in the were-beasts cave south-west of Edron and in the Last Sanctum.",
+      "preyExclusive": false,
       "monsterIds": [
         "werebadger"
       ]
@@ -6065,6 +6497,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Old Fortress (north of Edron), Old Masonry, Forbidden Temple (Carlin).",
+      "preyExclusive": false,
       "monsterIds": [
         "vicious-squire"
       ]
@@ -6079,6 +6512,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Old Fortress (north of Edron), Old Masonry, Forbidden Temple (Carlin).",
+      "preyExclusive": false,
       "monsterIds": [
         "renegade-knight"
       ]
@@ -6093,6 +6527,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Old Fortress (north of Edron), Old Masonry, Forbidden Temple (Carlin).",
+      "preyExclusive": false,
       "monsterIds": [
         "vile-grandmaster"
       ]
@@ -6107,6 +6542,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Poacher Caves/Gloomy.",
+      "preyExclusive": true,
       "monsterIds": [
         "ghost-wolf"
       ]
@@ -6121,6 +6557,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Krailos Steppe.",
+      "preyExclusive": false,
       "monsterIds": [
         "ogre-brute"
       ]
@@ -6135,6 +6572,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Krailos Steppe.",
+      "preyExclusive": false,
       "monsterIds": [
         "ogre-savage"
       ]
@@ -6149,6 +6587,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Krailos Steppe.",
+      "preyExclusive": false,
       "monsterIds": [
         "ogre-shaman"
       ]
@@ -6163,6 +6602,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Krailos Steppe.",
+      "preyExclusive": false,
       "monsterIds": [
         "clomp"
       ]
@@ -6177,6 +6617,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Grounds of Damnation, Grounds of Deceit, Grounds of Despair, Grounds of Fire, Grounds of Plague, Halls of Ascension and Hell Hub.",
+      "preyExclusive": false,
       "monsterIds": [
         "grimeleech"
       ]
@@ -6191,6 +6632,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "The Dungeons of The Ruthless Seven.",
+      "preyExclusive": false,
       "monsterIds": [
         "vexclaw"
       ]
@@ -6205,6 +6647,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Grounds of Damnation, Grounds of Despair, Grounds of Destruction, Grounds of Fire, Grounds of Plague, Grounds of Undeath, Halls of Ascension and Hell Hub",
+      "preyExclusive": false,
       "monsterIds": [
         "hellflayer"
       ]
@@ -6219,6 +6662,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Otherworld",
+      "preyExclusive": false,
       "monsterIds": [
         "reality-reaver"
       ]
@@ -6233,6 +6677,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Otherworld",
+      "preyExclusive": false,
       "monsterIds": [
         "sparkion"
       ]
@@ -6247,6 +6692,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Otherworld.",
+      "preyExclusive": false,
       "monsterIds": [
         "breach-brood"
       ]
@@ -6261,6 +6707,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Otherworld",
+      "preyExclusive": false,
       "monsterIds": [
         "dread-intruder"
       ]
@@ -6275,6 +6722,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Otherworld Dwarf Bridge",
+      "preyExclusive": false,
       "monsterIds": [
         "instable-sparkion"
       ]
@@ -6289,6 +6737,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Otherworld Dwarf Bridge",
+      "preyExclusive": false,
       "monsterIds": [
         "instable-breach-brood"
       ]
@@ -6303,6 +6752,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Otherworld (Edron)",
+      "preyExclusive": false,
       "monsterIds": [
         "stabilizing-reality-reaver"
       ]
@@ -6317,6 +6767,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Otherworld (Edron)",
+      "preyExclusive": false,
       "monsterIds": [
         "stabilizing-dread-intruder"
       ]
@@ -6331,6 +6782,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Desecrated Glade",
+      "preyExclusive": true,
       "monsterIds": [
         "cave-parrot"
       ]
@@ -6345,6 +6797,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Desecrated Glade, Edron Orc Cave",
+      "preyExclusive": false,
       "monsterIds": [
         "orclops-doomhauler"
       ]
@@ -6359,6 +6812,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Desecrated Glade",
+      "preyExclusive": false,
       "monsterIds": [
         "orclops-ravager"
       ]
@@ -6373,6 +6827,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Astral Shaper Dungeon, Astral Shaper Ruins, Old Masonry",
+      "preyExclusive": false,
       "monsterIds": [
         "broken-shaper"
       ]
@@ -6387,6 +6842,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Astral Shaper Dungeon, Old Masonry, small dungeon under the Formorgar Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "twisted-shaper"
       ]
@@ -6401,6 +6857,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Replica Dungeon",
+      "preyExclusive": true,
       "monsterIds": [
         "iron-servant-replica"
       ]
@@ -6415,6 +6872,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Replica Dungeon",
+      "preyExclusive": true,
       "monsterIds": [
         "diamond-servant-replica"
       ]
@@ -6429,6 +6887,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Replica Dungeon",
+      "preyExclusive": true,
       "monsterIds": [
         "golden-servant-replica"
       ]
@@ -6443,6 +6902,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "The First Dragons Lair, fourth floor.",
+      "preyExclusive": true,
       "monsterIds": [
         "haunted-dragon"
       ]
@@ -6457,6 +6917,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "The First Dragon's Lair.",
+      "preyExclusive": true,
       "monsterIds": [
         "ice-dragon"
       ]
@@ -6471,6 +6932,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Old Masonry, Astral Shaper Ruins, small dungeon under the Formorgar Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "shaper-matriarch"
       ]
@@ -6485,6 +6947,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Astral Shaper Ruins in two small rooms on the second floor, and to the east.",
+      "preyExclusive": true,
       "monsterIds": [
         "stone-rhino"
       ]
@@ -6499,6 +6962,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Misguided Camp accessible via Outlaw Camp's portal.",
+      "preyExclusive": false,
       "monsterIds": [
         "misguided-bully"
       ]
@@ -6513,6 +6977,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Misguided Camp accessible via Outlaw Camp's portal.",
+      "preyExclusive": false,
       "monsterIds": [
         "misguided-thief"
       ]
@@ -6527,6 +6992,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Caverna Exanima.",
+      "preyExclusive": false,
       "monsterIds": [
         "putrid-mummy"
       ]
@@ -6541,6 +7007,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist (daytime).",
+      "preyExclusive": false,
       "monsterIds": [
         "faun"
       ]
@@ -6555,6 +7022,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist (daytime).",
+      "preyExclusive": false,
       "monsterIds": [
         "pooka"
       ]
@@ -6569,6 +7037,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist (nighttime) and its underground (all day).",
+      "preyExclusive": false,
       "monsterIds": [
         "twisted-pooka"
       ]
@@ -6583,6 +7052,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist Meadows",
+      "preyExclusive": false,
       "monsterIds": [
         "swan-maiden"
       ]
@@ -6597,6 +7067,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist.",
+      "preyExclusive": false,
       "monsterIds": [
         "pixie"
       ]
@@ -6611,6 +7082,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist (night time) and its underground (all day).",
+      "preyExclusive": false,
       "monsterIds": [
         "boogy"
       ]
@@ -6625,6 +7097,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist.",
+      "preyExclusive": false,
       "monsterIds": [
         "weakened-frazzlemaw"
       ]
@@ -6639,6 +7112,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist.",
+      "preyExclusive": false,
       "monsterIds": [
         "enfeebled-silencer"
       ]
@@ -6653,6 +7127,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Museum of Tibian Arts.",
+      "preyExclusive": true,
       "monsterIds": [
         "goldhanded-cultist"
       ]
@@ -6667,6 +7142,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist",
+      "preyExclusive": false,
       "monsterIds": [
         "nymph"
       ]
@@ -6681,6 +7157,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Barkless Cult Trial Zone (below Ab'Dendriel).",
+      "preyExclusive": false,
       "monsterIds": [
         "barkless-devotee"
       ]
@@ -6695,6 +7172,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Barkless Cult Trial Zone (below Ab'Dendriel).",
+      "preyExclusive": true,
       "monsterIds": [
         "barkless-fanatic"
       ]
@@ -6709,6 +7187,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Feyrist (nighttime) and its underground (all day).",
+      "preyExclusive": false,
       "monsterIds": [
         "dark-faun"
       ]
@@ -6723,6 +7202,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Edron Orc Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-cultist"
       ]
@@ -6737,6 +7217,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Edron Orc Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-cult-priest"
       ]
@@ -6751,6 +7232,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Edron Orc Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-cult-inquisitor"
       ]
@@ -6765,6 +7247,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Edron Orc Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-cult-fanatic"
       ]
@@ -6779,6 +7262,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Edron Orc Cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "orc-cult-minion"
       ]
@@ -6793,6 +7277,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Minotaurs Cult Cave",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-cult-follower"
       ]
@@ -6807,6 +7292,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Minotaurs Cult Cave",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-cult-prophet"
       ]
@@ -6821,6 +7307,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Minotaurs Cult Cave",
+      "preyExclusive": false,
       "monsterIds": [
         "minotaur-cult-zealot"
       ]
@@ -6835,6 +7322,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Forbidden Temple (Carlin).",
+      "preyExclusive": false,
       "monsterIds": [
         "cult-believer"
       ]
@@ -6849,6 +7337,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Forbidden Temple (Carlin).",
+      "preyExclusive": false,
       "monsterIds": [
         "cult-enforcer"
       ]
@@ -6863,6 +7352,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Forbidden Temple (Carlin).",
+      "preyExclusive": false,
       "monsterIds": [
         "cult-scholar"
       ]
@@ -6877,6 +7367,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Corym Mines.",
+      "preyExclusive": true,
       "monsterIds": [
         "stonerefiner"
       ]
@@ -6891,6 +7382,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "South east of the Gnome Deep Hub's entrance.",
+      "preyExclusive": true,
       "monsterIds": [
         "lost-exile"
       ]
@@ -6905,6 +7397,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Gnome Deep Hub",
+      "preyExclusive": false,
       "monsterIds": [
         "deepworm"
       ]
@@ -6919,6 +7412,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Gnome Deep Hub north and south tasking areas, Warzone 6",
+      "preyExclusive": false,
       "monsterIds": [
         "diremaw"
       ]
@@ -6933,6 +7427,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 5",
+      "preyExclusive": false,
       "monsterIds": [
         "cave-devourer"
       ]
@@ -6947,6 +7442,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 5",
+      "preyExclusive": false,
       "monsterIds": [
         "tunnel-tyrant"
       ]
@@ -6961,6 +7457,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Warzone 4",
+      "preyExclusive": false,
       "monsterIds": [
         "chasm-spawn"
       ]
@@ -6975,6 +7472,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "South-west of Edron, possibly other places.",
+      "preyExclusive": false,
       "monsterIds": [
         "fox"
       ]
@@ -6989,6 +7487,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Were-beasts cave south-west of Edron and in the Last Sanctum east of Cormaya.",
+      "preyExclusive": false,
       "monsterIds": [
         "werefox"
       ]
@@ -7003,6 +7502,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Gnome Deep Hub",
+      "preyExclusive": false,
       "monsterIds": [
         "lava-lurker"
       ]
@@ -7017,6 +7517,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Gnome Deep Hub in the Gnomish area.",
+      "preyExclusive": true,
       "monsterIds": [
         "ravenous-lava-lurker"
       ]
@@ -7031,6 +7532,7 @@
       "secondUnlock": 250,
       "toKill": 500,
       "locations": "Warzone 4 and Warzone 6.",
+      "preyExclusive": true,
       "monsterIds": [
         "mole"
       ]
@@ -7045,6 +7547,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Asura Palace.",
+      "preyExclusive": false,
       "monsterIds": [
         "frost-flower-asura"
       ]
@@ -7059,6 +7562,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Asura Palace, Asura Vaults.",
+      "preyExclusive": false,
       "monsterIds": [
         "true-dawnfire-asura"
       ]
@@ -7073,6 +7577,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Asura Palace, Asura Vaults.",
+      "preyExclusive": false,
       "monsterIds": [
         "true-midnight-asura"
       ]
@@ -7087,6 +7592,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Asura Palace, Asura Vaults",
+      "preyExclusive": false,
       "monsterIds": [
         "true-frost-flower-asura"
       ]
@@ -7101,6 +7607,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "The Extension Site",
+      "preyExclusive": false,
       "monsterIds": [
         "floating-savant"
       ]
@@ -7115,6 +7622,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Falcon Bastion.",
+      "preyExclusive": false,
       "monsterIds": [
         "falcon-knight"
       ]
@@ -7129,6 +7637,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Falcon Bastion.",
+      "preyExclusive": false,
       "monsterIds": [
         "falcon-paladin"
       ]
@@ -7143,6 +7652,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (energy section).",
+      "preyExclusive": false,
       "monsterIds": [
         "brain-squid"
       ]
@@ -7157,6 +7667,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Secret Library (fire and energy sections).",
+      "preyExclusive": true,
       "monsterIds": [
         "flying-book"
       ]
@@ -7171,6 +7682,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (earth section).",
+      "preyExclusive": false,
       "monsterIds": [
         "cursed-book"
       ]
@@ -7185,6 +7697,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library earth, energy, fire and ice sections. Also two incarcerated in the Issavi prison, reachable from the city Library.",
+      "preyExclusive": false,
       "monsterIds": [
         "biting-book"
       ]
@@ -7199,6 +7712,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (earth, fire and ice sections)",
+      "preyExclusive": false,
       "monsterIds": [
         "ink-blob"
       ]
@@ -7213,6 +7727,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (fire section).",
+      "preyExclusive": false,
       "monsterIds": [
         "guardian-of-tales"
       ]
@@ -7227,6 +7742,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (fire section).",
+      "preyExclusive": false,
       "monsterIds": [
         "burning-book"
       ]
@@ -7241,6 +7757,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (ice section).",
+      "preyExclusive": false,
       "monsterIds": [
         "icecold-book"
       ]
@@ -7255,6 +7772,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (energy section).",
+      "preyExclusive": false,
       "monsterIds": [
         "energetic-book"
       ]
@@ -7269,6 +7787,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "The Secret Library (energy section).",
+      "preyExclusive": false,
       "monsterIds": [
         "energuardian-of-tales"
       ]
@@ -7283,6 +7802,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Deepling Ancestorial Grounds and Sunken Temple.",
+      "preyExclusive": false,
       "monsterIds": [
         "deathling-scout"
       ]
@@ -7297,6 +7817,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (fire section).",
+      "preyExclusive": false,
       "monsterIds": [
         "rage-squid"
       ]
@@ -7311,6 +7832,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library (ice section).",
+      "preyExclusive": false,
       "monsterIds": [
         "squid-warden"
       ]
@@ -7325,6 +7847,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Secret Library energy section.",
+      "preyExclusive": false,
       "monsterIds": [
         "knowledge-elemental"
       ]
@@ -7339,6 +7862,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "The Secret Library (ice section).",
+      "preyExclusive": false,
       "monsterIds": [
         "animated-feather"
       ]
@@ -7353,6 +7877,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Deep Desert.",
+      "preyExclusive": false,
       "monsterIds": [
         "skeleton-elite-warrior"
       ]
@@ -7367,6 +7892,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Deep Desert.",
+      "preyExclusive": false,
       "monsterIds": [
         "undead-elite-gladiator"
       ]
@@ -7381,6 +7907,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ancient Ancestorial Grounds and Sunken Temple.",
+      "preyExclusive": false,
       "monsterIds": [
         "deathling-spellsinger"
       ]
@@ -7395,6 +7922,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Carnivora's Rocks.",
+      "preyExclusive": false,
       "monsterIds": [
         "lumbering-carnivor"
       ]
@@ -7409,6 +7937,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Carnivora's Rocks.",
+      "preyExclusive": false,
       "monsterIds": [
         "spiky-carnivor"
       ]
@@ -7423,6 +7952,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Carnivora's Rocks.",
+      "preyExclusive": false,
       "monsterIds": [
         "menacing-carnivor"
       ]
@@ -7437,6 +7967,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Haunted Cellar, Buried Cathedral",
+      "preyExclusive": false,
       "monsterIds": [
         "ripper-spectre"
       ]
@@ -7451,6 +7982,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Haunted Temple, Buried Cathedral",
+      "preyExclusive": false,
       "monsterIds": [
         "gazer-spectre"
       ]
@@ -7465,6 +7997,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Haunted Tomb west of Darashia, Buried Cathedral.",
+      "preyExclusive": false,
       "monsterIds": [
         "burster-spectre"
       ]
@@ -7479,6 +8012,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Haunted Temple, Court of Winter, Dream Labyrinth.",
+      "preyExclusive": false,
       "monsterIds": [
         "thanatursus"
       ]
@@ -7493,6 +8027,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Buried Cathedral, Haunted Cellar, Court of Summer, Court of Winter, Dream Labyrinth.",
+      "preyExclusive": false,
       "monsterIds": [
         "arachnophobica"
       ]
@@ -7507,6 +8042,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Court of Winter, Dream Labyrinth.",
+      "preyExclusive": false,
       "monsterIds": [
         "crazed-winter-vanguard"
       ]
@@ -7521,6 +8057,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Court of Winter, Dream Labyrinth.",
+      "preyExclusive": false,
       "monsterIds": [
         "crazed-winter-rearguard"
       ]
@@ -7535,6 +8072,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Court of Summer, Dream Labyrinth.",
+      "preyExclusive": false,
       "monsterIds": [
         "crazed-summer-vanguard"
       ]
@@ -7549,6 +8087,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Court of Summer, Dream Labyrinth.",
+      "preyExclusive": false,
       "monsterIds": [
         "crazed-summer-rearguard"
       ]
@@ -7563,6 +8102,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Court of Winter.",
+      "preyExclusive": false,
       "monsterIds": [
         "soul-broken-harbinger"
       ]
@@ -7577,6 +8117,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Court of Summer.",
+      "preyExclusive": false,
       "monsterIds": [
         "insane-siren"
       ]
@@ -7591,6 +8132,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Court of Winter at night.",
+      "preyExclusive": true,
       "monsterIds": [
         "hibernal-moth"
       ]
@@ -7605,6 +8147,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Percht Island",
+      "preyExclusive": true,
       "monsterIds": [
         "percht"
       ]
@@ -7619,6 +8162,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Percht Island",
+      "preyExclusive": true,
       "monsterIds": [
         "schiach"
       ]
@@ -7633,6 +8177,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Percht Island",
+      "preyExclusive": true,
       "monsterIds": [
         "baleful-bunny"
       ]
@@ -7647,6 +8192,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Cobra Bastion.",
+      "preyExclusive": false,
       "monsterIds": [
         "cobra-assassin"
       ]
@@ -7661,6 +8207,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Cobra Bastion.",
+      "preyExclusive": false,
       "monsterIds": [
         "cobra-scout"
       ]
@@ -7675,6 +8222,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Issavi Sewers, Kilmaresh Catacombs and Kilmaresh Mountains above and under ground.",
+      "preyExclusive": false,
       "monsterIds": [
         "burning-gladiator"
       ]
@@ -7689,6 +8237,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Issavi Sewers, Kilmaresh Mountains, Kilmaresh Catacombs.",
+      "preyExclusive": false,
       "monsterIds": [
         "priestess-of-the-wild-sun"
       ]
@@ -7703,6 +8252,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Issavi Sewers, Kilmaresh Catacombs and Kilmaresh Mountains (above and under ground).",
+      "preyExclusive": false,
       "monsterIds": [
         "black-sphinx-acolyte"
       ]
@@ -7717,6 +8267,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh Catacombs.",
+      "preyExclusive": false,
       "monsterIds": [
         "crypt-warden"
       ]
@@ -7731,6 +8282,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh.",
+      "preyExclusive": false,
       "monsterIds": [
         "lamassu"
       ]
@@ -7745,6 +8297,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh, south of Issavi.",
+      "preyExclusive": false,
       "monsterIds": [
         "feral-sphinx"
       ]
@@ -7759,6 +8312,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Nykri Delta, Kilmaresh Central Steppe, Kilmaresh Southern Steppe, Kilmaresh Catacombs.",
+      "preyExclusive": false,
       "monsterIds": [
         "sphinx"
       ]
@@ -7773,6 +8327,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh.",
+      "preyExclusive": false,
       "monsterIds": [
         "manticore"
       ]
@@ -7787,6 +8342,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh Central Steppe, Kilmaresh Southern Steppe, Green Belt.",
+      "preyExclusive": false,
       "monsterIds": [
         "young-goanna"
       ]
@@ -7801,6 +8357,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh Central Steppe, Kilmaresh Southern Steppe, Green Belt.",
+      "preyExclusive": false,
       "monsterIds": [
         "adult-goanna"
       ]
@@ -7815,6 +8372,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Kilmaresh Mountains",
+      "preyExclusive": false,
       "monsterIds": [
         "gryphon"
       ]
@@ -7829,6 +8387,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh Central Steppe, Kilmaresh Southern Steppe, Green Belt, Kilmaresh Mountains underground.",
+      "preyExclusive": false,
       "monsterIds": [
         "ogre-ruffian"
       ]
@@ -7843,6 +8402,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh Central Steppe, Kilmaresh Southern Steppe, Green Belt, Kilmaresh Mountains underground.",
+      "preyExclusive": false,
       "monsterIds": [
         "ogre-rowdy"
       ]
@@ -7857,6 +8417,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Kilmaresh Central Steppe, Kilmaresh Southern Steppe, Green Belt, Kilmaresh Mountains underground.",
+      "preyExclusive": false,
       "monsterIds": [
         "ogre-sage"
       ]
@@ -7871,6 +8432,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Cobra Bastion.",
+      "preyExclusive": false,
       "monsterIds": [
         "cobra-vizier"
       ]
@@ -7885,6 +8447,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Brain Grounds, Netherworld, Zarganash.",
+      "preyExclusive": false,
       "monsterIds": [
         "flimsy-lost-soul"
       ]
@@ -7899,6 +8462,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Brain Grounds, Netherworld, Zarganash.",
+      "preyExclusive": false,
       "monsterIds": [
         "mean-lost-soul"
       ]
@@ -7913,6 +8477,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Brain Grounds, Netherworld, Zarganash.",
+      "preyExclusive": false,
       "monsterIds": [
         "freakish-lost-soul"
       ]
@@ -7927,6 +8492,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Barren Drift.",
+      "preyExclusive": false,
       "monsterIds": [
         "cursed-prospector"
       ]
@@ -7941,6 +8507,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Barren Drift",
+      "preyExclusive": false,
       "monsterIds": [
         "evil-prospector"
       ]
@@ -7955,6 +8522,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Ebb and Flow.",
+      "preyExclusive": false,
       "monsterIds": [
         "bony-sea-devil"
       ]
@@ -7969,6 +8537,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Mirrored Nightmare.",
+      "preyExclusive": false,
       "monsterIds": [
         "many-faces"
       ]
@@ -7983,6 +8552,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Furious Crater.",
+      "preyExclusive": false,
       "monsterIds": [
         "cloak-of-terror"
       ]
@@ -7997,6 +8567,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Furious Crater.",
+      "preyExclusive": false,
       "monsterIds": [
         "vibrant-phantom"
       ]
@@ -8011,6 +8582,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Claustrophobic Inferno.",
+      "preyExclusive": false,
       "monsterIds": [
         "brachiodemon"
       ]
@@ -8025,6 +8597,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Rotten Wasteland.",
+      "preyExclusive": false,
       "monsterIds": [
         "branchy-crawler"
       ]
@@ -8039,6 +8612,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Ebb and Flow.",
+      "preyExclusive": false,
       "monsterIds": [
         "capricious-phantom"
       ]
@@ -8053,6 +8627,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Claustrophobic Inferno.",
+      "preyExclusive": false,
       "monsterIds": [
         "infernal-phantom"
       ]
@@ -8067,6 +8642,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Claustrophobic Inferno.",
+      "preyExclusive": false,
       "monsterIds": [
         "infernal-demon"
       ]
@@ -8081,6 +8657,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Rotten Wasteland.",
+      "preyExclusive": false,
       "monsterIds": [
         "rotten-golem"
       ]
@@ -8095,6 +8672,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Ebb and Flow.",
+      "preyExclusive": false,
       "monsterIds": [
         "turbulent-elemental"
       ]
@@ -8109,6 +8687,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Furious Crater",
+      "preyExclusive": false,
       "monsterIds": [
         "courage-leech"
       ]
@@ -8123,6 +8702,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Rotten Wasteland.",
+      "preyExclusive": false,
       "monsterIds": [
         "mould-phantom"
       ]
@@ -8137,6 +8717,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Mirrored Nightmare.",
+      "preyExclusive": false,
       "monsterIds": [
         "druid-s-apparition",
         "monk-s-apparition"
@@ -8152,6 +8733,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Mirrored Nightmare.",
+      "preyExclusive": false,
       "monsterIds": [
         "knight-s-apparition"
       ]
@@ -8166,6 +8748,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Mirrored Nightmare.",
+      "preyExclusive": false,
       "monsterIds": [
         "paladin-s-apparition"
       ]
@@ -8180,6 +8763,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Mirrored Nightmare.",
+      "preyExclusive": false,
       "monsterIds": [
         "sorcerer-s-apparition"
       ]
@@ -8194,6 +8778,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Mirrored Nightmare.",
+      "preyExclusive": false,
       "monsterIds": [
         "distorted-phantom"
       ]
@@ -8208,6 +8793,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Darashia Wyrm Hills only during night, Hyaena Lairs.",
+      "preyExclusive": false,
       "monsterIds": [
         "werehyaena"
       ]
@@ -8222,6 +8808,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "This monster you can find in Hyaena Lairs.",
+      "preyExclusive": false,
       "monsterIds": [
         "werehyaena-shaman"
       ]
@@ -8236,6 +8823,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Lion Sanctum.",
+      "preyExclusive": false,
       "monsterIds": [
         "werelion"
       ]
@@ -8250,6 +8838,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Lion Sanctum.",
+      "preyExclusive": false,
       "monsterIds": [
         "werelioness"
       ]
@@ -8264,6 +8853,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Lion Sanctum.",
+      "preyExclusive": false,
       "monsterIds": [
         "white-lion"
       ]
@@ -8278,6 +8868,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Bounac, the Order of the Lion settlement.",
+      "preyExclusive": false,
       "monsterIds": [
         "usurper-knight"
       ]
@@ -8292,6 +8883,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Bounac, the Order of the Lion settlement.",
+      "preyExclusive": false,
       "monsterIds": [
         "usurper-archer"
       ]
@@ -8306,6 +8898,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Bounac, the Order of the Lion settlement.",
+      "preyExclusive": false,
       "monsterIds": [
         "usurper-warlock"
       ]
@@ -8320,6 +8913,7 @@
       "secondUnlock": 100,
       "toKill": 250,
       "locations": "Bounac, the Order of the Lion settlement.",
+      "preyExclusive": false,
       "monsterIds": [
         "agrestic-chicken"
       ]
@@ -8334,6 +8928,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Exotic cave spider cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "exotic-cave-spider"
       ]
@@ -8348,6 +8943,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Darashia, Krailos Steppe, Liberty Bay, Pirat Mines, Port Hope, Thais, The Wreckoning.",
+      "preyExclusive": false,
       "monsterIds": [
         "pirat-cutthroat"
       ]
@@ -8362,6 +8958,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pirat Mine, The Wreckoning",
+      "preyExclusive": false,
       "monsterIds": [
         "pirat-scoundrel"
       ]
@@ -8376,6 +8973,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Pirat Mine, The Wreckoning",
+      "preyExclusive": false,
       "monsterIds": [
         "pirat-bombardier"
       ]
@@ -8390,6 +8988,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "The Wreckoning",
+      "preyExclusive": false,
       "monsterIds": [
         "pirat-mate"
       ]
@@ -8404,6 +9003,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Exotic cave Spider cave.",
+      "preyExclusive": false,
       "monsterIds": [
         "exotic-bat"
       ]
@@ -8418,6 +9018,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Grotto of the Lost.",
+      "preyExclusive": false,
       "monsterIds": [
         "lavaworm"
       ]
@@ -8432,6 +9033,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Dwelling of the Forgotten",
+      "preyExclusive": false,
       "monsterIds": [
         "tremendous-tyrant"
       ]
@@ -8446,6 +9048,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Dwelling of the Forgotten.",
+      "preyExclusive": false,
       "monsterIds": [
         "varnished-diremaw"
       ]
@@ -8460,6 +9063,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Grotto of the Lost.",
+      "preyExclusive": false,
       "monsterIds": [
         "streaked-devourer"
       ]
@@ -8474,6 +9078,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Antrum of the Fallen.",
+      "preyExclusive": false,
       "monsterIds": [
         "eyeless-devourer"
       ]
@@ -8488,6 +9093,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Antrum of the Fallen.",
+      "preyExclusive": false,
       "monsterIds": [
         "blemished-spawn"
       ]
@@ -8502,6 +9108,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Antrum of the Fallen.",
+      "preyExclusive": false,
       "monsterIds": [
         "afflicted-strider"
       ]
@@ -8516,6 +9123,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Grotto of the Lost.",
+      "preyExclusive": false,
       "monsterIds": [
         "lavafungus"
       ]
@@ -8530,6 +9138,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Dwelling of the Forgotten",
+      "preyExclusive": false,
       "monsterIds": [
         "cave-chimera"
       ]
@@ -8544,6 +9153,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ruins of Nuur",
+      "preyExclusive": false,
       "monsterIds": [
         "venerable-girtablilu"
       ]
@@ -8558,6 +9168,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ruins of Nuur.",
+      "preyExclusive": false,
       "monsterIds": [
         "girtablilu-warrior"
       ]
@@ -8572,6 +9183,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Salt Caves.",
+      "preyExclusive": false,
       "monsterIds": [
         "bashmu"
       ]
@@ -8586,6 +9198,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Salt Caves",
+      "preyExclusive": false,
       "monsterIds": [
         "juvenile-bashmu"
       ]
@@ -8600,6 +9213,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Forest of Life.",
+      "preyExclusive": false,
       "monsterIds": [
         "hulking-carnisylvan"
       ]
@@ -8614,6 +9228,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Forest of Life.",
+      "preyExclusive": false,
       "monsterIds": [
         "poisonous-carnisylvan"
       ]
@@ -8628,6 +9243,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Forest of Life.",
+      "preyExclusive": false,
       "monsterIds": [
         "dark-carnisylvan"
       ]
@@ -8642,6 +9258,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "In almost all grass areas in Tibia, also found in Rookgaard and Dawnport.",
+      "preyExclusive": false,
       "monsterIds": [
         "parder"
       ]
@@ -8656,6 +9273,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "All around Marapur",
+      "preyExclusive": false,
       "monsterIds": [
         "jungle-moa"
       ]
@@ -8670,6 +9288,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Great Pearl Fan Reef",
+      "preyExclusive": false,
       "monsterIds": [
         "two-headed-turtle"
       ]
@@ -8684,6 +9303,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Great Pearl Fan Reef",
+      "preyExclusive": false,
       "monsterIds": [
         "foam-stalker"
       ]
@@ -8698,6 +9318,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Temple of the Moon Goddess.",
+      "preyExclusive": false,
       "monsterIds": [
         "naga-archer"
       ]
@@ -8712,6 +9333,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Temple of the Moon Goddess.",
+      "preyExclusive": false,
       "monsterIds": [
         "naga-warrior"
       ]
@@ -8726,6 +9348,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Temple of the Moon Goddess.",
+      "preyExclusive": false,
       "monsterIds": [
         "makara"
       ]
@@ -8740,6 +9363,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Monster Graveyard",
+      "preyExclusive": false,
       "monsterIds": [
         "sulphider"
       ]
@@ -8754,6 +9378,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Monster Graveyard",
+      "preyExclusive": false,
       "monsterIds": [
         "sulphur-spouter"
       ]
@@ -8768,6 +9393,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Sparkling Pools",
+      "preyExclusive": false,
       "monsterIds": [
         "gore-horn"
       ]
@@ -8782,6 +9408,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Sparkling Pools",
+      "preyExclusive": false,
       "monsterIds": [
         "sabretooth"
       ]
@@ -8796,6 +9423,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Sparkling Pools",
+      "preyExclusive": false,
       "monsterIds": [
         "emerald-tortoise"
       ]
@@ -8810,6 +9438,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Monster Graveyard",
+      "preyExclusive": false,
       "monsterIds": [
         "undertaker"
       ]
@@ -8824,6 +9453,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Monster Graveyard",
+      "preyExclusive": false,
       "monsterIds": [
         "nighthunter"
       ]
@@ -8838,6 +9468,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Sparkling Pools",
+      "preyExclusive": false,
       "monsterIds": [
         "hulking-prehemoth"
       ]
@@ -8852,6 +9483,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Monster Graveyard",
+      "preyExclusive": false,
       "monsterIds": [
         "stalking-stalk"
       ]
@@ -8866,6 +9498,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Crystal Enigma",
+      "preyExclusive": false,
       "monsterIds": [
         "mantosaurus"
       ]
@@ -8880,6 +9513,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Crystal Enigma",
+      "preyExclusive": false,
       "monsterIds": [
         "headpecker"
       ]
@@ -8894,6 +9528,7 @@
       "secondUnlock": 500,
       "toKill": 5000,
       "locations": "Crystal Enigma",
+      "preyExclusive": false,
       "monsterIds": [
         "noxious-ripptor"
       ]
@@ -8908,6 +9543,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Sparkling Pools",
+      "preyExclusive": false,
       "monsterIds": [
         "gorerilla"
       ]
@@ -8922,6 +9558,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Crystal Enigma",
+      "preyExclusive": false,
       "monsterIds": [
         "shrieking-cry-stal"
       ]
@@ -8936,6 +9573,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Crystal Enigma",
+      "preyExclusive": false,
       "monsterIds": [
         "mercurial-menace"
       ]
@@ -8950,6 +9588,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ingol",
+      "preyExclusive": false,
       "monsterIds": [
         "crape-man"
       ]
@@ -8964,6 +9603,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ingol",
+      "preyExclusive": false,
       "monsterIds": [
         "liodile"
       ]
@@ -8978,6 +9618,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ingol",
+      "preyExclusive": false,
       "monsterIds": [
         "boar-man"
       ]
@@ -8992,6 +9633,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ingol",
+      "preyExclusive": false,
       "monsterIds": [
         "harpy"
       ]
@@ -9006,6 +9648,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ingol",
+      "preyExclusive": false,
       "monsterIds": [
         "carnivostrich"
       ]
@@ -9020,6 +9663,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Ingol",
+      "preyExclusive": false,
       "monsterIds": [
         "rhindeer"
       ]
@@ -9034,6 +9678,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Iksupan",
+      "preyExclusive": false,
       "monsterIds": [
         "iks-pututu"
       ]
@@ -9048,6 +9693,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Iksupan",
+      "preyExclusive": false,
       "monsterIds": [
         "iks-aucar"
       ]
@@ -9062,6 +9708,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Iksupan",
+      "preyExclusive": false,
       "monsterIds": [
         "iks-chuka"
       ]
@@ -9076,6 +9723,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Iksupan",
+      "preyExclusive": false,
       "monsterIds": [
         "cursed-ape"
       ]
@@ -9090,6 +9738,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Jaded roots",
+      "preyExclusive": false,
       "monsterIds": [
         "mycobiontic-beetle"
       ]
@@ -9104,6 +9753,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Putrefactory.",
+      "preyExclusive": false,
       "monsterIds": [
         "meandering-mushroom"
       ]
@@ -9118,6 +9768,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Putrefactory.",
+      "preyExclusive": false,
       "monsterIds": [
         "oozing-carcass"
       ]
@@ -9132,6 +9783,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Darklight Core",
+      "preyExclusive": false,
       "monsterIds": [
         "darklight-construct"
       ]
@@ -9146,6 +9798,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Gloom Pillars.",
+      "preyExclusive": false,
       "monsterIds": [
         "converter"
       ]
@@ -9160,6 +9813,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Darklight Core.",
+      "preyExclusive": false,
       "monsterIds": [
         "darklight-matter"
       ]
@@ -9174,6 +9828,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Jaded Roots.",
+      "preyExclusive": false,
       "monsterIds": [
         "oozing-corpus"
       ]
@@ -9188,6 +9843,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Darklight Core",
+      "preyExclusive": false,
       "monsterIds": [
         "darklight-emitter"
       ]
@@ -9202,6 +9858,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Jaded Roots",
+      "preyExclusive": false,
       "monsterIds": [
         "bloated-man-maggot"
       ]
@@ -9216,6 +9873,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Putrefactory.",
+      "preyExclusive": false,
       "monsterIds": [
         "rotten-man-maggot"
       ]
@@ -9230,6 +9888,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Darklight Core",
+      "preyExclusive": false,
       "monsterIds": [
         "walking-pillar"
       ]
@@ -9244,6 +9903,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Darklight Core",
+      "preyExclusive": false,
       "monsterIds": [
         "wandering-pillar"
       ]
@@ -9258,6 +9918,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Putrefactory.",
+      "preyExclusive": false,
       "monsterIds": [
         "sopping-carcass"
       ]
@@ -9272,6 +9933,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Jaded Roots.",
+      "preyExclusive": false,
       "monsterIds": [
         "sopping-corpus"
       ]
@@ -9286,6 +9948,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Darklight Core",
+      "preyExclusive": false,
       "monsterIds": [
         "darklight-source"
       ]
@@ -9300,6 +9963,7 @@
       "secondUnlock": 2000,
       "toKill": 5000,
       "locations": "Darklight Core",
+      "preyExclusive": false,
       "monsterIds": [
         "darklight-striker"
       ]
@@ -9314,6 +9978,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Nimmersatt's Breeding Ground",
+      "preyExclusive": false,
       "monsterIds": [
         "dragolisk"
       ]
@@ -9328,6 +9993,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Nimmersatt's Breeding Ground",
+      "preyExclusive": false,
       "monsterIds": [
         "wardragon"
       ]
@@ -9342,6 +10008,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Nimmersatt's Breeding Ground",
+      "preyExclusive": false,
       "monsterIds": [
         "mega-dragon"
       ]
@@ -9356,6 +10023,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Chocolate Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "nibblemaw"
       ]
@@ -9370,6 +10038,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Dessert Dungeons.",
+      "preyExclusive": false,
       "monsterIds": [
         "candy-floss-elemental"
       ]
@@ -9384,6 +10053,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Dessert Dungeons.",
+      "preyExclusive": false,
       "monsterIds": [
         "goggle-cake"
       ]
@@ -9398,6 +10068,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Chocolate Mines.",
+      "preyExclusive": false,
       "monsterIds": [
         "candy-horror"
       ]
@@ -9412,6 +10083,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Candia",
+      "preyExclusive": true,
       "monsterIds": [
         "truffle"
       ]
@@ -9426,6 +10098,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Candia",
+      "preyExclusive": true,
       "monsterIds": [
         "sugar-cube"
       ]
@@ -9440,6 +10113,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Candia",
+      "preyExclusive": true,
       "monsterIds": [
         "gingerbread-man"
       ]
@@ -9454,6 +10128,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Candia",
+      "preyExclusive": true,
       "monsterIds": [
         "chocolate-blob"
       ]
@@ -9468,6 +10143,7 @@
       "secondUnlock": 500,
       "toKill": 1000,
       "locations": "Chocolate Mines",
+      "preyExclusive": false,
       "monsterIds": [
         "honey-elemental"
       ]
@@ -9482,6 +10158,7 @@
       "secondUnlock": 1000,
       "toKill": 2500,
       "locations": "Dessert Dungeons, Candy Carnival.",
+      "preyExclusive": false,
       "monsterIds": [
         "angry-sugar-fairy"
       ]
@@ -9496,6 +10173,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Candia",
+      "preyExclusive": true,
       "monsterIds": [
         "truffle-cook"
       ]
@@ -9510,6 +10188,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Candia",
+      "preyExclusive": true,
       "monsterIds": [
         "fruit-drop"
       ]
@@ -9524,6 +10203,7 @@
       "secondUnlock": 10,
       "toKill": 25,
       "locations": "Candia",
+      "preyExclusive": true,
       "monsterIds": [
         "cream-blob"
       ]
@@ -9538,6 +10218,7 @@
       "secondUnlock": 500,
       "toKill": 2500,
       "locations": "Azzilon Castle Catacombs.",
+      "preyExclusive": true,
       "monsterIds": [
         "spellreaper-inferniarch"
       ]
@@ -9552,6 +10233,7 @@
       "secondUnlock": 500,
       "toKill": 2500,
       "locations": "Azzilon Castle Catacombs.",
+      "preyExclusive": true,
       "monsterIds": [
         "hellhunter-inferniarch"
       ]
@@ -9566,6 +10248,7 @@
       "secondUnlock": 500,
       "toKill": 2500,
       "locations": "Azzilon Castle Catacombs.",
+      "preyExclusive": true,
       "monsterIds": [
         "brinebrute-inferniarch"
       ]
@@ -9580,6 +10263,7 @@
       "secondUnlock": 500,
       "toKill": 2500,
       "locations": "Azzilon Castle.",
+      "preyExclusive": true,
       "monsterIds": [
         "sineater-inferniarch"
       ]
@@ -9594,6 +10278,7 @@
       "secondUnlock": 500,
       "toKill": 2500,
       "locations": "Azzilon Castle.",
+      "preyExclusive": true,
       "monsterIds": [
         "broodrider-inferniarch"
       ]
@@ -9608,6 +10293,7 @@
       "secondUnlock": 500,
       "toKill": 2500,
       "locations": "Azzilon Castle.",
+      "preyExclusive": true,
       "monsterIds": [
         "gorger-inferniarch"
       ]

@@ -24,6 +24,7 @@
     "npcs:shop-categories": "node tools/buildNpcShopCategories.mjs",
     "spells:import": "node tools/importCanarySpells.mjs",
     "bestiary:import": "node tools/importCanaryBestiary.mjs",
+    "achievements:import": "node tools/importCanaryAchievements.mjs",
     "cyclopedia:assets": "node tools/importOtclientCyclopediaAssets.mjs",
     "parity:inventory": "node tools/buildCanaryParityInventory.mjs",
     "parity:world-actions": "node tools/buildWorldActionParityInventory.mjs",

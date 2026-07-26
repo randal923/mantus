@@ -7,10 +7,13 @@ import { useGemSession } from "../../../hooks/useGemSession";
 import { useGuildSession } from "../../../hooks/useGuildSession";
 import { useHighscoresSession } from "../../../hooks/useHighscoresSession";
 import { useHouseSession } from "../../../hooks/useHouseSession";
+import { useHuntingTasksSession } from "../../../hooks/useHuntingTasksSession";
 import { useMarketSession } from "../../../hooks/useMarketSession";
 import { useOptimisticInventory } from "../../../hooks/useOptimisticInventory";
 import { useOutfitSession } from "../../../hooks/useOutfitSession";
 import { usePartySession } from "../../../hooks/usePartySession";
+import { usePreySession } from "../../../hooks/usePreySession";
+import { useProfileSession } from "../../../hooks/useProfileSession";
 import { useTradeSession } from "../../../hooks/useTradeSession";
 import { useVipSession } from "../../../hooks/useVipSession";
 import { useWheelSession } from "../../../hooks/useWheelSession";
@@ -116,6 +119,9 @@ export function GameWindowSessionController() {
   const wheel = useWheelSession();
   const gems = useGemSession();
   const outfit = useOutfitSession();
+  const profile = useProfileSession();
+  const prey = usePreySession();
+  const huntingTasks = useHuntingTasksSession();
 
   const sessionActions = useMemo<GameWindowSessionActions>(
     () => ({
@@ -236,6 +242,29 @@ export function GameWindowSessionController() {
         fail: outfit.fail,
         reset: outfit.reset,
       },
+      profile: {
+        stateReceived: profile.stateReceived,
+        publicProfileReceived: profile.publicProfileReceived,
+        clearPublicProfile: profile.clearPublicProfile,
+        begin: profile.begin,
+        fail: profile.fail,
+        dismissError: profile.dismissError,
+        reset: profile.reset,
+      },
+      prey: {
+        stateReceived: prey.stateReceived,
+        begin: prey.begin,
+        fail: prey.fail,
+        dismissError: prey.dismissError,
+        reset: prey.reset,
+      },
+      huntingTasks: {
+        stateReceived: huntingTasks.stateReceived,
+        begin: huntingTasks.begin,
+        fail: huntingTasks.fail,
+        dismissError: huntingTasks.dismissError,
+        reset: huntingTasks.reset,
+      },
       dispatchItemOpChecked,
     }),
     [
@@ -284,6 +313,11 @@ export function GameWindowSessionController() {
       house.offerResolved,
       house.reset,
       house.stateReceived,
+      huntingTasks.begin,
+      huntingTasks.dismissError,
+      huntingTasks.fail,
+      huntingTasks.reset,
+      huntingTasks.stateReceived,
       market.begin,
       market.fail,
       market.historyReceived,
@@ -314,6 +348,18 @@ export function GameWindowSessionController() {
       party.stateReceived,
       party.analyzerReceived,
       party.finderReceived,
+      prey.begin,
+      prey.dismissError,
+      prey.fail,
+      prey.reset,
+      prey.stateReceived,
+      profile.begin,
+      profile.clearPublicProfile,
+      profile.dismissError,
+      profile.fail,
+      profile.publicProfileReceived,
+      profile.reset,
+      profile.stateReceived,
       trade.begin,
       trade.fail,
       trade.reset,
@@ -321,6 +367,7 @@ export function GameWindowSessionController() {
       vip.begin,
       vip.dismissError,
       vip.fail,
+      vip.friendStateReceived,
       vip.reset,
       vip.stateReceived,
       vip.statusChanged,
@@ -348,6 +395,9 @@ export function GameWindowSessionController() {
         wheel: wheel.state,
         gems: gems.state,
         outfit: outfit.state,
+        profile: profile.state,
+        prey: prey.state,
+        huntingTasks: huntingTasks.state,
       },
       sessionActions,
     );
@@ -359,10 +409,13 @@ export function GameWindowSessionController() {
     guild.state,
     highscores.state,
     house.state,
+    huntingTasks.state,
     market.session,
     optimisticInventory.inventory,
     outfit.state,
     party.state,
+    prey.state,
+    profile.state,
     sessionActions,
     store,
     trade.session,

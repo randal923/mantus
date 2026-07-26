@@ -410,3 +410,95 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   capacity view (`items.updateCapacity`). Extra point sources (promotion
   scrolls, Monk quest bonus, hunting-task points) stay deferred on Features
   43/75/quests — see `todo/todo-10.md`.
+
+## 2026-07-26 profiles closed + prey + hunting tasks
+
+- **Feature 67 — Profiles: achievements, titles, badges, char info**
+  (2026-07-26): **closed**. (a) Full Canary achievement catalog imported:
+  `tools/parseCanaryAchievements.mjs` (+ node:test suite) parses the pinned
+  `data/scripts/lib/register_achievements.lua` (541 entries, 191 secret,
+  grade 4 ×1, points 0-10); `tools/importCanaryAchievements.mjs`
+  (`yarn achievements:import`) pins commit + sha256 through
+  `content/source-manifest.json` and writes
+  `content/profile/canary-achievements.json` with deterministic kebab-case
+  slugs (durable grant keys, collision-checked against the 7 pinned mantus
+  ids); `server/src/profile/loadCanaryAchievements.ts` re-validates
+  provenance and every field at boot; `achievementCatalog.ts` merges to 548
+  definitions and throws on id collisions. Protocol: `secret` flag on
+  achievement entries, grade widened to 1-4, catalog cap 600, description
+  cap 256. (b) Entire client surface: `useProfileSession`, message branches
+  (`profile-state`/`achievement-granted`/`profile-action-failed` own-state,
+  `character-profile` community), `GameClient.getCharacterProfile/
+  selectTitle/reportBug`, components under `client/components/profile/`
+  (`ProfileModal` tabs, reusable `AchievementList` with ??? masking for
+  ungranted secrets — built for Feature 83 reuse, `TitlePicker` with
+  ungranted titles unselectable, `PublicProfileModal` rendering the
+  projection exactly as received, `BugReportModal` sending only
+  category+text), achievement toast, Ctrl+Z via new ctrl-combo hotkey
+  support (`CTRL_HOTKEY_BINDINGS`), "View profile" on the player context
+  menu + VIP rows, nav button, `profile.*` + `serverErrors.
+  character-namelocked` locales (en/pt-BR), `summarizeProfileProgress`
+  helper + unit test, 3 Storybook stories. Verified: client typecheck,
+  238-test unit suite, eslint clean, locale key-sets identical. Residuals
+  live with Features 2 (rename) and 83 (Cyclopedia display).
+- **Feature 74 — Prey system** (2026-07-26): **closed** server+client,
+  transcribed from pinned `src/io/ioprey.cpp`. Migration 055:
+  `character_prey_slots` + shared `character_prey_resources`
+  (wildcards/task points) with conditional-debit semantics. `server/src/
+  prey/`: `PreyService` (in-memory slot state loaded at attach, mutated only
+  in-tick; Canary state machine incl. selection-change-monster and
+  list-selection; premium slot-2 unlock at load; slot 3 locked until the
+  Feature 43 store offer), exact grid roll (`rollMonsterGrid` — star-bucket
+  quotas 3/3/2/1→1/1/3/4 by level band, blacklist semantics, tries≥10
+  fallback, 36-entry pool guard), bonus rolls (`preyBonusRoll` — monotonic
+  rarity, type-first-then-value order, 2r+5/2r+10/3r+10 percentages),
+  hunting-time drain in Canary's 60/120 s exp-gain chunks with
+  auto-reroll/lock expiry options (optimistic renewal corrected on failed
+  debit), gold list rerolls (level × 200) through `PgPreyStore` in one
+  serializable transaction with `bank_ledger('prey-reroll')` + audit rows,
+  wildcard spends conditional and audited, capped `grantWildcards` for
+  Features 43/84. Combat: `PreyHooks` consumed post-mitigation/pre-wheel in
+  `DamageResolver` (damage boost / defense reduction, floor(amount·pct/100),
+  condition ticks and mana drains exempt), `DeathHandler` (exp bonus
+  `ceil(amount·(100+pct)/100)` after the drain call, Canary's order), and
+  `createMonsterCorpse` (pct% chance of one extra full loot roll). Bestiary
+  import now carries `isPreyExclusive` (146 races kept out of random grids,
+  wildcard-list selectable) — closes Feature 9's prey typed-data bucket.
+  Client: `usePreySession`, `PreyModal`/`PreySlotCard`/`PreyFullListPanel`
+  (+shared `PreyCreatureSprite`, `RarityStars`), `GameClient.preyAction`,
+  nav toggle, locales, stories. Tests: 22 unit (incl. racing paid rerolls
+  debit exactly once; bonuses only for the slot's race at execution; grid
+  quota/fallback/exclusive behavior) + 5 Pg integration (racing
+  debits/wildcard spends leave one winner, grant cap). Deviations recorded
+  in `TODO.md` accepted gaps (bank-only gold, stamina-decoupled drain,
+  optimistic option renewals, no chat notices).
+- **Feature 75 — Hunting tasks** (2026-07-26): **closed** server+client.
+  `server/src/huntingTasks/`: kill credit rides the same death-hook
+  damagers set as the bestiary (`HuntingTaskService.onMonsterKilled` in
+  GameServer's composite hook; counting continues past the goal, Completed
+  at the tier goal), exact 15-row option table in
+  `protocol/src/huntingTasks.ts` (`TASK_HUNTING_OPTIONS`, Canary integer
+  arithmetic: kills 25/100/400, ×120/125/130 star escalation, second tier
+  double), monotonic star rerolls (`rollTaskRarity`), upgrade tier gated on
+  full bestiary completion re-checked at selection, list rerolls/cancel
+  charging level × 200 gold with ledger + audit, claims through
+  `claimTaskSlotQuery`'s conditional UPDATE (selection/kills/state
+  re-checked in SQL) crediting `task_points` + audit in the same
+  transaction — racing claims grant exactly once; 4★/5★ claim boost roll
+  (×2.0 at ≤5, ×1.5 at ≤10, else ×1.0, floor(reward·boost/10)); post-claim
+  20 h exhaust with the Canary load fixup (expired exhaust → selection).
+  `taskPointsOf` is the durable balance Feature 80 will read as a wheel
+  point source. Client: `useHuntingTasksSession`, `HuntingTasksModal`/
+  `HuntingTaskSlotCard`/`HuntingTaskFullListPanel` (tier pickers showing
+  kills/points from the shared table, claim button, exhaust countdown),
+  `GameClient.huntingTaskAction`, nav toggle, locales, stories. Tests: 12
+  unit (kill credit only via the death path and only for matching
+  selections; claim exactly-once incl. replay and same-tick races; exhaust
+  gates; upgrade stripping) + 4 Pg integration (racing claims, short-kill
+  rejection, cancel ledger/audit, full-shape persistence). Verified
+  end-to-end 2026-07-26: protocol+server+client typecheck, 1201 server +
+  242 client tests green, tools tests + parity:check green, new integration
+  tests green against Postgres (the 10 failing chest/guild/social
+  integration cases predate this work — verified by re-running without
+  migration 055 — and are recorded in `TODO.md`). Migration 055 pending
+  `yarn db:migrate` alongside 043-054.

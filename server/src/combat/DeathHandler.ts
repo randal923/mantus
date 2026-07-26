@@ -7,6 +7,7 @@ import type { GuildHooks } from "../guild/GuildHooks";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
+import type { PreyHooks } from "../prey/PreyHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import { EXPERIENCE_STAGES, getStageRate } from "../progression/stageRates";
 import type { PvpHooks } from "../pvp/PvpHooks";
@@ -38,6 +39,7 @@ export class DeathHandler {
     private readonly monsterEventHooks?: MonsterEventHooks,
     private readonly staminaSystem = false,
     private readonly useStages = false,
+    private readonly preyHooks?: PreyHooks,
   ) {}
 
   handleDeath(
@@ -112,6 +114,7 @@ export class DeathHandler {
         deathEventId,
         now,
         this.lootRate,
+        this.preyHooks,
       );
       if (!this.onMonsterDeath(target, now)) {
         this.world.removeCreature(target.id);
@@ -231,10 +234,23 @@ export class DeathHandler {
       return;
     }
     if (baseAmount >= recipient.level) recipient.armSoulRegeneration(now);
+    // Prey hunting time drains before the bonus is read (Canary
+    // onGainExperience order: useStamina at player.lua:555, prey percent at
+    // :568-574) — a bonus expiring on this very kill does not boost it.
+    this.preyHooks?.onHuntExperienceGained(recipientId, now);
     let amount = baseAmount;
+    if (target instanceof Monster) {
+      const preyPercent = this.preyHooks?.experienceBonusPercent(
+        recipientId,
+        target,
+      );
+      if (preyPercent && preyPercent > 0) {
+        amount = Math.ceil((amount * (100 + preyPercent)) / 100);
+      }
+    }
     if (this.staminaSystem) {
       amount = Math.floor(
-        baseAmount * recipient.staminaExperienceMultiplier(now),
+        amount * recipient.staminaExperienceMultiplier(now),
       );
       recipient.decayHuntStamina(now);
     }

@@ -328,6 +328,7 @@ export class ProfileService {
         description: definition.description,
         grade: definition.grade,
         points: definition.points,
+        secret: definition.secret === true,
         granted: owned,
       });
     }

@@ -44,8 +44,18 @@ test("parses a bestiary block", () => {
     secondUnlock: 100,
     toKill: 250,
     locations: 'Rookgaard and Mainland, "everywhere".',
+    preyExclusive: false,
   });
   assert.equal(result.bosstiary, null);
+});
+
+test("marks prey-exclusive monsters", () => {
+  const lua = bestiaryLua.replace(
+    "mType:register(monster)",
+    "monster.flags = {\n\tisPreyExclusive = true,\n}\nmType:register(monster)",
+  );
+  const result = parseCanaryBestiary(lua, "mammals/test_rat.lua");
+  assert.equal(result.bestiary?.preyExclusive, true);
 });
 
 test("parses a bosstiary block", () => {

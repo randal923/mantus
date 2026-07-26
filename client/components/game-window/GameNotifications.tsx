@@ -19,6 +19,9 @@ export function GameNotifications() {
   const houseToast = useGameWindowStore((state) => state.houseToast);
   const guildToast = useGameWindowStore((state) => state.guildToast);
   const vipToast = useGameWindowStore((state) => state.vipToast);
+  const achievementToast = useGameWindowStore(
+    (state) => state.achievementToast,
+  );
   const levelUpNotice = useGameWindowStore((state) => state.levelUpNotice);
   const setLevelUpNotice = useGameWindowStore(
     (state) => state.setLevelUpNotice,
@@ -56,6 +59,9 @@ export function GameNotifications() {
   const setHouseToast = useGameWindowStore((state) => state.setHouseToast);
   const setGuildToast = useGameWindowStore((state) => state.setGuildToast);
   const setVipToast = useGameWindowStore((state) => state.setVipToast);
+  const setAchievementToast = useGameWindowStore(
+    (state) => state.setAchievementToast,
+  );
   const showServerErrorAsToast =
     serverError === "combat-action-failed" ||
     serverError?.startsWith("spell-") === true;
@@ -129,6 +135,15 @@ export function GameNotifications() {
         <Toast
           message={t("vip.loggedIn", { name: vipToast })}
           onDismiss={() => setVipToast(null)}
+        />
+      )}
+      {achievementToast && (
+        <Toast
+          message={t("profile.achievementToast", {
+            name: achievementToast.name,
+            points: achievementToast.points,
+          })}
+          onDismiss={() => setAchievementToast(null)}
         />
       )}
       {levelUpNotice && (

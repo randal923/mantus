@@ -1,4 +1,8 @@
-import { HOTKEY_BINDINGS, type HotkeyAction } from "./hotkeyBindings";
+import {
+  CTRL_HOTKEY_BINDINGS,
+  HOTKEY_BINDINGS,
+  type HotkeyAction,
+} from "./hotkeyBindings";
 
 interface HotkeyKeyEvent {
   code: string;
@@ -11,6 +15,14 @@ interface HotkeyKeyEvent {
 
 export function resolveHotkey(event: HotkeyKeyEvent): HotkeyAction | null {
   if (event.repeat) return null;
+  if (
+    event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  ) {
+    return CTRL_HOTKEY_BINDINGS[event.code] ?? null;
+  }
   if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
     return null;
   }

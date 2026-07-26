@@ -15,7 +15,6 @@ this index is still exhaustive for "what's left on the client".
 
 | File | Feature | Weight |
 |---|---|---|
-| [feature-67-profile-ui.md](feature-67-profile-ui.md) | 67 | Large — no client surface at all yet |
 | [feature-23-combat-panels.md](feature-23-combat-panels.md) | 23 | Medium — analyzer panel + aim-at-target toggle |
 | [feature-69-movable-panels.md](feature-69-movable-panels.md) | 69 | Medium |
 | [feature-65-vip-groups-and-typing.md](feature-65-vip-groups-and-typing.md) | 65 | Medium |
@@ -32,11 +31,11 @@ this index is still exhaustive for "what's left on the client".
 1. [cross-cutting-locales.md](cross-cutting-locales.md) — cheap, and several
    already-shipped paths currently fall back to a generic message.
    (The outfit window and mounted rendering — the former items 70/71 here —
-   shipped 2026-07-26; see [done.md](../done.md).)
-2. [feature-67-profile-ui.md](feature-67-profile-ui.md) — largest single
-   piece; build the list components so Feature 83 (Cyclopedia) can reuse them.
-3. The small unblocked panels in any order: 23, 43, 58, 102, 49, 68, 62.
-4. [feature-69-movable-panels.md](feature-69-movable-panels.md) and
+   shipped 2026-07-26; the profile UI — the former item 67 here, once the
+   largest piece — also shipped 2026-07-26 with reusable list components
+   for Feature 83; see [done.md](../done.md).)
+2. The small unblocked panels in any order: 23, 43, 58, 102, 49, 68, 62.
+3. [feature-69-movable-panels.md](feature-69-movable-panels.md) and
    [feature-65-vip-groups-and-typing.md](feature-65-vip-groups-and-typing.md)
    whenever convenient.
 

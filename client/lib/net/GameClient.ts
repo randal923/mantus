@@ -1,5 +1,6 @@
 import {
   parseServerMessages,
+  type BugReportMessage,
   type ChatChannelId,
   type ChatSpeechMode,
   type CreateCharacterInput,
@@ -22,7 +23,10 @@ import {
   type OutfitSelectMessage,
   type PartyAnalyzerPriceMode,
   type Position,
+  type PreyActionMessage,
+  type PreyOption,
   type ReportReason,
+  type TaskHuntingActionMessage,
   type ServerErrorCode,
   type ServerMessage,
   type ActionBar,
@@ -805,6 +809,36 @@ export class GameClient {
     return this.send({ type: "wheel-gems-get" });
   }
 
+  /** Prey mutations only send intents; the server re-validates everything. */
+  preyAction(
+    action: PreyActionMessage["action"],
+    slot: number,
+    extras?: { index?: number; raceId?: number; option?: PreyOption },
+  ): boolean {
+    return this.send({
+      type: "prey-action",
+      slot,
+      action,
+      ...(extras?.index !== undefined ? { index: extras.index } : {}),
+      ...(extras?.raceId !== undefined ? { raceId: extras.raceId } : {}),
+      ...(extras?.option !== undefined ? { option: extras.option } : {}),
+    });
+  }
+
+  huntingTaskAction(
+    action: TaskHuntingActionMessage["action"],
+    slot: number,
+    extras?: { raceId?: number; upgrade?: boolean },
+  ): boolean {
+    return this.send({
+      type: "hunting-task-action",
+      slot,
+      action,
+      ...(extras?.raceId !== undefined ? { raceId: extras.raceId } : {}),
+      ...(extras?.upgrade !== undefined ? { upgrade: extras.upgrade } : {}),
+    });
+  }
+
   sendGemAction(requestId: string, action: GemAction): boolean {
     return this.send({ type: "wheel-gem-action", requestId, action });
   }
@@ -828,6 +862,24 @@ export class GameClient {
     comment: string,
   ): boolean {
     return this.send({ type: "report-player", targetName, reason, comment });
+  }
+
+  /** Looks up another character's public profile by display name. */
+  getCharacterProfile(name: string): boolean {
+    return this.send({ type: "character-profile-get", name });
+  }
+
+  /** Displays one of the own granted titles, or none with null. */
+  selectTitle(titleId: string | null): boolean {
+    return this.send({ type: "profile-select-title", titleId });
+  }
+
+  /** Only category and text; the server stamps reporter and position. */
+  reportBug(
+    category: BugReportMessage["category"],
+    message: string,
+  ): boolean {
+    return this.send({ type: "bug-report", category, message });
   }
 
   requestMarketOwnOffers(): boolean {

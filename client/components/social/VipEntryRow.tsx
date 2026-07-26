@@ -10,6 +10,7 @@ import { Input } from "../ui/Input";
 interface VipEntryRowProps {
   entry: VipEntry;
   onChat: (name: string) => void;
+  onViewProfile: (name: string) => void;
   onEdit: (
     targetCharacterId: string,
     edits: { description?: string; icon?: number; notifyLogin?: boolean },
@@ -35,6 +36,7 @@ const ICON_COLORS = [
 export function VipEntryRow({
   entry,
   onChat,
+  onViewProfile,
   onEdit,
   onRemove,
 }: VipEntryRowProps) {
@@ -135,6 +137,26 @@ export function VipEntryRow({
           >
             <path d="M5 5.5h14v10H9l-4 3z" />
             <path d="M8.5 9h7M8.5 12h4.5" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          aria-label={t("vip.viewProfile", { name: entry.name })}
+          onClick={() => onViewProfile(entry.name)}
+          className="flex size-8 items-center justify-center rounded-sm border border-ui-stone-light/20 bg-black/15 text-ui-muted outline-none transition-[color,border-color,background-color] hover:border-ui-gold/45 hover:bg-white/5 hover:text-ui-gold focus-visible:ring-2 focus-visible:ring-ui-gold/60"
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="9" r="3.5" />
+            <path d="m10 11.8-1.6 6 3.6-2 3.6 2-1.6-6" />
           </svg>
         </button>
         <button

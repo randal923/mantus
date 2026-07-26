@@ -23,8 +23,10 @@ re-deriving coverage from `bestiary.json` rather than trusting labels),
   76 (todo-10) owns importing `isRewardBoss` onto `MonsterType` (it also
   needs it for the challenge/melee-pull guards); this feature closes its
   blocked bucket when that lands.
-- **Prey classification** (`flags.isPreyExclusive` 146, `flags.isPreyable` 1)
-  — needs Feature 74 (todo-10).
+- ~~Prey classification~~ — resolved 2026-07-26 with Feature 74:
+  `isPreyExclusive` is imported onto bestiary entries
+  (`tools/parseCanaryBestiary.mjs` → `BestiaryCatalogEntry.preyExclusive`);
+  `isPreyable` has no `false` setter at the pin, so nothing to import.
 - **Three NPC entries** (`onSay` ×2, `moneyToNeedDonation`) — todo-7.
 - Already typed or resolved (do NOT redo): static mana cost, light,
   target-change rules, hidden health, static-attack chance; all 54 registered
