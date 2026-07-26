@@ -235,7 +235,8 @@
     "wiki": "Wiki",
     "bestiary": "Bestiary",
     "bosstiary": "Bosstiary",
-    "wheel": "Wheel"
+    "wheel": "Wheel",
+    "outfit": "Outfits"
   },
   "currency": {
     "wallet": "Currency wallet",
@@ -1010,7 +1011,8 @@
     "attack": "Attack",
     "stopAttack": "Stop Attack",
     "follow": "Follow",
-    "stopFollow": "Stop Follow"
+    "stopFollow": "Stop Follow",
+    "setOutfit": "Set outfit"
   },
   "potions": {
     "bar": "Potion bar",
@@ -1678,6 +1680,31 @@
         "regular": "{{name}}",
         "greater": "Greater {{name}}"
       }
+    }
+  },
+  "outfit": {
+    "title": "Outfits",
+    "outfits": "Outfits",
+    "mounts": "Mounts",
+    "noMount": "No mount",
+    "noMounts": "No mounts unlocked yet.",
+    "noOutfits": "No outfits available.",
+    "starterOnly": "Only the starter citizen outfits are unlocked so far — quests, achievements, and the store grant more.",
+    "confirm": "Confirm",
+    "firstAddon": "Addon 1",
+    "secondAddon": "Addon 2",
+    "colors": "Colours",
+    "mountSpeed": "+{{speed}} speed",
+    "channels": {
+      "head": "Head",
+      "body": "Body",
+      "legs": "Legs",
+      "feet": "Feet"
+    },
+    "errors": {
+      "not-owned": "You do not own that outfit or mount.",
+      "rate-limited": "Please wait a moment before changing again.",
+      "invalid-request": "That selection is not possible."
     }
   }
 }

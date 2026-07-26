@@ -56,6 +56,12 @@ export class Player extends Creature<Character["outfit"]> {
   mountId = 0;
   /** The mount's outfit sprite; set together with the speed bonus. */
   mountLookType = 0;
+  /**
+   * Focus Mastery window: armed by casting a focus-group spell, consumed by
+   * the next spell damage (Canary player_wheel.cpp:3313-3319, 3476-3478).
+   * Server-owned; never persisted (Canary's on-think timer is not either).
+   */
+  focusMasteryUntil = 0;
   private mountSpeedBonus = 0;
   private currentWheelBonuses: WheelBonuses;
 

@@ -3394,6 +3394,283 @@ describe("Combat", () => {
     ).toBe(false);
   });
 
+  it("applies wheel life and mana leech at damage execution time", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 0, red: 0, blue: 1, purple: 0 },
+        lifeLeechPercent: 100,
+        manaLeechPercent: 100,
+      },
+    });
+    const monster = makeMonster(
+      "monster-instance:wheel-leech:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 100_000, maxHealth: 100_000 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.player.setHealth(1);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-ulus-frigo",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    const dealt = monster.maxHealth - monster.health;
+    expect(dealt).toBeGreaterThan(0);
+    // 100 % leech on a single target heals the full damage dealt, and the
+    // mana leg more than refunds the 230 mana the cast spent.
+    expect(harness.player.health).toBe(Math.min(1 + dealt, harness.player.maxHealth));
+    expect(harness.player.mana).toBe(harness.player.maxMana);
+  });
+
+  it("never leeches for a player without wheel or equipment leech", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 0, red: 0, blue: 1, purple: 0 },
+      },
+    });
+    const monster = makeMonster(
+      "monster-instance:wheel-leech:1",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 100_000, maxHealth: 100_000 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.player.setHealth(1);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-ulus-frigo",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+    expect(harness.player.health).toBe(1);
+  });
+
+  it("adds the revelation flat damage and healing to player casts", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 0, red: 0, blue: 1, purple: 0 },
+        damageAndHealing: 500,
+      },
+    });
+    const monster = makeMonster(
+      "monster-instance:wheel-flat:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 100_000, maxHealth: 100_000 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-ulus-frigo",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+    // Formula floor at level 300 / magic 30 is 270; the flat 500 rides on top.
+    expect(monster.maxHealth - monster.health).toBeGreaterThanOrEqual(770);
+
+    harness.player.setHealth(1);
+    harness.combat.castSpell(
+      harness.session,
+      { type: "cast-spell", spellId: "exura", target: { kind: "self" } },
+      3_000,
+    );
+    expect(harness.player.health).toBeGreaterThanOrEqual(501);
+  });
+
+  it("applies wheel augment mana cost and cooldown reductions at cast time", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+      bystanderPositions: [{ x: 2, y: 1, z: 7 }],
+      partyMembership: { sameParty: true },
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        spellGrades: { "Heal Friend": 1, "Nature's Embrace": 2 },
+      },
+    });
+    const friend = harness.bystanders[0];
+    if (!friend) throw new Error("bystander missing");
+    harness.session.knownCreatureIds.add(friend.player.id);
+
+    const manaBefore = harness.player.mana;
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exura-sio",
+        target: { kind: "creature", creatureId: friend.player.id },
+      },
+      1_000,
+    );
+    // Heal Friend costs 120; its grade 1 augment refunds 10.
+    expect(manaBefore - harness.player.mana).toBe(110);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exura-gran-sio",
+        target: { kind: "creature", creatureId: friend.player.id },
+      },
+      3_000,
+    );
+    // Nature's Embrace runs 60 s; its grade 2 augment removes 10 s.
+    expect(
+      harness.session.combatCooldowns.get("spell:exura-gran-sio")?.totalMs,
+    ).toBe(50_000);
+  });
+
+  it("widens Energy Wave to the grade-two area from the server-owned grade", async () => {
+    const castAt = async (grades: Readonly<Record<string, number>>) => {
+      const harness = await makeHarness({
+        character: makeLeveledCharacter(300, "Master Sorcerer", 30),
+        position: { x: 5, y: 8, z: 7 },
+        wheelBonuses: { ...EMPTY_WHEEL_BONUSES, spellGrades: grades },
+      });
+      // Offset (2,-3) from the cast center one tile ahead exists only in
+      // the upgraded AREA_WAVE7 matrix.
+      const monster = makeMonster(
+        "monster-instance:wheel-wave:0",
+        { x: 7, y: 4, z: 7 },
+        makeMonsterType({ health: 100_000, maxHealth: 100_000 }),
+      );
+      harness.world.addCreature(monster);
+      harness.session.knownCreatureIds.add(monster.id);
+      harness.player.direction = "north";
+      harness.combat.castSpell(
+        harness.session,
+        {
+          type: "cast-spell",
+          spellId: "exevo-vis-hur",
+          target: { kind: "direction" },
+        },
+        1_000,
+      );
+      return monster;
+    };
+
+    const upgraded = await castAt({ "Energy Wave": 2 });
+    expect(upgraded.health).toBeLessThan(upgraded.maxHealth);
+    const base = await castAt({});
+    expect(base.health).toBe(base.maxHealth);
+  });
+
+  it("self-heals the Healing Link druid when healing another player", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+      bystanderPositions: [{ x: 2, y: 1, z: 7 }],
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        instants: { "Healing Link": true },
+      },
+    });
+    const friend = harness.bystanders[0];
+    if (!friend) throw new Error("bystander missing");
+    harness.session.knownCreatureIds.add(friend.player.id);
+    harness.player.setHealth(1);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exura-sio",
+        target: { kind: "creature", creatureId: friend.player.id },
+      },
+      1_000,
+    );
+
+    expect(harness.player.health).toBeGreaterThan(1);
+  });
+
+  it("saves a fatal hit through Gift of Life exactly once per cooldown", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elder Druid", 30),
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 1, red: 0, blue: 0, purple: 0 },
+      },
+    });
+    const maxHealth = harness.player.maxHealth;
+    harness.player.setHealth(50);
+
+    harness.combat.applyTileTrapDamage(
+      harness.player,
+      { minimum: 60, maximum: 60, type: "earth" },
+      1_000,
+    );
+
+    // Stage 1 heals 20 % of max health; the hit removes the pre-heal 50.
+    expect(harness.player.health).toBe(Math.floor(maxHealth * 0.2));
+    expect(
+      harness.player.storageValue("wheel:gift-of-life-cooldown"),
+    ).toBe(108_000);
+
+    // On cooldown the same fatal hit kills; the death path revives at full.
+    harness.player.setHealth(10);
+    harness.combat.applyTileTrapDamage(
+      harness.player,
+      { minimum: 60, maximum: 60, type: "earth" },
+      2_000,
+    );
+    expect(harness.player.health).toBe(harness.player.maxHealth);
+  });
+
+  it("lets gem dodge fully avoid incoming player damage", async () => {
+    const attacked = async (dodgePercent: number) => {
+      const harness = await makeHarness({
+        character: makeLeveledCharacter(300, "Elder Druid", 30),
+        bystanderPositions: [{ x: 2, y: 1, z: 7 }],
+      });
+      harness.session.fightMode.secure = false;
+      const victim = harness.bystanders[0];
+      if (!victim) throw new Error("bystander missing");
+      harness.session.knownCreatureIds.add(victim.player.id);
+      if (dodgePercent > 0) {
+        victim.player.setWheelBonuses({
+          ...EMPTY_WHEEL_BONUSES,
+          dodgePercent,
+        });
+      }
+      harness.combat.castSpell(
+        harness.session,
+        {
+          type: "cast-spell",
+          spellId: "exori-frigo",
+          target: { kind: "creature", creatureId: victim.player.id },
+        },
+        1_000,
+      );
+      return victim.player;
+    };
+
+    const dodged = await attacked(100);
+    expect(dodged.health).toBe(dodged.maxHealth);
+    const struck = await attacked(0);
+    expect(struck.health).toBeLessThan(struck.maxHealth);
+  });
+
   /**
    * Balanced Brawl's target callback pulls every monster the pinned
    * AREA_BALANCED_BRAWL matrix covers into melee. The matrix is anchored on

@@ -207,19 +207,25 @@ export class PlayerAutoAttack {
     specials: PlayerSpecials,
     now: number,
   ): void {
-    const health = Math.round(
-      damage *
-        (this.formula.chance(specials.lifeLeechChance)
-          ? specials.lifeLeechPercent
-          : 0) /
-        100,
+    // Equipment leech keeps its chance roll; wheel and gem leech always
+    // apply (Canary folds WheelStat_t leech into the leech skills,
+    // player.cpp:7360-7363). Single-target, so no multi-target falloff.
+    const wheel = player.wheelBonuses;
+    const lifePercent =
+      (this.formula.chance(specials.lifeLeechChance)
+        ? specials.lifeLeechPercent
+        : 0) + wheel.lifeLeechPercent;
+    const manaPercent =
+      (this.formula.chance(specials.manaLeechChance)
+        ? specials.manaLeechPercent
+        : 0) + wheel.manaLeechPercent;
+    const health = Math.min(
+      damage,
+      Math.max(0, Math.round((damage * lifePercent) / 100)),
     );
-    const mana = Math.round(
-      damage *
-        (this.formula.chance(specials.manaLeechChance)
-          ? specials.manaLeechPercent
-          : 0) /
-        100,
+    const mana = Math.min(
+      damage,
+      Math.max(0, Math.round((damage * manaPercent) / 100)),
     );
     if (health > 0) player.setHealth(player.health + health);
     if (mana > 0) player.restoreMana(mana);

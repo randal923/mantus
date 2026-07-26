@@ -47,6 +47,7 @@ import { DeathHandler } from "./DeathHandler";
 import { EventSequence } from "./EventSequence";
 import { findVisiblePlayerByName } from "./findVisiblePlayerByName";
 import { getMagicEffectId } from "./getMagicEffectId";
+import { GIFT_OF_LIFE_STORAGE_KEY } from "./giftOfLife";
 import { getMissileId } from "./getMissileId";
 import { isInRange } from "./isInRange";
 import { PlayerAutoAttack } from "./PlayerAutoAttack";
@@ -117,6 +118,7 @@ export class Combat {
     readonly position: Position;
   }> = [];
   private readonly lastFieldByCreature = new WeakMap<Creature, string>();
+  private readonly nextGiftOfLifeTickAt = new WeakMap<Player, number>();
 
   constructor(
     private readonly world: World,
@@ -200,6 +202,8 @@ export class Combat {
       this.conditionSystem,
       pvpHooks,
       partyHooks,
+      this.formula,
+      (runeItemTypeId) => this.spells.conjuringSpellFor(runeItemTypeId),
     );
     this.playerActions = new PlayerSpellActions(
       world,
@@ -701,7 +705,24 @@ export class Combat {
       this.autoAttack.tickPlayerAttack(session, now);
       this.tickFollow(session, now);
       this.tickCombatAnalyzer(session, now);
+      this.tickGiftOfLifeCooldown(session, now);
     }
+  }
+
+  /**
+   * Canary ticks the Gift of Life cooldown down one second per on-think
+   * while the character is online (player_wheel.cpp:3334-3336); it never
+   * advances offline. Persisted as a character storage value.
+   */
+  private tickGiftOfLifeCooldown(session: Session, now: number): void {
+    const player = playerForSession(this.world, session);
+    if (!player) return;
+    if (now < (this.nextGiftOfLifeTickAt.get(player) ?? 0)) return;
+    this.nextGiftOfLifeTickAt.set(player, now + 1_000);
+    const remaining = player.storageValue(GIFT_OF_LIFE_STORAGE_KEY);
+    if (remaining <= 0) return;
+    player.setStorageValue(GIFT_OF_LIFE_STORAGE_KEY, remaining - 1);
+    this.persistence.markDirty(player);
   }
 
   /**

@@ -99,6 +99,7 @@ export interface GameWindowStoreActions {
   setHighscoresOpen: (value: SetStateAction<boolean>) => void;
   setWikiOpen: (value: SetStateAction<boolean>) => void;
   setWheelOpen: (value: SetStateAction<boolean>) => void;
+  setOutfitWindowOpen: (value: SetStateAction<boolean>) => void;
   setReportSession: (value: SetStateAction<ReportSessionState | null>) => void;
   setHouseToast: (value: SetStateAction<HouseToast | null>) => void;
   setTradeToast: (value: SetStateAction<TradeClosedReason | null>) => void;

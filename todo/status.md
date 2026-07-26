@@ -69,8 +69,8 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Minimap (68)                                             | ✅     | ◐      | Marker editing + walk feedback                                              |
 | UI settings sync (69)                                    | ✅     | ◐      | Movable chat/battle-list/spell-bar panels                                   |
 | Bestiary + bosstiary + charm earning (73, 77)            | ✅     | ✅     | Charm **spending**, shared-exp kill credit                                  |
-| Wheel of Destiny + Gem Atelier (79–81)                   | ◐      | ✅     | Combat wiring (mitigation, leech, revelations), rule gaps, 5 gem deviations |
-| Outfits + mounts entitlements (70, 71)                   | ✅     | ❌     | Outfit window, mounted rendering                                            |
+| Wheel of Destiny + Gem Atelier (79–81)                   | ◐      | ✅     | Revelation actives (avatars + 5 procedural spells), periodic conviction majors, Monk perks (need harmony), gem long tail, extra point sources, 5 gem deviations |
+| Outfits + mounts (70, 71)                                | ✅     | ✅     | Nothing — unlock sources ride with store/achievements/quests (43, 67)       |
 | Profiles: achievements, titles, badges, char info (67)   | ◐      | ❌     | Full achievement catalog; entire profile UI                                 |
 | Prey (74)                                                | ❌     | ❌     | Everything                                                                  |
 | Hunting tasks (75)                                       | ❌     | ❌     | Everything                                                                  |
@@ -107,8 +107,8 @@ all exploit-tested. The gaps cluster in four places:
    proficiency/animus, Cyclopedia, familiars, quests (74–76, 78, 82–85,
    103–105).
 2. **The NPC content grind**: 611 procedural entries (38/40/41).
-3. **Client surfaces**: outfit window and profile UI are the two big ones;
-   the [client backlog](client/README.md) lists the rest.
+3. **Client surfaces**: the profile UI is the big one left; the
+   [client backlog](client/README.md) lists the rest.
 4. **Launch hardening**: logging, metrics, error handling, durability,
    release gates (93–100).
 

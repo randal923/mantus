@@ -78,6 +78,7 @@ export class CreatureView {
   readonly plate = new Container();
 
   private readonly sprite = new Sprite();
+  private readonly mount = new Sprite();
   private readonly light = new Graphics();
   private readonly attackTarget = new Graphics();
   private readonly health = new Graphics();
@@ -89,6 +90,7 @@ export class CreatureView {
   private publicGuildName: string | null;
   private publicAtWar: boolean;
   private readonly appearance: CreatureState["outfit"];
+  private readonly mountLookType: number;
   private direction: Direction;
   private walkDirection: Direction;
   private tileX: number;
@@ -108,6 +110,7 @@ export class CreatureView {
     state: CreatureState,
     private readonly colors: OutfitColors | undefined,
     nameColor: number,
+    private readonly mountObject: TibiaObject | null = null,
   ) {
     this.direction = state.direction;
     this.walkDirection = state.direction;
@@ -125,6 +128,17 @@ export class CreatureView {
         -(outfit.height - 1) * TILE_SIZE - SPRITE_DISPLACEMENT,
       );
     }
+    // The mount draws under the rider at the same anchor with no
+    // displacement — mount outfit objects carry displacement 0 in the
+    // pinned metadata, unlike rider outfits' 8 (see client/ASSETS.md).
+    if (mountObject) {
+      this.mount.position.set(
+        -(mountObject.width - 1) * TILE_SIZE,
+        -(mountObject.height - 1) * TILE_SIZE,
+      );
+    }
+    this.mount.zIndex = -0.5;
+    this.mount.visible = mountObject !== null;
     this.attackTarget
       .rect(-7, -7, TILE_SIZE - 2, TILE_SIZE - 2)
       .stroke({ color: 0xff2222, width: 2 });
@@ -132,6 +146,7 @@ export class CreatureView {
     this.container.sortableChildren = true;
     this.light.zIndex = -1;
     this.container.addChild(this.sprite, this.attackTarget, this.light);
+    this.container.addChild(this.mount);
 
     const name = new Text({
       text: state.name,
@@ -148,6 +163,7 @@ export class CreatureView {
     name.position.y = -5;
     this.name = name;
     this.appearance = { ...state.outfit };
+    this.mountLookType = state.mountLookType ?? 0;
     this.publicPartyMember = state.partyStatus === "member";
     this.publicGuildName = state.guildName ?? null;
     this.publicAtWar = state.atWar ?? false;
@@ -169,14 +185,22 @@ export class CreatureView {
   }
 
   get cullMarginTiles(): number {
-    return Math.max(this.outfit?.width ?? 1, this.outfit?.height ?? 1);
+    return Math.max(
+      this.outfit?.width ?? 1,
+      this.outfit?.height ?? 1,
+      this.mountObject?.width ?? 1,
+      this.mountObject?.height ?? 1,
+    );
   }
 
   get position(): Position {
     return { x: this.tileX, y: this.tileY, z: this.tileZ };
   }
 
-  hasAppearance(appearance: CreatureState["outfit"]): boolean {
+  hasAppearance(
+    appearance: CreatureState["outfit"],
+    mountLookType?: number,
+  ): boolean {
     return (
       appearance.lookType === this.appearance.lookType &&
       appearance.lookTypeEx === this.appearance.lookTypeEx &&
@@ -184,7 +208,8 @@ export class CreatureView {
       appearance.body === this.appearance.body &&
       appearance.legs === this.appearance.legs &&
       appearance.feet === this.appearance.feet &&
-      appearance.addons === this.appearance.addons
+      appearance.addons === this.appearance.addons &&
+      (mountLookType ?? 0) === this.mountLookType
     );
   }
 
@@ -475,10 +500,20 @@ export class CreatureView {
     const moving = this.moveT < 1;
     const phase = moving && walkPhases > 0 ? this.walkAnimationPhase : 0;
     const dir = DIR_INDEX[moving ? this.walkDirection : this.direction];
+    // Mounted riders use pattern-Z 1 (the riding pose); getSpriteIndex wraps
+    // it away again for outfits without a mount pattern.
     this.sprite.texture = this.store.cachedFrameTexture(
       this.outfit,
-      { x: dir, phase },
+      { x: dir, z: this.mountObject ? 1 : 0, phase },
       this.colors,
     );
+    if (this.mountObject) {
+      // The mount animates from the same direction and walk phase as its
+      // rider and is never colorized (mounts bake with a single layer).
+      this.mount.texture = this.store.cachedFrameTexture(this.mountObject, {
+        x: dir,
+        phase: Math.min(phase, this.mountObject.phases - 1),
+      });
+    }
   }
 }

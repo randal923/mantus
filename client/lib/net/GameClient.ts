@@ -19,6 +19,7 @@ import {
   type QuickLootFilter,
   type Language,
   type MarketSide,
+  type OutfitSelectMessage,
   type PartyAnalyzerPriceMode,
   type Position,
   type ReportReason,
@@ -785,6 +786,15 @@ export class GameClient {
 
   requestWheel(): boolean {
     return this.send({ type: "wheel-get" });
+  }
+
+  getOutfits(): boolean {
+    return this.send({ type: "outfit-get" });
+  }
+
+  /** Every id is a request; the server re-validates entitlements. */
+  selectOutfit(selection: Omit<OutfitSelectMessage, "type">): boolean {
+    return this.send({ type: "outfit-select", ...selection });
   }
 
   saveWheel(requestId: string, slices: ReadonlyArray<number>): boolean {

@@ -72,12 +72,14 @@ limitations accepted during a session are recorded in the owning feature file
   character is held out of the world with `character-namelocked`, which is the
   enforcement half; nothing clears the flag in-game. The rename infrastructure
   is Feature 2. Owner: Feature 67.
-- **Mounts do not render** (2026-07-25, Feature 71). Ownership, selection
-  validation, and the server-side speed bonus ship, and creature state carries
-  `mountLookType`, but `CreatureView` still draws only the rider. Drawing the
-  mount under it needs a second sprite layer subject to the pattern/layer
-  rules in `client/ASSETS.md`. Owner:
-  [`todo/client/feature-71-mount-rendering.md`](todo/client/feature-71-mount-rendering.md).
+- **Outfit/mount rendering has not been eyeballed in the running client**
+  (2026-07-26, Features 70/71). Mounted rendering, the riding pose
+  (pattern-Z 1), and the addon-compositing preview shipped with unit tests,
+  but a wrong pattern index is invisible to tests — the feature files always
+  called for a visual pass with `/run` or Storybook, which this session's
+  no-dev-servers rule skipped. Fix: eyeball a mounted walk cycle and an
+  addon toggle once in-game; `node client/tools/spritetool.mjs render outfit
+  128 out.png --x 2 --z 1 --phase 1` spot-checks frames offline.
 - **Fields cannot be implemented from the pinned assets** (2026-07-25,
   Feature 50). The item catalog imports `kind: "magicfield"` for 45 types but
   no `field` payload; `ItemType.field` is declared and always undefined, so
@@ -148,17 +150,15 @@ limitations accepted during a session are recorded in the owning feature file
   mutation" (a paused/stop-condition decay — Feature 33), that item does need a
   stored deadline; add the column then, for those items only.
 
-- **Wheel-upgraded (WOD) combat areas are modelled at their base grade only**
-  (2026-07-25, Feature 25). Spells that build one combat per Wheel of Destiny
-  grade — Energy Beam (`AREA_BEAM5` → `AREA_BEAM7`), Energy Wave
-  (`AREA_SQUAREWAVE5` → `AREA_WAVE7`), Great Energy Beam (`AREA_BEAM8` →
-  `AREA_BEAM10`), Great Death Beam (`AREA_BEAM6`/`7`/`8` by grade), Mass
-  Healing and Sap Strength — import the **first** helper call site, which is
-  the un-upgraded combat. The upgraded areas are simply not applied; nothing
-  is mis-applied. Fix: extend the catalog entry to carry a per-grade area list
-  and pick the grade from `player.wheelBonuses` at cast time, the same way
-  `wheelRevelation` is now enforced in `SpellCaster.spellRejectionCode`.
-  Owner: Features 79–80 (wheel combat wiring / rule gaps).
+- **Two WOD-graded combat areas still wait on their spells** (2026-07-26,
+  narrowed from the 2026-07-25 Feature 25 entry). Energy Beam, Energy Wave,
+  Great Energy Beam, and Sap Strength now pick their upgraded areas from
+  `player.wheelBonuses` at cast time (`server/src/combat/wheelUpgradedAreas.ts`
+  + `wheelSpellAugments.ts`/`wheelBeamMastery.ts`). Great Death Beam
+  (per-grade `AREA_BEAM6/7/8`) and Mass Healing remain at nothing rather than
+  base grade because both spells are unsupported catalog entries; their areas
+  land with the spells. Owner: Feature 79 (via Feature 24's disabled-spell
+  bucket).
 
 - **38 pinned monster loot entries can never drop** (2026-07-25, Feature 29).
   Twelve items (darklight/inferniarch-era drops) exist in the pinned Canary

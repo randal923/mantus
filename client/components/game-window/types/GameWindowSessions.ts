@@ -7,6 +7,7 @@ import type { HighscoresSessionState } from "../../../hooks/useHighscoresSession
 import type { HouseSessionState } from "../../../hooks/useHouseSession";
 import type { MarketSessionState } from "../../../hooks/useMarketSession";
 import type { OptimisticInventory } from "../../../hooks/useOptimisticInventory";
+import type { OutfitSessionState } from "../../../hooks/useOutfitSession";
 import type { PartySessionState } from "../../../hooks/usePartySession";
 import type { TradeSessionState } from "../../../hooks/useTradeSession";
 import type { VipSessionState } from "../../../hooks/useVipSession";
@@ -26,4 +27,5 @@ export interface GameWindowSessions {
   bosstiary: BosstiarySessionState;
   wheel: WheelSessionState;
   gems: GemSessionState;
+  outfit: OutfitSessionState;
 }

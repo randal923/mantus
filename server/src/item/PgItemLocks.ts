@@ -1,6 +1,16 @@
-import type { EquipmentSlot, Position } from "@tibia/protocol";
+import {
+  computeWheelBonuses,
+  GEM_QUALITIES,
+  WHEEL_DOMAINS,
+  type EquipmentSlot,
+  type Position,
+  type RevealedGem,
+} from "@tibia/protocol";
 import type { PoolClient } from "pg";
 import { deriveCharacterStats } from "../progression/deriveCharacterStats";
+import { selectGemGradesQuery } from "../wheel/sql/selectGemGradesQuery";
+import { selectGemRowsQuery } from "../wheel/sql/selectGemRowsQuery";
+import { selectWheelSlicesQuery } from "../wheel/sql/selectWheelSlicesQuery";
 import type { CharacterItemRow } from "./CharacterItemRow";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemRow } from "./ItemRow";
@@ -40,6 +50,70 @@ export class PgItemLocks {
         vocation: row.vocation,
         definitionVersion: row.progression_definition_version,
         level: row.level,
+        wheel: await this.wheelCapacityBonus(client, characterId, row),
+      }).capacity,
+    };
+  }
+
+  /**
+   * The wheel's capacity contribution for an *offline* character, read
+   * inside the same transaction so offline deliveries (mail, market) apply
+   * the same capacity limit the character has while online. Uses the shared
+   * `computeWheelBonuses`, so the online and offline numbers cannot drift.
+   */
+  private async wheelCapacityBonus(
+    client: PoolClient,
+    characterId: string,
+    row: Omit<CharacterItemRow, "capacity">,
+  ): Promise<{ capacity: number }> {
+    const slices = await client.query<{ slices: number[] }>(
+      selectWheelSlicesQuery,
+      [characterId],
+    );
+    const gems = await client.query<{
+      id: string;
+      domain: number;
+      quality: number;
+      basic_mod_1: number;
+      basic_mod_2: number | null;
+      supreme_mod: number | null;
+      locked: boolean;
+      equipped: boolean;
+    }>(selectGemRowsQuery, [characterId]);
+    const grades = await client.query<{
+      mod_kind: number;
+      mod_id: number;
+      grade: number;
+    }>(selectGemGradesQuery, [characterId]);
+    const allocation = slices.rows[0]?.slices ?? [];
+    const equipped: RevealedGem[] = [];
+    for (const gem of gems.rows) {
+      const domain = WHEEL_DOMAINS[gem.domain];
+      const quality = GEM_QUALITIES[gem.quality];
+      if (!gem.equipped || !domain || !quality) continue;
+      equipped.push({
+        id: gem.id,
+        domain,
+        quality,
+        locked: gem.locked,
+        basicModIds:
+          gem.basic_mod_2 === null
+            ? [gem.basic_mod_1]
+            : [gem.basic_mod_1, gem.basic_mod_2],
+        ...(gem.supreme_mod === null ? {} : { supremeModId: gem.supreme_mod }),
+      });
+    }
+    return {
+      capacity: computeWheelBonuses(allocation, row.vocation, {
+        equipped,
+        grades: {
+          basic: grades.rows
+            .filter((grade) => grade.mod_kind === 0)
+            .map((grade) => ({ modId: grade.mod_id, grade: grade.grade })),
+          supreme: grades.rows
+            .filter((grade) => grade.mod_kind === 1)
+            .map((grade) => ({ modId: grade.mod_id, grade: grade.grade })),
+        },
       }).capacity,
     };
   }

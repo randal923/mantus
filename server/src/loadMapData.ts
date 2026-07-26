@@ -328,6 +328,14 @@ export function loadMapData(
     z: spawnSource.z,
   });
   if (!spawnResult.success) throw new Error(`map ${name} has an invalid spawn`);
+  const townTemples = meta.towns.flatMap((town) => {
+    const temple = positionSchema.safeParse({
+      x: town.x,
+      y: town.y,
+      z: town.z,
+    });
+    return temple.success ? [temple.data] : [];
+  });
 
   return {
     name,
@@ -352,6 +360,9 @@ export function loadMapData(
     getItems,
     getTownName(townId) {
       return meta.towns.find((town) => town.id === townId)?.name;
+    },
+    getTownTemples() {
+      return townTemples;
     },
     getHouseId(position) {
       return houseTiles.byPosition.get(positionKey(position));

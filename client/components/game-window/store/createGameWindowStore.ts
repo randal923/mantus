@@ -102,6 +102,7 @@ export function createGameWindowStore({
     highscoresOpen: false,
     wikiOpen: false,
     wheelOpen: false,
+    outfitWindowOpen: false,
     reportSession: null,
     houseToast: null,
     tradeToast: null,
@@ -298,6 +299,10 @@ export function createGameWindowStore({
       set((state) => ({
         wheelOpen: resolveStateAction(value, state.wheelOpen),
       })),
+    setOutfitWindowOpen: (value) =>
+      set((state) => ({
+        outfitWindowOpen: resolveStateAction(value, state.outfitWindowOpen),
+      })),
     setReportSession: (value) =>
       set((state) => ({
         reportSession: resolveStateAction(value, state.reportSession),
@@ -449,6 +454,7 @@ export function createGameWindowStore({
         highscoresOpen: false,
         wikiOpen: false,
         wheelOpen: false,
+        outfitWindowOpen: false,
         reportSession: null,
         mailboxSession: null,
         visibleCreatures: [],

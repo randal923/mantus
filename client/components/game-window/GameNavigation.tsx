@@ -30,6 +30,9 @@ export function GameNavigation() {
   const highscoresOpen = useGameWindowStore((state) => state.highscoresOpen);
   const wikiOpen = useGameWindowStore((state) => state.wikiOpen);
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
+  const outfitWindowOpen = useGameWindowStore(
+    (state) => state.outfitWindowOpen,
+  );
   const vipPanelVisible = useGameWindowStore(
     (state) => state.vipPanelVisible,
   );
@@ -70,6 +73,9 @@ export function GameNavigation() {
   );
   const setWikiOpen = useGameWindowStore((state) => state.setWikiOpen);
   const setWheelOpen = useGameWindowStore((state) => state.setWheelOpen);
+  const setOutfitWindowOpen = useGameWindowStore(
+    (state) => state.setOutfitWindowOpen,
+  );
   const setVipPanelVisible = useGameWindowStore(
     (state) => state.setVipPanelVisible,
   );
@@ -98,11 +104,13 @@ export function GameNavigation() {
             ? "wiki"
             : wheelOpen
               ? "wheel"
-              : characterStatsOpen
-                ? "character"
-                : inventoryOpen
-                  ? "inventory"
-                  : undefined;
+              : outfitWindowOpen
+                ? "outfit"
+                : characterStatsOpen
+                  ? "character"
+                  : inventoryOpen
+                    ? "inventory"
+                    : undefined;
 
   return (
     <div className="absolute inset-x-0 top-0 z-40">
@@ -222,6 +230,19 @@ export function GameNavigation() {
             if (!open && !wheelLoaded) {
               const sent = runtime.clientRef.current?.requestWheel() ?? false;
               sessionActions.wheel.begin(sent);
+            }
+            return !open;
+          });
+        }}
+        onOutfits={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          setOutfitWindowOpen((open) => {
+            if (!open) {
+              // Idempotent refresh; the server also pushes state at login.
+              const sent = runtime.clientRef.current?.getOutfits() ?? false;
+              sessionActions.outfit.begin(sent);
             }
             return !open;
           });

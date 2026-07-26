@@ -342,11 +342,71 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
 - **Feature 62 — House access lists** (2026-07-25): per-door lists enforced server-side; [door-list editor](client/feature-62-door-list-editor.md) missing.
 - **Feature 68 — Minimap completion** (2026-07-25): markers/walk-to shipped; [marker icon/text editing + walk feedback](client/feature-68-marker-editing.md) missing.
 - **Feature 69 — UI-settings polish** (2026-07-25): reset + cross-session sync shipped; [chat/battle-list/spell-bar panels still fixed](client/feature-69-movable-panels.md).
-- **Feature 70 — Outfits and addons** (2026-07-25): entitlements + validation shipped; [outfit window](client/feature-70-outfit-picker.md) missing (unlock sources ride with store/quests/achievements).
-- **Feature 71 — Mounts** (2026-07-25): ownership, validation, speed bonus shipped; [mounted rendering](client/feature-71-mount-rendering.md) missing.
+- **Feature 70 — Outfits and addons** (2026-07-25): entitlements + validation shipped; outfit window followed 2026-07-26 (below). Unlock sources ride with store/quests/achievements.
+- **Feature 71 — Mounts** (2026-07-25): ownership, validation, speed bonus shipped; mounted rendering followed 2026-07-26 (below).
 
 ### Major partial cores shipped in the same wave (features stay open)
 
 - Feature 96: `accounts.role` migration (054), fail-closed capability model, per-command gating, audited `/goto`/`/bring`/`/inspect`; role assignment + content/event controls remain.
 - Feature 54: durable restart-safe world-event engine + the 18-raid import lane; other global events, daily resets, boosted rotations, reward steps remain.
 - Features 24/26/29/32/33/35/38/40/41/43/45/46/48/49/50/51/52/57/58/59/65/67/72: substantial slices each — see their sections in the merged area files (`todo-1.md` … `todo-13.md`) for exactly what remains.
+
+## 2026-07-26 wheel combat wiring + outfit/mount client surfaces
+
+- **Feature 70 — Outfit window (client)** (2026-07-26): closed. `useOutfitSession` +
+  `outfit-state`/`outfit-action-failed` branches in `handleCharacterSessionMessage`,
+  `GameClient.getOutfits/selectOutfit`, `OutfitModal` (entitled outfits, mounts with
+  speed, 133-colour grid, granted-mask-aware addon toggles via
+  `client/lib/outfit/selectableAddons` + unit test), live preview
+  (`getOutfitPreviewCanvas` composites addon pattern-Y passes and the mount
+  underlay with the riding pose), nav-bar button, own-player context-menu entry,
+  `outfit.*` locales (en/pt-BR), Storybook stories. `creature-state-changed` now
+  also refreshes `ownCharacter.outfit` so the top-bar portrait tracks changes.
+  Verified: client typecheck + 232 unit tests; visual pass still recommended on
+  first run (pattern indexes are test-blind).
+- **Feature 71 — Mounted rendering (client)** (2026-07-26): closed. `CreatureView`
+  draws the mount as a second uncolourised sprite below the rider (mount objects
+  carry displacement 0 vs the rider's 8), the rider switches to pattern-Z 1,
+  `hasAppearance` compares `mountLookType`, `WorldRenderer.loadCreature` preloads
+  mount sprites; mount row ships in the outfit window. 4 new `CreatureView` tests.
+- **Feature 79 — Wheel combat wiring, first big slice** (2026-07-26): the passive
+  layer plus universal actives are live in combat. Player mitigation
+  (`playerMitigation.ts`, full Canary formula: shielding skill, held defense,
+  fight factor, pinned vocation constants, wheel multiplier; applied after
+  shield/armor with Canary's truncated-reduction semantics, drains and condition
+  ticks exempt), wheel+gem life/mana leech (multi-target falloff
+  `(0.1n+0.9)/n`, capped at damage, condition-origin exempt), gem crit damage,
+  gem dodge (pre-block full avoid), wheel magic-skill boost in
+  `playerMagicLevel`, revelation flat damage/healing at Canary's post-block
+  application point, Blessing of the Grove, Gift of Life (overkill window,
+  20/25/30 % heal, 30/20/10 h cooldown ticking 1 s at a time via a character
+  storage value in `Combat.tick`, −60 s on every spell cooldown when it fires),
+  spell augments (`protocol/src/wheelSpellGrades.ts` grades from slice pairs +
+  revelation stages; `server/src/combat/wheelSpellAugments.ts` per-grade
+  damage/heal %, mana cost, spell+secondary-group cooldown reductions floored
+  at half base, crit, per-spell leech, Sap Strength's grade-2 debuff, chain
+  targets/duration for Chivalrous Challenge and Divine Dazzle), upgraded areas
+  (AREA_WAVE7/CIRCLE5X5/BEAM7/BEAM10 transcribed from the pinned
+  register_spells.lua in `wheelUpgradedAreas.ts`), Beam Mastery (area upgrade,
+  per-target accumulating multiplier, 1 s cooldown refund per target),
+  Combat Mastery (2H crit / shield defense), Focus Mastery (12 s +35 % window),
+  Healing Link (10 % self-heal on Heal Friend/Nature's Embrace), Runic Mastery
+  (bell-curved 25 % roll, +20/10 % rune magic level via the conjuring-spell
+  lookup). Every value cites the pinned Canary source. Tests: `playerMitigation`,
+  `blessingOfTheGroveBonus`, `computeWheelSpellGrades` units + 9 Combat
+  integration tests (leech, flat damage, dodge, mana/cooldown augments,
+  grade-gated area, Healing Link, Gift of Life once-per-cooldown). Remaining
+  Feature 79 work stays in `todo/todo-10.md`.
+- **Feature 80 — Wheel rule gaps** (2026-07-26): point removal now requires a
+  protection zone within 10 tiles of a town temple at execution time (new
+  `temple-required` reason; `MapData.getTownTemples` + `World.townTemplePositions`;
+  Canary's literal `areInRange<1,10>` x/y asymmetry is an upstream template
+  defect — the documented 10-sqm intent is implemented and the deviation noted
+  in `WheelService`). Offline capacity (`PgItemLocks.lockCharacter`) now derives
+  the wheel+equipped-gem capacity through the shared `computeWheelBonuses`.
+  Boosted (green) skill and magic values ship as `boostedLevel`/
+  `boostedMagicLevel` in `projectOwnProgression` and render as signed deltas in
+  the skills panel. Wheel saves and gem equips now refresh the inventory
+  capacity view (`items.updateCapacity`). Extra point sources (promotion
+  scrolls, Monk quest bonus, hunting-task points) stay deferred on Features
+  43/75/quests — see `todo/todo-10.md`.

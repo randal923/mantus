@@ -16,8 +16,14 @@ export function GameMapContextMenu() {
   );
 
   if (!menu) return null;
-  const { fightState, ownCharacter, visibleCreatures, runtime } =
-    store.getState();
+  const {
+    fightState,
+    ownCharacter,
+    visibleCreatures,
+    runtime,
+    sessionActions,
+    setOutfitWindowOpen,
+  } = store.getState();
   const client = runtime.clientRef.current;
   const creature = menu.creatureId
     ? visibleCreatures.find((candidate) => candidate.id === menu.creatureId)
@@ -61,6 +67,17 @@ export function GameMapContextMenu() {
         onSelect: () => client?.followCreature(attackableId),
       });
     }
+  }
+  if (creature && creature.id === ownCharacter?.id) {
+    items.push({
+      id: "set-outfit",
+      label: t("contextMenu.setOutfit"),
+      onSelect: () => {
+        const sent = client?.getOutfits() ?? false;
+        sessionActions?.outfit.begin(sent);
+        setOutfitWindowOpen(true);
+      },
+    });
   }
   if (!menu.creatureId) {
     items.push({

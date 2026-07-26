@@ -33,6 +33,7 @@ export * from "./uiSettings";
 export * from "./viewRange";
 export * from "./wheel";
 export * from "./wheelBonuses";
+export * from "./wheelSpellGrades";
 export * from "./wheelValidation";
 export * from "./gemAtelier";
 export * from "./gemAtelierMods";

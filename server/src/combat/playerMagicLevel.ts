@@ -7,6 +7,7 @@ export function playerMagicLevel(
 ): number {
   const equipped =
     player.progression.magicLevel +
+    player.wheelBonuses.skillBoosts.magic +
     equipment.reduce(
         (total, entry) => total + (entry.type.magicLevelPoints ?? 0),
         0,

@@ -78,13 +78,14 @@ export function gridMapData(config: GridMapConfig): MapData {
     tileItems.push(placement.item);
     items.set(key, tileItems);
   }
+  const spawn = {
+    x: Math.floor(config.width / 2),
+    y: Math.floor(config.height / 2),
+    z: 7,
+  };
   return {
     name: config.name,
-    spawn: {
-      x: Math.floor(config.width / 2),
-      y: Math.floor(config.height / 2),
-      z: 7,
-    },
+    spawn,
     getTile(position) {
       const { x, y, z } = position;
       if (!floors.has(z)) return undefined;
@@ -129,6 +130,9 @@ export function gridMapData(config: GridMapConfig): MapData {
     },
     getTownName(townId) {
       return config.towns?.find((town) => town.id === townId)?.name;
+    },
+    getTownTemples() {
+      return [{ ...spawn }];
     },
   };
 }

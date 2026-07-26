@@ -7,6 +7,7 @@ import type { HighscoresSession } from "../../../hooks/useHighscoresSession";
 import type { HouseSession } from "../../../hooks/useHouseSession";
 import type { MarketSession } from "../../../hooks/useMarketSession";
 import type { OptimisticInventory } from "../../../hooks/useOptimisticInventory";
+import type { OutfitSession } from "../../../hooks/useOutfitSession";
 import type { PartySession } from "../../../hooks/usePartySession";
 import type { TradeSession } from "../../../hooks/useTradeSession";
 import type { VipSession } from "../../../hooks/useVipSession";
@@ -27,5 +28,6 @@ export interface GameWindowSessionActions {
   bosstiary: Omit<BosstiarySession, "state">;
   wheel: Omit<WheelSession, "state">;
   gems: Omit<GemSession, "state">;
+  outfit: Omit<OutfitSession, "state">;
   dispatchItemOpChecked: (op: PendingItemOp) => boolean;
 }

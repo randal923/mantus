@@ -1,18 +1,18 @@
 # Todo 10 — Remaining Canary systems
 
-**Features 68†–71†, 72–86.** Later in order but **not optional in final
+**Features 68†–69†, 72–86.** Later in order but **not optional in final
 scope**. Shipped cores: minimap with markers/click-to-walk, account UI
-settings with reset/sync, bestiary/bosstiary, Wheel core, Gem Atelier, the
-Mantus Store slice, outfit/mount entitlements with server-side validation
-and mount speed, and the blessing data layer (see [done.md](done.md)).
+settings with reset/sync, bestiary/bosstiary, Wheel core + passive/augment
+combat wiring, Gem Atelier, the Mantus Store slice, outfits/mounts complete
+(entitlements, window, mounted rendering; unlock sources ride with Features
+43/67/quests — each calls `OutfitService.grantOutfit`), and the blessing
+data layer (see [done.md](done.md)).
 **Feature 72 is the highest-leverage unblocker in the whole backlog.**
 
 ## Client-only remainders (server + protocol ship)
 
 - [ ] **Feature 68 — Minimap marker editing + walk feedback** → [client](client/feature-68-marker-editing.md)
 - [ ] **Feature 69 — Movable chat/battle-list/spell-bar panels** → [client](client/feature-69-movable-panels.md)
-- [ ] **Feature 70 — Outfit window** → [client](client/feature-70-outfit-picker.md); unlock sources ride with Features 43 (store), 67 (achievements), and quests — each calls `OutfitService.grantOutfit`
-- [ ] **Feature 71 — Mounted rendering + mount row** → [client](client/feature-71-mount-rendering.md); mount unlock sources alongside Feature 70's
 
 ## Feature 72 — Beds, sleep, training triggers, blessings, regeneration
 
@@ -143,38 +143,55 @@ intents first; costs/prerequisites re-checked at execution.
 exactly what Canary consumes; tier rolls server-side; history rows match
 audit rows one-to-one.
 
-## Feature 79 — Wheel combat wiring (incl. revelation perks)
+## Feature 79 — Wheel combat wiring (revelation actives + periodic passives)
 
-The Wheel core computes bonuses; large parts are combat-inert — the biggest
-wheel-parity gap.
+The passive layer shipped 2026-07-26 (mitigation, leech, dodge, crit, magic
+boost, revelation flat damage/healing, Gift of Life, spell grades/augments,
+upgraded areas, Beam/Combat/Focus/Runic Mastery, Healing Link, Blessing of
+the Grove — see [done.md](done.md)). What remains are the bespoke actives
+and the periodic majors:
 
-**Remaining:** apply mitigation multiplier, life/mana leech, magic skill
-boost, revelation flat damage/healing; conviction instants (Battle Instinct
-…); spell grants/augments from allocation; revelation abilities (Gift of
-Life, Avatars, Beam Mastery, …); gem overlap (supreme spell augments, dodge,
-crit damage, gem leech/mitigation) currently display-only.
+- **Avatars (all five vocations)** — `uteta res *` casts are unsupported
+  catalog entries; need reviewed `playerAction` callbacks in the importer
+  (outfit condition lookTypes 1593-1596/1823 for 15 s, 5/10/15 % damage
+  reduction before mitigation, crit chance overridden to 100 % with
+  +5/10/15 % crit damage, 2 h/1.5 h/1 h cooldown), then catalog regen +
+  converter-hash re-pin.
+- **Executioner's Throw / Divine Grenade / Spiritual Outburst / Divine
+  Empowerment / Drain Body** — procedural revelation spells (chain bounces,
+  delayed explosion, tile-field item, leech-vs-debuff interplay). Spiritual
+  Outburst and the Monk instants (Guiding Presence, Sanctuary, Ascetic) are
+  additionally blocked on the Feature 24 harmony/mantra runtime.
+- **Periodic conviction majors** — Battle Instinct, Positional Tactics,
+  Ballistic Mastery (2 s recalcs over nearby-monster counts / ammo type),
+  Battle Healing (fires on successful challenge). Canary zeroes all majors
+  outside fights and in PZs (display-only skills effect) — mirror when the
+  majors land.
+- **Great Death Beam / Mass Healing / Sharpshooter / Swift Foot / Monk
+  augment targets** — their grades and augment rows exist; the spells are
+  unsupported catalog entries (Feature 24's disabled-spell bucket).
+- **Gem long tail** — momentum (cooldown proc on even seconds in fight),
+  the 30 spell-supreme gem augments (`computeGemBonuses` `case "spell"` is
+  still a no-op), and `m_modsMaxGrade` (each grade-3 gem mod adds one wheel
+  point and one point to every quadrant's stage total).
 
-**Implementation:** thread `WheelBonuses`/`computeGemBonuses` into
-`Combat.ts`, `DamageResolver`, `SpellCaster.ts`/`SpellRegistry.ts`, and the
-healing paths; revelation abilities as server-side effects with server RNG;
-bonuses read from the server-owned allocation at execution each tick/cast.
-Also: the WOD-graded combat areas deviation in `TODO.md` (per-grade area
-lists picked from `player.wheelBonuses` at cast time) lands here/Feature 80.
+**Tests:** avatar reduction/crit verified in damage resolution; majors zero
+outside fights; forged intents still change nothing (bonuses only ever read
+from `player.wheelBonuses`).
 
-**Tests:** client claiming unallocated bonuses changes nothing; spell grants
-appear/disappear with allocation at execution; gem mods verified active in
-damage resolution.
+## Feature 80 — Wheel rule gaps (extra point sources)
 
-## Feature 80 — Wheel rule gaps
+Temple-gated decreases, offline capacity, capacity-view refresh, and the
+boosted skill projection shipped 2026-07-26 (see [done.md](done.md)).
 
-**Remaining:** restrict allocation decreases to a temple-adjacent PZ
-(enforce in `WheelService.handleSave` when any slice shrinks); extra point
-sources (promotion scrolls — needs store/quest items; Monk quest bonus;
-hunting-task points from Feature 75); include the wheel capacity bonus in
-`PgItemLocks` offline capacity; project boosted (green) skill values in the
-skills panel (projection only).
-**Tests:** shrinking saves outside a temple PZ rejected; point-source grants
-exactly-once (scroll consumption atomic with grant).
+**Remaining:** extra point sources — promotion scrolls (items 43946-43950,
++3/5/9/13/20, unlocked once each; needs store/quest item delivery, Feature
+43), the Monk quest bonus (+10 behind the shrine storage count; needs
+quests), and hunting-task points (Feature 75). `getUnusedPoints` must then
+include them the way Canary's `getExtraPoints` does
+(player_wheel.cpp:1931-1963).
+**Tests:** point-source grants exactly-once (scroll consumption atomic with
+grant).
 
 ## Feature 81 — Gem atelier Canary deviations
 

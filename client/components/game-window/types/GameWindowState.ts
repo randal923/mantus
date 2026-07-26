@@ -91,6 +91,7 @@ export interface GameWindowState {
   highscoresOpen: boolean;
   wikiOpen: boolean;
   wheelOpen: boolean;
+  outfitWindowOpen: boolean;
   reportSession: ReportSessionState | null;
   houseToast: HouseToast | null;
   tradeToast: TradeClosedReason | null;

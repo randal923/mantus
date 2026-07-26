@@ -1,4 +1,5 @@
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { OutfitModal } from "../outfit/OutfitModal";
 import { HighscoresModal } from "../social/HighscoresModal";
 import { WheelModal } from "../wheel/WheelModal";
 import { WikiModal } from "../wiki/WikiModal";
@@ -12,9 +13,15 @@ export function GameProgressionOverlays() {
   const vocation = useGameWindowStore(
     (state) => state.ownCharacter?.vocation ?? null,
   );
+  const ownOutfit = useGameWindowStore(
+    (state) => state.ownCharacter?.outfit ?? null,
+  );
   const highscoresOpen = useGameWindowStore((state) => state.highscoresOpen);
   const wikiOpen = useGameWindowStore((state) => state.wikiOpen);
   const wheelOpen = useGameWindowStore((state) => state.wheelOpen);
+  const outfitWindowOpen = useGameWindowStore(
+    (state) => state.outfitWindowOpen,
+  );
   const highscoresSession = useGameWindowStore(
     (state) => state.sessions?.highscores ?? null,
   );
@@ -30,12 +37,18 @@ export function GameProgressionOverlays() {
   const gemSession = useGameWindowStore(
     (state) => state.sessions?.gems ?? null,
   );
+  const outfitSession = useGameWindowStore(
+    (state) => state.sessions?.outfit ?? null,
+  );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
   const setHighscoresOpen = useGameWindowStore(
     (state) => state.setHighscoresOpen,
   );
   const setWikiOpen = useGameWindowStore((state) => state.setWikiOpen);
   const setWheelOpen = useGameWindowStore((state) => state.setWheelOpen);
+  const setOutfitWindowOpen = useGameWindowStore(
+    (state) => state.setOutfitWindowOpen,
+  );
   if (
     !vocation ||
     !highscoresSession ||
@@ -43,6 +56,7 @@ export function GameProgressionOverlays() {
     !bosstiarySession ||
     !wheelSession ||
     !gemSession ||
+    !outfitSession ||
     !sessionActions
   ) {
     return null;
@@ -145,6 +159,35 @@ export function GameProgressionOverlays() {
             sessionActions.gems.begin(sent);
           }}
           onClose={() => setWheelOpen(false)}
+        />
+      )}
+      {outfitWindowOpen && outfitSession.outfit && ownOutfit && (
+        <OutfitModal
+          outfits={outfitSession.outfit.outfits}
+          mounts={outfitSession.outfit.mounts}
+          initial={{
+            lookType: outfitSession.outfit.selectedLookType,
+            head: ownOutfit.head,
+            body: ownOutfit.body,
+            legs: ownOutfit.legs,
+            feet: ownOutfit.feet,
+            addons: ownOutfit.addons,
+            mountId: outfitSession.outfit.selectedMountId,
+          }}
+          pending={outfitSession.pending}
+          error={
+            outfitSession.error
+              ? t(`outfit.errors.${outfitSession.error}`, {
+                  defaultValue: t("outfit.errors.invalid-request"),
+                })
+              : null
+          }
+          onConfirm={(selection) => {
+            const sent =
+              runtime.clientRef.current?.selectOutfit(selection) ?? false;
+            sessionActions.outfit.begin(sent);
+          }}
+          onClose={() => setOutfitWindowOpen(false)}
         />
       )}
     </>

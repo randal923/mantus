@@ -9,6 +9,7 @@ import { useHighscoresSession } from "../../../hooks/useHighscoresSession";
 import { useHouseSession } from "../../../hooks/useHouseSession";
 import { useMarketSession } from "../../../hooks/useMarketSession";
 import { useOptimisticInventory } from "../../../hooks/useOptimisticInventory";
+import { useOutfitSession } from "../../../hooks/useOutfitSession";
 import { usePartySession } from "../../../hooks/usePartySession";
 import { useTradeSession } from "../../../hooks/useTradeSession";
 import { useVipSession } from "../../../hooks/useVipSession";
@@ -114,6 +115,7 @@ export function GameWindowSessionController() {
   const bosstiary = useBosstiarySession();
   const wheel = useWheelSession();
   const gems = useGemSession();
+  const outfit = useOutfitSession();
 
   const sessionActions = useMemo<GameWindowSessionActions>(
     () => ({
@@ -228,6 +230,12 @@ export function GameWindowSessionController() {
         fail: gems.fail,
         reset: gems.reset,
       },
+      outfit: {
+        stateReceived: outfit.stateReceived,
+        begin: outfit.begin,
+        fail: outfit.fail,
+        reset: outfit.reset,
+      },
       dispatchItemOpChecked,
     }),
     [
@@ -293,6 +301,10 @@ export function GameWindowSessionController() {
       optimisticInventory.rejectPreview,
       optimisticInventory.reset,
       optimisticInventory.rollback,
+      outfit.begin,
+      outfit.fail,
+      outfit.reset,
+      outfit.stateReceived,
       party.begin,
       party.dismissError,
       party.fail,
@@ -335,6 +347,7 @@ export function GameWindowSessionController() {
         bosstiary: bosstiary.state,
         wheel: wheel.state,
         gems: gems.state,
+        outfit: outfit.state,
       },
       sessionActions,
     );
@@ -348,6 +361,7 @@ export function GameWindowSessionController() {
     house.state,
     market.session,
     optimisticInventory.inventory,
+    outfit.state,
     party.state,
     sessionActions,
     store,

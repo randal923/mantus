@@ -68,6 +68,11 @@ const outfit: TibiaObject = {
   sprites: [],
 };
 
+const mount: TibiaObject = {
+  ...outfit,
+  clientId: 372,
+};
+
 const store = {
   cachedFrameTexture: () => Texture.EMPTY,
 } as unknown as AssetStore;
@@ -320,5 +325,77 @@ describe("CreatureView", () => {
     view.setAttackTarget(false);
     expect(marker?.visible).toBe(false);
     view.destroy();
+  });
+
+  it("draws the mount under the rider from the shared walk state", () => {
+    const patterns: Array<{ clientId: number; pattern: SpritePattern }> = [];
+    const captureStore = {
+      cachedFrameTexture: (object: TibiaObject, pattern: SpritePattern) => {
+        patterns.push({ clientId: object.clientId, pattern });
+        return Texture.EMPTY;
+      },
+    } as unknown as AssetStore;
+    const view = new CreatureView(
+      captureStore,
+      { ...outfit, pz: 2 },
+      { ...state, mountLookType: 372 },
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+      mount,
+    );
+
+    const mountSprite = view.container.children[3];
+    if (!(mountSprite instanceof Sprite)) throw new Error("mount missing");
+    expect(mountSprite.visible).toBe(true);
+    // Below the rider (children[0], default zIndex 0), above the light (-1).
+    expect(mountSprite.zIndex).toBeLessThan(0);
+    expect(mountSprite.zIndex).toBeGreaterThan(-1);
+    // Mounts carry no displacement, unlike the rider's 8px shift.
+    expect(mountSprite.position.x).toBe(0);
+    const rider = view.container.children[0];
+    if (!(rider instanceof Sprite)) throw new Error("rider missing");
+    expect(rider.position.x).toBe(-8);
+
+    // The rider bakes the riding pose (pattern-Z 1) and the mount bakes its
+    // own object from the same direction, never colorized.
+    const riderBake = patterns.find((entry) => entry.clientId === 128);
+    const mountBake = patterns.find((entry) => entry.clientId === 372);
+    expect(riderBake?.pattern.z).toBe(1);
+    expect(mountBake?.pattern.x).toBe(riderBake?.pattern.x);
+    view.destroy();
+  });
+
+  it("keeps the mount sprite hidden for unmounted creatures", () => {
+    const view = new CreatureView(store, outfit, state, undefined, 0xffffff);
+    const mountSprite = view.container.children[3];
+    if (!(mountSprite instanceof Sprite)) throw new Error("mount missing");
+    expect(mountSprite.visible).toBe(false);
+    view.destroy();
+  });
+
+  it("reports a changed appearance when only the mount differs", () => {
+    const view = new CreatureView(
+      store,
+      outfit,
+      state,
+      undefined,
+      0xffffff,
+    );
+    expect(view.hasAppearance(state.outfit)).toBe(true);
+    expect(view.hasAppearance(state.outfit, 372)).toBe(false);
+
+    const mounted = new CreatureView(
+      store,
+      outfit,
+      { ...state, mountLookType: 372 },
+      undefined,
+      0xffffff,
+      mount,
+    );
+    expect(mounted.hasAppearance(state.outfit, 372)).toBe(true);
+    expect(mounted.hasAppearance(state.outfit)).toBe(false);
+    expect(mounted.hasAppearance(state.outfit, 0)).toBe(false);
+    view.destroy();
+    mounted.destroy();
   });
 });

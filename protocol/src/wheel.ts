@@ -395,7 +395,13 @@ export const wheelStateMessageSchema = z
 export const wheelActionFailedMessageSchema = z
   .object({
     type: z.literal("wheel-action-failed"),
-    reason: z.enum(["rate-limited", "unavailable", "invalid-allocation"]),
+    reason: z.enum([
+      "rate-limited",
+      "unavailable",
+      "invalid-allocation",
+      /** Removing points requires standing in a temple's protection zone. */
+      "temple-required",
+    ]),
   })
   .strict();
 

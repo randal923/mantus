@@ -16,6 +16,7 @@ import { findVisiblePlayerByName } from "./findVisiblePlayerByName";
 import { isInRange } from "./isInRange";
 import type { SpellDefinition } from "./Spell";
 import type { TargetingHooks } from "./TargetingHooks";
+import { wheelSpellAugmentFor } from "./wheelSpellAugments";
 
 /** Canary `doChallengeCreature(creature, target)` default focus window. */
 const CHALLENGE_FOCUS_MS = 12_000;
@@ -64,13 +65,27 @@ export class PlayerSpellActions {
     parameter: string | null,
     now: number,
   ): boolean {
+    // Wheel augments add chain targets and pull duration at execution time.
+    const augment = wheelSpellAugmentFor(player, spell);
     switch (spell.playerAction) {
       case "challenge":
         return this.challengeArea(player, spell, now);
       case "chivalrous-challenge":
-        return this.chain(player, now, CHIVALROUS_CHALLENGE_TARGETS, true);
+        return this.chain(
+          player,
+          now,
+          CHIVALROUS_CHALLENGE_TARGETS + (augment.additionalTargets ?? 0),
+          true,
+          augment.durationExtensionMs ?? 0,
+        );
       case "divine-dazzle":
-        return this.chain(player, now, DIVINE_DAZZLE_TARGETS, false);
+        return this.chain(
+          player,
+          now,
+          DIVINE_DAZZLE_TARGETS + (augment.additionalTargets ?? 0),
+          false,
+          augment.durationExtensionMs ?? 0,
+        );
       case "creature-illusion":
         return this.creatureIllusion(session, player, parameter, now);
       case "summon-creature":
@@ -171,6 +186,7 @@ export class PlayerSpellActions {
     now: number,
     maxTargets: number,
     challenge: boolean,
+    extraDurationMs = 0,
   ): boolean {
     const targeting = this.targeting;
     if (!targeting) return false;
@@ -198,11 +214,16 @@ export class PlayerSpellActions {
         monster,
         1,
         now,
-        CHAIN_PULL_MS,
+        CHAIN_PULL_MS + extraDurationMs,
       );
       const challenged =
         challenge &&
-        targeting.challengeMonster(monster, player, now, CHALLENGE_FOCUS_MS);
+        targeting.challengeMonster(
+          monster,
+          player,
+          now,
+          CHALLENGE_FOCUS_MS + extraDurationMs,
+        );
       if (!pulled && !challenged) continue;
       affected = true;
       this.visibility.broadcastMagicEffect(monster.position, 219, monster.id);

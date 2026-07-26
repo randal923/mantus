@@ -58,7 +58,7 @@ export function playerAttackPlan(
       entry.item.location.kind === "equipment" &&
       entry.item.location.slot === "weapon",
   );
-  const specials = playerSpecials(equipment);
+  const specials = playerSpecials(equipment, player);
   if (weapon && !meetsItemRequirements(player, weapon.type)) {
     return null;
   }

@@ -1,6 +1,6 @@
 # Cross-cutting — missing locale keys and error surfaces
 
-Part of the [client backlog](README.md). Covers Features 62, 65, 66, 67, 70.
+Part of the [client backlog](README.md). Covers Features 62, 65, 66, 67.
 
 ## Why
 Several failure reasons the server can now send have no translation, so they
@@ -22,10 +22,10 @@ Add to **both** `client/locales/en.json` and `client/locales/pt-BR.json`:
   `mail.errors`.
 - `house.errors.list-too-long`, `house.errors.not-a-door` are already added;
   no action.
-- A new `profile.*` section and a new `outfit.*` section — see
-  [feature-67-profile-ui.md](feature-67-profile-ui.md) and
-  [feature-70-outfit-picker.md](feature-70-outfit-picker.md), which own their
-  own key lists.
+- A new `profile.*` section — see
+  [feature-67-profile-ui.md](feature-67-profile-ui.md), which owns its own
+  key list. (The `outfit.*` section shipped 2026-07-26 with the outfit
+  window.)
 
 ## Implementation
 Keys only. Keep the two locale files structurally identical; the repo has no

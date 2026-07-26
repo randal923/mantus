@@ -26,6 +26,13 @@ export class SpellRegistry {
         : [],
     ),
   );
+  private readonly conjuringByRuneTypeId = new Map(
+    this.spells.flatMap((spell) =>
+      spell.origin === "spell" && spell.conjure
+        ? [[spell.conjure.targetItemTypeId, spell] as const]
+        : [],
+    ),
+  );
 
   get(spellId: string): SpellDefinition | undefined {
     return this.byId.get(spellId);
@@ -33,6 +40,11 @@ export class SpellRegistry {
 
   getRune(itemTypeId: number): SpellDefinition | undefined {
     return this.byRuneTypeId.get(itemTypeId);
+  }
+
+  /** The instant spell that conjures this rune, for Runic Mastery. */
+  conjuringSpellFor(runeItemTypeId: number): SpellDefinition | undefined {
+    return this.conjuringByRuneTypeId.get(runeItemTypeId);
   }
 
   /**

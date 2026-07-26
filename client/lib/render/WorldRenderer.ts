@@ -9,7 +9,7 @@ import {
   type ServerMessage,
   type ViewRange,
 } from "@tibia/protocol";
-import type { OutfitColors } from "./AssetStore";
+import type { OutfitColors, TibiaObject } from "./AssetStore";
 import { getSharedAssetStore } from "./getSharedAssetStore";
 import { getCreatureSortPosition } from "./getCreatureSortPosition";
 import { getAutoWalkDirections } from "../movement/getAutoWalkDirections";
@@ -491,6 +491,15 @@ export class WorldRenderer {
       if (this.destroyed || this.creatureViews.has(creatureId)) return;
       const creature = this.pendingCreatures.get(creatureId);
       if (!creature) return;
+      // Mount look types are ordinary outfit objects; preload them too or
+      // the first mounted frame pops in late. Unknown ids draw no mount.
+      const mountObject = creature.mountLookType
+        ? this.outfitObjectOrNull(creature.mountLookType)
+        : null;
+      if (mountObject) {
+        await this.store.preload(mountObject.sprites);
+        if (this.destroyed || this.creatureViews.has(creatureId)) return;
+      }
       const view = new CreatureView(
         this.store,
         object,
@@ -499,6 +508,7 @@ export class WorldRenderer {
           ? this.outfitColorsFor(creature.outfit)
           : undefined,
         NAME_COLORS[creature.kind],
+        mountObject,
       );
       this.mapView.creatureLayer(creature.position.z).addChild(view.container);
       this.overlay.addChild(view.plate);
@@ -527,9 +537,17 @@ export class WorldRenderer {
     this.creatureOrderDirty = true;
   }
 
+  private outfitObjectOrNull(lookType: number): TibiaObject | null {
+    try {
+      return this.store.outfit(lookType);
+    } catch {
+      return null;
+    }
+  }
+
   private replaceCreature(creature: CreatureState): void {
     const view = this.creatureViews.get(creature.id);
-    if (view?.hasAppearance(creature.outfit)) {
+    if (view?.hasAppearance(creature.outfit, creature.mountLookType)) {
       const previousFloor = view.floor;
       view.updateState(creature);
       if (view.floor !== previousFloor) {

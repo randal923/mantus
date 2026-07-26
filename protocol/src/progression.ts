@@ -25,6 +25,12 @@ export const characterSkillStateSchema = z.object({
   level: z.number().int().min(MIN_SKILL_LEVEL).max(MAX_SKILL_LEVEL),
   tries: z.number().int().min(0).max(MAX_PROGRESSION_VALUE),
   triesForNextLevel: z.number().int().min(0).max(MAX_PROGRESSION_VALUE),
+  /**
+   * Server-computed effective level including Wheel of Destiny conviction
+   * boosts and active condition modifiers; display-only (the panel shows it
+   * green when it differs from `level`). The server never reads it back.
+   */
+  boostedLevel: z.number().int().min(0).optional(),
 });
 
 export const ownProgressionStateSchema = z.object({
@@ -42,6 +48,8 @@ export const ownProgressionStateSchema = z.object({
     .min(0)
     .max(MAX_PROGRESSION_VALUE),
   magicLevel: z.number().int().min(0).max(MAX_MAGIC_LEVEL),
+  /** Effective magic level with wheel/condition boosts; display-only. */
+  boostedMagicLevel: z.number().int().min(0).optional(),
   manaSpent: z.number().int().min(0).max(MAX_PROGRESSION_VALUE),
   manaSpentForNextMagicLevel: z
     .number()

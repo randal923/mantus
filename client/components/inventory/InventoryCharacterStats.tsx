@@ -2,6 +2,7 @@
 
 import type { OwnCharacterState } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { formatSkillBoost } from "../../lib/inventory/formatSkillBoost";
 import { getProgressPercent } from "../../lib/inventory/getProgressPercent";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { ProgressionBar } from "./ProgressionBar";
@@ -88,6 +89,10 @@ export function InventoryCharacterStats({
             label={t("characterStats.magicLevel", {
               level: character.magicLevel,
             })}
+            boost={formatSkillBoost(
+              character.magicLevel,
+              character.boostedMagicLevel,
+            )}
             value={character.manaSpent}
             max={character.manaSpentForNextMagicLevel}
             valueLabel={
@@ -178,6 +183,7 @@ export function InventoryCharacterStats({
               <ProgressionBar
                 key={skill.skill}
                 label={`${t(`skills.${skill.skill}`)} · ${skill.level}`}
+                boost={formatSkillBoost(skill.level, skill.boostedLevel)}
                 value={skill.tries}
                 max={skill.triesForNextLevel}
                 valueLabel={

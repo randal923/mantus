@@ -88,6 +88,12 @@ export class World {
     return this.map.getTownName?.(townId);
   }
 
+  /** Every town temple; the world spawn stands in when the map has none. */
+  get townTemplePositions(): ReadonlyArray<Position> {
+    const temples = this.map.getTownTemples?.();
+    return temples && temples.length > 0 ? temples : [this.templePosition];
+  }
+
   isWalkable(position: Position): boolean {
     return this.map.isWalkable(position);
   }

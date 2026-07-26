@@ -8,6 +8,7 @@ import type { GemResistElement } from "./gemAtelier";
 import type { GemGrades, RevealedGem } from "./gemAtelierMessages";
 import {
   WHEEL_BASE_VOCATION,
+  WHEEL_CONVICTION_NAMES,
   WHEEL_CONVICTION_VALUES,
   WHEEL_DEDICATION_RATES,
   WHEEL_DOMAINS,
@@ -16,8 +17,10 @@ import {
   WHEEL_REVELATION_THRESHOLDS,
   WHEEL_SKILL_BOOST_TARGET,
   WHEEL_SLICES,
+  type WheelBaseVocation,
   type WheelDomain,
 } from "./wheel";
+import { computeWheelSpellGrades } from "./wheelSpellGrades";
 
 export interface WheelBonuses {
   readonly maxHealth: number;
@@ -34,8 +37,12 @@ export interface WheelBonuses {
   readonly lifeLeechPercent: number;
   readonly manaLeechPercent: number;
   readonly revelationStages: Readonly<Record<WheelDomain, number>>;
-  /** Flat damage and healing from revelation stages (future combat use). */
+  /** Flat damage and healing from revelation stages. */
   readonly damageAndHealing: number;
+  /** Spell augment grades (0..3) per Canary spell name. */
+  readonly spellGrades: Readonly<Record<string, number>>;
+  /** Slice-36/1 conviction instants (Battle Instinct, Focus Mastery, ...). */
+  readonly instants: Readonly<Record<string, boolean>>;
   /** Elemental resistances from equipped gems, in percent. */
   readonly resistances: Readonly<Record<GemResistElement, number>>;
   /** From gem supreme mods (display + future combat use). */
@@ -58,10 +65,32 @@ export const EMPTY_WHEEL_BONUSES: WheelBonuses = {
   manaLeechPercent: 0,
   revelationStages: { green: 0, red: 0, blue: 0, purple: 0 },
   damageAndHealing: 0,
+  spellGrades: {},
+  instants: {},
   resistances: EMPTY_GEM_RESISTANCES,
   criticalDamagePercent: 0,
   dodgePercent: 0,
 };
+
+/** The two "special" conviction slices grant the vocation's instants. */
+function computeInstants(
+  slices: ReadonlyArray<number>,
+  base: WheelBaseVocation,
+): Readonly<Record<string, boolean>> {
+  const instants: Record<string, boolean> = {};
+  for (const sliceId of [1, 36]) {
+    const definition = WHEEL_SLICES[sliceId - 1];
+    const name = WHEEL_CONVICTION_NAMES[sliceId]?.[base];
+    if (
+      definition &&
+      name &&
+      (slices[sliceId - 1] ?? 0) === definition.maxPoints
+    ) {
+      instants[name] = true;
+    }
+  }
+  return instants;
+}
 
 /**
  * Derives every wheel perk from an allocation snapshot; recomputed from
@@ -167,6 +196,8 @@ export function computeWheelBonuses(
     manaLeechPercent,
     revelationStages,
     damageAndHealing,
+    spellGrades: computeWheelSpellGrades(slices, base, revelationStages),
+    instants: computeInstants(slices, base),
     resistances: gemBonuses?.resistances ?? EMPTY_GEM_RESISTANCES,
     criticalDamagePercent: gemBonuses?.criticalDamagePercent ?? 0,
     dodgePercent: gemBonuses?.dodgePercent ?? 0,

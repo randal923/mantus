@@ -17,6 +17,7 @@ import {
   type RevealedGem,
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
+import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import { getVocation } from "../progression/getVocation";
 import { projectOwnProgression } from "../progression/projectOwnProgression";
@@ -50,6 +51,7 @@ export class GemAtelierService {
     private readonly persistence: CharacterPersistence,
     private readonly store?: GemStore,
     private readonly random: () => number = Math.random,
+    private readonly items?: ItemIntentHandler,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -307,6 +309,12 @@ export class GemAtelierService {
       playerId: player.id,
       progression: projectOwnProgression(player, now),
     });
+    // Equipping or grading a gem can change capacity; refresh the
+    // inventory view so the client's weight limit matches the enforced one.
+    const inventory = this.items?.updateCapacity(player.id, player.capacity);
+    if (inventory) {
+      session.send({ type: "inventory-updated", inventory });
+    }
   }
 
   private transact(

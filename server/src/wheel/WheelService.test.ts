@@ -67,7 +67,11 @@ function makeHarness(options?: {
   level?: number;
   premium?: boolean;
   vocation?: CharacterVocation;
+  position?: { x: number; y: number; z: number };
 }): Harness {
+  // The grid map's spawn (30,30,7) doubles as the town temple; its tile and
+  // one far-away tile are protection zones so the respec gate has both a
+  // temple PZ and a non-temple PZ to probe.
   const world = new World(
     gridMapData({
       name: "wheel-test",
@@ -75,6 +79,10 @@ function makeHarness(options?: {
       height: 60,
       blocked: [],
       floors: [7],
+      protectionZones: [
+        [30, 30, 7],
+        [55, 55, 7],
+      ],
     }),
     25,
   );
@@ -85,7 +93,7 @@ function makeHarness(options?: {
   );
   const player = new Player(
     character,
-    { x: 30, y: 30, z: 7 },
+    options?.position ?? { x: 30, y: 30, z: 7 },
     0,
     options?.premium === false ? null : PREMIUM_UNTIL,
   );
@@ -219,6 +227,52 @@ describe("WheelService", () => {
     );
     expect(harness.player.maxHealth).toBe(boostedHealth - 150);
     expect(harness.player.health).toBe(harness.player.maxHealth);
+  });
+
+  it("refuses to remove points away from a temple protection zone", () => {
+    // Outside any PZ (still next to the temple): increases fine, decrease not.
+    const open = makeHarness({ level: 100, position: { x: 31, y: 30, z: 7 } });
+    save(open, withSlices({ 22: 50 }), 0);
+    expect(open.tracker.slicesFor(A)).toEqual(withSlices({ 22: 50 }));
+    save(
+      open,
+      withSlices({ 22: 25 }),
+      WHEEL_LIMITS.actionCooldownMs,
+      "44444444-4444-4444-8444-444444444444",
+    );
+    expect(open.sent.at(-1)).toMatchObject({
+      type: "wheel-action-failed",
+      reason: "temple-required",
+    });
+    expect(open.tracker.slicesFor(A)).toEqual(withSlices({ 22: 50 }));
+
+    // A protection zone far from every temple is not enough either.
+    const farPz = makeHarness({
+      level: 100,
+      position: { x: 55, y: 55, z: 7 },
+    });
+    save(farPz, withSlices({ 22: 50 }), 0);
+    save(
+      farPz,
+      emptySlices(),
+      WHEEL_LIMITS.actionCooldownMs,
+      "55555555-5555-4555-8555-555555555555",
+    );
+    expect(farPz.sent.at(-1)).toMatchObject({
+      type: "wheel-action-failed",
+      reason: "temple-required",
+    });
+
+    // On the temple's protection zone the same decrease commits.
+    const temple = makeHarness({ level: 100 });
+    save(temple, withSlices({ 22: 50 }), 0);
+    save(
+      temple,
+      withSlices({ 22: 25 }),
+      WHEEL_LIMITS.actionCooldownMs,
+      "66666666-6666-4666-8666-666666666666",
+    );
+    expect(temple.tracker.slicesFor(A)).toEqual(withSlices({ 22: 25 }));
   });
 
   it("requires a joined session", () => {

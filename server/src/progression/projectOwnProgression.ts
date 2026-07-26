@@ -34,6 +34,14 @@ export function projectOwnProgression(
         ? getExperienceForLevel(progression.level)
         : getExperienceForLevel(progression.level + 1),
     magicLevel: progression.magicLevel,
+    boostedMagicLevel: Math.max(
+      0,
+      progression.magicLevel +
+        player.wheelBonuses.skillBoosts.magic +
+        player.conditions.magicLevelModifier(
+          progression.magicLevel + player.wheelBonuses.skillBoosts.magic,
+        ),
+    ),
     manaSpent: progression.manaSpent,
     manaSpentForNextMagicLevel: getManaForNextMagicLevel(
       vocation,
@@ -72,6 +80,7 @@ export function projectOwnProgression(
         state.skill,
         state.level,
       ),
+      boostedLevel: player.skillLevel(state.skill),
     })),
   };
 }

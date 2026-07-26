@@ -12,6 +12,7 @@ import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import { applyCombatLocks } from "./applyCombatLocks";
+import { blessingOfTheGroveBonus } from "./blessingOfTheGroveBonus";
 import { catalogDamageType } from "./catalogDamageType";
 import { CombatFeedback } from "./CombatFeedback";
 import { MISSILE_DURATION_MS } from "./combatConstants";
@@ -19,7 +20,16 @@ import type { CombatFormula } from "./CombatFormula";
 import type { DamageRequest, DamageResult } from "./Damage";
 import { DeathHandler } from "./DeathHandler";
 import { EventSequence } from "./EventSequence";
+import {
+  GIFT_OF_LIFE_EFFECT_ID,
+  GIFT_OF_LIFE_MESSAGE,
+  GIFT_OF_LIFE_SPELL_COOLDOWN_REDUCTION_MS,
+  GIFT_OF_LIFE_STORAGE_KEY,
+  giftOfLifeCooldownSeconds,
+  giftOfLifeHealPercent,
+} from "./giftOfLife";
 import { playerDefense } from "./playerDefense";
+import { playerMitigation } from "./playerMitigation";
 
 const ARMOR_SLOTS = new Set([
   "helmet",
@@ -118,6 +128,26 @@ export class DamageResolver {
         manaChanged: false,
       };
     }
+    // Gem-supreme dodge: a server-rolled full avoid before any reduction
+    // (Canary Game::combatBlockHit, game.cpp:7874-7882; Canary's BLOCK_DODGE
+    // is published as a miss here). Condition ticks bypass it, like every
+    // Canary block step.
+    if (
+      target instanceof Player &&
+      request.type !== "healing" &&
+      request.type !== "mana-drain" &&
+      request.origin !== "condition" &&
+      this.formula.chance(target.wheelBonuses.dodgePercent)
+    ) {
+      this.publishDamageResult(target, request, 0, "miss");
+      return {
+        amount: 0,
+        block: "miss",
+        critical: false,
+        healthChanged: false,
+        manaChanged: false,
+      };
+    }
     let amount = this.formula.normalInteger(
       request.minimum,
       request.maximum,
@@ -157,6 +187,43 @@ export class DamageResolver {
       }
     }
     if (request.type === "healing") {
+      // Wheel of Destiny healing, in Canary's order: the augment multiplier,
+      // the flat revelation-stage bonus, then Blessing of the Grove's
+      // percent of the running value (Game::applyWheelOfDestinyHealing,
+      // game.cpp:8250-8271).
+      let healingLinkAmount = 0;
+      if (source instanceof Player && amount > 0) {
+        const healingPercent = request.wheelHealingPercent ?? 0;
+        if (healingPercent > 0) {
+          amount += Math.trunc((amount * healingPercent) / 100);
+        }
+        amount += source.wheelBonuses.damageAndHealing;
+        // Healing Link reads the pre-Grove value, like Canary's ordering in
+        // Game::applyWheelOfDestinyHealing (game.cpp:8250-8271).
+        if ((request.healingLinkPercent ?? 0) > 0 && source !== target) {
+          healingLinkAmount = Math.trunc(
+            (amount * (request.healingLinkPercent ?? 0)) / 100,
+          );
+        }
+        const grove = blessingOfTheGroveBonus(source, target);
+        if (grove > 0) {
+          amount += Math.floor((amount * grove) / 100);
+        }
+      }
+      if (healingLinkAmount > 0 && source instanceof Player) {
+        this.applyDamage(
+          source,
+          {
+            sourceId: source.id,
+            origin: "spell",
+            type: "healing",
+            minimum: healingLinkAmount,
+            maximum: healingLinkAmount,
+            allowReflection: false,
+          },
+          now,
+        );
+      }
       const before = target.health;
       target.setHealth(target.health + amount);
       const healed = target.health - before;
@@ -196,6 +263,22 @@ export class DamageResolver {
     }
     const mitigated = this.mitigate(target, request, amount, now);
     amount = mitigated.amount;
+    // Wheel damage lands after every block step, in Canary's order: the
+    // augment multiplier first, then the flat revelation-stage bonus
+    // (Game::applyWheelOfDestinyEffectsToDamage, game.cpp:8273-8288 inside
+    // combatChangeHealth, which runs after blockHit). A fully blocked hit
+    // stays blocked.
+    if (
+      source instanceof Player &&
+      amount > 0 &&
+      request.type !== "mana-drain"
+    ) {
+      const damagePercent = request.wheelDamagePercent ?? 0;
+      if (damagePercent > 0) {
+        amount += Math.trunc((amount * damagePercent) / 100);
+      }
+      amount += source.wheelBonuses.damageAndHealing;
+    }
     if (target instanceof Monster && amount > 0) {
       amount = this.monsterEventHooks?.beforeMonsterDamage(
         target,
@@ -232,6 +315,7 @@ export class DamageResolver {
         }
       }
       if (amount > 0) {
+        amount = this.applyGiftOfLife(target, amount, now);
         const before = target.health;
         target.setHealth(target.health - amount);
         amount = before - target.health;
@@ -271,19 +355,35 @@ export class DamageResolver {
       );
     }
     if (source instanceof Player && amount > 0) {
-      const healthLeech = Math.round(
-        amount *
-          (this.formula.chance(request.lifeLeechChance ?? 0)
+      // Equipment leech keeps its chance roll; wheel and gem leech always
+      // apply, and the total scales down across multi-target casts and is
+      // capped at the damage dealt (Canary Game::calculateLeechAmount,
+      // game.cpp:9042-9045; condition ticks never leech, game.cpp:8746).
+      const fromConditions = request.origin === "condition";
+      const wheel = source.wheelBonuses;
+      const lifePercent = fromConditions
+        ? 0
+        : (this.formula.chance(request.lifeLeechChance ?? 0)
             ? (request.lifeLeechPercent ?? 0)
-            : 0) /
-          100,
-      );
-      const manaLeech = Math.round(
-        amount *
-          (this.formula.chance(request.manaLeechChance ?? 0)
+            : 0) +
+          wheel.lifeLeechPercent +
+          (request.wheelLifeLeechPercent ?? 0);
+      const manaPercent = fromConditions
+        ? 0
+        : (this.formula.chance(request.manaLeechChance ?? 0)
             ? (request.manaLeechPercent ?? 0)
-            : 0) /
-          100,
+            : 0) +
+          wheel.manaLeechPercent +
+          (request.wheelManaLeechPercent ?? 0);
+      const targets = Math.max(1, request.leechTargets ?? 1);
+      const spread = (0.1 * targets + 0.9) / targets;
+      const healthLeech = Math.min(
+        amount,
+        Math.max(0, Math.round(amount * (lifePercent / 100) * spread)),
+      );
+      const manaLeech = Math.min(
+        amount,
+        Math.max(0, Math.round(amount * (manaPercent / 100) * spread)),
       );
       if (healthLeech > 0) source.setHealth(source.health + healthLeech);
       if (manaLeech > 0) source.restoreMana(manaLeech);
@@ -337,6 +437,59 @@ export class DamageResolver {
       healthChanged,
       manaChanged,
     };
+  }
+
+  /**
+   * The green revelation's death save (Canary Game::applyHealthChange,
+   * game.cpp:8313-8328 + PlayerWheel::checkGiftOfLife, player_wheel.cpp:
+   * 3116-3131): fatal damage inside the overkill window heals
+   * stage-percent of max health first, the loss is capped at the pre-heal
+   * health, every spell cooldown drops a minute, and the long cooldown
+   * starts. All state is server-owned; the client only sees the outcome.
+   */
+  private applyGiftOfLife(
+    target: Creature,
+    amount: number,
+    now: number,
+  ): number {
+    if (!(target instanceof Player) || amount < target.health) return amount;
+    const stage = target.wheelBonuses.revelationStages.green;
+    if (stage < 1) return amount;
+    if (target.storageValue(GIFT_OF_LIFE_STORAGE_KEY) > 0) return amount;
+    const overkillPercent =
+      ((amount - target.health) * 100) / target.maxHealth;
+    if (overkillPercent > giftOfLifeHealPercent(stage)) return amount;
+    const preHealHealth = target.health;
+    const heal = Math.floor(
+      (target.maxHealth * giftOfLifeHealPercent(stage)) / 100,
+    );
+    target.setHealth(Math.min(target.maxHealth, target.health + heal));
+    target.setStorageValue(
+      GIFT_OF_LIFE_STORAGE_KEY,
+      giftOfLifeCooldownSeconds(stage),
+    );
+    this.visibility.broadcastMagicEffect(
+      target.position,
+      GIFT_OF_LIFE_EFFECT_ID,
+      target.id,
+    );
+    const session = this.registry.sessionFor(target.id);
+    if (session) {
+      session.send({
+        type: "combat-log",
+        kind: "condition",
+        text: GIFT_OF_LIFE_MESSAGE,
+      });
+      for (const [key, entry] of session.combatCooldowns) {
+        if (!key.startsWith("spell:")) continue;
+        session.combatCooldowns.set(key, {
+          ...entry,
+          readyAt: entry.readyAt - GIFT_OF_LIFE_SPELL_COOLDOWN_REDUCTION_MS,
+        });
+      }
+      this.feedback.sendFightStateForPlayer(target.id, now);
+    }
+    return Math.min(amount, preHealHealth);
   }
 
   publishDamageResult(
@@ -523,6 +676,32 @@ export class DamageResolver {
             1,
             now,
           );
+        }
+      }
+      // Player mitigation runs after shield and armor for every damage type
+      // except the drains, mirroring Canary's Creature::mitigateDamage
+      // (creature.cpp:911-922, called after both block rolls). Canary
+      // subtracts the *truncated reduction* — `damage -= (damage * m) / 100`
+      // in integer arithmetic — so a sub-1 reduction changes nothing.
+      // Condition ticks bypass Canary's blockHit entirely, so also this.
+      if (
+        request.type !== "life-drain" &&
+        request.type !== "mana-drain" &&
+        request.origin !== "condition" &&
+        amount > 0
+      ) {
+        const fightSession = this.registry.sessionFor(target.id);
+        const mitigation = playerMitigation(
+          target,
+          equipment,
+          fightSession?.fightMode?.attack ?? "balanced",
+        );
+        if (mitigation > 0) {
+          amount = Math.max(
+            0,
+            amount - Math.trunc((amount * mitigation) / 100),
+          );
+          if (amount === 0) block = "armor";
         }
       }
     }

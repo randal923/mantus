@@ -235,7 +235,8 @@
     "wiki": "Wiki",
     "bestiary": "Bestiário",
     "bosstiary": "Bosstiário",
-    "wheel": "Roda"
+    "wheel": "Roda",
+    "outfit": "Visuais"
   },
   "currency": {
     "wallet": "Carteira de moedas",
@@ -1010,7 +1011,8 @@
     "attack": "Atacar",
     "stopAttack": "Parar ataque",
     "follow": "Seguir",
-    "stopFollow": "Parar de seguir"
+    "stopFollow": "Parar de seguir",
+    "setOutfit": "Mudar visual"
   },
   "potions": {
     "bar": "Barra de poções",
@@ -1678,6 +1680,31 @@
         "regular": "{{name}}",
         "greater": "{{name}} Maior"
       }
+    }
+  },
+  "outfit": {
+    "title": "Visuais",
+    "outfits": "Visuais",
+    "mounts": "Montarias",
+    "noMount": "Sem montaria",
+    "noMounts": "Nenhuma montaria desbloqueada ainda.",
+    "noOutfits": "Nenhum visual disponível.",
+    "starterOnly": "Apenas os visuais iniciais de cidadão estão desbloqueados — missões, conquistas e a loja concedem mais.",
+    "confirm": "Confirmar",
+    "firstAddon": "Adicional 1",
+    "secondAddon": "Adicional 2",
+    "colors": "Cores",
+    "mountSpeed": "+{{speed}} de velocidade",
+    "channels": {
+      "head": "Cabeça",
+      "body": "Corpo",
+      "legs": "Pernas",
+      "feet": "Pés"
+    },
+    "errors": {
+      "not-owned": "Você não possui esse visual ou montaria.",
+      "rate-limited": "Aguarde um momento antes de mudar novamente.",
+      "invalid-request": "Essa seleção não é possível."
     }
   }
 }

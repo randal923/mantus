@@ -355,6 +355,7 @@ export class GameServer {
       this.wheelTracker,
       this.persistence,
       this.gemTracker,
+      this.items,
     );
     this.gems = new GemAtelierService(
       this.world,
@@ -362,6 +363,8 @@ export class GameServer {
       this.wheelTracker,
       this.persistence,
       deps.gems,
+      undefined,
+      this.items,
     );
     this.gemDrops = new GemDropHooks(
       bestiaryCatalog,

@@ -42,6 +42,17 @@ export function handleCharacterSessionMessage(
     return true;
   }
 
+  // Own-character state: only the requester's entitlements ever arrive here.
+  if (message.type === "outfit-state") {
+    actions.outfit.stateReceived(message);
+    return true;
+  }
+
+  if (message.type === "outfit-action-failed") {
+    actions.outfit.fail(message.reason);
+    return true;
+  }
+
   if (message.type !== "welcome") return false;
 
   runtime.joinedRef.current = true;
@@ -102,6 +113,8 @@ export function handleCharacterSessionMessage(
   actions.wheel.reset();
   actions.gems.reset();
   state.setWheelOpen(false);
+  actions.outfit.reset();
+  state.setOutfitWindowOpen(false);
 
   window.setTimeout(
     () => runtime.clientRef.current?.browseHouses(undefined, 0),

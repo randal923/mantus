@@ -8,6 +8,7 @@ import {
   type WheelStateMessage,
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
+import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import { getVocation } from "../progression/getVocation";
 import { projectOwnProgression } from "../progression/projectOwnProgression";
@@ -33,6 +34,7 @@ export class WheelService {
     private readonly tracker: WheelTracker,
     private readonly persistence: CharacterPersistence,
     private readonly gems?: GemTracker,
+    private readonly items?: ItemIntentHandler,
   ) {}
 
   detach(session: Session): void {
@@ -65,6 +67,13 @@ export class WheelService {
       this.fail(session, "invalid-allocation");
       return;
     }
+    if (
+      this.shrinksAnySlice(player, intent.slices) &&
+      !this.isInTempleRespecArea(player)
+    ) {
+      this.fail(session, "temple-required");
+      return;
+    }
     seen.add(intent.requestId);
     if (seen.size > MAX_TRACKED_REQUEST_IDS) {
       const oldest = seen.values().next().value;
@@ -91,6 +100,12 @@ export class WheelService {
       playerId: player.id,
       progression: projectOwnProgression(player, now),
     });
+    // Capacity may have moved with the allocation; refresh the inventory
+    // view so the client's weight limit matches the enforced one.
+    const inventory = this.items?.updateCapacity(player.id, player.capacity);
+    if (inventory) {
+      session.send({ type: "inventory-updated", inventory });
+    }
   }
 
   private projectState(player: Player, now: number): WheelStateMessage {
@@ -110,6 +125,34 @@ export class WheelService {
       player.level >= WHEEL_LIMITS.minLevel &&
       player.isPremiumAt(now) &&
       getVocation(player.vocation).promotedFrom !== null
+    );
+  }
+
+  private shrinksAnySlice(
+    player: Player,
+    requested: ReadonlyArray<number>,
+  ): boolean {
+    const current = this.tracker.slicesFor(player.id);
+    return requested.some(
+      (points, index) => points < (current[index] ?? 0),
+    );
+  }
+
+  /**
+   * Points may only be *removed* while standing in a protection zone within
+   * 10 tiles of a town temple, checked against the live position at
+   * execution time. Canary's check (player_wheel.cpp:2025-2045) states the
+   * same 10-sqm intent but instantiates `areInRange<1, 10>` — an x<=1/y<=10
+   * strip with no floor check, an upstream template-argument defect we do
+   * not mirror; this uses the documented 10-tile range on the same floor.
+   */
+  private isInTempleRespecArea(player: Player): boolean {
+    if (!this.world.isProtectionZone(player.position)) return false;
+    return this.world.townTemplePositions.some(
+      (temple) =>
+        temple.z === player.position.z &&
+        Math.abs(temple.x - player.position.x) <= 10 &&
+        Math.abs(temple.y - player.position.y) <= 10,
     );
   }
 

@@ -37,6 +37,8 @@ export interface MapData {
   ): MapAction | undefined;
   getItems(position: Position): ReadonlyArray<MapItem>;
   getTownName?(townId: number): string | undefined;
+  /** Every town's temple position, for temple-proximity rules (wheel respec). */
+  getTownTemples?(): ReadonlyArray<Position>;
   /** House id owning this tile, when the map ships house metadata. */
   getHouseId?(position: Position): number | undefined;
   /** Every tile of one house, for eviction sweeps and occupant checks. */

@@ -12,6 +12,7 @@ import { areaPositions } from "./areaPositions";
 import { applySpellCooldowns } from "./applySpellCooldowns";
 import { canPlayerHarm } from "./canPlayerHarm";
 import { CombatFeedback } from "./CombatFeedback";
+import type { CombatFormula } from "./CombatFormula";
 import {
   MISSILE_DURATION_MS,
   SPELL_FAILURE_EFFECT_ID,
@@ -31,6 +32,8 @@ import { resolveSpellTarget } from "./resolveSpellTarget";
 import { skillForWeapon } from "./skillForWeapon";
 import type { SpellDefinition } from "./Spell";
 import { spellCondition } from "./spellCondition";
+import { wheelBeamMasteryFor } from "./wheelBeamMastery";
+import { wheelSpellAugmentFor } from "./wheelSpellAugments";
 import type { PvpHooks } from "../pvp/PvpHooks";
 import type { PartyHooks } from "../party/PartyHooks";
 
@@ -47,6 +50,10 @@ export class SpellCaster {
     private readonly conditions: ConditionSystem,
     private readonly pvpHooks?: PvpHooks,
     private readonly partyHooks?: PartyHooks,
+    private readonly formula?: CombatFormula,
+    private readonly conjuringSpellFor?: (
+      runeItemTypeId: number,
+    ) => SpellDefinition | undefined,
   ) {}
 
   /** Reports whether the spell was actually cast; a false result was rejected. */
@@ -84,23 +91,33 @@ export class SpellCaster {
       this.feedback.reject(session, now, "spell-target-invalid");
       return false;
     }
+    // Wheel augments re-read from the server-owned allocation at cast time.
+    const augment = wheelSpellAugmentFor(player, spell);
+    const beamMastery = wheelBeamMasteryFor(player, spell);
+    const manaCost = Math.max(
+      0,
+      spell.manaCost - (augment.manaCostReduction ?? 0),
+    );
     if (spendResources) {
-      if (!player.spendMana(spell.manaCost)) {
+      if (!player.spendMana(manaCost)) {
         this.feedback.reject(session, now, "spell-mana-insufficient");
         return false;
       }
       if (!player.spendSoul(spell.soulCost)) {
-        player.restoreMana(spell.manaCost);
+        player.restoreMana(manaCost);
         this.feedback.reject(session, now, "spell-soul-insufficient");
         return false;
       }
     }
-    applySpellCooldowns(this.feedback, session, spell, now);
-    if (spendResources && spell.manaCost > 0) {
+    applySpellCooldowns(this.feedback, session, spell, now, {
+      spellMs: augment.cooldownReductionMs ?? 0,
+      secondaryGroupMs: augment.secondaryGroupCooldownReductionMs ?? 0,
+    });
+    if (spendResources && manaCost > 0) {
       this.progression.awardMagicProgress(
         player.id,
         this.sequence.nextEventId(`magic:${player.id}`),
-        spell.manaCost,
+        manaCost,
         now,
       );
     } else if (spendResources && spell.soulCost > 0) {
@@ -128,7 +145,11 @@ export class SpellCaster {
     );
     const variables = {
       level: player.level,
-      magicLevel: playerMagicLevel(player, equipment),
+      magicLevel: this.runicMasteryMagicLevel(
+        player,
+        spell,
+        playerMagicLevel(player, equipment),
+      ),
       skill: playerCombatSkill(
         player,
         equipment,
@@ -156,18 +177,20 @@ export class SpellCaster {
         ),
       ),
     );
+    // Beam Mastery and grade-2 augments swap in the upgraded combat area.
+    const area = beamMastery?.area ?? augment.area ?? spell.area;
     const affected = creaturesInArea(
       this.world,
       player.position,
       target.position,
-      spell.area,
+      area,
     );
-    const usesAreaEffect = spell.area.shape !== "single";
+    const usesAreaEffect = area.shape !== "single";
     if (usesAreaEffect && spell.effectId > 0) {
       const effectPositions = areaPositions(
         player.position,
         target.position,
-        spell.area,
+        area,
       ).filter(
         (position) =>
           this.world.getTile(position) &&
@@ -177,22 +200,48 @@ export class SpellCaster {
         this.visibility.broadcastMagicEffect(position, spell.effectId);
       }
     }
-    if (
-      spell.area.shape === "single" &&
-      target.creature &&
-      affected.length === 0
-    ) {
+    if (area.shape === "single" && target.creature && affected.length === 0) {
       affected.push(target.creature);
     }
-    const specials = playerSpecials(equipment);
+    const specials = playerSpecials(equipment, player);
+    // Focus Mastery: the armed window boosts the next spell damage once
+    // (Canary player_wheel.cpp:3313-3319); casting a focus-group spell arms
+    // it for twelve seconds afterwards.
+    let focusMasteryPercent = 0;
+    if (
+      maximum > 0 &&
+      spell.damageType !== "healing" &&
+      now < player.focusMasteryUntil
+    ) {
+      focusMasteryPercent = 35;
+      player.focusMasteryUntil = 0;
+    }
+    if (
+      spell.groups.includes("focus") &&
+      player.wheelBonuses.instants["Focus Mastery"] === true
+    ) {
+      player.focusMasteryUntil = now + 12_000;
+    }
+    // Healing Link self-heals the Druid for a tenth of the linked heals.
+    const healingLinkPercent =
+      player.wheelBonuses.instants["Healing Link"] === true &&
+      (spell.id === "exura-sio" || spell.id === "exura-gran-sio")
+        ? 10
+        : 0;
     if (maximum > 0) {
-      for (const creature of affected) {
-        if (
-          spell.damageType !== "healing" &&
-          !canPlayerHarm(this.world, session, player, creature, this.pvpHooks)
-        ) {
-          continue;
-        }
+      // Resolved once so leech can scale by the number of struck targets
+      // (Canary's calculateLeechAmount reads damage.affected).
+      const damageTargets = affected.filter(
+        (creature) =>
+          spell.damageType === "healing" ||
+          canPlayerHarm(this.world, session, player, creature, this.pvpHooks),
+      );
+      damageTargets.forEach((creature, index) => {
+        // Beam Mastery shares Canary's one CombatDamage across the sweep:
+        // the multiplier accumulates over the first three targets.
+        const beamPercent = beamMastery
+          ? beamMastery.damagePercentPerTarget * Math.min(index + 1, 3)
+          : 0;
         this.damage.applyDamage(
           creature,
           {
@@ -205,8 +254,27 @@ export class SpellCaster {
             ignoreArmor: !spell.blockArmor,
             ignoreShield: !spell.blockShield,
             ...specials,
+            criticalChance:
+              specials.criticalChance + (augment.criticalChance ?? 0),
+            criticalDamagePercent:
+              specials.criticalDamagePercent +
+              (augment.criticalDamagePercent ?? 0),
+            leechTargets: damageTargets.length,
+            wheelDamagePercent:
+              (augment.damagePercent ?? 0) + beamPercent + focusMasteryPercent,
+            wheelHealingPercent: augment.healPercent ?? 0,
+            wheelLifeLeechPercent: augment.lifeLeechPercent ?? 0,
+            wheelManaLeechPercent: augment.manaLeechPercent ?? 0,
+            healingLinkPercent,
           },
           now,
+        );
+      });
+      if (beamMastery && damageTargets.length > 0) {
+        this.reduceSpellCooldowns(
+          session,
+          beamMastery.cooldownReductionPerTargetMs *
+            Math.min(damageTargets.length, 3),
         );
       }
     } else if (!usesAreaEffect && spell.effectId > 0) {
@@ -216,11 +284,25 @@ export class SpellCaster {
         target.creature?.id,
       );
     }
-    if (spell.condition) {
+    // The upgraded Sap Strength debuffs harder (sap_strength.lua:23-27).
+    const conditionSpell =
+      augment.conditionDamageDealtPercent && spell.condition
+        ? {
+            ...spell,
+            condition: {
+              ...spell.condition,
+              damageDealtPercent: augment.conditionDamageDealtPercent,
+            },
+          }
+        : spell;
+    if (conditionSpell.condition) {
       for (const creature of affected.length > 0 ? affected : [player]) {
         // Canary's crippling target callbacks refuse players outright, so the
         // debuff can never be turned on another character.
-        if (spell.condition.monstersOnly && !(creature instanceof Monster)) {
+        if (
+          conditionSpell.condition.monstersOnly &&
+          !(creature instanceof Monster)
+        ) {
           continue;
         }
         if (
@@ -232,7 +314,7 @@ export class SpellCaster {
         const condition = spellCondition(
           player,
           creature,
-          spell,
+          conditionSpell,
           variables.magicLevel,
         );
         if (condition) this.conditions.applyCondition(creature, condition, now);
@@ -423,6 +505,48 @@ export class SpellCaster {
     );
   }
 
+  /**
+   * The Runic Mastery conviction: rune damage rolls a bell-curved 25 %
+   * chance to boost the formula's magic level by 20 % (10 % when the caster
+   * cannot cast the rune's conjuring spell) — Canary
+   * ValueCallback::getMagicLevelSkill, combat.cpp:1815-1833. Server RNG.
+   */
+  private runicMasteryMagicLevel(
+    player: Player,
+    spell: SpellDefinition,
+    magicLevel: number,
+  ): number {
+    if (
+      spell.origin !== "rune" ||
+      !player.wheelBonuses.instants["Runic Mastery"] ||
+      !this.formula ||
+      this.formula.normalInteger(0, 100) > 25
+    ) {
+      return magicLevel;
+    }
+    const conjuring = spell.runeItemTypeId
+      ? this.conjuringSpellFor?.(spell.runeItemTypeId)
+      : undefined;
+    if (!conjuring) return magicLevel;
+    const canConjure =
+      conjuring.vocations.includes(player.vocation) &&
+      player.level >= conjuring.requiredLevel &&
+      magicLevel >= conjuring.requiredMagicLevel;
+    return magicLevel + Math.trunc((magicLevel * (canConjure ? 20 : 10)) / 100);
+  }
+
+  /** Canary reduceAllSpellsCooldownTimer: every spell cooldown shortens. */
+  private reduceSpellCooldowns(session: Session, reductionMs: number): void {
+    if (reductionMs <= 0) return;
+    for (const [key, entry] of session.combatCooldowns) {
+      if (!key.startsWith("spell:")) continue;
+      session.combatCooldowns.set(key, {
+        ...entry,
+        readyAt: entry.readyAt - reductionMs,
+      });
+    }
+  }
+
   private spellRejectionCode(
     session: Session,
     player: Player,
@@ -447,7 +571,12 @@ export class SpellCaster {
     if (playerMagicLevel(player, equipment) < spell.requiredMagicLevel) {
       return "spell-magic-level-restricted";
     }
-    if (player.mana < spell.manaCost) return "spell-mana-insufficient";
+    const manaCost = Math.max(
+      0,
+      spell.manaCost -
+        (wheelSpellAugmentFor(player, spell).manaCostReduction ?? 0),
+    );
+    if (player.mana < manaCost) return "spell-mana-insufficient";
     if (player.progression.soul < spell.soulCost) {
       return "spell-soul-insufficient";
     }
