@@ -147,6 +147,10 @@
    "sha256": "1767016806d0b41bd7783dfafdc8cd4e494b52a77d56de56eeb95435aa05330f"
   },
   {
+   "path": "tools/buildProficiencySprites.mjs",
+   "sha256": "3a20e46606a612694d0821f779e0b7ee1d96f0ab19d1716c899036838efffd2a"
+  },
+  {
    "path": "tools/buildSpellReport.mjs",
    "sha256": "be5e85e2f9c0ee424d17cbbece9cf05aed50c215bc32abe2a662bfe93de5149e"
   },

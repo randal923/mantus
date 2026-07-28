@@ -1969,8 +1969,8 @@
     "optionLabel": "When the time runs out",
     "options": {
       "none": "Do nothing",
-      "auto-reroll": "Auto-reroll",
-      "lock": "Lock prey"
+      "auto-reroll": "Auto Bonus Reroll",
+      "lock": "Lock Prey"
     },
     "bonusReroll": "Reroll bonus",
     "listReroll": "New list",
@@ -2002,7 +2002,10 @@
       "insufficient-wildcards": "You do not have enough Prey Wildcards.",
       "invalid-request": "That prey action is not possible.",
       "rate-limited": "Please wait a moment before trying again."
-    }
+    },
+    "tab": "Prey Creatures",
+    "selectTitle": "Select monster",
+    "confirmPick": "Confirm selection"
   },
   "huntingTasks": {
     "title": "Hunting Tasks",
@@ -2069,7 +2072,12 @@
       "goal-not-met": "You have not reached the kill goal yet.",
       "invalid-request": "That task action is not possible.",
       "rate-limited": "Please wait a moment before trying again."
-    }
+    },
+    "tab": "Hunting Tasks",
+    "selectTitle": "Select monster",
+    "exhaustedTitle": "Exhausted",
+    "confirmPick": "Confirm selection",
+    "amountLabel": "Amount"
   },
   "boosted": {
     "title": "Today's Boost",
@@ -2258,6 +2266,9 @@
     "mastered": "Mastered",
     "unlockedLevels": "Perk levels unlocked: {{levels}}",
     "levelLabel": "Level {{level}}",
+    "levelComplete": "{{label}} — complete",
+    "levelProgress": "{{label}} — {{experience}} / {{required}} XP ({{remaining}} to go)",
+    "overallProgress": "Weapon mastery: {{percent}}%",
     "locked": "Locked",
     "unlocksAt": "Unlocks at {{experience}} XP",
     "apply": "Apply",
@@ -2309,6 +2320,15 @@
       "omega-strike-extra-damage": "{{value}} Omega Strike Extra Damage",
       "armor-penetration": "{{value}} Armor Penetration",
       "elemental-pierce": "{{value}} Elemental Pierce"
-    }
+    },
+    "xpForNextLevel": "{{experience}} XP to next level",
+    "xpRemaining": "{{experience}} XP left",
+    "searchLabel": "Search weapons",
+    "searchPlaceholder": "Type to search…",
+    "searchEmpty": "No weapons match your search."
+  },
+  "preyHunting": {
+    "tabsLabel": "Prey and hunting tasks",
+    "goldLabel": "Gold"
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   TASK_HUNTING_RULES,
   taskDifficultyForStars,
@@ -9,9 +10,13 @@ import {
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { formatPreyDuration } from "../../lib/prey/formatPreyDuration";
-import { Button } from "../ui/Button";
+import { PreyActionCard, type PreyActionCardImage } from "../prey/PreyActionCard";
+import { PreyBonusFlag } from "../prey/PreyBonusFlag";
+import { PreyCostPlate } from "../prey/PreyCostPlate";
 import { PreyCreatureSprite } from "../prey/PreyCreatureSprite";
-import { RarityStars } from "../prey/RarityStars";
+import { PREY_UI_SCALE } from "../prey/preyUiScale";
+import { PixelImage } from "../ui/PixelImage";
+import { SlotActionButton } from "../prey/SlotActionButton";
 
 export interface HuntingTaskSlotActionExtras {
   raceId?: number;
@@ -29,10 +34,61 @@ interface HuntingTaskSlotCardProps {
   ) => void;
 }
 
+const REROLL_IMAGE: PreyActionCardImage = {
+  src: "ui/prey/prey_reroll.png",
+  sheetWidth: 60,
+  sheetHeight: 92,
+  x: 1,
+  y: 0,
+  width: 58,
+  height: 45,
+};
+const REROLL_BLOCKED: PreyActionCardImage = {
+  src: "ui/prey/prey_reroll_blocked.png",
+  sheetWidth: 58,
+  sheetHeight: 45,
+};
+const SELECT_IMAGE: PreyActionCardImage = {
+  src: "ui/prey/prey_select.png",
+  sheetWidth: 64,
+  sheetHeight: 64,
+};
+const SELECT_BLOCKED: PreyActionCardImage = {
+  src: "ui/prey/prey_select_blocked.png",
+  sheetWidth: 64,
+  sheetHeight: 64,
+};
+const STAR_REROLL_IMAGE: PreyActionCardImage = {
+  src: "ui/prey/prey_bonus_reroll.png",
+  sheetWidth: 37,
+  sheetHeight: 106,
+  x: 1,
+  y: 0,
+  width: 35,
+  height: 52,
+};
+const CHOOSE_IMAGE: PreyActionCardImage = {
+  src: "ui/prey/prey_choose.png",
+  sheetWidth: 46,
+  sheetHeight: 73,
+  x: 1,
+  y: 0,
+  width: 44,
+  height: 35,
+};
+const CHOOSE_BLOCKED: PreyActionCardImage = {
+  src: "ui/prey/prey_choose_blocked.png",
+  sheetWidth: 44,
+  sheetHeight: 35,
+};
+
 /**
- * One hunting-task slot as the server projected it. Goals and rewards come
- * from the shared option table for display; kills, claims, and exhausts are
- * all server-enforced at execution time.
+ * One hunting-task slot rebuilt on the OTClient prey art: the selection
+ * grid with Tibia's Amount radios (standard vs. bestiary-gated upgraded
+ * goal) confirmed by the checkmark card, and an active view with the star
+ * flag, kill progress, star-reroll card, and cancel/claim. Goals and
+ * rewards come from the shared option table for display; kills, claims, and
+ * exhausts are all server-enforced at execution time.
  */
 export function HuntingTaskSlotCard({
   slot,
@@ -41,195 +97,315 @@ export function HuntingTaskSlotCard({
   onAction,
 }: HuntingTaskSlotCardProps) {
   const { t } = useAppTranslation();
+  const scale = PREY_UI_SCALE;
+  const [pickedRaceId, setPickedRaceId] = useState<number | null>(null);
+  const [upgrade, setUpgrade] = useState(false);
   const exhausted = slot.disabledForSeconds > 0;
-  const showFooter =
-    slot.state === "selection" ||
-    slot.state === "list-selection" ||
-    slot.state === "inactive";
   const listRerollFree = slot.freeRerollInSeconds === 0;
   const goal = slot.goalKills ?? 0;
   const progressPercent =
     goal > 0 ? Math.min(100, (slot.kills / goal) * 100) : 0;
-  const activeOption = slot.selected
-    ? taskHuntingOptionFor(slot.selected.stars, slot.rarity)
+  const picked = slot.grid.find((entry) => entry.raceId === pickedRaceId);
+  const pickedOption = picked
+    ? taskHuntingOptionFor(picked.stars, slot.rarity)
     : undefined;
+  const title =
+    (slot.state === "active" || slot.state === "completed") && slot.selected
+      ? slot.selected.name
+      : slot.state === "inactive" && exhausted
+        ? t("huntingTasks.exhaustedTitle")
+        : slot.state === "selection"
+          ? t("huntingTasks.selectTitle")
+          : t(`huntingTasks.states.${slot.state}`);
+
+  const rerollCard = (
+    <PreyActionCard
+      label={`${t("huntingTasks.listReroll")} · ${
+        listRerollFree
+          ? t("huntingTasks.cost.free")
+          : t("huntingTasks.cost.gold", { gold: rerollPriceGold })
+      }`}
+      image={REROLL_IMAGE}
+      blockedImage={REROLL_BLOCKED}
+      disabled={pending || exhausted}
+      onClick={() => onAction("list-reroll")}
+      plate={
+        <>
+          <span
+            className="flex w-full items-center justify-center border border-black/80 bg-black/60 text-sm leading-none tabular-nums text-ui-text-bright"
+            style={{ height: 15 * scale }}
+          >
+            {listRerollFree
+              ? t("huntingTasks.cost.free")
+              : formatPreyDuration(slot.freeRerollInSeconds)}
+          </span>
+          <PreyCostPlate
+            value={rerollPriceGold.toLocaleString()}
+            icon="gold"
+            struck={listRerollFree}
+          />
+        </>
+      }
+    />
+  );
+  const selectCard = (
+    <PreyActionCard
+      label={`${t("huntingTasks.wildcardList")} · ${t(
+        "huntingTasks.cost.wildcards",
+        { count: TASK_HUNTING_RULES.wildcardListPrice },
+      )}`}
+      image={SELECT_IMAGE}
+      blockedImage={SELECT_BLOCKED}
+      disabled={pending || exhausted || slot.state === "list-selection"}
+      onClick={() => onAction("wildcard-list")}
+      plate={
+        <PreyCostPlate
+          value={`${TASK_HUNTING_RULES.wildcardListPrice}`}
+          icon="wildcard"
+        />
+      }
+    />
+  );
 
   return (
     <section
       aria-label={t("huntingTasks.slotLabel", { slot: slot.slot + 1 })}
-      className="flex min-w-0 flex-col gap-3 rounded-xl border border-ui-gold/15 bg-black/20 p-3"
+      className="flex min-w-0 flex-col overflow-hidden rounded-md border border-ui-stone-light/15 bg-black/20"
+      style={{ width: 210 * scale }}
     >
-      <header className="flex items-center justify-between gap-2">
-        <h3 className="font-display text-sm font-bold tracking-wide text-ui-text-bright">
-          {t("huntingTasks.slotLabel", { slot: slot.slot + 1 })}
-        </h3>
-        <span className="rounded-full border border-ui-stone-light/15 bg-black/30 px-2 py-0.5 text-xs tracking-wide text-ui-muted uppercase">
-          {t(`huntingTasks.states.${slot.state}`)}
-        </span>
+      <header className="truncate border-b border-ui-stone-light/15 bg-black/40 px-2 py-1.5 text-center font-display text-sm font-bold tracking-wide text-ui-text/90">
+        {title}
       </header>
 
-      {slot.state === "locked" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center">
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-8 text-ui-muted"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="5.5" y="10.5" width="13" height="9" rx="1.5" />
-            <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
-          </svg>
-          {slot.unlock && (
-            <p className="text-sm text-ui-muted">
-              {t(`huntingTasks.unlock.${slot.unlock}`)}
-            </p>
-          )}
-        </div>
-      )}
+      <div className="flex flex-1 flex-col gap-2 p-2">
+        {slot.state === "locked" && (
+          <>
+            <div className="flex gap-2">
+              <div
+                className="flex items-center justify-center rounded-sm border border-ui-stone-light/15 bg-black/40"
+                style={{ width: 124 * scale, height: 124 * scale }}
+              >
+                <span
+                  aria-hidden
+                  className="font-display text-5xl text-ui-muted/60"
+                >
+                  ?
+                </span>
+              </div>
+              <div className="flex flex-1 justify-center">
+                <PreyBonusFlag
+                  variant="locked"
+                  stars={0}
+                  maxStars={TASK_HUNTING_RULES.maxStars}
+                  label={t("huntingTasks.states.locked")}
+                />
+              </div>
+            </div>
+            {slot.unlock && (
+              <p className="rounded-sm border border-ui-gold/30 bg-ui-gold-deep/30 px-3 py-3 text-center text-sm text-ui-text-bright">
+                {t(`huntingTasks.unlock.${slot.unlock}`)}
+              </p>
+            )}
+          </>
+        )}
 
-      {slot.state === "inactive" && (
-        <p className="py-4 text-center text-sm tabular-nums text-ui-muted">
-          {exhausted
-            ? t("huntingTasks.exhaustedFor", {
-                time: formatPreyDuration(slot.disabledForSeconds),
-              })
-            : t("huntingTasks.emptyGrid")}
-        </p>
-      )}
-
-      {slot.state === "selection" && (
-        <>
-          <p className="text-center">
-            <RarityStars
-              value={slot.rarity}
-              max={TASK_HUNTING_RULES.maxStars}
-              label={t("huntingTasks.rarity", {
-                value: slot.rarity,
-                max: TASK_HUNTING_RULES.maxStars,
-              })}
+        {slot.state === "inactive" && (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-sm border border-ui-stone-light/15 bg-black/40 px-3 py-6 text-center">
+            <PixelImage
+              src="ui/prey/prey_biginactive.png"
+              sheetWidth={57}
+              sheetHeight={91}
+              scale={scale}
             />
-          </p>
-          {slot.grid.length === 0 ? (
-            <p className="py-4 text-center text-sm text-ui-muted">
-              {t("huntingTasks.emptyGrid")}
+            <p className="text-sm tabular-nums text-ui-muted">
+              {exhausted
+                ? t("huntingTasks.exhaustedFor", {
+                    time: formatPreyDuration(slot.disabledForSeconds),
+                  })
+                : t("huntingTasks.emptyGrid")}
             </p>
-          ) : (
-            <ul className="grid grid-cols-3 gap-1.5">
-              {slot.grid.map((entry) => {
-                const option = taskHuntingOptionFor(entry.stars, slot.rarity);
-                return (
-                  <li
-                    key={entry.raceId}
-                    className="flex min-w-0 flex-col items-center gap-1 rounded-lg border border-ui-stone-light/15 bg-black/25 p-2"
-                  >
-                    <span className="flex h-9 items-center justify-center">
+          </div>
+        )}
+
+        {slot.state === "selection" && (
+          <>
+            {slot.grid.length === 0 ? (
+              <p className="flex flex-1 items-center justify-center rounded-sm border border-ui-stone-light/15 bg-black/40 px-3 py-8 text-center text-sm text-ui-muted">
+                {t("huntingTasks.emptyGrid")}
+              </p>
+            ) : (
+              <ul
+                className="grid grid-cols-3 justify-items-center gap-1 rounded-sm border border-ui-stone-light/15 bg-black/40 p-1.5"
+                role="radiogroup"
+                aria-label={t("huntingTasks.selectTitle")}
+              >
+                {slot.grid.map((entry) => (
+                  <li key={entry.raceId}>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={pickedRaceId === entry.raceId}
+                      disabled={pending}
+                      aria-label={t("huntingTasks.selectTask", {
+                        name: entry.name,
+                      })}
+                      title={`${entry.name} · ${t(
+                        `huntingTasks.difficulty.${taskDifficultyForStars(entry.stars)}`,
+                      )} (${entry.stars}★)`}
+                      onClick={() => {
+                        const next =
+                          pickedRaceId === entry.raceId ? null : entry.raceId;
+                        setPickedRaceId(next);
+                        if (
+                          next !== null &&
+                          !entry.upgradeUnlocked &&
+                          upgrade
+                        ) {
+                          setUpgrade(false);
+                        }
+                      }}
+                      className={`flex items-center justify-center border transition-colors disabled:cursor-not-allowed ${
+                        pickedRaceId === entry.raceId
+                          ? "border-white"
+                          : "border-transparent hover:border-ui-gold/40"
+                      }`}
+                      style={{ width: 60 * scale, height: 60 * scale }}
+                    >
                       <PreyCreatureSprite
                         lookTypeId={entry.lookTypeId}
-                        fit={32}
+                        fit={Math.round(48 * scale)}
                       />
-                    </span>
-                    <span
-                      title={entry.name}
-                      className="w-full truncate text-center text-xs text-ui-text/85"
-                    >
-                      {entry.name}
-                    </span>
-                    <RarityStars
-                      value={entry.stars}
-                      max={TASK_HUNTING_RULES.maxStars}
-                      label={t("huntingTasks.stars", {
-                        value: entry.stars,
-                        max: TASK_HUNTING_RULES.maxStars,
-                      })}
-                    />
-                    <span className="text-xs tracking-wide text-ui-muted uppercase">
-                      {t(
-                        `huntingTasks.difficulty.${taskDifficultyForStars(entry.stars)}`,
-                      )}
-                    </span>
-                    {option && (
-                      <>
-                        <button
-                          type="button"
-                          disabled={pending}
-                          aria-label={`${t("huntingTasks.selectTask", { name: entry.name })} · ${t("huntingTasks.tierFirst")}`}
-                          onClick={() =>
-                            onAction("select-monster", {
-                              raceId: entry.raceId,
-                              upgrade: false,
-                            })
-                          }
-                          className="w-full rounded-md border border-ui-stone-light/15 bg-black/30 px-1 py-0.5 text-xs tabular-nums text-ui-text/85 transition-colors hover:border-ui-gold/40 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {t("huntingTasks.tier", {
-                            kills: option.firstKills,
-                            points: option.firstReward,
-                          })}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={pending || !entry.upgradeUnlocked}
-                          aria-label={`${t("huntingTasks.selectTask", { name: entry.name })} · ${t("huntingTasks.tierSecond")}`}
-                          title={
-                            entry.upgradeUnlocked
-                              ? t("huntingTasks.tierSecond")
-                              : t("huntingTasks.upgradeLocked")
-                          }
-                          onClick={() =>
-                            onAction("select-monster", {
-                              raceId: entry.raceId,
-                              upgrade: true,
-                            })
-                          }
-                          className="w-full rounded-md border border-ui-gold/25 bg-ui-gold-deep/20 px-1 py-0.5 text-xs tabular-nums text-ui-gold transition-colors hover:border-ui-gold/50 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {t("huntingTasks.tier", {
-                            kills: option.secondKills,
-                            points: option.secondReward,
-                          })}
-                        </button>
-                      </>
-                    )}
+                    </button>
                   </li>
+                ))}
+              </ul>
+            )}
+            <div
+              role="radiogroup"
+              aria-label={t("huntingTasks.amountLabel")}
+              className="flex items-center gap-3 rounded-sm border border-ui-stone-light/15 bg-black/25 px-2 py-1 text-sm"
+            >
+              <span className="font-bold text-ui-text/90">
+                {t("huntingTasks.amountLabel")}:
+              </span>
+              {([false, true] as const).map((secondTier) => {
+                const kills = secondTier
+                  ? pickedOption?.secondKills
+                  : pickedOption?.firstKills;
+                const points = secondTier
+                  ? pickedOption?.secondReward
+                  : pickedOption?.firstReward;
+                const tierLocked = secondTier && !picked?.upgradeUnlocked;
+                return (
+                  <button
+                    key={String(secondTier)}
+                    type="button"
+                    role="radio"
+                    aria-checked={upgrade === secondTier}
+                    disabled={pending || !picked || tierLocked}
+                    title={
+                      tierLocked
+                        ? t("huntingTasks.upgradeLocked")
+                        : points !== undefined
+                          ? t("huntingTasks.tier", { kills, points })
+                          : undefined
+                    }
+                    onClick={() => setUpgrade(secondTier)}
+                    className="flex items-center gap-1.5 tabular-nums disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <span
+                      aria-hidden
+                      className={`size-3.5 rounded-full border ${
+                        upgrade === secondTier
+                          ? "border-ui-gold bg-ui-gold/70"
+                          : "border-ui-stone-light/50 bg-black/50"
+                      }`}
+                    />
+                    <span
+                      className={
+                        upgrade === secondTier
+                          ? "text-ui-text-bright"
+                          : "text-ui-muted"
+                      }
+                    >
+                      {kills ?? "—"}
+                    </span>
+                  </button>
                 );
               })}
-            </ul>
-          )}
-        </>
-      )}
-
-      {slot.state === "list-selection" && (
-        <p className="py-4 text-center text-sm text-ui-muted">
-          {t("huntingTasks.listSelectionHint")}
-        </p>
-      )}
-
-      {(slot.state === "active" || slot.state === "completed") &&
-        slot.selected && (
-          <div className="flex flex-col items-center gap-2 text-center">
-            <span className="flex h-16 items-center justify-center">
-              <PreyCreatureSprite
-                lookTypeId={slot.selected.lookTypeId}
-                fit={56}
+            </div>
+            <div className="mt-auto flex justify-end gap-1">
+              {rerollCard}
+              {selectCard}
+              <PreyActionCard
+                label={t("huntingTasks.confirmPick")}
+                image={CHOOSE_IMAGE}
+                narrow
+                blockedImage={CHOOSE_BLOCKED}
+                disabled={pending || !picked}
+                onClick={() => {
+                  if (!picked) return;
+                  onAction("select-monster", {
+                    raceId: picked.raceId,
+                    upgrade,
+                  });
+                  setPickedRaceId(null);
+                  setUpgrade(false);
+                }}
               />
-            </span>
-            <p className="text-sm font-bold text-ui-text-bright">
-              {slot.selected.name}
+            </div>
+          </>
+        )}
+
+        {slot.state === "list-selection" && (
+          <>
+            <p className="flex flex-1 items-center justify-center rounded-sm border border-ui-stone-light/15 bg-black/40 px-3 py-8 text-center text-sm text-ui-muted">
+              {t("huntingTasks.listSelectionHint")}
             </p>
-            <RarityStars
-              value={slot.rarity}
-              max={TASK_HUNTING_RULES.maxStars}
-              label={t("huntingTasks.rarity", {
-                value: slot.rarity,
-                max: TASK_HUNTING_RULES.maxStars,
-              })}
-            />
-            {goal > 0 && (
-              <div className="flex w-full flex-col gap-1">
+            <div className="flex justify-end gap-1">
+              {rerollCard}
+              {selectCard}
+            </div>
+          </>
+        )}
+
+        {(slot.state === "active" || slot.state === "completed") &&
+          slot.selected && (
+            <>
+              <div className="flex gap-2">
+                <div
+                  className="flex items-center justify-center rounded-sm border border-ui-stone-light/15 bg-black/40"
+                  style={{ width: 124 * scale, height: 124 * scale }}
+                >
+                  <PreyCreatureSprite
+                    lookTypeId={slot.selected.lookTypeId}
+                    fit={Math.round(96 * scale)}
+                  />
+                </div>
+                <div className="flex flex-1 justify-center">
+                  <PreyBonusFlag
+                    variant="none"
+                    stars={slot.rarity}
+                    maxStars={TASK_HUNTING_RULES.maxStars}
+                    label={`${t("huntingTasks.rarity", {
+                      value: slot.rarity,
+                      max: TASK_HUNTING_RULES.maxStars,
+                    })}${
+                      slot.goalPoints !== null
+                        ? ` · ${t("huntingTasks.rewardPoints", {
+                            points: slot.goalPoints,
+                          })}`
+                        : ""
+                    }`}
+                    footer={
+                      slot.goalPoints !== null
+                        ? `${slot.goalPoints}`
+                        : undefined
+                    }
+                  />
+                </div>
+              </div>
+              {goal > 0 && (
                 <div
                   role="progressbar"
                   aria-label={t("huntingTasks.progress", {
@@ -239,96 +415,65 @@ export function HuntingTaskSlotCard({
                   aria-valuemin={0}
                   aria-valuemax={goal}
                   aria-valuenow={Math.min(slot.kills, goal)}
-                  className="h-2 overflow-hidden rounded-full bg-black/40"
+                  className="relative shrink-0 overflow-hidden rounded-sm border border-ui-stone-light/15 bg-black/45"
+                  style={{ height: 20 * scale }}
                 >
                   <div
-                    className="h-full rounded-full bg-ui-gold"
+                    className="h-full bg-ui-gold-deep/80"
                     style={{ width: `${progressPercent}%` }}
                   />
+                  <span className="absolute inset-0 flex items-center justify-center text-sm leading-none tabular-nums text-ui-text-bright [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
+                    {slot.kills} / {goal}
+                  </span>
                 </div>
-                <p className="text-xs tabular-nums text-ui-muted">
-                  {t("huntingTasks.progress", { kills: slot.kills, goal })}
-                </p>
-              </div>
-            )}
-            {slot.goalPoints !== null && slot.state === "active" && (
-              <p className="text-sm tabular-nums text-ui-muted">
-                {t("huntingTasks.rewardPoints", {
-                  points: slot.goalPoints,
-                })}
-              </p>
-            )}
-            {activeOption && slot.state === "active" && (
-              <p className="text-xs tracking-wide text-ui-muted uppercase">
-                {t(`huntingTasks.difficulty.${activeOption.difficulty}`)}
-                {slot.upgrade ? ` · ${t("huntingTasks.tierSecond")}` : ""}
-              </p>
-            )}
-            {slot.state === "active" && (
-              <>
-                <Button
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => onAction("star-reroll")}
-                >
-                  {t("huntingTasks.starReroll")} ·{" "}
-                  {t("huntingTasks.cost.wildcards", {
-                    count: TASK_HUNTING_RULES.starRerollPrice,
-                  })}
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => onAction("cancel")}
-                >
-                  {t("huntingTasks.cancel")} ·{" "}
-                  {t("huntingTasks.cost.gold", { gold: rerollPriceGold })}
-                </Button>
-              </>
-            )}
-            {slot.state === "completed" && (
-              <Button
-                variant="primary"
-                disabled={pending}
-                onClick={() => onAction("claim")}
-              >
-                {t("huntingTasks.claim", { points: slot.goalPoints ?? 0 })}
-              </Button>
-            )}
-          </div>
-        )}
-
-      {showFooter && (
-        <footer className="mt-auto flex flex-col gap-1.5 border-t border-ui-stone-light/10 pt-2">
-          <Button
-            size="sm"
-            disabled={pending || exhausted}
-            onClick={() => onAction("list-reroll")}
-          >
-            {t("huntingTasks.listReroll")} ·{" "}
-            {listRerollFree
-              ? t("huntingTasks.cost.free")
-              : t("huntingTasks.cost.gold", { gold: rerollPriceGold })}
-          </Button>
-          {!listRerollFree && !exhausted && (
-            <p className="text-center text-xs tabular-nums text-ui-muted">
-              {t("huntingTasks.freeRerollIn", {
-                time: formatPreyDuration(slot.freeRerollInSeconds),
-              })}
-            </p>
+              )}
+              {slot.state === "active" && (
+                <>
+                  <div className="flex justify-end gap-1">
+                    <PreyActionCard
+                      label={`${t("huntingTasks.starReroll")} · ${t(
+                        "huntingTasks.cost.wildcards",
+                        { count: TASK_HUNTING_RULES.starRerollPrice },
+                      )}`}
+                      image={STAR_REROLL_IMAGE}
+                      narrow
+                      disabled={pending}
+                      onClick={() => onAction("star-reroll")}
+                      plate={
+                        <PreyCostPlate
+                          value={`${TASK_HUNTING_RULES.starRerollPrice}`}
+                          icon="wildcard"
+                        />
+                      }
+                    />
+                  </div>
+                  <div className="flex">
+                    <SlotActionButton
+                      label={t("huntingTasks.cancel")}
+                      cost={t("huntingTasks.cost.gold", {
+                        gold: rerollPriceGold,
+                      })}
+                      disabled={pending}
+                      onClick={() => onAction("cancel")}
+                    />
+                  </div>
+                </>
+              )}
+              {slot.state === "completed" && (
+                <div className="flex">
+                  <SlotActionButton
+                    label={t("huntingTasks.claim", {
+                      points: slot.goalPoints ?? 0,
+                    })}
+                    primary
+                    disabled={pending}
+                    onClick={() => onAction("claim")}
+                  />
+                </div>
+              )}
+            </>
           )}
-          <Button
-            size="sm"
-            disabled={pending || exhausted || slot.state === "list-selection"}
-            onClick={() => onAction("wildcard-list")}
-          >
-            {t("huntingTasks.wildcardList")} ·{" "}
-            {t("huntingTasks.cost.wildcards", {
-              count: TASK_HUNTING_RULES.wildcardListPrice,
-            })}
-          </Button>
-        </footer>
-      )}
+      </div>
     </section>
   );
 }

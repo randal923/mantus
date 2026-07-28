@@ -1,9 +1,10 @@
 import type { ProficiencyStateMessage } from "@tibia/protocol";
 
 /**
- * Ids 6 and 8 are real profiles in public/assets/proficiencies.json
- * ("Sanguine 1H Sword" / "Sanguine 1H Axe"), so stories render actual perk
- * tables; 9_999 exercises the missing-profile fallback.
+ * Ids 6, 8, and 101 are real profiles in public/assets/proficiencies.json
+ * ("Sanguine 1H Sword" / "Sanguine 1H Axe" / the three-level "Crude Umbral
+ * 1H Club"), so stories render actual perk tables; 9_999 exercises the
+ * missing-profile fallback.
  */
 export const PROFICIENCY_STATE: ProficiencyStateMessage = {
   type: "proficiency-state",
@@ -15,6 +16,14 @@ export const PROFICIENCY_STATE: ProficiencyStateMessage = {
       unlockedLevels: 2,
       nextLevelExperience: 100_000,
       selections: [{ level: 0, index: 0 }],
+    },
+    {
+      proficiencyId: 101,
+      experience: 5_000,
+      mastered: false,
+      unlockedLevels: 1,
+      nextLevelExperience: 25_000,
+      selections: [],
     },
     {
       proficiencyId: 8,

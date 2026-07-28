@@ -252,6 +252,52 @@ databaseDescribe("CurrencyReconciler integration", () => {
     expect(report.balanced).toBe(false);
   });
 
+  it("ignores ledger rows orphaned by character deletion", async () => {
+    // Two characters bank the same amounts, then both are deleted: the FK
+    // nulls their ledger rows, and the NULLs all land in one window
+    // partition. Chaining those unrelated histories used to report false
+    // breaks.
+    await seedBankBalance(100);
+    const account = await pool.query<{ id: string }>(
+      `INSERT INTO accounts (supabase_user_id, language)
+       VALUES ($1, 'en') RETURNING id`,
+      [`reconciler-${randomUUID()}`],
+    );
+    const accountId = account.rows[0]?.id;
+    if (!accountId) throw new Error("account insert returned no id");
+    const characters = new PgCharacterStore(pool);
+    await new CharacterService(characters, {
+      x: 100,
+      y: 200,
+      z: 7,
+      townId: 1,
+    }).create(accountId, {
+      displayName: "Ledger Hero II",
+      vocation: "Knight",
+      lookType: 128,
+    });
+    const second = (await characters.listByAccountId(accountId))[0];
+    if (!second) throw new Error("second character was not created");
+    await pool.query(
+      "INSERT INTO bank_accounts(character_id, balance) VALUES ($1, 100)",
+      [second.id],
+    );
+    await pool.query(
+      `INSERT INTO bank_ledger (character_id, entry_type, amount, balance_after)
+       VALUES ($1, 'deposit', 100, 100)`,
+      [second.id],
+    );
+    await pool.query("DELETE FROM items");
+    await pool.query("DELETE FROM bank_accounts");
+    await pool.query("DELETE FROM characters");
+
+    const report = await reconciler.run();
+
+    expect(report.bankLedgerBreaks).toEqual([]);
+    expect(report.bankLedgerDrift).toEqual([]);
+    expect(report.balanced).toBe(true);
+  });
+
   it("never mutates the data it reads", async () => {
     await backpackChild(GOLD_TYPE, 100, 0);
     await seedBankBalance(250);

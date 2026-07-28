@@ -44,10 +44,9 @@ export const LockedLevels: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findAllByText("Sanguine 1H Sword");
-    // Level 3 is beyond unlockedLevels: 2, so it shows the next threshold.
-    await expect(
-      await canvas.findByText("Unlocks at 100,000 XP"),
-    ).toBeVisible();
+    // Levels past unlockedLevels: 2 carry the next-threshold hint.
+    const hints = await canvas.findAllByText("Unlocks at 100,000 XP");
+    await expect(hints.length).toBeGreaterThan(0);
     const locked = await canvas.findByRole("radio", {
       name: "+3% Damage vs. Powerful Foes",
     });

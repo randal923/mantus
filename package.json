@@ -16,7 +16,7 @@
     "items:stowable": "node tools/importCanaryStowableItems.mjs",
     "chests:import": "node tools/importCanaryChests.mjs",
     "raids:import": "node tools/importCanaryRaids.mjs",
-    "items:catalog": "node tools/buildItemCatalog.mjs && node tools/buildWikiItemCatalog.mjs && node tools/buildLookCatalog.mjs",
+    "items:catalog": "node tools/buildItemCatalog.mjs && node tools/buildWikiItemCatalog.mjs && node tools/buildLookCatalog.mjs && node tools/buildProficiencySprites.mjs",
     "map:convert": "node tools/convertOtbm.mjs && node tools/buildMinimapTiles.mjs",
     "minimap:build": "node tools/buildMinimapTiles.mjs",
     "creatures:import": "node tools/importCanaryCreatures.mjs",

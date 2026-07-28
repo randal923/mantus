@@ -451,4 +451,52 @@ describe("PreyService", () => {
       reason: "slot-locked",
     });
   });
+
+  it("refuses paid options the wildcard balance cannot fund, but always allows none", async () => {
+    const harness = makeHarness();
+    const alice = harness.join(A);
+    await harness.flush();
+
+    // 0 wildcards: both paid options are refused; the slot stays on "none"
+    // no matter how often the intent is replayed.
+    harness.service.handle(
+      alice.session,
+      { type: "prey-action", slot: 0, action: "set-option", option: "auto-reroll" },
+      2_000,
+    );
+    expect(failuresOf(alice.sent).at(-1)).toMatchObject({
+      reason: "insufficient-wildcards",
+    });
+    harness.service.handle(
+      alice.session,
+      { type: "prey-action", slot: 0, action: "set-option", option: "lock" },
+      3_000,
+    );
+    expect(failuresOf(alice.sent).at(-1)).toMatchObject({
+      reason: "insufficient-wildcards",
+    });
+    expect(statesOf(alice.sent).at(-1)?.slots[0]?.option).toBe("none");
+
+    // A funded balance lets the option stick.
+    harness.store.setWildcards(A, PREY_RULES.lockPrice);
+    harness.service.grantWildcards(A, 0);
+    await harness.flush(3_000);
+    harness.service.handle(
+      alice.session,
+      { type: "prey-action", slot: 0, action: "set-option", option: "lock" },
+      4_000,
+    );
+    expect(statesOf(alice.sent).at(-1)?.slots[0]?.option).toBe("lock");
+
+    // Clearing back to "none" needs no funds.
+    harness.store.setWildcards(A, 0);
+    harness.service.grantWildcards(A, 0);
+    await harness.flush(4_000);
+    harness.service.handle(
+      alice.session,
+      { type: "prey-action", slot: 0, action: "set-option", option: "none" },
+      5_000,
+    );
+    expect(statesOf(alice.sent).at(-1)?.slots[0]?.option).toBe("none");
+  });
 });

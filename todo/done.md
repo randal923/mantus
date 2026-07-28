@@ -914,3 +914,140 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   (storage-gated doors/tiles/chest placements, quest NPC branches,
   creature variants), dynamic mission descriptions, and the KV quest
   tracker.
+
+### 2026-07-27 — Tibia-style windows: weapon proficiency, prey + hunting tasks (client-only)
+
+- Problem: `ProficiencyModal` was a plain radio-row list and Prey / Hunting
+  Tasks were two separate modals; none resembled the real Tibia windows.
+- Proficiency window rebuilt Tibia-style: left panel with weapon name plate,
+  item sprite, `x / y` XP plus "XP for next level" line, search box, and a
+  tracked-weapon sprite-tile grid; right panel renders one starred column per
+  perk level (square perk tiles, alternating shading, lock/level footer with
+  the unlock-XP tooltip). Draft picks + Revert/Apply full-replacement send
+  are unchanged. New `tools/buildProficiencySprites.mjs` derives
+  proficiencyId→spriteId (398/420 profiles, lowest item id wins) from
+  `server/data/item-catalog.json` into
+  `client/public/assets/proficiency-sprites.json`, loaded by the new
+  `useProficiencySprites` hook (sprites are decoration; "?" fallback).
+  `formatProficiencyPerkValue` extracted from `formatProficiencyPerk` so
+  tiles can show the big value line.
+- Prey + Hunting Tasks merged into one `PreyHuntingModal` on the shared
+  `Modal` tabs (Prey Creatures / Hunting Tasks) with a Tibia-style balance
+  footer (gold via `countMoneyWorth(inventory)`, prey wildcards, task
+  points). Slot cards restyled as Tibia columns: creature-name/state title
+  bars, recessed 3×3 selection grids and big creature areas, time-left and
+  kill-progress bars with centered text, `SlotActionButton` price plates,
+  Auto Bonus Reroll / Lock Prey checkbox rows (unchecking sends
+  `set-option none`), locked "?" recess + unlock banner. Store flags are
+  unchanged — `preyWindowOpen`/`huntingTasksOpen` now drive which tab is
+  shown and stay mutually exclusive via the existing nav toggles. No wire or
+  protocol changes; every control still only sends intents.
+- Files: `client/components/proficiency/` (ProficiencyPerkColumn,
+  ProficiencyPerkTile, ProficiencyWeaponTile new; ProficiencyPerkLevelRow,
+  ProficiencyWeaponListItem removed), `client/components/prey/`
+  (PreyHuntingModal, SlotActionButton new; PreyModal removed; PreySlotCard
+  restyled), `client/components/hunting/` (HuntingTasksModal removed;
+  HuntingTaskSlotCard restyled), `GamePreyOverlays`,
+  `hooks/useProficiencySprites`, `lib/proficiency/formatProficiencyPerkValue`,
+  `tools/buildProficiencySprites.mjs`, locales en/pt-BR (tab/select/exhausted
+  titles, XP/search strings, Tibia option wording),
+  `stories/PreyHuntingModal.stories.tsx` (replaces the PreyModal and
+  HuntingTasksModal stories).
+- Verified: client `yarn typecheck`, `yarn lint` (only pre-existing
+  warnings), `yarn test` (61 files / 257 tests) green; Storybook built and
+  all proficiency/prey/hunting stories screenshotted headlessly — play
+  functions (perk pick + apply payload, locked-level threshold, mastered
+  weapon switch) ran without error overlays.
+- Residual risk: percent perk families with whole-number values render
+  inflated (e.g. "+1000% of Magic Level…") — pre-existing data/format
+  mismatch, recorded in `TODO.md` under Accepted gaps (owner: Feature 86).
+
+### 2026-07-27 — Round 2: OTClient art for prey/hunting/proficiency windows + prey option fix
+
+- Problem: the rebuilt windows still used our design-system chrome; the user
+  wants the exact Tibia layouts, and rapid clicks on the prey option
+  checkboxes left them visually checked with zero wildcards (the CSS
+  `peer-checked` visual follows the DOM, and a rejected intent never
+  re-rendered it back).
+- Server: `PreyService.setOption` already refused unfunded options at
+  execution time; added the missing regression test (0 wildcards → both paid
+  options refused with `insufficient-wildcards` no matter how often
+  replayed; funded lock sticks; clearing to "none" needs no funds).
+- Client checkbox fix: the option rows now disable when the balance cannot
+  fund the option (unchecking stays allowed) and `preventDefault` on click
+  keeps the DOM checkbox from ever toggling locally — the visual state is
+  purely the server-pushed `slot.option`.
+- OTClient art imported from the local mehah/otclient checkout (NOT the
+  pinned opentibiabr repo, which has no proficiency module):
+  `data/images/game/prey/*` → `client/public/assets/ui/prey/` and
+  `modules/game_proficiency/images/*` → `client/public/assets/ui/proficiency/`.
+  New `PixelImage` UI component draws scaled, clipped sheet regions.
+- Prey/Hunting cards rebuilt to prey.otui geometry at 1.5× zoom: creature
+  box + big bonus flag with star rows, gold time/kill bars with centered
+  text, reroll/select/bonus-reroll/checkmark card buttons with price plates
+  (free-reroll countdown strip, struck gold price when free), Tibia's
+  select-then-confirm grid flow (local pick + checkmark card sends the
+  intent), hunting-task Amount radios (standard vs. bestiary-gated upgraded
+  goal), hourglass exhaust art, locked "?" + blue unlock banner, balance
+  footer with gold/wildcard icons, tab icons. New components:
+  PreyActionCard, PreyCostPlate, PreyBonusFlag, preyUiScale.
+- Proficiency window rebuilt to proficiency.otui at 1.25×: mastery emblem
+  (icon-masterylevel-N + gold/silver overlay) behind the weapon sprite,
+  per-level star-progress headers, whole-table XP bar, 108×354 XP-filling
+  perk columns, 80px perk tiles with the real weapon-mastery icon sheets
+  (perk-type → sheet/cell map from const.lua in
+  `getProficiencyPerkIcon.ts`, augment badges, grey rows + lock when
+  sealed), per-column detail footers, item boxes with tiny mastery stars.
+  Per-level XP percents recover the weapon's XP family by matching the
+  server-sent next threshold against PROFICIENCY_RULES
+  (`getProficiencyLevelPercents.ts`); the server stays authoritative on
+  unlocks.
+- Verified: client typecheck/lint/tests green (61 files / 257 tests), server
+  prey tests green (11), Storybook built and all stories screenshotted
+  headlessly against the user's reference captures.
+- Residual: no hunting-task flag art in the set (task cards fly the "?"
+  no-bonus flag); elemental perk families carry no `element` field at this
+  pin so their icons fall back to the sheet's first cell; three perk
+  families (`armor-penetration`, alpha/omega strike) are mapped past
+  icons-0's edge upstream and fall back to the attack icon. Recorded in
+  `TODO.md`.
+
+### 2026-07-27 — Round 3: full-width proficiency table + palette re-skin
+
+- The proficiency table now always draws seven columns like Tibia
+  (`Math.max(7, levels.length)`); weapons with shorter perk tables (most:
+  158 have 5 levels, 116 have 4, 46 have 3) leave the trailing columns
+  empty with lock footers. Story fixture gained the three-level "Crude
+  Umbral 1H Club" (id 101) to keep this visible.
+- The OTClient grey/teal panel backgrounds clashed with the game design, so
+  the chrome was re-skinned with the design tokens while keeping all icon/
+  flag/card art: star strips, the whole-table XP bar, and the per-column XP
+  fill now use black recesses with `ui-gold-deep` fills; detail cells use
+  the standard recess; prey/task time and kill bars dropped the hardcoded
+  #C28400/#262626 for tokens; the locked-slot unlock banner went from Tibia
+  blue to the gold-deep banner. The unused bonus-select/star-progress/
+  progress-bg images were removed from the copied asset set.
+- Verified: typecheck/lint/tests green; storybook screenshots re-taken for
+  both windows (7-level sword, 3-level club, prey + task tabs).
+
+### 2026-07-27 — Conservation sweep false positive: deleted characters' ledger rows
+
+- Problem: the live server alerted `currency conservation drift detected`
+  with `bankLedgerBreaks: 7` but zero drift/orphans/coin delta. All seven
+  "breaks" were `bank_ledger` rows whose `character_id` the
+  `ON DELETE SET NULL` FK had nulled when their characters were deleted;
+  `PARTITION BY character_id` puts every NULL in one window partition, so
+  the chain check interleaved unrelated deleted characters' histories and
+  compared balances across them. No money moved wrongly.
+- Change: `bankLedgerBreakQuery` now excludes NULL-`character_id` rows
+  (their per-character chain is unrecoverable), with a comment on why.
+- Files: `server/src/economy/sql/bankLedgerBreakQuery.ts`,
+  `server/src/economy/CurrencyReconciler.integration.test.ts` (new
+  regression: two characters bank identical amounts, both deleted, sweep
+  must stay balanced — fails against the old query).
+- Verified: reconciler integration suite green (7 tests); the new test
+  reproduces the 7-break false positive when the fix is reverted.
+- Residual: forged NULL-character ledger rows are now invisible to the
+  chain check; attribution loss on deletion recorded under Feature 96
+  (todo-12) with the durable fix (non-FK character-id copy or soft
+  delete).

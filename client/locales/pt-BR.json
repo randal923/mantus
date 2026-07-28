@@ -1969,7 +1969,7 @@
     "optionLabel": "Quando o tempo acabar",
     "options": {
       "none": "Não fazer nada",
-      "auto-reroll": "Sortear automaticamente",
+      "auto-reroll": "Sortear bônus automaticamente",
       "lock": "Travar presa"
     },
     "bonusReroll": "Sortear novo bônus",
@@ -2002,7 +2002,10 @@
       "insufficient-wildcards": "Você não tem Cartas-Curinga suficientes.",
       "invalid-request": "Essa ação de presa não é possível.",
       "rate-limited": "Aguarde um momento antes de tentar novamente."
-    }
+    },
+    "tab": "Criaturas de Presa",
+    "selectTitle": "Selecione o monstro",
+    "confirmPick": "Confirmar seleção"
   },
   "huntingTasks": {
     "title": "Tarefas de Caça",
@@ -2069,7 +2072,12 @@
       "goal-not-met": "Você ainda não atingiu a meta de abates.",
       "invalid-request": "Essa ação de tarefa não é possível.",
       "rate-limited": "Aguarde um momento antes de tentar novamente."
-    }
+    },
+    "tab": "Tarefas de Caça",
+    "selectTitle": "Selecione o monstro",
+    "exhaustedTitle": "Esgotada",
+    "confirmPick": "Confirmar seleção",
+    "amountLabel": "Quantidade"
   },
   "boosted": {
     "title": "Impulso do Dia",
@@ -2258,6 +2266,9 @@
     "mastered": "Maestria",
     "unlockedLevels": "Níveis de vantagem desbloqueados: {{levels}}",
     "levelLabel": "Nível {{level}}",
+    "levelComplete": "{{label}} — concluído",
+    "levelProgress": "{{label}} — {{experience}} / {{required}} de XP (faltam {{remaining}})",
+    "overallProgress": "Maestria da arma: {{percent}}%",
     "locked": "Bloqueado",
     "unlocksAt": "Desbloqueia com {{experience}} de XP",
     "apply": "Aplicar",
@@ -2309,6 +2320,15 @@
       "omega-strike-extra-damage": "{{value}} de Dano Extra de Golpe Ômega",
       "armor-penetration": "{{value}} de Penetração de Armadura",
       "elemental-pierce": "{{value}} de Perfuração Elemental"
-    }
+    },
+    "xpForNextLevel": "Faltam {{experience}} de XP para o próximo nível",
+    "xpRemaining": "faltam {{experience}} de XP",
+    "searchLabel": "Buscar armas",
+    "searchPlaceholder": "Digite para buscar…",
+    "searchEmpty": "Nenhuma arma corresponde à sua busca."
+  },
+  "preyHunting": {
+    "tabsLabel": "Presas e tarefas de caça",
+    "goldLabel": "Ouro"
   }
 }

@@ -345,6 +345,28 @@ limitations accepted during a session are recorded in the owning feature file
   Recommended fix: give the left column and the tracker distinct docks (or
   flow the tracker below the indicator stack) rather than nudging `top-*`.
   Owner: `todo/client/`.
+- **Proficiency perk percent display inflates whole-number values**
+  (2026-07-27, noticed while rebuilding the proficiency window). The percent
+  perk families in `content/proficiencies.json` mix fractional values (0.05
+  → "+5%") with values ≥ 1: `skill-percentage-spell-healing` reaches 10
+  (rendered "+1000% of Magic Level to Spell Healing"), and 1–2 appear in six
+  more families. `formatProficiencyPerkValue` multiplies every percent-family
+  value by 100, matching only the fractional entries. Display-only today:
+  the server applies just `skill-percentage-auto-attack` (all fractional)
+  and ignores the rest, so nothing mis-executes. Recommended fix: determine
+  the intended unit per family from pinned Canary's weapon_proficiency.cpp
+  consumption and normalize at import (`importCanaryProficiencies.mjs`),
+  not with a display heuristic. Owner: Feature 86 (inert perk families).
+- **OTClient art gaps in the prey/proficiency windows** (2026-07-27). The
+  mehah/otclient image set we imported has no hunting-task flag, so active
+  task cards fly the grey "?" no-bonus flag; elemental perk entries carry no
+  `element` field at this content pin, so their icons fall back to the
+  sheet's first (physical) cell; and const.lua maps armor-penetration and
+  alpha/omega strike at x 1216–1344, past the 1216px icons-0 sheet, so those
+  three fall back to the attack icon (`getProficiencyPerkIcon.ts`).
+  Recommended fix: rip the task flag + a wider icons-0 from a newer client
+  build, and carry `Element` through `importCanaryProficiencies.mjs` if a
+  later Canary pin provides it. Owner: `todo/client/`.
 
 ## Repo-wide known breakage
 

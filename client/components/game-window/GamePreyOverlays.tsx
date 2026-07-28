@@ -1,6 +1,6 @@
+import { countMoneyWorth } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { HuntingTasksModal } from "../hunting/HuntingTasksModal";
-import { PreyModal } from "../prey/PreyModal";
+import { PreyHuntingModal } from "../prey/PreyHuntingModal";
 import { useGameWindowStore } from "./store/useGameWindowStore";
 import { useGameWindowStoreApi } from "./store/useGameWindowStoreApi";
 
@@ -19,6 +19,9 @@ export function GamePreyOverlays() {
   const huntingTasksSession = useGameWindowStore(
     (state) => state.sessions?.huntingTasks ?? null,
   );
+  const inventory = useGameWindowStore(
+    (state) => state.sessions?.inventory ?? null,
+  );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
   const setPreyWindowOpen = useGameWindowStore(
     (state) => state.setPreyWindowOpen,
@@ -29,6 +32,7 @@ export function GamePreyOverlays() {
   if (!ownCharacter || !preySession || !huntingTasksSession || !sessionActions) {
     return null;
   }
+  if (!preyWindowOpen && !huntingTasksOpen) return null;
 
   const preyError = preySession.error
     ? t(`prey.errors.${preySession.error}`, {
@@ -42,44 +46,36 @@ export function GamePreyOverlays() {
     : null;
 
   return (
-    <>
-      {preyWindowOpen && (
-        <PreyModal
-          prey={preySession.state}
-          pending={preySession.pending}
-          error={preyError}
-          onAction={(action, slot, extras) => {
-            const sent =
-              runtime.clientRef.current?.preyAction(action, slot, extras) ??
-              false;
-            sessionActions.prey.begin(sent);
-          }}
-          onClose={() => {
-            setPreyWindowOpen(false);
-            sessionActions.prey.dismissError();
-          }}
-        />
-      )}
-      {huntingTasksOpen && (
-        <HuntingTasksModal
-          tasks={huntingTasksSession.state}
-          pending={huntingTasksSession.pending}
-          error={huntingTasksError}
-          onAction={(action, slot, extras) => {
-            const sent =
-              runtime.clientRef.current?.huntingTaskAction(
-                action,
-                slot,
-                extras,
-              ) ?? false;
-            sessionActions.huntingTasks.begin(sent);
-          }}
-          onClose={() => {
-            setHuntingTasksOpen(false);
-            sessionActions.huntingTasks.dismissError();
-          }}
-        />
-      )}
-    </>
+    <PreyHuntingModal
+      tab={huntingTasksOpen && !preyWindowOpen ? "hunting-tasks" : "prey"}
+      onTabChange={(tab) => {
+        setPreyWindowOpen(tab === "prey");
+        setHuntingTasksOpen(tab === "hunting-tasks");
+      }}
+      prey={preySession.state}
+      preyPending={preySession.pending}
+      preyError={preyError}
+      onPreyAction={(action, slot, extras) => {
+        const sent =
+          runtime.clientRef.current?.preyAction(action, slot, extras) ?? false;
+        sessionActions.prey.begin(sent);
+      }}
+      tasks={huntingTasksSession.state}
+      tasksPending={huntingTasksSession.pending}
+      tasksError={huntingTasksError}
+      onTaskAction={(action, slot, extras) => {
+        const sent =
+          runtime.clientRef.current?.huntingTaskAction(action, slot, extras) ??
+          false;
+        sessionActions.huntingTasks.begin(sent);
+      }}
+      gold={inventory ? countMoneyWorth(inventory) : 0}
+      onClose={() => {
+        setPreyWindowOpen(false);
+        setHuntingTasksOpen(false);
+        sessionActions.prey.dismissError();
+        sessionActions.huntingTasks.dismissError();
+      }}
+    />
   );
 }

@@ -130,6 +130,16 @@ and the role-authorization test suites.
   `CurrencyConservationRunner.report` holds the last sweep; a read-only
   `/conservation` admin command is enough. Don't invent a second reporting
   channel.
+- **Bank-ledger rows lose attribution on character deletion** (2026-07-27).
+  `bank_ledger.character_id` is `ON DELETE SET NULL`, so deleted
+  characters' ledger rows survive but unattributed, and the conservation
+  sweep's chain-break check now skips NULL rows entirely (they used to
+  interleave into one bogus NULL partition and fire false
+  `bankLedgerBreaks` alerts). Consequence: a forged ledger row with a NULL
+  `character_id` is invisible to the chain check. Durable fix: keep
+  attribution across deletion — a plain (non-FK) copy of the character id
+  on `bank_ledger`, or soft-deleted characters — then chain deleted
+  characters' histories again.
 
 **Tests:** correct role per command; forged/unauthorized admin intents
 rejected and reported; targets validated at execution; complete audit record
