@@ -103,7 +103,7 @@ async function ensureCharacterExists(): Promise<void> {
       type: "create-character",
       name: CHARACTER,
       vocation: "Sorcerer",
-      lookType: 128,
+      sex: "male",
     });
     await waitFor(
       () =>

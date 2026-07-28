@@ -60,8 +60,13 @@ offset `(-w*32, -h*32)`. Creatures additionally draw displaced `(-8, -8)`.
 - **Item layers**: draw every layer in order at the same anchor. They are
   pieces of one rendered item, not alternate materials.
 - **Outfits**: `px = 4` directions (patternX: 0=N, 1=E, 2=S, 3=W), `py` =
-  addons (use 0), `pz` = mount (use 0). Phase 0 = idle, phases 1..n-1 = walk
-  cycle. `layers = 2` means layer 1 is the color mask: yellow→head, red→body,
+  addons, `pz` = mount (0 = unmounted, 1 = riding pose). Phase 0 = idle,
+  phases 1..n-1 = walk cycle. Addons are **composited**, not selected: draw
+  pattern-Y 0 always, then Y 1 and/or Y 2 over it for the granted addon bits
+  (`py` = 1 + addon passes, so `py = 1` means the outfit has no addons).
+  `addonPatternYs()` returns exactly the passes to draw; every outfit bake
+  path (`CreatureView`, portraits, animation frames, the outfit window
+  preview) goes through it. `layers = 2` means layer 1 is the color mask: yellow→head, red→body,
   green→legs, blue→feet; multiply layer-0 RGB by `palette[i]/255`.
 - **Effects**: play phases 0..n-1 once (~90ms each).
 - **Map-item animation**: this pinned classic-container DAT has no enhanced

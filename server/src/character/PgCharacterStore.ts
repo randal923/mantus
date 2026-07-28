@@ -15,6 +15,7 @@ import type { CharacterStore } from "./CharacterStore";
 import type { StarterSet } from "../item/StarterSet";
 import { assertValidCharacterSaveSnapshot } from "../progression/assertValidCharacterSaveSnapshot";
 import { skullToCode } from "../pvp/skullToCode";
+import { sexToCode } from "./sexToCode";
 import { insertCharacterSkills } from "./insertCharacterSkills";
 import { insertStarterSet } from "./insertStarterSet";
 import { isNormalizedNameConflict } from "./isNormalizedNameConflict";
@@ -111,6 +112,7 @@ export class PgCharacterStore implements CharacterStore {
         character.displayName,
         character.normalizedName,
         character.vocation,
+        sexToCode(character.sex),
         character.level,
         character.experience.toString(),
         character.magicLevel,

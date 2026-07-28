@@ -23,6 +23,7 @@
     "npcs:import": "node tools/importCanaryNpcs.mjs && node tools/buildNpcShopCategories.mjs",
     "npcs:shop-categories": "node tools/buildNpcShopCategories.mjs",
     "spells:import": "node tools/importCanarySpells.mjs",
+    "outfits:import": "node tools/importCanaryOutfits.mjs",
     "bestiary:import": "node tools/importCanaryBestiary.mjs",
     "achievements:import": "node tools/importCanaryAchievements.mjs",
     "cyclopedia:assets": "node tools/importOtclientCyclopediaAssets.mjs",

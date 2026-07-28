@@ -134,7 +134,7 @@ databaseDescribe("PgItemStore process-kill crash durability", () => {
     const [character] = await characterService.create(accountId, {
       displayName: "Crasher",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     if (!character) throw new Error("character was not created");
     characterId = character.id;

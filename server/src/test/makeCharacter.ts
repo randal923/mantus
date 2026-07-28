@@ -22,6 +22,7 @@ export function makeCharacter(id: string, displayName = id): Character {
     displayName,
     normalizedName: displayName.toLowerCase(),
     vocation: "Knight",
+    sex: "male",
     level: 1,
     experience: 0n,
     magicLevel: 0,

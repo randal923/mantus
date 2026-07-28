@@ -70,7 +70,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | UI settings sync (69)                                    | ✅     | ◐      | Movable chat/battle-list/spell-bar panels                                   |
 | Bestiary + bosstiary + charm earning (73, 77)            | ✅     | ✅     | Charm **spending**, shared-exp kill credit                                  |
 | Wheel of Destiny + Gem Atelier (79–81)                   | ◐      | ✅     | Revelation actives (avatars + 5 procedural spells), periodic conviction majors, Monk perks (need harmony), gem long tail, extra point sources, 5 gem deviations |
-| Outfits + mounts (70, 71)                                | ✅     | ✅     | Nothing — unlock sources ride with store/achievements/quests (43, 67)       |
+| Outfits + mounts (70, 71)                                | ✅     | ✅     | Full Canary catalog (252 outfits/236 mounts) + per-sex wardrobe + addon rendering shipped 2026-07-28; premium gate unenforced (TODO.md), unlock sources ride with store/achievements/quests (43, 67) |
 | Profiles: achievements, titles, badges, char info (67)   | ✅     | ✅     | Nothing — closed; rename flow (2) and Cyclopedia display (83) live elsewhere |
 | Prey (74)                                                | ✅     | ✅     | Third-slot source rides with 43 (store); daily-reward wildcards ship (84); party-shared loot boost → 77 |
 | Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |

@@ -57,7 +57,7 @@ databaseDescribe("PgPromotionStore integration", () => {
     }).create(accountId, {
       displayName: "Promotion Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await characters.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");

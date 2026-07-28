@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type {
   CharacterCreationOptions,
-  StarterLookType,
+  CharacterSex,
   CreateCharacterInput,
   StarterVocation,
 } from "@tibia/protocol";
@@ -32,14 +32,14 @@ export function CreateCharacterForm({
   const [vocation, setVocation] = useState<StarterVocation | null>(
     creationOptions.vocations[0] ?? null,
   );
-  const [lookType, setLookType] = useState<StarterLookType | null>(
-    creationOptions.outfits[0]?.lookType ?? null,
+  const [sex, setSex] = useState<CharacterSex | null>(
+    creationOptions.sexes[0] ?? null,
   );
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!vocation || !lookType) return;
-    onCreate({ name: name.trim(), vocation, lookType });
+    if (!vocation || !sex) return;
+    onCreate({ name: name.trim(), vocation, sex });
   };
 
   return (
@@ -103,28 +103,28 @@ export function CreateCharacterForm({
 
       <fieldset disabled={busy} className="min-w-0 has-disabled:opacity-45">
         <legend className="font-display text-xs font-semibold tracking-[0.18em] text-ui-gold uppercase">
-          {t("characters.outfit")}
+          {t("characters.sex")}
         </legend>
         <div className="mt-2 grid grid-cols-2 gap-2">
-          {creationOptions.outfits.map((outfit) => (
+          {creationOptions.sexes.map((option) => (
             <label
-              key={outfit.lookType}
+              key={option}
               className={`cursor-pointer rounded-lg border px-3 py-2.5 text-center transition-[border-color,background-color,filter] duration-150 has-focus-visible:ring-2 has-focus-visible:ring-ui-gold/60 ${
-                lookType === outfit.lookType
+                sex === option
                   ? "border-ui-gold/60 bg-ui-accent-deep/40"
                   : "border-ui-stone-light/15 bg-black/20 hover:border-ui-stone-light/40 hover:brightness-110"
               }`}
             >
               <input
                 type="radio"
-                name="outfit"
-                value={outfit.lookType}
+                name="sex"
+                value={option}
                 className="sr-only"
-                checked={lookType === outfit.lookType}
-                onChange={() => setLookType(outfit.lookType)}
+                checked={sex === option}
+                onChange={() => setSex(option)}
               />
               <span className="font-display text-sm font-semibold tracking-wide text-ui-text-bright">
-                {t(`characters.outfits.${outfit.label}`)}
+                {t(`characters.sexes.${option}`)}
               </span>
             </label>
           ))}
@@ -141,7 +141,7 @@ export function CreateCharacterForm({
           size="sm"
           type="submit"
           variant="primary"
-          disabled={busy || !vocation || !lookType}
+          disabled={busy || !vocation || !sex}
         >
           {busy && (
             <span

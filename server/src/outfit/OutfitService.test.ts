@@ -87,11 +87,12 @@ describe("OutfitService", () => {
     await harness.flush();
     const before = alice.player.outfit.lookType;
 
+    // Pirate is in the catalog but is not part of the starter wardrobe.
     harness.service.handle(
       alice.session,
       {
         type: "outfit-select",
-        lookType: 134,
+        lookType: 151,
         head: 0,
         body: 0,
         legs: 0,
@@ -105,6 +106,44 @@ describe("OutfitService", () => {
     expect(lastOf(alice.sent, "outfit-action-failed")?.reason).toBe("not-owned");
     // The unowned outfit never reached the world.
     expect(alice.player.outfit.lookType).toBe(before);
+  });
+
+  it("refuses the other sex's outfit even when a grant row exists", async () => {
+    const harness = makeHarness();
+    const alice = harness.join(A, "Alice");
+    await harness.flush();
+    const before = alice.player.outfit.lookType;
+    // A stale or hand-written row for the female citizen: the catalog's sex
+    // check must still refuse it, and it must not be listed as an entitlement.
+    await harness.store.grantOutfit({
+      characterId: A,
+      lookType: 136,
+      addons: 3,
+    });
+
+    harness.service.handle(
+      alice.session,
+      {
+        type: "outfit-select",
+        lookType: 136,
+        head: 0,
+        body: 0,
+        legs: 0,
+        feet: 0,
+        addons: 0,
+        mountId: 0,
+      },
+      1_000,
+    );
+    await harness.flush();
+    expect(lastOf(alice.sent, "outfit-action-failed")?.reason).toBe("not-owned");
+    expect(alice.player.outfit.lookType).toBe(before);
+    expect(harness.store.selections.get(A)).toBeUndefined();
+    expect(
+      harness.service
+        .entitlementsFor(A)
+        .outfits.some((outfit) => outfit.lookType === 136),
+    ).toBe(false);
   });
 
   it("refuses an outfit outside the pinned catalog before touching storage", async () => {
@@ -218,8 +257,8 @@ describe("OutfitService", () => {
     );
     await harness.flush();
     expect(alice.player.mountId).toBe(5);
-    // Midnight Panther grants 20 speed points, from the pinned catalog.
-    expect(alice.player.stepSpeed).toBe(baseSpeed + 20);
+    // Midnight Panther grants 10 speed points, from the pinned catalog.
+    expect(alice.player.stepSpeed).toBe(baseSpeed + 10);
     // Viewers get the mount sprite, not the entitlement id.
     expect(alice.player.toState().mountLookType).toBe(372);
   });

@@ -6,6 +6,8 @@ export interface CharacterRow {
   display_name: string;
   normalized_name: string;
   vocation: Character["vocation"];
+  /** Canary PlayerSex_t: 0 = female, 1 = male. */
+  sex: number;
   level: number;
   experience: string;
   magic_level: number;

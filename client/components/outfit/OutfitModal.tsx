@@ -190,9 +190,11 @@ export function OutfitModal({
           </section>
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-start gap-4">
-          <div className="flex min-h-32 w-full items-center justify-center rounded-md border border-ui-stone-light/25 bg-black/30 p-4">
+          {/* Fixed stage: the baked preview grows with mounts and addons, and
+              the window must not resize under the pointer when it does. */}
+          <div className="flex h-56 w-full items-center justify-center rounded-md border border-ui-stone-light/25 bg-black/30 p-4">
             {selectedOutfit ? (
-              <OutfitPreview selection={preview} />
+              <OutfitPreview selection={preview} className="size-full" />
             ) : (
               <p className="text-xs text-ui-muted">{t("outfit.noOutfits")}</p>
             )}

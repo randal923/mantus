@@ -2,8 +2,9 @@ import { z } from "zod";
 import { OUTFIT_PALETTE_SIZE } from "./character";
 
 export const OUTFIT_LIMITS = {
-  maxOutfits: 200,
-  maxMounts: 200,
+  /** Above the full Canary catalog (252 outfits / 236 mounts) with headroom. */
+  maxOutfits: 400,
+  maxMounts: 400,
   maxNameLength: 40,
   /** One outfit change per second per session. */
   changeCooldownMs: 1_000,

@@ -28,7 +28,7 @@ const createCharacter = async (label: string): Promise<string> => {
   await characterService.create(accountId, {
     displayName: `Fragger ${label}`,
     vocation: "Knight",
-    lookType: 128,
+    sex: "male",
   });
   const summaries = await characterStore.listByAccountId(accountId);
   const summary = summaries[summaries.length - 1];

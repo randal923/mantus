@@ -1051,3 +1051,65 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   chain check; attribution loss on deletion recorded under Feature 96
   (todo-12) with the durable fix (non-FK character-id copy or soft
   delete).
+
+## 2026-07-28 character sex + full Canary outfit/mount catalog (Features 70, 71)
+
+- **Problem**: three defects in the shipped outfit/mount surfaces. (1) A
+  character had no sex — creation offered "citizen male / citizen female" as a
+  look type, and every character was granted both citizen outfits, so the
+  wardrobe was sex-blind. (2) The catalog was 14 hand-written outfits and 10
+  hand-written mounts instead of Canary's, and starters were the two citizens
+  only. (3) Addons were selectable and previewed correctly in the outfit
+  window but never drew on the character: every world/portrait bake path drew
+  pattern-Y 0 only, so a confirmed addon selection was invisible everywhere
+  except the modal preview.
+- **Change**:
+  - `tools/importCanaryOutfits.mjs` (`yarn outfits:import`) generates
+    `server/src/outfit/outfitCatalogData.ts` from Canary `data/XML/outfits.xml`
+    + `mounts.xml`, cross-checked against `client/public/assets/objects.json`:
+    252 outfits (24 of them starters — Canary's `unlocked="yes"`, 12 per sex)
+    and 236 mounts, each carrying sex, premium flag, and the addon-pass count
+    the sprite pack actually has (`py - 1`). Entries whose look type is missing
+    from the sprite pack are skipped rather than shipped as a client crash.
+    `OUTFIT_LIMITS` raised 200 → 400 for both lists.
+  - `characters.sex` (migration `063_character_sex.sql`, Canary PlayerSex_t:
+    0 female / 1 male) is chosen once at creation and never changes. Existing
+    characters become male and any female citizen look type is remapped to the
+    male one. The create intent now carries `sex` instead of a look type
+    (`createCharacterInputSchema`, `characterCreationOptionsSchema.sexes`), and
+    the server derives the starter look type from it.
+  - `OutfitService` back-fills only the starter outfits of the character's sex,
+    refuses a selection whose look type belongs to the other sex before the
+    store is asked, and drops wrong-sex rows from `entitlementsFor`, so a
+    stale or hand-written grant is neither listed nor selectable.
+  - Addon compositing: new `client/lib/render/addonPatternYs.ts` is the one
+    place that decides which pattern-Y passes to draw, used by the new
+    `AssetStore.cachedOutfitFrameTexture` (world creatures),
+    `getOutfitPortraitCanvas`, `getOutfitAnimationFrames` (podium/bestiary),
+    and `getOutfitPreviewCanvas`.
+  - Outfit and podium windows now have a fixed-height preview stage and clamp
+    the baked canvas into it, so picking a mount no longer resizes the window.
+  - `tools/grantAllOutfits.mjs` (`yarn character:grant-outfits "<name>"`)
+    grants every outfit of the character's sex with all sprite-supported
+    addons plus every mount, in one transaction, merging addon bits like
+    `PgOutfitStore` does.
+- **Files**: `tools/importCanaryOutfits.mjs`, `tools/grantAllOutfits.mjs`(+test),
+  `server/db/migrations/063_character_sex.sql`,
+  `server/src/outfit/{outfitCatalog.ts,outfitCatalogData.ts,OutfitService.ts}`,
+  `server/src/character/{Character.ts,CharacterRow.ts,CharacterService.ts,
+  toCharacter.ts,sexFromCode.ts,sexToCode.ts,PgCharacterStore.ts,sql/*}`,
+  `server/src/{Player.ts,CharacterHandler.ts}`, `protocol/src/{character.ts,
+  outfit.ts}`, `client/lib/render/{addonPatternYs.ts,AssetStore.ts,
+  CreatureView.ts,getOutfitPortraitCanvas.ts,getOutfitAnimationFrames.ts,
+  getOutfitPreviewCanvas.ts}`, `client/components/{characters/
+  CreateCharacterForm.tsx,outfit/{OutfitModal.tsx,OutfitPreview.tsx},
+  podium/PodiumModal.tsx}`, `client/locales/{en,pt-BR}.json`,
+  `client/ASSETS.md`.
+- **Verified**: `yarn typecheck`, full server suite (1300 passed), client suite
+  (257 passed), `yarn test:tools`; new `OutfitService` regression test proves a
+  granted wrong-sex row is refused and unlisted. The addon render fix is
+  test-blind (canvas compositing) — worth a visual pass on first run.
+- **Residual**: premium outfits/mounts are granted without a premium check
+  (recorded in TODO.md); addon *unlock sources* (quests/store) still ride with
+  Features 43/67; `character_outfits` rows written before the sex column are
+  left in place and simply filtered out.

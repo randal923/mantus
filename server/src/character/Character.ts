@@ -2,6 +2,7 @@ import type {
   ActionBar,
   ActionBotSettings,
   CharacterLookType,
+  CharacterSex,
   CharacterVocation,
   Direction,
   StarterVocation,
@@ -25,6 +26,8 @@ export interface Character {
   readonly displayName: string;
   readonly normalizedName: string;
   readonly vocation: CharacterVocation;
+  /** Fixed at creation; decides which half of the outfit catalog applies. */
+  readonly sex: CharacterSex;
   readonly level: number;
   readonly experience: bigint;
   readonly magicLevel: number;
@@ -74,7 +77,7 @@ export interface CharacterSummary {
 export interface CreateCharacterInput {
   readonly displayName: string;
   readonly vocation: StarterVocation;
-  readonly lookType: CharacterLookType;
+  readonly sex: CharacterSex;
 }
 
 export interface CharacterSaveSnapshot {

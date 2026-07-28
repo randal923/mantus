@@ -87,7 +87,7 @@ const createCharacter = async (
   await characterService.create(resolvedAccountId, {
     displayName: `Trader ${label}`,
     vocation: "Knight",
-    lookType: 128,
+    sex: "male",
   });
   const summaries = await characterStore.listByAccountId(resolvedAccountId);
   const summary = summaries[summaries.length - 1];

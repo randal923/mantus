@@ -9,10 +9,7 @@ import { CharacterSelectModal } from "../components/characters/CharacterSelectMo
 
 const CREATION_OPTIONS: CharacterCreationOptions = {
   vocations: ["Knight", "Paladin", "Sorcerer", "Druid"],
-  outfits: [
-    { lookType: 128, label: "citizen-male" },
-    { lookType: 136, label: "citizen-female" },
-  ],
+  sexes: ["male", "female"],
   maxCharacters: 5,
 };
 

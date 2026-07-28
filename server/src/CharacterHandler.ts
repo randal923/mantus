@@ -160,7 +160,7 @@ export class CharacterHandler {
       const characters = await this.service.create(accountId, {
         displayName: intent.name,
         vocation: intent.vocation,
-        lookType: intent.lookType,
+        sex: intent.sex,
       });
       this.outcomes.push(() => {
         if (!this.finishOperation(session, accountId)) return;

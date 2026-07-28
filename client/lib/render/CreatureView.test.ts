@@ -75,11 +75,14 @@ const mount: TibiaObject = {
 
 const store = {
   cachedFrameTexture: () => Texture.EMPTY,
+  cachedOutfitFrameTexture: () => Texture.EMPTY,
 } as unknown as AssetStore;
 
 const animationTextures = [new Texture(), new Texture(), new Texture()];
 const animationStore = {
   cachedFrameTexture: (_outfit: TibiaObject, pattern: SpritePattern) =>
+    animationTextures[pattern.phase ?? 0] ?? Texture.EMPTY,
+  cachedOutfitFrameTexture: (_outfit: TibiaObject, pattern: SpritePattern) =>
     animationTextures[pattern.phase ?? 0] ?? Texture.EMPTY,
 } as unknown as AssetStore;
 
@@ -330,11 +333,13 @@ describe("CreatureView", () => {
 
   it("draws the mount under the rider from the shared walk state", () => {
     const patterns: Array<{ clientId: number; pattern: SpritePattern }> = [];
+    const capture = (object: TibiaObject, pattern: SpritePattern) => {
+      patterns.push({ clientId: object.clientId, pattern });
+      return Texture.EMPTY;
+    };
     const captureStore = {
-      cachedFrameTexture: (object: TibiaObject, pattern: SpritePattern) => {
-        patterns.push({ clientId: object.clientId, pattern });
-        return Texture.EMPTY;
-      },
+      cachedFrameTexture: capture,
+      cachedOutfitFrameTexture: capture,
     } as unknown as AssetStore;
     const view = new CreatureView(
       captureStore,

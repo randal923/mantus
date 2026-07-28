@@ -164,10 +164,10 @@
     "nameRules": "Letters and spaces only, starting with a letter",
     "namePlaceholder": "Choose a name",
     "vocation": "Vocation",
-    "outfit": "Outfit",
-    "outfits": {
-      "citizen-male": "Male",
-      "citizen-female": "Female"
+    "sex": "Sex",
+    "sexes": {
+      "male": "Male",
+      "female": "Female"
     },
     "loading": "Loading your characters…",
     "creating": "Creating",

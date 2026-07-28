@@ -1,4 +1,5 @@
 import type { RGB, TibiaObject } from "./AssetStore";
+import { addonPatternYs } from "./addonPatternYs";
 import { getSharedAssetStore } from "./getSharedAssetStore";
 import { TILE_SIZE } from "./tileSize";
 
@@ -34,9 +35,7 @@ export async function getOutfitPreviewCanvas(
     ? store.outfit(selection.mountLookType)
     : null;
   const riderZ = mount && outfit.pz > 1 ? 1 : 0;
-  const addonYs = [0];
-  if (outfit.py > 1 && (selection.addons & 1) === 1) addonYs.push(1);
-  if (outfit.py > 2 && (selection.addons & 2) === 2) addonYs.push(2);
+  const addonYs = addonPatternYs(outfit, selection.addons);
 
   const spriteIds: number[] = [];
   const collect = (object: TibiaObject, ys: ReadonlyArray<number>, z: number) => {

@@ -5,6 +5,7 @@ import { parseActionBar } from "./parseActionBar";
 import { parseActionBotSettings } from "./parseActionBotSettings";
 import { parseAimAtTargetSpells } from "./parseAimAtTargetSpells";
 import { skullFromCode } from "../pvp/skullFromCode";
+import { sexFromCode } from "./sexFromCode";
 
 export function toCharacter(
   row: CharacterRow,
@@ -19,6 +20,7 @@ export function toCharacter(
     displayName: row.display_name,
     normalizedName: row.normalized_name,
     vocation: row.vocation,
+    sex: sexFromCode(row.sex),
     level: row.level,
     experience: BigInt(row.experience),
     magicLevel: row.magic_level,

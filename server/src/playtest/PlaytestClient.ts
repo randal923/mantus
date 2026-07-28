@@ -115,7 +115,7 @@ export class PlaytestClient {
         type: "create-character",
         name: characterName,
         vocation,
-        lookType: 128,
+        sex: "male",
       });
       const updated = await this.waitFor(
         (m): m is ServerMessage & { type: "character-list" } =>

@@ -29,6 +29,12 @@ export function OutfitPreview({
         if (cancelled) return;
         canvas.style.width = `${canvas.width * scale}px`;
         canvas.style.height = `${canvas.height * scale}px`;
+        // The baked canvas is alpha-trimmed, so it changes size with the
+        // outfit and the mount; clamping keeps it inside a fixed stage
+        // instead of resizing the window around it.
+        canvas.style.maxWidth = "100%";
+        canvas.style.maxHeight = "100%";
+        canvas.style.objectFit = "contain";
         canvas.style.imageRendering = "pixelated";
         host.replaceChildren(canvas);
       })
@@ -45,7 +51,7 @@ export function OutfitPreview({
     <span
       ref={hostRef}
       aria-hidden
-      className={`block leading-none ${className ?? ""}`}
+      className={`flex items-center justify-center leading-none ${className ?? ""}`}
     />
   );
 }

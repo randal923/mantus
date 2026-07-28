@@ -1,5 +1,5 @@
 export const characterColumns = `
-  id, account_id, display_name, normalized_name, vocation, level,
+  id, account_id, display_name, normalized_name, vocation, sex, level,
   experience, magic_level, mana_spent, health, mana, soul, stamina,
   last_seen_at,
   progression_definition_version,

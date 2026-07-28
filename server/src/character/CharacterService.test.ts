@@ -134,12 +134,12 @@ describe("CharacterService", () => {
       service.create("account-a", {
         displayName: "Alice",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       }),
       service.create("account-b", {
         displayName: "  ALICE  ",
         vocation: "Druid",
-        lookType: 136,
+        sex: "female",
       }),
     ]);
 
@@ -157,7 +157,7 @@ describe("CharacterService", () => {
       await service.create("account-a", {
         displayName: name,
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       });
     }
 
@@ -165,7 +165,7 @@ describe("CharacterService", () => {
       service.create("account-a", {
         displayName: "Fiona",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       }),
     ).rejects.toMatchObject({ code: "limit-reached" });
     await expect(service.list("account-a")).resolves.toHaveLength(5);
@@ -178,7 +178,7 @@ describe("CharacterService", () => {
       service.create("account-a", {
         displayName: "Game Master",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       }),
     ).rejects.toMatchObject({ code: "name-invalid" });
   });
@@ -189,7 +189,7 @@ describe("CharacterService", () => {
         type: "create-character",
         name: "Mallory",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
         health: 999999,
         x: 1,
         outfitHead: 999,

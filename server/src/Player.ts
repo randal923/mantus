@@ -38,6 +38,8 @@ export class Player extends Creature<Character["outfit"]> {
   /** Party hunt-session loot/supply counters; never client-supplied. */
   readonly partyAnalyzer: PartyAnalyzerTotals;
   private currentVocation: Character["vocation"];
+  /** Fixed at creation; gates which outfits this character may wear. */
+  readonly sex: Character["sex"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
   readonly version: number;
@@ -98,6 +100,7 @@ export class Player extends Creature<Character["outfit"]> {
     this.partyAnalyzer = new PartyAnalyzerTotals(now);
     this.currentWheelBonuses = wheelBonuses;
     this.currentVocation = character.vocation;
+    this.sex = character.sex;
     this.premiumUntil = premiumUntil?.getTime() ?? null;
     this.townId = character.townId;
     this.mountId = character.mountId;

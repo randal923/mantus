@@ -110,9 +110,9 @@ export function PodiumModal({
     <Modal title={t(`podium.title.${podium.family}`)} onClose={onClose} size="wide">
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="flex w-full flex-col items-center gap-3 sm:w-44">
-          <div className="flex min-h-32 w-full items-center justify-center rounded-md border border-ui-stone-light/25 bg-black/30 p-4">
+          <div className="flex h-56 w-full items-center justify-center rounded-md border border-ui-stone-light/25 bg-black/30 p-4">
             {preview.lookType > 0 || preview.mountLookType > 0 ? (
-              <OutfitPreview selection={preview} />
+              <OutfitPreview selection={preview} className="size-full" />
             ) : (
               <p className="text-xs text-ui-muted">{t("podium.empty")}</p>
             )}

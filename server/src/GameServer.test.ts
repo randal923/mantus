@@ -114,7 +114,7 @@ const connect = (
                 type: "create-character",
                 name,
                 vocation: "Knight",
-                lookType: 128,
+                sex: "male",
               }),
             );
             return;

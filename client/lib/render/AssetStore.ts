@@ -1,4 +1,5 @@
 import { Rectangle, Texture } from "pixi.js";
+import { addonPatternYs } from "./addonPatternYs";
 import { getSpriteIndex } from "./getSpriteIndex";
 
 export interface TibiaFlags {
@@ -387,6 +388,41 @@ export class AssetStore {
     const cached = this.frameTexCache.get(key);
     if (cached) return cached;
     const tex = this.frameTexture(o, p, colors);
+    this.frameTexCache.set(key, tex);
+    return tex;
+  }
+
+  /**
+   * Like `cachedFrameTexture`, but composites the outfit's granted addon
+   * passes over the base pass. Addons are additional pattern-Y frames, not a
+   * different sprite, so a creature wearing them is one flattened texture.
+   */
+  cachedOutfitFrameTexture(
+    o: TibiaObject,
+    p: SpritePattern,
+    colors: OutfitColors | undefined,
+    addons: number,
+  ): Texture {
+    const ys = addonPatternYs(o, addons);
+    if (ys.length === 1) return this.cachedFrameTexture(o, p, colors);
+    const key = [
+      o.category,
+      o.clientId,
+      p.x ?? 0,
+      p.z ?? 0,
+      p.phase ?? 0,
+      colors ? `${colors.head}|${colors.body}|${colors.legs}|${colors.feet}` : "",
+      `addons${addons}`,
+    ].join(":");
+    const cached = this.frameTexCache.get(key);
+    if (cached) return cached;
+    const canvas = this.bakeFrame(o, { ...p, y: ys[0] }, colors);
+    const ctx = canvas.getContext("2d")!;
+    for (const y of ys.slice(1)) {
+      ctx.drawImage(this.bakeFrame(o, { ...p, y }, colors), 0, 0);
+    }
+    const tex = Texture.from(canvas);
+    tex.source.scaleMode = "nearest";
     this.frameTexCache.set(key, tex);
     return tex;
   }

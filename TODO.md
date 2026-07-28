@@ -65,6 +65,14 @@ limitations accepted during a session are recorded in the owning feature file
   mounts, lookTypeEx monsters, and the platform-hide flag are not
   rendered yet; map-side right-click rotation is not wired (the edit
   window's direction buttons cover rotation).
+- **Premium outfits and mounts are not gated** (2026-07-28, Features 70/71):
+  the imported catalog records Canary's `premium="yes"` flag per outfit and
+  mount, but nothing enforces it — every starter outfit is granted at
+  creation regardless, and `OutfitService` never consults the account tier.
+  Accounts already carry `premiumUntil`/`accountTier`, so the fix is a tier
+  check at grant *and* at selection time (execution-time re-check, since
+  premium can lapse while online), plus a premium-lapse fallback to a free
+  outfit. Owner: Feature 70.
 - **Chest quest-flag window** (2026-07-26, Feature 104): a chest's
   `storageWrites` are audited inside the grant transaction but applied to
   the live player in the resolved outcome; a crash between commit and the

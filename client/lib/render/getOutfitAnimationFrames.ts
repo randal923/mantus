@@ -1,5 +1,6 @@
 import type { CreatureOutfit } from "@tibia/protocol";
 import type { RGB, SpritePattern } from "./AssetStore";
+import { addonPatternYs } from "./addonPatternYs";
 import { getSharedAssetStore } from "./getSharedAssetStore";
 import { waitForIdle } from "./waitForIdle";
 
@@ -53,14 +54,23 @@ async function bakeOutfitAnimationFrames(
       ? Array.from({ length: outfit.phases - 1 }, (_, index) => index + 1)
       : [0];
   const patterns: SpritePattern[] = phases.map((phase) => ({ x: 2, phase }));
+  const addonYs = addonPatternYs(outfit, outfitState.addons);
   const spriteIds: number[] = [];
   for (const pattern of patterns) {
-    for (let layer = 0; layer < outfit.layers; layer++) {
-      for (let height = 0; height < outfit.height; height++) {
-        for (let width = 0; width < outfit.width; width++) {
-          spriteIds.push(
-            store.spriteId(outfit, { ...pattern, w: width, h: height, l: layer }),
-          );
+    for (const y of addonYs) {
+      for (let layer = 0; layer < outfit.layers; layer++) {
+        for (let height = 0; height < outfit.height; height++) {
+          for (let width = 0; width < outfit.width; width++) {
+            spriteIds.push(
+              store.spriteId(outfit, {
+                ...pattern,
+                y,
+                w: width,
+                h: height,
+                l: layer,
+              }),
+            );
+          }
         }
       }
     }
@@ -83,9 +93,13 @@ async function bakeOutfitAnimationFrames(
   let right = -1;
   let bottom = -1;
   for (const pattern of patterns) {
-    const frame = store.bakeFrame(outfit, pattern, colors);
+    const frame = store.bakeFrame(outfit, { ...pattern, y: addonYs[0] }, colors);
     const context = frame.getContext("2d");
     if (!context) throw new Error("outfit animation canvas is unavailable");
+    // Addons are extra pattern-Y passes drawn over the base, not replacements.
+    for (const y of addonYs.slice(1)) {
+      context.drawImage(store.bakeFrame(outfit, { ...pattern, y }, colors), 0, 0);
+    }
     // One 32-bit read per pixel; RGBA is little-endian, alpha is the high byte.
     const pixels = new Uint32Array(
       context.getImageData(0, 0, frame.width, frame.height).data.buffer,

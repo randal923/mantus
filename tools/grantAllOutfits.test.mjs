@@ -15,11 +15,14 @@ test("projects the whole catalog for the requested character", () => {
   );
 
   assert.equal(result.status, 0);
-  const projected = /"Test Hero" (\d+) outfits with addons 3 and (\d+) mounts\./
-    .exec(result.stdout);
+  const projected =
+    /\((\d+) male, (\d+) female\) with all addons, plus (\d+) mounts\./.exec(
+      result.stdout,
+    );
   assert.ok(projected, result.stdout);
   assert.ok(Number(projected[1]) > 0);
   assert.ok(Number(projected[2]) > 0);
+  assert.ok(Number(projected[3]) > 0);
 });
 
 test("rejects invalid names and stray options before opening the database", () => {

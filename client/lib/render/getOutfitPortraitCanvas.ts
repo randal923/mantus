@@ -1,5 +1,6 @@
 import type { CharacterOutfit } from "@tibia/protocol";
 import type { RGB } from "./AssetStore";
+import { addonPatternYs } from "./addonPatternYs";
 import { getSharedAssetStore } from "./getSharedAssetStore";
 
 const PORTRAIT_PADDING = 2;
@@ -11,18 +12,22 @@ export async function getOutfitPortraitCanvas(
   await store.load();
   const outfit = store.outfit(outfitState.lookType);
   const pattern = { x: 2, phase: 0 } as const;
+  const addonYs = addonPatternYs(outfit, outfitState.addons);
   const spriteIds: number[] = [];
-  for (let layer = 0; layer < outfit.layers; layer++) {
-    for (let height = 0; height < outfit.height; height++) {
-      for (let width = 0; width < outfit.width; width++) {
-        spriteIds.push(
-          store.spriteId(outfit, {
-            ...pattern,
-            w: width,
-            h: height,
-            l: layer,
-          }),
-        );
+  for (const y of addonYs) {
+    for (let layer = 0; layer < outfit.layers; layer++) {
+      for (let height = 0; height < outfit.height; height++) {
+        for (let width = 0; width < outfit.width; width++) {
+          spriteIds.push(
+            store.spriteId(outfit, {
+              ...pattern,
+              y,
+              w: width,
+              h: height,
+              l: layer,
+            }),
+          );
+        }
       }
     }
   }
@@ -32,14 +37,19 @@ export async function getOutfitPortraitCanvas(
     if (!color) throw new Error(`unknown outfit palette index ${index}`);
     return color;
   };
-  const frame = store.bakeFrame(outfit, pattern, {
+  const colors = {
     head: paletteColor(outfitState.head),
     body: paletteColor(outfitState.body),
     legs: paletteColor(outfitState.legs),
     feet: paletteColor(outfitState.feet),
-  });
+  };
+  const frame = store.bakeFrame(outfit, { ...pattern, y: addonYs[0] }, colors);
   const context = frame.getContext("2d");
   if (!context) throw new Error("outfit portrait canvas is unavailable");
+  // Addons are extra pattern-Y passes drawn over the base, not replacements.
+  for (const y of addonYs.slice(1)) {
+    context.drawImage(store.bakeFrame(outfit, { ...pattern, y }, colors), 0, 0);
+  }
   // One 32-bit read per pixel; RGBA is little-endian, alpha is the high byte.
   const pixels = new Uint32Array(
     context.getImageData(0, 0, frame.width, frame.height).data.buffer,

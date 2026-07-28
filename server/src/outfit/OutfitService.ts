@@ -55,15 +55,18 @@ export class OutfitService {
   }
 
   /**
-   * Loads entitlements and back-fills the starter outfits, so a character
-   * created before this feature still owns what they are already wearing.
+   * Loads entitlements and back-fills the starter outfits for the character's
+   * sex, so a character created before an outfit joined the starter set still
+   * owns it — and never owns the other sex's wardrobe.
    */
   attachCharacter(session: Session, characterId: string): void {
     const store = this.store;
-    if (!store) return;
+    const player = this.world.getPlayer(characterId);
+    if (!store || !player) return;
+    const starterLookTypes = STARTER_LOOK_TYPES[player.sex];
     this.track(
       (async () => {
-        for (const lookType of STARTER_LOOK_TYPES) {
+        for (const lookType of starterLookTypes) {
           await store.grantOutfit({ characterId, lookType, addons: 0 });
         }
         return store.loadSnapshot(characterId);
@@ -85,10 +88,11 @@ export class OutfitService {
     this.snapshots.delete(characterId);
   }
 
-  /** Grants one catalog outfit; an unknown look type is ignored. */
+  /** Grants one catalog outfit; an unknown or wrong-sex look type is ignored. */
   grantOutfit(characterId: string, lookType: number, addons = 0): void {
     const store = this.store;
-    if (!store || !OUTFITS.has(lookType)) return;
+    const sex = this.world.getPlayer(characterId)?.sex;
+    if (!store || OUTFITS.get(lookType)?.sex !== sex) return;
     this.track(
       store.grantOutfit({ characterId, lookType, addons }).then(
         () => this.reload(characterId),
@@ -134,9 +138,10 @@ export class OutfitService {
       session.id,
       now + OUTFIT_LIMITS.changeCooldownMs,
     );
-    // A look type outside the pinned catalog is refused before the store is
-    // even asked; the store then re-checks entitlement inside its transaction.
-    if (!OUTFITS.has(intent.lookType)) {
+    // A look type outside the pinned catalog — or belonging to the other sex —
+    // is refused before the store is even asked; the store then re-checks
+    // entitlement inside its transaction.
+    if (OUTFITS.get(intent.lookType)?.sex !== player.sex) {
       this.fail(session, "not-owned");
       return;
     }
@@ -218,17 +223,20 @@ export class OutfitService {
   /**
    * The character's granted outfits/mounts as catalog-resolved entitlement
    * entries; empty until the login load resolves. Read by the podium's
-   * execution-time ownership re-checks as well as the outfit window.
+   * execution-time ownership re-checks as well as the outfit window. Rows
+   * belonging to the other sex are dropped here, so a stale grant can neither
+   * be listed nor pass the selection check.
    */
   entitlementsFor(characterId: string): {
     outfits: OutfitEntitlement[];
     mounts: MountEntitlement[];
   } {
     const snapshot = this.snapshots.get(characterId);
-    if (!snapshot) return { outfits: [], mounts: [] };
+    const sex = this.world.getPlayer(characterId)?.sex;
+    if (!snapshot || !sex) return { outfits: [], mounts: [] };
     const outfits: OutfitEntitlement[] = snapshot.outfits.flatMap((entry) => {
       const definition = OUTFITS.get(entry.lookType);
-      return definition
+      return definition && definition.sex === sex
         ? [
             {
               lookType: entry.lookType,

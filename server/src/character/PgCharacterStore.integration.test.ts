@@ -117,12 +117,12 @@ databaseDescribe("PgCharacterStore integration", () => {
       service.create(accountA, {
         displayName: "Alice",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       }),
       service.create(accountB, {
         displayName: "  ALICE  ",
         vocation: "Druid",
-        lookType: 136,
+        sex: "female",
       }),
     ]);
 
@@ -143,7 +143,7 @@ databaseDescribe("PgCharacterStore integration", () => {
       await service.create(accountId, {
         displayName: name,
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       });
     }
 
@@ -151,12 +151,12 @@ databaseDescribe("PgCharacterStore integration", () => {
       service.create(accountId, {
         displayName: "Elena",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       }),
       service.create(accountId, {
         displayName: "Fiona",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       }),
     ]);
 
@@ -177,7 +177,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     await service.create(accountId, {
       displayName: "Quest Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await store.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
@@ -200,7 +200,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     await service.create(accountId, {
       displayName: "Bar Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await store.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
@@ -253,7 +253,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     await service.create(accountId, {
       displayName: "Version Hero",
       vocation: "Paladin",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await store.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
@@ -291,7 +291,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     await service.create(accountId, {
       displayName: "Replay Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await store.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
@@ -325,7 +325,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     await service.create(accountId, {
       displayName: "Batch Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await store.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
@@ -354,7 +354,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     await service.create(accountId, {
       displayName: "Prune Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await store.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
@@ -391,7 +391,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     const characters = await service.create(accountId, {
       displayName: "Starter Hero",
       vocation: "Druid",
-      lookType: 136,
+      sex: "female",
     });
     const summary = characters[0];
     if (!summary) throw new Error("character was not created");
@@ -433,12 +433,12 @@ databaseDescribe("PgCharacterStore integration", () => {
       service.create(accountA, {
         displayName: "Loot Alice",
         vocation: "Knight",
-        lookType: 128,
+        sex: "male",
       }),
       service.create(accountB, {
         displayName: "Loot Bianca",
         vocation: "Paladin",
-        lookType: 136,
+        sex: "female",
       }),
     ]);
     const characterA = charactersA[0];
@@ -503,7 +503,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     const characters = await service.create(accountId, {
       displayName: "Container Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const character = characters[0];
     if (!character) throw new Error("character was not created");
@@ -582,7 +582,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     const characters = await service.create(accountId, {
       displayName: "Swap Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const character = characters[0];
     if (!character) throw new Error("character was not created");
@@ -643,7 +643,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     const characters = await service.create(accountId, {
       displayName: "Nested Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const character = characters[0];
     if (!character) throw new Error("character was not created");
@@ -737,7 +737,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     const characters = await service.create(accountId, {
       displayName: "Rollback Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const character = characters[0];
     if (!character) throw new Error("character was not created");
@@ -830,7 +830,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     const characters = await service.create(accountId, {
       displayName: "Conjuring Hero",
       vocation: "Paladin",
-      lookType: 128,
+      sex: "male",
     });
     const summary = characters[0];
     if (!summary) throw new Error("character was not created");

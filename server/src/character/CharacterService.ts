@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
-  CHARACTER_OUTFIT_LOOK_TYPES,
+  CHARACTER_SEXES,
+  STARTER_LOOK_TYPE_BY_SEX,
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
   MAX_CHARACTERS_PER_ACCOUNT,
@@ -45,10 +46,7 @@ export class CharacterService {
   creationOptions(): CharacterCreationOptions {
     return {
       vocations: [...STARTER_VOCATIONS],
-      outfits: [
-        { lookType: CHARACTER_OUTFIT_LOOK_TYPES[0], label: "citizen-male" },
-        { lookType: CHARACTER_OUTFIT_LOOK_TYPES[1], label: "citizen-female" },
-      ],
+      sexes: [...CHARACTER_SEXES],
       maxCharacters: MAX_CHARACTERS_PER_ACCOUNT,
     };
   }
@@ -76,7 +74,7 @@ export class CharacterService {
     const options = this.creationOptions();
     if (
       !options.vocations.includes(input.vocation) ||
-      !options.outfits.some((outfit) => outfit.lookType === input.lookType)
+      !options.sexes.includes(input.sex)
     ) {
       throw new CharacterError("name-invalid");
     }
@@ -96,6 +94,7 @@ export class CharacterService {
       displayName: name.displayName,
       normalizedName: name.normalizedName,
       vocation: input.vocation,
+      sex: input.sex,
       level: 1,
       experience: 0n,
       magicLevel: 0,
@@ -116,7 +115,10 @@ export class CharacterService {
       positionY: this.starter.y,
       positionZ: this.starter.z,
       direction: "south",
-      outfit: { lookType: input.lookType, ...STARTER_OUTFIT_COLORS },
+      outfit: {
+        lookType: STARTER_LOOK_TYPE_BY_SEX[input.sex],
+        ...STARTER_OUTFIT_COLORS,
+      },
       townId: this.starter.townId,
       actionBar: createDefaultActionBar(),
       actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },

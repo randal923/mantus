@@ -113,7 +113,7 @@ databaseDescribe("CurrencyReconciler integration", () => {
     }).create(accountId, {
       displayName: "Ledger Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await characters.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");
@@ -274,7 +274,7 @@ databaseDescribe("CurrencyReconciler integration", () => {
     }).create(accountId, {
       displayName: "Ledger Hero II",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const second = (await characters.listByAccountId(accountId))[0];
     if (!second) throw new Error("second character was not created");

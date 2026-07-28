@@ -122,7 +122,7 @@ databaseDescribe("PgNpcTravelStore integration", () => {
     }).create(accountId, {
       displayName: "Travel Hero",
       vocation: "Knight",
-      lookType: 128,
+      sex: "male",
     });
     const summary = (await characters.listByAccountId(accountId))[0];
     if (!summary) throw new Error("character was not created");

@@ -569,11 +569,13 @@ export class CreatureView {
     const phase = moving && walkPhases > 0 ? this.walkAnimationPhase : 0;
     const dir = DIR_INDEX[moving ? this.walkDirection : this.direction];
     // Mounted riders use pattern-Z 1 (the riding pose); getSpriteIndex wraps
-    // it away again for outfits without a mount pattern.
-    this.sprite.texture = this.store.cachedFrameTexture(
+    // it away again for outfits without a mount pattern. Addon passes are
+    // composited over the base by cachedOutfitFrameTexture.
+    this.sprite.texture = this.store.cachedOutfitFrameTexture(
       this.outfit,
       { x: dir, z: this.mountObject ? 1 : 0, phase },
       this.colors,
+      this.appearance.addons,
     );
     if (this.mountObject) {
       // The mount animates from the same direction and walk phase as its

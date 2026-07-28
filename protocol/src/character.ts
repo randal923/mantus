@@ -25,22 +25,29 @@ export const STARTER_VOCATIONS = [
   "Monk",
 ] as const;
 
-export const CHARACTER_OUTFIT_LOOK_TYPES = [128, 136] as const;
+export const CHARACTER_SEXES = ["male", "female"] as const;
+/**
+ * A character's sex is chosen once at creation and never changes. It decides
+ * which half of the outfit catalog the character may ever wear, so it is
+ * server-side truth: the creation intent carries the sex, never a look type.
+ */
+export const characterSexSchema = z.enum(CHARACTER_SEXES);
+
+/** The citizen outfit each sex is created wearing. */
+export const STARTER_LOOK_TYPE_BY_SEX = {
+  male: 128,
+  female: 136,
+} as const satisfies Record<(typeof CHARACTER_SEXES)[number], number>;
+
+export const CHARACTER_OUTFIT_LOOK_TYPES = [
+  STARTER_LOOK_TYPE_BY_SEX.male,
+  STARTER_LOOK_TYPE_BY_SEX.female,
+] as const;
 export const OUTFIT_PALETTE_SIZE = 133;
 export const MAX_CHARACTERS_PER_ACCOUNT = 5;
 
 export const characterVocationSchema = z.enum(CHARACTER_VOCATIONS);
 export const starterVocationSchema = z.enum(STARTER_VOCATIONS);
-
-/**
- * The two citizen outfits a character may be *created* with. Everything
- * beyond them is an entitlement granted server-side (Feature 70), so the
- * creation intent stays deliberately narrow.
- */
-export const starterLookTypeSchema = z.union([
-  z.literal(CHARACTER_OUTFIT_LOOK_TYPES[0]),
-  z.literal(CHARACTER_OUTFIT_LOOK_TYPES[1]),
-]);
 
 /** A displayed look type; ownership is enforced by the entitlement check. */
 export const characterLookTypeSchema = z.number().int().min(1).max(65_535);
@@ -80,14 +87,7 @@ export const ownCharacterStateSchema = characterSummarySchema
 
 export const characterCreationOptionsSchema = z.object({
   vocations: z.array(starterVocationSchema).min(1),
-  outfits: z
-    .array(
-      z.object({
-        lookType: starterLookTypeSchema,
-        label: z.enum(["citizen-male", "citizen-female"]),
-      }),
-    )
-    .min(1),
+  sexes: z.array(characterSexSchema).min(1),
   maxCharacters: z.number().int().positive(),
 });
 
@@ -98,13 +98,13 @@ export const createCharacterInputSchema = z
       .min(PROTOCOL_LIMITS.minCharacterNameLength)
       .max(PROTOCOL_LIMITS.maxCharacterNameLength),
     vocation: starterVocationSchema,
-    lookType: starterLookTypeSchema,
+    sex: characterSexSchema,
   })
   .strict();
 
 export type CharacterVocation = z.infer<typeof characterVocationSchema>;
 export type StarterVocation = z.infer<typeof starterVocationSchema>;
-export type StarterLookType = z.infer<typeof starterLookTypeSchema>;
+export type CharacterSex = z.infer<typeof characterSexSchema>;
 export type CharacterLookType = z.infer<typeof characterLookTypeSchema>;
 export type CharacterOutfit = z.infer<typeof characterOutfitSchema>;
 export type CharacterSummary = z.infer<typeof characterSummarySchema>;

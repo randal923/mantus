@@ -46,7 +46,7 @@ const createCharacter = async (label: string): Promise<string> => {
   await characterService.create(accountId, {
     displayName: `Depot ${label}`,
     vocation: "Knight",
-    lookType: 128,
+    sex: "male",
   });
   const character = (await characterStore.listByAccountId(accountId))[0];
   if (!character) throw new Error("character was not created");
