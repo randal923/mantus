@@ -11,6 +11,7 @@ import { Button } from "../ui/Button";
 import { Checkbox } from "../ui/Checkbox";
 import { Modal } from "../ui/Modal";
 import { OutfitColorGrid } from "../outfit/OutfitColorGrid";
+import { OutfitPickerGrid } from "../outfit/OutfitPickerGrid";
 import { OutfitPreview } from "../outfit/OutfitPreview";
 
 const COLOR_CHANNELS = ["head", "body", "legs", "feet"] as const;
@@ -41,6 +42,24 @@ export function PodiumModal({
   const { t } = useAppTranslation();
   const [draft, setDraft] = useState<PodiumCurrent>(podium.current);
   const [channel, setChannel] = useState<ColorChannel>("head");
+  /** Remembers the mount to re-mount on, so the toggle is not destructive. */
+  const [preferredMountLookType, setPreferredMountLookType] = useState(
+    podium.current.mountLookType || podium.mounts[0]?.lookType || 0,
+  );
+
+  // Thumbnails keep the colours the window opened with: re-baking every tile
+  // on each palette click would cost one canvas pass per entitled outfit.
+  const opened = podium.current;
+  const thumbnailColors = useMemo(
+    () => ({
+      head: opened.head,
+      body: opened.body,
+      legs: opened.legs,
+      feet: opened.feet,
+      addons: 0,
+    }),
+    [opened.head, opened.body, opened.legs, opened.feet],
+  );
 
   const isRenown = podium.family === "renown";
   const selectedOutfit = podium.outfits.find(
@@ -166,32 +185,28 @@ export function PodiumModal({
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           {isRenown ? (
             <>
-              <ul className="ui-scrollbar flex max-h-40 flex-col gap-1 overflow-y-auto pr-1">
-                {podium.outfits.map((outfit) => (
-                  <li key={outfit.lookType}>
-                    <button
-                      type="button"
-                      aria-pressed={outfit.lookType === draft.lookType}
-                      onClick={() =>
-                        setDraft((current) => ({
-                          ...current,
-                          lookType: outfit.lookType,
-                          addons: clampAddonsToGranted(
-                            current.addons,
-                            outfit.addons,
-                          ),
-                        }))
-                      }
-                      className={listButtonClass(
-                        outfit.lookType === draft.lookType,
-                      )}
-                    >
-                      {outfit.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex gap-4">
+              <OutfitPickerGrid
+                label={t("outfit.outfits")}
+                emptyLabel={t("outfit.noOutfits")}
+                entries={podium.outfits.map((outfit) => ({
+                  key: String(outfit.lookType),
+                  outfit: { ...thumbnailColors, lookType: outfit.lookType },
+                  label: outfit.name,
+                  selected: outfit.lookType === draft.lookType,
+                }))}
+                onSelect={(key) => {
+                  const outfit = podium.outfits.find(
+                    (entry) => String(entry.lookType) === key,
+                  );
+                  if (!outfit) return;
+                  setDraft((current) => ({
+                    ...current,
+                    lookType: outfit.lookType,
+                    addons: clampAddonsToGranted(current.addons, outfit.addons),
+                  }));
+                }}
+              />
+              <div className="flex flex-wrap gap-4">
                 <Checkbox
                   label={t("outfit.firstAddon")}
                   checked={(draft.addons & 1) === 1}
@@ -203,6 +218,19 @@ export function PodiumModal({
                   checked={(draft.addons & 2) === 2}
                   disabled={!addons.second}
                   onChange={() => toggleAddon(2)}
+                />
+                <Checkbox
+                  label={t("outfit.mountToggle")}
+                  checked={draft.mountLookType > 0}
+                  disabled={podium.mounts.length === 0}
+                  onChange={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      mountLookType: current.mountLookType
+                        ? 0
+                        : preferredMountLookType,
+                    }))
+                  }
                 />
               </div>
               <div
@@ -234,72 +262,54 @@ export function PodiumModal({
                   setDraft((current) => ({ ...current, [channel]: index }))
                 }
               />
-              <ul className="ui-scrollbar flex max-h-32 flex-col gap-1 overflow-y-auto pr-1">
-                <li>
-                  <button
-                    type="button"
-                    aria-pressed={draft.mountLookType === 0}
-                    onClick={() =>
-                      setDraft((current) => ({ ...current, mountLookType: 0 }))
-                    }
-                    className={listButtonClass(draft.mountLookType === 0)}
-                  >
-                    {t("outfit.noMount")}
-                  </button>
-                </li>
-                {podium.mounts.map((mount) => (
-                  <li key={mount.mountId}>
-                    <button
-                      type="button"
-                      aria-pressed={mount.lookType === draft.mountLookType}
-                      onClick={() =>
-                        setDraft((current) => ({
-                          ...current,
-                          mountLookType: mount.lookType,
-                        }))
-                      }
-                      className={listButtonClass(
-                        mount.lookType === draft.mountLookType,
-                      )}
-                    >
-                      {mount.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <OutfitPickerGrid
+                label={t("outfit.mounts")}
+                emptyLabel={t("outfit.noMounts")}
+                entries={podium.mounts.map((mount) => ({
+                  key: String(mount.mountId),
+                  outfit: { ...thumbnailColors, lookType: mount.lookType },
+                  label: mount.name,
+                  selected: mount.lookType === draft.mountLookType,
+                }))}
+                onSelect={(key) => {
+                  const mount = podium.mounts.find(
+                    (entry) => String(entry.mountId) === key,
+                  );
+                  if (!mount) return;
+                  setPreferredMountLookType(mount.lookType);
+                  setDraft((current) => ({
+                    ...current,
+                    mountLookType: mount.lookType,
+                  }));
+                }}
+              />
             </>
           ) : (
-            <ul className="ui-scrollbar flex max-h-72 flex-col gap-1 overflow-y-auto pr-1">
-              <li>
-                <button
-                  type="button"
-                  aria-pressed={draft.raceId === 0}
-                  onClick={() =>
-                    setDraft((current) => ({ ...current, raceId: 0 }))
-                  }
-                  className={listButtonClass(draft.raceId === 0)}
-                >
-                  {t("podium.noMonster")}
-                </button>
-              </li>
-              {podium.races.map((race) => (
-                <li key={race.raceId}>
-                  <button
-                    type="button"
-                    aria-pressed={race.raceId === draft.raceId}
-                    onClick={() =>
-                      setDraft((current) => ({
-                        ...current,
-                        raceId: race.raceId,
-                      }))
-                    }
-                    className={listButtonClass(race.raceId === draft.raceId)}
-                  >
-                    {race.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <button
+                type="button"
+                aria-pressed={draft.raceId === 0}
+                onClick={() =>
+                  setDraft((current) => ({ ...current, raceId: 0 }))
+                }
+                className={listButtonClass(draft.raceId === 0)}
+              >
+                {t("podium.noMonster")}
+              </button>
+              <OutfitPickerGrid
+                label={t("podium.title.vigour")}
+                emptyLabel={t("podium.noMonster")}
+                entries={podium.races.map((race) => ({
+                  key: String(race.raceId),
+                  outfit: { ...race.outfit, addons: 0 },
+                  label: race.name,
+                  selected: race.raceId === draft.raceId,
+                }))}
+                onSelect={(key) =>
+                  setDraft((current) => ({ ...current, raceId: Number(key) }))
+                }
+              />
+            </>
           )}
           {error && <p className="text-sm text-ui-accent-light">{error}</p>}
           <div className="flex justify-end gap-2">

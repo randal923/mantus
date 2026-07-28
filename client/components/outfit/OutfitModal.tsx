@@ -9,8 +9,10 @@ import {
 } from "../../lib/outfit/selectableAddons";
 import { Button } from "../ui/Button";
 import { Checkbox } from "../ui/Checkbox";
+import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
 import { OutfitColorGrid } from "./OutfitColorGrid";
+import { OutfitPickerGrid, type OutfitPickerEntry } from "./OutfitPickerGrid";
 import { OutfitPreview } from "./OutfitPreview";
 
 export interface OutfitSelection {
@@ -24,8 +26,10 @@ export interface OutfitSelection {
 }
 
 const COLOR_CHANNELS = ["head", "body", "legs", "feet"] as const;
+const PICKER_TABS = ["outfits", "mounts"] as const;
 
 type ColorChannel = (typeof COLOR_CHANNELS)[number];
+type PickerTab = (typeof PICKER_TABS)[number];
 
 interface OutfitModalProps {
   outfits: ReadonlyArray<OutfitEntitlement>;
@@ -38,9 +42,10 @@ interface OutfitModalProps {
 }
 
 /**
- * The outfit window: entitled outfits and mounts, the four colour channels,
- * and the addon toggles. Everything here is a *request* — the server
- * re-validates the whole selection against its own entitlement rows.
+ * The outfit window: entitled outfits and mounts as sprite grids, the four
+ * colour channels, and the addon toggles. Everything here is a *request* —
+ * the server re-validates the whole selection against its own entitlement
+ * rows.
  */
 export function OutfitModal({
   outfits,
@@ -54,6 +59,12 @@ export function OutfitModal({
   const { t } = useAppTranslation();
   const [draft, setDraft] = useState<OutfitSelection>(initial);
   const [channel, setChannel] = useState<ColorChannel>("head");
+  const [tab, setTab] = useState<PickerTab>("outfits");
+  const [search, setSearch] = useState("");
+  /** Remembers the mount to re-mount on, so the toggle is not destructive. */
+  const [preferredMountId, setPreferredMountId] = useState(
+    initial.mountId || mounts[0]?.mountId || 0,
+  );
 
   const selectedOutfit =
     outfits.find((outfit) => outfit.lookType === draft.lookType) ?? outfits[0];
@@ -73,11 +84,63 @@ export function OutfitModal({
     [draft, grantedAddons, selectedOutfit?.lookType, selectedMount?.lookType],
   );
 
-  const chooseOutfit = (outfit: OutfitEntitlement) => {
+  // Thumbnails keep the colours the window opened with: re-baking every tile
+  // on each palette click would cost one canvas pass per entitled outfit.
+  const thumbnailColors = useMemo(
+    () => ({
+      head: initial.head,
+      body: initial.body,
+      legs: initial.legs,
+      feet: initial.feet,
+      addons: 0,
+    }),
+    [initial.head, initial.body, initial.legs, initial.feet],
+  );
+
+  const matchesSearch = (name: string) =>
+    name.toLowerCase().includes(search.trim().toLowerCase());
+
+  const entries: ReadonlyArray<OutfitPickerEntry> =
+    tab === "outfits"
+      ? outfits
+          .filter((outfit) => matchesSearch(outfit.name))
+          .map((outfit) => ({
+            key: String(outfit.lookType),
+            outfit: { ...thumbnailColors, lookType: outfit.lookType },
+            label: outfit.name,
+            selected: outfit.lookType === preview.lookType,
+          }))
+      : mounts
+          .filter((mount) => matchesSearch(mount.name))
+          .map((mount) => ({
+            key: String(mount.mountId),
+            outfit: { ...thumbnailColors, lookType: mount.lookType },
+            label: mount.name,
+            title: t("outfit.mountSpeed", { speed: mount.speed }),
+            selected: mount.mountId === selectedMount?.mountId,
+          }));
+
+  const chooseEntry = (key: string) => {
+    if (tab === "outfits") {
+      const outfit = outfits.find((entry) => String(entry.lookType) === key);
+      if (!outfit) return;
+      setDraft((current) => ({
+        ...current,
+        lookType: outfit.lookType,
+        addons: clampAddonsToGranted(current.addons, outfit.addons),
+      }));
+      return;
+    }
+    const mount = mounts.find((entry) => String(entry.mountId) === key);
+    if (!mount) return;
+    setPreferredMountId(mount.mountId);
+    setDraft((current) => ({ ...current, mountId: mount.mountId }));
+  };
+
+  const toggleMount = () => {
     setDraft((current) => ({
       ...current,
-      lookType: outfit.lookType,
-      addons: clampAddonsToGranted(current.addons, outfit.addons),
+      mountId: current.mountId ? 0 : preferredMountId,
     }));
   };
 
@@ -112,83 +175,6 @@ export function OutfitModal({
       }
     >
       <div className="flex flex-col gap-6 sm:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <section aria-label={t("outfit.outfits")}>
-            <h3 className="mb-2 text-ui-text-bright">{t("outfit.outfits")}</h3>
-            <ul className="ui-scrollbar flex max-h-48 flex-col gap-1 overflow-y-auto pr-1">
-              {outfits.map((outfit) => (
-                <li key={outfit.lookType}>
-                  <button
-                    type="button"
-                    aria-pressed={outfit.lookType === preview.lookType}
-                    onClick={() => chooseOutfit(outfit)}
-                    className={`w-full rounded-md border px-3 py-1.5 text-left ${
-                      outfit.lookType === preview.lookType
-                        ? "border-ui-gold/70 bg-ui-gold-deep text-ui-text-bright"
-                        : "border-ui-stone-light/25 hover:border-ui-gold/50"
-                    }`}
-                  >
-                    {outfit.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {outfits.length <= 2 && (
-              <p className="mt-2 text-xs text-ui-muted">
-                {t("outfit.starterOnly")}
-              </p>
-            )}
-          </section>
-          <section aria-label={t("outfit.mounts")}>
-            <h3 className="mb-2 text-ui-text-bright">{t("outfit.mounts")}</h3>
-            {mounts.length === 0 ? (
-              <p className="text-xs text-ui-muted">{t("outfit.noMounts")}</p>
-            ) : (
-              <ul className="ui-scrollbar flex max-h-40 flex-col gap-1 overflow-y-auto pr-1">
-                <li>
-                  <button
-                    type="button"
-                    aria-pressed={!selectedMount}
-                    onClick={() =>
-                      setDraft((current) => ({ ...current, mountId: 0 }))
-                    }
-                    className={`w-full rounded-md border px-3 py-1.5 text-left ${
-                      !selectedMount
-                        ? "border-ui-gold/70 bg-ui-gold-deep text-ui-text-bright"
-                        : "border-ui-stone-light/25 hover:border-ui-gold/50"
-                    }`}
-                  >
-                    {t("outfit.noMount")}
-                  </button>
-                </li>
-                {mounts.map((mount) => (
-                  <li key={mount.mountId}>
-                    <button
-                      type="button"
-                      aria-pressed={mount.mountId === selectedMount?.mountId}
-                      onClick={() =>
-                        setDraft((current) => ({
-                          ...current,
-                          mountId: mount.mountId,
-                        }))
-                      }
-                      className={`flex w-full items-center justify-between rounded-md border px-3 py-1.5 text-left ${
-                        mount.mountId === selectedMount?.mountId
-                          ? "border-ui-gold/70 bg-ui-gold-deep text-ui-text-bright"
-                          : "border-ui-stone-light/25 hover:border-ui-gold/50"
-                      }`}
-                    >
-                      <span>{mount.name}</span>
-                      <span className="text-xs text-ui-muted">
-                        {t("outfit.mountSpeed", { speed: mount.speed })}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
         <div className="flex min-w-0 flex-1 flex-col items-start gap-4">
           {/* Fixed stage: the baked preview grows with mounts and addons, and
               the window must not resize under the pointer when it does. */}
@@ -199,7 +185,7 @@ export function OutfitModal({
               <p className="text-xs text-ui-muted">{t("outfit.noOutfits")}</p>
             )}
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Checkbox
               label={t("outfit.firstAddon")}
               checked={(preview.addons & 1) === 1}
@@ -211,6 +197,12 @@ export function OutfitModal({
               checked={(preview.addons & 2) === 2}
               disabled={!addons.second}
               onChange={() => toggleAddon(2)}
+            />
+            <Checkbox
+              label={t("outfit.mountToggle")}
+              checked={Boolean(selectedMount)}
+              disabled={mounts.length === 0}
+              onChange={toggleMount}
             />
           </div>
           <div
@@ -247,6 +239,42 @@ export function OutfitModal({
               {error}
             </p>
           )}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div role="tablist" aria-label={t("outfit.title")} className="flex gap-2">
+            {PICKER_TABS.map((entry) => (
+              <button
+                key={entry}
+                type="button"
+                role="tab"
+                aria-selected={tab === entry}
+                onClick={() => setTab(entry)}
+                className={`flex-1 rounded-md border px-3 py-1.5 text-sm ${
+                  tab === entry
+                    ? "border-ui-gold/70 bg-ui-gold-deep text-ui-text-bright"
+                    : "border-ui-stone-light/25 hover:border-ui-gold/50"
+                }`}
+              >
+                {t(`outfit.${entry}`)}
+              </button>
+            ))}
+          </div>
+          <Input
+            label={t("outfit.search")}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder={t("outfit.searchPlaceholder")}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <OutfitPickerGrid
+            label={t(`outfit.${tab}`)}
+            entries={entries}
+            emptyLabel={
+              tab === "outfits" ? t("outfit.noOutfits") : t("outfit.noMounts")
+            }
+            onSelect={chooseEntry}
+          />
         </div>
       </div>
     </Modal>

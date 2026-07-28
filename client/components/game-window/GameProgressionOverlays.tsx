@@ -275,6 +275,10 @@ export function GameProgressionOverlays() {
             const sent =
               runtime.clientRef.current?.selectOutfit(selection) ?? false;
             sessionActions.outfit.begin(sent);
+            // The look is server-owned: once the request is away the window
+            // has nothing left to show. A send that never left (disconnected)
+            // keeps it open so the choice is not lost.
+            if (sent) setOutfitWindowOpen(false);
           }}
           onClose={() => setOutfitWindowOpen(false)}
         />

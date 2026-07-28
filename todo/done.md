@@ -1113,3 +1113,31 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   (recorded in TODO.md); addon *unlock sources* (quests/store) still ride with
   Features 43/67; `character_outfits` rows written before the sex column are
   left in place and simply filtered out.
+
+## 2026-07-28 outfit window: sprite grid instead of name lists (Feature 70)
+
+- **Problem**: the outfit and podium windows picked outfits and mounts from
+  scrolling lists of *names* — nothing like Tibia's "Customise Character"
+  window, and unusable once the catalog grew past a dozen entries. Confirming
+  a look also left the window open.
+- **Change**: both windows now show a two-column scrollable grid of sprite
+  thumbnails with the name under each (`OutfitPickerGrid` +
+  `OutfitPickerCell`, thumbnails via `OutfitPortrait`'s new `fit` prop, which
+  mirrors `AnimatedOutfit`'s). The outfit window gained Tibia's
+  Outfits/Mounts tab pair and a name search box; "No mount" became a `Mount`
+  checkbox that remembers the last mount instead of a list row. Thumbnails
+  bake with the colours the window opened with — following the live palette
+  would re-bake one canvas per entitled outfit on every click. Confirm now
+  closes the window once the request is actually sent (a send that never left
+  keeps it open).
+- **Files**: `client/components/outfit/{OutfitModal.tsx,OutfitPickerGrid.tsx,
+  OutfitPickerCell.tsx}`, `client/components/podium/PodiumModal.tsx`,
+  `client/components/characters/OutfitPortrait.tsx`,
+  `client/components/game-window/GameProgressionOverlays.tsx`,
+  `client/locales/{en,pt-BR}.json` (`outfit.search`, `searchPlaceholder`,
+  `mountToggle`; dropped the dead `starterOnly` hint),
+  `client/stories/OutfitModal.stories.tsx`.
+- **Verified**: client typecheck + lint clean, 257 unit tests, Storybook
+  browser lane green for both modals, and a headless screenshot of the
+  outfits and mounts tabs confirms thumbnails, selection highlight, and
+  layout render correctly.

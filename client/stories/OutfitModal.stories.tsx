@@ -43,14 +43,36 @@ type Story = StoryObj<typeof meta>;
 /** Citizen with both addons granted; the Hunter row has only the first. */
 export const Entitled: Story = {};
 
-/** Only the two starter outfits: the empty-state note explains why. */
+/** No mounts unlocked: the mount tab shows its empty state. */
 export const StartersOnly: Story = {
   args: {
-    outfits: [
-      { lookType: 128, name: "Citizen", addons: 0 },
-      { lookType: 136, name: "Citizen", addons: 0 },
-    ],
+    outfits: [{ lookType: 128, name: "Citizen", addons: 0 }],
     mounts: [],
+  },
+};
+
+/** A full starter wardrobe: the grid scrolls and the search box filters it. */
+export const FullWardrobe: Story = {
+  args: {
+    outfits: [
+      { lookType: 128, name: "Citizen", addons: 3 },
+      { lookType: 129, name: "Hunter", addons: 3 },
+      { lookType: 130, name: "Mage", addons: 3 },
+      { lookType: 131, name: "Knight", addons: 3 },
+      { lookType: 132, name: "Nobleman", addons: 1 },
+      { lookType: 133, name: "Summoner", addons: 0 },
+      { lookType: 134, name: "Warrior", addons: 0 },
+      { lookType: 143, name: "Barbarian", addons: 0 },
+      { lookType: 144, name: "Druid", addons: 0 },
+      { lookType: 145, name: "Wizard", addons: 0 },
+      { lookType: 146, name: "Oriental", addons: 0 },
+    ],
+    mounts: [
+      { mountId: 1, name: "Widow Queen", lookType: 368, speed: 10 },
+      { mountId: 2, name: "Racing Bird", lookType: 369, speed: 10 },
+      { mountId: 3, name: "War Bear", lookType: 370, speed: 10 },
+      { mountId: 5, name: "Midnight Panther", lookType: 372, speed: 10 },
+    ],
   },
 };
 
