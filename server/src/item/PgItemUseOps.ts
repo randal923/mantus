@@ -2,6 +2,7 @@ import type { CharacterVocation } from "@tibia/protocol";
 import type { Pool } from "pg";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getVocation } from "../progression/getVocation";
+import { chargesOf } from "./chargesOf";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
@@ -14,8 +15,11 @@ import type { PotionUseRequest } from "./PotionUseRequest";
 import type { PotionUseResult } from "./PotionUseResult";
 import { requireReturnedItem } from "./requireReturnedItem";
 import { requireVersion } from "./requireVersion";
+import { consumeChargeUpdate } from "./sql/consumeChargeUpdate";
 import { consumeOwnedCombatItemQuery } from "./sql/consumeOwnedCombatItemQuery";
 import { decrementItemCountUpdate } from "./sql/decrementItemCountUpdate";
+import { deleteItemById } from "./sql/deleteItemById";
+import { insertItemDestroyedAudit } from "./sql/insertItemDestroyedAudit";
 import { incrementPotionFlaskUpdate } from "./sql/incrementPotionFlaskUpdate";
 import { insertPotionFlask } from "./sql/insertPotionFlask";
 import { insertItemWrittenAudit } from "./sql/insertItemWrittenAudit";
@@ -85,6 +89,46 @@ export class PgItemUseOps {
         text.length,
       ]);
       return { before, after: [after] };
+    });
+  }
+
+  /**
+   * Spends one charge of a charged item (Canary's
+   * `item:setAttribute(ITEM_ATTRIBUTE_CHARGES, charges - 1)` plus the
+   * `item:remove(1)` that follows the last charge). Read, decrement and the
+   * final destruction are one transaction under the row lock, so two racing
+   * training ticks can never spend the same charge twice.
+   */
+  consumeCharge(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+  ): Promise<ItemMutation> {
+    return withSerializableTransaction(this.pool, async (client) => {
+      await this.locks.lockCharacter(client, characterId);
+      const row = await this.locks.lockItem(client, itemId);
+      requireVersion(row, expectedVersion);
+      await this.guards.requireOwned(client, row.id, characterId);
+      const before = itemFromRow(row);
+      const type = this.catalog.require(row.item_type_id);
+      const remaining = chargesOf(before, type.charges) - 1;
+      if (remaining < 0) throw new Error("item has no charges left");
+      if (remaining === 0) {
+        await client.query(deleteItemById, [row.id]);
+        await client.query(insertItemDestroyedAudit, [
+          characterId,
+          row.id,
+          row.item_type_id,
+          before.count,
+          "charges-spent",
+        ]);
+        return { before, after: [], removedItemIds: [row.id] };
+      }
+      const result = await client.query<ItemRow>(consumeChargeUpdate, [
+        row.id,
+        remaining,
+      ]);
+      return { before, after: [requireReturnedItem(result.rows[0])] };
     });
   }
 

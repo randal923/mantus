@@ -138,7 +138,7 @@ export function ActionBarItemPicker({
                 }`}
               >
                 <span className="flex size-16 shrink-0 items-center justify-center">
-                  <SpriteIcon spriteId={item.spriteId} />
+                  <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} />
                 </span>
                 <span className="min-w-0 flex-1 truncate font-medium text-ui-text-bright">
                   {item.name}

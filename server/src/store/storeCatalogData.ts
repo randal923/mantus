@@ -2,11 +2,11 @@
 // data/modules/scripts/gamestore/catalog — do not edit by hand.
 //
 // Every entry here is deliverable by this server: item ids exist in the pinned
-// item catalog and are pickupable, look types and mount ids exist in the
-// outfit catalog. Offer types whose systems do not exist yet (blessings,
-// hirelings, charm expansion, instant reward access, house decoration kits,
-// tournament) are absent by design. Behaviour lives in storeCatalog.ts; this
-// file is data only.
+// item catalog and are carriable (house furniture via decoration kits), look
+// types and mount ids exist in the outfit catalog. Offer types whose systems
+// do not exist yet (blessings, hirelings, charm expansion, instant reward
+// access, beds, casks, tournament) are absent by design. Behaviour lives in
+// storeCatalog.ts; this file is data only.
 import type { StoreCatalogCategory } from "./storeCatalog";
 
 export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
@@ -28,6 +28,16 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
       "kind": "outfit",
       "lookType": 1449,
       "addons": 3
+    },
+    "products": []
+  },
+  {
+    "id": "houses",
+    "name": "Houses",
+    "parentId": null,
+    "icon": {
+      "kind": "item",
+      "itemTypeId": 25721
     },
     "products": []
   },
@@ -1693,15 +1703,15 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "description": "Use it to train your fist skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your fist skill\n{info} usable 500 times a piece",
         "icon": {
           "kind": "item",
-          "itemTypeId": 50294
+          "itemTypeId": 50293
         },
         "subOffers": [
           {
-            "id": "charges-50294-500",
+            "id": "charges-50293-500",
             "price": 25,
             "grant": {
               "kind": "charges",
-              "itemTypeId": 50294,
+              "itemTypeId": 50293,
               "charges": 500
             }
           }
@@ -5982,6 +5992,7671 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
             "grant": {
               "kind": "mount",
               "mountId": 235
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "upgrades",
+    "name": "Upgrades",
+    "parentId": "houses",
+    "icon": {
+      "kind": "item",
+      "itemTypeId": 25721
+    },
+    "products": [
+      {
+        "id": "upgrades-daily-reward-shrine",
+        "name": "Daily Reward Shrine",
+        "kind": "house-item",
+        "description": "Pick up your daily reward comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it to open the reward wall\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25721
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25721-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25721,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-demon-exercise-dummy",
+        "name": "Demon Exercise Dummy",
+        "kind": "house-item",
+        "description": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28561
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28561-1",
+            "price": 900,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28561,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-ferumbras-exercise-dummy",
+        "name": "Ferumbras Exercise Dummy",
+        "kind": "house-item",
+        "description": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28559
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28559-1",
+            "price": 900,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28559,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-gilded-imbuing-shrine",
+        "name": "Gilded Imbuing Shrine",
+        "kind": "house-item",
+        "description": "Enhance your equipment comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it with an imbuable item to open the imbuing dialog\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25183
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25183-1",
+            "price": 200,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25183,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-imbuing-shrine",
+        "name": "Imbuing Shrine",
+        "kind": "house-item",
+        "description": "Enhance your equipment comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it with an imbuable item to open the imbuing dialog\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25175
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25175-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25175,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-mailbox",
+        "name": "Mailbox",
+        "kind": "house-item",
+        "description": "Send your letters and parcels right from your own home!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23399
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23399-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23399,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-monk-exercise-dummy",
+        "name": "Monk Exercise Dummy",
+        "kind": "house-item",
+        "description": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28563
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28563-1",
+            "price": 900,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28563,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-ornate-mailbox",
+        "name": "Ornate Mailbox",
+        "kind": "house-item",
+        "description": "Send your letters and parcels right from your own home!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23401
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23401-1",
+            "price": 200,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23401,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "upgrades-shiny-daily-reward-shrine",
+        "name": "Shiny Daily Reward Shrine",
+        "kind": "house-item",
+        "description": "Pick up your daily reward comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it to open the reward wall\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25723
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25723-1",
+            "price": 200,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25723,
+              "count": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "furniture",
+    "name": "Furniture",
+    "parentId": "houses",
+    "icon": {
+      "kind": "item",
+      "itemTypeId": 27664
+    },
+    "products": [
+      {
+        "id": "furniture-alchemistic-cabinet",
+        "name": "Alchemistic Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27664
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27664-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27664,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-alchemistic-chair",
+        "name": "Alchemistic Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27662
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27662-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27662,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-alchemistic-table",
+        "name": "Alchemistic Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27665
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27665-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27665,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-artist-chair",
+        "name": "Artist Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34036
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34036-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34036,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-artist-chest",
+        "name": "Artist Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34040
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34040-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34040,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-artist-shelf",
+        "name": "Artist Shelf",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34030
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34030-1",
+            "price": 110,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34030,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-artist-table",
+        "name": "Artist Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34034
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34034-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34034,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-comfy-cabinet",
+        "name": "Comfy Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28942
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28942-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28942,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-comfy-chair",
+        "name": "Comfy Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28934
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28934-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28934,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-comfy-chest",
+        "name": "Comfy Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28938
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28938-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28938,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-comfy-table",
+        "name": "Comfy Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28936
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28936-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28936,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-cupboard",
+        "name": "Cupboard",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34276
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34276-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34276,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-dwarven-stone-cabinet",
+        "name": "Dwarven Stone Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31192
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31192-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31192,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-dwarven-stone-chair",
+        "name": "Dwarven Stone Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31185
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31185-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31185,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-dwarven-stone-chest",
+        "name": "Dwarven Stone Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31187
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31187-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31187,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-dwarven-stone-table",
+        "name": "Dwarven Stone Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31191
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31191-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31191,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ferocious-cabinet",
+        "name": "Ferocious Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23421
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23421-1",
+            "price": 110,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23421,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ferocious-chair",
+        "name": "Ferocious Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23409
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23409-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23409,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ferocious-table",
+        "name": "Ferocious Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23414
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23414-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23414,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ferocious-trunk",
+        "name": "Ferocious Trunk",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23423
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23423-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23423,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-flower-cabinet",
+        "name": "Flower Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39775
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39775-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39775,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-flower-chair",
+        "name": "Flower Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39768
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39768-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39768,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-flower-chest",
+        "name": "Flower Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39777
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39777-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39777,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-flower-table",
+        "name": "Flower Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39772
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39772-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39772,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-chair",
+        "name": "Grandiose Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35915
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35915-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35915,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-couch-left",
+        "name": "Grandiose Couch Left",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35959
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35959-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35959,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-couch-middle",
+        "name": "Grandiose Couch Middle",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35960
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35960-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35960,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-couch-right",
+        "name": "Grandiose Couch Right",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35961
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35961-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35961,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-cupboard",
+        "name": "Grandiose Cupboard",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35911
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35911-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35911,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-gilded-chest",
+        "name": "Grandiose Gilded Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35923
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35923-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35923,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-refined-chest",
+        "name": "Grandiose Refined Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35919
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35919-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35919,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-grandiose-table",
+        "name": "Grandiose Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35913
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35913-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35913,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-heart-cabinet",
+        "name": "Heart Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 33032
+        },
+        "subOffers": [
+          {
+            "id": "house-item-33032-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 33032,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-heart-chair",
+        "name": "Heart Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 33036
+        },
+        "subOffers": [
+          {
+            "id": "house-item-33036-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 33036,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-heart-chest",
+        "name": "Heart Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 33043
+        },
+        "subOffers": [
+          {
+            "id": "house-item-33043-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 33043,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-hrodmir-chair",
+        "name": "Hrodmir Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31693
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31693-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31693,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-hrodmir-chest",
+        "name": "Hrodmir Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31687
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31687-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31687,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-hrodmir-cupboard",
+        "name": "Hrodmir Cupboard",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31705
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31705-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31705,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-hrodmir-table",
+        "name": "Hrodmir Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31679
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31679-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31679,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ice-cabinet",
+        "name": "Ice Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32775
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32775-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32775,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ice-chest",
+        "name": "Ice Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32780
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32780-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32780,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ice-stool",
+        "name": "Ice Stool",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32778
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32778-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32778,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ice-table",
+        "name": "Ice Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32777
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32777-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32777,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-katana-display",
+        "name": "Katana Display",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37804
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37804-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37804,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-kitchen-chair",
+        "name": "Kitchen Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34292
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34292-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34292,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-kitchen-chest",
+        "name": "Kitchen Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34296
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34296-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34296,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-kitchen-table",
+        "name": "Kitchen Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34285
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34285-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34285,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-bench-large-left",
+        "name": "Knightly Bench Large Left",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39518
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39518-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39518,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-bench-large-right",
+        "name": "Knightly Bench Large Right",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39520
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39520-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39520,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-bench-left",
+        "name": "Knightly Bench Left",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39517
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39517-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39517,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-bench-middle",
+        "name": "Knightly Bench Middle",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39519
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39519-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39519,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-bench-right",
+        "name": "Knightly Bench Right",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39521
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39521-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39521,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-cabinet",
+        "name": "Knightly Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39441
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39441-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39441,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-chair",
+        "name": "Knightly Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39419
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39419-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39419,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-chess-table",
+        "name": "Knightly Chess Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39427
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39427-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39427,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-chest",
+        "name": "Knightly Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39504
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39504-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39504,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-decorative-shield",
+        "name": "Knightly Decorative Shield",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39502
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39502-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39502,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-knightly-table",
+        "name": "Knightly Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39423
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39423-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39423,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-kraken-cabinet",
+        "name": "Kraken Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37179
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37179-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37179,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-kraken-chair",
+        "name": "Kraken Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37174
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37174-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37174,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-kraken-chest",
+        "name": "Kraken Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37181
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37181-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37181,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-kraken-table",
+        "name": "Kraken Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37178
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37178-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37178,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-leaf-chair",
+        "name": "Leaf Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37004
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37004-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37004,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-log-chest",
+        "name": "Log Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37011
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37011-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37011,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-magnificent-cabinet",
+        "name": "Magnificent Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23419
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23419-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23419,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-magnificent-chair",
+        "name": "Magnificent Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23405
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23405-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23405,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-magnificent-table",
+        "name": "Magnificent Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23418
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23418-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23418,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-magnificent-trunk",
+        "name": "Magnificent Trunk",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23427
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23427-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23427,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-opulent-book-case",
+        "name": "Opulent Book Case",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42332
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42332-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42332,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-opulent-chair",
+        "name": "Opulent Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42320
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42320-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42320,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-opulent-chest",
+        "name": "Opulent Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42328
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42328-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42328,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-opulent-item-stand",
+        "name": "Opulent Item Stand",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42350
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42350-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42350,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-opulent-spice-rack",
+        "name": "Opulent Spice Rack",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42334
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42334-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42334,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-opulent-table",
+        "name": "Opulent Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42324
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42324-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42324,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ornate-cabinet",
+        "name": "Ornate Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26162
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26162-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26162,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ornate-chair",
+        "name": "Ornate Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26158
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26158-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26158,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ornate-chest",
+        "name": "Ornate Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26165
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26165-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26165,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-ornate-table",
+        "name": "Ornate Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26161
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26161-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26161,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-round-side-table",
+        "name": "Round Side Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31208
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31208-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31208,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-rustic-cabinet",
+        "name": "Rustic Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23700
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23700-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23700,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-rustic-chair",
+        "name": "Rustic Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23695
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23695-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23695,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-rustic-table",
+        "name": "Rustic Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23698
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23698-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23698,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-rustic-trunk",
+        "name": "Rustic Trunk",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23702
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23702-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23702,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-sculptor-chair",
+        "name": "Sculptor Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34050
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34050-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34050,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-sculptor-chest",
+        "name": "Sculptor Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34054
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34054-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34054,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-sculptor-shelf",
+        "name": "Sculptor Shelf",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34044
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34044-1",
+            "price": 110,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34044,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-sculptor-table",
+        "name": "Sculptor Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34048
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34048-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34048,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-seafarer-cabinet",
+        "name": "Seafarer Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42273
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42273-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42273,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-seafarer-chair",
+        "name": "Seafarer Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42267
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42267-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42267,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-seafarer-chest",
+        "name": "Seafarer Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42275
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42275-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42275,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-seafarer-table",
+        "name": "Seafarer Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42271
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42271-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42271,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-shroom-cupboard",
+        "name": "Shroom Cupboard",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37009
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37009-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37009,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-skeletal-cabinet",
+        "name": "Skeletal Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28687
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28687-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28687,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-skeletal-chair",
+        "name": "Skeletal Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28676
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28676-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28676,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-skeletal-chest",
+        "name": "Skeletal Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28682
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28682-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28682,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-skeletal-table",
+        "name": "Skeletal Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28680
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28680-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28680,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-square-side-table",
+        "name": "Square Side Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31207
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31207-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31207,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-stump-table",
+        "name": "Stump Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37008
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37008-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37008,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-toolbox",
+        "name": "Toolbox",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35171
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35171-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35171,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-vengothic-cabinet",
+        "name": "Vengothic Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25227
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25227-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25227,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-vengothic-chair",
+        "name": "Vengothic Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25223
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25223-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25223,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-vengothic-chest",
+        "name": "Vengothic Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25229
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25229-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25229,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-vengothic-table",
+        "name": "Vengothic Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25225
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25225-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25225,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-verdant-cabinet",
+        "name": "Verdant Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26105
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26105-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26105,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-verdant-chair",
+        "name": "Verdant Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26103
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26103-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26103,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-verdant-table",
+        "name": "Verdant Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26111
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26111-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26111,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-verdant-trunk",
+        "name": "Verdant Trunk",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26107
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26107-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26107,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-volcanic-chair",
+        "name": "Volcanic Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36634
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36634-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36634,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-volcanic-chest",
+        "name": "Volcanic Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36630
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36630-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36630,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-volcanic-shelf",
+        "name": "Volcanic Shelf",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36640
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36640-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36640,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-volcanic-table",
+        "name": "Volcanic Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36638
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36638-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36638,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-wooden-bookcase",
+        "name": "Wooden Bookcase",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31194
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31194-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31194,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-wooden-cabinet",
+        "name": "Wooden Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35175
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35175-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35175,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-wooden-stool",
+        "name": "Wooden Stool",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35167
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35167-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35167,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-workbench",
+        "name": "Workbench",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35163
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35163-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35163,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-zaoan-cabinet",
+        "name": "Zaoan Cabinet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37782
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37782-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37782,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-zaoan-hassock",
+        "name": "Zaoan Hassock",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37778
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37778-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37778,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "furniture-zaoan-side-table",
+        "name": "Zaoan Side Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37803
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37803-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37803,
+              "count": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "decorations",
+    "name": "Decorations",
+    "parentId": "houses",
+    "icon": {
+      "kind": "item",
+      "itemTypeId": 27679
+    },
+    "products": [
+      {
+        "id": "decorations-alchemistic-bookstand",
+        "name": "Alchemistic Bookstand",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27679
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27679-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27679,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-alchemistic-cupboard",
+        "name": "Alchemistic Cupboard",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27689
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27689-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27689,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-alchemistic-scales",
+        "name": "Alchemistic Scales",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27683
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27683-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27683,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-all-seeing-tapestry",
+        "name": "All-Seeing Tapestry",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23450
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23450-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23450,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-anglerfish-lamp",
+        "name": "Anglerfish Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28675
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28675-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28675,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-anvil",
+        "name": "Anvil",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35185
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35185-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35185,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-arrival-the-thais-paint",
+        "name": "Arrival The Thais Paint",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27698
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27698-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27698,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-azure-carpet",
+        "name": "Azure Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23710
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23710-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23710,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-23710-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23710,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-baby-bonelord",
+        "name": "Baby Bonelord",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34026
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34026-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34026,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-baby-dragon",
+        "name": "Baby Dragon",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23442
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23442-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23442,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-baby-elephant",
+        "name": "Baby Elephant",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35153
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35153-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35153,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-baby-polar-bear",
+        "name": "Baby Polar Bear",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32790
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32790-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32790,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-baby-rotworm",
+        "name": "Baby Rotworm",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28690
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28690-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28690,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-baby-seal",
+        "name": "Baby Seal",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32788
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32788-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32788,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-baby-unicorn",
+        "name": "Baby Unicorn",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31703
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31703-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31703,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-bamboo-mat",
+        "name": "Bamboo Mat",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23433
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23433-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23433,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-23433-5",
+            "price": 125,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23433,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-barrel",
+        "name": "Barrel",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34300
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34300-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34300,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-barrel-anchor-lamp",
+        "name": "Barrel & Anchor Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31937
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31937-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31937,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-bat",
+        "name": "Bat",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 33040
+        },
+        "subOffers": [
+          {
+            "id": "house-item-33040-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 33040,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-bath-tub",
+        "name": "Bath Tub",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26076
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26076-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26076,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-bellflower",
+        "name": "Bellflower",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28697
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28697-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28697,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-bitter-smack-leaf",
+        "name": "Bitter-Smack Leaf",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25217
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25217-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25217,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-blank-zaoan-panel",
+        "name": "Blank Zaoan Panel",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37777
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37777-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37777,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-blooming-cactus",
+        "name": "Blooming Cactus",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25216
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25216-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25216,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-blue-round-cushion",
+        "name": "Blue Round Cushion",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31222
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31222-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31222,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-blue-square-cushion",
+        "name": "Blue Square Cushion",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31219
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31219-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31219,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-brocade-tapestry",
+        "name": "Brocade Tapestry",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23725
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23725-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23725,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-captain-crab",
+        "name": "Captain Crab",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42308
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42308-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42308,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-carnivorous-plant",
+        "name": "Carnivorous Plant",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28689
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28689-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28689,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-cat-in-a-basket",
+        "name": "Cat in a Basket",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23451
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23451-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23451,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-chameleon",
+        "name": "Chameleon",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25213
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25213-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25213,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-chest-of-abundance",
+        "name": "Chest of Abundance",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28945
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28945-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28945,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-colourful-carpet",
+        "name": "Colourful Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24417
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24417-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24417,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24417-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24417,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-colourful-pom-pom-carpet",
+        "name": "Colourful Pom-Pom Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35889
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35889-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35889,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-35889-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35889,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-crested-carpet",
+        "name": "Crested Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26152
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26152-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26152,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-26152-5",
+            "price": 125,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26152,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-crimson-carpet",
+        "name": "Crimson Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23707
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23707-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23707,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-23707-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23707,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-crystal-lamp",
+        "name": "Crystal Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31196
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31196-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31196,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-curly-hortensis-lamp",
+        "name": "Curly Hortensis Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31695
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31695-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31695,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-dark-parquet",
+        "name": "Dark Parquet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23713
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23713-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23713,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-decorated-carpet",
+        "name": "Decorated Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26154
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26154-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26154,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-26154-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26154,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-demon-baller",
+        "name": "Demon Baller",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36646
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36646-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36646,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-demon-pet",
+        "name": "Demon Pet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26173
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26173-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26173,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-demon-skull",
+        "name": "Demon Skull",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31212
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31212-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31212,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-demon-statue",
+        "name": "Demon Statue",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34058
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34058-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34058,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-diamond-carpet",
+        "name": "Diamond Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24420
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24420-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24420,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24420-5",
+            "price": 125,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24420,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-djinn-lamp",
+        "name": "Djinn Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42363
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42363-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42363,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-dog-house",
+        "name": "Dog House",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23697
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23697-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23697,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-dragon-plant",
+        "name": "Dragon Plant",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37021
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37021-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37021,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-drawing-board",
+        "name": "Drawing Board",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34062
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34062-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34062,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-dungeon-scene-painting",
+        "name": "Dungeon Scene Painting",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27697
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27697-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27697,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-emerald-carpet",
+        "name": "Emerald Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23711
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23711-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23711,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-23711-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23711,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-fennec",
+        "name": "Fennec",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{useicon} to trigger an animation feed it with meat, ham, dragon ham, haunch of a boar, roasted meat or bug meat\n{info} can be fed once every 65 seconds\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28694
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28694-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28694,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-ferumbras-dust",
+        "name": "Ferumbras Dust",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{backtoinbox}\n{useicon} house owner can use it to display a duplicate of an owned Ferumbras' Hat on this bust - also works if the character has already turned Ferumbras' hat in to earn the outfit addon",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27692
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27692-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27692,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-ferumbras-portrait",
+        "name": "Ferumbras Portrait",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27700
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27700-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27700,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-ferumbras-snowman",
+        "name": "Ferumbras Snowman",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32786
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32786-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32786,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-filled-shoes",
+        "name": "Festive Filled Shoes",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30227
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30227-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30227,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-fireplace",
+        "name": "Festive Fireplace",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30233
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30233-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30233,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-pile-of-presents",
+        "name": "Festive Pile of Presents",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30245
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30245-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30245,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-pyramid",
+        "name": "Festive Pyramid",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30248
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30248-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30248,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-rocking-chair",
+        "name": "Festive Rocking Chair",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30241
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30241-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30241,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-sack-of-presents",
+        "name": "Festive Sack of Presents",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30247
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30247-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30247,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-sleigh",
+        "name": "Festive Sleigh",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30244
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30244-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30244,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-table",
+        "name": "Festive Table",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30229
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30229-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30229,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-festive-tree",
+        "name": "Festive Tree",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 30237
+        },
+        "subOffers": [
+          {
+            "id": "house-item-30237-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 30237,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-fish-hook-board",
+        "name": "Fish Hook Board",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42304
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42304-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42304,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-fish-tank",
+        "name": "Fish Tank",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23691
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23691-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23691,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-flowery-carpet",
+        "name": "Flowery Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24416
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24416-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24416,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24416-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24416,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-flowery-grass",
+        "name": "Flowery Grass",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39797
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39797-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39797,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-39797-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39797,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-fluorescent-fungi",
+        "name": "Fluorescent Fungi",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28920
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28920-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28920,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-forge",
+        "name": "Forge",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35155
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35155-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35155,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-forget-me-not",
+        "name": "Forget-Me-Not",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28698
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28698-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28698,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-four-hearts-lamp",
+        "name": "Four Hearts Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 33028
+        },
+        "subOffers": [
+          {
+            "id": "house-item-33028-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 33028,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-fur-carpet",
+        "name": "Fur Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24419
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24419-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24419,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24419-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24419,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-gloomy-poisonous-fungi",
+        "name": "Gloomy Poisonous Fungi",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28926
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28926-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28926,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-glowing-sulphur-fungi",
+        "name": "Glowing Sulphur Fungi",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28924
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28924-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28924,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-glowworms",
+        "name": "Glowworms",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34270
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34270-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34270,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-golden-demon-skull",
+        "name": "Golden Demon Skull",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31211
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31211-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31211,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-golden-dragon-tapestry",
+        "name": "Golden Dragon Tapestry",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{info} drag the unwrapped tapestry to a wall to hang it up\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23723
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23723-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23723,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-golden-minotaur-skull",
+        "name": "Golden Minotaur Skull",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31209
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31209-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31209,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-grandiose-carpet",
+        "name": "Grandiose Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35942
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35942-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35942,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-grandiose-lamp",
+        "name": "Grandiose Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35943
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35943-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35943,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-grandiose-painting",
+        "name": "Grandiose Painting",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35940
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35940-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35940,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-grass",
+        "name": "Grass",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37019
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37019-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37019,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-green-round-cushion",
+        "name": "Green Round Cushion",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31221
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31221-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31221,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-green-square-cushion",
+        "name": "Green Square Cushion",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31218
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31218-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31218,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-grinding-wheel",
+        "name": "Grinding Wheel",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35177
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35177-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35177,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-hamster-in-a-wheel",
+        "name": "Hamster in a Wheel",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23444
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23444-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23444,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-heart-lamp",
+        "name": "Heart Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 33026
+        },
+        "subOffers": [
+          {
+            "id": "house-item-33026-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 33026,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-hedgehog",
+        "name": "Hedgehog",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31680
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31680-1",
+            "price": 150,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31680,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-hrodmir-weapons-rack",
+        "name": "Hrodmir Weapons Rack",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26081
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26081-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26081,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-ice-chandelier",
+        "name": "Ice_Chandelier",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 32784
+        },
+        "subOffers": [
+          {
+            "id": "house-item-32784-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 32784,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-idol-lamp",
+        "name": "Idol Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31214
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31214-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31214,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-incomprehensible-riches",
+        "name": "Incomprehensible Riches",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28944
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28944-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28944,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-king-tibianus-bust",
+        "name": "King Tibianus Bust",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27702
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27702-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27702,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-kitchen-clock",
+        "name": "Kitchen Clock",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34309
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34309-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34309,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-kitchen-lamp",
+        "name": "Kitchen Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34304
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34304-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34304,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-kitchen-shelf",
+        "name": "Kitchen Shelf",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34282
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34282-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34282,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-knightly-candelabra",
+        "name": "Knightly Candelabra",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39498
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39498-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39498,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-knightly-candle-holder",
+        "name": "Knightly Candle Holder",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39500
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39500-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39500,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-knightly-fire-bowl",
+        "name": "Knightly Fire Bowl",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39443
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39443-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39443,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-knightly-guard",
+        "name": "Knightly Guard",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39508
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39508-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39508,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-knightly-sword-lamp",
+        "name": "Knightly Sword Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39496
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39496-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39496,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-knightly-wall-lamp",
+        "name": "Knightly Wall Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39446
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39446-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39446,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-kraken-buoy-lamp",
+        "name": "Kraken Buoy Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37187
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37187-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37187,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-kraken-shelf",
+        "name": "Kraken Shelf",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37189
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37189-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37189,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-kraken-tentacle-lamp",
+        "name": "Kraken Tentacle Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37520
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37520-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37520,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-kraken-watcher-lamp",
+        "name": "Kraken Watcher Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37700
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37700-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37700,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-life-buoy",
+        "name": "Life Buoy",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42305
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42305-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42305,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-light-of-change",
+        "name": "Light of Change",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27667
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27667-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27667,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-light-parquet",
+        "name": "Light Parquet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23712
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23712-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23712,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-lit-predator-lamp",
+        "name": "Lit Predator Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23436
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23436-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23436,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-lit-protectress-lamp",
+        "name": "Lit Protectress Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23440
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23440-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23440,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-lit-skull-lamp",
+        "name": "Lit Skull Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24435
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24435-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24435,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-little-big-flower-lamp",
+        "name": "Little Big Flower Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31697
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31697-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31697,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-loose-opulent-floor-intarsia",
+        "name": "Loose Opulent Floor Intarsia",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42338
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42338-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42338,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-lordly-tapestry",
+        "name": "Lordly Tapestry",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23448
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23448-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23448,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-luminescent-fungi",
+        "name": "Luminescent Fungi",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28922
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28922-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28922,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-marble-floor",
+        "name": "Marble Floor",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23720
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23720-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23720,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-menacing-tapestry",
+        "name": "Menacing Tapestry",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23449
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23449-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23449,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-merchant-portrait",
+        "name": "Merchant Portrait",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42343
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42343-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42343,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-mermaid-figure-head",
+        "name": "Mermaid Figure Head",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31949
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31949-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31949,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-metal-wall-lamp",
+        "name": "Metal Wall Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35161
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35161-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35161,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-midnight-panther-rug",
+        "name": "Midnight Panther Rug",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35895
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35895-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35895,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-minotaur-skull",
+        "name": "Minotaur Skull",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31210
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31210-1",
+            "price": 70,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31210,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-model-ship-lamp",
+        "name": "Model Ship Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31942
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31942-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31942,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-monkey",
+        "name": "Monkey",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31955
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31955-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31955,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-moon-carpet",
+        "name": "Moon Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35898
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35898-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35898,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-mystic-carpet",
+        "name": "Mystic Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26118
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26118-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26118,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-26118-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26118,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-natural-pom-pom-carpet",
+        "name": "Natural Pom-Pom Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35891
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35891-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35891,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-night-sky-carpet",
+        "name": "Night Sky Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24422
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24422-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24422,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24422-5",
+            "price": 125,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24422,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-octoputz",
+        "name": "Octoputz",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37211
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37211-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37211,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-opulent-floor-intarsia",
+        "name": "Opulent Floor Intarsia",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42339
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42339-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42339,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-opulent-floor-lamp",
+        "name": "Opulent Floor Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42348
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42348-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42348,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-opulent-wooden-floor",
+        "name": "Opulent Wooden Floor",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42337
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42337-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42337,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-opulent-wood-floor-planks",
+        "name": "Opulent Wood Floor Planks",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42336
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42336-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42336,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-oven",
+        "name": "Oven",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37272
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37272-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37272,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-owin-rug",
+        "name": "Owin Rug",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35893
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35893-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35893,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-painting-of-tibiasula",
+        "name": "Painting of Tibiasula",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28947
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28947-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28947,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pair-of-bellows",
+        "name": "Pair of Bellows",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35181
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35181-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35181,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-parrot",
+        "name": "Parrot",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24432
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24432-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24432,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-rolled-up-opulent-carpet",
+        "name": "Rolled-Up Opulent Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42340
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42340-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42340,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-42340-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42340,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-patterned-carpet",
+        "name": "Patterned Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24421
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24421-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24421,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24421-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24421,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pile-of-alchemistic-books",
+        "name": "Pile of Alchemistic Books",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27687
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27687-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27687,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pile-of-riches",
+        "name": "Pile of Riches",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42342
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42342-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42342,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pink-roses",
+        "name": "Pink Roses",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25218
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25218-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25218,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pink-shroom-lamp",
+        "name": "Pink Shroom Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37018
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37018-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37018,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pirate-flag",
+        "name": "Pirate Flag",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31945
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31945-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31945,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pirate-ship-ballista",
+        "name": "Pirate Ship Ballista",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31933
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31933-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31933,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pirate-skeleton-cage",
+        "name": "Pirate Skeleton Cage",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31947
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31947-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31947,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pirate-treasure-chest",
+        "name": "Pirate Treasure Chest",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31936
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31936-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31936,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-pirate-treasure-map",
+        "name": "Pirate Treasure Map",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31946
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31946-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31946,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-podium-of-renown",
+        "name": "Podium of Renown",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35973
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35973-1",
+            "price": 500,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35973,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-podium-of-tenacity",
+        "name": "Podium of Tenacity",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42367
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42367-1",
+            "price": 375,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42367,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-portable-aqueduct",
+        "name": "Portable Aqueduct",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35949
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35949-1",
+            "price": 250,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35949,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-purple-flower-lamp",
+        "name": "Purple Flower Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39795
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39795-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39795,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-queen-eloise-bust",
+        "name": "Queen Eloise Bust",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27695
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27695-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27695,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-red-geranium",
+        "name": "Red Geranium",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28699
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28699-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28699,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-red-roses",
+        "name": "Red Roses",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25219
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25219-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25219,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-romantic-carpet",
+        "name": "Romantic Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35899
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35899-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35899,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sabertooth-skull",
+        "name": "Sabertooth Skull",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34060
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34060-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34060,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sarcophagus",
+        "name": "Sarcophagus",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31683
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31683-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31683,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-scales-wall-lamp",
+        "name": "Scales Wall Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42345
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42345-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42345,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sculpture-of-a-fox",
+        "name": "Sculpture of a Fox",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37811
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37811-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37811,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sculpture-of-a-noblewoman",
+        "name": "Sculpture of a Noblewoman",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34064
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34064-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34064,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sculpture-of-an-octoputz",
+        "name": "Sculpture of an Octoputz",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37205
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37205-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37205,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sea-devil-wall-lamp",
+        "name": "Sea-devil Wall Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42300
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42300-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42300,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-seafood-bucket",
+        "name": "Seafood Bucket",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42301
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42301-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42301,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-seashell-lamp",
+        "name": "Seashell Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42292
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42292-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42292,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-shaggy-carpet",
+        "name": "Shaggy Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26116
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26116-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26116,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-26116-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26116,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-ship-bell",
+        "name": "Ship Bell",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42303
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42303-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42303,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-ship-s-wheel",
+        "name": "Ship's Wheel",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31948
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31948-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31948,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-small-hearts-lamp",
+        "name": "Small Hearts Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 33030
+        },
+        "subOffers": [
+          {
+            "id": "house-item-33030-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 33030,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-star-carpet",
+        "name": "Star Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24423
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24423-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24423,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24423-5",
+            "price": 125,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24423,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-stone-tiles",
+        "name": "Stone Tiles",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26121
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26121-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26121,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-striped-carpet",
+        "name": "Striped Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 24418
+        },
+        "subOffers": [
+          {
+            "id": "house-item-24418-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24418,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-24418-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 24418,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-stuffed-bear-display",
+        "name": "Stuffed Bear Display",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28928
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28928-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28928,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-stuffed-teddy-display",
+        "name": "Stuffed Teddy Display",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 28930
+        },
+        "subOffers": [
+          {
+            "id": "house-item-28930-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 28930,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sulphur-blossom-lamp",
+        "name": "Sulphur Blossom Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31723
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31723-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31723,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-sword-tapestry",
+        "name": "Sword Tapestry",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23724
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23724-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23724,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-tendrils",
+        "name": "Tendrils",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39803
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39803-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39803,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-tentacle-lamp",
+        "name": "Tentacle Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 42298
+        },
+        "subOffers": [
+          {
+            "id": "house-item-42298-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 42298,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-terrarium-snake",
+        "name": "Terrarium Snake",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26171
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26171-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26171,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-terrarium-spider",
+        "name": "Terrarium Spider",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26078
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26078-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26078,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-tibia-streets-painting",
+        "name": "Tibia Streets Painting",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27699
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27699-1",
+            "price": 100,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27699,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-torch-of-change",
+        "name": "Torch of Change",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 27673
+        },
+        "subOffers": [
+          {
+            "id": "house-item-27673-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 27673,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-turquoise-flower-lamp",
+        "name": "Turquoise Flower Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39793
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39793-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39793,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-vegetable-basket",
+        "name": "Vegetable Basket",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34302
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34302-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34302,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-vengothic-lamp",
+        "name": "Vengothic Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25210
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25210-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25210,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-venorean-table-clock",
+        "name": "Venorean Table Clock",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26112
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26112-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26112,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-verdant-carpet",
+        "name": "Verdant Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26114
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26114-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26114,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-26114-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26114,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-violet-round-cushion",
+        "name": "Violet Round Cushion",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31220
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31220-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31220,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-violet-square-cushion",
+        "name": "Violet Square Cushion",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31217
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31217-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31217,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-volcanic-basin",
+        "name": "Volcanic Basin",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36618
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36618-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36618,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-volcanic-bulb",
+        "name": "Volcanic Bulb",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36624
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36624-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36624,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-volcanic-mirror",
+        "name": "Volcanic Mirror",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36626
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36626-1",
+            "price": 120,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36626,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-volcanic-sphere",
+        "name": "Volcanic Sphere",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 36620
+        },
+        "subOffers": [
+          {
+            "id": "house-item-36620-1",
+            "price": 90,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 36620,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-wall-fern",
+        "name": "Wall Fern",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39800
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39800-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39800,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-wall-flowers",
+        "name": "Wall Flowers",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39799
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39799-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39799,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-wall-leaves",
+        "name": "Wall Leaves",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39801
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39801-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39801,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-wallcupboard",
+        "name": "Wallcupboard",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 34280
+        },
+        "subOffers": [
+          {
+            "id": "house-item-34280-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 34280,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-water-bucket",
+        "name": "Water Bucket",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 35188
+        },
+        "subOffers": [
+          {
+            "id": "house-item-35188-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 35188,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-water-nymph",
+        "name": "Water Nymph",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 39805
+        },
+        "subOffers": [
+          {
+            "id": "house-item-39805-1",
+            "price": 180,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 39805,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-wheat-carpet",
+        "name": "Wheat Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26151
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26151-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26151,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-26151-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26151,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-white-fur-carpet",
+        "name": "White Fur Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23432
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23432-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23432,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-23432-5",
+            "price": 150,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23432,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-white-shark-trophy",
+        "name": "White Shark Trophy",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 31951
+        },
+        "subOffers": [
+          {
+            "id": "house-item-31951-1",
+            "price": 80,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 31951,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-wooden-planks",
+        "name": "Wooden Planks",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 26123
+        },
+        "subOffers": [
+          {
+            "id": "house-item-26123-1",
+            "price": 25,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26123,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-26123-5",
+            "price": 125,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 26123,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-wooden-sandals",
+        "name": "Wooden Sandals",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37801
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37801-1",
+            "price": 40,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37801,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-yalaharian-carpet",
+        "name": "Yalaharian Carpet",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 23431
+        },
+        "subOffers": [
+          {
+            "id": "house-item-23431-1",
+            "price": 35,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23431,
+              "count": 1
+            }
+          },
+          {
+            "id": "house-item-23431-5",
+            "price": 175,
+            "count": 5,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 23431,
+              "count": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-yellow-roses",
+        "name": "Yellow Roses",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 25220
+        },
+        "subOffers": [
+          {
+            "id": "house-item-25220-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 25220,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-yellow-shroom-lamp",
+        "name": "Yellow Shroom Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37015
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37015-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37015,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-bamboo-tiles-1",
+        "name": "Zaoan Bamboo Tiles 1",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37763
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37763-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37763,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-bamboo-tiles-2",
+        "name": "Zaoan Bamboo Tiles 2",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37764
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37764-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37764,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-bamboo-tiles-3",
+        "name": "Zaoan Bamboo Tiles 3",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37765
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37765-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37765,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-bamboo-tiles-4",
+        "name": "Zaoan Bamboo Tiles 4",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37766
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37766-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37766,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-bamboo-tiles-5",
+        "name": "Zaoan Bamboo Tiles 5",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37767
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37767-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37767,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-bamboo-tiles-6",
+        "name": "Zaoan Bamboo Tiles 6",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37768
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37768-1",
+            "price": 30,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37768,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-bonsai",
+        "name": "Zaoan Bonsai",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37798
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37798-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37798,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-divider",
+        "name": "Zaoan Divider",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37815
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37815-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37815,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-drawing",
+        "name": "Zaoan Drawing",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37800
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37800-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37800,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-panel",
+        "name": "Zaoan Panel",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37776
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37776-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37776,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-panel-base",
+        "name": "Zaoan Panel Base",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37775
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37775-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37775,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-paravent",
+        "name": "Zaoan Paravent",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37784
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37784-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37784,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-pot-bamboo",
+        "name": "Zaoan Pot Bamboo",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37799
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37799-1",
+            "price": 50,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37799,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-wall-lamp",
+        "name": "Zaoan Wall Lamp",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37806
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37806-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37806,
+              "count": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "decorations-zaoan-wall-lamps",
+        "name": "Zaoan Wall Lamps",
+        "kind": "house-item",
+        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "icon": {
+          "kind": "item",
+          "itemTypeId": 37808
+        },
+        "subOffers": [
+          {
+            "id": "house-item-37808-1",
+            "price": 60,
+            "grant": {
+              "kind": "house-item",
+              "itemTypeId": 37808,
+              "count": 1
             }
           }
         ]

@@ -71,6 +71,7 @@ function makeHarness(options: {
   doorLevels?: ReadonlyMap<string, number>;
   chests?: ReadonlyMap<string, ChestDefinition>;
   width?: number;
+  decorateAccess?: (characterId: string, position: Position) => boolean;
 }) {
   const lootedChests: Array<{ characterId: string; uniqueId: number }> = [];
   const world = new World(
@@ -107,6 +108,10 @@ function makeHarness(options: {
     (_session, player, chest) => {
       lootedChests.push({ characterId: player.id, uniqueId: chest.uniqueId });
     },
+    undefined,
+    undefined,
+    undefined,
+    options.decorateAccess,
   );
   const makeSession = async (
     characterId: string,
@@ -881,5 +886,92 @@ describe("WorldActionRegistry fail-closed routing", () => {
     ladderWorld.addPlayer(ladderPlayer);
     session.playerId = "climber";
     expect(ladderRegistry.handleUseMap(session, ladderTile, 1_000)).toBe(false);
+  });
+});
+
+describe("WorldActionRegistry decoration kits", () => {
+  const DECORATION_KIT = 23_398;
+  const DEMON_EXERCISE_DUMMY = 28_561;
+
+  it("unwraps a kit into its furniture for someone who may redecorate", async () => {
+    const harness = makeHarness({
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(DECORATION_KIT, TILE, {
+            unwrapTo: DEMON_EXERCISE_DUMMY,
+          }),
+        },
+      ],
+      decorateAccess: () => true,
+    });
+    const { session } = await harness.makeSession("owner", { x: 5, y: 5, z: 7 });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(tileItemIds(harness, TILE)).toEqual([DEMON_EXERCISE_DUMMY]);
+    await harness.items.stopPersists();
+    // The kit's routing attributes are gone with the kit.
+    expect(harness.store.allItems()[0]).toMatchObject({
+      typeId: DEMON_EXERCISE_DUMMY,
+      attributes: {},
+    });
+  });
+
+  it("refuses a guest and anyone outside a house they may redecorate", async () => {
+    const harness = makeHarness({
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(DECORATION_KIT, TILE, {
+            unwrapTo: DEMON_EXERCISE_DUMMY,
+          }),
+        },
+      ],
+      decorateAccess: () => false,
+    });
+    const { session, sent } = await harness.makeSession("guest", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "combat-log",
+      text: "Unwrap it in a house you own.",
+    });
+    expect(tileItemIds(harness, TILE)).toEqual([DECORATION_KIT]);
+  });
+
+  it("fails closed when no house service is wired at all", async () => {
+    const harness = makeHarness({
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(DECORATION_KIT, TILE, {
+            unwrapTo: DEMON_EXERCISE_DUMMY,
+          }),
+        },
+      ],
+    });
+    const { session } = await harness.makeSession("actor", { x: 5, y: 5, z: 7 });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(tileItemIds(harness, TILE)).toEqual([DECORATION_KIT]);
+  });
+
+  it("treats a kit without a furniture target as unsupported", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(DECORATION_KIT, TILE) }],
+      decorateAccess: () => true,
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    expect(tileItemIds(harness, TILE)).toEqual([DECORATION_KIT]);
   });
 });

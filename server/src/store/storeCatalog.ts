@@ -47,6 +47,16 @@ export type StoreGrant =
       readonly itemTypeId: number;
       readonly charges: number;
     }
+  | {
+      /**
+       * House furniture sold as wrapped decoration kits, Canary's
+       * OFFER_TYPE_HOUSE: the buyer receives `count` kits that unwrap into
+       * `itemTypeId` on an owned house tile.
+       */
+      readonly kind: "house-item";
+      readonly itemTypeId: number;
+      readonly count: number;
+    }
   | { readonly kind: "prey-wildcard"; readonly count: number }
   | {
       readonly kind:
@@ -128,23 +138,29 @@ export const STORE_HOME_PRODUCT_IDS: ReadonlyArray<string> = [
 
 /** The category tree, as the client's left-hand list needs it. */
 export function storeCategoryTree(
-  spriteIdOf: (itemTypeId: number) => number,
+  itemIconOf: (itemTypeId: number) => StoreItemIconIds,
 ): StoreCategory[] {
   return STORE_CATEGORIES.map((category) => ({
     id: category.id,
     name: category.name,
     parentId: category.parentId,
-    icon: toStoreIcon(category.icon, spriteIdOf),
+    icon: toStoreIcon(category.icon, itemIconOf),
   }));
 }
 
-/** Resolves an item icon's sprite; other icon kinds pass through unchanged. */
+/** The ids an item icon carries: its atlas sprite and its appearance. */
+export interface StoreItemIconIds {
+  readonly spriteId: number;
+  readonly clientId: number;
+}
+
+/** Resolves an item icon's ids; other icon kinds pass through unchanged. */
 function toStoreIcon(
   icon: StoreCatalogIcon,
-  spriteIdOf: (itemTypeId: number) => number,
+  itemIconOf: (itemTypeId: number) => StoreItemIconIds,
 ): StoreIcon {
   return icon.kind === "item"
-    ? { kind: "item", spriteId: spriteIdOf(icon.itemTypeId) }
+    ? { kind: "item", ...itemIconOf(icon.itemTypeId) }
     : icon;
 }
 
@@ -166,13 +182,13 @@ export interface StoreOfferAdjustment {
 export function toStoreProduct(
   product: StoreCatalogProduct,
   adjustments: ReadonlyMap<string, StoreOfferAdjustment>,
-  spriteIdOf: (itemTypeId: number) => number,
+  itemIconOf: (itemTypeId: number) => StoreItemIconIds,
 ): StoreProduct {
   return {
     id: product.id,
     name: product.name,
     kind: product.kind,
-    icon: toStoreIcon(product.icon, spriteIdOf),
+    icon: toStoreIcon(product.icon, itemIconOf),
     subOffers: product.subOffers.map((offer) => {
       const adjustment = adjustments.get(offer.id);
       return {

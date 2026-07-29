@@ -98,6 +98,12 @@ export interface ItemStore {
     count: number,
     reason: "rune" | "ammunition" | "break" | "food",
   ): Promise<ItemMutation>;
+  /** Spends one charge; the item is destroyed when the last charge goes. */
+  consumeCharge(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+  ): Promise<ItemMutation>;
   usePotion(request: PotionUseRequest): Promise<PotionUseResult>;
   conjure(
     characterId: string,

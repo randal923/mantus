@@ -1383,3 +1383,151 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   WSL distro), so every delivery leg's transaction, concurrency and rollback
   behaviour is asserted only by the tests as written, not by execution. They
   must be run before this is trusted. Remaining gaps are in `TODO.md`.
+
+---
+
+## Exercise-weapon training + animated item icons (2026-07-29, Feature 72 slice)
+
+- **Problem**: exercise weapons did nothing. Right-clicking one tried to equip
+  it instead of raising the use-with crosshair, no handler ever consumed the
+  intent, and the item icons sat frozen on their first sprite even though the
+  DAT gives them five phases. The same freeze hit every animated item —
+  supreme/ultimate potions and health/mana kegs (12 phases each), water, fires.
+  The store's `{character}`/`{storeinbox}` description icons also tripped
+  Next's aspect-ratio warning on every offer.
+- **What changed**:
+  - `server/src/action/ExerciseTrainingHandler.ts` ports Canary's
+    `exercise_training_weapons.lua`: use-with on a dummy starts a scheduled
+    loop that re-validates the dummy, the protection zone, and the carried
+    weapon *on the tick that awards*, spends one charge atomically, then awards
+    skill tries or mana spent from `computeExerciseTrainingGain` and draws
+    CONST_ME_HITAREA on the dummy plus the weapon's distance missile. Interval
+    is `exerciseTrainingIntervalMs(attackSpeedMs, rates.exerciseTraining)`.
+    Start is gated on Canary's 10s exhaustion and its per-house-dummy cap.
+  - Weapon and dummy tables transcribed to
+    `server/src/action/getExerciseWeaponDefinition.ts` (all four charge tiers
+    per weapon) and `getExerciseDummyRate.ts` (rate 100 free / 110 house).
+  - New atomic charge spend: `ItemStore.consumeCharge` →
+    `PgItemUseOps.consumeCharge` (locks character + row, reads charges under
+    the lock, decrements, and on the last charge deletes the row and writes an
+    `item-destroyed` audit in the same transaction) + the memory-store twin +
+    `ItemIntentHandler.consumeCharge`. `server/src/item/chargesOf.ts` falls
+    back to the catalog's charge count for items minted before the attribute.
+  - `projectItem` gives exercise weapons `useKind: "useWith"`, so the existing
+    client crosshair flow works with no client change.
+  - Exercise dummies were invisible to the server: bolted-down scenery is
+    neither movable nor pickupable, so the converter classified it as static
+    client art and never emitted it. `"dummy"` joined `MUTABLE_TYPES` in
+    `getMapItemSemantics` (an *interactive* classification is not enough —
+    `loadMapItems` only surfaces mutable entries), and the map was reconverted:
+    96,632 → 96,646 world items, and all 14 dummies now resolve through
+    `World.getMapItems` on protection-zone tiles.
+  - `tools/buildItemAnimations.mjs` emits
+    `client/public/assets/item-animations.json` (2,017 sequences, 37 ambiguous
+    first sprites dropped), and `itemSpriteAnimationStore` +
+    `useAnimatedSpriteId` drive `SpriteIcon` off one shared clock that only
+    wakes the icons that actually animate. Every DOM item icon — inventory,
+    store, shop, depot, forge, wiki, action bar — now animates.
+  - Frame duration moved into `client/lib/render/LEGACY_FRAME_DURATION_MS.ts`
+    at 100ms and shared with `AssetStore`'s synthesized legacy animation
+    (was 500ms, which read as slow motion; the ripped legacy DAT carries no
+    per-phase timings, and parsing it with `--enhanced-animations` fails, so
+    a fallback is all there is).
+  - `StoreDescription` icons get `self-start`; Tailwind's preflight leaves
+    images at `height: auto`, so the flex row was stretching them and Next
+    saw a changed height with an unchanged width.
+- **Files touched**: `server/src/action/{ExerciseTrainingHandler,
+  getExerciseWeaponDefinition,getExerciseDummyRate}.ts`,
+  `server/src/item/{chargesOf,ItemStore,PgItemStore,PgItemUseOps,
+  MemoryItemStore,ItemIntentHandler,projectItem}.ts`,
+  `server/src/item/sql/consumeChargeUpdate.ts`, `server/src/GameServer.ts`,
+  `tools/{getMapItemSemantics,buildItemAnimations}.mjs`,
+  `client/lib/render/{itemSpriteAnimationStore,useAnimatedSpriteId,
+  LEGACY_FRAME_DURATION_MS,AssetStore}.ts`,
+  `client/components/inventory/SpriteIcon.tsx`,
+  `client/components/store/StoreDescription.tsx`, `package.json`,
+  regenerated map + minimap + `client/public/assets/item-animations.json`.
+- **Upgrade note**: reconverting the map bumps
+  `mapVersion = sha256(mapSha256:itemsSha256)`, so any database holding
+  persisted world-item delta rows refuses the boot gate with "persisted world
+  items require reconciliation for this map version". Run
+  `yarn workspace server db:reconcile-world-seed` with the server down. Done
+  here: 7 stale rows (levers/doors, all still seeded and in place, no
+  children) deleted in one serializable transaction with 7 `item-destroyed`
+  audit rows; those world items revert to their seeded state.
+- **Verified**: the four Thais/Carlin/Port Hope dummies resolve through
+  `World.getMapItems` against the real reconverted map, on protection-zone
+  tiles, at rate 100. `yarn workspace server test` 1331 passed (8 new
+  `ExerciseTrainingHandler` tests covering the one-charge-per-interval rule,
+  the PZ drop-out, out-of-reach melee, ranged rod training, and weapon
+  destruction on the last charge); client unit 271 passed (5 new
+  `itemSpriteAnimationStore` tests); both typechecks clean; client lint clean;
+  `node --test tools/getMapItemSemantics.test.mjs` passed.
+- **Residual risk**: the charge-spend path is covered by the memory store
+  only — `PgItemUseOps.consumeCharge` has no integration test and no Postgres
+  is reachable here, so its transaction and last-charge deletion are asserted
+  by reading, not by execution. Canary's house-membership check for house
+  dummies is not implemented (only the per-dummy trainer cap); recorded
+  against Feature 72.
+
+---
+
+## Item animations run on Tibia's own phase timings (2026-07-29, Feature 72 slice)
+
+- **Problem**: every animated item and effect played at one invented rate. The
+  legacy 15.11 `Tibia.dat` we render from stores a phase count and no timings
+  (parsing it with `--enhanced-animations` fails), so `AssetStore` synthesised
+  a flat schedule — 500ms per phase originally, dropped to 100ms because 500
+  read as slow motion. Neither is what Tibia plays: measured against Canary's
+  protobuf `data/items/appearances.dat`, the flat 100ms was **faster** than the
+  real schedule for 3,483 of 4,994 animated appearances and slower for 131, and
+  it flattened the shape that makes Tibia's animations read correctly — a long
+  idle frame followed by a fast glint (924 items vary their duration per phase;
+  the durable exercise bow is `500,100,100,100`). Ping-pong and play-once loop
+  types were lost the same way, and `getItemAnimationTimeline` still carried a
+  private 500ms fallback that never got the 100ms update.
+- **What changed**:
+  - `tools/importAppearanceAnimations.mjs` walks the pinned protobuf
+    (hash-checked against `content/source-manifest.json`) and emits
+    `client/public/assets/appearance-animations.json`: per-phase min/max
+    durations, `synchronized`, start phase and loop type for **4,887 items and
+    198 effects** — every animated appearance the DAT agrees with. 107 items
+    and 41 effects whose protobuf phase count disagrees with the DAT are
+    skipped, so nothing can animate on another object's clock.
+  - `AssetStore` decodes that table (`decodeAppearanceAnimation.ts`) into the
+    `TibiaAnimation` the renderer already consumed, keeping the flat fallback
+    only for objects neither source describes. Water is 200ms synchronized
+    again, `CombatEffectRenderer` picks up real effect timings (many are
+    40–80ms, not 100), and `getItemAnimationTimeline` now shares
+    `LEGACY_FRAME_DURATION_MS` instead of its own 500.
+  - `tools/buildItemAnimations.mjs` folds the same schedules into the DOM icon
+    table (`item-animations.json`, now formatVersion 2: `{f, d}` per sequence,
+    1,598 of 2,012 on a non-default schedule). Ping-pong sequences are expanded
+    into the order they play and 0ms terminal phases dropped, since an icon
+    loops forever.
+  - `itemSpriteAnimationStore` replaced its single global `setInterval` with a
+    time-based clock: it resolves each mounted icon's frame from elapsed time
+    (`resolveSpriteFrame.ts`) and sleeps until the *next frame boundary of a
+    mounted icon*, so a 2s idle phase costs one wake, not twenty, and only
+    icons whose frame actually changed re-render.
+  - `yarn animations:import <canary-checkout|appearances.dat>` documented in
+    `map/README.md` alongside `yarn items:animations`.
+- **Files touched**: `tools/{importAppearanceAnimations,buildItemAnimations}.mjs`,
+  `client/lib/render/{AssetStore,decodeAppearanceAnimation,resolveSpriteFrame,
+  itemSpriteAnimationStore,getItemAnimationTimeline,LEGACY_FRAME_DURATION_MS}.ts`,
+  `client/public/assets/{appearance-animations,item-animations}.json`,
+  `package.json`, `map/README.md`, `TODO.md`.
+- **Verified**: `yarn animations:import` reproduces the pinned
+  `aa44a154…` hash and covers 4,887/4,887 animated items and 198/198 animated
+  effects; spot-checked against the real client's values (water 622/629/4597 =
+  200ms synchronized, exercise club = 100ms, durable exercise bow =
+  500/100/100/100 ping-pong-free, arcanomancer folio = 50ms). Client unit 275
+  passed (4 new: per-phase schedules, sleep-until-boundary, and
+  `decodeAppearanceAnimation`); client typecheck and lint clean.
+- **Residual risk**: outfits are untouched — their protobuf appearances split
+  into idle/walking frame groups whose phase counts do not match the legacy
+  DAT's single group, so 261 of 275 were rejected by the phase-count guard;
+  recorded in `TODO.md`. Timing is decoration only: a missing or stale
+  `appearance-animations.json` degrades to the flat fallback rather than
+  failing the catalog load, which means an asset re-rip that changes phase
+  counts silently loses schedules until the table is rebuilt.

@@ -36,7 +36,11 @@ export function StoreProductIcon({ icon, size }: StoreProductIconProps) {
         className="flex items-center justify-center"
         style={{ width: size, height: size }}
       >
-        <SpriteIcon spriteId={icon.spriteId} scale={Math.max(1, size / 32)} />
+        <SpriteIcon
+          spriteId={icon.spriteId}
+          clientId={icon.clientId}
+          scale={Math.max(1, size / 32)}
+        />
       </span>
     );
   }

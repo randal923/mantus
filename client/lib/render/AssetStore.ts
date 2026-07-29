@@ -1,6 +1,9 @@
 import { Rectangle, Texture } from "pixi.js";
 import { addonPatternYs } from "./addonPatternYs";
+import type { AppearanceAnimationEntry } from "./decodeAppearanceAnimation";
+import { decodeAppearanceAnimation } from "./decodeAppearanceAnimation";
 import { getSpriteIndex } from "./getSpriteIndex";
+import { LEGACY_FRAME_DURATION_MS } from "./LEGACY_FRAME_DURATION_MS";
 
 export interface TibiaFlags {
   ground: boolean;
@@ -36,7 +39,7 @@ export interface TibiaAnimationPhase {
 }
 
 export interface TibiaAnimation {
-  source: "legacy" | "enhanced";
+  source: "legacy" | "enhanced" | "appearances";
   timingMode: "asynchronous" | "synchronized";
   loopType: "infinite" | "counted" | "ping-pong";
   loopCount: number;
@@ -146,13 +149,21 @@ export class AssetStore {
     // Revalidate the version first (no-cache), then fetch the cache-busted
     // catalog files. outfit-colors.json is not part of the dat/spr bundle.
     await this.loadVersion();
-    const [index, objectsFile, palette] = await Promise.all([
+    const [index, objectsFile, palette, timings] = await Promise.all([
       fetch(this.assetUrl("atlas-index.json")).then((r) => r.json()),
       fetch(this.assetUrl("objects.json")).then((r) => r.json()),
       fetch(`${ASSET_BASE}/outfit-colors.json`).then((r) => r.json()),
+      // Tibia's own phase schedules. Timing is decoration: if the table is
+      // missing, everything falls back to one flat rate rather than failing.
+      fetch(this.assetUrl("appearance-animations.json"))
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
     ]);
     this.index = index;
     this.outfitPalette = palette;
+    const schedules = (timings?.animations ?? {}) as Partial<
+      Record<TibiaObject["category"], Record<string, AppearanceAnimationEntry>>
+    >;
     for (const source of objectsFile.objects as Array<
       Omit<TibiaObject, "animation" | "flags"> & {
         animation?: TibiaAnimation;
@@ -160,8 +171,12 @@ export class AssetStore {
           Partial<Pick<TibiaFlags, "lightIntensity" | "lightColor" | "topEffect">>;
       }
     >) {
+      const schedule = schedules[source.category]?.[source.clientId];
       const animation =
         source.animation ??
+        (source.phases > 1 && schedule
+          ? decodeAppearanceAnimation(schedule, source.phases)
+          : null) ??
         (source.category === "item" && source.phases > 1
           ? {
               source: "legacy" as const,
@@ -170,8 +185,8 @@ export class AssetStore {
               loopCount: 0,
               startPhase: 0,
               phases: Array.from({ length: source.phases }, () => ({
-                minimumDurationMs: 500,
-                maximumDurationMs: 500,
+                minimumDurationMs: LEGACY_FRAME_DURATION_MS,
+                maximumDurationMs: LEGACY_FRAME_DURATION_MS,
               })),
             }
           : null);

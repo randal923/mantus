@@ -9,8 +9,10 @@
 // at import time rather than on some player's first purchase.
 //
 // Offer types whose systems this server does not have — blessings, hirelings,
-// charm expansion, instant reward access, house decoration kits, tournament —
-// are skipped by design and listed in the run's summary.
+// charm expansion, instant reward access, beds, casks, tournament — are
+// skipped by design and listed in the run's summary. House furniture and
+// upgrades (exercise dummies, shrines, mailboxes) ARE supported: they deliver
+// as decoration kits that unwrap on an owned house tile.
 //
 // Usage: node tools/importCanaryStoreCatalog.mjs [path-to-canary]
 import { readFileSync, writeFileSync } from "node:fs";
@@ -41,6 +43,9 @@ const MODULES = [
   { module: "consumables_exercise_weapons", id: "exercise-weapons" },
   { module: "cosmetics_outfits", id: "outfits" },
   { module: "cosmetics_mounts", id: "mounts" },
+  { module: "house_upgrades", id: "upgrades" },
+  { module: "house_furniture", id: "furniture" },
+  { module: "house_decorations", id: "decorations" },
   { module: "extras_extras_services", id: "extra-services" },
   { module: "extras_usefull_things", id: "useful-things" },
 ];
@@ -49,7 +54,17 @@ const MODULES = [
 const PARENTS = [
   { id: "consumables", name: "Consumables" },
   { id: "cosmetics", name: "Cosmetics" },
+  { id: "houses", name: "Houses" },
   { id: "extras", name: "Extras" },
+];
+
+/**
+ * Known data bugs in Canary's shipped catalog, corrected at import. The base
+ * "Exercise Wraps" offer names the *durable* wraps id; items.xml says the
+ * 500-charge tier is 50293.
+ */
+const ITEM_ID_CORRECTIONS = [
+  { name: "Exercise Wraps", charges: 500, from: 50_294, to: 50_293 },
 ];
 
 const SYMBOL_BY_KIND = {
@@ -221,13 +236,26 @@ function toGrant(offer, context) {
     type === "OFFER_TYPE_STACKABLE" ||
     type === "OFFER_TYPE_CHARGES"
   ) {
-    const itemTypeId = integerOrNull(offer.itemtype);
-    const itemType = itemTypeId === null ? undefined : itemTypes.get(itemTypeId);
-    if (!itemType) return { skip: `item ${offer.itemtype} is not in the catalog` };
-    if (!itemType.pickupable) return { skip: `item ${itemTypeId} is not pickupable` };
+    let itemTypeId = integerOrNull(offer.itemtype);
     // Ultimate Health Keg spells its charge count `count` where every other
     // keg uses `charges`; both mean "usable N times a piece".
     const charges = integerOrNull(offer.charges) ?? integerOrNull(offer.count);
+    const correction = ITEM_ID_CORRECTIONS.find(
+      (candidate) =>
+        candidate.name === offer.name &&
+        candidate.charges === charges &&
+        candidate.from === itemTypeId,
+    );
+    if (correction) {
+      context.corrections.push(
+        `"${offer.name}" (${charges} charges) named item ${correction.from}; ` +
+          `items.xml says ${correction.to}`,
+      );
+      itemTypeId = correction.to;
+    }
+    const itemType = itemTypeId === null ? undefined : itemTypes.get(itemTypeId);
+    if (!itemType) return { skip: `item ${offer.itemtype} is not in the catalog` };
+    if (!itemType.pickupable) return { skip: `item ${itemTypeId} is not pickupable` };
     if (type === "OFFER_TYPE_CHARGES") {
       if (!charges) return { skip: `item ${itemTypeId} charges offer without charges` };
       return {
@@ -257,6 +285,25 @@ function toGrant(offer, context) {
         count,
         unique: type === "OFFER_TYPE_ITEM_UNIQUE",
       },
+    };
+  }
+
+  if (type === "OFFER_TYPE_HOUSE") {
+    const itemTypeId = integerOrNull(offer.itemtype);
+    const itemType = itemTypeId === null ? undefined : itemTypes.get(itemTypeId);
+    if (!itemType) return { skip: `item ${offer.itemtype} is not in the catalog` };
+    const count = integerOrNull(offer.count) ?? 1;
+    // Casks are one kit carrying hundreds of potion servings; that liquid
+    // system does not exist here, so anything sold by the serving is skipped.
+    if (count > 25) {
+      return { skip: `house item ${itemTypeId} sells ${count} servings (cask)` };
+    }
+    return {
+      kind: "house-item",
+      id: `house-item-${itemTypeId}-${count}`,
+      ...(count > 1 ? { count } : {}),
+      icon: { kind: "item", itemTypeId },
+      grant: { kind: "house-item", itemTypeId, count },
     };
   }
 
@@ -310,6 +357,13 @@ function importCatalog() {
   const productsByCategory = new Map();
   const skipped = [];
   const parentsUsed = new Set();
+  /**
+   * Offer ids must be globally unique — the purchase message names one — but
+   * Canary ships a few products pointing at the same item id ("Heart Table"
+   * reuses Heart Chest's id, "Volcanic Spire" reuses Volcanic Sphere's). The
+   * first product keeps the offer; later collisions are dropped and reported.
+   */
+  const usedOfferIds = new Map();
 
   for (const entry of MODULES) {
     const source = readFileSync(join(catalogRoot, `${entry.module}.lua`), "utf8");
@@ -342,6 +396,17 @@ function importCatalog() {
       // groups by kind so its four durations are one product, as in Tibia.
       const productKey =
         mapped.kind === "premium" ? "premium" : `${mapped.kind}:${name}`;
+      const claimedBy = usedOfferIds.get(mapped.id);
+      if (claimedBy !== undefined && claimedBy !== productKey) {
+        skipped.push({
+          module: entry.module,
+          reason:
+            `offer id ${mapped.id} of "${name}" already belongs to another ` +
+            "product (Canary data bug)",
+        });
+        continue;
+      }
+      usedOfferIds.set(mapped.id, productKey);
       const existing = products.get(productKey);
       const subOffer = {
         id: mapped.id,
@@ -428,11 +493,11 @@ const serialized = `// Generated by tools/importCanaryStoreCatalog.mjs from Cana
 // data/modules/scripts/gamestore/catalog — do not edit by hand.
 //
 // Every entry here is deliverable by this server: item ids exist in the pinned
-// item catalog and are pickupable, look types and mount ids exist in the
-// outfit catalog. Offer types whose systems do not exist yet (blessings,
-// hirelings, charm expansion, instant reward access, house decoration kits,
-// tournament) are absent by design. Behaviour lives in storeCatalog.ts; this
-// file is data only.
+// item catalog and are carriable (house furniture via decoration kits), look
+// types and mount ids exist in the outfit catalog. Offer types whose systems
+// do not exist yet (blessings, hirelings, charm expansion, instant reward
+// access, beds, casks, tournament) are absent by design. Behaviour lives in
+// storeCatalog.ts; this file is data only.
 import type { StoreCatalogCategory } from "./storeCatalog";
 
 export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = ${JSON.stringify(

@@ -125,7 +125,13 @@ export function toItemTooltip(
       ? { vocations: [...item.requirements.vocations] }
       : {}),
     weight: item.weight,
-    ...(item.description ? { description: item.description } : {}),
+    // A row-level description (a decoration kit naming its furniture) beats
+    // the type's own text.
+    ...(typeof instance?.attributes.description === "string"
+      ? { description: instance.attributes.description }
+      : item.description
+        ? { description: item.description }
+        : {}),
     ...(item.charges !== undefined ? { charges: item.charges } : {}),
     ...(item.containerCapacity !== undefined
       ? { containerCapacity: item.containerCapacity }

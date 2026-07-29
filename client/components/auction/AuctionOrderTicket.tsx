@@ -88,7 +88,7 @@ export function AuctionOrderTicket({
         >
           <div className="flex items-center gap-3 rounded-lg border border-ui-stone-light/15 bg-ui-panel-deep/45 p-2.5">
             <span className="flex size-11 shrink-0 items-center justify-center rounded-md border border-ui-stone-light/15 bg-black/40">
-              <SpriteIcon spriteId={item.spriteId} scale={1.1} />
+              <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} scale={1.1} />
             </span>
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-ui-text-bright">

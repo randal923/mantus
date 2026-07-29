@@ -9,6 +9,7 @@ import { rewardDeliveryInsert } from "../../depot/sql/rewardDeliveryInsert";
 import { rewardItemInsert } from "../../depot/sql/rewardItemInsert";
 import { rewardStorageStateLockQuery } from "../../depot/sql/rewardStorageStateLockQuery";
 import { TransactionRollback } from "../../economy/TransactionRollback";
+import { DECORATION_KIT_ITEM_ID } from "../../item/decorationKitItemId";
 import type { Item } from "../../item/Item";
 import type { StoreDeliveryContext } from "./StoreDeliveryContext";
 
@@ -43,12 +44,21 @@ export async function deliverInboxItem(
         readonly kind: "charges";
         readonly itemTypeId: number;
         readonly charges: number;
+      }
+    | {
+        readonly kind: "house-item";
+        readonly itemTypeId: number;
+        readonly count: number;
       },
 ): Promise<{ items: Item[] }> {
-  const type = context.catalog.require(grant.itemTypeId);
+  // House furniture is not carriable; what the buyer receives is a wrapped
+  // decoration kit per piece, unwrapped later on an owned house tile.
+  const deliveredTypeId =
+    grant.kind === "house-item" ? DECORATION_KIT_ITEM_ID : grant.itemTypeId;
+  const type = context.catalog.require(deliveredTypeId);
   if (!type.pickupable) throw new Error("store product is not pickupable");
 
-  if (grant.kind !== "charges" && grant.unique) {
+  if (grant.kind !== "charges" && grant.kind !== "house-item" && grant.unique) {
     const owned = await context.client.query(ownedItemTypeQuery, [
       context.characterId,
       grant.itemTypeId,
@@ -58,15 +68,26 @@ export async function deliverInboxItem(
     }
   }
 
-  // One row per stack: charges are a single charged item, a stackable count
-  // splits across `maxCount`, a plain item is one row.
+  // One row per stack: charges are a single charged item, house furniture is
+  // one kit per piece, a stackable count splits across `maxCount`, a plain
+  // item is one row.
   const stacks =
     grant.kind === "charges"
       ? [{ count: 1, attributes: { charges: grant.charges } }]
-      : splitIntoStacks(grant.count, type.maxCount).map((count) => ({
-          count,
-          attributes: {},
-        }));
+      : grant.kind === "house-item"
+        ? Array.from({ length: grant.count }, () => ({
+            count: 1,
+            attributes: {
+              unwrapTo: grant.itemTypeId,
+              description:
+                "Unwrap it in your own house to create a " +
+                `${context.catalog.require(grant.itemTypeId).name}.`,
+            },
+          }))
+        : splitIntoStacks(grant.count, type.maxCount).map((count) => ({
+            count,
+            attributes: {},
+          }));
 
   await depot.ensureStorageState(context.client, context.characterId);
   await context.client.query(rewardStorageStateLockQuery, [context.characterId]);
@@ -90,7 +111,7 @@ export async function deliverInboxItem(
       : `${context.requestKey}:${index}`;
     const inserted = await context.client.query<DepotItemRow>(rewardItemInsert, [
       itemId,
-      grant.itemTypeId,
+      deliveredTypeId,
       stack.count,
       JSON.stringify(stack.attributes),
       context.characterId,
@@ -105,7 +126,7 @@ export async function deliverInboxItem(
       context.characterId,
       itemId,
       deliveryKey,
-      grant.itemTypeId,
+      deliveredTypeId,
       stack.count,
     ]);
     items.push(requireItem(inserted.rows[0]));

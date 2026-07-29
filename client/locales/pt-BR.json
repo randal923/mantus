@@ -292,6 +292,7 @@
       "item": "Item",
       "stackable": "Suprimentos",
       "charges": "Item com cargas",
+      "house-item": "Item para casa",
       "name-change": "Serviço",
       "sex-change": "Serviço",
       "exp-boost": "Impulso",

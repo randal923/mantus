@@ -13,6 +13,7 @@ export interface AuctionHouseItem {
   id: string;
   name: string;
   category: AuctionItemCategory;
+  clientId: number;
   spriteId: number;
   ownedCount: number;
   averagePrice: number;

@@ -72,7 +72,11 @@ export function ForgeFusionTab({
                     : "border-ui-stone-light/15 bg-black/25 hover:border-ui-gold/40"
                 }`}
               >
-                <SpriteIcon spriteId={pair.item.spriteId} scale={1.25} />
+                <SpriteIcon
+                  spriteId={pair.item.spriteId}
+                  clientId={pair.item.clientId}
+                  scale={1.25}
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm text-ui-text-bright capitalize">
                     {pair.item.name}

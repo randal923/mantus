@@ -63,6 +63,7 @@ export const storeProductKindSchema = z.enum([
   "item",
   "stackable",
   "charges",
+  "house-item",
   "name-change",
   "sex-change",
   "exp-boost",
@@ -83,6 +84,8 @@ export const storeIconSchema = z.discriminatedUnion("kind", [
       kind: z.literal("item"),
       /** Atlas sprite, resolved server-side from the pinned item catalog. */
       spriteId: z.number().int().min(1),
+      /** Appearance id, so the icon can resolve its animation schedule. */
+      clientId: z.number().int().min(1),
     })
     .strict(),
   z

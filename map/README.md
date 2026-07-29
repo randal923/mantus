@@ -17,14 +17,24 @@ The v3.6.1 map matches Canary's extended Tibia 15.11 client pack. Download
 <https://github.com/dudantas/tibia-client/releases/tag/15.11.c9d1cf>
 
 Extract only `Tibia.dat` and `Tibia.spr` here. Copy Canary's matching
-`data/items/items.xml` to `map/items.xml`, then build the item semantics,
-browser assets, and map:
+`data/items/items.xml` to `map/items.xml` and `data/items/appearances.dat` to
+`map/appearances.dat`, then build the item semantics, browser assets, and map:
 
 ```sh
 yarn items:convert map/items.xml --commit=a879c9312e34381e8eedf397b8ed44510698b689
 yarn assets:import
+yarn animations:import map/appearances.dat # or a Canary checkout path
+yarn items:animations
 yarn map:convert map/otservbr.otbm
 ```
+
+The legacy DAT stores a phase count and no timings, so `animations:import`
+reads Tibia's real per-phase schedules out of Canary's protobuf
+`data/items/appearances.dat` into
+`client/public/assets/appearance-animations.json`; `items:animations` then
+folds them into the DOM icon table. Objects whose protobuf phase count
+disagrees with the DAT are skipped rather than animated on another object's
+clock.
 
 `content/source-manifest.json` pins the exact map, DAT, SPR, Canary commit, and
 converter versions. Conversion stops before replacing existing outputs if a

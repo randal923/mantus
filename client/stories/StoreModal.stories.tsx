@@ -47,7 +47,7 @@ const POTIONS: StoreProduct = {
   id: "potions-great-health-potion",
   name: "Great Health Potion",
   kind: "stackable",
-  icon: { kind: "item", spriteId: 7145 },
+  icon: { kind: "item", spriteId: 7145, clientId: 2874 },
   subOffers: [
     { id: "item-239-100", price: 18, count: 100 },
     { id: "item-239-250", price: 41, count: 250 },

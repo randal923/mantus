@@ -101,6 +101,19 @@ test("keeps immutable ladders and teleports interactive", () => {
   assert.equal(teleport.interactive, true);
 });
 
+test("gives the server the exercise dummy standing on a tile", () => {
+  // Free dummies are neither movable nor pickupable, so only the type puts
+  // them in server-owned world items — which is the only classification
+  // `loadMapItems` surfaces for a use-with action to find.
+  const dummy = getMapItemSemantics(appearance(), {
+    name: "exercise dummy",
+    type: "dummy",
+  });
+
+  assert.equal(dummy.mutable, true);
+  assert.equal(dummy.interactive, true);
+});
+
 test("classifies subtype, action, and text attributes deliberately", () => {
   assert.equal(
     getMapItemSemantics(appearance(), { name: "coins" }, { count: 20 }).mutable,

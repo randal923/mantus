@@ -203,7 +203,8 @@ export class PgMantusStore implements MantusStoreStore {
     if (
       grant.kind === "item" ||
       grant.kind === "stackable" ||
-      grant.kind === "charges"
+      grant.kind === "charges" ||
+      grant.kind === "house-item"
     ) {
       const { items } = await deliverInboxItem(context, grant);
       const first = items[0];

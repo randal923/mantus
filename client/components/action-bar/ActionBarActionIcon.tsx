@@ -42,7 +42,7 @@ export function ActionBarActionIcon({
   const item = items.find((candidate) => candidate.typeId === action.itemTypeId);
   return item ? (
     <span className="flex size-11 shrink-0 items-center justify-center">
-      <SpriteIcon spriteId={item.spriteId} scale={1.25} />
+      <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} scale={1.25} />
     </span>
   ) : (
     <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-ui-stone-light/20 bg-black/35 text-ui-muted">

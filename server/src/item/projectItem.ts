@@ -1,4 +1,5 @@
 import type { InventoryItem } from "@tibia/protocol";
+import { getExerciseWeaponDefinition } from "../action/getExerciseWeaponDefinition";
 import { itemTierOf } from "../forge/itemTierOf";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
@@ -14,7 +15,10 @@ export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
       ? "rune"
       : potion
         ? "potion"
-      : getToolDefinition(type.id)
+      : getToolDefinition(type.id) ||
+          // Exercise weapons are used *on* a dummy, so they raise the same
+          // crosshair a tool does rather than trying to equip themselves.
+          getExerciseWeaponDefinition(type.id)
         ? "useWith"
       : type.containerCapacity !== undefined
         ? "container"

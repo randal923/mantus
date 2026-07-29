@@ -22,6 +22,8 @@ export function planTransformMapItem(input: {
   readonly instanceId: string;
   readonly position: Position;
   readonly toTypeId: number;
+  /** Replaces the item's attributes; omitted keeps them (doors, levers). */
+  readonly attributes?: Readonly<Record<string, unknown>>;
 }): CarriedPlan | null {
   const { catalog, world, position } = input;
   const mapItem = world
@@ -53,6 +55,7 @@ export function planTransformMapItem(input: {
   const final: Item = {
     ...root,
     typeId: input.toTypeId,
+    ...(input.attributes === undefined ? {} : { attributes: input.attributes }),
     version: root.version + 1,
   };
   const rowOps: CarriedPersistRowOp[] = [];

@@ -447,6 +447,40 @@ export class ItemIntentHandler {
     return true;
   }
 
+  /**
+   * Spends one charge of a carried charged item (exercise weapons). The store
+   * decides whether a charge is left and whether this was the last one, so a
+   * replayed or racing tick can never over-spend the item.
+   */
+  consumeCharge(
+    session: Session,
+    itemId: string,
+    revision: number,
+    onCommitted: (now: number) => void,
+  ): boolean {
+    const characterId = session.playerId;
+    if (
+      !characterId ||
+      !this.combatItem(characterId, itemId, revision) ||
+      session.itemOperationPending ||
+      session.itemPersistsPending > 0
+    ) {
+      return false;
+    }
+    session.itemOperationPending = true;
+    this.operations.run(
+      session,
+      characterId,
+      this.store.consumeCharge(characterId, itemId, revision),
+      {
+        errorCode: "item-action-failed",
+        logLabel: "charge consumption failed",
+        onCommitted,
+      },
+    );
+    return true;
+  }
+
   usePotionForCombat(
     session: Session,
     request: PendingPotionUse,

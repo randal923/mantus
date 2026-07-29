@@ -13,6 +13,7 @@ const REGISTERED_KINDS = [
   "chest",
   "clock",
   "daily-shrine",
+  "decoration-kit",
   "door",
   "lever",
   "podium",

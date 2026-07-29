@@ -40,6 +40,7 @@ import { ClockHandler } from "./action/ClockHandler";
 import { loadChestDefinitions } from "./action/loadChestDefinitions";
 import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
 import { PressurePlateRegistry } from "./action/PressurePlateRegistry";
+import { ExerciseTrainingHandler } from "./action/ExerciseTrainingHandler";
 import { RopePullHandler } from "./action/RopePullHandler";
 import { ToolUseHandler } from "./action/ToolUseHandler";
 import { WorldActionRegistry } from "./action/WorldActionRegistry";
@@ -219,6 +220,7 @@ export class GameServer {
   private readonly quests: QuestService;
   private readonly worldEvents: WorldEventManager;
   private readonly toolUse: ToolUseHandler;
+  private readonly exerciseTraining: ExerciseTrainingHandler;
   private readonly chat: ChatHandler;
   private readonly combat: CombatIntentHandler;
   private readonly combatSystem: Combat;
@@ -852,6 +854,8 @@ export class GameServer {
         this.podium.open(session, player, position, item),
       (session, player, position, now) =>
         this.daily.openShrine(session, player, position, now),
+      (characterId, position) =>
+        this.houses.canDecorateHouseTile(characterId, position),
     );
     this.clocks = new ClockHandler(this.items);
     this.pressurePlates = new PressurePlateRegistry(
@@ -883,6 +887,15 @@ export class GameServer {
       (typeName, position, now) => {
         spawns?.spawnEventMonsterNear(typeName, position, now);
       },
+    );
+    this.exerciseTraining = new ExerciseTrainingHandler(
+      this.world,
+      deps.itemCatalog,
+      this.items,
+      this.registry,
+      this.visibility,
+      this.progression,
+      config.rates.exerciseTraining,
     );
     this.parties = new PartyHandler(
       this.world,
@@ -1258,6 +1271,7 @@ export class GameServer {
       this.guilds.tick(now);
       this.houses.tick(now);
       this.pvp.tick(now);
+      this.exerciseTraining.tick(now);
       this.progression.tick(now);
       this.persistence.tick(now);
     } finally {
@@ -1348,6 +1362,7 @@ export class GameServer {
     now: number,
   ): void {
     this.npcs.removePlayer(playerId);
+    this.exerciseTraining.stop(playerId);
     // Player summons are owned creatures: they leave with their owner so
     // an offline player can never keep monsters alive in the world.
     this.spawns?.releaseSummonsOf(playerId);
@@ -1492,6 +1507,7 @@ export class GameServer {
           return;
         }
         session.armUseExhaust(now);
+        if (this.exerciseTraining.handle(session, intent, now)) return;
         if (this.toolUse.handle(session, intent, now)) return;
         this.items.handle(session, intent, now);
         return;

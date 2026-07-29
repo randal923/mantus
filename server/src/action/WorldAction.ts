@@ -42,6 +42,12 @@ export type WorldAction =
   | { readonly kind: "read"; readonly item: MapItem; readonly type: ItemType }
   | { readonly kind: "rotate"; readonly item: MapItem; readonly toTypeId: number }
   | {
+      /** A store-bought decoration kit: unwraps into furniture on a house tile. */
+      readonly kind: "decoration-kit";
+      readonly item: MapItem;
+      readonly toTypeId: number;
+    }
+  | {
       /**
        * A text write onto a writeable map item. Never produced by
        * `resolveWorldAction` (a use-map only ever reads); the write intent

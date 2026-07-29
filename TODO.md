@@ -451,6 +451,37 @@ limitations accepted during a session are recorded in the owning feature file
   the pointer routing decisions into a pure module (`shouldResolveMapClick`,
   taking button/target/drag state) that both the renderer and a unit test can
   call. Owner: `todo/client/`.
+- **Exercise-weapon charge spend is untested against Postgres** (2026-07-29).
+  `PgItemUseOps.consumeCharge` decrements `attributes.charges` and deletes the
+  row on the last charge inside one serializable transaction, but no Postgres
+  is reachable in this environment, so only the `MemoryItemStore` twin is
+  exercised. Recommended fix: add a `PgItemStore.integration.test.ts` case that
+  races two charge spends against one weapon and asserts exactly one charge
+  goes, plus one that asserts the last charge deletes the row and writes the
+  `item-destroyed` audit. Owner: Feature 72.
+- **House exercise dummies skip the house-membership check** (2026-07-29).
+  Canary refuses a house dummy to anyone not inside that house and caps
+  trainers per dummy; only the cap is implemented, so a player standing in a
+  protection zone beside a house dummy could train on it. Recommended fix:
+  resolve both tiles' houses through `HouseService` at execution time in
+  `ExerciseTrainingHandler.handle`. Owner: Feature 72.
+- **Animated item icons are keyed by first sprite id** (2026-07-29).
+  `item-animations.json` maps an item's first sprite to its frames because DOM
+  icons only ever receive a `spriteId`; 39 appearances share a first sprite but
+  disagree on the rest or on their timing and were dropped, so those items stay
+  static. Multi-tile items (exercise weapons, kegs, mystery boxes) are excluded
+  for the same reason — a 32×32 icon draws one piece of them. Recommended fix:
+  thread `clientId` through `SpriteIcon` (inventory items already carry one;
+  store icons would need it added to `storeIconSchema`) and key the table by
+  client id instead. Owner: `todo/client/`.
+- **Outfit animations still ignore Tibia's phase timings** (2026-07-29).
+  `appearance-animations.json` carries item and effect schedules only: outfit
+  appearances split into idle/walking frame groups whose phase counts do not
+  match the legacy DAT's single group (261 of 275 disagree), so
+  `getOutfitAnimationFrames` keeps its own `WALK_FRAME_DURATION_MS`.
+  Recommended fix: emit both frame groups from
+  `tools/importAppearanceAnimations.mjs` and pick the group by creature state.
+  Owner: `todo/client/`.
 
 ## Repo-wide known breakage
 

@@ -6,6 +6,7 @@ export function toAuctionHouseItem(entry: MarketItemEntry): AuctionHouseItem {
     id: String(entry.itemTypeId),
     name: entry.name,
     category: entry.category,
+    clientId: entry.clientId,
     spriteId: entry.spriteId,
     ownedCount: entry.ownedCount,
     averagePrice: entry.averagePrice,

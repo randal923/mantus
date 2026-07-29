@@ -28,7 +28,10 @@ export function StoreDescription({ description }: StoreDescriptionProps) {
               alt=""
               width={13}
               height={13}
-              className="mt-1 shrink-0 [image-rendering:pixelated]"
+              // `self-start` keeps the flex row from stretching the icon:
+              // Tailwind's preflight leaves images at `height: auto`, so a
+              // stretched cell would change the height without the width.
+              className="mt-1 shrink-0 self-start [image-rendering:pixelated]"
             />
           )}
           <span className={line.icon ? "text-ui-muted" : ""}>{line.text}</span>

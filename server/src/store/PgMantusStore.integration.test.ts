@@ -15,6 +15,7 @@ const databaseDescribe = databaseUrl ? describe : describe.skip;
 const PREMIUM_30 = { id: "premium-30", price: 250 };
 const GOLD_CONVERTER = { id: "charges-23722-500", price: 5 };
 const GREAT_HEALTH_250 = { id: "item-239-250", price: 41 };
+const DEMON_EXERCISE_DUMMY_KIT = { id: "house-item-28561-1", price: 900 };
 const GOLD_POUCH = { id: "item-23721-1", price: 900 };
 const ARMOURED_WAR_HORSE = { id: "mount-23", price: 870 };
 const WILDCARDS_5 = { id: "prey-wildcard-5", price: 50 };
@@ -300,6 +301,40 @@ databaseDescribe("PgMantusStore integration", () => {
       [accountId],
     );
     expect(account.rows[0]?.premium_until).toBeNull();
+  });
+
+  it("delivers a house dummy as a decoration kit naming its furniture", async () => {
+    await pool.query("UPDATE accounts SET mantus_coins = 1000 WHERE id = $1", [
+      accountId,
+    ]);
+    const result = await store.purchase({
+      accountId,
+      characterId,
+      offerId: DEMON_EXERCISE_DUMMY_KIT.id,
+      requestId: randomUUID(),
+    });
+
+    expect(result.status).toBe("committed");
+    if (result.status !== "committed") return;
+    expect(result.deliveredItems).toHaveLength(1);
+    const delivered = await pool.query<{
+      item_type_id: number;
+      location_type: string;
+      attributes: { unwrapTo?: number; description?: string };
+    }>(
+      "SELECT item_type_id, location_type, attributes FROM items WHERE id = $1",
+      [result.deliveredItems[0]?.id],
+    );
+    // The buyer gets the wrapped kit, not the (uncarriable) dummy itself.
+    expect(delivered.rows[0]).toMatchObject({
+      item_type_id: 23_398,
+      location_type: "inbox",
+      attributes: {
+        unwrapTo: 28_561,
+        description:
+          "Unwrap it in your own house to create a demon exercise dummy.",
+      },
+    });
   });
 
   it("splits a stackable product across stacks rather than overflowing one", async () => {

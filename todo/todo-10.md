@@ -48,13 +48,15 @@ table already exist as typed data (`server/src/progression/blessings.ts`).
 - **Beds/sleep** — authorization via `HouseService.canUseHouseTile` at
   execution time; sleep state persisted; offline-regen accrual computed
   server-side on next login.
-- **Offline + exercise training in-world triggers only** — statue trigger
-  that selects the skill and logs out + durable offline-training bar column +
-  transactional login conversion applying `computeOfflineTraining`; exercise
-  weapon/dummy loop (charge-consuming, PZ-gated, exhausted, scheduled ticks
-  calling `computeExerciseTrainingGain`). The math lives in
-  `server/src/progression/offlineTraining.ts` / `exerciseTraining.ts` with
-  `rates.offlineTraining`/`rates.exerciseTraining` knobs — do not re-derive.
+- **Offline training in-world trigger only** — statue trigger that selects
+  the skill and logs out + durable offline-training bar column + transactional
+  login conversion applying `computeOfflineTraining`. The math lives in
+  `server/src/progression/offlineTraining.ts` with the `rates.offlineTraining`
+  knob — do not re-derive. (Exercise weapons/dummies shipped; see
+  [done.md](done.md).)
+- **Exercise training residue** — the house-dummy check only caps trainers
+  per dummy tile; Canary also requires the trainer to be inside the same house
+  as the dummy, which needs `HouseService` membership at execution time.
 - **Food/soul regeneration** with exact Canary persistence (soul eligibility
   shipped).
 

@@ -75,7 +75,7 @@ export function MailboxModal({
                   onChange={() => setSelectedItemId(item.id)}
                   className="accent-ui-gold"
                 />
-                <SpriteIcon spriteId={item.spriteId} scale={1.1} />
+                <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} scale={1.1} />
                 <span className="min-w-0 flex-1 truncate text-sm text-ui-text-bright">
                   {item.name}
                 </span>

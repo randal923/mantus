@@ -1,4 +1,5 @@
 import { STORE_LIMITS } from "@tibia/protocol";
+import { DECORATION_KIT_ITEM_ID } from "../item/decorationKitItemId";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { MOUNTS, OUTFITS } from "../outfit/outfitCatalog";
 import {
@@ -194,6 +195,26 @@ function assertGrant(
     }
     if (!Number.isInteger(grant.charges) || grant.charges < 1) {
       throw new Error(`store offer ${offerId} grants an invalid charge count`);
+    }
+    return;
+  }
+
+  if (grant.kind === "house-item") {
+    // The furniture itself is never carried — the buyer receives decoration
+    // kits — so the target only has to exist; the kit must be carriable.
+    if (!catalog.get(grant.itemTypeId)) {
+      throw new Error(
+        `store offer ${offerId} names item ${grant.itemTypeId}, which is not ` +
+          "in the item catalog",
+      );
+    }
+    if (!catalog.get(DECORATION_KIT_ITEM_ID)?.pickupable) {
+      throw new Error(
+        "the decoration kit item is missing from the catalog or not carriable",
+      );
+    }
+    if (!Number.isInteger(grant.count) || grant.count < 1 || grant.count > 25) {
+      throw new Error(`store offer ${offerId} grants an invalid kit count`);
     }
     return;
   }

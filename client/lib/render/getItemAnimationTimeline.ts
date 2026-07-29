@@ -1,6 +1,5 @@
 import type { TibiaObject } from "./AssetStore";
-
-const LEGACY_ITEM_PHASE_DURATION_MS = 500;
+import { LEGACY_FRAME_DURATION_MS } from "./LEGACY_FRAME_DURATION_MS";
 
 interface AnimatedItemAppearance {
   phases: number;
@@ -32,7 +31,7 @@ export function getItemAnimationTimeline(
     const metadata = animation?.phases[phase];
     const minimum = Math.max(
       1,
-      Math.floor(metadata?.minimumDurationMs ?? LEGACY_ITEM_PHASE_DURATION_MS),
+      Math.floor(metadata?.minimumDurationMs ?? LEGACY_FRAME_DURATION_MS),
     );
     const maximum = Math.max(
       minimum,

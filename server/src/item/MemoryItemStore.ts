@@ -4,6 +4,7 @@ import type {
   ItemContainerDestination,
   Position,
 } from "@tibia/protocol";
+import { chargesOf } from "./chargesOf";
 import { collectMemoryDescendantIds } from "./collectMemoryDescendantIds";
 import { collectReachableItemIds } from "./collectReachableItemIds";
 import type { CarriedPersistPlan } from "./CarriedPersistPlan";
@@ -449,6 +450,33 @@ export class MemoryItemStore implements ItemStore {
       version: before.version + 1,
     };
     this.items.set(after.id, after);
+    return { before, after: [after] };
+  }
+
+  async consumeCharge(
+    characterId: string,
+    itemId: string,
+    expectedVersion: number,
+  ): Promise<ItemMutation> {
+    const before = requireOwnedMemoryItem(
+      this.items,
+      characterId,
+      itemId,
+      expectedVersion,
+    );
+    const remaining =
+      chargesOf(before, this.catalog?.get(before.typeId)?.charges) - 1;
+    if (remaining < 0) throw new Error("item has no charges left");
+    if (remaining === 0) {
+      this.items.delete(itemId);
+      return { before, after: [], removedItemIds: [itemId] };
+    }
+    const after = {
+      ...before,
+      attributes: { ...before.attributes, charges: remaining },
+      version: before.version + 1,
+    };
+    this.items.set(itemId, after);
     return { before, after: [after] };
   }
 

@@ -13,7 +13,7 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-07-28
+**Last updated:** 2026-07-29
 
 ## World & engine
 
@@ -47,7 +47,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Monster death, loot rolls, corpses, quick-loot sweep (29–31)                               | ✅     | ✅     | Child loot containers, `unique` flag, loot subType, reward-boss rules, 175 death callbacks                                                                                                         |
 | Player death penalty — full Canary formula (32)                                            | ◐      | ✅     | Blessing consumption + item/container drop into player corpse (needs 72)                                                                                                                           |
 | Decay: carried + world (33, 34)                                                            | ✅     | —      | Spell fields as real world items, charge expiry                                                                                                                                                    |
-| Stamina, soul, training engines (18) → in-world triggers (72)                              | ◐      | ◐      | Beds/sleep, statue/dummy triggers, blessings persistence+purchase, food/soul regen persistence                                                                                                     |
+| Stamina, soul, training engines (18) → in-world triggers (72)                              | ◐      | ◐      | Beds/sleep, offline-training statue trigger, blessings persistence+purchase, food/soul regen persistence; exercise weapons/dummies ship (house-membership check still missing)                     |
 | PVP: skulls, frags, pvp-zones, combat logout (59, 60)                                      | ✅     | ✅     | E2E logout playtest; linger-window inventory (lands with 32)                                                                                                                                       |
 
 ## Social

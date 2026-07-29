@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createRenderTestObject } from "./createRenderTestObject";
 import { getItemAnimationPhase } from "./getItemAnimationPhase";
 import { getItemAnimationTimeline } from "./getItemAnimationTimeline";
+import { LEGACY_FRAME_DURATION_MS } from "./LEGACY_FRAME_DURATION_MS";
 import { resolveItemAnimationPhase } from "./resolveItemAnimationPhase";
 
 describe("getItemAnimationPhase", () => {
@@ -9,13 +10,14 @@ describe("getItemAnimationPhase", () => {
     expect(getItemAnimationPhase({ phases: 1 }, 10_000, 42)).toBe(0);
   });
 
-  it("advances legacy items at exact 500 ms phase boundaries", () => {
+  it("advances items with no timing metadata at the fallback rate", () => {
     const appearance = { phases: 3 };
+    const frame = LEGACY_FRAME_DURATION_MS;
     expect(getItemAnimationPhase(appearance, 0, 0)).toBe(0);
-    expect(getItemAnimationPhase(appearance, 499, 0)).toBe(0);
-    expect(getItemAnimationPhase(appearance, 500, 0)).toBe(1);
-    expect(getItemAnimationPhase(appearance, 1_000, 0)).toBe(2);
-    expect(getItemAnimationPhase(appearance, 1_500, 0)).toBe(0);
+    expect(getItemAnimationPhase(appearance, frame - 1, 0)).toBe(0);
+    expect(getItemAnimationPhase(appearance, frame, 0)).toBe(1);
+    expect(getItemAnimationPhase(appearance, frame * 2, 0)).toBe(2);
+    expect(getItemAnimationPhase(appearance, frame * 3, 0)).toBe(0);
   });
 
   it("uses stable offsets for asynchronous items", () => {

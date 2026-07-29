@@ -1,4 +1,5 @@
 import type { Position } from "@tibia/protocol";
+import { DECORATION_KIT_ITEM_ID } from "../item/decorationKitItemId";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { positionKey } from "../positionKey";
 import type { ChestDefinition } from "./ChestDefinition";
@@ -67,6 +68,15 @@ export function resolveWorldAction(
     if (DAILY_SHRINE_ITEM_IDS.has(item.itemId)) {
       if (scripted) return { kind: "unsupported" };
       return { kind: "daily-shrine", item };
+    }
+    if (item.itemId === DECORATION_KIT_ITEM_ID) {
+      if (scripted) return { kind: "unsupported" };
+      const toTypeId = attributes.unwrapTo;
+      // A kit without a furniture target (hand-spawned, legacy) does nothing.
+      if (!Number.isInteger(toTypeId) || !catalog.get(toTypeId as number)) {
+        return { kind: "unsupported" };
+      }
+      return { kind: "decoration-kit", item, toTypeId: toTypeId as number };
     }
     if (type.text?.readable) {
       if (scripted) return { kind: "unsupported" };

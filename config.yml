@@ -42,11 +42,11 @@ combat:
 
 rates:
   # Non-negative up to 1000. Fractional progression is floored to whole units.
-  experience: 1
-  skill: 1
-  magic: 1
-  loot: 1
-  spawn: 1
+  experience: 1000
+  skill: 1000
+  magic: 1000
+  loot: 1000
+  spawn: 5
   # Soul regeneration, offline-training, and exercise-weapon training speeds.
   soulRegen: 1
   offlineTraining: 1

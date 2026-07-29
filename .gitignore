@@ -10,6 +10,7 @@ map/items.xml
 # Local client files used by the asset importer.
 map/Tibia.dat
 map/Tibia.spr
+map/appearances.dat
 map/tibia-*.zip
 map/tibia-8.6-extended/
 /canary/

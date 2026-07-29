@@ -205,7 +205,9 @@ export function GameHud({
           emptyTitle,
           emptyAriaLabel,
           item: {
-            icon: item ? <SpriteIcon spriteId={item.spriteId} /> : null,
+            icon: item ? (
+              <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} />
+            ) : null,
             title: `${name} · ${action.mode.replaceAll("-", " ")}`,
             ariaLabel: `Use ${name}`,
             badge: count > 0 ? count : undefined,

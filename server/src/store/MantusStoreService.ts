@@ -78,9 +78,11 @@ export class MantusStoreService {
     private readonly hooks?: StoreLiveHooks,
   ) {}
 
-  /** The atlas sprite for an item product, from the pinned catalog. */
-  private spriteIdOf = (itemTypeId: number): number =>
-    this.catalog.require(itemTypeId).spriteId;
+  /** The sprite and appearance ids for an item product, from the catalog. */
+  private itemIconOf = (itemTypeId: number) => {
+    const type = this.catalog.require(itemTypeId);
+    return { spriteId: type.spriteId, clientId: type.clientId };
+  };
 
   applyResolvedOutcomes(now: number): void {
     for (const outcome of this.outcomes.splice(0)) outcome(now);
@@ -146,11 +148,11 @@ export class MantusStoreService {
     session.send({
       type: "store-state",
       balance: account.mantusCoins,
-      categories: storeCategoryTree(this.spriteIdOf),
+      categories: storeCategoryTree(this.itemIconOf),
       home: STORE_HOME_PRODUCT_IDS.flatMap((productId) => {
         const product = STORE_PRODUCTS_BY_ID.get(productId);
         return product
-          ? [toStoreProduct(product, adjustments, this.spriteIdOf)]
+          ? [toStoreProduct(product, adjustments, this.itemIconOf)]
           : [];
       }),
     });
@@ -198,7 +200,7 @@ export class MantusStoreService {
       pageCount,
       products: category.products
         .slice(start, start + STORE_LIMITS.productsPerPage)
-        .map((product) => toStoreProduct(product, adjustments, this.spriteIdOf)),
+        .map((product) => toStoreProduct(product, adjustments, this.itemIconOf)),
     });
   }
 

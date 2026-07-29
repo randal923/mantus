@@ -121,6 +121,7 @@ export function ItemSlot({
         {item ? (
           <SpriteIcon
             spriteId={item.spriteId}
+            clientId={item.clientId}
             className={optimistic ? "animate-pulse opacity-60" : undefined}
           />
         ) : (
@@ -164,7 +165,7 @@ export function ItemSlot({
             className="pointer-events-none fixed z-[100]"
             style={{ left: dragPosition.left, top: dragPosition.top }}
           >
-            <SpriteIcon spriteId={item.spriteId} scale={1} />
+            <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} scale={1} />
           </div>,
           document.body,
         )}

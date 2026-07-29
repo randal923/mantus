@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { AnimatedMapItemRegistry } from "./AnimatedMapItemRegistry";
 import { createRenderTestObject } from "./createRenderTestObject";
+import { LEGACY_FRAME_DURATION_MS } from "./LEGACY_FRAME_DURATION_MS";
 
 const water = createRenderTestObject({ phases: 3, sprites: [1, 2, 3] });
 
@@ -18,7 +19,7 @@ describe("AnimatedMapItemRegistry", () => {
     });
     expect(applyPhase).toHaveBeenLastCalledWith(0);
 
-    registry.tick(499);
+    registry.tick(LEGACY_FRAME_DURATION_MS - 1);
     expect(applyPhase).toHaveBeenCalledTimes(1);
     registry.tick(1);
     expect(applyPhase).toHaveBeenLastCalledWith(1);

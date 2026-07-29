@@ -10,6 +10,7 @@ import type { ChestDefinition } from "./ChestDefinition";
 import { handleChestUse } from "./handleChestUse";
 import { handleClockRead } from "./handleClockRead";
 import { handleDailyShrineUse } from "./handleDailyShrineUse";
+import { handleDecorationKitUse } from "./handleDecorationKitUse";
 import { handleDoorUse } from "./handleDoorUse";
 import { handleLeverUse } from "./handleLeverUse";
 import { handleMapRotate } from "./handleMapRotate";
@@ -45,6 +46,7 @@ export class WorldActionRegistry {
     chest: handleChestUse,
     clock: handleClockRead,
     "daily-shrine": handleDailyShrineUse,
+    "decoration-kit": handleDecorationKitUse,
     door: handleDoorUse,
     lever: handleLeverUse,
     podium: handlePodiumUse,
@@ -81,6 +83,10 @@ export class WorldActionRegistry {
       position: Position,
       now: number,
     ) => void,
+    private readonly decorateAccess?: (
+      characterId: string,
+      position: Position,
+    ) => boolean,
   ) {}
 
   /**
@@ -198,6 +204,9 @@ export class WorldActionRegistry {
       case "daily-shrine":
         this.handlers["daily-shrine"](context, action);
         return true;
+      case "decoration-kit":
+        this.handlers["decoration-kit"](context, action);
+        return true;
       case "door":
         this.handlers.door(context, action);
         return true;
@@ -265,6 +274,9 @@ export class WorldActionRegistry {
       catalog: this.catalog,
       doorLevels: this.doorLevels,
       houseAccess: this.houseAccess,
+      ...(this.decorateAccess === undefined
+        ? {}
+        : { decorateAccess: this.decorateAccess }),
       applyPlan: (plan) => {
         if (!plan) {
           session.sendError("item-action-failed");

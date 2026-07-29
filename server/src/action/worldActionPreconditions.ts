@@ -47,6 +47,12 @@ export const WORLD_ACTION_REQUIREMENTS: Readonly<
     houseAccess: false,
     exclusive: false,
   },
+  "decoration-kit": {
+    reach: "adjacent",
+    itemStillPlaced: true,
+    houseAccess: true,
+    exclusive: true,
+  },
   door: {
     reach: "adjacent",
     itemStillPlaced: true,

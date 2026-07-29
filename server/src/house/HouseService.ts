@@ -193,6 +193,22 @@ export class HouseService {
   }
 
   /**
+   * Redecoration authorization (unwrapping decoration kits): the tile must be
+   * inside a house and the character its owner or a subowner — a guest may
+   * walk the floor, not refurnish it. Non-house tiles fail closed.
+   */
+  canDecorateHouseTile(characterId: string, position: Position): boolean {
+    const houseId = this.world.getHouseId(position);
+    if (houseId === undefined) return false;
+    const level = this.houses.accessLevel(
+      houseId,
+      characterId,
+      this.subjectFor(characterId),
+    );
+    return level === "owner" || level === "subowner";
+  }
+
+  /**
    * Execution-time door authorization. House-wide access is required, and a
    * door carrying its own list additionally has to match it. Both are read
    * fresh here — a character who just left the listed guild fails the very

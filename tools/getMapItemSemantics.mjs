@@ -1,11 +1,16 @@
 // "trashholder" is deliberately absent: Canary types water/lava/tar grounds
 // as trashholders (throwing an item in destroys it), but the tiles themselves
 // are immutable scenery and must stay in the static client map.
+// Types the server must own on the tile. "dummy" is here even though the free
+// exercise dummies are bolted-down scenery: `loadMapItems` only surfaces
+// mutable entries, and the exercise-weapon action has to be able to ask "is
+// there a dummy on this tile?" at execution time.
 const MUTABLE_TYPES = new Set([
   "bed",
   "container",
   "depot",
   "door",
+  "dummy",
   "magicfield",
   "mailbox",
   "rewardchest",
