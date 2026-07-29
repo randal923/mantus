@@ -20,7 +20,10 @@ import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import { getVocation } from "../progression/getVocation";
-import { projectOwnProgression } from "../progression/projectOwnProgression";
+import {
+  projectOwnProgression,
+  type ExperienceRateConfig,
+} from "../progression/projectOwnProgression";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import type { GemStore, GemTransactionResult } from "./GemStore";
@@ -52,6 +55,10 @@ export class GemAtelierService {
     private readonly store?: GemStore,
     private readonly random: () => number = Math.random,
     private readonly items?: ItemIntentHandler,
+    private readonly experienceRates: ExperienceRateConfig = {
+      baseRate: 1,
+      useStages: false,
+    },
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -307,7 +314,7 @@ export class GemAtelierService {
     session.send({
       type: "progression-updated",
       playerId: player.id,
-      progression: projectOwnProgression(player, now),
+      progression: projectOwnProgression(player, now, this.experienceRates),
     });
     // Equipping or grading a gem can change capacity; refresh the
     // inventory view so the client's weight limit matches the enforced one.

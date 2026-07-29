@@ -1296,3 +1296,90 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
 - **Residual risk**: whether Elane was the NPC the player tried is unconfirmed;
   the other 48 teachers were already wired. Known content and gameplay gaps
   from this pass are recorded in `TODO.md`.
+
+### 2026-07-29 — Mantus Store rebuilt on Canary's game store (Feature 43)
+
+- **Problem**: the store sold two hand-written categories (premium time and
+  four odd items) through a protocol that carried a whole flat catalog in one
+  message. Feature 43's backlog owed catalog breadth, a load-time catalog
+  gate, and outfit/mount/prey unlock sources; nothing turned coins into
+  anything a player actually wanted. Separately, nothing told a player what
+  their experience rate currently was.
+- **Changed**:
+  - **Catalog import.** `tools/parseCanaryStoreCatalog.mjs` reads Canary's
+    `gamestore/catalog/*.lua` offline (no Lua executed; local string constants
+    and `string.format` resolved, anything else reported unresolved), and
+    `tools/importCanaryStoreCatalog.mjs` maps it onto grants this server can
+    perform: 13 categories, 279 products, 294 offers. An offer survives only
+    if its item exists in the pinned catalog and is pickupable, its look types
+    are a real male/female pair, its mount id exists. Canary's own catalog bug
+    — the Trophy Hunter offer naming Lupine Warden's look types — is corrected
+    against `outfits.xml` and reported. Blessings, hirelings, charm expansion,
+    instant reward access, house kits and tournament are skipped by design.
+  - **Protocol reshaped to the official store's layout**: a category tree,
+    *products* carrying priced *sub-offers* ("Great Health Potion" → 100x/250x),
+    paged category requests (26/page — the mount category alone is 140
+    products and would blow `maxMessageBytes`), and descriptions fetched per
+    selection rather than shipped with every page. `disabled` + a reason are
+    computed server-side, Canary's `canBuyOffer` equivalent.
+  - **Delivery.** `PgMantusStore.purchase` takes an offer *id* and reads price,
+    product and grant from the server's own catalog. One SERIALIZABLE
+    transaction locks the account and the character, runs the product's leg
+    (`server/src/store/delivery/`: premium, outfit/addon, mount, inbox
+    item/stackable/charges with stack splitting, prey wildcards, prey and
+    hunting slot unlocks, XP boost, sex change, name change), writes the coin
+    ledger row and the audit row, and commits all of it or none. The XP boost's
+    price escalates on Canary's curve from a locked per-day counter, so the
+    charged price is never the displayed one.
+  - **XP boost made real**: it extends the same
+    `character_daily_rewards.xp_boost_until_ms` the kill-experience path
+    already reads, applied live through `DailyRewardService`, so no relog and
+    no second timer.
+  - **XP gain rate in character details**, Tibia-style: base staged rate, XP
+    boost with its countdown, stamina multiplier, and the composed total,
+    computed server-side by `getExperienceRate`.
+  - **Client** rebuilt to the official layout (category tree / product list /
+    detail pane / coin bar), using OTClient's own art:
+    `tools/importOtclientStoreAssets.mjs` slices `store-icons-inline.png` into
+    the 15 description-tag icons and copies the Home and star icons, and
+    descriptions render `{character}`/`{storeinbox}`/`{speedboost}` lines with
+    those icons and Canary's captions. Categories borrow a product's icon
+    (item sprite, look type, mount) because OTClient downloads CipSoft's
+    category pack rather than bundling it.
+  - **Operator tool**: `yarn coins:grant "Name" --mantus N --gold N` credits
+    Mantus Coins and bank gold in one transaction with both ledgers and audit
+    rows, idempotent per `--key`.
+  - **Boot gate**: `assertStoreCatalog` refuses to start on a catalog this
+    server could not deliver — the gap Feature 43's backlog named.
+- **Files**: `protocol/src/store.ts`, `protocol/src/progression.ts`,
+  `server/db/migrations/064_store_catalog.sql`, `server/src/store/**` (catalog,
+  availability, delivery legs, SQL), `server/src/progression/getExperienceRate.ts`,
+  `server/src/daily/DailyRewardService.ts`, `server/src/prey/PreyService.ts`,
+  `server/src/huntingTasks/HuntingTaskService.ts`,
+  `server/src/outfit/OutfitService.ts`, `server/src/GameServer.ts`,
+  `server/src/Player.ts`, `client/components/store/**`,
+  `client/components/wiki/XpGainRatePanel.tsx`,
+  `client/lib/store/parseStoreDescription.ts`, `client/locales/{en,pt-BR}.json`,
+  `tools/{parseCanaryStoreCatalog,importCanaryStoreCatalog,importOtclientStoreAssets,grantCoins}.mjs`.
+- **Verified**: `yarn typecheck` clean; `yarn test` 1323 passed; client unit
+  266 passed; `node --test tools/*.test.mjs` 88 passed; the Storybook browser
+  lane for `StoreModal` (6 interaction tests, including the name-change prompt
+  and an owned-mount refusal) plus headless screenshots of the home and paged
+  views and a console sweep of four stories asserting no DOM-nesting or
+  hydration errors. The boot gate was run against the real item catalog — it
+  caught the duplicate-offer bug above before this landed. The browser lane
+  also caught two real defects during the pass: price buttons nested inside a
+  `role="button"` row (invalid ARIA, and it swallowed the clicks), and a
+  category heading rendered as a `<p>` containing the icon's `<div>`s (a
+  hydration error). Both fixed.
+- **Layout follow-ups** (same day): pages hold 12 products so a page fits the
+  list without an endless inner scroll, the pager shows whenever a category is
+  open, rows were compacted to the official store's icon-left/name-and-prices
+  -right shape, the modal body is height-bounded (`min-h-0` on the grid item —
+  without it the list grows past the row and pushes the pager and coin bar off
+  screen), and offer descriptions render at `text-sm`.
+- **Residual risk**: **the 20 `PgMantusStore` integration tests did not run** —
+  no Postgres is reachable in this environment (Docker is unavailable from this
+  WSL distro), so every delivery leg's transaction, concurrency and rollback
+  behaviour is asserted only by the tests as written, not by execution. They
+  must be run before this is trusted. Remaining gaps are in `TODO.md`.

@@ -149,6 +149,8 @@ import {
 import {
   storeActionFailedMessageSchema,
   storeHistoryStateMessageSchema,
+  storeOffersMessageSchema,
+  storeDescriptionStateMessageSchema,
   storePurchaseCompletedMessageSchema,
   storeStateMessageSchema,
 } from "./store";
@@ -582,6 +584,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   shopTransactedMessageSchema,
   shopActionFailedMessageSchema,
   storeStateMessageSchema,
+  storeOffersMessageSchema,
+  storeDescriptionStateMessageSchema,
   storeHistoryStateMessageSchema,
   storePurchaseCompletedMessageSchema,
   storeActionFailedMessageSchema,

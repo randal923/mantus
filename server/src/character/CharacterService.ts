@@ -21,7 +21,10 @@ import { createInitialSkills } from "../progression/createInitialSkills";
 import { deriveCharacterStats } from "../progression/deriveCharacterStats";
 import { getVocation } from "../progression/getVocation";
 import { PROGRESSION_DEFINITION_VERSION } from "../progression/progressionDefinitionVersion";
-import { projectOwnProgression } from "../progression/projectOwnProgression";
+import {
+  projectOwnProgression,
+  type ExperienceRateConfig,
+} from "../progression/projectOwnProgression";
 import { normalizeCharacterName } from "./normalizeCharacterName";
 import { monotonicNow } from "../monotonicNow";
 
@@ -41,6 +44,10 @@ export class CharacterService {
   constructor(
     private readonly store: CharacterStore,
     private readonly starter: StarterPosition,
+    private readonly experienceRates: ExperienceRateConfig = {
+      baseRate: 1,
+      useStages: false,
+    },
   ) {}
 
   creationOptions(): CharacterCreationOptions {
@@ -160,7 +167,7 @@ export class CharacterService {
       id: player.id,
       name: player.name,
       vocation: player.vocation,
-      ...projectOwnProgression(player, now),
+      ...projectOwnProgression(player, now, this.experienceRates),
       position: { ...player.position },
       direction: player.direction,
       outfit: player.outfit,

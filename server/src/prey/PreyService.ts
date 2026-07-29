@@ -264,6 +264,17 @@ export class PreyService implements PreyHooks {
     if (session) this.sendState(session, recipientId);
   }
 
+  /** The character's own wildcard balance, for the store's offer display. */
+  wildcardsOf(characterId: string): number {
+    return this.wildcardsByCharacter.get(characterId) ?? 0;
+  }
+
+  /** True when no slot is still locked, so the store's slot offer is spent. */
+  allSlotsUnlocked(characterId: string): boolean {
+    const slots = this.slotsByCharacter.get(characterId);
+    return slots !== undefined && slots.every((slot) => slot.state !== "locked");
+  }
+
   /**
    * Applies a wildcard balance another transaction already committed (the
    * daily-reward claim); refresh-only, never a second grant.
@@ -272,6 +283,28 @@ export class PreyService implements PreyHooks {
     this.outcomes.push(() => {
       if (!this.slotsByCharacter.has(characterId)) return;
       this.wildcardsByCharacter.set(characterId, balance);
+      const session = this.registry.sessionFor(characterId);
+      if (session) this.sendState(session, characterId);
+    });
+  }
+
+  /**
+   * Unlocks a slot the Mantus Store already unlocked durably (Canary's
+   * Permanent Prey Slot). Refresh-only: the row was written inside the
+   * purchase transaction, so this never decides anything — it only brings
+   * the live copy in line and pushes the state its owner can already see.
+   */
+  applyStoreSlotUnlock(characterId: string, slot: number): void {
+    this.outcomes.push(() => {
+      const slots = this.slotsByCharacter.get(characterId);
+      const record = slots?.[slot];
+      if (!slots || !record || record.state !== "locked") return;
+      const player = this.world.getPlayer(characterId);
+      this.replaceSlot(characterId, slots, {
+        ...record,
+        state: "selection",
+        grid: this.rollGrid(slots, player?.level ?? 1),
+      });
       const session = this.registry.sessionFor(characterId);
       if (session) this.sendState(session, characterId);
     });

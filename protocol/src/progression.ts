@@ -72,6 +72,30 @@ export const ownProgressionStateSchema = z.object({
     z.literal(100),
     z.literal(150),
   ]),
+  /**
+   * Tibia's XP-gain-rate breakdown, computed server-side from the same terms
+   * the kill-experience path applies. Purely a display projection: nothing
+   * here is read back, and the server's own multipliers remain the real ones
+   * (charter rule 8).
+   *
+   * Per-monster terms — prey bonus, boosted creature, animus mastery — are
+   * deliberately absent: they depend on what is being killed, so they cannot
+   * be a standing rate.
+   */
+  experienceRate: z
+    .object({
+      /** The server's level-staged base rate, as a percentage (500 = x5). */
+      basePercent: z.number().int().min(0).max(100_000),
+      /** The store/daily XP boost while it is running; 0 otherwise. */
+      xpBoostPercent: z.number().int().min(0).max(1_000),
+      /** Milliseconds of XP boost left, for the countdown; 0 when inactive. */
+      xpBoostRemainingMs: z.number().int().min(0),
+      /** Stamina's multiplier, as a percentage (0/50/100/150). */
+      staminaPercent: z.number().int().min(0).max(1_000),
+      /** All of the above composed, as a percentage. */
+      totalPercent: z.number().int().min(0).max(1_000_000),
+    })
+    .strict(),
   speed: z.number().int().positive(),
   attackSpeedMs: z.number().int().positive(),
   healthRegeneration: z.object({

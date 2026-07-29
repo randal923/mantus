@@ -11,7 +11,10 @@ import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import { getVocation } from "../progression/getVocation";
-import { projectOwnProgression } from "../progression/projectOwnProgression";
+import {
+  projectOwnProgression,
+  type ExperienceRateConfig,
+} from "../progression/projectOwnProgression";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import type { GemTracker } from "./GemTracker";
@@ -35,6 +38,10 @@ export class WheelService {
     private readonly persistence: CharacterPersistence,
     private readonly gems?: GemTracker,
     private readonly items?: ItemIntentHandler,
+    private readonly experienceRates: ExperienceRateConfig = {
+      baseRate: 1,
+      useStages: false,
+    },
   ) {}
 
   detach(session: Session): void {
@@ -98,7 +105,7 @@ export class WheelService {
     session.send({
       type: "progression-updated",
       playerId: player.id,
-      progression: projectOwnProgression(player, now),
+      progression: projectOwnProgression(player, now, this.experienceRates),
     });
     // Capacity may have moved with the allocation; refresh the inventory
     // view so the client's weight limit matches the enforced one.

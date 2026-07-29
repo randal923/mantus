@@ -16,11 +16,47 @@ export function handleCommerceMessage(
     state.setMantusCoins(message.balance);
     state.setStoreSession({
       categories: message.categories,
+      home: message.home,
+      categoryId: null,
+      products: [],
+      page: 0,
+      pageCount: 1,
+      selectedProductId: message.home[0]?.id ?? null,
+      description: null,
       pending: false,
       pendingOfferId: null,
       purchasedOfferId: null,
       error: null,
     });
+    return true;
+  }
+
+  if (message.type === "store-offers") {
+    state.setStoreSession((current) =>
+      current
+        ? {
+            ...current,
+            categoryId: message.categoryId,
+            products: message.products,
+            page: message.page,
+            pageCount: message.pageCount,
+            // Selecting the first product mirrors the official store, which
+            // focuses a row as soon as a category opens.
+            selectedProductId: message.products[0]?.id ?? null,
+            description: null,
+            error: null,
+          }
+        : current,
+    );
+    return true;
+  }
+
+  if (message.type === "store-description-state") {
+    state.setStoreSession((current) =>
+      current && current.selectedProductId === message.productId
+        ? { ...current, description: message.description }
+        : current,
+    );
     return true;
   }
 

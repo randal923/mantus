@@ -751,8 +751,21 @@ export class GameClient {
     return this.send({ type: "store-open" });
   }
 
-  purchaseStoreOffer(offerId: string): boolean {
-    return this.send({ type: "store-purchase", offerId });
+  openStoreCategory(categoryId: string, page: number): boolean {
+    return this.send({ type: "store-category", categoryId, page });
+  }
+
+  getStoreDescription(productId: string): boolean {
+    return this.send({ type: "store-description", productId });
+  }
+
+  /** `newName` accompanies a name-change offer and nothing else. */
+  purchaseStoreOffer(offerId: string, newName?: string): boolean {
+    return this.send({
+      type: "store-purchase",
+      offerId,
+      ...(newName === undefined ? {} : { newName }),
+    });
   }
 
   removeVip(targetCharacterId: string): boolean {

@@ -384,6 +384,13 @@ export function GameNavigation() {
           if (!sent) {
             setStoreSession({
               categories: [],
+              home: [],
+              categoryId: null,
+              products: [],
+              page: 0,
+              pageCount: 1,
+              selectedProductId: null,
+              description: null,
               pending: false,
               pendingOfferId: null,
               purchasedOfferId: null,

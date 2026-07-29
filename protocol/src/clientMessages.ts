@@ -163,6 +163,8 @@ import {
 } from "./party";
 import { shopBuyMessageSchema, shopSellMessageSchema } from "./shop";
 import {
+  storeCategoryMessageSchema,
+  storeDescriptionMessageSchema,
   storeHistoryMessageSchema,
   storeOpenMessageSchema,
   storePurchaseMessageSchema,
@@ -694,6 +696,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   bankTransferMessageSchema,
   shopBuyMessageSchema,
   shopSellMessageSchema,
+  storeCategoryMessageSchema,
+  storeDescriptionMessageSchema,
   storeHistoryMessageSchema,
   storeOpenMessageSchema,
   storePurchaseMessageSchema,

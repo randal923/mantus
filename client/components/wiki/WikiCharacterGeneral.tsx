@@ -10,6 +10,7 @@ import {
   type BestiaryStatIconName,
 } from "../bestiary/BestiaryStatIcon";
 import { ProgressionBar } from "../inventory/ProgressionBar";
+import { XpGainRatePanel } from "./XpGainRatePanel";
 
 interface WikiCharacterGeneralProps {
   character: OwnCharacterState;
@@ -138,6 +139,8 @@ export function WikiCharacterGeneral({
           ))}
         </div>
       </section>
+
+      <XpGainRatePanel rate={character.experienceRate} />
 
       <section className="ui-panel-inset rounded-sm border border-ui-stone-light/15 p-4">
         <h4 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">

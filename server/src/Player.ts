@@ -38,8 +38,12 @@ export class Player extends Creature<Character["outfit"]> {
   /** Party hunt-session loot/supply counters; never client-supplied. */
   readonly partyAnalyzer: PartyAnalyzerTotals;
   private currentVocation: Character["vocation"];
-  /** Fixed at creation; gates which outfits this character may wear. */
-  readonly sex: Character["sex"];
+  /**
+   * Gates which outfits this character may wear. Fixed at creation and
+   * changed only by a committed Mantus Store sex-change purchase — never by
+   * anything a client sends.
+   */
+  private currentSex: Character["sex"];
   readonly townId: number;
   readonly lastLoginAt: Date | null;
   readonly version: number;
@@ -100,7 +104,7 @@ export class Player extends Creature<Character["outfit"]> {
     this.partyAnalyzer = new PartyAnalyzerTotals(now);
     this.currentWheelBonuses = wheelBonuses;
     this.currentVocation = character.vocation;
-    this.sex = character.sex;
+    this.currentSex = character.sex;
     this.premiumUntil = premiumUntil?.getTime() ?? null;
     this.townId = character.townId;
     this.mountId = character.mountId;
@@ -211,6 +215,31 @@ export class Player extends Creature<Character["outfit"]> {
 
   isPremiumAt(now: number): boolean {
     return this.accountTierAt(now) === "premium";
+  }
+
+  /**
+   * The XP boost deadline, mirrored here for the character panel's rate
+   * breakdown. `DailyRewardService` is its only writer — both the daily claim
+   * and the Mantus Store purchase go through it — so this can never disagree
+   * with the deadline the kill-experience path reads.
+   */
+  private xpBoostUntil = 0;
+
+  get xpBoostUntilMs(): number {
+    return this.xpBoostUntil;
+  }
+
+  setXpBoostUntilMs(untilMs: number): void {
+    this.xpBoostUntil = untilMs;
+  }
+
+  get sex(): Character["sex"] {
+    return this.currentSex;
+  }
+
+  /** Adopts a sex change the store already committed to the database. */
+  setSex(sex: Character["sex"]): void {
+    this.currentSex = sex;
   }
 
   setPremiumUntil(premiumUntil: Date): void {

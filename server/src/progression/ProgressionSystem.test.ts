@@ -143,7 +143,7 @@ describe("ProgressionSystem stages", () => {
 });
 
 function makeHarness(
-  rates: { skill: number; magic: number },
+  rates: { experience?: number; skill: number; magic: number },
   progressionEventIds: ReadonlyArray<string> = [],
   useStages = false,
 ) {
@@ -172,7 +172,7 @@ function makeHarness(
     { sessionFor: () => undefined } as unknown as SessionRegistry,
     persistence,
     { updateCapacity: () => null } as unknown as ItemIntentHandler,
-    rates,
+    { experience: 1, ...rates },
     useStages,
   );
   return { player, persistence, progression };

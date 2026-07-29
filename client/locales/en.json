@@ -253,28 +253,10 @@
     "title": "Mantus Store",
     "open": "Open Mantus Store",
     "categories": "Store categories",
-    "category": {
-      "premium-time": "Premium Time",
-      "premium-timeHint": "Account-wide benefits"
-    },
     "yourBalance": "Your Mantus Coins",
-    "balanceHint": "Mantus Coins are account-wide and separate from gold carried by your character.",
-    "hero": {
-      "eyebrow": "Forge your legend",
-      "title": "Premium Time",
-      "description": "Unlock the complete Mantus experience across every character on your account.",
-      "action": "View featured offer"
-    },
     "currentPremium": "{{count}} premium days remaining",
     "loading": "Opening the store…",
-    "premiumOffers": "Premium offers",
-    "premiumOffersHint": "Premium time is added to your existing entitlement.",
-    "popular": "Popular",
-    "days": "{{count}} days",
-    "premiumAccount": "Premium account",
-    "select": "Select",
     "purchaseComplete": "Purchase complete. Your premium time is active.",
-    "confirmTitle": "Add {{count}} days of Premium Time?",
     "confirmDescription": "This purchase costs {{price}} Mantus Coins.",
     "confirm": "Confirm purchase",
     "purchasing": "Purchasing…",
@@ -284,8 +266,42 @@
       "premium-limit": "This purchase would exceed the premium-time limit.",
       "rate-limited": "Please wait a moment before trying again.",
       "unavailable": "The Mantus Store is unavailable right now.",
-      "failed": "The purchase could not be completed. No coins were charged."
-    }
+      "failed": "The purchase could not be completed. No coins were charged.",
+      "category-not-found": "That store category is no longer available.",
+      "already-owned": "You already own this.",
+      "outfit-required": "You must own the outfit before you can buy its addon.",
+      "wrong-sex": "That outfit does not suit your character.",
+      "limit-reached": "You have reached the limit for this offer.",
+      "name-taken": "That name is already taken.",
+      "name-invalid": "That name cannot be used.",
+      "name-required": "Enter the new character name first.",
+      "in-combat": "You cannot use this while in combat.",
+      "inbox-full": "Your store inbox has no free space."
+    },
+    "home": "Home",
+    "empty": "No offers in this category.",
+    "newName": "New character name",
+    "page": "Page {{page}} / {{pageCount}}",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "kind": {
+      "premium": "Premium Time",
+      "outfit": "Outfit",
+      "outfit-addon": "Outfit addon",
+      "mount": "Mount",
+      "item": "Item",
+      "stackable": "Supplies",
+      "charges": "Charged item",
+      "name-change": "Service",
+      "sex-change": "Service",
+      "exp-boost": "Boost",
+      "prey-slot": "Prey slot",
+      "prey-wildcard": "Prey wildcards",
+      "hunting-slot": "Hunting task slot",
+      "temple-teleport": "Transport"
+    },
+    "priceLabel": "Buy for {{price}} Mantus Coins",
+    "priceLabelWithCount": "Buy {{count}} for {{price}} Mantus Coins"
   },
   "connection": {
     "connecting": "Connecting",
@@ -2340,5 +2356,14 @@
   "preyHunting": {
     "tabsLabel": "Prey and hunting tasks",
     "goldLabel": "Gold"
+  },
+  "xpRate": {
+    "title": "XP Gain Rate",
+    "base": "Base XP rate",
+    "xpBoost": "XP boost",
+    "stamina": "Stamina multiplier",
+    "total": "Total",
+    "remaining": "{{count}} min left",
+    "staminaDepleted": "Your stamina is depleted; you gain no experience from hunting."
   }
 }

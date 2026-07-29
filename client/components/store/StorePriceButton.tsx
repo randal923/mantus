@@ -1,0 +1,70 @@
+"use client";
+
+import Image from "next/image";
+import type { StoreSubOffer } from "@tibia/protocol";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { useLanguageStore } from "../../stores/useLanguageStore";
+
+interface StorePriceButtonProps {
+  offer: StoreSubOffer;
+  balance: number;
+  busy: boolean;
+  onSelect: () => void;
+}
+
+/**
+ * One priced variant of a product — the store's "100x for 18" button.
+ *
+ * `disabled` and its reason come from the server; the affordability tint is
+ * the only thing decided here, and it is decoration: the server re-checks the
+ * balance when the purchase runs.
+ */
+export function StorePriceButton({
+  offer,
+  balance,
+  busy,
+  onSelect,
+}: StorePriceButtonProps) {
+  const { t } = useAppTranslation();
+  const language = useLanguageStore((state) => state.language);
+  const affordable = balance >= offer.price;
+  const price = offer.price.toLocaleString(language);
+  // The visible label is a bare number; the accessible name says what it buys.
+  const label =
+    offer.count === undefined
+      ? t("store.priceLabel", { price })
+      : t("store.priceLabelWithCount", { count: offer.count, price });
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={offer.disabled === true || busy}
+      title={offer.disabledReason}
+      onClick={onSelect}
+      className="flex h-8 min-w-20 items-center justify-center gap-1.5 rounded-lg border border-ui-gold/25 bg-black/35 px-2.5 text-left transition-[border-color,background-color] not-disabled:hover:border-cyan-200/60 not-disabled:hover:bg-cyan-950/40 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-cyan-200/60 focus-visible:outline-none"
+    >
+      {offer.count !== undefined && (
+        <span className="font-display text-xs text-ui-text-bright tabular-nums">
+          {offer.count.toLocaleString(language)}x
+        </span>
+      )}
+      <span className="flex items-center gap-1">
+        <Image
+          src="/assets/ui/mantus-coin.png"
+          alt=""
+          width={16}
+          height={16}
+          className="shrink-0"
+        />
+        <span
+          className={`font-display text-sm font-bold tabular-nums ${
+            affordable ? "text-cyan-100" : "text-red-400"
+          }`}
+        >
+          {price}
+        </span>
+      </span>
+    </button>
+  );
+}

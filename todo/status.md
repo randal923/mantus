@@ -36,7 +36,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Depot, inbox, mail, supply stash (11c)                                               | ✅     | ✅     | Nothing                                                                                                       |
 | Player trade (48)                                                                    | ✅     | ✅     | Ground-item offers; store/unique/house-tile restrictions (wait on 43/78/houses)                               |
 | Market with escrow (49)                                                              | ✅     | ✅     | Full-catalog browser (asset pass 108), pristineness extensions, expiry decision; selection retention (client) |
-| Mantus Store: coins + premium (43)                                                   | ◐      | ◐      | Payment provider (product), coin transfers, catalog breadth; history tab (client)                             |
+| Mantus Store: full Canary catalog (43)                                               | ✅     | ✅     | 279 products/294 offers + all deliverable offer types shipped 2026-07-29 (integration tests unrun — no DB); payment provider, coin transfers, history tab (client) still open |
 
 ## Progression & combat
 
@@ -72,7 +72,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Wheel of Destiny + Gem Atelier (79–81)                   | ◐      | ✅     | Revelation actives (avatars + 5 procedural spells), periodic conviction majors, Monk perks (need harmony), gem long tail, extra point sources, 5 gem deviations |
 | Outfits + mounts (70, 71)                                | ✅     | ✅     | Full Canary catalog (252 outfits/236 mounts) + per-sex wardrobe + addon rendering shipped 2026-07-28; premium gate unenforced (TODO.md), unlock sources ride with store/achievements/quests (43, 67) |
 | Profiles: achievements, titles, badges, char info (67)   | ✅     | ✅     | Nothing — closed; rename flow (2) and Cyclopedia display (83) live elsewhere |
-| Prey (74)                                                | ✅     | ✅     | Third-slot source rides with 43 (store); daily-reward wildcards ship (84); party-shared loot boost → 77 |
+| Prey (74)                                                | ✅     | ✅     | Third slot + wildcard packs now sold by the store (43, 2026-07-29); party-shared loot boost → 77 |
 | Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |
 | Boosted creatures/bosses + reward-boss flag (76)         | ✅     | ✅     | Nothing — slot/boosted loot bonuses now feed reward-chest rolls (84)        |
 | Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Stash material auto-draw rides with 84's stash routing (speed/capacity stats shipped) |

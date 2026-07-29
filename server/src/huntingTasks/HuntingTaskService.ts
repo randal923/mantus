@@ -152,6 +152,34 @@ export class HuntingTaskService {
     );
   }
 
+  /** True when no slot is still locked, so the store's slot offer is spent. */
+  allSlotsUnlocked(characterId: string): boolean {
+    const slots = this.slotsByCharacter.get(characterId);
+    return slots !== undefined && slots.every((slot) => slot.state !== "locked");
+  }
+
+  /**
+   * Unlocks a slot the Mantus Store already unlocked durably (Canary's
+   * Permanent Hunting Task Slot). Refresh-only: the row was written inside
+   * the purchase transaction, so nothing is decided here.
+   */
+  applyStoreSlotUnlock(characterId: string, slot: number): void {
+    this.outcomes.push((now) => {
+      const slots = this.slotsByCharacter.get(characterId);
+      const record = slots?.[slot];
+      if (!slots || !record || record.state !== "locked") return;
+      const player = this.world.getPlayer(characterId);
+      this.replaceSlot(characterId, {
+        ...record,
+        state: "selection",
+        grid: this.rollGrid(slots, player?.level ?? 1),
+        freeRerollAtMs: now + TASK_HUNTING_RULES.freeRerollSeconds * 1000,
+      });
+      const session = this.registry.sessionFor(characterId);
+      if (session) this.sendState(session, characterId);
+    });
+  }
+
   /** Same damagers set as the bestiary; counting continues past the goal. */
   onMonsterKilled(
     damagerIds: ReadonlyArray<string>,

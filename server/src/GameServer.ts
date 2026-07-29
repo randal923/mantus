@@ -3,6 +3,7 @@ import type { IncomingMessage } from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
 import {
   PROTOCOL_LIMITS,
+  type CharacterSex,
   type ClientMessage,
   type PodiumRaceEntry,
 } from "@tibia/protocol";
@@ -370,12 +371,6 @@ export class GameServer {
       deps.moderation,
       config.moderationRetentionDays,
     );
-    this.store = new MantusStoreService(
-      this.world,
-      this.registry,
-      deps.store,
-      this.depot,
-    );
     this.storeOperator = new StoreOperatorService(this.registry, deps.store);
     this.vips = new VipService(this.world, this.registry, deps.vip);
     this.friends = new FriendService(this.world, this.registry, deps.friends);
@@ -526,6 +521,41 @@ export class GameServer {
       new WorldActionRng(config.combatSeed ^ 0x77e1_9b25),
       (characterId) => this.bestiaryTracker.killsFor(characterId),
       deps.huntingTasks,
+    );
+    // Built after the systems it refreshes: a committed purchase reaches the
+    // live world only through these hooks, and each one is refresh-only —
+    // the purchase transaction already wrote the durable truth.
+    this.store = new MantusStoreService(
+      this.world,
+      this.registry,
+      deps.itemCatalog,
+      deps.store,
+      {
+        entitlementsFor: (characterId) =>
+          this.outfits.entitlementsFor(characterId),
+        refreshOutfits: (characterId) => this.outfits.refresh(characterId),
+        wildcardsOf: (characterId) => this.prey.wildcardsOf(characterId),
+        applyWildcardBalance: (characterId, balance) =>
+          this.prey.applyWildcardBalance(characterId, balance),
+        preySlotsUnlocked: (characterId) =>
+          this.prey.allSlotsUnlocked(characterId),
+        huntingSlotsUnlocked: (characterId) =>
+          this.huntingTasks.allSlotsUnlocked(characterId),
+        applyPreySlotUnlock: (characterId, slot) =>
+          this.prey.applyStoreSlotUnlock(characterId, slot),
+        applyHuntingSlotUnlock: (characterId, slot) =>
+          this.huntingTasks.applyStoreSlotUnlock(characterId, slot),
+        xpBoostUntilMs: (characterId) => this.daily.xpBoostUntilMs(characterId),
+        applyXpBoost: (characterId, untilMs) =>
+          this.daily.applyXpBoost(characterId, untilMs),
+        injectDelivery: (characterId, item) =>
+          this.depot.injectDelivery(characterId, item),
+        applySexChange: (characterId, sex, lookType) =>
+          this.applyStoreSexChange(characterId, sex, lookType),
+        canTempleTeleport: (characterId) =>
+          this.canTempleTeleport(characterId),
+        templeTeleport: (characterId) => this.templeTeleport(characterId),
+      },
     );
     this.wheelTracker = new WheelTracker(deps.wheel);
     this.gemTracker = new GemTracker(deps.gems);
@@ -1664,6 +1694,8 @@ export class GameServer {
         return;
       }
       case "store-open":
+      case "store-category":
+      case "store-description":
       case "store-purchase":
       case "store-history":
         this.store.handle(session, intent, now);
@@ -1862,5 +1894,57 @@ export class GameServer {
         resolve();
       });
     });
+  }
+
+  /**
+   * Adopts a sex change the store already committed. The worn look type moved
+   * with it in the same transaction, so the live creature only has to catch
+   * up — and the new outfit reaches other players' views through the normal
+   * creature-state push, never as an unentitled one (charter rule 6).
+   */
+  private applyStoreSexChange(
+    characterId: string,
+    sex: CharacterSex,
+    lookType: number,
+  ): void {
+    const player = this.world.getPlayer(characterId);
+    if (!player) return;
+    player.setSex(sex);
+    player.outfit = { ...player.outfit, lookType, addons: 0 };
+    this.visibility.onCreatureStateChanged(player);
+    this.persistence.markDirty(player);
+  }
+
+  /**
+   * Canary's temple-teleport rule: allowed inside a protection zone, refused
+   * outside one while the pz-lock from a fight is running. Read from live
+   * state at execution time, never from anything the client sent.
+   */
+  private canTempleTeleport(characterId: string): boolean {
+    const player = this.world.getPlayer(characterId);
+    if (!player) return false;
+    if (this.world.isProtectionZone(player.position)) return true;
+    return !player.conditions.has("pz-lock");
+  }
+
+  private templeTeleport(characterId: string): void {
+    const player = this.world.getPlayer(characterId);
+    const session = this.registry.sessionFor(characterId);
+    if (!player || !session) return;
+    const destination = this.world.findUnoccupiedPosition(
+      this.world.templePosition,
+      2,
+    );
+    if (!destination) return;
+    session.movementDirection = null;
+    session.bufferedMovementDirection = null;
+    session.autoWalkDirections = [];
+    if (session.attackTargetId) {
+      session.attackTargetId = null;
+      session.send({ type: "attack-target-changed", creatureId: null });
+    }
+    const from = this.world.relocateCreature(player, destination);
+    this.visibility.onPlayerTeleported(session, player, from);
+    this.persistence.markDirty(player);
   }
 }

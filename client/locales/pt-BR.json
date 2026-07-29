@@ -253,28 +253,10 @@
     "title": "Loja Mantus",
     "open": "Abrir Loja Mantus",
     "categories": "Categorias da loja",
-    "category": {
-      "premium-time": "Tempo Premium",
-      "premium-timeHint": "Benefícios para toda a conta"
-    },
     "yourBalance": "Suas Mantus Coins",
-    "balanceHint": "Mantus Coins pertencem à conta e são separadas do ouro carregado pelo personagem.",
-    "hero": {
-      "eyebrow": "Forje sua lenda",
-      "title": "Tempo Premium",
-      "description": "Desbloqueie a experiência completa de Mantus para todos os personagens da sua conta.",
-      "action": "Ver oferta em destaque"
-    },
     "currentPremium": "{{count}} dias premium restantes",
     "loading": "Abrindo a loja…",
-    "premiumOffers": "Ofertas premium",
-    "premiumOffersHint": "O tempo premium é somado ao período atual.",
-    "popular": "Popular",
-    "days": "{{count}} dias",
-    "premiumAccount": "Conta premium",
-    "select": "Selecionar",
     "purchaseComplete": "Compra concluída. Seu tempo premium está ativo.",
-    "confirmTitle": "Adicionar {{count}} dias de Tempo Premium?",
     "confirmDescription": "Esta compra custa {{price}} Mantus Coins.",
     "confirm": "Confirmar compra",
     "purchasing": "Comprando…",
@@ -284,8 +266,42 @@
       "premium-limit": "Esta compra ultrapassaria o limite de tempo premium.",
       "rate-limited": "Aguarde um momento antes de tentar novamente.",
       "unavailable": "A Loja Mantus está indisponível no momento.",
-      "failed": "Não foi possível concluir a compra. Nenhuma moeda foi cobrada."
-    }
+      "failed": "Não foi possível concluir a compra. Nenhuma moeda foi cobrada.",
+      "category-not-found": "Esta categoria da loja não está mais disponível.",
+      "already-owned": "Você já possui isto.",
+      "outfit-required": "Você precisa ter a roupa antes de comprar o adereço.",
+      "wrong-sex": "Essa roupa não serve para o seu personagem.",
+      "limit-reached": "Você atingiu o limite desta oferta.",
+      "name-taken": "Esse nome já está em uso.",
+      "name-invalid": "Esse nome não pode ser usado.",
+      "name-required": "Digite o novo nome do personagem primeiro.",
+      "in-combat": "Você não pode usar isto durante um combate.",
+      "inbox-full": "Sua caixa de entrada da loja está sem espaço."
+    },
+    "home": "Início",
+    "empty": "Nenhuma oferta nesta categoria.",
+    "newName": "Novo nome do personagem",
+    "page": "Página {{page}} / {{pageCount}}",
+    "previousPage": "Anterior",
+    "nextPage": "Próxima",
+    "kind": {
+      "premium": "Tempo Premium",
+      "outfit": "Roupa",
+      "outfit-addon": "Adereço de roupa",
+      "mount": "Montaria",
+      "item": "Item",
+      "stackable": "Suprimentos",
+      "charges": "Item com cargas",
+      "name-change": "Serviço",
+      "sex-change": "Serviço",
+      "exp-boost": "Impulso",
+      "prey-slot": "Espaço de presa",
+      "prey-wildcard": "Curingas de presa",
+      "hunting-slot": "Espaço de tarefa de caça",
+      "temple-teleport": "Transporte"
+    },
+    "priceLabel": "Comprar por {{price}} Mantus Coins",
+    "priceLabelWithCount": "Comprar {{count}} por {{price}} Mantus Coins"
   },
   "connection": {
     "connecting": "Conectando",
@@ -2340,5 +2356,14 @@
   "preyHunting": {
     "tabsLabel": "Presas e tarefas de caça",
     "goldLabel": "Ouro"
+  },
+  "xpRate": {
+    "title": "Taxa de ganho de XP",
+    "base": "Taxa base de XP",
+    "xpBoost": "Impulso de XP",
+    "stamina": "Multiplicador de stamina",
+    "total": "Total",
+    "remaining": "{{count}} min restantes",
+    "staminaDepleted": "Sua stamina acabou; você não ganha experiência ao caçar."
   }
 }

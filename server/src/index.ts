@@ -6,6 +6,7 @@ import { PgAccountStore } from "./PgAccountStore";
 import { DevTokenVerifier } from "./DevTokenVerifier";
 import { SupabaseTokenVerifier } from "./SupabaseTokenVerifier";
 import { loadItemCatalog } from "./item/loadItemCatalog";
+import { assertStoreCatalog } from "./store/assertStoreCatalog";
 import { PgItemStore } from "./item/PgItemStore";
 import { CurrencyReconciler } from "./economy/CurrencyReconciler";
 import { PgBankStore } from "./economy/PgBankStore";
@@ -97,6 +98,9 @@ pool.on("error", (cause) => {
 const accounts = new PgAccountStore(pool);
 const characters = new PgCharacterStore(pool);
 const itemCatalog = await loadItemCatalog();
+// Refuses to start on a store catalog this server could not deliver, rather
+// than failing on some player's first purchase.
+assertStoreCatalog(itemCatalog);
 const items = new PgItemStore(pool, itemCatalog, serverConfig.map.name);
 const npcTravel = new PgNpcTravelStore(pool, itemCatalog);
 const promotion = new PgPromotionStore(pool, itemCatalog);

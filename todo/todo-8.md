@@ -14,31 +14,38 @@ that performs it.
 
 ## Feature 43 — Mantus Store parity completion
 
+The Canary catalog, every deliverable offer type, and the official store
+layout shipped 2026-07-29 (see [done.md](done.md)). What is left:
+
 **Remaining work**
 
+- **Run the integration tests.** The 20 `PgMantusStore.integration.test.ts`
+  cases — every delivery leg's transaction, the racing-purchase and
+  replay-guard assertions, the inbox-full rollback — were written but never
+  executed: no Postgres was reachable when they landed. Run them before
+  trusting the store. **This is the highest-priority item here.**
 - **Real-money purchase path.** Nothing turns money into coins: needs a
   payment provider, webhook verification, and a grant keyed by the
   provider's transaction id (the `request_key` column exists for exactly
-  this). Until then `/coins` is a development surface.
+  this). Until then `/coins` and `yarn coins:grant` are development surfaces.
 - **Transferable coin balances.** Coins are account-scoped; Canary gifting
   needs a transfer op with both legs in one transaction plus an anti-abuse
-  policy.
-- **Catalog breadth** — two categories exist; expanding is content. Owed to
-  Feature 74/75 (shipped 2026-07-26): the Canary prey offers — "Permanent
-  Prey Slot" / "Permanent Hunting Task Slot" (900 coins, unlock slot 2…3 by
-  flipping the slot out of `locked`), "Prey Wildcard" packs (5 for 50 coins,
-  balance cap 50 — call the shipped capped
-  `PreyService.grantWildcards`/`PreyStore.grantWildcards`), and Instant
-  Reward Access. Until these exist the third prey/task slots stay locked and
-  wildcards have no source besides Feature 84's daily rewards.
-- **Load-time catalog gate** — assert every offer's `itemTypeId` exists in
-  the pinned catalog and is pickupable (mirror `loadShopCatalogs`; today a
-  bad id fails on first purchase, not at boot).
+  policy. Canary's second balance (`coins_transferable`) is deliberately not
+  modelled yet.
+- **Offer types with no system behind them** — blessings (needs Feature 72's
+  persistence; nothing grants or stores them today), hirelings, charm
+  expansion, instant reward access, house decoration kits, tournament. The
+  importer skips and reports each one; adding the system is what unblocks
+  the offer, not the catalog.
+- **Sex-change save race.** The delivery writes `characters.sex` and the worn
+  look type inside the purchase transaction without bumping `version`; a
+  character snapshot save landing between commit and the tick applying the
+  effect would write the old look type back. The window is sub-tick. Fix by
+  having the delivery bump `version`, or by making the save skip outfit
+  columns it did not author.
 - **Capability move:** `/coins` and `/storerefund` onto Feature 96's surface
   behind an `economy.grant` capability (todo-12).
 - Client history UI → [client backlog](client/feature-43-store-history-ui.md).
-- When item products grant outfits/mounts, call
-  `OutfitService.grantOutfit` (see todo-10, Features 70/71 unlock sources).
 
 ## Feature 45 — Bank parity gaps
 

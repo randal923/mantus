@@ -5,10 +5,15 @@ Part of the [client backlog](README.md). Server side shipped:
 
 ## Why
 Coin grants, item products, refunds, and the coin history all ship
-server-side, but `store-history-state` has no panel —
-`client/components/store/StoreModal.tsx` shows the catalog only. A player
-cannot see their coin ledger, and a purchase delivered to the inbox
-(`deliveredToInbox`) gives no cue about where the item went.
+server-side, but `store-history-state` has no panel. `StoreModal` was rebuilt
+2026-07-29 into the official store's layout (category tree, product list,
+detail pane, coin bar) and still shows the catalog only. A player cannot see
+their coin ledger, and a purchase delivered to the inbox (`deliveredToInbox`)
+gives no cue about where the item went.
+
+The rebuilt window has an obvious seam for both: the bottom coin bar is where
+the official client puts its History button, and the purchase-complete banner
+already renders after a committed purchase.
 
 ## Remaining work
 - A History tab in `StoreModal`: request the history (paged, bounded by the
@@ -31,7 +36,9 @@ cannot see their coin ledger, and a purchase delivered to the inbox
   balances client-side.
 
 ## Tests
-- Storybook: history with mixed row kinds and an empty state.
+- Storybook: history with mixed row kinds and an empty state. `StoreModal`
+  already has a browser-lane story file to extend
+  (`client/stories/StoreModal.stories.tsx`).
 - Unit test for the row-formatting helper in `client/lib/store/`.
 
 ## Dependencies

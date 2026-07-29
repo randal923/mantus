@@ -1,37 +1,47 @@
-import { randomUUID } from "node:crypto";
 import {
-  DEPOT_LIMITS,
   MAX_PREMIUM_DAYS,
   STORE_LIMITS,
   type StoreHistoryEntry,
-  type StoreOffer,
 } from "@tibia/protocol";
 import type { Pool, PoolClient } from "pg";
-import { DepotTxHelper } from "../depot/DepotTxHelper";
-import type { DepotItemRow } from "../depot/DepotItemRow";
-import { requireItem } from "../depot/requireItem";
-import { bumpInboxRevisionUpdate } from "../depot/sql/bumpInboxRevisionUpdate";
-import { lockCharacterQuery } from "../depot/sql/lockCharacterQuery";
-import { rewardAuditInsert } from "../depot/sql/rewardAuditInsert";
-import { rewardDeliveryInsert } from "../depot/sql/rewardDeliveryInsert";
-import { rewardItemInsert } from "../depot/sql/rewardItemInsert";
-import { rewardStorageStateLockQuery } from "../depot/sql/rewardStorageStateLockQuery";
+import { localDayKey } from "../boosted/localDayKey";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { Item } from "../item/Item";
+import { deliverExpBoost } from "./delivery/deliverExpBoost";
+import { deliverInboxItem } from "./delivery/deliverInboxItem";
+import { deliverMount } from "./delivery/deliverMount";
+import { deliverNameChange } from "./delivery/deliverNameChange";
+import { deliverOutfit } from "./delivery/deliverOutfit";
+import { deliverPreyWildcards } from "./delivery/deliverPreyWildcards";
+import { deliverSexChange } from "./delivery/deliverSexChange";
+import { deliverSlotUnlock } from "./delivery/deliverSlotUnlock";
+import type {
+  StoreCharacterRow,
+  StoreDeliveryContext,
+} from "./delivery/StoreDeliveryContext";
 import type {
   MantusStoreGrantResult,
   MantusStorePurchaseResult,
   MantusStoreRefundResult,
   MantusStoreStore,
+  StoreDbFacts,
 } from "./MantusStoreStore";
 import { coinLedgerHistoryQuery } from "./sql/coinLedgerHistoryQuery";
 import { coinLedgerInsert } from "./sql/coinLedgerInsert";
+import { ensureStoreLimitsInsert } from "./sql/ensureStoreLimitsInsert";
 import { lockCoinLedgerEntryQuery } from "./sql/lockCoinLedgerEntryQuery";
 import { lockStoreAccountQuery } from "./sql/lockStoreAccountQuery";
+import { lockStoreCharacterQuery } from "./sql/lockStoreCharacterQuery";
+import { lockStoreLimitsQuery } from "./sql/lockStoreLimitsQuery";
 import { storeAuditInsert } from "./sql/storeAuditInsert";
 import { storeRequestKeyQuery } from "./sql/storeRequestKeyQuery";
+import { updateStoreLimitsQuery } from "./sql/updateStoreLimitsQuery";
+import { STORE_OFFERS_BY_ID, type StoreGrant } from "./storeCatalog";
+import { XP_BOOST_DAILY_LIMIT } from "./storeOfferAvailability";
+import type { StorePurchaseEffect } from "./StorePurchaseEffect";
+import { xpBoostPrice } from "./xpBoostPrice";
 
 interface LockedAccount {
   readonly mantus_coins: string;
@@ -40,11 +50,16 @@ interface LockedAccount {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
-const IDENTIFIER = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/**
+ * Postgres Mantus Store. Every purchase is one SERIALIZABLE transaction that
+ * locks the account and the character, re-derives the price from the pinned
+ * catalog and the character's own counters, performs the product's delivery
+ * leg, writes the coin ledger row and the audit row — and commits all of it
+ * or none of it. There is no window in which coins are gone and the product
+ * is not delivered, or the reverse (charter rules 2, 4 and 11).
+ */
 export class PgMantusStore implements MantusStoreStore {
-  private readonly depot = new DepotTxHelper();
-
   constructor(
     private readonly pool: Pool,
     private readonly catalog: ItemCatalog,
@@ -53,10 +68,25 @@ export class PgMantusStore implements MantusStoreStore {
   async purchase(input: {
     readonly accountId: string;
     readonly characterId: string;
-    readonly offer: StoreOffer;
+    readonly offerId: string;
     readonly requestId: string;
+    readonly newName?: string;
   }): Promise<MantusStorePurchaseResult> {
-    this.validatePurchase(input);
+    if (
+      input.accountId.length < 1 ||
+      input.accountId.length > 128 ||
+      input.characterId.length < 1 ||
+      input.characterId.length > 128 ||
+      input.requestId.length < 1 ||
+      input.requestId.length > 64
+    ) {
+      throw new Error("invalid store purchase");
+    }
+    // Resolved here, from the server's own catalog: the message named an id
+    // and nothing more.
+    const entry = STORE_OFFERS_BY_ID.get(input.offerId);
+    if (!entry) return { status: "offer-not-found" };
+
     const requestKey = `store-purchase:${input.accountId}:${input.requestId}`;
     return runSerializableTransaction(this.pool, async (client) => {
       const account = await this.lockAccount(client, input.accountId);
@@ -67,30 +97,51 @@ export class PgMantusStore implements MantusStoreStore {
           status: "committed",
           balance: Number(account.mantus_coins),
           premiumUntil: account.premium_until,
-          deliveredItem: null,
+          price: 0,
+          effect: null,
+          deliveredItems: [],
         });
       }
+      const character = await this.lockCharacter(client, input.characterId);
+
+      // The XP boost's price escalates with the day's purchases, so the
+      // charged price comes from the locked counter — never from the offer
+      // the client is looking at.
+      const price =
+        entry.offer.grant.kind === "exp-boost"
+          ? xpBoostPrice(
+              await this.bumpExpBoostCount(
+                client,
+                input.characterId,
+                account.transaction_now,
+              ),
+            )
+          : entry.offer.price;
+
       const balance = Number(account.mantus_coins);
-      if (!Number.isSafeInteger(balance) || balance < input.offer.price) {
+      if (!Number.isSafeInteger(balance) || balance < price) {
         throw new TransactionRollback<MantusStorePurchaseResult>({
           status: "insufficient-coins",
         });
       }
-      const balanceAfter = balance - input.offer.price;
-      const premiumUntil = input.offer.premiumDays
-        ? this.extendPremium(account, input.offer.premiumDays)
-        : account.premium_until;
-      // The item leg runs in this same transaction, so a delivery that cannot
-      // land rolls the coin debit back with it — never a partial purchase.
-      const deliveredItem = input.offer.item
-        ? await this.deliverToInbox(
-            client,
-            input.characterId,
-            input.offer.item.itemTypeId,
-            input.offer.item.count,
-            requestKey,
-          )
-        : null;
+      const balanceAfter = balance - price;
+      const premiumUntil =
+        entry.offer.grant.kind === "premium"
+          ? this.extendPremium(account, entry.offer.grant.days)
+          : account.premium_until;
+
+      const context: StoreDeliveryContext = {
+        client,
+        characterId: input.characterId,
+        accountId: input.accountId,
+        character,
+        catalog: this.catalog,
+        requestKey,
+        transactionNow: account.transaction_now,
+        ...(input.newName === undefined ? {} : { newName: input.newName }),
+      };
+      const delivered = await this.deliver(context, entry.offer.grant);
+
       await this.writeBalance(
         client,
         input.accountId,
@@ -100,9 +151,9 @@ export class PgMantusStore implements MantusStoreStore {
       await client.query(coinLedgerInsert, [
         input.accountId,
         "purchase",
-        -input.offer.price,
+        -price,
         balanceAfter,
-        input.offer.id,
+        entry.offer.id,
         requestKey,
         null,
         null,
@@ -112,20 +163,136 @@ export class PgMantusStore implements MantusStoreStore {
         input.characterId,
         JSON.stringify({
           accountId: input.accountId,
-          offerId: input.offer.id,
-          price: input.offer.price,
+          offerId: entry.offer.id,
+          productId: entry.product.id,
+          kind: entry.product.kind,
+          price,
           balanceAfter,
           premiumUntil: premiumUntil?.toISOString() ?? null,
-          deliveredItemId: deliveredItem?.id ?? null,
+          deliveredItemIds: delivered.items.map((item) => item.id),
         }),
       ]);
       return {
         status: "committed" as const,
         balance: balanceAfter,
         premiumUntil,
-        deliveredItem,
+        price,
+        effect: delivered.effect,
+        deliveredItems: delivered.items,
       };
     });
+  }
+
+  /** Dispatches the product's own delivery leg inside the transaction. */
+  private async deliver(
+    context: StoreDeliveryContext,
+    grant: StoreGrant,
+  ): Promise<{
+    readonly effect: StorePurchaseEffect;
+    readonly items: ReadonlyArray<Item>;
+  }> {
+    if (grant.kind === "premium") {
+      return { effect: { kind: "premium" }, items: [] };
+    }
+    if (grant.kind === "outfit" || grant.kind === "outfit-addon") {
+      return { effect: await deliverOutfit(context, grant), items: [] };
+    }
+    if (grant.kind === "mount") {
+      return { effect: await deliverMount(context, grant), items: [] };
+    }
+    if (
+      grant.kind === "item" ||
+      grant.kind === "stackable" ||
+      grant.kind === "charges"
+    ) {
+      const { items } = await deliverInboxItem(context, grant);
+      const first = items[0];
+      if (!first) throw new Error("store delivery produced no item");
+      return { effect: { kind: "inbox-item", item: first }, items };
+    }
+    if (grant.kind === "prey-wildcard") {
+      return { effect: await deliverPreyWildcards(context, grant), items: [] };
+    }
+    if (grant.kind === "prey-slot" || grant.kind === "hunting-slot") {
+      return { effect: await deliverSlotUnlock(context, grant.kind), items: [] };
+    }
+    if (grant.kind === "exp-boost") {
+      return { effect: await deliverExpBoost(context), items: [] };
+    }
+    if (grant.kind === "sex-change") {
+      return { effect: await deliverSexChange(context), items: [] };
+    }
+    if (grant.kind === "name-change") {
+      return { effect: await deliverNameChange(context), items: [] };
+    }
+    // Temple teleport moves a live creature and writes nothing durable; the
+    // tick applies it from the committed outcome.
+    return { effect: { kind: "temple-teleport" }, items: [] };
+  }
+
+  /**
+   * Rolls the per-day XP boost counter forward and returns how many boosts
+   * had already been bought today — the index the price curve uses. Refuses
+   * once Canary's daily cap is reached.
+   */
+  private async bumpExpBoostCount(
+    client: PoolClient,
+    characterId: string,
+    transactionNow: Date,
+  ): Promise<number> {
+    await client.query(ensureStoreLimitsInsert, [characterId]);
+    const locked = await client.query<{
+      exp_boost_day: string | null;
+      exp_boost_count: number;
+    }>(lockStoreLimitsQuery, [characterId]);
+    const row = locked.rows[0];
+    const today = localDayKey(transactionNow.getTime());
+    const already = row?.exp_boost_day === today ? row.exp_boost_count : 0;
+    if (already >= XP_BOOST_DAILY_LIMIT) {
+      throw new TransactionRollback<MantusStorePurchaseResult>({
+        status: "limit-reached",
+      });
+    }
+    await client.query(updateStoreLimitsQuery, [
+      characterId,
+      today,
+      already + 1,
+    ]);
+    return already;
+  }
+
+  async facts(
+    characterId: string,
+    uniqueItemTypeIds: ReadonlyArray<number>,
+  ): Promise<StoreDbFacts> {
+    const bounded = uniqueItemTypeIds
+      .filter((id) => Number.isInteger(id) && id > 0 && id <= 65_535)
+      .slice(0, 32);
+    const owned =
+      bounded.length === 0
+        ? { rows: [] as Array<{ item_type_id: number }> }
+        : await this.pool.query<{ item_type_id: number }>(
+            `SELECT DISTINCT item_type_id FROM items
+             WHERE character_id = $1 AND item_type_id = ANY($2::int[])`,
+            [characterId, bounded],
+          );
+    const limits = await this.pool.query<{
+      exp_boost_day: string | null;
+      exp_boost_count: number;
+    }>(
+      `SELECT to_char(exp_boost_day, 'YYYY-MM-DD') AS exp_boost_day,
+              exp_boost_count
+       FROM character_store_limits
+       WHERE character_id = $1`,
+      [characterId],
+    );
+    const row = limits.rows[0];
+    const today = localDayKey(Date.now());
+    return {
+      ownedUniqueItemTypeIds: owned.rows.map((entry) => entry.item_type_id),
+      xpBoostPurchasesToday:
+        row?.exp_boost_day === today ? row.exp_boost_count : 0,
+    };
   }
 
   async grant(input: {
@@ -298,6 +465,23 @@ export class PgMantusStore implements MantusStoreStore {
     return account;
   }
 
+  private async lockCharacter(
+    client: PoolClient,
+    characterId: string,
+  ): Promise<StoreCharacterRow> {
+    const locked = await client.query<StoreCharacterRow>(
+      lockStoreCharacterQuery,
+      [characterId],
+    );
+    const character = locked.rows[0];
+    if (!character) {
+      throw new TransactionRollback<{ status: "unavailable" }>({
+        status: "unavailable",
+      });
+    }
+    return character;
+  }
+
   private extendPremium(account: LockedAccount, days: number): Date {
     const transactionNow = account.transaction_now.getTime();
     const premiumUntil = account.premium_until?.getTime() ?? 0;
@@ -325,89 +509,5 @@ export class PgMantusStore implements MantusStoreStore {
       [accountId, balance, premiumUntil],
     );
     if (updated.rowCount !== 1) throw new Error("store account update failed");
-  }
-
-  private async deliverToInbox(
-    client: PoolClient,
-    characterId: string,
-    itemTypeId: number,
-    count: number,
-    requestKey: string,
-  ): Promise<Item> {
-    const type = this.catalog.require(itemTypeId);
-    if (!type.pickupable || count > type.maxCount) {
-      throw new Error("invalid store product item");
-    }
-    const recipient = await client.query<{ id: string }>(lockCharacterQuery, [
-      characterId,
-    ]);
-    if (!recipient.rows[0]) throw new Error("store recipient not found");
-    await this.depot.ensureStorageState(client, characterId);
-    await client.query(rewardStorageStateLockQuery, [characterId]);
-    const slot = await this.depot.firstFreeSlot(
-      client,
-      characterId,
-      "inbox",
-      DEPOT_LIMITS.maxInboxItems,
-    );
-    if (slot === null) {
-      throw new TransactionRollback<MantusStorePurchaseResult>({
-        status: "inbox-full",
-      });
-    }
-    const itemId = randomUUID();
-    const inserted = await client.query<DepotItemRow>(rewardItemInsert, [
-      itemId,
-      itemTypeId,
-      count,
-      "{}",
-      characterId,
-      slot,
-    ]);
-    await client.query(rewardDeliveryInsert, [requestKey, characterId, itemId]);
-    await client.query(bumpInboxRevisionUpdate, [characterId]);
-    await client.query(rewardAuditInsert, [
-      characterId,
-      itemId,
-      requestKey,
-      itemTypeId,
-      count,
-    ]);
-    return requireItem(inserted.rows[0]);
-  }
-
-  private validatePurchase(input: {
-    readonly accountId: string;
-    readonly characterId: string;
-    readonly offer: StoreOffer;
-    readonly requestId: string;
-  }): void {
-    if (
-      input.accountId.length < 1 ||
-      input.accountId.length > 128 ||
-      input.characterId.length < 1 ||
-      input.characterId.length > 128 ||
-      input.requestId.length < 1 ||
-      input.requestId.length > 64 ||
-      !IDENTIFIER.test(input.offer.id) ||
-      !Number.isSafeInteger(input.offer.price) ||
-      input.offer.price < 1 ||
-      input.offer.price > STORE_LIMITS.maxBalance ||
-      (input.offer.premiumDays === undefined) ===
-        (input.offer.item === undefined) ||
-      (input.offer.premiumDays !== undefined &&
-        (!Number.isInteger(input.offer.premiumDays) ||
-          input.offer.premiumDays < 1 ||
-          input.offer.premiumDays > 365)) ||
-      (input.offer.item !== undefined &&
-        (!Number.isInteger(input.offer.item.itemTypeId) ||
-          input.offer.item.itemTypeId < 1 ||
-          input.offer.item.itemTypeId > 65_535 ||
-          !Number.isInteger(input.offer.item.count) ||
-          input.offer.item.count < 1 ||
-          input.offer.item.count > 100))
-    ) {
-      throw new Error("invalid store purchase");
-    }
   }
 }

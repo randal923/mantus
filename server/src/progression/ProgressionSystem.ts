@@ -14,7 +14,12 @@ export class ProgressionSystem {
     private readonly registry: SessionRegistry,
     private readonly persistence: CharacterPersistence,
     private readonly items: ItemIntentHandler,
-    private readonly rates: Readonly<{ skill: number; magic: number }> = {
+    private readonly rates: Readonly<{
+      experience: number;
+      skill: number;
+      magic: number;
+    }> = {
+      experience: 1,
       skill: 1,
       magic: 1,
     },
@@ -179,7 +184,10 @@ export class ProgressionSystem {
     this.registry.sessionFor(player.id)?.send({
       type: "progression-updated",
       playerId: player.id,
-      progression: projectOwnProgression(player, now),
+      progression: projectOwnProgression(player, now, {
+        baseRate: this.rates.experience,
+        useStages: this.useStages,
+      }),
     });
   }
 

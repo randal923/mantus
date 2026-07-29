@@ -66,7 +66,7 @@ export class DailyRewardService {
         (snapshot) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;
-            this.recordsByCharacter.set(characterId, snapshot);
+            this.setRecord(characterId, snapshot);
           });
         },
         (cause: unknown) => this.warn(characterId, cause),
@@ -76,6 +76,47 @@ export class DailyRewardService {
 
   detachCharacter(characterId: string): void {
     this.recordsByCharacter.delete(characterId);
+  }
+
+  /** Milliseconds of XP boost still running, for the character panel. */
+  xpBoostUntilMs(characterId: string): number {
+    return this.recordsByCharacter.get(characterId)?.xpBoostUntilMs ?? 0;
+  }
+
+  /**
+   * Adopts an XP boost deadline the Mantus Store already committed. The store
+   * extends this same row rather than keeping a second timer, so the
+   * kill-experience path needs no new branch and a character can never carry
+   * two boosts at once.
+   */
+  applyXpBoost(characterId: string, untilMs: number): void {
+    const record = this.recordsByCharacter.get(characterId);
+    // A character whose streak row has not loaded yet still gets the boost it
+    // paid for: the deadline is the only field the experience path reads, and
+    // the durable row already carries it.
+    this.setRecord(
+      characterId,
+      record
+        ? { ...record, xpBoostUntilMs: untilMs }
+        : {
+            streakPosition: 0,
+            streakLevel: 0,
+            jokerTokens: 0,
+            lastClaimDay: null,
+            lastJokerMonth: null,
+            xpBoostUntilMs: untilMs,
+          },
+    );
+  }
+
+  /**
+   * The single writer for a character's streak record. It also mirrors the XP
+   * boost deadline onto the live player, so the character panel's rate
+   * breakdown and the kill-experience path can never disagree.
+   */
+  private setRecord(characterId: string, record: DailyRewardSnapshot): void {
+    this.recordsByCharacter.set(characterId, record);
+    this.world.getPlayer(characterId)?.setXpBoostUntilMs(record.xpBoostUntilMs);
   }
 
   /** Day-7 boost for the kill-experience path; zero once expired. */
@@ -180,7 +221,7 @@ export class DailyRewardService {
             if (session.playerId !== playerId) return;
             session.itemOperationPending = false;
             if (result.status === "committed") {
-              this.recordsByCharacter.set(playerId, result.state);
+              this.setRecord(playerId, result.state);
               if (result.wildcardsAfter !== null) {
                 this.preyHooks?.applyWildcardBalance(
                   playerId,

@@ -113,6 +113,15 @@ export class OutfitService {
     );
   }
 
+  /**
+   * Re-reads entitlements another transaction already committed (a Mantus
+   * Store purchase). Refresh-only — it grants nothing, so a replayed purchase
+   * cannot hand out a second outfit.
+   */
+  refresh(characterId: string): void {
+    this.reload(characterId);
+  }
+
   handle(session: Session, intent: OutfitIntent, now: number): void {
     const characterId = session.playerId;
     const player = characterId ? this.world.getPlayer(characterId) : undefined;

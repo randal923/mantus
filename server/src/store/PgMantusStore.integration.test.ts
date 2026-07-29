@@ -4,7 +4,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { loadItemCatalog } from "../item/loadItemCatalog";
 import { applyMigrations } from "../test/applyMigrations";
-import { MANTUS_STORE_CATEGORIES } from "./MANTUS_STORE_CATEGORIES";
 import { PgMantusStore } from "./PgMantusStore";
 
 const TEST_SCHEMA = "mantus_store_integration";
@@ -12,18 +11,29 @@ const MIGRATION_LOCK_KEY = 7_281_033;
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const databaseDescribe = databaseUrl ? describe : describe.skip;
 
+/** Catalog offers this suite exercises, with the prices the server pins. */
+const PREMIUM_30 = { id: "premium-30", price: 250 };
+const GOLD_CONVERTER = { id: "charges-23722-500", price: 5 };
+const GREAT_HEALTH_250 = { id: "item-239-250", price: 41 };
+const GOLD_POUCH = { id: "item-23721-1", price: 900 };
+const ARMOURED_WAR_HORSE = { id: "mount-23", price: 870 };
+const WILDCARDS_5 = { id: "prey-wildcard-5", price: 50 };
+const PREY_SLOT = { id: "prey-slot", price: 900 };
+const XP_BOOST = { id: "exp-boost" };
+const SEX_CHANGE = { id: "sex-change", price: 120 };
+const NAME_CHANGE = { id: "name-change", price: 250 };
+
 let setupClient: Client;
 let pool: Pool;
 let store: PgMantusStore;
 let accountId: string;
 let characterId: string;
 
-const itemOffer = () => {
-  const offer = MANTUS_STORE_CATEGORIES.flatMap(
-    (category) => category.offers,
-  ).find((candidate) => candidate.item !== undefined);
-  if (!offer) throw new Error("catalog has no item offer");
-  return offer;
+const setCoins = async (amount: number): Promise<void> => {
+  await pool.query("UPDATE accounts SET mantus_coins = $2 WHERE id = $1", [
+    accountId,
+    amount,
+  ]);
 };
 
 /** Leaves the inbox with no free slot for a delivery. */
@@ -85,13 +95,13 @@ databaseDescribe("PgMantusStore integration", () => {
          health, mana,
          position_x, position_y, position_z, direction,
          outfit_look_type, outfit_head, outfit_body, outfit_legs, outfit_feet,
-         town_id
+         town_id, sex
        ) VALUES (
          $1, $2, 'Store Hero', 'store hero', 'Knight',
          150, 50,
          100, 100, 7, 'south',
          128, 1, 1, 1, 1,
-         1
+         1, 1
        )`,
       [characterId, accountId],
     );
@@ -109,19 +119,19 @@ databaseDescribe("PgMantusStore integration", () => {
   });
 
   it("atomically debits coins, extends premium, and writes both ledgers", async () => {
-    const offer = MANTUS_STORE_CATEGORIES[0]!.offers[0]!;
     const before = Date.now();
 
     const result = await store.purchase({
       accountId,
       characterId,
-      offer,
+      offerId: PREMIUM_30.id,
       requestId: randomUUID(),
     });
 
     expect(result.status).toBe("committed");
     if (result.status !== "committed") return;
     expect(result.balance).toBe(0);
+    expect(result.price).toBe(PREMIUM_30.price);
     expect(result.premiumUntil?.getTime() ?? 0).toBeGreaterThanOrEqual(
       before + 30 * 24 * 60 * 60 * 1_000,
     );
@@ -155,8 +165,7 @@ databaseDescribe("PgMantusStore integration", () => {
       },
     ]);
     const audit = await pool.query<{ event_type: string; details: unknown }>(
-      `SELECT event_type, details FROM audit_log
-       WHERE character_id = $1`,
+      `SELECT event_type, details FROM audit_log WHERE character_id = $1`,
       [characterId],
     );
     expect(audit.rows).toHaveLength(1);
@@ -165,24 +174,35 @@ databaseDescribe("PgMantusStore integration", () => {
       details: {
         accountId,
         offerId: "premium-30",
+        kind: "premium",
         price: 250,
         balanceAfter: 0,
       },
     });
   });
 
+  it("refuses an offer id that is not in the pinned catalog", async () => {
+    await expect(
+      store.purchase({
+        accountId,
+        characterId,
+        offerId: "premium-9999",
+        requestId: randomUUID(),
+      }),
+    ).resolves.toEqual({ status: "offer-not-found" });
+    expect(
+      await pool.query("SELECT id FROM mantus_coin_ledger"),
+    ).toHaveProperty("rowCount", 0);
+  });
+
   it("does not charge or grant premium when coins are insufficient", async () => {
-    await pool.query(
-      "UPDATE accounts SET mantus_coins = 249 WHERE id = $1",
-      [accountId],
-    );
-    const offer = MANTUS_STORE_CATEGORIES[0]!.offers[0]!;
+    await setCoins(249);
 
     await expect(
       store.purchase({
         accountId,
         characterId,
-        offer,
+        offerId: PREMIUM_30.id,
         requestId: randomUUID(),
       }),
     ).resolves.toEqual({ status: "insufficient-coins" });
@@ -208,28 +228,27 @@ databaseDescribe("PgMantusStore integration", () => {
   });
 
   it("serializes racing purchases so one balance can only be spent once", async () => {
-    const offer = MANTUS_STORE_CATEGORIES[0]!.offers[0]!;
-
     const results = await Promise.all([
       store.purchase({
         accountId,
         characterId,
-        offer,
+        offerId: PREMIUM_30.id,
         requestId: randomUUID(),
       }),
       store.purchase({
         accountId,
         characterId,
-        offer,
+        offerId: PREMIUM_30.id,
         requestId: randomUUID(),
       }),
     ]);
 
-    expect(results.filter((result) => result.status === "committed")).toHaveLength(
-      1,
-    );
-    expect(results.filter((result) => result.status === "insufficient-coins"))
-      .toHaveLength(1);
+    expect(
+      results.filter((result) => result.status === "committed"),
+    ).toHaveLength(1);
+    expect(
+      results.filter((result) => result.status === "insufficient-coins"),
+    ).toHaveLength(1);
     const account = await pool.query<{
       mantus_coins: string;
       premium_until: Date | null;
@@ -248,39 +267,60 @@ databaseDescribe("PgMantusStore integration", () => {
     );
   });
 
-  it("delivers an item product to the inbox in the purchase's own transaction", async () => {
-    const offer = itemOffer();
-
+  it("delivers a charged item to the inbox in the purchase's own transaction", async () => {
     const result = await store.purchase({
       accountId,
       characterId,
-      offer,
+      offerId: GOLD_CONVERTER.id,
       requestId: randomUUID(),
     });
 
     expect(result.status).toBe("committed");
     if (result.status !== "committed") return;
-    expect(result.balance).toBe(250 - offer.price);
-    expect(result.deliveredItem?.typeId).toBe(offer.item?.itemTypeId);
+    expect(result.balance).toBe(250 - GOLD_CONVERTER.price);
+    expect(result.deliveredItems).toHaveLength(1);
     const delivered = await pool.query<{
       location_type: string;
       character_id: string;
       count: number;
+      attributes: { charges?: number };
     }>(
-      "SELECT location_type, character_id, count FROM items WHERE id = $1",
-      [result.deliveredItem?.id],
+      "SELECT location_type, character_id, count, attributes FROM items WHERE id = $1",
+      [result.deliveredItems[0]?.id],
     );
-    expect(delivered.rows[0]).toEqual({
+    expect(delivered.rows[0]).toMatchObject({
       location_type: "inbox",
       character_id: characterId,
-      count: offer.item?.count,
+      count: 1,
+      attributes: { charges: 500 },
     });
-    // Premium is untouched by an item offer.
+    // Premium is untouched by a non-premium offer.
     const account = await pool.query<{ premium_until: Date | null }>(
       "SELECT premium_until FROM accounts WHERE id = $1",
       [accountId],
     );
     expect(account.rows[0]?.premium_until).toBeNull();
+  });
+
+  it("splits a stackable product across stacks rather than overflowing one", async () => {
+    const result = await store.purchase({
+      accountId,
+      characterId,
+      offerId: GREAT_HEALTH_250.id,
+      requestId: randomUUID(),
+    });
+
+    expect(result.status).toBe("committed");
+    if (result.status !== "committed") return;
+    // 250 potions at a stack size of 100 is three rows, never one of 250.
+    expect(result.deliveredItems).toHaveLength(3);
+    const counts = await pool.query<{ count: number }>(
+      `SELECT count FROM items
+       WHERE character_id = $1 AND location_type = 'inbox'
+       ORDER BY count DESC`,
+      [characterId],
+    );
+    expect(counts.rows.map((row) => row.count)).toEqual([100, 100, 50]);
   });
 
   it("rolls the coin debit back when the inbox cannot take the product", async () => {
@@ -289,7 +329,7 @@ databaseDescribe("PgMantusStore integration", () => {
     const result = await store.purchase({
       accountId,
       characterId,
-      offer: itemOffer(),
+      offerId: GOLD_CONVERTER.id,
       requestId: randomUUID(),
     });
 
@@ -305,37 +345,332 @@ databaseDescribe("PgMantusStore integration", () => {
   });
 
   it("cannot double-charge or double-deliver a replayed purchase", async () => {
-    const offer = itemOffer();
     const requestId = randomUUID();
 
     const first = await store.purchase({
       accountId,
       characterId,
-      offer,
+      offerId: GOLD_CONVERTER.id,
       requestId,
     });
     const replay = await store.purchase({
       accountId,
       characterId,
-      offer,
+      offerId: GOLD_CONVERTER.id,
       requestId,
     });
 
     expect(first.status).toBe("committed");
     expect(replay.status).toBe("committed");
     if (replay.status !== "committed") return;
-    expect(replay.deliveredItem).toBeNull();
+    expect(replay.deliveredItems).toHaveLength(0);
+    expect(replay.effect).toBeNull();
     const account = await pool.query<{ mantus_coins: string }>(
       "SELECT mantus_coins FROM accounts WHERE id = $1",
       [accountId],
     );
-    expect(account.rows[0]?.mantus_coins).toBe(String(250 - offer.price));
+    expect(account.rows[0]?.mantus_coins).toBe(
+      String(250 - GOLD_CONVERTER.price),
+    );
     expect(
       await pool.query("SELECT id FROM mantus_coin_ledger"),
     ).toHaveProperty("rowCount", 1);
     expect(
       await pool.query("SELECT id FROM items WHERE location_type = 'inbox'"),
     ).toHaveProperty("rowCount", 1);
+  });
+
+  it("refuses a second unique item and does not charge for it", async () => {
+    await setCoins(2_000);
+
+    const first = await store.purchase({
+      accountId,
+      characterId,
+      offerId: GOLD_POUCH.id,
+      requestId: randomUUID(),
+    });
+    const second = await store.purchase({
+      accountId,
+      characterId,
+      offerId: GOLD_POUCH.id,
+      requestId: randomUUID(),
+    });
+
+    expect(first.status).toBe("committed");
+    expect(second).toEqual({ status: "already-owned" });
+    const account = await pool.query<{ mantus_coins: string }>(
+      "SELECT mantus_coins FROM accounts WHERE id = $1",
+      [accountId],
+    );
+    expect(account.rows[0]?.mantus_coins).toBe(String(2_000 - GOLD_POUCH.price));
+  });
+
+  it("grants an outfit for the buyer's own sex and refuses buying it twice", async () => {
+    await setCoins(5_000);
+    // "Full Arbalester Outfit": male 1449 / female 1450, both addons.
+    const first = await store.purchase({
+      accountId,
+      characterId,
+      offerId: "outfit-1449",
+      requestId: randomUUID(),
+    });
+
+    expect(first.status).toBe("committed");
+    if (first.status !== "committed") return;
+    expect(first.effect).toEqual({
+      kind: "outfit",
+      lookType: 1449,
+      addons: 3,
+    });
+    const owned = await pool.query<{ look_type: number; addons: number }>(
+      "SELECT look_type, addons FROM character_outfits WHERE character_id = $1 ORDER BY look_type",
+      [characterId],
+    );
+    // Both sexes' rows are granted, so a later sex change keeps the outfit.
+    expect(owned.rows).toEqual([
+      { look_type: 1449, addons: 3 },
+      { look_type: 1450, addons: 3 },
+    ]);
+
+    const second = await store.purchase({
+      accountId,
+      characterId,
+      offerId: "outfit-1449",
+      requestId: randomUUID(),
+    });
+    expect(second).toEqual({ status: "already-owned" });
+  });
+
+  it("grants a mount once, even when two purchases race for it", async () => {
+    await setCoins(5_000);
+
+    const results = await Promise.all([
+      store.purchase({
+        accountId,
+        characterId,
+        offerId: ARMOURED_WAR_HORSE.id,
+        requestId: randomUUID(),
+      }),
+      store.purchase({
+        accountId,
+        characterId,
+        offerId: ARMOURED_WAR_HORSE.id,
+        requestId: randomUUID(),
+      }),
+    ]);
+
+    expect(
+      results.filter((result) => result.status === "committed"),
+    ).toHaveLength(1);
+    expect(
+      results.filter((result) => result.status === "already-owned"),
+    ).toHaveLength(1);
+    expect(
+      await pool.query("SELECT mount_id FROM character_mounts WHERE character_id = $1", [
+        characterId,
+      ]),
+    ).toHaveProperty("rowCount", 1);
+    // Exactly one charge for exactly one mount.
+    const account = await pool.query<{ mantus_coins: string }>(
+      "SELECT mantus_coins FROM accounts WHERE id = $1",
+      [accountId],
+    );
+    expect(account.rows[0]?.mantus_coins).toBe(
+      String(5_000 - ARMOURED_WAR_HORSE.price),
+    );
+  });
+
+  it("credits prey wildcards up to the cap and refuses to charge at the cap", async () => {
+    await setCoins(5_000);
+
+    const first = await store.purchase({
+      accountId,
+      characterId,
+      offerId: WILDCARDS_5.id,
+      requestId: randomUUID(),
+    });
+    expect(first.status).toBe("committed");
+    if (first.status !== "committed") return;
+    expect(first.effect).toEqual({ kind: "prey-wildcard", balance: 5 });
+
+    await pool.query(
+      "UPDATE character_prey_resources SET wildcards = 50 WHERE character_id = $1",
+      [characterId],
+    );
+    const atCap = await store.purchase({
+      accountId,
+      characterId,
+      offerId: WILDCARDS_5.id,
+      requestId: randomUUID(),
+    });
+
+    expect(atCap).toEqual({ status: "limit-reached" });
+    const balance = await pool.query<{ mantus_coins: string }>(
+      "SELECT mantus_coins FROM accounts WHERE id = $1",
+      [accountId],
+    );
+    expect(balance.rows[0]?.mantus_coins).toBe(
+      String(5_000 - WILDCARDS_5.price),
+    );
+  });
+
+  it("unlocks one prey slot per purchase and refuses once none are locked", async () => {
+    await setCoins(5_000);
+
+    const first = await store.purchase({
+      accountId,
+      characterId,
+      offerId: PREY_SLOT.id,
+      requestId: randomUUID(),
+    });
+    const second = await store.purchase({
+      accountId,
+      characterId,
+      offerId: PREY_SLOT.id,
+      requestId: randomUUID(),
+    });
+    const third = await store.purchase({
+      accountId,
+      characterId,
+      offerId: PREY_SLOT.id,
+      requestId: randomUUID(),
+    });
+
+    expect(first.status).toBe("committed");
+    expect(second.status).toBe("committed");
+    // Slot 0 starts unlocked, so only slots 1 and 2 are ever for sale.
+    expect(third).toEqual({ status: "already-owned" });
+    const states = await pool.query<{ state: string }>(
+      "SELECT state FROM character_prey_slots WHERE character_id = $1 ORDER BY slot",
+      [characterId],
+    );
+    expect(states.rows.map((row) => row.state)).toEqual([
+      "inactive",
+      "inactive",
+      "inactive",
+    ]);
+  });
+
+  it("escalates the XP boost price with the day's purchases and caps it", async () => {
+    await setCoins(5_000);
+    const prices: number[] = [];
+
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const result = await store.purchase({
+        accountId,
+        characterId,
+        offerId: XP_BOOST.id,
+        requestId: randomUUID(),
+      });
+      expect(result.status).toBe("committed");
+      if (result.status !== "committed") return;
+      prices.push(result.price);
+    }
+
+    // Canary's ExpBoostValues curve.
+    expect(prices).toEqual([30, 45, 90, 180, 360, 720]);
+    const seventh = await store.purchase({
+      accountId,
+      characterId,
+      offerId: XP_BOOST.id,
+      requestId: randomUUID(),
+    });
+    expect(seventh).toEqual({ status: "limit-reached" });
+
+    const boost = await pool.query<{ xp_boost_until_ms: string }>(
+      "SELECT xp_boost_until_ms::text AS xp_boost_until_ms FROM character_daily_rewards WHERE character_id = $1",
+      [characterId],
+    );
+    // Six stacked hours, all of them still ahead of now.
+    expect(Number(boost.rows[0]?.xp_boost_until_ms)).toBeGreaterThan(
+      Date.now() + 5 * 60 * 60 * 1_000,
+    );
+  });
+
+  it("flips sex and moves the worn outfit in one transaction", async () => {
+    await setCoins(5_000);
+
+    const result = await store.purchase({
+      accountId,
+      characterId,
+      offerId: SEX_CHANGE.id,
+      requestId: randomUUID(),
+    });
+
+    expect(result.status).toBe("committed");
+    if (result.status !== "committed") return;
+    expect(result.effect).toMatchObject({ kind: "sex-change", sex: "female" });
+    const character = await pool.query<{
+      sex: number;
+      outfit_look_type: number;
+      outfit_addons: number;
+    }>(
+      "SELECT sex, outfit_look_type, outfit_addons FROM characters WHERE id = $1",
+      [characterId],
+    );
+    expect(character.rows[0]?.sex).toBe(0);
+    // A male look type can never survive the flip.
+    expect(character.rows[0]?.outfit_look_type).not.toBe(128);
+    expect(character.rows[0]?.outfit_addons).toBe(0);
+  });
+
+  it("renames a character and refuses a name another character holds", async () => {
+    await setCoins(5_000);
+    const rivalId = randomUUID();
+    await pool.query(
+      `INSERT INTO characters (
+         id, account_id, display_name, normalized_name, vocation, health, mana,
+         position_x, position_y, position_z, direction,
+         outfit_look_type, outfit_head, outfit_body, outfit_legs, outfit_feet,
+         town_id
+       ) VALUES ($1, $2, 'Taken Name', 'taken name', 'Knight', 150, 50,
+         100, 100, 7, 'south', 128, 1, 1, 1, 1, 1)`,
+      [rivalId, accountId],
+    );
+
+    const renamed = await store.purchase({
+      accountId,
+      characterId,
+      offerId: NAME_CHANGE.id,
+      requestId: randomUUID(),
+      newName: "Fresh Start",
+    });
+    expect(renamed.status).toBe("committed");
+    if (renamed.status !== "committed") return;
+    expect(renamed.effect).toEqual({
+      kind: "name-change",
+      displayName: "Fresh Start",
+    });
+
+    const balanceBefore = 5_000 - NAME_CHANGE.price;
+    const taken = await store.purchase({
+      accountId,
+      characterId,
+      offerId: NAME_CHANGE.id,
+      requestId: randomUUID(),
+      newName: "Taken Name",
+    });
+    const reserved = await store.purchase({
+      accountId,
+      characterId,
+      offerId: NAME_CHANGE.id,
+      requestId: randomUUID(),
+      newName: "Game Master",
+    });
+
+    expect(taken).toEqual({ status: "name-taken" });
+    // Reserved words are refused exactly as character creation refuses them.
+    expect(reserved).toEqual({ status: "name-invalid" });
+    const account = await pool.query<{ mantus_coins: string }>(
+      "SELECT mantus_coins FROM accounts WHERE id = $1",
+      [accountId],
+    );
+    expect(account.rows[0]?.mantus_coins).toBe(String(balanceBefore));
+    const character = await pool.query<{ normalized_name: string }>(
+      "SELECT normalized_name FROM characters WHERE id = $1",
+      [characterId],
+    );
+    expect(character.rows[0]?.normalized_name).toBe("fresh start");
   });
 
   it("grants coins once per grant key and audits the operator", async () => {
@@ -372,11 +707,10 @@ databaseDescribe("PgMantusStore integration", () => {
   });
 
   it("refunds a purchase exactly once", async () => {
-    const offer = MANTUS_STORE_CATEGORIES[0]!.offers[0]!;
     await store.purchase({
       accountId,
       characterId,
-      offer,
+      offerId: PREMIUM_30.id,
       requestId: randomUUID(),
     });
     const entry = await pool.query<{ id: string }>(
@@ -418,7 +752,7 @@ databaseDescribe("PgMantusStore integration", () => {
     await store.purchase({
       accountId,
       characterId,
-      offer: itemOffer(),
+      offerId: GOLD_CONVERTER.id,
       requestId: randomUUID(),
     });
 
@@ -430,5 +764,26 @@ databaseDescribe("PgMantusStore integration", () => {
     ]);
     expect(history[0]?.amount).toBeLessThan(0);
     expect(history[1]).toMatchObject({ amount: 100, balanceAfter: 350 });
+  });
+
+  it("reports the facts the offer display needs, scoped to the character", async () => {
+    await setCoins(2_000);
+    await store.purchase({
+      accountId,
+      characterId,
+      offerId: GOLD_POUCH.id,
+      requestId: randomUUID(),
+    });
+    await store.purchase({
+      accountId,
+      characterId,
+      offerId: XP_BOOST.id,
+      requestId: randomUUID(),
+    });
+
+    const facts = await store.facts(characterId, [23721, 23722]);
+
+    expect(facts.ownedUniqueItemTypeIds).toEqual([23721]);
+    expect(facts.xpBoostPurchasesToday).toBe(1);
   });
 });

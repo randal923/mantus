@@ -71,9 +71,24 @@ export function GameCommerceOverlays() {
           premiumDaysRemaining={premiumDaysRemaining}
           session={storeSession}
           onClose={() => setStoreOpen(false)}
-          onPurchase={(offerId) => {
+          onOpenHome={() => {
+            runtime.clientRef.current?.openStore();
+          }}
+          onOpenCategory={(categoryId, page) => {
+            runtime.clientRef.current?.openStoreCategory(categoryId, page);
+          }}
+          onSelectProduct={(productId) => {
+            setStoreSession((current) =>
+              current
+                ? { ...current, selectedProductId: productId, description: null }
+                : current,
+            );
+            runtime.clientRef.current?.getStoreDescription(productId);
+          }}
+          onPurchase={(offerId, newName) => {
             const sent =
-              runtime.clientRef.current?.purchaseStoreOffer(offerId) ?? false;
+              runtime.clientRef.current?.purchaseStoreOffer(offerId, newName) ??
+              false;
             setStoreSession((current) =>
               current
                 ? {

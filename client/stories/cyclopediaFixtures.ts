@@ -17,6 +17,13 @@ export const OWN_CHARACTER: OwnCharacterState = {
   experience: 1_842_000,
   experienceForCurrentLevel: 1_780_000,
   experienceForNextLevel: 1_920_000,
+  experienceRate: {
+    basePercent: 500,
+    xpBoostPercent: 50,
+    xpBoostRemainingMs: 1_800_000,
+    staminaPercent: 150,
+    totalPercent: 1_125,
+  },
   magicLevel: 8,
   manaSpent: 2_100,
   manaSpentForNextMagicLevel: 4_800,

@@ -109,12 +109,38 @@ limitations accepted during a session are recorded in the owning feature file
   carried subtree: `coinOwnedItemsQuery` already loads every owned row inside
   the transaction, so weight can be summed there; `capacityMax` needs to ride
   along on the server-built `ShopPurchaseRequest`. Owner: Feature 46.
-- **Mantus Store item offers have no load-time catalog gate** (2026-07-25,
-  Feature 43). Nothing asserts that every offer's `itemTypeId` exists in the
-  pinned catalog and is pickupable. `PgMantusStore` validates at purchase time
-  (`catalog.require` throws, `pickupable` is checked), so a bad id fails loudly
-  on first purchase rather than silently — but `loadShopCatalogs`-style
-  validation at boot would be better. Owner: Feature 43.
+- **The Mantus Store's integration tests have never been executed**
+  (2026-07-29, Feature 43). All 20 cases in
+  `server/src/store/PgMantusStore.integration.test.ts` — every delivery leg's
+  transaction, the racing-purchase and replay-guard assertions, the
+  inbox-full rollback, the escalating XP-boost price — were written against
+  the new store but skipped, because no Postgres was reachable in the
+  environment where they landed (Docker is unavailable from this WSL distro).
+  The store's unit-level behaviour and the boot catalog gate are covered and
+  passing; its *transactional* behaviour is asserted only on paper. Run
+  `yarn test:integration` before relying on it. Owner: Feature 43.
+- **A store sex change can be undone by a concurrent character save**
+  (2026-07-29, Feature 43). `deliverSexChange` writes `characters.sex`,
+  `outfit_look_type` and `outfit_addons` inside the purchase transaction but
+  does not bump `version`, and the tick applies the same values to the live
+  player afterwards. A snapshot save landing in that sub-tick window would
+  write the pre-change look type back over the committed one (the sex column
+  itself is not in the snapshot query, so it would survive). Fix by bumping
+  `version` in the delivery, or by having the snapshot save leave outfit
+  columns it did not author alone. Owner: Feature 43.
+- **A store name change needs a relog to take effect in the world**
+  (2026-07-29, Feature 43). `Creature.name` is immutable, so the renamed
+  character keeps its old name in other players' views until the next login
+  reads the row back. This matches Canary, which says so in the offer's own
+  description, and is recorded as a deviation rather than a bug — but a live
+  rename would need a mutable creature name and a name-change broadcast.
+  Owner: Feature 43.
+- **No low-level experience bonus term** (2026-07-29, Feature 43). Tibia's XP
+  Gain Rate panel lists a "Low Level Bonus" row; mantus has no such term in
+  the kill-experience path, so `getExperienceRate` omits the row entirely
+  rather than always showing 0%. Adding the bonus is a progression change
+  (owner: Feature 72/the progression curve work); the panel picks it up for
+  free once the term exists.
 - **`/coins` and `/storerefund` are dev-only GM commands, not real operator
   tooling** (2026-07-25, Feature 43). They credit and refund the *operator's
   own* account only, are audited with the operator's character id, and exist
