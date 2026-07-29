@@ -1,6 +1,5 @@
 import type { Position, ServerMessage } from "@tibia/protocol";
-import { evaluateSpellExpression } from "../../combat/evaluateSpellExpression";
-import { loadCanarySpellCatalog } from "../../combat/loadCanarySpellCatalog";
+import { SPELL_DEFINITIONS } from "../../combat/spells/SPELL_DEFINITIONS";
 import { ParityRig } from "../ParityRig";
 import { startPlaytestServer } from "../startPlaytestServer";
 
@@ -71,7 +70,7 @@ const url = externalUrl ?? server!.url;
 let crashed = false;
 
 try {
-  const catalog = loadCanarySpellCatalog();
+  const catalog = SPELL_DEFINITIONS;
   const runeBounds = (runeId: string, level: number, magicLevel: number) => {
     const spell = catalog.find((entry) => entry.id === runeId);
     if (!spell) throw new Error(`rune ${runeId} missing from catalog`);
@@ -79,13 +78,13 @@ try {
     const minimum = Math.max(
       0,
       Math.floor(
-        Math.abs(evaluateSpellExpression(spell.formula.minimum, variables)),
+        Math.abs(spell.formula.minimum(variables)),
       ),
     );
     const maximum = Math.max(
       minimum,
       Math.floor(
-        Math.abs(evaluateSpellExpression(spell.formula.maximum, variables)),
+        Math.abs(spell.formula.maximum(variables)),
       ),
     );
     return { spell, minimum, maximum };

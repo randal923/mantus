@@ -23,8 +23,9 @@ import GameWindow from "../components/GameWindow";
  * It skips itself in the default lane, whose server has neither the probe
  * token nor the seeded character.
  */
-const WS_URL = import.meta.env.VITE_PLAYTEST_WS_URL ?? "ws://127.0.0.1:4126";
-const ON_PROBE_SERVER = WS_URL.endsWith(":4126");
+const ON_PROBE_SERVER = (
+  (import.meta.env.VITE_PLAYTEST_WS_URL as string | undefined) ?? ""
+).endsWith(":4126");
 const TOKEN = "anim-probe";
 /** First atlas sprite of the exercise sword (clientId 28552, 5 phases). */
 const EXERCISE_SWORD_SPRITE = 25_676;

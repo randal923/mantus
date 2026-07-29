@@ -34,9 +34,12 @@ layout shipped 2026-07-29 (see [done.md](done.md)). What is left:
   modelled yet.
 - **Offer types with no system behind them** — blessings (needs Feature 72's
   persistence; nothing grants or stores them today), hirelings, charm
-  expansion, instant reward access, house decoration kits, tournament. The
-  importer skips and reports each one; adding the system is what unblocks
-  the offer, not the catalog.
+  expansion, instant reward access, beds (two-part items + sleep), casks
+  (potion servings from a house vat), tournament. The importer skips and
+  reports each one; adding the system is what unblocks the offer, not the
+  catalog. House decoration kits shipped 2026-07-29 (Upgrades incl. the three
+  exercise dummies, Furniture, Decorations — 380+ offers); the wrap-back op
+  and the Postgres run of the kit delivery test are recorded in `TODO.md`.
 - **Sex-change save race.** The delivery writes `characters.sex` and the worn
   look type inside the purchase transaction without bumping `version`; a
   character snapshot save landing between commit and the tick applying the

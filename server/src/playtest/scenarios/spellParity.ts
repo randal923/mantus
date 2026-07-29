@@ -7,8 +7,7 @@ import type {
 } from "@tibia/protocol";
 import { STARTER_VOCATIONS } from "@tibia/protocol";
 import { areaPositions } from "../../combat/areaPositions";
-import { evaluateSpellExpression } from "../../combat/evaluateSpellExpression";
-import { loadCanarySpellCatalog } from "../../combat/loadCanarySpellCatalog";
+import { SPELL_DEFINITIONS } from "../../combat/spells/SPELL_DEFINITIONS";
 import type { SpellDefinition } from "../../combat/Spell";
 import { ParityRig } from "../ParityRig";
 import { startPlaytestServer } from "../startPlaytestServer";
@@ -132,11 +131,11 @@ function formulaBounds(
 ): { minimum: number; maximum: number } {
   const minimum = Math.max(
     0,
-    Math.floor(Math.abs(evaluateSpellExpression(spell.formula.minimum, variables))),
+    Math.floor(Math.abs(spell.formula.minimum(variables))),
   );
   const maximum = Math.max(
     minimum,
-    Math.floor(Math.abs(evaluateSpellExpression(spell.formula.maximum, variables))),
+    Math.floor(Math.abs(spell.formula.maximum(variables))),
   );
   return { minimum, maximum };
 }
@@ -823,7 +822,7 @@ const results: SpellResult[] = [];
 let crashed = false;
 
 try {
-  const catalog = loadCanarySpellCatalog();
+  const catalog = SPELL_DEFINITIONS;
   const assignments = new Map<StarterVocation, SpellDefinition[]>(
     STARTER_VOCATIONS.map((vocation) => [vocation, []]),
   );

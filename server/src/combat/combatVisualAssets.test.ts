@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { loadCreatureContent } from "../spawn/loadCreatureContent";
 import { getMagicEffectId } from "./getMagicEffectId";
 import { getMissileId } from "./getMissileId";
-import { loadCanarySpellCatalog } from "./loadCanarySpellCatalog";
+import { SPELL_DEFINITIONS } from "./spells/SPELL_DEFINITIONS";
 
 /**
  * "Can I see it on screen?" — every magic effect and distance missile the
@@ -63,7 +63,7 @@ const renderableMissile = (id: number) => {
 describe("combat visual assets", () => {
   it("renders every supported spell's magic effect, caster effect, and missile", () => {
     const missing: string[] = [];
-    for (const spell of loadCanarySpellCatalog()) {
+    for (const spell of SPELL_DEFINITIONS) {
       if (spell.effectId > 0 && !renderableEffect(spell.effectId)) {
         missing.push(`${spell.id}: effect ${spell.effectId}`);
       }

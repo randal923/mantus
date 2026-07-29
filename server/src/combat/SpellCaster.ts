@@ -21,7 +21,6 @@ import { ConditionSystem } from "./ConditionSystem";
 import { creaturesInArea } from "./creaturesInArea";
 import { DamageResolver } from "./DamageResolver";
 import { EventSequence } from "./EventSequence";
-import { evaluateSpellExpression } from "./evaluateSpellExpression";
 import { isInRange } from "./isInRange";
 import { matchesSpellTarget } from "./matchesSpellTarget";
 import { playerCombatSkill } from "./playerCombatSkill";
@@ -166,19 +165,11 @@ export class SpellCaster {
     };
     const minimum = Math.max(
       0,
-      Math.floor(
-        Math.abs(
-          evaluateSpellExpression(spell.formula.minimum, variables),
-        ),
-      ),
+      Math.floor(Math.abs(spell.formula.minimum(variables))),
     );
     const maximum = Math.max(
       minimum,
-      Math.floor(
-        Math.abs(
-          evaluateSpellExpression(spell.formula.maximum, variables),
-        ),
-      ),
+      Math.floor(Math.abs(spell.formula.maximum(variables))),
     );
     // Beam Mastery and grade-2 augments swap in the upgraded combat area.
     const area = beamMastery?.area ?? augment.area ?? spell.area;

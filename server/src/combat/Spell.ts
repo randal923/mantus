@@ -7,26 +7,18 @@ import type {
   WheelDomain,
 } from "@tibia/protocol";
 
-export type SpellExpression =
-  | {
-      readonly type: "number";
-      readonly value: number;
-    }
-  | {
-      readonly type: "variable";
-      readonly name: "level" | "magicLevel" | "skill" | "attack";
-    }
-  | {
-      readonly type: "binary";
-      readonly operator: "add" | "subtract" | "multiply" | "divide";
-      readonly left: SpellExpression;
-      readonly right: SpellExpression;
-    };
+/** Caster stats a damage or healing formula may read, resolved at cast time. */
+export interface SpellVariables {
+  readonly level: number;
+  readonly magicLevel: number;
+  readonly skill: number;
+  readonly attack: number;
+}
 
 export interface SpellFormula {
   readonly kind: "fixed" | "level-magic" | "skill";
-  readonly minimum: SpellExpression;
-  readonly maximum: SpellExpression;
+  readonly minimum: (variables: SpellVariables) => number;
+  readonly maximum: (variables: SpellVariables) => number;
 }
 
 export interface SpellCondition {

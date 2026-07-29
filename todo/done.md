@@ -1531,3 +1531,90 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   `appearance-animations.json` degrades to the flat fallback rather than
   failing the catalog load, which means an asset re-rip that changes phase
   counts silently loses schedules until the table is rebuilt.
+
+## 2026-07-29 — Item-animation verification + client-id icon keying (Feature 43 / client)
+
+- **Problem**: "Item animations are not working" was reported after the
+  animation-schedule work landed. End-to-end verification did not exist, and
+  the DOM icon table was keyed by first sprite id, dropping 39 ambiguous
+  appearances (dolls, adamant shield, love elixir, magic hat) and forcing
+  every icon surface to hope its sprite id was unambiguous.
+- **What changed**:
+  - Reproduced the report in a real browser against a real server and proved
+    the pipeline works: two new e2e lanes. `itemIconAnimation.e2e.test.tsx`
+    mounts the real `SpriteIcon` against the real
+    `/assets/item-animations.json` (runs in the default e2e lane);
+    `itemAnimationWorld.e2e.test.tsx` mounts the full `GameWindow` against a
+    new memory-backed probe server
+    (`server/src/playtest/itemAnimationProbeServer.ts`, port 4126, no
+    Postgres — `yarn workspace server playtest:animation-probe:server`),
+    asserts the equipped exercise sword's paperdoll icon cycles atlas cells
+    and that the Thais-temple world canvas repaints thousands of pixels
+    (animated wall torches) while standing still, via WebGL readback. It
+    skips itself unless `VITE_PLAYTEST_WS_URL` points at :4126.
+  - `item-animations.json` (formatVersion 3) is keyed by client id with the
+    first-frame sprite alongside (`{b, f, d}`), emitting 2,695 sequences with
+    zero ambiguity drops. `itemSpriteAnimationStore` resolves a `{clientId,
+    spriteId}` key — client id authoritative, bare sprite id falls back to
+    the old unambiguous-only index — and `SpriteIcon` takes an optional
+    `clientId`, threaded through inventory/paperdoll, drag ghosts, action
+    bar, GameHud, depot, mailbox, shop rows, market/auction, forge fusion and
+    the store (`storeIconSchema` item icons now carry `clientId`, resolved
+    server-side).
+- **Files touched**: `tools/buildItemAnimations.mjs`,
+  `client/lib/render/{itemSpriteAnimationStore,useAnimatedSpriteId}.ts`,
+  `client/components/inventory/{SpriteIcon,ItemSlot}.tsx`, ~10 icon call
+  sites, `client/components/store/StoreProductIcon.tsx`,
+  `protocol/src/store.ts`, `server/src/store/{storeCatalog,
+  MantusStoreService}.ts`, `client/e2e/{itemIconAnimation,
+  itemAnimationWorld}.e2e.test.tsx`,
+  `server/src/playtest/itemAnimationProbeServer.ts`, `server/package.json`.
+- **Verified**: both e2e lanes pass (icon cycles ≥3 cells, potion ≥4; world
+  canvas diff > 5,000 px with a lit-frame guard against blank readbacks);
+  client unit 89, server 1,331, tools 89 + parity, full typecheck.
+- **Residual risk**: surfaces without a client id in their rows (bestiary
+  loot, reward chest, daily rewards, wiki) still use the sprite fallback —
+  recorded in `TODO.md`.
+
+## 2026-07-29 — Store: house items as decoration kits, exercise dummies purchasable (Feature 43)
+
+- **Problem**: the store had no house categories at all — no exercise
+  dummies, furniture, decorations, shrines or mailboxes (Canary sells 380+
+  such offers) — and the base "Exercise Wraps" offer sold the durable-tier
+  item id (Canary data bug).
+- **What changed**:
+  - New `house-item` grant kind: delivery hands the buyer one decoration kit
+    (23398) per piece into the store inbox, each carrying `unwrapTo` and a
+    Canary-style row description ("Unwrap it in your own house to create a
+    …"), shown by the tooltip via a new instance-description override in
+    `toItemTooltip`.
+  - New `decoration-kit` world action: using a kit on a tile transforms it
+    into its furniture in place (`planTransformMapItem` gained an attributes
+    override to shed the routing attributes), gated by
+    `HouseService.canDecorateHouseTile` — owner or subowner of that house,
+    never a guest, re-checked at execution time; fails closed when no house
+    service is wired.
+  - `importCanaryStoreCatalog.mjs` imports `house_upgrades`, `house_furniture`
+    and `house_decorations` under a "Houses" parent (17 categories, 631
+    products, 670 offers), corrects Exercise Wraps 50294→50293 via a new
+    item-id corrections table, and drops offers whose global offer id
+    collides (Canary's Heart Table/Heart Chest and Volcanic Spire/Sphere
+    duplicate-item bugs). Beds and casks stay skipped (systems missing).
+- **Files touched**: `server/src/store/{storeCatalog,storeCatalogData,
+  assertStoreCatalog,PgMantusStore}.ts`,
+  `server/src/store/delivery/deliverInboxItem.ts`,
+  `server/src/item/{decorationKitItemId,toItemTooltip}.ts`,
+  `server/src/item/plan/planTransformMapItem.ts`,
+  `server/src/action/{WorldAction,resolveWorldAction,WorldActionRegistry,
+  WorldActionContext,worldActionPreconditions,handleDecorationKitUse}.ts`,
+  `server/src/house/HouseService.ts`, `server/src/GameServer.ts`,
+  `protocol/src/store.ts`, `tools/importCanaryStoreCatalog.mjs`,
+  `client/locales/{en,pt-BR}.json`.
+- **Verified**: 4 new `WorldActionRegistry` decoration-kit cases (unwrap with
+  access, guest refusal, fail-closed without house service, kit without
+  target unsupported); a `PgMantusStore` integration case asserting the kit
+  row (written, unrun — no DB); server 1,335, tools + `parity:check`, full
+  typecheck all pass.
+- **Residual risk**: kit wrap-back missing and Postgres delivery test unrun —
+  both in `TODO.md`; exercise dummies placed in houses still miss the
+  same-house membership check (pre-existing, Feature 72).

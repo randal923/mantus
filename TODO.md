@@ -465,15 +465,27 @@ limitations accepted during a session are recorded in the owning feature file
   protection zone beside a house dummy could train on it. Recommended fix:
   resolve both tiles' houses through `HouseService` at execution time in
   `ExerciseTrainingHandler.handle`. Owner: Feature 72.
-- **Animated item icons are keyed by first sprite id** (2026-07-29).
-  `item-animations.json` maps an item's first sprite to its frames because DOM
-  icons only ever receive a `spriteId`; 39 appearances share a first sprite but
-  disagree on the rest or on their timing and were dropped, so those items stay
-  static. Multi-tile items (exercise weapons, kegs, mystery boxes) are excluded
-  for the same reason — a 32×32 icon draws one piece of them. Recommended fix:
-  thread `clientId` through `SpriteIcon` (inventory items already carry one;
-  store icons would need it added to `storeIconSchema`) and key the table by
-  client id instead. Owner: `todo/client/`.
+- **A few icon surfaces still resolve animations by bare sprite id**
+  (2026-07-29). `item-animations.json` is keyed by client id and `SpriteIcon`
+  takes an optional `clientId`, threaded through inventory, containers, action
+  bar, depot, mailbox, shop, market, forge and the store. Surfaces whose
+  protocol rows carry no client id — bestiary loot, reward chest, daily
+  rewards, wiki — fall back to the first-frame sprite index, where the ~39
+  appearances sharing a first sprite stay static. Recommended fix: add
+  `clientId` to those schemas when touching them. Owner: `todo/client/`.
+- **House decoration kits cannot be wrapped back** (2026-07-29). Store-bought
+  furniture unwraps on an owned house tile (`handleDecorationKitUse`), but
+  Canary's reverse op — wrapping placed furniture back into a kit via its
+  `wrapableto` id — does not exist, so furniture cannot be moved between
+  houses or sold back. Recommended fix: import `wrapableto` into the item
+  catalog and add the inverse transform behind the same decorate
+  authorization. Owner: Feature 43.
+- **House-kit store delivery is untested against Postgres** (2026-07-29).
+  `deliverInboxItem` now delivers `house-item` grants as decoration kits with
+  `unwrapTo`/`description` attributes; the integration case exists in
+  `PgMantusStore.integration.test.ts` but no Postgres was reachable in this
+  environment, so only unit-level coverage ran. Run the integration suite
+  before trusting the store. Owner: Feature 43.
 - **Outfit animations still ignore Tibia's phase timings** (2026-07-29).
   `appearance-animations.json` carries item and effect schedules only: outfit
   appearances split into idle/walking frame groups whose phase counts do not

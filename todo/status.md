@@ -36,7 +36,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Depot, inbox, mail, supply stash (11c)                                               | ✅     | ✅     | Nothing                                                                                                       |
 | Player trade (48)                                                                    | ✅     | ✅     | Ground-item offers; store/unique/house-tile restrictions (wait on 43/78/houses)                               |
 | Market with escrow (49)                                                              | ✅     | ✅     | Full-catalog browser (asset pass 108), pristineness extensions, expiry decision; selection retention (client) |
-| Mantus Store: full Canary catalog (43)                                               | ✅     | ✅     | 279 products/294 offers + all deliverable offer types shipped 2026-07-29 (integration tests unrun — no DB); payment provider, coin transfers, history tab (client) still open |
+| Mantus Store: full Canary catalog (43)                                               | ✅     | ✅     | 631 products/670 offers incl. house furniture/decorations/upgrades as decoration kits (exercise dummies purchasable, unwrap on owned house tiles) shipped 2026-07-29 (integration tests unrun — no DB); payment provider, coin transfers, history tab (client), kit wrap-back still open |
 
 ## Progression & combat
 

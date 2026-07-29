@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { Position } from "@tibia/protocol";
-import { loadCanarySpellCatalog } from "../combat/loadCanarySpellCatalog";
+import { SPELL_DEFINITIONS } from "../combat/spells/SPELL_DEFINITIONS";
 import type {
   DialogueAction,
   DialogueChoiceDefinition,
@@ -112,7 +112,7 @@ let cachedSpellIds: ReadonlySet<string> | undefined;
 
 function knownSpellIdSet(): ReadonlySet<string> {
   cachedSpellIds ??= new Set(
-    loadCanarySpellCatalog().map((spell) => spell.id),
+    SPELL_DEFINITIONS.map((spell) => spell.id),
   );
   return cachedSpellIds;
 }

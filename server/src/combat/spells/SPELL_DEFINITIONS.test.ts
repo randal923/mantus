@@ -2,15 +2,16 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { spellCatalogEntrySchema } from "@tibia/protocol";
-import { Player } from "../Player";
-import { makeCharacter } from "../test/makeCharacter";
-import { evaluateSpellExpression } from "./evaluateSpellExpression";
-import { loadCanarySpellCatalog } from "./loadCanarySpellCatalog";
-import { SpellRegistry } from "./SpellRegistry";
+import { Player } from "../../Player";
+import { makeCharacter } from "../../test/makeCharacter";
+import { SpellRegistry } from "../SpellRegistry";
+import { SPELL_DEFINITIONS } from "./SPELL_DEFINITIONS";
 
-describe("Canary spell catalog", () => {
-  it("loads pinned direct spell and rune formulas", () => {
-    const spells = loadCanarySpellCatalog();
+const CASTER = { level: 1, magicLevel: 0, skill: 10, attack: 7 };
+
+describe("spell definitions", () => {
+  it("keeps the pinned direct spell and rune numbers", () => {
+    const spells = SPELL_DEFINITIONS;
     const buzz = spells.find((spell) => spell.name === "Buzz");
     const frontSweep = spells.find(
       (spell) => spell.name === "Lesser Front Sweep",
@@ -47,30 +48,8 @@ describe("Canary spell catalog", () => {
       effectId: 38,
       missileId: 5,
     });
-    expect(
-      Math.floor(
-        Math.abs(
-          evaluateSpellExpression(buzz!.formula.minimum, {
-            level: 1,
-            magicLevel: 0,
-            skill: 10,
-            attack: 7,
-          }),
-        ),
-      ),
-    ).toBe(3);
-    expect(
-      Math.floor(
-        Math.abs(
-          evaluateSpellExpression(frontSweep!.formula.maximum, {
-            level: 1,
-            magicLevel: 0,
-            skill: 10,
-            attack: 7,
-          }),
-        ),
-      ),
-    ).toBe(18);
+    expect(Math.floor(Math.abs(buzz!.formula.minimum(CASTER)))).toBe(3);
+    expect(Math.floor(Math.abs(frontSweep!.formula.maximum(CASTER)))).toBe(18);
     expect(suddenDeath).toMatchObject({
       runeItemTypeId: 3155,
       requiredLevel: 45,
@@ -137,12 +116,7 @@ describe("Canary spell catalog", () => {
     });
     expect(
       Math.floor(
-        evaluateSpellExpression(energyBeam!.formula.maximum, {
-          level: 23,
-          magicLevel: 10,
-          skill: 10,
-          attack: 7,
-        }),
+        energyBeam!.formula.maximum({ ...CASTER, level: 23, magicLevel: 10 }),
       ),
     ).toBe(53);
   });
@@ -153,8 +127,8 @@ describe("Canary spell catalog", () => {
    * importer used to skip. Canary's `AreaCombat::createArea` treats `2` and
    * `3` alike as the centre and `1` and `3` alike as affected tiles.
    */
-  it("loads the matrix spells whose centre tile is not itself affected", () => {
-    const spells = loadCanarySpellCatalog();
+  it("keeps the matrix spells whose centre tile is not itself affected", () => {
+    const spells = SPELL_DEFINITIONS;
     const iceBurst = spells.find((spell) => spell.name === "Ice Burst");
     const terraBurst = spells.find((spell) => spell.name === "Terra Burst");
     const balancedBrawl = spells.find(
@@ -198,7 +172,12 @@ describe("Canary spell catalog", () => {
     expect(report.nonContent).toBe(1);
     expect(report.registered).toBe(report.total - report.nonContent);
     expect(report.registered).toBe(235);
-    expect(report.supported).toBe(loadCanarySpellCatalog().length);
+    // Every spell Canary supports has a module. Extra modules are allowed:
+    // these files are ours to edit and extend, the dump is only the reference.
+    const defined = new Set(SPELL_DEFINITIONS.map((spell) => spell.id));
+    expect(
+      readSupportedUpstreamIds().filter((id) => !defined.has(id)),
+    ).toEqual([]);
 
     // Reached zero — locked.
     expect(report.ignoredFormulaFields).toBe(0);
@@ -263,8 +242,22 @@ interface SpellReport {
 }
 
 function readSpellReport(): SpellReport {
+  return readUpstreamDump().report as SpellReport;
+}
+
+function readSupportedUpstreamIds(): string[] {
+  return (readUpstreamDump().spells as ReadonlyArray<{
+    readonly id: string;
+    readonly supported: boolean;
+  }>)
+    .filter((spell) => spell.supported)
+    .map((spell) => spell.id);
+}
+
+/** The pinned Canary dump, kept as the upstream reference to diff against. */
+function readUpstreamDump(): Record<string, unknown> {
   const path = fileURLToPath(
-    new URL("../../../content/spells/canary-spells.json", import.meta.url),
+    new URL("../../../../content/spells/canary-spells.json", import.meta.url),
   );
-  return JSON.parse(readFileSync(path, "utf8")).report as SpellReport;
+  return JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
 }

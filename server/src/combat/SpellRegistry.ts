@@ -1,14 +1,14 @@
 import type { SpellCatalogEntry } from "@tibia/protocol";
 import type { Player } from "../Player";
-import { loadCanarySpellCatalog } from "./loadCanarySpellCatalog";
 import type { SpellDefinition } from "./Spell";
+import { SPELL_DEFINITIONS } from "./spells/SPELL_DEFINITIONS";
 import { spellParameterKind } from "./spellParameterKind";
 
 const normalizeSpellWords = (text: string): string =>
   text.trim().toLowerCase().replace(/\s+/g, " ");
 
 export class SpellRegistry {
-  private readonly spells = loadCanarySpellCatalog();
+  private readonly spells = SPELL_DEFINITIONS;
   private readonly byId = new Map(
     this.spells.map((spell) => [spell.id, spell]),
   );
