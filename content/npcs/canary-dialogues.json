@@ -13,7 +13,6 @@
       "data-otservbr-global/npc/naji.lua",
       "data-otservbr-global/npc/benjamin.lua",
       "data-otservbr-global/npc/donald_mcronald.lua",
-      "data-otservbr-global/npc/elane.lua",
       "data-otservbr-global/npc/frodo.lua",
       "data-otservbr-global/npc/gorn.lua",
       "data-otservbr-global/npc/hanna.lua",
@@ -769,98 +768,6 @@
           ],
           "responses": [
             "We grow vegetables and cheese on this farm. Say trade to have a look."
-          ],
-          "children": [],
-          "choices": [],
-          "nextNodeId": "root"
-        }
-      ],
-      "travelOffers": []
-    },
-    {
-      "typeId": "elane",
-      "talkRange": 4,
-      "timeoutMs": 30000,
-      "greetingKeywords": [
-        "hi",
-        "hello"
-      ],
-      "farewellKeywords": [
-        "bye",
-        "farewell"
-      ],
-      "greeting": [
-        "Greetings, |PLAYERNAME|. Say trade if you have something for the guild."
-      ],
-      "farewell": [
-        "Good bye, |PLAYERNAME|."
-      ],
-      "walkAway": [
-        "Come back soon!"
-      ],
-      "rootNodeId": "root",
-      "nodes": [
-        {
-          "id": "root",
-          "matches": [],
-          "responses": [],
-          "children": [
-            "trade",
-            "job"
-          ],
-          "choices": [
-            {
-              "nodeId": "trade",
-              "label": "Trade"
-            },
-            {
-              "nodeId": "job",
-              "label": "Job"
-            }
-          ]
-        },
-        {
-          "id": "trade",
-          "matches": [
-            [
-              "trade"
-            ],
-            [
-              "shop"
-            ],
-            [
-              "buy"
-            ],
-            [
-              "sell"
-            ],
-            [
-              "wares"
-            ],
-            [
-              "offer"
-            ]
-          ],
-          "responses": [
-            "Take a look."
-          ],
-          "children": [],
-          "choices": [],
-          "nextNodeId": "root",
-          "action": {
-            "kind": "shop",
-            "shopId": "elane"
-          }
-        },
-        {
-          "id": "job",
-          "matches": [
-            [
-              "job"
-            ]
-          ],
-          "responses": [
-            "I lead the paladins here. Say trade if you have equipment to offer."
           ],
           "children": [],
           "choices": [],

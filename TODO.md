@@ -389,6 +389,42 @@ limitations accepted during a session are recorded in the owning feature file
   does, unbinds the player and replies `character-list` — with a client-side
   reset that clears `ownCharacter` without rebuilding the socket. Owner:
   Feature 59 (session/logout lifecycle).
+- **A bought spell changes nothing** (2026-07-29). `SpellTeacherService` takes
+  the money and writes `Spell.<spell_id>` to `character_storages`, but nothing
+  reads that key back: `SpellRegistry.projectFor` hands the client every spell
+  of the character's vocation and `SpellCaster.spellRejectionCode` has no
+  learned-spell gate (its one `spell-not-learned` return is the wheel
+  revelation check). So spells are castable without buying them, and the only
+  effect of a purchase is the gold leaving the player. Recommended fix: gate
+  both the projection and the cast on `player.storageValue(
+  learnedSpellStorageKey(spell.id)) > 0` for spells Canary sells, seeding the
+  free starter spells at character creation so existing characters are not
+  stripped mid-flight; the migration for already-created characters needs its
+  own backfill. Owner: Feature 40 (NPC dialogue/typed commands) with the cast
+  half in the combat features (22–28).
+- **~130 imported spell offers have no confirmation branch** (2026-07-29). In
+  `content/npcs/canary-dialogue-baseline.json` some "Would you like to learn
+  {x} for N gold?" nodes carry no child holding the `learn-spell` action (e.g.
+  `muriel/dialogue-17` "explosion", 3 of Muriel's 34 offers; every teacher has
+  a handful). The player says yes and nothing happens. The importer is
+  dropping the confirmation node rather than the engine failing, so the fix is
+  in `tools/importCanaryNpcs.mjs` plus a re-import; a parity assertion that
+  every "would you like to learn" node has a `learn-spell` child would keep it
+  fixed. Owner: Feature 38/40 (NPC content grind).
+- **Reviewed NPC dialogues still shadow richer imported ones** (2026-07-29).
+  `loadNpcDialogueGraphs` now refuses an override that *drops an action*, but
+  an override may still discard imported flavour and quest branches:
+  `quentin` 22 nodes → 10, `frodo` 44 → 3, `gorn` 23 → 3. Recommended fix:
+  re-check whether those four hand-written entries are still needed now that
+  the importer wires shops, and delete the redundant ones the way `elane` was
+  deleted. Owner: Feature 40.
+- **Map click routing has no test harness** (2026-07-29). The fix keeping HUD
+  right-clicks out of the world (`WorldRenderer.secondaryPressOnCanvas`) is
+  unit-testable only by standing a Pixi `Application` up in vitest; every test
+  in `client/lib/render/` covers pure helpers instead. Recommended fix: extract
+  the pointer routing decisions into a pure module (`shouldResolveMapClick`,
+  taking button/target/drag state) that both the renderer and a unit test can
+  call. Owner: `todo/client/`.
 
 ## Repo-wide known breakage
 

@@ -59,7 +59,13 @@ export function loadNpcDialogueGraphs(
         throw new Error(`duplicate NPC dialogue definition ${typeId}`);
       }
       documentTypeIds.add(typeId);
-      graphs.set(typeId, parseGraph(definition));
+      const graph = parseGraph(definition);
+      const replaced = graphs.get(typeId);
+      // A later, hand-reviewed document refines an imported graph; it must not
+      // quietly take offers away. Elane lost her twelve spell offers this way
+      // and nobody noticed until a player could not buy a spell.
+      if (replaced) assertKeepsActions(typeId, replaced, graph);
+      graphs.set(typeId, graph);
     }
   }
   // Promotion actions used to be composed in here from a hard-coded ruler
@@ -71,6 +77,30 @@ export function loadNpcDialogueGraphs(
       expectedCanaryCommit,
     ),
   );
+}
+
+function countActions(graph: DialogueGraph): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const node of graph.nodes) {
+    if (!node.action) continue;
+    counts.set(node.action.kind, (counts.get(node.action.kind) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function assertKeepsActions(
+  typeId: string,
+  replaced: DialogueGraph,
+  replacement: DialogueGraph,
+): void {
+  const after = countActions(replacement);
+  for (const [kind, before] of countActions(replaced)) {
+    if ((after.get(kind) ?? 0) < before) {
+      throw new Error(
+        `NPC dialogue ${typeId} drops ${kind} actions defined by an earlier document`,
+      );
+    }
+  }
 }
 
 /**

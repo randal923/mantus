@@ -60,7 +60,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | VIP/friends, groups, requests, typing (65)                              | ✅     | ◐      | Finder privacy setting, exiva spells; VIP-group UI                                            |
 | Chat, channels, talkactions, flood control (35, 36)                     | ✅     | ✅     | Admin talkactions, GM/broadcast modes, durable ignore lists                                   |
 | Moderation + role-authorized admin core (66, 96)                        | ✅     | —      | Role-assignment tooling, `/coins`+`/raid` capabilities, `/conservation` view                  |
-| NPC dialogue engine, travel, 6 typed command families (37–42)           | ◐      | ✅     | The 611-entry procedural grind (38), new condition/effect kinds (40), gated/quest routes (41) |
+| NPC dialogue engine, travel, 6 typed command families (37–42)           | ◐      | ✅     | The 611-entry procedural grind (38), new condition/effect kinds (40), gated/quest routes (41), spell purchases have no gameplay effect + ~130 offers missing their confirmation branch (TODO.md) |
 
 ## Modern systems
 

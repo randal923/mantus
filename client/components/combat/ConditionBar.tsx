@@ -42,32 +42,30 @@ export function ConditionBar({ conditions }: ConditionBarProps) {
       className="ui-panel-frame pointer-events-auto flex max-w-80 flex-wrap gap-1 p-1.5"
     >
       {conditions.map((condition) => {
+        const name = t(`combat.condition.${condition.type}`);
         const title = t("combat.conditionTitle", {
-          condition: t(`combat.condition.${condition.type}`),
+          condition: name,
           seconds: Math.ceil(condition.remainingMs / 1_000),
         });
-        const iconSource = ICON_SOURCES[condition.type];
 
         return (
           <span
             key={condition.type}
             aria-label={title}
             title={title}
-            className="relative flex size-8 items-center justify-center rounded border border-ui-gold/20 bg-black/35 font-display text-base text-ui-text-bright"
+            className="flex h-8 items-center gap-1.5 rounded border border-ui-gold/20 bg-black/35 pr-2 pl-1 text-xs font-medium text-ui-text-bright"
           >
             <Image
-              src={iconSource}
+              src={ICON_SOURCES[condition.type]}
               alt=""
               width={18}
               height={18}
               unoptimized
             />
+            <span className="whitespace-nowrap">{name}</span>
             {condition.stacks > 1 && (
-              <span
-                aria-hidden="true"
-                className="absolute right-0.5 bottom-0 text-[9px] font-bold"
-              >
-                {condition.stacks}
+              <span aria-hidden="true" className="text-ui-gold">
+                ×{condition.stacks}
               </span>
             )}
           </span>

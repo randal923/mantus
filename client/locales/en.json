@@ -1151,7 +1151,8 @@
       "floorDown": "Floor down",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
-      "recenter": "Re-center on you",
+      "lock": "Lock the map on your character",
+      "unlock": "Unlock the map to look around",
       "npcLegend": "NPC",
       "resize": "Drag to resize the map",
       "categories": {

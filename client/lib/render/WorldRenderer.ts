@@ -134,6 +134,7 @@ export class WorldRenderer {
   private previousBodyCursor = "";
   private suppressNextMapClick = false;
   private mapLookChordActive = false;
+  private secondaryPressOnCanvas = false;
   private lastPointerClientPosition: { x: number; y: number } | null = null;
   private destroyed = false;
 
@@ -675,6 +676,7 @@ export class WorldRenderer {
   };
 
   private readonly onMapMouseDown = (event: MouseEvent): void => {
+    if (event.button === 2) this.secondaryPressOnCanvas = true;
     // Mouse events report the second button press; pointerdown does not.
     if (
       (event.button !== 0 && event.button !== 2) ||
@@ -694,12 +696,18 @@ export class WorldRenderer {
   };
 
   private readonly onMapMouseUp = (event: MouseEvent): void => {
+    // This listener is on the window so a release outside the canvas still
+    // resolves, so ignore presses that started on a HUD panel instead.
+    const startedOnCanvas = this.secondaryPressOnCanvas;
+    if (event.button === 2) this.secondaryPressOnCanvas = false;
     if (this.mapLookChordActive) {
       if ((event.buttons & 3) === 0) this.mapLookChordActive = false;
       return;
     }
     // Resolve a regular right-click only after it cannot become a look chord.
-    if (event.button === 2) this.performSecondaryMapAction(event);
+    if (event.button === 2 && startedOnCanvas) {
+      this.performSecondaryMapAction(event);
+    }
   };
 
   private readonly onMapPointerMove = (event: PointerEvent): void => {
@@ -871,7 +879,8 @@ export class WorldRenderer {
       this.actions.attackTarget(creatureId);
       return;
     }
-    this.useMapWithReach(
+    // Right-click only uses what is already in reach; walking is left-click.
+    this.actions.useMap(
       this.mapView.interactiveTileFor(
         getMapPointerPosition(
           point.x,

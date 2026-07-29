@@ -1151,7 +1151,8 @@
       "floorDown": "Andar abaixo",
       "zoomIn": "Aproximar",
       "zoomOut": "Afastar",
-      "recenter": "Centralizar em você",
+      "lock": "Travar o mapa no seu personagem",
+      "unlock": "Destravar o mapa para explorar",
       "npcLegend": "NPC",
       "resize": "Arraste para redimensionar o mapa",
       "categories": {

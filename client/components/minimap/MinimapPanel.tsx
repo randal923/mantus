@@ -108,7 +108,8 @@ export function MinimapPanel({
   const centerX = panCenter?.x ?? ownPosition.x;
   const centerY = panCenter?.y ?? ownPosition.y;
   const pixelsPerTile = ZOOM_LEVELS[zoomIndex] ?? 3;
-  const detached = panCenter !== null || viewFloor !== null;
+  /** Locked = the view follows the character; panning or a floor change frees it. */
+  const locked = panCenter === null && viewFloor === null;
   const canvasWidth = layout?.width ?? DEFAULT_CANVAS_WIDTH;
   const canvasHeight = layout?.height ?? DEFAULT_CANVAS_HEIGHT;
 
@@ -242,6 +243,17 @@ export function MinimapPanel({
       // the tile; the server routes and re-validates every step.
       if (!drag.moved && floor === ownPosition.z) onWalkTo(tileAt(event));
     }
+  };
+
+  const toggleLock = () => {
+    if (!locked) {
+      setPanCenter(null);
+      setViewFloor(null);
+      return;
+    }
+    // Unlocking freezes the view where it currently sits.
+    setPanCenter({ x: centerX, y: centerY });
+    setViewFloor(floor);
   };
 
   const onContextMenu = (event: ReactPointerEvent<HTMLCanvasElement>) => {
@@ -408,30 +420,30 @@ export function MinimapPanel({
             </svg>
           </MinimapControlButton>
         </div>
-        {detached && (
-          <div className="absolute bottom-1.5 left-1.5">
-            <MinimapControlButton
-              label={t("hud.minimap.recenter")}
-              onClick={() => {
-                setPanCenter(null);
-                setViewFloor(null);
-              }}
+        <div className="absolute bottom-1.5 left-1.5">
+          <MinimapControlButton
+            label={t(locked ? "hud.minimap.unlock" : "hud.minimap.lock")}
+            onClick={toggleLock}
+          >
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              className={locked ? "size-3.5 text-ui-gold" : "size-3.5"}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <svg
-                aria-hidden
-                viewBox="0 0 24 24"
-                className="size-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <circle cx="12" cy="12" r="2.6" fill="currentColor" />
-                <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
-              </svg>
-            </MinimapControlButton>
-          </div>
-        )}
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path
+                d={
+                  locked ? "M7 11V7a5 5 0 0 1 10 0v4" : "M7 11V7a5 5 0 0 1 9.9-1"
+                }
+              />
+            </svg>
+          </MinimapControlButton>
+        </div>
         {hover && (
           <div
             style={{

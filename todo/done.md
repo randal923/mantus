@@ -1236,3 +1236,63 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   picker keeps it selectable and the rule simply no-ops until the object is
   back in the inventory. The old `slotIndex` shape is migrated at load but
   only rewritten to the database on the next bot save.
+
+## 2026-07-29 — Map input routing, minimap follow lock, spell teachers, status bar
+
+- **Problem**: (1) right-clicking anywhere over the HUD — the inventory panel
+  in particular — ran the map's secondary action on the tile *underneath* the
+  panel, so an inventory right-click walked the character across the screen;
+  (2) right-click also auto-walked to whatever it was pointed at (walk-then-use),
+  which the player wanted reserved for left-click; (3) the minimap detached
+  from the character the moment it was panned, with only a conditional
+  re-center button to get back; (4) Elane, the spell teacher standing next to
+  the Thais depot, could not sell any spell; (5) the condition bar showed bare
+  icons, so a player could not tell haste from regeneration without hovering.
+- **What changed**:
+  - `WorldRenderer` now records whether a secondary press started on the map
+    canvas (`secondaryPressOnCanvas`, set on the canvas-scoped `mousedown`) and
+    the window-level `mouseup` only resolves a right-click when it did. The
+    window listener still exists so a drag released off-canvas resolves; it no
+    longer acts on presses that belong to a HUD panel. React's
+    `stopPropagation` cannot help here — the listener is on `window`, outside
+    the React root's propagation path.
+  - `performSecondaryMapAction` calls `actions.useMap(tile)` directly instead
+    of `useMapWithReach(...)`. Walking is now left-click only: `onMapClick`
+    auto-walk plus the walk-then-use reach scheduler, which is reachable only
+    from left-button double-click (use) and shift+double-click (pickup).
+  - `MinimapPanel` derives `locked` from "no pan center and no view floor" and
+    renders an always-visible padlock toggle where the conditional re-center
+    button used to be: closed gold padlock = the view follows the character,
+    open padlock = frozen where it sits. Locking clears the pan/floor
+    overrides; unlocking pins the current center and floor. Panning or a floor
+    change still detaches, which now simply reads as "unlocked".
+  - `content/npcs/canary-dialogues.json` no longer overrides `elane`. The
+    reviewed document replaces an imported graph wholesale, and the
+    hand-written three-node Elane (greeting + trade + job) deleted the 68
+    imported nodes carrying her twelve `learn-spell` offers. The imported graph
+    already contains the same `trade` → `shop: elane` node, so the override was
+    pure loss. `loadNpcDialogueGraphs` now refuses any later document that
+    lowers the count of an action kind an earlier document defined, so this
+    class of silent deletion fails the boot instead of the player.
+  - `ConditionBar` chips are icon + localized name (+ `×n` for stacks) instead
+    of icon-only; the seconds-remaining tooltip is unchanged.
+- **Files**: `client/lib/render/WorldRenderer.ts`,
+  `client/components/minimap/MinimapPanel.tsx`,
+  `client/components/combat/ConditionBar.tsx`, `client/locales/{en,pt-BR}.json`
+  (`hud.minimap.lock`/`unlock` replace `recenter`),
+  `server/src/npc/loadNpcDialogueGraphs.ts`,
+  `server/src/npc/spellTeacherContent.test.ts` (new),
+  `content/npcs/canary-dialogues.json`.
+- **Verified**: client `yarn typecheck` + `eslint`, the Storybook browser lane
+  for `MinimapPanel` and `ConditionBar`, and headless screenshots of both
+  (locked and after a pan). Server `yarn typecheck` and `yarn vitest run
+  src/npc src/spawn` (105 passed): the new content test asserts 49 teachers
+  keep their offers, walks Elane's root → "light healing" → "yes" to the
+  `learn-spell` action, and checks the loader rejects an action-dropping
+  override. The NPC purchase path itself was re-walked offline against the real
+  imported Muriel graph (greet → choice → Yes reaches `SpellTeacherService`
+  with a committed store); no live server run — Docker/Postgres is not
+  available in this environment.
+- **Residual risk**: whether Elane was the NPC the player tried is unconfirmed;
+  the other 48 teachers were already wired. Known content and gameplay gaps
+  from this pass are recorded in `TODO.md`.
