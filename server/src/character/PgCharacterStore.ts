@@ -192,24 +192,30 @@ export class PgCharacterStore implements CharacterStore {
   async updateActionBar(
     characterId: string,
     actionBar: ActionBar,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET action_bar = $2::jsonb
+       WHERE id = $1`,
+      [characterId, JSON.stringify(actionBar)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("character action bar update failed");
+    }
+  }
+
+  async updateActionBot(
+    characterId: string,
     settings: ActionBotSettings,
   ): Promise<void> {
     const result = await this.pool.query(
       `UPDATE characters
-       SET action_bar = $2::jsonb,
-           potion_action_bar = jsonb_build_object(
-             'botSettings',
-             $3::jsonb
-           )
+       SET potion_action_bar = jsonb_build_object('botSettings', $2::jsonb)
        WHERE id = $1`,
-      [
-        characterId,
-        JSON.stringify(actionBar),
-        JSON.stringify(settings),
-      ],
+      [characterId, JSON.stringify(settings)],
     );
     if (result.rowCount !== 1) {
-      throw new Error("character action bar update failed");
+      throw new Error("character action bot update failed");
     }
   }
 

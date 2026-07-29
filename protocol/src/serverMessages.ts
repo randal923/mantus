@@ -233,6 +233,10 @@ export const uiSettingsUpdatedMessageSchema = z.object({
 export const actionBarUpdatedMessageSchema = z.object({
   type: z.literal("action-bar-updated"),
   actionBar: actionBarSchema,
+});
+
+export const actionBotUpdatedMessageSchema = z.object({
+  type: z.literal("action-bot-updated"),
   settings: actionBotSettingsSchema,
 });
 
@@ -474,6 +478,9 @@ export const serverErrorCodeSchema = z.enum([
   "action-bar-invalid",
   "action-bar-update-failed",
   "action-bar-update-pending",
+  "action-bot-invalid",
+  "action-bot-update-failed",
+  "action-bot-update-pending",
   "already-authenticated",
   "already-joined",
   "auth-failed",
@@ -539,6 +546,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   languageUpdatedMessageSchema,
   uiSettingsUpdatedMessageSchema,
   actionBarUpdatedMessageSchema,
+  actionBotUpdatedMessageSchema,
   actionBarActivationResultMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,

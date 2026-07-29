@@ -1,16 +1,20 @@
 import type { GameWindowRuntime } from "../../components/game-window/types/GameWindowRuntime";
 
 /**
- * Sends any debounced action-bar / UI-settings save immediately. Edits made
- * inside the 800 ms debounce window are otherwise lost when the tab closes or
- * the session tears down before the timer fires.
+ * Sends any debounced action-bar, action-bot, or UI-settings save immediately.
+ * Edits made inside the 800 ms debounce window are otherwise lost when the tab
+ * closes or the session tears down before the timer fires.
  */
 export function flushPendingSaves(runtime: GameWindowRuntime): void {
   if (runtime.actionBarSaveTimerRef.current) {
     clearTimeout(runtime.actionBarSaveTimerRef.current);
     runtime.actionBarSaveTimerRef.current = null;
-    runtime.clientRef.current?.updateActionBar(
-      runtime.actionBarRef.current,
+    runtime.clientRef.current?.updateActionBar(runtime.actionBarRef.current);
+  }
+  if (runtime.actionBotSaveTimerRef.current) {
+    clearTimeout(runtime.actionBotSaveTimerRef.current);
+    runtime.actionBotSaveTimerRef.current = null;
+    runtime.clientRef.current?.updateActionBot(
       runtime.actionBotSettingsRef.current,
     );
   }

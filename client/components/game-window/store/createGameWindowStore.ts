@@ -47,6 +47,7 @@ export function createGameWindowStore({
     actionBotSettingsRef: {
       current: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },
     },
+    actionBotSaveTimerRef: { current: null },
     marketOpenRef: { current: false },
     marketSelectedItemRef: { current: null },
     hadPartyRef: { current: false },
@@ -521,6 +522,10 @@ export function createGameWindowStore({
       if (runtime.actionBarSaveTimerRef.current) {
         clearTimeout(runtime.actionBarSaveTimerRef.current);
         runtime.actionBarSaveTimerRef.current = null;
+      }
+      if (runtime.actionBotSaveTimerRef.current) {
+        clearTimeout(runtime.actionBotSaveTimerRef.current);
+        runtime.actionBotSaveTimerRef.current = null;
       }
       runtime.pendingRuneRef.current = null;
       runtime.pendingPotionRef.current = null;

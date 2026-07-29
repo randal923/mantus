@@ -1042,15 +1042,12 @@ export class GameClient {
     return this.send({ type: "update-ui-settings", settings });
   }
 
-  updateActionBar(
-    actionBar: ActionBar,
-    settings: ActionBotSettings,
-  ): boolean {
-    return this.send({
-      type: "update-action-bar",
-      actionBar,
-      settings,
-    });
+  updateActionBar(actionBar: ActionBar): boolean {
+    return this.send({ type: "update-action-bar", actionBar });
+  }
+
+  updateActionBot(settings: ActionBotSettings): boolean {
+    return this.send({ type: "update-action-bot", settings });
   }
 
   disconnect(): void {

@@ -1,4 +1,5 @@
 import type {
+  ActionBotAction,
   ActivateActionBarMessage,
   CastSpellMessage,
   CombatTarget,
@@ -273,15 +274,10 @@ export class Combat {
     );
     this.actionBot = new ActionBot(
       world,
-      (session, slotIndex, target, now) =>
-        this.activateAutomaticActionBarSlot(
-          session,
-          slotIndex,
-          target,
-          now,
-        ),
-      (session, slotIndex, now) =>
-        this.deactivateActionBarSlot(session, slotIndex, now),
+      (session, action, target, now) =>
+        this.activateAutomaticAction(session, action, target, now),
+      (session, action, now) =>
+        this.deactivateAction(session, action, now),
       (session, spellId, now) =>
         this.activateAutomaticSpell(session, spellId, now),
     );
@@ -641,12 +637,19 @@ export class Combat {
     now: number,
   ): void {
     const action = session.actionBar[intent.slotIndex]?.action;
-    const cooldown = this.actionBarCooldown(session, intent.slotIndex);
+    if (!action || action.kind === "text") {
+      session.pendingManualActionBarActivation = null;
+      session.send({
+        type: "action-bar-activation-result",
+        slotIndex: intent.slotIndex,
+        accepted: false,
+      });
+      return;
+    }
+    const cooldown = this.actionCooldown(session, action);
     if (
-      action &&
-      action.kind !== "text" &&
       cooldown.readyAt <= now &&
-      this.actionBarTemporarilyBlockedByItems(session, action)
+      this.actionTemporarilyBlockedByItems(session, action)
     ) {
       const player = playerForSession(this.world, session);
       if (!player) {
@@ -668,9 +671,9 @@ export class Combat {
     }
     session.pendingManualActionBarActivation = null;
     const errorRevision = session.errorRevision;
-    const started = this.activateActionBarSlot(
+    const started = this.activateAction(
       session,
-      intent.slotIndex,
+      action,
       intent.target,
       now,
       false,
@@ -863,18 +866,14 @@ export class Combat {
       session.pendingManualActionBarActivation = null;
       return;
     }
-    if (this.actionBarTemporarilyBlockedByItems(session, action)) return;
+    if (this.actionTemporarilyBlockedByItems(session, action)) return;
     session.pendingManualActionBarActivation = null;
-    if (
-      this.actionBarCooldown(session, pending.intent.slotIndex).readyAt > now
-    ) {
-      return;
-    }
+    if (this.actionCooldown(session, action).readyAt > now) return;
     session.actionBotSuppressedAt = now;
     const errorRevision = session.errorRevision;
-    const started = this.activateActionBarSlot(
+    const started = this.activateAction(
       session,
-      pending.intent.slotIndex,
+      action,
       pending.intent.target,
       now,
       false,
@@ -884,12 +883,9 @@ export class Combat {
     }
   }
 
-  private actionBarTemporarilyBlockedByItems(
+  private actionTemporarilyBlockedByItems(
     session: Session,
-    action: Exclude<
-      NonNullable<Session["actionBar"][number]["action"]>,
-      { readonly kind: "text" }
-    >,
+    action: ActionBotAction,
   ): boolean {
     if (action.kind === "spell") {
       const spell = this.spells.get(action.spellId);
@@ -935,24 +931,24 @@ export class Combat {
     );
   }
 
-  private activateAutomaticActionBarSlot(
+  private activateAutomaticAction(
     session: Session,
-    slotIndex: number,
+    action: ActionBotAction,
     suppliedTarget: CombatTarget | undefined,
     now: number,
   ): { readonly started: boolean; readonly nextAttemptAt: number } {
-    const cooldown = this.actionBarCooldown(session, slotIndex);
+    const cooldown = this.actionCooldown(session, action);
     if (cooldown.readyAt > now) {
       return { started: false, nextAttemptAt: cooldown.readyAt };
     }
-    const started = this.activateActionBarSlot(
+    const started = this.activateAction(
       session,
-      slotIndex,
+      action,
       suppliedTarget,
       now,
       true,
     );
-    const updatedCooldown = this.actionBarCooldown(session, slotIndex);
+    const updatedCooldown = this.actionCooldown(session, action);
     return {
       started,
       nextAttemptAt: started
@@ -965,16 +961,15 @@ export class Combat {
     };
   }
 
-  private activateActionBarSlot(
+  private activateAction(
     session: Session,
-    slotIndex: number,
+    action: ActionBotAction,
     suppliedTarget: CombatTarget | undefined,
     now: number,
     automatic: boolean,
   ): boolean {
     const player = playerForSession(this.world, session);
-    const action = session.actionBar[slotIndex]?.action;
-    if (!player || !action || action.kind === "text") return false;
+    if (!player) return false;
     if (action.kind === "spell") {
       const spell = this.spells.get(action.spellId);
       if (!spell || spell.origin !== "spell") return false;
@@ -1184,14 +1179,10 @@ export class Combat {
     };
   }
 
-  private actionBarCooldown(
+  private actionCooldown(
     session: Session,
-    slotIndex: number,
+    action: ActionBotAction,
   ): { readonly readyAt: number; readonly totalMs: number } {
-    const action = session.actionBar[slotIndex]?.action;
-    if (!action || action.kind === "text") {
-      return { readyAt: 0, totalMs: 0 };
-    }
     if (action.kind === "spell") {
       const spell = this.spells.get(action.spellId);
       return spell
@@ -1228,13 +1219,12 @@ export class Combat {
     };
   }
 
-  private deactivateActionBarSlot(
+  private deactivateAction(
     session: Session,
-    slotIndex: number,
+    action: ActionBotAction,
     now: number,
   ): boolean {
-    const action = session.actionBar[slotIndex]?.action;
-    if (action?.kind !== "item" || action.mode !== "equip") return false;
+    if (action.kind !== "item" || action.mode !== "equip") return false;
     return this.items.toggleEquippedItem(
       session,
       action.itemTypeId,

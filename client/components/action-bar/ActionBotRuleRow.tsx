@@ -1,20 +1,21 @@
 import type {
-  ActionBar,
   ActionBotRule,
   ActionBotTrigger,
   InventoryItem,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { createActionBotAction } from "../../lib/action-bar/createActionBotAction";
 import { getActionBarActionName } from "../../lib/action-bar/getActionBarActionName";
+import { getActionBotActionValue } from "../../lib/action-bar/getActionBotActionValue";
 import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/Dropdown";
+import { DropUp, type DropUpOption } from "../ui/DropUp";
 import { ActionBarActionIcon } from "./ActionBarActionIcon";
 
 interface ActionBotRuleRowProps {
   readonly rule: ActionBotRule;
   readonly ruleNumber: number;
-  readonly actionBar: ActionBar;
   readonly spells: ReadonlyArray<SpellCatalogEntry>;
   readonly items: ReadonlyArray<InventoryItem>;
   readonly onChange: (rule: ActionBotRule) => void;
@@ -76,7 +77,6 @@ function withTriggerPercent(
 export function ActionBotRuleRow({
   rule,
   ruleNumber,
-  actionBar,
   spells,
   items,
   onChange,
@@ -85,27 +85,60 @@ export function ActionBotRuleRow({
   onMoveDown,
 }: ActionBotRuleRowProps) {
   const { t } = useAppTranslation();
-  const action = actionBar[rule.slotIndex]?.action ?? null;
-  const isEquip = action?.kind === "item" && action.mode === "equip";
+  const action = rule.action;
+  const isEquip = action.kind === "item" && action.mode === "equip";
   const resourceTrigger =
     rule.trigger.kind === "resource-below" ||
     rule.trigger.kind === "resource-above"
       ? rule.trigger
       : null;
-  const actionOptions = actionBar.flatMap((slot, index) =>
-    slot.action && slot.action.kind !== "text"
-      ? [
-          {
-            value: String(index),
-            label: `${index + 1}. ${getActionBarActionName(
-              slot.action,
-              spells,
-              items,
-            )}`,
-          },
-        ]
-      : [],
-  );
+  const selectedValue = getActionBotActionValue(action);
+  const carried = new Map<number, InventoryItem>();
+  for (const item of items) {
+    if (!carried.has(item.typeId)) carried.set(item.typeId, item);
+  }
+  const actionOptions: Array<DropUpOption<string>> = [
+    ...spells
+      .filter((spell) => spell.origin === "spell")
+      .map((spell) => ({
+        value: `spell:${spell.id}`,
+        label: spell.name,
+        description: [spell.words, `${spell.manaCost} mana`]
+          .filter(Boolean)
+          .join(" · "),
+        icon: (
+          <ActionBarActionIcon
+            action={{
+              kind: "spell",
+              spellId: spell.id,
+              targetMode: "self",
+            }}
+            items={items}
+          />
+        ),
+        group: t("actionBot.actionGroups.spells"),
+      })),
+    ...[...carried.values()].map((item) => ({
+      value: `item:${item.typeId}`,
+      label: item.name,
+      icon: (
+        <ActionBarActionIcon
+          action={{ kind: "item", itemTypeId: item.typeId, mode: "use" }}
+          items={items}
+        />
+      ),
+      group: t("actionBot.actionGroups.objects"),
+    })),
+  ];
+  // A rule may name an object the character is not carrying right now; keep it
+  // selectable so opening the panel never silently rewrites the rule.
+  if (!actionOptions.some((option) => option.value === selectedValue)) {
+    actionOptions.unshift({
+      value: selectedValue,
+      label: getActionBarActionName(action, spells, items),
+      icon: <ActionBarActionIcon action={action} items={items} />,
+    });
+  }
   const triggerOptions = TRIGGER_KINDS.map((kind) => ({
     value: kind,
     label: t(`actionBot.triggers.${kind}`),
@@ -160,21 +193,18 @@ export function ActionBotRuleRow({
             {t("actionBot.columns.action")}
           </span>
           <div className="flex min-w-0 items-center gap-2">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-md border border-ui-stone-light/20 bg-black/35">
-              <ActionBarActionIcon action={action} items={items} />
-            </span>
-            <Dropdown
+            <DropUp
               ariaLabel={t("actionBot.actionForRule", {
                 number: ruleNumber,
               })}
-              value={String(rule.slotIndex)}
+              value={selectedValue}
               options={actionOptions}
-              onChange={(slotIndex) =>
-                onChange({
-                  ...rule,
-                  slotIndex: Number(slotIndex),
-                })
-              }
+              searchLabel={t("actionBot.searchActions")}
+              emptyLabel={t("actionBot.noMatchingActions")}
+              onChange={(value) => {
+                const next = createActionBotAction(value, spells, items);
+                if (next) onChange({ ...rule, action: next });
+              }}
               className="flex-1"
             />
           </div>

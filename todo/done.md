@@ -1166,3 +1166,73 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
 - **Residual**: no dedicated leave-world intent, so a change-character during
   a fight parks the character in the linger window instead of refusing with
   Tibia's "you may not logout during a fight" (recorded in TODO.md).
+
+## 2026-07-28 action bot: rules own their action, decoupled from the action bar
+
+- **Problem**: an action bot rule pointed at an action bar slot
+  (`rule.slotIndex`). Automating a spell meant first parking it on a bar
+  button, the 12 rules competed with the 18 buttons for space, and
+  rearranging or clearing the bar silently rewrote or deleted rules
+  (`removeInvalidActionBotRules`).
+- **Change**: `actionBotRuleSchema` now carries `action:
+  actionBotActionSchema` (the spell/item halves of the bar action union —
+  text actions are excluded, the bot never speaks). Any spell of the
+  character's vocation and any carried object can be automated without
+  touching the bar. Because a rule's action is a full action, the worst-case
+  `update-action-bar` message no longer fit the 16 KB transport cap, so bot
+  settings travel in their own `update-action-bot` intent (server confirms
+  with `action-bot-updated`, errors `action-bot-invalid` /
+  `-update-failed` / `-update-pending`, own `Session.actionBotUpdatePending`
+  and own debounced client save timer). The bar and the bot now persist
+  through separate store methods (`updateActionBar` / `updateActionBot`,
+  columns `action_bar` and `potion_action_bar`).
+  Server-side, `Combat` lost its slot-indexed helpers: `activateAction`,
+  `actionCooldown`, `deactivateAction`, and `actionTemporarilyBlockedByItems`
+  all take an action, and the bar path resolves its slot once per tick before
+  calling them. `ActionBotHandler` validates each rule action on its own
+  terms via the extracted `sanitizeActionBarAction` (vocation-owned spell,
+  real item type, equip only on equipment) — a rule never inherits legitimacy
+  from a bar button. `parseActionBotSettings` gained a migration step that
+  resolves persisted `slotIndex` rules against the loaded bar once at login
+  and drops rules whose slot was empty.
+- **Files**: `protocol/src/{actionBar,clientMessages,serverMessages}.ts`,
+  `server/src/{ActionBarHandler,ActionBotHandler,sanitizeActionBarAction,
+  Session,CharacterHandler,GameServer}.ts`,
+  `server/src/combat/{Combat,ActionBot}.ts`,
+  `server/src/character/{parseActionBotSettings,CharacterStore,
+  PgCharacterStore}.ts`, `server/src/test/InMemoryCharacterStore.ts`,
+  `client/components/action-bar/{ActionBotSettingsPanel,ActionBotRuleRow,
+  ActionBarModal,ActionBarSpellPicker}.tsx`,
+  `client/lib/action-bar/{createActionBotAction,createSpellAction,
+  getActionBotActionValue}.ts` (deleted `removeInvalidActionBotRules.ts`),
+  `client/lib/net/GameClient.ts`, `client/lib/game-window/flushPendingSaves.ts`,
+  `client/components/game-window/{GameActionBarOverlays,GameHudOverlay}.tsx`,
+  `client/components/game-window/{store/createGameWindowStore,
+  controllers/handleGameClientStatus,messages/handlePlayerStateMessage,
+  types/GameWindowRuntime}.ts`, `client/locales/{en,pt-BR}.json`.
+- **Verified**: server `yarn typecheck` + 1308 tests (new
+  `ActionBotHandler.test.ts` covers vocation/item/dup-id rejection, pending
+  guard, storage-failure rollback; `parseActionBotSettings.test.ts` covers the
+  slot→action migration; `ActionBotIntentSchemas.test.ts` now asserts both
+  messages' worst case fits `maxMessageBytes`). Client `yarn typecheck`,
+  `yarn lint`, 260 unit tests including a new `createActionBotAction.test.ts`.
+  Not exercised against a live server.
+- **Follow-up (same day)**: the rule's Action dropdown shipped with disabled
+  `<option>` separators as group headings, which tripped the `has-disabled:
+  pointer-events-none` wrapper on `components/ui/Dropdown.tsx` and made the
+  whole control unclickable — every new rule was stuck on its default spell.
+  `Dropdown` gained an optional `group` field rendering real `<optgroup>`s and
+  the rule row uses that. Never pass a disabled option to that component.
+- **Follow-up 2 (same day)**: the rule action picker became a new
+  `components/ui/DropUp.tsx` — a viewport-positioned popover that opens
+  *upwards* (so the modal's `overflow-hidden` and the panel's scroll container
+  never clip it), listing every castable spell and carried object with its
+  sprite/spell icon, words and mana cost, grouped headings, and a filter box
+  (Enter picks the first match, Escape closes, outside click closes). The
+  row's separate icon preview was dropped — the trigger shows it. Stories:
+  `DropUp.stories.tsx` and `ActionBarModal`'s `ActionBot` story, both with
+  play functions; the Storybook browser lane passes.
+- **Residual**: a rule may name an object the character is not carrying; the
+  picker keeps it selectable and the rule simply no-ops until the object is
+  back in the inventory. The old `slotIndex` shape is migrated at load but
+  only rewritten to the database on the next bot save.

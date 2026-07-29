@@ -1,11 +1,15 @@
-import type { ActionBotRule, CombatTarget } from "@tibia/protocol";
+import type {
+  ActionBotAction,
+  ActionBotRule,
+  CombatTarget,
+} from "@tibia/protocol";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { World } from "../World";
 
 type ActivateAction = (
   session: Session,
-  slotIndex: number,
+  action: ActionBotAction,
   target: CombatTarget | undefined,
   now: number,
 ) => {
@@ -15,7 +19,7 @@ type ActivateAction = (
 
 type DeactivateAction = (
   session: Session,
-  slotIndex: number,
+  action: ActionBotAction,
   now: number,
 ) => boolean;
 
@@ -44,7 +48,7 @@ export class ActionBot {
       !player ||
       player.health <= 0 ||
       !settings.enabled ||
-      session.actionBarUpdatePending ||
+      session.actionBotUpdatePending ||
       session.actionBotSuppressedAt === now
     ) {
       return;
@@ -84,7 +88,7 @@ export class ActionBot {
       if (!active) {
         if (
           rule.unequipWhenInactive &&
-          this.deactivate(session, rule.slotIndex, now)
+          this.deactivate(session, rule.action, now)
         ) {
           session.actionBotRuleReadyAt.set(rule.id, now + 500);
           return;
@@ -93,7 +97,7 @@ export class ActionBot {
       }
       const result = this.activate(
         session,
-        rule.slotIndex,
+        rule.action,
         undefined,
         now,
       );

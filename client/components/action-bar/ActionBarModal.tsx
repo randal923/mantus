@@ -80,18 +80,20 @@ export function ActionBarModal({
       <div className="flex flex-col gap-4">
         <div className="rounded-lg border border-ui-gold/15 bg-black/25 px-3 py-2.5">
           <p className="text-sm leading-6 text-ui-muted">
-            Assign spells, runes, potions, equipment, usable objects, or text.
-            Drag carried objects directly onto the bar and right-click any
-            button for Tibia-style options.
+            {section === "bot"
+              ? t("actionBot.panelIntro")
+              : "Assign spells, runes, potions, equipment, usable objects, or text. Drag carried objects directly onto the bar and right-click any button for Tibia-style options."}
           </p>
         </div>
-        <ActionBarSlotStrip
-          actionBar={actionBar}
-          selectedSlot={selectedSlot}
-          spells={spells}
-          items={items}
-          onSelect={setSelectedSlot}
-        />
+        {section !== "bot" && (
+          <ActionBarSlotStrip
+            actionBar={actionBar}
+            selectedSlot={selectedSlot}
+            spells={spells}
+            items={items}
+            onSelect={setSelectedSlot}
+          />
+        )}
         <div className="flex items-center gap-2 border-b border-ui-stone-light/15 pb-2">
           <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
             {SECTIONS.map((candidate) => (
@@ -112,13 +114,15 @@ export function ActionBarModal({
               </button>
             ))}
           </div>
-          <Button
-            size="sm"
-            disabled={!selected.action}
-            onClick={() => updateAction(null)}
-          >
-            Clear Action
-          </Button>
+          {section !== "bot" && (
+            <Button
+              size="sm"
+              disabled={!selected.action}
+              onClick={() => updateAction(null)}
+            >
+              Clear Action
+            </Button>
+          )}
         </div>
         {section === "spell" && (
           <ActionBarSpellPicker
@@ -151,8 +155,6 @@ export function ActionBarModal({
         {section === "bot" && (
           <ActionBotSettingsPanel
             settings={botSettings}
-            actionBar={actionBar}
-            initialSlot={selectedSlot}
             spells={spells}
             items={items}
             onChange={onBotSettingsChange}

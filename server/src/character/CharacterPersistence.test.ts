@@ -23,6 +23,7 @@ const makeStore = (
   },
   async recordLogin(): Promise<void> {},
   async updateActionBar(): Promise<void> {},
+  async updateActionBot(): Promise<void> {},
   async updateAimAtTargetSpells(): Promise<void> {},
   saveSnapshot,
 });

@@ -468,6 +468,7 @@ export class CharacterHandler {
     existing.potionPersistPending = false;
     existing.depotOperationPending = false;
     existing.actionBarUpdatePending = false;
+    existing.actionBotUpdatePending = false;
     existing.actionBar = createDefaultActionBar();
     existing.actionBotSettings = {
       ...DEFAULT_ACTION_BOT_SETTINGS,

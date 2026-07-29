@@ -26,9 +26,9 @@ export interface CharacterStore {
     loggedInAt: Date,
   ): Promise<void>;
   saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number>;
-  updateActionBar(
+  updateActionBar(characterId: string, actionBar: ActionBar): Promise<void>;
+  updateActionBot(
     characterId: string,
-    actionBar: ActionBar,
     settings: ActionBotSettings,
   ): Promise<void>;
   updateAimAtTargetSpells(

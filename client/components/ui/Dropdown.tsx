@@ -2,6 +2,9 @@ interface DropdownOption<Value extends string> {
   value: Value;
   label: string;
   disabled?: boolean;
+  /** Optional `<optgroup>` heading. Never use a disabled option as a
+   * separator: the label hides a control that contains any disabled element. */
+  group?: string;
 }
 
 interface DropdownProps<Value extends string> {
@@ -50,11 +53,34 @@ export function Dropdown<Value extends string>({
           }}
           className="ui-dropdown h-10 w-full truncate rounded-md border border-ui-stone-light/25 py-2 pr-10 pl-3 font-tibia text-sm text-white outline-none transition-[border-color,box-shadow,filter] duration-150 hover:border-ui-gold/45 hover:brightness-110 focus:border-ui-gold/60 focus:ring-2 focus:ring-ui-gold/15 disabled:cursor-default"
         >
-          {options.map((option) => (
-            <option key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </option>
-          ))}
+          {options
+            .filter((option) => !option.group)
+            .map((option) => (
+              <option
+                key={option.value}
+                value={option.value}
+                disabled={option.disabled}
+              >
+                {option.label}
+              </option>
+            ))}
+          {[...new Set(options.map((option) => option.group))]
+            .filter((group): group is string => Boolean(group))
+            .map((group) => (
+              <optgroup key={group} label={group}>
+                {options
+                  .filter((option) => option.group === group)
+                  .map((option) => (
+                    <option
+                      key={option.value}
+                      value={option.value}
+                      disabled={option.disabled}
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
         </select>
         <span
           aria-hidden

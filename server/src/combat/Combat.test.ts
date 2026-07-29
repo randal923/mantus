@@ -1531,18 +1531,7 @@ describe("Combat", () => {
           2,
         ),
       ],
-      actionBar: createDefaultActionBar().map((slot, index) =>
-        index === 0
-          ? {
-              ...slot,
-              action: {
-                kind: "item" as const,
-                itemTypeId: 239,
-                mode: "use-on-self" as const,
-              },
-            }
-          : slot,
-      ),
+      actionBar: createDefaultActionBar(),
       actionBotSettings: {
         ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
@@ -1550,7 +1539,11 @@ describe("Combat", () => {
           {
             id: "health",
             enabled: true,
-            slotIndex: 0,
+            action: {
+              kind: "item",
+              itemTypeId: 239,
+              mode: "use-on-self",
+            },
             trigger: {
               kind: "resource-below",
               resource: "health",
@@ -1629,13 +1622,7 @@ describe("Combat", () => {
           2,
         ),
       ],
-      actionBar: actionBarWith([
-        {
-          kind: "item",
-          itemTypeId: 3155,
-          mode: "use-on-target",
-        },
-      ]),
+      actionBar: createDefaultActionBar(),
       actionBotSettings: {
         ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
@@ -1647,7 +1634,11 @@ describe("Combat", () => {
           {
             id: "rune-target",
             enabled: true,
-            slotIndex: 0,
+            action: {
+              kind: "item",
+              itemTypeId: 3155,
+              mode: "use-on-target",
+            },
             trigger: { kind: "target-present" },
             unequipWhenInactive: false,
           },
@@ -1723,7 +1714,11 @@ describe("Combat", () => {
           {
             id: "rune-target",
             enabled: true,
-            slotIndex: 0,
+            action: {
+              kind: "item",
+              itemTypeId: 3155,
+              mode: "use-on-target",
+            },
             trigger: { kind: "target-present" },
             unequipWhenInactive: false,
           },
@@ -2041,13 +2036,7 @@ describe("Combat", () => {
           3,
         ),
       ],
-      actionBar: actionBarWith([
-        {
-          kind: "item",
-          itemTypeId: 3155,
-          mode: "use-with-crosshair",
-        },
-      ]),
+      actionBar: createDefaultActionBar(),
       actionBotSettings: {
         ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
@@ -2055,7 +2044,11 @@ describe("Combat", () => {
           {
             id: "rune-target",
             enabled: true,
-            slotIndex: 0,
+            action: {
+              kind: "item",
+              itemTypeId: 3155,
+              mode: "use-with-crosshair",
+            },
             trigger: { kind: "target-present" },
             unequipWhenInactive: false,
           },
@@ -2117,13 +2110,7 @@ describe("Combat", () => {
           slot: 0,
         }),
       ],
-      actionBar: actionBarWith([
-        {
-          kind: "item",
-          itemTypeId: 3355,
-          mode: "equip",
-        },
-      ]),
+      actionBar: createDefaultActionBar(),
       actionBotSettings: {
         ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
@@ -2131,7 +2118,11 @@ describe("Combat", () => {
           {
             id: "emergency-helmet",
             enabled: true,
-            slotIndex: 0,
+            action: {
+              kind: "item",
+              itemTypeId: 3355,
+              mode: "equip",
+            },
             trigger: {
               kind: "resource-below",
               resource: "health",
@@ -2179,29 +2170,7 @@ describe("Combat", () => {
           2,
         ),
       ],
-      actionBar: createDefaultActionBar().map((slot, index) => {
-        if (index === 0) {
-          return {
-            ...slot,
-            action: {
-              kind: "item" as const,
-              itemTypeId: 268,
-              mode: "use-on-self" as const,
-            },
-          };
-        }
-        if (index === 1) {
-          return {
-            ...slot,
-            action: {
-              kind: "item" as const,
-              itemTypeId: 239,
-              mode: "use-on-self" as const,
-            },
-          };
-        }
-        return slot;
-      }),
+      actionBar: createDefaultActionBar(),
       actionBotSettings: {
         ...DEFAULT_ACTION_BOT_SETTINGS,
         enabled: true,
@@ -2209,7 +2178,11 @@ describe("Combat", () => {
           {
             id: "mana",
             enabled: true,
-            slotIndex: 0,
+            action: {
+              kind: "item",
+              itemTypeId: 268,
+              mode: "use-on-self",
+            },
             trigger: {
               kind: "resource-below",
               resource: "mana",
@@ -2220,7 +2193,11 @@ describe("Combat", () => {
           {
             id: "health",
             enabled: true,
-            slotIndex: 1,
+            action: {
+              kind: "item",
+              itemTypeId: 239,
+              mode: "use-on-self",
+            },
             trigger: {
               kind: "resource-below",
               resource: "health",

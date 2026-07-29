@@ -37,6 +37,7 @@ export class Session {
   languageUpdatePending = false;
   uiSettingsUpdatePending = false;
   actionBarUpdatePending = false;
+  actionBotUpdatePending = false;
   itemOperationPending = false;
   /**
    * Ready-time for the next generic item/object use. Canary applies a 200 ms

@@ -34,6 +34,11 @@ export function handlePlayerStateMessage(
     if (runtime.actionBarSaveTimerRef.current) return true;
     state.setActionBar(message.actionBar);
     runtime.actionBarRef.current = message.actionBar;
+    return true;
+  }
+
+  if (message.type === "action-bot-updated") {
+    if (runtime.actionBotSaveTimerRef.current) return true;
     state.setActionBotSettings(message.settings);
     runtime.actionBotSettingsRef.current = message.settings;
     return true;

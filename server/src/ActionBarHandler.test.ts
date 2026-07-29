@@ -132,7 +132,6 @@ describe("ActionBarHandler", () => {
         spellId: "exura ico",
         targetMode: "self",
       }),
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(errors).toEqual(["join-required"]);
   });
@@ -150,7 +149,6 @@ describe("ActionBarHandler", () => {
         spellId,
         targetMode: "self",
       }),
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(errors).toEqual(["action-bar-invalid"]);
     expect(session.actionBarUpdatePending).toBe(false);
@@ -166,7 +164,6 @@ describe("ActionBarHandler", () => {
         itemTypeId: 9999,
         mode: "use",
       }),
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     const second = makeSession("char-1");
     handler.handle(second.session, {
@@ -176,7 +173,6 @@ describe("ActionBarHandler", () => {
         itemTypeId: 266,
         mode: "equip",
       }),
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(first.errors).toEqual(["action-bar-invalid"]);
     expect(second.errors).toEqual(["action-bar-invalid"]);
@@ -190,7 +186,6 @@ describe("ActionBarHandler", () => {
     makeHandler(seededStore()).handle(session, {
       type: "update-action-bar",
       actionBar,
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(errors).toEqual(["action-bar-invalid"]);
   });
@@ -208,7 +203,6 @@ describe("ActionBarHandler", () => {
     handler.handle(session, {
       type: "update-action-bar",
       actionBar: requested,
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     await settle(handler);
 
@@ -219,127 +213,13 @@ describe("ActionBarHandler", () => {
       targetMode: "direction",
     });
     expect(sent).toEqual([
-      {
-        type: "action-bar-updated",
-        actionBar: session.actionBar,
-        settings: DEFAULT_ACTION_BOT_SETTINGS,
-      },
+      { type: "action-bar-updated", actionBar: session.actionBar },
     ]);
     const character = await store.findByIdForAccount(
       "account-id",
       "char-1",
     );
     expect(character?.actionBar).toEqual(session.actionBar);
-  });
-
-  it("persists automation rules that reference a configured action", async () => {
-    const store = seededStore();
-    const handler = makeHandler(store);
-    const { session, sent, errors } = makeSession("char-1");
-    const actionBar = withFirstAction({
-      kind: "item",
-      itemTypeId: 266,
-      mode: "use-on-self",
-    });
-    const settings = {
-      ...DEFAULT_ACTION_BOT_SETTINGS,
-      enabled: true,
-      rules: [
-        {
-          id: "heal",
-          enabled: true,
-          slotIndex: 0,
-          trigger: {
-            kind: "resource-below" as const,
-            resource: "health" as const,
-            percent: 45,
-          },
-          unequipWhenInactive: false,
-        },
-      ],
-    };
-
-    handler.handle(session, {
-      type: "update-action-bar",
-      actionBar,
-      settings,
-    });
-    await settle(handler);
-
-    expect(errors).toEqual([]);
-    expect(session.actionBotSettings).toEqual(settings);
-    expect(sent).toEqual([
-      { type: "action-bar-updated", actionBar, settings },
-    ]);
-    const character = await store.findByIdForAccount(
-      "account-id",
-      "char-1",
-    );
-    expect(character?.actionBotSettings).toEqual(settings);
-  });
-
-  it("persists auto haste without an action bar spell", async () => {
-    const handler = makeHandler(seededStore());
-    const { session, errors } = makeSession("char-1");
-    const settings = {
-      ...DEFAULT_ACTION_BOT_SETTINGS,
-      enabled: true,
-      autoHaste: {
-        enabled: true,
-        spellId: "utani-hur" as const,
-      },
-    };
-
-    handler.handle(session, {
-      type: "update-action-bar",
-      actionBar: createDefaultActionBar(),
-      settings,
-    });
-    await settle(handler);
-
-    expect(errors).toEqual([]);
-    expect(session.actionBotSettings).toEqual(settings);
-    expect(session.actionBar).toEqual(createDefaultActionBar());
-  });
-
-  it("rejects an automatic support spell restricted to another vocation", () => {
-    const { session, errors } = makeSession("char-1");
-
-    makeHandler(seededStore()).handle(session, {
-      type: "update-action-bar",
-      actionBar: createDefaultActionBar(),
-      settings: {
-        ...DEFAULT_ACTION_BOT_SETTINGS,
-        enabled: true,
-        autoUtamoVita: true,
-      },
-    });
-
-    expect(errors).toEqual(["action-bar-invalid"]);
-    expect(session.actionBarUpdatePending).toBe(false);
-  });
-
-  it("rejects automation rules that reference empty slots", () => {
-    const { session, errors } = makeSession("char-1");
-    makeHandler(seededStore()).handle(session, {
-      type: "update-action-bar",
-      actionBar: createDefaultActionBar(),
-      settings: {
-        ...DEFAULT_ACTION_BOT_SETTINGS,
-        enabled: true,
-        rules: [
-          {
-            id: "invalid",
-            enabled: true,
-            slotIndex: 0,
-            trigger: { kind: "target-present" },
-            unequipWhenInactive: false,
-          },
-        ],
-      },
-    });
-    expect(errors).toEqual(["action-bar-invalid"]);
-    expect(session.actionBarUpdatePending).toBe(false);
   });
 
   it("rejects a second update while one is pending", async () => {
@@ -353,18 +233,16 @@ describe("ActionBarHandler", () => {
     handler.handle(session, {
       type: "update-action-bar",
       actionBar,
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     handler.handle(session, {
       type: "update-action-bar",
       actionBar,
-      settings: DEFAULT_ACTION_BOT_SETTINGS,
     });
     expect(errors).toEqual(["action-bar-update-pending"]);
     await settle(handler);
   });
 
-  it("reports storage failures and restores confirmed bot settings", async () => {
+  it("reports storage failures and restores the confirmed layout", async () => {
     const handler = makeHandler(new InMemoryCharacterStore());
     const { session, sent, errors } = makeSession("char-1");
     session.actionBar = withFirstAction({
@@ -376,33 +254,16 @@ describe("ActionBarHandler", () => {
 
     handler.handle(session, {
       type: "update-action-bar",
-      actionBar: session.actionBar,
-      settings: {
-        ...DEFAULT_ACTION_BOT_SETTINGS,
-        enabled: true,
-        rules: [
-          {
-            id: "heal",
-            enabled: true,
-            slotIndex: 0,
-            trigger: {
-              kind: "resource-below",
-              resource: "health",
-              percent: 50,
-            },
-            unequipWhenInactive: false,
-          },
-        ],
-      },
+      actionBar: withFirstAction({
+        kind: "spell",
+        spellId: "exori",
+        targetMode: "direction",
+      }),
     });
     await settle(handler);
 
     expect(sent).toEqual([
-      {
-        type: "action-bar-updated",
-        actionBar: session.actionBar,
-        settings: DEFAULT_ACTION_BOT_SETTINGS,
-      },
+      { type: "action-bar-updated", actionBar: session.actionBar },
     ]);
     expect(errors).toEqual(["action-bar-update-failed"]);
     expect(session.actionBarUpdatePending).toBe(false);

@@ -86,13 +86,24 @@ export class InMemoryCharacterStore implements CharacterStore {
   async updateActionBar(
     characterId: string,
     actionBar: ActionBar,
-    actionBotSettings: ActionBotSettings,
   ): Promise<void> {
     const character = this.characters.get(characterId);
     if (!character) throw new CharacterError("not-found");
     this.characters.set(characterId, {
       ...character,
       actionBar,
+      updatedAt: new Date(),
+    });
+  }
+
+  async updateActionBot(
+    characterId: string,
+    actionBotSettings: ActionBotSettings,
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, {
+      ...character,
       actionBotSettings,
       updatedAt: new Date(),
     });

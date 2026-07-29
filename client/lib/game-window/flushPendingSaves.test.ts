@@ -13,18 +13,22 @@ function armTimer(callback: () => void): ReturnType<typeof setTimeout> {
 
 function createRuntime(uiSettings: UiSettings) {
   const updateActionBar = vi.fn();
+  const updateActionBot = vi.fn();
   const updateUiSettings = vi.fn();
   const runtime = {
-    clientRef: { current: { updateActionBar, updateUiSettings } },
+    clientRef: {
+      current: { updateActionBar, updateActionBot, updateUiSettings },
+    },
     actionBarRef: { current: createDefaultActionBar() },
     actionBotSettingsRef: {
       current: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },
     },
     actionBarSaveTimerRef: { current: null },
+    actionBotSaveTimerRef: { current: null },
     uiSettingsRef: { current: uiSettings },
     uiSettingsSaveTimerRef: { current: null },
   } as unknown as GameWindowRuntime;
-  return { runtime, updateActionBar, updateUiSettings };
+  return { runtime, updateActionBar, updateActionBot, updateUiSettings };
 }
 
 describe("flushPendingSaves", () => {
@@ -37,15 +41,27 @@ describe("flushPendingSaves", () => {
     flushPendingSaves(runtime);
 
     expect(updateActionBar).toHaveBeenCalledTimes(1);
-    expect(updateActionBar).toHaveBeenCalledWith(
-      runtime.actionBarRef.current,
-      runtime.actionBotSettingsRef.current,
-    );
+    expect(updateActionBar).toHaveBeenCalledWith(runtime.actionBarRef.current);
     expect(runtime.actionBarSaveTimerRef.current).toBeNull();
 
     // The cancelled timer must not fire a second save afterwards.
     vi.advanceTimersByTime(2_000);
     expect(send).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("sends a pending debounced action-bot save immediately", () => {
+    vi.useFakeTimers();
+    const { runtime, updateActionBar, updateActionBot } = createRuntime({});
+    runtime.actionBotSaveTimerRef.current = armTimer(() => {});
+
+    flushPendingSaves(runtime);
+
+    expect(updateActionBot).toHaveBeenCalledWith(
+      runtime.actionBotSettingsRef.current,
+    );
+    expect(updateActionBar).not.toHaveBeenCalled();
+    expect(runtime.actionBotSaveTimerRef.current).toBeNull();
     vi.useRealTimers();
   });
 
@@ -65,11 +81,13 @@ describe("flushPendingSaves", () => {
   });
 
   it("sends nothing when no save is pending", () => {
-    const { runtime, updateActionBar, updateUiSettings } = createRuntime({});
+    const { runtime, updateActionBar, updateActionBot, updateUiSettings } =
+      createRuntime({});
 
     flushPendingSaves(runtime);
 
     expect(updateActionBar).not.toHaveBeenCalled();
+    expect(updateActionBot).not.toHaveBeenCalled();
     expect(updateUiSettings).not.toHaveBeenCalled();
   });
 

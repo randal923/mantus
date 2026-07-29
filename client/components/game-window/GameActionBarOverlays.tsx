@@ -1,5 +1,4 @@
 import { ActionBarModal } from "../action-bar/ActionBarModal";
-import { removeInvalidActionBotRules } from "../../lib/action-bar/removeInvalidActionBotRules";
 import { useGameWindowStore } from "./store/useGameWindowStore";
 import { useGameWindowStoreApi } from "./store/useGameWindowStoreApi";
 
@@ -34,14 +33,8 @@ export function GameActionBarOverlays() {
       request={request}
       onActionBarChange={(next) => {
         const runtime = store.getState().runtime;
-        const nextBotSettings = removeInvalidActionBotRules(
-          runtime.actionBotSettingsRef.current,
-          next,
-        );
         setActionBar(next);
-        setActionBotSettings(nextBotSettings);
         runtime.actionBarRef.current = next;
-        runtime.actionBotSettingsRef.current = nextBotSettings;
         if (runtime.actionBarSaveTimerRef.current) {
           clearTimeout(runtime.actionBarSaveTimerRef.current);
         }
@@ -49,7 +42,6 @@ export function GameActionBarOverlays() {
           runtime.actionBarSaveTimerRef.current = null;
           runtime.clientRef.current?.updateActionBar(
             runtime.actionBarRef.current,
-            runtime.actionBotSettingsRef.current,
           );
         }, 800);
       }}
@@ -57,13 +49,12 @@ export function GameActionBarOverlays() {
         const runtime = store.getState().runtime;
         setActionBotSettings(next);
         runtime.actionBotSettingsRef.current = next;
-        if (runtime.actionBarSaveTimerRef.current) {
-          clearTimeout(runtime.actionBarSaveTimerRef.current);
+        if (runtime.actionBotSaveTimerRef.current) {
+          clearTimeout(runtime.actionBotSaveTimerRef.current);
         }
-        runtime.actionBarSaveTimerRef.current = setTimeout(() => {
-          runtime.actionBarSaveTimerRef.current = null;
-          runtime.clientRef.current?.updateActionBar(
-            runtime.actionBarRef.current,
+        runtime.actionBotSaveTimerRef.current = setTimeout(() => {
+          runtime.actionBotSaveTimerRef.current = null;
+          runtime.clientRef.current?.updateActionBot(
             runtime.actionBotSettingsRef.current,
           );
         }, 800);

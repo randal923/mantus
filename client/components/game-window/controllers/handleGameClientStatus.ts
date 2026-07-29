@@ -29,6 +29,10 @@ export function handleGameClientStatus(
       clearTimeout(runtime.actionBarSaveTimerRef.current);
       runtime.actionBarSaveTimerRef.current = null;
     }
+    if (runtime.actionBotSaveTimerRef.current) {
+      clearTimeout(runtime.actionBotSaveTimerRef.current);
+      runtime.actionBotSaveTimerRef.current = null;
+    }
     state.setWorldLoading(false);
     state.setLevelUpNotice(null);
     state.setVisibleCreatures([]);

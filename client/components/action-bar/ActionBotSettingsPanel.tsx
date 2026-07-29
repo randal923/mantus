@@ -2,7 +2,7 @@
 
 import {
   ACTION_BOT_RULE_COUNT,
-  type ActionBar,
+  type ActionBotAction,
   type ActionBotRule,
   type ActionBotSettings,
   type ActionBotTrigger,
@@ -10,6 +10,8 @@ import {
   type SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { createSpellAction } from "../../lib/action-bar/createSpellAction";
+import { createItemAction } from "../../lib/action-bar/createItemAction";
 import { ActionBotRuleRow } from "./ActionBotRuleRow";
 import { ActionBarActionIcon } from "./ActionBarActionIcon";
 import { Button } from "../ui/Button";
@@ -18,21 +20,17 @@ import { Dropdown } from "../ui/Dropdown";
 
 interface ActionBotSettingsPanelProps {
   readonly settings: ActionBotSettings;
-  readonly actionBar: ActionBar;
-  readonly initialSlot: number;
   readonly spells: ReadonlyArray<SpellCatalogEntry>;
   readonly items: ReadonlyArray<InventoryItem>;
   readonly onChange: (settings: ActionBotSettings) => void;
 }
 
 function defaultTrigger(
-  slotIndex: number,
-  actionBar: ActionBar,
+  action: ActionBotAction,
   spells: ReadonlyArray<SpellCatalogEntry>,
   items: ReadonlyArray<InventoryItem>,
 ): ActionBotTrigger {
-  const action = actionBar[slotIndex]?.action;
-  if (action?.kind === "spell") {
+  if (action.kind === "spell") {
     if (action.spellId.startsWith("utani-")) {
       return { kind: "condition-missing", condition: "haste" };
     }
@@ -44,27 +42,36 @@ function defaultTrigger(
       ? { kind: "resource-below", resource: "health", percent: 70 }
       : { kind: "target-present" };
   }
-  if (action?.kind === "item") {
-    const item = items.find((entry) => entry.typeId === action.itemTypeId);
-    if (item?.useKind === "potion") {
-      return {
-        kind: "resource-below",
-        resource:
-          item.potionResources?.includes("health") === false
-            ? "mana"
-            : "health",
-        percent: 70,
-      };
-    }
-    if (item?.useKind === "rune") return { kind: "target-present" };
+  const item = items.find((entry) => entry.typeId === action.itemTypeId);
+  if (item?.useKind === "potion") {
+    return {
+      kind: "resource-below",
+      resource:
+        item.potionResources?.includes("health") === false
+          ? "mana"
+          : "health",
+      percent: 70,
+    };
   }
+  if (item?.useKind === "rune") return { kind: "target-present" };
   return { kind: "resource-below", resource: "health", percent: 50 };
+}
+
+/** The action a new rule starts on: the first spell, else a carried object. */
+function defaultAction(
+  spells: ReadonlyArray<SpellCatalogEntry>,
+  items: ReadonlyArray<InventoryItem>,
+): ActionBotAction | null {
+  const spell = spells.find((entry) => entry.origin === "spell");
+  if (spell) return createSpellAction(spell);
+  const item = items[0];
+  if (!item) return null;
+  const action = createItemAction(item, spells);
+  return action.kind === "item" ? action : null;
 }
 
 export function ActionBotSettingsPanel({
   settings,
-  actionBar,
-  initialSlot,
   spells,
   items,
   onChange,
@@ -83,24 +90,16 @@ export function ActionBotSettingsPanel({
   const utamoVita = spells.find(
     (spell) => spell.origin === "spell" && spell.id === "utamo-vita",
   );
-  const configuredSlots = actionBar.flatMap((slot, index) =>
-    slot.action && slot.action.kind !== "text" ? [index] : [],
-  );
+  const newRuleAction = defaultAction(spells, items);
   const addRule = () => {
-    const slotIndex = configuredSlots.includes(initialSlot)
-      ? initialSlot
-      : configuredSlots[0];
-    if (
-      slotIndex === undefined ||
-      settings.rules.length >= ACTION_BOT_RULE_COUNT
-    ) {
+    if (!newRuleAction || settings.rules.length >= ACTION_BOT_RULE_COUNT) {
       return;
     }
     const rule: ActionBotRule = {
       id: crypto.randomUUID(),
       enabled: true,
-      slotIndex,
-      trigger: defaultTrigger(slotIndex, actionBar, spells, items),
+      action: newRuleAction,
+      trigger: defaultTrigger(newRuleAction, spells, items),
       unequipWhenInactive: false,
     };
     onChange({ ...settings, rules: [...settings.rules, rule] });
@@ -293,12 +292,12 @@ export function ActionBotSettingsPanel({
           <Button
             size="sm"
             disabled={
-              configuredSlots.length === 0 ||
+              !newRuleAction ||
               settings.rules.length >= ACTION_BOT_RULE_COUNT
             }
             onClick={addRule}
           >
-            {t("actionBot.addSelectedAction")}
+            {t("actionBot.addRule")}
           </Button>
         </div>
       </div>
@@ -327,7 +326,6 @@ export function ActionBotSettingsPanel({
             key={rule.id}
             rule={rule}
             ruleNumber={index + 1}
-            actionBar={actionBar}
             spells={spells}
             items={items}
             onChange={(next) => replaceRule(index, next)}

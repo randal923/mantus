@@ -31,28 +31,32 @@ export const actionBarItemModeSchema = z.enum([
   "use",
 ]);
 
+const spellActionSchema = z
+  .object({
+    kind: z.literal("spell"),
+    spellId: z.string().min(1).max(96),
+    targetMode: actionBarTargetModeSchema,
+    /**
+     * Bound word parameter for the spells Canary declares with `hasParams`
+     * (exani hur up/down, summon creature, creature illusion, mentor
+     * other). It is resolved against server-owned catalogs and visible
+     * players at cast time and never indexes anything directly.
+     */
+    parameter: z.string().min(1).max(64).optional(),
+  })
+  .strict();
+
+const itemActionSchema = z
+  .object({
+    kind: z.literal("item"),
+    itemTypeId: z.number().int().positive().max(65_535),
+    mode: actionBarItemModeSchema,
+  })
+  .strict();
+
 export const actionBarActionSchema = z.discriminatedUnion("kind", [
-  z
-    .object({
-      kind: z.literal("spell"),
-      spellId: z.string().min(1).max(96),
-      targetMode: actionBarTargetModeSchema,
-      /**
-       * Bound word parameter for the spells Canary declares with `hasParams`
-       * (exani hur up/down, summon creature, creature illusion, mentor
-       * other). It is resolved against server-owned catalogs and visible
-       * players at cast time and never indexes anything directly.
-       */
-      parameter: z.string().min(1).max(64).optional(),
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("item"),
-      itemTypeId: z.number().int().positive().max(65_535),
-      mode: actionBarItemModeSchema,
-    })
-    .strict(),
+  spellActionSchema,
+  itemActionSchema,
   z
     .object({
       kind: z.literal("text"),
@@ -60,6 +64,17 @@ export const actionBarActionSchema = z.discriminatedUnion("kind", [
       sendAutomatically: z.boolean(),
     })
     .strict(),
+]);
+
+/**
+ * What an action bot rule performs. The bot owns its action outright — it is
+ * configured independently of the action bar, so a rule keeps working when the
+ * bar is rearranged and a spell need not occupy a button to be automated.
+ * Text actions are excluded: the bot never speaks for the player.
+ */
+export const actionBotActionSchema = z.discriminatedUnion("kind", [
+  spellActionSchema,
+  itemActionSchema,
 ]);
 
 export const actionBarSlotSchema = z
@@ -109,7 +124,7 @@ export const actionBotRuleSchema = z
       .max(64)
       .regex(/^[A-Za-z0-9_-]+$/),
     enabled: z.boolean(),
-    slotIndex: z.number().int().min(0).max(ACTION_BAR_SLOT_COUNT - 1),
+    action: actionBotActionSchema,
     trigger: actionBotTriggerSchema,
     unequipWhenInactive: z.boolean(),
   })
@@ -160,6 +175,7 @@ export type ActionBarItemMode = z.infer<typeof actionBarItemModeSchema>;
 export type ActionBarAction = z.infer<typeof actionBarActionSchema>;
 export type ActionBarSlot = z.infer<typeof actionBarSlotSchema>;
 export type ActionBar = z.infer<typeof actionBarSchema>;
+export type ActionBotAction = z.infer<typeof actionBotActionSchema>;
 export type ActionBotTrigger = z.infer<typeof actionBotTriggerSchema>;
 export type ActionBotRule = z.infer<typeof actionBotRuleSchema>;
 export type ActionBotAutoHaste = z.infer<typeof actionBotAutoHasteSchema>;

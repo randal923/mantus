@@ -5,6 +5,7 @@ import type {
   ActionBarAction,
   SpellCatalogEntry,
 } from "@tibia/protocol";
+import { createSpellAction } from "../../lib/action-bar/createSpellAction";
 import { getSpellIconArtwork } from "../../lib/combat/getSpellIconArtwork";
 import { ActionBarSpellParameter } from "./ActionBarSpellParameter";
 import { Input } from "../ui/Input";
@@ -60,20 +61,7 @@ export function ActionBarSpellPicker({
               <button
                 type="button"
                 aria-pressed={active}
-                onClick={() =>
-                  onSelect({
-                    kind: "spell",
-                    spellId: spell.id,
-                    targetMode:
-                      spell.targetKind === "self"
-                        ? "self"
-                        : spell.targetKind === "direction"
-                          ? "direction"
-                          : spell.targetKind === "position"
-                            ? "crosshair"
-                            : "attack-target",
-                  })
-                }
+                onClick={() => onSelect(createSpellAction(spell))}
                 className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ui-gold/60 ${
                   active
                     ? "border-ui-gold/70 bg-ui-gold/10"

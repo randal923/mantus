@@ -102,3 +102,41 @@ export const EmptyBar: Story = {
     request: { slotIndex: 0, section: "spell" },
   },
 };
+
+/** The bot configures its own actions; the bar below it stays untouched. */
+export const ActionBot: Story = {
+  args: {
+    request: { slotIndex: 0, section: "bot" },
+    botSettings: {
+      ...DEFAULT_ACTION_BOT_SETTINGS,
+      enabled: true,
+      rules: [
+        {
+          id: "heal",
+          enabled: true,
+          action: {
+            kind: "spell",
+            spellId: "exura-infir-ico",
+            targetMode: "self",
+          },
+          trigger: {
+            kind: "resource-below",
+            resource: "health",
+            percent: 70,
+          },
+          unequipWhenInactive: false,
+        },
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const picker = canvas.getByRole("button", {
+      name: "Action for rule 1",
+    });
+    await picker.click();
+    await expect(
+      canvas.getByRole("option", { name: /Lesser Front Sweep/ }),
+    ).toBeInTheDocument();
+  },
+};

@@ -70,6 +70,7 @@ import type { TradeStore } from "./trade/TradeStore";
 import { LanguageHandler } from "./LanguageHandler";
 import { UiSettingsHandler } from "./UiSettingsHandler";
 import { ActionBarHandler } from "./ActionBarHandler";
+import { ActionBotHandler } from "./ActionBotHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { ItemCatalog } from "./item/ItemCatalog";
@@ -206,6 +207,7 @@ export class GameServer {
   private readonly language: LanguageHandler;
   private readonly uiSettings: UiSettingsHandler;
   private readonly actionBar: ActionBarHandler;
+  private readonly actionBot: ActionBotHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
   private readonly pressurePlates: PressurePlateRegistry;
@@ -609,6 +611,13 @@ export class GameServer {
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
     this.actionBar = new ActionBarHandler(
+      this.registry,
+      this.world,
+      this.spells,
+      this.items,
+      deps.characters,
+    );
+    this.actionBot = new ActionBotHandler(
       this.registry,
       this.world,
       this.spells,
@@ -1178,6 +1187,7 @@ export class GameServer {
       this.language.applyResolvedOutcomes();
       this.uiSettings.applyResolvedOutcomes();
       this.actionBar.applyResolvedOutcomes();
+      this.actionBot.applyResolvedOutcomes();
       this.combat.applyResolvedOutcomes();
       for (const session of this.registry.awaitingAuth()) {
         this.auth.enforceDeadline(session, now);
@@ -1741,6 +1751,9 @@ export class GameServer {
         return;
       case "update-action-bar":
         this.actionBar.handle(session, intent);
+        return;
+      case "update-action-bot":
+        this.actionBot.handle(session, intent);
         return;
     }
   }

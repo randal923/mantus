@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  clientMessageSchema,
-  DEFAULT_ACTION_BOT_SETTINGS,
-} from "@tibia/protocol";
+import { clientMessageSchema } from "@tibia/protocol";
 
 describe("combat intent schemas", () => {
   it("accepts bounded target and cancel intents", () => {
@@ -150,7 +147,6 @@ describe("combat intent schemas", () => {
             hotkey: "Digit1",
           },
         ],
-        settings: DEFAULT_ACTION_BOT_SETTINGS,
       }).success,
     ).toBe(true);
     expect(
@@ -167,7 +163,6 @@ describe("combat intent schemas", () => {
             hotkey: "Digit1",
           },
         ],
-        settings: DEFAULT_ACTION_BOT_SETTINGS,
       }).success,
     ).toBe(false);
   });

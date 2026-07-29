@@ -25,9 +25,13 @@ describe("unified action bar persistence parsing", () => {
       enabled: true,
       rules: [
         {
-          id: "say-hi",
+          id: "attack",
           enabled: true,
-          slotIndex: 0,
+          action: {
+            kind: "spell" as const,
+            spellId: "exori",
+            targetMode: "direction" as const,
+          },
           trigger: { kind: "target-present" as const },
           unequipWhenInactive: false,
         },
@@ -78,7 +82,11 @@ describe("unified action bar persistence parsing", () => {
         {
           id: "legacy-mana",
           enabled: true,
-          slotIndex: 10,
+          action: {
+            kind: "item",
+            itemTypeId: 268,
+            mode: "use-with-crosshair",
+          },
           trigger: {
             kind: "resource-below",
             resource: "mana",
@@ -89,7 +97,11 @@ describe("unified action bar persistence parsing", () => {
         {
           id: "legacy-health",
           enabled: true,
-          slotIndex: 9,
+          action: {
+            kind: "item",
+            itemTypeId: 266,
+            mode: "use-on-self",
+          },
           trigger: {
             kind: "resource-below",
             resource: "health",
@@ -159,6 +171,61 @@ describe("unified action bar persistence parsing", () => {
       },
       autoUtamoVita: true,
       rules: [],
+    });
+  });
+
+  it("resolves rules persisted as action bar slots into their own actions", () => {
+    const actionBar = createDefaultActionBar();
+    actionBar[3] = {
+      ...actionBar[3]!,
+      action: { kind: "item", itemTypeId: 266, mode: "use-on-self" },
+    };
+
+    expect(
+      parseActionBotSettings(
+        {
+          botSettings: {
+            enabled: true,
+            rules: [
+              {
+                id: "heal",
+                enabled: true,
+                slotIndex: 3,
+                trigger: {
+                  kind: "resource-below",
+                  resource: "health",
+                  percent: 40,
+                },
+                unequipWhenInactive: false,
+              },
+              {
+                id: "dangling",
+                enabled: true,
+                slotIndex: 7,
+                trigger: { kind: "target-present" },
+                unequipWhenInactive: false,
+              },
+            ],
+          },
+        },
+        actionBar,
+      ),
+    ).toEqual({
+      ...DEFAULT_ACTION_BOT_SETTINGS,
+      enabled: true,
+      rules: [
+        {
+          id: "heal",
+          enabled: true,
+          action: { kind: "item", itemTypeId: 266, mode: "use-on-self" },
+          trigger: {
+            kind: "resource-below",
+            resource: "health",
+            percent: 40,
+          },
+          unequipWhenInactive: false,
+        },
+      ],
     });
   });
 

@@ -229,17 +229,18 @@ databaseDescribe("PgCharacterStore integration", () => {
         {
           id: "auto-exori",
           enabled: true,
-          slotIndex: 0,
+          action: {
+            kind: "spell" as const,
+            spellId: "exori",
+            targetMode: "direction" as const,
+          },
           trigger: { kind: "target-present" as const },
           unequipWhenInactive: false,
         },
       ],
     };
-    await store.updateActionBar(
-      summary.id,
-      actionBar,
-      actionBotSettings,
-    );
+    await store.updateActionBar(summary.id, actionBar);
+    await store.updateActionBot(summary.id, actionBotSettings);
     const updatedBot = await store.findByIdForAccount(
       accountId,
       summary.id,

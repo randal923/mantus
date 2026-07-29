@@ -39,6 +39,7 @@ export interface GameWindowRuntime {
   actionBarRef: RefObject<ActionBar>;
   actionBarSaveTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
   actionBotSettingsRef: RefObject<ActionBotSettings>;
+  actionBotSaveTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
   marketOpenRef: RefObject<boolean>;
   marketSelectedItemRef: RefObject<number | null>;
   hadPartyRef: RefObject<boolean>;

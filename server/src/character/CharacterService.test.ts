@@ -98,15 +98,19 @@ class MemoryCharacterStore implements CharacterStore {
   async updateActionBar(
     characterId: string,
     actionBar: Character["actionBar"],
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, { ...character, actionBar });
+  }
+
+  async updateActionBot(
+    characterId: string,
     actionBotSettings: Character["actionBotSettings"],
   ): Promise<void> {
     const character = this.characters.get(characterId);
     if (!character) throw new CharacterError("not-found");
-    this.characters.set(characterId, {
-      ...character,
-      actionBar,
-      actionBotSettings,
-    });
+    this.characters.set(characterId, { ...character, actionBotSettings });
   }
 
   async updateAimAtTargetSpells(

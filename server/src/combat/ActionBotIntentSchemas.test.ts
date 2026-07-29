@@ -1,8 +1,8 @@
 import {
-  clientMessageSchema,
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
   PROTOCOL_LIMITS,
+  clientMessageSchema,
 } from "@tibia/protocol";
 import { describe, expect, it } from "vitest";
 
@@ -14,7 +14,11 @@ function settings(percent: number) {
       {
         id: "health-potion",
         enabled: true,
-        slotIndex: 9,
+        action: {
+          kind: "item",
+          itemTypeId: 239,
+          mode: "use-on-self",
+        },
         trigger: {
           kind: "resource-below",
           resource: "health",
@@ -26,27 +30,11 @@ function settings(percent: number) {
   };
 }
 
-function actionBar() {
-  return createDefaultActionBar().map((slot, index) =>
-    index === 9
-      ? {
-          ...slot,
-          action: {
-            kind: "item" as const,
-            itemTypeId: 239,
-            mode: "use-on-self" as const,
-          },
-        }
-      : slot,
-  );
-}
-
 describe("action bot intent schema", () => {
   it("accepts a bounded server-evaluated rule", () => {
     expect(
       clientMessageSchema.safeParse({
-        type: "update-action-bar",
-        actionBar: actionBar(),
+        type: "update-action-bot",
         settings: settings(45),
       }).success,
     ).toBe(true);
@@ -57,19 +45,38 @@ describe("action bot intent schema", () => {
     (percent) => {
       expect(
         clientMessageSchema.safeParse({
-          type: "update-action-bar",
-          actionBar: actionBar(),
+          type: "update-action-bot",
           settings: settings(percent),
         }).success,
       ).toBe(false);
     },
   );
 
+  it("rejects a rule action the bot must never perform", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "update-action-bot",
+        settings: {
+          ...settings(45),
+          rules: [
+            {
+              ...settings(45).rules[0],
+              action: {
+                kind: "text",
+                text: "hi",
+                sendAutomatically: true,
+              },
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects extra client-authored outcome fields", () => {
     expect(
       clientMessageSchema.safeParse({
-        type: "update-action-bar",
-        actionBar: actionBar(),
+        type: "update-action-bot",
         settings: {
           ...settings(45),
           targetPlayerId: "00000000-0000-4000-8000-000000000099",
@@ -81,8 +88,7 @@ describe("action bot intent schema", () => {
   it("rejects an unsupported automatic haste spell", () => {
     expect(
       clientMessageSchema.safeParse({
-        type: "update-action-bar",
-        actionBar: actionBar(),
+        type: "update-action-bot",
         settings: {
           ...settings(45),
           autoHaste: {
@@ -94,7 +100,37 @@ describe("action bot intent schema", () => {
     ).toBe(false);
   });
 
-  it("keeps the largest schema-valid configuration within the transport cap", () => {
+  it("keeps the largest schema-valid bot configuration within the transport cap", () => {
+    const rules = Array.from({ length: 12 }, (_, index) => ({
+      id: String(index).padEnd(64, "r"),
+      enabled: true,
+      action: {
+        kind: "spell" as const,
+        spellId: String(index).padEnd(96, "s"),
+        targetMode: "attack-target" as const,
+        parameter: String(index).padEnd(64, "p"),
+      },
+      trigger: {
+        kind: "condition-missing" as const,
+        condition: "magic-shield" as const,
+      },
+      unequipWhenInactive: true,
+    }));
+    const serialized = JSON.stringify({
+      type: "update-action-bot",
+      settings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        rules,
+      },
+    });
+
+    expect(Buffer.byteLength(serialized)).toBeLessThanOrEqual(
+      PROTOCOL_LIMITS.maxMessageBytes,
+    );
+  });
+
+  it("keeps the largest schema-valid action bar within the transport cap", () => {
     const actionBar = createDefaultActionBar().map((slot, index) => ({
       ...slot,
       action: {
@@ -104,24 +140,9 @@ describe("action bot intent schema", () => {
       },
       hotkey: `Alt+Control+Meta+Shift+${String(index).padEnd(41, "K")}`,
     }));
-    const rules = Array.from({ length: 12 }, (_, index) => ({
-      id: String(index).padEnd(64, "r"),
-      enabled: true,
-      slotIndex: index,
-      trigger: {
-        kind: "condition-missing" as const,
-        condition: "magic-shield" as const,
-      },
-      unequipWhenInactive: true,
-    }));
     const serialized = JSON.stringify({
       type: "update-action-bar",
       actionBar,
-      settings: {
-        ...DEFAULT_ACTION_BOT_SETTINGS,
-        enabled: true,
-        rules,
-      },
     });
 
     expect(Buffer.byteLength(serialized)).toBeLessThanOrEqual(

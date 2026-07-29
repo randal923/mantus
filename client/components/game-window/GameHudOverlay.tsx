@@ -15,7 +15,6 @@ import {
 import { parseChatInput } from "../../lib/chat/parseChatInput";
 import { sanitizeChatText } from "../../lib/chat/sanitizeChatText";
 import { toChatMessage } from "../../lib/chat/toChatMessage";
-import { removeInvalidActionBotRules } from "../../lib/action-bar/removeInvalidActionBotRules";
 import { getInventoryItems } from "../../lib/inventory/getInventoryItems";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import type { ActionBarEditorRequest } from "../action-bar/ActionBarEditorRequest";
@@ -76,9 +75,6 @@ export function GameHudOverlay() {
   );
   const setActionBarEditorRequest = useGameWindowStore(
     (state) => state.setActionBarEditorRequest,
-  );
-  const setActionBotSettings = useGameWindowStore(
-    (state) => state.setActionBotSettings,
   );
 
   const chatChannels = useMemo<ReadonlyArray<ChatChannel>>(
@@ -328,14 +324,8 @@ export function GameHudOverlay() {
     (next: ActionBarState) => {
       const state = store.getState();
       const runtime = state.runtime;
-      const nextBotSettings = removeInvalidActionBotRules(
-        runtime.actionBotSettingsRef.current,
-        next,
-      );
       state.setActionBar(next);
-      setActionBotSettings(nextBotSettings);
       runtime.actionBarRef.current = next;
-      runtime.actionBotSettingsRef.current = nextBotSettings;
       if (runtime.actionBarSaveTimerRef.current) {
         clearTimeout(runtime.actionBarSaveTimerRef.current);
       }
@@ -343,11 +333,10 @@ export function GameHudOverlay() {
         runtime.actionBarSaveTimerRef.current = null;
         runtime.clientRef.current?.updateActionBar(
           runtime.actionBarRef.current,
-          runtime.actionBotSettingsRef.current,
         );
       }, 800);
     },
-    [store, setActionBotSettings],
+    [store],
   );
   const onConfigureActionBar = useCallback(
     (slotIndex: number, section: ActionBarEditorRequest["section"]) => {

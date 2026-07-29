@@ -947,10 +947,10 @@
   "actionBot": {
     "title": "Bot de Ações",
     "configure": "Configurar Bot de Ações",
-    "description": "Selecione uma ação acima, adicione-a e escolha exatamente quando ela será executada.",
+    "description": "Adicione uma regra, escolha qualquer magia ou objeto carregado e defina exatamente quando ela roda.",
     "enabled": "Ativado",
     "quickHelpers": "Assistentes rápidos",
-    "quickHelpersDescription": "Ative magias de suporte comuns sem ocupar espaços na barra de ações.",
+    "quickHelpersDescription": "Ative magias de suporte comuns sem configurar uma regra.",
     "autoHaste": "Velocidade Automática",
     "autoHasteDescription": "Conjura novamente a magia de velocidade escolhida quando o efeito termina.",
     "hasteSpell": "Magia de velocidade",
@@ -963,7 +963,6 @@
     "rulesTitle": "Regras de ações automáticas",
     "rulesDescription": "As regras são executadas de cima para baixo. Mova-as para definir a prioridade.",
     "ruleCount": "{{count}} / {{max}}",
-    "addSelectedAction": "Adicionar Ação Selecionada",
     "columns": {
       "on": "Ativa",
       "action": "Ação",
@@ -972,7 +971,7 @@
       "options": "Opções"
     },
     "noRules": "Nenhuma regra automática",
-    "noRulesDescription": "Coloque uma poção, runa, magia ou equipamento na barra de ações e adicione sua condição aqui.",
+    "noRulesDescription": "Adicione uma regra para automatizar qualquer magia da sua vocação, uma poção, uma runa ou um equipamento.",
     "status": "Status do Bot de Ações",
     "statusEnabled": "Ativado ✓",
     "statusDisabled": "Desativado",
@@ -1011,7 +1010,15 @@
     "moveRuleUp": "Mover regra para cima",
     "moveRuleDown": "Mover regra para baixo",
     "removeRule": "Remover regra",
-    "unequipInactive": "Desequipar quando esta condição deixar de estar ativa"
+    "unequipInactive": "Desequipar quando esta condição deixar de estar ativa",
+    "addRule": "Adicionar Regra",
+    "actionGroups": {
+      "spells": "Magias",
+      "objects": "Objetos carregados"
+    },
+    "panelIntro": "O action bot funciona por conta própria. As regras são configuradas aqui e são independentes dos botões da sua barra de ações.",
+    "searchActions": "Buscar magias e objetos",
+    "noMatchingActions": "Nenhuma magia ou objeto encontrado"
   },
   "contextMenu": {
     "look": "Olhar",

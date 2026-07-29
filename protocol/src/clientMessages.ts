@@ -622,6 +622,17 @@ export const updateActionBarMessageSchema = z
   .object({
     type: z.literal("update-action-bar"),
     actionBar: actionBarSchema,
+  })
+  .strict();
+
+/**
+ * The action bot is configured on its own, not through the bar: rules carry
+ * their own action, so this travels separately and each message stays well
+ * inside the transport cap.
+ */
+export const updateActionBotMessageSchema = z
+  .object({
+    type: z.literal("update-action-bot"),
     settings: actionBotSettingsSchema,
   })
   .strict();
@@ -675,6 +686,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   setLanguageMessageSchema,
   updateUiSettingsMessageSchema,
   updateActionBarMessageSchema,
+  updateActionBotMessageSchema,
   npcDialogueGreetMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,
@@ -868,6 +880,9 @@ export type UpdateUiSettingsMessage = z.infer<
 >;
 export type UpdateActionBarMessage = z.infer<
   typeof updateActionBarMessageSchema
+>;
+export type UpdateActionBotMessage = z.infer<
+  typeof updateActionBotMessageSchema
 >;
 export type ActivateActionBarMessage = z.infer<
   typeof activateActionBarMessageSchema

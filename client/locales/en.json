@@ -947,10 +947,10 @@
   "actionBot": {
     "title": "Action Bot",
     "configure": "Configure Action Bot",
-    "description": "Select an action above, add it, then choose exactly when it runs.",
+    "description": "Add a rule, choose any spell or carried object, then set exactly when it runs.",
     "enabled": "Enabled",
     "quickHelpers": "Quick helpers",
-    "quickHelpersDescription": "Enable common support spells without using action bar slots.",
+    "quickHelpersDescription": "Enable common support spells without configuring a rule.",
     "autoHaste": "Auto Haste",
     "autoHasteDescription": "Recasts your chosen haste spell when haste expires.",
     "hasteSpell": "Haste spell",
@@ -963,7 +963,6 @@
     "rulesTitle": "Automatic action rules",
     "rulesDescription": "Rules run from top to bottom. Move them to set priority.",
     "ruleCount": "{{count}} / {{max}}",
-    "addSelectedAction": "Add Selected Action",
     "columns": {
       "on": "On",
       "action": "Action",
@@ -972,7 +971,7 @@
       "options": "Options"
     },
     "noRules": "No automation rules yet",
-    "noRulesDescription": "Put a potion, rune, spell, or equipment item on the action bar, then add its trigger here.",
+    "noRulesDescription": "Add a rule to automate any spell your vocation can cast, a potion, a rune, or a piece of equipment.",
     "status": "Action Bot Status",
     "statusEnabled": "Enabled ✓",
     "statusDisabled": "Disabled",
@@ -1011,7 +1010,15 @@
     "moveRuleUp": "Move rule up",
     "moveRuleDown": "Move rule down",
     "removeRule": "Remove rule",
-    "unequipInactive": "Unequip when this trigger is no longer active"
+    "unequipInactive": "Unequip when this trigger is no longer active",
+    "addRule": "Add Rule",
+    "actionGroups": {
+      "spells": "Spells",
+      "objects": "Carried objects"
+    },
+    "panelIntro": "The action bot runs on its own. Its rules are configured here and are independent of the buttons on your action bar.",
+    "searchActions": "Search spells and objects",
+    "noMatchingActions": "No matching spell or object"
   },
   "contextMenu": {
     "look": "Look",
