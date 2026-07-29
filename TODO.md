@@ -375,6 +375,20 @@ limitations accepted during a session are recorded in the owning feature file
   Recommended fix: rip the task flag + a wider icons-0 from a newer client
   build, and carry `Element` through `importCanaryProficiencies.mjs` if a
   later Canary pin provides it. Owner: `todo/client/`.
+- **Change Character leaves the world by dropping the socket** (2026-07-28).
+  The game menu's Change Character reuses `reconnect(null)`: the client tears
+  down the connection and the server sees an ordinary disconnect. So changing
+  character mid-fight parks the character in the combat-logout linger window
+  (it keeps taking damage while its owner sits at the character list) instead
+  of being refused the way Canary refuses a logout during a fight, and the
+  round-trip pays a fresh WebSocket handshake plus token verification.
+  Recommended fix: a `leave-world` client message in `protocol/` (schema, max
+  size, rate expectation) whose handler refuses while `combat-lock` is
+  running, otherwise runs `GameServer.leaveWorld`, wipes the session's
+  character-scoped fields the way `CharacterHandler.evictExistingSession`
+  does, unbinds the player and replies `character-list` — with a client-side
+  reset that clears `ownCharacter` without rebuilding the socket. Owner:
+  Feature 59 (session/logout lifecycle).
 
 ## Repo-wide known breakage
 

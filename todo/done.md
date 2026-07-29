@@ -1141,3 +1141,28 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   browser lane green for both modals, and a headless screenshot of the
   outfits and mounts tabs confirms thumbnails, selection highlight, and
   layout render correctly.
+
+## 2026-07-28 game menu: Change Character returns to the character list
+
+- **Problem**: the game menu's "Change Character" button had been rendered
+  permanently disabled since it shipped — `GameSettingsOverlay` never passed
+  `onChangeCharacter`, so the only way off a character was a full account
+  logout through Supabase and a fresh sign-in.
+- **Change**: the overlay now passes `onChangeCharacter={() => reconnect(null)}`.
+  `reconnect` already resets every session slice plus `ownCharacter` /
+  `characters` / `gameMenuOpen` and bumps `connectionAttempt`, so the
+  connection effect flushes pending saves, drops the socket, destroys the
+  renderer and rebuilds both; the fresh `auth` → `auth-ok` → `list-characters`
+  round-trip lands on the character-select modal with `resumeCharacterIdRef`
+  null (no auto re-entry). No new packet and no server change: the leave runs
+  through the existing disconnect path (`GameServer.processDisconnects` →
+  `leaveWorld`, or the combat-lock linger window), and re-selecting the same
+  character reclaims the lingering entity with its locks intact.
+- **Files**: `client/components/game-window/GameSettingsOverlay.tsx`.
+- **Verified**: client `yarn typecheck` and `yarn lint` clean (only
+  pre-existing warnings elsewhere). No unit test — the client suite covers
+  pure `lib/` modules only, and this is prop wiring onto an already-tested
+  store action (the same one the reconnect banner uses).
+- **Residual**: no dedicated leave-world intent, so a change-character during
+  a fight parks the character in the linger window instead of refusing with
+  Tibia's "you may not logout during a fight" (recorded in TODO.md).

@@ -35,6 +35,7 @@ export function GameSettingsOverlay() {
   );
   const setUiSettings = useGameWindowStore((state) => state.setUiSettings);
   const gameMenuOpen = useGameWindowStore((state) => state.gameMenuOpen);
+  const reconnect = useGameWindowStore((state) => state.reconnect);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const diagonalWalking = useGameSettingsStore(
     (state) => state.diagonalWalking,
@@ -95,6 +96,7 @@ export function GameSettingsOverlay() {
       accountTier={accountTier}
       premiumDaysRemaining={premiumDaysRemaining}
       onLogout={onLogout}
+      onChangeCharacter={() => reconnect(null)}
       languageSaving={languageSaving}
       languageError={languageError}
       diagonalWalking={diagonalWalking}
