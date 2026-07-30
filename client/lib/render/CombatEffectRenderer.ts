@@ -5,6 +5,8 @@ import type {
   Position,
 } from "@tibia/protocol";
 import type { AssetStore, TibiaObject } from "./AssetStore";
+import { EFFECT_FRAME_DURATION_MS } from "./EFFECT_FRAME_DURATION_MS";
+import { getEffectPattern } from "./getEffectPattern";
 import { getMapObjectZ } from "./getMapObjectZ";
 import type { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
@@ -19,8 +21,11 @@ interface MagicEffectPiece {
 interface MagicEffectView {
   readonly container: Container;
   readonly pieces: MagicEffectPiece[];
+  /** One entry per step played: the phases repeated once per loop. */
   readonly durations: number[];
   readonly phaseCount: number;
+  /** Phases the appearance actually has, which each step indexes into. */
+  readonly spritePhases: number;
   elapsedMs: number;
   phase: number;
 }
@@ -167,13 +172,16 @@ export class CombatEffectRenderer {
       effect.elapsedMs += deltaMs;
       while (
         effect.phase < effect.phaseCount &&
-        effect.elapsedMs >= (effect.durations[effect.phase] ?? 100)
+        effect.elapsedMs >=
+          (effect.durations[effect.phase] ?? EFFECT_FRAME_DURATION_MS)
       ) {
-        effect.elapsedMs -= effect.durations[effect.phase] ?? 100;
+        effect.elapsedMs -=
+          effect.durations[effect.phase] ?? EFFECT_FRAME_DURATION_MS;
         effect.phase++;
         if (effect.phase < effect.phaseCount) {
+          const phase = effect.phase % effect.spritePhases;
           for (const piece of effect.pieces) {
-            piece.sprite.texture = piece.textures[effect.phase]!;
+            piece.sprite.texture = piece.textures[phase]!;
           }
         }
       }
@@ -258,10 +266,22 @@ export class CombatEffectRenderer {
       return;
     }
     if (this.destroyed) return;
-    const durations = Array.from(
+    // OTClient holds each effect phase for its *maximum* window and plays the
+    // schedule `loopCount` times (`Animator::getPhaseAt` / `getTotalDuration`),
+    // so a 4-loop effect runs four passes before it is removed.
+    const phaseDurations = Array.from(
       { length: appearance.phases },
       (_, phase) =>
-        appearance.animation?.phases[phase]?.minimumDurationMs ?? 100,
+        appearance.animation?.phases[phase]?.maximumDurationMs ??
+        EFFECT_FRAME_DURATION_MS,
+    );
+    const loops =
+      appearance.animation?.loopType === "counted"
+        ? Math.max(1, appearance.animation.loopCount)
+        : 1;
+    const durations = Array.from(
+      { length: appearance.phases * loops },
+      (_, step) => phaseDurations[step % appearance.phases],
     );
     const container = new Container();
     container.position.set(
@@ -277,13 +297,23 @@ export class CombatEffectRenderer {
       position.y,
       MAP_DEPTH.effect + 1,
     );
-    const pieces = this.buildPieces(appearance, container);
+    const pieces = this.buildPieces(
+      appearance,
+      container,
+      getEffectPattern(
+        position,
+        this.mapView.centerPosition(),
+        appearance.px,
+        appearance.py,
+      ),
+    );
     this.mapView.effectLayer(position.z).addChild(container);
     this.effects.push({
       container,
       pieces,
       durations,
-      phaseCount: appearance.phases,
+      phaseCount: durations.length,
+      spritePhases: appearance.phases,
       elapsedMs: 0,
       phase: 0,
     });
@@ -293,14 +323,20 @@ export class CombatEffectRenderer {
   private buildPieces(
     appearance: TibiaObject,
     container: Container,
-    patternX = 0,
+    pattern: { x: number; y: number } = { x: 0, y: 0 },
   ): MagicEffectPiece[] {
     const pieces: MagicEffectPiece[] = [];
     for (let h = 0; h < appearance.height; h++) {
       for (let w = 0; w < appearance.width; w++) {
         const textures = Array.from({ length: appearance.phases }, (_, phase) =>
           this.store.spriteTexture(
-            this.store.spriteId(appearance, { x: patternX, w, h, phase }),
+            this.store.spriteId(appearance, {
+              x: pattern.x,
+              y: pattern.y,
+              w,
+              h,
+              phase,
+            }),
           ),
         );
         if (textures.every((texture) => texture === Texture.EMPTY)) continue;
@@ -336,11 +372,10 @@ export class CombatEffectRenderer {
       from.y * TILE_SIZE + TILE_SIZE / 2,
     );
     container.zIndex = getMapObjectZ(from.x, from.y, MAP_DEPTH.effect);
-    const pieces = this.buildPieces(
-      appearance,
-      container,
-      this.missilePattern(from, to, appearance.px),
-    );
+    const pieces = this.buildPieces(appearance, container, {
+      x: this.missilePattern(from, to, appearance.px),
+      y: 0,
+    });
     // Recenter pieces so the container origin matches the old canvas center.
     for (const piece of pieces) {
       piece.sprite.position.x -= (appearance.width * TILE_SIZE) / 2;

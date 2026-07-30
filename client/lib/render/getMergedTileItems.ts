@@ -19,6 +19,7 @@ export function getMergedTileItems(
     merged.push({
       instanceId: item.instanceId,
       stackIndex: item.stackIndex,
+      count: item.count,
       object: getAppearance(item.itemId),
     });
   }

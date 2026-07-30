@@ -74,7 +74,7 @@ export function RewardChestModal({
                       key={item.itemId}
                       className="flex items-center gap-3 rounded-md border border-ui-stone/20 bg-black/20 px-2 py-1"
                     >
-                      <SpriteIcon spriteId={item.spriteId} scale={0.9} />
+                      <SpriteIcon spriteId={item.spriteId} count={item.count} scale={0.9} />
                       <span className="min-w-0 flex-1 truncate text-sm text-ui-text">
                         {item.count > 1 ? `${item.count}× ` : ""}
                         {item.name}

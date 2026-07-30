@@ -141,6 +141,11 @@ export class MapView {
     return floor.transient;
   }
 
+  /** The authoritative camera tile, which effects pattern themselves against. */
+  centerPosition(): Position | null {
+    return this.center ? { ...this.center } : null;
+  }
+
   isFloorVisible(z: number): boolean {
     return this.floors.get(z)?.container.visible ?? false;
   }
@@ -254,6 +259,7 @@ export class MapView {
         south: objects.some((tileObject) => tileObject.flags.hookSouth),
         east: objects.some((tileObject) => tileObject.flags.hookEast),
       },
+      item.count,
     );
     return this.store.bakeFrame(object, { ...pattern, phase: 0 });
   }
@@ -660,7 +666,14 @@ export class MapView {
     hooks: { south: boolean; east: boolean },
   ): void {
     const object = item.object;
-    const pattern = getMapItemPattern(object, tileX, tileY, floor, hooks);
+    const pattern = getMapItemPattern(
+      object,
+      tileX,
+      tileY,
+      floor,
+      hooks,
+      item.count ?? 1,
+    );
     const pieces: Array<{
       sprite: Sprite;
       w: number;

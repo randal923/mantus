@@ -1576,6 +1576,108 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   loot, reward chest, daily rewards, wiki) still use the sprite fallback —
   recorded in `TODO.md`.
 
+## 2026-07-30 — Item animation rebuilt on Tibia's own animator (Feature 43 / client)
+
+- **Problem**: "item animations are not working" was reported again after the
+  schedule work landed. Both pipelines were in fact alive (the icon e2e passes,
+  and the world canvas repaints while standing still), but the animator was ours,
+  not Tibia's, and five defects made animation read wrong or absent:
+  - the world resolved every phase off one global `elapsedMs` and gave each
+    asynchronous instance a *hash rotation* of the phase order, so three adjacent
+    lava walls (1441, ping-pong) played `[1,0,1,2]`, `[0,1,2,1]`, `[1,2,1,0]` —
+    out of step with each other where Tibia keeps type-mates coherent;
+  - play-once schedules (185 item types: `platform rising from water`,
+    `chameleon`, `hamster in a wheel`) were *born complete* — any instance
+    registered after `cycle × loopCount` froze immediately on a hash-dependent
+    phase instead of playing from the moment the item appeared;
+  - the `[min, max]` window was rolled once per instance and never again, so
+    Tibia's random idles (378 items, e.g. 193 `something crawling` at
+    2000–5000ms) ticked like a metronome;
+  - phases Tibia gives 0ms became 1ms, so `vortex` (22894/23469/23470, 0ms for
+    all 15 phases) strobed a full cycle every 15ms, swapping textures every frame;
+  - the DOM icon table skipped every multi-pattern or multi-tile appearance —
+    2,192 of 4,887 animated items, 38 of them carryable (enchanted gems, gold
+    ingot, `miraculum`, arrows, souls) — and `SpriteIcon` drew a single atlas
+    cell, so a 2×2 item showed one corner and no stack ever showed its pile art.
+- **What changed** — one animator, ported from OTClient's `Animator`, shared by
+  the world and the icons:
+  - `getItemAnimationSchedule.ts` normalizes an appearance into Tibia's schedule
+    (per-phase `[min, max]`, play order with ping-pong expanded, loop type/count,
+    start phase, synchronized), substituting the first non-zero window for 0ms
+    phases exactly as `Animator::unserializeAppearance` does, and never treating a
+    counted schedule as shared — a loop count only means something counted from
+    when the item appeared. Cached per appearance (a screen of water asks
+    hundreds of times per redraw).
+  - `ItemAnimator.ts` is the state machine: advanced by frame deltas, one phase
+    boundary per call with the overshoot carried, `[min, max]` re-rolled on every
+    transition from a seeded mulberry32 (so an instance replays identically),
+    ping-pong bounce, counted loops that freeze on the true last phase.
+  - `getSynchronizedItemPhase.ts` is `calculateSynchronous`: phase as a function
+    of the shared clock, so the whole ocean ripples together whenever a tile is
+    drawn. Ping-pong order is honoured here too, which OTClient's synchronous
+    path drops (123 of Tibia's synchronized item schedules are ping-pong).
+  - `AnimatedMapItemRegistry` now owns an animator per asynchronous instance and
+    reads the clock for synchronized ones, ticks only visible floors as before,
+    re-resolves a synchronized entry when its floor is revealed, and **parks an
+    animator for 10s on unregister** so the tile teardown that follows every tile
+    update does not restart the flame beside a dropped coin.
+  - Icons: `itemIconAnimationStore` + `useItemIcon` + `getItemIconPieces` replace
+    the generated sequence table. One animator per appearance (OTClient keeps its
+    animator on the `ThingType`, so two potions in a container are never a frame
+    apart), sleeping until the next mounted icon's phase boundary, reading the
+    same `AssetStore` catalog the world loads — so icons now animate *every*
+    animated item, draw all `w×h` pieces scaled into the slot the way
+    `UIItem::drawSelf` does, and pick pile art from the stack count
+    (`getStackCountPattern`, ported from `Item::updatePatterns`). `count` is
+    threaded through inventory/container slots, drag ghosts, depot, mailbox and
+    reward rows. Ground items pattern by count too (`getMapItemPattern`).
+  - Effects: per-phase **maximum** windows and `loopCount` passes, matching
+    `getPhaseAt`/`getTotalDuration`, and the pattern comes from the tile's offset
+    to the camera (`getEffectPattern`, `Effect::draw`) instead of always cell 0.
+  - Fallback rates are Tibia's own again: `ITEM_FRAME_DURATION_MS` 500 (OTClient
+    `itemTicksPerFrame`) and `EFFECT_FRAME_DURATION_MS` 75, replacing the invented
+    shared 100ms. `AssetStore` no longer synthesizes a flat schedule that could
+    shadow a real one; unscheduled objects fall back at the renderer instead.
+  - Deleted: `item-animations.json`, `tools/buildItemAnimations.mjs`, the
+    `items:animations` script, `itemSpriteAnimationStore`, `resolveSpriteFrame`,
+    `useAnimatedSpriteId`, `getItemAnimationTimeline`, `resolveItemAnimationPhase`,
+    `getItemAnimationPhase`, `LEGACY_FRAME_DURATION_MS`.
+- **Files touched**: `client/lib/render/{getItemAnimationSchedule,ItemAnimator,
+  getSynchronizedItemPhase,AnimatedMapItemRegistry,itemIconAnimationStore,
+  useItemIcon,getItemIconPieces,getItemIconPattern,getStackCountPattern,
+  getEffectPattern,ITEM_FRAME_DURATION_MS,EFFECT_FRAME_DURATION_MS,AssetStore,
+  MapView,CombatEffectRenderer,getMapItemPattern,getMergedTileItems,
+  getTileRenderLayers}.ts`, `client/components/inventory/{SpriteIcon,ItemSlot}.tsx`,
+  `client/components/{depot/DepotModal,depot/MailboxModal,reward/RewardChestModal}.tsx`,
+  `client/e2e/{itemIconAnimation,itemAnimationWorld}.e2e.test.tsx`, `package.json`,
+  `map/README.md`, `TODO.md`, `todo/status.md`.
+- **Verified**: client unit 309 passed (39 new across `getItemAnimationSchedule`,
+  `ItemAnimator`, `getSynchronizedItemPhase`, `AnimatedMapItemRegistry`,
+  `getItemIconPieces`, `getStackCountPattern`, `getEffectPattern`,
+  `itemIconAnimationStore` — including the two regressions that started this:
+  a counted schedule registered 60s late plays every phase, and a redrawn tile
+  keeps its phase); client typecheck + lint clean (0 errors); server typecheck
+  clean. Both browser lanes pass against the real assets: the icon lane now also
+  asserts 100 gold coins draw different art from one coin and that a 2×2 item
+  renders four pieces; the world lane, run against
+  `itemAnimationProbeServer` (:4126), asserts the standing-still temple keeps
+  reaching distinct frames instead of a pixel-count threshold that flapped
+  (3,528 vs `>5,000` before this change).
+- **Scene note for whoever tests this next**: the Thais temple spawn animates
+  **four coal basins** (2110) and nothing else — the map has no lit torches at
+  all, and its animated mass is water/lava (2.9M static instances) plus 13k
+  server-side fields and campfires elsewhere. The old test and probe comments
+  claimed torches and rippling harbour water; both were wrong.
+- **Residual risk**: the parked-animator window (10s) is a judgement call, not
+  Tibia's behaviour — Tibia's item objects live as long as they are in the
+  awareness range, so an item revisited after 10s restarts its asynchronous
+  animation. Icons now depend on the 37MB object catalog: they hold their first
+  frame until it loads (Storybook fetches it once per session) instead of
+  animating from a 163KB table. Creature idle animation, fluid-subtype patterns
+  and permanent effects remain open in `TODO.md`.
+
+---
+
 ## 2026-07-29 — Store: house items as decoration kits, exercise dummies purchasable (Feature 43)
 
 - **Problem**: the store had no house categories at all — no exercise

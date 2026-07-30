@@ -3,7 +3,6 @@ import { addonPatternYs } from "./addonPatternYs";
 import type { AppearanceAnimationEntry } from "./decodeAppearanceAnimation";
 import { decodeAppearanceAnimation } from "./decodeAppearanceAnimation";
 import { getSpriteIndex } from "./getSpriteIndex";
-import { LEGACY_FRAME_DURATION_MS } from "./LEGACY_FRAME_DURATION_MS";
 
 export interface TibiaFlags {
   ground: boolean;
@@ -39,7 +38,8 @@ export interface TibiaAnimationPhase {
 }
 
 export interface TibiaAnimation {
-  source: "legacy" | "enhanced" | "appearances";
+  /** Which asset the schedule came from: the DAT itself, or Tibia's protobuf. */
+  source: "enhanced" | "appearances";
   timingMode: "asynchronous" | "synchronized";
   loopType: "infinite" | "counted" | "ping-pong";
   loopCount: number;
@@ -172,23 +172,13 @@ export class AssetStore {
       }
     >) {
       const schedule = schedules[source.category]?.[source.clientId];
+      // No schedule leaves `animation` null; the renderers fall back to
+      // ITEM_FRAME_DURATION_MS / EFFECT_FRAME_DURATION_MS themselves rather
+      // than have a synthesized one shadow a real schedule.
       const animation =
         source.animation ??
         (source.phases > 1 && schedule
           ? decodeAppearanceAnimation(schedule, source.phases)
-          : null) ??
-        (source.category === "item" && source.phases > 1
-          ? {
-              source: "legacy" as const,
-              timingMode: "asynchronous" as const,
-              loopType: "infinite" as const,
-              loopCount: 0,
-              startPhase: 0,
-              phases: Array.from({ length: source.phases }, () => ({
-                minimumDurationMs: LEGACY_FRAME_DURATION_MS,
-                maximumDurationMs: LEGACY_FRAME_DURATION_MS,
-              })),
-            }
           : null);
       const o: TibiaObject = {
         ...source,
@@ -211,6 +201,11 @@ export class AssetStore {
     const o = this.items.get(id);
     if (!o) throw new Error(`unknown item ${id}`);
     return o;
+  }
+
+  /** Every item appearance, for callers that index the catalog themselves. */
+  itemAppearances(): IterableIterator<TibiaObject> {
+    return this.items.values();
   }
 
   outfit(id: number): TibiaObject {

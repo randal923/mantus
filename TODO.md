@@ -472,14 +472,28 @@ limitations accepted during a session are recorded in the owning feature file
   protection zone beside a house dummy could train on it. Recommended fix:
   resolve both tiles' houses through `HouseService` at execution time in
   `ExerciseTrainingHandler.handle`. Owner: Feature 72.
-- **A few icon surfaces still resolve animations by bare sprite id**
-  (2026-07-29). `item-animations.json` is keyed by client id and `SpriteIcon`
-  takes an optional `clientId`, threaded through inventory, containers, action
-  bar, depot, mailbox, shop, market, forge and the store. Surfaces whose
-  protocol rows carry no client id — bestiary loot, reward chest, daily
-  rewards, wiki — fall back to the first-frame sprite index, where the ~39
-  appearances sharing a first sprite stay static. Recommended fix: add
-  `clientId` to those schemas when touching them. Owner: `todo/client/`.
+- **A few icon surfaces still resolve appearances by bare sprite id**
+  (2026-07-30). `SpriteIcon` resolves an item's appearance from its `clientId`,
+  threaded through inventory, containers, action bar, depot, mailbox, shop,
+  market, forge and the store. Surfaces whose protocol rows carry no client id —
+  bestiary loot, daily rewards, wiki, auction browser, forge banner — fall back
+  to `itemIconAnimationStore`'s first-sprite index, so the handful of
+  appearances sharing a first sprite draw static and unpatterned. Recommended
+  fix: add `clientId` to those schemas when touching them. Owner: `todo/client/`.
+- **Stack sizes reach icons, fluid subtypes do not** (2026-07-30). Item icons and
+  ground items now pick Tibia's pile art from the stack count
+  (`getStackCountPattern`), but splashes and fluid containers pattern by their
+  *fluid subtype*, which no protocol row carries — `mapItemStateSchema.count` is
+  a stack size — so every puddle and vial draws the first cell. Recommended fix:
+  project the subtype for splash/fluid items and map it through Canary's fluid
+  colour table. Owner: `todo/client/`.
+- **Permanent magic effects play once** (2026-07-30). 13 of Tibia's 198 animated
+  effects declare an infinite loop; OTClient marks those `m_permanent` and keeps
+  drawing them until the server removes the thing. We have no effect-removal
+  message, so `CombatEffectRenderer` plays one pass and destroys them rather than
+  leaking sprites forever. Recommended fix: add a remove-effect server message
+  (or a duration) for persistent effects, then honour the loop type. Owner:
+  `todo/client/`.
 - **House decoration kits cannot be wrapped back** (2026-07-29). Store-bought
   furniture unwraps on an owned house tile (`handleDecorationKitUse`), but
   Canary's reverse op — wrapping placed furniture back into a kit via its
@@ -493,13 +507,19 @@ limitations accepted during a session are recorded in the owning feature file
   `PgMantusStore.integration.test.ts` but no Postgres was reachable in this
   environment, so only unit-level coverage ran. Run the integration suite
   before trusting the store. Owner: Feature 43.
-- **Outfit animations still ignore Tibia's phase timings** (2026-07-29).
-  `appearance-animations.json` carries item and effect schedules only: outfit
-  appearances split into idle/walking frame groups whose phase counts do not
-  match the legacy DAT's single group (261 of 275 disagree), so
-  `getOutfitAnimationFrames` keeps its own `WALK_FRAME_DURATION_MS`.
-  Recommended fix: emit both frame groups from
-  `tools/importAppearanceAnimations.mjs` and pick the group by creature state.
+- **Creatures have no idle animation, and outfit walk timings are invented**
+  (2026-07-30). Real Tibia animates a standing creature from its *idle* frame
+  group (`Creature::getCurrentAnimationPhase`: idle animator while
+  `walkAnimationPhase == 0`, then `walkPhase + idlePhases - 1` while moving), and
+  times the walk from the group's own per-phase schedule. Our pinned legacy
+  Tibia.dat cannot express either: measured against Canary's protobuf, outfits
+  there carry an idle group plus a moving group whose phases the DAT disagrees
+  with entirely — outfit 2 has 3 DAT phases against 1 idle + 8 moving in the
+  protobuf, and only 160 of 1,443 outfits even satisfy `dat == idle + moving`.
+  The idle sprites are simply not in this rip, so `getOutfitAnimationFrames`
+  keeps its own `WALK_FRAME_DURATION_MS`. Recommended fix: re-rip outfits from
+  the modern frame-group assets (`--enhanced-animations` with frame groups, or
+  the protobuf + sprite sheets directly), then pick the group by creature state.
   Owner: `todo/client/`.
 
 - **Spell modules no longer diff against the Canary dump** (2026-07-29).

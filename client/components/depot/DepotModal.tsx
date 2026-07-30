@@ -165,7 +165,12 @@ export function DepotModal({
                     key={item.id}
                     className="flex items-center gap-3 rounded-lg border border-ui-stone/25 bg-black/30 p-2"
                   >
-                    <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} scale={1.1} />
+                    <SpriteIcon
+                      spriteId={item.spriteId}
+                      clientId={item.clientId}
+                      count={item.count}
+                      scale={1.1}
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm text-ui-text-bright">
                         {item.name}
@@ -244,7 +249,12 @@ export function DepotModal({
                   }
                   className="flex items-center gap-3 rounded-lg border border-ui-stone/25 bg-black/30 p-2"
                 >
-                  <SpriteIcon spriteId={entry.spriteId} clientId={entry.clientId} scale={1.1} />
+                  <SpriteIcon
+                    spriteId={entry.spriteId}
+                    clientId={entry.clientId}
+                    count={entry.count}
+                    scale={1.1}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm text-ui-text-bright">
                       {entry.name}

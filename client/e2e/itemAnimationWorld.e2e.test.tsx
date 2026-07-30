@@ -11,9 +11,12 @@ import GameWindow from "../components/GameWindow";
  *
  * - the equipped exercise sword's paperdoll icon cycles through its phases,
  * - the world canvas keeps changing while the character stands still in the
- *   Thais temple protection zone: no creature can get in, so the animated
- *   wall torches and fountains around the hall are the only thing moving,
- *   and they repaint thousands of pixels per phase step.
+ *   Thais temple protection zone: no creature can get in and our own outfit
+ *   holds its standing frame, so the only thing moving is the map itself. The
+ *   scene there is four animated coal basins (client id 2110, eleven phases at
+ *   100–200ms) — no torches, no water — so this asserts that the canvas keeps
+ *   reaching *distinct* frames rather than any particular pixel count, which
+ *   depends on which phase pair a sample happens to straddle.
  */
 /**
  * This test needs the memory-backed probe server, not the default e2e server:
@@ -92,18 +95,22 @@ function captureFrame(canvas: HTMLCanvasElement): Promise<Uint8Array> {
   });
 }
 
-function countDifferingPixels(a: Uint8Array, b: Uint8Array): number {
-  let differing = 0;
-  for (let index = 0; index < a.length; index += 4) {
-    if (
-      a[index] !== b[index] ||
-      a[index + 1] !== b[index + 1] ||
-      a[index + 2] !== b[index + 2]
-    ) {
-      differing += 1;
-    }
+/** Cheap order-sensitive digest, so distinct frames can be counted. */
+function frameSignature(pixels: Uint8Array): string {
+  let hash = 2_166_136_261;
+  for (let index = 0; index < pixels.length; index += 16) {
+    hash ^= pixels[index];
+    hash = Math.imul(hash, 16_777_619);
   }
-  return differing;
+  return (hash >>> 0).toString(16);
+}
+
+function countLitPixels(pixels: Uint8Array): number {
+  let lit = 0;
+  for (let index = 0; index < pixels.length; index += 4) {
+    if (pixels[index] || pixels[index + 1] || pixels[index + 2]) lit += 1;
+  }
+  return lit;
 }
 
 test.skipIf(!ON_PROBE_SERVER)(
@@ -160,20 +167,19 @@ test.skipIf(!ON_PROBE_SERVER)(
       }
       expect(iconPositions.size).toBeGreaterThanOrEqual(3);
 
-      // World: frames of the standing-still harbor scene must differ where
-      // the water ripples.
-      const before = await captureFrame(canvas as HTMLCanvasElement);
-      await sleep(600);
-      const after = await captureFrame(canvas as HTMLCanvasElement);
-      expect(before.length).toBe(after.length);
-      let lit = 0;
-      for (let index = 0; index < before.length; index += 4) {
-        if (before[index] || before[index + 1] || before[index + 2]) lit += 1;
+      // World: the standing-still temple must keep reaching new frames as the
+      // braziers step through their phases.
+      const signatures = new Set<string>();
+      let litFloor = 0;
+      for (let sample = 0; sample < 12; sample++) {
+        const pixels = await captureFrame(canvas as HTMLCanvasElement);
+        litFloor = Math.max(litFloor, countLitPixels(pixels));
+        signatures.add(frameSignature(pixels));
+        await sleep(120);
       }
-      // Guard against a blank readback: an empty frame would diff as zero too.
-      expect(lit).toBeGreaterThan(1_000);
-      const changed = countDifferingPixels(before, after);
-      expect(changed).toBeGreaterThan(5_000);
+      // Guard against blank readbacks: an unpainted canvas would look static.
+      expect(litFloor).toBeGreaterThan(1_000);
+      expect(signatures.size).toBeGreaterThanOrEqual(3);
     } finally {
       root.unmount();
       host.remove();

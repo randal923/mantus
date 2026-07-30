@@ -24,17 +24,16 @@ Extract only `Tibia.dat` and `Tibia.spr` here. Copy Canary's matching
 yarn items:convert map/items.xml --commit=a879c9312e34381e8eedf397b8ed44510698b689
 yarn assets:import
 yarn animations:import map/appearances.dat # or a Canary checkout path
-yarn items:animations
 yarn map:convert map/otservbr.otbm
 ```
 
 The legacy DAT stores a phase count and no timings, so `animations:import`
 reads Tibia's real per-phase schedules out of Canary's protobuf
 `data/items/appearances.dat` into
-`client/public/assets/appearance-animations.json`; `items:animations` then
-folds them into the DOM icon table. Objects whose protobuf phase count
-disagrees with the DAT are skipped rather than animated on another object's
-clock.
+`client/public/assets/appearance-animations.json`. World sprites and DOM item
+icons both animate straight from that table, so there is nothing else to build.
+Objects whose protobuf phase count disagrees with the DAT are skipped rather
+than animated on another object's clock.
 
 `content/source-manifest.json` pins the exact map, DAT, SPR, Canary commit, and
 converter versions. Conversion stops before replacing existing outputs if a

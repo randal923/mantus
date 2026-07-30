@@ -14,6 +14,8 @@ interface RenderFlags {
 export interface TileRenderItem<RenderObject extends { flags: RenderFlags }> {
   instanceId: string;
   stackIndex: number;
+  /** Stack size, for the count pattern; absent on static scenery (always one). */
+  count?: number;
   object: RenderObject;
 }
 
