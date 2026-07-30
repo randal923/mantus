@@ -38,6 +38,10 @@ import {
 } from "./depot";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
+import {
+  lootFilterItemsGetMessageSchema,
+  updateLootFilterMessageSchema,
+} from "./lootFilter";
 import { lookMessageSchema } from "./look";
 import { uiSettingsSchema } from "./uiSettings";
 import { PROTOCOL_LIMITS } from "./limits";
@@ -694,6 +698,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   updateUiSettingsMessageSchema,
   updateActionBarMessageSchema,
   updateActionBotMessageSchema,
+  updateLootFilterMessageSchema,
+  lootFilterItemsGetMessageSchema,
   npcDialogueGreetMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,

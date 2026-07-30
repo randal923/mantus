@@ -13,7 +13,7 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-07-29
+**Last updated:** 2026-07-30
 
 ## World & engine
 
@@ -44,7 +44,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | ------------------------------------------------------------------------------------------ | ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Vocations, stats, progression, promotion, Monk (18–20)                                     | ✅     | ✅     | Nothing — closed (in-world triggers moved to 72)                                                                                                                                                   |
 | Combat core, conditions, potions, all 171 monster spells, action bars, spell words (22–28) | ✅     | ✅     | 66 disabled player spells: Monk harmony unit + 2 conditions + Divine Empowerment + 17 field/wall runes + mass heals (24), house words (109), exiva (65), familiars' 10 (85); 2 icons external (22) |
-| Monster death, loot rolls, corpses, quick-loot sweep (29–31)                               | ✅     | ✅     | Child loot containers, `unique` flag, loot subType, reward-boss rules, 175 death callbacks                                                                                                         |
+| Monster death, loot rolls, corpses, quick-loot sweep, auto-loot filter (29–31)             | ✅     | ✅     | Child loot containers, `unique` flag, loot subType, reward-boss rules, 175 death callbacks; auto-loot ✅ (2026-07-30) needs one-tile reach and has no per-category container routing                |
 | Player death penalty — full Canary formula (32)                                            | ◐      | ✅     | Blessing consumption + item/container drop into player corpse (needs 72)                                                                                                                           |
 | Decay: carried + world (33, 34)                                                            | ✅     | —      | Spell fields as real world items, charge expiry                                                                                                                                                    |
 | Stamina, soul, training engines (18) → in-world triggers (72)                              | ◐      | ◐      | Beds/sleep, offline-training statue trigger, blessings persistence+purchase, food/soul regen persistence; exercise weapons/dummies ship (house-membership check still missing)                     |

@@ -12,7 +12,7 @@ import type { ItemMutation } from "../../item/ItemMutation";
 import {
   backpackContainers,
   type BackpackContainerView,
-} from "./backpackContainers";
+} from "../../item/plan/backpackContainers";
 
 const MAX_CARRIED_ITEMS = 500;
 

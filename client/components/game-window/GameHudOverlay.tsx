@@ -54,6 +54,9 @@ export function GameHudOverlay() {
   const actionBotEnabled = useGameWindowStore(
     (state) => state.actionBotSettings.enabled,
   );
+  const lootFilterEnabled = useGameWindowStore(
+    (state) => state.lootFilter.enabled,
+  );
   const inventory = useGameWindowStore(
     (state) => state.sessions?.inventory ?? null,
   );
@@ -75,6 +78,9 @@ export function GameHudOverlay() {
   );
   const setActionBarEditorRequest = useGameWindowStore(
     (state) => state.setActionBarEditorRequest,
+  );
+  const setLootFilterOpen = useGameWindowStore(
+    (state) => state.setLootFilterOpen,
   );
 
   const chatChannels = useMemo<ReadonlyArray<ChatChannel>>(
@@ -344,6 +350,12 @@ export function GameHudOverlay() {
     },
     [setActionBarEditorRequest],
   );
+  const onOpenLootFilter = useCallback(() => {
+    // The carried list is only meaningful at the moment the window opens, so
+    // it is fetched here rather than pushed on every inventory change.
+    store.getState().runtime.clientRef.current?.requestLootFilterItems();
+    setLootFilterOpen(true);
+  }, [setLootFilterOpen, store]);
 
   if (!ownCharacter || !fightState) return null;
 
@@ -366,6 +378,7 @@ export function GameHudOverlay() {
       spells={spells}
       actionBar={actionBar}
       actionBotEnabled={actionBotEnabled}
+      lootFilterEnabled={lootFilterEnabled}
       inventory={inventory}
       hasWeapon={Boolean(inventory?.equipment.weapon)}
       combatLog={combatLog}
@@ -381,6 +394,7 @@ export function GameHudOverlay() {
       onActivateActionBar={onActivateActionBar}
       onActionBarChange={onActionBarChange}
       onConfigureActionBar={onConfigureActionBar}
+      onOpenLootFilter={onOpenLootFilter}
     />
   );
 }

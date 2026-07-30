@@ -77,6 +77,7 @@ import { LanguageHandler } from "./LanguageHandler";
 import { UiSettingsHandler } from "./UiSettingsHandler";
 import { ActionBarHandler } from "./ActionBarHandler";
 import { ActionBotHandler } from "./ActionBotHandler";
+import { LootFilterHandler } from "./LootFilterHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { ItemCatalog } from "./item/ItemCatalog";
@@ -222,6 +223,7 @@ export class GameServer {
   private readonly uiSettings: UiSettingsHandler;
   private readonly actionBar: ActionBarHandler;
   private readonly actionBot: ActionBotHandler;
+  private readonly lootFilter: LootFilterHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
   private readonly look: LookHandler;
@@ -693,6 +695,12 @@ export class GameServer {
       this.registry,
       this.world,
       this.spells,
+      this.items,
+      deps.characters,
+    );
+    this.lootFilter = new LootFilterHandler(
+      this.registry,
+      this.world,
       this.items,
       deps.characters,
     );
@@ -1296,6 +1304,7 @@ export class GameServer {
       this.uiSettings.applyResolvedOutcomes();
       this.actionBar.applyResolvedOutcomes();
       this.actionBot.applyResolvedOutcomes();
+      this.lootFilter.applyResolvedOutcomes();
       this.combat.applyResolvedOutcomes();
       for (const session of this.registry.awaitingAuth()) {
         this.auth.enforceDeadline(session, now);
@@ -1873,6 +1882,12 @@ export class GameServer {
         return;
       case "update-action-bot":
         this.actionBot.handle(session, intent);
+        return;
+      case "update-loot-filter":
+        this.lootFilter.handleUpdate(session, intent);
+        return;
+      case "loot-filter-items-get":
+        this.lootFilter.handleItemsGet(session, now);
         return;
     }
   }

@@ -2,6 +2,7 @@ import type { SetStateAction } from "react";
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  DEFAULT_LOOT_FILTER,
 } from "@tibia/protocol";
 import { createStore } from "zustand/vanilla";
 import { chatReducer, initialChatState } from "../../../lib/chat/chatReducer";
@@ -48,6 +49,10 @@ export function createGameWindowStore({
       current: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },
     },
     actionBotSaveTimerRef: { current: null },
+    lootFilterRef: {
+      current: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+    },
+    lootFilterSaveTimerRef: { current: null },
     marketOpenRef: { current: false },
     marketSelectedItemRef: { current: null },
     hadPartyRef: { current: false },
@@ -91,6 +96,9 @@ export function createGameWindowStore({
     uiSettings: {},
     actionBar: createDefaultActionBar(),
     actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },
+    lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+    lootFilterOpen: false,
+    lootFilterItems: { carried: [], ignored: [] },
     actionBarEditorRequest: null,
     marketSelectedItem: null,
     marketToast: null,
@@ -270,6 +278,15 @@ export function createGameWindowStore({
           state.actionBotSettings,
         ),
       })),
+    setLootFilter: (value) =>
+      set((state) => ({
+        lootFilter: resolveStateAction(value, state.lootFilter),
+      })),
+    setLootFilterOpen: (value) =>
+      set((state) => ({
+        lootFilterOpen: resolveStateAction(value, state.lootFilterOpen),
+      })),
+    setLootFilterItems: (value) => set({ lootFilterItems: value }),
     setActionBarEditorRequest: (value) =>
       set((state) => ({
         actionBarEditorRequest: resolveStateAction(
@@ -535,6 +552,14 @@ export function createGameWindowStore({
         clearTimeout(runtime.actionBotSaveTimerRef.current);
         runtime.actionBotSaveTimerRef.current = null;
       }
+      runtime.lootFilterRef.current = {
+        ...DEFAULT_LOOT_FILTER,
+        ignoredItemTypeIds: [],
+      };
+      if (runtime.lootFilterSaveTimerRef.current) {
+        clearTimeout(runtime.lootFilterSaveTimerRef.current);
+        runtime.lootFilterSaveTimerRef.current = null;
+      }
       runtime.pendingRuneRef.current = null;
       runtime.pendingPotionRef.current = null;
       runtime.pendingUseWithRef.current = null;
@@ -596,6 +621,9 @@ export function createGameWindowStore({
           ...DEFAULT_ACTION_BOT_SETTINGS,
           rules: [],
         },
+        lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+        lootFilterOpen: false,
+        lootFilterItems: { carried: [], ignored: [] },
         actionBarEditorRequest: null,
         combatLog: [],
         chatChannels: [],

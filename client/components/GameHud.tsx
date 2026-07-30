@@ -40,6 +40,7 @@ interface GameHudProps {
   spells: ReadonlyArray<SpellCatalogEntry>;
   actionBar: ActionBarState;
   actionBotEnabled: boolean;
+  lootFilterEnabled: boolean;
   inventory: InventoryState | null;
   hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
@@ -56,6 +57,7 @@ interface GameHudProps {
     slotIndex: number,
     section: ActionBarEditorRequest["section"],
   ) => void;
+  onOpenLootFilter: () => void;
   onChatChannelSelect?: (channelId: string) => void;
   onChatChannelClose?: (channelId: string) => void;
   onChatSenderSelect?: (sender: string) => void;
@@ -75,6 +77,7 @@ export function GameHud({
   spells,
   actionBar,
   actionBotEnabled,
+  lootFilterEnabled,
   inventory,
   hasWeapon,
   combatLog,
@@ -85,6 +88,7 @@ export function GameHud({
   onActivateActionBar,
   onActionBarChange,
   onConfigureActionBar,
+  onOpenLootFilter,
   onChatChannelSelect,
   onChatChannelClose,
   onChatSenderSelect,
@@ -379,22 +383,40 @@ export function GameHud({
             max={ownCharacter.maxHealth}
           />
           <div className="ui-action-cluster-shell pointer-events-auto relative z-0 min-w-0 max-w-[calc(100vw-16rem)] sm:max-w-[calc(100vw-16rem)]">
-            <button
-              type="button"
-              title={t("actionBot.configure")}
-              aria-label={t("actionBot.configure")}
-              onClick={() => onConfigureActionBar(0, "bot")}
-              className="ui-button ui-button-secondary absolute -top-7 left-1/2 z-10 flex h-7 -translate-x-1/2 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
-            >
-              <span
-                className={`size-2 rounded-full ${
-                  actionBotEnabled
-                    ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                    : "bg-ui-stone"
-                }`}
-              />
-              {t("actionBot.title").toLocaleUpperCase()}
-            </button>
+            <div className="absolute -top-7 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1">
+              <button
+                type="button"
+                title={t("actionBot.configure")}
+                aria-label={t("actionBot.configure")}
+                onClick={() => onConfigureActionBar(0, "bot")}
+                className="ui-button ui-button-secondary flex h-7 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
+              >
+                <span
+                  className={`size-2 rounded-full ${
+                    actionBotEnabled
+                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                      : "bg-ui-stone"
+                  }`}
+                />
+                {t("actionBot.title").toLocaleUpperCase()}
+              </button>
+              <button
+                type="button"
+                title={t("lootFilter.configure")}
+                aria-label={t("lootFilter.configure")}
+                onClick={onOpenLootFilter}
+                className="ui-button ui-button-secondary flex h-7 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
+              >
+                <span
+                  className={`size-2 rounded-full ${
+                    lootFilterEnabled
+                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                      : "bg-ui-stone"
+                  }`}
+                />
+                {t("lootFilter.title").toLocaleUpperCase()}
+              </button>
+            </div>
             <div className="ui-action-cluster w-max max-w-full overflow-x-auto p-2">
               <div className="flex w-max min-w-full items-end">
                 <ActionBar

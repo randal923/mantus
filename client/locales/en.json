@@ -1041,6 +1041,23 @@
     "searchActions": "Search spells and objects",
     "noMatchingActions": "No matching spell or object"
   },
+  "lootFilter": {
+    "title": "Loot Filter",
+    "configure": "Configure Loot Filter",
+    "enabled": "Auto loot enabled",
+    "enabledDescription": "Picks up everything you kill except the items on the ignore list.",
+    "carried": "Loot in your backpacks",
+    "carriedEmpty": "You are not carrying anything.",
+    "searchResults": "Search results",
+    "searchEmpty": "No creature drops match that name.",
+    "searchPlaceholder": "Search every creature drop…",
+    "ignored": "Active filter (do not pick up)",
+    "ignoredEmpty": "Drag items here to stop picking them up.",
+    "addItem": "Stop picking up {{name}}",
+    "removeItem": "Pick up {{name}} again",
+    "reset": "Reset filter",
+    "close": "Close"
+  },
   "contextMenu": {
     "look": "Look",
     "use": "Use",

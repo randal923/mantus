@@ -4,6 +4,7 @@ import type {
   ActionBar,
   ChatChannelId,
   ActionBotSettings,
+  LootFilter,
   CharacterCreationOptions,
   CreatureState,
   CombatAnalyzerState,
@@ -96,6 +97,9 @@ export interface GameWindowStoreActions {
   setActionBotSettings: (
     value: SetStateAction<ActionBotSettings>,
   ) => void;
+  setLootFilter: (value: SetStateAction<LootFilter>) => void;
+  setLootFilterOpen: (value: SetStateAction<boolean>) => void;
+  setLootFilterItems: (value: GameWindowState["lootFilterItems"]) => void;
   setActionBarEditorRequest: (
     value: SetStateAction<ActionBarEditorRequest | null>,
   ) => void;

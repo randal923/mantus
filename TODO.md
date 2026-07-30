@@ -606,6 +606,31 @@ limitations accepted during a session are recorded in the owning feature file
   pointing at a local Postgres before this reaches production, and treat a
   failure there as blocking. Owner: Feature 46.
 
+- **Auto-loot migration `066_character_loot_filter.sql` is unapplied** (added
+  2026-07-30). `characters.loot_filter` is read by `toCharacter` and written
+  by `PgCharacterStore.updateLootFilter`, but the migration has never run:
+  this environment has no Docker and no reachable Postgres. The SQL mirrors
+  `039_character_aim_at_target.sql` in shape and is reviewed but unexecuted,
+  so every loot-filter save will fail against a database that has not been
+  migrated (the handler rolls the session back and reports
+  `loot-filter-update-failed`, so it degrades rather than corrupts).
+  Recommended fix: run `yarn db:migrate` before this reaches any live server.
+  Owner: the auto-loot work recorded in `todo/done.md` (2026-07-30).
+- **Auto-loot needs the killer within one tile of the corpse** (accepted
+  2026-07-30). `ItemIntentHandler.autoLoot` reuses `isNear`, the same reach
+  rule a hand-made loot move obeys, so a ranged or run-away kill auto-loots
+  nothing. This is deliberate — the alternative is a reach exemption that
+  only auto-loot enjoys — but Canary's quick-loot is more forgiving, so
+  revisit if playtest finds it annoying. Recommended fix if changed: widen
+  the check inside `autoLoot` only, never in `planLoot`. Owner: same.
+- **Auto-loot has no per-category container routing** (accepted 2026-07-30).
+  Everything not blacklisted goes through `planBackpackPlacement`, which fills
+  the equipped backpack and every bag nested inside it depth-first — correct
+  and recursive, but it cannot send gold to one bag and gems to another.
+  `planLoot` already accepts an explicit `destination`, so routing is a matter
+  of extending `lootFilterSchema` with a category→container map and passing it
+  through. Owner: same.
+
 
 ## Repo-wide known breakage
 

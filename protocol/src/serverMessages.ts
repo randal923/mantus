@@ -20,6 +20,11 @@ import {
   ownCharacterStateSchema,
 } from "./character";
 import {
+  lootFilterItemsMessageSchema,
+  lootFilterSchema,
+  lootFilterUpdatedMessageSchema,
+} from "./lootFilter";
+import {
   channelClosedMessageSchema,
   channelListMessageSchema,
   channelMessageSchema,
@@ -275,6 +280,7 @@ export const welcomeMessageSchema = z.object({
   uiSettings: uiSettingsSchema,
   actionBar: actionBarSchema,
   actionBotSettings: actionBotSettingsSchema,
+  lootFilter: lootFilterSchema,
   aimAtTargetSpellIds: z
     .array(z.string().min(1).max(64))
     .max(AIM_AT_TARGET_SPELL_LIMIT),
@@ -485,6 +491,9 @@ export const serverErrorCodeSchema = z.enum([
   "action-bot-invalid",
   "action-bot-update-failed",
   "action-bot-update-pending",
+  "loot-filter-invalid",
+  "loot-filter-update-failed",
+  "loot-filter-update-pending",
   "already-authenticated",
   "already-joined",
   "auth-failed",
@@ -551,6 +560,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   uiSettingsUpdatedMessageSchema,
   actionBarUpdatedMessageSchema,
   actionBotUpdatedMessageSchema,
+  lootFilterUpdatedMessageSchema,
+  lootFilterItemsMessageSchema,
   actionBarActivationResultMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,

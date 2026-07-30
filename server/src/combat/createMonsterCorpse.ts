@@ -19,9 +19,9 @@ export function createMonsterCorpse(
   lootRate = 1,
   preyHooks?: PreyHooks,
   boostedHooks?: BoostedHooks,
-): void {
+): string | null {
   const corpseType = items.itemType(monster.type.corpseItemTypeId);
-  if (!corpseType || (corpseType.containerCapacity ?? 0) < 1) return;
+  if (!corpseType || (corpseType.containerCapacity ?? 0) < 1) return null;
   const capacity = corpseType.containerCapacity ?? 0;
   const roll = {
     resolve: (entry: Parameters<typeof resolveMonsterLootType>[0]) =>
@@ -80,7 +80,7 @@ export function createMonsterCorpse(
       .getMapItems(monster.position)
       .reduce((highest, item) => Math.max(highest, item.stackIndex), -1) + 1,
   );
-  items.createCorpse(
+  return items.createCorpse(
     killerId,
     deathEventId,
     monster.position,

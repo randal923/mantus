@@ -12,7 +12,7 @@ import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import { canMergeItems } from "./canMergeItems";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
-import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
+import { planBackpackPlacement } from "./planBackpackPlacement";
 import { materializeWorldSource } from "./materializeWorldSource";
 import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
 import { subtreeHeight } from "./subtreeHeight";
@@ -186,35 +186,15 @@ export function planPickup(input: {
       slot: input.destination.slot,
     };
   } else {
-    const backpack = carried.items.find(
-      (item) =>
-        item.location.kind === "equipment" && item.location.slot === "backpack",
-    );
-    if (
-      !backpack ||
-      (catalog.require(backpack.typeId).containerCapacity ?? 0) < 1
-    ) {
-      return null;
-    }
-    mergeTarget = type.stackable
-      ? carried.items
-          .filter(
-            (candidate) =>
-              candidate.location.kind === "container" &&
-              candidate.location.containerId === backpack.id,
-          )
-          .sort((left, right) => slotOf(left) - slotOf(right))
-          .find((candidate) =>
-            canMergeItems(catalog, root, candidate, root.count),
-          )
-      : undefined;
-    if (mergeTarget) {
-      finalLocation = mergeTarget.location;
-    } else {
-      const slot = firstFreeContainerSlot(catalog, carried.items, backpack);
-      if (slot === null) return null;
-      finalLocation = { kind: "container", containerId: backpack.id, slot };
-    }
+    const placement = planBackpackPlacement({
+      catalog,
+      carried: carried.items,
+      item: root,
+      subtree,
+    });
+    if (!placement) return null;
+    finalLocation = placement.location;
+    mergeTarget = placement.mergeTarget;
   }
 
   const final: Item = {
@@ -290,11 +270,4 @@ export function planPickup(input: {
     },
     persist: { characterId, rowOps, audits },
   };
-}
-
-function slotOf(item: Item): number {
-  return item.location.kind === "container" ||
-    item.location.kind === "corpse"
-    ? item.location.slot
-    : 0;
 }

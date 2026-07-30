@@ -3,6 +3,7 @@ import { GameCommerceOverlays } from "./GameCommerceOverlays";
 import { GameCommunityOverlays } from "./GameCommunityOverlays";
 import { GameForgeOverlays } from "./GameForgeOverlays";
 import { GameInventoryOverlays } from "./GameInventoryOverlays";
+import { GameLootFilterOverlay } from "./GameLootFilterOverlay";
 import { GameMapContextMenu } from "./GameMapContextMenu";
 import { GamePartyTradeOverlays } from "./GamePartyTradeOverlays";
 import { GamePreyOverlays } from "./GamePreyOverlays";
@@ -19,6 +20,7 @@ export function GameWorldOverlayParent() {
     <>
       <GameCommerceOverlays />
       <GameActionBarOverlays />
+      <GameLootFilterOverlay />
       <GameCommunityOverlays />
       <GameProgressionOverlays />
       <GamePreyOverlays />

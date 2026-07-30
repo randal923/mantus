@@ -1,6 +1,7 @@
 import type {
   ActionBar,
   ActionBotSettings,
+  LootFilter,
 } from "@tibia/protocol";
 import type {
   Character,
@@ -31,6 +32,7 @@ export interface CharacterStore {
     characterId: string,
     settings: ActionBotSettings,
   ): Promise<void>;
+  updateLootFilter(characterId: string, filter: LootFilter): Promise<void>;
   updateAimAtTargetSpells(
     characterId: string,
     spellIds: ReadonlyArray<string>,

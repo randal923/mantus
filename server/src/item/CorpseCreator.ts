@@ -22,6 +22,7 @@ export class CorpseCreator {
     private readonly decay?: DecayManager,
   ) {}
 
+  /** Returns the new corpse's id, or null when the corpse was rejected. */
   create(
     characterId: string | null,
     eventId: string,
@@ -30,19 +31,19 @@ export class CorpseCreator {
     corpseTypeId: number,
     loot: ReadonlyArray<LootItemCreation>,
     now: number,
-  ): void {
+  ): string | null {
     if (!/^[A-Za-z0-9:_-]{1,128}$/.test(eventId)) {
       console.warn(`corpse creation skipped: invalid event id ${eventId}`);
-      return;
+      return null;
     }
     if (!Number.isInteger(stackIndex) || stackIndex < 0 || stackIndex > 255) {
       console.warn(`corpse creation skipped for ${eventId}: bad stack index`);
-      return;
+      return null;
     }
     const corpseType = this.catalog.require(corpseTypeId);
     if ((corpseType.containerCapacity ?? 0) < loot.length) {
       console.warn(`corpse creation skipped for ${eventId}: loot overflow`);
-      return;
+      return null;
     }
     for (const entry of loot) {
       const type = this.catalog.require(entry.typeId);
@@ -52,7 +53,7 @@ export class CorpseCreator {
         entry.count > type.maxCount
       ) {
         console.warn(`corpse creation skipped for ${eventId}: bad loot count`);
-        return;
+        return null;
       }
     }
     const corpseId = randomUUID();
@@ -80,5 +81,6 @@ export class CorpseCreator {
     });
     this.visibility.onMapItemsChanged(positions);
     this.decay?.observeCreated(items, now);
+    return corpseId;
   }
 }

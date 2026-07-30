@@ -5,6 +5,7 @@ import type {
   CharacterSex,
   CharacterVocation,
   Direction,
+  LootFilter,
   StarterVocation,
 } from "@tibia/protocol";
 import type { CharacterSkill } from "../progression/CharacterSkill";
@@ -51,6 +52,8 @@ export interface Character {
   readonly townId: number;
   readonly actionBar: ActionBar;
   readonly actionBotSettings: ActionBotSettings;
+  /** Auto-loot blacklist plus its on/off switch. */
+  readonly lootFilter: LootFilter;
   /** Spell ids whose direction cast aims at the live attack target. */
   readonly aimAtTargetSpellIds: ReadonlyArray<string>;
   readonly skull: SkullState;

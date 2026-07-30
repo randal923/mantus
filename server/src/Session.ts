@@ -4,6 +4,7 @@ import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
   DEFAULT_FIGHT_MODE,
+  DEFAULT_LOOT_FILTER,
   PROTOCOL_LIMITS,
   type ClientMessage,
   type ActivateActionBarMessage,
@@ -12,6 +13,7 @@ import {
   type ActionBotSettings,
   type Direction,
   type FightMode,
+  type LootFilter,
   type Position,
   type ServerErrorCode,
   type ServerMessage,
@@ -38,6 +40,9 @@ export class Session {
   uiSettingsUpdatePending = false;
   actionBarUpdatePending = false;
   actionBotUpdatePending = false;
+  lootFilterUpdatePending = false;
+  /** Ready-time for the next loot-filter item listing; throttles the window. */
+  lootFilterItemsReadyAt = 0;
   itemOperationPending = false;
   /**
    * Ready-time for the next generic item/object use. Canary applies a 200 ms
@@ -101,6 +106,14 @@ export class Session {
   actionBotSettings: ActionBotSettings = {
     ...DEFAULT_ACTION_BOT_SETTINGS,
     rules: [],
+  };
+  /**
+   * Auto-loot blacklist. Held per session so the tick can consult it without
+   * a DB read; the durable copy is written behind the same trailing persist.
+   */
+  lootFilter: LootFilter = {
+    ...DEFAULT_LOOT_FILTER,
+    ignoredItemTypeIds: [],
   };
   isAlive = true;
   readonly knownCreatureIds = new Set<string>();

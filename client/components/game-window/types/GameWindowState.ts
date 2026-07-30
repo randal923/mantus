@@ -3,6 +3,8 @@ import type {
   ActionBar,
   ChatChannelId,
   ActionBotSettings,
+  LootFilter,
+  LootFilterItem,
   CharacterCreationOptions,
   CharacterSummary,
   CreatureState,
@@ -90,6 +92,13 @@ export interface GameWindowState {
   uiSettings: UiSettings;
   actionBar: ActionBar;
   actionBotSettings: ActionBotSettings;
+  lootFilter: LootFilter;
+  lootFilterOpen: boolean;
+  /** What the loot-filter window draws; refreshed when the window opens. */
+  lootFilterItems: {
+    readonly carried: ReadonlyArray<LootFilterItem>;
+    readonly ignored: ReadonlyArray<LootFilterItem>;
+  };
   actionBarEditorRequest: ActionBarEditorRequest | null;
   marketSelectedItem: string | null;
   marketToast: "created" | "accepted" | "cancelled" | null;

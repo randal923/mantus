@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { ServerMessage } from "@tibia/protocol";
+import { DEFAULT_LOOT_FILTER, type ServerMessage } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import { CombatFeedback } from "../combat/CombatFeedback";
 import { CombatFormula } from "../combat/CombatFormula";
@@ -120,6 +120,7 @@ function makeHarness(experienceRate = 1): Harness {
       knownCreatureIds: new Set([id]),
       knownMapItemTiles: new Map(),
       attackTargetId: null,
+      lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
       send: (message: ServerMessage) => sent.push(message),
       sendError: () => {},
     } as unknown as Session);

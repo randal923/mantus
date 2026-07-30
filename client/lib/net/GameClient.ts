@@ -40,6 +40,7 @@ import {
   type ServerMessage,
   type ActionBar,
   type ActionBotSettings,
+  type LootFilter,
   type UiSettings,
   type ViewRange,
 } from "@tibia/protocol";
@@ -1072,6 +1073,14 @@ export class GameClient {
 
   updateActionBot(settings: ActionBotSettings): boolean {
     return this.send({ type: "update-action-bot", settings });
+  }
+
+  updateLootFilter(filter: LootFilter): boolean {
+    return this.send({ type: "update-loot-filter", filter });
+  }
+
+  requestLootFilterItems(): boolean {
+    return this.send({ type: "loot-filter-items-get" });
   }
 
   disconnect(): void {

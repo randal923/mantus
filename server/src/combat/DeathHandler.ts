@@ -126,7 +126,7 @@ export class DeathHandler {
         // death event so a crash replay cannot grant twice (Feature 84).
         this.rewardHooks?.onRewardBossDeath(target, deathEventId, now);
       }
-      createMonsterCorpse(
+      const corpseId = createMonsterCorpse(
         this.world,
         this.items,
         this.formula,
@@ -138,6 +138,14 @@ export class DeathHandler {
         this.preyHooks,
         this.boostedHooks,
       );
+      // Auto-loot sweeps the corpse for the killer in this same tick, before
+      // any other intent can touch it. Reach, ownership and the blacklist are
+      // all re-checked inside; a killer who is offline, dead or out of range
+      // simply gets nothing.
+      const killerSession = killerId ? this.registry.sessionFor(killerId) : null;
+      if (corpseId && killerId && killerSession) {
+        this.items.autoLoot(killerSession, killerId, corpseId, now);
+      }
       if (!this.onMonsterDeath(target, now)) {
         this.world.removeCreature(target.id);
         this.visibility.announceCreatureLeave(target);

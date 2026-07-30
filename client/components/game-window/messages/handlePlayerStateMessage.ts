@@ -52,6 +52,21 @@ export function handlePlayerStateMessage(
     return true;
   }
 
+  if (message.type === "loot-filter-updated") {
+    if (runtime.lootFilterSaveTimerRef.current) return true;
+    state.setLootFilter(message.filter);
+    runtime.lootFilterRef.current = message.filter;
+    return true;
+  }
+
+  if (message.type === "loot-filter-items") {
+    state.setLootFilterItems({
+      carried: message.carried,
+      ignored: message.ignored,
+    });
+    return true;
+  }
+
   if (message.type === "inventory-updated") {
     actions.inventory.confirm(message.inventory, message.nonce);
     state.setShopSession((current) =>

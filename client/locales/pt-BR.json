@@ -1041,6 +1041,23 @@
     "searchActions": "Buscar magias e objetos",
     "noMatchingActions": "Nenhuma magia ou objeto encontrado"
   },
+  "lootFilter": {
+    "title": "Filtro de Loot",
+    "configure": "Configurar Filtro de Loot",
+    "enabled": "Auto loot ativado",
+    "enabledDescription": "Pega tudo o que você matar, exceto os itens da lista de ignorados.",
+    "carried": "Loot nas suas mochilas",
+    "carriedEmpty": "Você não está carregando nada.",
+    "searchResults": "Resultados da busca",
+    "searchEmpty": "Nenhum drop de criatura corresponde a esse nome.",
+    "searchPlaceholder": "Buscar em todos os drops de criaturas…",
+    "ignored": "Filtro ativo (não pegar)",
+    "ignoredEmpty": "Arraste itens para cá para parar de pegá-los.",
+    "addItem": "Parar de pegar {{name}}",
+    "removeItem": "Voltar a pegar {{name}}",
+    "reset": "Resetar filtro",
+    "close": "Fechar"
+  },
   "contextMenu": {
     "look": "Olhar",
     "use": "Usar",

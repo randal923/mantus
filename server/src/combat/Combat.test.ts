@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  DEFAULT_LOOT_FILTER,
   EMPTY_WHEEL_BONUSES,
   type ActionBar,
   type ActionBarAction,
@@ -265,6 +266,7 @@ function makeBystander(
     followTargetId: null,
     aimAtTargetSpellIds: new Set<string>(),
     combatCooldowns: new Map(),
+    lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
     send: (message: ServerMessage) => sent.push(message),
     sendSerialized: (message: string) =>
       sent.push(JSON.parse(message) as ServerMessage),
@@ -310,6 +312,7 @@ async function makeHarness(options: {
     combatCooldowns: new Map(),
     followTargetId: null,
     aimAtTargetSpellIds: new Set<string>(),
+    lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
     nextCombatAnalyzerAt: 0,
     itemOperationPending: false,
     potionPersistPending: false,

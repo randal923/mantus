@@ -1,11 +1,13 @@
-import type { Item } from "../../item/Item";
-import type { ItemCatalog } from "../../item/ItemCatalog";
+import type { Item } from "../Item";
+import type { ItemCatalog } from "../ItemCatalog";
 
 const MAX_CONTAINER_DEPTH = 8;
 
 export interface BackpackContainerView {
   readonly containerId: string;
   readonly capacity: number;
+  /** 0 for the equipped backpack, 1 for a bag inside it, and so on. */
+  readonly depth: number;
   /** Slots already taken; grants add to this as they claim destinations. */
   readonly occupiedSlots: Set<number>;
 }
@@ -43,6 +45,7 @@ export function backpackContainers(
     containers.push({
       containerId: container.id,
       capacity,
+      depth,
       occupiedSlots: new Set(children.map(slotOf)),
     });
     for (const child of children) collect(child, depth + 1);

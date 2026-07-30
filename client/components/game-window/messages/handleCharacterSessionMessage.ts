@@ -154,6 +154,10 @@ export function handleCharacterSessionMessage(
   runtime.actionBarRef.current = message.actionBar;
   state.setActionBotSettings(message.actionBotSettings);
   runtime.actionBotSettingsRef.current = message.actionBotSettings;
+  state.setLootFilter(message.lootFilter);
+  runtime.lootFilterRef.current = message.lootFilter;
+  state.setLootFilterOpen(false);
+  state.setLootFilterItems({ carried: [], ignored: [] });
   state.setActionBarEditorRequest(null);
   state.setCharacterBusy(false);
   state.setServerError(null);

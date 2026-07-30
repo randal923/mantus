@@ -17,6 +17,10 @@ export class InMemoryCharacterStore implements CharacterStore {
     this.characters.set(character.id, character);
   }
 
+  get(characterId: string): Character | undefined {
+    return this.characters.get(characterId);
+  }
+
   positionFor(characterId: string): { x: number; y: number; z: number } | null {
     const character = this.characters.get(characterId);
     if (!character) return null;
@@ -107,6 +111,15 @@ export class InMemoryCharacterStore implements CharacterStore {
       actionBotSettings,
       updatedAt: new Date(),
     });
+  }
+
+  async updateLootFilter(
+    characterId: string,
+    lootFilter: Character["lootFilter"],
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, { ...character, lootFilter });
   }
 
   async updateAimAtTargetSpells(

@@ -16,6 +16,7 @@ import { monotonicNow } from "../monotonicNow";
 import { CorpseCreator } from "./CorpseCreator";
 import type { DecayManager } from "./DecayManager";
 import { InventoryCacheManager } from "./InventoryCacheManager";
+import { isNear } from "./isNear";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemIntent } from "./ItemIntent";
@@ -914,6 +915,66 @@ export class ItemIntentHandler {
     if (taken === 0) session.sendError("item-action-failed");
   }
 
+  /**
+   * Sweeps a freshly created corpse into the killer's backpack, honouring the
+   * character's auto-loot blacklist. Nothing here comes from the client: the
+   * corpse, its contents, the reach check and the ownership check are all read
+   * from live world state inside the tick, and each take is the same
+   * `planLoot` + apply + persist as a hand-made loot move. Failures are
+   * silent — the sweep is automatic, so a full backpack is not an error the
+   * player asked about.
+   */
+  autoLoot(
+    session: Session,
+    playerId: string,
+    corpseId: string,
+    now: number,
+  ): void {
+    const filter = session.lootFilter;
+    if (!filter.enabled) return;
+    const player = this.world.getPlayer(playerId);
+    const corpse = this.world.getWorldItem(corpseId);
+    if (!player || !corpse || corpse.location.kind !== "world") return;
+    if (!isNear(player.position, corpse.location.position)) return;
+    const owner = corpse.attributes.ownerCharacterId;
+    if (typeof owner === "string" && owner !== playerId) return;
+    const ignored = new Set(filter.ignoredItemTypeIds);
+    const eligible = this.world
+      .getWorldSubtree(corpseId)
+      .filter(
+        (item) =>
+          item.location.kind === "corpse" &&
+          item.location.containerId === corpseId &&
+          !ignored.has(item.typeId) &&
+          quickLootCategory(this.catalog.require(item.typeId)) !== "none",
+      );
+    for (const item of eligible) {
+      const cache = this.inventories.get(playerId);
+      if (!cache) break;
+      const plan = planLoot({
+        characterId: playerId,
+        catalog: this.catalog,
+        carried: { items: cache.items, capacityMax: cache.capacityMax },
+        world: this.world,
+        containerId: corpseId,
+        itemId: item.id,
+        expectedVersion: item.version,
+      });
+      if (!plan) continue;
+      const inventory = this.operations.applyMutation(
+        playerId,
+        plan.mutation,
+        now,
+      );
+      if (inventory && session.playerId === playerId) {
+        session.send({ type: "inventory-updated", inventory });
+      }
+      const persist = plan.persist;
+      this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+      this.analyzerHooks?.onLooted(playerId, item.typeId, item.count);
+    }
+  }
+
   /** Creates the corpse in memory synchronously; rows appear on first touch. */
   createCorpse(
     characterId: string | null,
@@ -923,8 +984,8 @@ export class ItemIntentHandler {
     corpseTypeId: number,
     loot: ReadonlyArray<LootItemCreation>,
     now: number,
-  ): void {
-    this.corpses.create(
+  ): string | null {
+    return this.corpses.create(
       characterId,
       eventId,
       position,

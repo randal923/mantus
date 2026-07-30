@@ -2,6 +2,7 @@ import { Pool } from "pg";
 import {
   type ActionBar,
   type ActionBotSettings,
+  type LootFilter,
 } from "@tibia/protocol";
 import { CharacterError } from "./CharacterError";
 import type {
@@ -216,6 +217,21 @@ export class PgCharacterStore implements CharacterStore {
     );
     if (result.rowCount !== 1) {
       throw new Error("character action bot update failed");
+    }
+  }
+
+  async updateLootFilter(
+    characterId: string,
+    filter: LootFilter,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET loot_filter = $2::jsonb
+       WHERE id = $1`,
+      [characterId, JSON.stringify(filter)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("character loot filter update failed");
     }
   }
 

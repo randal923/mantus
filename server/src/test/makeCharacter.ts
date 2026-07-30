@@ -1,6 +1,7 @@
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  DEFAULT_LOOT_FILTER,
   MAX_STAMINA_MINUTES,
 } from "@tibia/protocol";
 import type { Character } from "../character/Character";
@@ -51,6 +52,7 @@ export function makeCharacter(id: string, displayName = id): Character {
     townId: 1,
     actionBar: createDefaultActionBar(),
     actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS },
+    lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
     aimAtTargetSpellIds: [],
     skull: "none",
     skullExpiresAt: null,

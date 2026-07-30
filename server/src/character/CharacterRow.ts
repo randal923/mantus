@@ -31,6 +31,7 @@ export interface CharacterRow {
   town_id: number;
   action_bar: unknown;
   potion_action_bar: unknown;
+  loot_filter: unknown;
   aim_at_target_spells: unknown;
   skull: number;
   skull_expires_at: Date | null;
