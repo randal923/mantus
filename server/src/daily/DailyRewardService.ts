@@ -24,6 +24,7 @@ import type {
   DailyRewardStore,
 } from "./DailyRewardStore";
 import { dailyRewardPoolFor, TRAINING_ITEM_POOL } from "./dailyRewardPools";
+import { localDayEndMs } from "./localDayEndMs";
 
 /**
  * Daily rewards (Feature 84, Canary daily_reward.lua). The shrine use
@@ -38,6 +39,7 @@ export class DailyRewardService {
   private readonly recordsByCharacter = new Map<string, DailyRewardSnapshot>();
   private readonly accessBySession = new WeakMap<Session, Position>();
   private readonly lastClaimBySession = new WeakMap<Session, number>();
+  private readonly lastHistoryBySession = new WeakMap<Session, number>();
   private readonly claimsInFlight = new Set<string>();
 
   constructor(
@@ -116,12 +118,16 @@ export class DailyRewardService {
 
   /**
    * The single writer for a character's streak record. It also mirrors the XP
-   * boost deadline onto the live player, so the character panel's rate
-   * breakdown and the kill-experience path can never disagree.
+   * boost deadline and the streak level onto the live player, so the character
+   * panel's rate breakdown, the kill-experience path and the resting-area
+   * bonuses in the progression tick can never disagree with this record.
    */
   private setRecord(characterId: string, record: DailyRewardSnapshot): void {
     this.recordsByCharacter.set(characterId, record);
-    this.world.getPlayer(characterId)?.setXpBoostUntilMs(record.xpBoostUntilMs);
+    const player = this.world.getPlayer(characterId);
+    if (!player) return;
+    player.setXpBoostUntilMs(record.xpBoostUntilMs);
+    player.setDailyStreakLevel(record.streakLevel);
   }
 
   /** Day-7 boost for the kill-experience path; zero once expired. */
@@ -206,6 +212,8 @@ export class DailyRewardService {
         characterId: playerId,
         todayKey,
         expectedRewardDay: claim.rewardDay,
+        kind: entry.kind,
+        allowance,
         items,
         wildcards,
         xpBoostMinutes,
@@ -267,6 +275,63 @@ export class DailyRewardService {
     this.items.trackExternalOperation(playerId, resolution);
   }
 
+  /**
+   * Projects this character's own last claims (charter rule 6). Requires the
+   * session to have opened a shrine — the History button only exists inside
+   * that window — and is rate-limited, but needs no reach check: a player
+   * reading their own history from across the room reveals nothing.
+   */
+  handleHistoryGet(session: Session, now: number): void {
+    const playerId = session.playerId;
+    const store = this.store;
+    if (!playerId || !store || !this.accessBySession.has(session)) {
+      this.fail(session, "invalid-request");
+      return;
+    }
+    const last = this.lastHistoryBySession.get(session) ?? 0;
+    if (now - last < DAILY_REWARD_RULES.historyCooldownMs) {
+      this.fail(session, "rate-limited");
+      return;
+    }
+    this.lastHistoryBySession.set(session, now);
+    this.track(
+      store.history(playerId, DAILY_REWARD_RULES.historyLimit).then(
+        (records) => {
+          this.outcomes.push(() => {
+            if (session.playerId !== playerId) return;
+            session.send({
+              type: "daily-reward-history",
+              entries: records.map((record) => ({
+                claimedAtMs: record.claimedAtMs,
+                rewardDay: record.rewardDay,
+                kind: record.kind,
+                allowance: record.allowance,
+                items: record.items.flatMap((item) => {
+                  const type = this.catalog.get(item.typeId);
+                  if (!type) return [];
+                  return [
+                    {
+                      itemTypeId: item.typeId,
+                      name: type.name,
+                      count: item.count,
+                    },
+                  ];
+                }),
+              })),
+            });
+          });
+        },
+        (cause: unknown) => {
+          this.warn(playerId, cause);
+          this.outcomes.push(() => {
+            if (session.playerId !== playerId) return;
+            this.fail(session, "invalid-request");
+          });
+        },
+      ),
+    );
+  }
+
   private sendState(session: Session, player: Player, now: number): void {
     const record =
       this.recordsByCharacter.get(player.id) ?? {
@@ -282,8 +347,8 @@ export class DailyRewardService {
     const rewardDay = assessment.settled.streakPosition + 1;
     const entry = DAILY_REWARD_TABLE[rewardDay - 1];
     if (!entry) return;
-    const allowance =
-      player.accountTierAt(now) === "premium" ? entry.premium : entry.free;
+    const accountTier = player.accountTierAt(now);
+    const allowance = accountTier === "premium" ? entry.premium : entry.free;
     session.send({
       type: "daily-rewards-state",
       streakPosition: assessment.settled.streakPosition,
@@ -292,6 +357,8 @@ export class DailyRewardService {
       claimableToday: assessment.claimable,
       missedDays: assessment.missedDays,
       xpBoostUntilMs: record.xpBoostUntilMs,
+      dayEndsAtMs: localDayEndMs(now),
+      accountTier,
       pool: this.poolFor(player, entry.kind),
       allowance,
     });

@@ -1911,3 +1911,101 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   (~60 ms), making login ~1.7 s until the two are co-located. Both recorded in
   `TODO.md` accepted gaps; collapsing the login read set into one statement is
   recorded on Feature 106 in `todo/todo-12.md`.
+
+## 2026-07-30 reward wall reachable + real window, resting-area bonuses, claim history
+
+- **Feature 84 — Reward wall (server+client)** (2026-07-30): the daily-reward
+  engine shipped 2026-07-26 but was **unreachable in the running game**. The
+  otservbr map places 37 reward shrines, one per city temple (Thais at
+  `32376,32239,z7`, four tiles from the town spawn), and all of them are the
+  wall-mounted 25802/25803: immovable, unpickupable, untyped scenery. So
+  `getMapItemSemantics` classified them neither mutable nor interactive,
+  `convertOtbm` baked them into the client's static draw layer, `items.bin`
+  carried **zero** shrines, `world.getMapItems` returned nothing on those
+  tiles, and `resolveWorldAction` never reached its `DAILY_SHRINE_ITEM_IDS`
+  branch — right-click → Use fell through to the movement-correction path and
+  the whole claim/window path was dead code. Fixed by adding 25802/25803 plus
+  the floor shrines 25720-25723 to `MUTABLE_ITEM_IDS` in
+  `tools/getMapItemSemantics.mjs` (the list that already exists for levers and
+  shovel holes, for exactly this reason — `loadMapItems` only surfaces
+  classification 1, so "interactive" would not have been enough), then
+  re-running `convertOtbm` + `buildMinimapTiles`: `items.bin` 96,646 → 96,683
+  entries with all 37 shrines at classification 1, diff limited to the 33
+  regions that held one (`map.bin` walkability byte-identical).
+- **Resting-area bonuses now apply** instead of being display-only. The streak
+  level is mirrored onto the live `Player` by `DailyRewardService.setRecord`
+  (the same single-writer path the XP-boost deadline already used) and read by
+  `CharacterProgression.tick`: inside a protection zone health needs streak 2
+  and doubles at 5, mana needs 3 and doubles at 6, soul rests at 7 — bypassing
+  both the usual PZ block and the recent-kill arming, since Canary's RegenSoul
+  event ticks purely on standing there — and a new
+  `regenerateRestingStamina` (staminaRules) refills one stamina-minute every
+  3 real minutes at streak 4, every 6 inside the green band. Leaving the zone
+  parks the stamina clock rather than banking the time.
+- **Claim history**: migration `065_daily_reward_history.sql` adds
+  `character_daily_reward_history`, written **inside the claim transaction**
+  next to the `daily-reward-claim` audit row, so an entry cannot exist for a
+  claim that rolled back. Rows store the claim's parts (day, kind, allowance,
+  picked items as jsonb) rather than Canary's prebuilt sentence, so the window
+  renders each entry in the player's own language; the read is owner-scoped and
+  capped at 15 (Canary daily_reward.lua:220).
+- **Protocol**: `dailyRewardsStateMessageSchema` gains `dayEndsAtMs` (the
+  server-local day boundary — the client cannot derive it, its time zone need
+  not match) and `accountTier`; new `daily-history-get` /
+  `daily-reward-history` pair with a 1/s per-session rate limit and a 15-entry
+  cap. `DAILY_REWARD_RULES` gains `historyCooldownMs`/`historyLimit`, and its
+  `streakBonuses` comment no longer says "(display)".
+- **Client**: the placeholder 190-line list is now the real Reward Wall —
+  `RestingAreaPanel` (streak ribbon by tier, claim countdown, joker tokens,
+  the six resting shields lit by threshold **and** premium, the late-claim
+  warning), `DailyRewardCycle` + `DailyRewardDay` (68px type icons, green
+  check / red padlock plates, arrows that green out behind the collected run),
+  `RewardWallPremiumPanel`, `DailyRewardPickPanel`, `DailyRewardHistoryPanel`,
+  with `getDailyRewardDayState` / `getRewardStreakTier` /
+  `formatRewardCountdown` / `getDailyRewardKindIcon` as pure helpers. Art comes
+  from OTClient's `game_rewardwall` module via a new
+  `tools/importOtclientRewardWallAssets.mjs` (`yarn rewardwall:assets`) into
+  `client/public/assets/reward-wall/` — 19 images, including the 384x64
+  resting-shield strip sliced into six cells and `rewardButton.png` split into
+  its locked/collected plates. Locales en+pt-BR (14 keys added, 3 obsolete
+  removed), 6 stories.
+- **Files**: `tools/{getMapItemSemantics,getMapItemSemantics.test,
+  importOtclientRewardWallAssets}.mjs`, `package.json`,
+  `protocol/src/{dailyRewards,clientMessages,serverMessages}.ts`,
+  `server/db/migrations/065_daily_reward_history.sql`,
+  `server/src/daily/{DailyRewardService,DailyRewardStore,PgDailyRewardStore,
+  localDayEndMs}.ts`, `server/src/daily/sql/{insertDailyHistoryQuery,
+  readDailyHistoryQuery}.ts`,
+  `server/src/progression/{CharacterProgression,staminaRules}.ts`,
+  `server/src/{Player,GameServer}.ts`, `client/components/daily/*` (7 files),
+  `client/lib/daily/*` (4 helpers + 3 tests), `client/locales/{en,pt-BR}.json`,
+  `client/stories/DailyRewardsModal.stories.tsx`, plus the regenerated map
+  data (`server/data/otservbr.{items.bin,map.json}`, 33 client region JSONs and
+  their minimap tiles, `manifest.json`).
+- **Verified**: full workspace typecheck 0 errors; client lint 0 errors (the
+  15 remaining warnings are pre-existing); server suite 1,382 passed / 268
+  skipped including 3 new resting-area cases (PZ regen blocked at streak 0 and
+  unaffected outside the zone, unlocked at 3, doubled at 6; double health at 5
+  and rested soul at 7 but not 6; rested stamina only while the bonus runs, and
+  not at streak 3) and 4 new world-action cases (the wall opens from an
+  adjacent tile without consuming itself, the shrine window outranks the floor
+  shrine's rotate behaviour, a scripted placement fails closed, out-of-reach is
+  refused); client unit suite 317 passed including the 3 new daily helpers;
+  `yarn test:tools` 90 passed and `yarn parity:check` clean; all 6
+  `DailyRewardsModal` stories render in headless chromium — which caught a real
+  nested-`<li>` in the day cell, now fixed. The window was screenshot-verified
+  against the reference client: streak ribbon, countdown, six shields, the
+  collected/current/locked run with green arrows, premium panel and footer all
+  match.
+- **Residual risk**: the **history integration tests are unrun**. This
+  environment has no Docker and the configured `DATABASE_URL` is a hosted
+  Supabase pooler, not a local Postgres, so `test:integration` was not run
+  against it. The three new cases (history rides the winning claim only, is
+  newest-first/capped/owner-scoped, and absent after a rollback) are written
+  and will run wherever a local Postgres exists; the two new SQL statements
+  were validated directly against the live schema inside a rolled-back
+  transaction (exact `claimed_at_ms` and jsonb round-trip, nothing persisted).
+  Migration 065 **has been applied** to the configured database. Blocking base
+  PZ regeneration below streak 2 is Canary's rule (condition.cpp:1490) and is a
+  live behaviour change for characters with no streak — recorded in `TODO.md`
+  with the additive-only alternative.

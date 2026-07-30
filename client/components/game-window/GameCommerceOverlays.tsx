@@ -48,6 +48,7 @@ export function GameCommerceOverlays() {
   const setRewardChest = useGameWindowStore((state) => state.setRewardChest);
   const dailyRewards = useGameWindowStore((state) => state.dailyRewards);
   const dailyError = useGameWindowStore((state) => state.dailyError);
+  const dailyHistory = useGameWindowStore((state) => state.dailyHistory);
   const setDailyRewards = useGameWindowStore((state) => state.setDailyRewards);
   const marketSelectedItem = useGameWindowStore(
     (state) => state.marketSelectedItem,
@@ -417,8 +418,12 @@ export function GameCommerceOverlays() {
                 })
               : null
           }
+          history={dailyHistory}
           onClaim={(picks) => {
             runtime.clientRef.current?.claimDailyReward(picks);
+          }}
+          onRequestHistory={() => {
+            runtime.clientRef.current?.requestDailyHistory();
           }}
           onClose={() => setDailyRewards(null)}
         />

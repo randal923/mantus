@@ -67,6 +67,32 @@ limitations accepted during a session are recorded in the owning feature file
   day-6 training weapons grant without Canary's 50-charge stamp (charges
   are not modeled on these items yet). Panel (non-shrine) claiming needs
   Feature 43's collection tokens.
+- **Protection-zone regeneration now needs a reward streak** (2026-07-30,
+  Feature 84): `CharacterProgression.tick` transcribes Canary
+  condition.cpp:1490-1535, which *blocks* base health regeneration inside a
+  protection zone below streak level 2 (mana below 3) rather than only adding
+  the doubling at 5/6. This is a live behaviour change: a character who never
+  touches a reward wall stops regenerating in temples and depots, and two
+  claims are the minimum to unlock it. Kept for parity; the additive-only
+  variant — keep base PZ regeneration and apply only the doubling — is a
+  one-line change to `restingHealthBlocked`/`restingManaBlocked` if the nerf
+  is unwanted.
+- **Daily-reward history integration tests are unrun** (2026-07-30, Feature
+  84): the three new cases in `PgDailyRewardStore.integration.test.ts` (the
+  history row rides the winning claim only, is newest-first/capped/
+  owner-scoped, and is absent after a rollback) have never executed — this
+  environment has no Docker and `DATABASE_URL` points at a hosted Supabase
+  pooler rather than a local Postgres. Both new SQL statements were validated
+  against the live schema inside a rolled-back transaction, and migration 065
+  is applied. Run `yarn test:integration` wherever a local Postgres exists.
+- **Five Storybook story files fail, unrelated to daily rewards** (observed
+  2026-07-30, pre-existing): `SpellListModal` cannot find the "Wound
+  Cleansing" spell, `ProficiencyModal` cannot find its "Unlocks at ... XP"
+  row, `ActionBar` never fires `onConfigure` on an empty-slot click, and
+  `GameHud` fails a chat focus and a dock-class assertion; `LandingPage` fails
+  only inside the full parallel run and passes alone. None touch the reward
+  wall (its 6 stories pass). Owner unassigned — likely fallout from the spell
+  and item-icon commits that precede this work.
 - **Podium display rendering** (2026-07-26, Feature 86 → 87): the tile
   overlay bakes a static south-facing outfit frame — stored direction,
   mounts, lookTypeEx monsters, and the platform-hide flag are not

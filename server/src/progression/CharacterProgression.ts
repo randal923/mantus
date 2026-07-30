@@ -1,4 +1,5 @@
 import {
+  DAILY_REWARD_RULES,
   MAX_CHARACTER_LEVEL,
   MAX_MAGIC_LEVEL,
   MAX_PROGRESSION_VALUE,
@@ -14,6 +15,7 @@ import {
   decayHuntStamina,
   getStaminaExperienceMultiplier,
   regenerateOfflineStamina,
+  regenerateRestingStamina,
 } from "./staminaRules";
 import type { CharacterSkill } from "./CharacterSkill";
 import {
@@ -36,6 +38,11 @@ const MAX_AWARD_AMOUNT = 1_000_000_000;
  * that bounds `sessionEvents`/`processedEventIds` growth over a long session.
  */
 export const RETAINED_MEMORY_EVENTS = 256;
+/**
+ * A player who steps into a protection zone waits a full interval before the
+ * first rested stamina-minute, so hopping in and out cannot farm it.
+ */
+const RESTING_STAMINA_FIRST_INTERVAL_MS = 180_000;
 const MAX_SCHEDULES = 4;
 const MIN_TRAINING_INTERVAL_MS = 250;
 const MAX_SCHEDULE_TICKS_PER_SERVER_TICK = 5;
@@ -81,6 +88,8 @@ export class CharacterProgression {
   private currentStamina: number;
   /** Seeded at 0 so the first hunt after login costs two stamina (Canary). */
   private nextStaminaDecayAt = 0;
+  /** Zero while the resting-stamina bonus is not running; see tickRestingStamina. */
+  private nextRestingStaminaAt = 0;
   /** Soul regenerates only while `now` is before this armed-by-kill deadline. */
   private soulEligibleUntil = 0;
   private readonly skillStates = new Map<Skill, CharacterSkill>();
@@ -643,29 +652,55 @@ export class CharacterProgression {
     soulRegenerationBlocked = false,
     inProtectionZone = false,
     accountTier = this.accountTier,
+    dailyStreakLevel = 0,
   ): ProgressionTick {
     const regenerationChanged = this.syncRegeneration(accountTier, now);
+    const bonuses = DAILY_REWARD_RULES.streakBonuses;
+    // Resting-area bonuses (Canary condition.cpp:1490-1535): inside a
+    // protection zone health and mana only regenerate once the daily-reward
+    // streak unlocks them, and double once it reaches the higher thresholds.
+    // Outside a protection zone nothing here applies.
+    const restingHealthBlocked =
+      inProtectionZone && dailyStreakLevel < bonuses.hpRegeneration;
+    const restingManaBlocked =
+      inProtectionZone && dailyStreakLevel < bonuses.mpRegeneration;
+    const healthBlocked = healthManaRegenerationBlocked || restingHealthBlocked;
+    const manaBlocked = healthManaRegenerationBlocked || restingManaBlocked;
+    const healthMultiplier =
+      inProtectionZone && dailyStreakLevel >= bonuses.doubleHpRegeneration
+        ? 2
+        : 1;
+    const manaMultiplier =
+      inProtectionZone && dailyStreakLevel >= bonuses.doubleMpRegeneration
+        ? 2
+        : 1;
+    // The streak-7 bonus is Canary's own RegenSoul event, which ticks purely
+    // on standing in a protection zone — so it bypasses both the usual PZ
+    // block and the recent-kill arming that gates soul everywhere else.
+    const restingSoul =
+      inProtectionZone && dailyStreakLevel >= bonuses.soulRegeneration;
     // Soul only regenerates while a recent qualifying kill keeps it armed and
     // the player is outside a protection zone (Canary CONDITION_SOUL rules).
     const soulBlocked =
       soulRegenerationBlocked ||
-      inProtectionZone ||
-      now >= this.soulEligibleUntil;
-    if (healthManaRegenerationBlocked) {
+      (!restingSoul && (inProtectionZone || now >= this.soulEligibleUntil));
+    if (healthBlocked) {
       this.nextHealthAt = now + this.regeneration.healthIntervalMs;
+    }
+    if (manaBlocked) {
       this.nextManaAt = now + this.regeneration.manaIntervalMs;
     }
     if (soulBlocked) {
       this.nextSoulAt = now + this.regeneration.soulIntervalMs;
     }
-    const health = healthManaRegenerationBlocked
+    const health = healthBlocked
       ? { count: 0, nextAt: this.nextHealthAt }
       : this.dueTicks(
           now,
           this.nextHealthAt,
           this.regeneration.healthIntervalMs,
         );
-    const mana = healthManaRegenerationBlocked
+    const mana = manaBlocked
       ? { count: 0, nextAt: this.nextManaAt }
       : this.dueTicks(
           now,
@@ -687,11 +722,15 @@ export class CharacterProgression {
     const soulBefore = this.currentSoul;
     this.currentMana = Math.min(
       this.maxMana,
-      this.currentMana + mana.count * this.regeneration.manaAmount,
+      this.currentMana + mana.count * this.regeneration.manaAmount * manaMultiplier,
     );
     this.currentSoul = Math.min(
       this.maxSoul,
       this.currentSoul + soul.count * this.regeneration.soulAmount,
+    );
+    const restedStamina = this.tickRestingStamina(
+      now,
+      inProtectionZone && dailyStreakLevel >= bonuses.staminaRegeneration,
     );
 
     let trained = false;
@@ -712,9 +751,36 @@ export class CharacterProgression {
         regenerationChanged ||
         manaBefore !== this.currentMana ||
         soulBefore !== this.currentSoul ||
+        restedStamina ||
         trained,
-      healthGain: health.count * this.regeneration.healthAmount,
+      healthGain: health.count * this.regeneration.healthAmount * healthMultiplier,
     };
+  }
+
+  /**
+   * The streak-4 resting bonus. The clock only advances while the bonus is
+   * live, so leaving the protection zone parks the timer instead of banking
+   * stamina the player did not rest for.
+   */
+  private tickRestingStamina(now: number, active: boolean): boolean {
+    if (!active) {
+      this.nextRestingStaminaAt = 0;
+      return false;
+    }
+    if (this.nextRestingStaminaAt === 0) {
+      this.nextRestingStaminaAt =
+        now + RESTING_STAMINA_FIRST_INTERVAL_MS;
+      return false;
+    }
+    const result = regenerateRestingStamina(
+      this.currentStamina,
+      this.nextRestingStaminaAt,
+      now,
+    );
+    this.nextRestingStaminaAt = result.nextRegenAt;
+    if (!result.changed) return false;
+    this.currentStamina = result.staminaMinutes;
+    return true;
   }
 
   private syncRegeneration(accountTier: AccountTier, now: number): boolean {

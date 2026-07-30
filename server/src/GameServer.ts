@@ -1743,6 +1743,9 @@ export class GameServer {
       case "daily-claim":
         this.daily.handleClaim(session, intent, now);
         return;
+      case "daily-history-get":
+        this.daily.handleHistoryGet(session, now);
+        return;
       case "quest-log-get": {
         const questPlayer = session.playerId
           ? this.world.getPlayer(session.playerId)

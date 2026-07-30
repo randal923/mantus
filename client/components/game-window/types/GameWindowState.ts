@@ -9,6 +9,7 @@ import type {
   CombatAnalyzerState,
   FightState,
   DailyActionFailedReason,
+  DailyRewardHistoryEntry,
   DailyRewardsStateMessage,
   OwnCharacterState,
   PodiumActionFailedReason,
@@ -121,6 +122,8 @@ export interface GameWindowState {
   /** Open daily-rewards window; pushed by the server on shrine use. */
   dailyRewards: DailyRewardsStateMessage | null;
   dailyError: DailyActionFailedReason | null;
+  /** Claim history; undefined until the window asks for it. */
+  dailyHistory: ReadonlyArray<DailyRewardHistoryEntry> | undefined;
   questLogOpen: boolean;
   questLog: QuestLogMessage | null;
   questLine: QuestLineMessage | null;

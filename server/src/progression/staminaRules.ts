@@ -100,6 +100,42 @@ export function decayHuntStamina(
   };
 }
 
+export interface RestingStaminaRegen {
+  readonly staminaMinutes: number;
+  readonly nextRegenAt: number;
+  readonly changed: boolean;
+}
+
+/**
+ * The daily-reward resting-area bonus (streak level 4+, Canary
+ * daily_reward.lua's RegenStamina event): while the player stands in a
+ * protection zone, one stamina-minute returns every 3 real minutes, slowing
+ * to every 6 inside the green band — the same two rates offline regen uses.
+ * The caller gates on the streak level and the zone; this only owns the clock.
+ */
+export function regenerateRestingStamina(
+  staminaMinutes: number,
+  nextRegenAt: number,
+  now: number,
+): RestingStaminaRegen {
+  assertStamina(staminaMinutes);
+  const interval =
+    staminaMinutes > STAMINA_GREEN_THRESHOLD
+      ? GREEN_SECONDS_PER_MINUTE * 1_000
+      : NORMAL_SECONDS_PER_MINUTE * 1_000;
+  if (staminaMinutes >= MAX_STAMINA_MINUTES) {
+    return { staminaMinutes, nextRegenAt: now + interval, changed: false };
+  }
+  if (now < nextRegenAt) {
+    return { staminaMinutes, nextRegenAt, changed: false };
+  }
+  return {
+    staminaMinutes: staminaMinutes + 1,
+    nextRegenAt: now + interval,
+    changed: true,
+  };
+}
+
 /**
  * Experience multiplier from stamina. Zero stamina yields no experience at all;
  * the green +50% bonus is premium-only; the orange band halves experience.

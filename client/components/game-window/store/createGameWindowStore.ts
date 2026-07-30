@@ -117,6 +117,7 @@ export function createGameWindowStore({
     rewardChestOpenedAtMs: 0,
     dailyRewards: null,
     dailyError: null,
+    dailyHistory: undefined,
     questLogOpen: false,
     questLog: null,
     questLine: null,
@@ -359,9 +360,16 @@ export function createGameWindowStore({
         rewardChestOpenedAtMs: Date.now(),
       })),
     setRewardError: (value) => set(() => ({ rewardError: value })),
+    // A fresh shrine use drops the history with the old state, so reopening
+    // the window fetches it again rather than showing a stale list.
     setDailyRewards: (value) =>
-      set(() => ({ dailyRewards: value, dailyError: null })),
+      set(() => ({
+        dailyRewards: value,
+        dailyError: null,
+        dailyHistory: undefined,
+      })),
     setDailyError: (value) => set(() => ({ dailyError: value })),
+    setDailyHistory: (value) => set(() => ({ dailyHistory: value })),
     setQuestLogOpen: (value) =>
       set((state) => ({
         questLogOpen: resolveStateAction(value, state.questLogOpen),
@@ -567,6 +575,7 @@ export function createGameWindowStore({
         rewardChestOpenedAtMs: 0,
         dailyRewards: null,
         dailyError: null,
+        dailyHistory: undefined,
         questLogOpen: false,
         questLog: null,
         questLine: null,

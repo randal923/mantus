@@ -26,6 +26,8 @@ const claim = (
   characterId,
   todayKey: "2026-07-26",
   expectedRewardDay: 1,
+  kind: "vocation-items",
+  allowance: 5,
   items: [
     { typeId: HEALTH_POTION, count: 5, stackable: true, maxCount: 100 },
   ],
@@ -56,6 +58,7 @@ databaseDescribe("PgDailyRewardStore integration", () => {
 
   beforeEach(async () => {
     await pool.query("DELETE FROM character_daily_rewards");
+    await pool.query("DELETE FROM character_daily_reward_history");
     await pool.query("DELETE FROM character_prey_resources");
     await pool.query("DELETE FROM items");
     await pool.query("DELETE FROM audit_log");
@@ -119,6 +122,64 @@ databaseDescribe("PgDailyRewardStore integration", () => {
        WHERE event_type = 'daily-reward-claim'`,
     );
     expect(Number(audits.rows[0]?.total)).toBe(1);
+    // The history row rides the same transaction, so the loser of the race
+    // leaves no entry behind either.
+    const history = await store.history(characterId, 15);
+    expect(history).toEqual([
+      {
+        claimedAtMs: NOW,
+        rewardDay: 1,
+        kind: "vocation-items",
+        allowance: 5,
+        items: [{ typeId: HEALTH_POTION, count: 5 }],
+      },
+    ]);
+  });
+
+  it("keeps history newest first, capped, and scoped to its own character", async () => {
+    const days = ["2026-07-26", "2026-07-27", "2026-07-28"];
+    for (const [index, todayKey] of days.entries()) {
+      const result = await store.claim(
+        claim({
+          todayKey,
+          expectedRewardDay: index + 1,
+          nowMs: NOW + index * 86_400_000,
+          ...(index === 2
+            ? { kind: "wildcards" as const, allowance: 1, items: [], wildcards: 1 }
+            : {}),
+        }),
+      );
+      expect(result.status).toBe("committed");
+    }
+
+    const newestFirst = await store.history(characterId, 15);
+    expect(newestFirst.map((entry) => entry.rewardDay)).toEqual([3, 2, 1]);
+    expect(newestFirst[0]).toMatchObject({ kind: "wildcards", items: [] });
+    expect(await store.history(characterId, 2)).toHaveLength(2);
+
+    // A different character sees none of it (charter rule 6).
+    const other = await pool.query<{ id: string }>(
+      `INSERT INTO characters (
+         id, account_id, display_name, normalized_name, vocation,
+         health, mana, position_x, position_y, position_z, direction,
+         outfit_look_type, outfit_head, outfit_body, outfit_legs,
+         outfit_feet, town_id
+       )
+       SELECT gen_random_uuid(), account_id, 'Other Hero', 'other hero',
+              'Knight', 150, 50, 100, 100, 7, 'south', 128, 1, 1, 1, 1, 1
+       FROM characters WHERE id = $1
+       RETURNING id`,
+      [characterId],
+    );
+    const otherId = other.rows[0]?.id;
+    if (!otherId) throw new Error("second character insert returned no id");
+    expect(await store.history(otherId, 15)).toEqual([]);
+  });
+
+  it("writes no history row when the claim rolls back", async () => {
+    const stale = await store.claim(claim({ expectedRewardDay: 4 }));
+    expect(stale.status).toBe("stale");
+    expect(await store.history(characterId, 15)).toEqual([]);
   });
 
   it("advances the streak on the next day and pays the next reward day", async () => {

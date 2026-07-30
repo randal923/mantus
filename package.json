@@ -31,6 +31,7 @@
     "bestiary:import": "node tools/importCanaryBestiary.mjs",
     "achievements:import": "node tools/importCanaryAchievements.mjs",
     "cyclopedia:assets": "node tools/importOtclientCyclopediaAssets.mjs",
+    "rewardwall:assets": "node tools/importOtclientRewardWallAssets.mjs",
     "parity:inventory": "node tools/buildCanaryParityInventory.mjs",
     "parity:world-actions": "node tools/buildWorldActionParityInventory.mjs",
     "parity:check": "node tools/verifyCanaryParityInventory.mjs",

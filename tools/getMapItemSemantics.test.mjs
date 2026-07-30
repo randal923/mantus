@@ -114,6 +114,21 @@ test("gives the server the exercise dummy standing on a tile", () => {
   assert.equal(dummy.interactive, true);
 });
 
+test("gives the server the reward shrines the reward wall opens from", () => {
+  // 25802/25803 are the wall-mounted shrines the map places in every city
+  // temple: immovable, unpickupable, untyped scenery. Only the id list puts
+  // them in server-owned world items, and without that the daily-shrine use
+  // action can never see one (they stay baked in the client's draw layer).
+  for (const clientId of [25_720, 25_721, 25_722, 25_723, 25_802, 25_803]) {
+    const shrine = getMapItemSemantics(
+      { ...appearance({ onBottom: true }), clientId },
+      { name: "reward shrine", movable: false, pickupable: false },
+    );
+    assert.equal(shrine.mutable, true, `shrine ${clientId} must be mutable`);
+    assert.equal(shrine.interactive, true);
+  }
+});
+
 test("classifies subtype, action, and text attributes deliberately", () => {
   assert.equal(
     getMapItemSemantics(appearance(), { name: "coins" }, { count: 20 }).mutable,

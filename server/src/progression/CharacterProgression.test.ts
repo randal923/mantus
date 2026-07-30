@@ -365,6 +365,97 @@ describe("CharacterProgression", () => {
     expect(player.progression.soul).toBe(1);
   });
 
+  it("gates protection-zone regeneration on the daily reward streak", () => {
+    // Master Sorcerer: mana 2 per 2s. Fed, so natural regeneration is allowed
+    // and only the resting-area rules decide what happens inside the zone.
+    const character = {
+      ...makeCharacter("mage"),
+      vocation: "Master Sorcerer" as const,
+      mana: 0,
+    };
+    const restless = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    restless.feed(600, 0);
+
+    // Streak 0 in a protection zone: Canary blocks the regeneration outright.
+    restless.tickProgression(10_000, true);
+    expect(restless.progression.mana).toBe(0);
+    // Same player, same span, outside the zone: unaffected by the streak.
+    restless.tickProgression(20_000, false);
+    expect(restless.progression.mana).toBeGreaterThan(0);
+
+    // Streak 3 unlocks mana regeneration inside the zone.
+    const rested = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    rested.feed(600, 0);
+    rested.setDailyStreakLevel(3);
+    rested.tickProgression(10_000, true);
+    expect(rested.progression.mana).toBe(10);
+
+    // Streak 6 doubles it over the same span.
+    const doubled = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    doubled.feed(600, 0);
+    doubled.setDailyStreakLevel(6);
+    doubled.tickProgression(10_000, true);
+    expect(doubled.progression.mana).toBe(20);
+  });
+
+  it("doubles resting health regeneration and rests soul at streak 7", () => {
+    const character = {
+      ...makeCharacter("mage"),
+      vocation: "Master Sorcerer" as const,
+      soul: 0,
+      health: 1,
+    };
+    // Health is 1 per 12s; over 60s that is 5, doubled to 10 at streak 5.
+    const doubled = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    doubled.feed(600, 0);
+    doubled.setDailyStreakLevel(5);
+    doubled.tickProgression(60_000, true);
+    expect(doubled.health).toBe(11);
+
+    // Streak 7 rests soul in the zone without a recent kill arming it, which
+    // is the only way soul regenerates inside a protection zone at all.
+    const soulRested = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    soulRested.setDailyStreakLevel(7);
+    soulRested.tickProgression(15_000, true);
+    expect(soulRested.progression.soul).toBe(1);
+
+    // One level short: still nothing, armed or not.
+    const unrested = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    unrested.setDailyStreakLevel(6);
+    unrested.armSoulRegeneration(0);
+    unrested.tickProgression(15_000, true);
+    expect(unrested.progression.soul).toBe(0);
+  });
+
+  it("refills stamina only while the streak-4 bonus keeps resting", () => {
+    const character = {
+      ...makeCharacter("rester"),
+      vocation: "Elder Druid" as const,
+      stamina: 2_000,
+    };
+    const player = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    player.setDailyStreakLevel(4);
+
+    // The first interval only starts the clock; nothing is banked yet.
+    player.tickProgression(1_000, true);
+    expect(player.stamina).toBe(2_000);
+    player.tickProgression(181_000, true);
+    expect(player.stamina).toBe(2_001);
+
+    // Stepping out parks the timer, so the next tick inside starts over
+    // instead of paying for the time spent hunting.
+    player.tickProgression(200_000, false);
+    player.tickProgression(370_000, true);
+    expect(player.stamina).toBe(2_001);
+
+    // Below the threshold the bonus never runs at all.
+    const unrested = new Player(character, { x: 0, y: 0, z: 7 }, 0);
+    unrested.setDailyStreakLevel(3);
+    unrested.tickProgression(1_000, true);
+    unrested.tickProgression(400_000, true);
+    expect(unrested.stamina).toBe(2_000);
+  });
+
   it("bounds scheduled training work and drops schedules on reconnect", () => {
     const character = makeCharacter("hero");
     const player = new Player(character, { x: 0, y: 0, z: 7 }, 0);

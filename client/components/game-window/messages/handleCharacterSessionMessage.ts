@@ -81,6 +81,11 @@ export function handleCharacterSessionMessage(
     return true;
   }
 
+  if (message.type === "daily-reward-history") {
+    state.setDailyHistory(message.entries);
+    return true;
+  }
+
   if (message.type === "daily-action-failed") {
     state.setDailyError(message.reason);
     return true;

@@ -9,6 +9,7 @@ import type {
   CombatAnalyzerState,
   FightState,
   DailyActionFailedReason,
+  DailyRewardHistoryEntry,
   DailyRewardsStateMessage,
   OwnCharacterState,
   PodiumActionFailedReason,
@@ -122,6 +123,9 @@ export interface GameWindowStoreActions {
   setRewardError: (value: RewardActionFailedReason | null) => void;
   setDailyRewards: (value: DailyRewardsStateMessage | null) => void;
   setDailyError: (value: DailyActionFailedReason | null) => void;
+  setDailyHistory: (
+    value: ReadonlyArray<DailyRewardHistoryEntry> | undefined,
+  ) => void;
   setQuestLogOpen: (value: SetStateAction<boolean>) => void;
   setQuestLog: (value: QuestLogMessage | null) => void;
   setQuestLine: (value: QuestLineMessage | null) => void;

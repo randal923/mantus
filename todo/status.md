@@ -78,7 +78,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Stash material auto-draw rides with 84's stash routing (speed/capacity stats shipped) |
 | Weapon proficiency + animus mastery (82)                 | ✅     | ✅     | Spell-facing perk families ride 79, inert families + Soul Pit earn path ride 86; locked-row thresholds/animus race list → 87 |
 | Cyclopedia views (83)                                    | ✅     | ✅     | Map view (stub upstream, skipped); combat-view live refresh while open → 87 |
-| Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards ✅ (2026-07-26); loot-container assignment + stash routing remain |
+| Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards ✅ (2026-07-26); reward wall reachable + real window, resting-area bonuses, claim history ✅ (2026-07-30); loot-container assignment + stash routing remain |
 | Familiars, hirelings (85)                                | ❌     | ❌     | Everything (summon runtime exists; importer lanes + runtime gaps mapped in todo-10) |
 | Long tail: hazard, concoctions, difficulty, podium (86)  | ◐      | ◐      | Hazard + concoctions + inert perks/animus earn; podium + stat residuals ✅, difficulty = upstream no-op; livestream **excluded** (product decision) |
 | Quests (103–105)                                         | ◐      | ◐      | Platform + rewards/log + catalog+parity gate ✅ (2026-07-26); 114 script-dir behaviors + dynamic descriptions + tracker remain |

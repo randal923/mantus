@@ -929,6 +929,11 @@ export class GameClient {
     return this.send({ type: "daily-claim", picks: [...picks] });
   }
 
+  /** Asks for this character's own last daily-reward claims. */
+  requestDailyHistory(): boolean {
+    return this.send({ type: "daily-history-get" });
+  }
+
   requestQuestLog(): boolean {
     return this.send({ type: "quest-log-get" });
   }

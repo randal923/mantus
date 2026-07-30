@@ -26,6 +26,8 @@ const CLOSED_LEVEL_DOOR = 1_646;
 const OPEN_LEVEL_DOOR = 1_647;
 const CLOSED_DARASHIA_LEVEL_DOOR = 5_293;
 const OPEN_DARASHIA_LEVEL_DOOR = 5_294;
+const REWARD_WALL = 25_802;
+const FLOOR_SHRINE = 25_720;
 const LEVER_OFF = 2_772;
 const LEVER_ON = 2_773;
 const ROTATABLE_STATUE = 2_025;
@@ -74,6 +76,7 @@ function makeHarness(options: {
   decorateAccess?: (characterId: string, position: Position) => boolean;
 }) {
   const lootedChests: Array<{ characterId: string; uniqueId: number }> = [];
+  const openedShrines: Array<{ characterId: string; position: Position }> = [];
   const world = new World(
     gridMapData({
       name: "test",
@@ -110,7 +113,9 @@ function makeHarness(options: {
     },
     undefined,
     undefined,
-    undefined,
+    (_session, player, position) => {
+      openedShrines.push({ characterId: player.id, position });
+    },
     options.decorateAccess,
   );
   const makeSession = async (
@@ -146,7 +151,15 @@ function makeHarness(options: {
     items.attach(await items.load(characterId, 400));
     return { player, session, sent };
   };
-  return { world, store, items, worldActions, makeSession, lootedChests };
+  return {
+    world,
+    store,
+    items,
+    worldActions,
+    makeSession,
+    lootedChests,
+    openedShrines,
+  };
 }
 
 const tileItemIds = (harness: { world: World }, position: Position) =>
@@ -411,6 +424,64 @@ describe("WorldActionRegistry levers, rotation, and signs", () => {
       type: "error",
       code: "item-action-failed",
     });
+  });
+
+  it("opens the reward wall from an adjacent tile", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(REWARD_WALL, TILE) }],
+    });
+    const { session, player } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(harness.openedShrines).toEqual([
+      { characterId: player.id, position: TILE },
+    ]);
+    // The wall is scenery: opening the window never consumes or changes it.
+    expect(tileItemIds(harness, TILE)).toEqual([REWARD_WALL]);
+  });
+
+  it("prefers the shrine window over the floor shrine's rotate behaviour", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(FLOOR_SHRINE, TILE) }],
+    });
+    const { session } = await harness.makeSession("actor", { x: 5, y: 5, z: 7 });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(harness.openedShrines).toHaveLength(1);
+    expect(tileItemIds(harness, TILE)).toEqual([FLOOR_SHRINE]);
+  });
+
+  it("fails closed on a quest-scripted reward shrine", async () => {
+    const harness = makeHarness({
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(REWARD_WALL, TILE, { uniqueId: 9_002 }),
+        },
+      ],
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    expect(harness.openedShrines).toEqual([]);
+  });
+
+  it("rejects reward wall use from beyond reach", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(REWARD_WALL, TILE) }],
+    });
+    const { session } = await harness.makeSession("actor", { x: 8, y: 7, z: 7 });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(harness.openedShrines).toEqual([]);
   });
 
   it("rotates map furniture through its catalog rotateTo target", async () => {

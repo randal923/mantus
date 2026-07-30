@@ -16,14 +16,20 @@ const MUTABLE_TYPES = new Set([
   "rewardchest",
 ]);
 
-// Ids the server must own so their use-action can transform them at
-// runtime: shovel-diggable closed piles (Canary's `holes`; sync with
-// SHOVEL_HOLE_PAIRS in server/src/action/shovelHolePairs.ts) and bare
-// on/off levers (sync with LEVER_TOGGLE_PAIRS in
-// server/src/action/leverTogglePairs.ts) — levers are neither movable nor
+// Ids the server must own so their use-action can reach them at runtime:
+// shovel-diggable closed piles (Canary's `holes`; sync with
+// SHOVEL_HOLE_PAIRS in server/src/action/shovelHolePairs.ts), bare on/off
+// levers (sync with LEVER_TOGGLE_PAIRS in
+// server/src/action/leverTogglePairs.ts) and the reward shrines the reward
+// wall opens from (sync with DAILY_SHRINE_ITEM_IDS in
+// server/src/daily/dailyShrineItemIds.ts). None of these are movable or
 // typed in MUTABLE_TYPES, so without this they stay baked draw-only and
-// the lever handler never sees them.
-const MUTABLE_ITEM_IDS = new Set([593, 606, 608, 2772, 2773, 9110, 9111]);
+// their handler never sees them — the 37 wall shrines the map places in
+// the city temples are all 25802/25803.
+const MUTABLE_ITEM_IDS = new Set([
+  593, 606, 608, 2772, 2773, 9110, 9111, 25_720, 25_721, 25_722, 25_723,
+  25_802, 25_803,
+]);
 
 const STATEFUL_ATTRIBUTES = [
   "charges",

@@ -129,7 +129,10 @@ import {
   outfitGetMessageSchema,
   outfitSelectMessageSchema,
 } from "./outfit";
-import { dailyClaimMessageSchema } from "./dailyRewards";
+import {
+  dailyClaimMessageSchema,
+  dailyHistoryGetMessageSchema,
+} from "./dailyRewards";
 import { podiumSetMessageSchema } from "./podium";
 import {
   questLineGetMessageSchema,
@@ -787,6 +790,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   podiumSetMessageSchema,
   rewardCollectMessageSchema,
   dailyClaimMessageSchema,
+  dailyHistoryGetMessageSchema,
   questLogGetMessageSchema,
   questLineGetMessageSchema,
   highscoresGetMessageSchema,
@@ -878,6 +882,9 @@ export type WriteMapItemMessage = z.infer<typeof writeMapItemMessageSchema>;
 export type PodiumSetMessage = z.infer<typeof podiumSetMessageSchema>;
 export type RewardCollectMessage = z.infer<typeof rewardCollectMessageSchema>;
 export type DailyClaimMessage = z.infer<typeof dailyClaimMessageSchema>;
+export type DailyHistoryGetMessage = z.infer<
+  typeof dailyHistoryGetMessageSchema
+>;
 export type QuestLogGetMessage = z.infer<typeof questLogGetMessageSchema>;
 export type QuestLineGetMessage = z.infer<typeof questLineGetMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;

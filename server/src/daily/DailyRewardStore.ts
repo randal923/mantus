@@ -1,3 +1,4 @@
+import type { DailyRewardKind } from "@tibia/protocol";
 import type { ItemMutation } from "../item/ItemMutation";
 import type { DailyStreakRecord } from "./assessDailyStreak";
 
@@ -18,10 +19,23 @@ export interface DailyClaimRequest {
   readonly todayKey: string;
   /** The day the service projected; a mismatch on the locked row aborts. */
   readonly expectedRewardDay: number;
+  /** Today's reward kind, recorded on the history row. */
+  readonly kind: DailyRewardKind;
+  /** Units, wildcards or boost minutes this claim pays. */
+  readonly allowance: number;
   readonly items: ReadonlyArray<DailyClaimItemGrant>;
   readonly wildcards: number;
   readonly xpBoostMinutes: number;
   readonly nowMs: number;
+}
+
+/** One past claim, newest first. Item names resolve from the catalog. */
+export interface DailyHistoryRecord {
+  readonly claimedAtMs: number;
+  readonly rewardDay: number;
+  readonly kind: DailyRewardKind;
+  readonly allowance: number;
+  readonly items: ReadonlyArray<{ typeId: number; count: number }>;
 }
 
 export type DailyClaimResult =
@@ -38,4 +52,8 @@ export type DailyClaimResult =
 export interface DailyRewardStore {
   load(characterId: string): Promise<DailyRewardSnapshot>;
   claim(request: DailyClaimRequest): Promise<DailyClaimResult>;
+  history(
+    characterId: string,
+    limit: number,
+  ): Promise<ReadonlyArray<DailyHistoryRecord>>;
 }

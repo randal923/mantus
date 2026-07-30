@@ -233,6 +233,21 @@ export class Player extends Creature<Character["outfit"]> {
     this.xpBoostUntil = untilMs;
   }
 
+  /**
+   * Daily-reward streak level, mirrored here so the progression tick can apply
+   * the resting-area bonuses without reaching into the daily service.
+   * `DailyRewardService` is its only writer, as with the boost deadline above.
+   */
+  private dailyStreak = 0;
+
+  get dailyStreakLevel(): number {
+    return this.dailyStreak;
+  }
+
+  setDailyStreakLevel(level: number): void {
+    this.dailyStreak = level;
+  }
+
   get sex(): Character["sex"] {
     return this.currentSex;
   }
@@ -500,6 +515,7 @@ export class Player extends Creature<Character["outfit"]> {
       this.hasCondition("no-regeneration"),
       inProtectionZone,
       this.accountTierAt(now),
+      this.dailyStreak,
     );
     const healthBefore = this.health;
     if (tick.healthGain > 0) this.setHealth(this.health + tick.healthGain);

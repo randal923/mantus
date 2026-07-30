@@ -1,37 +1,57 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  DAILY_REWARD_RULES,
   DAILY_REWARD_TABLE,
+  type DailyRewardHistoryEntry,
   type DailyRewardPick,
   type DailyRewardsStateMessage,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
-import { SpriteIcon } from "../inventory/SpriteIcon";
+import { PixelImage } from "../ui/PixelImage";
+import { DailyRewardCycle } from "./DailyRewardCycle";
+import { DailyRewardHistoryPanel } from "./DailyRewardHistoryPanel";
+import { DailyRewardPickPanel } from "./DailyRewardPickPanel";
+import { RestingAreaPanel } from "./RestingAreaPanel";
+import { RewardWallPremiumPanel } from "./RewardWallPremiumPanel";
 
 interface DailyRewardsModalProps {
   state: DailyRewardsStateMessage;
   error: string | null;
+  /** Null until a history request comes back; undefined while never asked. */
+  history?: ReadonlyArray<DailyRewardHistoryEntry> | null;
   onClaim: (picks: ReadonlyArray<DailyRewardPick>) => void;
+  onRequestHistory?: () => void;
   onClose: () => void;
 }
 
 /**
- * The daily reward window (Feature 84): the 7-day cycle, streak level and
- * joker tokens, and today's claim. Item days pick from the server-provided
- * pool; every choice is a request the server re-validates.
+ * The reward wall (Feature 84). Opened by using a reward shrine, it shows the
+ * resting-area bonuses the streak has unlocked, the seven-day cycle, and
+ * today's claim. Every number here is server state and every pick is a request
+ * the server re-validates — the window enforces nothing.
  */
 export function DailyRewardsModal({
   state,
   error,
+  history,
   onClaim,
+  onRequestHistory,
   onClose,
 }: DailyRewardsModalProps) {
   const { t } = useAppTranslation();
   const [picks, setPicks] = useState<ReadonlyMap<number, number>>(new Map());
+  const [showHistory, setShowHistory] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  // The only external system this window syncs with: the wall clock behind the
+  // claim countdown. The deadline itself is the server's.
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const todayEntry = DAILY_REWARD_TABLE[state.streakPosition];
   const needsPicks =
@@ -42,6 +62,8 @@ export function DailyRewardsModal({
     () => [...picks.values()].reduce((total, count) => total + count, 0),
     [picks],
   );
+  const premium = state.accountTier === "premium";
+  const remainingMs = Math.max(0, state.dayEndsAtMs - now);
 
   const adjustPick = (itemTypeId: number, delta: number) => {
     setPicks((current) => {
@@ -62,116 +84,42 @@ export function DailyRewardsModal({
     );
   };
 
+  const toggleHistory = () => {
+    if (!showHistory && history === undefined) onRequestHistory?.();
+    setShowHistory((open) => !open);
+  };
+
   const claimDisabled =
     !state.claimableToday ||
     (needsPicks && (pickedUnits === 0 || pickedUnits > state.allowance));
 
   return (
-    <Modal title={t("dailyRewards.title")} onClose={onClose} size="wide">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <span className="text-ui-text-bright">
-            {t("dailyRewards.streakLevel", { level: state.streakLevel })}
-          </span>
-          <span className="text-ui-muted">
-            {t("dailyRewards.jokerTokens", { count: state.jokerTokens })}
-          </span>
-          {state.missedDays > 0 && (
-            <span className="text-ui-accent-light">
-              {t("dailyRewards.missedDays", { count: state.missedDays })}
-            </span>
-          )}
-          {state.xpBoostUntilMs > 0 && (
-            <span className="text-ui-gold">{t("dailyRewards.boostActive")}</span>
-          )}
-        </div>
-        <ol className="grid grid-cols-7 gap-2">
-          {DAILY_REWARD_TABLE.map((entry, index) => (
-            <li
-              key={index}
-              aria-current={index === state.streakPosition ? "step" : undefined}
-              className={`rounded-md border p-2 text-center text-xs ${
-                index === state.streakPosition
-                  ? "border-ui-gold/70 bg-ui-gold-deep text-ui-text-bright"
-                  : "border-ui-stone-light/25 text-ui-muted"
-              }`}
-            >
-              <div className="font-medium">
-                {t("dailyRewards.day", { day: index + 1 })}
-              </div>
-              <div>{t(`dailyRewards.kinds.${entry.kind}`)}</div>
-            </li>
-          ))}
-        </ol>
-        {needsPicks && (
-          <>
-            <p className="text-sm text-ui-muted">
-              {t("dailyRewards.pickPrompt", {
-                picked: pickedUnits,
-                allowance: state.allowance,
-              })}
-            </p>
-            <ul className="ui-scrollbar grid max-h-56 grid-cols-1 gap-1 overflow-y-auto pr-1 sm:grid-cols-2">
-              {state.pool.map((entry) => {
-                const count = picks.get(entry.itemTypeId) ?? 0;
-                return (
-                  <li
-                    key={entry.itemTypeId}
-                    className="flex items-center gap-2 rounded-md border border-ui-stone-light/25 bg-black/20 px-2 py-1"
-                  >
-                    <SpriteIcon spriteId={entry.spriteId} scale={0.9} />
-                    <span className="min-w-0 flex-1 truncate text-sm text-ui-text">
-                      {entry.name}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        aria-label={t("dailyRewards.remove", {
-                          name: entry.name,
-                        })}
-                        disabled={count === 0}
-                        onClick={() => adjustPick(entry.itemTypeId, -1)}
-                      >
-                        −
-                      </Button>
-                      <span className="w-6 text-center text-sm text-ui-text-bright">
-                        {count}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        aria-label={t("dailyRewards.add", { name: entry.name })}
-                        disabled={pickedUnits >= state.allowance}
-                        onClick={() => adjustPick(entry.itemTypeId, 1)}
-                      >
-                        +
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-        {!needsPicks && todayEntry && (
-          <p className="text-sm text-ui-text">
-            {todayEntry.kind === "wildcards"
-              ? t("dailyRewards.wildcardsToday", { count: state.allowance })
-              : t("dailyRewards.boostToday", { minutes: state.allowance })}
-          </p>
-        )}
-        {error && <p className="text-sm text-ui-accent-light">{error}</p>}
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-ui-muted">
-            {t("dailyRewards.streakHint", {
-              soulLevel: DAILY_REWARD_RULES.streakBonuses.soulRegeneration,
+    <Modal
+      title={t("dailyRewards.title")}
+      onClose={onClose}
+      size="wide"
+      footer={
+        <>
+          <span
+            aria-label={t("dailyRewards.jokerTokens", {
+              count: state.jokerTokens,
             })}
-          </p>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={onClose}>
-              {t("dailyRewards.close")}
-            </Button>
+            className="mr-auto flex items-center gap-1 text-xs text-ui-muted"
+          >
+            {state.jokerTokens}
+            <PixelImage
+              src="reward-wall/joker.png"
+              sheetWidth={11}
+              sheetHeight={11}
+            />
+          </span>
+          <Button variant="secondary" size="sm" onClick={toggleHistory}>
+            {t(showHistory ? "dailyRewards.back" : "dailyRewards.history")}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onClose}>
+            {t("dailyRewards.close")}
+          </Button>
+          {!showHistory && (
             <Button
               variant="primary"
               size="sm"
@@ -182,9 +130,47 @@ export function DailyRewardsModal({
                 ? t("dailyRewards.claim")
                 : t("dailyRewards.claimed")}
             </Button>
-          </div>
+          )}
+        </>
+      }
+    >
+      {showHistory ? (
+        <DailyRewardHistoryPanel entries={history ?? null} />
+      ) : (
+        <div className="flex flex-col gap-3">
+          <RestingAreaPanel
+            streakLevel={state.streakLevel}
+            jokerTokens={state.jokerTokens}
+            remainingMs={remainingMs}
+            premium={premium}
+            atRisk={state.claimableToday && state.missedDays > 0}
+            boostActive={state.xpBoostUntilMs > now}
+          />
+          <DailyRewardCycle
+            streakPosition={state.streakPosition}
+            claimableToday={state.claimableToday}
+            premium={premium}
+          />
+          {needsPicks && state.claimableToday && (
+            <DailyRewardPickPanel
+              pool={state.pool}
+              picks={picks}
+              pickedUnits={pickedUnits}
+              allowance={state.allowance}
+              onAdjust={adjustPick}
+            />
+          )}
+          {!needsPicks && todayEntry && (
+            <p className="text-sm text-ui-text">
+              {todayEntry.kind === "wildcards"
+                ? t("dailyRewards.wildcardsToday", { count: state.allowance })
+                : t("dailyRewards.boostToday", { minutes: state.allowance })}
+            </p>
+          )}
+          <RewardWallPremiumPanel premium={premium} />
+          {error && <p className="text-sm text-ui-accent-light">{error}</p>}
         </div>
-      </div>
+      )}
     </Modal>
   );
 }

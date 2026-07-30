@@ -176,7 +176,9 @@ outside a temple rejected; destroy distribution matches `normal_random`.
 
 Reward chests and daily rewards shipped 2026-07-26 (see
 [done.md](done.md)), including the bosstiary-slot/boosted loot-bonus
-application. What remains is the loot-routing QoL:
+application; the reward wall became reachable in the world and got its real
+window, resting-area bonuses and claim history on 2026-07-30. What remains is
+the loot-routing QoL:
 
 - **Loot-container assignment** — durable per-category container
   assignments (`quickLootFilter` categories), server-validated intents

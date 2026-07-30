@@ -176,6 +176,7 @@ import {
 } from "./rewardChest";
 import {
   dailyActionFailedMessageSchema,
+  dailyRewardHistoryMessageSchema,
   dailyRewardsStateMessageSchema,
 } from "./dailyRewards";
 import {
@@ -642,6 +643,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   rewardChestStateMessageSchema,
   rewardActionFailedMessageSchema,
   dailyRewardsStateMessageSchema,
+  dailyRewardHistoryMessageSchema,
   dailyActionFailedMessageSchema,
   questLogMessageSchema,
   questLineMessageSchema,
@@ -707,6 +709,9 @@ export type RewardActionFailedMessage = z.infer<
 >;
 export type DailyRewardsStateMessage = z.infer<
   typeof dailyRewardsStateMessageSchema
+>;
+export type DailyRewardHistoryMessage = z.infer<
+  typeof dailyRewardHistoryMessageSchema
 >;
 export type DailyActionFailedMessage = z.infer<
   typeof dailyActionFailedMessageSchema

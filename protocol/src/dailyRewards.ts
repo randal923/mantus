@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { accountTierSchema } from "./account";
 
 // Feature 84 — daily rewards. Transcribed from pinned Canary
 // data/modules/scripts/daily_reward/daily_reward.lua: the 7-day table
@@ -15,7 +16,16 @@ export const DAILY_REWARD_RULES = {
   xpBoostPercent: 50,
   /** One claim intent per 300 ms per session. */
   claimCooldownMs: 300,
-  /** Resting-area bonus thresholds by streak level (display). */
+  /** One history request per second per session. */
+  historyCooldownMs: 1_000,
+  /** Entries the history reply carries (Canary daily_reward.lua:220). */
+  historyLimit: 15,
+  /**
+   * Streak level each resting-area bonus needs. Applied inside protection
+   * zones by `CharacterProgression.tick` and `regenerateRestingStamina`
+   * (Canary condition.cpp:1490-1535, daily_reward.lua's RegenStamina /
+   * RegenSoul events), and drawn as the six shields in the reward wall.
+   */
   streakBonuses: {
     hpRegeneration: 2,
     mpRegeneration: 3,
@@ -74,10 +84,57 @@ export const dailyRewardsStateMessageSchema = z
     /** Days the streak would lose to the gap; jokers absorb them first. */
     missedDays: z.number().int().nonnegative(),
     xpBoostUntilMs: z.number().int().nonnegative(),
+    /**
+     * Epoch ms at which the server-local day flips — the claim deadline the
+     * window counts down to. The client cannot derive it: its time zone need
+     * not match the server's, and the server's day is the real one.
+     */
+    dayEndsAtMs: z.number().int().nonnegative(),
+    /** Drives the premium panel; the allowance below already accounts for it. */
+    accountTier: accountTierSchema,
     /** Today's pickable pool (empty for wildcard/boost days). */
     pool: z.array(poolEntrySchema).max(40),
     /** Item units (or wildcards/minutes) today's claim grants this account. */
     allowance: z.number().int().nonnegative(),
+  })
+  .strict();
+
+const historyItemSchema = z
+  .object({
+    itemTypeId: z.number().int().min(1).max(65_535),
+    name: z.string().min(1).max(100),
+    count: z.number().int().min(1).max(100),
+  })
+  .strict();
+
+const historyEntrySchema = z
+  .object({
+    claimedAtMs: z.number().int().nonnegative(),
+    /** 1..7 day of the cycle the claim paid. */
+    rewardDay: z.number().int().min(1).max(7),
+    kind: dailyRewardKindSchema,
+    /** Units, wildcards or boost minutes the claim paid. */
+    allowance: z.number().int().nonnegative(),
+    /** Empty for wildcard and boost days. */
+    items: z.array(historyItemSchema).max(10),
+  })
+  .strict();
+export type DailyRewardHistoryEntry = z.infer<typeof historyEntrySchema>;
+
+/**
+ * Ask for this character's own claim history (Canary daily_reward.lua:213-233
+ * keeps the last 15). Entries are structured rather than Canary's prebuilt
+ * sentence so the window can render them in the player's language.
+ * One request per second per session; the reply is capped at 15 entries.
+ */
+export const dailyHistoryGetMessageSchema = z
+  .object({ type: z.literal("daily-history-get") })
+  .strict();
+
+export const dailyRewardHistoryMessageSchema = z
+  .object({
+    type: z.literal("daily-reward-history"),
+    entries: z.array(historyEntrySchema).max(15),
   })
   .strict();
 

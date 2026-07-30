@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from "pg";
-import { PREY_RULES } from "@tibia/protocol";
+import { PREY_RULES, type DailyRewardKind } from "@tibia/protocol";
 import { PgCoinOperations } from "../economy/PgCoinOperations";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import { TransactionRollback } from "../economy/TransactionRollback";
@@ -14,16 +14,27 @@ import { claimDailyStreak } from "./claimDailyStreak";
 import type {
   DailyClaimRequest,
   DailyClaimResult,
+  DailyHistoryRecord,
   DailyRewardSnapshot,
   DailyRewardStore,
 } from "./DailyRewardStore";
 import { ensureDailyRowQuery } from "./sql/ensureDailyRowQuery";
 import { insertDailyAuditQuery } from "./sql/insertDailyAuditQuery";
+import { insertDailyHistoryQuery } from "./sql/insertDailyHistoryQuery";
 import { lockDailyRowQuery } from "./sql/lockDailyRowQuery";
+import { readDailyHistoryQuery } from "./sql/readDailyHistoryQuery";
 import { readDailyRowQuery } from "./sql/readDailyRowQuery";
 import { updateDailyClaimQuery } from "./sql/updateDailyClaimQuery";
 
 const GRANT_REASON = "daily-reward";
+
+interface HistoryRow {
+  reward_day: number;
+  kind: DailyRewardKind;
+  allowance: number;
+  items: Array<{ typeId: number; count: number }>;
+  claimed_at_ms: string;
+}
 
 interface DailyRow {
   streak_position: number;
@@ -66,6 +77,23 @@ export class PgDailyRewardStore implements DailyRewardStore {
     return recordOf(result.rows[0]);
   }
 
+  async history(
+    characterId: string,
+    limit: number,
+  ): Promise<ReadonlyArray<DailyHistoryRecord>> {
+    const result = await this.pool.query<HistoryRow>(readDailyHistoryQuery, [
+      characterId,
+      limit,
+    ]);
+    return result.rows.map((row) => ({
+      claimedAtMs: Number(row.claimed_at_ms),
+      rewardDay: row.reward_day,
+      kind: row.kind,
+      allowance: row.allowance,
+      items: Array.isArray(row.items) ? row.items : [],
+    }));
+  }
+
   claim(request: DailyClaimRequest): Promise<DailyClaimResult> {
     return runSerializableTransaction(this.pool, async (client) => {
       await client.query(ensureDailyRowQuery, [request.characterId]);
@@ -97,6 +125,10 @@ export class PgDailyRewardStore implements DailyRewardStore {
           boostMs,
         ],
       );
+      const grantedItems = request.items.map((item) => ({
+        typeId: item.typeId,
+        count: item.count,
+      }));
       await client.query(insertDailyAuditQuery, [
         request.characterId,
         JSON.stringify({
@@ -104,13 +136,18 @@ export class PgDailyRewardStore implements DailyRewardStore {
           streakLevel: claim.next.streakLevel,
           jokersSpent: assessment.jokersSpent,
           streakLevelLost: assessment.streakLevelLost,
-          items: request.items.map((item) => ({
-            typeId: item.typeId,
-            count: item.count,
-          })),
+          items: grantedItems,
           wildcards: request.wildcards,
           xpBoostMinutes: request.xpBoostMinutes,
         }),
+      ]);
+      await client.query(insertDailyHistoryQuery, [
+        request.characterId,
+        claim.rewardDay,
+        request.kind,
+        request.allowance,
+        JSON.stringify(grantedItems),
+        request.nowMs,
       ]);
       return {
         status: "committed" as const,
