@@ -248,6 +248,53 @@ describe("planShopPurchase", () => {
     expect(result.status).toBe("no-space");
   });
 
+  it("fills the backpack first, then descends into bags inside bags", () => {
+    const nested = (
+      id: string,
+      typeId: number,
+      containerId: string,
+      slot: number,
+    ): Item => ({
+      id,
+      typeId,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId, slot },
+    });
+    const items: Item[] = [
+      backpack,
+      carriedItem("coin-1", GOLD_COIN_TYPE_ID, 100, 0),
+      nested("bag-1", BACKPACK, BACKPACK_ID, 1),
+      nested("bag-2", BACKPACK, "bag-1", 0),
+    ];
+    // Leave one free slot in the equipped backpack and none in bag-1.
+    for (let slot = 2; slot < 19; slot++) {
+      items.push(carriedItem(`filler-${slot}`, SWORD, 1, slot));
+    }
+    for (let slot = 1; slot < 20; slot++) {
+      items.push(nested(`bag-1-filler-${slot}`, SWORD, "bag-1", slot));
+    }
+
+    const result = plan({
+      items,
+      itemTypeId: SWORD,
+      amount: 3,
+      unitPrice: 1,
+      capacityMax: 1_000_000,
+    });
+    expect(result.status).toBe("planned");
+    if (result.status !== "planned") return;
+    const placed = result.mutation.after
+      .filter((item) => item.typeId === SWORD && item.version === 1)
+      .map((item) =>
+        item.location.kind === "container" ? item.location.containerId : "?",
+      );
+    // One into the backpack's last free slot, then past the full bag-1 into
+    // the bag nested inside it.
+    expect(placed).toEqual([BACKPACK_ID, "bag-2", "bag-2"]);
+  });
+
   it("spends a custom shop currency exactly and never the bank", () => {
     const result = plan({
       items: [backpack, carriedItem("token-1", TOKEN, 40)],

@@ -2115,3 +2115,19 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   Postgres before trusting it in production. Four client storybook failures
   (ActionBar, GameHud, ProficiencyModal, SpellListModal) are pre-existing and
   reproduce on a clean tree.
+
+  **Follow-up 2026-07-30** — purchases stopped landing anywhere but the
+  equipped backpack once it filled. The server was right (the draft walks the
+  backpack tree depth-first and a test now pins a buy spilling past a full
+  nested bag into the bag inside it); the client was refusing the intent
+  locally. `GameCommerceOverlays.onBuy` ran `sessionActions.inventory.preview`
+  first and bailed with a `busy` error when it returned null, and
+  `applyInventoryPrediction`'s `freeBackpackSlots` only counts the equipped
+  backpack's own slots — it cannot see nested bags at all, because
+  `InventoryState.containers` carries only the containers the player has open.
+  So a full main backpack meant no predicted slot, which meant no purchase was
+  ever sent. Removed the optimistic placement from the buy path: it cannot be
+  computed correctly from what the client knows, and it is redundant now that
+  the purchase is memory-first and the real `inventory-updated` arrives in the
+  same tick. The shop was the last caller of the external preview queue, so
+  that whole mechanism is now dead — noted in `todo/todo-4.md`.

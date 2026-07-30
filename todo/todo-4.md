@@ -87,8 +87,13 @@ Canary behavior.
   `PgItemUseOps.writeText`, `PgWorldItemOps.pickup/drop/moveWorldItem`,
   `MemoryItemStore` mirrors + tests) remain as parity reference — remove
   after the memory-first path soaks; do not call them.
-- `useOptimisticInventory` prediction is redundant for converted ops —
-  removal is a standalone client-only simplification.
+- `useOptimisticInventory`'s **external preview** path is now dead: the shop
+  buy handler was its last caller and was removed 2026-07-30 (it could not see
+  closed nested bags, so it refused purchases the server would have placed).
+  `preview`/`rejectPreview`/`clearPreviews`, `applyInventoryPrediction`,
+  `InventoryPrediction` and the `advance-preview` branch of
+  `resolveConfirmAction` can all go; the drag path (`applyPendingItemOp`) is
+  unaffected. Standalone client-only simplification.
 - The pickup capacity precheck ignores ground-container contents;
   `usedWeight` not adjusted by queued ops (errs safe).
 

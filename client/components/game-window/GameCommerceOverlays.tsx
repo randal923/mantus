@@ -2,7 +2,6 @@ import { SHOP_LIMITS } from "@tibia/protocol";
 import { useExhaustedAction } from "../../hooks/useExhaustedAction";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { exceedsCapacity } from "../../lib/inventory/exceedsCapacity";
-import { toInventoryItemPresentation } from "../../lib/inventory/toInventoryItemPresentation";
 import { toAuctionHistoryEntry } from "../../lib/market/toAuctionHistoryEntry";
 import { toAuctionHouseItem } from "../../lib/market/toAuctionHouseItem";
 import { toAuctionOffer } from "../../lib/market/toAuctionOffer";
@@ -198,27 +197,13 @@ export function GameCommerceOverlays() {
                 );
                 return;
               }
-              const predicted = sessionActions.inventory.preview({
-                kind: "add",
-                item: toInventoryItemPresentation(entry),
-                count: amount,
-                itemIds: Array.from(
-                  {
-                    length: entry.stackable
-                      ? Math.ceil(amount / entry.maxCount)
-                      : amount,
-                  },
-                  () => crypto.randomUUID(),
-                ),
-              });
-              if (!predicted) {
-                setShopSession((current) =>
-                  current?.shopSessionId === shopSession.shopSessionId
-                    ? { ...current, error: "busy" }
-                    : current,
-                );
-                return;
-              }
+              // No optimistic placement: the client only knows the contents of
+              // containers the player has open, so it cannot tell whether a
+              // purchase lands in the backpack or a nested bag. Predicting it
+              // used to refuse the buy outright once the main backpack filled,
+              // even though the server places it in the first free slot of the
+              // whole tree. The purchase is memory-first now, so the real
+              // `inventory-updated` arrives in the same tick anyway.
               const sent =
                 runtime.clientRef.current?.shopBuy(
                   shopSession.npcId,
@@ -226,7 +211,6 @@ export function GameCommerceOverlays() {
                   offerId,
                   amount,
                 ) ?? false;
-              if (!sent) sessionActions.inventory.rejectPreview();
               setShopSession((current) =>
                 current?.shopSessionId === shopSession.shopSessionId
                   ? {

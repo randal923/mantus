@@ -226,7 +226,6 @@ export function handleCommerceMessage(
   }
 
   if (message.type === "shop-action-failed") {
-    actions.inventory.rejectPreview();
     state.setShopSession((current) => {
       if (!current) return current;
       if (
