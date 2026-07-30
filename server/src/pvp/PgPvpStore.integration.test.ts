@@ -112,6 +112,7 @@ databaseDescribe("PgPvpStore integration", () => {
         skull: "red" as const,
         expiresAt: new Date(Date.now() + 24 * 3_600_000),
       },
+      pruneBefore: new Date(Date.now() - 30 * 24 * 3_600_000),
     };
 
     // A racing replay of the same death event must not double anything.
@@ -135,6 +136,7 @@ databaseDescribe("PgPvpStore integration", () => {
       createCharacter("avenger"),
     ]);
     const base = Date.now();
+    const pruneBefore = new Date(base - 30 * 24 * 3_600_000);
     await store.recordKill({
       deathEventId: "death:first",
       killerCharacterId: killer,
@@ -143,6 +145,7 @@ databaseDescribe("PgPvpStore integration", () => {
       unjustified: true,
       avengeCutoff: null,
       sanction: null,
+      pruneBefore,
     });
     await store.recordKill({
       deathEventId: "death:second",
@@ -152,6 +155,7 @@ databaseDescribe("PgPvpStore integration", () => {
       unjustified: true,
       avengeCutoff: null,
       sanction: null,
+      pruneBefore,
     });
 
     await store.recordKill({
@@ -162,6 +166,7 @@ databaseDescribe("PgPvpStore integration", () => {
       unjustified: false,
       avengeCutoff: new Date(base - 7 * 24 * 3_600_000),
       sanction: null,
+      pruneBefore,
     });
 
     const avengedRows = await pool.query<{ death_event_id: string }>(
@@ -176,12 +181,17 @@ databaseDescribe("PgPvpStore integration", () => {
     ]);
   });
 
-  it("prunes frags older than the window on load and returns the rest", async () => {
+  // Login is read-only (see PvpStore.loadFrags): the window is applied by the
+  // read, and expired rows are collected by recordKill instead.
+  it("returns only frags inside the window and writes nothing on load", async () => {
     const [killer, victim] = await Promise.all([
       createCharacter("killer"),
       createCharacter("victim"),
     ]);
     const now = Date.now();
+    // A cutoff far in the past, so neither insert collects the other and both
+    // rows survive for the read to filter.
+    const noPrune = new Date(now - 3650 * 24 * 3_600_000);
     await store.recordKill({
       deathEventId: "death:old",
       killerCharacterId: killer,
@@ -190,6 +200,7 @@ databaseDescribe("PgPvpStore integration", () => {
       unjustified: true,
       avengeCutoff: null,
       sanction: null,
+      pruneBefore: noPrune,
     });
     await store.recordKill({
       deathEventId: "death:recent",
@@ -199,7 +210,9 @@ databaseDescribe("PgPvpStore integration", () => {
       unjustified: true,
       avengeCutoff: null,
       sanction: null,
+      pruneBefore: noPrune,
     });
+    expect(await killRowCount()).toBe(2);
 
     const frags = await store.loadFrags(
       killer,
@@ -207,6 +220,48 @@ databaseDescribe("PgPvpStore integration", () => {
     );
     expect(frags).toHaveLength(1);
     expect(frags[0]?.victimCharacterId).toBe(victim);
+    // The load filtered rather than deleted — both rows are still there.
+    expect(await killRowCount()).toBe(2);
+  });
+
+  it("collects the killer's expired frags when recording a new kill", async () => {
+    const [killer, victim] = await Promise.all([
+      createCharacter("killer"),
+      createCharacter("victim"),
+    ]);
+    const now = Date.now();
+    const noPrune = new Date(now - 3650 * 24 * 3_600_000);
+    await store.recordKill({
+      deathEventId: "death:old",
+      killerCharacterId: killer,
+      victimCharacterId: victim,
+      occurredAt: new Date(now - 40 * 24 * 3_600_000),
+      unjustified: true,
+      avengeCutoff: null,
+      sanction: null,
+      pruneBefore: noPrune,
+    });
     expect(await killRowCount()).toBe(1);
+
+    await store.recordKill({
+      deathEventId: "death:recent",
+      killerCharacterId: killer,
+      victimCharacterId: victim,
+      occurredAt: new Date(now - 1_000),
+      unjustified: true,
+      avengeCutoff: null,
+      sanction: null,
+      pruneBefore: new Date(now - 30 * 24 * 3_600_000),
+    });
+
+    // The expired frag is gone; the new one — which is inside the window —
+    // survives the prune that ran ahead of its own insert.
+    expect(await killRowCount()).toBe(1);
+    const frags = await store.loadFrags(
+      killer,
+      new Date(now - 30 * 24 * 3_600_000),
+    );
+    expect(frags).toHaveLength(1);
+    expect(frags[0]?.occurredAtMs).toBeGreaterThan(now - 10_000);
   });
 });

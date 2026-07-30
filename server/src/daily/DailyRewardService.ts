@@ -15,6 +15,7 @@ import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import { assessDailyStreak } from "./assessDailyStreak";
 import { claimDailyStreak } from "./claimDailyStreak";
 import type {
@@ -48,6 +49,7 @@ export class DailyRewardService {
       applyWildcardBalance(characterId: string, balance: number): void;
     },
     private readonly store?: DailyRewardStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -61,8 +63,11 @@ export class DailyRewardService {
   attachCharacter(session: Session, characterId: string): void {
     const store = this.store;
     if (!store) return;
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.load(characterId),
+    );
     this.track(
-      store.load(characterId).then(
+      loaded.then(
         (snapshot) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;

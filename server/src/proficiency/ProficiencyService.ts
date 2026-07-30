@@ -12,6 +12,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { ItemType } from "../item/ItemType";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { ProficiencyCatalog } from "./ProficiencyCatalog";
 import {
   EMPTY_PROFICIENCY_EFFECTS,
@@ -51,6 +52,7 @@ export class ProficiencyService {
     private readonly bestiary: BestiaryCatalog,
     private readonly catalog?: ProficiencyCatalog,
     private readonly store?: ProficiencyStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -75,8 +77,11 @@ export class ProficiencyService {
       this.progressByCharacter.set(characterId, new Map());
       return;
     }
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.load(characterId),
+    );
     this.track(
-      store.load(characterId).then(
+      loaded.then(
         (records) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;

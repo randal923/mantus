@@ -41,7 +41,10 @@ export class PgPreyStore implements PreyStore {
       characterId,
     ]);
     if (slots.rowCount === 0) return null;
-    await this.pool.query(insertPreyResourcesRowQuery, [characterId]);
+    // Read-only: slots existing means `initialize` already seeded the
+    // resources row, a missing row reads as the schema's zero below, and
+    // `grantWildcards` seeds it while `spendWildcards` is a guarded debit that
+    // correctly matches nothing without it. Login pays no write for this.
     const resources = await this.pool.query<{ wildcards: string }>(
       selectPreyResourcesQuery,
       [characterId],

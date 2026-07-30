@@ -29,16 +29,23 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
-- **The Postgres connection budget is per-process, not shared** (2026-07-26).
-  The pg pool default dropped 20 → 10 because the Supabase session pooler
-  (`pooler.supabase.com:5432`) refuses clients beyond its `pool_size` (15),
-  which was failing login-burst loads/persists with `EMAXCONNSESSION`. Each
-  server process budgets independently, so a dev server plus a playtest
-  server or long-running tools can still jointly exceed the cap. Durable fix
-  per `server/.env.example`: a direct connection where available; the
-  transaction pooler (port 6543) is also compatible today — the only advisory
-  lock is `pg_advisory_xact_lock` and nothing uses LISTEN/NOTIFY or named
-  prepared statements.
+- **The Postgres connection budget is per-process, not shared** (2026-07-26,
+  largely resolved 2026-07-29 — see `todo/done.md`). `DATABASE_URL` now uses
+  the transaction pooler (port 6543), which multiplexes instead of pinning one
+  Postgres connection per pooled client, so `PG_POOL_MAX` no longer has to fit
+  inside the pooler's `pool_size` (15) and a second client — a rolling
+  deploy's old machine, a migration, a tool run — no longer trips
+  `EMAXCONNSESSION`. Still per-process: each server budgets `PG_POOL_MAX`
+  independently, so many processes can jointly exhaust the pooler's *server*
+  side. A direct connection remains the best option where IPv6 is available.
+- **The game server and its database are in different regions**
+  (2026-07-29). `server/fly.toml` pins `primary_region = "iad"` while
+  `DATABASE_URL` points at `aws-1-us-west-2`, i.e. ~60 ms per round trip on
+  every query. Login is now serialized onto one connection (Feature 106), so
+  its ~28 round trips are paid sequentially and this latency sets login time
+  directly. Recommended fix: move the Supabase project to `us-east-1` (or the
+  Fly app to a west-coast region) before collapsing login into a single
+  statement, since co-location is worth more than the query-count work.
 - **Four pre-existing Postgres integration failures at HEAD** (updated
   2026-07-26: the six `PgChestStore.integration.test.ts` failures are
   fixed — the store was always correct; the tests asserted `character_id`

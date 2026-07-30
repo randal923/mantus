@@ -4,6 +4,7 @@ import {
   type MinimapMarkerDeleteMessage,
   type MinimapMarkerSetMessage,
 } from "@tibia/protocol";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
@@ -26,6 +27,7 @@ export class MarkerService {
     private readonly world: World,
     private readonly registry: SessionRegistry,
     private readonly store?: MarkerStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(): void {
@@ -41,7 +43,7 @@ export class MarkerService {
   }
 
   attachCharacter(session: Session, characterId: string): void {
-    this.reload(session, characterId);
+    this.reload(session, characterId, true);
   }
 
   handle(session: Session, intent: MarkerIntent, now: number): void {
@@ -79,11 +81,17 @@ export class MarkerService {
     );
   }
 
-  private reload(session: Session, characterId: string): void {
+  /**
+   * `atLogin` routes the read through the login queue so world entry does not
+   * add another concurrent pool checkout; a reload after a marker mutation is
+   * a lone query and goes straight to the store.
+   */
+  private reload(session: Session, characterId: string, atLogin = false): void {
     const store = this.store;
     if (!store) return;
+    const load = () => store.loadMarkers(characterId);
     this.track(
-      store.loadMarkers(characterId).then(
+      (atLogin ? this.loginLoads.run(characterId, load) : load()).then(
         (markers) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;

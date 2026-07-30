@@ -3,6 +3,7 @@ import type { BestiaryCatalog } from "../bestiary/BestiaryCatalog";
 import type { Monster } from "../creature/Monster";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { ProficiencyStore } from "./ProficiencyStore";
 
 /**
@@ -22,6 +23,7 @@ export class AnimusService {
     private readonly registry: SessionRegistry,
     private readonly catalog: BestiaryCatalog,
     private readonly store?: ProficiencyStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -42,8 +44,11 @@ export class AnimusService {
       this.masteriesByCharacter.set(characterId, new Set());
       return;
     }
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.loadAnimus(characterId),
+    );
     this.track(
-      store.loadAnimus(characterId).then(
+      loaded.then(
         (raceIds) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;

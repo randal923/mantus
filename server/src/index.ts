@@ -51,8 +51,10 @@ const serverConfig = await loadServerConfig();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const databaseUrl = process.env.DATABASE_URL;
-// Supabase's session pooler refuses clients beyond its pool_size (15 by
-// default), so stay below that with headroom for migrations/tools.
+// On the transaction pooler (port 6543) this bounds concurrent in-flight
+// queries. On the session pooler (5432) each pooled client pins a Postgres
+// connection for its whole life, so it must stay under pool_size (15 by
+// default) with headroom for migrations/tools — see server/.env.example.
 const postgresPoolMax = Number(process.env.PG_POOL_MAX ?? 10);
 
 if (!databaseUrl || (!supabaseUrl && !serverConfig.dev.auth)) {

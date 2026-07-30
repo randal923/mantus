@@ -23,17 +23,18 @@ export class MemoryPvpStore implements PvpStore {
     deathEventId: string;
   }> = [];
 
+  /** Read-only, like PgPvpStore: the window filters, it does not delete. */
   async loadFrags(
     characterId: string,
-    pruneBefore: Date,
+    since: Date,
   ): Promise<ReadonlyArray<PvpKillRecord>> {
-    const cutoff = pruneBefore.getTime();
-    for (let index = this.rows.length - 1; index >= 0; index--) {
-      const row = this.rows[index];
-      if (row && row.occurredAtMs < cutoff) this.rows.splice(index, 1);
-    }
+    const cutoff = since.getTime();
     return this.rows
-      .filter((row) => row.killerCharacterId === characterId)
+      .filter(
+        (row) =>
+          row.killerCharacterId === characterId && row.occurredAtMs >= cutoff,
+      )
+      .sort((left, right) => left.occurredAtMs - right.occurredAtMs)
       .map((row) => ({
         victimCharacterId: row.victimCharacterId,
         occurredAtMs: row.occurredAtMs,
@@ -49,6 +50,19 @@ export class MemoryPvpStore implements PvpStore {
         row.killerCharacterId === input.killerCharacterId,
     );
     if (duplicate) return "duplicate";
+    // Collects this killer's expired frags before the insert, so a kill never
+    // collects its own row (PgPvpStore.recordKill).
+    const pruneBefore = input.pruneBefore.getTime();
+    for (let index = this.rows.length - 1; index >= 0; index--) {
+      const row = this.rows[index];
+      if (
+        row &&
+        row.killerCharacterId === input.killerCharacterId &&
+        row.occurredAtMs < pruneBefore
+      ) {
+        this.rows.splice(index, 1);
+      }
+    }
     this.rows.push({
       deathEventId: input.deathEventId,
       killerCharacterId: input.killerCharacterId,

@@ -41,7 +41,9 @@ export class PgHuntingTaskStore implements HuntingTaskStore {
       characterId,
     ]);
     if (slots.rowCount === 0) return null;
-    await this.pool.query(insertPreyResourcesRowQuery, [characterId]);
+    // Read-only, same reasoning as PgPreyStore.load: slots existing means
+    // `initialize` seeded the shared resources row, a missing row reads as the
+    // schema's zeros below, and the task-point credit path seeds it too.
     const resources = await this.pool.query<{
       wildcards: string;
       task_points: string;

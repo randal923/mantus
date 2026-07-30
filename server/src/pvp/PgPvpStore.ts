@@ -21,36 +21,39 @@ interface KillRow {
 export class PgPvpStore implements PvpStore {
   constructor(private readonly pool: Pool) {}
 
+  /**
+   * One read, no transaction, no dedicated client: this is the login path, and
+   * a four-round-trip transaction held a pooled connection for all of it. The
+   * window is applied in SQL; expired rows are collected by `recordKill`.
+   */
   async loadFrags(
     characterId: string,
-    pruneBefore: Date,
+    since: Date,
   ): Promise<ReadonlyArray<PvpKillRecord>> {
-    const client = await this.pool.connect();
-    try {
-      await client.query("BEGIN");
-      await client.query(pruneCharacterKillsQuery, [characterId, pruneBefore]);
-      const result = await client.query<KillRow>(killsByKillerQuery, [
-        characterId,
-      ]);
-      await client.query("COMMIT");
-      return result.rows.map((row) => ({
-        victimCharacterId: row.victim_character_id,
-        occurredAtMs: row.occurred_at.getTime(),
-        unjustified: row.unjustified,
-        avenged: row.avenged,
-      }));
-    } catch (cause) {
-      await client.query("ROLLBACK");
-      throw cause;
-    } finally {
-      client.release();
-    }
+    const result = await this.pool.query<KillRow>(killsByKillerQuery, [
+      characterId,
+      since,
+    ]);
+    return result.rows.map((row) => ({
+      victimCharacterId: row.victim_character_id,
+      occurredAtMs: row.occurred_at.getTime(),
+      unjustified: row.unjustified,
+      avenged: row.avenged,
+    }));
   }
 
   async recordKill(input: RecordKillInput): Promise<RecordKillResult> {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
+      // Garbage-collects this killer's expired frags in the transaction that
+      // grows the set, so login stays read-only. Runs before the insert so a
+      // kill can never collect its own row, and is discarded along with
+      // everything else on the duplicate path below.
+      await client.query(pruneCharacterKillsQuery, [
+        input.killerCharacterId,
+        input.pruneBefore,
+      ]);
       const inserted = await client.query(insertCharacterKillQuery, [
         input.deathEventId,
         input.killerCharacterId,

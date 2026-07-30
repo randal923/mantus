@@ -13,6 +13,7 @@ import type { Monster } from "../creature/Monster";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { PreyHooks } from "./PreyHooks";
 import type { PreySlotRecord, PreyStore } from "./PreyStore";
 import {
@@ -64,6 +65,7 @@ export class PreyService implements PreyHooks {
     private readonly catalog: BestiaryCatalog,
     private readonly rng: WorldActionRng,
     private readonly store?: PreyStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {
     const pool: PoolEntry[] = [];
     for (const entry of catalog.entriesByRaceId.values()) {
@@ -101,8 +103,11 @@ export class PreyService implements PreyHooks {
   attachCharacter(session: Session, characterId: string): void {
     const store = this.store;
     if (!store) return;
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.load(characterId),
+    );
     this.track(
-      store.load(characterId).then(
+      loaded.then(
         (snapshot) => {
           this.outcomes.push((now) => {
             if (this.registry.sessionFor(characterId) !== session) return;

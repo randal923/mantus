@@ -11,6 +11,7 @@ import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
 import { CharacterHandler } from "./CharacterHandler";
 import { CharacterPersistence } from "./character/CharacterPersistence";
+import { LoginLoadQueue } from "./character/LoginLoadQueue";
 import { CharacterService } from "./character/CharacterService";
 import { MonsterEventService } from "./creature/MonsterEventService";
 import type { CharacterStore } from "./character/CharacterStore";
@@ -203,6 +204,12 @@ export class GameServer {
   private readonly wss: WebSocketServer;
   private readonly world: World;
   private readonly registry: SessionRegistry;
+  /**
+   * Shared by every service that reads per-character state at world entry, so
+   * a login's ~15 store reads chain onto one pooled connection instead of
+   * checking out one each in the same tick.
+   */
+  private readonly loginLoads = new LoginLoadQueue();
   private readonly visibility: Visibility;
   private readonly auth: AuthHandler;
   private readonly characters: CharacterHandler;
@@ -374,23 +381,41 @@ export class GameServer {
       this.registry,
       deps.moderation,
       config.moderationRetentionDays,
+      this.loginLoads,
     );
     this.storeOperator = new StoreOperatorService(this.registry, deps.store);
-    this.vips = new VipService(this.world, this.registry, deps.vip);
-    this.friends = new FriendService(this.world, this.registry, deps.friends);
-    this.markers = new MarkerService(this.world, this.registry, deps.markers);
+    this.vips = new VipService(
+      this.world,
+      this.registry,
+      deps.vip,
+      this.loginLoads,
+    );
+    this.friends = new FriendService(
+      this.world,
+      this.registry,
+      deps.friends,
+      this.loginLoads,
+    );
+    this.markers = new MarkerService(
+      this.world,
+      this.registry,
+      deps.markers,
+      this.loginLoads,
+    );
     this.outfits = new OutfitService(
       this.world,
       this.registry,
       this.visibility,
       this.persistence,
       deps.outfits,
+      this.loginLoads,
     );
     this.profiles = new ProfileService(
       this.world,
       this.registry,
       (characterId) => this.guilds.guildIdentityOf(characterId)?.guildName ?? null,
       deps.profiles,
+      this.loginLoads,
     );
     this.highscores = new HighscoreService(this.world, deps.highscores);
     const creatureContent =
@@ -417,6 +442,7 @@ export class GameServer {
       bestiaryCatalog,
       this.bestiaryTracker,
       deps.trackers,
+      this.loginLoads,
     );
     this.bossSlots = new BossSlotService(
       this.registry,
@@ -424,6 +450,7 @@ export class GameServer {
       this.bestiaryTracker,
       this.boosted,
       deps.bossSlots,
+      this.loginLoads,
     );
     // A rotating boosted boss leaves every character's slots, online or not
     // (the store cleared offline rows inside the rotation already).
@@ -439,6 +466,7 @@ export class GameServer {
       deps.itemCatalog,
       new WorldActionRng(config.combatSeed ^ 0x6b43_9d17),
       deps.forge,
+      this.loginLoads,
     );
     let imbuementCatalog: ReturnType<typeof loadImbuementCatalog> | undefined;
     try {
@@ -470,11 +498,13 @@ export class GameServer {
       bestiaryCatalog,
       proficiencyCatalog,
       deps.proficiency,
+      this.loginLoads,
     );
     this.animus = new AnimusService(
       this.registry,
       bestiaryCatalog,
       deps.proficiency,
+      this.loginLoads,
     );
     this.cyclopedia = new CyclopediaService(
       this.world,
@@ -506,6 +536,7 @@ export class GameServer {
       bestiaryCatalog,
       new WorldActionRng(config.combatSeed ^ 0x51ab_3c7d),
       deps.prey,
+      this.loginLoads,
     );
     this.daily = new DailyRewardService(
       this.world,
@@ -517,6 +548,7 @@ export class GameServer {
           this.prey.applyWildcardBalance(characterId, balance),
       },
       deps.daily,
+      this.loginLoads,
     );
     this.huntingTasks = new HuntingTaskService(
       this.world,
@@ -525,6 +557,7 @@ export class GameServer {
       new WorldActionRng(config.combatSeed ^ 0x77e1_9b25),
       (characterId) => this.bestiaryTracker.killsFor(characterId),
       deps.huntingTasks,
+      this.loginLoads,
     );
     // Built after the systems it refreshes: a committed purchase reaches the
     // live world only through these hooks, and each one is refresh-only —

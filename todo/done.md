@@ -1734,3 +1734,78 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   can pick which catalog description is read back but nothing more. Recorded in
   `TODO.md` along with the flags our catalog does not carry (`showAttributes`,
   ring effect flags, `ignoreLook`).
+
+## 2026-07-29 — Login database connection footprint (Feature 106)
+
+- **Problem**: production logins failed with
+  `(EMAXCONNSESSION) max clients reached in session mode - max clients are
+  limited to pool_size: 15`. Two causes. (a) `DATABASE_URL` used Supabase's
+  *session* pooler (port 5432), where every pooled client pins one Postgres
+  connection for its whole life, so the server permanently occupied
+  `PG_POOL_MAX` of the pooler's 15 and any second client — a rolling deploy's
+  old machine, a migration, a tool run — was refused. (b) A single login
+  demanded ~14 concurrent pool checkouts: `resolveWorldEntry` ran five loads in
+  a `Promise.all` (one of which, `PgGemStore.load`, fanned out three more), and
+  `enterWorld` fired ~14 `attachCharacter` store loads with no awaits between
+  them, all in one tick. Five of those "loads" were also writes. For reference,
+  Canary runs its whole server — including a ~19-query player load — on one
+  mutex-guarded MySQL handle (`src/database/database.hpp`).
+- **What changed**:
+  - `DATABASE_URL` moved to the transaction pooler (port 6543), which
+    multiplexes instead of pinning. Verified compatible: nothing uses
+    LISTEN/NOTIFY, `SET`/`SET SESSION`, temp tables, cursors, or named prepared
+    statements (node-pg does not use them by default), and the only advisory
+    lock is transaction-scoped `pg_advisory_xact_lock`.
+  - New `LoginLoadQueue` (`server/src/character/LoginLoadQueue.ts`): a
+    per-character promise chain shared by every service that reads at world
+    entry, so a login's store reads run one at a time on one connection while
+    concurrent logins still proceed in parallel. A rejected load does not
+    stall the ones queued behind it; an idle chain starts immediately.
+  - `resolveWorldEntry`'s `Promise.all` is now sequential awaits;
+    `PgGemStore.load`'s three-way fan-out is sequential too.
+  - Writes removed from login reads: `PgForgeStore.load`, `PgGemStore.load`,
+    `PgPreyStore.load` and `PgHuntingTaskStore.load` no longer lazily seed
+    their resources row (every read already coalesced to the schema defaults,
+    and every mutation path seeds its own row — `upsertGemDropsQuery` creates
+    the gem row on the first drop, and spend paths are guarded UPDATEs that
+    correctly match nothing without it). `insertGemResourcesRowQuery` was
+    deleted as unused. `OutfitService.attachCharacter` reads before it writes,
+    so the starter-outfit back-fill costs zero writes for the characters that
+    already own the set instead of one write per starter outfit per login.
+    `PgPvpStore.loadFrags` is a single filtered SELECT — no transaction, no
+    dedicated client — and the frag prune moved into `recordKill`'s existing
+    transaction, ahead of its insert so a kill cannot collect its own row
+    (`RecordKillInput.pruneBefore`; `MemoryPvpStore` mirrors both changes).
+- **Files touched**: `.env`, `server/.env.example`, `server/src/index.ts`,
+  `docs/server-capacity.md`, `TODO.md`, `todo/todo-12.md`,
+  `server/src/character/LoginLoadQueue.ts` (new) + `.test.ts` (new),
+  `server/src/{CharacterHandler,GameServer}.ts`,
+  `server/src/{social/VipService,social/FriendService,profile/ProfileService,
+  minimap/MarkerService,moderation/ModerationService,prey/PreyService,
+  daily/DailyRewardService,huntingTasks/HuntingTaskService,
+  bestiary/TrackerService,bestiary/BossSlotService,forge/ForgeService,
+  proficiency/ProficiencyService,proficiency/AnimusService,
+  outfit/OutfitService}.ts`,
+  `server/src/{forge/PgForgeStore,wheel/PgGemStore,prey/PgPreyStore,
+  huntingTasks/PgHuntingTaskStore}.ts`,
+  `server/src/pvp/{PgPvpStore,PvpStore,PvpTracker,MemoryPvpStore,
+  sql/killsByKillerQuery,PgPvpStore.integration.test}.ts`; deleted
+  `server/src/wheel/sql/insertGemResourcesRowQuery.ts`.
+- **Verified**: full workspace typecheck; server suite 1,375 passed / 266
+  skipped, including 4 new `LoginLoadQueue` tests (same-character serialization
+  with a concurrency peak of 1, no cross-character serialization, a rejected
+  load not stranding its successors, a relogin not queueing behind a drained
+  chain); `yarn test:tools` 89 passed and `yarn parity:check` clean. The
+  `PgPvpStore` integration test was rewritten into two cases — the load
+  filters the window and writes nothing (row count unchanged), and `recordKill`
+  collects the killer's expired frags while its own in-window row survives.
+- **Residual risk**: the rewritten `PgPvpStore.integration.test.ts` and the
+  other pg integration suites are **unrun** — this environment has no Postgres
+  and no Docker. The four store changes and the pvp SQL are unexercised against
+  a real database; the new `character_kills` filter is covered by the existing
+  `(killer_character_id, occurred_at desc)` index. Login now pays its ~28 read
+  round trips sequentially, so login latency is set directly by database RTT —
+  and `server/fly.toml` pins `iad` while the database is in `us-west-2`
+  (~60 ms), making login ~1.7 s until the two are co-located. Both recorded in
+  `TODO.md` accepted gaps; collapsing the login read set into one statement is
+  recorded on Feature 106 in `todo/todo-12.md`.

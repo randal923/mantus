@@ -1,4 +1,4 @@
 export const killsByKillerQuery = `SELECT victim_character_id, occurred_at, unjustified, avenged
          FROM character_kills
-         WHERE killer_character_id = $1
+         WHERE killer_character_id = $1 AND occurred_at >= $2
          ORDER BY occurred_at ASC`;

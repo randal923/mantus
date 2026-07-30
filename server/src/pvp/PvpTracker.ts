@@ -76,7 +76,7 @@ export class PvpTracker implements PvpHooks {
     this.feedback = new CombatFeedback(world, registry);
   }
 
-  /** Off-tick login load; prunes durable frags beyond the month window. */
+  /** Off-tick login load; read-only, bounded to the month window. */
   async load(characterId: string): Promise<ReadonlyArray<PvpKillRecord>> {
     if (!this.store) return [];
     return this.store.loadFrags(
@@ -491,6 +491,7 @@ export class PvpTracker implements PvpHooks {
             ? new Date(now - this.policy.orangeSkullDurationMs)
             : null,
         sanction,
+        pruneBefore: new Date(now - this.policy.fragExpiryMs),
       })
       .then(
         () => undefined,

@@ -9,6 +9,7 @@ import {
   type VipGroupDeleteMessage,
   type VipRemoveMessage,
 } from "@tibia/protocol";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import { getAccountStatus } from "../getAccountStatus";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -45,6 +46,7 @@ export class VipService {
     private readonly world: World,
     private readonly registry: SessionRegistry,
     private readonly store?: VipStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -67,10 +69,12 @@ export class VipService {
     const store = this.store;
     if (!store) return;
     this.enqueue(characterId, async () => {
-      const [entries, groups] = await Promise.all([
+      const entries = await this.loginLoads.run(characterId, () =>
         store.loadEntries(characterId),
+      );
+      const groups = await this.loginLoads.run(characterId, () =>
         store.loadGroups(characterId),
-      ]);
+      );
       return () => {
         if (this.registry.sessionFor(characterId) !== session) return;
         this.entriesByCharacter.set(characterId, [...entries]);

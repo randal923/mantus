@@ -7,6 +7,7 @@ import {
   type SocialSetSettingsMessage,
   type VipActionFailedReason,
 } from "@tibia/protocol";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
@@ -40,6 +41,7 @@ export class FriendService {
     private readonly world: World,
     private readonly registry: SessionRegistry,
     private readonly store?: FriendStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -59,7 +61,9 @@ export class FriendService {
     const store = this.store;
     if (!store) return;
     this.enqueue(characterId, async () => {
-      const snapshot = await store.loadSnapshot(characterId);
+      const snapshot = await this.loginLoads.run(characterId, () =>
+        store.loadSnapshot(characterId),
+      );
       return () => {
         if (this.registry.sessionFor(characterId) !== session) return;
         this.snapshots.set(characterId, snapshot);

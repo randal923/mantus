@@ -4,6 +4,7 @@ import {
   type ReportActionFailedReason,
   type ReportPlayerMessage,
 } from "@tibia/protocol";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import { monotonicNow } from "../monotonicNow";
@@ -46,6 +47,7 @@ export class ModerationService implements ChatModerationHooks {
     private readonly registry: SessionRegistry,
     private readonly store?: ModerationStore,
     private readonly retentionDays = DEFAULT_RETENTION_DAYS,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -99,7 +101,9 @@ export class ModerationService implements ChatModerationHooks {
     const store = this.store;
     if (!store) return;
     this.enqueue(`load-mute:${characterId}`, async () => {
-      const mute = await store.loadMute(characterId);
+      const mute = await this.loginLoads.run(characterId, () =>
+        store.loadMute(characterId),
+      );
       return () => {
         if (!mute) return;
         const mutedUntil = mute.mutedUntil.getTime();

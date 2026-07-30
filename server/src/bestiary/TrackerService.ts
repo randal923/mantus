@@ -8,6 +8,7 @@ import {
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { BestiaryCatalog } from "./BestiaryCatalog";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { BestiaryTracker } from "./BestiaryTracker";
 import { getBestiaryStage } from "./getBestiaryStage";
 import { getBossMilestones } from "./getBossMilestones";
@@ -36,6 +37,7 @@ export class TrackerService {
     private readonly catalog: BestiaryCatalog,
     private readonly kills: BestiaryTracker,
     private readonly store?: TrackerStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -63,8 +65,11 @@ export class TrackerService {
       });
       return;
     }
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.load(characterId),
+    );
     this.track(
-      store.load(characterId).then(
+      loaded.then(
         (snapshot) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;

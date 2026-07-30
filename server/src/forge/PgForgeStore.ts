@@ -54,8 +54,12 @@ export class PgForgeStore implements ForgeStore {
     private readonly catalog: ItemCatalog,
   ) {}
 
+  /**
+   * Read-only: a character with no resources row reads as the schema defaults
+   * (`parseResources`), and every mutation path seeds the row itself, so login
+   * does not need a write to lazily create it.
+   */
   async load(characterId: string): Promise<ForgeResourcesRecord> {
-    await this.pool.query(ensureForgeResourcesQuery, [characterId]);
     const result = await this.pool.query<ResourcesRow>(
       selectForgeResourcesQuery,
       [characterId],

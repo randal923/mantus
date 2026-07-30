@@ -22,6 +22,7 @@ import type {
   ForgeResourcesRecord,
   ForgeStore,
 } from "./ForgeStore";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import { itemImbuementsOf } from "./itemImbuementsOf";
 import { itemTierOf } from "./itemTierOf";
 
@@ -51,6 +52,7 @@ export class ForgeService {
     private readonly catalog: ItemCatalog,
     private readonly rng: WorldActionRng,
     private readonly store?: ForgeStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -78,8 +80,11 @@ export class ForgeService {
       });
       return;
     }
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.load(characterId),
+    );
     this.track(
-      store.load(characterId).then(
+      loaded.then(
         (resources) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;

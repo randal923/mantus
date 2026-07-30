@@ -242,19 +242,15 @@ export class CharacterHandler {
       let pvpFrags: ReadonlyArray<PvpKillRecord> = [];
       let bestiaryKills: ReadonlyMap<number, number> = new Map();
       if (character) {
-        [
-          wheelSlices,
-          gemData,
-          depot,
-          pvpFrags,
-          bestiaryKills,
-        ] = await Promise.all([
-          this.wheel.load(character.id),
-          this.gems.load(character.id),
-          this.depot.load(character.id),
-          this.pvp.load(character.id),
-          this.bestiary.load(character.id),
-        ]);
+        // Sequential, not Promise.all: each load checks out its own pooled
+        // client, and the fan-out let one login hold five at once (more —
+        // gem data is itself three queries). None of these depend on each
+        // other, so serializing costs round trips and buys back the pool.
+        wheelSlices = await this.wheel.load(character.id);
+        gemData = await this.gems.load(character.id);
+        depot = await this.depot.load(character.id);
+        pvpFrags = await this.pvp.load(character.id);
+        bestiaryKills = await this.bestiary.load(character.id);
       }
       const wheelBonuses = character
         ? computeWheelBonuses(

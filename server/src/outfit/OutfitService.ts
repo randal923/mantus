@@ -11,6 +11,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import { MOUNTS, OUTFITS, STARTER_LOOK_TYPES } from "./outfitCatalog";
 import type { OutfitSnapshot, OutfitStore } from "./OutfitStore";
 
@@ -40,6 +41,7 @@ export class OutfitService {
     private readonly visibility: Visibility,
     private readonly persistence: CharacterPersistence,
     private readonly store?: OutfitStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(): void {
@@ -58,6 +60,11 @@ export class OutfitService {
    * Loads entitlements and back-fills the starter outfits for the character's
    * sex, so a character created before an outfit joined the starter set still
    * owns it — and never owns the other sex's wardrobe.
+   *
+   * Reads before it writes: the back-fill only exists for characters that
+   * predate a starter-set change, so granting first made every login pay one
+   * write per starter outfit for a set it already owned. The common path is now
+   * a single read.
    */
   attachCharacter(session: Session, characterId: string): void {
     const store = this.store;
@@ -66,7 +73,15 @@ export class OutfitService {
     const starterLookTypes = STARTER_LOOK_TYPES[player.sex];
     this.track(
       (async () => {
-        for (const lookType of starterLookTypes) {
+        const snapshot = await this.loginLoads.run(characterId, () =>
+          store.loadSnapshot(characterId),
+        );
+        const owned = new Set(snapshot.outfits.map((entry) => entry.lookType));
+        const missing = starterLookTypes.filter(
+          (lookType) => !owned.has(lookType),
+        );
+        if (missing.length === 0) return snapshot;
+        for (const lookType of missing) {
           await store.grantOutfit({ characterId, lookType, addons: 0 });
         }
         return store.loadSnapshot(characterId);

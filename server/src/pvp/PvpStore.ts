@@ -23,6 +23,12 @@ export interface RecordKillInput {
     readonly skull: "red" | "black";
     readonly expiresAt: Date;
   } | null;
+  /**
+   * Frags of this killer older than this are dropped in the same transaction.
+   * Collecting them here rather than at login keeps world entry read-only, and
+   * this is the moment the killer's frag set grew.
+   */
+  readonly pruneBefore: Date;
 }
 
 export type RecordKillResult = "recorded" | "duplicate";
@@ -35,12 +41,13 @@ export type RecordKillResult = "recorded" | "duplicate";
  */
 export interface PvpStore {
   /**
-   * Loads the character's killer-side frags inside the month window and
-   * prunes anything older in the same call.
+   * Loads the character's killer-side frags inside the month window. Read-only
+   * — this is on the login path, so expired rows are filtered here and
+   * collected by `recordKill` instead.
    */
   loadFrags(
     characterId: string,
-    pruneBefore: Date,
+    since: Date,
   ): Promise<ReadonlyArray<PvpKillRecord>>;
   recordKill(input: RecordKillInput): Promise<RecordKillResult>;
 }

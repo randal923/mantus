@@ -15,6 +15,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { BestiaryCatalog } from "./BestiaryCatalog";
 import type { BestiaryTracker } from "./BestiaryTracker";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { BossSlotRecord, BossSlotStore } from "./BossSlotStore";
 import { getBossMilestones } from "./getBossMilestones";
 
@@ -42,6 +43,7 @@ export class BossSlotService {
     private readonly kills: BestiaryTracker,
     private readonly boostedHooks?: BoostedHooks,
     private readonly store?: BossSlotStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -67,8 +69,11 @@ export class BossSlotService {
       this.recordsByCharacter.set(characterId, emptyRecord());
       return;
     }
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.load(characterId),
+    );
     this.track(
-      store.load(characterId).then(
+      loaded.then(
         (record) => {
           this.outcomes.push(() => {
             if (this.registry.sessionFor(characterId) !== session) return;

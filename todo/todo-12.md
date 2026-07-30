@@ -298,9 +298,22 @@ transaction.
 Implement only when load data (Feature 100's staging gates) shows they
 matter:
 
-- `PG_POOL_MAX` default (20) may be low — raise to 30–40 once player counts
-  and the Postgres `max_connections` budget are known (`index.ts` lines
-  34–49).
+- `PG_POOL_MAX` default (10) may be low — raise once player counts and the
+  pooler's server-side budget are known (`index.ts` lines 54–72). On the
+  transaction pooler this bounds concurrent in-flight queries, not reserved
+  Postgres connections, so it is far cheaper to raise than it was on the
+  session pooler.
+- Collapse the login read set into a single statement. Login is serialized
+  onto one connection and its writes are out of the read path, so the
+  remaining win is round trips: ~28 sequential reads could become one
+  `WITH RECURSIVE` + JSON-aggregate statement, following the pattern already
+  used by `depot/sql/storedStateQuery.ts` and
+  `character/sql/findByIdForAccountQuery.ts`. Also buys atomicity — today
+  each read sees its own MVCC snapshot, so a login racing a trade or mail
+  delivery can observe a torn view. Do the region co-location first (see
+  `TODO.md` accepted gaps); one fragment per subsystem
+  (`<system>/sql/loginFragment.ts`) composed by a single loader keeps SQL
+  ownership local.
 - `MonsterBrain.acquireTarget` sorts all candidates with `localeCompare`
   tiebreaks and re-checks `world.canSee` per candidate — short-circuit cheap
   predicates, single-pass min. Behavior-sensitive: write a parity test

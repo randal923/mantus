@@ -365,7 +365,7 @@ instead of copying Canary's C++ worker design:
 - A snapshot with progression events is six round trips.
 - Snapshot version checks and progression-event IDs make stale/replayed saves
   fail atomically.
-- The shared PostgreSQL pool defaults to 20 connections, accepts only 1-50,
+- The shared PostgreSQL pool defaults to 10 connections, accepts only 1-50,
   waits at most five seconds for connection establishment, and retires idle
   connections after 30 seconds.
 
@@ -426,8 +426,11 @@ For the current long-lived Node server:
 
 1. keep Supabase if it can be placed close to the Fly region;
 2. prefer its direct IPv6 connection for a persistent backend;
-3. use the session pooler on port 5432 when direct IPv6 is unavailable;
-4. start with `PG_POOL_MAX=20`, then size from pool wait, DB CPU, p95/p99 query
+3. use the *transaction* pooler on port 6543 when direct IPv6 is unavailable —
+   not the session pooler on 5432, which pins one Postgres connection per
+   pooled client for that client's whole life and so refuses any second client
+   past `pool_size` (15 by default) with `EMAXCONNSESSION`;
+4. start with `PG_POOL_MAX=10`, then size from pool wait, DB CPU, p95/p99 query
    time, connection limits, WAL and IOPS;
 5. use SSL and never point load tests at production data.
 

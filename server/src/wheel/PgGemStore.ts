@@ -23,7 +23,6 @@ import { deleteGemRowQuery } from "./sql/deleteGemRowQuery";
 import { insertGemAuditQuery } from "./sql/insertGemAuditQuery";
 import { insertGemGradeQuery } from "./sql/insertGemGradeQuery";
 import { insertGemLedgerQuery } from "./sql/insertGemLedgerQuery";
-import { insertGemResourcesRowQuery } from "./sql/insertGemResourcesRowQuery";
 import { insertGemRowQuery } from "./sql/insertGemRowQuery";
 import { selectGemGradesQuery } from "./sql/selectGemGradesQuery";
 import { selectGemResourcesQuery } from "./sql/selectGemResourcesQuery";
@@ -58,22 +57,29 @@ interface GemRow {
 export class PgGemStore implements GemStore {
   constructor(private readonly pool: Pool) {}
 
+  /**
+   * Read-only and sequential: this runs at login, where a write would need its
+   * own pooled connection and a fan-out would need three. A character with no
+   * resources row reads as the schema's zeros below; the row is created by the
+   * first gem drop (`upsertGemDropsQuery`), and every spend path is a guarded
+   * UPDATE that correctly matches nothing until then.
+   */
   async load(characterId: string): Promise<GemCharacterData> {
-    await this.pool.query(insertGemResourcesRowQuery, [characterId]);
-    const [resources, gems, grades] = await Promise.all([
-      this.pool.query<{
-        lesser_gems: number;
-        regular_gems: number;
-        greater_gems: number;
-        lesser_fragments: number;
-        greater_fragments: number;
-      }>(selectGemResourcesQuery, [characterId]),
-      this.pool.query<GemRow>(selectGemRowsQuery, [characterId]),
-      this.pool.query<{ mod_kind: number; mod_id: number; grade: number }>(
-        selectGemGradesQuery,
-        [characterId],
-      ),
+    const resources = await this.pool.query<{
+      lesser_gems: number;
+      regular_gems: number;
+      greater_gems: number;
+      lesser_fragments: number;
+      greater_fragments: number;
+    }>(selectGemResourcesQuery, [characterId]);
+    const gems = await this.pool.query<GemRow>(selectGemRowsQuery, [
+      characterId,
     ]);
+    const grades = await this.pool.query<{
+      mod_kind: number;
+      mod_id: number;
+      grade: number;
+    }>(selectGemGradesQuery, [characterId]);
     const balances = resources.rows[0];
     const revealed: RevealedGem[] = [];
     const equipped: Partial<Record<WheelDomain, string>> = {};

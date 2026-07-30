@@ -14,6 +14,7 @@ import { rollMonsterGrid, type GridCandidate } from "../prey/rollMonsterGrid";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { HuntingTaskStore, TaskSlotRecord } from "./HuntingTaskStore";
 import { rollTaskRarity } from "./rollTaskRarity";
 
@@ -54,6 +55,7 @@ export class HuntingTaskService {
       characterId: string,
     ) => ReadonlyMap<number, number>,
     private readonly store?: HuntingTaskStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {
     const pool: PoolEntry[] = [];
     for (const entry of catalog.entriesByRaceId.values()) {
@@ -97,8 +99,11 @@ export class HuntingTaskService {
   attachCharacter(session: Session, characterId: string): void {
     const store = this.store;
     if (!store) return;
+    const loaded = this.loginLoads.run(characterId, () =>
+      store.load(characterId),
+    );
     this.track(
-      store.load(characterId).then(
+      loaded.then(
         (snapshot) => {
           this.outcomes.push((now) => {
             if (this.registry.sessionFor(characterId) !== session) return;

@@ -8,6 +8,7 @@ import {
   type ProfileSelectTitleMessage,
   type TitleEntry,
 } from "@tibia/protocol";
+import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
@@ -52,6 +53,7 @@ export class ProfileService {
     private readonly registry: SessionRegistry,
     private readonly guildNameOf: (characterId: string) => string | null,
     private readonly store?: ProfileStore,
+    private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -71,16 +73,18 @@ export class ProfileService {
     const store = this.store;
     if (!store) return;
     this.track(
-      store.loadSnapshot(characterId).then(
-        (snapshot) => {
-          this.outcomes.push(() => {
-            if (this.registry.sessionFor(characterId) !== session) return;
-            this.snapshots.set(characterId, snapshot);
-            this.sendState(session, characterId);
-          });
-        },
-        (cause: unknown) => this.warn(characterId, cause),
-      ),
+      this.loginLoads
+        .run(characterId, () => store.loadSnapshot(characterId))
+        .then(
+          (snapshot) => {
+            this.outcomes.push(() => {
+              if (this.registry.sessionFor(characterId) !== session) return;
+              this.snapshots.set(characterId, snapshot);
+              this.sendState(session, characterId);
+            });
+          },
+          (cause: unknown) => this.warn(characterId, cause),
+        ),
     );
   }
 
