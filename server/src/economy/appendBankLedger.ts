@@ -1,29 +1,11 @@
 import type { PoolClient } from "pg";
+import type { BankLedgerEntryType } from "./BankLedgerEntryType";
 import { insertBankLedgerQuery } from "./sql/insertBankLedgerQuery";
 
 export async function appendBankLedger(
   client: PoolClient,
   characterId: string,
-  entryType:
-    | "deposit"
-    | "withdraw"
-    | "transfer-in"
-    | "transfer-out"
-    | "shop-sale"
-    | "npc-travel"
-    | "market-fee"
-    | "market-escrow"
-    | "market-refund"
-    | "market-sale"
-    | "market-purchase"
-    | "house-purchase"
-    | "house-rent"
-    | "house-transfer-in"
-    | "house-transfer-out"
-    | "house-bid-escrow"
-    | "house-bid-refund"
-    | "guild-deposit"
-    | "guild-withdraw",
+  entryType: BankLedgerEntryType,
   amount: number,
   balanceAfter: number,
   counterpartyCharacterId?: string,

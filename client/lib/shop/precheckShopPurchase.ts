@@ -16,6 +16,8 @@ export interface ShopPurchaseCheckInput {
   readonly currencyWeight: number;
   readonly coinWeights: ShopCoinWeights;
   readonly pendingPurchaseCost: number;
+  /** Bank money a gold shop may draw on for the shortfall. */
+  readonly bankBalance: number;
   readonly inventory: Pick<
     InventoryState,
     "gold" | "platinum" | "crystal" | "usedWeight" | "capacityMax"
@@ -48,7 +50,9 @@ export function precheckShopPurchase(
     crystal: inventory.crystal,
   };
   const worth = countMoneyWorth(carried);
-  if (worth - input.pendingPurchaseCost < input.totalCost) {
+  // Carried coins pay first and the bank covers the rest, so the funds test is
+  // against the sum while the weight below only counts the coins that leave.
+  if (worth + input.bankBalance - input.pendingPurchaseCost < input.totalCost) {
     return "insufficient-funds";
   }
   const plan = planMoneySpend(carried, Math.min(worth, input.totalCost));

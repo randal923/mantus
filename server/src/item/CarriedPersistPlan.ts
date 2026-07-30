@@ -33,13 +33,43 @@ export type CarriedPersistRowOp =
       readonly expectedVersion: number;
     };
 
+/**
+ * Why a row lost units. The economy reasons mirror the strings the DB-first
+ * shop and bank paths wrote, so the `item-destroyed` audit trail stays
+ * comparable across the move to memory-first.
+ */
+export type CarriedDestructionReason =
+  | "food"
+  | "trash"
+  | "decay"
+  | "shop-purchase"
+  | "shop-purchase-currency"
+  | "shop-sale"
+  | "bank-deposit";
+
+/** Why a row gained units, mirroring the DB-first economy reason strings. */
+export type CarriedCreationReason =
+  | "shop-purchase"
+  | "shop-purchase-change"
+  | "shop-sale"
+  | "shop-sale-currency"
+  | "bank-deposit-change"
+  | "bank-withdraw";
+
 export type CarriedPersistAudit =
   | {
       readonly kind: "destruction";
       readonly itemId: string;
       readonly typeId: number;
       readonly count: number;
-      readonly reason: "food" | "trash" | "decay";
+      readonly reason: CarriedDestructionReason;
+    }
+  | {
+      readonly kind: "creation";
+      readonly itemId: string;
+      readonly typeId: number;
+      readonly count: number;
+      readonly reason: CarriedCreationReason;
     }
   | {
       readonly kind: "transfer";

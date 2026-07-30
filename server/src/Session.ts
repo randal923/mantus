@@ -45,6 +45,12 @@ export class Session {
    * execution time inside the tick (charter rules 4, 8).
    */
   useExhaustReadyAt = 0;
+  /**
+   * Ready-time for the next shop buy/sell. Canary applies a 250 ms UI exhaust
+   * per shop action; this is the server-authoritative timer, checked at
+   * execution time inside the tick (charter rules 4, 8).
+   */
+  shopExhaustReadyAt = 0;
   /** One optimistic potion transaction may be durable at a time per user. */
   potionPersistPending = false;
   depotOperationPending = false;

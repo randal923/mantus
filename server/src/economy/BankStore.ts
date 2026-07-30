@@ -1,13 +1,12 @@
-import type {
-  BankDepositResult,
-  BankTransferResult,
-  BankWithdrawResult,
-} from "./BankOperationResult";
+import type { BankTransferResult } from "./BankOperationResult";
 
+/**
+ * Durable bank state. Deposits and withdrawals are memory-first and commit
+ * through `EconomyPersistStore`, so only the login read and the
+ * cross-character transfer are transactions of their own.
+ */
 export interface BankStore {
   balance(characterId: string): Promise<number>;
-  deposit(characterId: string, amount: number): Promise<BankDepositResult>;
-  withdraw(characterId: string, amount: number): Promise<BankWithdrawResult>;
   transfer(
     characterId: string,
     toCharacterName: string,

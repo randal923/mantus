@@ -836,7 +836,11 @@
       "no-space": "Você não tem espaço suficiente.",
       "no-capacity": "Você não consegue carregar tanto peso.",
       "failed": "A loja não conseguiu concluir essa ação."
-    }
+    },
+    "priceEach": "{{price}} {{currency}} cada",
+    "total": "Preço:",
+    "weightEach": "{{weight}} oz cada",
+    "ownedCount": "{{count}} em posse"
   },
   "depot": {
     "title": "Depósito — {{townName}}",

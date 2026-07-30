@@ -28,7 +28,9 @@ import type { BankStore } from "./economy/BankStore";
 import { CurrencyConservationRunner } from "./economy/CurrencyConservationRunner";
 import type { CurrencyReconciler } from "./economy/CurrencyReconciler";
 import { ShopRestockRunner } from "./economy/ShopRestockRunner";
+import { ShopStockCache } from "./economy/ShopStockCache";
 import { ShopService } from "./economy/ShopService";
+import type { EconomyPersistStore } from "./economy/EconomyPersistStore";
 import type { ShopStore } from "./economy/ShopStore";
 import { AdminCommandHandler } from "./admin/AdminCommandHandler";
 import { GmCommandHandler } from "./gm/GmCommandHandler";
@@ -165,6 +167,8 @@ export interface GameServerDeps {
   spellTeacher?: SpellTeacherStore;
   bank?: BankStore;
   shop?: ShopStore;
+  /** Commits memory-first shop and bank operations in one transaction. */
+  economyPersist?: EconomyPersistStore;
   depot?: DepotStore;
   market?: MarketStore;
   trade?: TradeStore;
@@ -242,6 +246,7 @@ export class GameServer {
   private readonly spellTeacher: SpellTeacherService;
   private readonly bank: BankService;
   private readonly shops: ShopService;
+  private readonly shopStock = new ShopStockCache();
   private readonly shopRestock: ShopRestockRunner;
   private readonly currencyConservation: CurrencyConservationRunner;
   private readonly depot: DepotService;
@@ -723,17 +728,31 @@ export class GameServer {
     this.bank = new BankService(
       this.world,
       this.items,
+      deps.itemCatalog,
+      deps.economyPersist,
       deps.bank,
       this.registry,
     );
+    // Money joins the items in the per-character cache, so every path that
+    // loads an inventory (login and the persist resync) also rebuilds the
+    // balance from committed DB state.
+    if (deps.bank) {
+      const bankStore = deps.bank;
+      this.items.setBankBalanceReader((characterId) =>
+        bankStore.balance(characterId),
+      );
+    }
     this.shops = new ShopService(
       this.world,
       this.items,
       creatureContent?.shopCatalogs ?? new Map(),
-      deps.shop,
+      deps.itemCatalog,
+      this.shopStock,
+      deps.economyPersist,
     );
     this.shopRestock = new ShopRestockRunner(
       creatureContent?.shopCatalogs ?? new Map(),
+      this.shopStock,
       deps.shop,
     );
     this.currencyConservation = new CurrencyConservationRunner(
@@ -1245,7 +1264,6 @@ export class GameServer {
       this.promotion.applyResolvedOutcomes(now);
       this.spellTeacher.applyResolvedOutcomes(now);
       this.bank.applyResolvedOutcomes(now);
-      this.shops.applyResolvedOutcomes(now);
       this.depot.applyResolvedOutcomes();
       this.persistResync.applyResolvedOutcomes();
       this.market.applyResolvedOutcomes(now);
@@ -1619,7 +1637,7 @@ export class GameServer {
       case "bank-deposit":
       case "bank-withdraw":
       case "bank-transfer":
-        this.bank.handle(session, intent);
+        this.bank.handle(session, intent, now);
         return;
       case "shop-buy":
       case "shop-sell":
@@ -1878,8 +1896,8 @@ export class GameServer {
     this.spellTeacher.applyResolvedOutcomes(monotonicNow());
     await this.bank.stop();
     this.bank.applyResolvedOutcomes(monotonicNow());
-    await this.shops.stop();
-    this.shops.applyResolvedOutcomes(monotonicNow());
+    // The shop writes nothing of its own: its transactions ride the shared item
+    // persist lane, drained by `items.stopPersists()` below.
     await this.shopRestock.stop();
     await this.currencyConservation.stop();
     await this.market.stop();

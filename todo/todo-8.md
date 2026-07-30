@@ -73,17 +73,11 @@ concurrency, in one transaction.
 
 **Remaining work**
 
-- **Move the carry-capacity check inside the purchase transaction** (stale
-  validation, charter rule 4; the current window is one tick). Cheap now:
-  `coinOwnedItemsQuery` already loads every owned row in the transaction, so
-  weight can be summed from the catalog there — `capacityMax` rides along on
-  the server-built `ShopPurchaseRequest` (server-computed from
-  level/vocation/wheel, never client-supplied).
 - **Shopping bags sold as containers** — Canary fills the purchased bag in
   the same transaction that created it; here a purchased container is inert.
-- **Finite stock** — plumbing, schema, and tests exist and are inert; no
-  pinned catalog entry declares `stock`, so enabling it is a content
-  decision.
+- **Finite stock** — plumbing, schema, in-memory mirror and tests all exist
+  and are exercised; no pinned catalog entry declares `stock`, so enabling it
+  is a content decision.
 
 ## Feature 48 — Player-trade parity completions
 

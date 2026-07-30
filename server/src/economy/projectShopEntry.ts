@@ -7,10 +7,12 @@ import type { ShopEntry } from "./ShopCatalog";
 export function projectShopEntry(
   entry: ShopEntry,
   type: ItemType | undefined,
+  owned = 0,
 ): ShopEntryProjection[] {
   if (!type || resolveShopSubtype(entry, type) === null) return [];
   return [
     {
+      owned,
       offerId: entry.offerId,
       itemTypeId: entry.itemTypeId,
       clientId: type.clientId,

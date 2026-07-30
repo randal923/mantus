@@ -5,6 +5,7 @@ import type {
 } from "./CarriedPersistPlan";
 import { itemLocationColumns } from "./itemLocationColumns";
 import { insertItemMergedAudit } from "./sql/insertItemMergedAudit";
+import { insertItemCreatedAudit } from "./sql/insertItemCreatedAudit";
 import { insertItemDestroyedAudit } from "./sql/insertItemDestroyedAudit";
 import { insertItemSplitAudit } from "./sql/insertItemSplitAudit";
 import { insertItemTransferredAudit } from "./sql/insertItemTransferredAudit";
@@ -31,54 +32,41 @@ export class PgItemPersistOps {
   ) {}
 
   persist(plan: CarriedPersistPlan): Promise<void> {
-    return withSerializableTransaction(this.pool, async (client) => {
-      await client.query(lockCharacterQuery, [plan.characterId]);
-      for (const op of plan.rowOps) {
-        if (op.kind === "stage") {
-          const staged = await client.query(persistCarriedStageUpdate, [
-            op.itemId,
-            op.expectedVersion,
-            op.nextVersion,
-            op.characterId,
-            op.slot,
-          ]);
-          if (staged.rowCount !== 1) {
-            throw new Error(
-              `carried persist stage missed item ${op.itemId}@${op.expectedVersion}`,
-            );
-          }
-          continue;
+    return withSerializableTransaction(this.pool, (client) =>
+      this.applyPlan(client, plan),
+    );
+  }
+
+  /**
+   * Applies the plan inside a transaction the caller already opened, so an
+   * economy write can commit its money and stock legs together with these row
+   * ops (charter rules 2 and 11).
+   */
+  async applyPlan(
+    client: PoolClient,
+    plan: CarriedPersistPlan,
+  ): Promise<void> {
+    await client.query(lockCharacterQuery, [plan.characterId]);
+    for (const op of plan.rowOps) {
+      if (op.kind === "stage") {
+        const staged = await client.query(persistCarriedStageUpdate, [
+          op.itemId,
+          op.expectedVersion,
+          op.nextVersion,
+          op.characterId,
+          op.slot,
+        ]);
+        if (staged.rowCount !== 1) {
+          throw new Error(
+            `carried persist stage missed item ${op.itemId}@${op.expectedVersion}`,
+          );
         }
-        if (op.kind === "insert") {
-          const columns = itemLocationColumns(op.item, this.mapName);
-          if (op.seed) {
-            await client.query(persistSeededInsert, [
-              op.item.id,
-              op.item.typeId,
-              op.item.count,
-              JSON.stringify(op.item.attributes),
-              op.item.version,
-              columns.locationType,
-              columns.characterId,
-              columns.containerId,
-              columns.slotIndex,
-              columns.equipmentSlot,
-              columns.worldMapName,
-              columns.worldX,
-              columns.worldY,
-              columns.worldZ,
-              columns.worldStackIndex,
-              op.item.seedKey ?? null,
-              op.seed.mapName,
-              op.seed.mapVersion,
-              op.seed.x,
-              op.seed.y,
-              op.seed.z,
-              op.seed.stackIndex,
-            ]);
-            continue;
-          }
-          await client.query(persistCarriedInsert, [
+        continue;
+      }
+      if (op.kind === "insert") {
+        const columns = itemLocationColumns(op.item, this.mapName);
+        if (op.seed) {
+          await client.query(persistSeededInsert, [
             op.item.id,
             op.item.typeId,
             op.item.count,
@@ -94,23 +82,17 @@ export class PgItemPersistOps {
             columns.worldY,
             columns.worldZ,
             columns.worldStackIndex,
+            op.item.seedKey ?? null,
+            op.seed.mapName,
+            op.seed.mapVersion,
+            op.seed.x,
+            op.seed.y,
+            op.seed.z,
+            op.seed.stackIndex,
           ]);
           continue;
         }
-        if (op.kind === "delete") {
-          const deleted = await client.query(persistCarriedDelete, [
-            op.itemId,
-            op.expectedVersion,
-          ]);
-          if (deleted.rowCount !== 1) {
-            throw new Error(
-              `carried persist delete missed item ${op.itemId}@${op.expectedVersion}`,
-            );
-          }
-          continue;
-        }
-        const columns = itemLocationColumns(op.item, this.mapName);
-        const written = await client.query(persistCarriedWriteUpdate, [
+        await client.query(persistCarriedInsert, [
           op.item.id,
           op.item.typeId,
           op.item.count,
@@ -126,18 +108,49 @@ export class PgItemPersistOps {
           columns.worldY,
           columns.worldZ,
           columns.worldStackIndex,
+        ]);
+        continue;
+      }
+      if (op.kind === "delete") {
+        const deleted = await client.query(persistCarriedDelete, [
+          op.itemId,
           op.expectedVersion,
         ]);
-        if (written.rowCount !== 1) {
+        if (deleted.rowCount !== 1) {
           throw new Error(
-            `carried persist write missed item ${op.item.id}@${op.expectedVersion}`,
+            `carried persist delete missed item ${op.itemId}@${op.expectedVersion}`,
           );
         }
+        continue;
       }
-      for (const audit of plan.audits) {
-        await this.insertAudit(client, plan.characterId, audit);
+      const columns = itemLocationColumns(op.item, this.mapName);
+      const written = await client.query(persistCarriedWriteUpdate, [
+        op.item.id,
+        op.item.typeId,
+        op.item.count,
+        JSON.stringify(op.item.attributes),
+        op.item.version,
+        columns.locationType,
+        columns.characterId,
+        columns.containerId,
+        columns.slotIndex,
+        columns.equipmentSlot,
+        columns.worldMapName,
+        columns.worldX,
+        columns.worldY,
+        columns.worldZ,
+        columns.worldStackIndex,
+        op.expectedVersion,
+      ]);
+      if (written.rowCount !== 1) {
+        throw new Error(
+          `carried persist write missed item ${op.item.id}@${op.expectedVersion}`,
+        );
       }
-    });
+    }
+    for (const audit of plan.audits) {
+      await this.insertAudit(client, plan.characterId, audit);
+    }
   }
 
   private async insertAudit(
@@ -147,6 +160,16 @@ export class PgItemPersistOps {
   ): Promise<void> {
     if (audit.kind === "destruction") {
       await client.query(insertItemDestroyedAudit, [
+        characterId,
+        audit.itemId,
+        audit.typeId,
+        audit.count,
+        audit.reason,
+      ]);
+      return;
+    }
+    if (audit.kind === "creation") {
+      await client.query(insertItemCreatedAudit, [
         characterId,
         audit.itemId,
         audit.typeId,

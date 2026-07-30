@@ -118,6 +118,11 @@ export function handleCommerceMessage(
           }
         : current,
     );
+    // An open shop spends bank money for whatever the carried coins cannot
+    // cover, so its amount slider follows the same balance.
+    state.setShopSession((current) =>
+      current ? { ...current, bankBalance: message.balance } : current,
+    );
     return true;
   }
 
@@ -146,10 +151,12 @@ export function handleCommerceMessage(
           currencyName: message.currencyName,
           currencyAmount: message.currencyAmount,
           currencyWeight: message.currencyWeight,
+          bankBalance: message.bankBalance,
           coinWeights: message.coinWeights,
           pageCount: message.pageCount,
           nextPage: 2,
           entries: message.entries,
+          selectedOfferId: message.entries[0]?.offerId ?? null,
           pending: false,
           error: null,
           lastTransaction: null,
@@ -168,6 +175,8 @@ export function handleCommerceMessage(
       return {
         ...current,
         entries: [...current.entries, ...message.entries],
+        selectedOfferId:
+          current.selectedOfferId ?? message.entries[0]?.offerId ?? null,
         nextPage: current.nextPage + 1,
       };
     });
@@ -183,6 +192,23 @@ export function handleCommerceMessage(
             error: null,
             lastTransaction: message,
             pendingPurchaseCost: 0,
+            // The traded offer's sellable count moved by exactly this amount.
+            // Other offers keep their opening count; the server is still the
+            // authority and refuses a sale the player cannot cover.
+            entries: current.entries.map((entry) =>
+              entry.offerId === message.offerId
+                ? {
+                    ...entry,
+                    owned: Math.max(
+                      0,
+                      entry.owned +
+                        (message.kind === "sale"
+                          ? -message.amount
+                          : message.amount),
+                    ),
+                  }
+                : entry,
+            ),
             currencyAmount:
               current.currencyItemTypeId === GOLD_COIN_TYPE_ID
                 ? current.currencyAmount

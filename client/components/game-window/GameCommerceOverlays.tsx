@@ -1,4 +1,5 @@
-import { GOLD_COIN_TYPE_ID } from "@tibia/protocol";
+import { SHOP_LIMITS } from "@tibia/protocol";
+import { useExhaustedAction } from "../../hooks/useExhaustedAction";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { exceedsCapacity } from "../../lib/inventory/exceedsCapacity";
 import { toInventoryItemPresentation } from "../../lib/inventory/toInventoryItemPresentation";
@@ -8,6 +9,7 @@ import { toAuctionOffer } from "../../lib/market/toAuctionOffer";
 import { toAuctionOwnOffer } from "../../lib/market/toAuctionOwnOffer";
 import { precheckShopPurchase } from "../../lib/shop/precheckShopPurchase";
 import { precheckShopSale } from "../../lib/shop/precheckShopSale";
+import { shopMoneyAvailable } from "../../lib/shop/shopMoneyAvailable";
 import { AuctionHouseModal } from "../auction/AuctionHouseModal";
 import { BankPanel } from "../bank/BankPanel";
 import { DepotModal } from "../depot/DepotModal";
@@ -20,6 +22,9 @@ import { useGameWindowStoreApi } from "./store/useGameWindowStoreApi";
 
 export function GameCommerceOverlays() {
   const { t } = useAppTranslation();
+  // Mirrors the server's shop exhaust so repeated Buy clicks queue rather than
+  // come back as "please wait for your other action to finish".
+  const runShopAction = useExhaustedAction(SHOP_LIMITS.exhaustMs);
   const store = useGameWindowStoreApi();
   const runtime = store.getState().runtime;
   const bankSession = useGameWindowStore((state) => state.bankSession);
@@ -142,119 +147,136 @@ export function GameCommerceOverlays() {
         <ShopPanel
           npcName={shopSession.npcName}
           entries={shopSession.entries}
-          carriedTotal={Math.max(
+          selectedOfferId={shopSession.selectedOfferId}
+          availableMoney={Math.max(
             0,
-            (shopSession.currencyItemTypeId === GOLD_COIN_TYPE_ID
-              ? inventory.gold +
-                inventory.platinum * 100 +
-                inventory.crystal * 10_000
-              : shopSession.currencyAmount) - shopSession.pendingPurchaseCost,
+            shopMoneyAvailable({
+              currencyItemTypeId: shopSession.currencyItemTypeId,
+              currencyAmount: shopSession.currencyAmount,
+              bankBalance: shopSession.bankBalance,
+              inventory,
+            }) - shopSession.pendingPurchaseCost,
+          )}
+          freeCapacity={Math.max(
+            0,
+            inventory.capacityMax * 100 - inventory.usedWeight,
           )}
           currencyName={shopSession.currencyName}
           currencySpriteId={shopSession.currencySpriteId}
-          pending={shopSession.pending}
           error={shopSession.error}
           lastTransaction={shopSession.lastTransaction}
-          onBuy={(offerId, amount) => {
-            const entry = shopSession.entries.find(
-              (candidate) => candidate.offerId === offerId,
-            );
-            if (!entry || entry.buyPrice === undefined) return;
-            const rejection = precheckShopPurchase({
-              unitWeight: entry.weight,
-              amount,
-              totalCost: entry.buyPrice * amount,
-              currencyItemTypeId: shopSession.currencyItemTypeId,
-              currencyAmount: shopSession.currencyAmount,
-              currencyWeight: shopSession.currencyWeight,
-              coinWeights: shopSession.coinWeights,
-              pendingPurchaseCost: shopSession.pendingPurchaseCost,
-              inventory,
-            });
-            if (rejection) {
-              setShopSession((current) =>
-                current?.shopSessionId === shopSession.shopSessionId
-                  ? { ...current, error: rejection }
-                  : current,
-              );
-              return;
-            }
-            const predicted = sessionActions.inventory.preview({
-              kind: "add",
-              item: toInventoryItemPresentation(entry),
-              count: amount,
-              itemIds: Array.from(
-                {
-                  length: entry.stackable
-                    ? Math.ceil(amount / entry.maxCount)
-                    : amount,
-                },
-                () => crypto.randomUUID(),
-              ),
-            });
-            if (!predicted) {
-              setShopSession((current) =>
-                current?.shopSessionId === shopSession.shopSessionId
-                  ? { ...current, error: "busy" }
-                  : current,
-              );
-              return;
-            }
-            const sent =
-              runtime.clientRef.current?.shopBuy(
-                shopSession.npcId,
-                shopSession.shopSessionId,
-                offerId,
-                amount,
-              ) ?? false;
-            if (!sent) sessionActions.inventory.rejectPreview();
+          onSelect={(offerId) => {
             setShopSession((current) =>
               current?.shopSessionId === shopSession.shopSessionId
-                ? {
-                    ...current,
-                    pending: sent,
-                    error: sent ? null : "failed",
-                    pendingPurchaseCost: sent ? entry.buyPrice! * amount : 0,
-                  }
+                ? { ...current, selectedOfferId: offerId, error: null }
                 : current,
             );
           }}
-          onSell={(offerId, amount) => {
-            const entry = shopSession.entries.find(
-              (candidate) => candidate.offerId === offerId,
-            );
-            if (!entry || entry.sellPrice === undefined) return;
-            const rejection = precheckShopSale({
-              unitWeight: entry.weight,
-              amount,
-              totalProceeds: entry.sellPrice * amount,
-              currencyItemTypeId: shopSession.currencyItemTypeId,
-              currencyWeight: shopSession.currencyWeight,
-              coinWeights: shopSession.coinWeights,
-              inventory,
-            });
-            if (rejection) {
+          onBuy={(offerId, amount) =>
+            runShopAction(() => {
+              const entry = shopSession.entries.find(
+                (candidate) => candidate.offerId === offerId,
+              );
+              if (!entry || entry.buyPrice === undefined) return;
+              const rejection = precheckShopPurchase({
+                unitWeight: entry.weight,
+                amount,
+                totalCost: entry.buyPrice * amount,
+                currencyItemTypeId: shopSession.currencyItemTypeId,
+                currencyAmount: shopSession.currencyAmount,
+                currencyWeight: shopSession.currencyWeight,
+                coinWeights: shopSession.coinWeights,
+                pendingPurchaseCost: shopSession.pendingPurchaseCost,
+                bankBalance: shopSession.bankBalance,
+                inventory,
+              });
+              if (rejection) {
+                setShopSession((current) =>
+                  current?.shopSessionId === shopSession.shopSessionId
+                    ? { ...current, error: rejection }
+                    : current,
+                );
+                return;
+              }
+              const predicted = sessionActions.inventory.preview({
+                kind: "add",
+                item: toInventoryItemPresentation(entry),
+                count: amount,
+                itemIds: Array.from(
+                  {
+                    length: entry.stackable
+                      ? Math.ceil(amount / entry.maxCount)
+                      : amount,
+                  },
+                  () => crypto.randomUUID(),
+                ),
+              });
+              if (!predicted) {
+                setShopSession((current) =>
+                  current?.shopSessionId === shopSession.shopSessionId
+                    ? { ...current, error: "busy" }
+                    : current,
+                );
+                return;
+              }
+              const sent =
+                runtime.clientRef.current?.shopBuy(
+                  shopSession.npcId,
+                  shopSession.shopSessionId,
+                  offerId,
+                  amount,
+                ) ?? false;
+              if (!sent) sessionActions.inventory.rejectPreview();
               setShopSession((current) =>
                 current?.shopSessionId === shopSession.shopSessionId
-                  ? { ...current, error: rejection }
+                  ? {
+                      ...current,
+                      pending: sent,
+                      error: sent ? null : "failed",
+                      pendingPurchaseCost: sent ? entry.buyPrice! * amount : 0,
+                    }
                   : current,
               );
-              return;
-            }
-            const sent =
-              runtime.clientRef.current?.shopSell(
-                shopSession.npcId,
-                shopSession.shopSessionId,
-                offerId,
+            })
+          }
+          onSell={(offerId, amount) =>
+            runShopAction(() => {
+              const entry = shopSession.entries.find(
+                (candidate) => candidate.offerId === offerId,
+              );
+              if (!entry || entry.sellPrice === undefined) return;
+              const rejection = precheckShopSale({
+                unitWeight: entry.weight,
                 amount,
-              ) ?? false;
-            if (!sent) return;
-            setShopSession((current) =>
-              current?.shopSessionId === shopSession.shopSessionId
-                ? { ...current, pending: true, error: null }
-                : current,
-            );
-          }}
+                totalProceeds: entry.sellPrice * amount,
+                currencyItemTypeId: shopSession.currencyItemTypeId,
+                currencyWeight: shopSession.currencyWeight,
+                coinWeights: shopSession.coinWeights,
+                inventory,
+              });
+              if (rejection) {
+                setShopSession((current) =>
+                  current?.shopSessionId === shopSession.shopSessionId
+                    ? { ...current, error: rejection }
+                    : current,
+                );
+                return;
+              }
+              const sent =
+                runtime.clientRef.current?.shopSell(
+                  shopSession.npcId,
+                  shopSession.shopSessionId,
+                  offerId,
+                  amount,
+                ) ?? false;
+              if (!sent) return;
+              setShopSession((current) =>
+                current?.shopSessionId === shopSession.shopSessionId
+                  ? { ...current, pending: true, error: null }
+                  : current,
+              );
+            })
+          }
           onClose={() => setShopSession(null)}
         />
       )}

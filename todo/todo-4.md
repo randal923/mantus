@@ -89,9 +89,8 @@ Canary behavior.
   after the memory-first path soaks; do not call them.
 - `useOptimisticInventory` prediction is redundant for converted ops —
   removal is a standalone client-only simplification.
-- Shop-sell has no client ownership precheck (accepted); the pickup capacity
-  precheck ignores ground-container contents; `usedWeight` not adjusted by
-  queued ops (errs safe).
+- The pickup capacity precheck ignores ground-container contents;
+  `usedWeight` not adjusted by queued ops (errs safe).
 
 **Tests:** CTE-converted ops keep the single-owner/race exploit tests green.
 

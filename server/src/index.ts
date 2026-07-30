@@ -7,9 +7,11 @@ import { DevTokenVerifier } from "./DevTokenVerifier";
 import { SupabaseTokenVerifier } from "./SupabaseTokenVerifier";
 import { loadItemCatalog } from "./item/loadItemCatalog";
 import { assertStoreCatalog } from "./store/assertStoreCatalog";
+import { PgItemPersistOps } from "./item/PgItemPersistOps";
 import { PgItemStore } from "./item/PgItemStore";
 import { CurrencyReconciler } from "./economy/CurrencyReconciler";
 import { PgBankStore } from "./economy/PgBankStore";
+import { PgEconomyPersistOps } from "./economy/PgEconomyPersistOps";
 import { PgShopStore } from "./economy/PgShopStore";
 import { PgNpcTravelStore } from "./npc/PgNpcTravelStore";
 import { PgPromotionStore } from "./npc/PgPromotionStore";
@@ -107,8 +109,15 @@ const items = new PgItemStore(pool, itemCatalog, serverConfig.map.name);
 const npcTravel = new PgNpcTravelStore(pool, itemCatalog);
 const promotion = new PgPromotionStore(pool, itemCatalog);
 const spellTeacher = new PgSpellTeacherStore(pool, itemCatalog);
-const bank = new PgBankStore(pool, itemCatalog);
-const shop = new PgShopStore(pool, itemCatalog);
+const bank = new PgBankStore(pool);
+const shop = new PgShopStore(pool);
+// Memory-first shop and bank writes commit their item, money, stock and audit
+// legs together. The carried row writer is stateless, so this second instance
+// shares nothing with the one inside PgItemStore.
+const economyPersist = new PgEconomyPersistOps(
+  pool,
+  new PgItemPersistOps(pool, serverConfig.map.name),
+);
 const depot = new PgDepotStore(pool, itemCatalog);
 const market = new PgMarketStore(pool, itemCatalog);
 const trade = new PgTradeStore(pool, itemCatalog);
@@ -159,6 +168,7 @@ const server = new GameServer(serverConfig, {
   spellTeacher,
   bank,
   shop,
+  economyPersist,
   depot,
   market,
   trade,

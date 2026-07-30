@@ -1,25 +1,20 @@
 import type { Pool } from "pg";
-import type { ItemCatalog } from "../item/ItemCatalog";
-import type {
-  BankDepositResult,
-  BankTransferResult,
-  BankWithdrawResult,
-} from "./BankOperationResult";
+import type { BankTransferResult } from "./BankOperationResult";
 import type { BankStore } from "./BankStore";
-import { executeBankDeposit } from "./executeBankDeposit";
 import { executeBankTransfer } from "./executeBankTransfer";
-import { executeBankWithdraw } from "./executeBankWithdraw";
 import { parseBalance } from "./parseBalance";
 import { runSerializableTransaction } from "./runSerializableTransaction";
 import { selectBankBalanceQuery } from "./sql/selectBankBalanceQuery";
 import { validateBankAmount } from "./validateBankAmount";
 import { validateBankCharacterId } from "./validateBankCharacterId";
 
+/**
+ * Durable bank state. Deposits and withdrawals touch one character, so they are
+ * planned in memory and committed by `PgEconomyPersistOps`; only the login read
+ * and the cross-character transfer need a transaction of their own here.
+ */
 export class PgBankStore implements BankStore {
-  constructor(
-    private readonly pool: Pool,
-    private readonly catalog: ItemCatalog,
-  ) {}
+  constructor(private readonly pool: Pool) {}
 
   async balance(characterId: string): Promise<number> {
     validateBankCharacterId(characterId);
@@ -29,28 +24,6 @@ export class PgBankStore implements BankStore {
     );
     const row = result.rows[0];
     return row ? parseBalance(row.balance) : 0;
-  }
-
-  async deposit(
-    characterId: string,
-    amount: number,
-  ): Promise<BankDepositResult> {
-    validateBankCharacterId(characterId);
-    validateBankAmount(amount);
-    return runSerializableTransaction(this.pool, (client) =>
-      executeBankDeposit(client, characterId, amount, this.catalog),
-    );
-  }
-
-  async withdraw(
-    characterId: string,
-    amount: number,
-  ): Promise<BankWithdrawResult> {
-    validateBankCharacterId(characterId);
-    validateBankAmount(amount);
-    return runSerializableTransaction(this.pool, (client) =>
-      executeBankWithdraw(client, characterId, amount, this.catalog),
-    );
   }
 
   async transfer(

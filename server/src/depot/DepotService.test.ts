@@ -155,6 +155,7 @@ const makeHarness = (options: HarnessOptions = {}) => {
     characterId: player.id,
     capacityMax: 400,
     items: [backpack, ...(options.carried ?? [])],
+    bankBalance: 0,
   });
   const persist = vi.fn(options.persist ?? (async () => undefined));
   const store = {

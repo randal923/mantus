@@ -164,7 +164,7 @@ const makeHarness = (options?: {
     };
     const inventory = [backpack, ...carried];
     for (const item of inventory) itemStore.seed(item);
-    items.attach({ characterId, capacityMax, items: inventory });
+    items.attach({ characterId, capacityMax, items: inventory, bankBalance: 0 });
     return { player, session, messages };
   };
 

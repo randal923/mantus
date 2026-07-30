@@ -328,6 +328,7 @@ export class NpcDialogueExecutor {
         npc,
         action.operation,
         amount,
+        now,
         (balance) =>
           answer(
             action.operation === "deposit"

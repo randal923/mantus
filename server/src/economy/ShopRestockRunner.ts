@@ -1,4 +1,5 @@
 import type { ShopCatalog } from "./ShopCatalog";
+import type { ShopStockCache } from "./ShopStockCache";
 import type { ShopRestockSchedule, ShopStore } from "./ShopStore";
 
 const RESTOCK_SCAN_INTERVAL_MS = 60_000;
@@ -17,12 +18,19 @@ export class ShopRestockRunner {
 
   constructor(
     private readonly catalogs: ReadonlyMap<string, ShopCatalog>,
+    private readonly stock: ShopStockCache,
     private readonly store?: ShopStore,
   ) {}
 
-  /** Reconciles the durable stock rows with the catalog. Call once at boot. */
+  /**
+   * Reconciles the durable stock rows with the catalog, then loads them into
+   * the in-memory mirror the tick decides purchases against. Call once at boot.
+   */
   async seed(): Promise<void> {
-    if (!this.store?.seedRestockSchedules) return;
+    if (!this.store?.seedRestockSchedules) {
+      this.stock.seed(this.catalogs, []);
+      return;
+    }
     const schedules: ShopRestockSchedule[] = [];
     for (const catalog of this.catalogs.values()) {
       for (const entry of catalog.entries) {
@@ -38,6 +46,7 @@ export class ShopRestockRunner {
       }
     }
     await this.store.seedRestockSchedules(schedules);
+    this.stock.seed(this.catalogs, (await this.store.readStock?.()) ?? []);
   }
 
   tick(now: number): void {
@@ -46,8 +55,12 @@ export class ShopRestockRunner {
     this.nextScanAt = now + RESTOCK_SCAN_INTERVAL_MS;
     const restock = this.store.restockDueOffers();
     this.operation = restock
-      .then((count) => {
-        if (count > 0) console.info(`restocked ${count} shop offer(s)`);
+      .then((offers) => {
+        if (offers.length === 0) return;
+        // The sweep is the durable writer; the mirror follows it so the tick
+        // sees the refill without re-reading the table.
+        this.stock.restock(offers);
+        console.info(`restocked ${offers.length} shop offer(s)`);
       })
       .catch((cause: unknown) => {
         const reason = cause instanceof Error ? cause.message : "unknown";

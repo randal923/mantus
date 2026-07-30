@@ -3,12 +3,17 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
+import type { ItemCatalog } from "../item/ItemCatalog";
 import { loadItemCatalog } from "../item/loadItemCatalog";
+import { PgItemPersistOps } from "../item/PgItemPersistOps";
+import { PgItemStore } from "../item/PgItemStore";
 import { applyMigrations } from "../test/applyMigrations";
 import { CurrencyReconciler } from "./CurrencyReconciler";
 import { PgBankStore } from "./PgBankStore";
-import { PgShopStore } from "./PgShopStore";
-import type { ShopSaleRequest } from "./ShopStore";
+import { PgEconomyPersistOps } from "./PgEconomyPersistOps";
+import { planBankDeposit } from "./plan/planBankDeposit";
+import { planBankWithdraw } from "./plan/planBankWithdraw";
+import { planShopSale } from "./plan/planShopSale";
 
 const TEST_SCHEMA = "currency_reconciler_integration";
 const MIGRATION_LOCK_KEY = 7_281_019;
@@ -22,7 +27,9 @@ let setupClient: Client;
 let pool: Pool;
 let reconciler: CurrencyReconciler;
 let bank: PgBankStore;
-let shop: PgShopStore;
+let catalog: ItemCatalog;
+let itemStore: PgItemStore;
+let economyPersist: PgEconomyPersistOps;
 let characterId: string;
 
 const backpackChild = async (
@@ -57,18 +64,25 @@ const seedBankBalance = async (amount: number): Promise<void> => {
   );
 };
 
-const saleRequest = (
-  overrides: Partial<ShopSaleRequest> = {},
-): ShopSaleRequest => ({
-  npcTypeId: "sam",
-  shopId: "sam",
-  offerId: "item-3274",
-  itemTypeId: AXE_TYPE,
-  amount: 1,
-  unitPrice: 7,
-  totalProceeds: 7,
-  ...overrides,
+/** The live state a planner reads, loaded the way login does. */
+const planInput = async () => ({
+  characterId,
+  catalog,
+  carried: {
+    items: await itemStore.loadForCharacter(characterId),
+    capacityMax: 100_000,
+    bankBalance: await bank.balance(characterId),
+  },
 });
+
+const commit = async (plan: {
+  status: string;
+  persist?: Parameters<PgEconomyPersistOps["persist"]>[0];
+}): Promise<void> => {
+  expect(plan.status).toBe("planned");
+  if (!plan.persist) throw new Error(`plan was rejected: ${plan.status}`);
+  await economyPersist.persist(plan.persist);
+};
 
 databaseDescribe("CurrencyReconciler integration", () => {
   beforeAll(async () => {
@@ -84,10 +98,14 @@ databaseDescribe("CurrencyReconciler integration", () => {
       connectionString: databaseUrl,
       options: `-c search_path=${TEST_SCHEMA}`,
     });
-    const catalog = await loadItemCatalog();
+    catalog = await loadItemCatalog();
     reconciler = new CurrencyReconciler(pool);
-    bank = new PgBankStore(pool, catalog);
-    shop = new PgShopStore(pool, catalog);
+    bank = new PgBankStore(pool);
+    itemStore = new PgItemStore(pool, catalog, "reconciler-test");
+    economyPersist = new PgEconomyPersistOps(
+      pool,
+      new PgItemPersistOps(pool, "reconciler-test"),
+    );
   });
 
   beforeEach(async () => {
@@ -169,11 +187,21 @@ databaseDescribe("CurrencyReconciler integration", () => {
     await reconciler.run();
 
     // Deposits and withdrawals move money between the two pots without
-    // changing the supply; the sale mints new coins and audits them.
-    await bank.deposit(characterId, 60);
-    await bank.withdraw(characterId, 30);
-    const sold = await shop.sell(characterId, saleRequest());
-    expect(sold.status).toBe("committed");
+    // changing the supply; the sale mints new coins and audits them. Each runs
+    // the production path: plan in memory, then commit the one transaction.
+    await commit(planBankDeposit({ ...(await planInput()), amount: 60 }));
+    await commit(planBankWithdraw({ ...(await planInput()), amount: 30 }));
+    await commit(
+      planShopSale({
+        ...(await planInput()),
+        npcTypeId: "sam",
+        shopId: "sam",
+        offerId: "item-3274",
+        itemTypeId: AXE_TYPE,
+        amount: 1,
+        unitPrice: 7,
+      }),
+    );
 
     const report = await reconciler.run();
 

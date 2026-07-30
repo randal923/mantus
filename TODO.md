@@ -592,6 +592,21 @@ limitations accepted during a session are recorded in the owning feature file
   `itemLookSegments` — our catalog carries `attack` and `maxHitChance` for every
   ammo type. Owner: Feature 52.
 
+- **Memory-first economy SQL is unrun against a database** (2026-07-30).
+  Shop buy/sell and bank deposit/withdraw moved to memory-first, and the whole
+  durable half now goes through the new `PgEconomyPersistOps` — guarded bank
+  deltas keyed on `expectedBalanceAfter`, guarded finite-stock decrements, and
+  the shop/bank audit and ledger inserts. Its 10-case integration suite
+  (`server/src/economy/PgEconomyPersistOps.integration.test.ts`) plus the
+  reworked `PgBankStore` and `CurrencyReconciler` suites have never executed:
+  this environment has neither Docker nor a local Postgres, and the configured
+  `DATABASE_URL` is the hosted Supabase pooler, which is not a test target.
+  Everything below the planners is therefore proven only by typechecking.
+  Recommended fix: run `yarn test:integration` with `TEST_DATABASE_URL`
+  pointing at a local Postgres before this reaches production, and treat a
+  failure there as blocking. Owner: Feature 46.
+
+
 ## Repo-wide known breakage
 
 - None. The `yarn parity:check` converter-hash drift recorded here previously

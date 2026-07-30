@@ -2009,3 +2009,109 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
   PZ regeneration below streak 2 is Canary's rule (condition.cpp:1490) and is a
   live behaviour change for characters with no streak — recorded in `TODO.md`
   with the additive-only alternative.
+
+### 2026-07-30 — Memory-first NPC shops and bank (Features 45, 46)
+
+- **Problem**: buying at an NPC took seconds and spam-clicking Buy produced a
+  run of "Please wait until your other action is finished." The purchase path
+  was database-first: `ShopService.execute` held `session.itemOperationPending`
+  for the whole of `executeShopPurchase`, which made ~10–14 sequential round
+  trips inside one SERIALIZABLE transaction (owned rows, bank lock, stock
+  reserve, per-row coin destroys, backpack lock, change grants, item grant,
+  audit, commit) — against a hosted Supabase pooler measured at ~150 ms RTT,
+  so 1–2 s per purchase before any 40001 retry. Every click inside that window
+  was refused with `busy`. There was also no amount slider, and no clamp to
+  what the player could afford or carry.
+- **What changed**: purchases, sales, deposits and withdrawals now compute in
+  memory inside the tick and flush behind it, the way Canary does
+  (`Game::playerBuyItem` is fully in-memory; its only throttle is a 250 ms
+  `isUIExhausted`).
+  - The bank balance joined the per-character inventory cache
+    (`InventoryCache.bankBalance`, seeded by `ItemIntentHandler.load` through
+    an injected reader), so money and items attach, detach and resync as one
+    unit and a purchase plans both legs from one snapshot.
+  - New pure planners return a `CarriedPlan` plus the durable money/stock/audit
+    legs: `planShopPurchase`, `planShopSale`, `planBankDeposit`,
+    `planBankWithdraw`, composed over a shared `CarriedItemDraft` (the
+    in-memory twin of `PgCoinOperations`: same fill order, same per-row audits,
+    same 500-row ceiling).
+  - `PgEconomyPersistOps` commits the carried row ops, guarded bank deltas,
+    guarded finite-stock decrements and the audit rows in one transaction. It
+    runs on `runSerializableTransaction` (40001/40P01 only) rather than the
+    item helper, because retrying an ambiguous connection reset could apply a
+    balance delta twice. Every bank op carries `expectedBalanceAfter`; a
+    mismatch throws, poisoning the write lane into the existing resync path.
+  - The gate became a 250 ms `session.shopExhaustReadyAt` plus
+    `itemOperationPending` only. `itemPersistsPending` was dropped from it:
+    memory-first writes have already reconciled memory, so ordering is the
+    persist lane's job — which is what lets purchases repeat.
+  - Finite stock gained an in-memory mirror (`ShopStockCache`) seeded at boot
+    and refreshed by the restock sweep, keeping one purchase path instead of
+    splitting by whether an offer has stock.
+  - Client: `ShopPanel` became the Tibia trade window — Buy/Sell tabs, search,
+    a scrolling offer list, and one pinned `ShopAmountPanel` (slider + amount
+    box + Price/Gold + Buy) driving the selected offer. `maxShopPurchaseAmount`
+    mirrors OTClient's `refreshItem` clamp (offer cap, money, capacity); the
+    amount is held as *desired* and clamped for display, so it drops to what
+    is affordable after each buy and recovers when money returns.
+    `useExhaustedAction` holds an early click back for the exhaust window
+    instead of sending one that would be refused. `shop-opened` now ships the
+    player's own `bankBalance` and a per-offer `owned` count (Canary's
+    `sendSaleItemList` sends both).
+  - Retired the DB-first path: `executeShopPurchase`, `executeShopSale`,
+    `executeBankDeposit`, `executeBankWithdraw`, `reserveShopStock`,
+    `debitShopBankBalance`, `sellableShopRows`, `ShopPrechecks`,
+    `ShopOperationResult`, `countFreeBackpackSlots`, `validateShopPurchase`,
+    `validateShopSale`, `sql/debitShopBankWithLedgerQuery`, and the
+    `purchase`/`sell`/`deposit`/`withdraw` members of the shop and bank stores.
+    A bank **transfer** stays database-first on purpose — it names a possibly
+    offline recipient, so the row can only be found and credited in a
+    transaction — but now runs through `runOrderedInternalOperation` so it
+    reads the sender's balance after every queued memory-first write.
+- **Files touched**: `protocol/src/shop.ts` (SHOP_LIMITS, `bankBalance`,
+  `owned`); `server/src/economy/` (`plan/{CarriedItemDraft,backpackContainers,
+  planShopPurchase,planShopSale,planBankDeposit,planBankWithdraw}.ts`,
+  `{EconomyPersistPlan,EconomyPersistStore,PgEconomyPersistOps,
+  BankLedgerEntryType,ShopStockCache}.ts`, `{ShopService,BankService,
+  PgShopStore,PgBankStore,ShopStore,BankStore,BankOperationResult,
+  ShopRestockRunner,projectShopEntry,appendBankLedger}.ts`,
+  `sql/readShopStockQuery.ts`); `server/src/item/`
+  (`{InventoryCache,LoadedInventory,InventoryCacheManager,ItemIntentHandler,
+  CarriedPersistPlan,PgItemPersistOps,PersistResyncRunner}.ts`);
+  `server/src/{Session,GameServer,index}.ts`,
+  `server/src/npc/NpcDialogueExecutor.ts`; `client/components/shop/*` (3),
+  `client/lib/shop/{maxShopPurchaseAmount,shopMoneyAvailable,
+  precheckShopPurchase}.ts`, `client/hooks/useExhaustedAction.ts`,
+  `client/components/game-window/{GameCommerceOverlays.tsx,
+  types/ShopSessionState.ts,messages/handleCommerceMessage.ts}`,
+  `client/locales/{en,pt-BR}.json`, `client/stories/ShopPanel.stories.tsx`.
+- **Verified**: workspace typecheck 0 errors; server suite 1,419 passed / 251
+  skipped, including 25 `ShopService` cases (buys apply in the same tick with
+  nothing pending; three buys spaced by the exhaust all succeed with no
+  failure message; a buy inside the window is refused; carried-then-bank
+  payment and the `bank-updated` push; refusal when coins+bank fall short; a
+  DB-first operation still blocks; finite stock cannot be oversold across
+  repeated buys; `owned` excludes equipped rows), 18 `BankService` cases
+  (deposit/withdraw land in-tick, withdrawal can never overdraw, no-space vs
+  no-capacity, transfer ordering and recipient push), and 24 planner cases
+  plus 6 `CarriedItemDraft` cases (a destroyed row's slot is reused by a later
+  grant, stacks top up before opening new ones, nested bags are filled,
+  equipped rows and non-empty containers are never consumed). Client unit
+  suite 326 passed including the new clamp helpers; all 6 `ShopPanel` stories
+  pass in headless chromium — `ClampedByMoney` asserts the slider's `max`
+  falls to 6 at 137 gold, `ClampedByCapacity` asserts Buy disables at zero
+  room. The window was screenshot-verified against the reference: tabs,
+  search, offer list, slider, Amount box, Price/Gold and Buy all present.
+- **Residual risk**: the **integration tests are unrun**. This environment has
+  no Docker and no local Postgres, and the configured `DATABASE_URL` is the
+  hosted Supabase pooler, so `PgEconomyPersistOps.integration.test.ts` (10 new
+  cases: purchase commits goods+coins+audit together; the bank shortfall writes
+  its ledger row; a diverged balance is refused; a debit cannot go negative;
+  stock decrements under its guard and a replay is refused; sale overflow is
+  banked and audited; deposit/withdraw legs commit together; the bank row is
+  created on first use; two racing purchases leave exactly one) has never
+  executed against a real database. Nothing in the new writer's SQL is
+  therefore proven beyond typechecking — run `test:integration` with a local
+  Postgres before trusting it in production. Four client storybook failures
+  (ActionBar, GameHud, ProficiencyModal, SpellListModal) are pre-existing and
+  reproduce on a clean tree.

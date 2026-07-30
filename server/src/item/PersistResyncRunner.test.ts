@@ -174,6 +174,7 @@ const attachCaches = (harness: ReturnType<typeof makeHarness>): void => {
     characterId: CHARACTER_ID,
     capacityMax: 400,
     items: committedCarried(),
+    bankBalance: 0,
   });
   harness.depot.attach(committedDepot());
 };

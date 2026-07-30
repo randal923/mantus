@@ -19,6 +19,7 @@ export class InventoryCacheManager {
       items: loaded.items,
       revision: 0,
       openContainerIds: new Set<string>(),
+      bankBalance: loaded.bankBalance,
     };
     this.inventories.set(loaded.characterId, cache);
     return this.project(cache);
@@ -34,11 +35,30 @@ export class InventoryCacheManager {
 
   snapshot(
     characterId: string,
-  ): { items: ReadonlyArray<Item>; capacityMax: number } | null {
+  ): {
+    items: ReadonlyArray<Item>;
+    capacityMax: number;
+    bankBalance: number;
+  } | null {
     const cache = this.inventories.get(characterId);
     return cache
-      ? { items: cache.items, capacityMax: cache.capacityMax }
+      ? {
+          items: cache.items,
+          capacityMax: cache.capacityMax,
+          bankBalance: cache.bankBalance,
+        }
       : null;
+  }
+
+  /**
+   * Replaces the cached balance. `items` and `revision` are carried over
+   * untouched so no client projection is invalidated and the items-keyed
+   * memoizations survive: only `bank-updated` reports a balance.
+   */
+  setBankBalance(characterId: string, bankBalance: number): void {
+    const cache = this.inventories.get(characterId);
+    if (!cache || cache.bankBalance === bankBalance) return;
+    this.inventories.set(characterId, { ...cache, bankBalance });
   }
 
   updateCapacity(

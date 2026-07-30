@@ -836,7 +836,11 @@
       "no-space": "You do not have enough room.",
       "no-capacity": "You cannot carry that much weight.",
       "failed": "The shop could not complete that action."
-    }
+    },
+    "priceEach": "{{price}} {{currency}} each",
+    "total": "Price:",
+    "weightEach": "{{weight}} oz each",
+    "ownedCount": "{{count}} owned"
   },
   "depot": {
     "title": "Depot — {{townName}}",

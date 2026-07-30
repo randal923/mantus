@@ -195,7 +195,12 @@ const makeHarness = (
     world,
     new Visibility(world, new SessionRegistry()),
   );
-  items.attach({ characterId: player.id, capacityMax: 400, items: [] });
+  items.attach({
+    characterId: player.id,
+    capacityMax: 400,
+    items: [],
+    bankBalance: 0,
+  });
   const depotStore = {
     loadForCharacter: vi.fn(),
     persist: vi.fn(async () => undefined),

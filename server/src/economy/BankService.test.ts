@@ -1,19 +1,79 @@
-import type { ServerMessage } from "@tibia/protocol";
+import {
+  CRYSTAL_COIN_TYPE_ID,
+  GOLD_COIN_TYPE_ID,
+  PLATINUM_COIN_TYPE_ID,
+  type ServerMessage,
+} from "@tibia/protocol";
 import { describe, expect, it, vi } from "vitest";
 import type { WebSocket } from "ws";
 import { Npc } from "../creature/Npc";
 import type { NpcType } from "../creature/NpcType";
 import { gridMapData } from "../gridMapData";
 import type { Item } from "../item/Item";
+import { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import type { ItemType } from "../item/ItemType";
 import { Player } from "../Player";
 import { Session } from "../Session";
 import { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
-import { World } from "../World";
-import type { BankStore } from "./BankStore";
-import { BankService } from "./BankService";
 import { makeNpcType } from "../test/makeNpcType";
+import { World } from "../World";
+import { BankService } from "./BankService";
+import type { BankStore } from "./BankStore";
+import type { EconomyPersistPlan } from "./EconomyPersistPlan";
+
+const BACKPACK_TYPE = 2854;
+const AXE = 3274;
+const BACKPACK_ID = "test-backpack";
+
+const makeItemType = (
+  overrides: Partial<ItemType> & { id: number },
+): ItemType => ({
+  clientId: overrides.id,
+  name: `type-${overrides.id}`,
+  spriteId: 7_000 + overrides.id,
+  stackable: false,
+  maxCount: 1,
+  weight: 100,
+  pickupable: true,
+  movable: true,
+  light: { intensity: 0, color: 0 },
+  elevation: 0,
+  render: {
+    ground: false,
+    groundBorder: false,
+    onBottom: false,
+    onTop: false,
+    stackable: false,
+    fluidContainer: false,
+    splash: false,
+    hangable: false,
+    hookSouth: false,
+    hookEast: false,
+    lyingCorpse: false,
+    animateAlways: false,
+    topEffect: false,
+  },
+  ...overrides,
+});
+
+const coinType = (id: number): ItemType =>
+  makeItemType({ id, stackable: true, maxCount: 100, weight: 10 });
+
+const itemCatalog = new ItemCatalog([
+  makeItemType({
+    id: BACKPACK_TYPE,
+    equipmentSlot: "backpack",
+    containerCapacity: 20,
+    weight: 1_800,
+  }),
+  makeItemType({ id: AXE, weight: 100 }),
+  makeItemType({ id: 2_000, weight: 100 }),
+  coinType(GOLD_COIN_TYPE_ID),
+  coinType(PLATINUM_COIN_TYPE_ID),
+  coinType(CRYSTAL_COIN_TYPE_ID),
+]);
 
 const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -36,13 +96,7 @@ const bankerType: NpcType = makeNpcType({
     walkAway: ["Bye."],
     rootNodeId: "root",
     nodes: [
-      {
-        id: "root",
-        matches: [],
-        responses: [],
-        children: ["bank"],
-        choices: [],
-      },
+      { id: "root", matches: [], responses: [], children: ["bank"], choices: [] },
       {
         id: "bank",
         matches: [["bank"]],
@@ -59,14 +113,20 @@ const bankerType: NpcType = makeNpcType({
 
 const goldStack = (id: string, count: number, slot: number): Item => ({
   id,
-  typeId: 3031,
+  typeId: GOLD_COIN_TYPE_ID,
   count,
   attributes: {},
   version: 1,
-  location: { kind: "container", containerId: "test-backpack", slot },
+  location: { kind: "container", containerId: BACKPACK_ID, slot },
 });
 
-const makeHarness = (store: Partial<BankStore>, carried: Item[] = []) => {
+const makeHarness = (options?: {
+  store?: Partial<BankStore>;
+  carried?: Item[];
+  bankBalance?: number;
+  capacityMax?: number;
+  persistFails?: boolean;
+}) => {
   const world = new World(
     gridMapData({
       name: "bank-test",
@@ -106,37 +166,56 @@ const makeHarness = (store: Partial<BankStore>, carried: Item[] = []) => {
   });
   session.playerId = player.id;
   session.knownCreatureIds.add(npc.id);
-  const applyCommittedMutation = vi.fn();
-  const trackExternalOperation = vi.fn();
   const backpack: Item = {
-    id: "test-backpack",
-    typeId: 2854,
+    id: BACKPACK_ID,
+    typeId: BACKPACK_TYPE,
     count: 1,
     attributes: {},
     version: 1,
-    location: {
-      kind: "equipment",
-      characterId: player.id,
-      slot: "backpack",
-    },
+    location: { kind: "equipment", characterId: player.id, slot: "backpack" },
   };
-  const items = {
+  const items: ReadonlyArray<Item> = [backpack, ...(options?.carried ?? [])];
+  const balances = new Map<string, number>([
+    [player.id, options?.bankBalance ?? 0],
+  ]);
+  const applyCommittedMutation = vi.fn();
+  const trackExternalOperation = vi.fn();
+  const persisted: EconomyPersistPlan[] = [];
+  const writes: Promise<void>[] = [];
+  const persist = vi.fn(async (plan: EconomyPersistPlan) => {
+    if (options?.persistFails) throw new Error("database exploded");
+    persisted.push(plan);
+  });
+  const handler = {
     applyCommittedMutation,
     trackExternalOperation,
-    inventorySnapshot: vi.fn(() => ({
-      items: [backpack, ...carried],
-      capacityMax: 400,
+    inventorySnapshot: vi.fn((characterId: string) => ({
+      items,
+      capacityMax: options?.capacityMax ?? 400,
+      bankBalance: balances.get(characterId) ?? 0,
     })),
-    itemType: vi.fn((typeId: number) =>
-      typeId === backpack.typeId
-        ? { weight: 1800, containerCapacity: 20 }
-        : { weight: 10 },
+    setBankBalance: vi.fn((characterId: string, balance: number) => {
+      balances.set(characterId, balance);
+    }),
+    enqueuePersist: vi.fn(
+      (_session: Session, _characterId: string, run: () => Promise<void>) => {
+        writes.push(run());
+      },
     ),
+    runOrderedInternalOperation: vi.fn(<T>(run: () => Promise<T>) => run()),
+    itemType: vi.fn((typeId: number) => itemCatalog.get(typeId)),
   } as unknown as ItemIntentHandler;
   const registry = new SessionRegistry();
   registry.add(session);
   registry.bindPlayer(session);
-  const bank = new BankService(world, items, store as BankStore, registry);
+  const bank = new BankService(
+    world,
+    handler,
+    itemCatalog,
+    { persist },
+    options?.store as BankStore | undefined,
+    registry,
+  );
   return {
     world,
     player,
@@ -147,6 +226,12 @@ const makeHarness = (store: Partial<BankStore>, carried: Item[] = []) => {
     registry,
     applyCommittedMutation,
     trackExternalOperation,
+    persist,
+    persisted,
+    balanceOf: (characterId: string) => balances.get(characterId) ?? 0,
+    settleWrites: async () => {
+      await Promise.allSettled(writes);
+    },
     /** Registers a second online character so pushes to them can be observed. */
     addRecipient(characterId: string) {
       const received: ServerMessage[] = [];
@@ -176,15 +261,13 @@ const makeHarness = (store: Partial<BankStore>, carried: Item[] = []) => {
 };
 
 describe("BankService", () => {
-  it("opens the bank and reports the stored balance", async () => {
-    const harness = makeHarness({ balance: vi.fn(async () => 1_234) });
+  it("opens the bank straight from the cached balance", () => {
+    const harness = makeHarness({ bankBalance: 1_234 });
     const onOpened = vi.fn();
 
     expect(
       harness.bank.open(harness.session, harness.npc, onOpened, vi.fn()),
     ).toBe("started");
-    await nextTurn();
-    harness.bank.applyResolvedOutcomes(1_000);
 
     expect(onOpened).toHaveBeenCalledOnce();
     expect(harness.messages).toContainEqual({
@@ -196,7 +279,7 @@ describe("BankService", () => {
   });
 
   it("refuses to open away from the banker", () => {
-    const harness = makeHarness({ balance: vi.fn(async () => 0) });
+    const harness = makeHarness();
     harness.world.relocateCreature(harness.player, { x: 30, y: 30, z: 7 });
 
     expect(
@@ -204,46 +287,89 @@ describe("BankService", () => {
     ).toBe("unavailable");
   });
 
-  it("applies a committed deposit and publishes the new balance", async () => {
-    const mutation = { after: [], removedItemIds: ["coin"] };
-    const deposit = vi.fn(async () => ({
-      status: "committed" as const,
-      balance: 500,
-      mutation,
-    }));
-    const harness = makeHarness({ deposit }, [goldStack("coin", 100, 0)]);
-
-    harness.bank.handle(harness.session, {
-      type: "bank-deposit",
-      npcId: "npc-naji",
-      amount: 100,
+  it("deposits in the same tick and publishes the new balance", async () => {
+    const harness = makeHarness({
+      carried: [goldStack("coin", 100, 0)],
+      bankBalance: 400,
     });
-    expect(harness.session.itemOperationPending).toBe(true);
-    await nextTurn();
-    harness.bank.applyResolvedOutcomes(2_000);
 
-    expect(deposit).toHaveBeenCalledWith(harness.player.id, 100);
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-deposit", npcId: "npc-naji", amount: 100 },
+      1_000,
+    );
+
+    // Nothing is awaited: the balance and the coins move immediately.
     expect(harness.session.itemOperationPending).toBe(false);
     expect(harness.applyCommittedMutation).toHaveBeenCalledOnce();
-    expect(harness.trackExternalOperation).toHaveBeenCalledOnce();
+    expect(harness.balanceOf(harness.player.id)).toBe(500);
     expect(harness.messages).toContainEqual({
       type: "bank-updated",
       balance: 500,
     });
+
+    await harness.settleWrites();
+    expect(harness.persisted[0]?.bankOps).toEqual([
+      {
+        characterId: harness.player.id,
+        delta: 100,
+        expectedBalanceAfter: 500,
+        ledger: "deposit",
+      },
+    ]);
+    expect(harness.persisted[0]?.audits).toEqual([
+      { kind: "bank-deposit", amount: 100, balanceAfter: 500 },
+    ]);
   });
 
-  it("rejects a deposit that exceeds carried money before touching the store", () => {
-    const deposit = vi.fn();
-    const harness = makeHarness({ deposit }, [goldStack("coin", 40, 0)]);
+  it("withdraws in the same tick and lowers the balance", async () => {
+    const harness = makeHarness({ bankBalance: 5_000 });
 
-    harness.bank.handle(harness.session, {
-      type: "bank-deposit",
-      npcId: "npc-naji",
-      amount: 100,
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-withdraw", npcId: "npc-naji", amount: 250 },
+      1_000,
+    );
+
+    expect(harness.balanceOf(harness.player.id)).toBe(4_750);
+    await harness.settleWrites();
+    expect(harness.persisted[0]?.bankOps).toEqual([
+      {
+        characterId: harness.player.id,
+        delta: -250,
+        expectedBalanceAfter: 4_750,
+        ledger: "withdraw",
+      },
+    ]);
+  });
+
+  it("never lets a withdrawal overdraw the balance", () => {
+    const harness = makeHarness({ bankBalance: 100 });
+
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-withdraw", npcId: "npc-naji", amount: 101 },
+      1_000,
+    );
+
+    expect(harness.persist).not.toHaveBeenCalled();
+    expect(harness.balanceOf(harness.player.id)).toBe(100);
+    expect(harness.messages).toContainEqual({
+      type: "bank-action-failed",
+      reason: "insufficient-balance",
     });
+  });
 
-    expect(deposit).not.toHaveBeenCalled();
-    expect(harness.session.itemOperationPending).toBe(false);
+  it("rejects a deposit that exceeds carried money", () => {
+    const harness = makeHarness({ carried: [goldStack("coin", 40, 0)] });
+
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-deposit", npcId: "npc-naji", amount: 100 },
+      1_000,
+    );
+
+    expect(harness.persist).not.toHaveBeenCalled();
     expect(harness.messages).toContainEqual({
       type: "bank-action-failed",
       reason: "insufficient-funds",
@@ -251,35 +377,33 @@ describe("BankService", () => {
   });
 
   it("rejects bank intents out of talk range at execution time", () => {
-    const deposit = vi.fn();
-    const harness = makeHarness({ deposit }, [goldStack("coin", 100, 0)]);
+    const harness = makeHarness({ carried: [goldStack("coin", 100, 0)] });
     harness.world.relocateCreature(harness.player, { x: 30, y: 30, z: 7 });
 
-    harness.bank.handle(harness.session, {
-      type: "bank-deposit",
-      npcId: "npc-naji",
-      amount: 100,
-    });
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-deposit", npcId: "npc-naji", amount: 100 },
+      1_000,
+    );
 
-    expect(deposit).not.toHaveBeenCalled();
+    expect(harness.persist).not.toHaveBeenCalled();
     expect(harness.messages).toContainEqual({
       type: "bank-action-failed",
       reason: "out-of-range",
     });
   });
 
-  it("serializes bank intents against pending item operations", () => {
-    const deposit = vi.fn();
-    const harness = makeHarness({ deposit }, [goldStack("coin", 100, 0)]);
+  it("serializes bank intents against pending DB-first operations", () => {
+    const harness = makeHarness({ carried: [goldStack("coin", 100, 0)] });
     harness.session.itemOperationPending = true;
 
-    harness.bank.handle(harness.session, {
-      type: "bank-deposit",
-      npcId: "npc-naji",
-      amount: 100,
-    });
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-deposit", npcId: "npc-naji", amount: 100 },
+      1_000,
+    );
 
-    expect(deposit).not.toHaveBeenCalled();
+    expect(harness.persist).not.toHaveBeenCalled();
     expect(harness.messages).toContainEqual({
       type: "bank-action-failed",
       reason: "busy",
@@ -287,37 +411,155 @@ describe("BankService", () => {
   });
 
   it("rejects a withdrawal that cannot fit the coins", () => {
-    const withdraw = vi.fn();
-    const fullInventory = Array.from({ length: 100 }, (_, slot) => ({
+    const fullInventory = Array.from({ length: 20 }, (_, slot) => ({
       ...goldStack(`stack-${slot}`, 1, slot),
       typeId: 2_000,
     }));
-    const harness = makeHarness({ withdraw }, fullInventory);
-
-    harness.bank.handle(harness.session, {
-      type: "bank-withdraw",
-      npcId: "npc-naji",
-      amount: 10_000,
+    const harness = makeHarness({
+      carried: fullInventory,
+      bankBalance: 1_000_000,
+      capacityMax: 100_000,
     });
 
-    expect(withdraw).not.toHaveBeenCalled();
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-withdraw", npcId: "npc-naji", amount: 10_000 },
+      1_000,
+    );
+
+    expect(harness.persist).not.toHaveBeenCalled();
     expect(harness.messages).toContainEqual({
       type: "bank-action-failed",
       reason: "no-space",
     });
   });
 
-  it("reports a failed store operation without leaking details", async () => {
-    const withdraw = vi.fn(async () => {
+  it("rejects a withdrawal heavier than the remaining capacity", () => {
+    // The equipped backpack alone weighs the whole budget, so any coin is too
+    // heavy even though there are free slots for it.
+    const harness = makeHarness({ bankBalance: 1_000_000, capacityMax: 18 });
+
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-withdraw", npcId: "npc-naji", amount: 500 },
+      1_000,
+    );
+
+    expect(harness.persist).not.toHaveBeenCalled();
+    expect(harness.messages).toContainEqual({
+      type: "bank-action-failed",
+      reason: "no-capacity",
+    });
+  });
+
+  it("forwards transfer outcomes and updates the sender's cached balance", async () => {
+    const transfer = vi.fn(async () => ({
+      status: "committed" as const,
+      balance: 900,
+      toCharacterId: "other",
+      toBalance: 1_100,
+    }));
+    const harness = makeHarness({ store: { transfer }, bankBalance: 1_000 });
+
+    harness.bank.handle(
+      harness.session,
+      {
+        type: "bank-transfer",
+        npcId: "npc-naji",
+        toCharacterName: "Other Person",
+        amount: 100,
+      },
+      1_000,
+    );
+    expect(harness.session.itemOperationPending).toBe(true);
+    await nextTurn();
+    harness.bank.applyResolvedOutcomes(2_000);
+
+    expect(transfer).toHaveBeenCalledWith(
+      harness.player.id,
+      "Other Person",
+      100,
+    );
+    expect(harness.session.itemOperationPending).toBe(false);
+    expect(harness.balanceOf(harness.player.id)).toBe(900);
+    expect(harness.messages).toContainEqual({
+      type: "bank-updated",
+      balance: 900,
+    });
+  });
+
+  it("pushes only their own balance to an online recipient", async () => {
+    const transfer = vi.fn(async () => ({
+      status: "committed" as const,
+      balance: 900,
+      toCharacterId: "other",
+      toBalance: 1_100,
+    }));
+    const harness = makeHarness({ store: { transfer } });
+    const received = harness.addRecipient("other");
+
+    harness.bank.handle(
+      harness.session,
+      {
+        type: "bank-transfer",
+        npcId: "npc-naji",
+        toCharacterName: "Other Person",
+        amount: 100,
+      },
+      1_000,
+    );
+    await nextTurn();
+    harness.bank.applyResolvedOutcomes(2_000);
+
+    // Their balance and nothing else — no sender name, no amount, no ledger.
+    expect(received).toEqual([{ type: "bank-updated", balance: 1_100 }]);
+    expect(harness.balanceOf("other")).toBe(1_100);
+  });
+
+  it("does not push when the recipient is offline", async () => {
+    const transfer = vi.fn(async () => ({
+      status: "committed" as const,
+      balance: 900,
+      toCharacterId: "offline-character",
+      toBalance: 1_100,
+    }));
+    const harness = makeHarness({ store: { transfer } });
+
+    harness.bank.handle(
+      harness.session,
+      {
+        type: "bank-transfer",
+        npcId: "npc-naji",
+        toCharacterName: "Other Person",
+        amount: 100,
+      },
+      1_000,
+    );
+    await nextTurn();
+
+    expect(() => harness.bank.applyResolvedOutcomes(2_000)).not.toThrow();
+    expect(harness.messages).toContainEqual({
+      type: "bank-updated",
+      balance: 900,
+    });
+  });
+
+  it("reports a failed transfer without leaking details", async () => {
+    const transfer = vi.fn(async () => {
       throw new Error("database exploded");
     });
-    const harness = makeHarness({ withdraw });
+    const harness = makeHarness({ store: { transfer } });
 
-    harness.bank.handle(harness.session, {
-      type: "bank-withdraw",
-      npcId: "npc-naji",
-      amount: 100,
-    });
+    harness.bank.handle(
+      harness.session,
+      {
+        type: "bank-transfer",
+        npcId: "npc-naji",
+        toCharacterName: "Other Person",
+        amount: 100,
+      },
+      1_000,
+    );
     await nextTurn();
     harness.bank.applyResolvedOutcomes(2_000);
 
@@ -333,89 +575,11 @@ describe("BankService", () => {
     ).toBe(false);
   });
 
-  it("forwards transfer outcomes", async () => {
-    const transfer = vi.fn(async () => ({
-      status: "committed" as const,
-      balance: 900,
-      toCharacterId: "other",
-      toBalance: 1_100,
-    }));
-    const harness = makeHarness({ transfer });
-
-    harness.bank.handle(harness.session, {
-      type: "bank-transfer",
-      npcId: "npc-naji",
-      toCharacterName: "Other Person",
-      amount: 100,
+  it("runs a keyword deposit through the same planning as the panel", () => {
+    const harness = makeHarness({
+      carried: [goldStack("gold-1", 100, 0)],
+      bankBalance: 1_000,
     });
-    await nextTurn();
-    harness.bank.applyResolvedOutcomes(2_000);
-
-    expect(transfer).toHaveBeenCalledWith(
-      harness.player.id,
-      "Other Person",
-      100,
-    );
-    expect(harness.messages).toContainEqual({
-      type: "bank-updated",
-      balance: 900,
-    });
-  });
-
-  it("pushes only their own balance to an online recipient", async () => {
-    const transfer = vi.fn(async () => ({
-      status: "committed" as const,
-      balance: 900,
-      toCharacterId: "other",
-      toBalance: 1_100,
-    }));
-    const harness = makeHarness({ transfer });
-    const received = harness.addRecipient("other");
-
-    harness.bank.handle(harness.session, {
-      type: "bank-transfer",
-      npcId: "npc-naji",
-      toCharacterName: "Other Person",
-      amount: 100,
-    });
-    await nextTurn();
-    harness.bank.applyResolvedOutcomes(2_000);
-
-    // Their balance and nothing else — no sender name, no amount, no ledger.
-    expect(received).toEqual([{ type: "bank-updated", balance: 1_100 }]);
-  });
-
-  it("does not push when the recipient is offline", async () => {
-    const transfer = vi.fn(async () => ({
-      status: "committed" as const,
-      balance: 900,
-      toCharacterId: "offline-character",
-      toBalance: 1_100,
-    }));
-    const harness = makeHarness({ transfer });
-
-    harness.bank.handle(harness.session, {
-      type: "bank-transfer",
-      npcId: "npc-naji",
-      toCharacterName: "Other Person",
-      amount: 100,
-    });
-    await nextTurn();
-
-    expect(() => harness.bank.applyResolvedOutcomes(2_000)).not.toThrow();
-    expect(harness.messages).toContainEqual({
-      type: "bank-updated",
-      balance: 900,
-    });
-  });
-
-  it("runs a keyword deposit through the same validation as the panel", async () => {
-    const deposit = vi.fn(async () => ({
-      status: "committed" as const,
-      balance: 1_050,
-      mutation: { after: [], removedItemIds: [] },
-    }));
-    const harness = makeHarness({ deposit }, [goldStack("gold-1", 100, 0)]);
     const onCommitted = vi.fn();
     const onFailed = vi.fn();
 
@@ -425,14 +589,12 @@ describe("BankService", () => {
         harness.npc,
         "deposit",
         50,
+        1_000,
         onCommitted,
         onFailed,
       ),
     ).toBe("started");
-    await nextTurn();
-    harness.bank.applyResolvedOutcomes(2_000);
 
-    expect(deposit).toHaveBeenCalledWith(harness.player.id, 50);
     expect(onCommitted).toHaveBeenCalledWith(1_050);
     expect(onFailed).not.toHaveBeenCalled();
     // Keyword replies come from the NPC, not the bank panel protocol.
@@ -440,8 +602,7 @@ describe("BankService", () => {
   });
 
   it("rejects a keyword deposit larger than the carried coins", () => {
-    const deposit = vi.fn();
-    const harness = makeHarness({ deposit }, [goldStack("gold-1", 10, 0)]);
+    const harness = makeHarness({ carried: [goldStack("gold-1", 10, 0)] });
     const onFailed = vi.fn();
 
     expect(
@@ -450,18 +611,18 @@ describe("BankService", () => {
         harness.npc,
         "deposit",
         5_000,
+        1_000,
         vi.fn(),
         onFailed,
       ),
     ).toBe("unavailable");
 
-    expect(deposit).not.toHaveBeenCalled();
+    expect(harness.persist).not.toHaveBeenCalled();
     expect(onFailed).toHaveBeenCalledWith("insufficient-funds");
   });
 
   it("rejects a keyword deposit away from the banker", () => {
-    const deposit = vi.fn();
-    const harness = makeHarness({ deposit }, [goldStack("gold-1", 100, 0)]);
+    const harness = makeHarness({ carried: [goldStack("gold-1", 100, 0)] });
     harness.world.relocateCreature(harness.player, { x: 30, y: 30, z: 7 });
     const onFailed = vi.fn();
 
@@ -471,57 +632,54 @@ describe("BankService", () => {
         harness.npc,
         "deposit",
         50,
+        1_000,
         vi.fn(),
         onFailed,
       ),
     ).toBe("unavailable");
 
-    expect(deposit).not.toHaveBeenCalled();
+    expect(harness.persist).not.toHaveBeenCalled();
     expect(onFailed).toHaveBeenCalledWith("out-of-range");
   });
 
-  it("counts free slots in nested bags when prechecking a withdrawal", async () => {
-    const bagId = "nested-bag";
+  it("places withdrawn coins in nested bags when the backpack is full", () => {
     const nestedBag: Item = {
-      id: bagId,
-      typeId: 2854,
+      id: "nested-bag",
+      typeId: BACKPACK_TYPE,
       count: 1,
       attributes: {},
       version: 1,
-      location: { kind: "container", containerId: "test-backpack", slot: 0 },
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 0 },
     };
     const filler = Array.from({ length: 19 }, (_, index) => ({
       id: `filler-${index}`,
-      typeId: 3274,
+      typeId: AXE,
       count: 1,
       attributes: {},
       version: 1,
       location: {
         kind: "container" as const,
-        containerId: "test-backpack",
+        containerId: BACKPACK_ID,
         slot: index + 1,
       },
     }));
-    const withdraw = vi.fn(async () => ({
-      status: "committed" as const,
-      balance: 0,
-      mutation: { after: [], removedItemIds: [] },
-    }));
     // The equipped backpack is full; only the nested bag has room.
-    const harness = makeHarness({ withdraw }, [nestedBag, ...filler]);
-
-    harness.bank.handle(harness.session, {
-      type: "bank-withdraw",
-      npcId: "npc-naji",
-      amount: 100,
+    const harness = makeHarness({
+      carried: [nestedBag, ...filler],
+      bankBalance: 1_000,
+      capacityMax: 100_000,
     });
-    await nextTurn();
-    harness.bank.applyResolvedOutcomes(2_000);
 
-    expect(withdraw).toHaveBeenCalledWith(harness.player.id, 100);
+    harness.bank.handle(
+      harness.session,
+      { type: "bank-withdraw", npcId: "npc-naji", amount: 100 },
+      1_000,
+    );
+
     expect(harness.messages).not.toContainEqual({
       type: "bank-action-failed",
       reason: "no-space",
     });
+    expect(harness.balanceOf(harness.player.id)).toBe(900);
   });
 });

@@ -97,6 +97,12 @@ export class PersistResyncRunner {
     if (reloaded.depot) this.depot.attach(reloaded.depot);
     this.items.clearPersistState(characterId);
     session.send({ type: "inventory-updated", inventory });
+    // The reload also replaced the cached balance, so correct any open bank
+    // panel; it is ignored when the player has none open.
+    session.send({
+      type: "bank-updated",
+      balance: reloaded.inventory.bankBalance,
+    });
     this.depot.closeStorageView(session);
   }
 }

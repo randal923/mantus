@@ -69,6 +69,7 @@ export class ItemIntentHandler {
     ReadonlyArray<{ item: Item; type: ItemType }>
   >();
   private imbuementCatalog?: ImbuementCatalog;
+  private readBankBalance?: (characterId: string) => Promise<number>;
   private readonly imbuementEffectsByItems = new WeakMap<
     ReadonlyArray<Item>,
     PlayerImbuementEffects
@@ -167,10 +168,14 @@ export class ItemIntentHandler {
     // Row ages come from the database clock, so a burning ring resumes where
     // it left off instead of restarting its duration on every login.
     const agesMs = await this.store.carriedAgesMs?.(characterId);
+    // Money loads with the items so a purchase can plan its carried and bank
+    // legs from one consistent snapshot.
+    const bankBalance = (await this.readBankBalance?.(characterId)) ?? 0;
     return {
       characterId,
       capacityMax,
       items,
+      bankBalance,
       ...(agesMs ? { agesMs } : {}),
     };
   }
@@ -193,7 +198,11 @@ export class ItemIntentHandler {
 
   inventorySnapshot(
     characterId: string,
-  ): { items: ReadonlyArray<Item>; capacityMax: number } | null {
+  ): {
+    items: ReadonlyArray<Item>;
+    capacityMax: number;
+    bankBalance: number;
+  } | null {
     return this.inventories.snapshot(characterId);
   }
 
@@ -231,6 +240,25 @@ export class ItemIntentHandler {
     // The Pg store folds Featherweight into transactional capacity checks
     // from the same catalog, so DB-side limits cannot drift from live ones.
     this.store.setImbuementCatalog?.(catalog);
+  }
+
+  /**
+   * Supplies the committed bank balance for `load`. Injected rather than taking
+   * a BankStore dependency, and read inside `load` so both login and the
+   * resync path rebuild the balance from the DB alongside the items.
+   */
+  setBankBalanceReader(
+    read: (characterId: string) => Promise<number>,
+  ): void {
+    this.readBankBalance = read;
+  }
+
+  /**
+   * Overwrites the cached balance after a committed money mutation. The
+   * economy services are its only writers, as with the inventory itself.
+   */
+  setBankBalance(characterId: string, balance: number): void {
+    this.inventories.setBankBalance(characterId, balance);
   }
 
   /** Running imbuement effects for combat reads, memoized like equipment. */

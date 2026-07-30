@@ -9,7 +9,21 @@ const shopReferenceSchema = z
 const shopSessionReferenceSchema = z.string().uuid();
 const itemTypeIdSchema = z.number().int().min(1).max(65_535);
 const shopPriceSchema = z.number().int().min(0).max(1_000_000_000);
-const shopAmountSchema = z.number().int().min(1).max(100);
+export const SHOP_LIMITS = {
+  /**
+   * Largest amount one intent may trade. Canary caps a non-stackable buy at
+   * 100 and OTClient's amount slider caps every buy at 100.
+   */
+  maxAmount: 100,
+  /**
+   * Canary applies a 250 ms UI exhaust per shop action (`isUIExhausted`).
+   * The server owns the real timer; the client mirrors it only to hold a click
+   * back instead of sending one it knows will be refused.
+   */
+  exhaustMs: 250,
+} as const;
+
+const shopAmountSchema = z.number().int().min(1).max(SHOP_LIMITS.maxAmount);
 
 /**
  * Buys one catalog entry; price, stock, and funds stay server-owned. This is a
@@ -53,6 +67,12 @@ export const shopEntrySchema = z
     stowable: z.boolean().optional(),
     minimumAmount: shopAmountSchema,
     maximumAmount: shopAmountSchema,
+    /**
+     * How many of this offer the player can sell right now — their own data,
+     * counted server-side because nested bags are not fully projected to the
+     * client. Canary ships the same per-offer counts with its sale list.
+     */
+    owned: z.number().int().nonnegative().max(1_000_000),
     subtype: z.number().int().min(1).max(65_535).optional(),
     buyPrice: shopPriceSchema.optional(),
     sellPrice: shopPriceSchema.optional(),
@@ -72,6 +92,12 @@ export const shopOpenedMessageSchema = z
     currencyAmount: z.number().int().min(0).max(100_000_000_000),
     /** Unit weight of the shop's currency item, hundredths of oz. */
     currencyWeight: z.number().int().nonnegative(),
+    /**
+     * The buyer's own bank balance. A gold shop spends carried coins first and
+     * the shortfall from the bank, so the amount slider needs both to clamp to
+     * what the player can actually afford (Canary sends the same sum).
+     */
+    bankBalance: z.number().int().min(0).max(1_000_000_000_000_000),
     /** Coin unit weights so the client can mirror payment-weight math. */
     coinWeights: z
       .object({

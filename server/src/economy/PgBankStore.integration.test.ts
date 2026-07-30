@@ -3,7 +3,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { CharacterService } from "../character/CharacterService";
 import { PgCharacterStore } from "../character/PgCharacterStore";
-import { loadItemCatalog } from "../item/loadItemCatalog";
 import { applyMigrations } from "../test/applyMigrations";
 import { PgBankStore } from "./PgBankStore";
 
@@ -164,7 +163,7 @@ databaseDescribe("PgBankStore integration", () => {
       z: 7,
       townId: 1,
     });
-    store = new PgBankStore(pool, await loadItemCatalog());
+    store = new PgBankStore(pool);
   });
 
   beforeEach(async () => {
@@ -188,179 +187,10 @@ databaseDescribe("PgBankStore integration", () => {
     await setupClient.end();
   });
 
-  it("deposits coins, credits the balance, and audits in one transaction", async () => {
-    const goldId = await insertBackpackItem(characterId, GOLD_TYPE, 100, 0);
-    await insertBackpackItem(characterId, PLATINUM_TYPE, 3, 1);
-
-    const result = await store.deposit(characterId, 120);
-
-    expect(result.status).toBe("committed");
-    if (result.status !== "committed") return;
-    expect(result.balance).toBe(120);
-    expect(await store.balance(characterId)).toBe(120);
-    expect(await carriedWorth(characterId)).toBe(280);
-    expect(result.mutation.removedItemIds).not.toContain(goldId);
-    expect(await ledgerRows(characterId)).toEqual([
-      {
-        entry_type: "deposit",
-        amount: "120",
-        balance_after: "120",
-        counterparty_character_id: null,
-      },
-    ]);
-    expect(await auditRows("bank-deposit")).toHaveLength(1);
-    expect((await auditRows("item-destroyed")).length).toBeGreaterThan(0);
-  });
-
-  it("makes change when a large coin covers a small deposit", async () => {
-    await insertBackpackItem(characterId, PLATINUM_TYPE, 3, 0);
-
-    const result = await store.deposit(characterId, 250);
-
-    expect(result.status).toBe("committed");
-    expect(await store.balance(characterId)).toBe(250);
-    expect(await carriedWorth(characterId)).toBe(50);
-    const coins = await pool.query<{ item_type_id: number; count: number }>(
-      `WITH RECURSIVE owned AS (
-         SELECT id, item_type_id, count FROM items WHERE character_id = $1
-         UNION ALL
-         SELECT child.id, child.item_type_id, child.count
-         FROM items child JOIN owned ON child.container_id = owned.id
-       )
-       SELECT item_type_id, count FROM owned
-       WHERE item_type_id IN ($2, $3, $4)`,
-      [characterId, GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
-    );
-    expect(coins.rows).toEqual([{ item_type_id: GOLD_TYPE, count: 50 }]);
-  });
-
-  it("changes nothing when carried coins cannot cover the deposit", async () => {
-    await insertBackpackItem(characterId, GOLD_TYPE, 40, 0);
-
-    const result = await store.deposit(characterId, 100);
-
-    expect(result.status).toBe("insufficient-funds");
-    expect(await store.balance(characterId)).toBe(0);
-    expect(await carriedWorth(characterId)).toBe(40);
-    expect(await ledgerRows(characterId)).toEqual([]);
-    expect(await auditRows("bank-deposit")).toEqual([]);
-    expect(await auditRows("item-destroyed")).toEqual([]);
-  });
-
-  it("withdraws the fewest coins and debits the balance atomically", async () => {
-    await setBalance(characterId, 20_000);
-
-    const result = await store.withdraw(characterId, 12_345);
-
-    expect(result.status).toBe("committed");
-    if (result.status !== "committed") return;
-    expect(result.balance).toBe(7_655);
-    expect(await carriedWorth(characterId)).toBe(12_345);
-    const coins = await pool.query<{ item_type_id: number; count: number }>(
-      `WITH RECURSIVE owned AS (
-         SELECT id, item_type_id, count FROM items WHERE character_id = $1
-         UNION ALL
-         SELECT child.id, child.item_type_id, child.count
-         FROM items child JOIN owned ON child.container_id = owned.id
-       )
-       SELECT item_type_id, count FROM owned
-       WHERE item_type_id IN ($2, $3, $4)
-       ORDER BY item_type_id`,
-      [characterId, GOLD_TYPE, PLATINUM_TYPE, CRYSTAL_TYPE],
-    );
-    expect(coins.rows).toEqual([
-      { item_type_id: GOLD_TYPE, count: 45 },
-      { item_type_id: PLATINUM_TYPE, count: 23 },
-      { item_type_id: CRYSTAL_TYPE, count: 1 },
-    ]);
-    expect(await ledgerRows(characterId)).toEqual([
-      {
-        entry_type: "withdraw",
-        amount: "12345",
-        balance_after: "7655",
-        counterparty_character_id: null,
-      },
-    ]);
-    expect(await auditRows("bank-withdraw")).toHaveLength(1);
-    expect(await auditRows("item-created")).toHaveLength(3);
-  });
-
-  it("changes nothing when the balance cannot cover the withdrawal", async () => {
-    await setBalance(characterId, 99);
-
-    const result = await store.withdraw(characterId, 100);
-
-    expect(result.status).toBe("insufficient-balance");
-    expect(await store.balance(characterId)).toBe(99);
-    expect(await carriedWorth(characterId)).toBe(0);
-    expect(await ledgerRows(characterId)).toEqual([]);
-  });
-
-  it("changes nothing when the coins cannot fit the backpack", async () => {
-    await setBalance(characterId, 300);
-    for (let slot = 0; slot < 20; slot++) {
-      await insertBackpackItem(characterId, HELMET_TYPE, 1, slot);
-    }
-
-    const result = await store.withdraw(characterId, 300);
-
-    expect(result.status).toBe("no-space");
-    expect(await store.balance(characterId)).toBe(300);
-    expect(await carriedWorth(characterId)).toBe(0);
-    expect(await ledgerRows(characterId)).toEqual([]);
-    expect(await auditRows("item-created")).toEqual([]);
-  });
-
-  it("lets exactly one of two racing withdrawals spend the balance", async () => {
-    await setBalance(characterId, 100);
-
-    const outcomes = await Promise.allSettled([
-      store.withdraw(characterId, 100),
-      store.withdraw(characterId, 100),
-    ]);
-
-    const committed = outcomes.filter(
-      (outcome) =>
-        outcome.status === "fulfilled" &&
-        outcome.value.status === "committed",
-    );
-    expect(committed).toHaveLength(1);
-    expect(await store.balance(characterId)).toBe(0);
-    expect(await carriedWorth(characterId)).toBe(100);
-    expect(await ledgerRows(characterId)).toHaveLength(1);
-  });
-
-  it("lets exactly one of two racing deposits spend the same coins", async () => {
-    await insertBackpackItem(characterId, GOLD_TYPE, 100, 0);
-
-    const outcomes = await Promise.allSettled([
-      store.deposit(characterId, 100),
-      store.deposit(characterId, 100),
-    ]);
-
-    const committed = outcomes.filter(
-      (outcome) =>
-        outcome.status === "fulfilled" &&
-        outcome.value.status === "committed",
-    );
-    expect(committed).toHaveLength(1);
-    expect(await store.balance(characterId)).toBe(100);
-    expect(await carriedWorth(characterId)).toBe(0);
-    expect(await ledgerRows(characterId)).toHaveLength(1);
-  });
-
-  it("conserves total currency under concurrent conversion requests", async () => {
-    await insertBackpackItem(characterId, GOLD_TYPE, 100, 0);
-    await setBalance(characterId, 50);
-
-    await Promise.allSettled([
-      store.deposit(characterId, 60),
-      store.withdraw(characterId, 50),
-      store.deposit(characterId, 40),
-    ]);
-
-    expect(await totalWorth(characterId)).toBe(150);
-  });
+  // Deposits and withdrawals are memory-first now: their coin, balance and
+  // audit legs commit through PgEconomyPersistOps, covered by
+  // PgEconomyPersistOps.integration.test.ts. What remains here is the
+  // durable state this store still owns on its own.
 
   it("transfers between accounts with ledger entries for both parties", async () => {
     const recipientId = await createCharacter("beta");
