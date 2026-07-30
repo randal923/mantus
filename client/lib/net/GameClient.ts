@@ -23,6 +23,7 @@ import {
   type ItemContainerDestination,
   type QuickLootFilter,
   type Language,
+  type LookTarget,
   type MarketSide,
   type DailyRewardPick,
   type OutfitSelectMessage,
@@ -115,6 +116,11 @@ export class GameClient {
 
   useMap(position: Position): void {
     this.send({ type: "use-map", position });
+  }
+
+  /** Left+right click or the map menu's "Look": the server writes the text. */
+  look(target: LookTarget): void {
+    this.send({ type: "look", target });
   }
 
   attackTarget(creatureId: string): void {

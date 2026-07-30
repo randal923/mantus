@@ -1618,3 +1618,119 @@ These stay open in their areas, tracked entirely by [`todo/client/`](client/READ
 - **Residual risk**: kit wrap-back missing and Postgres delivery test unrun —
   both in `TODO.md`; exercise dummies placed in houses still miss the
   same-house membership check (pre-existing, Feature 72).
+
+### 2026-07-29 — Spell and item balance moved out of the pinned dumps
+
+- **Problem**: every spell/rune formula lived in `content/spells/canary-spells.json`
+  as an expression AST behind a sha256 provenance pin, so tuning one number
+  (e.g. sudden death's `magicLevel * 4.605`) meant hand-editing a 604 KB
+  generated file and recomputing the pin. Item stats had the same shape in the
+  16 MB `server/data/item-catalog.json`.
+- **What changed**:
+  - Spells: 169 supported definitions became one hand-editable module each
+    under `server/src/combat/spells/{attack,healing,support,conjuring,runes}/<spell-id>.ts`,
+    collected by `spells/SPELL_DEFINITIONS.ts`. `SpellFormula.minimum/maximum`
+    are now plain `(variables: SpellVariables) => number` functions that read
+    like the Canary Lua, replacing the AST; `evaluateSpellExpression.ts` and
+    `loadCanarySpellCatalog.ts` are deleted.
+  - The Canary dump stays as the **upstream reference only** — the parity
+    tooling (`parity:check`, `buildSpellReport`, `importCanaryNpcs`) still
+    reads it, and the definitions test asserts every upstream-supported id has
+    a module while allowing extra modules of our own.
+  - Items: 32,197 catalog entries are asset-derived, so instead of splitting
+    them, `server/src/item/overrides/` merges hand-written `ItemOverride`
+    records over the generated catalog at load (`applyItemOverrides`), failing
+    closed on an unknown or duplicated id. `yarn item:override <id | name>`
+    scaffolds `overrides/<category>/<item>.ts` prefilled with the item's whole
+    current record and registers it in `ITEM_OVERRIDES`.
+- **Files touched**: `server/src/combat/{Spell,SpellCaster,SpellRegistry}.ts`,
+  `server/src/combat/spells/**` (171 new files),
+  `server/src/npc/loadNpcDialogueGraphs.ts`,
+  `server/src/playtest/scenarios/{spellParity,monsterParity}.ts`,
+  `server/src/item/loadItemCatalog.ts`, `server/src/item/overrides/**`,
+  `tools/createItemOverride.mjs`, `package.json`.
+- **Verified**: full typecheck (protocol + server + client), server suite
+  1,340 passed / 265 skipped, `yarn test:tools` 89 passed, `yarn parity:check`
+  clean (236 spells, 313 world actions). The pinned-value assertions moved to
+  `spells/SPELL_DEFINITIONS.test.ts` and still pass (Buzz 3, Lesser Front
+  Sweep 18, Energy Beam 53, sudden death level 45 / ML 15).
+- **Residual risk**: spell modules are no longer diffed field-by-field against
+  the dump, so an upstream change to a spell we have already tuned will not
+  surface automatically — only a missing spell id fails the test. Item
+  overrides carry the whole record by design, so an override pins its item's
+  sprite/render fields against a future asset re-import; keep them to items
+  actually being tuned. Both recorded in `TODO.md`.
+
+### 2026-07-29 — Look moved server-side: Tibia's left+right click describes creatures, items, and houses (Feature 52)
+
+- **Problem**: the look shipped 2026-07-21 was composed entirely in the
+  client. `performMapLook` read a generated `client/public/assets/look-items.json`
+  (1.1 MB, `tools/buildLookCatalog.mjs`) and produced "You see a stone pile."
+  from article + name + type description alone, and creature looks were the
+  bare `You see <name>.`. It knew nothing about stats, requirements, weight,
+  stack counts, instance state, vocations, levels, or house ownership, and it
+  was a second source of truth for text the server already owns — the very
+  shape the charter's golden rule warns about.
+- **What changed** (Canary `playerLookAt` / `playerLookInBattleList` +
+  `data/scripts/eventcallbacks/player/on_look.lua`, OTClient `Game::look`):
+  - **Protocol** (`protocol/src/look.ts`): a `look` intent whose target is
+    either `{kind: "creature", creatureId}` or
+    `{kind: "map", position, itemId?}`, and a `look-text` server message
+    carrying the finished multi-line description (≤1024 chars, newline the only
+    control character allowed).
+  - **Server** (`server/src/look/`): `LookHandler` resolves the target inside
+    the tick — the tile must be in the session's *current* view range, and a
+    creature must be one this client was already told about
+    (`session.knownCreatureIds`) **and** still visible now. `describeItemLook`
+    reproduces Canary's `Item::getDescription` for the fields our pinned
+    catalog holds: counted plural or article name, one merged stat group
+    (`Vol:`, `Range:`/`Atk`/`Hit%` for bows, `Atk:24 physical + 11 fire`,
+    `Def:20 +1`, `Arm:`, skills, magic level, crit/leech, `protection fire
+    +8%`, speed), charge suffix, readable text with Canary's 4-tile cut-off,
+    `It can only be wielded properly by …` from base vocations only,
+    imbuement-slot and classification lines for real instances, and — only for
+    an adjacent looker — `It weighs 23.00 oz.` plus flavour text.
+    `describeCreatureLook` reads a monster's/NPC's `nameDescription`, and
+    `describePlayerLook` composes `Shui Sorc (Level 214). He is a master
+    sorcerer.` with live party size and guild rank, switching to second person
+    for your own character. A look at a house door appends Canary's
+    `House::updateDoorDescription` text (`HouseService.lookStateFor`).
+  - **Client**: `GameClient.look()`, `performMapLook` now only *sends* the
+    intent (top drawn sprite id for the tile, creature id when one was
+    clicked), and `look-text` renders verbatim into the server-log channel and
+    the existing centred screen message (`tone: "look"`). `lib/look/`,
+    `tools/buildLookCatalog.mjs`, the generated `look-items.json`, and the
+    `items:catalog` chain step are deleted — one source of look text now.
+    Chat lines and the centred message keep server-authored newlines
+    (`whitespace-pre-line`).
+- **Deliberate deviation**: wands/rods report `(Range:3, Mana:1)` as real Tibia
+  does; Canary drops both from the look line although it has the data.
+- **Files touched**: `protocol/src/{look,clientMessages,serverMessages,index}.ts`,
+  `server/src/look/**` (13 files incl. 4 test files),
+  `server/src/{GameServer,house/HouseService,party/PartyHandler}.ts`,
+  `server/src/playtest/scenarios/lookDescriptions.ts`, `server/package.json`,
+  `client/lib/net/GameClient.ts`,
+  `client/components/game-window/{controllers/performMapLook,controllers/createGameWindowRenderer,messages/handlePlayerStateMessage,GameMapContextMenu,GameNotifications}.tsx?`,
+  `client/components/chat/ChatMessageList.tsx`,
+  `client/lib/game-window/mapLook.test.ts`, `package.json`; deleted
+  `client/lib/look/**`, `tools/buildLookCatalog.mjs`,
+  `client/public/assets/look-items.json`.
+- **Verified**: full typecheck (protocol + server + client); server suite 1,371
+  passed / 265 skipped including 31 new look tests; client suite 281 passed
+  including 4 new look-wiring tests; `yarn test:tools` 89 passed and
+  `yarn parity:check` clean; client lint 0 errors. Exploit coverage: a look at
+  a creature the client was never told about, at one that walked out of view
+  between click and tick, at a tile outside the view range, and with an item id
+  absent from the pinned catalog all answer *nothing* — no description and no
+  error, since the shared `item-action-failed` code has side effects a look must
+  not cause (it rolls the optimistic inventory queue back and puffs the player)
+  and silence cannot confirm whether anything is standing there.
+- **Residual risk**: `yarn playtest:look` (own character before/after a
+  promotion, a summoned rat, a dropped fire sword, static scenery, a real house
+  door, a silent out-of-view refusal) is written but **unrun** — this
+  environment has no Postgres and no Docker. The server only tracks mutable/interactive world
+  items, so a look at static scenery is answered from the client-supplied
+  client id, validated against the pinned catalog and gated on view range: it
+  can pick which catalog description is read back but nothing more. Recorded in
+  `TODO.md` along with the flags our catalog does not carry (`showAttributes`,
+  ring effect flags, `ignoreLook`).

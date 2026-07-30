@@ -495,6 +495,50 @@ limitations accepted during a session are recorded in the owning feature file
   `tools/importAppearanceAnimations.mjs` and pick the group by creature state.
   Owner: `todo/client/`.
 
+- **Spell modules no longer diff against the Canary dump** (2026-07-29).
+  Formulas now live in `server/src/combat/spells/**` as editable TypeScript;
+  `content/spells/canary-spells.json` is kept only as the upstream reference.
+  `SPELL_DEFINITIONS.test.ts` catches a *missing* spell id but not an upstream
+  change to a spell we already tuned. Recommended fix: a report mode in
+  `tools/buildSpellReport.mjs` that lists per-field divergence between the
+  modules and the dump, run from `parity:check` as advisory output rather than
+  a gate. Owner: Feature 26 (spell report gate).
+- **Item overrides carry the whole item record** (2026-07-29).
+  `yarn item:override` scaffolds every field, including `spriteId`, `render`
+  and `elevation`, so an override pins that item's asset-derived fields against
+  a future `yarn items:catalog` re-import. Only scaffold items being tuned, and
+  trim untouched fields. Recommended fix: an optional `--stats-only` flag that
+  emits just the gameplay fields. Owner: Feature 43.
+
+- **Look at static scenery trusts a validated client id** (2026-07-29).
+  The server only tracks mutable/interactive world items, so a look at a tile
+  whose top sprite is static scenery is answered from the client-supplied
+  client id in the `look` intent. It is validated against the pinned catalog,
+  the tile must be inside the session's current view range, and an
+  authoritative world item on that tile always wins — so the id can only pick
+  which catalog description is read back, never create or reveal state.
+  Recommended fix (only if it ever matters): emit the full static stack into a
+  server-side artifact and drop the field. Owner: Feature 52.
+- **`yarn playtest:look` is unrun** (2026-07-29). The end-to-end look scenario
+  (own character before/after a promotion, a summoned rat, a dropped fire
+  sword, static scenery, a real house door, a silent out-of-view refusal) is
+  written but never executed: this environment has neither Postgres nor Docker. Run it
+  once a database is reachable. Owner: Feature 52.
+- **Item look flags our catalog does not carry** (2026-07-29). Canary's
+  `showAttributes` is absent, so `describeItemLook` merges its two
+  parenthesised stat passes into one group instead of reproducing both; ring
+  effect flags (`invisible`, `manaShield`, `hard drinking`, faster
+  regeneration) and `ignoreLook` are not in the pinned catalog either, so those
+  suffixes and the skip-this-type rule are missing. Recommended fix: capture
+  the flags in the asset/`items.xml` import pass. Owner: Feature 108 (asset
+  regeneration).
+  Ammunition also reports no stat group, because Canary's look chain skips
+  `WEAPON_AMMO` entirely (it shows the attack only in the inspection window,
+  which our hover tooltip already covers). If the official client turns out to
+  print `(Atk:25)` on an arrow look, add an ammunition branch to
+  `itemLookSegments` — our catalog carries `attack` and `maxHitChance` for every
+  ammo type. Owner: Feature 52.
+
 ## Repo-wide known breakage
 
 - None. The `yarn parity:check` converter-hash drift recorded here previously

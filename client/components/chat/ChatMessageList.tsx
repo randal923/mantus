@@ -75,7 +75,9 @@ export function ChatMessageList({
                     {message.time}
                   </time>
                 )}
-                <p className="min-w-0 break-words">
+                {/* Server-authored lines (a look description) carry their own
+                    line breaks; keep them instead of collapsing to one run. */}
+                <p className="min-w-0 break-words whitespace-pre-line">
                   {sender && (
                     <>
                       {onSenderSelect ? (

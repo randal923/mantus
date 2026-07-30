@@ -230,6 +230,16 @@ export class PartyHandler implements PartyHooks {
       .filter((memberId) => this.world.getPlayer(memberId));
   }
 
+  /**
+   * Party size for a look line; null when the player is in no party. Only the
+   * counts are exposed, which the gray party shield already implies.
+   */
+  lookStateFor(playerId: string): { members: number; invitations: number } | null {
+    const party = this.parties.partyOf(playerId);
+    if (!party) return null;
+    return { members: party.size, invitations: party.inviteeIds.length };
+  }
+
   private invite(
     session: Session,
     player: Player,

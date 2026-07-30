@@ -34,7 +34,8 @@ export function GameMapContextMenu() {
     {
       id: "look",
       label: t("contextMenu.look"),
-      onSelect: () => performMapLook(store, menu.creatureId, menu.itemIds),
+      onSelect: () =>
+        performMapLook(store, menu.position, menu.creatureId, menu.itemIds),
     },
   ];
   const attackableId =

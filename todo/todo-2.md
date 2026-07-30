@@ -124,10 +124,14 @@ kind lacks a row) and the write-map path shipped.
   alternative source needing no DAT change.
 - 181 rotatable-but-immobile types (42 map instances) are baked draw-only —
   promote via `MUTABLE_ITEM_IDS` in `tools/getMapItemSemantics.mjs` if wanted.
-- Look deferred: `ignoreLook` unparsed; creature look shows name only; no
-  shift+left-click alias. Ctrl-menu deferred: no "Use with…"/Trade/Follow/
-  Talk entries. Pixel-perfect hit-testing deferred: elevation/displacement
-  not reversed on click.
+- Look remainder (the server-authored description shipped 2026-07-29, see
+  `done.md`): `ignoreLook` still unparsed, so a type flagged to be skipped is
+  still described; no shift+left-click alias; carried items are looked at
+  through the inventory hover tooltip rather than a `look` intent, so the
+  chord does nothing over inventory/container/corpse slots; items inside an
+  open world container (corpse) have no look target at all. Ctrl-menu
+  deferred: no "Use with…"/Trade/Follow/Talk entries. Pixel-perfect
+  hit-testing deferred: elevation/displacement not reversed on click.
 
 **Tests:** regenerated catalogs keep shipped-handler behavior green
 (`WorldActionRegistry.test.ts`); precondition and write-map suites are done.

@@ -183,7 +183,7 @@ export function GameNotifications() {
           className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center"
         >
           <span
-            className={`max-w-lg px-4 text-center font-tibia text-base font-bold sm:text-lg [text-shadow:-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000,0_2px_4px_rgba(0,0,0,0.9)] ${
+            className={`max-w-lg px-4 text-center font-tibia text-base font-bold whitespace-pre-line sm:text-lg [text-shadow:-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000,0_2px_4px_rgba(0,0,0,0.9)] ${
               screenMessage.tone === "look" ? "text-yellow-300" : "text-white"
             }`}
           >

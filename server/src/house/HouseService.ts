@@ -20,6 +20,7 @@ import {
 } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { DepotService } from "../depot/DepotService";
+import type { HouseLookState } from "../look/houseLookDescription";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -220,6 +221,26 @@ export class HouseService {
     const subject = this.subjectFor(characterId);
     const level = this.houses.accessLevel(houseId, characterId, subject);
     return this.houses.doorAllows(houseId, level, position, subject);
+  }
+
+  /**
+   * Public ownership text for a look at one of a house's doors (Canary stamps
+   * the same string onto every door via `House::updateDoorDescription`). Null
+   * when the position belongs to no house.
+   */
+  lookStateFor(position: Position): HouseLookState | null {
+    const houseId = this.world.getHouseId(position);
+    if (houseId === undefined) return null;
+    const info = this.content.get(houseId);
+    if (!info) return null;
+    return {
+      name: info.name,
+      size: info.size,
+      price: info.size * HOUSE_LIMITS.pricePerSqm,
+      rent: info.rent,
+      ownerName: this.houses.get(houseId)?.ownerName ?? null,
+      rentPeriodDays: HOUSE_LIMITS.rentPeriodDays,
+    };
   }
 
   /** Live identity for text-list evaluation; undefined when offline. */

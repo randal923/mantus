@@ -195,8 +195,8 @@ export function createGameWindowRenderer(
       store.getState().setUseWithTargeting(false);
       return true;
     },
-    lookAt: (_position, creatureId, itemIds) =>
-      performMapLook(store, creatureId, itemIds),
+    lookAt: (position, creatureId, itemIds) =>
+      performMapLook(store, position, creatureId, itemIds),
     openContextMenu: (screen, position, creatureId, itemIds) =>
       store
         .getState()

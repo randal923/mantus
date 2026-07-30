@@ -38,6 +38,7 @@ import {
 } from "./depot";
 import { DIRECTIONS } from "./direction";
 import { languageSchema } from "./language";
+import { lookMessageSchema } from "./look";
 import { uiSettingsSchema } from "./uiSettings";
 import { PROTOCOL_LIMITS } from "./limits";
 import {
@@ -650,6 +651,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   autoWalkMessageSchema,
   setViewportMessageSchema,
   useMapMessageSchema,
+  lookMessageSchema,
   attackTargetMessageSchema,
   cancelAttackMessageSchema,
   followCreatureMessageSchema,

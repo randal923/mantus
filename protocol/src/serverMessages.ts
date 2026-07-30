@@ -112,6 +112,7 @@ import {
   houseTransferIncomingMessageSchema,
 } from "./house";
 import { languageSchema } from "./language";
+import { lookTextMessageSchema } from "./look";
 import { uiSettingsSchema } from "./uiSettings";
 import { containerStateSchema, inventoryStateSchema } from "./item";
 import {
@@ -554,6 +555,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   welcomeMessageSchema,
   inventoryUpdatedMessageSchema,
   itemTextMessageSchema,
+  lookTextMessageSchema,
   progressionUpdatedMessageSchema,
   vocationUpdatedMessageSchema,
   creatureJoinedMessageSchema,

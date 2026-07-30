@@ -8,6 +8,14 @@ export function handlePlayerStateMessage(
   { store }: GameWindowMessageContext,
 ): boolean {
   const state = store.getState();
+  if (message.type === "look-text") {
+    // Tibia shows a look centred on the screen and in the server log; the text
+    // is the server's, rendered verbatim.
+    state.setCombatLog((current) => [...current, message.text].slice(-6));
+    state.showScreenMessage(message.text, "look");
+    return false;
+  }
+
   const actions = state.sessionActions;
   if (!actions) return false;
 

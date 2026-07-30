@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import { EQUIPMENT_SLOTS } from "@tibia/protocol";
 import { ItemCatalog } from "./ItemCatalog";
 import type { ItemType } from "./ItemType";
+import { applyItemOverrides } from "./overrides/applyItemOverrides";
+import { ITEM_OVERRIDES } from "./overrides/ITEM_OVERRIDES";
 
 const CATALOG_PATH = fileURLToPath(
   new URL("../../data/item-catalog.json", import.meta.url),
@@ -139,11 +141,14 @@ export async function loadItemCatalog(): Promise<ItemCatalog> {
   }
   const stowableItemTypeIds = new Set<number>(stowable.itemTypeIds);
   return new ItemCatalog(
-    Object.entries(parsed.items).map(([key, item]) => {
-      const parsedItem = parseItem(item, key);
-      return stowableItemTypeIds.has(parsedItem.id)
-        ? { ...parsedItem, stowable: true }
-        : parsedItem;
-    }),
+    applyItemOverrides(
+      Object.entries(parsed.items).map(([key, item]) => {
+        const parsedItem = parseItem(item, key);
+        return stowableItemTypeIds.has(parsedItem.id)
+          ? { ...parsedItem, stowable: true }
+          : parsedItem;
+      }),
+      ITEM_OVERRIDES,
+    ),
   );
 }

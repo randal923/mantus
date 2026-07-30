@@ -57,6 +57,7 @@ import { loadQuestStorageAliases } from "./quest/loadQuestStorageAliases";
 import { loadWorldEventContent } from "./event/loadWorldEventContent";
 import { WorldEventManager } from "./event/WorldEventManager";
 import type { WorldEventStore } from "./event/WorldEventStore";
+import { LookHandler } from "./look/LookHandler";
 import { MarketService } from "./market/MarketService";
 import type { MarketStore } from "./market/MarketStore";
 import { ModerationCommandHandler } from "./moderation/ModerationCommandHandler";
@@ -212,6 +213,7 @@ export class GameServer {
   private readonly actionBot: ActionBotHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
+  private readonly look: LookHandler;
   private readonly pressurePlates: PressurePlateRegistry;
   private readonly clocks: ClockHandler;
   private readonly chests: ChestService;
@@ -857,6 +859,18 @@ export class GameServer {
       (characterId, position) =>
         this.houses.canDecorateHouseTile(characterId, position),
     );
+    // Look descriptions are composed from live state through these closures,
+    // so a promotion, party join, or house sale shows up on the next look.
+    this.look = new LookHandler(this.world, deps.itemCatalog, {
+      house: (position) => this.houses.lookStateFor(position),
+      party: (playerId) => this.parties.lookStateFor(playerId),
+      guild: (characterId) => {
+        const identity = this.guilds.guildIdentityOf(characterId);
+        return identity
+          ? { rankName: identity.rankName, guildName: identity.guildName }
+          : null;
+      },
+    });
     this.clocks = new ClockHandler(this.items);
     this.pressurePlates = new PressurePlateRegistry(
       this.world,
@@ -1487,6 +1501,9 @@ export class GameServer {
           }
         }
         this.movement.handleUseMap(session, intent, now);
+        return;
+      case "look":
+        this.look.handle(session, intent);
         return;
       case "attack-target":
       case "cancel-attack":
