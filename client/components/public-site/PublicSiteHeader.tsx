@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
-import { ButtonLink } from "../ui/ButtonLink";
 import { LanguageFlagButtons } from "../ui/LanguageFlagButtons";
 import { MantusLogo } from "../ui/MantusLogo";
+import { PublicAuthAction } from "./PublicAuthAction";
 
 export function PublicSiteHeader() {
   const { t } = useAppTranslation();
@@ -27,9 +27,7 @@ export function PublicSiteHeader() {
         <div className="ml-auto flex items-center gap-3">
           <LanguageFlagButtons language={language} onChange={setLanguage} />
           <span className="hidden sm:block">
-            <ButtonLink href="/play" variant="primary" size="sm">
-              {t("landing.nav.play")}
-            </ButtonLink>
+            <PublicAuthAction size="sm" />
           </span>
         </div>
       </div>

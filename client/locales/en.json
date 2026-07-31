@@ -17,6 +17,7 @@
     "navigation": "Main website navigation",
     "mobileNavigation": "Mobile website navigation",
     "menuButton": "Menu",
+    "logIn": "Log In",
     "unavailable": "Live server data is temporarily unavailable. Please try again shortly.",
     "menu": {
       "news": {

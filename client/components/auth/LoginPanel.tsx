@@ -11,6 +11,7 @@ interface LoginPanelProps {
   onSignIn: (email: string, password: string) => void;
   onSignUp: (email: string, password: string) => void;
   onGoogle: () => void;
+  embedded?: boolean;
   busy?: boolean;
   error?: string | null;
   notice?: string | null;
@@ -20,6 +21,7 @@ export function LoginPanel({
   onSignIn,
   onSignUp,
   onGoogle,
+  embedded = false,
   busy = false,
   error,
   notice,
@@ -36,12 +38,14 @@ export function LoginPanel({
   return (
     <section
       aria-label={t("auth.signInLabel")}
-      className="ui-panel-frame relative isolate flex w-full flex-col gap-5 overflow-hidden px-7 py-8 font-tibia text-ui-text sm:px-9"
+      className={`${embedded ? "px-1 py-2 sm:px-2" : "ui-panel-frame px-7 py-8 sm:px-9"} relative isolate flex w-full flex-col gap-5 overflow-hidden font-tibia text-ui-text`}
     >
-      <div
-        aria-hidden
-        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.045] mix-blend-soft-light"
-      />
+      {!embedded && (
+        <div
+          aria-hidden
+          className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.045] mix-blend-soft-light"
+        />
+      )}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-12 top-0 -z-10 h-32 bg-radial from-ui-accent/15 to-transparent blur-2xl"

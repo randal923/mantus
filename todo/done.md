@@ -519,3 +519,24 @@ breakpoint is viewport-based, not container-based.
   dropdowns, no-gap server-information layout, and live character summary;
   390px captures confirmed the server and profile layouts remain readable
   without horizontal overflow.
+
+  **Follow-up 2026-07-31 — auth-aware public actions and login modal** —
+  replaced unconditional Play Now links across the public header and account
+  rail with session-aware actions. Authenticated visitors go directly to the
+  game, while signed-out visitors open the existing email, account creation,
+  and Google login experience in the shared game-styled modal without leaving
+  the current public page. The standalone game login screen now reuses the
+  same login hook, so both entry points retain one deliberate error and
+  confirmation flow. The modal is portaled to the document root so the
+  sticky header's backdrop filter cannot constrain its full-screen overlay.
+
+  **Files touched**: `client/components/auth/{LoginModal,LoginPanel,LoginScreen}.tsx`,
+  `client/components/public-site/{PublicAuthAction,PublicSiteHeader}.tsx`,
+  `client/components/landing/LandingNavigation.tsx`,
+  `client/hooks/{useLogin,usePublicAuthSession}.ts`, and
+  `client/locales/{en,pt-BR}.json`.
+
+  **Verified**: focused lint, client TypeScript, and the optimized Next.js
+  production build passed for all ten generated routes. Hydrated 1,440px and
+  390px browser captures confirmed a centered, complete, scroll-safe login
+  modal over the public page.

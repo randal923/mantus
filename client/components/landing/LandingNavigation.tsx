@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { ButtonLink } from "../ui/ButtonLink";
+import { PublicAuthAction } from "../public-site/PublicAuthAction";
 
 const MENU_GROUPS = [
   {
@@ -32,13 +32,9 @@ export function LandingNavigation() {
   return (
     <aside className="order-2 flex flex-col gap-4 md:order-1">
       <div className="ui-panel-frame relative overflow-hidden p-3">
-        <ButtonLink
-          href="/play"
-          variant="primary"
+        <PublicAuthAction
           className="h-12 w-full justify-center text-sm"
-        >
-          {t("landing.nav.play")}
-        </ButtonLink>
+        />
         <p className="px-2 pt-3 text-center text-xs leading-relaxed text-ui-muted">
           {t("landing.menu.playNote")}
         </p>
@@ -83,9 +79,11 @@ export function LandingNavigation() {
         <p className="mt-2 text-sm leading-relaxed text-ui-muted">
           {t("landing.menu.account.description")}
         </p>
-        <ButtonLink href="/play" className="mt-4 w-full justify-center" size="sm">
-          {t("landing.menu.account.action")}
-        </ButtonLink>
+        <PublicAuthAction
+          className="mt-4 w-full justify-center"
+          size="sm"
+          variant="secondary"
+        />
       </section>
     </aside>
   );
