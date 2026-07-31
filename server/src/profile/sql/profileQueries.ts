@@ -50,9 +50,17 @@ export const selectTitleUpdate = `
     ))`;
 
 export const publicProfileQuery = `
-  SELECT id, display_name, level, vocation, selected_title
-  FROM characters
-  WHERE normalized_name = lower(btrim($1))`;
+  SELECT c.id, c.display_name, c.level, c.vocation, c.sex,
+         c.outfit_look_type, c.outfit_head, c.outfit_body,
+         c.outfit_legs, c.outfit_feet, c.outfit_addons,
+         c.town_id, c.selected_title, c.created_at, c.last_login_at,
+         g.name AS guild_name
+  FROM characters c
+  LEFT JOIN guild_members gm ON gm.character_id = c.id
+  LEFT JOIN guilds g ON g.id = gm.guild_id
+  WHERE c.normalized_name = lower(btrim($1))
+    AND c.namelocked = false
+  LIMIT 1`;
 
 export const countRecentBugReportsQuery = `
   SELECT count(*)::int AS total FROM bug_reports

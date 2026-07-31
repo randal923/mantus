@@ -134,6 +134,12 @@ and be stored in a web-optimized format.
 - `mantus-coin.png` — original transparent Mantus Coin icon: a forged
   silver-and-obsidian coin with cyan mantis sigil and restrained gold edge
   marks, generated for the account wallet and store UI.
+- `public/images/landing/mantus-citadel-hero.webp` — original wide citadel
+  key art for the public website hero.
+- `public/images/landing/astral-vault.webp` — original ritual-vault editorial
+  art for the featured news story.
+- `public/images/landing/frontier-road.webp` — original forest-expedition
+  editorial art for the world overview.
 
 ## Wheel of Destiny art (`public/assets/wheel/`)
 

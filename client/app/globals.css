@@ -37,6 +37,25 @@
     url("/assets/ui/forged-stone-texture.webp") center / 900px 900px;
 }
 
+.landing-hero-fade {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 58%,
+    rgb(0 0 0 / 92%) 70%,
+    rgb(0 0 0 / 52%) 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 58%,
+    rgb(0 0 0 / 92%) 70%,
+    rgb(0 0 0 / 52%) 86%,
+    transparent 100%
+  );
+}
+
 .ui-panel-frame {
   border: 1px solid #444844;
   border-radius: 0.75rem;

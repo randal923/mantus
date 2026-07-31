@@ -1,4 +1,8 @@
-import type { CharacterVocation } from "@tibia/protocol";
+import type {
+  CharacterOutfit,
+  CharacterSex,
+  CharacterVocation,
+} from "@tibia/protocol";
 
 /** Everything the owner may see about their own profile. */
 export interface ProfileSnapshot {
@@ -14,9 +18,15 @@ export interface PublicProfileRecord {
   readonly name: string;
   readonly level: number;
   readonly vocation: CharacterVocation;
+  readonly sex: CharacterSex;
+  readonly outfit: CharacterOutfit;
+  readonly townId: number;
+  readonly guildName: string | null;
   readonly selectedTitle: string | null;
   readonly achievements: ReadonlyArray<string>;
   readonly badges: ReadonlyArray<string>;
+  readonly createdAt: Date;
+  readonly lastLoginAt: Date | null;
 }
 
 /**

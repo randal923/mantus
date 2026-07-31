@@ -13,6 +13,216 @@
     "cancel": "Cancelar",
     "loading": "Carregando"
   },
+  "publicSite": {
+    "navigation": "Navegação principal do site",
+    "mobileNavigation": "Navegação móvel do site",
+    "menuButton": "Menu",
+    "unavailable": "Os dados ao vivo do servidor estão temporariamente indisponíveis. Tente novamente em instantes.",
+    "menu": {
+      "news": {
+        "title": "Notícias",
+        "latest": "Últimas Notícias"
+      },
+      "game": {
+        "title": "Jogo",
+        "vocations": "Vocações",
+        "serverInfo": "Informações do Servidor"
+      },
+      "community": {
+        "title": "Comunidade",
+        "highscores": "Highscores",
+        "online": "Quem Está Online",
+        "characters": "Buscar Personagem"
+      }
+    }
+  },
+  "websiteVocations": {
+    "eyebrow": "Escolha seu caminho",
+    "title": "Vocações",
+    "description": "Todo herói começa com uma das cinco vocações. Sua escolha define as armas que você domina, a magia que comanda e o papel que assume quando o perigo se aproxima.",
+    "role": "Papel em Combate",
+    "playstyle": "Estilo de Jogo",
+    "strength": "Pontos Fortes",
+    "tradeoff": "Tenha em Mente",
+    "promotion": "Promoção",
+    "entries": {
+      "Knight": {
+        "role": "Combatente da linha de frente",
+        "playstyle": "Aproxime-se, mantenha criaturas perigosas ocupadas e confie em armas corpo a corpo, armaduras e uma grande reserva de vida.",
+        "strength": "Resistência, capacidade para suprimentos e dano contínuo de perto.",
+        "tradeoff": "Pressão limitada à distância e menos magia ofensiva que outras vocações.",
+        "promotion": "Cavaleiro de Elite"
+      },
+      "Paladin": {
+        "role": "Combatente à distância",
+        "playstyle": "Controle a distância com arcos, bestas e lanças enquanto complementa os ataques com cura e magia sagrada.",
+        "strength": "Caçadas solo flexíveis, dano à distância e sobrevivência equilibrada.",
+        "tradeoff": "Munição, posicionamento e habilidade de distância exigem preparação constante.",
+        "promotion": "Paladino Real"
+      },
+      "Sorcerer": {
+        "role": "Mago ofensivo",
+        "playstyle": "Controle as lutas com magia destrutiva de fogo, energia e morte, causando grandes explosões de dano antes da aproximação inimiga.",
+        "strength": "Alto dano mágico, ataques em grandes áreas e eliminação rápida de grupos.",
+        "tradeoff": "A baixa resistência física torna posicionamento e controle de mana essenciais.",
+        "promotion": "Mestre Feiticeiro"
+      },
+      "Druid": {
+        "role": "Mago de cura e suporte",
+        "playstyle": "Mantenha aliados vivos com curas poderosas enquanto controla inimigos usando gelo, terra e magia da natureza.",
+        "strength": "Suporte em grupo, recuperação, controle e magia elemental.",
+        "tradeoff": "Menor resistência e dano que depende bastante do uso cuidadoso das magias.",
+        "promotion": "Druida Ancião"
+      },
+      "Monk": {
+        "role": "Combatente corpo a corpo móvel",
+        "playstyle": "Lute de perto com técnicas disciplinadas de punho, bom posicionamento e pressão física constante.",
+        "strength": "Combate com punhos, mobilidade e confrontos prolongados de perto.",
+        "tradeoff": "Precisa permanecer próximo do alvo e controlar a agressividade em lutas perigosas.",
+        "promotion": "Monge Exaltado"
+      }
+    }
+  },
+  "websiteHighscores": {
+    "eyebrow": "Ranking da comunidade",
+    "title": "Highscores",
+    "description": "Compare os maiores aventureiros do reino em experiência, magia e disciplinas de combate.",
+    "filters": "Filtros do Ranking",
+    "category": "Categoria",
+    "vocation": "Vocação",
+    "allVocations": "Todas as Vocações",
+    "updateNote": "Os rankings vêm dos registros públicos de progressão do servidor e usam um cache breve para responder rapidamente.",
+    "page": "Página {{current}} de {{total}}",
+    "rank": "Posição",
+    "name": "Nome",
+    "level": "Nível",
+    "value": "Pontos",
+    "empty": "Ainda não há personagens neste ranking.",
+    "previous": "Anterior",
+    "next": "Próxima",
+    "categories": {
+      "experience": "Experiência",
+      "magic": "Nível Mágico",
+      "fist": "Combate com Punhos",
+      "club": "Combate com Clavas",
+      "sword": "Combate com Espadas",
+      "axe": "Combate com Machados",
+      "distance": "Combate à Distância",
+      "shielding": "Defesa",
+      "fishing": "Pesca"
+    }
+  },
+  "online": {
+    "eyebrow": "O mundo vivo",
+    "title": "Quem Está Online",
+    "description": "Veja os heróis conectados a Mantus. Selecione um nome para abrir o perfil público do personagem.",
+    "world": "Mundo Mantus",
+    "count_one": "{{count}} jogador online",
+    "count_other": "{{count}} jogadores online",
+    "statusPending": "Verificando o mundo",
+    "empty": "O mundo está quieto. Nenhum personagem está online agora.",
+    "name": "Nome",
+    "vocation": "Vocação",
+    "guild": "Guilda",
+    "level": "Nível",
+    "noGuild": "Sem guilda"
+  },
+  "characterLookup": {
+    "eyebrow": "Diretório da comunidade",
+    "title": "Buscar Personagem",
+    "description": "Procure um aventureiro para ver informações públicas, conquistas, guilda e aparência.",
+    "formTitle": "Encontrar um Personagem",
+    "formDescription": "Digite o nome exato do personagem. A busca ignora maiúsculas e minúsculas.",
+    "name": "Nome do Personagem",
+    "placeholder": "ex.: Aster Vale",
+    "search": "Buscar"
+  },
+  "publicProfile": {
+    "eyebrow": "Perfil do personagem",
+    "pageTitle": "Personagens",
+    "pageSummary": "Informações públicas do personagem {{name}}.",
+    "description": "Carregando o registro público deste aventureiro no servidor Mantus.",
+    "summary": "{{vocation}} de nível {{level}} no mundo {{world}}.",
+    "anotherCharacter": "Buscar Outro Personagem",
+    "notFoundTitle": "Personagem Não Encontrado",
+    "notFoundDescription": "Nenhum personagem público chamado “{{name}}” foi encontrado.",
+    "searchAgain": "Buscar Novamente",
+    "online": "Online agora",
+    "offline": "Offline",
+    "characterInformation": "Informações do Personagem",
+    "name": "Nome",
+    "title": "Título",
+    "noTitle": "Nenhum título selecionado",
+    "sex": "Sexo",
+    "vocation": "Vocação",
+    "level": "Nível",
+    "world": "Mundo",
+    "residence": "Residência",
+    "guild": "Guilda",
+    "guildMembership": "Participação em Guilda",
+    "noGuild": "Sem guilda",
+    "achievementPoints": "Pontos de Conquista",
+    "created": "Criado em",
+    "lastLogin": "Último Login",
+    "never": "Nunca",
+    "onlineStatus": "Status",
+    "accountAchievements": "Conquistas da Conta",
+    "achievements": "Conquistas em Destaque",
+    "showcase": "Até 5 exibidas",
+    "noAchievements": "Este personagem ainda não possui conquistas públicas.",
+    "points": "{{points}} pontos",
+    "grade": "Grau {{grade}}",
+    "badges": "Emblemas",
+    "recentDeaths": "Mortes Recentes",
+    "noRecentDeaths": "Este personagem não possui mortes registradas nos últimos 30 dias.",
+    "deathAtLevel": "Morreu no nível {{level}}.",
+    "accountInformation": "Informações da Conta",
+    "characterCreated": "Personagem Criado em",
+    "accountStatus": "Status da Conta",
+    "accountPrivate": "Não divulgado publicamente",
+    "charactersSection": "Personagens",
+    "charactersPrivate": "Os outros personagens desta conta são privados e não são divulgados pela API pública de Mantus."
+  },
+  "serverInfo": {
+    "eyebrow": "Configuração do mundo",
+    "title": "Informações do Servidor",
+    "description": "Confira as taxas, capacidade, sistemas habilitados e regras que moldam o mundo persistente Open PvP de Mantus.",
+    "world": "Mundo",
+    "status": "Status",
+    "online": "Online",
+    "players": "Jogadores",
+    "worldType": "Tipo de Mundo",
+    "openPvp": "Open PvP",
+    "ratesTitle": "Taxas do Jogo",
+    "systemsTitle": "Sistemas do Mundo",
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "rulesEyebrow": "As leis de Mantus",
+    "rulesTitle": "Regras do Mundo",
+    "rates": {
+      "experience": "Experiência",
+      "skill": "Habilidades",
+      "magic": "Magia",
+      "loot": "Loot",
+      "spawn": "Nascimento de Criaturas",
+      "soulRegen": "Regeneração de Soul",
+      "offlineTraining": "Treino Offline",
+      "exerciseTraining": "Treino com Armas de Exercício"
+    },
+    "systems": {
+      "stamina": "Stamina",
+      "experienceStages": "Estágios de Experiência",
+      "market": "Mercado de Jogadores",
+      "houses": "Casas de Jogadores",
+      "guildWars": "Guerras de Guilda",
+      "dailyRewards": "Recompensas Diárias"
+    },
+    "rules": {
+      "authority": "Movimento, combate, loot, recargas e progressão são resolvidos pelo servidor autoritativo.",
+      "economy": "Itens, ouro, vendas no mercado e transferências de propriedade são persistidos em transações atômicas.",
+      "pvp": "O Open PvP está ativo. Prepare-se, respeite os bloqueios de combate e espere que outros aventureiros revidem."
+    }
+  },
   "languages": {
     "label": "Idioma",
     "selector": "Escolher idioma",
@@ -58,7 +268,31 @@
       "media": "Mídia",
       "play": "Jogar Agora"
     },
+    "menu": {
+      "playNote": "Jogue grátis no navegador. Nenhum download é necessário.",
+      "news": {
+        "title": "Notícias",
+        "latest": "Últimas Notícias"
+      },
+      "game": {
+        "title": "Jogo",
+        "vocations": "Vocações",
+        "serverInfo": "Informações do Servidor"
+      },
+      "community": {
+        "title": "Comunidade",
+        "highscores": "Recordes",
+        "online": "Quem Está Online",
+        "guilds": "Guildas"
+      },
+      "account": {
+        "title": "Sua Conta",
+        "description": "Crie um herói ou continue a história de um personagem existente.",
+        "action": "Acessar Conta"
+      }
+    },
     "hero": {
+      "eyebrow": "Um MMORPG persistente no navegador",
       "tagline": "Um mundo implacável à moda antiga, forjado de novo",
       "subtitle": "Mantus Online é um MMORPG 2D gratuito de estilo clássico: um mundo aberto persistente onde cada passo, cada troca e cada batalha é real — e tudo o que você conquista pode ser perdido.",
       "cta": "Jogue Grátis",
@@ -70,6 +304,15 @@
         "vocations": "Cinco vocações para dominar",
         "economy": "Uma economia dirigida por jogadores"
       }
+    },
+    "featured": {
+      "label": "Prévia de Desenvolvimento",
+      "date": "30 de julho de 2026",
+      "category": "Comunicado do Mundo",
+      "title": "Sob a Cidadela, o Cofre Astral Desperta",
+      "description": "Exploradores encontraram uma câmara selada sob a cidadela do norte. Esta prévia mostra o tipo de expedição em grupo perigosa, narrativa ambiental e encontro controlado pelo servidor que estamos construindo para Mantus.",
+      "action": "Prepare seu personagem",
+      "imageAlt": "Três aventureiros diante de um selo brilhante em um antigo cofre subterrâneo"
     },
     "features": {
       "title": "Forjado para os Destemidos",
@@ -96,8 +339,10 @@
       "subtitle": "Cinco vocações, cada uma com suas próprias armas, magias e formas de sobreviver ao mundo. Escolha com sabedoria — a maestria é uma longa estrada."
     },
     "news": {
+      "kicker": "Direto do reino",
       "title": "Crônicas de Mantus",
       "subtitle": "Comunicados dos desenvolvedores e do próprio mundo.",
+      "updated": "Atualizado semanalmente",
       "items": {
         "gatesOpen": {
           "tag": "Anúncio",
@@ -119,6 +364,36 @@
         }
       }
     },
+    "overview": {
+      "kicker": "Entre na fronteira",
+      "title": "Um Mundo. Inúmeras Histórias.",
+      "description": "Cace em florestas antigas, desça até ruínas esquecidas, negocie o que encontrar e construa um nome que outros jogadores lembrarão. O reino é compartilhado, persistente e governado pelo servidor — cada vitória é conquistada.",
+      "imageAlt": "Um grupo de aventureiros segue por uma estrada escura na floresta em direção a uma torre de vigia"
+    },
+    "world": {
+      "unavailable": "Os dados do mundo estão temporariamente indisponíveis.",
+      "status": {
+        "title": "Status do Mundo",
+        "online": "Mundo Online",
+        "unknown": "Status Desconhecido",
+        "players_one": "{{count}} jogador online",
+        "players_other": "{{count}} jogadores online",
+        "world": "Mundo",
+        "type": "Tipo de Mundo"
+      },
+      "highscores": {
+        "title": "Recordes",
+        "experience": "Experiência",
+        "level": "Nv. {{level}}",
+        "empty": "Ainda não há dados públicos de classificação."
+      },
+      "boosted": {
+        "title": "Encontros de Hoje",
+        "creature": "Criatura Impulsionada",
+        "boss": "Chefe Impulsionado",
+        "awaiting": "Aguardando a rotação diária"
+      }
+    },
     "media": {
       "title": "Vislumbres do Mundo",
       "subtitle": "Cenas do reino, capturadas por quem sobreviveu a elas.",
@@ -134,6 +409,8 @@
       "cta": "Criar Conta Grátis"
     },
     "footer": {
+      "description": "Um MMORPG 2D gratuito e persistente feito para combate deliberado, exploração perigosa e um mundo moldado pelos jogadores.",
+      "links": "Links do rodapé",
       "copyright": "© {{year}} Mantus Online. Todos os direitos reservados."
     }
   },

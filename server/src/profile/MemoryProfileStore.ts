@@ -1,4 +1,9 @@
-import type { CharacterVocation } from "@tibia/protocol";
+import {
+  STARTER_LOOK_TYPE_BY_SEX,
+  type CharacterOutfit,
+  type CharacterSex,
+  type CharacterVocation,
+} from "@tibia/protocol";
 import type {
   ProfileSnapshot,
   ProfileStore,
@@ -9,6 +14,12 @@ interface MemoryCharacter {
   readonly name: string;
   readonly level: number;
   readonly vocation: CharacterVocation;
+  readonly sex: CharacterSex;
+  readonly outfit: CharacterOutfit;
+  readonly townId: number;
+  readonly guildName: string | null;
+  readonly createdAt: Date;
+  readonly lastLoginAt: Date | null;
 }
 
 /**
@@ -29,8 +40,26 @@ export class MemoryProfileStore implements ProfileStore {
     name: string,
     level = 1,
     vocation: CharacterVocation = "Knight",
+    sex: CharacterSex = "male",
   ): void {
-    this.characters.set(characterId, { name, level, vocation });
+    this.characters.set(characterId, {
+      name,
+      level,
+      vocation,
+      sex,
+      outfit: {
+        lookType: STARTER_LOOK_TYPE_BY_SEX[sex],
+        head: 0,
+        body: 0,
+        legs: 0,
+        feet: 0,
+        addons: 0,
+      },
+      townId: 1,
+      guildName: null,
+      createdAt: new Date(0),
+      lastLoginAt: null,
+    });
   }
 
   async loadSnapshot(characterId: string): Promise<ProfileSnapshot> {
@@ -99,9 +128,15 @@ export class MemoryProfileStore implements ProfileStore {
       name: character.name,
       level: character.level,
       vocation: character.vocation,
+      sex: character.sex,
+      outfit: character.outfit,
+      townId: character.townId,
+      guildName: character.guildName,
       selectedTitle: this.selectedTitles.get(characterId) ?? null,
       achievements: [...(this.achievements.get(characterId) ?? [])].sort(),
       badges: [...(this.badges.get(characterId) ?? [])].sort(),
+      createdAt: character.createdAt,
+      lastLoginAt: character.lastLoginAt,
     };
   }
 

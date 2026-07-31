@@ -673,6 +673,22 @@ limitations accepted during a session are recorded in the owning feature file
   (`sanitizeActionBarAction` already resolves each type against the catalog),
   and relax `carriedItemSummarySchema.count` to non-negative. Owner: the
   action-bar work recorded in `todo/done.md` (2026-07-31).
+- **Public-website editorial destinations are provisional** (2026-07-31,
+  Feature 110). The portal layout, live world status, boosted rotation,
+  highscores, online list, character lookup/profile, server-info, and vocation
+  guide pages are real, but the featured Astral Vault dispatch is explicitly a
+  development preview. The news archive and public guild destination do not
+  yet have durable content sources. Recommended fix: replace the preview with
+  approved launch copy and add those bounded read-only pages as their server
+  projections become available. Owner: public website.
+- **Public sibling-character lists need an explicit account opt-in**
+  (2026-07-31, Feature 110/101). The Tibia-style profile preserves the
+  Characters section but does not reveal which characters share an account:
+  the current account model has no public-visibility preference, and exposing
+  that relationship by default would disclose private ownership metadata.
+  Recommended fix: add an authenticated account privacy setting, persist it,
+  and expose a bounded sibling projection only when the owner opted in.
+  Owner: public website/auth.
 
 
 ## Repo-wide known breakage

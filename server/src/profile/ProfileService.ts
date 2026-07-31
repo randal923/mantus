@@ -203,7 +203,8 @@ export class ProfileService {
               name: record.name,
               level: record.level,
               vocation: record.vocation,
-              guildName: this.guildNameOf(record.characterId),
+              guildName:
+                this.guildNameOf(record.characterId) ?? record.guildName,
               title: record.selectedTitle
                 ? (TITLE_NAMES.get(record.selectedTitle) ?? null)
                 : null,

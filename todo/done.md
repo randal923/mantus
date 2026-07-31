@@ -329,3 +329,193 @@ client.
 **Residual risk**: the scaled wheel is a CSS transform, so the pixel art is
 resampled below 1:1 and looks softer on narrow viewports; the sub-`xl`
 breakpoint is viewport-based, not container-based.
+  **Feature 110 — public website and read-only landing API
+  (2026-07-31)** — replaced the one-column marketing page with a responsive
+  fantasy portal layout inspired by Tibia's information architecture: a
+  branded hero, grouped navigation rail, central news/editorial stream, and
+  live world-data rail. The presentation remains Mantus-specific charcoal,
+  pewter, oxblood, and cyan, with original generated citadel, ritual-vault,
+  and forest-expedition artwork stored as optimized WebP assets. English and
+  Brazilian Portuguese copy covers every new surface, and the intentionally
+  provisional story is labeled as a development preview.
+
+  The game process now owns `GET /api/public/landing` on the same listener as
+  WebSocket upgrades. It exposes only world status, the daily boosted pair,
+  and five bounded public experience-ranking rows; accepts no writes or
+  request bodies; applies short cache/security/CORS headers; coalesces
+  concurrent database reads; and caches the fixed projection for 30 seconds.
+  The shared protocol package defines the strict response schema, and the
+  browser validates the untrusted JSON before rendering it. WebSocket
+  payload, connection, and shutdown behavior continue through the same
+  `GameServer` boundary.
+
+  **Files touched**: `client/components/landing/`,
+  `client/public/images/landing/`, `client/locales/`, `client/ASSETS.md`,
+  `protocol/src/publicLanding.ts`, `server/src/PublicLandingApi.ts`,
+  `server/src/PublicLandingApi.test.ts`, `server/src/GameServer.ts`, and
+  `server/src/boosted/BoostedService.ts`.
+
+  **Verified**: protocol, server, and client TypeScript checks passed; the
+  landing component lint passed; the optimized Next.js production build
+  generated `/` and `/play`; 2 public-API tests, 31 `GameServer` WebSocket
+  regressions, and 10 boosted-rotation tests passed. The remaining editorial
+  placeholders are recorded in `TODO.md`.
+
+  **Follow-up 2026-07-31 — public community routes and complete read-only
+  API** — expanded the portal into a shared public site with a RubinOT-inspired
+  grouped desktop/mobile menu and dedicated `/highscores`, `/online`,
+  `/characters`, `/characters/[name]`, and `/server-info` routes. Character
+  names in the ranking and connected-player table now open the same public
+  profile, which shows the server-owned appearance, level, vocation, sex,
+  residence, guild, title, achievement showcase, badges, creation time, and
+  last login without exposing an account id, position, inventory, or hidden
+  stats. The landing artwork now dissolves through a deep backdrop-matched
+  gradient into an overlapping content grid instead of ending at a hard
+  border.
+
+  Renamed `PublicLandingApi` to the cohesive `PublicApi` and added bounded,
+  strict-schema routes for the landing projection, paged category/vocation
+  highscores, currently authenticated online players, name-addressed
+  profiles, and safe gameplay-facing server settings. HTTP reads reject
+  bodies, writes, unknown/duplicate query fields, invalid names, and ranking
+  pages past the existing 1,000-row cap. Database projections use fixed
+  parameterized SQL, caches and concurrent loads are capped, live lists are
+  limited to 1,000 rows, and the shared HTTP/WebSocket listener has an
+  explicit connection ceiling. Offline guild membership comes from the
+  durable profile projection; online status comes only from a bound live
+  session, not lingering world state.
+
+  **Files touched**: `client/app/{highscores,online,characters,server-info}/`,
+  `client/components/public-site/`, `client/components/landing/`,
+  `client/hooks/usePublicApiData.ts`, `client/lib/public/`,
+  `client/locales/`, `protocol/src/publicWebsite.ts`,
+  `server/src/PublicApi.ts`, `server/src/PublicApi.test.ts`,
+  `server/src/GameServer.ts`, and `server/src/profile/`.
+
+  **Verified**: all workspace TypeScript checks passed; the client lint has no
+  new errors (15 pre-existing warnings); the optimized Next.js build produced
+  all seven public/game routes; 1,439 server tests and 326 client tests passed;
+  all new pages returned HTTP 200 against the active local processes; and
+  hydrated desktop plus 390px mobile browser checks confirmed real highscore,
+  character, and server-info data. The intentionally provisional editorial
+  copy remains recorded in `TODO.md`.
+
+  **Follow-up 2026-07-31 — Tibia-style character page and public death
+  history** — rebuilt the character route around the official site's stacked
+  information hierarchy: full-width framed sections, strong title bars, and
+  compact alternating label/value rows for character information,
+  achievements, deaths, account information, and related characters. It keeps
+  Mantus's charcoal/oxblood presentation rather than copying Tibia's artwork.
+  Account linkage remains private: the related-characters section explains
+  that sibling characters are withheld until the game has an explicit public
+  opt-in instead of leaking account ownership.
+
+  Corrected the earlier mistaken death-history placeholder. Feature 83 already
+  persists every authoritative player death in `character_deaths`; `PublicApi`
+  now reads page zero through the existing parameterized `CyclopediaStore`
+  projection (15 rows, 30-day window), validates the entries through the
+  shared public schema, and renders the real timestamp and server-authored
+  cause. No new table or duplicate death write path was introduced.
+
+  **Verified**: all workspace TypeScript checks passed; 3 `PublicApi` tests
+  passed including the death projection; lint reports only the same 15
+  pre-existing warnings; the optimized Next.js build passed with all routes;
+  the live API returned six real death records for the visual test character;
+  and a hydrated desktop browser check confirmed the complete stacked layout
+  and data.
+
+  **Follow-up 2026-07-31 — seamless hero/backdrop blend** — replaced the
+  landing hero's opaque bottom cover with a real alpha mask on both the
+  generated citadel artwork and its readability shade. The image now fades
+  directly into the page's existing forged-stone backdrop, while the
+  three-column content grid overlaps the final part of that fade. This removes
+  the rectangular image edge and separate black transition band.
+
+  **Files touched**: `client/app/globals.css`,
+  `client/components/landing/LandingHeader.tsx`, and
+  `client/components/landing/LandingPage.tsx`.
+
+  **Verified**: client TypeScript and the optimized Next.js production build
+  passed; a hydrated 1,440px browser capture confirmed that the image remains
+  visible behind the first content row and dissolves continuously into the
+  shared backdrop.
+
+  **Follow-up 2026-07-31 — cleaner landing news hierarchy** — kept one
+  featured story with its image and summary, but reduced its vertical weight
+  and converted the three older stories from repeated excerpt blocks into a
+  quiet date/title/category archive. The redundant “Prepare your character”
+  action was also removed from the story body. The result preserves the
+  available news without forcing every item to compete with the featured
+  story.
+
+  **Files touched**: `client/components/landing/LandingNews.tsx` and
+  `client/components/landing/LandingNewsRow.tsx`.
+
+  **Verified**: client TypeScript and focused lint passed; a hydrated 1,440px
+  full-page browser capture confirmed the shorter feature and compact,
+  single-line desktop archive.
+
+  **Follow-up 2026-07-31 — persistent public-site frame** — moved the landing
+  hero, grouped navigation rail, and live world-data rail into one shared
+  public layout. Highscores, online players, character search, character
+  profiles, and server information now replace only the center content while
+  retaining the homepage artwork and navigation context. Route-specific
+  headings were converted into compact center-column panels, highscore
+  filters were reshaped for the narrower content column, and homepage section
+  links now resolve correctly from every sub-route.
+
+  **Files touched**: `client/components/public-site/PublicSiteLayout.tsx`,
+  `client/components/public-site/PublicPageHero.tsx`,
+  `client/components/public-site/{HighscoresPage,OnlinePlayersPage,CharacterSearchPage,CharacterProfilePage,ServerInfoPage}.tsx`,
+  and `client/components/landing/{LandingPage,LandingNews,LandingNavigation}.tsx`.
+
+  **Verified**: focused lint, client TypeScript, and the optimized Next.js
+  production build passed for all eight application routes. Hydrated browser
+  captures at 1,440px confirmed the shared frame around highscores and a live
+  character profile; a 390px capture confirmed responsive character search,
+  navigation, and world-data rails without horizontal overflow.
+
+  **Follow-up 2026-07-31 — focused navigation and vocation guide** — removed
+  Featured Story, News Archive, World Overview, and Enter the Game from both
+  public navigation systems. News now links only to Latest News; Game links to
+  the new Vocation guide and Server Information. `/vocations` explains all
+  five starter paths with their battle role, playstyle, strengths, tradeoffs,
+  promotion, and a portrait rendered from the real game outfit assets. The
+  guide is fully localized in English and Brazilian Portuguese and retains the
+  shared public hero and side rails.
+
+  **Files touched**:
+  `client/components/public-site/{PublicSiteHeader,VocationsPage,VocationGuideCard}.tsx`,
+  `client/components/landing/{LandingHeader,LandingNavigation}.tsx`,
+  `client/app/vocations/page.tsx`, and `client/locales/{en,pt-BR}.json`.
+
+  **Verified**: locale JSON parsing, focused lint, client TypeScript, and the
+  optimized Next.js production build passed; the build now generates nine
+  public/game routes including `/vocations`. Hydrated 1,440px and 390px
+  full-page captures confirmed the shortened menus, all five outfit portraits,
+  and the responsive guide without horizontal overflow.
+
+  **Follow-up 2026-07-31 — content-first portal and profile polish** — reduced
+  the global header to the Mantus mark, language controls, and Play Now by
+  removing only the News/Game/Community navigation block. The large marketing
+  hero and route-introduction cards were removed entirely; the citadel artwork
+  is now an absolute shared backdrop that reserves no layout space, so every
+  route begins directly beneath the compact header.
+
+  Rebuilt the landing news stream around Tibia-inspired dispatches: each story
+  has a strong dated oxblood headline bar and a clearly separated body, while
+  the featured story keeps a restrained supporting image instead of a dominant
+  banner. Public highscore filters now use the existing shared `Dropdown`
+  component. The character page gained a live outfit/status summary, visible
+  badges, tighter information columns, stronger section bars, and refined
+  alternating tables while retaining real achievements and death history.
+
+  **Files touched**: `client/components/landing/{LandingNews,LandingNewsRow,LandingPage}.tsx`,
+  `client/components/public-site/{PublicSiteHeader,PublicSiteArtworkHeader,PublicSiteLayout,PublicSiteShell,HighscoresPage,CharacterProfilePage,PublicProfileSummary,PublicProfileSection,PublicProfileInformation,PublicProfileAchievements,PublicProfileDeaths,PublicProfileAccountInformation,PublicProfileCharactersPrivacy}.tsx`,
+  and the remaining public route page components.
+
+  **Verified**: focused lint and client TypeScript passed. Hydrated desktop
+  captures confirmed the content-first root news page, shared highscore
+  dropdowns, no-gap server-information layout, and live character summary;
+  390px captures confirmed the server and profile layouts remain readable
+  without horizontal overflow.

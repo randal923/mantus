@@ -40,6 +40,7 @@ export * from "./npc";
 export * from "./party";
 export * from "./position";
 export * from "./progression";
+export * from "./publicWebsite";
 export * from "./shop";
 export * from "./store";
 export * from "./trade";

@@ -96,6 +96,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Testing + release gates, CI (100)                               | ◐      | ◐      | Staging soak, fuzz, full CI pipeline, launch runbook                                                     |
 | Auth follow-ups (101)                                           | ◐      | ◐      | Captcha, production rate limits, reauth forms, coin funding                                              |
 | Dev tooling (102)                                               | ◐      | ◐      | AI-detach fix, delete audit event, gm-response rendering                                                 |
+| Public website + read-only public API (110)                     | ✅     | ✅     | Editorial preview/archive content (content-first route frame, Tibia-style news, vocation guide, and profile polish shipped 2026-07-31) and guild directory are provisional; sibling-character lists need a public opt-in |
 | Parity ledger + gates (1, 17, 26, 89)                           | ◐      | —      | Importer surface extensions; inventory generator (89, unblocked by the pinned checkout since 2026-07-26) |
 
 ## The shape of what's left

@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
-import type { IncomingMessage } from "node:http";
+import {
+  createServer,
+  type IncomingMessage,
+  type Server as HttpServer,
+} from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
 import {
   PROTOCOL_LIMITS,
@@ -97,6 +101,7 @@ import type { SpellTeacherStore } from "./npc/SpellTeacherStore";
 import { TravelService } from "./npc/TravelService";
 import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
+import { PublicApi } from "./PublicApi";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
 import { BestiaryService } from "./bestiary/BestiaryService";
@@ -206,6 +211,7 @@ export interface GameServerDeps {
 }
 
 export class GameServer {
+  private readonly httpServer: HttpServer;
   private readonly wss: WebSocketServer;
   private readonly world: World;
   private readonly registry: SessionRegistry;
@@ -1179,10 +1185,57 @@ export class GameServer {
       undefined,
       config.chat,
     );
+    const publicApi = new PublicApi({
+      worldName: "Mantus",
+      onlinePlayers: () =>
+        [...this.world.allPlayers()]
+          .filter(
+            (player) =>
+              this.registry.sessionFor(player.id)?.playerId === player.id,
+          )
+          .map((player) => ({
+            name: player.name,
+            level: player.level,
+            vocation: player.vocation,
+            guildName: player.guildName,
+          })),
+      isOnline: (characterId) =>
+        this.registry.sessionFor(characterId)?.playerId === characterId &&
+        this.world.getPlayer(characterId) !== undefined,
+      residenceFor: (townId) => this.world.townName(townId),
+      boosted: () => this.boosted.publicSelection(),
+      highscores: deps.highscores,
+      profiles: deps.profiles,
+      cyclopedia: deps.cyclopedia,
+      serverInfo: {
+        maxPlayers: config.maxSessions,
+        pvpType: "open-pvp",
+        rates: config.rates,
+        systems: {
+          stamina: config.progression.staminaSystem,
+          experienceStages: config.progression.useStages,
+          market: true,
+          houses: true,
+          guildWars: true,
+          dailyRewards: true,
+        },
+        startedAt: new Date(this.startedAt).toISOString(),
+      },
+    });
+    this.httpServer = createServer((request, response) => {
+      void publicApi.handle(request, response);
+    });
+    this.httpServer.maxHeadersCount = 50;
+    this.httpServer.maxConnections = config.maxSessions;
+    this.httpServer.requestTimeout = 5_000;
+    this.httpServer.headersTimeout = 5_000;
+    this.httpServer.keepAliveTimeout = 5_000;
+    this.httpServer.maxRequestsPerSocket = 100;
     this.wss = new WebSocketServer({
-      port: config.port,
+      server: this.httpServer,
       maxPayload: PROTOCOL_LIMITS.maxMessageBytes,
     });
+    this.httpServer.listen(config.port);
     this.loop = new TickLoop(config.tickMs, () => this.tick());
   }
 
@@ -1228,7 +1281,10 @@ export class GameServer {
       () => this.pingSessions(),
       this.config.heartbeatMs,
     );
-    console.log(`game server listening on ws://localhost:${this.port}`);
+    console.log(
+      `game server listening on ws://localhost:${this.port} and ` +
+        `http://localhost:${this.port}/api/public/*`,
+    );
   }
 
   stop(): Promise<void> {
@@ -2001,6 +2057,15 @@ export class GameServer {
       );
     }
     for (const session of this.registry.all()) session.terminate();
+    const httpClosed = new Promise<void>((resolve, reject) => {
+      this.httpServer.close((cause) => {
+        if (cause) {
+          reject(cause);
+          return;
+        }
+        resolve();
+      });
+    });
     await new Promise<void>((resolve, reject) => {
       this.wss.close((cause) => {
         if (cause) {
@@ -2010,6 +2075,7 @@ export class GameServer {
         resolve();
       });
     });
+    await httpClosed;
   }
 
   /**

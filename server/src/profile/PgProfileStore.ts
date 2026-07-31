@@ -1,5 +1,6 @@
 import { PROFILE_LIMITS, type CharacterVocation } from "@tibia/protocol";
 import type { Pool, PoolClient } from "pg";
+import { sexFromCode } from "../character/sexFromCode";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
 import type {
   ProfileSnapshot,
@@ -110,7 +111,18 @@ export class PgProfileStore implements ProfileStore {
       display_name: string;
       level: number;
       vocation: CharacterVocation;
+      sex: number;
+      outfit_look_type: number;
+      outfit_head: number;
+      outfit_body: number;
+      outfit_legs: number;
+      outfit_feet: number;
+      outfit_addons: number;
+      town_id: number;
+      guild_name: string | null;
       selected_title: string | null;
+      created_at: Date;
+      last_login_at: Date | null;
     }>(publicProfileQuery, [normalizedName]);
     const row = character.rows[0];
     if (!row) return null;
@@ -127,9 +139,22 @@ export class PgProfileStore implements ProfileStore {
       name: row.display_name,
       level: row.level,
       vocation: row.vocation,
+      sex: sexFromCode(row.sex),
+      outfit: {
+        lookType: row.outfit_look_type,
+        head: row.outfit_head,
+        body: row.outfit_body,
+        legs: row.outfit_legs,
+        feet: row.outfit_feet,
+        addons: row.outfit_addons,
+      },
+      townId: row.town_id,
+      guildName: row.guild_name,
       selectedTitle: row.selected_title,
       achievements: achievements.rows.map((entry) => entry.achievement_id),
       badges: badges.rows.map((entry) => entry.badge_id),
+      createdAt: row.created_at,
+      lastLoginAt: row.last_login_at,
     };
   }
 

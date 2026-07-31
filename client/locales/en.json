@@ -13,6 +13,216 @@
     "cancel": "Cancel",
     "loading": "Loading"
   },
+  "publicSite": {
+    "navigation": "Main website navigation",
+    "mobileNavigation": "Mobile website navigation",
+    "menuButton": "Menu",
+    "unavailable": "Live server data is temporarily unavailable. Please try again shortly.",
+    "menu": {
+      "news": {
+        "title": "News",
+        "latest": "Latest News"
+      },
+      "game": {
+        "title": "Game",
+        "vocations": "Vocations",
+        "serverInfo": "Server Information"
+      },
+      "community": {
+        "title": "Community",
+        "highscores": "Highscores",
+        "online": "Who Is Online",
+        "characters": "Character Lookup"
+      }
+    }
+  },
+  "websiteVocations": {
+    "eyebrow": "Choose your path",
+    "title": "Vocations",
+    "description": "Every hero begins with one of five vocations. Your choice defines the weapons you master, the magic you command, and the role you fill when danger closes in.",
+    "role": "Battle Role",
+    "playstyle": "Playstyle",
+    "strength": "Excels At",
+    "tradeoff": "Keep in Mind",
+    "promotion": "Promotion",
+    "entries": {
+      "Knight": {
+        "role": "Front-line fighter",
+        "playstyle": "Close the distance, hold dangerous creatures in place, and rely on melee weapons, armour, and a deep health pool.",
+        "strength": "Durability, carrying supplies, and sustained close-range damage.",
+        "tradeoff": "Limited ranged pressure and less offensive magic than other vocations.",
+        "promotion": "Elite Knight"
+      },
+      "Paladin": {
+        "role": "Ranged fighter",
+        "playstyle": "Control distance with bows, crossbows, and spears while supporting each attack with healing and holy magic.",
+        "strength": "Flexible solo hunting, ranged damage, and balanced survivability.",
+        "tradeoff": "Ammunition, positioning, and distance skill all require steady preparation.",
+        "promotion": "Royal Paladin"
+      },
+      "Sorcerer": {
+        "role": "Offensive mage",
+        "playstyle": "Shape fights with destructive fire, energy, and death magic, delivering powerful bursts before enemies can close in.",
+        "strength": "High spell damage, large-area attacks, and rapid elimination of groups.",
+        "tradeoff": "Low physical durability makes positioning and mana management essential.",
+        "promotion": "Master Sorcerer"
+      },
+      "Druid": {
+        "role": "Healer and support mage",
+        "playstyle": "Keep allies alive with powerful healing while controlling enemies through ice, earth, and nature magic.",
+        "strength": "Group support, recovery, crowd control, and elemental spellcasting.",
+        "tradeoff": "Lower durability and damage that depends heavily on careful spell use.",
+        "promotion": "Elder Druid"
+      },
+      "Monk": {
+        "role": "Mobile melee fighter",
+        "playstyle": "Fight at close range with disciplined fist techniques, deliberate positioning, and relentless physical pressure.",
+        "strength": "Fist combat, mobility, and sustained brawling at close range.",
+        "tradeoff": "Must stay near the target and pace aggression carefully in dangerous fights.",
+        "promotion": "Exalted Monk"
+      }
+    }
+  },
+  "websiteHighscores": {
+    "eyebrow": "Community rankings",
+    "title": "Highscores",
+    "description": "Compare the realm's greatest adventurers across experience, magic, and combat disciplines.",
+    "filters": "Ranking Filters",
+    "category": "Category",
+    "vocation": "Vocation",
+    "allVocations": "All Vocations",
+    "updateNote": "Rankings are read from the server's public progression records and cached briefly to keep requests fast.",
+    "page": "Page {{current}} of {{total}}",
+    "rank": "Rank",
+    "name": "Name",
+    "level": "Level",
+    "value": "Points",
+    "empty": "No characters are ranked for these filters yet.",
+    "previous": "Previous",
+    "next": "Next",
+    "categories": {
+      "experience": "Experience",
+      "magic": "Magic Level",
+      "fist": "Fist Fighting",
+      "club": "Club Fighting",
+      "sword": "Sword Fighting",
+      "axe": "Axe Fighting",
+      "distance": "Distance Fighting",
+      "shielding": "Shielding",
+      "fishing": "Fishing"
+    }
+  },
+  "online": {
+    "eyebrow": "The living world",
+    "title": "Who Is Online",
+    "description": "See the heroes currently connected to Mantus. Select a name to open that character's public profile.",
+    "world": "Mantus World",
+    "count_one": "{{count}} player online",
+    "count_other": "{{count}} players online",
+    "statusPending": "Checking world status",
+    "empty": "The world is quiet. No characters are online right now.",
+    "name": "Name",
+    "vocation": "Vocation",
+    "guild": "Guild",
+    "level": "Level",
+    "noGuild": "No guild"
+  },
+  "characterLookup": {
+    "eyebrow": "Community directory",
+    "title": "Character Lookup",
+    "description": "Search for an adventurer to view their public character information, achievements, guild, and appearance.",
+    "formTitle": "Find a Character",
+    "formDescription": "Enter the character's exact name. Searches are case-insensitive.",
+    "name": "Character Name",
+    "placeholder": "e.g. Aster Vale",
+    "search": "Search"
+  },
+  "publicProfile": {
+    "eyebrow": "Character profile",
+    "pageTitle": "Characters",
+    "pageSummary": "Public character information for {{name}}.",
+    "description": "Loading this adventurer's public record from the Mantus server.",
+    "summary": "Level {{level}} {{vocation}} of {{world}}.",
+    "anotherCharacter": "Find Another Character",
+    "notFoundTitle": "Character Not Found",
+    "notFoundDescription": "No public character named “{{name}}” could be found.",
+    "searchAgain": "Search Again",
+    "online": "Online now",
+    "offline": "Offline",
+    "characterInformation": "Character Information",
+    "name": "Name",
+    "title": "Title",
+    "noTitle": "No title selected",
+    "sex": "Sex",
+    "vocation": "Vocation",
+    "level": "Level",
+    "world": "World",
+    "residence": "Residence",
+    "guild": "Guild",
+    "guildMembership": "Guild Membership",
+    "noGuild": "No guild",
+    "achievementPoints": "Achievement Points",
+    "created": "Created",
+    "lastLogin": "Last Login",
+    "never": "Never",
+    "onlineStatus": "Status",
+    "accountAchievements": "Account Achievements",
+    "achievements": "Achievement Showcase",
+    "showcase": "Up to 5 displayed",
+    "noAchievements": "This character has no public achievements yet.",
+    "points": "{{points}} points",
+    "grade": "Grade {{grade}}",
+    "badges": "Badges",
+    "recentDeaths": "Recent Deaths",
+    "noRecentDeaths": "This character has no recorded deaths in the last 30 days.",
+    "deathAtLevel": "Died at level {{level}}.",
+    "accountInformation": "Account Information",
+    "characterCreated": "Character Created",
+    "accountStatus": "Account Status",
+    "accountPrivate": "Not publicly disclosed",
+    "charactersSection": "Characters",
+    "charactersPrivate": "Other characters belonging to this account are private and are not disclosed by the Mantus public API."
+  },
+  "serverInfo": {
+    "eyebrow": "World configuration",
+    "title": "Server Information",
+    "description": "Review Mantus rates, capacity, enabled systems, and the rules that shape its persistent open-PvP world.",
+    "world": "World",
+    "status": "Status",
+    "online": "Online",
+    "players": "Players",
+    "worldType": "World Type",
+    "openPvp": "Open PvP",
+    "ratesTitle": "Game Rates",
+    "systemsTitle": "World Systems",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "rulesEyebrow": "The laws of Mantus",
+    "rulesTitle": "World Rules",
+    "rates": {
+      "experience": "Experience",
+      "skill": "Skills",
+      "magic": "Magic",
+      "loot": "Loot",
+      "spawn": "Creature Spawn",
+      "soulRegen": "Soul Regeneration",
+      "offlineTraining": "Offline Training",
+      "exerciseTraining": "Exercise Training"
+    },
+    "systems": {
+      "stamina": "Stamina",
+      "experienceStages": "Experience Stages",
+      "market": "Player Market",
+      "houses": "Player Houses",
+      "guildWars": "Guild Wars",
+      "dailyRewards": "Daily Rewards"
+    },
+    "rules": {
+      "authority": "Movement, combat, loot, cooldowns, and progression are resolved by the authoritative game server.",
+      "economy": "Items, gold, market sales, and ownership transfers are persisted as atomic server transactions.",
+      "pvp": "Open PvP is active. Prepare carefully, respect combat locks, and expect other adventurers to fight back."
+    }
+  },
   "languages": {
     "label": "Language",
     "selector": "Choose language",
@@ -58,7 +268,31 @@
       "media": "Media",
       "play": "Play Now"
     },
+    "menu": {
+      "playNote": "Free to play in your browser. No download required.",
+      "news": {
+        "title": "News",
+        "latest": "Latest News"
+      },
+      "game": {
+        "title": "Game",
+        "vocations": "Vocations",
+        "serverInfo": "Server Information"
+      },
+      "community": {
+        "title": "Community",
+        "highscores": "Highscores",
+        "online": "Who Is Online",
+        "guilds": "Guilds"
+      },
+      "account": {
+        "title": "Your Account",
+        "description": "Create a hero or continue the story of an existing character.",
+        "action": "Account Login"
+      }
+    },
     "hero": {
+      "eyebrow": "A persistent browser MMORPG",
       "tagline": "A ruthless old-school world, forged anew",
       "subtitle": "Mantus Online is a free classic-style 2D MMORPG: one persistent open world where every step, every trade, and every battle is real — and everything you earn can be lost.",
       "cta": "Play Free",
@@ -70,6 +304,15 @@
         "vocations": "Five vocations to master",
         "economy": "A player-driven economy"
       }
+    },
+    "featured": {
+      "label": "Development Preview",
+      "date": "July 30, 2026",
+      "category": "World Dispatch",
+      "title": "Beneath the Citadel, the Astral Vault Stirs",
+      "description": "Surveyors have found a sealed chamber beneath the northern citadel. This preview explores the kind of dangerous group expedition, layered environmental story, and server-authored encounter we are building for Mantus.",
+      "action": "Prepare your character",
+      "imageAlt": "Three adventurers stand before a glowing seal in an ancient underground vault"
     },
     "features": {
       "title": "Forged for the Fearless",
@@ -96,8 +339,10 @@
       "subtitle": "Five vocations, each with its own weapons, magic, and way of surviving the world. Choose wisely — mastery is a long road."
     },
     "news": {
+      "kicker": "From the realm",
       "title": "Chronicles of Mantus",
       "subtitle": "Dispatches from the developers and the world itself.",
+      "updated": "Updated weekly",
       "items": {
         "gatesOpen": {
           "tag": "Announcement",
@@ -119,6 +364,36 @@
         }
       }
     },
+    "overview": {
+      "kicker": "Enter the frontier",
+      "title": "One World. Countless Stories.",
+      "description": "Hunt through ancient forests, descend into forgotten ruins, trade what you recover, and build a name other players will remember. The realm is shared, persistent, and governed by the server — every victory is earned.",
+      "imageAlt": "A party of adventurers travels along a dark forest road toward a frontier watchtower"
+    },
+    "world": {
+      "unavailable": "Live world data is temporarily unavailable.",
+      "status": {
+        "title": "World Status",
+        "online": "World Online",
+        "unknown": "Status Unknown",
+        "players_one": "{{count}} player online",
+        "players_other": "{{count}} players online",
+        "world": "World",
+        "type": "World Type"
+      },
+      "highscores": {
+        "title": "Highscores",
+        "experience": "Experience",
+        "level": "Lv. {{level}}",
+        "empty": "No public ranking data is available yet."
+      },
+      "boosted": {
+        "title": "Today's Encounters",
+        "creature": "Boosted Creature",
+        "boss": "Boosted Boss",
+        "awaiting": "Awaiting daily rotation"
+      }
+    },
     "media": {
       "title": "Glimpses of the World",
       "subtitle": "Scenes from the realm, captured by those who survived them.",
@@ -134,6 +409,8 @@
       "cta": "Create Free Account"
     },
     "footer": {
+      "description": "A free, persistent 2D MMORPG built for deliberate combat, dangerous exploration, and a player-shaped world.",
+      "links": "Footer links",
       "copyright": "© {{year}} Mantus Online. All rights reserved."
     }
   },

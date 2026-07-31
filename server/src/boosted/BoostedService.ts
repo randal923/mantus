@@ -64,6 +64,14 @@ export class BoostedService implements BoostedHooks {
     session.send(this.projectState());
   }
 
+  publicSelection(): {
+    readonly creature: BoostedEntry | null;
+    readonly boss: BoostedEntry | null;
+  } {
+    const state = this.projectState();
+    return { creature: state.creature, boss: state.boss };
+  }
+
   isBoostedCreature(monster: Monster): boolean {
     const record = this.current;
     if (!record) return false;
