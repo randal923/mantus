@@ -6,7 +6,7 @@ import {
   type ActionBotRule,
   type ActionBotSettings,
   type ActionBotTrigger,
-  type InventoryItem,
+  type CarriedItemSummary,
   type SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -21,14 +21,14 @@ import { Dropdown } from "../ui/Dropdown";
 interface ActionBotSettingsPanelProps {
   readonly settings: ActionBotSettings;
   readonly spells: ReadonlyArray<SpellCatalogEntry>;
-  readonly items: ReadonlyArray<InventoryItem>;
+  readonly items: ReadonlyArray<CarriedItemSummary>;
   readonly onChange: (settings: ActionBotSettings) => void;
 }
 
 function defaultTrigger(
   action: ActionBotAction,
   spells: ReadonlyArray<SpellCatalogEntry>,
-  items: ReadonlyArray<InventoryItem>,
+  items: ReadonlyArray<CarriedItemSummary>,
 ): ActionBotTrigger {
   if (action.kind === "spell") {
     if (action.spellId.startsWith("utani-")) {
@@ -60,7 +60,7 @@ function defaultTrigger(
 /** The action a new rule starts on: the first spell, else a carried object. */
 function defaultAction(
   spells: ReadonlyArray<SpellCatalogEntry>,
-  items: ReadonlyArray<InventoryItem>,
+  items: ReadonlyArray<CarriedItemSummary>,
 ): ActionBotAction | null {
   const spell = spells.find((entry) => entry.origin === "spell");
   if (spell) return createSpellAction(spell);

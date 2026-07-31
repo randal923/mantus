@@ -354,8 +354,7 @@
       "out-of-range": "Você está longe demais.",
       "too-far": "Você não pode jogar o item tão longe.",
       "too-heavy": "Você não pode carregar tanto peso."
-    },
-    "imbue": "Imbuir {{name}}"
+    }
   },
   "auction": {
     "title": "Casa de Leilões",
@@ -1726,7 +1725,7 @@
     "save": "Salvar",
     "reset": "Redefinir",
     "help": "Clique em uma fatia para selecioná-la. Clique com o botão direito para preencher, ou limpar quando cheia. As mudanças valem ao salvar.",
-    "locked": "Requer nível {{level}} e uma conta Premium.",
+    "locked": "Requer nível {{level}}, vocação promovida e uma conta Premium.",
     "points": {
       "title": "Pontos de Promoção Disponíveis"
     },
@@ -2302,21 +2301,39 @@
   "imbuement": {
     "title": "Santuário de Imbuimento",
     "loading": "Carregando imbuimentos…",
-    "item": "Item",
-    "slotCount": "{{slots}} slots de imbuimento",
     "slotLabel": "Slot {{slot}}",
     "emptySlot": "Slot vazio",
-    "choose": "Escolher imbuimento",
-    "selected": "Selecionado",
-    "timeLeft": "{{time}} restante",
-    "clear": "Limpar ({{gold}} de ouro)",
     "premium": "Premium",
     "price": "{{gold}} de ouro",
-    "apply": "Aplicar",
-    "material": "{{name}} {{available}}/{{required}}",
-    "optionsFor": "Imbuimentos disponíveis para o slot {{slot}}",
+    "apply": "Encantar",
     "noOptions": "Nenhum imbuimento pode ser aplicado a este item.",
     "noSlots": "Este item não tem slots de imbuimento.",
+    "itemInformation": "Informações do item",
+    "selectQuality": "Escolha a qualidade e o encanto",
+    "pickItem": "Escolher item",
+    "pickItemHint": "Escolha um item para encantar.",
+    "noItemPicked": "Nenhum item escolhido",
+    "noImbuableItems": "Você não está carregando nada que possa ser encantado.",
+    "blankScroll": "Pergaminho vazio",
+    "imbueSlotWith": "Encantar espaço vazio com “{{name}}”",
+    "forgeScrollWith": "Forjar pergaminho de “{{name}}”",
+    "forgeScroll": "Forjar pergaminho",
+    "clearTitle": "Remover encanto “{{name}}”",
+    "clearAction": "Remover",
+    "timeRemaining": "Tempo restante",
+    "selectHint": "Selecione um encanto para ver o que ele faz.",
+    "effectAndDuration": "{{description}} Dura {{duration}} enquanto equipado.",
+    "materialFromStash": "{{name}} — {{stash}} do seu estoque",
+    "activeCount": "{{count}} ativo(s)",
+    "close": "Fechar",
+    "slotBadge": "{{name}} — {{time}} restantes",
+    "blocked": {
+      "wrong-category": "Este item não aceita esse encanto.",
+      "duplicate-imbuement": "Este item já possui esse tipo de encanto.",
+      "premium-required": "Requer uma conta premium.",
+      "insufficient-materials": "Você não possui os materiais necessários.",
+      "no-blank-scroll": "Você precisa de um pergaminho de encanto vazio."
+    },
     "errors": {
       "invalid-item": "Esse item não pode ser imbuído.",
       "no-shrine": "Você precisa estar ao lado de um santuário de imbuimento.",
@@ -2329,7 +2346,10 @@
       "insufficient-materials": "Você não tem os materiais necessários.",
       "insufficient-gold": "Você não tem ouro suficiente.",
       "rate-limited": "Aguarde um momento antes de tentar novamente.",
-      "invalid-request": "Essa ação de imbuimento não é possível."
+      "invalid-request": "Essa ação de imbuimento não é possível.",
+      "no-blank-scroll": "Você precisa de um pergaminho de encanto vazio.",
+      "no-free-slot": "Esse item não tem espaço de encanto livre.",
+      "invalid-scroll": "Isso não é um pergaminho de encanto utilizável."
     }
   },
   "proficiency": {

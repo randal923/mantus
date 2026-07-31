@@ -29,6 +29,30 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **A map re-import needs `db:reconcile-world-seed` on every database**
+  (2026-07-31, see `todo/done.md`). Making the imbuing shrines server-owned
+  changed the map version, and the server refuses to boot against a database
+  holding world-item deltas from the previous one
+  (`persisted world items require reconciliation for this map version`). Run
+  `yarn workspace server db:reconcile-world-seed` with the server down before
+  deploying this. Recommended fix so it stops being a manual step: fold the
+  reconciliation into the migration path, or gate boot on a map-version row
+  the migration writes.
+- **Imbuing has no success roll and no protection option** (2026-07-31, see
+  `todo/done.md`). The pinned Canary applies every imbuement unconditionally;
+  `imbuements.xml`'s `percent` and `protectionPrice` are read but never used,
+  so the window deliberately shows no odds and no protection checkbox rather
+  than printing a number that does not govern anything. Recommended fix if a
+  later Canary bump reintroduces the roll: add the roll server-side first,
+  then surface the chance and the protection purchase together — never the UI
+  alone, or the client would be promising a mechanic the server does not run.
+- **Imbuement icons on gear imbued before 2026-07-31 show the placeholder**
+  (2026-07-31, see `todo/done.md`). `iconId` is denormalized into the item's
+  imbuement attribute at apply time so item projections need no imbuement
+  catalog; entries written earlier have only `name` and fall back to icon 0 on
+  the inventory badge until the imbuement is re-applied. Recommended fix if it
+  matters before those decay: a one-off backfill mapping stored `imbuementId`
+  to `iconid + (baseid - 1)`.
 - **The Postgres connection budget is per-process, not shared** (2026-07-26,
   largely resolved 2026-07-29 — see `todo/done.md`). `DATABASE_URL` now uses
   the transaction pooler (port 6543), which multiplexes instead of pinning one
@@ -638,6 +662,17 @@ limitations accepted during a session are recorded in the owning feature file
   `planLoot` already accepts an explicit `destination`, so routing is a matter
   of extending `lootFilterSchema` with a category→container map and passing it
   through. Owner: same.
+- **An action-bar button for an object the character carries none of still
+  draws `?` instead of the greyed sprite** (accepted 2026-07-31).
+  `InventoryState.carried` (Canary's `sendInventoryIds`) now keeps the icon
+  alive for anything in a closed backpack, but once the last one is gone the
+  type leaves the summary and the client has no server-id → appearance map of
+  its own, so `ActionBarActionIcon` falls back to `?`. Canary's client reads
+  the sprite from Tibia.dat and only greys it. Recommended fix: have the
+  server include the action bar's own item types in `carried` with count 0
+  (`sanitizeActionBarAction` already resolves each type against the catalog),
+  and relax `carriedItemSummarySchema.count` to non-negative. Owner: the
+  action-bar work recorded in `todo/done.md` (2026-07-31).
 
 
 ## Repo-wide known breakage

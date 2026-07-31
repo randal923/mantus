@@ -7,6 +7,7 @@ import {
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import { projectItem } from "./projectItem";
+import { summarizeCarriedItems } from "./summarizeCarriedItems";
 
 export function projectInventory(
   items: ReadonlyArray<Item>,
@@ -115,5 +116,6 @@ export function projectInventory(
       ? (catalog.require(backpack.typeId).containerCapacity ?? 0)
       : 0,
     containers,
+    carried: summarizeCarriedItems(items, catalog),
   };
 }

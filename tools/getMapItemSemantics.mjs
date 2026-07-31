@@ -29,6 +29,13 @@ const MUTABLE_TYPES = new Set([
 const MUTABLE_ITEM_IDS = new Set([
   593, 606, 608, 2772, 2773, 9110, 9111, 25_720, 25_721, 25_722, 25_723,
   25_802, 25_803,
+  // Imbuing shrines and crystals (server/src/imbuement/imbuementShrineItemIds
+  // .ts), for the same reason as the reward shrines above: immovable,
+  // untyped decoration that would stay baked draw-only, so the server would
+  // hold no map item for them — the use never resolves and the adjacency
+  // check every imbuement mutation runs could never see one.
+  24_964, 25_060, 25_061, 25_101, 25_102, 25_103, 25_104, 25_174, 25_175,
+  25_182, 25_183, 25_201, 25_202,
 ]);
 
 const STATEFUL_ATTRIBUTES = [

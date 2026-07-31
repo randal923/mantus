@@ -39,6 +39,11 @@ export type WorldAction =
       readonly kind: "daily-shrine";
       readonly item: MapItem;
     }
+  | {
+      /** An imbuement shrine: use opens the window with no item picked. */
+      readonly kind: "imbuement-shrine";
+      readonly item: MapItem;
+    }
   | { readonly kind: "read"; readonly item: MapItem; readonly type: ItemType }
   | { readonly kind: "rotate"; readonly item: MapItem; readonly toTypeId: number }
   | {

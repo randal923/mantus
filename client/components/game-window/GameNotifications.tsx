@@ -62,9 +62,6 @@ export function GameNotifications() {
   const setAchievementToast = useGameWindowStore(
     (state) => state.setAchievementToast,
   );
-  const showServerErrorAsToast =
-    serverError === "combat-action-failed" ||
-    serverError?.startsWith("spell-") === true;
 
   return (
     <>
@@ -78,14 +75,7 @@ export function GameNotifications() {
           {t("connection.disconnected")} · {t("connection.reconnect")}
         </button>
       )}
-      {serverError && showServerErrorAsToast && (
-        <Toast
-          message={t(`serverErrors.${serverError}`)}
-          onDismiss={() => setServerError(null)}
-          autoDismissMs={3000}
-        />
-      )}
-      {serverError && !showServerErrorAsToast && (
+      {serverError && (
         <button
           type="button"
           role="alert"

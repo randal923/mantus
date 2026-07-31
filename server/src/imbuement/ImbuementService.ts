@@ -3,10 +3,12 @@ import {
   type ImbuementActionFailedReason,
   type ImbuementApplyMessage,
   type ImbuementClearMessage,
-  type ImbuementOption,
+  type ImbuementScrollApplyMessage,
+  type ImbuementScrollCreateMessage,
   type ImbuementSlotState,
   type ImbuementWindowGetMessage,
 } from "@tibia/protocol";
+import type { DepotService } from "../depot/DepotService";
 import { itemImbuementsOf, type ItemImbuementEntry } from "../forge/itemImbuementsOf";
 import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
@@ -14,15 +16,27 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
+import { buildImbuementOptions } from "./buildImbuementOptions";
 import type { ImbuementCatalog } from "./ImbuementCatalog";
+import { IMBUEMENT_SHRINE_ITEM_IDS } from "./imbuementShrineItemIds";
 import type { ImbuementStore } from "./ImbuementStore";
+import {
+  planImbuementMaterials,
+  type ImbuementMaterialPlan,
+} from "./planImbuementMaterials";
 
 /**
  * Imbuement shrine actions (Feature 78), transcribed from pinned Canary
- * player.cpp:2658-2788 and imbuements.cpp:469-634. Applying consumes the
+ * player.cpp:2511-2788 and imbuements.cpp:469-634. Applying consumes the
  * astral sources and gold in one store transaction with the version-guarded
  * attribute write and the audit row; there is no success roll, mirroring
  * this Canary exactly (its XML percent is display-only).
+ *
+ * Astral sources come from carried rows first and the stash for the shortfall
+ * (player.cpp:2707-2726). The stash share is reserved in the depot cache
+ * synchronously inside the tick and written by the same store transaction as
+ * the gold debit, so materials are never half-spent across two lanes; a
+ * non-committed result restores the reservation in the outcome step.
  *
  * Decay is a one-second sweep over equipped items: aggressive categories
  * burn only while the wearer is in a fight outside protection zones,
@@ -32,10 +46,6 @@ import type { ImbuementStore } from "./ImbuementStore";
  * not a write per second. Stricter than Canary: applying re-checks shrine
  * adjacency at execution time (upstream only gates the window open).
  */
-const SHRINE_ITEM_TYPE_IDS = new Set([
-  24_964, 25_060, 25_061, 25_103, 25_104, 25_174, 25_175, 25_182, 25_183,
-  25_202,
-]);
 const DECAY_CHECKPOINT_SECONDS = 60;
 
 interface DecayLedgerEntry {
@@ -55,6 +65,7 @@ export class ImbuementService {
     private readonly registry: SessionRegistry,
     private readonly items: ItemIntentHandler,
     private readonly itemCatalog: ItemCatalog,
+    private readonly depot?: DepotService,
     private readonly catalog?: ImbuementCatalog,
     private readonly store?: ImbuementStore,
   ) {}
@@ -98,9 +109,16 @@ export class ImbuementService {
   ): void {
     const characterId = session.playerId;
     if (!characterId || !this.guard(session, now)) return;
+    // Tibia only opens this window at the shrine; requiring adjacency here
+    // too keeps the catalog and the player's own material counts off the
+    // wire for anyone standing anywhere else.
+    if (!this.nearShrine(characterId)) return this.fail(session, "no-shrine");
+    if (intent.itemId === null) {
+      return this.sendWindow(session, characterId, null, intent.mode, now);
+    }
     const item = this.carriedItem(characterId, intent.itemId);
     if (!item) return this.fail(session, "invalid-item");
-    this.sendWindow(session, characterId, item, now);
+    this.sendWindow(session, characterId, item, intent.mode, now);
   }
 
   handleApply(session: Session, intent: ImbuementApplyMessage, now: number): void {
@@ -111,9 +129,7 @@ export class ImbuementService {
     if (!catalog || !store) return;
     const player = this.world.getPlayer(characterId);
     if (!player) return;
-    if (session.itemOperationPending || session.itemPersistsPending > 0) {
-      return this.fail(session, "rate-limited");
-    }
+    if (this.busy(session)) return this.fail(session, "rate-limited");
     if (!this.nearShrine(characterId)) return this.fail(session, "no-shrine");
     const item = this.carriedItem(characterId, intent.itemId);
     if (!item) return this.fail(session, "invalid-item");
@@ -146,17 +162,12 @@ export class ImbuementService {
     if (definition.premium && !player.isPremiumAt(now)) {
       return this.fail(session, "premium-required");
     }
-    const snapshot = this.items.inventorySnapshot(characterId);
-    for (const source of definition.astralSources) {
-      const available = snapshot?.items.reduce(
-        (total, carried) =>
-          carried.typeId === source.itemTypeId ? total + carried.count : total,
-        0,
-      );
-      if ((available ?? 0) < source.count) {
-        return this.fail(session, "insufficient-materials");
-      }
-    }
+    const plan = planImbuementMaterials({
+      sources: definition.astralSources,
+      carriedCountOf: (typeId) => this.carriedCount(characterId, typeId),
+      stashCountOf: (typeId) => this.stashCount(characterId, typeId),
+    });
+    if (!plan) return this.fail(session, "insufficient-materials");
     const label = `${base.name} ${definition.name}`;
     const nextEntries: ItemImbuementEntry[] = [
       ...current,
@@ -165,10 +176,12 @@ export class ImbuementService {
         imbuementId: definition.id,
         remainingSeconds: base.durationSeconds,
         name: label,
+        iconId: definition.iconId + (definition.baseId - 1),
       },
     ];
     this.runMutation(session, characterId, item, nextEntries, {
-      materials: definition.astralSources,
+      plan,
+      grants: [],
       goldCost: base.priceGold,
       auditEvent: "imbuement-apply",
       auditDetails: {
@@ -177,6 +190,10 @@ export class ImbuementService {
         name: label,
         goldCost: base.priceGold,
         materials: definition.astralSources,
+        stashDraws: plan.stash.map((draw) => ({
+          itemTypeId: draw.itemTypeId,
+          count: draw.drawn,
+        })),
       },
     }, now);
   }
@@ -187,9 +204,8 @@ export class ImbuementService {
     const store = this.store;
     if (!characterId || !this.guard(session, now)) return;
     if (!catalog || !store) return;
-    if (session.itemOperationPending || session.itemPersistsPending > 0) {
-      return this.fail(session, "rate-limited");
-    }
+    if (this.busy(session)) return this.fail(session, "rate-limited");
+    if (!this.nearShrine(characterId)) return this.fail(session, "no-shrine");
     const item = this.carriedItem(characterId, intent.itemId);
     if (!item) return this.fail(session, "invalid-item");
     const current = itemImbuementsOf(item);
@@ -199,7 +215,8 @@ export class ImbuementService {
       (candidate) => candidate.slot !== intent.slot,
     );
     this.runMutation(session, characterId, item, nextEntries, {
-      materials: [],
+      plan: { carried: [], stash: [] },
+      grants: [],
       goldCost: IMBUEMENT_RULES.removeCostGold,
       auditEvent: "imbuement-clear",
       auditDetails: {
@@ -210,32 +227,194 @@ export class ImbuementService {
     }, now);
   }
 
+  /**
+   * Forges an imbuement scroll at the shrine (Canary
+   * player.cpp:2548-2620 createScrollImbuement): a blank scroll plus the
+   * imbuement's own astral sources and its base price buy a filled scroll.
+   * The blank scroll is just another source, so it draws from the stash on
+   * the same terms.
+   */
+  handleScrollCreate(
+    session: Session,
+    intent: ImbuementScrollCreateMessage,
+    now: number,
+  ): void {
+    const characterId = session.playerId;
+    const catalog = this.catalog;
+    if (!characterId || !this.guard(session, now)) return;
+    if (!catalog || !this.store) return;
+    const player = this.world.getPlayer(characterId);
+    if (!player) return;
+    if (this.busy(session)) return this.fail(session, "rate-limited");
+    if (!this.nearShrine(characterId)) return this.fail(session, "no-shrine");
+    const definition = catalog.imbuements.get(intent.imbuementId);
+    const base = definition ? catalog.bases.get(definition.baseId) : undefined;
+    if (!definition || !base || definition.scrollItemTypeId === undefined) {
+      return this.fail(session, "invalid-request");
+    }
+    if (definition.premium && !player.isPremiumAt(now)) {
+      return this.fail(session, "premium-required");
+    }
+    const plan = planImbuementMaterials({
+      sources: [
+        ...definition.astralSources,
+        { itemTypeId: IMBUEMENT_RULES.blankScrollItemTypeId, count: 1 },
+      ],
+      carriedCountOf: (typeId) => this.carriedCount(characterId, typeId),
+      stashCountOf: (typeId) => this.stashCount(characterId, typeId),
+    });
+    if (!plan) {
+      return this.fail(
+        session,
+        this.totalCount(characterId, IMBUEMENT_RULES.blankScrollItemTypeId) ===
+          0
+          ? "no-blank-scroll"
+          : "insufficient-materials",
+      );
+    }
+    this.runMutation(session, characterId, null, [], {
+      plan,
+      grants: [{ itemTypeId: definition.scrollItemTypeId, count: 1 }],
+      goldCost: base.priceGold,
+      auditEvent: "imbuement-scroll-create",
+      auditDetails: {
+        imbuementId: definition.id,
+        name: `${base.name} ${definition.name}`,
+        scrollItemTypeId: definition.scrollItemTypeId,
+        goldCost: base.priceGold,
+        materials: definition.astralSources,
+        stashDraws: plan.stash.map((draw) => ({
+          itemTypeId: draw.itemTypeId,
+          count: draw.drawn,
+        })),
+      },
+      mode: "scroll",
+    }, now);
+  }
+
+  /**
+   * Spends a filled scroll on a carried item (Canary player.cpp:2511-2546
+   * applyScrollImbuement). No gold, no sources, no shrine: the scroll already
+   * paid for all of it, and it lands in the item's first free slot.
+   */
+  handleScrollApply(
+    session: Session,
+    intent: ImbuementScrollApplyMessage,
+    now: number,
+  ): void {
+    const characterId = session.playerId;
+    const catalog = this.catalog;
+    if (!characterId || !this.guard(session, now)) return;
+    if (!catalog || !this.store) return;
+    const player = this.world.getPlayer(characterId);
+    if (!player) return;
+    if (this.busy(session)) return this.fail(session, "rate-limited");
+    const scroll = this.carriedItem(characterId, intent.scrollItemId);
+    if (!scroll) return this.fail(session, "invalid-scroll");
+    const definition = [...catalog.imbuements.values()].find(
+      (candidate) => candidate.scrollItemTypeId === scroll.typeId,
+    );
+    const base = definition ? catalog.bases.get(definition.baseId) : undefined;
+    if (!definition || !base) return this.fail(session, "invalid-scroll");
+    const item = this.carriedItem(characterId, intent.itemId);
+    if (!item) return this.fail(session, "invalid-item");
+    const type = this.itemCatalog.get(item.typeId);
+    if (!type) return this.fail(session, "invalid-item");
+    const slotCount = Math.min(
+      IMBUEMENT_RULES.maxSlots,
+      type.imbuementSlots ?? 0,
+    );
+    const current = itemImbuementsOf(item);
+    const allowedLevel = type.imbuementTypes?.[definition.categorySlug] ?? 0;
+    if (allowedLevel < definition.baseId) {
+      return this.fail(session, "wrong-category");
+    }
+    if (
+      current.some(
+        (entry) =>
+          catalog.imbuements.get(entry.imbuementId)?.categorySlug ===
+          definition.categorySlug,
+      )
+    ) {
+      return this.fail(session, "duplicate-imbuement");
+    }
+    const occupied = new Set(current.map((entry) => entry.slot));
+    let freeSlot = -1;
+    for (let slot = 0; slot < slotCount; slot += 1) {
+      if (!occupied.has(slot)) {
+        freeSlot = slot;
+        break;
+      }
+    }
+    if (freeSlot < 0) return this.fail(session, "no-free-slot");
+    const label = `${base.name} ${definition.name}`;
+    this.runMutation(session, characterId, item, [
+      ...current,
+      {
+        slot: freeSlot,
+        imbuementId: definition.id,
+        remainingSeconds: base.durationSeconds,
+        name: label,
+        iconId: definition.iconId + (definition.baseId - 1),
+      },
+    ], {
+      plan: {
+        carried: [{ itemTypeId: scroll.typeId, count: 1 }],
+        stash: [],
+      },
+      grants: [],
+      goldCost: 0,
+      auditEvent: "imbuement-scroll-apply",
+      auditDetails: {
+        itemId: item.id,
+        imbuementId: definition.id,
+        name: label,
+        scrollItemTypeId: scroll.typeId,
+        slot: freeSlot,
+      },
+    }, now);
+  }
+
   private runMutation(
     session: Session,
     characterId: string,
-    item: Item,
+    item: Item | null,
     entries: ReadonlyArray<ItemImbuementEntry>,
     request: {
-      materials: ReadonlyArray<{ itemTypeId: number; count: number }>;
+      plan: ImbuementMaterialPlan;
+      grants: ReadonlyArray<{ itemTypeId: number; count: number }>;
       goldCost: number;
-      auditEvent: "imbuement-apply" | "imbuement-clear";
+      auditEvent:
+        | "imbuement-apply"
+        | "imbuement-clear"
+        | "imbuement-scroll-create"
+        | "imbuement-scroll-apply";
       auditDetails: Readonly<Record<string, unknown>>;
+      mode?: "item" | "scroll";
     },
     now: number,
   ): void {
     const store = this.store;
     if (!store) return;
-    const attributes: Record<string, unknown> = { ...item.attributes };
+    const attributes: Record<string, unknown> = { ...item?.attributes };
     if (entries.length > 0) attributes.imbuements = entries;
     else delete attributes.imbuements;
     void now;
+    // Reserve the stash share before the await: from here on the sources are
+    // spent as far as every other intent this tick can see (charter rule 3).
+    const restore = this.reserveStash(characterId, request.plan);
     session.itemOperationPending = true;
     const resolution = store
       .mutate(characterId, {
-        itemId: item.id,
-        expectedVersion: item.version,
+        itemId: item?.id ?? null,
+        expectedVersion: item?.version ?? 0,
         attributes,
-        materials: request.materials,
+        materials: request.plan.carried,
+        stashOps: request.plan.stash.map((draw) => ({
+          itemTypeId: draw.itemTypeId,
+          count: draw.remaining,
+        })),
+        grants: request.grants,
         goldCost: request.goldCost,
         auditEvent: request.auditEvent,
         auditDetails: request.auditDetails,
@@ -245,10 +424,11 @@ export class ImbuementService {
           this.outcomes.push((at) => {
             session.itemOperationPending = false;
             if (result.status !== "committed") {
+              restore();
               if (session.playerId === characterId) {
                 this.fail(
                   session,
-                  result.status === "conflict"
+                  result.status === "conflict" || result.status === "no-space"
                     ? "invalid-request"
                     : result.status,
                 );
@@ -261,11 +441,25 @@ export class ImbuementService {
               result.mutation,
               at,
             );
+            // The debit happened inside the transaction; without this the
+            // cached balance drifts and every later affordability read is
+            // wrong until the character reloads.
+            if (result.bankBalanceAfter !== undefined) {
+              this.items.setBankBalance(characterId, result.bankBalanceAfter);
+            }
             // A fresh apply restarts this item's checkpoint ledger.
-            this.decayLedger.get(characterId)?.delete(item.id);
+            if (item) this.decayLedger.get(characterId)?.delete(item.id);
             if (session.playerId === characterId) {
-              const updated = this.carriedItem(characterId, item.id);
-              if (updated) this.sendWindow(session, characterId, updated, at);
+              const updated = item
+                ? this.carriedItem(characterId, item.id)
+                : null;
+              this.sendWindow(
+                session,
+                characterId,
+                updated,
+                request.mode ?? "item",
+                at,
+              );
             }
           });
         },
@@ -276,6 +470,7 @@ export class ImbuementService {
           );
           this.outcomes.push(() => {
             session.itemOperationPending = false;
+            restore();
             if (session.playerId === characterId) {
               this.fail(session, "invalid-request");
             }
@@ -284,6 +479,37 @@ export class ImbuementService {
       );
     this.track(resolution);
     this.items.trackExternalOperation(characterId, resolution);
+  }
+
+  /**
+   * Decrements the reserved stash counts in the depot cache and returns the
+   * undo. Idempotent: the undo restores the pre-reservation absolute counts,
+   * so a late restore after the player stashed more of the same type cannot
+   * be triggered twice.
+   */
+  private reserveStash(
+    characterId: string,
+    plan: ImbuementMaterialPlan,
+  ): () => void {
+    const depot = this.depot;
+    if (!depot || plan.stash.length === 0) return () => undefined;
+    const before = plan.stash.map((draw) => ({
+      itemTypeId: draw.itemTypeId,
+      count: draw.remaining + draw.drawn,
+    }));
+    depot.setStashCounts(
+      characterId,
+      plan.stash.map((draw) => ({
+        itemTypeId: draw.itemTypeId,
+        count: draw.remaining,
+      })),
+    );
+    let restored = false;
+    return () => {
+      if (restored) return;
+      restored = true;
+      depot.setStashCounts(characterId, before);
+    };
   }
 
   private sweepCharacter(
@@ -439,22 +665,25 @@ export class ImbuementService {
     }
   }
 
+  /** `item` is null for the shrine's "Pick Item" state and for scroll mode. */
   private sendWindow(
     session: Session,
     characterId: string,
-    item: Item,
+    item: Item | null,
+    mode: "item" | "scroll",
     now: number,
   ): void {
     const catalog = this.catalog;
     if (!catalog) return;
     const player = this.world.getPlayer(characterId);
-    const type = this.itemCatalog.get(item.typeId);
-    if (!player || !type) return;
+    if (!player) return;
+    const type = item ? this.itemCatalog.get(item.typeId) : null;
+    if (item && !type) return;
     const slotCount = Math.min(
       IMBUEMENT_RULES.maxSlots,
-      type.imbuementSlots ?? 0,
+      type?.imbuementSlots ?? 0,
     );
-    const states = itemImbuementsOf(item);
+    const states = item ? itemImbuementsOf(item) : [];
     const slots: ImbuementSlotState[] = [];
     for (let slot = 0; slot < slotCount; slot += 1) {
       const state = states.find((candidate) => candidate.slot === slot);
@@ -475,67 +704,73 @@ export class ImbuementService {
         ),
       });
     }
-    const snapshot = this.items.inventorySnapshot(characterId);
-    const carriedCount = (typeId: number) =>
-      snapshot?.items.reduce(
-        (total, carried) =>
-          carried.typeId === typeId ? total + carried.count : total,
-        0,
-      ) ?? 0;
-    const premium = player.isPremiumAt(now);
-    const options: ImbuementOption[] = [];
-    for (const definition of catalog.imbuements.values()) {
-      const allowedLevel = type.imbuementTypes?.[definition.categorySlug] ?? 0;
-      if (allowedLevel < definition.baseId) continue;
-      const base = catalog.bases.get(definition.baseId);
-      if (!base) continue;
-      const materials = definition.astralSources.map((source) => ({
-        itemTypeId: source.itemTypeId,
-        name: this.itemCatalog.get(source.itemTypeId)?.name ?? "unknown",
-        count: source.count,
-        available: carriedCount(source.itemTypeId),
-      }));
-      const duplicate = states.some((state) => {
-        const other = catalog.imbuements.get(state.imbuementId);
-        return other?.categorySlug === definition.categorySlug;
-      });
-      options.push({
-        imbuementId: definition.id,
-        name: definition.name,
-        baseId: definition.baseId,
-        baseName: base.name,
-        categorySlug: definition.categorySlug,
-        iconId: definition.iconId + (definition.baseId - 1),
-        description: definition.description,
-        priceGold: base.priceGold,
-        premium: definition.premium,
-        materials,
-        canApply:
-          !duplicate &&
-          (!definition.premium || premium) &&
-          materials.every((material) => material.available >= material.count),
-      });
-    }
-    options.sort(
-      (left, right) =>
-        left.categorySlug.localeCompare(right.categorySlug) ||
-        left.baseId - right.baseId ||
-        left.name.localeCompare(right.name),
+    const blankScrollCount = this.totalCount(
+      characterId,
+      IMBUEMENT_RULES.blankScrollItemTypeId,
     );
     session.send({
       type: "imbuement-window-state",
-      itemId: item.id,
-      itemTypeId: item.typeId,
+      mode,
+      itemId: item?.id ?? null,
+      itemTypeId: item?.typeId ?? null,
       slotCount,
       slots,
-      options: options.slice(0, IMBUEMENT_RULES.maxWindowOptions),
+      options: buildImbuementOptions({
+        catalog,
+        itemCatalog: this.itemCatalog,
+        imbuementTypes: type?.imbuementTypes ?? null,
+        currentStates: states,
+        premium: player.isPremiumAt(now),
+        mode,
+        blankScrollCount,
+        carriedCountOf: (typeId) => this.carriedCount(characterId, typeId),
+        stashCountOf: (typeId) => this.stashCount(characterId, typeId),
+      }),
       removeCostGold: IMBUEMENT_RULES.removeCostGold,
+      blankScrollCount,
+      bankBalance: this.items.inventorySnapshot(characterId)?.bankBalance ?? 0,
     });
   }
 
   private carriedItem(characterId: string, itemId: string): Item | null {
     const snapshot = this.items.inventorySnapshot(characterId);
     return snapshot?.items.find((item) => item.id === itemId) ?? null;
+  }
+
+  private carriedCount(characterId: string, itemTypeId: number): number {
+    const snapshot = this.items.inventorySnapshot(characterId);
+    return (
+      snapshot?.items.reduce(
+        (total, item) =>
+          item.typeId === itemTypeId ? total + item.count : total,
+        0,
+      ) ?? 0
+    );
+  }
+
+  private stashCount(characterId: string, itemTypeId: number): number {
+    return this.depot?.stashCountOf(characterId, itemTypeId) ?? 0;
+  }
+
+  /** Carried + stashed, the pool Canary checks sources against. */
+  private totalCount(characterId: string, itemTypeId: number): number {
+    return (
+      this.carriedCount(characterId, itemTypeId) +
+      this.stashCount(characterId, itemTypeId)
+    );
+  }
+
+  /**
+   * True while any item write for this session is still in flight. Depot
+   * operations count too: the stash draw writes rows the depot persist lane
+   * also owns, and this gate is what keeps the two off the same rows at once.
+   */
+  private busy(session: Session): boolean {
+    return (
+      session.itemOperationPending ||
+      session.depotOperationPending ||
+      session.itemPersistsPending > 0
+    );
   }
 
   private nearShrine(characterId: string): boolean {
@@ -551,7 +786,7 @@ export class ImbuementService {
         if (
           this.world
             .getMapItems(position)
-            .some((mapItem) => SHRINE_ITEM_TYPE_IDS.has(mapItem.itemId))
+            .some((mapItem) => IMBUEMENT_SHRINE_ITEM_IDS.has(mapItem.itemId))
         ) {
           return true;
         }

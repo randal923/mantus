@@ -116,6 +116,7 @@ export interface GameWindowStoreActions {
   setWheelOpen: (value: SetStateAction<boolean>) => void;
   setForgeOpen: (value: SetStateAction<boolean>) => void;
   setProficiencyOpen: (value: SetStateAction<boolean>) => void;
+  setImbuementOpen: (value: SetStateAction<boolean>) => void;
   setImbuementItemId: (value: SetStateAction<string | null>) => void;
   setTrackerVisible: (value: SetStateAction<boolean>) => void;
   setPreyWindowOpen: (value: SetStateAction<boolean>) => void;

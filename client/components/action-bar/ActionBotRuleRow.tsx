@@ -1,7 +1,7 @@
 import type {
   ActionBotRule,
   ActionBotTrigger,
-  InventoryItem,
+  CarriedItemSummary,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -17,7 +17,7 @@ interface ActionBotRuleRowProps {
   readonly rule: ActionBotRule;
   readonly ruleNumber: number;
   readonly spells: ReadonlyArray<SpellCatalogEntry>;
-  readonly items: ReadonlyArray<InventoryItem>;
+  readonly items: ReadonlyArray<CarriedItemSummary>;
   readonly onChange: (rule: ActionBotRule) => void;
   readonly onRemove: () => void;
   readonly onMoveUp?: () => void;
@@ -93,7 +93,7 @@ export function ActionBotRuleRow({
       ? rule.trigger
       : null;
   const selectedValue = getActionBotActionValue(action);
-  const carried = new Map<number, InventoryItem>();
+  const carried = new Map<number, CarriedItemSummary>();
   for (const item of items) {
     if (!carried.has(item.typeId)) carried.set(item.typeId, item);
   }

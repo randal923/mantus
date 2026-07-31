@@ -38,6 +38,11 @@ interface ModalProps {
   /** Optional action row rendered below a divider at the bottom of the panel. */
   footer?: ReactNode;
   size?: "default" | "wide" | "extra-wide";
+  /**
+   * "tall" pins the panel to its maximum height so switching tabs or content
+   * does not resize the window; the content area scrolls instead.
+   */
+  height?: "auto" | "tall";
 }
 
 /** Centered dialog on a dimmed backdrop, styled like the game panels. */
@@ -49,6 +54,7 @@ export function Modal({
   pagination,
   footer,
   size = "default",
+  height = "auto",
 }: ModalProps) {
   const { t } = useAppTranslation();
   useEffect(() => {
@@ -70,6 +76,8 @@ export function Modal({
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
         className={`ui-panel-frame relative isolate flex max-h-[calc(100dvh-1rem)] min-w-0 w-full flex-col gap-3 overflow-hidden p-3 font-tibia text-ui-text sm:max-h-4/5 sm:gap-5 sm:p-6 ${
+          height === "tall" ? "h-[calc(100dvh-1rem)] sm:h-4/5" : ""
+        } ${
           size === "extra-wide"
             ? "max-w-7xl"
             : size === "wide"

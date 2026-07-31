@@ -20,6 +20,7 @@ import { ConditionBar } from "./combat/ConditionBar";
 import { ProtectionZoneIndicator } from "./combat/ProtectionZoneIndicator";
 import { OwnSkullIndicator } from "./pvp/OwnSkullIndicator";
 import { getSpellIconArtwork } from "../lib/combat/getSpellIconArtwork";
+import { getCarriedItems } from "../lib/inventory/getCarriedItems";
 import { getInventoryItems } from "../lib/inventory/getInventoryItems";
 import { formatActionBarHotkey } from "../lib/hotkeys/formatActionBarHotkey";
 import { createItemAction } from "../lib/action-bar/createItemAction";
@@ -104,6 +105,9 @@ export function GameHud({
     () => getInventoryItems(inventory),
     [inventory],
   );
+  // Buttons draw from what the character carries in total, closed backpacks
+  // included — an item's icon must not vanish because its bag is shut.
+  const carriedItems = useMemo(() => getCarriedItems(inventory), [inventory]);
   const cooldowns = fightState.cooldowns;
   const { level, magicLevel, mana, soul } = ownCharacter;
   const slots = useMemo<ReadonlyArray<ActionBarViewSlot>>(
@@ -181,14 +185,10 @@ export function GameHud({
             },
           };
         }
-        const matchingItems = inventoryItems.filter(
-          (item) => item.typeId === action.itemTypeId,
+        const item = carriedItems.find(
+          (candidate) => candidate.typeId === action.itemTypeId,
         );
-        const item = matchingItems[0];
-        const count = matchingItems.reduce(
-          (total, candidate) => total + candidate.count,
-          0,
-        );
+        const count = item?.count ?? 0;
         const rune = spells.find(
           (spell) =>
             spell.origin === "rune" &&
@@ -201,7 +201,7 @@ export function GameHud({
           : item?.useKind === "potion"
             ? cooldowns.find((entry) => entry.group === "potion")
             : undefined;
-        const name = getActionBarActionName(action, spells, inventoryItems);
+        const name = getActionBarActionName(action, spells, carriedItems);
         return {
           action,
           hotkey: slot.hotkey,
@@ -230,7 +230,7 @@ export function GameHud({
       actionBar,
       spells,
       cooldowns,
-      inventoryItems,
+      carriedItems,
       level,
       magicLevel,
       mana,

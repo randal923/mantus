@@ -13,7 +13,7 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-07-30
+**Last updated:** 2026-07-31
 
 ## World & engine
 
@@ -75,7 +75,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Prey (74)                                                | ✅     | ✅     | Third slot + wildcard packs now sold by the store (43, 2026-07-29); party-shared loot boost → 77 |
 | Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |
 | Boosted creatures/bosses + reward-boss flag (76)         | ✅     | ✅     | Nothing — slot/boosted loot bonuses now feed reward-chest rolls (84)        |
-| Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Stash material auto-draw rides with 84's stash routing (speed/capacity stats shipped) |
+| Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Tibia-layout window, stash-drawn sources, blank-scroll flow, equipment badges (2026-07-31); shrines made server-owned (map re-import — needs db:reconcile-world-seed); migration 067 pending |
 | Weapon proficiency + animus mastery (82)                 | ✅     | ✅     | Spell-facing perk families ride 79, inert families + Soul Pit earn path ride 86; locked-row thresholds/animus race list → 87 |
 | Cyclopedia views (83)                                    | ✅     | ✅     | Map view (stub upstream, skipped); combat-view live refresh while open → 87 |
 | Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards ✅ (2026-07-26); reward wall reachable + real window, resting-area bonuses, claim history ✅ (2026-07-30); loot-container assignment + stash routing remain |

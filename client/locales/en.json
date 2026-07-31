@@ -354,8 +354,7 @@
       "out-of-range": "You are too far away.",
       "too-far": "You cannot throw the item that far.",
       "too-heavy": "You cannot carry that much weight."
-    },
-    "imbue": "Imbue {{name}}"
+    }
   },
   "auction": {
     "title": "Auction House",
@@ -1726,7 +1725,7 @@
     "save": "Save",
     "reset": "Reset",
     "help": "Left-click a slice to select it. Right-click fills a slice, or clears it when full. Changes apply when you save.",
-    "locked": "Requires level {{level}} and a Premium account.",
+    "locked": "Requires level {{level}}, a promoted vocation and a Premium account.",
     "points": {
       "title": "Available Promotion Points"
     },
@@ -2302,21 +2301,39 @@
   "imbuement": {
     "title": "Imbuement Shrine",
     "loading": "Loading imbuements…",
-    "item": "Item",
-    "slotCount": "{{slots}} imbuement slots",
     "slotLabel": "Slot {{slot}}",
     "emptySlot": "Empty slot",
-    "choose": "Choose imbuement",
-    "selected": "Selected",
-    "timeLeft": "{{time}} remaining",
-    "clear": "Clear ({{gold}} gold)",
     "premium": "Premium",
     "price": "{{gold}} gold",
-    "apply": "Apply",
-    "material": "{{name}} {{available}}/{{required}}",
-    "optionsFor": "Available imbuements for slot {{slot}}",
+    "apply": "Imbue",
     "noOptions": "No imbuements can be applied to this item.",
     "noSlots": "This item has no imbuement slots.",
+    "itemInformation": "Item Information",
+    "selectQuality": "Select Quality and Imbuement",
+    "pickItem": "Pick Item",
+    "pickItemHint": "Pick an item to imbue.",
+    "noItemPicked": "No item picked",
+    "noImbuableItems": "You are carrying nothing that can be imbued.",
+    "blankScroll": "Blank Scroll",
+    "imbueSlotWith": "Imbue Empty Slot with “{{name}}”",
+    "forgeScrollWith": "Forge Scroll of “{{name}}”",
+    "forgeScroll": "Forge Scroll",
+    "clearTitle": "Clear Imbuement “{{name}}”",
+    "clearAction": "Clear",
+    "timeRemaining": "Time remaining",
+    "selectHint": "Select an imbuement to see what it does.",
+    "effectAndDuration": "{{description}} Lasts for {{duration}} while equipped.",
+    "materialFromStash": "{{name}} — {{stash}} from your stash",
+    "activeCount": "{{count}} active",
+    "close": "Close",
+    "slotBadge": "{{name}} — {{time}} left",
+    "blocked": {
+      "wrong-category": "This item cannot take that imbuement.",
+      "duplicate-imbuement": "This item already has that imbuement type.",
+      "premium-required": "Requires a premium account.",
+      "insufficient-materials": "You do not have the required materials.",
+      "no-blank-scroll": "You need a blank imbuement scroll."
+    },
     "errors": {
       "invalid-item": "That item cannot be imbued.",
       "no-shrine": "You must stand next to an imbuement shrine.",
@@ -2329,7 +2346,10 @@
       "insufficient-materials": "You do not have the required materials.",
       "insufficient-gold": "You do not have enough gold.",
       "rate-limited": "Please wait a moment before trying again.",
-      "invalid-request": "That imbuement action is not possible."
+      "invalid-request": "That imbuement action is not possible.",
+      "no-blank-scroll": "You need a blank imbuement scroll.",
+      "no-free-slot": "That item has no free imbuement slot.",
+      "invalid-scroll": "That is not a usable imbuement scroll."
     }
   },
   "proficiency": {

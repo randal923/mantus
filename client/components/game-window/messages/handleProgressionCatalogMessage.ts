@@ -107,6 +107,10 @@ export function handleProgressionCatalogMessage(
 
   if (message.type === "imbuement-window-state") {
     actions.imbuement.windowReceived(message);
+    // Using a shrine pushes this unprompted, so the window opens itself; the
+    // item id follows the server's view of what is picked.
+    store.getState().setImbuementOpen(true);
+    store.getState().setImbuementItemId(message.itemId);
     return true;
   }
 

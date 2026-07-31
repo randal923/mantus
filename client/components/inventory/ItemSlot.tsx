@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { InventoryItem } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { ItemSlotImbuements } from "./ItemSlotImbuements";
 import { ItemTooltip } from "./ItemTooltip";
 import { SpriteIcon } from "./SpriteIcon";
 
@@ -11,8 +12,6 @@ interface ItemSlotProps {
   item?: InventoryItem;
   placeholderSpriteId?: number;
   onActivate?: () => void;
-  /** Shows a hover badge that opens the item's imbuement window. */
-  onImbue?: () => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onDrop?: () => void;
@@ -23,7 +22,6 @@ export function ItemSlot({
   item,
   placeholderSpriteId,
   onActivate,
-  onImbue,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -139,20 +137,8 @@ export function ItemSlot({
           </span>
         )}
       </button>
-      {item && !optimistic && onImbue && (
-        <button
-          type="button"
-          aria-label={t("inventory.imbue", { name: item.name })}
-          title={t("inventory.imbue", { name: item.name })}
-          onClick={(event) => {
-            event.stopPropagation();
-            setAnchor(null);
-            onImbue();
-          }}
-          className="absolute -top-1 -right-1 z-10 hidden size-5 items-center justify-center rounded-full border border-ui-gold/50 bg-black/85 text-xs text-ui-gold shadow-md shadow-black/60 group-hover/slot:flex hover:brightness-125 focus-visible:flex"
-        >
-          ✦
-        </button>
+      {item && item.imbuements && item.imbuements.length > 0 && (
+        <ItemSlotImbuements imbuements={item.imbuements} />
       )}
       <span
         ref={emptyDragImageRef}

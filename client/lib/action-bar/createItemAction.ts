@@ -1,11 +1,11 @@
 import type {
   ActionBarAction,
-  InventoryItem,
+  CarriedItemSummary,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 
 export function createItemAction(
-  item: InventoryItem,
+  item: CarriedItemSummary,
   spells: ReadonlyArray<SpellCatalogEntry>,
 ): ActionBarAction {
   if (item.useKind === "rune") {

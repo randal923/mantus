@@ -882,8 +882,12 @@ export class GameClient {
     });
   }
 
-  requestImbuementWindow(itemId: string): boolean {
-    return this.send({ type: "imbuement-window-get", itemId });
+  /** `itemId: null` opens the shrine's "Pick Item" state. */
+  requestImbuementWindow(
+    itemId: string | null,
+    mode: "item" | "scroll" = "item",
+  ): boolean {
+    return this.send({ type: "imbuement-window-get", itemId, mode });
   }
 
   applyImbuement(
@@ -896,6 +900,14 @@ export class GameClient {
 
   clearImbuement(itemId: string, slot: number): boolean {
     return this.send({ type: "imbuement-clear", itemId, slot });
+  }
+
+  forgeImbuementScroll(imbuementId: number): boolean {
+    return this.send({ type: "imbuement-scroll-create", imbuementId });
+  }
+
+  applyImbuementScroll(scrollItemId: string, itemId: string): boolean {
+    return this.send({ type: "imbuement-scroll-apply", scrollItemId, itemId });
   }
 
   requestWheel(): boolean {

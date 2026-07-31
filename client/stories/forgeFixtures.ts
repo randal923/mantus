@@ -172,6 +172,7 @@ export const FORGE_INVENTORY: InventoryState = {
 
 export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
   type: "imbuement-window-state",
+  mode: "item",
   itemId: "00000000-0000-4000-8000-000000000001",
   itemTypeId: 3366,
   slotCount: 2,
@@ -205,9 +206,16 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
       priceGold: 5_000,
       premium: false,
       materials: [
-        { itemTypeId: 9685, name: "vampire teeth", count: 25, available: 25 },
+        {
+          itemTypeId: 9685,
+          name: "vampire teeth",
+          count: 25,
+          available: 25,
+          stashAvailable: 0,
+        },
       ],
       canApply: true,
+      blockedReason: null,
     },
     {
       imbuementId: 5,
@@ -220,10 +228,23 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
       priceGold: 25_000,
       premium: false,
       materials: [
-        { itemTypeId: 9685, name: "vampire teeth", count: 25, available: 25 },
-        { itemTypeId: 9663, name: "bloody pincers", count: 15, available: 4 },
+        {
+          itemTypeId: 9685,
+          name: "vampire teeth",
+          count: 25,
+          available: 25,
+          stashAvailable: 0,
+        },
+        {
+          itemTypeId: 9663,
+          name: "bloody pincers",
+          count: 15,
+          available: 4,
+          stashAvailable: 4,
+        },
       ],
       canApply: false,
+      blockedReason: "insufficient-materials",
     },
     {
       imbuementId: 12,
@@ -236,10 +257,19 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
       priceGold: 5_000,
       premium: true,
       materials: [
-        { itemTypeId: 9640, name: "rope belt", count: 25, available: 30 },
+        {
+          itemTypeId: 9640,
+          name: "rope belt",
+          count: 25,
+          available: 30,
+          stashAvailable: 5,
+        },
       ],
       canApply: true,
+      blockedReason: null,
     },
   ],
   removeCostGold: 15_000,
+  blankScrollCount: 2,
+  bankBalance: 500_000,
 };

@@ -116,6 +116,7 @@ function makeHarness(options: {
     (_session, player, position) => {
       openedShrines.push({ characterId: player.id, position });
     },
+    undefined,
     options.decorateAccess,
   );
   const makeSession = async (

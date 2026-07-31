@@ -1,6 +1,6 @@
 import type {
   ActionBar,
-  InventoryItem,
+  CarriedItemSummary,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { formatActionBarHotkey } from "../../lib/hotkeys/formatActionBarHotkey";
@@ -11,7 +11,7 @@ interface ActionBarSlotStripProps {
   readonly actionBar: ActionBar;
   readonly selectedSlot: number;
   readonly spells: ReadonlyArray<SpellCatalogEntry>;
-  readonly items: ReadonlyArray<InventoryItem>;
+  readonly items: ReadonlyArray<CarriedItemSummary>;
   readonly onSelect: (slotIndex: number) => void;
 }
 

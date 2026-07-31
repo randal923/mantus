@@ -13,6 +13,8 @@ export class MemoryImbuementStore implements ImbuementStore {
   readonly requests: ImbuementMutationRequest[] = [];
   goldBalances = new Map<string, number>();
   materialCounts = new Map<number, number>();
+  /** Absolute stash counts the last committed mutation wrote. */
+  stashCounts = new Map<number, number>();
 
   async mutate(
     characterId: string,
@@ -31,6 +33,9 @@ export class MemoryImbuementStore implements ImbuementStore {
         material.itemTypeId,
         (this.materialCounts.get(material.itemTypeId) ?? 0) - material.count,
       );
+    }
+    for (const stashOp of request.stashOps) {
+      this.stashCounts.set(stashOp.itemTypeId, stashOp.count);
     }
     this.requests.push(request);
     return { status: "committed", mutation: { after: [] } };

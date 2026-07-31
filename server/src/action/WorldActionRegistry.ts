@@ -10,6 +10,7 @@ import type { ChestDefinition } from "./ChestDefinition";
 import { handleChestUse } from "./handleChestUse";
 import { handleClockRead } from "./handleClockRead";
 import { handleDailyShrineUse } from "./handleDailyShrineUse";
+import { handleImbuementShrineUse } from "./handleImbuementShrineUse";
 import { handleDecorationKitUse } from "./handleDecorationKitUse";
 import { handleDoorUse } from "./handleDoorUse";
 import { handleLeverUse } from "./handleLeverUse";
@@ -46,6 +47,7 @@ export class WorldActionRegistry {
     chest: handleChestUse,
     clock: handleClockRead,
     "daily-shrine": handleDailyShrineUse,
+    "imbuement-shrine": handleImbuementShrineUse,
     "decoration-kit": handleDecorationKitUse,
     door: handleDoorUse,
     lever: handleLeverUse,
@@ -81,6 +83,10 @@ export class WorldActionRegistry {
       session: Session,
       player: Player,
       position: Position,
+      now: number,
+    ) => void,
+    private readonly openImbuementWindow?: (
+      session: Session,
       now: number,
     ) => void,
     private readonly decorateAccess?: (
@@ -204,6 +210,9 @@ export class WorldActionRegistry {
       case "daily-shrine":
         this.handlers["daily-shrine"](context, action);
         return true;
+      case "imbuement-shrine":
+        this.handlers["imbuement-shrine"](context, action);
+        return true;
       case "decoration-kit":
         this.handlers["decoration-kit"](context, action);
         return true;
@@ -301,6 +310,12 @@ export class WorldActionRegistry {
         : {
             openDailyRewards: () =>
               this.openDailyRewards?.(session, player, position, now),
+          }),
+      ...(this.openImbuementWindow === undefined
+        ? {}
+        : {
+            openImbuementWindow: () =>
+              this.openImbuementWindow?.(session, now),
           }),
     };
   }

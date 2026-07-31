@@ -113,7 +113,9 @@ export interface GameWindowState {
   wheelOpen: boolean;
   forgeOpen: boolean;
   proficiencyOpen: boolean;
-  /** Carried item whose imbuement window is open, or null when closed. */
+  /** The shrine window is open; it starts with no item picked. */
+  imbuementOpen: boolean;
+  /** Carried item the open shrine window is showing, null before one is picked. */
   imbuementItemId: string | null;
   /** The docked kill-tracker panel toggle; renders only with entries. */
   trackerVisible: boolean;

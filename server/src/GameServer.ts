@@ -488,6 +488,7 @@ export class GameServer {
       this.registry,
       this.items,
       deps.itemCatalog,
+      this.depot,
       imbuementCatalog,
       deps.imbuements,
     );
@@ -916,6 +917,13 @@ export class GameServer {
         this.podium.open(session, player, position, item),
       (session, player, position, now) =>
         this.daily.openShrine(session, player, position, now),
+      // Opens with no item picked; the player chooses one in the window.
+      (session, now) =>
+        this.imbuements.handleWindowGet(
+          session,
+          { type: "imbuement-window-get", itemId: null, mode: "item" },
+          now,
+        ),
       (characterId, position) =>
         this.houses.canDecorateHouseTile(characterId, position),
     );
@@ -1846,6 +1854,12 @@ export class GameServer {
         return;
       case "imbuement-clear":
         this.imbuements.handleClear(session, intent, now);
+        return;
+      case "imbuement-scroll-create":
+        this.imbuements.handleScrollCreate(session, intent, now);
+        return;
+      case "imbuement-scroll-apply":
+        this.imbuements.handleScrollApply(session, intent, now);
         return;
       case "proficiency-get":
         this.proficiency.handleGet(session, now);

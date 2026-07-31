@@ -1,6 +1,6 @@
 import type {
   ActionBotAction,
-  InventoryItem,
+  CarriedItemSummary,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { createItemAction } from "./createItemAction";
@@ -13,7 +13,7 @@ import { createSpellAction } from "./createSpellAction";
 export function createActionBotAction(
   value: string,
   spells: ReadonlyArray<SpellCatalogEntry>,
-  items: ReadonlyArray<InventoryItem>,
+  items: ReadonlyArray<CarriedItemSummary>,
 ): ActionBotAction | null {
   const separator = value.indexOf(":");
   const kind = value.slice(0, separator);

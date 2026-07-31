@@ -8,7 +8,6 @@ import type {
   OwnCharacterState,
 } from "@tibia/protocol";
 import type { Equipment, InventoryItem } from "./inventoryTypes";
-import { itemImbuementSlotCountOf } from "../../lib/forge/itemImbuementSlotCountOf";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { CloseButton } from "../ui/CloseButton";
@@ -43,8 +42,6 @@ interface InventoryPanelProps {
   onOpenContainer?: (item: InventoryItem) => void;
   onCloseContainer?: (containerId: string) => void;
   onUseItem?: (item: InventoryItem) => void;
-  /** Opens the imbuement window for a carried item with imbuement slots. */
-  onImbue?: (item: InventoryItem) => void;
   onDragStart?: (source: ItemDragSource) => void;
   onDragEnd?: () => void;
   onDropInContainer?: (
@@ -77,7 +74,6 @@ export function InventoryPanel({
   onOpenContainer,
   onCloseContainer,
   onUseItem,
-  onImbue,
   onDragStart,
   onDragEnd,
   onDropInContainer,
@@ -318,11 +314,6 @@ export function InventoryPanel({
                     key={item?.id ?? `empty-${slot}`}
                     item={item}
                     onActivate={item ? () => activateItem(item) : undefined}
-                    onImbue={
-                      item && onImbue && itemImbuementSlotCountOf(item) > 0
-                        ? () => onImbue(item)
-                        : undefined
-                    }
                     onDragStart={
                       item && dropContainer && onDragStart
                         ? () =>

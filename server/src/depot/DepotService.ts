@@ -83,6 +83,31 @@ export class DepotService {
     });
   }
 
+  /** Stashed count of one type, 0 when the character has none or is offline. */
+  stashCountOf(characterId: string, itemTypeId: number): number {
+    return this.caches.get(characterId)?.stash.get(itemTypeId) ?? 0;
+  }
+
+  /**
+   * Sets absolute stash counts for a flow that spends stashed items outside
+   * the depot windows (imbuing draws its astral sources this way). The caller
+   * owns the durable write and must call this again to restore the counts if
+   * its transaction does not commit — memory leads, the DB trails.
+   */
+  setStashCounts(
+    characterId: string,
+    counts: ReadonlyArray<{ readonly itemTypeId: number; readonly count: number }>,
+  ): void {
+    if (counts.length === 0) return;
+    this.caches.apply(characterId, {
+      stashSets: counts.map((entry) => ({
+        itemTypeId: entry.itemTypeId,
+        count: entry.count,
+      })),
+      bumps: [{ kind: "stash" }],
+    });
+  }
+
   /**
    * Drops an open depot/mailbox view after a cache resync so the client
    * discards the page it was showing and re-opens against rebuilt state.

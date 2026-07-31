@@ -47,6 +47,12 @@ export const WORLD_ACTION_REQUIREMENTS: Readonly<
     houseAccess: false,
     exclusive: false,
   },
+  "imbuement-shrine": {
+    reach: "adjacent",
+    itemStillPlaced: true,
+    houseAccess: false,
+    exclusive: false,
+  },
   "decoration-kit": {
     reach: "adjacent",
     itemStillPlaced: true,

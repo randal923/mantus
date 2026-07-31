@@ -15,7 +15,7 @@ import {
 import { parseChatInput } from "../../lib/chat/parseChatInput";
 import { sanitizeChatText } from "../../lib/chat/sanitizeChatText";
 import { toChatMessage } from "../../lib/chat/toChatMessage";
-import { getInventoryItems } from "../../lib/inventory/getInventoryItems";
+import { getCarriedItems } from "../../lib/inventory/getCarriedItems";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import type { ActionBarEditorRequest } from "../action-bar/ActionBarEditorRequest";
 import type { ChatChannel } from "../chat/chatTypes";
@@ -269,7 +269,7 @@ export function GameHudOverlay() {
       const currentSpells = state.spells;
       const configuredItem =
         action.kind === "item"
-          ? getInventoryItems(currentInventory).find(
+          ? getCarriedItems(currentInventory).find(
               (item) => item.typeId === action.itemTypeId,
             )
           : undefined;

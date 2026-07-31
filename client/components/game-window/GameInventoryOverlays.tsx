@@ -41,12 +41,6 @@ export function GameInventoryOverlays() {
   const setUseWithTargeting = useGameWindowStore(
     (state) => state.setUseWithTargeting,
   );
-  const setImbuementItemId = useGameWindowStore(
-    (state) => state.setImbuementItemId,
-  );
-  const imbuementActions = useGameWindowStore(
-    (state) => state.sessionActions?.imbuement ?? null,
-  );
 
   if (!ownCharacter || !dispatchItemOp) return null;
 
@@ -206,13 +200,6 @@ export function GameInventoryOverlays() {
               runtime.clientRef.current?.closeContainer(containerId)
             }
             onUseItem={(item) => runtime.clientRef.current?.useItem(item)}
-            onImbue={(item) => {
-              setImbuementItemId(item.id);
-              const sent =
-                runtime.clientRef.current?.requestImbuementWindow(item.id) ??
-                false;
-              imbuementActions?.begin(sent);
-            }}
             onDragStart={(source) => {
               runtime.itemDragRef.current = source;
             }}

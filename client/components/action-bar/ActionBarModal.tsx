@@ -10,7 +10,7 @@ import type {
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { getInventoryItems } from "../../lib/inventory/getInventoryItems";
+import { getCarriedItems } from "../../lib/inventory/getCarriedItems";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import type { ActionBarEditorRequest } from "./ActionBarEditorRequest";
@@ -56,7 +56,7 @@ export function ActionBarModal({
   const { t } = useAppTranslation();
   const [selectedSlot, setSelectedSlot] = useState(request.slotIndex);
   const [section, setSection] = useState(request.section);
-  const items = getInventoryItems(inventory);
+  const items = getCarriedItems(inventory);
   const selected = actionBar[selectedSlot]!;
   const updateAction = (action: ActionBarAction | null) => {
     const next = [...actionBar];

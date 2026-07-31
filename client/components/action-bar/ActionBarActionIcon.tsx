@@ -1,6 +1,6 @@
 import type {
   ActionBarAction,
-  InventoryItem,
+  CarriedItemSummary,
 } from "@tibia/protocol";
 import { getSpellIconArtwork } from "../../lib/combat/getSpellIconArtwork";
 import { SpriteIcon } from "../inventory/SpriteIcon";
@@ -8,7 +8,7 @@ import { SpellIcon } from "../spells/SpellIcon";
 
 interface ActionBarActionIconProps {
   readonly action: ActionBarAction | null;
-  readonly items: ReadonlyArray<InventoryItem>;
+  readonly items: ReadonlyArray<CarriedItemSummary>;
 }
 
 export function ActionBarActionIcon({

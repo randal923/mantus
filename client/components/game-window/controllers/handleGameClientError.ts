@@ -19,13 +19,17 @@ export function handleGameClientError(
     code.startsWith("spell-") ||
     code.startsWith("potion-");
 
-  if (showPuff && state.ownCharacter) {
-    renderer.showLocalMagicEffect(state.ownCharacter.position, 3);
-  }
-
   if (code === "item-action-failed") {
     actions?.inventory.rollback();
     renderer.clearMapItemPreviews();
+  }
+  // A refused gameplay action reads as Canary does it: the puff on the player
+  // and nothing else. No banner, no toast.
+  if (showPuff) {
+    if (state.ownCharacter) {
+      renderer.showLocalMagicEffect(state.ownCharacter.position, 3);
+    }
+    return;
   }
   if (code === "language-update-failed") {
     setLanguage(runtime.confirmedLanguageRef.current);

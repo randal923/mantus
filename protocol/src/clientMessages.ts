@@ -98,6 +98,8 @@ import {
 import {
   imbuementApplyMessageSchema,
   imbuementClearMessageSchema,
+  imbuementScrollApplyMessageSchema,
+  imbuementScrollCreateMessageSchema,
   imbuementWindowGetMessageSchema,
 } from "./imbuements";
 import {
@@ -815,6 +817,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   imbuementWindowGetMessageSchema,
   imbuementApplyMessageSchema,
   imbuementClearMessageSchema,
+  imbuementScrollCreateMessageSchema,
+  imbuementScrollApplyMessageSchema,
   proficiencyGetMessageSchema,
   proficiencySelectMessageSchema,
   cyclopediaCharacterGetMessageSchema,

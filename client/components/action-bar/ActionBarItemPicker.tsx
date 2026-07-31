@@ -4,7 +4,7 @@ import { useState } from "react";
 import type {
   ActionBarAction,
   ActionBarItemMode,
-  InventoryItem,
+  CarriedItemSummary,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 import { createItemAction } from "../../lib/action-bar/createItemAction";
@@ -12,7 +12,7 @@ import { SpriteIcon } from "../inventory/SpriteIcon";
 import { Input } from "../ui/Input";
 
 interface ActionBarItemPickerProps {
-  readonly items: ReadonlyArray<InventoryItem>;
+  readonly items: ReadonlyArray<CarriedItemSummary>;
   readonly spells: ReadonlyArray<SpellCatalogEntry>;
   readonly selected: ActionBarAction | null;
   readonly onSelect: (action: ActionBarAction) => void;
@@ -31,7 +31,7 @@ const ITEM_MODES: ReadonlyArray<{
 ];
 
 function availableModes(
-  item: InventoryItem,
+  item: CarriedItemSummary,
   spells: ReadonlyArray<SpellCatalogEntry>,
 ): ReadonlySet<ActionBarItemMode> {
   if (item.useKind === "rune") {
@@ -69,21 +69,13 @@ export function ActionBarItemPicker({
   onSelect,
 }: ActionBarItemPickerProps) {
   const [search, setSearch] = useState("");
-  const byType = new Map<number, { item: InventoryItem; count: number }>();
-  for (const item of items) {
-    const current = byType.get(item.typeId);
-    byType.set(item.typeId, {
-      item: current?.item ?? item,
-      count: (current?.count ?? 0) + item.count,
-    });
-  }
   const query = search.trim().toLowerCase();
-  const visible = [...byType.values()]
-    .filter(({ item }) => item.name.toLowerCase().includes(query))
-    .sort((left, right) => left.item.name.localeCompare(right.item.name));
+  const visible = items
+    .filter((item) => item.name.toLowerCase().includes(query))
+    .toSorted((left, right) => left.name.localeCompare(right.name));
   const selectedItem =
     selected?.kind === "item"
-      ? byType.get(selected.itemTypeId)?.item
+      ? items.find((item) => item.typeId === selected.itemTypeId)
       : undefined;
   const modes = selectedItem
     ? availableModes(selectedItem, spells)
@@ -121,7 +113,7 @@ export function ActionBarItemPicker({
         onChange={(event) => setSearch(event.currentTarget.value)}
       />
       <ul className="grid max-h-96 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
-        {visible.map(({ item, count }) => {
+        {visible.map((item) => {
           const active =
             selected?.kind === "item" &&
             selected.itemTypeId === item.typeId;
@@ -144,7 +136,7 @@ export function ActionBarItemPicker({
                   {item.name}
                 </span>
                 <span className="text-xs font-semibold tabular-nums text-ui-muted">
-                  {count}
+                  {item.count}
                 </span>
               </button>
             </li>

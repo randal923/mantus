@@ -6,6 +6,7 @@ import type { ChestDefinition } from "./ChestDefinition";
 import { MAP_CLOCK_ITEM_IDS } from "./clockItemIds";
 import { LEVER_TOGGLE_PAIRS } from "./leverTogglePairs";
 import { DAILY_SHRINE_ITEM_IDS } from "../daily/dailyShrineItemIds";
+import { IMBUEMENT_SHRINE_ITEM_IDS } from "../imbuement/imbuementShrineItemIds";
 import { PODIUM_DEFINITIONS } from "../podium/PodiumDefinition";
 import { mapItemAttributes } from "./mapItemAttributes";
 import type { WorldAction } from "./WorldAction";
@@ -68,6 +69,10 @@ export function resolveWorldAction(
     if (DAILY_SHRINE_ITEM_IDS.has(item.itemId)) {
       if (scripted) return { kind: "unsupported" };
       return { kind: "daily-shrine", item };
+    }
+    if (IMBUEMENT_SHRINE_ITEM_IDS.has(item.itemId)) {
+      if (scripted) return { kind: "unsupported" };
+      return { kind: "imbuement-shrine", item };
     }
     if (item.itemId === DECORATION_KIT_ITEM_ID) {
       if (scripted) return { kind: "unsupported" };

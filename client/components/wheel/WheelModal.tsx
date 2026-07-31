@@ -149,25 +149,31 @@ export function WheelModal({
   };
 
   const infoId = hoveredId ?? selectedId;
-  const infoSlice =
-    infoId !== null ? (WHEEL_SLICES[infoId - 1] ?? null) : null;
+  const infoSlice = infoId !== null ? (WHEEL_SLICES[infoId - 1] ?? null) : null;
   const infoPoints = infoId !== null ? (draft[infoId - 1] ?? 0) : 0;
   const selectedSlice =
     selectedId !== null ? (WHEEL_SLICES[selectedId - 1] ?? null) : null;
-  const selectedPoints =
-    selectedId !== null ? (draft[selectedId - 1] ?? 0) : 0;
+  const selectedPoints = selectedId !== null ? (draft[selectedId - 1] ?? 0) : 0;
   const canAdd =
     editable &&
     selectedSlice !== null &&
     available > 0 &&
-    trySetWheelSlice(draft, selectedSlice.id, selectedPoints + 1, totalPoints) !==
-      null;
+    trySetWheelSlice(
+      draft,
+      selectedSlice.id,
+      selectedPoints + 1,
+      totalPoints,
+    ) !== null;
   const canRemove =
     editable &&
     selectedSlice !== null &&
     selectedPoints > 0 &&
-    trySetWheelSlice(draft, selectedSlice.id, selectedPoints - 1, totalPoints) !==
-      null;
+    trySetWheelSlice(
+      draft,
+      selectedSlice.id,
+      selectedPoints - 1,
+      totalPoints,
+    ) !== null;
 
   const dirty =
     serverSlices !== undefined &&
@@ -191,6 +197,7 @@ export function WheelModal({
       title={t("wheel.title")}
       onClose={onClose}
       size="extra-wide"
+      height="tall"
       tabs={{
         label: t("wheel.sections"),
         selected: tab,
@@ -247,8 +254,8 @@ export function WheelModal({
       }
     >
       {tab === "wheel" && (
-        <div className="flex flex-wrap items-start justify-center gap-5 xl:flex-nowrap">
-          <div className="flex w-52 shrink-0 flex-col gap-4">
+        <div className="flex flex-col items-center gap-5 xl:flex-row xl:items-start xl:justify-center">
+          <div className="order-2 flex w-full max-w-[522px] flex-col gap-4 xl:order-none xl:w-52 xl:shrink-0">
             <section className="rounded border border-ui-gold/15 bg-black/25 p-3">
               <h3 className="mb-1 font-display text-sm tracking-wide text-ui-text-bright">
                 {t("wheel.points.title")}
@@ -292,7 +299,7 @@ export function WheelModal({
             </p>
           </div>
 
-          <div className="ui-scrollbar flex w-full max-w-[522px] shrink-0 overflow-x-auto pb-2">
+          <div className="order-1 flex w-full max-w-[522px] justify-center xl:order-none xl:shrink-0">
             <WheelCanvas
               vocation={vocationKey}
               slices={draft}
@@ -306,7 +313,7 @@ export function WheelModal({
             />
           </div>
 
-          <div className="w-52 shrink-0 rounded border border-ui-gold/15 bg-black/25 p-3">
+          <div className="order-3 w-full max-w-[522px] rounded border border-ui-gold/15 bg-black/25 p-3 xl:order-none xl:w-52 xl:shrink-0">
             <WheelPerkSummary
               bonuses={bonuses}
               slices={draft}

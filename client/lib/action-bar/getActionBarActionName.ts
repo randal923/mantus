@@ -1,13 +1,13 @@
 import type {
   ActionBarAction,
-  InventoryItem,
+  CarriedItemSummary,
   SpellCatalogEntry,
 } from "@tibia/protocol";
 
 export function getActionBarActionName(
   action: ActionBarAction | null,
   spells: ReadonlyArray<SpellCatalogEntry>,
-  items: ReadonlyArray<InventoryItem>,
+  items: ReadonlyArray<CarriedItemSummary>,
 ): string {
   if (!action) return "Empty";
   if (action.kind === "text") return action.text;

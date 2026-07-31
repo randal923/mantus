@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { itemImbuementSlotCountOf } from "../../lib/forge/itemImbuementSlotCountOf";
 import { getInventoryItems } from "../../lib/inventory/getInventoryItems";
 import { ForgeModal } from "../forge/ForgeModal";
 import { ImbuementModal } from "../imbuement/ImbuementModal";
@@ -13,6 +14,7 @@ export function GameForgeOverlays() {
   const runtime = store.getState().runtime;
   const ownCharacter = useGameWindowStore((state) => state.ownCharacter);
   const forgeOpen = useGameWindowStore((state) => state.forgeOpen);
+  const imbuementOpen = useGameWindowStore((state) => state.imbuementOpen);
   const imbuementItemId = useGameWindowStore(
     (state) => state.imbuementItemId,
   );
@@ -27,6 +29,9 @@ export function GameForgeOverlays() {
   );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
   const setForgeOpen = useGameWindowStore((state) => state.setForgeOpen);
+  const setImbuementOpen = useGameWindowStore(
+    (state) => state.setImbuementOpen,
+  );
   const setImbuementItemId = useGameWindowStore(
     (state) => state.setImbuementItemId,
   );
@@ -44,14 +49,14 @@ export function GameForgeOverlays() {
         defaultValue: t("imbuement.errors.invalid-request"),
       })
     : null;
+  const carried = getInventoryItems(inventory);
   const imbuedItem =
     imbuementItemId !== null
-      ? getInventoryItems(inventory).find(
-          (item) => item.id === imbuementItemId,
-        )
+      ? carried.find((item) => item.id === imbuementItemId)
       : undefined;
+  // Only trust a projection that matches the item currently picked, so a
+  // stale window from the previous item never renders against a new one.
   const imbuementWindow =
-    imbuementItemId !== null &&
     imbuementSession.window?.itemId === imbuementItemId
       ? imbuementSession.window
       : null;
@@ -94,14 +99,38 @@ export function GameForgeOverlays() {
           }}
         />
       )}
-      {imbuementItemId !== null && (
+      {imbuementOpen && (
         <ImbuementModal
           window={imbuementWindow}
           itemName={imbuedItem?.name}
           itemSpriteId={imbuedItem?.spriteId}
+          imbuableItems={carried.filter(
+            (item) => itemImbuementSlotCountOf(item) > 0,
+          )}
+          spriteIdOf={(itemTypeId) =>
+            carried.find((item) => item.typeId === itemTypeId)?.spriteId
+          }
           pending={imbuementSession.pending}
           error={imbuementError}
+          onPickItem={(itemId) => {
+            setImbuementItemId(itemId);
+            const sent =
+              runtime.clientRef.current?.requestImbuementWindow(itemId) ??
+              false;
+            sessionActions.imbuement.begin(sent);
+          }}
+          onSelectMode={(mode) => {
+            const itemId = mode === "scroll" ? null : imbuementItemId;
+            setImbuementItemId(itemId);
+            const sent =
+              runtime.clientRef.current?.requestImbuementWindow(
+                itemId,
+                mode,
+              ) ?? false;
+            sessionActions.imbuement.begin(sent);
+          }}
           onApply={(slot, imbuementId) => {
+            if (imbuementItemId === null) return;
             const sent =
               runtime.clientRef.current?.applyImbuement(
                 imbuementItemId,
@@ -111,6 +140,7 @@ export function GameForgeOverlays() {
             sessionActions.imbuement.begin(sent);
           }}
           onClear={(slot) => {
+            if (imbuementItemId === null) return;
             const sent =
               runtime.clientRef.current?.clearImbuement(
                 imbuementItemId,
@@ -118,9 +148,16 @@ export function GameForgeOverlays() {
               ) ?? false;
             sessionActions.imbuement.begin(sent);
           }}
+          onForgeScroll={(imbuementId) => {
+            const sent =
+              runtime.clientRef.current?.forgeImbuementScroll(imbuementId) ??
+              false;
+            sessionActions.imbuement.begin(sent);
+          }}
           onClose={() => {
+            setImbuementOpen(false);
             setImbuementItemId(null);
-            sessionActions.imbuement.dismissError();
+            sessionActions.imbuement.reset();
           }}
         />
       )}

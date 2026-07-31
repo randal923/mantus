@@ -62,6 +62,16 @@ export const itemTooltipSchema = z
   })
   .strict();
 
+export const itemUseKindSchema = z.enum([
+  "rune",
+  "potion",
+  "container",
+  "rotate",
+  "read",
+  "food",
+  "useWith",
+]);
+
 export const inventoryItemPresentationSchema = z
   .object({
     typeId: z.number().int().positive().max(65_535),
@@ -73,9 +83,7 @@ export const inventoryItemPresentationSchema = z
     equipmentSlot: equipmentSlotSchema.optional(),
     twoHanded: z.boolean().optional(),
     containerCapacity: z.number().int().min(0).max(100).optional(),
-    useKind: z
-      .enum(["rune", "potion", "container", "rotate", "read", "food", "useWith"])
-      .optional(),
+    useKind: itemUseKindSchema.optional(),
     /** Forge tier (0 = untiered); only classified items ever carry one. */
     tier: z.number().int().min(0).max(10).optional(),
     potionResources: z
@@ -84,6 +92,24 @@ export const inventoryItemPresentationSchema = z
       .max(2)
       .optional(),
     stowable: z.boolean().optional(),
+    /**
+     * Running imbuements, so equipped gear can show its icons and time left
+     * without opening a shrine. Projected from the item's attribute bag;
+     * omitted entirely on items that have none.
+     */
+    imbuements: z
+      .array(
+        z
+          .object({
+            slot: z.number().int().min(0).max(2),
+            name: z.string().min(1).max(80),
+            iconId: z.number().int().min(0).max(1_000),
+            remainingSeconds: z.number().int().min(0).max(72_000),
+          })
+          .strict(),
+      )
+      .max(3)
+      .optional(),
     tooltip: itemTooltipSchema,
   })
   .strict();
@@ -129,6 +155,31 @@ export const containerStateSchema = z
   })
   .strict();
 
+/**
+ * One item type the character carries, with the total amount held across
+ * equipment and every container — open or closed. Canary keeps the same map
+ * (`Player::getInventoryItemsId`) and pushes it on every inventory change
+ * (`sendInventoryIds`, 0xF5) so a hotkey keeps drawing an object that lives in
+ * a backpack the player has not opened. It is presentation only: no item ids,
+ * no locations, nothing the player cannot already see by opening the bag.
+ */
+export const carriedItemSummarySchema = z
+  .object({
+    typeId: z.number().int().positive().max(65_535),
+    clientId: z.number().int().positive().max(65_535),
+    spriteId: z.number().int().positive(),
+    name: z.string().min(1).max(120),
+    count: z.number().int().positive().max(1_000_000_000),
+    equipmentSlot: equipmentSlotSchema.optional(),
+    useKind: itemUseKindSchema.optional(),
+    potionResources: z
+      .array(z.enum(["health", "mana"]))
+      .min(1)
+      .max(2)
+      .optional(),
+  })
+  .strict();
+
 export const inventoryStateSchema = z
   .object({
     revision: z.number().int().nonnegative(),
@@ -143,6 +194,7 @@ export const inventoryStateSchema = z
     capacityMax: z.number().int().nonnegative(),
     slotCount: z.number().int().min(0).max(100),
     containers: z.array(containerStateSchema).max(16).optional(),
+    carried: z.array(carriedItemSummarySchema).max(1_024).optional(),
   })
   .strict();
 
@@ -151,6 +203,8 @@ export type QuickLootCategory = z.infer<typeof quickLootCategorySchema>;
 export type QuickLootFilter = z.infer<typeof quickLootFilterSchema>;
 export type ItemAffix = z.infer<typeof itemAffixSchema>;
 export type ItemTooltipData = z.infer<typeof itemTooltipSchema>;
+export type ItemUseKind = z.infer<typeof itemUseKindSchema>;
+export type CarriedItemSummary = z.infer<typeof carriedItemSummarySchema>;
 export type InventoryItemPresentation = z.infer<
   typeof inventoryItemPresentationSchema
 >;

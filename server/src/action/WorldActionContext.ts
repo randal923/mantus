@@ -35,6 +35,7 @@ export interface WorldActionContext {
   readonly openPodium?: (item: MapItem) => void;
   /** Present when the daily-reward service is wired; projects claim state. */
   readonly openDailyRewards?: () => void;
+  readonly openImbuementWindow?: () => void;
   /** Grants a chest reward atomically; absent without a chest store. */
   readonly lootChest?: (chest: ChestDefinition) => void;
 }

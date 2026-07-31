@@ -15,6 +15,7 @@ const REGISTERED_KINDS = [
   "daily-shrine",
   "decoration-kit",
   "door",
+  "imbuement-shrine",
   "lever",
   "podium",
   "read",
@@ -91,7 +92,12 @@ describe("worldActionPreconditions", () => {
   it("requires every mutating kind to be exclusive and item-checked", () => {
     for (const kind of REGISTERED_KINDS) {
       // Clock/sign reads and shrine/window opens mutate nothing.
-      if (kind === "clock" || kind === "read" || kind === "daily-shrine") {
+      if (
+        kind === "clock" ||
+        kind === "read" ||
+        kind === "daily-shrine" ||
+        kind === "imbuement-shrine"
+      ) {
         continue;
       }
       expect(WORLD_ACTION_REQUIREMENTS[kind].exclusive).toBe(true);

@@ -1,34 +1,25 @@
 import type { InventoryItem } from "@tibia/protocol";
-import { getExerciseWeaponDefinition } from "../action/getExerciseWeaponDefinition";
+import { itemImbuementsOf } from "../forge/itemImbuementsOf";
 import { itemTierOf } from "../forge/itemTierOf";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
-import { getToolDefinition } from "./getToolDefinition";
+import { getItemUseKind } from "./getItemUseKind";
 import { toItemTooltip } from "./toItemTooltip";
 
 export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
   const type = catalog.require(item.typeId);
   const potion = getPotionDefinition(type.id);
-  const useKind =
-    type.kind === "rune"
-      ? "rune"
-      : potion
-        ? "potion"
-      : getToolDefinition(type.id) ||
-          // Exercise weapons are used *on* a dummy, so they raise the same
-          // crosshair a tool does rather than trying to equip themselves.
-          getExerciseWeaponDefinition(type.id)
-        ? "useWith"
-      : type.containerCapacity !== undefined
-        ? "container"
-        : type.food
-          ? "food"
-          : type.text?.readable
-            ? "read"
-            : type.rotateTo
-              ? "rotate"
-              : undefined;
+  const useKind = getItemUseKind(type);
+  // Running imbuements, so equipped gear can show its icons and time left
+  // without a shrine. Entries written before the icon was denormalized fall
+  // back to the placeholder rather than dropping the badge.
+  const imbuements = itemImbuementsOf(item).map((entry) => ({
+    slot: entry.slot,
+    name: entry.name ?? "imbuement",
+    iconId: entry.iconId ?? 0,
+    remainingSeconds: entry.remainingSeconds,
+  }));
   return {
     id: item.id,
     typeId: type.id,
@@ -59,6 +50,7 @@ export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
       ? { stowable: true }
       : {}),
     ...(itemTierOf(item) > 0 ? { tier: itemTierOf(item) } : {}),
+    ...(imbuements.length > 0 ? { imbuements } : {}),
     tooltip: toItemTooltip(type, item),
   };
 }

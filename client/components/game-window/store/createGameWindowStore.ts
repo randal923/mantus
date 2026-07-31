@@ -113,6 +113,7 @@ export function createGameWindowStore({
     wheelOpen: false,
     forgeOpen: false,
     proficiencyOpen: false,
+    imbuementOpen: false,
     imbuementItemId: null,
     trackerVisible: false,
     preyWindowOpen: false,
@@ -346,6 +347,10 @@ export function createGameWindowStore({
     setProficiencyOpen: (value) =>
       set((state) => ({
         proficiencyOpen: resolveStateAction(value, state.proficiencyOpen),
+      })),
+    setImbuementOpen: (value) =>
+      set((state) => ({
+        imbuementOpen: resolveStateAction(value, state.imbuementOpen),
       })),
     setImbuementItemId: (value) =>
       set((state) => ({
@@ -589,6 +594,7 @@ export function createGameWindowStore({
         wheelOpen: false,
         forgeOpen: false,
         proficiencyOpen: false,
+        imbuementOpen: false,
         imbuementItemId: null,
         preyWindowOpen: false,
         huntingTasksOpen: false,
