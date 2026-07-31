@@ -63,7 +63,61 @@ describe("planPotionUse", () => {
     });
   });
 
-  it("rejects the use when a new flask has no backpack slot", () => {
+  it("tops up an existing flask stack before opening a new one", () => {
+    const flasks: Item = {
+      id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+      typeId: 285,
+      count: 3,
+      attributes: {},
+      version: 4,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 5 },
+    };
+    const plan = planPotionUse({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [backpack, potion, flasks],
+      itemId: POTION_ID,
+      expectedVersion: 1,
+    });
+
+    expect(plan?.itemPlan).toMatchObject({
+      kind: "merge",
+      flaskBefore: { id: flasks.id, count: 3 },
+      flaskAfter: { id: flasks.id, count: 4, version: 5 },
+    });
+  });
+
+  it("cascades the returned flask into a sub-bag when the backpack is full", () => {
+    const subBag: Item = {
+      id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      typeId: 2854,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 19 },
+    };
+    const plan = planPotionUse({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [
+        backpack,
+        potion,
+        subBag,
+        ...Array.from({ length: 18 }, (_, i) => filler(i + 1)),
+      ],
+      itemId: POTION_ID,
+      expectedVersion: 1,
+    });
+
+    expect(plan?.itemPlan).toMatchObject({
+      kind: "create",
+      flaskAfter: {
+        location: { kind: "container", containerId: subBag.id, slot: 0 },
+      },
+    });
+  });
+
+  it("still drinks the potion when no carried container can hold the flask", () => {
     const plan = planPotionUse({
       characterId: CHARACTER_ID,
       catalog,
@@ -72,6 +126,10 @@ describe("planPotionUse", () => {
       expectedVersion: 1,
     });
 
-    expect(plan).toBeNull();
+    expect(plan?.itemPlan).toMatchObject({
+      kind: "discard",
+      potionAfter: { id: POTION_ID, count: 1, version: 2 },
+    });
+    expect(plan?.mutation.after).toHaveLength(1);
   });
 });

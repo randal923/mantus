@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { getPotionDefinition } from "../../potion/getPotionDefinition";
-import { collectReachableItemIds } from "../collectReachableItemIds";
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { PlannedPotionUse } from "../PotionItemPlan";
-import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
+import { planBackpackPlacement } from "./planBackpackPlacement";
 
 export function planPotionUse(input: {
   readonly characterId: string;
@@ -38,50 +37,49 @@ export function planPotionUse(input: {
     count: before.count - 1,
     version: before.version + 1,
   };
-  const reachable = collectReachableItemIds(input.items, input.characterId);
-  const flaskMaxCount = input.catalog.require(potion.flaskTypeId).maxCount;
-  const flaskBefore = input.items
-    .filter(
-      (item) =>
-        reachable.has(item.id) &&
-        item.typeId === potion.flaskTypeId &&
-        item.count < flaskMaxCount,
-    )
-    .sort((left, right) => left.id.localeCompare(right.id))[0];
-  if (flaskBefore) {
+  // The flask lands wherever a picked-up item would: top up the first partial
+  // flask stack in the backpack tree, else the first free slot in it.
+  const flask: Item = {
+    id: randomUUID(),
+    typeId: potion.flaskTypeId,
+    count: 1,
+    attributes: {},
+    version: 1,
+    location: before.location,
+  };
+  const placement = planBackpackPlacement({
+    catalog: input.catalog,
+    carried: input.items,
+    item: flask,
+    subtree: [flask],
+  });
+  // Canary drinks the potion either way and only hands the flask back when
+  // the player can carry it, so a full backpack must never block the restore.
+  if (!placement) {
+    return {
+      itemPlan: { kind: "discard", before, potionAfter },
+      mutation: { before, after: [potionAfter] },
+    };
+  }
+  const mergeTarget = placement.mergeTarget;
+  if (mergeTarget) {
     const flaskAfter: Item = {
-      ...flaskBefore,
-      count: flaskBefore.count + 1,
-      version: flaskBefore.version + 1,
+      ...mergeTarget,
+      count: mergeTarget.count + 1,
+      version: mergeTarget.version + 1,
     };
     return {
       itemPlan: {
         kind: "merge",
         before,
         potionAfter,
-        flaskBefore,
+        flaskBefore: mergeTarget,
         flaskAfter,
       },
       mutation: { before, after: [potionAfter, flaskAfter] },
     };
   }
-  const backpack = input.items.find(
-    (item) =>
-      item.location.kind === "equipment" &&
-      item.location.characterId === input.characterId &&
-      item.location.slot === "backpack",
-  );
-  if (!backpack) return null;
-  const slot = firstFreeContainerSlot(input.catalog, input.items, backpack);
-  if (slot === null) return null;
-  const flaskAfter: Item = {
-    id: randomUUID(),
-    typeId: potion.flaskTypeId,
-    count: 1,
-    attributes: {},
-    version: 1,
-    location: { kind: "container", containerId: backpack.id, slot },
-  };
+  const flaskAfter: Item = { ...flask, location: placement.location };
   return {
     itemPlan: { kind: "create", before, potionAfter, flaskAfter },
     mutation: { before, after: [potionAfter, flaskAfter] },

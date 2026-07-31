@@ -610,7 +610,7 @@ export class MemoryItemStore implements ItemStore {
           "merged potion flask",
         );
         this.items.set(flaskAfter.id, flaskAfter);
-      } else {
+      } else if (plan.kind === "create") {
         const flaskAfter = plan.flaskAfter;
         if (
           this.items.has(flaskAfter.id) ||

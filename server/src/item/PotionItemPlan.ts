@@ -19,6 +19,12 @@ export type PotionItemPlan =
       readonly before: Item;
       readonly potionAfter: Item;
       readonly flaskAfter: Item;
+    }
+  /** Canary hands the flask back only when the drinker has room for it. */
+  | {
+      readonly kind: "discard";
+      readonly before: Item;
+      readonly potionAfter: Item;
     };
 
 export interface PlannedPotionUse {

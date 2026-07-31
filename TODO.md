@@ -38,6 +38,14 @@ limitations accepted during a session are recorded in the owning feature file
   `EMAXCONNSESSION`. Still per-process: each server budgets `PG_POOL_MAX`
   independently, so many processes can jointly exhaust the pooler's *server*
   side. A direct connection remains the best option where IPv6 is available.
+- **A potion flask is destroyed when the drinker has no room for it**
+  (2026-07-31, see `todo/done.md`). Canary's `player:addItem(potion.flask, 1)`
+  defaults `canDropOnMap = true`, so a flask that fits nowhere in the
+  backpack tree lands on the ground under the drinker. Our `discard` potion
+  plan drinks the potion and destroys the flask instead, because dropping it
+  would mean creating a world item inside the potion transaction. Recommended
+  fix when the world-item write joins that transaction: turn `discard` into a
+  ground placement at the drinker's tile.
 - **The game server and its database are in different regions**
   (2026-07-29). `server/fly.toml` pins `primary_region = "iad"` while
   `DATABASE_URL` points at `aws-1-us-west-2`, i.e. ~60 ms per round trip on

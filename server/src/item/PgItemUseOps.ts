@@ -238,7 +238,7 @@ export class PgItemUseOps {
         throw new Error("potion target changed during use");
       }
 
-      let createdFlask: Item;
+      let createdFlask: Item | null = null;
       if (plan.kind === "transform") {
         if (row.count !== 1) {
           throw new Error("potion transform plan does not consume one item");
@@ -266,8 +266,8 @@ export class PgItemUseOps {
           plan.potionAfter,
           "remaining potion stack",
         );
-        const flaskType = this.catalog.require(potion.flaskTypeId);
         if (plan.kind === "merge") {
+          const flaskType = this.catalog.require(potion.flaskTypeId);
           if (plan.flaskBefore.typeId !== potion.flaskTypeId) {
             throw new Error("potion flask merge type is invalid");
           }
@@ -296,7 +296,7 @@ export class PgItemUseOps {
             plan.flaskAfter,
             "merged potion flask",
           );
-        } else {
+        } else if (plan.kind === "create") {
           if (
             plan.flaskAfter.typeId !== potion.flaskTypeId ||
             plan.flaskAfter.location.kind !== "container"
@@ -348,12 +348,14 @@ export class PgItemUseOps {
         1,
         "potion",
       );
-      await this.audit.creation(
-        client,
-        request.actorCharacterId,
-        { ...createdFlask, count: 1 },
-        "potion-flask",
-      );
+      if (createdFlask) {
+        await this.audit.creation(
+          client,
+          request.actorCharacterId,
+          { ...createdFlask, count: 1 },
+          "potion-flask",
+        );
+      }
       return {
         targetCharacterVersion: restoredTarget.version,
         healthRestored: restoredTarget.health - target.health,

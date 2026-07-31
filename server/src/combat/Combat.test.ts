@@ -2318,6 +2318,58 @@ describe("Combat", () => {
     );
   });
 
+  it("drinks a stacked potion with a full backpack, dropping only the flask", async () => {
+    const filler = Array.from({ length: 19 }, (_, index) =>
+      ownedItem(
+        `00000000-0000-4000-8000-0000000001${String(index).padStart(2, "0")}`,
+        3031,
+        { kind: "container", containerId: BACKPACK_ID, slot: index + 1 },
+      ),
+    );
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(130, "Sorcerer"),
+      inventory: [
+        ownedItem(
+          MANA_POTION_ID,
+          23373,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          5,
+        ),
+        ...filler,
+      ],
+    });
+    harness.player.spendMana(harness.player.maxMana - 1);
+    const manaBefore = harness.player.mana;
+
+    harness.combat.usePotion(
+      harness.session,
+      {
+        type: "use-potion",
+        itemId: MANA_POTION_ID,
+        revision: 1,
+        targetPlayerId: PLAYER_ID,
+      },
+      1_000,
+    );
+    await settleItems(harness, 1_000);
+
+    expect(harness.player.mana).toBeGreaterThanOrEqual(manaBefore + 425);
+    expect(harness.player.mana).toBeLessThanOrEqual(manaBefore + 575);
+    expect(harness.sent.filter((message) => message.type === "error")).toEqual(
+      [],
+    );
+    const stored = await harness.store.loadForCharacter(PLAYER_ID);
+    expect(stored).toContainEqual(
+      expect.objectContaining({
+        id: MANA_POTION_ID,
+        typeId: 23373,
+        count: 4,
+        version: 2,
+      }),
+    );
+    expect(stored.some((item) => item.typeId === 284)).toBe(false);
+  });
+
   it("says the potion line only to observers who see the drinker", async () => {
     const harness = await makeHarness({
       character: makeLeveledCharacter(80, "Knight"),
