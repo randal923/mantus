@@ -11,9 +11,9 @@
     "itemDefinitions": 37526,
     "foodDefinitions": 133,
     "spells": 236,
-    "monsterTypes": 911,
+    "monsterTypes": 922,
     "npcTypes": 956,
-    "monsterPlacements": 83286,
+    "monsterPlacements": 83369,
     "npcPlacements": 1008
   },
   "collections": [
@@ -2752,8 +2752,9 @@
       "path": "data-otservbr-global/monster/aquatics/quara_looter.lua",
       "blob": "42b96e18711292bccca0730e13e4ea79199a6666",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/aquatics/quara_mantassin.lua",
@@ -2791,8 +2792,9 @@
       "path": "data-otservbr-global/monster/aquatics/quara_plunderer.lua",
       "blob": "330c60858720733fb353b07e27103d38a3c814f2",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/aquatics/quara_predator.lua",
@@ -2814,8 +2816,9 @@
       "path": "data-otservbr-global/monster/aquatics/quara_raider.lua",
       "blob": "22cb4098a8cc5c8ce223fa7a7d75979cfebe64db",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/aquatics/renegade_quara_constrictor.lua",
@@ -4945,15 +4948,17 @@
       "path": "data-otservbr-global/monster/extra_dimensional/mitmah_scout.lua",
       "blob": "b2be7396eae38243f816b028016be93416a25d02",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/extra_dimensional/mitmah_seer.lua",
       "blob": "5dd43f12e06aaff7c77a0009d99ccf45b66aba3b",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/extra_dimensional/reality_reaver.lua",
@@ -6593,8 +6598,9 @@
       "path": "data-otservbr-global/monster/lycanthropes/cunning_werepanther.lua",
       "blob": "b0e6c74131f5526b112152f1d64c95758c333184",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/lycanthropes/feral_werecrocodile.lua",
@@ -6631,8 +6637,9 @@
       "path": "data-otservbr-global/monster/lycanthropes/werecrocodile.lua",
       "blob": "0d598a2141343b1eae4c88ecb11ad643f57c1506",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/lycanthropes/werefox.lua",
@@ -6678,15 +6685,17 @@
       "path": "data-otservbr-global/monster/lycanthropes/werepanther.lua",
       "blob": "fb351221cead3e1069ef37c082b4490c1f515efe",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/lycanthropes/weretiger.lua",
       "blob": "6584860abb0a30fdc2a2ca8288a64693f3253c2e",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/lycanthropes/werewolf.lua",
@@ -6700,8 +6709,9 @@
       "path": "data-otservbr-global/monster/lycanthropes/white_weretiger.lua",
       "blob": "f892a60b1176ffdd475ad472ca3bc0c487f03487",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/magicals/animated_feather.lua",
@@ -14040,8 +14050,9 @@
       "path": "data-otservbr-global/monster/undeads/iks_yapunac.lua",
       "blob": "f479867c8a672fe5f6c2865bede5d8a56562c0a9",
       "ownerTodo": "04-creatures-spawns-and-ai",
-      "status": "implemented",
-      "reason": "Typed monster definition is present in the generated world catalog."
+      "status": "blocked",
+      "blockedBy": "04-creatures-spawns-and-ai",
+      "reason": "Definition retains 2 fields and 0 callbacks with explicit owners in the import report."
     },
     {
       "path": "data-otservbr-global/monster/undeads/lich.lua",

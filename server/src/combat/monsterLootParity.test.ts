@@ -28,10 +28,10 @@ describe("monster loot parity", () => {
       catalog,
     );
 
-    expect(report.lootBearingMonsters).toBe(782);
-    expect(report.entries).toBe(9_679);
-    expect(report.resolvedEntries).toBe(9_641);
-    expect(report.countedEntries).toBe(2_441);
+    expect(report.lootBearingMonsters).toBe(793);
+    expect(report.entries).toBe(9_821);
+    expect(report.resolvedEntries).toBe(9_783);
+    expect(report.countedEntries).toBe(2_471);
     // Canary's `unique` loot flag is imported but not modelled by the roll;
     // this pins the surface so a wider use of the flag cannot slip in silently.
     expect(report.uniqueEntries).toBe(3);
@@ -89,7 +89,7 @@ describe("monster loot parity", () => {
     ]);
     // Tables longer than the corpse's capacity are normal — Canary fills the
     // container until it is full and the rest simply does not fit.
-    expect(report.monstersWithOverflowingTable).toHaveLength(144);
+    expect(report.monstersWithOverflowingTable).toHaveLength(147);
   });
 
   it("keeps every loot entry inside its declared bands", () => {

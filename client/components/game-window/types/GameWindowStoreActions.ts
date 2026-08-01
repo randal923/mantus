@@ -59,6 +59,7 @@ export interface GameWindowStoreActions {
   setAccountTier: (value: SetStateAction<AccountTier>) => void;
   setPremiumDaysRemaining: (value: SetStateAction<number>) => void;
   setMantusCoins: (value: SetStateAction<number>) => void;
+  setBankBalance: (value: SetStateAction<number>) => void;
   setCreationOptions: (
     value: SetStateAction<CharacterCreationOptions | null>,
   ) => void;

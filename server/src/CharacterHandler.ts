@@ -420,6 +420,7 @@ export class CharacterHandler {
       type: "welcome",
       playerId: player.id,
       mantusCoins: account.mantusCoins,
+      bankBalance: loadedInventory.bankBalance,
       ...accountStatus,
       character: this.service.ownState(player, now),
       map: { name: this.world.mapName },

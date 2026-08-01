@@ -431,6 +431,7 @@ export class MarketService {
               ...(result.stashSet ? { stashSets: [result.stashSet] } : {}),
             });
           }
+          this.syncBankBalance(session, characterId, result.balance);
           session.send({
             type: "market-transacted",
             requestId: intent.requestId,
@@ -575,6 +576,7 @@ export class MarketService {
           // market: their own balance and nothing else (charter rule 6).
           this.notifyCounterparty(result.counterpartyCharacterId);
           const side = result.deliveredCharacterId === characterId ? "buy" : "sell";
+          this.syncBankBalance(session, characterId, result.balance);
           session.send({
             type: "market-transacted",
             requestId: intent.requestId,
@@ -656,6 +658,7 @@ export class MarketService {
                 bumps: [{ kind: "inbox" }],
               });
             }
+            this.syncBankBalance(session, characterId, result.balance);
             session.send({
               type: "market-transacted",
               requestId: intent.requestId,
@@ -699,6 +702,21 @@ export class MarketService {
       return "busy";
     }
     return null;
+  }
+
+  /**
+   * Adopts the balance the market transaction committed. Without this the
+   * cached balance drifts from the row every bank/shop plan is checked
+   * against, and the client's wallet counter keeps the pre-trade number.
+   */
+  private syncBankBalance(
+    session: Session,
+    characterId: string,
+    balance: number,
+  ): void {
+    this.items.setBankBalance(characterId, balance);
+    if (session.playerId !== characterId) return;
+    session.send({ type: "bank-updated", balance });
   }
 
   /**

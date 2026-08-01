@@ -200,6 +200,12 @@ function parseMonsterType(value: unknown): MonsterType {
         0,
         100,
       ),
+      criticalChance: boundedInteger(
+        flags.criticalChance ?? 0,
+        "criticalChance",
+        0,
+        100,
+      ),
       healthHidden: bool(flags.healthHidden, "healthHidden"),
       canWalkOnEnergy: bool(flags.canWalkOnEnergy, "canWalkOnEnergy"),
       canWalkOnFire: bool(flags.canWalkOnFire, "canWalkOnFire"),

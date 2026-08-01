@@ -115,11 +115,12 @@ const ALLOWED_OWNERS = new Set([
 const ALLOWED_COVERING_IMPORTERS = new Set(["tools/importCanaryBestiary.mjs"]);
 
 // Ceilings lowered 2026-07-26: Feature 76 imported flags.rewardBoss onto
-// MonsterType, closing the 911-monster blocked bucket. What is left blocked
+// MonsterType, closing the original 911-monster blocked bucket. What is left blocked
 // is flags.isPrey* (147, Todo 16 Feature 74's typed-data tail) and three NPC
-// entries.
-const UNSUPPORTED_DEFINITIONS_CEILING = 739;
-const IGNORED_ASSIGNMENTS_CEILING = 1573;
+// entries. The 11 hunting-guide monsters added on 2026-08-01 contribute only
+// Bestiary/raceId fields that the pinned bestiary importer demonstrably covers.
+const UNSUPPORTED_DEFINITIONS_CEILING = 750;
+const IGNORED_ASSIGNMENTS_CEILING = 1595;
 const PROCEDURAL_CALLBACKS_CEILING = 2;
 const BLOCKED_GAPS_CEILING = 150;
 /** Canary's Crypt Warrior: a Bestiary block with no raceId to track. */

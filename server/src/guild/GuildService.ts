@@ -25,6 +25,7 @@ import {
   type GuildWithdrawMessage,
 } from "@tibia/protocol";
 import { ChatRateLimiter } from "../chat/ChatRateLimiter";
+import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { ChatModerationHooks } from "../moderation/ChatModerationHooks";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
@@ -97,6 +98,8 @@ export class GuildService implements GuildHooks {
     private readonly visibility: Visibility,
     private readonly store?: GuildStore,
     private readonly moderation?: ChatModerationHooks,
+    /** Only to keep the cached bank balance in step with guild transfers. */
+    private readonly items?: ItemIntentHandler,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -690,6 +693,15 @@ export class GuildService implements GuildHooks {
       const apply = guildId ? await this.loadApplyGuild(guildId) : null;
       return (at: number) => {
         apply?.(at);
+        // The transfer debited/credited the actor's bank row, so the cached
+        // balance and the client's wallet follow it here.
+        this.items?.setBankBalance(characterId, result.characterBalance);
+        if (session.playerId === characterId) {
+          session.send({
+            type: "bank-updated",
+            balance: result.characterBalance,
+          });
+        }
         session.send({
           type: "guild-event",
           kind: direction === "deposit" ? "bank-deposit" : "bank-withdraw",

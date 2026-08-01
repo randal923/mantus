@@ -29,6 +29,14 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Carnisylvan Sapling remains a dynamic monster mechanic** (2026-08-01,
+  Feature 9/26). The pinned Canary definition has zero XP, no bestiary or loot,
+  and its registered `sapling explode` spell schedules the creature's removal.
+  Canary's world spawn XML does not place it. It is therefore the only Hunt
+  Finder monster deliberately excluded from persistent static spawn coverage;
+  making it permanent would change the hunt. Recommended fix: implement the
+  registered self-destruct callback and the quest/monster trigger that creates
+  the sapling, then add a regression proving it cannot persist or award loot.
 - **Six RubinOT-only Hunt Finder item labels use text fallbacks**
   (2026-08-01, Feature 111). The copied guide catalog names 499 distinct
   recommended/valuable/equipment entries; 492 resolve to Mantus' validated
@@ -699,6 +707,21 @@ limitations accepted during a session are recorded in the owning feature file
   Recommended fix: add an authenticated account privacy setting, persist it,
   and expose a bounded sibling projection only when the owner opted in.
   Owner: public website/auth.
+- **Six gold sinks never report the balance they charged** (2026-08-01). The
+  bank, shop, market, imbuement, gem atelier, guild bank, and player transfers
+  all push `bank-updated` and refresh `InventoryCacheManager.bankBalance`, so
+  the wallet counter in the top bar and every affordability plan follow them.
+  Prey list rerolls, hunting-task rerolls/cancels, bosstiary slot removals,
+  forge fusion/transfer, house rent/purchase/transfer, and NPC travel fares
+  debit `bank_accounts` inside their own transaction and tell nobody: the
+  cached balance and the client's counter keep the pre-charge number until the
+  next bank/shop/market/imbuement/gem/guild event or relog. Not an economy
+  hole — `debitBankBalanceQuery` guards with `balance >= $2`, so a stale (too
+  high) cache can only make an action fail, never overdraw. Recommended fix:
+  the prey, hunting-task and boss-slot stores already return `goldAfter`, so
+  their services only need `items.setBankBalance` + a `bank-updated` send;
+  forge, house and NPC travel additionally have to return the post-debit
+  balance their SQL already reads. Owner: economy/bank.
 
 
 ## Repo-wide known breakage

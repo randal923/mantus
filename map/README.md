@@ -24,8 +24,21 @@ Extract only `Tibia.dat` and `Tibia.spr` here. Copy Canary's matching
 yarn items:convert map/items.xml --commit=a879c9312e34381e8eedf397b8ed44510698b689
 yarn assets:import
 yarn animations:import map/appearances.dat # or a Canary checkout path
-yarn map:convert map/otservbr.otbm
+yarn map:convert
 ```
+
+The official Windows launcher directory is not a world-data source. Modern
+client graphics packages do not contain an OTBM server map or authoritative
+monster placements, and DAT/SPR files describe appearances rather than map
+geometry. The repository OTBM's SHA-256 is pinned in the source manifest; on
+2026-08-01 it still exactly matched Canary's latest v3.6.1 release asset.
+
+Canary's pinned monster XML omits several hunting grounds that are present in
+the OTBM and the Hunt Finder routes. Their authored, map-bound coverage lives
+in `content/spawns/hunting-ground-spawns.json`. The creature importer verifies
+that every supplemental tile is walkable, lies on its matching route, names a
+monster from that guide, and is tied to the pinned OTBM and guide hashes before
+publishing it into the server-owned world spawn catalog.
 
 The legacy DAT stores a phase count and no timings, so `animations:import`
 reads Tibia's real per-phase schedules out of Canary's protobuf

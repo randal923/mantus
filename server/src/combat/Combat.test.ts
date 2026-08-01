@@ -2723,6 +2723,46 @@ describe("Combat", () => {
     expect(monster.health).toBeLessThanOrEqual(170);
   });
 
+  it("rolls a monster's visual critical hit without inventing bonus damage", async () => {
+    const harness = await makeHarness();
+    const monster = makeMonster(
+      "monster-instance:critical-hit:0",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({
+        flags: {
+          ...makeMonsterType().flags,
+          criticalChance: 100,
+        },
+      }),
+    );
+    harness.world.addCreature(monster);
+
+    harness.combat.executeMonsterAbility(
+      monster,
+      harness.player,
+      {
+        kind: "damage",
+        intervalMs: 1_000,
+        chance: 100,
+        target: "target",
+        range: 2,
+        area: { shape: "single" },
+        damageType: "energy",
+        minimum: 10,
+        maximum: 10,
+      },
+      1_000,
+    );
+
+    expect(harness.player.health).toBe(harness.player.maxHealth - 10);
+    expect(
+      harness.sent.filter(
+        (message) =>
+          message.type === "magic-effect" && message.effectId === 173,
+      ),
+    ).toHaveLength(1);
+  });
+
   it("aims an untargeted monster wave toward its current target", async () => {
     const harness = await makeHarness({ position: { x: 1, y: 1, z: 7 } });
     const attacker = makeMonster(

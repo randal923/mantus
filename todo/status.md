@@ -13,7 +13,7 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-07-31
+**Last updated:** 2026-08-01
 
 ## World & engine
 
@@ -21,7 +21,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | --------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------- |
 | Map conversion, multi-floor movement, visibility (4)                                                | ✅     | ✅     | Per-entry content review: 348 disabled map actions, 2,225 unresolved floor transitions                     |
 | Rendering, animation, floors, occlusion (5–8)                                                       | —      | ✅     | Creature idle animation + real outfit walk timings need a modern outfit re-rip; fluid-subtype patterns unprojected; permanent effects play once |
-| Creatures, spawns, AI, all 84,294 placements (9, 10)                                                | ✅     | ✅     | Typed-data buckets (3 NPC entries; reward-boss + prey buckets closed 2026-07-26), placement review, Harlow duplicate |
+| Creatures, spawns, AI, all 84,377 placements (9, 10)                                                | ✅     | ✅     | Four route-validated Hunt Finder grounds gained 11 types/83 placements; Carnisylvan Sapling's dynamic self-destruct trigger, typed-data buckets (3 NPC entries), placement review, Harlow duplicate |
 | World actions: doors, levers, readables, rope, shovel, chests, plates, traps, teleports (12, 50–52) | ✅     | ✅     | Fields (50), trap disarm, tool remainder + sand digging (51), transform-on-use/`ignoreLook` flags (asset pass 108); look is server-authored since 2026-07-29 — carried/corpse items and a shift+click alias still missing (52) |
 | World events engine + 18 raids (54)                                                                 | ◐      | —      | Other global events, daily resets (boosted rotation shipped with 76), reward steps, `/raid` capability     |
 | Exhausts, trash holders, pz-lock, crash harness (3, 12–15)                                          | ✅     | ✅     | Nothing — closed                                                                                           |
@@ -32,7 +32,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | ------------------------------------------------------------------------------------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------- |
 | Item core: catalog, single-owner ops, containers, equipment, drag queue (11, 16, 17) | ✅     | ✅     | Fluids (11), container sorting/browse-field, 7-tile throw range (16), item parity gate (17)                   |
 | NPC shops — 8,368 offers (46)                                                        | ✅     | ✅     | Memory-first buy/sell + amount slider (2026-07-30); shopping-bag fill, finite stock (product decision)         |
-| Bank (45)                                                                            | ✅     | ✅     | Memory-first deposit/withdraw (2026-07-30); `change gold`/`change platinum` conversions                        |
+| Bank (45)                                                                            | ✅     | ✅     | Memory-first deposit/withdraw (2026-07-30); balance in the top-bar wallet counter (2026-08-01); `change gold`/`change platinum` conversions; six gold sinks still charge the bank without reporting the new balance (`TODO.md`) |
 | Depot, inbox, mail, supply stash (11c)                                               | ✅     | ✅     | Nothing                                                                                                       |
 | Player trade (48)                                                                    | ✅     | ✅     | Ground-item offers; store/unique/house-tile restrictions (wait on 43/78/houses)                               |
 | Market with escrow (49)                                                              | ✅     | ✅     | Full-catalog browser (asset pass 108), pristineness extensions, expiry decision; selection retention (client) |
@@ -74,7 +74,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Profiles: achievements, titles, badges, char info (67)   | ✅     | ✅     | Nothing — closed; rename flow (2) and Cyclopedia display (83) live elsewhere |
 | Prey (74)                                                | ✅     | ✅     | Third slot + wildcard packs now sold by the store (43, 2026-07-29); party-shared loot boost → 77 |
 | Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |
-| Hunt Finder and route guide (111)                        | —      | ✅     | Nothing — all 131 guides ship; six RubinOT-only item labels intentionally use text fallbacks |
+| Hunt Finder and route guide (111)                        | —      | ✅     | All 131 guides ship and static monsters have server spawn coverage; dynamic Carnisylvan Sapling trigger remains; six RubinOT-only item labels use text fallbacks |
 | Boosted creatures/bosses + reward-boss flag (76)         | ✅     | ✅     | Nothing — slot/boosted loot bonuses now feed reward-chest rolls (84)        |
 | Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Full shrine workspace refreshed 2026-08-01; stash-drawn sources, blank-scroll flow, equipment badges; shrines made server-owned (map re-import — needs db:reconcile-world-seed); migration 067 pending |
 | Weapon proficiency + animus mastery (82)                 | ✅     | ✅     | Spell-facing perk families ride 79, inert families + Soul Pit earn path ride 86; locked-row thresholds/animus race list → 87 |

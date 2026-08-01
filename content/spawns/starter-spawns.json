@@ -1,11 +1,12 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
     "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
     "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9",
     "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a",
-    "monsterSpellsSha256": "c188b2b984f9cb3f14f1af04e9e84f06b43677a69598b864c0c8958ba40d968b"
+    "monsterSpellsSha256": "c188b2b984f9cb3f14f1af04e9e84f06b43677a69598b864c0c8958ba40d968b",
+    "huntingGroundSpawnsSha256": "4fbbac606a6282b07a601cb77ff7cd3a38991c02f0787a0c65f19fe4c9c6461c"
   },
   "map": "otservbr",
   "bounds": {

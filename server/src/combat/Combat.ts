@@ -78,6 +78,8 @@ const TARGETED_SPELL_KINDS = new Set<SpellDefinition["targetKind"]>([
   "target-or-direction",
 ]);
 
+const CRITICAL_DAMAGE_EFFECT_ID = 173;
+
 const FEAR_DIRECTIONS: ReadonlyArray<readonly [Direction, number, number]> = [
   ["north", 0, -1],
   ["northeast", 1, -1],
@@ -1578,6 +1580,14 @@ export class Combat {
         : {}),
       ignoreArmor: ability.damageType !== "physical",
       ignoreShield: ability.damageType !== "physical",
+      ...(ability.kind !== "healing" &&
+        (monster.type.flags.criticalChance ?? 0) > 0
+        ? {
+            criticalChance: monster.type.flags.criticalChance,
+            // Canary monster criticals default to a visual-only 0% bonus.
+            criticalDamagePercent: 0,
+          }
+        : {}),
     };
     for (const creature of affected) {
       if (ability.kind === "healing") {
@@ -1592,6 +1602,13 @@ export class Combat {
       }
       const result = this.damage.applyDamage(creature, request, now);
       if (result.healthChanged || result.manaChanged) {
+        if (result.critical) {
+          this.visibility.broadcastMagicEffect(
+            creature.position,
+            CRITICAL_DAMAGE_EFFECT_ID,
+            creature.id,
+          );
+        }
         this.applyMonsterAbilityConditions(
           monster,
           creature,

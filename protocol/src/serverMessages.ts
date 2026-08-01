@@ -9,6 +9,7 @@ import {
   actionBotSettingsSchema,
 } from "./actionBar";
 import {
+  BANK_LIMITS,
   bankActionFailedMessageSchema,
   bankOpenedMessageSchema,
   bankUpdatedMessageSchema,
@@ -271,6 +272,8 @@ export const welcomeMessageSchema = z.object({
   accountTier: accountTierSchema,
   premiumDaysRemaining: premiumDaysRemainingSchema,
   mantusCoins: z.number().int().min(0).max(1_000_000_000_000),
+  /** Own bank balance, so the wallet counter is right before any bank visit. */
+  bankBalance: z.number().int().min(0).max(BANK_LIMITS.maxBalance),
   character: ownCharacterStateSchema,
   map: mapInfoSchema,
   creatures: z.array(creatureStateSchema),

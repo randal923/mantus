@@ -1,16 +1,18 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
     "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
     "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9",
     "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a",
-    "monsterSpellsSha256": "c188b2b984f9cb3f14f1af04e9e84f06b43677a69598b864c0c8958ba40d968b"
+    "monsterSpellsSha256": "c188b2b984f9cb3f14f1af04e9e84f06b43677a69598b864c0c8958ba40d968b",
+    "huntingGroundSpawnsSha256": "4fbbac606a6282b07a601cb77ff7cd3a38991c02f0787a0c65f19fe4c9c6461c"
   },
   "types": [
     {
       "id": "aruda",
       "name": "Aruda",
+      "description": "Aruda",
       "outfit": {
         "lookType": 140,
         "head": 96,
@@ -23,11 +25,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "banker",
+      "speechBubble": "banker",
+      "voices": [
+        {
+          "text": "Hey there, up for a chat?",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "benjamin",
       "name": "Benjamin",
+      "description": "Benjamin",
       "outfit": {
         "lookType": 128,
         "head": 116,
@@ -40,11 +54,35 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": [
+        {
+          "text": "Welcome to the post office!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        },
+        {
+          "text": "If you need help with letters or parcels, just ask me. I can explain everything.",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        },
+        {
+          "text": "Hey, send a letter to your friend now and then. Keep in touch, you know.",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "donald-mcronald",
       "name": "Donald McRonald",
+      "description": "Donald McRonald",
       "outfit": {
         "lookType": 128,
         "head": 22,
@@ -57,11 +95,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": []
     },
     {
       "id": "elane",
       "name": "Elane",
+      "description": "Elane",
       "outfit": {
         "lookType": 137,
         "head": 96,
@@ -74,11 +117,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": []
     },
     {
       "id": "frodo",
       "name": "Frodo",
+      "description": "Frodo",
       "outfit": {
         "lookType": 128,
         "head": 58,
@@ -91,11 +139,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": [
+        {
+          "text": "Come into my tavern and share some stories!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "gorn",
       "name": "Gorn",
+      "description": "Gorn",
       "outfit": {
         "lookType": 129,
         "head": 58,
@@ -108,11 +168,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "banker",
+      "speechBubble": "banker",
+      "voices": [
+        {
+          "text": "General goods and paperware for sale!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "hanna",
       "name": "Hanna",
+      "description": "Hanna",
       "outfit": {
         "lookType": 136,
         "head": 96,
@@ -125,11 +197,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": [
+        {
+          "text": "Gems and jewellery! Best prices in town!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "lynda",
       "name": "Lynda",
+      "description": "Lynda",
       "outfit": {
         "lookType": 138,
         "head": 79,
@@ -142,11 +226,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": []
     },
     {
       "id": "naji",
       "name": "Naji",
+      "description": "Naji",
       "outfit": {
         "lookType": 129,
         "head": 57,
@@ -159,11 +248,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "banker",
+      "speechBubble": "banker",
+      "voices": [
+        {
+          "text": "It's a wise idea to store your money in your bank account.",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "oswald",
       "name": "Oswald",
+      "description": "Oswald",
       "outfit": {
         "lookType": 128,
         "head": 115,
@@ -176,11 +277,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "banker",
+      "speechBubble": "banker",
+      "voices": []
     },
     {
       "id": "pig",
       "name": "Pig",
+      "description": "Pig",
       "outfit": {
         "lookType": 60,
         "head": 0,
@@ -193,11 +299,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "normal",
+      "speechBubble": "normal",
+      "voices": []
     },
     {
       "id": "quentin",
       "name": "Quentin",
+      "description": "Quentin",
       "outfit": {
         "lookType": 57,
         "head": 0,
@@ -210,11 +321,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "normal",
+      "speechBubble": "normal",
+      "voices": []
     },
     {
       "id": "quero",
       "name": "Quero",
+      "description": "Quero",
       "outfit": {
         "lookType": 128,
         "head": 55,
@@ -227,11 +343,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": []
     },
     {
       "id": "sam",
       "name": "Sam",
+      "description": "Sam",
       "outfit": {
         "lookType": 131,
         "head": 38,
@@ -244,11 +365,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": [
+        {
+          "text": "Hello there, adventurer! Need a deal in weapons or armor? I'm your man!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "sherry-mcronald",
       "name": "Sherry McRonald",
+      "description": "Sherry McRonald",
       "outfit": {
         "lookType": 136,
         "head": 78,
@@ -261,11 +394,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": [
+        {
+          "text": "Isn't this a beautiful day? Perfect for farming.",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "suzy",
       "name": "Suzy",
+      "description": "Suzy",
       "outfit": {
         "lookType": 136,
         "head": 78,
@@ -278,11 +423,23 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "banker",
+      "speechBubble": "banker",
+      "voices": [
+        {
+          "text": "Don't forget to deposit your money here in the Global Bank before you head out for adventure.",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "towncryer",
       "name": "Towncryer",
+      "description": "Towncryer",
       "outfit": {
         "lookType": 131,
         "head": 95,
@@ -295,11 +452,35 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "normal",
+      "speechBubble": "normal",
+      "voices": [
+        {
+          "text": "Hear me! Hear me! The mage Wyrdin in the Edron academy is looking for brave adventurers to undertake a task!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        },
+        {
+          "text": "Hear me! Hear me! The postmaster's guild has open spots for aspiring postmen! Contact Kevin Postner at the post office in the plains south of Kazordoon!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        },
+        {
+          "text": "Hear me! Hear me! The inquisition is looking for daring people to fight evil! Apply at the inquisition headquarters next to the Thaian jail!",
+          "intervalMs": 15000,
+          "chance": 50,
+          "yell": false
+        }
+      ]
     },
     {
       "id": "walter-jaeger",
       "name": "Walter Jaeger",
+      "description": "Walter Jaeger",
       "outfit": {
         "lookType": 957,
         "head": 78,
@@ -312,11 +493,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": []
     },
     {
       "id": "walter-the-guard",
       "name": "Walter, The Guard",
+      "description": "Walter, The Guard",
       "outfit": {
         "lookType": 131,
         "head": 19,
@@ -329,11 +515,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "normal",
+      "speechBubble": "normal",
+      "voices": []
     },
     {
       "id": "wyat",
       "name": "Wyat",
+      "description": "Wyat",
       "outfit": {
         "lookType": 129,
         "head": 98,
@@ -346,11 +537,16 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "normal",
+      "speechBubble": "normal",
+      "voices": []
     },
     {
       "id": "xodet",
       "name": "Xodet",
+      "description": "Xodet",
       "outfit": {
         "lookType": 130,
         "head": 19,
@@ -363,7 +559,11 @@
       "maxHealth": 100,
       "speed": 100,
       "walkIntervalMs": 2000,
-      "walkRadius": 2
+      "walkRadius": 2,
+      "canChangeFloor": false,
+      "profession": "trader",
+      "speechBubble": "trade",
+      "voices": []
     }
   ]
 }

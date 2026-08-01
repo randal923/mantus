@@ -93,6 +93,7 @@ export function handleCommerceMessage(
   }
 
   if (message.type === "bank-opened") {
+    state.setBankBalance(message.balance);
     state.setShopSession(null);
     actions.depot.reset();
     state.closeMarket();
@@ -108,6 +109,7 @@ export function handleCommerceMessage(
   }
 
   if (message.type === "bank-updated") {
+    state.setBankBalance(message.balance);
     state.setBankSession((current) =>
       current
         ? {
@@ -136,6 +138,7 @@ export function handleCommerceMessage(
   }
 
   if (message.type === "shop-opened") {
+    state.setBankBalance(message.bankBalance);
     state.setBankSession(null);
     actions.depot.reset();
     state.closeMarket();

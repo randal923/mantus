@@ -723,3 +723,116 @@ the endpoint of the nearest segment on that floor. The Darashia Dragon Lair
 regression fixture covers floors 7 through 10. Browser stories cover both
 fresh-store and player-following route states. Verified with client typecheck,
 focused unit and Chromium Storybook tests, and `git diff --check`.
+
+## 2026-08-01 — Bank balance in the wallet counter, top-bar layout, auto-height modals
+
+**Problem**: the top navigation bar's gold counter only summed the coins the
+character carried, so the money most players actually hold — the bank balance —
+was invisible outside a banker dialogue. The bar also spent width on a
+"Connected" status label, left the currency counters stranded in the middle of
+the header, and the character-select, login and outfit windows were pinned to
+the fixed 900px modal height with most of it empty.
+
+**What changed**: `welcome` now carries the character's own `bankBalance`
+(`BANK_LIMITS.maxBalance`-bounded), read from the inventory cache the login
+already attached, so the counter is right before any bank visit. The client
+keeps it in `GameWindowState.bankBalance` and refreshes it from every message
+that already reports an authoritative own balance: `bank-opened`,
+`bank-updated`, `shop-opened` and `imbuement-window-state`. `CurrencyCounters`
+renders it as a second segment inside the gold pill (coin + carried, divider,
+vault glyph + bank), and the whole wallet moved to `ml-auto` so it sits flush
+against the navigation buttons, which lost their own `ml-auto`. The connection
+status dot and label are gone from the header (`GameNotifications` still
+surfaces a lost connection), taking `connectionStatus` off the component's
+props with it. `LoginModal`, `CharacterSelectModal` and `OutfitModal` now pass
+`height="auto"`; the outfit picker's own `max-h-80` keeps that window bounded.
+
+Four services that debit or credit the bank and had the new balance in hand
+were leaving both the cached balance and the client stale, which this counter
+would have shown: market create/accept/cancel (also a real cache-drift fix —
+`MarketService` never adopted the balance its own transaction committed), the
+imbuement apply path, gem atelier transactions, and guild bank deposits and
+withdrawals (`GuildBankResult.characterBalance` was returned and ignored;
+`GuildService` took an optional `ItemIntentHandler` for it).
+
+**Files**: `protocol/src/serverMessages.ts`, `server/src/CharacterHandler.ts`,
+`server/src/GameServer.ts`, `server/src/market/MarketService.ts`,
+`server/src/guild/GuildService.ts`,
+`server/src/imbuement/ImbuementService.ts`,
+`server/src/wheel/GemAtelierService.ts`,
+`client/components/navigation/{CurrencyCounters,TopNavigationBar}.tsx`,
+`client/components/game-window/GameNavigation.tsx`, the game-window store,
+state and action types, `client/components/game-window/messages/{handle
+CharacterSessionMessage,handleCommerceMessage,handleProgressionCatalog
+Message}.ts`, `client/components/auth/LoginModal.tsx`,
+`client/components/characters/CharacterSelectModal.tsx`,
+`client/components/outfit/OutfitModal.tsx`, client locales, and the top
+navigation story.
+
+**Verified**: `yarn typecheck` passes across protocol, server and client; the
+client unit suite (338 tests) and client lint pass; the server suite passes
+except `monsterLootParity.test.ts`, which fails on the in-progress creature
+import in the working tree and not on anything here. Chromium Storybook
+interactions for `TopNavigationBar`, `CharacterSelectModal` and `OutfitModal`
+pass (15 tests), and headless screenshots of the rebuilt static Storybook
+confirm the two-segment wallet flush against the nav buttons, no connection
+label, and both modals hugging their content.
+
+**Residual risk**: six other gold sinks (prey rerolls, hunting-task
+rerolls/cancels, bosstiary slot removals, forge, house rent/purchase, NPC
+travel) still charge the bank without reporting the new balance, so the
+counter can lag until the next bank/shop/market/imbuement/gem/guild event.
+`debitBankBalanceQuery` guards with `balance >= $2`, so a stale cache can only
+reject an action, never overdraw; the gap and its fix are recorded in
+`TODO.md`.
+
+## 2026-08-01 — Canary map verification and missing Hunt Finder populations
+
+**Problem**: the Hunt Finder described current areas such as Werecrocodiles,
+Weretigers Oskayaat, Iksupan Occupied Sanctuary, and Podzilla Quara, but the
+pinned Canary monster XML placed none of their 11 normal monster types. The
+local official Tibia directory was only a 55 MB launcher installation and had
+no OTBM, DAT, SPR, or minimap source to import.
+
+**What changed**: verified that `map/otservbr.otbm` already byte-matches
+Canary's latest released v3.6.1 OTBM, then rebuilt all map and minimap outputs
+without changing the pinned map version. Added 83 authored supplemental spawn
+slots across the four missing grounds. The importer binds that source to the
+exact OTBM and Hunt Finder hashes and rejects an unknown guide/type, duplicate
+position, blocked tile, or position outside the matching route polyline. It now
+imports the 11 previously unplaced Canary definitions, yielding 922 monster
+types and 84,377 total world placements. Mitmah Scout and Mitmah Seer retain
+their Canary critical-hit chance, which is bounded during loading and rolled
+only by the server; it emits Canary's critical visual without inventing a
+damage bonus. Three current corpse appearances omitted by Canary's
+`items.xml` receive Canary's default eight-slot container semantics so Cunning
+Werepanther, Iks Yapunac, and White Weretiger can create corpses and drop loot.
+The generated world/starter creature, spawn, bestiary, loot-item, item-catalog,
+and parity reports were refreshed. `yarn map:convert` was repaired to target
+the repository's pinned map directly.
+
+**Files**: `content/{source-manifest.json,canary-parity-inventory.json}`;
+`content/{monsters,npcs,spawns}/*.json`;
+`content/spawns/hunting-ground-spawns.json`; `tools/{buildItemCatalog,
+importCanaryCreatures,parseCanaryCreatureContent,parseHuntingGroundSpawns}.mjs`
+and parser tests; `server/data/item-catalog.json`; creature/combat loader,
+critical-hit, loot-parity, performance, import, and hunting-coverage tests;
+`client/public/assets/creature-loot-items.json`; `package.json`;
+`map/README.md`; and the project status/optimization/accepted-gap records.
+
+**Verified**: the pinned OTBM SHA-256 is
+`a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2`;
+`yarn map:convert` processed 17,972,264 tiles and rebuilt 1,116 minimap region
+tiles with zero missing item IDs; both world and starter creature imports
+completed; all 93 tool tests and the Canary parity inventory gate pass; all
+1,467 non-integration server tests pass (251 integration tests skipped by the
+normal unit-test command); all 338 client unit tests pass; and the full
+protocol/server/client TypeScript check passes.
+
+**Residual risk**: these 83 positions are route-authored coverage because the
+upstream spawn XML contains no authoritative placements for the four grounds.
+Carnisylvan Sapling is intentionally not made persistent: Canary creates this
+zero-XP, no-loot creature dynamically and its registered spell removes it. The
+typed self-destruct callback and creation trigger remain recorded in `TODO.md`.
+No database world-seed reconciliation is required for this update because the
+OTBM and converted map version did not change.

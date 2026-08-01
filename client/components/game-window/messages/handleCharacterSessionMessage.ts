@@ -135,6 +135,7 @@ export function handleCharacterSessionMessage(
   state.setAccountTier(message.accountTier);
   state.setPremiumDaysRemaining(message.premiumDaysRemaining);
   state.setMantusCoins(message.mantusCoins);
+  state.setBankBalance(message.bankBalance);
   runtime.confirmedLevelRef.current = {
     playerId: message.playerId,
     level: message.character.level,

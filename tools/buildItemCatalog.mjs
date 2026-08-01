@@ -115,6 +115,15 @@ const CURRENCY_WORTH = {
   3043: 10_000,
 };
 
+// These current monster corpses exist in the pinned DAT and are referenced by
+// Canary definitions, but Canary's items.xml omits their otherwise-default
+// rows. Canary ItemType defaults a container to eight slots.
+const APPEARANCE_ONLY_CORPSES = {
+  43762: { name: "dead white weretiger", containerSize: 8 },
+  43959: { name: "dead cunning werepanther", containerSize: 8 },
+  44447: { name: "dead iks yapunac", containerSize: 8 },
+};
+
 function equipmentSlot(semantics) {
   if (semantics.weaponType === "shield") return "shield";
   if (semantics.weaponType === "ammunition") return "ammo";
@@ -147,7 +156,9 @@ for (const appearance of appearancesDocument.objects) {
   if (appearance.category !== "item") continue;
   const spriteId = appearance.sprites[0];
   if (!Number.isInteger(spriteId) || spriteId <= 0) continue;
-  const semantics = semanticsDocument.items[appearance.clientId];
+  const semantics =
+    semanticsDocument.items[appearance.clientId] ??
+    APPEARANCE_ONLY_CORPSES[appearance.clientId];
   if (!semantics?.name) continue;
   const slot = equipmentSlot(semantics);
   items[appearance.clientId] = {

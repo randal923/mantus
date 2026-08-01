@@ -6,6 +6,7 @@ import { useLanguageStore } from "../../stores/useLanguageStore";
 
 interface CurrencyCountersProps {
   gold: number;
+  bankBalance: number;
   mantusCoins: number;
   storeOpen: boolean;
   onStore: () => void;
@@ -13,6 +14,7 @@ interface CurrencyCountersProps {
 
 export function CurrencyCounters({
   gold,
+  bankBalance,
   mantusCoins,
   storeOpen,
   onStore,
@@ -23,23 +25,47 @@ export function CurrencyCounters({
   return (
     <section
       aria-label={t("currency.wallet")}
-      className="flex shrink-0 items-center gap-1.5"
+      className="ml-auto flex shrink-0 items-center gap-1.5"
     >
-      <div
-        title={t("currency.gold")}
-        className="flex h-10 min-w-20 items-center gap-2 rounded-xl border border-ui-gold/25 bg-black/35 px-2.5 shadow-inner shadow-black/50"
-      >
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-amber-300/25 bg-amber-950/35">
-          <Image
-            src="/assets/cyclopedia/currency/gold.png"
-            alt=""
-            width={20}
-            height={20}
-            className="[image-rendering:pixelated]"
-          />
+      <div className="flex h-10 items-center gap-2 rounded-xl border border-ui-gold/25 bg-black/35 px-2.5 shadow-inner shadow-black/50">
+        <span
+          title={t("currency.gold")}
+          className="flex items-center gap-2"
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-amber-300/25 bg-amber-950/35">
+            <Image
+              src="/assets/cyclopedia/currency/gold.png"
+              alt=""
+              width={20}
+              height={20}
+              className="[image-rendering:pixelated]"
+            />
+          </span>
+          <span className="min-w-0 font-display text-sm font-bold tabular-nums text-amber-200">
+            {gold.toLocaleString(language)}
+          </span>
         </span>
-        <span className="min-w-0 font-display text-sm font-bold tabular-nums text-amber-200">
-          {gold.toLocaleString(language)}
+
+        <span aria-hidden className="h-5 w-px shrink-0 bg-ui-gold/20" />
+
+        <span title={t("currency.bank")} className="flex items-center gap-1.5">
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5 shrink-0 text-amber-200/60"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3.5 9.5 12 4.5l8.5 5" />
+            <path d="M6 11v6M10 11v6M14 11v6M18 11v6" />
+            <path d="M4 19.5h16" />
+          </svg>
+          <span className="min-w-0 font-display text-sm font-bold tabular-nums text-amber-100/90">
+            {bankBalance.toLocaleString(language)}
+          </span>
         </span>
       </div>
 

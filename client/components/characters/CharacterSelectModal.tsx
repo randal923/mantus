@@ -58,6 +58,7 @@ export function CharacterSelectModal({
           : t("characters.createTitle")
       }
       onClose={onClose}
+      height="auto"
       footer={
         view === "select" ? (
           <>

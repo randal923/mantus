@@ -15,7 +15,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
   const login = useLogin(onClose);
 
   return createPortal(
-    <Modal title={t("publicSite.logIn")} onClose={onClose}>
+    <Modal title={t("publicSite.logIn")} onClose={onClose} height="auto">
       <LoginPanel
         embedded
         onSignIn={login.signIn}

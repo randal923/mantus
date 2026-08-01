@@ -8,7 +8,7 @@ import { SPELL_DEFINITIONS } from "./spells/SPELL_DEFINITIONS";
 
 /**
  * "Can I see it on screen?" — every magic effect and distance missile the
- * server can broadcast (player spells, runes, and all 911 monster abilities)
+ * server can broadcast (player spells, runes, and all imported monster abilities)
  * must resolve to a client sprite asset with at least one frame. A missing
  * entry renders as nothing or a generic poff on the real client.
  */
@@ -125,8 +125,8 @@ describe("combat visual assets", () => {
   });
 
   it("renders the hardcoded combat-system effects (fields, teleports, blocks)", () => {
-    // Fire/poison/energy field visuals, teleport, poff, magic-wall break.
-    for (const id of [7, 21, 38, 11, 3]) {
+    // Fire/poison/energy fields, teleport, poff, wall break, monster critical.
+    for (const id of [7, 21, 38, 11, 3, 173]) {
       expect(renderableEffect(id), `effect ${id}`).toBe(true);
     }
   });

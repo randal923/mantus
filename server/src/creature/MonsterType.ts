@@ -164,6 +164,8 @@ export interface MonsterType {
     targetDistance: number;
     runHealth: number;
     staticAttackChance: number;
+    /** Canary's per-hit monster critical chance, in percent. */
+    criticalChance?: number;
     healthHidden: boolean;
     canWalkOnEnergy: boolean;
     canWalkOnFire: boolean;

@@ -346,7 +346,11 @@ export class GemAtelierService {
             return;
           }
           if (result.goldAfter !== undefined) {
+            // The atelier pays from the bank, so the cached balance the bank
+            // and shop plan against follows the debit this transaction made.
             this.goldByCharacter.set(player.id, result.goldAfter);
+            this.items?.setBankBalance(player.id, result.goldAfter);
+            session.send({ type: "bank-updated", balance: result.goldAfter });
           }
           applyCommitted(at);
           session.send(this.projectState(player, at));

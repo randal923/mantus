@@ -71,6 +71,7 @@ export function createGameWindowStore({
     accountTier: "free",
     premiumDaysRemaining: 0,
     mantusCoins: 0,
+    bankBalance: 0,
     creationOptions: null,
     ownCharacter: null,
     worldLoading: false,
@@ -185,6 +186,10 @@ export function createGameWindowStore({
     setMantusCoins: (value) =>
       set((state) => ({
         mantusCoins: resolveStateAction(value, state.mantusCoins),
+      })),
+    setBankBalance: (value) =>
+      set((state) => ({
+        bankBalance: resolveStateAction(value, state.bankBalance),
       })),
     setCreationOptions: (value) =>
       set((state) => ({

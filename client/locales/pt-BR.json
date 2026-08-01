@@ -528,6 +528,7 @@
   "currency": {
     "wallet": "Carteira de moedas",
     "gold": "Valor em ouro carregado",
+    "bank": "Saldo no banco",
     "mantusCoins": "Mantus Coins"
   },
   "store": {

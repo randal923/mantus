@@ -10,7 +10,7 @@ invariants are listed at the bottom and must not be broken) and to the old
 **Ground truth today** (from `docs/server-capacity.md`, validated 2026-07-23):
 
 - Tick: 25 ms / 40 Hz; tick body `GameServer.tick()` (`server/src/GameServer.ts:1323`).
-- 84,294 creature placements, 96,711 static map items, 2,000 max sessions.
+- 84,377 creature placements, 96,711 static map items, 2,000 max sessions.
 - Recorded capacity: 4,000 players @ p95 41.2 ms turn latency (synthetic map,
   no DB, no monsters); 1,900-monster hotspot @ p95 42.9 ms; client 31 FPS at
   1,000 monsters under SwiftShader.

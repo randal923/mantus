@@ -72,15 +72,15 @@ describe("loadCreatureContent", () => {
     const callbackTypes = types.filter((type) => type.callbacks.length > 0);
     const eventReferences = types.flatMap((type) => type.events);
 
-    expect(types).toHaveLength(911);
+    expect(types).toHaveLength(922);
     expect(summoners).toHaveLength(69);
     expect(summoners.flatMap((type) => type.summons)).toHaveLength(77);
-    expect(voiced).toHaveLength(585);
-    expect(voiced.flatMap((type) => type.voices)).toHaveLength(1_561);
-    expect(directionalAbilities).toHaveLength(407);
+    expect(voiced).toHaveLength(593);
+    expect(voiced.flatMap((type) => type.voices)).toHaveLength(1_581);
+    expect(directionalAbilities).toHaveLength(411);
     expect(
       types.filter((type) => type.immunities.includes("invisible")),
-    ).toHaveLength(703);
+    ).toHaveLength(714);
     expect(types.filter((type) => type.speed === 0)).toHaveLength(27);
     expect(callbackTypes).toHaveLength(15);
     expect(new Set(eventReferences).size).toBe(54);
@@ -106,6 +106,7 @@ describe("loadCreatureContent", () => {
       expect(typeof type.changeTarget.chance).toBe("number");
       expect(typeof type.flags.healthHidden).toBe("boolean");
       expect(typeof type.flags.staticAttackChance).toBe("number");
+      expect(typeof type.flags.criticalChance).toBe("number");
     }
 
     // ...and the fields carry real parsed values, not just defaults.

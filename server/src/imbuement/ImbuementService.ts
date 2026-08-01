@@ -446,6 +446,12 @@ export class ImbuementService {
             // wrong until the character reloads.
             if (result.bankBalanceAfter !== undefined) {
               this.items.setBankBalance(characterId, result.bankBalanceAfter);
+              if (session.playerId === characterId) {
+                session.send({
+                  type: "bank-updated",
+                  balance: result.bankBalanceAfter,
+                });
+              }
             }
             // A fresh apply restarts this item's checkpoint ledger.
             if (item) this.decayLedger.get(characterId)?.delete(item.id);

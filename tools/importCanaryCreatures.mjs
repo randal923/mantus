@@ -14,6 +14,7 @@ import {
 import { join, relative } from "node:path";
 import { parseCanaryCreatureContent } from "./parseCanaryCreatureContent.mjs";
 import { parseCanaryMonsterSpells } from "./parseCanaryMonsterSpells.mjs";
+import { parseHuntingGroundSpawns } from "./parseHuntingGroundSpawns.mjs";
 import { readMapNavigation } from "./readMapNavigation.mjs";
 
 /**
@@ -48,6 +49,32 @@ const source = manifest.sources.canaryCreatures;
 if (!source || manifest.converters.creatures !== 3) {
   throw new Error("source manifest has no supported Canary creature source");
 }
+const huntingGroundSource = manifest.sources.huntingGroundSpawns;
+if (
+  !huntingGroundSource ||
+  manifest.converters.huntingGroundSpawns !== 1 ||
+  huntingGroundSource.mapSha256 !== manifest.sources.map.sha256
+) {
+  throw new Error("source manifest has no supported hunting-ground spawn source");
+}
+const huntingGroundSpawnSource = readFileSync(
+  join(repoRoot, "content/spawns/hunting-ground-spawns.json"),
+  "utf8",
+);
+const huntingPlacesSource = readFileSync(
+  join(repoRoot, "client/public/assets/hunting/hunting_places.json"),
+  "utf8",
+);
+assertHash(
+  huntingGroundSpawnSource,
+  huntingGroundSource.sha256,
+  "hunting-ground-spawns.json",
+);
+assertHash(
+  huntingPlacesSource,
+  huntingGroundSource.huntingPlacesSha256,
+  "hunting_places.json",
+);
 const commit = execFileSync("git", ["-C", canaryRoot, "rev-parse", "HEAD"], {
   encoding: "utf8",
 }).trim();
@@ -118,10 +145,31 @@ const parsed = parseCanaryCreatureContent({
         "monk-s-apparition",
         "greater-splinter-of-madness",
         "mighty-splinter-of-madness",
+        "werecrocodile",
+        "werepanther",
+        "cunning-werepanther",
+        "weretiger",
+        "white-weretiger",
+        "iks-yapunac",
+        "mitmah-scout",
+        "mitmah-seer",
+        "quara-looter",
+        "quara-plunderer",
+        "quara-raider",
       ],
   bounds,
   tileAt: navigation.tileAt,
 });
+const supplementalSpawns = starterOnly
+  ? { slots: [], report: { placements: 0, grounds: [] } }
+  : parseHuntingGroundSpawns({
+      document: JSON.parse(huntingGroundSpawnSource),
+      huntingPlaces: JSON.parse(huntingPlacesSource),
+      knownMonsterTypeIds: parsed.monsterTypes.map((type) => type.id),
+      existingSlots: parsed.slots,
+      tileAt: navigation.tileAt,
+    });
+const slots = [...parsed.slots, ...supplementalSpawns.slots];
 const appearanceValidation = validateAppearances(parsed, manifest);
 const definitionHash = createHash("sha256")
   .update(
@@ -148,6 +196,7 @@ const provenance = {
   npcSpawnsSha256: source.npcSpawnsSha256,
   definitionsSha256: definitionHash,
   monsterSpellsSha256: monsterSpellsHash,
+  huntingGroundSpawnsSha256: huntingGroundSource.sha256,
 };
 const staging = join(repoRoot, `.creature-staging-${process.pid}`);
 rmSync(staging, { recursive: true, force: true });
@@ -173,7 +222,7 @@ writeJson(join(staging, `spawns/${contentName}-spawns.json`), {
     "Ordinary spawn deadlines are ephemeral and reset when the process restarts.",
   activationSemantics:
     "Nearby players activate empty slots; creatures outside every player's activation range retain identity and state while dormant, then reactivate at their last position.",
-  slots: parsed.slots,
+  slots,
 });
 writeJson(join(staging, `spawns/${contentName}-import-report.json`), {
   formatVersion: manifest.converters.creatures,
@@ -182,6 +231,18 @@ writeJson(join(staging, `spawns/${contentName}-import-report.json`), {
   appearanceValidation,
   bounds,
   ...parsed.report,
+  canaryPlacementCounts: parsed.report.fullPlacementCounts,
+  fullPlacementCounts: {
+    monsters:
+      parsed.report.fullPlacementCounts.monsters + supplementalSpawns.slots.length,
+    npcs: parsed.report.fullPlacementCounts.npcs,
+  },
+  curatedPlacementCounts: {
+    monsters:
+      parsed.report.curatedPlacementCounts.monsters + supplementalSpawns.slots.length,
+    npcs: parsed.report.curatedPlacementCounts.npcs,
+  },
+  supplementalPlacements: supplementalSpawns.report,
   unsupportedDefinitions: parsed.report.unsupportedDefinitions.map(
     addGapOwnership,
   ),
@@ -196,7 +257,7 @@ for (const directory of ["monsters", "npcs", "spawns"]) {
 }
 rmSync(staging, { recursive: true, force: true });
 console.log(
-  `imported ${parsed.monsterTypes.length} monster types, ${parsed.npcTypes.length} NPC types, and ${parsed.slots.length} ${contentName} spawn slots`,
+  `imported ${parsed.monsterTypes.length} monster types, ${parsed.npcTypes.length} NPC types, and ${slots.length} ${contentName} spawn slots`,
 );
 
 function safeFilename(value, label) {

@@ -28,7 +28,6 @@ const meta = {
       feet: 76,
       addons: 0,
     },
-    connectionStatus: "connected",
     fightMode: {
       attack: "offensive",
       chase: false,
@@ -40,6 +39,7 @@ const meta = {
     vipVisible: false,
     partyVisible: false,
     gold: 5_228,
+    bankBalance: 1_240_500,
     mantusCoins: 340,
     storeOpen: false,
     activePanel: "inventory",
@@ -62,7 +62,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Connected: Story = {
+export const Default: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -87,16 +87,6 @@ export const WikiActive: Story = {
   args: { activePanel: "wiki" },
 };
 
-export const Connecting: Story = {
-  args: {
-    connectionStatus: "connecting",
-    activePanel: undefined,
-  },
-};
-
-export const Disconnected: Story = {
-  args: {
-    connectionStatus: "disconnected",
-    activePanel: undefined,
-  },
+export const NoPanelOpen: Story = {
+  args: { activePanel: undefined },
 };

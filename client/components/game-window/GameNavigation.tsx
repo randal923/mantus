@@ -9,7 +9,6 @@ export function GameNavigation() {
   const store = useGameWindowStoreApi();
   const runtime = store.getState().runtime;
   const character = useGameWindowStore((state) => state.ownCharacter);
-  const status = useGameWindowStore((state) => state.status);
   const fightMode = useGameWindowStore(
     (state) => state.fightState?.mode ?? null,
   );
@@ -24,6 +23,7 @@ export function GameNavigation() {
     (state) => state.sessions?.inventory ?? null,
   );
   const mantusCoins = useGameWindowStore((state) => state.mantusCoins);
+  const bankBalance = useGameWindowStore((state) => state.bankBalance);
   const storeOpen = useGameWindowStore((state) => state.storeOpen);
   const guildModalOpen = useGameWindowStore((state) => state.guildModalOpen);
   const houseModalOpen = useGameWindowStore((state) => state.houseModalOpen);
@@ -175,7 +175,6 @@ export function GameNavigation() {
         level={character.level}
         vocation={t(`vocations.${character.vocation}.name`)}
         outfit={character.outfit}
-        connectionStatus={status}
         fightMode={fightMode}
         battleListVisible={battleListVisible}
         minimapVisible={minimapVisible}
@@ -183,6 +182,7 @@ export function GameNavigation() {
         vipVisible={vipPanelVisible}
         partyVisible={partyPanelVisible}
         gold={inventory ? countMoneyWorth(inventory) : 0}
+        bankBalance={bankBalance}
         mantusCoins={mantusCoins}
         storeOpen={storeOpen}
         activePanel={activePanel}

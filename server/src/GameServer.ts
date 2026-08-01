@@ -639,6 +639,7 @@ export class GameServer {
       this.visibility,
       deps.guild,
       this.moderation,
+      this.items,
     );
     // Relations are read through closures at combat execution time, so the
     // party/guild services (constructed below) are always consulted live.

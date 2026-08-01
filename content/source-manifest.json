@@ -52,6 +52,13 @@
    "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
    "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9"
   },
+  "huntingGroundSpawns": {
+   "path": "content/spawns/hunting-ground-spawns.json",
+   "sha256": "4fbbac606a6282b07a601cb77ff7cd3a38991c02f0787a0c65f19fe4c9c6461c",
+   "mapSha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2",
+   "huntingPlacesPath": "client/public/assets/hunting/hunting_places.json",
+   "huntingPlacesSha256": "18d505adaea8ef3e449e1c3656b3100e1c5a5cd284a1dbbcd667bc5cbc5d2832"
+  },
   "canaryProgression": {
    "vocationsPath": "data/XML/vocations.xml",
    "implementationPath": "src/creatures/players/vocations/vocation.cpp",
@@ -144,7 +151,7 @@
   },
   {
    "path": "tools/buildItemCatalog.mjs",
-   "sha256": "1767016806d0b41bd7783dfafdc8cd4e494b52a77d56de56eeb95435aa05330f"
+   "sha256": "665e08471746cd6c5cf00a338750f3e70ceda37681ddbf65eca9de9b850ed6c2"
   },
   {
    "path": "tools/buildProficiencySprites.mjs",
@@ -188,7 +195,7 @@
   },
   {
    "path": "tools/importCanaryCreatures.mjs",
-   "sha256": "1879b176d5b364fb94fdc38bf34df7a85b097b038721e1984d3210d45a428ebf"
+   "sha256": "905cfdc4cf0058cffe1d0fa6bdccad1d30cd903aa8fd41faa4b14baa60a9f15a"
   },
   {
    "path": "tools/importCanaryDoors.mjs",
@@ -252,7 +259,7 @@
   },
   {
    "path": "tools/parseCanaryCreatureContent.mjs",
-   "sha256": "da7c5b45a17e1d33f302f2d22e704169b2f56bc2794822a9d21ed74bb00fca8d"
+   "sha256": "8e316ac518440968b9aeeed7c1ca64bccf00bc057e80187f1232cb1ae0aebaad"
   },
   {
    "path": "tools/parseCanaryDoorTables.mjs",
@@ -261,6 +268,10 @@
   {
    "path": "tools/parseCanaryMonsterSpells.mjs",
    "sha256": "3f9fca602ee57da7896181ad76be9b90e6fd5bc2671bd3708937c1516843d0a2"
+  },
+  {
+   "path": "tools/parseHuntingGroundSpawns.mjs",
+   "sha256": "90aec1ce4dbd2b0f25c1b8686bff0426978023dd8e381bcb4ada98e21c989154"
   },
   {
    "path": "tools/parseCanaryNpcDialogues.mjs",
@@ -295,6 +306,7 @@
   "itemCatalog": 3,
   "map": 3,
   "creatures": 3,
+  "huntingGroundSpawns": 1,
   "spells": 3,
   "shops": 2,
   "npcDialogues": 1,

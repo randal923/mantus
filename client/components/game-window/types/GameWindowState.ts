@@ -61,6 +61,8 @@ export interface GameWindowState {
   accountTier: AccountTier;
   premiumDaysRemaining: number;
   mantusCoins: number;
+  /** Own bank balance as the server last reported it, for the wallet counter. */
+  bankBalance: number;
   creationOptions: CharacterCreationOptions | null;
   ownCharacter: OwnCharacterState | null;
   worldLoading: boolean;

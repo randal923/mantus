@@ -156,6 +156,7 @@ export function OutfitModal({
       title={t("outfit.title")}
       onClose={onClose}
       size="wide"
+      height="auto"
       footer={
         <Button
           variant="primary"

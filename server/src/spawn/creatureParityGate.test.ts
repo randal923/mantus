@@ -56,11 +56,11 @@ describe("creature parity gate (Feature 10)", () => {
   ).length;
 
   it("pins the aggregate definition and placement counts", () => {
-    expect(loaded.monsterTypes.size).toBe(911);
+    expect(loaded.monsterTypes.size).toBe(922);
     expect(loaded.npcTypes.size).toBe(956);
-    expect(monsterPlacements).toBe(83_286);
+    expect(monsterPlacements).toBe(83_369);
     expect(npcPlacements).toBe(1_008);
-    expect(loaded.slots).toHaveLength(84_294);
+    expect(loaded.slots).toHaveLength(84_377);
   });
 
   it("keeps the loaded placements in lockstep with the import report", () => {

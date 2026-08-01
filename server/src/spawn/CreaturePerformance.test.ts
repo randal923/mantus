@@ -22,13 +22,13 @@ describe("full-world creature performance budgets", () => {
     const startedLoading = performance.now();
     const loaded = loadCreatureContent("world", "otservbr");
     const loadMs = performance.now() - startedLoading;
-    expect(loaded.monsterTypes.size).toBe(911);
+    expect(loaded.monsterTypes.size).toBe(922);
     expect(loaded.npcTypes.size).toBe(956);
-    expect(loaded.slots).toHaveLength(84_294);
-    expect(loaded.slots.filter((slot) => slot.enabled)).toHaveLength(83_493);
+    expect(loaded.slots).toHaveLength(84_377);
+    expect(loaded.slots.filter((slot) => slot.enabled)).toHaveLength(83_576);
     // Placement counts pinned per kind (Feature 10 parity gate).
     expect(loaded.slots.filter((slot) => slot.kind === "monster")).toHaveLength(
-      83_286,
+      83_369,
     );
     expect(loaded.slots.filter((slot) => slot.kind === "npc")).toHaveLength(
       1_008,

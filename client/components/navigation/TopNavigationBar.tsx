@@ -24,20 +24,12 @@ type NavigationPanel =
   | "outfit"
   | "profile"
   | "market";
-type ConnectionStatus = "connecting" | "connected" | "disconnected";
-
-const STATUS_CLASS: Record<ConnectionStatus, string> = {
-  connecting: "bg-ui-gold text-ui-gold",
-  connected: "bg-ui-success text-ui-success",
-  disconnected: "bg-ui-accent-light text-ui-accent-light",
-};
 
 interface TopNavigationBarProps {
   characterName: string;
   level: number;
   vocation: string;
   outfit: CharacterOutfit;
-  connectionStatus: ConnectionStatus;
   fightMode: FightMode | null;
   battleListVisible: boolean;
   minimapVisible: boolean;
@@ -45,6 +37,7 @@ interface TopNavigationBarProps {
   vipVisible: boolean;
   partyVisible: boolean;
   gold: number;
+  bankBalance: number;
   mantusCoins: number;
   storeOpen: boolean;
   activePanel?: NavigationPanel;
@@ -79,7 +72,6 @@ export function TopNavigationBar({
   level,
   vocation,
   outfit,
-  connectionStatus,
   fightMode,
   battleListVisible,
   minimapVisible,
@@ -87,6 +79,7 @@ export function TopNavigationBar({
   vipVisible,
   partyVisible,
   gold,
+  bankBalance,
   mantusCoins,
   storeOpen,
   activePanel,
@@ -116,11 +109,6 @@ export function TopNavigationBar({
   onSettings,
 }: TopNavigationBarProps) {
   const { t } = useAppTranslation();
-  const connectionLabel = {
-    connecting: t("connection.connecting"),
-    connected: t("connection.connected"),
-    disconnected: t("connection.disconnected"),
-  }[connectionStatus];
 
   return (
     <header className="relative isolate z-40 flex min-h-16 w-full items-center gap-2 border-b border-ui-gold/25 bg-ui-panel-deep/95 px-2 font-tibia text-ui-text shadow-[0_12px_40px_rgba(0,0,0,0.55),inset_0_-1px_0_rgba(0,0,0,0.8)] backdrop-blur-md select-none sm:gap-4 sm:px-4">
@@ -169,16 +157,9 @@ export function TopNavigationBar({
         </div>
       </section>
 
-      <div className="hidden items-center gap-2 text-xs tracking-widest text-ui-muted uppercase md:flex">
-        <span
-          aria-hidden
-          className={`size-1.5 rounded-full shadow-[0_0_8px_currentColor] ${STATUS_CLASS[connectionStatus]}`}
-        />
-        {connectionLabel}
-      </div>
-
       <CurrencyCounters
         gold={gold}
+        bankBalance={bankBalance}
         mantusCoins={mantusCoins}
         storeOpen={storeOpen}
         onStore={onStore}
@@ -186,7 +167,7 @@ export function TopNavigationBar({
 
       <nav
         aria-label={t("navigation.gamePanels")}
-        className="ml-auto flex gap-1 rounded-lg border border-ui-gold/10 bg-black/20 p-1"
+        className="flex gap-1 rounded-lg border border-ui-gold/10 bg-black/20 p-1"
       >
         <NavigationIconButton
           label={t("navigation.character")}

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "source": {
     "canaryCommit": "a879c9312e34381e8eedf397b8ed44510698b689",
-    "definitionsSha256": "6e4c4bc5de9050569eb761eb01b563b767353c3df3b88706a5a50425da9e3293"
+    "definitionsSha256": "5fde50fa502b2227d3756330ebf84bfe6c05904cbb603f29e2a68c86194e1e31"
   },
   "bestiary": [
     {
@@ -9849,6 +9849,66 @@
       ]
     },
     {
+      "raceId": 2386,
+      "class": "Lycanthrope",
+      "stars": 4,
+      "occurrence": 0,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Murky Caverns",
+      "preyExclusive": false,
+      "monsterIds": [
+        "weretiger"
+      ]
+    },
+    {
+      "raceId": 2387,
+      "class": "Lycanthrope",
+      "stars": 4,
+      "occurrence": 0,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Murky Caverns",
+      "preyExclusive": false,
+      "monsterIds": [
+        "white-weretiger"
+      ]
+    },
+    {
+      "raceId": 2388,
+      "class": "Lycanthrope",
+      "stars": 4,
+      "occurrence": 0,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Murky Caverns",
+      "preyExclusive": false,
+      "monsterIds": [
+        "werecrocodile"
+      ]
+    },
+    {
+      "raceId": 2390,
+      "class": "Lycanthrope",
+      "stars": 4,
+      "occurrence": 0,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Murky Caverns, Oskayaat",
+      "preyExclusive": false,
+      "monsterIds": [
+        "werepanther"
+      ]
+    },
+    {
       "raceId": 2392,
       "class": "Vermin",
       "stars": 5,
@@ -9969,6 +10029,36 @@
       ]
     },
     {
+      "raceId": 2403,
+      "class": "Lycanthrope",
+      "stars": 4,
+      "occurrence": 0,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Murky Caverns, Oskayaat",
+      "preyExclusive": false,
+      "monsterIds": [
+        "cunning-werepanther"
+      ]
+    },
+    {
+      "raceId": 2437,
+      "class": "Undead",
+      "stars": 4,
+      "occurrence": 1,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 500,
+      "toKill": 2500,
+      "locations": "Iksupan Waterways",
+      "preyExclusive": false,
+      "monsterIds": [
+        "iks-yapunac"
+      ]
+    },
+    {
       "raceId": 2456,
       "class": "Dragon",
       "stars": 5,
@@ -10011,6 +10101,36 @@
       "preyExclusive": false,
       "monsterIds": [
         "mega-dragon"
+      ]
+    },
+    {
+      "raceId": 2460,
+      "class": "Extra Dimensional",
+      "stars": 4,
+      "occurrence": 0,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Iksupan Waterways",
+      "preyExclusive": false,
+      "monsterIds": [
+        "mitmah-scout"
+      ]
+    },
+    {
+      "raceId": 2461,
+      "class": "Extra Dimensional",
+      "stars": 4,
+      "occurrence": 0,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Iksupan Waterways",
+      "preyExclusive": false,
+      "monsterIds": [
+        "mitmah-seer"
       ]
     },
     {
@@ -10071,6 +10191,51 @@
       "preyExclusive": false,
       "monsterIds": [
         "candy-horror"
+      ]
+    },
+    {
+      "raceId": 2541,
+      "class": "Aquatic",
+      "stars": 4,
+      "occurrence": 1,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Podzilla Bottom, Podzilla Underwater",
+      "preyExclusive": false,
+      "monsterIds": [
+        "quara-raider"
+      ]
+    },
+    {
+      "raceId": 2542,
+      "class": "Aquatic",
+      "stars": 4,
+      "occurrence": 1,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Podzilla Bottom, Podzilla Underwater",
+      "preyExclusive": false,
+      "monsterIds": [
+        "quara-plunderer"
+      ]
+    },
+    {
+      "raceId": 2543,
+      "class": "Aquatic",
+      "stars": 4,
+      "occurrence": 1,
+      "charmPoints": 50,
+      "firstUnlock": 100,
+      "secondUnlock": 1000,
+      "toKill": 2500,
+      "locations": "Podzilla Bottom, Podzilla Underwater",
+      "preyExclusive": false,
+      "monsterIds": [
+        "quara-looter"
       ]
     },
     {

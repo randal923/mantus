@@ -5,24 +5,25 @@
     "monsterSpawnsSha256": "ce70ad49af87603a6840c3b1169c69969dbca60a2c3737c8399f0af19f81f542",
     "npcSpawnsSha256": "a02d95945d73c1f5c24f9b0446d3f63102d2bfa2d4c2d4a59bb40c1ea3fd2fe9",
     "definitionsSha256": "dfac6c8f3695e5ee580127481fba8750b5727bce5f5d8ec977c711f58860214a",
-    "monsterSpellsSha256": "c188b2b984f9cb3f14f1af04e9e84f06b43677a69598b864c0c8958ba40d968b"
+    "monsterSpellsSha256": "c188b2b984f9cb3f14f1af04e9e84f06b43677a69598b864c0c8958ba40d968b",
+    "huntingGroundSpawnsSha256": "4fbbac606a6282b07a601cb77ff7cd3a38991c02f0787a0c65f19fe4c9c6461c"
   },
   "mapExternalFiles": {
     "monsters": "otservbr-monster.xml",
     "npcs": "otservbr-npc.xml"
   },
   "appearanceValidation": {
-    "outfits": 1808,
+    "outfits": 1819,
     "items": 54,
     "intentionallyInvisible": 5
   },
   "bounds": null,
   "fullPlacementCounts": {
-    "monsters": 83286,
+    "monsters": 83369,
     "npcs": 1008
   },
   "curatedPlacementCounts": {
-    "monsters": 83286,
+    "monsters": 83369,
     "npcs": 1008
   },
   "aliases": [],
@@ -791,6 +792,11 @@
       "kind": "monster",
       "typeId": "cult-scholar",
       "sourcePath": "data-otservbr-global/monster/quests/cults_of_tibia/cult_scholar.lua"
+    },
+    {
+      "kind": "monster",
+      "typeId": "cunning-werepanther",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/cunning_werepanther.lua"
     },
     {
       "kind": "monster",
@@ -2059,6 +2065,11 @@
     },
     {
       "kind": "monster",
+      "typeId": "iks-yapunac",
+      "sourcePath": "data-otservbr-global/monster/undeads/iks_yapunac.lua"
+    },
+    {
+      "kind": "monster",
       "typeId": "incredibly-old-witch",
       "sourcePath": "data-otservbr-global/monster/bosses/incredibly_old_witch.lua"
     },
@@ -2819,6 +2830,16 @@
     },
     {
       "kind": "monster",
+      "typeId": "mitmah-scout",
+      "sourcePath": "data-otservbr-global/monster/extra_dimensional/mitmah_scout.lua"
+    },
+    {
+      "kind": "monster",
+      "typeId": "mitmah-seer",
+      "sourcePath": "data-otservbr-global/monster/extra_dimensional/mitmah_seer.lua"
+    },
+    {
+      "kind": "monster",
       "typeId": "modified-gnarlhound",
       "sourcePath": "data-otservbr-global/monster/mammals/modified_gnarlhound.lua"
     },
@@ -3424,6 +3445,11 @@
     },
     {
       "kind": "monster",
+      "typeId": "quara-looter",
+      "sourcePath": "data-otservbr-global/monster/aquatics/quara_looter.lua"
+    },
+    {
+      "kind": "monster",
       "typeId": "quara-mantassin",
       "sourcePath": "data-otservbr-global/monster/aquatics/quara_mantassin.lua"
     },
@@ -3444,6 +3470,11 @@
     },
     {
       "kind": "monster",
+      "typeId": "quara-plunderer",
+      "sourcePath": "data-otservbr-global/monster/aquatics/quara_plunderer.lua"
+    },
+    {
+      "kind": "monster",
       "typeId": "quara-predator",
       "sourcePath": "data-otservbr-global/monster/aquatics/quara_predator.lua"
     },
@@ -3451,6 +3482,11 @@
       "kind": "monster",
       "typeId": "quara-predator-scout",
       "sourcePath": "data-otservbr-global/monster/aquatics/quara_predator_scout.lua"
+    },
+    {
+      "kind": "monster",
+      "typeId": "quara-raider",
+      "sourcePath": "data-otservbr-global/monster/aquatics/quara_raider.lua"
     },
     {
       "kind": "monster",
@@ -4414,6 +4450,11 @@
     },
     {
       "kind": "monster",
+      "typeId": "werecrocodile",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/werecrocodile.lua"
+    },
+    {
+      "kind": "monster",
       "typeId": "werefox",
       "sourcePath": "data-otservbr-global/monster/lycanthropes/werefox.lua"
     },
@@ -4439,6 +4480,16 @@
     },
     {
       "kind": "monster",
+      "typeId": "werepanther",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/werepanther.lua"
+    },
+    {
+      "kind": "monster",
+      "typeId": "weretiger",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/weretiger.lua"
+    },
+    {
+      "kind": "monster",
       "typeId": "werewolf",
       "sourcePath": "data-otservbr-global/monster/lycanthropes/werewolf.lua"
     },
@@ -4456,6 +4507,11 @@
       "kind": "monster",
       "typeId": "white-shade",
       "sourcePath": "data-otservbr-global/monster/undeads/white_shade.lua"
+    },
+    {
+      "kind": "monster",
+      "typeId": "white-weretiger",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/white_weretiger.lua"
     },
     {
       "kind": "monster",
@@ -32241,6 +32297,314 @@
           "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
         }
       ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "werecrocodile",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/werecrocodile.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "werepanther",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/werepanther.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "cunning-werepanther",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/cunning_werepanther.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "weretiger",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/weretiger.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "white-weretiger",
+      "sourcePath": "data-otservbr-global/monster/lycanthropes/white_weretiger.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "iks-yapunac",
+      "sourcePath": "data-otservbr-global/monster/undeads/iks_yapunac.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "mitmah-scout",
+      "sourcePath": "data-otservbr-global/monster/extra_dimensional/mitmah_scout.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "mitmah-seer",
+      "sourcePath": "data-otservbr-global/monster/extra_dimensional/mitmah_seer.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "quara-looter",
+      "sourcePath": "data-otservbr-global/monster/aquatics/quara_looter.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "quara-plunderer",
+      "sourcePath": "data-otservbr-global/monster/aquatics/quara_plunderer.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
+    },
+    {
+      "kind": "monster",
+      "typeId": "quara-raider",
+      "sourcePath": "data-otservbr-global/monster/aquatics/quara_raider.lua",
+      "ignoredAssignments": [
+        "Bestiary",
+        "raceId"
+      ],
+      "proceduralCallbacks": [],
+      "gaps": [
+        {
+          "kind": "field",
+          "name": "Bestiary",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        },
+        {
+          "kind": "field",
+          "name": "raceId",
+          "ownerTodo": "04-creatures-spawns-and-ai",
+          "status": "covered",
+          "coveredBy": "tools/importCanaryBestiary.mjs",
+          "reason": "Imported as typed content by tools/importCanaryBestiary.mjs; this importer deliberately does not duplicate it."
+        }
+      ]
     }
   ],
   "invisibleAppearances": [
@@ -32281,5 +32645,53 @@
       "reason": "Pinned Canary value exceeds the Tibia outfit palette."
     }
   ],
-  "fullPlacementsEnabled": true
+  "fullPlacementsEnabled": true,
+  "canaryPlacementCounts": {
+    "monsters": 83286,
+    "npcs": 1008
+  },
+  "supplementalPlacements": {
+    "placements": 83,
+    "grounds": [
+      {
+        "id": "werecrocodiles",
+        "huntingPlace": "Werecrocodiles",
+        "monsterTypeIds": [
+          "werecrocodile",
+          "werepanther"
+        ],
+        "placements": 19
+      },
+      {
+        "id": "weretigers-oskayaat",
+        "huntingPlace": "Weretigers Oskayaat",
+        "monsterTypeIds": [
+          "cunning-werepanther",
+          "weretiger",
+          "white-weretiger"
+        ],
+        "placements": 22
+      },
+      {
+        "id": "iksupan-occupied-sanctuary",
+        "huntingPlace": "Iksupan Occupied Sanctuary",
+        "monsterTypeIds": [
+          "iks-yapunac",
+          "mitmah-scout",
+          "mitmah-seer"
+        ],
+        "placements": 17
+      },
+      {
+        "id": "podzilla-quara",
+        "huntingPlace": "Podzilla Quara",
+        "monsterTypeIds": [
+          "quara-looter",
+          "quara-plunderer",
+          "quara-raider"
+        ],
+        "placements": 25
+      }
+    ]
+  }
 }

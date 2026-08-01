@@ -528,6 +528,7 @@
   "currency": {
     "wallet": "Currency wallet",
     "gold": "Carried gold value",
+    "bank": "Bank balance",
     "mantusCoins": "Mantus Coins"
   },
   "store": {
