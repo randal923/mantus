@@ -56,8 +56,30 @@ export class HuntingBotHandler {
     this.handleTrace(session, intent, now);
   }
 
-  applyResolvedOutcomes(): void {
+  applyResolvedOutcomes(now: number): void {
     for (const outcome of this.outcomes.splice(0)) outcome();
+    // Work that arrived while its lane was busy runs as soon as the lane
+    // clears; nothing a window asks for is ever silently dropped.
+    for (const session of this.registry.all()) {
+      this.startDeferred(session, now);
+    }
+  }
+
+  private startDeferred(session: Session, now: number): void {
+    const route = session.huntingBotDeferredRoute;
+    if (route && !session.huntingBotRouteUpdatePending) {
+      session.huntingBotDeferredRoute = null;
+      if (session.playerId) this.applyRoute(session, session.playerId, route, now);
+    }
+    const points = session.huntingBotDeferredTracePoints;
+    if (
+      points &&
+      !session.huntingBotTracePending &&
+      now >= session.huntingBotTraceReadyAt
+    ) {
+      session.huntingBotDeferredTracePoints = null;
+      this.beginTrace(session, points, now);
+    }
   }
 
   private handleRoute(
@@ -67,10 +89,21 @@ export class HuntingBotHandler {
     now: number,
   ): void {
     if (session.huntingBotRouteUpdatePending) {
-      session.sendError("hunting-bot-update-pending");
+      // A durable write is still in flight. The newest edit wins once it
+      // settles; refusing it would silently fork the window from the server.
+      session.huntingBotDeferredRoute = intent.route;
       return;
     }
-    const route = sanitize(intent.route);
+    this.applyRoute(session, characterId, intent.route, now);
+  }
+
+  private applyRoute(
+    session: Session,
+    characterId: string,
+    requested: HuntingBotRoute,
+    now: number,
+  ): void {
+    const route = sanitize(requested);
     const previous = session.huntingBotRoute;
     session.huntingBotRouteUpdatePending = true;
     // Applied in memory first so the very next tick walks the edited route;
@@ -108,11 +141,24 @@ export class HuntingBotHandler {
     intent: HuntingBotTraceMessage,
     now: number,
   ): void {
-    if (session.huntingBotTracePending) return;
-    if (now < session.huntingBotTraceReadyAt) return;
+    if (session.huntingBotTracePending || now < session.huntingBotTraceReadyAt) {
+      // Busy or cooling down: hold the newest request instead of dropping
+      // it — the window is waiting on a reply, and its own auto-trace plus
+      // one "reset to guide" click land inside a single cooldown.
+      session.huntingBotDeferredTracePoints = [...intent.points];
+      return;
+    }
+    this.beginTrace(session, [...intent.points], now);
+  }
+
+  private beginTrace(
+    session: Session,
+    points: ReadonlyArray<Position>,
+    now: number,
+  ): void {
     session.huntingBotTraceReadyAt = now + HUNTING_BOT_LIMITS.traceCooldownMs;
     session.huntingBotTracePending = true;
-    void this.trace(session, [...intent.points]);
+    void this.trace(session, [...points]);
   }
 
   /**

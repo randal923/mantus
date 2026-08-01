@@ -38,9 +38,17 @@ function makeBot(world: World) {
 }
 
 function makeHandler(store: CharacterStore, world = makeWorld()) {
-  const registry = { contains: () => true } as unknown as SessionRegistry;
+  const sessions: Session[] = [];
+  const registry = {
+    contains: () => true,
+    all: () => sessions,
+  } as unknown as SessionRegistry;
   const bot = makeBot(world);
-  return { handler: new HuntingBotHandler(registry, world, store, bot), world };
+  return {
+    handler: new HuntingBotHandler(registry, world, store, bot),
+    world,
+    sessions,
+  };
 }
 
 function makeSession(playerId: string | null) {
@@ -70,16 +78,16 @@ function seededStore() {
   return store;
 }
 
-async function settle(handler: HuntingBotHandler) {
+async function settle(handler: HuntingBotHandler, now = 0) {
   await new Promise((resolve) => setImmediate(resolve));
-  handler.applyResolvedOutcomes();
+  handler.applyResolvedOutcomes(now);
 }
 
-async function settleTrace(handler: HuntingBotHandler, legs: number) {
+async function settleTrace(handler: HuntingBotHandler, legs: number, now = 0) {
   for (let index = 0; index <= legs + 2; index++) {
     await new Promise((resolve) => setImmediate(resolve));
   }
-  handler.applyResolvedOutcomes();
+  handler.applyResolvedOutcomes(now);
 }
 
 describe("HuntingBotHandler", () => {
@@ -117,18 +125,57 @@ describe("HuntingBotHandler", () => {
     expect(sent.at(-1)).toMatchObject({ type: "hunting-bot-route" });
   });
 
-  it("refuses a second route save while one is still in flight", () => {
+  it("applies the newest route after the in-flight write settles, never refusing it", async () => {
     const { session, errors } = makeSession("char-1");
-    const { handler } = makeHandler(seededStore());
-    const intent = {
-      type: "update-hunting-bot-route" as const,
-      route: { huntName: "A", waypoints: [...RING] },
-    };
+    const store = seededStore();
+    const { handler, sessions } = makeHandler(store);
+    sessions.push(session);
 
-    handler.handle(session, intent, 0);
-    handler.handle(session, intent, 0);
+    handler.handle(
+      session,
+      {
+        type: "update-hunting-bot-route",
+        route: { huntName: "A", waypoints: [...RING] },
+      },
+      0,
+    );
+    handler.handle(
+      session,
+      {
+        type: "update-hunting-bot-route",
+        route: { huntName: "B", waypoints: [...RING] },
+      },
+      0,
+    );
 
-    expect(errors).toEqual(["hunting-bot-update-pending"]);
+    expect(errors).toEqual([]);
+    await settle(handler); // write A lands, deferred B starts
+    await settle(handler); // write B lands
+
+    expect(session.huntingBotRoute.huntName).toBe("B");
+    expect(store.get("char-1")?.huntingBotRoute.huntName).toBe("B");
+  });
+
+  it("answers a trace sent during the cooldown once the cooldown ends", async () => {
+    const { session, sent } = makeSession("char-1");
+    const { handler, sessions } = makeHandler(seededStore());
+    sessions.push(session);
+    const traced = () =>
+      sent.filter((message) => message.type === "hunting-bot-traced").length;
+
+    handler.handle(session, { type: "hunting-bot-trace", points: [...RING] }, 0);
+    await settleTrace(handler, RING.length);
+    expect(traced()).toBe(1);
+
+    // Inside the cooldown the request is held, not dropped...
+    handler.handle(session, { type: "hunting-bot-trace", points: [...RING] }, 500);
+    handler.applyResolvedOutcomes(1_000);
+    expect(traced()).toBe(1);
+
+    // ...and starts by itself the moment the cooldown expires.
+    handler.applyResolvedOutcomes(2_000);
+    await settleTrace(handler, RING.length, 2_000);
+    expect(traced()).toBe(2);
   });
 
   it("rolls the session route back when the durable write fails", async () => {

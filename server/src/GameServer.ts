@@ -1382,7 +1382,7 @@ export class GameServer {
       this.actionBar.applyResolvedOutcomes();
       this.actionBot.applyResolvedOutcomes();
       this.lootFilter.applyResolvedOutcomes();
-      this.huntingBotHandler.applyResolvedOutcomes();
+      this.huntingBotHandler.applyResolvedOutcomes(now);
       this.combat.applyResolvedOutcomes();
       for (const session of this.registry.awaitingAuth()) {
         this.auth.enforceDeadline(session, now);

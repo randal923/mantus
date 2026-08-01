@@ -1138,3 +1138,44 @@ interaction stories pass; hunt-finder unit tests pass. Noted: five unrelated
 story tests (ActionBar Empty, GameHud chat-hover, ProficiencyModal Locked
 Levels, SpellListModal Knight, WheelModal Empty) fail identically at HEAD
 with these changes stashed — pre-existing breakage, not touched here.
+
+## 2026-08-01 — Feature 112 follow-up: routes save reliably (DB cap, dropped traces, refused saves)
+
+**Problem**: opening a hunt showed an empty route map until "Reset guide" was
+clicked twice. Three server defects stacked: (1) migration 068 capped the
+stored route at `pg_column_size <= 8192`, smaller than a legal route — a
+traced 181-waypoint ring already exceeds it (protocol allows 200) — so every
+full-size traced save violated the constraint, failed, and the rollback echo
+blanked the window back to the previous (often empty) route; (2) a trace
+arriving inside the 2 s cooldown or while one ran was silently dropped, so
+the card-open auto-trace plus one quick reset left the window waiting on a
+reply that never came ("Tracing…" forever); (3) a route update racing the
+in-flight durable write was refused with `hunting-bot-update-pending`,
+silently losing the newest route and forking client from server.
+
+**What changed**: migration `069_hunting_bot_route_size.sql` re-derives the
+cap from the worst legal route (200 waypoints + 64-char name ≈ 12 KB jsonb)
+to 32 KB, still defence in depth. `HuntingBotHandler` never drops or refuses
+the newest request: a trace during cooldown/pending is held in
+`Session.huntingBotDeferredTracePoints` and started by the tick as soon as
+both clear; a route update during a pending write is held in
+`Session.huntingBotDeferredRoute` and applied when the write settles
+(last-write-wins, intermediates coalesce, one in flight at a time).
+`applyResolvedOutcomes(now)` runs the deferred work after draining outcomes.
+
+**Files**: `server/db/migrations/069_hunting_bot_route_size.sql` (pending
+`db:migrate`), `server/src/Session.ts`,
+`server/src/huntingBot/HuntingBotHandler.ts` + test, `server/src/GameServer.ts`.
+
+**Verified**: a wire probe replaying the client's exact sequence (auto-trace,
+800 ms debounced raw save, traced save, reset inside the cooldown) showed the
+pre-fix failures — silent trace drop, update-pending refusal, and the
+constraint violation with rollback — and post-fix shows the traced 181-wp
+route echoing back saved, the deferred trace answering itself when the
+cooldown ends, and a maximum 200-waypoint route persisting. 56 huntingBot
+unit tests (new: deferred-route apply, deferred-trace answer), the full
+`yarn playtest:hunting-bot` scenario, and server typecheck pass.
+
+**Residual risk**: `hunting-bot-update-pending` remains in the protocol error
+enum but is no longer emitted; deferred slots are one-deep by design (the
+newest request wins), which matches the window's semantics.
