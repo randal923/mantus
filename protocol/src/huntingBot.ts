@@ -36,17 +36,37 @@ export const HUNTING_BOT_LIMITS = {
   maxWaypointSpacing: 12,
   /** How far a raw guide point may be nudged to reach walkable ground. */
   maxSnapRadius: 4,
-  /** How far the character may stand from the route when the bot is armed. */
-  maxStartDistance: 100,
   /**
-   * Budget for pathing to the next waypoint while the bot runs. Traced
-   * waypoints are at most `maxWaypointSpacing` apart, so a few hundred nodes
-   * is already generous; the cap is what keeps a room full of running bots
-   * from spending a whole tick on path searches.
+   * How far the character may stand from the route when the bot is armed.
+   * The distance is only a cheap pre-filter: arming actually searches for
+   * the joining walk (`maxStartVisited`) and refuses when none exists, so
+   * the gate never promises a walk the bot cannot deliver.
    */
-  maxRuntimeVisited: 800,
+  maxStartDistance: 30,
+  /**
+   * One-shot search budget for the joining walk when the bot is armed.
+   * Sized past the worst `maxStartDistance` diagonal (Manhattan 60, ~7200
+   * breadth-first nodes) plus detour slack; it runs once per arm click, so
+   * it may be far larger than the per-waypoint runtime budget.
+   */
+  maxStartVisited: 10_000,
+  /**
+   * Budget for pathing to the next waypoint while the bot runs. Sized for
+   * the longest walk the bot legitimately performs — joining the route from
+   * `maxStartDistance` away, rejoining after a chase pulled the character
+   * off it, or a hand-placed leg of a few dozen tiles — while still
+   * bounding what a room full of running bots can spend on path searches.
+   */
+  maxRuntimeVisited: 4_000,
   /** Minimum gap between two runtime path searches for one session. */
   repathCooldownMs: 400,
+  /**
+   * Failed path searches at one waypoint, each `repathCooldownMs` apart,
+   * before the bot gives up on it and skips ahead. A failure is usually
+   * transient — a creature standing on the goal — so the bot waits it out
+   * instead of racing around the ring faster than the character walks.
+   */
+  skipAfterFailedRepaths: 5,
   /**
    * Consecutive waypoints the bot may fail to reach before it gives up and
    * stops itself, rather than spinning on a route the map cannot satisfy.

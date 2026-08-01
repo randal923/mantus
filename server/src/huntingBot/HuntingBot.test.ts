@@ -37,6 +37,7 @@ function makeSession(waypoints: ReadonlyArray<Position> = RING) {
     huntingBotWaypointIndex: 0,
     huntingBotRepathReadyAt: 0,
     huntingBotSkips: 0,
+    huntingBotPathFailures: 0,
     autoWalkDirections: [] as string[],
     attackTargetId: null as string | null,
     send: (message: ServerMessage) => sent.push(message),
@@ -68,9 +69,37 @@ describe("HuntingBot", () => {
     const player = makePlayer({ x: 14, y: 13, z: 7 });
     const bot = new HuntingBot(makeWorld(player), makeMovement().movement);
 
-    expect(bot.start(session)).toBe(true);
+    expect(bot.start(session, 0)).toBe("ok");
     expect(session.huntingBotEnabled).toBe(true);
     expect(session.huntingBotWaypointIndex).toBe(2);
+  });
+
+  it("refuses to arm when nothing walkable reaches the route", () => {
+    const { session } = makeSession();
+    const player = makePlayer({ x: 14, y: 13, z: 7 });
+    const bot = new HuntingBot(
+      makeWorld(player),
+      makeMovement(() => false).movement,
+    );
+
+    expect(bot.start(session, 0)).toBe("out-of-range");
+    expect(session.huntingBotEnabled).toBe(false);
+  });
+
+  it("joins at the earliest copy of a revisited tile and continues forward", () => {
+    // An out-and-back corridor: the way home walks the same tiles in
+    // reverse, so the tile of waypoint 1 appears again as waypoint 3.
+    const { session } = makeSession([
+      { x: 10, y: 10, z: 7 },
+      { x: 12, y: 10, z: 7 },
+      { x: 14, y: 10, z: 7 },
+      { x: 12, y: 10, z: 7 },
+    ]);
+    const player = makePlayer({ x: 12, y: 11, z: 7 });
+    const bot = new HuntingBot(makeWorld(player), makeMovement().movement);
+
+    expect(bot.start(session, 0)).toBe("ok");
+    expect(session.huntingBotWaypointIndex).toBe(1);
   });
 
   it("refuses to start when the character is not in the hunt", () => {
@@ -78,7 +107,7 @@ describe("HuntingBot", () => {
     const player = makePlayer({ x: 4_000, y: 4_000, z: 7 });
     const bot = new HuntingBot(makeWorld(player), makeMovement().movement);
 
-    expect(bot.start(session)).toBe(false);
+    expect(bot.start(session, 0)).toBe("out-of-range");
     expect(session.huntingBotEnabled).toBe(false);
   });
 
@@ -87,7 +116,7 @@ describe("HuntingBot", () => {
     const player = makePlayer({ x: 10, y: 10, z: 6 });
     const bot = new HuntingBot(makeWorld(player), makeMovement().movement);
 
-    expect(bot.start(session)).toBe(false);
+    expect(bot.start(session, 0)).toBe("wrong-floor");
   });
 
   it("walks to the current waypoint and loops around the ring", () => {
@@ -95,7 +124,7 @@ describe("HuntingBot", () => {
     const player = makePlayer({ x: 10, y: 10, z: 7 });
     const { movement, requests } = makeMovement();
     const bot = new HuntingBot(makeWorld(player), movement);
-    bot.start(session);
+    bot.start(session, 0);
 
     // Standing on waypoint 0 advances to 1 and asks to walk there.
     bot.tick(session, 1_000);
@@ -121,7 +150,8 @@ describe("HuntingBot", () => {
     const target = { id: "rat-1", health: 40 } as unknown as Creature;
     const { movement, requests } = makeMovement();
     const bot = new HuntingBot(makeWorld(player, target), movement);
-    bot.start(session);
+    bot.start(session, 0);
+    requests.length = 0;
     session.attackTargetId = "rat-1";
     session.autoWalkDirections = ["north", "north"];
 
@@ -137,7 +167,10 @@ describe("HuntingBot", () => {
     const target = { id: "rat-1", health: 0 } as unknown as Creature;
     const { movement, requests } = makeMovement();
     const bot = new HuntingBot(makeWorld(player, target), movement);
-    bot.start(session);
+    bot.start(session, 0);
+    // The join walk was dropped during the fight; nothing is queued now.
+    requests.length = 0;
+    session.autoWalkDirections = [];
     session.attackTargetId = "rat-1";
 
     bot.tick(session, 1_000);
@@ -145,31 +178,68 @@ describe("HuntingBot", () => {
     expect(requests.length).toBe(1);
   });
 
-  it("skips a waypoint nothing can path to rather than freezing on it", () => {
+  it("waits and retries a waypoint it cannot path to before skipping it", () => {
     const { session } = makeSession();
     const player = makePlayer({ x: 12, y: 10, z: 7 });
     const { movement, requests } = makeMovement(
       (target) => target.x !== 14 || target.y !== 10,
     );
     const bot = new HuntingBot(makeWorld(player), movement);
-    bot.start(session);
+    bot.start(session, 0);
+    requests.length = 0;
+    session.autoWalkDirections = [];
     session.huntingBotWaypointIndex = 1;
 
-    bot.tick(session, 1_000);
+    // Every failed search short of the retry budget stays on the waypoint.
+    for (let attempt = 1; attempt < 5; attempt++) {
+      session.huntingBotRepathReadyAt = 0;
+      bot.tick(session, attempt * 1_000);
+      expect(session.huntingBotWaypointIndex).toBe(1);
+    }
 
-    expect(requests).toEqual([{ x: 14, y: 10, z: 7 }]);
+    // The retry that exhausts the budget finally skips ahead.
+    session.huntingBotRepathReadyAt = 0;
+    bot.tick(session, 5_000);
+
+    expect(requests).toEqual(Array(5).fill({ x: 14, y: 10, z: 7 }));
     expect(session.huntingBotWaypointIndex).toBe(2);
     expect(session.huntingBotEnabled).toBe(true);
   });
 
+  it("a successful walk resets the retry budget of the next waypoint", () => {
+    const { session } = makeSession();
+    const player = makePlayer({ x: 12, y: 10, z: 7 });
+    const { movement } = makeMovement(
+      (target) => target.x !== 14 || target.y !== 10,
+    );
+    const bot = new HuntingBot(makeWorld(player), movement);
+    bot.start(session, 0);
+    session.autoWalkDirections = [];
+    session.huntingBotWaypointIndex = 1;
+    session.huntingBotPathFailures = 4;
+
+    // One more failure would skip — but walking to it succeeds elsewhere
+    // first, so the counter starts over.
+    session.huntingBotWaypointIndex = 0;
+    session.huntingBotRepathReadyAt = 0;
+    bot.tick(session, 1_000);
+
+    expect(session.huntingBotPathFailures).toBe(0);
+  });
+
   it("stops itself once a whole run of waypoints is unreachable", () => {
     const { session, sent } = makeSession();
-    const player = makePlayer({ x: 12, y: 10, z: 7 });
+    // Armed while standing on a waypoint, then displaced somewhere the
+    // route can no longer be pathed from — a door closed behind a lure.
+    const player = makePlayer({ x: 10, y: 10, z: 7 });
     const { movement } = makeMovement(() => false);
     const bot = new HuntingBot(makeWorld(player), movement);
-    bot.start(session);
+    bot.start(session, 0);
+    player.position = { x: 11, y: 11, z: 7 };
 
-    for (let tick = 0; tick < 20; tick++) {
+    // Each waypoint absorbs its retry budget before it is skipped, so a
+    // whole unreachable ring takes skips-times-retries failed searches.
+    for (let tick = 0; tick < 45; tick++) {
       session.huntingBotRepathReadyAt = 0;
       bot.tick(session, tick * 1_000);
     }
@@ -208,10 +278,11 @@ describe("HuntingBot", () => {
 
   it("paces its path searches with the repath cooldown", () => {
     const { session } = makeSession();
-    const player = makePlayer({ x: 12, y: 10, z: 7 });
+    const player = makePlayer({ x: 10, y: 10, z: 7 });
     const { movement, requests } = makeMovement(() => false);
     const bot = new HuntingBot(makeWorld(player), movement);
-    bot.start(session);
+    bot.start(session, 0);
+    player.position = { x: 12, y: 11, z: 7 };
 
     bot.tick(session, 1_000);
     bot.tick(session, 1_100);

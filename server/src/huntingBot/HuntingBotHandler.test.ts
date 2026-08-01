@@ -205,6 +205,25 @@ describe("HuntingBotHandler", () => {
     expect(session.huntingBotEnabled).toBe(false);
   });
 
+  it("names the floor as the problem when the route is above or below", () => {
+    const { session, errors } = makeSession("char-1");
+    const world = makeWorld(
+      gridMapData({ name: "test", width: 40, height: 40, blocked: [], floors: [6, 7] }),
+      { x: 11, y: 10, z: 6 },
+    );
+    const { handler } = makeHandler(seededStore(), world);
+    session.huntingBotRoute = { huntName: "A", waypoints: [...RING] };
+
+    handler.handle(
+      session,
+      { type: "set-hunting-bot-enabled", enabled: true },
+      0,
+    );
+
+    expect(errors).toEqual(["hunting-bot-wrong-floor"]);
+    expect(session.huntingBotEnabled).toBe(false);
+  });
+
   it("traces a guide route into a walkable chain", async () => {
     const world = makeWorld(
       gridMapData({

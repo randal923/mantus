@@ -1381,7 +1381,8 @@
       "addHint": "Click the map to insert a waypoint after the selected one."
     },
     "errors": {
-      "outOfRange": "You are not standing in this hunting ground. Travel there first.",
+      "outOfRange": "No walkable path reaches the route from here. Move closer to a waypoint.",
+      "wrongFloor": "The route is on a different floor. Go up or down to it first.",
       "invalid": "This route has no waypoints yet.",
       "saveFailed": "The route could not be saved."
     },

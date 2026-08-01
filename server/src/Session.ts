@@ -139,6 +139,8 @@ export class Session {
   huntingBotRepathReadyAt = 0;
   /** Waypoints skipped in a row because nothing could path to them. */
   huntingBotSkips = 0;
+  /** Failed path searches at the current waypoint; skips it once exhausted. */
+  huntingBotPathFailures = 0;
   isAlive = true;
   readonly knownCreatureIds = new Set<string>();
   readonly knownMapItemTiles = new Map<string, Position>();

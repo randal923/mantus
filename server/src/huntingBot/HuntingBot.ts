@@ -25,24 +25,47 @@ export class HuntingBot {
   ) {}
 
   /**
-   * Arms the bot at the waypoint nearest the character. Returns false when
-   * the character is not actually standing in the hunt, which is the one
-   * precondition a player can get wrong from the window.
+   * Arms the bot at the waypoint nearest the character, proving the joining
+   * walk exists before promising it: the distance gate alone cannot tell
+   * "in the hunt" from "next to it but walled off". The two refusals name
+   * what the player actually got wrong from the window — standing on the
+   * wrong floor, or too far from anything the bot can walk to.
    */
-  start(session: Session): boolean {
+  start(session: Session, now: number): "ok" | "wrong-floor" | "out-of-range" {
     const player = session.playerId
       ? this.world.getPlayer(session.playerId)
       : undefined;
-    if (!player) return false;
+    if (!player) return "out-of-range";
     const waypoints = session.huntingBotRoute.waypoints;
+    if (
+      waypoints.length > 0 &&
+      !waypoints.some((waypoint) => waypoint.z === player.position.z)
+    ) {
+      return "wrong-floor";
+    }
     const index = nearestWaypointIndex(player.position, waypoints);
-    if (index === null) return false;
+    if (index === null) return "out-of-range";
+    const waypoint = waypoints[index];
+    if (!waypoint) return "out-of-range";
+    if (
+      !samePosition(player.position, waypoint) &&
+      !this.movement.walkPathTo(
+        session,
+        player,
+        waypoint,
+        HUNTING_BOT_LIMITS.maxStartVisited,
+        now,
+      )
+    ) {
+      return "out-of-range";
+    }
     session.huntingBotEnabled = true;
     session.huntingBotWaypointIndex = index;
     session.huntingBotSkips = 0;
+    session.huntingBotPathFailures = 0;
     session.huntingBotRepathReadyAt = 0;
     this.sendStatus(session, null);
-    return true;
+    return "ok";
   }
 
   stop(session: Session, reason: HuntingBotStopReason | null): void {
@@ -90,6 +113,7 @@ export class HuntingBot {
     if (!waypoint) return;
     if (samePosition(player.position, waypoint)) {
       session.huntingBotSkips = 0;
+      session.huntingBotPathFailures = 0;
       this.advance(session, waypoints.length);
       return;
     }
@@ -102,11 +126,21 @@ export class HuntingBot {
     );
     if (walking) {
       session.huntingBotSkips = 0;
+      session.huntingBotPathFailures = 0;
       return;
     }
-    // No route from here — a door closed, a lure moved the character, or the
-    // waypoint was hand-placed somewhere unreachable. Try the next one rather
-    // than freezing on it, and give up once a whole run of them has failed.
+    // No route right now — usually a creature standing on the goal, sometimes
+    // a closed door or a waypoint hand-placed somewhere unreachable. Wait and
+    // retry the same waypoint first: advancing on one failure spins the ring
+    // far faster than the character walks. Only a waypoint that stays
+    // unreachable is skipped, and a whole run of those stops the bot.
+    session.huntingBotPathFailures++;
+    if (
+      session.huntingBotPathFailures < HUNTING_BOT_LIMITS.skipAfterFailedRepaths
+    ) {
+      return;
+    }
+    session.huntingBotPathFailures = 0;
     session.huntingBotSkips++;
     if (session.huntingBotSkips >= HUNTING_BOT_LIMITS.maxConsecutiveSkips) {
       this.stop(session, "unreachable");
@@ -141,21 +175,25 @@ function samePosition(left: Position, right: Position): boolean {
 /**
  * Where in the ring the character joins. Only waypoints on the character's
  * own floor and within reach count, so arming the bot from the depot cannot
- * start a cross-map hike.
+ * start a cross-map hike. Ties go to the earliest index: routes revisit
+ * tiles (closed loops, out-and-back corridors), and joining at the earliest
+ * copy makes the bot continue forward through the hunt rather than arm at
+ * the return leg and head straight for the end.
  */
 function nearestWaypointIndex(
   position: Position,
   waypoints: ReadonlyArray<Position>,
 ): number | null {
   let best: number | null = null;
-  let bestDistance: number = HUNTING_BOT_LIMITS.maxStartDistance;
+  let bestDistance = Number.POSITIVE_INFINITY;
   waypoints.forEach((waypoint, index) => {
     if (waypoint.z !== position.z) return;
     const distance = Math.max(
       Math.abs(waypoint.x - position.x),
       Math.abs(waypoint.y - position.y),
     );
-    if (distance > bestDistance) return;
+    if (distance > HUNTING_BOT_LIMITS.maxStartDistance) return;
+    if (distance >= bestDistance) return;
     best = index;
     bestDistance = distance;
   });

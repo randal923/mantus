@@ -1,5 +1,6 @@
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { Creature } from "../creature/Creature";
+import { CHASE_SEARCH_DISTANCE } from "../pathfinding/chaseSearchDistance";
 import { findPath } from "../pathfinding/findPath";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
@@ -7,9 +8,19 @@ import type { Visibility } from "../Visibility";
 import type { MoveResult, World } from "../World";
 import { isInRange } from "./isInRange";
 
-const PLAYER_CHASE_PATH_BUDGET = 32;
+/**
+ * Enough to exhaust the whole ±12 search box: our pathfinder is a plain
+ * breadth-first search, so unlike Canary's heuristic-guided 512-node A* it
+ * needs the full box area to guarantee it finds any detour the box allows.
+ */
+const PLAYER_CHASE_PATH_BUDGET = (2 * CHASE_SEARCH_DISTANCE + 1) ** 2;
+/** How long a failed search stands down before the next full-box attempt. */
+const CHASE_REPATH_COOLDOWN_MS = 250;
 
 export class ChaseController {
+  /** Per-session stand-down after a failed search; success needs no pacing. */
+  private readonly repathReadyAt = new Map<string, number>();
+
   constructor(
     private readonly world: World,
     private readonly visibility: Visibility,
@@ -56,17 +67,29 @@ export class ChaseController {
     range: number,
   ): void {
     if (session.movementDirection || now < player.nextStepAt) return;
+    if (now < (this.repathReadyAt.get(session.id) ?? 0)) return;
+    const from = player.position;
     const path = findPath({
-      start: player.position,
+      start: from,
       isGoal: (position) => isInRange(position, target.position, range),
       canStep: (position) =>
-        position.z === player.position.z &&
+        position.z === from.z &&
+        Math.max(
+          Math.abs(position.x - from.x),
+          Math.abs(position.y - from.y),
+        ) <= CHASE_SEARCH_DISTANCE &&
         this.world.isPathable(position) &&
         !this.world.isOccupied(position),
       maxVisited: PLAYER_CHASE_PATH_BUDGET,
     });
     const direction = path.directions[0];
-    if (!direction) return;
+    if (!direction) {
+      // Nothing reachable right now. Without a pause this would re-run a
+      // full-box search every 25 ms tick for as long as the target stays
+      // unreachable — a stuck chaser must idle, not burn the tick budget.
+      this.repathReadyAt.set(session.id, now + CHASE_REPATH_COOLDOWN_MS);
+      return;
+    }
     const result = this.world.tryMoveCreature(player, direction, now);
     this.publishChaseMovement(session, player, result);
   }

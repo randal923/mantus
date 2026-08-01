@@ -506,6 +506,7 @@ export const serverErrorCodeSchema = z.enum([
   "loot-filter-update-pending",
   "hunting-bot-invalid",
   "hunting-bot-out-of-range",
+  "hunting-bot-wrong-floor",
   "hunting-bot-update-failed",
   "hunting-bot-update-pending",
   "already-authenticated",

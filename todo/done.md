@@ -941,3 +941,137 @@ so a route needing one stalls and the bot skips past it — recorded in
 cannot be traced for those reasons and arrive flagged for hand editing. The
 runtime path budget (800 nodes, one search per waypoint per session) has not
 been profiled with many bots running at once.
+
+## 2026-08-01 — Feature 112 follow-up: bot no longer cycles waypoints faster than the character walks
+
+**Problem**: whenever the runtime path search failed, `HuntingBot.tick`
+advanced to the next waypoint after a single 400 ms repath beat, so the
+waypoint index raced around the ring while the character stood still. And the
+search failed constantly in real use: the 800-node budget only reaches ~20
+Manhattan tiles on open ground, less around geometry, while real legs are
+routinely longer — rejoining the route after a combat chase pulled the
+character off it, hand-edited waypoints tens of tiles apart, or the arm-time
+join that `maxStartDistance: 100` promised but the search could never deliver.
+A transient blocker (a creature standing on the goal tile) triggered the same
+instant skip.
+
+**What changed**: a failed path search now waits and retries the same waypoint
+(new `skipAfterFailedRepaths: 5`, one attempt per 400 ms repath cooldown, new
+`Session.huntingBotPathFailures` counter) and only skips a waypoint that stays
+unreachable for ~2 s; the consecutive-skip stop ("unreachable") is unchanged.
+`maxRuntimeVisited` was raised 800 → 4000 so the legs the bot legitimately
+meets are actually findable, and `maxStartDistance` was cut 100 → 20 so arming
+never promises a joining walk outside the search's reach.
+
+**Files**: `protocol/src/huntingBot.ts`, `server/src/Session.ts`,
+`server/src/huntingBot/HuntingBot.ts`, `server/src/huntingBot/HuntingBot.test.ts`.
+
+**Verified**: reproduced live with a headless-client probe — a route with
+~25-tile legs skipped three waypoints in 2.7 s without the character moving off
+its first corner; after the fix the same shape walked a 24-tile leg step by
+step with zero skip-advances, and a genuinely unwalkable hand-placed corner was
+skipped only after the full 5-attempt retry window. Updated/new unit tests
+cover retry-before-skip, the retry counter resetting on a successful walk, and
+the unreachable-ring stop absorbing retries × skips; all 52 huntingBot tests,
+`yarn playtest:hunting-bot` end to end, and protocol + server typechecks pass.
+
+**Residual risk**: a waypoint parked on by another player or an idle creature
+still gets skipped after ~2 s rather than approached to an adjacent tile;
+goal-adjacent arrival remains future work if that turns out to matter. The
+per-tick budget scale profiling gap in `TODO.md` now carries the 4000-node
+figure.
+
+## 2026-08-01 — Feature 112 follow-up: chase reach matches vision (Canary ±12 search box)
+
+**Problem**: a hunting-bot character froze mid-route staring at a wounded
+dragon on the screen edge, and the dragon stared back. Auto-targeting picks
+the weakest visible monster with no reachability check; the bot stands down
+while a target is alive; the forced chase then searched with a 32-node budget
+(~4 tiles of reach) and the monster's own chase with 96 nodes (~6 tiles), so
+neither side could path around the rock ridge between them and the stalemate
+never resolved. Both budgets contradicted the pinned Canary source, where
+every creature's follow search is boxed to ±12 tiles around the searcher
+(`Creature::getPathSearchParams`, creature.cpp:1041; enforced map.cpp:1297)
+with a 512-node A* (astarnodes.hpp:37) — a box that always covers the 11-tile
+view range (map_const.hpp:12-15), so anything a creature can see it can chase.
+
+**What changed**: new `CHASE_SEARCH_DISTANCE = 12` shared constant
+(`server/src/pathfinding/chaseSearchDistance.ts`) with the Canary citations.
+`ChaseController` searches the whole box (625-node budget — our BFS has no
+heuristic, so it needs the full box area to match the A*'s guarantee), bounds
+`canStep` to the box, and stands down 250 ms after a failed search instead of
+re-searching every 25 ms tick. `MonsterBrain.moveToward` takes the same box
+for chasing (walk-home stays unboxed); `config.yml` raises `ai.maxPathNodes`
+96 → 640 (one full box + slack) and `maxAiWorkPerTick` 512 → 2048 (three full
+searches per tick; the 250 ms think interval spreads monsters across ten
+ticks). The playtest load harnesses mirror the new values.
+
+**Files**: `server/src/pathfinding/chaseSearchDistance.ts` (new),
+`server/src/combat/ChaseController.ts` (+ new `ChaseController.test.ts`),
+`server/src/ai/MonsterBrain.ts` + test, `config.yml`,
+`server/src/spawn/CreaturePerformance.test.ts`,
+`server/src/playtest/{itemAnimationProbeServer,monsterLoadServer}.ts`.
+
+**Verified**: new tests — player chase walks a ~22-step detour the old
+32-node budget could never find, refuses targets outside the ±12 box, and
+skips re-searching inside the failure cooldown; a monster chases around a
+wall whose detour floods past the old budget while the starved config
+provably stands still; the perf gate re-pinned at 2048 work/640 visited with
+a worst-case full-box timing loop. Full server suite (1523 passed / 26
+DB-integration skipped), server typecheck, and `yarn playtest:hunting-bot`
+end to end all pass.
+
+**Residual risk**: a genuinely uncrossable target (ladder/rope/hole between)
+still stalls the bot — recorded in `TODO.md` with the give-up/ignore-list fix;
+the enlarged budgets fold into the existing scale-profiling gap there.
+
+## 2026-08-01 — Feature 112 follow-up: arming joins the route at the earliest nearest waypoint
+
+**Problem**: `nearestWaypointIndex` kept updating on ties, so among
+equally-close waypoints the last index won. Routes revisit tiles constantly
+(closed loops, out-and-back corridors), so arming next to "waypoint 3" could
+join at its return-leg twin near the end of the ring and walk toward the end
+instead of forward through the hunt.
+
+**What changed**: ties now go to the earliest index (strict-improvement
+update in `server/src/huntingBot/HuntingBot.ts`), with the start-distance
+boundary kept inclusive. New unit test covers an out-and-back corridor where
+the join tile appears twice; all 53 huntingBot tests and the server typecheck
+pass.
+
+## 2026-08-01 — Feature 112 follow-up: arming gate proves the join walk instead of guessing from distance
+
+**Problem**: a player standing visibly inside their hunt got "You are not
+standing in this hunting ground" when arming. The morning's fix had cut
+`maxStartDistance` 100 → 20 to keep the gate inside the old search budget, so
+standing a screen from the nearest waypoint now refused; and a route on a
+different floor produced the same misleading travel-there message, since the
+same-floor filter and the distance filter shared one error.
+
+**What changed**: arming is gated by what it actually promises.
+`HuntingBot.start` now returns "ok" / "wrong-floor" / "out-of-range": a route
+with no waypoint on the character's floor names the floor
+(new `hunting-bot-wrong-floor` protocol error, new `huntingBot.errors
+.wrongFloor` strings in en/pt-BR, mapped in `HuntingBotRouteEditor`); within
+`maxStartDistance` (back up to 30, now only a cheap pre-filter) the arm runs
+the real joining path search (`maxStartVisited: 10_000`, one-shot per arm
+click, sized past the worst 30-tile diagonal) and refuses only when no
+walkable join exists — on success the join leg is already queued, so the
+character starts walking the same tick. The out-of-range copy now says what
+is actually wrong ("No walkable path reaches the route from here").
+
+**Files**: `protocol/src/{serverMessages,huntingBot}.ts`,
+`server/src/huntingBot/{HuntingBot,HuntingBotHandler}.ts` + both tests,
+`client/components/hunting-bot/HuntingBotRouteEditor.tsx`,
+`client/locales/{en,pt-BR}.json`.
+
+**Verified**: 55 huntingBot unit tests (new: refuses when nothing walkable
+reaches the route; wrong-floor named at the handler; existing arm tests moved
+to the reason-string contract); a live probe armed from a traced tile 27
+tiles from the route — refused before this change — and walked the 55-step
+join back to waypoint 0; `yarn playtest:hunting-bot` still passes both
+refusal steps; protocol, server and client typechecks pass.
+
+**Residual risk**: arming spam is bounded only by the connection message-rate
+cap; each arm click may spend a 10k-node search (~4 ms). Fine at current
+scale; folds into the existing path-budget profiling gap in TODO.md.

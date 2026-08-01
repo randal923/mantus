@@ -41,10 +41,26 @@ limitations accepted during a session are recorded in the owning feature file
   the bot executes through the existing `use-map` / `use-with` paths, and let
   the tracer emit one when a leg's only connection is an action tile.
 - **The hunting bot's per-tick path budget is unprofiled at scale**
-  (2026-08-01, Feature 112). Each running bot spends up to 800 search nodes
-  (~0.3 ms) once per waypoint, paced by a 400 ms cooldown, and the tick is
+  (2026-08-01, Feature 112). Each running bot spends up to 4000 search nodes
+  (~1.5 ms) once per waypoint, paced by a 400 ms cooldown, and the tick is
   25 ms. That is comfortable for a handful of bots but nothing measures what
-  happens when many re-plan on the same tick. Recommended fix: give the bot the
+  happens when many re-plan on the same tick, and the budget was raised 5×
+  from its original 800 so the bot can actually path the legs real routes
+  contain (rejoining after a chase, hand-placed waypoints tens of tiles
+  apart). The same applies to the chase searches added alongside it: a
+  failed player chase burns a full ±12 box (625 nodes) every 250 ms, and the
+  monster AI work budget went 512 → 2048 nodes per tick so one chase search
+  (`maxPathNodes: 640`) no longer starves the whole spawn's brains.
+- **The hunting bot can still stare forever at a target no path reaches**
+  (2026-08-01, Feature 112). Auto-targeting picks the weakest visible
+  monster with no reachability check, and the bot stands down while any
+  target is alive. Chase now covers everything inside the Canary ±12 search
+  box, so this only bites when the target is genuinely uncrossable from the
+  player's side (a ladder, a rope spot, hole-separated ledges) — then the
+  bot waits, the monster stares back, and the route never resumes.
+  Recommended fix: when the auto-target has been neither hit nor approached
+  for a few seconds, drop it and ignore that creature id for a while so the
+  ring continues. Recommended fix: give the bot the
   shared per-tick work ceiling the monster AI already uses
   (`maxAiWorkPerTick`), round-robin across sessions, and add a perf gate beside
   the existing pathfinding one in `CreaturePerformance.test.ts`.

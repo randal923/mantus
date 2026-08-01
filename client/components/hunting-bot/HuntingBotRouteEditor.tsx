@@ -24,6 +24,7 @@ const STOP_MESSAGE: Record<HuntingBotStopReason, string> = {
 
 const ERROR_MESSAGE: Partial<Record<ServerErrorCode, string>> = {
   "hunting-bot-out-of-range": "huntingBot.errors.outOfRange",
+  "hunting-bot-wrong-floor": "huntingBot.errors.wrongFloor",
   "hunting-bot-invalid": "huntingBot.errors.invalid",
   "hunting-bot-update-failed": "huntingBot.errors.saveFailed",
 };

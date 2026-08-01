@@ -543,4 +543,43 @@ describe("MonsterBrain", () => {
     brain.tick(world, 7_000, 32);
     expect(brain.state).toBe("flee");
   });
+
+  it("chases a visible player around a wall that needs a big detour", () => {
+    // A wall column with its only gap far to the south: the detour's search
+    // floods well past the old 96-node budget but stays inside the ±12
+    // chase box, so a monster that can see its target must still find it.
+    const wall = Array.from(
+      { length: 15 },
+      (_, y) => [6, y] as const,
+    );
+    const world = new World(
+      gridMapData({ name: "test", width: 30, height: 20, blocked: wall }),
+      25,
+    );
+    const monster = new Monster({
+      id: "monster-instance:test:0",
+      type: baseType,
+      position: { x: 2, y: 10, z: 7 },
+      direction: "south",
+      home: { x: 2, y: 10, z: 7 },
+      spawnRadius: 3,
+    });
+    const player = new Player(makeCharacter("target"), { x: 10, y: 10, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(player);
+
+    const starved = new MonsterBrain(monster, 0, 7, config);
+    starved.tick(world, 1_000, 2_048);
+    expect(starved.state).toBe("chase");
+    expect(monster.position).toEqual({ x: 2, y: 10, z: 7 });
+
+    const brain = new MonsterBrain(monster, 0, 7, {
+      ...config,
+      maxPathNodes: 640,
+    });
+    brain.tick(world, 2_000, 2_048);
+
+    expect(brain.state).toBe("chase");
+    expect(monster.position).not.toEqual({ x: 2, y: 10, z: 7 });
+  });
 });

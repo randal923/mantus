@@ -1381,7 +1381,8 @@
       "addHint": "Clique no mapa para inserir um ponto após o selecionado."
     },
     "errors": {
-      "outOfRange": "Você não está neste local de caça. Viaje até lá primeiro.",
+      "outOfRange": "Nenhum caminho alcança a rota daqui. Aproxime-se de um ponto.",
+      "wrongFloor": "A rota está em outro andar. Suba ou desça até ela primeiro.",
       "invalid": "Esta rota ainda não tem pontos.",
       "saveFailed": "Não foi possível salvar a rota."
     },

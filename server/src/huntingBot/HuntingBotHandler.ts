@@ -46,11 +46,11 @@ export class HuntingBotHandler {
       return;
     }
     if (intent.type === "update-hunting-bot-route") {
-      this.handleRoute(session, playerId, intent);
+      this.handleRoute(session, playerId, intent, now);
       return;
     }
     if (intent.type === "set-hunting-bot-enabled") {
-      this.handleEnabled(session, intent);
+      this.handleEnabled(session, intent, now);
       return;
     }
     this.handleTrace(session, intent, now);
@@ -64,6 +64,7 @@ export class HuntingBotHandler {
     session: Session,
     characterId: string,
     intent: UpdateHuntingBotRouteMessage,
+    now: number,
   ): void {
     if (session.huntingBotRouteUpdatePending) {
       session.sendError("hunting-bot-update-pending");
@@ -75,7 +76,7 @@ export class HuntingBotHandler {
     // Applied in memory first so the very next tick walks the edited route;
     // the durable write trails behind and rolls the session back if it fails.
     session.huntingBotRoute = route;
-    if (session.huntingBotEnabled && !this.bot.start(session)) {
+    if (session.huntingBotEnabled && this.bot.start(session, now) !== "ok") {
       this.bot.stop(session, route.waypoints.length === 0 ? "no-route" : "out-of-range");
     }
     void this.persist(session, characterId, route, previous);
@@ -84,6 +85,7 @@ export class HuntingBotHandler {
   private handleEnabled(
     session: Session,
     intent: SetHuntingBotEnabledMessage,
+    now: number,
   ): void {
     if (!intent.enabled) {
       this.bot.stop(session, null);
@@ -93,7 +95,10 @@ export class HuntingBotHandler {
       session.sendError("hunting-bot-invalid");
       return;
     }
-    if (!this.bot.start(session)) {
+    const started = this.bot.start(session, now);
+    if (started === "wrong-floor") {
+      session.sendError("hunting-bot-wrong-floor");
+    } else if (started === "out-of-range") {
       session.sendError("hunting-bot-out-of-range");
     }
   }

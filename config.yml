@@ -83,13 +83,18 @@ creatures:
   maxSpawnChecksPerTick: 512
   maxSpawnAttemptsPerTick: 8
   maxAiScansPerTick: 512
-  maxAiWorkPerTick: 512
+  # Fits three full chase-box path searches per 25 ms tick; the 250 ms think
+  # interval spreads the monsters that want one across ten ticks.
+  maxAiWorkPerTick: 2048
   ai:
     thinkIntervalMs: 250
     acquisitionRange: 8
     loseRange: 12
     # Chase leash around the spawn point; spawn radius bounds idle wandering.
     despawnRadius: 50
-    maxPathNodes: 96
+    # One whole ±12 chase search box (25 x 25 = 625 tiles, see
+    # chaseSearchDistance.ts) with slack for the unboxed walk-home search, so
+    # any target a monster can see is reachable whenever a path exists.
+    maxPathNodes: 640
     wanderChance: 0.2
     seed: 1296125524
