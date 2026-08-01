@@ -8,6 +8,7 @@ import type { AssetStore, TibiaObject } from "./AssetStore";
 import { EFFECT_FRAME_DURATION_MS } from "./EFFECT_FRAME_DURATION_MS";
 import { getEffectPattern } from "./getEffectPattern";
 import { getMapObjectZ } from "./getMapObjectZ";
+import { isDocumentHidden } from "./isDocumentHidden";
 import type { MapView } from "./MapView";
 import { MAP_DEPTH } from "./mapDepth";
 import { TILE_SIZE } from "./tileSize";
@@ -75,6 +76,7 @@ export class CombatEffectRenderer {
   ) {}
 
   showMagicEffect(position: Position, effectId: number): void {
+    if (isDocumentHidden()) return;
     void this.loadMagicEffect(position, effectId);
   }
 
@@ -84,6 +86,7 @@ export class CombatEffectRenderer {
     missileId: number,
     durationMs: number,
   ): void {
+    if (isDocumentHidden()) return;
     void this.loadMissile(from, to, missileId, durationMs);
   }
 
@@ -93,7 +96,7 @@ export class CombatEffectRenderer {
     damageType: DamageType,
     block: HitBlock,
   ): void {
-    if (this.destroyed) return;
+    if (this.destroyed || isDocumentHidden()) return;
     const label =
       block === "miss"
         ? "MISS"
@@ -115,7 +118,7 @@ export class CombatEffectRenderer {
   }
 
   showExperienceText(position: Position, value: number): void {
-    if (this.destroyed) return;
+    if (this.destroyed || isDocumentHidden()) return;
     this.showFloatingText(
       position,
       value.toString(),

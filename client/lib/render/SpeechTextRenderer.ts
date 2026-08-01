@@ -1,5 +1,6 @@
 import { Text, type Container } from "pixi.js";
 import type { CreatureSpeechMode, Position } from "@tibia/protocol";
+import { isDocumentHidden } from "./isDocumentHidden";
 import type { MapView } from "./MapView";
 import { TILE_SIZE } from "./tileSize";
 
@@ -39,7 +40,7 @@ export class SpeechTextRenderer {
     body: string,
     mode: CreatureSpeechMode = "say",
   ): void {
-    if (this.destroyed) return;
+    if (this.destroyed || isDocumentHidden()) return;
     this.removeSpeaker(creatureId);
     const text = new Text({
       text: body,

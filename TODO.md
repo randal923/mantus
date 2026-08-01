@@ -29,6 +29,18 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **A long-backgrounded tab can still be discarded by the browser**
+  (2026-08-01). The client now stays correct while its tab is hidden
+  (cosmetic effects skip creation, the creature-store flush has a timeout
+  fallback, world load no longer stalls on a frozen animation frame), and
+  gameplay was always server-side, so AFK bot hunts survive tab switches.
+  But Chrome's Memory Saver may unload a background tab entirely after
+  enough idle time — a full page discard, which disconnects the session.
+  Page JS cannot veto it. Players hunting AFK for hours should exempt the
+  game site from Memory Saver (chrome://settings/performance). Possible
+  softener: detect the discard on restore (`document.wasDiscarded`) and
+  auto-reconnect straight back into the world. Owner: client/game-window.
+
 - **The mailbox window can only mail top-level backpack items** (2026-08-01).
   The depot's carried pane is now server-projected recursively
   (`carriedItems` on `depot-state`), but `MailboxModal` still receives the

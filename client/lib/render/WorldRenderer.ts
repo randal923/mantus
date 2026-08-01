@@ -25,6 +25,7 @@ import {
   type WarEmblemKind,
 } from "./CreatureView";
 import { CombatEffectRenderer } from "./CombatEffectRenderer";
+import { isDocumentHidden } from "./isDocumentHidden";
 import { SpeechTextRenderer } from "./SpeechTextRenderer";
 import { TILE_SIZE } from "./tileSize";
 
@@ -377,7 +378,9 @@ export class WorldRenderer {
         this.app.renderer.texture.initSource(texture.source);
         uploadsDone++;
         report();
-        await new Promise(requestAnimationFrame);
+        // Hidden tabs never fire animation frames — awaiting one there
+        // would stall the load (and worldReady) until the tab is refocused.
+        if (!isDocumentHidden()) await new Promise(requestAnimationFrame);
         if (this.destroyed) return;
       }
     } catch (cause: unknown) {

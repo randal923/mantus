@@ -1217,3 +1217,45 @@ unit tests (13) pass; protocol, server and client typechecks pass.
 **Residual risk**: the mailbox window still lists only top-level items to
 mail (recorded in `TODO.md`); the carried list caps at 1024 entries, beyond
 any weight-feasible inventory.
+
+## 2026-08-01 — Client keeps up while its tab is backgrounded
+
+**Problem**: switching browser tabs made the game look like it stopped.
+Gameplay never actually paused — the bot, combat and world all run
+server-side — but the client's world tick rides the PixiJS ticker
+(`requestAnimationFrame`), which browsers freeze in hidden tabs. Three
+things broke: (1) every damage number, hit splash, missile and speech
+bubble received while hidden created a Pixi object that only the frozen
+tick could expire, so an AFK hunt accumulated thousands of live sprites
+that all animated at once on return; (2) the creature-message → store
+flush was RAF-batched, so the backlog array grew unboundedly while
+hidden; (3) the world-load texture-upload loop awaited one animation
+frame per texture, so tabbing away during the loading screen stalled the
+load — and `worldReady()` — until the tab was refocused.
+
+**What changed**: new `client/lib/render/isDocumentHidden.ts` guard
+(node-test-safe). `CombatEffectRenderer.showMagicEffect/showMissile/
+showCombatText/showExperienceText` and `SpeechTextRenderer.showSpeech`
+skip creation while hidden — they are pure cosmetics nobody can see.
+`WorldRenderer.setMap` skips the per-texture RAF yield while hidden so
+loading completes in the background. `GameWindowConnectionController`
+schedules a 250ms `setTimeout` fallback alongside the RAF flush
+(whichever fires first wins and cancels the other), so the visible-
+creatures store keeps draining at the browser's ~1s background-timer
+clamp instead of accumulating forever.
+
+**Files**: `client/lib/render/isDocumentHidden.ts` (new),
+`client/lib/render/CombatEffectRenderer.ts`,
+`client/lib/render/SpeechTextRenderer.ts`,
+`client/lib/render/WorldRenderer.ts`,
+`client/components/game-window/controllers/GameWindowConnectionController.tsx`.
+
+**Verified**: client typecheck passes; full client unit suite passes
+(82 files, 353 tests) — renderer tests run in the node environment where
+`isDocumentHidden()` reports visible, so existing behavior is unchanged.
+
+**Residual risk**: Chrome's Memory Saver can still discard a
+long-backgrounded tab outright (full page unload → disconnect); that is
+browser policy we cannot override from page JS — players AFK-hunting for
+hours should exempt the game site from Memory Saver. Recorded in
+`TODO.md`.
