@@ -179,7 +179,7 @@ export function GameMenuModal({
   };
 
   return (
-    <Modal title={viewTitles[view]} onClose={onClose}>
+    <Modal title={viewTitles[view]} onClose={onClose} height="auto">
       {view === "menu" && (
         <nav aria-label={t("menu.actions")} className="flex flex-col gap-2">
           <Button

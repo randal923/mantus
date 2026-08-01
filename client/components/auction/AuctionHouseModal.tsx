@@ -109,7 +109,7 @@ export function AuctionHouseModal({
         aria-labelledby="auction-house-title"
         aria-describedby="auction-house-description"
         onClick={(event) => event.stopPropagation()}
-        className="ui-panel-frame relative isolate flex h-full max-h-[52rem] w-full max-w-7xl flex-col gap-4 overflow-hidden p-3 font-tibia text-ui-text select-none sm:gap-5 sm:p-5"
+        className="ui-panel-frame relative isolate flex h-[900px] max-h-full w-full max-w-7xl flex-col gap-4 overflow-hidden p-3 font-tibia text-ui-text select-none sm:gap-5 sm:p-5"
       >
         <div
           aria-hidden
