@@ -178,6 +178,8 @@ export function handleCharacterSessionMessage(
   state.setGuildToast(null);
   actions.house.reset();
   state.setHouseModalOpen(false);
+  state.setHuntFinderOpen(false);
+  state.setTrackedHuntRoute(null);
   state.setHouseToast(null);
   actions.vip.reset();
   state.setVipPanelVisible(false);

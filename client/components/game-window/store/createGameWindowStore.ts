@@ -118,6 +118,8 @@ export function createGameWindowStore({
     trackerVisible: false,
     preyWindowOpen: false,
     huntingTasksOpen: false,
+    huntFinderOpen: false,
+    trackedHuntRoute: null,
     outfitWindowOpen: false,
     podiumWindow: null,
     podiumError: null,
@@ -367,6 +369,14 @@ export function createGameWindowStore({
     setHuntingTasksOpen: (value) =>
       set((state) => ({
         huntingTasksOpen: resolveStateAction(value, state.huntingTasksOpen),
+      })),
+    setHuntFinderOpen: (value) =>
+      set((state) => ({
+        huntFinderOpen: resolveStateAction(value, state.huntFinderOpen),
+      })),
+    setTrackedHuntRoute: (value) =>
+      set((state) => ({
+        trackedHuntRoute: resolveStateAction(value, state.trackedHuntRoute),
       })),
     setOutfitWindowOpen: (value) =>
       set((state) => ({

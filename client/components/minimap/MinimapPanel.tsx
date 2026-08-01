@@ -10,6 +10,7 @@ import type {
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { MinimapRegionStore } from "../../lib/minimap/MinimapRegionStore";
+import type { MinimapRoute } from "../../lib/minimap/MinimapRoute";
 import { drawMinimap, type MinimapMarker } from "../../lib/minimap/drawMinimap";
 import {
   loadNpcShopCategories,
@@ -33,6 +34,8 @@ const GROUND_FLOOR = 7;
 const MIN_FLOOR = 0;
 const MAX_FLOOR = 15;
 const HOVER_RADIUS = 8;
+const ROUTE_BLINK_INTERVAL_MS = 500;
+const ROUTE_DIM_OPACITY = 0.2;
 
 interface MinimapHover {
   x: number;
@@ -65,6 +68,7 @@ interface MinimapPanelProps {
   layout: MinimapLayout | null;
   /** The character's own persisted waypoint flags, from the server. */
   mapMarkers: ReadonlyArray<MapMarker>;
+  trackedRoute?: MinimapRoute | null;
   onLayoutChange: (layout: MinimapLayout) => void;
   /** Sends a walk-to intent; the server computes and validates the path. */
   onWalkTo: (position: Position) => void;
@@ -78,6 +82,7 @@ export function MinimapPanel({
   creatures,
   layout,
   mapMarkers,
+  trackedRoute,
   onLayoutChange,
   onWalkTo,
   onToggleMarker,
@@ -103,6 +108,7 @@ export function MinimapPanel({
   );
   const [hover, setHover] = useState<MinimapHover | null>(null);
   const [shopCategories, setShopCategories] = useState<NpcShopCategories>({});
+  const [routeBright, setRouteBright] = useState(true);
 
   const floor = viewFloor ?? ownPosition.z;
   const centerX = panCenter?.x ?? ownPosition.x;
@@ -129,6 +135,15 @@ export function MinimapPanel({
   }, []);
 
   useEffect(() => {
+    if (!trackedRoute) return;
+    const timer = window.setInterval(
+      () => setRouteBright((bright) => !bright),
+      ROUTE_BLINK_INTERVAL_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [trackedRoute]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !store) return;
     const dpr = window.devicePixelRatio || 1;
@@ -146,11 +161,15 @@ export function MinimapPanel({
       mapMarkers,
       towns: store.towns,
       showTownLabels: pixelsPerTile <= 2,
+      route: trackedRoute,
+      routeOpacity: routeBright ? 1 : ROUTE_DIM_OPACITY,
     });
   }, [
     store,
     regionVersion,
     mapMarkers,
+    trackedRoute,
+    routeBright,
     centerX,
     centerY,
     floor,

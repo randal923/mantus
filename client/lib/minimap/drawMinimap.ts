@@ -4,6 +4,7 @@ import type {
   Position,
 } from "@tibia/protocol";
 import type { MinimapRegionStore } from "./MinimapRegionStore";
+import type { MinimapRoute } from "./MinimapRoute";
 
 export interface MinimapMarker {
   /** Canvas position in CSS pixels. */
@@ -27,6 +28,10 @@ export interface MinimapDrawInput {
   /** Town anchors from the map manifest; drawn only when zoomed out. */
   towns?: ReadonlyArray<{ name: string; x: number; y: number; z: number }>;
   showTownLabels?: boolean;
+  /** Optional client-authored guide path. It is display-only, never movement. */
+  route?: MinimapRoute | null;
+  /** Used by the live minimap to pulse the tracked route without hiding it. */
+  routeOpacity?: number;
 }
 
 /** Unexplored/absent terrain is black, like the classic automap. */
@@ -39,6 +44,75 @@ const OWN_COLOR = "#f2efe6";
 const OUTLINE_COLOR = "rgba(0, 0, 0, 0.85)";
 const FLAG_COLOR = "#ffd166";
 const TOWN_LABEL_COLOR = "rgba(242, 239, 230, 0.9)";
+const ROUTE_COLOR = "#45d9ff";
+
+function drawRoute(
+  context: CanvasRenderingContext2D,
+  route: MinimapRoute,
+  floor: number,
+  left: number,
+  top: number,
+  pixelsPerTile: number,
+  width: number,
+  height: number,
+  opacity: number,
+): void {
+  const segments = route.coordinates[String(floor)] ?? [];
+  if (segments.length === 0) return;
+  const point = (position: Position) => ({
+    x: (position.x + 0.5 - left) * pixelsPerTile,
+    y: (position.y + 0.5 - top) * pixelsPerTile,
+  });
+
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  const previousAlpha = context.globalAlpha;
+  context.globalAlpha = Math.max(0, Math.min(1, opacity));
+  for (const [start, end] of segments) {
+    const from = point(start);
+    const to = point(end);
+    context.beginPath();
+    context.moveTo(from.x, from.y);
+    context.lineTo(to.x, to.y);
+    context.strokeStyle = OUTLINE_COLOR;
+    context.lineWidth = Math.max(4, pixelsPerTile + 2);
+    context.stroke();
+    context.strokeStyle = ROUTE_COLOR;
+    context.lineWidth = Math.max(2, pixelsPerTile * 0.55);
+    context.stroke();
+  }
+  context.globalAlpha = previousAlpha;
+
+  const first = point(segments[0][0]);
+  const destination = route.destination?.z === floor
+    ? point(route.destination)
+    : point(segments[segments.length - 1][1]);
+  for (const marker of [first, destination]) {
+    context.beginPath();
+    context.arc(marker.x, marker.y, 4, 0, Math.PI * 2);
+    context.fillStyle = ROUTE_COLOR;
+    context.strokeStyle = OUTLINE_COLOR;
+    context.lineWidth = 2;
+    context.fill();
+    context.stroke();
+  }
+
+  if (
+    destination.x >= 0 &&
+    destination.y >= 0 &&
+    destination.x <= width &&
+    destination.y <= height
+  ) {
+    context.font = "bold 11px sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "bottom";
+    context.lineWidth = 3;
+    context.strokeStyle = OUTLINE_COLOR;
+    context.fillStyle = ROUTE_COLOR;
+    context.strokeText(route.name, destination.x, destination.y - 7);
+    context.fillText(route.name, destination.x, destination.y - 7);
+  }
+}
 
 /**
  * Renders terrain and creature markers onto the minimap canvas and returns
@@ -97,6 +171,20 @@ export function drawMinimap(input: MinimapDrawInput): MinimapMarker[] {
       ctx.strokeText(town.name, x, y);
       ctx.fillText(town.name, x, y);
     }
+  }
+
+  if (input.route) {
+    drawRoute(
+      ctx,
+      input.route,
+      floor,
+      left,
+      top,
+      pixelsPerTile,
+      width,
+      height,
+      input.routeOpacity ?? 1,
+    );
   }
 
   // Player-placed flags sit under the creature markers so a creature is never

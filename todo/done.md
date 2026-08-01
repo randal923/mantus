@@ -662,3 +662,63 @@ sprites, compact square sources, close placement, and desktop overflow.
 
 **Residual risk**: viewports shorter than the 900px target retain an overflow
 fallback so actions remain reachable instead of being clipped.
+
+## 2026-08-01 — Feature 111: RubinOT Hunt Finder and live routes
+
+**Problem**: the client had prey and hunting-task progression windows but no
+read-only hunting-place guide. Players could not browse suitable spawns,
+recommended preparations, creature weaknesses, valuable drops, or routes
+without leaving the game.
+
+**What changed**: copied RubinOT 21.0's complete, unencrypted 131-entry
+`hunting_places.json` catalog verbatim from `bin/assets.rtc` and documented its
+source hash. A bounded parser treats the fetched asset as untrusted before any
+guide uses it. The new top-navigation compass opens a full Hunt Finder with
+level, vocation, team-size, XP/loot, and text filters; searchable illustrated
+cards; and a detail workspace covering creatures, resistances, charms,
+premium/route requirements, vocation-specific imbuements, supplies,
+equipment, drops, and every approach/in-hunt coordinate segment.
+
+Guide item names resolve through the existing validated wiki catalog and
+creatures through the server-authored bestiary projection, so the feature
+reuses Mantus' atlas rather than importing RubinOT sprites. The route viewer
+draws every available floor over the existing minimap regions. “Track the
+path” stores only a display route in client state, opens the live minimap, and
+draws the matching-floor segments there; it never sends movement or gameplay
+state. All 3,464 copied route endpoints land in minimap regions present in the
+current `otservbr` map.
+
+**Files**: `client/public/assets/hunting/hunting_places.json`,
+`client/lib/hunt-finder/*`, `client/components/hunt-finder/*`,
+`client/hooks/useHuntingPlaces.ts`,
+`client/components/game-window/{GameHuntFinderOverlay,GameNavigation,
+GameMinimapOverlay,GameWorldOverlayParent}.tsx`, game-window store/state
+types, `client/components/navigation/TopNavigationBar.tsx`,
+`client/components/minimap/MinimapPanel.tsx`,
+`client/lib/minimap/{MinimapRoute,drawMinimap}.ts`, client locales, asset
+documentation, and Hunt Finder/navigation stories.
+
+**Verified**: the full client unit suite passes (334 tests), including the
+verbatim 131-entry catalog, malformed-coordinate rejection, guide filters,
+metric parsing, and floor-scoped live-route drawing. Five Hunt Finder and top
+navigation Storybook interactions pass in Chromium. Client TypeScript and
+lint pass with no errors, the Next.js production build completes, and
+`git diff --check` is clean.
+
+**Residual risk**: six normalized RubinOT-only item labels have no Mantus item
+catalog entry and deliberately render text monograms; the accepted gap and
+automatic resolution path are recorded in `TODO.md`. All guide content and
+coordinates remain present.
+
+### 2026-08-01 follow-up — stable unloaded-bestiary selector
+
+Fixed the Hunt Finder overlay's unloaded-bestiary fallback so its Zustand
+selector returns a stable empty array. The former inline `?? []` produced a
+new external-store snapshot on every read and triggered React's maximum update
+depth guard before bestiary data loaded. Live tracking uses only each guide's
+multi-floor `WayPath`, leaves the regular minimap camera and controls untouched,
+selects segments by the currently viewed floor (which follows the character by
+default), and pulses the line between bright and dim states. The Darashia
+Dragon Lair regression fixture covers floors 7 through 10. Browser stories
+cover both fresh-store and player-following route states. Verified with client
+typecheck, focused unit and Chromium Storybook tests, and `git diff --check`.

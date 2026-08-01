@@ -29,6 +29,16 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Six RubinOT-only Hunt Finder item labels use text fallbacks**
+  (2026-08-01, Feature 111). The copied guide catalog names 499 distinct
+  recommended/valuable/equipment entries; 492 resolve to Mantus' validated
+  item catalog. `Rubini Backpack`, `Dragon Trophy`, `Sai`, `Demonic Core
+  Essence`, `Demonic Matter`, and the source typo `Stalight Vial` have no
+  matching item, so their complete guide text remains visible but the tile
+  uses a monogram instead of inventing a sprite id. Recommended fix only if
+  those custom items join the game: add them to the authoritative item
+  catalog, then the existing name resolver will pick up their sprites without
+  a Hunt Finder special case.
 - **A map re-import needs `db:reconcile-world-seed` on every database**
   (2026-07-31, see `todo/done.md`). Making the imbuing shrines server-owned
   changed the map version, and the server refuses to boot against a database

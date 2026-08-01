@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { CreatureState } from "@tibia/protocol";
-import { fn } from "storybook/test";
+import { expect, fn, within } from "storybook/test";
 
 import { MinimapPanel } from "../components/minimap/MinimapPanel";
 
@@ -50,4 +50,31 @@ export const AtSpawn: Story = {};
 
 export const NoCreatures: Story = {
   args: { creatures: [] },
+};
+
+export const TrackedDarashiaWayPath: Story = {
+  args: {
+    ownPosition: { x: 33220, y: 32420, z: 7 },
+    creatures: [],
+    trackedRoute: {
+      name: "Darashia Dragon Lair",
+      destination: { x: 33231, y: 32263, z: 10 },
+      coordinates: {
+        7: [
+          [
+            { x: 33213, y: 32450, z: 7 },
+            { x: 33265, y: 32281, z: 7 },
+          ],
+        ],
+        8: [[{ x: 33265, y: 32275, z: 8 }, { x: 33264, y: 32274, z: 8 }]],
+        9: [[{ x: 33262, y: 32275, z: 9 }, { x: 33260, y: 32275, z: 9 }]],
+        10: [[{ x: 33258, y: 32275, z: 10 }, { x: 33256, y: 32278, z: 10 }]],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText("33220, 32420, 7")).toBeVisible();
+  },
 };

@@ -11,6 +11,9 @@ interface RegionDraw {
 function stubCanvas(size: number) {
   const regionDraws: RegionDraw[] = [];
   let arcCount = 0;
+  let lineCount = 0;
+  let globalAlpha = 1;
+  const strokeAlphas: number[] = [];
   const context = {
     setTransform: () => {},
     fillRect: () => {},
@@ -18,17 +21,32 @@ function stubCanvas(size: number) {
       regionDraws.push({ region: image, args }),
     beginPath: () => {},
     moveTo: () => {},
-    lineTo: () => {},
+    lineTo: () => {
+      lineCount += 1;
+    },
     closePath: () => {},
     arc: () => {
       arcCount += 1;
     },
     fill: () => {},
-    stroke: () => {},
+    stroke: () => strokeAlphas.push(globalAlpha),
+    strokeText: () => {},
+    fillText: () => {},
     imageSmoothingEnabled: true,
     fillStyle: "",
     strokeStyle: "",
     lineWidth: 0,
+    lineCap: "butt",
+    lineJoin: "miter",
+    font: "",
+    textAlign: "start",
+    textBaseline: "alphabetic",
+    get globalAlpha() {
+      return globalAlpha;
+    },
+    set globalAlpha(value: number) {
+      globalAlpha = value;
+    },
   };
   const canvas = {
     width: size,
@@ -36,7 +54,13 @@ function stubCanvas(size: number) {
     clientWidth: size,
     getContext: () => context,
   } as unknown as HTMLCanvasElement;
-  return { canvas, regionDraws, arcCount: () => arcCount };
+  return {
+    canvas,
+    regionDraws,
+    arcCount: () => arcCount,
+    lineCount: () => lineCount,
+    strokeAlphas,
+  };
 }
 
 const store = {
@@ -122,5 +146,69 @@ describe("drawMinimap", () => {
       ownPosition: null,
     });
     expect(arcCount()).toBe(0);
+  });
+
+  it("draws a tracked guide route only on its matching floor", () => {
+    const matching = stubCanvas(200);
+    drawMinimap({
+      canvas: matching.canvas,
+      store,
+      center: { x: ownPosition.x, y: ownPosition.y },
+      floor: 6,
+      pixelsPerTile: 4,
+      creatures: [],
+      ownPlayerId: "",
+      ownPosition: null,
+      route: {
+        name: "Test Hunt",
+        coordinates: {
+          6: [[ownPosition, { x: ownPosition.x + 5, y: ownPosition.y, z: 6 }]],
+        },
+      },
+    });
+    expect(matching.lineCount()).toBe(1);
+
+    const otherFloor = stubCanvas(200);
+    drawMinimap({
+      canvas: otherFloor.canvas,
+      store,
+      center: { x: ownPosition.x, y: ownPosition.y },
+      floor: 7,
+      pixelsPerTile: 4,
+      creatures: [],
+      ownPlayerId: "",
+      ownPosition: null,
+      route: {
+        name: "Test Hunt",
+        coordinates: {
+          6: [[ownPosition, { x: ownPosition.x + 5, y: ownPosition.y, z: 6 }]],
+        },
+      },
+    });
+    expect(otherFloor.lineCount()).toBe(0);
+  });
+
+  it("applies pulse opacity to route lines without dimming its markers", () => {
+    const result = stubCanvas(200);
+    drawMinimap({
+      canvas: result.canvas,
+      store,
+      center: { x: ownPosition.x, y: ownPosition.y },
+      floor: 6,
+      pixelsPerTile: 4,
+      creatures: [],
+      ownPlayerId: "",
+      ownPosition: null,
+      route: {
+        name: "Test Hunt",
+        coordinates: {
+          6: [[ownPosition, { x: ownPosition.x + 5, y: ownPosition.y, z: 6 }]],
+        },
+      },
+      routeOpacity: 0.2,
+    });
+
+    expect(result.strokeAlphas.slice(0, 2)).toEqual([0.2, 0.2]);
+    expect(result.strokeAlphas.slice(2)).toEqual([1, 1]);
   });
 });

@@ -185,6 +185,24 @@ original pixel artwork.
 yarn cyclopedia:assets
 ```
 
+## Hunt Finder data (`public/assets/hunting/`)
+
+`hunting_places.json` is the 131-entry hunting-place catalog copied from the
+locally installed RubinOT 21.0 client (`bin/assets.rtc`, internal path
+`data/json/hunting_places.json`, SHA-256
+`18d505adaea8ef3e449e1c3656b3100e1c5a5cd284a1dbbcd667bc5cbc5d2832`). It
+contains guide text, filters, recommended gear/supplies/imbuements, creature
+resistances and charms, valuable drops, and world-coordinate segments for the
+approach and in-hunt routes. It contains no sprites: the Hunt Finder resolves
+names against this project's item catalog and server-authored bestiary, and
+draws its coordinates over the project's own minimap tiles.
+
+The source JSON remains verbatim so no guide content is silently discarded.
+`parseHuntingPlaces` validates its bounds and structure before the UI uses it.
+Live tracking uses the floor-keyed `WayPath.Coordinates` only: the regular
+minimap continues following the character while the matching viewed-floor
+segments pulse over it.
+
 ## Rebuilding the web assets
 
 Place the matching extended files at `map/Tibia.dat` and `map/Tibia.spr`, then

@@ -20,6 +20,7 @@ type NavigationPanel =
   | "proficiency"
   | "prey"
   | "huntingTasks"
+  | "huntFinder"
   | "outfit"
   | "profile"
   | "market";
@@ -61,6 +62,7 @@ interface TopNavigationBarProps {
   onProficiency?: () => void;
   onPrey?: () => void;
   onHuntingTasks?: () => void;
+  onHuntFinder?: () => void;
   onOutfits?: () => void;
   onProfile?: () => void;
   onFightModeChange: (mode: FightMode) => void;
@@ -102,6 +104,7 @@ export function TopNavigationBar({
   onProficiency,
   onPrey,
   onHuntingTasks,
+  onHuntFinder,
   onOutfits,
   onProfile,
   onFightModeChange,
@@ -491,6 +494,28 @@ export function TopNavigationBar({
             <path d="M9.5 4.5h5V7h-5z" />
             <path d="M9.5 5.5H6.5v15h11v-15h-3" />
             <path d="m9 13.5 2 2 4-4.5" />
+          </svg>
+        </NavigationIconButton>
+
+        <NavigationIconButton
+          label={t("navigation.huntFinder")}
+          active={activePanel === "huntFinder"}
+          disabled={!onHuntFinder}
+          onClick={onHuntFinder}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-4 sm:size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9z" />
+            <path d="M12 1.5v2M12 20.5v2M1.5 12h2M20.5 12h2" />
           </svg>
         </NavigationIconButton>
 

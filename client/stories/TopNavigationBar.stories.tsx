@@ -49,6 +49,7 @@ const meta = {
     onParty: fn(),
     onQuests: fn(),
     onWiki: fn(),
+    onHuntFinder: fn(),
     onFightModeChange: fn(),
     onBattleList: fn(),
     onMinimap: fn(),
@@ -74,6 +75,11 @@ export const Connected: Story = {
       canvas.getByRole("button", { name: "Party [P]" }),
     );
     await expect(args.onParty).toHaveBeenCalledOnce();
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Hunt Finder" }),
+    );
+    await expect(args.onHuntFinder).toHaveBeenCalledOnce();
   },
 };
 

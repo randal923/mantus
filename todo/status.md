@@ -74,6 +74,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Profiles: achievements, titles, badges, char info (67)   | ✅     | ✅     | Nothing — closed; rename flow (2) and Cyclopedia display (83) live elsewhere |
 | Prey (74)                                                | ✅     | ✅     | Third slot + wildcard packs now sold by the store (43, 2026-07-29); party-shared loot boost → 77 |
 | Hunting tasks (75)                                       | ✅     | ✅     | Point spending surface + wheel point-source read (80); third-slot store offer (43) |
+| Hunt Finder and route guide (111)                        | —      | ✅     | Nothing — all 131 guides ship; six RubinOT-only item labels intentionally use text fallbacks |
 | Boosted creatures/bosses + reward-boss flag (76)         | ✅     | ✅     | Nothing — slot/boosted loot bonuses now feed reward-chest rolls (84)        |
 | Imbuements, tiers, Exaltation Forge (78)                 | ✅     | ✅     | Full shrine workspace refreshed 2026-08-01; stash-drawn sources, blank-scroll flow, equipment badges; shrines made server-owned (map re-import — needs db:reconcile-world-seed); migration 067 pending |
 | Weapon proficiency + animus mastery (82)                 | ✅     | ✅     | Spell-facing perk families ride 79, inert families + Soul Pit earn path ride 86; locked-row thresholds/animus race list → 87 |

@@ -17,6 +17,7 @@ export function GameMinimapOverlay() {
   );
   const setUiSettings = useGameWindowStore((state) => state.setUiSettings);
   const mapMarkers = useGameWindowStore((state) => state.mapMarkers);
+  const trackedRoute = useGameWindowStore((state) => state.trackedHuntRoute);
   if (!mapName || !ownCharacter) return null;
 
   const onLayoutChange = (layout: MinimapLayout) => {
@@ -43,6 +44,7 @@ export function GameMinimapOverlay() {
       creatures={visibleCreatures}
       layout={minimapLayout}
       mapMarkers={mapMarkers}
+      trackedRoute={trackedRoute}
       onLayoutChange={onLayoutChange}
       onWalkTo={(position) =>
         store.getState().runtime.clientRef.current?.walkTo(position)

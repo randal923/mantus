@@ -47,6 +47,7 @@ import type { ShopSessionState } from "./ShopSessionState";
 import type { StoreSessionState } from "./StoreSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
 import type { ActionBarEditorRequest } from "../../action-bar/ActionBarEditorRequest";
+import type { MinimapRoute } from "../../../lib/minimap/MinimapRoute";
 
 export interface GameWindowState {
   accessToken: string;
@@ -121,6 +122,9 @@ export interface GameWindowState {
   trackerVisible: boolean;
   preyWindowOpen: boolean;
   huntingTasksOpen: boolean;
+  huntFinderOpen: boolean;
+  /** Display-only route selected in the Hunt Finder. */
+  trackedHuntRoute: MinimapRoute | null;
   outfitWindowOpen: boolean;
   /** Open podium edit window; pushed by the server on podium use. */
   podiumWindow: PodiumWindowMessage | null;

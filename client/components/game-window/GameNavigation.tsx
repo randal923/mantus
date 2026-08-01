@@ -40,6 +40,7 @@ export function GameNavigation() {
   const huntingTasksOpen = useGameWindowStore(
     (state) => state.huntingTasksOpen,
   );
+  const huntFinderOpen = useGameWindowStore((state) => state.huntFinderOpen);
   const outfitWindowOpen = useGameWindowStore(
     (state) => state.outfitWindowOpen,
   );
@@ -108,6 +109,9 @@ export function GameNavigation() {
   const setHuntingTasksOpen = useGameWindowStore(
     (state) => state.setHuntingTasksOpen,
   );
+  const setHuntFinderOpen = useGameWindowStore(
+    (state) => state.setHuntFinderOpen,
+  );
   const setOutfitWindowOpen = useGameWindowStore(
     (state) => state.setOutfitWindowOpen,
   );
@@ -152,15 +156,17 @@ export function GameNavigation() {
                       ? "prey"
                       : huntingTasksOpen
                         ? "huntingTasks"
-                      : outfitWindowOpen
-                        ? "outfit"
-                        : profileWindowOpen
-                          ? "profile"
-                          : characterStatsOpen
-                            ? "character"
-                            : inventoryOpen
-                              ? "inventory"
-                              : undefined;
+                        : huntFinderOpen
+                          ? "huntFinder"
+                          : outfitWindowOpen
+                            ? "outfit"
+                            : profileWindowOpen
+                              ? "profile"
+                              : characterStatsOpen
+                                ? "character"
+                                : inventoryOpen
+                                  ? "inventory"
+                                  : undefined;
 
   return (
     <div className="absolute inset-x-0 top-0 z-40">
@@ -266,7 +272,8 @@ export function GameNavigation() {
           setWikiOpen((open) => {
             if (!open && !bestiaryLoaded) {
               const sent =
-                runtime.clientRef.current?.requestBestiaryCreatures() ?? false;
+                runtime.clientRef.current?.requestBestiaryCreatures() ??
+                false;
               sessionActions.bestiary.begin(sent);
             }
             return !open;
@@ -345,6 +352,21 @@ export function GameNavigation() {
           setPreyWindowOpen(false);
           // No fetch: hunting-tasks-state is pushed like prey-state.
           setHuntingTasksOpen((open) => !open);
+        }}
+        onHuntFinder={() => {
+          setGameMenuOpen(false);
+          setInventoryOpen(false);
+          setCharacterStatsOpen(false);
+          setPreyWindowOpen(false);
+          setHuntingTasksOpen(false);
+          setHuntFinderOpen((open) => {
+            if (!open && !bestiaryLoaded) {
+              const sent =
+                runtime.clientRef.current?.requestBestiaryCreatures() ?? false;
+              sessionActions.bestiary.begin(sent);
+            }
+            return !open;
+          });
         }}
         onOutfits={() => {
           setGameMenuOpen(false);

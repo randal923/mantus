@@ -45,6 +45,7 @@ import type { ShopSessionState } from "./ShopSessionState";
 import type { StoreSessionState } from "./StoreSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
 import type { ActionBarEditorRequest } from "../../action-bar/ActionBarEditorRequest";
+import type { MinimapRoute } from "../../../lib/minimap/MinimapRoute";
 
 export interface GameWindowStoreActions {
   setConfig: (config: Pick<GameWindowState, "accessToken" | "onLogout">) => void;
@@ -121,6 +122,8 @@ export interface GameWindowStoreActions {
   setTrackerVisible: (value: SetStateAction<boolean>) => void;
   setPreyWindowOpen: (value: SetStateAction<boolean>) => void;
   setHuntingTasksOpen: (value: SetStateAction<boolean>) => void;
+  setHuntFinderOpen: (value: SetStateAction<boolean>) => void;
+  setTrackedHuntRoute: (value: SetStateAction<MinimapRoute | null>) => void;
   setOutfitWindowOpen: (value: SetStateAction<boolean>) => void;
   setPodiumWindow: (value: PodiumWindowMessage | null) => void;
   setPodiumError: (value: PodiumActionFailedReason | null) => void;
