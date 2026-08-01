@@ -836,3 +836,33 @@ zero-XP, no-loot creature dynamically and its registered spell removes it. The
 typed self-destruct callback and creation trigger remain recorded in `TODO.md`.
 No database world-seed reconciliation is required for this update because the
 OTBM and converted map version did not change.
+
+## 2026-08-01 — Sewer-grate click targeting
+
+**Problem**: 2 of Thais's 32 valid sewer grates could not be used to descend.
+Their server-authored dropdowns and walkable landing tiles were correct, but
+the client redirected clicks to an adjacent 2×2 wall sprite's south-east
+anchor. The server consequently received an intent to use the wall while the
+paired underground ladder remained usable in the other direction. The same
+client-side ambiguity affected 13 of the world's 123 enabled sewer grates.
+
+**What changed**: sewer grates now retain their own map position as the use,
+look, and context-menu target even when a neighbouring multi-tile wall sprite
+overlaps the tile. Both sewer-grate item types are covered; ordinary doors and
+multi-tile gates keep the existing anchor redirect. No outcome moved to the
+client: it still sends only the selected map position, and the server resolves
+and revalidates the authored dropdown and destination inside the tick.
+
+**Files**: `client/lib/render/{MapView,resolveInteractiveTile}.ts`, its unit
+test, and the project completion/status records.
+
+**Verified**: audited all 32 Thais sewer-grate actions (all enabled with
+walkable server-authored destinations) and all 123 enabled sewer grates in the
+world map; the focused 9-test resolver suite, all 340 client unit tests, lint
+for the touched client files, and the full protocol/server/client TypeScript
+check pass.
+
+**Residual risk**: none for enabled sewer grates. The map's separately audited
+disabled-action backlog is unchanged; the one disabled dropdown in the Thais
+area is a closed wooden trapdoor whose tile directly below is a wall, not a
+sewer grate.

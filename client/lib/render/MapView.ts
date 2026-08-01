@@ -171,6 +171,7 @@ export class MapView {
     return resolveInteractiveTile(position, (candidate) =>
       this.tileItems(candidate.z, candidate.x, candidate.y).map(
         ({ object }) => ({
+          clientId: object.clientId,
           width: object.width,
           height: object.height,
           flags: object.flags,
