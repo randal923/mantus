@@ -612,6 +612,15 @@ for fractional/zero rates. Live wire probe: server booted with
 in-progress imbuement files unrelated to this change. Charm spending remains
 unimplemented (todo/status.md row 73/77).
 
+**Follow-up 2026-08-01 — public realm rates**: the public server information
+already exposed both kill-credit rates, but the realm still configured
+Bosstiary at ×1. Updated `config.yml` to set `bosstiaryKills: 2`, so the
+landing page now shows both Bestiary and Bosstiary at ×2 and the game server
+applies the advertised rates. Files touched: `config.yml` and `todo/done.md`.
+Verified with `yarn workspace server test src/loadServerConfig.test.ts` (9
+tests passed) and `git diff --check`. Residual risk: none known; the change
+takes effect when the server next loads its configuration.
+
 ## 2026-08-01 — Imbuement shrine workspace layout
 
 **Problem**: the functional imbuement window still used a narrow mode rail,
