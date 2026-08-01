@@ -5,6 +5,7 @@ import type {
 } from "@tibia/protocol";
 import type { MinimapRegionStore } from "./MinimapRegionStore";
 import type { MinimapRoute } from "./MinimapRoute";
+import { getNearestMinimapRouteSegment } from "./getNearestMinimapRouteSegment";
 
 export interface MinimapMarker {
   /** Canvas position in CSS pixels. */
@@ -56,9 +57,18 @@ function drawRoute(
   width: number,
   height: number,
   opacity: number,
+  ownPosition: Position | null,
 ): void {
   const segments = route.coordinates[String(floor)] ?? [];
   if (segments.length === 0) return;
+  const activeSegment =
+    ownPosition?.z === floor
+      ? getNearestMinimapRouteSegment(segments, ownPosition)
+      : null;
+  const drawnSegments: ReadonlyArray<readonly [Position, Position]> =
+    activeSegment && ownPosition
+      ? [[ownPosition, activeSegment[1]]]
+      : segments;
   const point = (position: Position) => ({
     x: (position.x + 0.5 - left) * pixelsPerTile,
     y: (position.y + 0.5 - top) * pixelsPerTile,
@@ -66,9 +76,13 @@ function drawRoute(
 
   context.lineCap = "round";
   context.lineJoin = "round";
+  context.setLineDash([
+    Math.max(1, pixelsPerTile * 0.35),
+    Math.max(4, pixelsPerTile * 1.5),
+  ]);
   const previousAlpha = context.globalAlpha;
   context.globalAlpha = Math.max(0, Math.min(1, opacity));
-  for (const [start, end] of segments) {
+  for (const [start, end] of drawnSegments) {
     const from = point(start);
     const to = point(end);
     context.beginPath();
@@ -82,11 +96,14 @@ function drawRoute(
     context.stroke();
   }
   context.globalAlpha = previousAlpha;
+  context.setLineDash([]);
 
-  const first = point(segments[0][0]);
-  const destination = route.destination?.z === floor
-    ? point(route.destination)
-    : point(segments[segments.length - 1][1]);
+  const first = point(drawnSegments[0][0]);
+  const destination = activeSegment
+    ? point(activeSegment[1])
+    : route.destination?.z === floor
+      ? point(route.destination)
+      : point(drawnSegments[drawnSegments.length - 1][1]);
   for (const marker of [first, destination]) {
     context.beginPath();
     context.arc(marker.x, marker.y, 4, 0, Math.PI * 2);
@@ -184,6 +201,7 @@ export function drawMinimap(input: MinimapDrawInput): MinimapMarker[] {
       width,
       height,
       input.routeOpacity ?? 1,
+      input.ownPosition,
     );
   }
 

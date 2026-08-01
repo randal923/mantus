@@ -718,7 +718,8 @@ new external-store snapshot on every read and triggered React's maximum update
 depth guard before bestiary data loaded. Live tracking uses only each guide's
 multi-floor `WayPath`, leaves the regular minimap camera and controls untouched,
 selects segments by the currently viewed floor (which follows the character by
-default), and pulses the line between bright and dim states. The Darashia
-Dragon Lair regression fixture covers floors 7 through 10. Browser stories
-cover both fresh-store and player-following route states. Verified with client
-typecheck, focused unit and Chromium Storybook tests, and `git diff --check`.
+default), and pulses a round-dotted line from the character's current tile to
+the endpoint of the nearest segment on that floor. The Darashia Dragon Lair
+regression fixture covers floors 7 through 10. Browser stories cover both
+fresh-store and player-following route states. Verified with client typecheck,
+focused unit and Chromium Storybook tests, and `git diff --check`.

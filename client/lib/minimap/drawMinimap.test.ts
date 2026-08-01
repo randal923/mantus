@@ -14,13 +14,15 @@ function stubCanvas(size: number) {
   let lineCount = 0;
   let globalAlpha = 1;
   const strokeAlphas: number[] = [];
+  const lineDashes: number[][] = [];
+  const movePoints: Array<{ x: number; y: number }> = [];
   const context = {
     setTransform: () => {},
     fillRect: () => {},
     drawImage: (image: RegionDraw["region"], ...args: number[]) =>
       regionDraws.push({ region: image, args }),
     beginPath: () => {},
-    moveTo: () => {},
+    moveTo: (x: number, y: number) => movePoints.push({ x, y }),
     lineTo: () => {
       lineCount += 1;
     },
@@ -32,6 +34,7 @@ function stubCanvas(size: number) {
     stroke: () => strokeAlphas.push(globalAlpha),
     strokeText: () => {},
     fillText: () => {},
+    setLineDash: (dash: number[]) => lineDashes.push(dash),
     imageSmoothingEnabled: true,
     fillStyle: "",
     strokeStyle: "",
@@ -60,6 +63,8 @@ function stubCanvas(size: number) {
     arcCount: () => arcCount,
     lineCount: () => lineCount,
     strokeAlphas,
+    lineDashes,
+    movePoints,
   };
 }
 
@@ -210,5 +215,32 @@ describe("drawMinimap", () => {
 
     expect(result.strokeAlphas.slice(0, 2)).toEqual([0.2, 0.2]);
     expect(result.strokeAlphas.slice(2)).toEqual([1, 1]);
+  });
+
+  it("starts the current-floor dotted route at the character position", () => {
+    const result = stubCanvas(200);
+    drawMinimap({
+      canvas: result.canvas,
+      store,
+      center: { x: ownPosition.x, y: ownPosition.y },
+      floor: ownPosition.z,
+      pixelsPerTile: 4,
+      creatures: [],
+      ownPlayerId: "player",
+      ownPosition,
+      route: {
+        name: "Test Hunt",
+        coordinates: {
+          6: [[
+            { x: ownPosition.x - 10, y: ownPosition.y, z: 6 },
+            { x: ownPosition.x + 5, y: ownPosition.y, z: 6 },
+          ]],
+        },
+      },
+    });
+
+    expect(result.movePoints[0]).toEqual({ x: 100, y: 100 });
+    expect(result.lineDashes[0]).toEqual([1.4, 6]);
+    expect(result.lineDashes.at(-1)).toEqual([]);
   });
 });
