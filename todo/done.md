@@ -1179,3 +1179,41 @@ unit tests (new: deferred-route apply, deferred-trace answer), the full
 **Residual risk**: `hunting-bot-update-pending` remains in the protocol error
 enum but is no longer emitted; deferred slots are one-deep by design (the
 newest request wins), which matches the window's semantics.
+
+## 2026-08-01 — Depot lists items inside closed nested backpacks
+
+**Problem**: the depot window's "Carried items" pane only showed the direct
+contents of the equipped backpack, so anything inside a bag within it could
+not be stored (or stowed) without first opening and unpacking the bag. The
+server never had this restriction — `planDepotDeposit`/`planStashDeposit`
+find the item anywhere in the carried snapshot — the pane was fed from the
+client's `inventory.items`, which is only the top level, and closed nested
+containers never reach the client at all.
+
+**What changed**: the carried list is now server-projected into the
+`depot-state` message. New `carriedDepotItemSchema` (`{ depth, item }`,
+capped at `DEPOT_LIMITS.maxCarriedListed` = 1024, depth ≤ 8) and a required
+`carriedItems` field on `depotStateMessageSchema`. New
+`server/src/depot/listCarriedDepotItems.ts` walks every equipped container
+depth-first in slot order (cycle-guarded, same 8-level cap as
+`collectDescendantItems`) and projects each item with `projectItem`, so the
+entries carry the same id/revision/stowable data the deposit and stow intents
+need. `DepotModal` renders `state.carriedItems` (indented by depth) instead
+of the `inventoryItems` prop, which was removed. Staleness self-heals: every
+mutation and every `stale` failure already re-sends the depot state, which
+now refreshes the carried pane too.
+
+**Files**: `protocol/src/depot.ts`,
+`server/src/depot/listCarriedDepotItems.ts` (new),
+`server/src/depot/projectDepotState.ts`, `server/src/depot/DepotService.ts`,
+`client/components/depot/DepotModal.tsx`,
+`client/components/game-window/GameCommerceOverlays.tsx`.
+
+**Verified**: new DepotService test — a sword inside a closed bag inside the
+equipped backpack is listed at depth 1 and deposited directly; the refreshed
+state drops it from the carried list and the persist fires once. All depot
+unit tests (13) pass; protocol, server and client typechecks pass.
+
+**Residual risk**: the mailbox window still lists only top-level items to
+mail (recorded in `TODO.md`); the carried list caps at 1024 entries, beyond
+any weight-feasible inventory.

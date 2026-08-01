@@ -1,5 +1,6 @@
 import {
   DEPOT_LIMITS,
+  type CarriedDepotItem,
   type DepotEntry,
   type DepotLocation,
   type DepotStateMessage,
@@ -15,6 +16,7 @@ export function projectDepotState(
   query: string,
   page: number,
   result: DepotPage,
+  carriedItems: ReadonlyArray<CarriedDepotItem>,
 ): DepotStateMessage {
   const entries: DepotEntry[] = result.entries.map((entry) => {
     const type = items.itemType(
@@ -77,5 +79,6 @@ export function projectDepotState(
       Math.ceil(result.totalEntries / DEPOT_LIMITS.pageSize),
     ),
     entries,
+    carriedItems: [...carriedItems],
   };
 }

@@ -17,6 +17,7 @@ import { depotPageOf } from "./depotPageOf";
 import type { DepotStore, RewardDeliveryRequest } from "./DepotStore";
 import { failDepot } from "./failDepot";
 import { failMail } from "./failMail";
+import { listCarriedDepotItems } from "./listCarriedDepotItems";
 import type { LoadedDepot } from "./LoadedDepot";
 import { planDepotDeposit } from "./planDepotDeposit";
 import { planDepotWithdraw } from "./planDepotWithdraw";
@@ -308,7 +309,10 @@ export class DepotService {
     const cache = session.playerId
       ? this.caches.get(session.playerId)
       : undefined;
-    if (!cache) {
+    const carried = session.playerId
+      ? this.items.inventorySnapshot(session.playerId)
+      : null;
+    if (!cache || !carried) {
       failDepot(session, "failed");
       return;
     }
@@ -324,7 +328,15 @@ export class DepotService {
       matchingItemTypeIds,
     );
     session.send(
-      projectDepotState(this.items, access, location, query, page, result),
+      projectDepotState(
+        this.items,
+        access,
+        location,
+        query,
+        page,
+        result,
+        listCarriedDepotItems(carried.items, this.catalog),
+      ),
     );
   }
 

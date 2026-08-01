@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { inventoryItemSchema } from "./item";
 import { PROTOCOL_LIMITS } from "./limits";
 
 export const DEPOT_LIMITS = {
@@ -7,6 +8,8 @@ export const DEPOT_LIMITS = {
   maxInboxItems: 2_000,
   maxStashAmount: 1_000_000_000,
   maxTransferCount: 100,
+  maxCarriedListed: 1_024,
+  maxCarriedDepth: 8,
   pageSize: 24,
   maxSearchLength: 60,
   mailExpiryDays: 30,
@@ -156,6 +159,20 @@ export const depotEntrySchema = z.discriminatedUnion("location", [
   stashEntrySchema,
 ]);
 
+/**
+ * One carried item the depot window can act on, listed recursively so the
+ * contents of closed backpacks are storable without opening them. `depth` is
+ * nesting below the equipped container (0 = directly inside it), for display
+ * indentation only. This is the player's own inventory — nothing here is
+ * beyond what opening the bags would show.
+ */
+export const carriedDepotItemSchema = z
+  .object({
+    depth: z.number().int().min(0).max(DEPOT_LIMITS.maxCarriedDepth),
+    item: inventoryItemSchema,
+  })
+  .strict();
+
 export const depotStateMessageSchema = z
   .object({
     type: z.literal("depot-state"),
@@ -175,6 +192,9 @@ export const depotStateMessageSchema = z
     page: z.number().int().positive(),
     pageCount: z.number().int().positive(),
     entries: z.array(depotEntrySchema).max(DEPOT_LIMITS.pageSize),
+    carriedItems: z
+      .array(carriedDepotItemSchema)
+      .max(DEPOT_LIMITS.maxCarriedListed),
   })
   .strict();
 
@@ -237,6 +257,7 @@ export type StashWithdrawMessage = z.infer<typeof stashWithdrawMessageSchema>;
 export type CloseDepotMessage = z.infer<typeof closeDepotMessageSchema>;
 export type SendMailMessage = z.infer<typeof sendMailMessageSchema>;
 export type CloseMailboxMessage = z.infer<typeof closeMailboxMessageSchema>;
+export type CarriedDepotItem = z.infer<typeof carriedDepotItemSchema>;
 export type DepotItemEntry = z.infer<typeof depotItemEntrySchema>;
 export type StashEntry = z.infer<typeof stashEntrySchema>;
 export type DepotEntry = z.infer<typeof depotEntrySchema>;

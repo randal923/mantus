@@ -211,6 +211,21 @@ const carriedSword = (): Item => ({
   location: { kind: "container", containerId: "depot-backpack", slot: 0 },
 });
 
+const nestedBag = (): Item => ({
+  id: "55555555-5555-4555-8555-555555555555",
+  typeId: 2854,
+  count: 1,
+  attributes: {},
+  version: 1,
+  location: { kind: "container", containerId: "depot-backpack", slot: 0 },
+});
+
+const nestedSword = (): Item => ({
+  ...carriedSword(),
+  id: "66666666-6666-4666-8666-666666666666",
+  location: { kind: "container", containerId: nestedBag().id, slot: 0 },
+});
+
 const storedSword = (): Item => ({
   id: "22222222-2222-4222-8222-222222222222",
   typeId: SWORD_TYPE,
@@ -317,6 +332,53 @@ describe("DepotService", () => {
     ).toBeDefined();
     await nextTurn();
     expect(harness.persist).toHaveBeenCalledTimes(2);
+  });
+
+  it("lists items inside closed nested backpacks and deposits one directly", async () => {
+    const bag = nestedBag();
+    const sword = nestedSword();
+    const harness = makeHarness({ carried: [bag, sword] });
+    const sessionId = openDepot(harness);
+
+    const opened = harness.messages
+      .filter((message) => message.type === "depot-state")
+      .at(-1);
+    if (opened?.type !== "depot-state") throw new Error("no state");
+    expect(opened.carriedItems).toEqual([
+      expect.objectContaining({
+        depth: 0,
+        item: expect.objectContaining({ id: bag.id }),
+      }),
+      expect.objectContaining({
+        depth: 1,
+        item: expect.objectContaining({ id: sword.id }),
+      }),
+    ]);
+
+    harness.depot.handle(harness.session, {
+      type: "depot-deposit",
+      sessionId,
+      depotRevision: 1,
+      itemId: sword.id,
+      itemRevision: 1,
+    });
+
+    const after = harness.messages
+      .filter((message) => message.type === "depot-state")
+      .at(-1);
+    if (after?.type !== "depot-state") throw new Error("no state");
+    expect(after.depotCount).toBe(1);
+    expect(after.carriedItems).toEqual([
+      expect.objectContaining({
+        depth: 0,
+        item: expect.objectContaining({ id: bag.id }),
+      }),
+    ]);
+    expect(
+      harness.carriedItems().find((item) => item.id === sword.id),
+    ).toBeUndefined();
+    await nextTurn();
+    expect(harness.persist).toHaveBeenCalledTimes(1);
   });
 
   it("refreshes the authoritative depot page after a stale intent", () => {

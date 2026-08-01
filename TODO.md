@@ -29,6 +29,17 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **The mailbox window can only mail top-level backpack items** (2026-08-01).
+  The depot's carried pane is now server-projected recursively
+  (`carriedItems` on `depot-state`), but `MailboxModal` still receives the
+  client's `inventory.items` — the equipped backpack's direct contents — so a
+  parcel inside a bag must be moved up before it can be sent. Low impact
+  (parcels are normally carried top-level) and mail eligibility differs from
+  deposit (containers with contents are the normal case), so it was left
+  as-is. Recommended fix: reuse `listCarriedDepotItems` in a
+  `mailbox-opened`-adjacent state message, or push it on open, and render it
+  in `MailboxModal` the way `DepotModal` now does. Owner: depot/mail.
+
 - **The hunting bot only walks; it never uses a ladder, hole, rope or door**
   (2026-08-01, Feature 112). Floor changes come in two shapes on this map:
   ramps are step-activated transitions, which the route search follows, but the
