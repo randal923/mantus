@@ -14,7 +14,6 @@ const meta = {
     ),
   ],
   args: {
-    characterLevel: 8,
     characterVocation: "Knight",
     mapName: "otservbr",
     creatures: [],

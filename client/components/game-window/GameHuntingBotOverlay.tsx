@@ -83,7 +83,6 @@ export function GameHuntingBotOverlay() {
 
   return (
     <HuntingBotModal
-      characterLevel={character.level}
       characterVocation={character.vocation}
       mapName={mapName}
       ownPosition={character.position}

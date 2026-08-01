@@ -28,7 +28,6 @@ import { Modal } from "../ui/Modal";
 import { HuntingBotRouteEditor } from "./HuntingBotRouteEditor";
 
 interface HuntingBotModalProps {
-  characterLevel: number;
   characterVocation: string;
   mapName: string;
   ownPosition: Position | null;
@@ -55,7 +54,6 @@ interface HuntingBotModalProps {
  * catalog; choosing one opens its route in the editor.
  */
 export function HuntingBotModal({
-  characterLevel,
   characterVocation,
   mapName,
   ownPosition,
@@ -73,7 +71,7 @@ export function HuntingBotModal({
 }: HuntingBotModalProps) {
   const { t } = useAppTranslation();
   const catalog = useHuntingPlaces();
-  const [minimumLevel, setMinimumLevel] = useState(characterLevel);
+  const [minimumLevel, setMinimumLevel] = useState("");
   const [vocation, setVocation] = useState<HuntingVocation | "all">(() =>
     baseHuntingVocation(characterVocation),
   );
@@ -87,7 +85,7 @@ export function HuntingBotModal({
   const places = useMemo(
     () =>
       filterHuntingPlaces(catalog.places, {
-        minimumLevel,
+        minimumLevel: Number(minimumLevel),
         vocation,
         teamSize,
         sort,

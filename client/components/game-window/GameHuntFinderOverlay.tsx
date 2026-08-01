@@ -24,7 +24,6 @@ export function GameHuntFinderOverlay() {
 
   return (
     <HuntFinderModal
-      characterLevel={character.level}
       characterVocation={character.vocation}
       mapName={mapName}
       creatures={creatures}

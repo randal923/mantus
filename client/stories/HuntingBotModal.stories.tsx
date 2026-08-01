@@ -23,7 +23,6 @@ const meta = {
     ),
   ],
   args: {
-    characterLevel: 8,
     characterVocation: "Knight",
     mapName: "otservbr",
     ownPosition: { x: 32_837, y: 31_927, z: 7 },
@@ -97,6 +96,6 @@ export const OutOfRange: Story = {
     const dialog = await canvas.findByRole("dialog", { name: "Hunting Bot" });
     await expect(
       await within(dialog).findByRole("alert"),
-    ).toHaveTextContent("You are not standing in this hunting ground.");
+    ).toHaveTextContent("No walkable path reaches the route from here.");
   },
 };

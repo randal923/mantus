@@ -1075,3 +1075,66 @@ refusal steps; protocol, server and client typechecks pass.
 **Residual risk**: arming spam is bounded only by the connection message-rate
 cap; each arm click may spend a 10k-node search (~4 ms). Fine at current
 scale; folds into the existing path-budget profiling gap in TODO.md.
+
+## 2026-08-01 — Guide catalog: dedicated "Darashia Dragon Lords" hunting place
+
+**Problem**: the catalog had no way to hunt the Darashia dragon-lord floor —
+the world spawns 24 dragon lords on z11 (plus 4 in a z12 side chamber) under
+the Darashia Dragon Lair, but no guide named them or carried a route there.
+A first attempt folded them into the existing Dragon Lair card (extra
+monster row + a second route floor), which was invisible in the card list
+and hidden by any level filter above 40, so it shipped as its own entry
+instead.
+
+**What changed**: new catalog entry "Darashia Dragon Lords" (Level 60,
+Solo/Duo, Darashia): Dragon Lord monster row (resistances matching the
+Fenrock/POI dragon-lord guides), its signature valuables, the lair's travel
+WayPath with the destination moved to the lower cave, and a floor-11
+RoutePath — a 24-point loop computed as a 2-opt tour over the dragon-lord
+spawn homes (316 tiles, legs <= ~25). The Dragon Lair entry itself is
+byte-identical to before. Catalog count pins updated 131 -> 132 in
+`parseHuntingPlaces.test.ts` / `filterHuntingPlaces.test.ts`. File:
+`client/public/assets/hunting/hunting_places.json` (note: it uses CRLF line
+endings — write it back with `newline='\r\n'` or the whole file diffs).
+
+**Follow-up (same day)**: the new card never reached the player because
+`next.config.ts` serves `/assets/*` with `max-age=86400,
+stale-while-revalidate=604800` — tuned for sprite atlases, but it let the
+browser serve a day-old `hunting_places.json` from HTTP cache without
+revalidating. `useHuntingPlaces` and `useWikiItems` now fetch with
+`cache: "no-cache"` (always revalidate; unchanged files answer 304).
+The other hand-maintained `/assets` JSON catalogs
+(`proficiencies`, `proficiency-sprites`, `creature-loot-items`,
+`npc-shop-categories`) still ride the day-long cache — recorded in TODO.md.
+
+**Verified**: JSON parses with all 131 original places byte-identical plus
+the new entry; hunt-finder and hunting-bot unit tests and both modal
+interaction stories pass; a playtest probe ran the floor-11 loop through the
+real `hunting-bot-trace` pipeline — 181 traced waypoints, 0 unresolved legs.
+Residual: the four z12 dragon lords sit in a small side chamber with no
+guide route (hand-draw if wanted), and the z10->z11 descent is a use-action
+floor change the bot cannot cross, so players walk down and arm on floor 11.
+
+## 2026-08-01 — Hunt finder & hunting bot: level filter no longer autofills, digits-only text input
+
+**Problem**: both the Hunt Finder and the Hunting Bot browser seeded their
+level filter with the character's level, hiding lower-level hunts by default,
+and used a native `type="number"` input (spinner arrows, scroll-to-change).
+
+**What changed**: the filter state is now a digits-only string that starts
+empty (empty = no level filter, placeholder "All"); the input is a plain text
+field with `inputMode="numeric"`, max 4 digits, non-digits stripped on
+change. `filterHuntingPlaces` keeps its numeric contract — the modals pass
+`Number(value)`. The now-unused `characterLevel` prop was removed from
+`HuntFinderModal`/`HuntingBotModal` and their overlays/stories, and the
+OutOfRange story was re-pinned to the new arm-error copy. Files:
+`client/components/hunt-finder/{HuntFinderFilters,HuntFinderModal}.tsx`,
+`client/components/hunting-bot/HuntingBotModal.tsx`,
+`client/components/game-window/{GameHuntFinderOverlay,GameHuntingBotOverlay}.tsx`,
+both story files.
+
+**Verified**: client typecheck; HuntingBotModal (4) and HuntFinderModal (1)
+interaction stories pass; hunt-finder unit tests pass. Noted: five unrelated
+story tests (ActionBar Empty, GameHud chat-hover, ProficiencyModal Locked
+Levels, SpellListModal Knight, WheelModal Empty) fail identically at HEAD
+with these changes stashed — pre-existing breakage, not touched here.

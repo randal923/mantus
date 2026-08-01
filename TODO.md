@@ -51,6 +51,10 @@ limitations accepted during a session are recorded in the owning feature file
   failed player chase burns a full ±12 box (625 nodes) every 250 ms, and the
   monster AI work budget went 512 → 2048 nodes per tick so one chase search
   (`maxPathNodes: 640`) no longer starves the whole spawn's brains.
+  Recommended fix: give the bot the shared per-tick work ceiling the monster
+  AI already uses (`maxAiWorkPerTick`), round-robin across sessions, and add
+  a perf gate beside the existing pathfinding one in
+  `CreaturePerformance.test.ts`.
 - **The hunting bot can still stare forever at a target no path reaches**
   (2026-08-01, Feature 112). Auto-targeting picks the weakest visible
   monster with no reachability check, and the bot stands down while any
@@ -60,10 +64,18 @@ limitations accepted during a session are recorded in the owning feature file
   bot waits, the monster stares back, and the route never resumes.
   Recommended fix: when the auto-target has been neither hit nor approached
   for a few seconds, drop it and ignore that creature id for a while so the
-  ring continues. Recommended fix: give the bot the
-  shared per-tick work ceiling the monster AI already uses
-  (`maxAiWorkPerTick`), round-robin across sessions, and add a perf gate beside
-  the existing pathfinding one in `CreaturePerformance.test.ts`.
+  ring continues.
+- **Data catalogs under `/assets/*` ride a day-long browser cache**
+  (2026-08-01, Feature 112 follow-up). `next.config.ts` sends
+  `max-age=86400, stale-while-revalidate=604800` for everything under
+  `/assets`, which is right for atlas sheets and map tiles but hid a same-day
+  `hunting_places.json` edit from players for up to a day. The hunt and wiki
+  catalogs now fetch with `cache: "no-cache"`; `proficiencies.json`,
+  `proficiency-sprites.json`, `creature-loot-items.json` and
+  `npc-shop-categories.json` still use the cached default and will show the
+  same staleness after a content regen. Recommended fix: give data JSON its
+  own `no-cache` header rule (more specific `source` after the general one)
+  or version the URLs.
 - **Carnisylvan Sapling remains a dynamic monster mechanic** (2026-08-01,
   Feature 9/26). The pinned Canary definition has zero XP, no bestiary or loot,
   and its registered `sapling explode` spell schedules the creature's removal.

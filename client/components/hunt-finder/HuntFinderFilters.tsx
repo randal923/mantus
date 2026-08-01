@@ -23,12 +23,13 @@ const TEAM_SIZES: ReadonlyArray<HuntingTeamSize> = [
 ];
 
 interface HuntFinderFiltersProps {
-  minimumLevel: number;
+  /** Digits-only text; empty means no level filter. */
+  minimumLevel: string;
   vocation: HuntingVocation | "all";
   teamSize: HuntingTeamSize | "all";
   sort: HuntingGuideSort;
   search: string;
-  onMinimumLevelChange: (level: number) => void;
+  onMinimumLevelChange: (level: string) => void;
   onVocationChange: (vocation: HuntingVocation | "all") => void;
   onTeamSizeChange: (teamSize: HuntingTeamSize | "all") => void;
   onSortChange: (sort: HuntingGuideSort) => void;
@@ -53,16 +54,13 @@ export function HuntFinderFilters({
       <Input
         label={t("huntFinder.filters.level")}
         aria-label={t("huntFinder.filters.level")}
-        type="number"
-        min={0}
-        max={2_000}
+        inputMode="numeric"
+        maxLength={4}
+        placeholder={t("huntFinder.filters.all")}
         value={minimumLevel}
-        onChange={(event) => {
-          const value = Number(event.currentTarget.value);
-          onMinimumLevelChange(
-            Number.isFinite(value) ? Math.min(2_000, Math.max(0, value)) : 0,
-          );
-        }}
+        onChange={(event) =>
+          onMinimumLevelChange(event.currentTarget.value.replace(/\D/g, ""))
+        }
       />
       <Dropdown
         label={t("huntFinder.filters.vocation")}
