@@ -4,6 +4,7 @@ import { Client, Pool } from "pg";
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  DEFAULT_HUNTING_BOT_ROUTE,
 } from "@tibia/protocol";
 import { applyMigrations } from "../test/applyMigrations";
 import type { Character, CharacterSaveSnapshot } from "./Character";
@@ -247,6 +248,39 @@ databaseDescribe("PgCharacterStore integration", () => {
     );
     expect(updatedBot?.actionBar).toEqual(actionBar);
     expect(updatedBot?.actionBotSettings).toEqual(actionBotSettings);
+  });
+
+  it("persists the hunting route and survives a corrupt stored blob", async () => {
+    const accountId = await createAccount("hunting-bot");
+    await service.create(accountId, {
+      displayName: "Route Hero",
+      vocation: "Knight",
+      sex: "male",
+    });
+    const summary = (await store.listByAccountId(accountId))[0];
+    if (!summary) throw new Error("character was not created");
+    const created = await store.findByIdForAccount(accountId, summary.id);
+    expect(created?.huntingBotRoute).toEqual(DEFAULT_HUNTING_BOT_ROUTE);
+
+    const route = {
+      huntName: "Rotworms",
+      waypoints: [
+        { x: 32_000, y: 31_900, z: 7 },
+        { x: 32_004, y: 31_900, z: 7 },
+      ],
+    };
+    await store.updateHuntingBotRoute(summary.id, route);
+    const updated = await store.findByIdForAccount(accountId, summary.id);
+    expect(updated?.huntingBotRoute).toEqual(route);
+
+    // A blob the schema cannot read must degrade to an empty route rather
+    // than throw and lock the character out of the game.
+    await pool.query(
+      `UPDATE characters SET hunting_bot = $2::jsonb WHERE id = $1`,
+      [summary.id, JSON.stringify({ waypoints: "not-a-list" })],
+    );
+    const recovered = await store.findByIdForAccount(accountId, summary.id);
+    expect(recovered?.huntingBotRoute).toEqual(DEFAULT_HUNTING_BOT_ROUTE);
   });
 
   it("rejects a stale snapshot without overwriting the newer save", async () => {

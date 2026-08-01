@@ -4,6 +4,7 @@ import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
   DEFAULT_FIGHT_MODE,
+  DEFAULT_HUNTING_BOT_ROUTE,
   DEFAULT_LOOT_FILTER,
   PROTOCOL_LIMITS,
   type ClientMessage,
@@ -13,6 +14,7 @@ import {
   type ActionBotSettings,
   type Direction,
   type FightMode,
+  type HuntingBotRoute,
   type LootFilter,
   type Position,
   type ServerErrorCode,
@@ -43,6 +45,10 @@ export class Session {
   lootFilterUpdatePending = false;
   /** Ready-time for the next loot-filter item listing; throttles the window. */
   lootFilterItemsReadyAt = 0;
+  huntingBotRouteUpdatePending = false;
+  /** One route trace may be in flight per connection; the search is not free. */
+  huntingBotTracePending = false;
+  huntingBotTraceReadyAt = 0;
   itemOperationPending = false;
   /**
    * Ready-time for the next generic item/object use. Canary applies a 200 ms
@@ -115,6 +121,24 @@ export class Session {
     ...DEFAULT_LOOT_FILTER,
     ignoredItemTypeIds: [],
   };
+  /**
+   * The character's saved hunting route. Held per session so the tick can
+   * walk it without a DB read; the durable copy trails behind the same way
+   * the loot filter's does.
+   */
+  huntingBotRoute: HuntingBotRoute = {
+    ...DEFAULT_HUNTING_BOT_ROUTE,
+    waypoints: [],
+  };
+  /**
+   * Whether the bot is running. Deliberately session-only and never
+   * persisted: a character must never log in already walking.
+   */
+  huntingBotEnabled = false;
+  huntingBotWaypointIndex = 0;
+  huntingBotRepathReadyAt = 0;
+  /** Waypoints skipped in a row because nothing could path to them. */
+  huntingBotSkips = 0;
   isAlive = true;
   readonly knownCreatureIds = new Set<string>();
   readonly knownMapItemTiles = new Map<string, Position>();
@@ -200,7 +224,10 @@ export class Session {
     return Boolean(
       this.movementDirection ||
         this.bufferedMovementDirection ||
-        this.autoWalkDirections.length > 0,
+        this.autoWalkDirections.length > 0 ||
+        // A running bot has to keep being ticked even between legs, or it
+        // stops the moment it stands still on a waypoint.
+        this.huntingBotEnabled,
     );
   }
 

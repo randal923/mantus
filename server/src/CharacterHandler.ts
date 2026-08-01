@@ -388,6 +388,15 @@ export class CharacterHandler {
       ...character.lootFilter,
       ignoredItemTypeIds: [...character.lootFilter.ignoredItemTypeIds],
     };
+    session.huntingBotRoute = {
+      ...character.huntingBotRoute,
+      waypoints: character.huntingBotRoute.waypoints.map((waypoint) => ({
+        ...waypoint,
+      })),
+    };
+    // A character never logs in already walking a route.
+    session.huntingBotEnabled = false;
+    session.huntingBotWaypointIndex = 0;
     session.aimAtTargetSpellIds = new Set(character.aimAtTargetSpellIds);
     this.registry.bindPlayer(session);
     const inventory = this.items.attach(loadedInventory);
@@ -432,6 +441,7 @@ export class CharacterHandler {
       actionBar: character.actionBar,
       actionBotSettings: character.actionBotSettings,
       lootFilter: character.lootFilter,
+      huntingBotRoute: character.huntingBotRoute,
       aimAtTargetSpellIds: [...character.aimAtTargetSpellIds],
     });
     this.visibility.syncMapItems(session, player);

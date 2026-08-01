@@ -57,6 +57,9 @@ export function GameHudOverlay() {
   const lootFilterEnabled = useGameWindowStore(
     (state) => state.lootFilter.enabled,
   );
+  const huntingBotEnabled = useGameWindowStore(
+    (state) => state.huntingBotStatus?.enabled ?? false,
+  );
   const inventory = useGameWindowStore(
     (state) => state.sessions?.inventory ?? null,
   );
@@ -81,6 +84,9 @@ export function GameHudOverlay() {
   );
   const setLootFilterOpen = useGameWindowStore(
     (state) => state.setLootFilterOpen,
+  );
+  const setHuntingBotOpen = useGameWindowStore(
+    (state) => state.setHuntingBotOpen,
   );
 
   const chatChannels = useMemo<ReadonlyArray<ChatChannel>>(
@@ -357,6 +363,10 @@ export function GameHudOverlay() {
     setLootFilterOpen(true);
   }, [setLootFilterOpen, store]);
 
+  const onOpenHuntingBot = useCallback(() => {
+    setHuntingBotOpen(true);
+  }, [setHuntingBotOpen]);
+
   if (!ownCharacter || !fightState) return null;
 
   return (
@@ -379,6 +389,7 @@ export function GameHudOverlay() {
       actionBar={actionBar}
       actionBotEnabled={actionBotEnabled}
       lootFilterEnabled={lootFilterEnabled}
+      huntingBotEnabled={huntingBotEnabled}
       inventory={inventory}
       hasWeapon={Boolean(inventory?.equipment.weapon)}
       combatLog={combatLog}
@@ -395,6 +406,7 @@ export function GameHudOverlay() {
       onActionBarChange={onActionBarChange}
       onConfigureActionBar={onConfigureActionBar}
       onOpenLootFilter={onOpenLootFilter}
+      onOpenHuntingBot={onOpenHuntingBot}
     />
   );
 }

@@ -29,6 +29,25 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **The hunting bot only walks; it never uses a ladder, hole, rope or door**
+  (2026-08-01, Feature 112). Floor changes come in two shapes on this map:
+  ramps are step-activated transitions, which the route search follows, but the
+  8805 ladders, dropdowns, rope spots and rope holes are `use`/`use-with`
+  actions that need their own intent, and a closed door needs opening. A route
+  leg that depends on one cannot be traced (about 5 % of the 1669 legs across
+  all 131 guides) and, if hand-placed anyway, is skipped at run time. Multi-
+  floor guides — 49 of 131 — are therefore seeded one floor at a time.
+  Recommended fix: extend the waypoint chain with a typed `use` waypoint that
+  the bot executes through the existing `use-map` / `use-with` paths, and let
+  the tracer emit one when a leg's only connection is an action tile.
+- **The hunting bot's per-tick path budget is unprofiled at scale**
+  (2026-08-01, Feature 112). Each running bot spends up to 800 search nodes
+  (~0.3 ms) once per waypoint, paced by a 400 ms cooldown, and the tick is
+  25 ms. That is comfortable for a handful of bots but nothing measures what
+  happens when many re-plan on the same tick. Recommended fix: give the bot the
+  shared per-tick work ceiling the monster AI already uses
+  (`maxAiWorkPerTick`), round-robin across sessions, and add a perf gate beside
+  the existing pathfinding one in `CreaturePerformance.test.ts`.
 - **Carnisylvan Sapling remains a dynamic monster mechanic** (2026-08-01,
   Feature 9/26). The pinned Canary definition has zero XP, no bestiary or loot,
   and its registered `sapling explode` spell schedules the creature's removal.

@@ -32,6 +32,7 @@ export interface CharacterRow {
   action_bar: unknown;
   potion_action_bar: unknown;
   loot_filter: unknown;
+  hunting_bot: unknown;
   aim_at_target_spells: unknown;
   skull: number;
   skull_expires_at: Date | null;

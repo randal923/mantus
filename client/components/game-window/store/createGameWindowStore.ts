@@ -2,6 +2,7 @@ import type { SetStateAction } from "react";
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  DEFAULT_HUNTING_BOT_ROUTE,
   DEFAULT_LOOT_FILTER,
 } from "@tibia/protocol";
 import { createStore } from "zustand/vanilla";
@@ -53,6 +54,10 @@ export function createGameWindowStore({
       current: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
     },
     lootFilterSaveTimerRef: { current: null },
+    huntingBotRouteRef: {
+      current: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
+    },
+    huntingBotSaveTimerRef: { current: null },
     marketOpenRef: { current: false },
     marketSelectedItemRef: { current: null },
     hadPartyRef: { current: false },
@@ -100,6 +105,12 @@ export function createGameWindowStore({
     lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
     lootFilterOpen: false,
     lootFilterItems: { carried: [], ignored: [] },
+    huntingBotOpen: false,
+    huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
+    huntingBotStatus: null,
+    huntingBotError: null,
+    huntingBotUnresolved: [],
+    huntingBotTracing: false,
     actionBarEditorRequest: null,
     marketSelectedItem: null,
     marketToast: null,
@@ -295,6 +306,18 @@ export function createGameWindowStore({
         lootFilterOpen: resolveStateAction(value, state.lootFilterOpen),
       })),
     setLootFilterItems: (value) => set({ lootFilterItems: value }),
+    setHuntingBotOpen: (value) =>
+      set((state) => ({
+        huntingBotOpen: resolveStateAction(value, state.huntingBotOpen),
+      })),
+    setHuntingBotRoute: (value) =>
+      set((state) => ({
+        huntingBotRoute: resolveStateAction(value, state.huntingBotRoute),
+      })),
+    setHuntingBotStatus: (value) => set({ huntingBotStatus: value }),
+    setHuntingBotError: (value) => set({ huntingBotError: value }),
+    setHuntingBotUnresolved: (value) => set({ huntingBotUnresolved: value }),
+    setHuntingBotTracing: (value) => set({ huntingBotTracing: value }),
     setActionBarEditorRequest: (value) =>
       set((state) => ({
         actionBarEditorRequest: resolveStateAction(
@@ -580,6 +603,14 @@ export function createGameWindowStore({
         clearTimeout(runtime.lootFilterSaveTimerRef.current);
         runtime.lootFilterSaveTimerRef.current = null;
       }
+      runtime.huntingBotRouteRef.current = {
+        ...DEFAULT_HUNTING_BOT_ROUTE,
+        waypoints: [],
+      };
+      if (runtime.huntingBotSaveTimerRef.current) {
+        clearTimeout(runtime.huntingBotSaveTimerRef.current);
+        runtime.huntingBotSaveTimerRef.current = null;
+      }
       runtime.pendingRuneRef.current = null;
       runtime.pendingPotionRef.current = null;
       runtime.pendingUseWithRef.current = null;
@@ -645,6 +676,12 @@ export function createGameWindowStore({
         lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
         lootFilterOpen: false,
         lootFilterItems: { carried: [], ignored: [] },
+        huntingBotOpen: false,
+        huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
+        huntingBotStatus: null,
+        huntingBotError: null,
+        huntingBotUnresolved: [],
+        huntingBotTracing: false,
         actionBarEditorRequest: null,
         combatLog: [],
         chatChannels: [],

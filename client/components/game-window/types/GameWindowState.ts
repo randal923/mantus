@@ -3,6 +3,8 @@ import type {
   ActionBar,
   ChatChannelId,
   ActionBotSettings,
+  HuntingBotRoute,
+  HuntingBotStopReason,
   LootFilter,
   LootFilterItem,
   CharacterCreationOptions,
@@ -14,6 +16,7 @@ import type {
   DailyRewardHistoryEntry,
   DailyRewardsStateMessage,
   OwnCharacterState,
+  Position,
   PodiumActionFailedReason,
   PodiumWindowMessage,
   QuestLineMessage,
@@ -97,6 +100,21 @@ export interface GameWindowState {
   actionBotSettings: ActionBotSettings;
   lootFilter: LootFilter;
   lootFilterOpen: boolean;
+  huntingBotOpen: boolean;
+  /** The character's saved hunting route; the server owns the walking. */
+  huntingBotRoute: HuntingBotRoute;
+  /** Live bot state pushed by the server; null before it has ever run. */
+  huntingBotStatus: {
+    readonly enabled: boolean;
+    readonly waypointIndex: number;
+    readonly stopReason: HuntingBotStopReason | null;
+  } | null;
+  /** Last refusal from the hunting-bot window; shown inside it, not as a banner. */
+  huntingBotError: ServerErrorCode | null;
+  /** Waypoints the last trace could not reach; cleared by any manual edit. */
+  huntingBotUnresolved: ReadonlyArray<number>;
+  /** A route trace is in flight; the window shows it and blocks a second one. */
+  huntingBotTracing: boolean;
   /** What the loot-filter window draws; refreshed when the window opens. */
   lootFilterItems: {
     readonly carried: ReadonlyArray<LootFilterItem>;

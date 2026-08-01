@@ -82,6 +82,8 @@ import { UiSettingsHandler } from "./UiSettingsHandler";
 import { ActionBarHandler } from "./ActionBarHandler";
 import { ActionBotHandler } from "./ActionBotHandler";
 import { LootFilterHandler } from "./LootFilterHandler";
+import { HuntingBot } from "./huntingBot/HuntingBot";
+import { HuntingBotHandler } from "./huntingBot/HuntingBotHandler";
 import { DecayManager } from "./item/DecayManager";
 import { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { ItemCatalog } from "./item/ItemCatalog";
@@ -230,6 +232,8 @@ export class GameServer {
   private readonly actionBar: ActionBarHandler;
   private readonly actionBot: ActionBotHandler;
   private readonly lootFilter: LootFilterHandler;
+  private readonly huntingBot: HuntingBot;
+  private readonly huntingBotHandler: HuntingBotHandler;
   private readonly movement: MovementHandler;
   private readonly worldActions: WorldActionRegistry;
   private readonly look: LookHandler;
@@ -855,6 +859,13 @@ export class GameServer {
     this.movement.setHousePolicy((player, position) =>
       this.houses.canUseHouseTile(player.id, position),
     );
+    this.huntingBot = new HuntingBot(this.world, this.movement);
+    this.huntingBotHandler = new HuntingBotHandler(
+      this.registry,
+      this.world,
+      deps.characters,
+      this.huntingBot,
+    );
     this.chests = new ChestService(
       this.items,
       deps.itemCatalog,
@@ -1371,6 +1382,7 @@ export class GameServer {
       this.actionBar.applyResolvedOutcomes();
       this.actionBot.applyResolvedOutcomes();
       this.lootFilter.applyResolvedOutcomes();
+      this.huntingBotHandler.applyResolvedOutcomes();
       this.combat.applyResolvedOutcomes();
       for (const session of this.registry.awaitingAuth()) {
         this.auth.enforceDeadline(session, now);
@@ -1389,6 +1401,7 @@ export class GameServer {
             session.terminate();
           }
         }
+        this.huntingBot.tick(session, now);
         this.movement.continueMovement(session, now);
         this.registry.finishTick(session);
       }
@@ -1960,6 +1973,11 @@ export class GameServer {
         return;
       case "loot-filter-items-get":
         this.lootFilter.handleItemsGet(session, now);
+        return;
+      case "update-hunting-bot-route":
+      case "set-hunting-bot-enabled":
+      case "hunting-bot-trace":
+        this.huntingBotHandler.handle(session, intent, now);
         return;
     }
   }

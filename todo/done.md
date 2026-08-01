@@ -866,3 +866,78 @@ check pass.
 disabled-action backlog is unchanged; the one disabled dropdown in the Thais
 area is a closed wooden trapdoor whose tile directly below is a wall, not a
 sewer grate.
+
+## 2026-08-01 — Feature 112: hunting bot
+
+**Problem**: the Hunt Finder ships 131 hunting guides, each carrying a route,
+but a route was only ever something to look at. The coordinates are drawn on a
+wiki map as straight `[start, end]` lines — the median segment is 23 tiles and
+the longest is 135 — so they run through walls, water and cliff faces, and
+nothing could walk them. Players wanting to hunt one still drove every step by
+hand.
+
+**What changed**: a server-owned hunting bot. The client's new HUNTING BOT
+window (beside LOOT FILTER) browses the same guide catalog as the Hunt Finder;
+picking a hunt seeds its route and asks the server to re-walk it.
+
+Tracing runs off-tick, one leg at a time, over the server's own walkability:
+each guide point is snapped onto real ground within 4 tiles, long segments are
+sampled every 16 tiles along the guide's own line so the trace follows the
+intended corridor instead of wandering, and a bounded breadth-first search
+joins the anchors. The search follows step-activated floor changes, so a route
+may take a ramp exactly as a player does. Legs it cannot solve come back
+flagged, and the window paints those waypoints red for the player to drag.
+Measured over all 131 guides: 1669 legs, 94.9 % resolved, 87 routes fully
+clean, ~4 ms of search for a whole route.
+
+The route itself is inert geometry. `HuntingBot.tick` only decides *where* the
+character should head next and hands that tile to `MovementHandler.walkPathTo`,
+which computes the path and lets the existing auto-walk loop re-validate every
+single step — so a hand-placed waypoint inside a wall costs a skipped waypoint,
+never a teleport. A waypoint nothing can reach is skipped; a whole run of them
+stops the bot with a reason the window explains. Auto-targeting picks the
+lowest-health visible monster (nearest, then creature id, to break ties) and is
+re-evaluated once a second so a running fight is not interrupted; while a
+target is alive the bot clears its walk queue and lets the attack pipeline own
+the character's feet, forcing the chase the weapon's own range asks for.
+
+Deliberate choices: the route persists, whether the bot is *running* does not —
+a character never logs in already walking. Health-hidden monsters are ranked as
+untouched so the bot's choice cannot reveal which one is weakest (charter rule
+6). Arming requires standing within 100 tiles of the route on one of its
+floors.
+
+**Files**: `protocol/src/{huntingBot,index,clientMessages,serverMessages}.ts`;
+`server/db/migrations/068_character_hunting_bot.sql`;
+`server/src/huntingBot/{findRoutePath,snapToWalkable,buildRouteAnchors,traceRouteLeg,RouteMap,HuntingBot,HuntingBotHandler,selectAutoTarget}.ts`
+plus their tests; `server/src/{MovementHandler,Session,World,GameServer,CharacterHandler}.ts`;
+`server/src/combat/{Combat,ChaseController,PlayerAutoAttack}.ts`;
+`server/src/character/{Character,CharacterRow,CharacterStore,PgCharacterStore,CharacterService,toCharacter,parseHuntingBotRoute,sql/characterColumns}.ts`;
+`server/src/test/{makeCharacter,InMemoryCharacterStore}.ts`;
+`server/src/playtest/scenarios/huntingBot.ts`;
+`client/lib/hunting-bot/{extractRouteWaypoints,insertWaypointAt,guideRouteFor,baseHuntingVocation}.ts`;
+`client/lib/minimap/{minimapPixelToTile,worldToMinimapPixel,drawMinimapWaypoints,drawMinimap}.ts`;
+`client/components/hunting-bot/{HuntingBotModal,HuntingBotRouteEditor,HuntingBotRouteMap,HuntingBotWaypointList}.tsx`;
+`client/components/game-window/GameHuntingBotOverlay.tsx` and the store/message/
+runtime plumbing; `client/components/GameHud.tsx`; both locale files;
+`client/stories/HuntingBotModal.stories.tsx`.
+
+**Verified**: 50 new server unit tests (pathfinding around walls and across a
+ramp, bounding-box and budget cut-offs, snapping, anchor sampling, turning-point
+extraction, target ranking and its exclusion matrix, waypoint advance/loop/skip/
+stop, the pending-write race, the durable-write rollback, the trace cooldown,
+and the schema/transport-cap suite); 12 new client unit tests; 4 Storybook
+interaction stories; a `PgCharacterStore` integration round-trip including a
+corrupt stored blob degrading to an empty route; and `yarn playtest:hunting-bot`
+end to end against a real server — traced a 20-waypoint loop with 0 unreachable
+legs, walked 37 single-tile steps across 8 waypoints, auto-targeted a Snake,
+stopped on command, and refused to arm both an empty route and one on the other
+side of the map. Full `yarn typecheck`, 1517 server tests, 353 client tests and
+client lint pass.
+
+**Residual risk**: ladders, holes and ropes are `use` actions rather than steps,
+so a route needing one stalls and the bot skips past it — recorded in
+`TODO.md`. Closed doors are likewise not opened. Roughly 5 % of guide legs
+cannot be traced for those reasons and arrive flagged for hand editing. The
+runtime path budget (800 nodes, one search per waypoint per session) has not
+been profiled with many bots running at once.

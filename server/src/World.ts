@@ -106,6 +106,19 @@ export class World {
     return this.map.getTile(position);
   }
 
+  getGroundSpeed(position: Position): number | undefined {
+    return this.map.getGroundSpeed(position);
+  }
+
+  /**
+   * The step-activated floor change a walker triggers by stepping onto this
+   * tile (a ramp). Ladders, holes and ropes are `use` actions instead and are
+   * not reachable this way.
+   */
+  getTransition(position: Position, direction: Direction) {
+    return this.map.getTransition(position, direction);
+  }
+
   isProtectionZone(position: Position): boolean {
     return this.map.getTile(position)?.protectionZone ?? false;
   }

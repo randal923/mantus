@@ -5,6 +5,7 @@ import type {
 } from "@tibia/protocol";
 import type { MinimapRegionStore } from "./MinimapRegionStore";
 import type { MinimapRoute } from "./MinimapRoute";
+import { drawMinimapWaypoints } from "./drawMinimapWaypoints";
 import { getNearestMinimapRouteSegment } from "./getNearestMinimapRouteSegment";
 
 export interface MinimapMarker {
@@ -33,6 +34,12 @@ export interface MinimapDrawInput {
   route?: MinimapRoute | null;
   /** Used by the live minimap to pulse the tracked route without hiding it. */
   routeOpacity?: number;
+  /** An ordered, editable waypoint ring — the hunting bot's route. */
+  waypoints?: ReadonlyArray<Position>;
+  /** Waypoint under the cursor or being dragged; drawn larger. */
+  activeWaypointIndex?: number | null;
+  /** Waypoints the server reported it could not reach; drawn in red. */
+  brokenWaypointIndexes?: ReadonlySet<number>;
 }
 
 /** Unexplored/absent terrain is black, like the classic automap. */
@@ -46,6 +53,7 @@ const OUTLINE_COLOR = "rgba(0, 0, 0, 0.85)";
 const FLAG_COLOR = "#ffd166";
 const TOWN_LABEL_COLOR = "rgba(242, 239, 230, 0.9)";
 const ROUTE_COLOR = "#45d9ff";
+const EMPTY_INDEXES: ReadonlySet<number> = new Set();
 
 function drawRoute(
   context: CanvasRenderingContext2D,
@@ -203,6 +211,17 @@ export function drawMinimap(input: MinimapDrawInput): MinimapMarker[] {
       input.routeOpacity ?? 1,
       input.ownPosition,
     );
+  }
+
+  if (input.waypoints?.length) {
+    drawMinimapWaypoints(ctx, input.waypoints, {
+      floor,
+      left,
+      top,
+      pixelsPerTile,
+      activeIndex: input.activeWaypointIndex ?? null,
+      brokenIndexes: input.brokenWaypointIndexes ?? EMPTY_INDEXES,
+    });
   }
 
   // Player-placed flags sit under the creature markers so a creature is never

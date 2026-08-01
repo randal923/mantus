@@ -59,6 +59,44 @@ export function handlePlayerStateMessage(
     return true;
   }
 
+  if (message.type === "hunting-bot-route") {
+    // A save is still pending locally; the echo would revert the live edit.
+    if (runtime.huntingBotSaveTimerRef.current) return true;
+    state.setHuntingBotRoute(message.route);
+    runtime.huntingBotRouteRef.current = message.route;
+    return true;
+  }
+
+  if (message.type === "hunting-bot-status") {
+    state.setHuntingBotError(null);
+    state.setHuntingBotStatus({
+      enabled: message.enabled,
+      waypointIndex: message.waypointIndex,
+      stopReason: message.stopReason,
+    });
+    return true;
+  }
+
+  if (message.type === "hunting-bot-traced") {
+    // The trace is the server's answer to the route the window asked about,
+    // so it replaces the live one and is saved straight away rather than
+    // waiting on the edit debounce.
+    const route = {
+      huntName: runtime.huntingBotRouteRef.current.huntName,
+      waypoints: [...message.waypoints],
+    };
+    state.setHuntingBotRoute(route);
+    runtime.huntingBotRouteRef.current = route;
+    state.setHuntingBotUnresolved(message.unresolvedWaypointIndexes);
+    state.setHuntingBotTracing(false);
+    if (runtime.huntingBotSaveTimerRef.current) {
+      clearTimeout(runtime.huntingBotSaveTimerRef.current);
+      runtime.huntingBotSaveTimerRef.current = null;
+    }
+    runtime.clientRef.current?.updateHuntingBotRoute(route);
+    return true;
+  }
+
   if (message.type === "loot-filter-items") {
     state.setLootFilterItems({
       carried: message.carried,

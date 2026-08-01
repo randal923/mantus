@@ -1,6 +1,7 @@
 import type {
   ActionBar,
   ActionBotSettings,
+  HuntingBotRoute,
   LootFilter,
 } from "@tibia/protocol";
 import type {
@@ -33,6 +34,10 @@ export interface CharacterStore {
     settings: ActionBotSettings,
   ): Promise<void>;
   updateLootFilter(characterId: string, filter: LootFilter): Promise<void>;
+  updateHuntingBotRoute(
+    characterId: string,
+    route: HuntingBotRoute,
+  ): Promise<void>;
   updateAimAtTargetSpells(
     characterId: string,
     spellIds: ReadonlyArray<string>,

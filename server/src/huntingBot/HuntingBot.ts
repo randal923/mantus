@@ -1,0 +1,163 @@
+import {
+  HUNTING_BOT_LIMITS,
+  type HuntingBotStopReason,
+  type Position,
+} from "@tibia/protocol";
+import type { MovementHandler } from "../MovementHandler";
+import type { Session } from "../Session";
+import type { World } from "../World";
+
+/**
+ * Walks a character around a saved waypoint ring, forever, and gets out of
+ * the way whenever there is something to kill.
+ *
+ * The bot owns no movement of its own: it decides *where* the character
+ * should head next and hands that destination to the movement system, which
+ * computes the route and re-validates every single step at execution time
+ * (charter rules 1, 4, 5). Targeting is likewise the combat system's job —
+ * this only clears the walk queue while a target is alive so the chase and
+ * the route never fight over the same character.
+ */
+export class HuntingBot {
+  constructor(
+    private readonly world: World,
+    private readonly movement: MovementHandler,
+  ) {}
+
+  /**
+   * Arms the bot at the waypoint nearest the character. Returns false when
+   * the character is not actually standing in the hunt, which is the one
+   * precondition a player can get wrong from the window.
+   */
+  start(session: Session): boolean {
+    const player = session.playerId
+      ? this.world.getPlayer(session.playerId)
+      : undefined;
+    if (!player) return false;
+    const waypoints = session.huntingBotRoute.waypoints;
+    const index = nearestWaypointIndex(player.position, waypoints);
+    if (index === null) return false;
+    session.huntingBotEnabled = true;
+    session.huntingBotWaypointIndex = index;
+    session.huntingBotSkips = 0;
+    session.huntingBotRepathReadyAt = 0;
+    this.sendStatus(session, null);
+    return true;
+  }
+
+  stop(session: Session, reason: HuntingBotStopReason | null): void {
+    if (!session.huntingBotEnabled) return;
+    session.huntingBotEnabled = false;
+    session.autoWalkDirections = [];
+    this.sendStatus(session, reason);
+  }
+
+  tick(session: Session, now: number): void {
+    if (!session.huntingBotEnabled) return;
+    const player = session.playerId
+      ? this.world.getPlayer(session.playerId)
+      : undefined;
+    if (!player) return;
+    if (player.health <= 0) {
+      this.stop(session, "died");
+      return;
+    }
+    const waypoints = session.huntingBotRoute.waypoints;
+    if (waypoints.length === 0) {
+      this.stop(session, "no-route");
+      return;
+    }
+    // Something is being fought: stand down and let the attack pipeline own
+    // the character's feet until the target is gone.
+    const target = session.attackTargetId
+      ? this.world.getCreature(session.attackTargetId)
+      : undefined;
+    if (target && target.health > 0) {
+      if (session.autoWalkDirections.length > 0) {
+        session.autoWalkDirections = [];
+      }
+      return;
+    }
+    // A leg is still being walked; the movement tick is draining it.
+    if (session.autoWalkDirections.length > 0) return;
+    if (now < session.huntingBotRepathReadyAt) return;
+    session.huntingBotRepathReadyAt = now + HUNTING_BOT_LIMITS.repathCooldownMs;
+
+    if (session.huntingBotWaypointIndex >= waypoints.length) {
+      session.huntingBotWaypointIndex = 0;
+    }
+    const waypoint = waypoints[session.huntingBotWaypointIndex];
+    if (!waypoint) return;
+    if (samePosition(player.position, waypoint)) {
+      session.huntingBotSkips = 0;
+      this.advance(session, waypoints.length);
+      return;
+    }
+    const walking = this.movement.walkPathTo(
+      session,
+      player,
+      waypoint,
+      HUNTING_BOT_LIMITS.maxRuntimeVisited,
+      now,
+    );
+    if (walking) {
+      session.huntingBotSkips = 0;
+      return;
+    }
+    // No route from here — a door closed, a lure moved the character, or the
+    // waypoint was hand-placed somewhere unreachable. Try the next one rather
+    // than freezing on it, and give up once a whole run of them has failed.
+    session.huntingBotSkips++;
+    if (session.huntingBotSkips >= HUNTING_BOT_LIMITS.maxConsecutiveSkips) {
+      this.stop(session, "unreachable");
+      return;
+    }
+    this.advance(session, waypoints.length);
+  }
+
+  private advance(session: Session, length: number): void {
+    session.huntingBotWaypointIndex =
+      (session.huntingBotWaypointIndex + 1) % length;
+    this.sendStatus(session, null);
+  }
+
+  private sendStatus(
+    session: Session,
+    stopReason: HuntingBotStopReason | null,
+  ): void {
+    session.send({
+      type: "hunting-bot-status",
+      enabled: session.huntingBotEnabled,
+      waypointIndex: session.huntingBotWaypointIndex,
+      stopReason,
+    });
+  }
+}
+
+function samePosition(left: Position, right: Position): boolean {
+  return left.x === right.x && left.y === right.y && left.z === right.z;
+}
+
+/**
+ * Where in the ring the character joins. Only waypoints on the character's
+ * own floor and within reach count, so arming the bot from the depot cannot
+ * start a cross-map hike.
+ */
+function nearestWaypointIndex(
+  position: Position,
+  waypoints: ReadonlyArray<Position>,
+): number | null {
+  let best: number | null = null;
+  let bestDistance: number = HUNTING_BOT_LIMITS.maxStartDistance;
+  waypoints.forEach((waypoint, index) => {
+    if (waypoint.z !== position.z) return;
+    const distance = Math.max(
+      Math.abs(waypoint.x - position.x),
+      Math.abs(waypoint.y - position.y),
+    );
+    if (distance > bestDistance) return;
+    best = index;
+    bestDistance = distance;
+  });
+  return best;
+}

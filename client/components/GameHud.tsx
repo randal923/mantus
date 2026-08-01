@@ -42,6 +42,7 @@ interface GameHudProps {
   actionBar: ActionBarState;
   actionBotEnabled: boolean;
   lootFilterEnabled: boolean;
+  huntingBotEnabled: boolean;
   inventory: InventoryState | null;
   hasWeapon: boolean;
   combatLog: ReadonlyArray<string>;
@@ -59,6 +60,7 @@ interface GameHudProps {
     section: ActionBarEditorRequest["section"],
   ) => void;
   onOpenLootFilter: () => void;
+  onOpenHuntingBot: () => void;
   onChatChannelSelect?: (channelId: string) => void;
   onChatChannelClose?: (channelId: string) => void;
   onChatSenderSelect?: (sender: string) => void;
@@ -79,6 +81,7 @@ export function GameHud({
   actionBar,
   actionBotEnabled,
   lootFilterEnabled,
+  huntingBotEnabled,
   inventory,
   hasWeapon,
   combatLog,
@@ -90,6 +93,7 @@ export function GameHud({
   onActionBarChange,
   onConfigureActionBar,
   onOpenLootFilter,
+  onOpenHuntingBot,
   onChatChannelSelect,
   onChatChannelClose,
   onChatSenderSelect,
@@ -415,6 +419,22 @@ export function GameHud({
                   }`}
                 />
                 {t("lootFilter.title").toLocaleUpperCase()}
+              </button>
+              <button
+                type="button"
+                title={t("huntingBot.configure")}
+                aria-label={t("huntingBot.configure")}
+                onClick={onOpenHuntingBot}
+                className="ui-button ui-button-secondary flex h-7 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
+              >
+                <span
+                  className={`size-2 rounded-full ${
+                    huntingBotEnabled
+                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                      : "bg-ui-stone"
+                  }`}
+                />
+                {t("huntingBot.title").toLocaleUpperCase()}
               </button>
             </div>
             <div className="ui-action-cluster w-max max-w-full overflow-x-auto p-2">

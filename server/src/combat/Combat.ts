@@ -68,6 +68,7 @@ import type { SpokenSpellOutcome } from "./SpokenSpellOutcome";
 import type { TargetingHooks } from "./TargetingHooks";
 import type { WorldSpellHooks } from "./WorldSpellHooks";
 import { ActionBot } from "./ActionBot";
+import { selectAutoTarget } from "../huntingBot/selectAutoTarget";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
 import { drainDue } from "../drainDue";
@@ -79,6 +80,13 @@ const TARGETED_SPELL_KINDS = new Set<SpellDefinition["targetKind"]>([
 ]);
 
 const CRITICAL_DAMAGE_EFFECT_ID = 173;
+
+/**
+ * How often the hunting bot re-picks its target. Slow enough that a running
+ * fight is not interrupted by every passing rat, fast enough that a fresh
+ * wounded monster is picked up promptly.
+ */
+const HUNTING_BOT_TARGET_INTERVAL_MS = 1_000;
 
 const FEAR_DIRECTIONS: ReadonlyArray<readonly [Direction, number, number]> = [
   ["north", 0, -1],
@@ -128,6 +136,8 @@ export class Combat {
   private readonly lastFieldByCreature = new WeakMap<Creature, string>();
   private readonly nextGiftOfLifeTickAt = new WeakMap<Player, number>();
   private readonly nextMomentumRollAt = new WeakMap<Player, number>();
+  /** Next tick at which the hunting bot may re-pick a target, per session. */
+  private readonly nextHuntingBotTargetAt = new WeakMap<Session, number>();
 
   constructor(
     private readonly world: World,
@@ -741,6 +751,7 @@ export class Combat {
     this.conditionSystem.tick(now);
     this.moveFearedCreatures(now);
     for (const session of this.registry.all()) {
+      this.tickHuntingBotTarget(session, now);
       this.activatePendingManualActionBar(session, now);
       this.actionBot.tick(session, now);
       this.autoAttack.tickPlayerAttack(session, now);
@@ -749,6 +760,44 @@ export class Combat {
       this.tickGiftOfLifeCooldown(session, now);
       this.tickMomentum(session, now);
     }
+  }
+
+  /**
+   * The hunting bot's auto-target. Runs only while the bot is armed, so a
+   * player who picks a target by hand is never overruled by it.
+   *
+   * Re-evaluated on a cadence rather than every tick: the ranking is stable
+   * while a fight is running (the engaged monster keeps losing health, so it
+   * keeps winning), and re-publishing the same target every tick would flood
+   * the connection with `attack-target-changed` and `fight-state` for nothing
+   * (charter rule 10).
+   */
+  private tickHuntingBotTarget(session: Session, now: number): void {
+    if (!session.huntingBotEnabled) return;
+    if (now < (this.nextHuntingBotTargetAt.get(session) ?? 0)) return;
+    this.nextHuntingBotTargetAt.set(
+      session,
+      now + HUNTING_BOT_TARGET_INTERVAL_MS,
+    );
+    // A queued action-bar activation is pinned to the target it was aimed at;
+    // retargeting underneath it would silently eat the player's spell.
+    if (session.pendingManualActionBarActivation) return;
+    if (session.followTargetId) return;
+    const player = playerForSession(this.world, session);
+    if (!player || player.health <= 0) return;
+    const best = selectAutoTarget({
+      world: this.world,
+      session,
+      player,
+      pvpHooks: this.pvpHooks,
+      // Until the spawn runtime exists nothing can be proven to be a summon;
+      // fail closed and leave targeting alone rather than attack a pet.
+      isSummon: (monster) => this.targeting?.isSummon(monster) ?? true,
+    });
+    const nextId = best?.id ?? null;
+    if (session.attackTargetId === nextId) return;
+    if (!nextId && !session.attackTargetId) return;
+    this.feedback.setTarget(session, nextId, now);
   }
 
   /**

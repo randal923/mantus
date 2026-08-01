@@ -16,14 +16,21 @@ export class ChaseController {
     private readonly persistence: CharacterPersistence,
   ) {}
 
+  /**
+   * `force` is the hunting bot: a bot that targets but never closes the
+   * distance would just stand and watch, so while it is armed the character
+   * approaches regardless of the chase fight-mode flag. The range is still
+   * the weapon's own, so a distance fighter stops where it can shoot.
+   */
   chaseTarget(
     session: Session,
     player: Player,
     target: Creature,
     now: number,
     range: number,
+    force = false,
   ): void {
-    if (!session.fightMode.chase) return;
+    if (!force && !session.fightMode.chase) return;
     this.stepToward(session, player, target, now, range);
   }
 
