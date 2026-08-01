@@ -95,6 +95,8 @@ function writeParityConfig(): string {
     skill: 1,
     magic: 1,
     loot: 1,
+    bestiaryKills: 1,
+    bosstiaryKills: 1,
   };
   const directory = mkdtempSync(join(tmpdir(), "tibia-playtest-"));
   const path = join(directory, "config.yml");

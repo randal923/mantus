@@ -51,6 +51,10 @@ rates:
   soulRegen: 1
   offlineTraining: 1
   exerciseTraining: 1
+  # Kill credit per death toward bestiary/bosstiary completion (integer >= 1).
+  # The boosted boss's triple credit stacks on top of bosstiaryKills.
+  bestiaryKills: 2
+  bosstiaryKills: 1
 
 progression:
   # Stamina gates hunting experience (green +50% / orange -50% / 0 = none).

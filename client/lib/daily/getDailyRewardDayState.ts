@@ -1,11 +1,14 @@
-export type DailyRewardDayState = "collected" | "current" | "locked";
+export type DailyRewardDayState =
+  | "collected"
+  | "current"
+  | "next"
+  | "locked";
 
 /**
  * How one of the seven days draws (OTClient game_rewardwall.lua's
  * updateDailyRewards): every day before the cycle position is already
- * collected, the position itself is today's claim, and the rest stay locked
- * until their turn comes. Once today is claimed the current day joins the
- * collected run, which is what turns the whole row into checkmarks.
+ * collected, the position itself is either claimable now or the next reward
+ * waiting for the server-local day boundary, and the rest stay locked.
  */
 export function getDailyRewardDayState(
   dayIndex: number,
@@ -14,5 +17,5 @@ export function getDailyRewardDayState(
 ): DailyRewardDayState {
   if (dayIndex < streakPosition) return "collected";
   if (dayIndex > streakPosition) return "locked";
-  return claimableToday ? "current" : "collected";
+  return claimableToday ? "current" : "next";
 }

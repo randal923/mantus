@@ -23,8 +23,12 @@ import type {
   DailyRewardSnapshot,
   DailyRewardStore,
 } from "./DailyRewardStore";
-import { dailyRewardPoolFor, TRAINING_ITEM_POOL } from "./dailyRewardPools";
+import {
+  dailyRewardPoolFor,
+  EXERCISE_WEAPON_POOL,
+} from "./dailyRewardPools";
 import { localDayEndMs } from "./localDayEndMs";
+import { validateDailyRewardPicks } from "./validateDailyRewardPicks";
 
 /**
  * Daily rewards (Feature 84, Canary daily_reward.lua). The shrine use
@@ -194,7 +198,13 @@ export class DailyRewardService {
     }
     const allowance =
       player.accountTierAt(now) === "premium" ? entry.premium : entry.free;
-    const items = this.validatePicks(player, entry.kind, intent, allowance);
+    const items = validateDailyRewardPicks(
+      this.catalog,
+      player.vocation,
+      entry.kind,
+      intent.picks,
+      allowance,
+    );
     if (items === null) {
       this.fail(session, "invalid-picks");
       return;
@@ -372,7 +382,7 @@ export class DailyRewardService {
       kind === "vocation-items"
         ? dailyRewardPoolFor(player.vocation)
         : kind === "training-items"
-          ? TRAINING_ITEM_POOL
+          ? EXERCISE_WEAPON_POOL
           : [];
     const pool: DailyRewardPoolEntry[] = [];
     for (const itemTypeId of ids) {
@@ -381,44 +391,6 @@ export class DailyRewardService {
       pool.push({ itemTypeId, name: type.name, spriteId: type.spriteId });
     }
     return pool;
-  }
-
-  /** Null means the picks are forged/over-allowance; [] means no item leg. */
-  private validatePicks(
-    player: Player,
-    kind: (typeof DAILY_REWARD_TABLE)[number]["kind"],
-    intent: DailyClaimMessage,
-    allowance: number,
-  ): ReadonlyArray<DailyClaimItemGrant> | null {
-    if (kind === "wildcards" || kind === "xp-boost") {
-      return intent.picks.length === 0 ? [] : null;
-    }
-    const poolIds = new Set(
-      kind === "vocation-items"
-        ? dailyRewardPoolFor(player.vocation)
-        : TRAINING_ITEM_POOL,
-    );
-    if (intent.picks.length === 0) return null;
-    const seen = new Set<number>();
-    const items: DailyClaimItemGrant[] = [];
-    let units = 0;
-    for (const pick of intent.picks) {
-      if (!poolIds.has(pick.itemTypeId) || seen.has(pick.itemTypeId)) {
-        return null;
-      }
-      seen.add(pick.itemTypeId);
-      const type = this.catalog.get(pick.itemTypeId);
-      if (!type || !type.pickupable) return null;
-      units += pick.count;
-      if (units > allowance) return null;
-      items.push({
-        typeId: pick.itemTypeId,
-        count: pick.count,
-        stackable: type.stackable,
-        maxCount: Math.max(1, type.maxCount),
-      });
-    }
-    return items;
   }
 
   private hasRoomFor(

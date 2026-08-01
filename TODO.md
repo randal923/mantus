@@ -693,7 +693,19 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Repo-wide known breakage
 
-- None. The `yarn parity:check` converter-hash drift recorded here previously
+- **`yarn playtest:bestiary` fails on stale stage-gating assertions**
+  (2026-08-01). The "add wiki" commit (898e2c3) deliberately made the
+  bestiary detail sheet a public catalog — stage gating on stats/loot/
+  locations was removed from `BestiaryService.handleMonster` — but
+  `server/src/playtest/scenarios/bestiaryUnlock.ts` still asserts the old
+  gated behavior ("stage-1 sheet leaked stage-gated fields") and the
+  locked/refusal probe. Charm earning itself is verified working (unit tests
+  plus an ad-hoc e2e probe: 249 seeded + 1 live rat kill → stage-4 push,
+  5 charm points in `bestiary-creatures-state`). Recommended fix: rewrite
+  the scenario around the public-catalog design (sheet always full; keep the
+  milestone-push, persistence, rate-limit, and unknown-race probes, plus a
+  charm-award leg via a seeded near-complete counter). Owner: bestiary.
+- The `yarn parity:check` converter-hash drift recorded here previously
   was reconciled 2026-07-25 (Feature 53): `importTibiaAssets.mjs`,
   `importCanaryCreatures.mjs` and `importCanaryNpcs.mjs` had all drifted from
   their `content/source-manifest.json` entries. `yarn test:tools` passes.

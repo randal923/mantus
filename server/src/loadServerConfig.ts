@@ -95,6 +95,8 @@ const serverConfigFileSchema = z
         soulRegen: rateSchema,
         offlineTraining: rateSchema,
         exerciseTraining: rateSchema,
+        bestiaryKills: positiveIntegerSchema.max(MAX_RATE),
+        bosstiaryKills: positiveIntegerSchema.max(MAX_RATE),
       })
       .strict(),
     progression: z

@@ -449,6 +449,7 @@ export class GameServer {
       this.registry,
       deps.bestiary,
       this.boosted,
+      config.rates,
     );
     this.trackers = new TrackerService(
       this.registry,

@@ -17,6 +17,8 @@ const SERVER_INFO = {
     soulRegen: 1,
     offlineTraining: 1,
     exerciseTraining: 1,
+    bestiaryKills: 1,
+    bosstiaryKills: 1,
   },
   systems: {
     stamina: true,

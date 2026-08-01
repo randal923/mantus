@@ -25,7 +25,7 @@ export function ImbuementMaterialBox({
 
   return (
     <li
-      className={`flex w-16 shrink-0 flex-col items-center gap-1 rounded-sm border bg-black/40 p-1.5 ${
+      className={`flex size-24 min-w-0 flex-col items-center justify-center gap-1 border bg-black/40 p-1 ${
         covered ? "border-ui-stone-light/20" : "border-ui-accent/50"
       }`}
       title={
@@ -37,8 +37,10 @@ export function ImbuementMaterialBox({
           : material.name
       }
     >
-      <span className="flex size-9 items-center justify-center">
-        {spriteId !== undefined && <SpriteIcon spriteId={spriteId} scale={1} />}
+      <span className="flex size-11 items-center justify-center">
+        {spriteId !== undefined && (
+          <SpriteIcon spriteId={spriteId} scale={1.25} />
+        )}
       </span>
       <span
         className={`text-sm tabular-nums ${

@@ -49,6 +49,8 @@ const configWith = (commands: boolean): ServerConfig => ({
     soulRegen: 1,
     offlineTraining: 1,
     exerciseTraining: 1,
+    bestiaryKills: 1,
+    bosstiaryKills: 1,
   },
   progression: { staminaSystem: true, useStages: false },
   starterTownId: 1,

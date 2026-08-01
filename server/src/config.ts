@@ -68,6 +68,9 @@ export interface ServerConfig {
     soulRegen: number;
     offlineTraining: number;
     exerciseTraining: number;
+    /** Kill credit per death toward bestiary/bosstiary completion. */
+    bestiaryKills: number;
+    bosstiaryKills: number;
   };
   progression: {
     staminaSystem: boolean;

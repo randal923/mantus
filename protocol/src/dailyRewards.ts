@@ -1,13 +1,10 @@
 import { z } from "zod";
 import { accountTierSchema } from "./account";
 
-// Feature 84 — daily rewards. Transcribed from pinned Canary
-// data/modules/scripts/daily_reward/daily_reward.lua: the 7-day table
-// (:106-151), the per-vocation item pools (:68-75), streak advance
-// (:255-274) and the joker/miss rules (:295-334). Deviations recorded in
-// the backlog: the day boundary is the server-local calendar day (mantus
-// has no global server save), and items grant to carried slots instead of
-// Canary's store inbox.
+// Feature 84 — daily rewards. Streak advance and joker/miss handling follow
+// pinned Canary daily_reward.lua (:255-334). Mantus uses its own three-reward
+// cycle below; the day boundary is the server-local calendar day and items
+// grant to carried slots instead of Canary's store inbox.
 
 export const DAILY_REWARD_RULES = {
   cycleDays: 7,
@@ -52,15 +49,15 @@ export interface DailyRewardDay {
   readonly premium: number;
 }
 
-/** Canary daily_reward.lua:106-151, day 1 first. */
+/** Mantus seven-day cycle, day 1 first. */
 export const DAILY_REWARD_TABLE: ReadonlyArray<DailyRewardDay> = [
-  { kind: "vocation-items", free: 5, premium: 10 },
-  { kind: "vocation-items", free: 5, premium: 10 },
   { kind: "wildcards", free: 1, premium: 2 },
-  { kind: "vocation-items", free: 10, premium: 20 },
-  { kind: "wildcards", free: 1, premium: 2 },
-  { kind: "training-items", free: 1, premium: 2 },
   { kind: "xp-boost", free: 10, premium: 30 },
+  { kind: "training-items", free: 1, premium: 1 },
+  { kind: "wildcards", free: 1, premium: 2 },
+  { kind: "xp-boost", free: 10, premium: 30 },
+  { kind: "training-items", free: 1, premium: 1 },
+  { kind: "wildcards", free: 1, premium: 2 },
 ];
 
 const poolEntrySchema = z

@@ -6,6 +6,7 @@ import { PixelImage } from "../ui/PixelImage";
 interface RewardStreakBannerProps {
   streakLevel: number;
   label: string;
+  size?: "default" | "large";
 }
 
 /**
@@ -15,7 +16,10 @@ interface RewardStreakBannerProps {
 export function RewardStreakBanner({
   streakLevel,
   label,
+  size = "default",
 }: RewardStreakBannerProps) {
+  const large = size === "large";
+
   return (
     <div
       className="relative flex items-center justify-center"
@@ -26,10 +30,13 @@ export function RewardStreakBanner({
         src={`reward-wall/streak-${getRewardStreakTier(streakLevel)}.png`}
         sheetWidth={66}
         sheetHeight={44}
+        scale={large ? 3 : 1}
       />
       <span
         aria-hidden
-        className="absolute inset-x-0 top-3.5 text-center font-display text-xs font-bold text-ui-text-bright [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]"
+        className={`absolute inset-x-0 text-center font-display font-bold text-ui-text-bright [text-shadow:0_1px_2px_rgba(0,0,0,0.95)] ${
+          large ? "top-10 text-3xl" : "top-3.5 text-xs"
+        }`}
       >
         {streakLevel}
       </span>

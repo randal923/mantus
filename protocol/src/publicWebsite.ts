@@ -140,6 +140,8 @@ export const publicServerInfoDataSchema = z
         soulRegen: z.number().min(0).max(10_000),
         offlineTraining: z.number().min(0).max(10_000),
         exerciseTraining: z.number().min(0).max(10_000),
+        bestiaryKills: z.number().min(0).max(10_000),
+        bosstiaryKills: z.number().min(0).max(10_000),
       })
       .strict(),
     systems: z

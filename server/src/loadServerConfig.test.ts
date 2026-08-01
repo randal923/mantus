@@ -107,6 +107,28 @@ describe("loadServerConfig", () => {
     );
   });
 
+  it("rejects a fractional bestiary kill rate", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const path = await temporaryConfig(
+      source.replace(/^  bestiaryKills:.*$/m, "  bestiaryKills: 1.5"),
+    );
+
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      "config.rates.bestiaryKills",
+    );
+  });
+
+  it("rejects a zero bosstiary kill rate", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const path = await temporaryConfig(
+      source.replace(/^  bosstiaryKills:.*$/m, "  bosstiaryKills: 0"),
+    );
+
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      "config.rates.bosstiaryKills",
+    );
+  });
+
   it("rejects a zero spawn rate", async () => {
     const source = await readFile(CONFIG_PATH, "utf8");
     const path = await temporaryConfig(

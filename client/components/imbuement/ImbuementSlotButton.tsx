@@ -33,13 +33,13 @@ export function ImbuementSlotButton({
       aria-pressed={selected}
       title={label}
       aria-label={t("imbuement.slotLabel", { slot: slot.slot + 1 })}
-      className={`flex size-12 shrink-0 items-center justify-center rounded-sm border bg-black/45 transition-[border-color,background-color] ${
+      className={`flex size-16 shrink-0 items-center justify-center border bg-black/45 shadow-[inset_0_0_0_3px_rgba(255,255,255,0.025)] transition-[border-color,background-color] sm:size-20 ${
         selected
           ? "border-ui-gold/70 bg-ui-gold/10"
           : "border-ui-stone-light/20 hover:border-ui-stone-light/45"
       }`}
     >
-      <ImbuementIcon iconId={slot.iconId ?? 0} size={38} />
+      <ImbuementIcon iconId={slot.iconId ?? 0} size={52} />
     </button>
   );
 }

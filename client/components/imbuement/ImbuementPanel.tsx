@@ -18,12 +18,12 @@ export function ImbuementPanel({
 }: ImbuementPanelProps) {
   return (
     <section
-      className={`flex min-h-0 min-w-0 flex-col rounded-sm border border-ui-stone-light/15 bg-black/25 ${className ?? ""}`}
+      className={`flex min-h-0 min-w-0 flex-col border border-ui-stone-light/15 bg-black/25 ${className ?? ""}`}
     >
-      <h3 className="border-b border-ui-stone-light/15 px-3 py-1 font-display text-sm font-bold tracking-widest text-ui-gold uppercase">
+      <h3 className="border-b border-ui-stone-light/15 bg-ui-panel-light/35 px-3 py-1.5 text-center font-display text-sm font-bold tracking-widest text-ui-gold uppercase sm:text-base">
         {title}
       </h3>
-      <div className="min-h-0 min-w-0 flex-1 p-2.5">{children}</div>
+      <div className="min-h-0 min-w-0 flex-1">{children}</div>
     </section>
   );
 }

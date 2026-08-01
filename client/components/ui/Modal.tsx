@@ -37,7 +37,7 @@ interface ModalProps {
   pagination?: ModalPagination;
   /** Optional action row rendered below a divider at the bottom of the panel. */
   footer?: ReactNode;
-  size?: "default" | "wide" | "extra-wide";
+  size?: "default" | "wide" | "extra-wide" | "full";
   /**
    * "auto" sizes the panel to its content instead of the fixed height, for
    * short dialogs that would otherwise render mostly empty.
@@ -78,11 +78,13 @@ export function Modal({
         className={`ui-panel-frame relative isolate flex max-h-full min-w-0 w-full flex-col gap-3 overflow-hidden p-3 font-tibia text-ui-text sm:gap-5 sm:p-6 ${
           height === "auto" ? "" : "h-[900px]"
         } ${
-          size === "extra-wide"
-            ? "max-w-7xl"
-            : size === "wide"
-              ? "max-w-5xl"
-              : "max-w-md"
+          size === "full"
+            ? "max-w-[1920px]"
+            : size === "extra-wide"
+              ? "max-w-7xl"
+              : size === "wide"
+                ? "max-w-5xl"
+                : "max-w-md"
         }`}
       >
         <div

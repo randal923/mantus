@@ -17,8 +17,8 @@ describe("getDailyRewardDayState", () => {
     ]);
   });
 
-  it("folds today into the collected run once it is claimed", () => {
-    expect(getDailyRewardDayState(2, 2, false)).toBe("collected");
+  it("keeps the next reward on its countdown after today's claim", () => {
+    expect(getDailyRewardDayState(2, 2, false)).toBe("next");
     expect(getDailyRewardDayState(3, 2, false)).toBe("locked");
   });
 

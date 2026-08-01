@@ -329,6 +329,7 @@ client.
 **Residual risk**: the scaled wheel is a CSS transform, so the pixel art is
 resampled below 1:1 and looks softer on narrow viewports; the sub-`xl`
 breakpoint is viewport-based, not container-based.
+
   **Feature 110 — public website and read-only landing API
   (2026-07-31)** — replaced the one-column marketing page with a responsive
   fantasy portal layout inspired by Tibia's information architecture: a
@@ -540,3 +541,115 @@ breakpoint is viewport-based, not container-based.
   production build passed for all ten generated routes. Hydrated 1,440px and
   390px browser captures confirmed a centered, complete, scroll-safe login
   modal over the public page.
+
+## 2026-08-01 — Daily reward calendar and exercise-weapon choice
+
+**Problem**: the reward wall used the broad Canary supply table and exposed
+item selection as an inline quantity editor. It did not match the requested
+seven-card calendar, and its 50-charge starter training pool did not let a
+player make one clear choice from the normal exercise weapons.
+
+**What changed**: replaced the cycle with prey card, XP boost, and exercise
+weapon days in the requested seven-day order. The reward window is now a wide,
+compact calendar with a large streak banner, one card per day, collected and
+locked status plates, and the server deadline beneath today's card. Clicking
+today's prey or XP card claims it; clicking an exercise day opens a separate
+chooser containing sword, axe, club, bow, rod, wand, shield, and wraps.
+
+The server projects those eight catalog entries and accepts exactly one normal
+500-charge exercise weapon. Pool membership, count, capacity, reach, daily
+gate, persistence, and audit handling remain server-authoritative and atomic.
+
+**Files**: `protocol/src/dailyRewards.ts`,
+`server/src/daily/{DailyRewardService,dailyRewardPools,validateDailyRewardPicks}.ts`,
+`server/src/daily/validateDailyRewardPicks.test.ts`,
+`client/components/daily/{DailyRewardCycle,DailyRewardDay,DailyRewardKindIcon,DailyRewardsModal,ExerciseWeaponSelectionModal,RewardStreakBanner}.tsx`,
+`client/components/ui/Modal.tsx`, `client/locales/{en,pt-BR}.json`, and
+`client/stories/DailyRewardsModal.stories.tsx`.
+
+**Verified**: protocol, server, and client TypeScript checks passed; focused
+client lint passed; 10 focused server tests and 5 daily-reward client tests
+passed. The new exploit regression rejects starter weapons, multiple choices,
+out-of-pool IDs, and over-allowance counts.
+
+**Residual risk**: the existing Postgres claim transaction was not changed and
+its integration suite was not run because no test database was used in this
+session.
+
+## 2026-08-01 — Configurable bestiary/bosstiary kill credit
+
+**Problem**: every creature death credited exactly 1 kill toward
+bestiary/bosstiary completion (boosted boss aside); there was no server
+setting to boost progression the way experience/skill/loot rates can be.
+
+**What changed**: added `rates.bestiaryKills` and `rates.bosstiaryKills` to
+`config.yml` (integer 1–1000, validated in `loadServerConfig`).
+`BestiaryTracker.onMonsterKilled` multiplies each death's increment by the
+matching rate; the boosted boss's Canary triple stacks multiplicatively on
+the bosstiary rate. The playtest parity config pins both back to 1 so parity
+scenarios keep asserting exact counts. The public `/api/public/server-info`
+rates object gained both keys (`protocol/src/publicWebsite.ts` — required,
+because the strict schema would otherwise 503 the endpoint now that
+`GameServer` passes `config.rates` through verbatim) and the public
+server-info page displays them.
+
+**Files**: `config.yml`, `server/src/loadServerConfig.ts`,
+`server/src/config.ts`, `server/src/bestiary/BestiaryTracker.ts`,
+`server/src/GameServer.ts`, `server/src/playtest/startPlaytestServer.ts`,
+`server/src/playtest/{itemAnimationProbeServer,monsterLoadServer,playerLoadServer}.ts`,
+`protocol/src/publicWebsite.ts`,
+`client/components/public-site/ServerInfoPage.tsx`,
+`client/locales/{en,pt-BR}.json`, plus rates fixtures in
+`server/src/{PublicApi,GameServer,gm/GmCommands,moderation/ModerationCommands,bestiary/BestiaryService,loadServerConfig}.test.ts`.
+
+**Verified**: protocol and server typechecks pass; 74 tests across the
+affected suites pass, including a new tracker test (bestiary ×2, bosstiary
+×5 stacking to ×15 with the boosted triple) and config-validation rejections
+for fractional/zero rates. Live wire probe: server booted with
+`bestiaryKills: 2`, one rat death pushed `bestiary-entry-changed kills=2`.
+
+**Residual risk**: client typecheck currently fails only in concurrently
+in-progress imbuement files unrelated to this change. Charm spending remains
+unimplemented (todo/status.md row 73/77).
+
+## 2026-08-01 — Imbuement shrine workspace layout
+
+**Problem**: the functional imbuement window still used a narrow mode rail,
+compact slot buttons, tier tabs, and a footer action card. That hierarchy did
+not match the supplied shrine reference, whose item stage, slot selection,
+imbuement controls, and source flow read as one large in-game workspace.
+
+**What changed**: rebuilt the client layout around a dedicated 900px-tall,
+viewport-safe `max-w-6xl` shrine dialog. Its flatter header and section frames
+fit the complete desktop flow without a modal scrollbar: a taller exact 50/50
+item-and-slot stage, Basic/Intricate/Powerful tabs, directly clickable
+imbuement icons, compact square source tiles, selected result, price, and
+footer. Every carried imbuable item is a directly clickable icon in the item
+half; the blank-scroll workflow sits in that same grid instead of a separate
+footer mode rail. Required source sprites resolve through the validated wiki
+item catalog, so their artwork remains visible even when the owned count is
+zero. The item-request transition retains the last complete server projection
+until the new one arrives, eliminating the intermediate empty-window flicker.
+Occupied-slot clearing, bank balance, material counts, and all existing intent
+callbacks remain intact. The screenshot's 90% success roll was not copied
+because this pinned Canary applies valid imbuements deterministically; the
+selected state reports the accurate 100% guaranteed outcome (or 0% while
+blocked).
+
+**Files**: `client/components/imbuement/{ImbuementShrineDialog,
+ImbuementModal,ImbuementItemPanel,ImbuementSlotButton,ImbuementListPanel,
+ImbuementApplyPanel,ImbuementMaterialBox,ImbuementPanel}.tsx`,
+`client/components/game-window/GameForgeOverlays.tsx`,
+`client/locales/{en,pt-BR}.json`, and
+`client/stories/{ImbuementModal.stories,forgeFixtures}.tsx`. The superseded
+separate item picker, tier-tab, option-row, and rail-button components were
+removed.
+
+**Verified**: all 6 imbuement Storybook interaction tests pass in Chromium;
+focused client lint and the full client TypeScript check pass. Selected and
+blocked browser captures were inspected against the supplied references,
+including the 50/50 split, larger item/imbuement targets, zero-owned material
+sprites, compact square sources, close placement, and desktop overflow.
+
+**Residual risk**: viewports shorter than the 900px target retain an overflow
+fallback so actions remain reachable instead of being clipped.

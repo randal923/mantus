@@ -9,6 +9,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
 import { World } from "../World";
+import type { BoostedHooks } from "../boosted/BoostedHooks";
 import type { BestiaryCatalog } from "./BestiaryCatalog";
 import { BestiaryService } from "./BestiaryService";
 import { BestiaryTracker } from "./BestiaryTracker";
@@ -288,6 +289,27 @@ describe("BestiaryTracker", () => {
       kills: 25,
       stage: 1,
     });
+  });
+
+  it("applies the configured kill rates, stacking the boosted-boss triple", () => {
+    const registry = {
+      sessionFor: () => undefined,
+    } as unknown as SessionRegistry;
+    const boosted = {
+      bossKillIncrement: (raceId: number) => (raceId === 46 ? 3 : 1),
+    } as unknown as BoostedHooks;
+    const tracker = new BestiaryTracker(
+      makeCatalog(),
+      registry,
+      undefined,
+      boosted,
+      { bestiaryKills: 2, bosstiaryKills: 5 },
+    );
+    tracker.attach(A, new Map());
+    tracker.onMonsterKilled([A], makeMonster(ratType), 0);
+    expect(tracker.killsFor(A).get(21)).toBe(2);
+    tracker.onMonsterKilled([A], makeMonster(bossType), 0);
+    expect(tracker.killsFor(A).get(46)).toBe(15);
   });
 
   it("persists increments and reloads them on attach", async () => {

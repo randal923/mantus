@@ -7,24 +7,19 @@ import {
   type ImbuementWindowStateMessage,
   type InventoryItem,
 } from "@tibia/protocol";
+import { useWikiItems } from "../../hooks/useWikiItems";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
-import { SpriteIcon } from "../inventory/SpriteIcon";
 import { Button } from "../ui/Button";
-import { Modal } from "../ui/Modal";
 import { ImbuementApplyPanel } from "./ImbuementApplyPanel";
 import { ImbuementClearPanel } from "./ImbuementClearPanel";
-import { ImbuementIcon } from "./ImbuementIcon";
 import { ImbuementItemPanel } from "./ImbuementItemPanel";
-import { ImbuementItemPicker } from "./ImbuementItemPicker";
 import { ImbuementListPanel } from "./ImbuementListPanel";
-import { ImbuementRailButton } from "./ImbuementRailButton";
+import { ImbuementShrineDialog } from "./ImbuementShrineDialog";
 
 interface ImbuementModalProps {
   window: ImbuementWindowStateMessage | null;
-  itemName?: string;
-  itemSpriteId?: number;
-  /** Carried items with imbuement slots, for the "Pick Item" chooser. */
+  /** Carried items with imbuement slots, shown directly in the item panel. */
   imbuableItems: ReadonlyArray<InventoryItem>;
   /** Resolves an astral source's sprite; supplied by the caller's catalog. */
   spriteIdOf: (itemTypeId: number) => number | undefined;
@@ -39,17 +34,11 @@ interface ImbuementModalProps {
 }
 
 /**
- * The imbuement shrine, laid out like Tibia's imbuing window: a mode rail on
- * the left, and a column of three panels — the item and its slots, the tier
- * and imbuement choice, then the action for the selected slot.
- *
- * Every price, material count and eligibility verdict on screen is a server
- * projection; the buttons only send intents.
+ * Server-projected imbuement shrine workspace. Its controls only send intents;
+ * prices, material counts, slot state, and eligibility all come from the server.
  */
 export function ImbuementModal({
   window: windowState,
-  itemName,
-  itemSpriteId,
   imbuableItems,
   spriteIdOf,
   pending,
@@ -63,7 +52,7 @@ export function ImbuementModal({
 }: ImbuementModalProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
-  const [picking, setPicking] = useState(false);
+  const wikiItems = useWikiItems();
   const [slotChoice, setSlotChoice] = useState<number | null>(null);
   const [tierChoice, setTierChoice] = useState<number | null>(null);
   const [imbuementChoice, setImbuementChoice] = useState<number | null>(null);
@@ -71,6 +60,10 @@ export function ImbuementModal({
   const mode = windowState?.mode ?? "item";
   const slots = useMemo(() => windowState?.slots ?? [], [windowState]);
   const options = useMemo(() => windowState?.options ?? [], [windowState]);
+  const wikiSpriteIds = useMemo(
+    () => new Map(wikiItems.items.map((item) => [item.id, item.spriteId])),
+    [wikiItems.items],
+  );
   const selectedSlot =
     slotChoice !== null && slots.some((slot) => slot.slot === slotChoice)
       ? slotChoice
@@ -79,63 +72,40 @@ export function ImbuementModal({
         null);
   const activeSlot = slots.find((slot) => slot.slot === selectedSlot) ?? null;
   const tier =
-    tierChoice ?? options.find((option) => option.canApply)?.baseId ?? 1;
+    tierChoice !== null &&
+    options.some((option) => option.baseId === tierChoice)
+      ? tierChoice
+      : (options.find((option) => option.canApply)?.baseId ??
+        options.find((option) => option.blockedReason !== "wrong-category")
+          ?.baseId ??
+        options[0]?.baseId ??
+        1);
   const selectedOption =
     options.find(
       (option) =>
-        option.imbuementId === imbuementChoice && option.baseId === tier,
+        option.imbuementId === imbuementChoice &&
+        option.baseId === tier,
     ) ?? null;
-  // Scroll mode has no item, so there is never a slot to clear.
   const clearing =
     mode === "item" && activeSlot !== null && activeSlot.imbuementId !== null;
 
-  const actionPanel =
-    clearing && activeSlot ? (
-      <ImbuementClearPanel
-        slot={activeSlot}
-        clearCostGold={windowState?.removeCostGold ?? 0}
-        pending={pending}
-        onClear={() => onClear(activeSlot.slot)}
-      />
-    ) : selectedOption ? (
-      <ImbuementApplyPanel
-        option={selectedOption}
-        spriteIdOf={spriteIdOf}
-        pending={pending}
-        mode={mode}
-        onApply={() => {
-          if (mode === "scroll") {
-            onForgeScroll(selectedOption.imbuementId);
-            return;
-          }
-          if (selectedSlot === null) return;
-          onApply(selectedSlot, selectedOption.imbuementId);
-        }}
-      />
-    ) : null;
-
   return (
-    <Modal
+    <ImbuementShrineDialog
       title={t("imbuement.title")}
-      size="extra-wide"
       onClose={onClose}
       footer={
-        // Modal footers are justify-end; grow so the action panel spans it.
-        <div className="flex w-full flex-col gap-3">
-          {actionPanel}
-          <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 text-base tabular-nums text-ui-gold">
-              <Image
-                src="/assets/cyclopedia/currency/gold.png"
-                alt=""
-                width={18}
-                height={18}
-                className="[image-rendering:pixelated]"
-              />
-              {(windowState?.bankBalance ?? 0).toLocaleString(language)}
-            </span>
-            <Button onClick={onClose}>{t("imbuement.close")}</Button>
-          </div>
+        <div className="ml-auto flex shrink-0 items-center gap-3">
+          <span className="flex items-center gap-2 text-base tabular-nums text-ui-gold">
+            <Image
+              src="/assets/cyclopedia/currency/gold.png"
+              alt=""
+              width={18}
+              height={18}
+              className="[image-rendering:pixelated]"
+            />
+            {(windowState?.bankBalance ?? 0).toLocaleString(language)}
+          </span>
+          <Button onClick={onClose}>{t("imbuement.close")}</Button>
         </div>
       }
     >
@@ -144,89 +114,80 @@ export function ImbuementModal({
           {t("imbuement.loading")}
         </p>
       ) : (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <div className="flex shrink-0 flex-row gap-2 sm:w-28 sm:flex-col">
-            <ImbuementRailButton
-              label={t("imbuement.pickItem")}
-              active={mode === "item"}
-              icon={
-                itemSpriteId === undefined ? (
-                  <ImbuementIcon iconId={0} size={32} />
-                ) : (
-                  <SpriteIcon spriteId={itemSpriteId} scale={1} />
-                )
-              }
-              onClick={() => {
-                onSelectMode("item");
-                setPicking(true);
-              }}
+        <div className="flex min-h-full min-w-0 flex-col gap-2.5">
+          {error && (
+            <p
+              role="alert"
+              className="border border-ui-accent/25 bg-ui-accent/10 px-3 py-2 text-base text-ui-accent-light"
+            >
+              {error}
+            </p>
+          )}
+
+          <ImbuementItemPanel
+            window={windowState}
+            items={imbuableItems}
+            selectedSlot={selectedSlot}
+            onSelectItem={(itemId) => {
+              setSlotChoice(null);
+              setTierChoice(null);
+              setImbuementChoice(null);
+              onPickItem(itemId);
+            }}
+            onSelectScroll={() => {
+              setSlotChoice(null);
+              setTierChoice(null);
+              setImbuementChoice(null);
+              onSelectMode("scroll");
+            }}
+            onSelectSlot={(slot) => {
+              setSlotChoice(slot);
+              setTierChoice(null);
+              setImbuementChoice(null);
+            }}
+          />
+
+          {clearing && activeSlot ? (
+            <ImbuementClearPanel
+              slot={activeSlot}
+              clearCostGold={windowState.removeCostGold}
+              pending={pending}
+              onClear={() => onClear(activeSlot.slot)}
             />
-            <ImbuementRailButton
-              label={t("imbuement.blankScroll")}
-              active={mode === "scroll"}
-              badge={windowState.blankScrollCount}
-              disabled={windowState.blankScrollCount === 0}
-              icon={<ImbuementIcon iconId={0} size={32} />}
-              onClick={() => {
-                setPicking(false);
-                setImbuementChoice(null);
-                onSelectMode("scroll");
-              }}
-            />
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            {error && (
-              <p
-                role="alert"
-                className="rounded-md border border-ui-accent/25 bg-ui-accent/10 px-3 py-2 text-base text-ui-accent-light"
-              >
-                {error}
-              </p>
-            )}
-            {picking && mode === "item" ? (
-              <ImbuementItemPicker
-                items={imbuableItems}
-                onPick={(itemId) => {
-                  setPicking(false);
-                  setSlotChoice(null);
+          ) : (
+            <>
+              <ImbuementListPanel
+                options={options}
+                tier={tier}
+                onSelectTier={(baseId) => {
+                  setTierChoice(baseId);
                   setImbuementChoice(null);
-                  onPickItem(itemId);
                 }}
-                onCancel={() => setPicking(false)}
+                selectedImbuementId={imbuementChoice}
+                onSelectImbuement={setImbuementChoice}
+                durationSeconds={IMBUEMENT_RULES.durationSeconds}
               />
-            ) : (
-              <>
-                {mode === "item" && (
-                  <ImbuementItemPanel
-                    window={windowState}
-                    itemName={itemName}
-                    itemSpriteId={itemSpriteId}
-                    selectedSlot={selectedSlot}
-                    onSelectSlot={(slot) => {
-                      setSlotChoice(slot);
-                      setImbuementChoice(null);
-                    }}
-                    onPickItem={() => setPicking(true)}
-                  />
-                )}
-                {!clearing && (
-                  <ImbuementListPanel
-                    options={options}
-                    tier={tier}
-                    onSelectTier={(baseId) => {
-                      setTierChoice(baseId);
-                      setImbuementChoice(null);
-                    }}
-                    selectedImbuementId={imbuementChoice}
-                    onSelectImbuement={setImbuementChoice}
-                    durationSeconds={IMBUEMENT_RULES.durationSeconds}
-                  />
-                )}
-              </>
-            )}
-          </div>
+              <ImbuementApplyPanel
+                option={selectedOption}
+                spriteIdOf={(itemTypeId) =>
+                  wikiSpriteIds.get(itemTypeId) ?? spriteIdOf(itemTypeId)
+                }
+                pending={pending}
+                mode={mode}
+                onApply={() => {
+                  if (!selectedOption) return;
+                  if (mode === "scroll") {
+                    onForgeScroll(selectedOption.imbuementId);
+                    return;
+                  }
+                  if (selectedSlot === null) return;
+                  onApply(selectedSlot, selectedOption.imbuementId);
+                }}
+              />
+            </>
+          )}
         </div>
       )}
-    </Modal>
+    </ImbuementShrineDialog>
   );
 }

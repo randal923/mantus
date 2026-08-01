@@ -1,8 +1,7 @@
 import type { CharacterVocation } from "@tibia/protocol";
 import { baseVocationOf } from "../progression/baseVocationOf";
 
-// Canary daily_reward.lua:68-75 (per-base-vocation pools) and :141-144
-// (training weapons). Ids are transcribed verbatim; entries the pinned
+// Canary daily_reward.lua:68-75 (per-base-vocation pools). Entries the pinned
 // catalog does not carry are filtered at projection time, never remapped.
 
 const PALADIN_POOL = [
@@ -35,8 +34,9 @@ const MONK_POOL = [
   3175, 3155, 3202,
 ] as const;
 
-export const TRAINING_ITEM_POOL = [
-  28_540, 28_541, 28_542, 28_543, 28_544, 28_545, 44_064, 50_292,
+/** Normal 500-charge exercise weapons, including shielding and fist skill. */
+export const EXERCISE_WEAPON_POOL = [
+  28_552, 28_553, 28_554, 28_555, 28_556, 28_557, 44_065, 50_293,
 ] as const;
 
 const POOLS: Record<string, ReadonlyArray<number>> = {

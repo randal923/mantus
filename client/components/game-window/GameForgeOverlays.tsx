@@ -50,16 +50,7 @@ export function GameForgeOverlays() {
       })
     : null;
   const carried = getInventoryItems(inventory);
-  const imbuedItem =
-    imbuementItemId !== null
-      ? carried.find((item) => item.id === imbuementItemId)
-      : undefined;
-  // Only trust a projection that matches the item currently picked, so a
-  // stale window from the previous item never renders against a new one.
-  const imbuementWindow =
-    imbuementSession.window?.itemId === imbuementItemId
-      ? imbuementSession.window
-      : null;
+  const imbuementWindow = imbuementSession.window;
 
   return (
     <>
@@ -102,8 +93,6 @@ export function GameForgeOverlays() {
       {imbuementOpen && (
         <ImbuementModal
           window={imbuementWindow}
-          itemName={imbuedItem?.name}
-          itemSpriteId={imbuedItem?.spriteId}
           imbuableItems={carried.filter(
             (item) => itemImbuementSlotCountOf(item) > 0,
           )}
@@ -113,7 +102,6 @@ export function GameForgeOverlays() {
           pending={imbuementSession.pending}
           error={imbuementError}
           onPickItem={(itemId) => {
-            setImbuementItemId(itemId);
             const sent =
               runtime.clientRef.current?.requestImbuementWindow(itemId) ??
               false;
@@ -121,7 +109,6 @@ export function GameForgeOverlays() {
           }}
           onSelectMode={(mode) => {
             const itemId = mode === "scroll" ? null : imbuementItemId;
-            setImbuementItemId(itemId);
             const sent =
               runtime.clientRef.current?.requestImbuementWindow(
                 itemId,

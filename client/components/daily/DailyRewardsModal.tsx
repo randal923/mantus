@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DAILY_REWARD_TABLE,
   type DailyRewardHistoryEntry,
@@ -13,9 +13,8 @@ import { Modal } from "../ui/Modal";
 import { PixelImage } from "../ui/PixelImage";
 import { DailyRewardCycle } from "./DailyRewardCycle";
 import { DailyRewardHistoryPanel } from "./DailyRewardHistoryPanel";
-import { DailyRewardPickPanel } from "./DailyRewardPickPanel";
-import { RestingAreaPanel } from "./RestingAreaPanel";
-import { RewardWallPremiumPanel } from "./RewardWallPremiumPanel";
+import { ExerciseWeaponSelectionModal } from "./ExerciseWeaponSelectionModal";
+import { RewardStreakBanner } from "./RewardStreakBanner";
 
 interface DailyRewardsModalProps {
   state: DailyRewardsStateMessage;
@@ -28,10 +27,9 @@ interface DailyRewardsModalProps {
 }
 
 /**
- * The reward wall (Feature 84). Opened by using a reward shrine, it shows the
- * resting-area bonuses the streak has unlocked, the seven-day cycle, and
- * today's claim. Every number here is server state and every pick is a request
- * the server re-validates — the window enforces nothing.
+ * Opened by using a reward shrine, this shows the seven-day cycle and turns a
+ * click on today's card into a claim intent. Exercise-weapon days open the
+ * server-projected chooser first; the server re-validates every selection.
  */
 export function DailyRewardsModal({
   state,
@@ -42,46 +40,28 @@ export function DailyRewardsModal({
   onClose,
 }: DailyRewardsModalProps) {
   const { t } = useAppTranslation();
-  const [picks, setPicks] = useState<ReadonlyMap<number, number>>(new Map());
   const [showHistory, setShowHistory] = useState(false);
+  const [showWeaponPicker, setShowWeaponPicker] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   // The only external system this window syncs with: the wall clock behind the
   // claim countdown. The deadline itself is the server's.
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
     return () => window.clearInterval(timer);
   }, []);
 
   const todayEntry = DAILY_REWARD_TABLE[state.streakPosition];
-  const needsPicks =
-    todayEntry !== undefined &&
-    (todayEntry.kind === "vocation-items" ||
-      todayEntry.kind === "training-items");
-  const pickedUnits = useMemo(
-    () => [...picks.values()].reduce((total, count) => total + count, 0),
-    [picks],
-  );
   const premium = state.accountTier === "premium";
   const remainingMs = Math.max(0, state.dayEndsAtMs - now);
 
-  const adjustPick = (itemTypeId: number, delta: number) => {
-    setPicks((current) => {
-      const next = new Map(current);
-      const value = (next.get(itemTypeId) ?? 0) + delta;
-      if (value <= 0) next.delete(itemTypeId);
-      else next.set(itemTypeId, value);
-      return next;
-    });
-  };
-
-  const claim = () => {
-    onClaim(
-      [...picks.entries()].map(([itemTypeId, count]) => ({
-        itemTypeId,
-        count,
-      })),
-    );
+  const activateCurrentReward = () => {
+    if (!state.claimableToday || !todayEntry) return;
+    if (todayEntry.kind === "training-items") {
+      setShowWeaponPicker(true);
+      return;
+    }
+    onClaim([]);
   };
 
   const toggleHistory = () => {
@@ -89,15 +69,25 @@ export function DailyRewardsModal({
     setShowHistory((open) => !open);
   };
 
-  const claimDisabled =
-    !state.claimableToday ||
-    (needsPicks && (pickedUnits === 0 || pickedUnits > state.allowance));
+  if (showWeaponPicker) {
+    return (
+      <ExerciseWeaponSelectionModal
+        weapons={state.pool}
+        onConfirm={(itemTypeId) => {
+          onClaim([{ itemTypeId, count: state.allowance }]);
+          setShowWeaponPicker(false);
+        }}
+        onClose={() => setShowWeaponPicker(false)}
+      />
+    );
+  }
 
   return (
     <Modal
       title={t("dailyRewards.title")}
       onClose={onClose}
-      size="wide"
+      size="full"
+      height="auto"
       footer={
         <>
           <span
@@ -119,55 +109,39 @@ export function DailyRewardsModal({
           <Button variant="secondary" size="sm" onClick={onClose}>
             {t("dailyRewards.close")}
           </Button>
-          {!showHistory && (
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={claimDisabled}
-              onClick={claim}
-            >
-              {state.claimableToday
-                ? t("dailyRewards.claim")
-                : t("dailyRewards.claimed")}
-            </Button>
-          )}
         </>
       }
     >
       {showHistory ? (
         <DailyRewardHistoryPanel entries={history ?? null} />
       ) : (
-        <div className="flex flex-col gap-3">
-          <RestingAreaPanel
-            streakLevel={state.streakLevel}
-            jokerTokens={state.jokerTokens}
-            remainingMs={remainingMs}
-            premium={premium}
-            atRisk={state.claimableToday && state.missedDays > 0}
-            boostActive={state.xpBoostUntilMs > now}
-          />
-          <DailyRewardCycle
-            streakPosition={state.streakPosition}
-            claimableToday={state.claimableToday}
-            premium={premium}
-          />
-          {needsPicks && state.claimableToday && (
-            <DailyRewardPickPanel
-              pool={state.pool}
-              picks={picks}
-              pickedUnits={pickedUnits}
-              allowance={state.allowance}
-              onAdjust={adjustPick}
+        <div className="flex flex-col gap-6">
+          <p className="max-w-4xl border border-ui-stone-light/10 bg-black/20 px-4 py-3 text-base font-medium text-ui-muted">
+            {t("dailyRewards.description")}
+          </p>
+          <div className="flex min-w-0 flex-col items-center gap-5 border border-ui-stone-light/10 bg-ui-panel/60 p-4 lg:flex-row lg:items-stretch">
+            <div className="flex shrink-0 items-center justify-center px-4 lg:w-56">
+              <RewardStreakBanner
+                streakLevel={state.streakLevel}
+                label={t("dailyRewards.streakLevel", {
+                  level: state.streakLevel,
+                })}
+                size="large"
+              />
+            </div>
+            <DailyRewardCycle
+              streakPosition={state.streakPosition}
+              claimableToday={state.claimableToday}
+              premium={premium}
+              remainingMs={remainingMs}
+              onActivateCurrent={activateCurrentReward}
             />
-          )}
-          {!needsPicks && todayEntry && (
-            <p className="text-sm text-ui-text">
-              {todayEntry.kind === "wildcards"
-                ? t("dailyRewards.wildcardsToday", { count: state.allowance })
-                : t("dailyRewards.boostToday", { minutes: state.allowance })}
+          </div>
+          {state.claimableToday && state.missedDays > 0 && (
+            <p className="text-sm text-ui-accent-light">
+              {t("dailyRewards.lateWarning")} {t("dailyRewards.streakWillReset")}
             </p>
           )}
-          <RewardWallPremiumPanel premium={premium} />
           {error && <p className="text-sm text-ui-accent-light">{error}</p>}
         </div>
       )}

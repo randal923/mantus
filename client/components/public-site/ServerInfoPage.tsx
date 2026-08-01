@@ -17,6 +17,8 @@ const RATE_KEYS = [
   "soulRegen",
   "offlineTraining",
   "exerciseTraining",
+  "bestiaryKills",
+  "bosstiaryKills",
 ] as const satisfies ReadonlyArray<keyof PublicServerInfoData["rates"]>;
 
 const SYSTEM_KEYS = [

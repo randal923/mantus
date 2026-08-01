@@ -21,6 +21,10 @@ export class BestiaryTracker implements BestiaryHooks {
     private readonly registry: SessionRegistry,
     private readonly store?: BestiaryStore,
     private readonly boostedHooks?: BoostedHooks,
+    private readonly killRates: {
+      bestiaryKills: number;
+      bosstiaryKills: number;
+    } = { bestiaryKills: 1, bosstiaryKills: 1 },
   ) {}
 
   async load(characterId: string): Promise<ReadonlyMap<number, number>> {
@@ -52,11 +56,12 @@ export class BestiaryTracker implements BestiaryHooks {
     void now;
     const raceId = this.catalog.raceIdByMonsterTypeId.get(monster.type.id);
     if (raceId === undefined) return;
-    // The boosted boss counts triple (Canary player.cpp:6565-6567); the
-    // multiplier only ever applies to bosstiary races.
+    // The boosted boss counts triple (Canary player.cpp:6565-6567) and
+    // stacks on top of the configured bosstiary kill rate.
     const increment = this.catalog.bossesByRaceId.has(raceId)
-      ? this.boostedHooks?.bossKillIncrement(raceId) ?? 1
-      : 1;
+      ? (this.boostedHooks?.bossKillIncrement(raceId) ?? 1) *
+        this.killRates.bosstiaryKills
+      : this.killRates.bestiaryKills;
     for (const characterId of new Set(damagerIds)) {
       const kills = this.killsByCharacter.get(characterId);
       if (!kills) continue;

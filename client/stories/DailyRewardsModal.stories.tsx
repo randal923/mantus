@@ -9,9 +9,9 @@ import { DailyRewardsModal } from "../components/daily/DailyRewardsModal";
 /** Fixed so the countdown renders the same string in every snapshot. */
 const DAY_ENDS_AT = Date.now() + 80_460_000;
 
-const ITEM_DAY: DailyRewardsStateMessage = {
+const EXERCISE_WEAPON_DAY: DailyRewardsStateMessage = {
   type: "daily-rewards-state",
-  streakPosition: 0,
+  streakPosition: 2,
   streakLevel: 12,
   jokerTokens: 2,
   claimableToday: true,
@@ -20,17 +20,21 @@ const ITEM_DAY: DailyRewardsStateMessage = {
   dayEndsAtMs: DAY_ENDS_AT,
   accountTier: "premium",
   pool: [
-    { itemTypeId: 266, name: "health potion", spriteId: 266 },
-    { itemTypeId: 268, name: "mana potion", spriteId: 268 },
-    { itemTypeId: 236, name: "strong health potion", spriteId: 236 },
-    { itemTypeId: 3203, name: "animate dead rune", spriteId: 3203 },
+    { itemTypeId: 28_552, name: "exercise sword", spriteId: 25_676 },
+    { itemTypeId: 28_553, name: "exercise axe", spriteId: 25_681 },
+    { itemTypeId: 28_554, name: "exercise club", spriteId: 25_686 },
+    { itemTypeId: 28_555, name: "exercise bow", spriteId: 25_691 },
+    { itemTypeId: 28_556, name: "exercise rod", spriteId: 25_696 },
+    { itemTypeId: 28_557, name: "exercise wand", spriteId: 25_701 },
+    { itemTypeId: 44_065, name: "exercise shield", spriteId: 41_861 },
+    { itemTypeId: 50_293, name: "exercise wraps", spriteId: 45_290 },
   ],
-  allowance: 5,
+  allowance: 1,
 };
 
 const WILDCARD_DAY: DailyRewardsStateMessage = {
-  ...ITEM_DAY,
-  streakPosition: 2,
+  ...EXERCISE_WEAPON_DAY,
+  streakPosition: 0,
   pool: [],
   allowance: 2,
 };
@@ -39,12 +43,9 @@ const HISTORY: ReadonlyArray<DailyRewardHistoryEntry> = [
   {
     claimedAtMs: DAY_ENDS_AT - 90_000_000,
     rewardDay: 2,
-    kind: "vocation-items",
-    allowance: 10,
-    items: [
-      { itemTypeId: 266, name: "health potion", count: 6 },
-      { itemTypeId: 268, name: "mana potion", count: 4 },
-    ],
+    kind: "xp-boost",
+    allowance: 30,
+    items: [],
   },
   {
     claimedAtMs: DAY_ENDS_AT - 180_000_000,
@@ -60,7 +61,7 @@ const meta = {
   component: DailyRewardsModal,
   parameters: { layout: "fullscreen" },
   args: {
-    state: ITEM_DAY,
+    state: EXERCISE_WEAPON_DAY,
     error: null,
     onClaim: fn(),
     onRequestHistory: fn(),
@@ -71,10 +72,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Day 1: pick supplies from the vocation pool, every bonus unlocked. */
-export const ItemDay: Story = {};
+/** Day 3: clicking the current card opens the exercise-weapon chooser. */
+export const ExerciseWeaponDay: Story = {};
 
-/** Day 3: prey wildcards, nothing to pick. */
+/** Day 1: clicking the current card claims prey wildcards. */
 export const WildcardDay: Story = {
   args: { state: WILDCARD_DAY },
 };
@@ -82,21 +83,37 @@ export const WildcardDay: Story = {
 /** Already claimed today; the whole run up to here shows as collected. */
 export const Claimed: Story = {
   args: {
-    state: { ...ITEM_DAY, streakPosition: 3, claimableToday: false },
+    state: {
+      ...EXERCISE_WEAPON_DAY,
+      streakPosition: 3,
+      claimableToday: false,
+      pool: [],
+    },
   },
 };
 
 /** A missed day: the streak is one claim away from resetting. */
 export const StreakAtRisk: Story = {
   args: {
-    state: { ...ITEM_DAY, streakPosition: 4, missedDays: 1, jokerTokens: 0 },
+    state: {
+      ...EXERCISE_WEAPON_DAY,
+      streakPosition: 4,
+      missedDays: 1,
+      jokerTokens: 0,
+      pool: [],
+      allowance: 30,
+    },
   },
 };
 
 /** A free account: rewards are halved and no resting bonus is active. */
 export const FreeAccount: Story = {
   args: {
-    state: { ...ITEM_DAY, accountTier: "free", streakLevel: 3, allowance: 5 },
+    state: {
+      ...EXERCISE_WEAPON_DAY,
+      accountTier: "free",
+      streakLevel: 3,
+    },
   },
 };
 
