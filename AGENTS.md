@@ -7,20 +7,6 @@ a modified client. These rules are mandatory for ALL gameplay code you write
 or review. Rationale and the full roadmap live in `plan.md`; asset-format
 rules live in `client/AGENTS.md` and `client/ASSETS.md`.
 
-## Git worktree requirement
-
-Before modifying any files:
-
-1. Create a new branch and Git worktree for the task.
-2. Perform all work inside that worktree.
-3. Never modify files directly in the primary repository checkout.
-4. Commit all completed changes to the worktree branch.
-5. Do not remove the worktree after completing the task.
-
-Branch format:
-
-agent/<task-name>
-
 You can use Tibia Canary as source of information about the server of our project git@github.com:opentibiabr/canary.git
 
 ## The golden rule
