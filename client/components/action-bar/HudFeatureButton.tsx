@@ -20,7 +20,7 @@ export function HudFeatureButton({
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="ui-button ui-button-secondary flex h-9 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
+      className="ui-button w-40 ui-button-secondary flex h-9 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
     >
       <span
         aria-hidden

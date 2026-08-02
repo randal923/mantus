@@ -386,7 +386,7 @@ export function GameHud({
             max={ownCharacter.maxHealth}
           />
           <div className="ui-action-cluster-shell pointer-events-auto relative z-0 min-w-0 max-w-[calc(100vw-16rem)] sm:max-w-[calc(100vw-16rem)]">
-            <div className="absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1">
+            <div className="absolute -top-11 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
               <HudFeatureButton
                 title={t("actionBot.configure")}
                 label={t("actionBot.title").toLocaleUpperCase()}
