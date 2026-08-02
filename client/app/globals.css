@@ -56,6 +56,18 @@
   );
 }
 
+/*
+ * In the base layer so positioning utilities (absolute/fixed) still win.
+ * Without a position of its own, the ::before inner border anchors to the
+ * nearest positioned ancestor and draws a ghost frame around it — visible
+ * as a stray rectangle behind statically-placed panels like the HUD chips.
+ */
+@layer base {
+  .ui-panel-frame {
+    position: relative;
+  }
+}
+
 .ui-panel-frame {
   border: 1px solid #444844;
   border-radius: 0.75rem;
