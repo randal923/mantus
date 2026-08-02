@@ -150,6 +150,11 @@ limitations accepted during a session are recorded in the owning feature file
   `EMAXCONNSESSION`. Still per-process: each server budgets `PG_POOL_MAX`
   independently, so many processes can jointly exhaust the pooler's *server*
   side. A direct connection remains the best option where IPv6 is available.
+  Note (2026-08-02): the 2026-07-29 fix only updated the local `.env`; the
+  prod Fly secret kept the session-pooler URL (port 5432) and prod hit
+  `EMAXCONNSESSION` persist failures until the secret was updated to 6543
+  with `fly secrets set -a mantus`. Fly secrets do not track `.env` — any
+  future `DATABASE_URL` change must be applied in both places.
 - **A potion flask is destroyed when the drinker has no room for it**
   (2026-07-31, see `todo/done.md`). Canary's `player:addItem(potion.flask, 1)`
   defaults `canDropOnMap = true`, so a flask that fits nowhere in the

@@ -1515,6 +1515,10 @@
   "hud": {
     "battleList": "Battle List",
     "battleListEmpty": "No creatures in view.",
+    "performanceLabel": "Frame rate and server latency",
+    "fps": "FPS",
+    "ping": "Ping",
+    "pingValue": "{{ms}} ms",
     "levelUpTitle": "Level {{level}}!",
     "levelUpDescription": "Your maximum health, mana, and capacity increased.",
     "minimap": {

@@ -79,6 +79,7 @@ export function createGameWindowStore({
     bankBalance: 0,
     creationOptions: null,
     ownCharacter: null,
+    latencyMs: null,
     worldLoading: false,
     worldLoadProgress: null,
     visibleCreatures: [],
@@ -209,6 +210,10 @@ export function createGameWindowStore({
     setOwnCharacter: (value) =>
       set((state) => ({
         ownCharacter: resolveStateAction(value, state.ownCharacter),
+      })),
+    setLatencyMs: (value) =>
+      set((state) => ({
+        latencyMs: resolveStateAction(value, state.latencyMs),
       })),
     setWorldLoading: (value) =>
       set((state) => ({
@@ -621,6 +626,7 @@ export function createGameWindowStore({
         characters: null,
         creationOptions: null,
         ownCharacter: null,
+        latencyMs: null,
         itemText: null,
         npcDialogue: null,
         npcTravelPending: false,

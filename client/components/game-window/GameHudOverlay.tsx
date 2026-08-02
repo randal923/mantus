@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type {
   ActionBar as ActionBarState,
   ActionBarAction,
@@ -48,6 +48,7 @@ export function GameHudOverlay() {
     (state) => state.uiSettings.chatPinnedOpen ?? false,
   );
   const ownCharacter = useGameWindowStore((state) => state.ownCharacter);
+  const latencyMs = useGameWindowStore((state) => state.latencyMs);
   const fightState = useGameWindowStore((state) => state.fightState);
   const spells = useGameWindowStore((state) => state.spells);
   const actionBar = useGameWindowStore((state) => state.actionBar);
@@ -367,6 +368,16 @@ export function GameHudOverlay() {
     setHuntingBotOpen(true);
   }, [setHuntingBotOpen]);
 
+  // Feeds the HUD ping readout while the HUD is on screen; one probe every
+  // two seconds stays far inside the shared message rate cap.
+  useEffect(() => {
+    const sendPing = () =>
+      store.getState().runtime.clientRef.current?.ping();
+    sendPing();
+    const timer = setInterval(sendPing, 2_000);
+    return () => clearInterval(timer);
+  }, [store]);
+
   if (!ownCharacter || !fightState) return null;
 
   return (
@@ -384,6 +395,7 @@ export function GameHudOverlay() {
       battleList={battleList}
       minimap={minimap}
       ownCharacter={ownCharacter}
+      latencyMs={latencyMs}
       fightState={fightState}
       spells={spells}
       actionBar={actionBar}

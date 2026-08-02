@@ -68,6 +68,8 @@ export interface GameWindowState {
   bankBalance: number;
   creationOptions: CharacterCreationOptions | null;
   ownCharacter: OwnCharacterState | null;
+  /** Last measured ping round trip in ms, for the HUD counter. */
+  latencyMs: number | null;
   worldLoading: boolean;
   worldLoadProgress: WorldLoadProgress | null;
   visibleCreatures: ReadonlyArray<CreatureState>;

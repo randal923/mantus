@@ -1515,6 +1515,10 @@
   "hud": {
     "battleList": "Lista de Batalha",
     "battleListEmpty": "Nenhuma criatura à vista.",
+    "performanceLabel": "Taxa de quadros e latência do servidor",
+    "fps": "FPS",
+    "ping": "Ping",
+    "pingValue": "{{ms}} ms",
     "levelUpTitle": "Nível {{level}}!",
     "levelUpDescription": "Sua vida máxima, mana e capacidade aumentaram.",
     "minimap": {

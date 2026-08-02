@@ -65,6 +65,7 @@ export interface GameWindowStoreActions {
     value: SetStateAction<CharacterCreationOptions | null>,
   ) => void;
   setOwnCharacter: (value: SetStateAction<OwnCharacterState | null>) => void;
+  setLatencyMs: (value: SetStateAction<number | null>) => void;
   setWorldLoading: (value: SetStateAction<boolean>) => void;
   setWorldLoadProgress: (
     value: SetStateAction<WorldLoadProgress | null>,

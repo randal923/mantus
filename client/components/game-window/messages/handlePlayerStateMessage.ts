@@ -8,6 +8,14 @@ export function handlePlayerStateMessage(
   { store }: GameWindowMessageContext,
 ): boolean {
   const state = store.getState();
+  if (message.type === "pong") {
+    const roundTrip = Date.now() - message.nonce;
+    // An implausible echo (clock jump, stale socket) is dropped, not shown.
+    if (roundTrip >= 0 && roundTrip <= 60_000) {
+      state.setLatencyMs(roundTrip);
+    }
+    return true;
+  }
   if (message.type === "look-text") {
     // Tibia shows a look centred on the screen and in the server log; the text
     // is the server's, rendered verbatim.
