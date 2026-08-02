@@ -91,7 +91,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | --------------------------------------------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------------- |
 | Reconnect/resync, state bounds, error taxonomy (90–92)          | ❌     | ❌     | All (freeze probes ship as regression gates)                                                             |
 | Client polish: lighting, sound, hotkey persistence, modals (87) | —      | ❌     | All                                                                                                      |
-| Performance budgets + deferred items (88, 106, 107)             | ◐      | ◐      | Measure-first list; login is 1 connection but ~28 sequential round trips (collapse to one statement)      |
+| Performance budgets + deferred items (88, 106, 107)             | ◐      | ◐      | Measure-first list; login is 1 connection but ~28 sequential round trips (collapse to one statement); intents wake the tick since 2026-08-02 but async DB outcomes still wait for the interval |
 | Network/resource limits (93)                                    | ◐      | —      | TLS/origin policy, per-intent rates, per-IP caps, idle timeouts                                          |
 | Structured logging + metrics/alerting (94, 95)                  | ❌     | —      | All                                                                                                      |
 | Error handling, durability/drain, DB audit/recovery (97–99)     | ❌     | —      | All                                                                                                      |

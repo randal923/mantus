@@ -1549,3 +1549,44 @@ ESLint pass.
 **Residual risk**: a sheet that fails both attempts still logs the existing
 creature-render warning and cannot be displayed because its pixels are
 unavailable; later preload callers can try the sheet again.
+
+## 2026-08-02 — Wakeable tick: intents no longer wait out the 25 ms interval
+
+**Problem**: every client intent sat in its session queue until the next
+fixed 25 ms interval tick — an artificial 0–25 ms (average ~12.5 ms) added
+to every action's round trip on top of network latency. Canary avoids this
+with a serialized dispatcher that wakes the moment a task arrives
+(src/game/scheduling/dispatcher.cpp); our fixed interval was the polling
+equivalent.
+
+**What changed**: `TickLoop` gained `requestTick()`, and the intent-queued
+callback in `GameServer.onConnection` (the same one that marks the session
+tickable) now calls it. The woken tick is the same full `GameServer.tick()`:
+all validation and mutation still happen synchronously inside the tick at
+execution time, so charter rules 3–5 are untouched — only the scheduling
+changed. Wake requests coalesce (any number of packets arriving before the
+woken tick fires produce one tick, via `setImmediate`), and a wake keeps a
+minimum 5 ms spacing from the previous tick, so a packet flood cannot turn
+every message into its own full tick — the loop is bounded at 200 wakes/s
+plus the 40/s interval, and the existing per-connection rate/size caps still
+apply. The interval tick keeps driving timed and background systems. Net
+effect: when the server is healthy the queue delay is gone (sub-millisecond
+wake); under sustained input it is capped at ~5 ms instead of ~25 ms.
+
+**Files**: `server/src/TickLoop.ts`, `server/src/GameServer.ts`,
+`server/src/TickLoop.test.ts` (new), `server/src/GameServer.test.ts`.
+
+**Verified**: 6 new TickLoop unit tests (immediate wake, coalescing,
+ignore-before-start, stop cancels a pending wake, spacing floor, interval
+unaffected); a new end-to-end regression starts the real server with
+`tickMs: 200` and asserts five sequential authenticated pings each
+round-trip in under 60 ms — without the wake each pong waits 0–200 ms for
+the interval, so the old code fails it essentially always. Full server
+suite: 1,535 passed / 252 skipped (the usual no-Postgres skips); typecheck
+clean.
+
+**Residual risk**: only network intents wake the loop. Async DB outcomes
+(the ~30 `applyResolvedOutcomes` queues) are still applied by the next
+interval tick, so multi-round-trip flows — login's ~28 sequential queries
+above all — keep paying up to 25 ms of tick alignment per round trip.
+Recorded in `TODO.md` under accepted gaps with the recommended fix.
