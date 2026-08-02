@@ -249,18 +249,25 @@ export class AssetStore {
     }
     for (const s of [...sheets].sort((a, b) => a - b)) {
       if (this.sheetImages[s]) continue;
-      let pending = this.sheetLoads.get(s);
-      if (!pending) {
-        pending = this.loadSheet(s);
-        this.sheetLoads.set(s, pending);
-      }
       try {
-        await pending;
-      } catch (cause) {
-        this.sheetLoads.delete(s);
-        throw cause;
+        await this.preloadSheet(s);
+      } catch {
+        await this.preloadSheet(s);
       }
     }
+  }
+
+  private preloadSheet(sheet: number): Promise<void> {
+    const existing = this.sheetLoads.get(sheet);
+    if (existing) return existing;
+    const pending = this.loadSheet(sheet).catch((cause: unknown) => {
+      if (this.sheetLoads.get(sheet) === pending) {
+        this.sheetLoads.delete(sheet);
+      }
+      throw cause;
+    });
+    this.sheetLoads.set(sheet, pending);
+    return pending;
   }
 
   private async loadSheet(sheet: number): Promise<void> {

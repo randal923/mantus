@@ -1516,3 +1516,36 @@ stale process was stopped gracefully (SIGTERM, saves ran).
 **Residual risk**: strike logs identify the message type only; if a mismatch
 ever hides in a field rather than the type, the log narrows it to the type
 but the zod issue paths still have to be reproduced manually.
+
+## 2026-08-02 — Ground item drags clean up and NPC atlas loads recover
+
+**Problem**: dropping a ground item onto an inventory slot accepted the pickup
+but left the custom map-drag sprite fixed to the screen. The slot stopped the
+native `pointerup`, so `WorldRenderer` never received the window-level event
+that removes its drag icon. Separately, a transient atlas request failure
+caused every creature waiting on that shared sheet to be discarded by the
+renderer for the rest of the session. This made a stable group of NPCs appear
+not to spawn; in Darashia, Asima uses a different atlas sheet from the visible
+Shalmar.
+
+**What changed**: item slots now mark a handled pointer drop as prevented but
+let it bubble to the renderer cleanup. `InventoryPanel` respects that marker,
+so the item intent is still dispatched exactly once. Atlas sheet loads now
+share one concurrency-safe retry after a failed request; all creatures waiting
+on the sheet resolve from the same retry. Gameplay remains server-authoritative:
+the drag change only fixes UI cleanup, and the NPC change only recovers visual
+assets for creature states already sent by the server.
+
+**Files**: `client/components/inventory/{ItemSlot,InventoryPanel}.tsx`,
+`client/lib/render/{AssetStore,AssetStore.test}.ts`,
+`client/stories/InventoryPanel.stories.tsx`, `todo/{done,status}.md`.
+
+**Verified**: a real-map/content spawn diagnostic activated both Asima and
+Shalmar at their committed Darashia slots; all 82 client unit files pass (354
+tests); all 7 InventoryPanel stories pass in headless Chromium, including the
+single-dispatch plus window-cleanup regression; client TypeScript and focused
+ESLint pass.
+
+**Residual risk**: a sheet that fails both attempts still logs the existing
+creature-render warning and cannot be displayed because its pixels are
+unavailable; later preload callers can try the sheet again.

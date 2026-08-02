@@ -204,6 +204,26 @@ export const DropsAnywhereIntoFirstBackpackSlot: Story = {
   },
 };
 
+export const GroundDropReachesRendererCleanup: Story = {
+  args: {
+    ...Knight.args,
+    onDropInContainer: fn(),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rendererCleanup = fn();
+    window.addEventListener("pointerup", rendererCleanup);
+    try {
+      fireEvent.pointerUp(canvas.getByTitle("5 Health Potion"), { button: 0 });
+    } finally {
+      window.removeEventListener("pointerup", rendererCleanup);
+    }
+
+    await expect(args.onDropInContainer).toHaveBeenCalledTimes(1);
+    await expect(rendererCleanup).toHaveBeenCalledTimes(1);
+  },
+};
+
 export const NavigatesBackpacksAndDropsInsideThem: Story = {
   args: {
     ...Knight.args,

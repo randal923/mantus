@@ -173,7 +173,7 @@ export function InventoryPanel({
         dropInVisibleContainer();
       }}
       onPointerUp={(event) => {
-        if (event.button !== 0) return;
+        if (event.button !== 0 || event.defaultPrevented) return;
         dropInVisibleContainer();
       }}
       className="relative flex h-full w-full justify-end font-tibia text-ui-text select-none"

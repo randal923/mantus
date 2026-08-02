@@ -122,4 +122,23 @@ describe("AssetStore cache-busting", () => {
     expect(urls).toContain(`/assets/atlas-0.png`);
     expect(urls.some((url) => url.includes("?v="))).toBe(false);
   });
+
+  it("retries one failed atlas sheet load for every waiting creature", async () => {
+    let sheetAttempts = 0;
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.split("?")[0]?.endsWith(".png")) {
+        sheetAttempts += 1;
+        if (sheetAttempts === 1) return { ok: false };
+      }
+      return route(url);
+    });
+
+    const store = new AssetStore();
+    await store.load();
+    await expect(
+      Promise.all([store.preload([1]), store.preload([1])]),
+    ).resolves.toEqual([undefined, undefined]);
+
+    expect(sheetAttempts).toBe(2);
+  });
 });

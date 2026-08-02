@@ -13,14 +13,14 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-08-01
+**Last updated:** 2026-08-02
 
 ## World & engine
 
 | System (features)                                                                                   | Server | Client | Still missing                                                                                              |
 | --------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------- |
 | Map conversion, multi-floor movement, visibility (4)                                                | ✅     | ✅     | All 123 enabled sewer grates preserve their click target (32/32 in Thais); per-entry content review: 348 disabled map actions, 2,225 unresolved floor transitions |
-| Rendering, animation, floors, occlusion (5–8)                                                       | —      | ✅     | Creature idle animation + real outfit walk timings need a modern outfit re-rip; fluid-subtype patterns unprojected; permanent effects play once |
+| Rendering, animation, floors, occlusion (5–8)                                                       | —      | ✅     | Transient creature-atlas loads retry once (2026-08-02); creature idle animation + real outfit walk timings need a modern outfit re-rip; fluid-subtype patterns unprojected; permanent effects play once |
 | Creatures, spawns, AI, all 84,377 placements (9, 10)                                                | ✅     | ✅     | Four route-validated Hunt Finder grounds gained 11 types/83 placements; Carnisylvan Sapling's dynamic self-destruct trigger, typed-data buckets (3 NPC entries), placement review, Harlow duplicate |
 | World actions: doors, levers, readables, rope, shovel, chests, plates, traps, teleports (12, 50–52) | ✅     | ✅     | Fields (50), trap disarm, tool remainder + sand digging (51), transform-on-use/`ignoreLook` flags (asset pass 108); look is server-authored since 2026-07-29 — carried/corpse items and a shift+click alias still missing (52) |
 | World events engine + 18 raids (54)                                                                 | ◐      | —      | Other global events, daily resets (boosted rotation shipped with 76), reward steps, `/raid` capability     |
@@ -30,7 +30,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
 | System (features)                                                                    | Server | Client | Still missing                                                                                                 |
 | ------------------------------------------------------------------------------------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------- |
-| Item core: catalog, single-owner ops, containers, equipment, drag queue (11, 16, 17) | ✅     | ✅     | Fluids (11), container sorting/browse-field, 7-tile throw range (16), item parity gate (17)                   |
+| Item core: catalog, single-owner ops, containers, equipment, drag queue (11, 16, 17) | ✅     | ✅     | Ground-to-container drag cleanup fixed (2026-08-02); fluids (11), container sorting/browse-field, 7-tile throw range (16), item parity gate (17) |
 | NPC shops — 8,368 offers (46)                                                        | ✅     | ✅     | Memory-first buy/sell + amount slider (2026-07-30); shopping-bag fill, finite stock (product decision)         |
 | Bank (45)                                                                            | ✅     | ✅     | Memory-first deposit/withdraw (2026-07-30); balance in the top-bar wallet counter (2026-08-01); `change gold`/`change platinum` conversions; six gold sinks still charge the bank without reporting the new balance (`TODO.md`) |
 | Depot, inbox, mail, supply stash (11c)                                               | ✅     | ✅     | Carried pane lists nested-backpack contents (2026-08-01); mailbox still mails top-level items only (`TODO.md`) |
