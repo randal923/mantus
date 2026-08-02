@@ -1,4 +1,5 @@
 import {
+  HUNTING_BOT_LIMITS,
   MINIMAP_LIMITS,
   PROTOCOL_LIMITS,
   type AutoWalkMessage,
@@ -9,6 +10,7 @@ import {
   type UseMapMessage,
   type WalkToMessage,
 } from "@tibia/protocol";
+import { findRoutePath } from "./huntingBot/findRoutePath";
 import { findPath } from "./pathfinding/findPath";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { Player } from "./Player";
@@ -158,6 +160,51 @@ export class MovementHandler {
       PROTOCOL_LIMITS.maxAutoWalkSteps,
     );
     this.continueAutoWalk(session, player, now);
+  }
+
+  /**
+   * Queues a server-computed route leg for the hunting bot. Same contract as
+   * click-to-walk — the caller names a destination and nothing else, the
+   * server owns the route — but the search follows step-activated floor
+   * changes so a route may take a ramp, and it routes around whatever is
+   * standing in the way right now. Every queued step is still re-validated
+   * one at a time by `continueAutoWalk` (charter rules 1 and 4).
+   */
+  walkPathTo(
+    session: Session,
+    player: Player,
+    target: Position,
+    maxVisited: number,
+    now: number,
+  ): boolean {
+    if (session.travelOperationPending || session.promotionOperationPending) {
+      this.stop(session);
+      return false;
+    }
+    const from = player.position;
+    const margin = HUNTING_BOT_LIMITS.traceLegMargin;
+    const { steps } = findRoutePath({
+      map: this.world,
+      start: from,
+      goal: target,
+      bounds: {
+        minX: Math.min(from.x, target.x) - margin,
+        maxX: Math.max(from.x, target.x) + margin,
+        minY: Math.min(from.y, target.y) - margin,
+        maxY: Math.max(from.y, target.y) + margin,
+      },
+      blocked: (position) =>
+        this.world.isOccupied(position) || !this.canWalkOn(player, position),
+      maxVisited,
+    });
+    if (steps.length === 0) return false;
+    session.movementDirection = null;
+    session.bufferedMovementDirection = null;
+    session.autoWalkDirections = steps
+      .slice(0, PROTOCOL_LIMITS.maxAutoWalkSteps)
+      .map((step) => step.direction);
+    this.continueAutoWalk(session, player, now);
+    return true;
   }
 
   handleUseMap(session: Session, intent: UseMapMessage, now: number): void {

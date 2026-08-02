@@ -61,13 +61,13 @@ describe("full-world creature performance budgets", () => {
       maxSpawnChecksPerTick: 128,
       maxSpawnAttemptsPerTick: 8,
       maxAiScansPerTick: 128,
-      maxAiWorkPerTick: 512,
+      maxAiWorkPerTick: 2_048,
       ai: {
         thinkIntervalMs: 250,
         acquisitionRange: 8,
         loseRange: 12,
         despawnRadius: 50,
-        maxPathNodes: 96,
+        maxPathNodes: 640,
         wanderChance: 0.2,
         seed: 123,
       },
@@ -80,22 +80,25 @@ describe("full-world creature performance budgets", () => {
       expect(metrics.spawnChecks).toBeLessThanOrEqual(128);
       expect(metrics.spawnAttempts).toBeLessThanOrEqual(8);
       expect(metrics.aiScans).toBeLessThanOrEqual(128);
-      expect(metrics.aiWork).toBeLessThanOrEqual(512);
+      expect(metrics.aiWork).toBeLessThanOrEqual(2_048);
     }
     expect(performance.now() - startedTicking).toBeLessThan(1_000);
   });
 
   it("keeps repeated bounded path searches within an explicit time budget", () => {
     const started = performance.now();
+    // Worst case per search: a full ±12 chase box with no route to the goal,
+    // so every one of its 625 tiles is expanded before the search gives up.
     for (let index = 0; index < 500; index++) {
       const result = findPath({
         start: { x: 0, y: 0, z: 7 },
-        isGoal: (position) => position.x === 8 && position.y === 8,
+        isGoal: (position) => position.x === 99 && position.y === 99,
         canStep: (position) =>
-          position.x >= 0 && position.y >= 0 && position.x <= 8 && position.y <= 8,
-        maxVisited: 96,
+          Math.max(Math.abs(position.x), Math.abs(position.y)) <= 12,
+        maxVisited: 640,
       });
-      expect(result.visited).toBeLessThanOrEqual(96);
+      expect(result.visited).toBeLessThanOrEqual(640);
+      expect(result.directions).toHaveLength(0);
     }
     expect(performance.now() - started).toBeLessThan(1_000);
   });

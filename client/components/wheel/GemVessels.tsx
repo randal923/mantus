@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   WHEEL_DOMAINS,
   type GemStateMessage,
@@ -7,95 +8,95 @@ import {
   type WheelDomain,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { domainIconStyle, gemIconStyle } from "../../lib/wheel/gemSheets";
+import { gemIconStyle } from "../../lib/wheel/gemSheets";
 import { GemSheetIcon } from "./GemSheetIcon";
 
 interface GemVesselsProps {
   gems: GemStateMessage;
   vocation: WheelBaseVocation;
   resonances: Readonly<Record<WheelDomain, number>>;
+  selectedGemId: string | null;
   onSelectGem: (gemId: string) => void;
 }
 
-/**
- * The four domain vessels: equipped gem, and how many of its mods the
- * domain's resonance (maxed resonance slices, 0-3) currently activates.
- */
+const VESSEL_POSITIONS = [
+  "top-0 left-0",
+  "top-0 right-0",
+  "bottom-0 left-0",
+  "right-0 bottom-0",
+] as const;
+
+/** Tibia's four-corner vessel socket for the currently equipped gems. */
 export function GemVessels({
   gems,
   vocation,
   resonances,
+  selectedGemId,
   onSelectGem,
 }: GemVesselsProps) {
   const { t } = useAppTranslation();
+
   return (
-    <section className="ui-panel-inset overflow-hidden rounded-md border border-ui-stone-light/15">
-      <header className="border-b border-ui-stone-light/15 bg-white/3 px-4 py-3">
-        <h3 className="font-display text-sm tracking-wider text-ui-text-bright uppercase">
+    <section className="ui-panel-inset overflow-hidden rounded border border-ui-stone-light/20">
+      <header className="border-b border-ui-stone-light/15 bg-white/3 px-2 py-1 text-center">
+        <h3 className="font-display text-xs tracking-wider text-ui-text-bright uppercase">
           {t("wheel.gems.vessels")}
         </h3>
       </header>
-      <div className="grid grid-cols-2 gap-2 p-3">
-        {WHEEL_DOMAINS.map((domain) => {
-          const gemId = gems.equipped[domain];
-          const gem = gems.revealed.find((entry) => entry.id === gemId);
-          const resonance = resonances[domain] ?? 0;
-          return (
-            <button
-              key={domain}
-              type="button"
-              disabled={!gem}
-              onClick={() => gem && onSelectGem(gem.id)}
-              title={t(`wheel.domain.${domain}`)}
-              className="group flex min-h-36 flex-col items-center rounded-md border border-ui-stone-light/15 bg-black/25 p-3 text-center transition-[border-color,background-color] enabled:hover:border-ui-gold/45 enabled:hover:bg-ui-gold/5 disabled:cursor-default"
-            >
-              <span className="flex items-center gap-1.5 text-xs font-medium text-ui-text-bright">
-                <GemSheetIcon
-                  style={domainIconStyle(domain)}
-                  label={t(`wheel.domain.${domain}`)}
-                />
-                {t(`wheel.domain.${domain}`)}
-              </span>
-              <span className="my-2 flex size-12 items-center justify-center rounded-full border border-ui-gold/15 bg-black/30 shadow-inner shadow-black/60">
-                {gem ? (
-                  <GemSheetIcon
-                    style={gemIconStyle(vocation, gem.domain, gem.quality)}
-                    label={t(`wheel.gems.quality.${gem.quality}`)}
-                  />
-                ) : (
-                  <span className="text-xl text-ui-muted/60">·</span>
-                )}
-              </span>
-              <span className="min-h-5 text-xs text-ui-muted">
-                {gem
-                  ? t(`wheel.gems.quality.${gem.quality}`)
-                  : t("wheel.gems.emptyVessel")}
-              </span>
-              <span
-                className="mt-auto flex flex-col items-center gap-1 pt-2"
-                aria-label={t("wheel.gems.resonanceCount", {
-                  count: resonance,
-                })}
+      <div className="flex justify-center px-3 py-4">
+        <div className="relative size-[116px]">
+          <Image
+            src="/assets/wheel/socket-gematelier.png"
+            alt=""
+            aria-hidden
+            width={96}
+            height={96}
+            className="absolute top-2.5 left-2.5 [image-rendering:pixelated]"
+          />
+          {WHEEL_DOMAINS.map((domain, index) => {
+            const gemId = gems.equipped[domain];
+            const gem = gems.revealed.find((entry) => entry.id === gemId);
+            const selected = gem?.id === selectedGemId;
+            const resonance = resonances[domain] ?? 0;
+
+            return (
+              <button
+                key={domain}
+                type="button"
+                disabled={!gem}
+                aria-pressed={selected}
+                aria-label={`${t(`wheel.domain.${domain}`)} · ${t(
+                  "wheel.gems.resonanceCount",
+                  { count: resonance },
+                )}`}
+                title={`${t(`wheel.domain.${domain}`)} · ${t(
+                  "wheel.gems.resonanceCount",
+                  { count: resonance },
+                )}`}
+                onClick={() => gem && onSelectGem(gem.id)}
+                className={`absolute flex size-11 items-center justify-center bg-[url('/assets/wheel/backdrop_skillwheel_socket_inactive.png')] bg-[length:44px_44px] bg-center bg-no-repeat [image-rendering:pixelated] ${VESSEL_POSITIONS[index]} enabled:hover:brightness-125`}
               >
-                <span aria-hidden className="flex gap-1">
-                  {[1, 2, 3].map((level) => (
-                    <span
-                      key={level}
-                      className={`h-1.5 w-5 rounded-full ${
-                        level <= resonance
-                          ? "bg-ui-accent-light shadow-sm shadow-ui-accent/50"
-                          : "bg-ui-stone-light/15"
-                      }`}
+                {gem && (
+                  <span className="flex scale-125 items-center justify-center">
+                    <GemSheetIcon
+                      style={gemIconStyle(vocation, gem.domain, gem.quality)}
                     />
-                  ))}
-                </span>
-                <span aria-hidden className="text-xs text-ui-muted">
-                  {t("wheel.gems.resonanceCount", { count: resonance })}
-                </span>
-              </span>
-            </button>
-          );
-        })}
+                  </span>
+                )}
+                {selected && (
+                  <Image
+                    src="/assets/wheel/marker_skillwheelsocket.png"
+                    alt=""
+                    aria-hidden
+                    width={44}
+                    height={44}
+                    className="pointer-events-none absolute inset-0 size-11 [image-rendering:pixelated]"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  DEFAULT_HUNTING_BOT_ROUTE,
   type UiSettings,
 } from "@tibia/protocol";
 import { describe, expect, it, vi } from "vitest";
@@ -15,9 +16,15 @@ function createRuntime(uiSettings: UiSettings) {
   const updateActionBar = vi.fn();
   const updateActionBot = vi.fn();
   const updateUiSettings = vi.fn();
+  const updateHuntingBotRoute = vi.fn();
   const runtime = {
     clientRef: {
-      current: { updateActionBar, updateActionBot, updateUiSettings },
+      current: {
+        updateActionBar,
+        updateActionBot,
+        updateUiSettings,
+        updateHuntingBotRoute,
+      },
     },
     actionBarRef: { current: createDefaultActionBar() },
     actionBotSettingsRef: {
@@ -25,10 +32,20 @@ function createRuntime(uiSettings: UiSettings) {
     },
     actionBarSaveTimerRef: { current: null },
     actionBotSaveTimerRef: { current: null },
+    huntingBotRouteRef: {
+      current: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
+    },
+    huntingBotSaveTimerRef: { current: null },
     uiSettingsRef: { current: uiSettings },
     uiSettingsSaveTimerRef: { current: null },
   } as unknown as GameWindowRuntime;
-  return { runtime, updateActionBar, updateActionBot, updateUiSettings };
+  return {
+    runtime,
+    updateActionBar,
+    updateActionBot,
+    updateUiSettings,
+    updateHuntingBotRoute,
+  };
 }
 
 describe("flushPendingSaves", () => {
@@ -80,15 +97,35 @@ describe("flushPendingSaves", () => {
     vi.useRealTimers();
   });
 
+  it("sends a pending debounced hunting-route save immediately", () => {
+    vi.useFakeTimers();
+    const { runtime, updateHuntingBotRoute } = createRuntime({});
+    runtime.huntingBotSaveTimerRef.current = armTimer(() => {});
+
+    flushPendingSaves(runtime);
+
+    expect(updateHuntingBotRoute).toHaveBeenCalledWith(
+      runtime.huntingBotRouteRef.current,
+    );
+    expect(runtime.huntingBotSaveTimerRef.current).toBeNull();
+    vi.useRealTimers();
+  });
+
   it("sends nothing when no save is pending", () => {
-    const { runtime, updateActionBar, updateActionBot, updateUiSettings } =
-      createRuntime({});
+    const {
+      runtime,
+      updateActionBar,
+      updateActionBot,
+      updateUiSettings,
+      updateHuntingBotRoute,
+    } = createRuntime({});
 
     flushPendingSaves(runtime);
 
     expect(updateActionBar).not.toHaveBeenCalled();
     expect(updateActionBot).not.toHaveBeenCalled();
     expect(updateUiSettings).not.toHaveBeenCalled();
+    expect(updateHuntingBotRoute).not.toHaveBeenCalled();
   });
 
   it("does not throw when the connection is already gone", () => {

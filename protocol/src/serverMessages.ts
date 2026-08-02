@@ -26,6 +26,12 @@ import {
   lootFilterUpdatedMessageSchema,
 } from "./lootFilter";
 import {
+  huntingBotRouteMessageSchema,
+  huntingBotRouteSchema,
+  huntingBotStatusMessageSchema,
+  huntingBotTracedMessageSchema,
+} from "./huntingBot";
+import {
   channelClosedMessageSchema,
   channelListMessageSchema,
   channelMessageSchema,
@@ -284,6 +290,7 @@ export const welcomeMessageSchema = z.object({
   actionBar: actionBarSchema,
   actionBotSettings: actionBotSettingsSchema,
   lootFilter: lootFilterSchema,
+  huntingBotRoute: huntingBotRouteSchema,
   aimAtTargetSpellIds: z
     .array(z.string().min(1).max(64))
     .max(AIM_AT_TARGET_SPELL_LIMIT),
@@ -497,6 +504,11 @@ export const serverErrorCodeSchema = z.enum([
   "loot-filter-invalid",
   "loot-filter-update-failed",
   "loot-filter-update-pending",
+  "hunting-bot-invalid",
+  "hunting-bot-out-of-range",
+  "hunting-bot-wrong-floor",
+  "hunting-bot-update-failed",
+  "hunting-bot-update-pending",
   "already-authenticated",
   "already-joined",
   "auth-failed",
@@ -565,6 +577,9 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   actionBotUpdatedMessageSchema,
   lootFilterUpdatedMessageSchema,
   lootFilterItemsMessageSchema,
+  huntingBotRouteMessageSchema,
+  huntingBotStatusMessageSchema,
+  huntingBotTracedMessageSchema,
   actionBarActivationResultMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,

@@ -25,6 +25,7 @@ export * from "./podium";
 export * from "./prey";
 export * from "./questLog";
 export * from "./rewardChest";
+export * from "./huntingBot";
 export * from "./huntingTasks";
 export * from "./profile";
 export * from "./moderation";

@@ -836,3 +836,503 @@ zero-XP, no-loot creature dynamically and its registered spell removes it. The
 typed self-destruct callback and creation trigger remain recorded in `TODO.md`.
 No database world-seed reconciliation is required for this update because the
 OTBM and converted map version did not change.
+
+## 2026-08-01 — Sewer-grate click targeting
+
+**Problem**: 2 of Thais's 32 valid sewer grates could not be used to descend.
+Their server-authored dropdowns and walkable landing tiles were correct, but
+the client redirected clicks to an adjacent 2×2 wall sprite's south-east
+anchor. The server consequently received an intent to use the wall while the
+paired underground ladder remained usable in the other direction. The same
+client-side ambiguity affected 13 of the world's 123 enabled sewer grates.
+
+**What changed**: sewer grates now retain their own map position as the use,
+look, and context-menu target even when a neighbouring multi-tile wall sprite
+overlaps the tile. Both sewer-grate item types are covered; ordinary doors and
+multi-tile gates keep the existing anchor redirect. No outcome moved to the
+client: it still sends only the selected map position, and the server resolves
+and revalidates the authored dropdown and destination inside the tick.
+
+**Files**: `client/lib/render/{MapView,resolveInteractiveTile}.ts`, its unit
+test, and the project completion/status records.
+
+**Verified**: audited all 32 Thais sewer-grate actions (all enabled with
+walkable server-authored destinations) and all 123 enabled sewer grates in the
+world map; the focused 9-test resolver suite, all 340 client unit tests, lint
+for the touched client files, and the full protocol/server/client TypeScript
+check pass.
+
+**Residual risk**: none for enabled sewer grates. The map's separately audited
+disabled-action backlog is unchanged; the one disabled dropdown in the Thais
+area is a closed wooden trapdoor whose tile directly below is a wall, not a
+sewer grate.
+
+## 2026-08-01 — Feature 112: hunting bot
+
+**Problem**: the Hunt Finder ships 131 hunting guides, each carrying a route,
+but a route was only ever something to look at. The coordinates are drawn on a
+wiki map as straight `[start, end]` lines — the median segment is 23 tiles and
+the longest is 135 — so they run through walls, water and cliff faces, and
+nothing could walk them. Players wanting to hunt one still drove every step by
+hand.
+
+**What changed**: a server-owned hunting bot. The client's new HUNTING BOT
+window (beside LOOT FILTER) browses the same guide catalog as the Hunt Finder;
+picking a hunt seeds its route and asks the server to re-walk it.
+
+Tracing runs off-tick, one leg at a time, over the server's own walkability:
+each guide point is snapped onto real ground within 4 tiles, long segments are
+sampled every 16 tiles along the guide's own line so the trace follows the
+intended corridor instead of wandering, and a bounded breadth-first search
+joins the anchors. The search follows step-activated floor changes, so a route
+may take a ramp exactly as a player does. Legs it cannot solve come back
+flagged, and the window paints those waypoints red for the player to drag.
+Measured over all 131 guides: 1669 legs, 94.9 % resolved, 87 routes fully
+clean, ~4 ms of search for a whole route.
+
+The route itself is inert geometry. `HuntingBot.tick` only decides *where* the
+character should head next and hands that tile to `MovementHandler.walkPathTo`,
+which computes the path and lets the existing auto-walk loop re-validate every
+single step — so a hand-placed waypoint inside a wall costs a skipped waypoint,
+never a teleport. A waypoint nothing can reach is skipped; a whole run of them
+stops the bot with a reason the window explains. Auto-targeting picks the
+lowest-health visible monster (nearest, then creature id, to break ties) and is
+re-evaluated once a second so a running fight is not interrupted; while a
+target is alive the bot clears its walk queue and lets the attack pipeline own
+the character's feet, forcing the chase the weapon's own range asks for.
+
+Deliberate choices: the route persists, whether the bot is *running* does not —
+a character never logs in already walking. Health-hidden monsters are ranked as
+untouched so the bot's choice cannot reveal which one is weakest (charter rule
+6). Arming requires standing within 100 tiles of the route on one of its
+floors.
+
+**Files**: `protocol/src/{huntingBot,index,clientMessages,serverMessages}.ts`;
+`server/db/migrations/068_character_hunting_bot.sql`;
+`server/src/huntingBot/{findRoutePath,snapToWalkable,buildRouteAnchors,traceRouteLeg,RouteMap,HuntingBot,HuntingBotHandler,selectAutoTarget}.ts`
+plus their tests; `server/src/{MovementHandler,Session,World,GameServer,CharacterHandler}.ts`;
+`server/src/combat/{Combat,ChaseController,PlayerAutoAttack}.ts`;
+`server/src/character/{Character,CharacterRow,CharacterStore,PgCharacterStore,CharacterService,toCharacter,parseHuntingBotRoute,sql/characterColumns}.ts`;
+`server/src/test/{makeCharacter,InMemoryCharacterStore}.ts`;
+`server/src/playtest/scenarios/huntingBot.ts`;
+`client/lib/hunting-bot/{extractRouteWaypoints,insertWaypointAt,guideRouteFor,baseHuntingVocation}.ts`;
+`client/lib/minimap/{minimapPixelToTile,worldToMinimapPixel,drawMinimapWaypoints,drawMinimap}.ts`;
+`client/components/hunting-bot/{HuntingBotModal,HuntingBotRouteEditor,HuntingBotRouteMap,HuntingBotWaypointList}.tsx`;
+`client/components/game-window/GameHuntingBotOverlay.tsx` and the store/message/
+runtime plumbing; `client/components/GameHud.tsx`; both locale files;
+`client/stories/HuntingBotModal.stories.tsx`.
+
+**Verified**: 50 new server unit tests (pathfinding around walls and across a
+ramp, bounding-box and budget cut-offs, snapping, anchor sampling, turning-point
+extraction, target ranking and its exclusion matrix, waypoint advance/loop/skip/
+stop, the pending-write race, the durable-write rollback, the trace cooldown,
+and the schema/transport-cap suite); 12 new client unit tests; 4 Storybook
+interaction stories; a `PgCharacterStore` integration round-trip including a
+corrupt stored blob degrading to an empty route; and `yarn playtest:hunting-bot`
+end to end against a real server — traced a 20-waypoint loop with 0 unreachable
+legs, walked 37 single-tile steps across 8 waypoints, auto-targeted a Snake,
+stopped on command, and refused to arm both an empty route and one on the other
+side of the map. Full `yarn typecheck`, 1517 server tests, 353 client tests and
+client lint pass.
+
+**Residual risk**: ladders, holes and ropes are `use` actions rather than steps,
+so a route needing one stalls and the bot skips past it — recorded in
+`TODO.md`. Closed doors are likewise not opened. Roughly 5 % of guide legs
+cannot be traced for those reasons and arrive flagged for hand editing. The
+runtime path budget (800 nodes, one search per waypoint per session) has not
+been profiled with many bots running at once.
+
+## 2026-08-01 — Feature 112 follow-up: bot no longer cycles waypoints faster than the character walks
+
+**Problem**: whenever the runtime path search failed, `HuntingBot.tick`
+advanced to the next waypoint after a single 400 ms repath beat, so the
+waypoint index raced around the ring while the character stood still. And the
+search failed constantly in real use: the 800-node budget only reaches ~20
+Manhattan tiles on open ground, less around geometry, while real legs are
+routinely longer — rejoining the route after a combat chase pulled the
+character off it, hand-edited waypoints tens of tiles apart, or the arm-time
+join that `maxStartDistance: 100` promised but the search could never deliver.
+A transient blocker (a creature standing on the goal tile) triggered the same
+instant skip.
+
+**What changed**: a failed path search now waits and retries the same waypoint
+(new `skipAfterFailedRepaths: 5`, one attempt per 400 ms repath cooldown, new
+`Session.huntingBotPathFailures` counter) and only skips a waypoint that stays
+unreachable for ~2 s; the consecutive-skip stop ("unreachable") is unchanged.
+`maxRuntimeVisited` was raised 800 → 4000 so the legs the bot legitimately
+meets are actually findable, and `maxStartDistance` was cut 100 → 20 so arming
+never promises a joining walk outside the search's reach.
+
+**Files**: `protocol/src/huntingBot.ts`, `server/src/Session.ts`,
+`server/src/huntingBot/HuntingBot.ts`, `server/src/huntingBot/HuntingBot.test.ts`.
+
+**Verified**: reproduced live with a headless-client probe — a route with
+~25-tile legs skipped three waypoints in 2.7 s without the character moving off
+its first corner; after the fix the same shape walked a 24-tile leg step by
+step with zero skip-advances, and a genuinely unwalkable hand-placed corner was
+skipped only after the full 5-attempt retry window. Updated/new unit tests
+cover retry-before-skip, the retry counter resetting on a successful walk, and
+the unreachable-ring stop absorbing retries × skips; all 52 huntingBot tests,
+`yarn playtest:hunting-bot` end to end, and protocol + server typechecks pass.
+
+**Residual risk**: a waypoint parked on by another player or an idle creature
+still gets skipped after ~2 s rather than approached to an adjacent tile;
+goal-adjacent arrival remains future work if that turns out to matter. The
+per-tick budget scale profiling gap in `TODO.md` now carries the 4000-node
+figure.
+
+## 2026-08-01 — Feature 112 follow-up: chase reach matches vision (Canary ±12 search box)
+
+**Problem**: a hunting-bot character froze mid-route staring at a wounded
+dragon on the screen edge, and the dragon stared back. Auto-targeting picks
+the weakest visible monster with no reachability check; the bot stands down
+while a target is alive; the forced chase then searched with a 32-node budget
+(~4 tiles of reach) and the monster's own chase with 96 nodes (~6 tiles), so
+neither side could path around the rock ridge between them and the stalemate
+never resolved. Both budgets contradicted the pinned Canary source, where
+every creature's follow search is boxed to ±12 tiles around the searcher
+(`Creature::getPathSearchParams`, creature.cpp:1041; enforced map.cpp:1297)
+with a 512-node A* (astarnodes.hpp:37) — a box that always covers the 11-tile
+view range (map_const.hpp:12-15), so anything a creature can see it can chase.
+
+**What changed**: new `CHASE_SEARCH_DISTANCE = 12` shared constant
+(`server/src/pathfinding/chaseSearchDistance.ts`) with the Canary citations.
+`ChaseController` searches the whole box (625-node budget — our BFS has no
+heuristic, so it needs the full box area to match the A*'s guarantee), bounds
+`canStep` to the box, and stands down 250 ms after a failed search instead of
+re-searching every 25 ms tick. `MonsterBrain.moveToward` takes the same box
+for chasing (walk-home stays unboxed); `config.yml` raises `ai.maxPathNodes`
+96 → 640 (one full box + slack) and `maxAiWorkPerTick` 512 → 2048 (three full
+searches per tick; the 250 ms think interval spreads monsters across ten
+ticks). The playtest load harnesses mirror the new values.
+
+**Files**: `server/src/pathfinding/chaseSearchDistance.ts` (new),
+`server/src/combat/ChaseController.ts` (+ new `ChaseController.test.ts`),
+`server/src/ai/MonsterBrain.ts` + test, `config.yml`,
+`server/src/spawn/CreaturePerformance.test.ts`,
+`server/src/playtest/{itemAnimationProbeServer,monsterLoadServer}.ts`.
+
+**Verified**: new tests — player chase walks a ~22-step detour the old
+32-node budget could never find, refuses targets outside the ±12 box, and
+skips re-searching inside the failure cooldown; a monster chases around a
+wall whose detour floods past the old budget while the starved config
+provably stands still; the perf gate re-pinned at 2048 work/640 visited with
+a worst-case full-box timing loop. Full server suite (1523 passed / 26
+DB-integration skipped), server typecheck, and `yarn playtest:hunting-bot`
+end to end all pass.
+
+**Residual risk**: a genuinely uncrossable target (ladder/rope/hole between)
+still stalls the bot — recorded in `TODO.md` with the give-up/ignore-list fix;
+the enlarged budgets fold into the existing scale-profiling gap there.
+
+## 2026-08-01 — Feature 112 follow-up: arming joins the route at the earliest nearest waypoint
+
+**Problem**: `nearestWaypointIndex` kept updating on ties, so among
+equally-close waypoints the last index won. Routes revisit tiles constantly
+(closed loops, out-and-back corridors), so arming next to "waypoint 3" could
+join at its return-leg twin near the end of the ring and walk toward the end
+instead of forward through the hunt.
+
+**What changed**: ties now go to the earliest index (strict-improvement
+update in `server/src/huntingBot/HuntingBot.ts`), with the start-distance
+boundary kept inclusive. New unit test covers an out-and-back corridor where
+the join tile appears twice; all 53 huntingBot tests and the server typecheck
+pass.
+
+## 2026-08-01 — Feature 112 follow-up: arming gate proves the join walk instead of guessing from distance
+
+**Problem**: a player standing visibly inside their hunt got "You are not
+standing in this hunting ground" when arming. The morning's fix had cut
+`maxStartDistance` 100 → 20 to keep the gate inside the old search budget, so
+standing a screen from the nearest waypoint now refused; and a route on a
+different floor produced the same misleading travel-there message, since the
+same-floor filter and the distance filter shared one error.
+
+**What changed**: arming is gated by what it actually promises.
+`HuntingBot.start` now returns "ok" / "wrong-floor" / "out-of-range": a route
+with no waypoint on the character's floor names the floor
+(new `hunting-bot-wrong-floor` protocol error, new `huntingBot.errors
+.wrongFloor` strings in en/pt-BR, mapped in `HuntingBotRouteEditor`); within
+`maxStartDistance` (back up to 30, now only a cheap pre-filter) the arm runs
+the real joining path search (`maxStartVisited: 10_000`, one-shot per arm
+click, sized past the worst 30-tile diagonal) and refuses only when no
+walkable join exists — on success the join leg is already queued, so the
+character starts walking the same tick. The out-of-range copy now says what
+is actually wrong ("No walkable path reaches the route from here").
+
+**Files**: `protocol/src/{serverMessages,huntingBot}.ts`,
+`server/src/huntingBot/{HuntingBot,HuntingBotHandler}.ts` + both tests,
+`client/components/hunting-bot/HuntingBotRouteEditor.tsx`,
+`client/locales/{en,pt-BR}.json`.
+
+**Verified**: 55 huntingBot unit tests (new: refuses when nothing walkable
+reaches the route; wrong-floor named at the handler; existing arm tests moved
+to the reason-string contract); a live probe armed from a traced tile 27
+tiles from the route — refused before this change — and walked the 55-step
+join back to waypoint 0; `yarn playtest:hunting-bot` still passes both
+refusal steps; protocol, server and client typechecks pass.
+
+**Residual risk**: arming spam is bounded only by the connection message-rate
+cap; each arm click may spend a 10k-node search (~4 ms). Fine at current
+scale; folds into the existing path-budget profiling gap in TODO.md.
+
+## 2026-08-01 — Guide catalog: dedicated "Darashia Dragon Lords" hunting place
+
+**Problem**: the catalog had no way to hunt the Darashia dragon-lord floor —
+the world spawns 24 dragon lords on z11 (plus 4 in a z12 side chamber) under
+the Darashia Dragon Lair, but no guide named them or carried a route there.
+A first attempt folded them into the existing Dragon Lair card (extra
+monster row + a second route floor), which was invisible in the card list
+and hidden by any level filter above 40, so it shipped as its own entry
+instead.
+
+**What changed**: new catalog entry "Darashia Dragon Lords" (Level 60,
+Solo/Duo, Darashia): Dragon Lord monster row (resistances matching the
+Fenrock/POI dragon-lord guides), its signature valuables, the lair's travel
+WayPath with the destination moved to the lower cave, and a floor-11
+RoutePath — a 24-point loop computed as a 2-opt tour over the dragon-lord
+spawn homes (316 tiles, legs <= ~25). The Dragon Lair entry itself is
+byte-identical to before. Catalog count pins updated 131 -> 132 in
+`parseHuntingPlaces.test.ts` / `filterHuntingPlaces.test.ts`. File:
+`client/public/assets/hunting/hunting_places.json` (note: it uses CRLF line
+endings — write it back with `newline='\r\n'` or the whole file diffs).
+
+**Follow-up (same day)**: the new card never reached the player because
+`next.config.ts` serves `/assets/*` with `max-age=86400,
+stale-while-revalidate=604800` — tuned for sprite atlases, but it let the
+browser serve a day-old `hunting_places.json` from HTTP cache without
+revalidating. `useHuntingPlaces` and `useWikiItems` now fetch with
+`cache: "no-cache"` (always revalidate; unchanged files answer 304).
+The other hand-maintained `/assets` JSON catalogs
+(`proficiencies`, `proficiency-sprites`, `creature-loot-items`,
+`npc-shop-categories`) still ride the day-long cache — recorded in TODO.md.
+
+**Verified**: JSON parses with all 131 original places byte-identical plus
+the new entry; hunt-finder and hunting-bot unit tests and both modal
+interaction stories pass; a playtest probe ran the floor-11 loop through the
+real `hunting-bot-trace` pipeline — 181 traced waypoints, 0 unresolved legs.
+Residual: the four z12 dragon lords sit in a small side chamber with no
+guide route (hand-draw if wanted), and the z10->z11 descent is a use-action
+floor change the bot cannot cross, so players walk down and arm on floor 11.
+
+## 2026-08-01 — Hunt finder & hunting bot: level filter no longer autofills, digits-only text input
+
+**Problem**: both the Hunt Finder and the Hunting Bot browser seeded their
+level filter with the character's level, hiding lower-level hunts by default,
+and used a native `type="number"` input (spinner arrows, scroll-to-change).
+
+**What changed**: the filter state is now a digits-only string that starts
+empty (empty = no level filter, placeholder "All"); the input is a plain text
+field with `inputMode="numeric"`, max 4 digits, non-digits stripped on
+change. `filterHuntingPlaces` keeps its numeric contract — the modals pass
+`Number(value)`. The now-unused `characterLevel` prop was removed from
+`HuntFinderModal`/`HuntingBotModal` and their overlays/stories, and the
+OutOfRange story was re-pinned to the new arm-error copy. Files:
+`client/components/hunt-finder/{HuntFinderFilters,HuntFinderModal}.tsx`,
+`client/components/hunting-bot/HuntingBotModal.tsx`,
+`client/components/game-window/{GameHuntFinderOverlay,GameHuntingBotOverlay}.tsx`,
+both story files.
+
+**Verified**: client typecheck; HuntingBotModal (4) and HuntFinderModal (1)
+interaction stories pass; hunt-finder unit tests pass. Noted: five unrelated
+story tests (ActionBar Empty, GameHud chat-hover, ProficiencyModal Locked
+Levels, SpellListModal Knight, WheelModal Empty) fail identically at HEAD
+with these changes stashed — pre-existing breakage, not touched here.
+
+## 2026-08-01 — Feature 112 follow-up: routes save reliably (DB cap, dropped traces, refused saves)
+
+**Problem**: opening a hunt showed an empty route map until "Reset guide" was
+clicked twice. Three server defects stacked: (1) migration 068 capped the
+stored route at `pg_column_size <= 8192`, smaller than a legal route — a
+traced 181-waypoint ring already exceeds it (protocol allows 200) — so every
+full-size traced save violated the constraint, failed, and the rollback echo
+blanked the window back to the previous (often empty) route; (2) a trace
+arriving inside the 2 s cooldown or while one ran was silently dropped, so
+the card-open auto-trace plus one quick reset left the window waiting on a
+reply that never came ("Tracing…" forever); (3) a route update racing the
+in-flight durable write was refused with `hunting-bot-update-pending`,
+silently losing the newest route and forking client from server.
+
+**What changed**: migration `069_hunting_bot_route_size.sql` re-derives the
+cap from the worst legal route (200 waypoints + 64-char name ≈ 12 KB jsonb)
+to 32 KB, still defence in depth. `HuntingBotHandler` never drops or refuses
+the newest request: a trace during cooldown/pending is held in
+`Session.huntingBotDeferredTracePoints` and started by the tick as soon as
+both clear; a route update during a pending write is held in
+`Session.huntingBotDeferredRoute` and applied when the write settles
+(last-write-wins, intermediates coalesce, one in flight at a time).
+`applyResolvedOutcomes(now)` runs the deferred work after draining outcomes.
+
+**Files**: `server/db/migrations/069_hunting_bot_route_size.sql` (pending
+`db:migrate`), `server/src/Session.ts`,
+`server/src/huntingBot/HuntingBotHandler.ts` + test, `server/src/GameServer.ts`.
+
+**Verified**: a wire probe replaying the client's exact sequence (auto-trace,
+800 ms debounced raw save, traced save, reset inside the cooldown) showed the
+pre-fix failures — silent trace drop, update-pending refusal, and the
+constraint violation with rollback — and post-fix shows the traced 181-wp
+route echoing back saved, the deferred trace answering itself when the
+cooldown ends, and a maximum 200-waypoint route persisting. 56 huntingBot
+unit tests (new: deferred-route apply, deferred-trace answer), the full
+`yarn playtest:hunting-bot` scenario, and server typecheck pass.
+
+**Residual risk**: `hunting-bot-update-pending` remains in the protocol error
+enum but is no longer emitted; deferred slots are one-deep by design (the
+newest request wins), which matches the window's semantics.
+
+## 2026-08-01 — Depot lists items inside closed nested backpacks
+
+**Problem**: the depot window's "Carried items" pane only showed the direct
+contents of the equipped backpack, so anything inside a bag within it could
+not be stored (or stowed) without first opening and unpacking the bag. The
+server never had this restriction — `planDepotDeposit`/`planStashDeposit`
+find the item anywhere in the carried snapshot — the pane was fed from the
+client's `inventory.items`, which is only the top level, and closed nested
+containers never reach the client at all.
+
+**What changed**: the carried list is now server-projected into the
+`depot-state` message. New `carriedDepotItemSchema` (`{ depth, item }`,
+capped at `DEPOT_LIMITS.maxCarriedListed` = 1024, depth ≤ 8) and a required
+`carriedItems` field on `depotStateMessageSchema`. New
+`server/src/depot/listCarriedDepotItems.ts` walks every equipped container
+depth-first in slot order (cycle-guarded, same 8-level cap as
+`collectDescendantItems`) and projects each item with `projectItem`, so the
+entries carry the same id/revision/stowable data the deposit and stow intents
+need. `DepotModal` renders `state.carriedItems` (indented by depth) instead
+of the `inventoryItems` prop, which was removed. Staleness self-heals: every
+mutation and every `stale` failure already re-sends the depot state, which
+now refreshes the carried pane too.
+
+**Files**: `protocol/src/depot.ts`,
+`server/src/depot/listCarriedDepotItems.ts` (new),
+`server/src/depot/projectDepotState.ts`, `server/src/depot/DepotService.ts`,
+`client/components/depot/DepotModal.tsx`,
+`client/components/game-window/GameCommerceOverlays.tsx`.
+
+**Verified**: new DepotService test — a sword inside a closed bag inside the
+equipped backpack is listed at depth 1 and deposited directly; the refreshed
+state drops it from the carried list and the persist fires once. All depot
+unit tests (13) pass; protocol, server and client typechecks pass.
+
+**Residual risk**: the mailbox window still lists only top-level items to
+mail (recorded in `TODO.md`); the carried list caps at 1024 entries, beyond
+any weight-feasible inventory.
+
+## 2026-08-01 — Client keeps up while its tab is backgrounded
+
+**Problem**: switching browser tabs made the game look like it stopped.
+Gameplay never actually paused — the bot, combat and world all run
+server-side — but the client's world tick rides the PixiJS ticker
+(`requestAnimationFrame`), which browsers freeze in hidden tabs. Three
+things broke: (1) every damage number, hit splash, missile and speech
+bubble received while hidden created a Pixi object that only the frozen
+tick could expire, so an AFK hunt accumulated thousands of live sprites
+that all animated at once on return; (2) the creature-message → store
+flush was RAF-batched, so the backlog array grew unboundedly while
+hidden; (3) the world-load texture-upload loop awaited one animation
+frame per texture, so tabbing away during the loading screen stalled the
+load — and `worldReady()` — until the tab was refocused.
+
+**What changed**: new `client/lib/render/isDocumentHidden.ts` guard
+(node-test-safe). `CombatEffectRenderer.showMagicEffect/showMissile/
+showCombatText/showExperienceText` and `SpeechTextRenderer.showSpeech`
+skip creation while hidden — they are pure cosmetics nobody can see.
+`WorldRenderer.setMap` skips the per-texture RAF yield while hidden so
+loading completes in the background. `GameWindowConnectionController`
+schedules a 250ms `setTimeout` fallback alongside the RAF flush
+(whichever fires first wins and cancels the other), so the visible-
+creatures store keeps draining at the browser's ~1s background-timer
+clamp instead of accumulating forever.
+
+**Files**: `client/lib/render/isDocumentHidden.ts` (new),
+`client/lib/render/CombatEffectRenderer.ts`,
+`client/lib/render/SpeechTextRenderer.ts`,
+`client/lib/render/WorldRenderer.ts`,
+`client/components/game-window/controllers/GameWindowConnectionController.tsx`.
+
+**Verified**: client typecheck passes; full client unit suite passes
+(82 files, 353 tests) — renderer tests run in the node environment where
+`isDocumentHidden()` reports visible, so existing behavior is unchanged.
+
+**Residual risk**: Chrome's Memory Saver can still discard a
+long-backgrounded tab outright (full page unload → disconnect); that is
+browser policy we cannot override from page JS — players AFK-hunting for
+hours should exempt the game site from Memory Saver. Recorded in
+`TODO.md`.
+
+## 2026-08-02 — Click-only Wheel selection and Tibia-layout Gem tabs
+
+**Problem**: hovering a Wheel of Destiny slice replaced the information for
+the slice the player had clicked, so the selection panel did not represent a
+stable selection. The Fragment Workshop was a wide data table that omitted
+Tibia's grade ladder, 5×6 image grid, search/filter/page controls, and most of
+the original Workshop artwork. The Gem Atelier likewise split its content
+across generic cards instead of Tibia's vessel/revelation column, selected-gem
+strip, filters, and 5×3 collection.
+
+**What changed**: hover still draws the lightweight focus overlay, but only a
+click now changes the selection panel. The Workshop now follows the original
+`fragmentMenu.otui` structure: a four-stage selected-mod grade ladder on the
+left; all 69 vocation-compatible supreme/basic mods in a searchable,
+filterable 30-card page on the right; socketed and owned markers; upgrade
+cost/action controls; and the resource strip below. Mod cards and every grade
+stage composite the original grade and mod sheets. The original ladder
+circles, animated overlays, connectors, Enhance button, and Workshop menu art
+were added through the reproducible asset importer. The Atelier now follows
+`gemMenu.otui`: the original four-corner vessel socket and stacked revelation
+column sit beside a selected-gem strip, search/affinity/quality/lock controls,
+15-gem pages, and a 5×3 grid. Gem cards show their actual gem, grade, modifier,
+lock, and equipped art; the original Reveal, Place/Remove, Switch, and Destroy
+button strips drive the existing server-authoritative intents. Supreme mod
+icons use Tibia's optical +3px/−2px offset so their art is centered inside the
+grade medallion instead of only mathematically centered by its sprite bounds.
+The Atelier side rail is widened with a larger vessel assembly, 64px
+revelation gems, and scaled Reveal/cost controls for better readability. Its
+rows remain compact and the redundant resource footer is omitted so the full
+Atelier tab fits inside the 900px Wheel modal without internal scrolling.
+Shared dropdown values are vertically centered, and the empty gem collection
+uses a balanced centered height instead of collapsing into a short message box
+or overflowing the 900px layout.
+All imported art comes from mehah otclient commit
+`9bfac7719fd5cd2d8a2cddf2ea6219e908e129f9`. English and Brazilian Portuguese
+copy now covers the new controls.
+
+**Files**: `client/components/wheel/{GemAtelierTab,GemDetails,GemList,GemRevealPanel,GemVessels}.tsx`,
+`client/components/wheel/FragmentWorkshop*.tsx`,
+`client/components/wheel/WheelModal.tsx`,
+`client/components/wheel/WheelSelectionPanel.tsx`,
+`client/lib/wheel/gemLargeIconStyle.ts`,
+`client/public/assets/wheel/{backdrop_grades_*,enhance-button.png,fragmentMenu.png,gemMenu.png,icons-modgrades-potential.png,place-vessel-button.png,remove-vessel-button.png,reveal-button.png,switch-button.png,destroy-button.png}`,
+`client/locales/{en,pt-BR}.json`, `client/stories/WheelModal.stories.tsx`,
+`client/ASSETS.md`, `tools/importWheelGemAssets.mjs`.
+
+**Verified**: `yarn --cwd client typecheck`; `yarn --cwd client lint` (0
+errors, 16 pre-existing warnings); the focused Wheel Storybook project (7
+stories, including hover-versus-click selection and Workshop search/select/
+improve interactions); and `yarn --cwd client build-storybook` all pass.
+
+**Residual risk**: the browser-control surface needed for a manual
+side-by-side screenshot comparison was unavailable in this session. The
+Workshop was rendered in Chromium by the Storybook interaction test and the
+static Storybook build includes every new sprite-position rule.
+
+## 2026-08-02 — Shared action-bar feature buttons
+
+**Problem**: Action Bot, Loot Filter, and Hunting Bot repeated the same button
+markup in `GameHud`, which made their status treatment and sizing easy to
+drift. The 28px controls were also too short for the HUD dock.
+
+**What changed**: all three controls now render through the shared
+`HudFeatureButton` component. It owns the accessible configuration label,
+enabled-status light, common styling, and a taller 36px height. The floating
+button row offset was increased to keep the taller controls clear of the
+action bar.
+
+**Files**: `client/components/action-bar/HudFeatureButton.tsx`,
+`client/components/GameHud.tsx`, `client/stories/GameHud.stories.tsx`.
+
+**Verified**: client typecheck and focused ESLint pass; all four Chromium
+`GameHud` Storybook interactions pass, including exact button heights and all
+three callbacks.
+
+**Residual risk**: none known.

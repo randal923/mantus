@@ -113,6 +113,15 @@ export class InMemoryCharacterStore implements CharacterStore {
     });
   }
 
+  async updateHuntingBotRoute(
+    characterId: string,
+    huntingBotRoute: Character["huntingBotRoute"],
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new Error("character not found");
+    this.characters.set(characterId, { ...character, huntingBotRoute });
+  }
+
   async updateLootFilter(
     characterId: string,
     lootFilter: Character["lootFilter"],

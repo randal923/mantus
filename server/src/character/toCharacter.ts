@@ -4,6 +4,7 @@ import type { CharacterSkill } from "../progression/CharacterSkill";
 import { parseActionBar } from "./parseActionBar";
 import { parseActionBotSettings } from "./parseActionBotSettings";
 import { parseAimAtTargetSpells } from "./parseAimAtTargetSpells";
+import { parseHuntingBotRoute } from "./parseHuntingBotRoute";
 import { parseLootFilter } from "./parseLootFilter";
 import { skullFromCode } from "../pvp/skullFromCode";
 import { sexFromCode } from "./sexFromCode";
@@ -54,6 +55,7 @@ export function toCharacter(
       actionBar,
     ),
     lootFilter: parseLootFilter(row.loot_filter),
+    huntingBotRoute: parseHuntingBotRoute(row.hunting_bot),
     aimAtTargetSpellIds: parseAimAtTargetSpells(row.aim_at_target_spells),
     skull: skullFromCode(row.skull),
     skullExpiresAt: row.skull_expires_at,

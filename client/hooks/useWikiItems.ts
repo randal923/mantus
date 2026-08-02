@@ -21,7 +21,12 @@ export function useWikiItems(): WikiItemsState {
 
   useEffect(() => {
     const controller = new AbortController();
-    void fetch("/assets/wiki-items.json", { signal: controller.signal })
+    // Hand-edited data, not a ripped asset: always revalidate past the
+    // day-long /assets/* cache policy (unchanged answers are 304s).
+    void fetch("/assets/wiki-items.json", {
+      signal: controller.signal,
+      cache: "no-cache",
+    })
       .then((response) => {
         if (!response.ok) throw new Error(`wiki item catalog ${response.status}`);
         return response.json() as Promise<unknown>;

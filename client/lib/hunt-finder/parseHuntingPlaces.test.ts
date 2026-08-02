@@ -12,7 +12,7 @@ describe("parseHuntingPlaces", () => {
     const value: unknown = JSON.parse(readFileSync(CATALOG_URL, "utf8"));
     const places = parseHuntingPlaces(value);
 
-    expect(places).toHaveLength(131);
+    expect(places).toHaveLength(132);
     expect(places[0]?.Name).toBe("Kha'labal Terramites Cave");
     expect(places[0]?.WayPath.Position).toEqual({ x: 33096, y: 32698, z: 8 });
     expect(

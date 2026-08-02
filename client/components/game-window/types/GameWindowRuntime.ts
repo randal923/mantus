@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import type {
   ActionBar,
   ActionBotSettings,
+  HuntingBotRoute,
   LootFilter,
   CreatureState,
   InventoryItem,
@@ -43,6 +44,8 @@ export interface GameWindowRuntime {
   actionBotSaveTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
   lootFilterRef: RefObject<LootFilter>;
   lootFilterSaveTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
+  huntingBotRouteRef: RefObject<HuntingBotRoute>;
+  huntingBotSaveTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
   marketOpenRef: RefObject<boolean>;
   marketSelectedItemRef: RefObject<number | null>;
   hadPartyRef: RefObject<boolean>;

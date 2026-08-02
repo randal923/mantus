@@ -29,6 +29,76 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **A long-backgrounded tab can still be discarded by the browser**
+  (2026-08-01). The client now stays correct while its tab is hidden
+  (cosmetic effects skip creation, the creature-store flush has a timeout
+  fallback, world load no longer stalls on a frozen animation frame), and
+  gameplay was always server-side, so AFK bot hunts survive tab switches.
+  But Chrome's Memory Saver may unload a background tab entirely after
+  enough idle time — a full page discard, which disconnects the session.
+  Page JS cannot veto it. Players hunting AFK for hours should exempt the
+  game site from Memory Saver (chrome://settings/performance). Possible
+  softener: detect the discard on restore (`document.wasDiscarded`) and
+  auto-reconnect straight back into the world. Owner: client/game-window.
+
+- **The mailbox window can only mail top-level backpack items** (2026-08-01).
+  The depot's carried pane is now server-projected recursively
+  (`carriedItems` on `depot-state`), but `MailboxModal` still receives the
+  client's `inventory.items` — the equipped backpack's direct contents — so a
+  parcel inside a bag must be moved up before it can be sent. Low impact
+  (parcels are normally carried top-level) and mail eligibility differs from
+  deposit (containers with contents are the normal case), so it was left
+  as-is. Recommended fix: reuse `listCarriedDepotItems` in a
+  `mailbox-opened`-adjacent state message, or push it on open, and render it
+  in `MailboxModal` the way `DepotModal` now does. Owner: depot/mail.
+
+- **The hunting bot only walks; it never uses a ladder, hole, rope or door**
+  (2026-08-01, Feature 112). Floor changes come in two shapes on this map:
+  ramps are step-activated transitions, which the route search follows, but the
+  8805 ladders, dropdowns, rope spots and rope holes are `use`/`use-with`
+  actions that need their own intent, and a closed door needs opening. A route
+  leg that depends on one cannot be traced (about 5 % of the 1669 legs across
+  all 131 guides) and, if hand-placed anyway, is skipped at run time. Multi-
+  floor guides — 49 of 131 — are therefore seeded one floor at a time.
+  Recommended fix: extend the waypoint chain with a typed `use` waypoint that
+  the bot executes through the existing `use-map` / `use-with` paths, and let
+  the tracer emit one when a leg's only connection is an action tile.
+- **The hunting bot's per-tick path budget is unprofiled at scale**
+  (2026-08-01, Feature 112). Each running bot spends up to 4000 search nodes
+  (~1.5 ms) once per waypoint, paced by a 400 ms cooldown, and the tick is
+  25 ms. That is comfortable for a handful of bots but nothing measures what
+  happens when many re-plan on the same tick, and the budget was raised 5×
+  from its original 800 so the bot can actually path the legs real routes
+  contain (rejoining after a chase, hand-placed waypoints tens of tiles
+  apart). The same applies to the chase searches added alongside it: a
+  failed player chase burns a full ±12 box (625 nodes) every 250 ms, and the
+  monster AI work budget went 512 → 2048 nodes per tick so one chase search
+  (`maxPathNodes: 640`) no longer starves the whole spawn's brains.
+  Recommended fix: give the bot the shared per-tick work ceiling the monster
+  AI already uses (`maxAiWorkPerTick`), round-robin across sessions, and add
+  a perf gate beside the existing pathfinding one in
+  `CreaturePerformance.test.ts`.
+- **The hunting bot can still stare forever at a target no path reaches**
+  (2026-08-01, Feature 112). Auto-targeting picks the weakest visible
+  monster with no reachability check, and the bot stands down while any
+  target is alive. Chase now covers everything inside the Canary ±12 search
+  box, so this only bites when the target is genuinely uncrossable from the
+  player's side (a ladder, a rope spot, hole-separated ledges) — then the
+  bot waits, the monster stares back, and the route never resumes.
+  Recommended fix: when the auto-target has been neither hit nor approached
+  for a few seconds, drop it and ignore that creature id for a while so the
+  ring continues.
+- **Data catalogs under `/assets/*` ride a day-long browser cache**
+  (2026-08-01, Feature 112 follow-up). `next.config.ts` sends
+  `max-age=86400, stale-while-revalidate=604800` for everything under
+  `/assets`, which is right for atlas sheets and map tiles but hid a same-day
+  `hunting_places.json` edit from players for up to a day. The hunt and wiki
+  catalogs now fetch with `cache: "no-cache"`; `proficiencies.json`,
+  `proficiency-sprites.json`, `creature-loot-items.json` and
+  `npc-shop-categories.json` still use the cached default and will show the
+  same staleness after a content regen. Recommended fix: give data JSON its
+  own `no-cache` header rule (more specific `source` after the general one)
+  or version the URLs.
 - **Carnisylvan Sapling remains a dynamic monster mechanic** (2026-08-01,
   Feature 9/26). The pinned Canary definition has zero XP, no bestiary or loot,
   and its registered `sapling explode` spell schedules the creature's removal.

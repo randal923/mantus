@@ -159,6 +159,14 @@ export function handleCharacterSessionMessage(
   runtime.lootFilterRef.current = message.lootFilter;
   state.setLootFilterOpen(false);
   state.setLootFilterItems({ carried: [], ignored: [] });
+  state.setHuntingBotRoute(message.huntingBotRoute);
+  runtime.huntingBotRouteRef.current = message.huntingBotRoute;
+  state.setHuntingBotOpen(false);
+  // The bot never survives a login, so the window starts from a clean slate.
+  state.setHuntingBotStatus(null);
+  state.setHuntingBotError(null);
+  state.setHuntingBotUnresolved([]);
+  state.setHuntingBotTracing(false);
   state.setActionBarEditorRequest(null);
   state.setCharacterBusy(false);
   state.setServerError(null);

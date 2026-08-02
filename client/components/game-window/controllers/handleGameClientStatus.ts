@@ -1,6 +1,7 @@
 import {
   createDefaultActionBar,
   DEFAULT_ACTION_BOT_SETTINGS,
+  DEFAULT_HUNTING_BOT_ROUTE,
 } from "@tibia/protocol";
 import type { ConnectionStatus } from "../../../lib/net/GameClient";
 import type { GameWindowStore } from "../types/GameWindowStore";
@@ -33,6 +34,14 @@ export function handleGameClientStatus(
       clearTimeout(runtime.actionBotSaveTimerRef.current);
       runtime.actionBotSaveTimerRef.current = null;
     }
+    runtime.huntingBotRouteRef.current = {
+      ...DEFAULT_HUNTING_BOT_ROUTE,
+      waypoints: [],
+    };
+    if (runtime.huntingBotSaveTimerRef.current) {
+      clearTimeout(runtime.huntingBotSaveTimerRef.current);
+      runtime.huntingBotSaveTimerRef.current = null;
+    }
     state.setWorldLoading(false);
     state.setLevelUpNotice(null);
     state.setVisibleCreatures([]);
@@ -49,6 +58,12 @@ export function handleGameClientStatus(
       rules: [],
     });
     state.setActionBarEditorRequest(null);
+    state.setHuntingBotRoute({ ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] });
+    state.setHuntingBotOpen(false);
+    state.setHuntingBotStatus(null);
+    state.setHuntingBotError(null);
+    state.setHuntingBotUnresolved([]);
+    state.setHuntingBotTracing(false);
     state.setCombatLog([]);
     state.setItemText(null);
     state.setNpcDialogue(null);

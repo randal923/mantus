@@ -44,6 +44,6 @@ describe("filterHuntingPlaces", () => {
     });
 
     expect(result[0]?.["Xp/Hour"]).toBeTruthy();
-    expect(result).toHaveLength(131);
+    expect(result).toHaveLength(132);
   });
 });

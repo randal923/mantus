@@ -122,6 +122,15 @@ class MemoryCharacterStore implements CharacterStore {
     this.characters.set(characterId, { ...character, lootFilter });
   }
 
+  async updateHuntingBotRoute(
+    characterId: string,
+    huntingBotRoute: Character["huntingBotRoute"],
+  ): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character) throw new CharacterError("not-found");
+    this.characters.set(characterId, { ...character, huntingBotRoute });
+  }
+
   async updateAimAtTargetSpells(
     characterId: string,
     aimAtTargetSpellIds: Character["aimAtTargetSpellIds"],

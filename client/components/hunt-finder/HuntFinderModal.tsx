@@ -30,7 +30,6 @@ function baseVocation(vocation: string): HuntingVocation {
 }
 
 interface HuntFinderModalProps {
-  characterLevel: number;
   characterVocation: string;
   mapName: string;
   creatures: ReadonlyArray<BestiaryCreatureEntry>;
@@ -40,7 +39,6 @@ interface HuntFinderModalProps {
 }
 
 export function HuntFinderModal({
-  characterLevel,
   characterVocation,
   mapName,
   creatures,
@@ -51,7 +49,7 @@ export function HuntFinderModal({
   const { t } = useAppTranslation();
   const catalog = useHuntingPlaces();
   const wikiItems = useWikiItems();
-  const [minimumLevel, setMinimumLevel] = useState(characterLevel);
+  const [minimumLevel, setMinimumLevel] = useState("");
   const [vocation, setVocation] = useState<HuntingVocation | "all">(
     () => baseVocation(characterVocation),
   );
@@ -62,7 +60,7 @@ export function HuntFinderModal({
   const places = useMemo(
     () =>
       filterHuntingPlaces(catalog.places, {
-        minimumLevel,
+        minimumLevel: Number(minimumLevel),
         vocation,
         teamSize,
         sort,

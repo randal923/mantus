@@ -1,10 +1,13 @@
 import type { Position } from "@tibia/protocol";
 
 interface InteractiveTileItem {
+  readonly clientId: number;
   readonly width: number;
   readonly height: number;
   readonly flags: { readonly ground: boolean; readonly groundBorder: boolean };
 }
+
+const SEWER_GRATE_ITEM_IDS = new Set([435, 21298]);
 
 const ANCHOR_OFFSETS = [
   [0, 0],
@@ -25,6 +28,13 @@ export function resolveInteractiveTile(
   position: Position,
   itemsAt: (position: Position) => ReadonlyArray<InteractiveTileItem>,
 ): Position {
+  // Grates are direct use targets even when an adjacent wall sprite overlaps
+  // their tile; redirecting the click makes the server receive the wall.
+  if (
+    itemsAt(position).some((item) => SEWER_GRATE_ITEM_IDS.has(item.clientId))
+  ) {
+    return position;
+  }
   for (const [dx, dy] of ANCHOR_OFFSETS) {
     const anchor = { x: position.x + dx, y: position.y + dy, z: position.z };
     const covers = itemsAt(anchor).some(

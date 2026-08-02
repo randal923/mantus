@@ -7,7 +7,6 @@ import type {
   DepotLocation,
   DepotStateMessage,
   InventoryItem,
-  InventorySlotEntry,
   StashEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -17,9 +16,10 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
 
+const DEPTH_INDENT = ["", "ml-4", "ml-8", "ml-12", "ml-16"] as const;
+
 interface DepotModalProps {
   state: DepotStateMessage;
-  inventoryItems: ReadonlyArray<InventorySlotEntry>;
   pending: boolean;
   error: DepotActionFailedReason | null;
   onBrowse(location: DepotLocation, page: number, query: string): void;
@@ -32,7 +32,6 @@ interface DepotModalProps {
 
 export function DepotModal({
   state,
-  inventoryItems,
   pending,
   error,
   onBrowse,
@@ -54,8 +53,8 @@ export function DepotModal({
   ];
   const carriedItems =
     state.location === "stash"
-      ? inventoryItems.filter(({ item }) => item.stowable)
-      : inventoryItems;
+      ? state.carriedItems.filter(({ item }) => item.stowable)
+      : state.carriedItems;
   const validAmount =
     amountInput !== "" &&
     Number.isInteger(amount) &&
@@ -160,10 +159,12 @@ export function DepotModal({
                 </h3>
               </header>
               <ul className="ui-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-                {carriedItems.map(({ item }) => (
+                {carriedItems.map(({ depth, item }) => (
                   <li
                     key={item.id}
-                    className="flex items-center gap-3 rounded-lg border border-ui-stone/25 bg-black/30 p-2"
+                    className={`flex items-center gap-3 rounded-lg border border-ui-stone/25 bg-black/30 p-2 ${
+                      DEPTH_INDENT[Math.min(depth, DEPTH_INDENT.length - 1)]
+                    }`}
                   >
                     <SpriteIcon
                       spriteId={item.spriteId}

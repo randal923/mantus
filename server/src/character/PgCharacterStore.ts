@@ -2,6 +2,7 @@ import { Pool } from "pg";
 import {
   type ActionBar,
   type ActionBotSettings,
+  type HuntingBotRoute,
   type LootFilter,
 } from "@tibia/protocol";
 import { CharacterError } from "./CharacterError";
@@ -232,6 +233,21 @@ export class PgCharacterStore implements CharacterStore {
     );
     if (result.rowCount !== 1) {
       throw new Error("character loot filter update failed");
+    }
+  }
+
+  async updateHuntingBotRoute(
+    characterId: string,
+    route: HuntingBotRoute,
+  ): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE characters
+       SET hunting_bot = $2::jsonb
+       WHERE id = $1`,
+      [characterId, JSON.stringify(route)],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error("character hunting bot route update failed");
     }
   }
 

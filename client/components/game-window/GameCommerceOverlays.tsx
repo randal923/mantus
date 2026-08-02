@@ -268,7 +268,6 @@ export function GameCommerceOverlays() {
         <DepotModal
           key={depotSession.state.sessionId}
           state={depotSession.state}
-          inventoryItems={inventory.items}
           pending={depotSession.pending}
           error={depotSession.error}
           onBrowse={(location, page, query) => {

@@ -21,6 +21,7 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { FragmentWorkshopTab } from "./FragmentWorkshopTab";
+import { FragmentWorkshopIcon } from "./FragmentWorkshopIcon";
 import { GemAtelierTab } from "./GemAtelierTab";
 import { WheelCanvas } from "./WheelCanvas";
 import { WheelPerkSummary } from "./WheelPerkSummary";
@@ -148,9 +149,6 @@ export function WheelModal({
     if (next) setDraft(next);
   };
 
-  const infoId = hoveredId ?? selectedId;
-  const infoSlice = infoId !== null ? (WHEEL_SLICES[infoId - 1] ?? null) : null;
-  const infoPoints = infoId !== null ? (draft[infoId - 1] ?? 0) : 0;
   const selectedSlice =
     selectedId !== null ? (WHEEL_SLICES[selectedId - 1] ?? null) : null;
   const selectedPoints = selectedId !== null ? (draft[selectedId - 1] ?? 0) : 0;
@@ -214,7 +212,7 @@ export function WheelModal({
           {
             id: "workshop",
             label: t("wheel.tabs.workshop"),
-            icon: tabIcon("/assets/wheel/icon-modgrade4.png"),
+            icon: <FragmentWorkshopIcon />,
           },
         ],
         onSelect: (id) => {
@@ -273,10 +271,10 @@ export function WheelModal({
                 {t("wheel.selection.title")}
               </h3>
               <WheelSelectionPanel
-                slice={infoSlice}
-                points={infoPoints}
+                slice={selectedSlice}
+                points={selectedPoints}
                 baseVocation={baseVocation}
-                editable={editable && infoSlice?.id === selectedId}
+                editable={editable && selectedSlice !== null}
                 canAdd={canAdd}
                 canRemove={canRemove}
                 onAddOne={() =>

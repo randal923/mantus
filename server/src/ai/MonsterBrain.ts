@@ -8,6 +8,7 @@ import type {
   MonsterSummon,
 } from "../creature/MonsterType";
 import { Player } from "../Player";
+import { CHASE_SEARCH_DISTANCE } from "../pathfinding/chaseSearchDistance";
 import { findPath } from "../pathfinding/findPath";
 import type { MoveResult, World } from "../World";
 
@@ -228,6 +229,9 @@ export class MonsterBrain {
         targetDistance,
         now,
         availableWork - work,
+        // Canary parity: chasing searches a ±12 box around the monster, so
+        // everything inside its view range is reachable if a path exists.
+        CHASE_SEARCH_DISTANCE,
       );
       work += result.work;
       return { work, movement: result.movement };
@@ -517,15 +521,19 @@ export class MonsterBrain {
     goalDistance: number,
     now: number,
     availableWork: number,
+    searchDistance: number | null = null,
   ): { work: number; movement: MoveResult | null } {
     if (availableWork <= 0) return { work: 0, movement: null };
     const goalKey = `${goal.x},${goal.y},${goal.z}:${goalDistance}`;
     if (this.cachedGoal !== goalKey || this.cachedPath.length === 0) {
+      const start = this.monster.position;
       const result = findPath({
-        start: this.monster.position,
+        start,
         isGoal: (position) => this.distance(position, goal) <= goalDistance,
         canStep: (position) =>
           position.z === this.monster.home.z &&
+          (searchDistance === null ||
+            this.distance(position, start) <= searchDistance) &&
           this.distance(position, this.monster.home) <=
             this.config.despawnRadius &&
           world.canCreaturePathTo(this.monster, position, now) &&

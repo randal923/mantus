@@ -6594,6 +6594,525 @@
         }
     },
     {
+        "Name": "Darashia Dragon Lords",
+        "Level": "60",
+        "Type": [
+            "Solo",
+            "Duo"
+        ],
+        "Xp/Hour": "450K",
+        "Loot/Hour": "30K",
+        "Location": "Darashia",
+        "Vocation": [
+            "Knight",
+            "Paladin",
+            "Druid",
+            "Sorcerer",
+            "Monk"
+        ],
+        "PremiumRequired": false,
+        "RouteRequirements": "None",
+        "RecommendedImbues": {
+            "Druid": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Sorcerer": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Knight": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Paladin": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Monk": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ]
+        },
+        "RecommendedSupplies": {
+            "Knight": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Paladin": [
+                "Avalanche Rune",
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Druid": [
+                "Avalanche Rune",
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Sorcerer": [
+                "Avalanche Rune",
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Monk": [
+                "Avalanche Rune",
+                "Health Potion",
+                "Mana Potion"
+            ]
+        },
+        "ValuableDrops": [
+            "Dragon Lord Trophy",
+            "Dragon Scale Mail",
+            "Dragon Slayer",
+            "Royal Helmet"
+        ],
+        "Monsters": [
+            {
+                "Name": "Dragon Lord",
+                "Resistances": "Fire: 200%, Ice: 90%, Earth: 120%, Energy: 100%, Holy: 100%, Death: 180%, Physical: 100%"
+            }
+        ],
+        "WayPath": {
+            "Coordinates": {
+                "7": [
+                    [
+                        {
+                            "x": 33213,
+                            "y": 32450,
+                            "z": 7
+                        },
+                        {
+                            "x": 33265,
+                            "y": 32281,
+                            "z": 7
+                        }
+                    ]
+                ],
+                "8": [
+                    [
+                        {
+                            "x": 33265,
+                            "y": 32275,
+                            "z": 8
+                        },
+                        {
+                            "x": 33264,
+                            "y": 32274,
+                            "z": 8
+                        }
+                    ]
+                ],
+                "9": [
+                    [
+                        {
+                            "x": 33262,
+                            "y": 32275,
+                            "z": 9
+                        },
+                        {
+                            "x": 33260,
+                            "y": 32275,
+                            "z": 9
+                        }
+                    ]
+                ],
+                "10": [
+                    [
+                        {
+                            "x": 33258,
+                            "y": 32275,
+                            "z": 10
+                        },
+                        {
+                            "x": 33256,
+                            "y": 32278,
+                            "z": 10
+                        }
+                    ]
+                ]
+            },
+            "Markers": [],
+            "Paths": [
+                "Start at Darashia Depot, head east to Dragon Lair, then take the hole down to the lower cave"
+            ],
+            "Position": {
+                "x": 33232,
+                "y": 32275,
+                "z": 11
+            },
+            "TemplePosition": {
+                "x": 33213,
+                "y": 32450,
+                "z": 7
+            }
+        },
+        "RoutePath": {
+            "Coordinates": {
+                "11": [
+                    [
+                        {
+                            "x": 33196,
+                            "y": 32280,
+                            "z": 11
+                        },
+                        {
+                            "x": 33197,
+                            "y": 32272,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33197,
+                            "y": 32272,
+                            "z": 11
+                        },
+                        {
+                            "x": 33197,
+                            "y": 32265,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33197,
+                            "y": 32265,
+                            "z": 11
+                        },
+                        {
+                            "x": 33198,
+                            "y": 32259,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33198,
+                            "y": 32259,
+                            "z": 11
+                        },
+                        {
+                            "x": 33209,
+                            "y": 32252,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33209,
+                            "y": 32252,
+                            "z": 11
+                        },
+                        {
+                            "x": 33212,
+                            "y": 32246,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33212,
+                            "y": 32246,
+                            "z": 11
+                        },
+                        {
+                            "x": 33222,
+                            "y": 32235,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33222,
+                            "y": 32235,
+                            "z": 11
+                        },
+                        {
+                            "x": 33234,
+                            "y": 32233,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33234,
+                            "y": 32233,
+                            "z": 11
+                        },
+                        {
+                            "x": 33241,
+                            "y": 32237,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33241,
+                            "y": 32237,
+                            "z": 11
+                        },
+                        {
+                            "x": 33259,
+                            "y": 32241,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33259,
+                            "y": 32241,
+                            "z": 11
+                        },
+                        {
+                            "x": 33269,
+                            "y": 32258,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33269,
+                            "y": 32258,
+                            "z": 11
+                        },
+                        {
+                            "x": 33261,
+                            "y": 32263,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33261,
+                            "y": 32263,
+                            "z": 11
+                        },
+                        {
+                            "x": 33245,
+                            "y": 32268,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33245,
+                            "y": 32268,
+                            "z": 11
+                        },
+                        {
+                            "x": 33268,
+                            "y": 32281,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33268,
+                            "y": 32281,
+                            "z": 11
+                        },
+                        {
+                            "x": 33266,
+                            "y": 32298,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33266,
+                            "y": 32298,
+                            "z": 11
+                        },
+                        {
+                            "x": 33254,
+                            "y": 32311,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33254,
+                            "y": 32311,
+                            "z": 11
+                        },
+                        {
+                            "x": 33250,
+                            "y": 32295,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33250,
+                            "y": 32295,
+                            "z": 11
+                        },
+                        {
+                            "x": 33237,
+                            "y": 32308,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33237,
+                            "y": 32308,
+                            "z": 11
+                        },
+                        {
+                            "x": 33227,
+                            "y": 32309,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33227,
+                            "y": 32309,
+                            "z": 11
+                        },
+                        {
+                            "x": 33220,
+                            "y": 32307,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33220,
+                            "y": 32307,
+                            "z": 11
+                        },
+                        {
+                            "x": 33207,
+                            "y": 32303,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33207,
+                            "y": 32303,
+                            "z": 11
+                        },
+                        {
+                            "x": 33200,
+                            "y": 32295,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33200,
+                            "y": 32295,
+                            "z": 11
+                        },
+                        {
+                            "x": 33218,
+                            "y": 32288,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33218,
+                            "y": 32288,
+                            "z": 11
+                        },
+                        {
+                            "x": 33219,
+                            "y": 32260,
+                            "z": 11
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33219,
+                            "y": 32260,
+                            "z": 11
+                        },
+                        {
+                            "x": 33196,
+                            "y": 32280,
+                            "z": 11
+                        }
+                    ]
+                ]
+            },
+            "Markers": [],
+            "Paths": [
+                "Circle the lower cave, dragon lords roam the whole floor"
+            ]
+        },
+        "Equipments": {
+            "Druid": {
+                "neck": "Platinum Amulet",
+                "leftHand": "Necrotic Rod",
+                "finger": "",
+                "head": "Hat of the Mad",
+                "body": "Focus Cape",
+                "leg": "Blue Legs",
+                "feet": "Boots of Haste",
+                "backpack": "Rubini Backpack",
+                "rightHand": "Demon Shield",
+                "ammo": ""
+            },
+            "Sorcerer": {
+                "neck": "Platinum Amulet",
+                "leftHand": "Wand of Decay",
+                "finger": "",
+                "head": "Hat of the Mad",
+                "body": "Focus Cape",
+                "leg": "Blue Legs",
+                "feet": "Boots of Haste",
+                "backpack": "Rubini Backpack",
+                "rightHand": "Demon Shield",
+                "ammo": ""
+            },
+            "Paladin": {
+                "neck": "Platinum Amulet",
+                "leftHand": "spear",
+                "finger": "",
+                "head": "Crown Helmet",
+                "body": "Paladin Armor",
+                "leg": "Zaoan Legs",
+                "feet": "Boots of Haste",
+                "backpack": "rubini backpack",
+                "rightHand": "Demon Shield",
+                "ammo": ""
+            },
+            "Knight": {
+                "neck": "Platinum Amulet",
+                "leftHand": "",
+                "finger": "",
+                "head": "Crown Helmet",
+                "body": "Crown Armor",
+                "leg": "Zaoan Legs",
+                "feet": "Boots of Haste",
+                "backpack": "rubini backpack",
+                "rightHand": "steel shield",
+                "ammo": ""
+            },
+            "Monk": {
+                "neck": "Harmony Amulet",
+                "leftHand": "Traditional Sai",
+                "finger": "Stealth Ring",
+                "head": "Light Bandana",
+                "body": "Monk Robe",
+                "leg": "Plate Legs",
+                "feet": "Boots of Enlightenment",
+                "backpack": "Rubini Backpack",
+                "rightHand": "",
+                "ammo": ""
+            }
+        }
+    },
+    {
         "Name": "Darashia Dragon Lair",
         "Level": "40",
         "Type": [

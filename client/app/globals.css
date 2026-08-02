@@ -581,6 +581,7 @@
 
 .ui-dropdown {
   appearance: none;
+  line-height: 1;
   background:
     linear-gradient(180deg, rgb(48 51 50 / 82%), rgb(13 15 15 / 94%)),
     url("/assets/ui/forged-stone-texture.webp") center / 280px 280px;
@@ -611,6 +612,10 @@
 }
 
 @supports (appearance: base-select) {
+  .ui-dropdown {
+    align-items: center;
+  }
+
   .ui-dropdown,
   .ui-dropdown::picker(select) {
     appearance: base-select;

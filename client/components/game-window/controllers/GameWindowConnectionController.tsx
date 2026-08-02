@@ -53,11 +53,19 @@ export function GameWindowConnectionController() {
     let renderer: WorldRenderer | undefined;
     let heldMovementKeys: ReadonlyArray<string> = [];
     let creatureFrame: number | null = null;
+    let creatureFlushTimer: number | null = null;
     let creatureMessages: ServerMessage[] = [];
     runtime.joinedRef.current = false;
 
     const flushCreatureMessages = () => {
-      creatureFrame = null;
+      if (creatureFrame !== null) {
+        window.cancelAnimationFrame(creatureFrame);
+        creatureFrame = null;
+      }
+      if (creatureFlushTimer !== null) {
+        window.clearTimeout(creatureFlushTimer);
+        creatureFlushTimer = null;
+      }
       const messages = creatureMessages;
       creatureMessages = [];
       store.getState().setVisibleCreatures((current) => {
@@ -69,7 +77,11 @@ export function GameWindowConnectionController() {
 
     const queueCreatureMessage = (message: ServerMessage) => {
       creatureMessages.push(message);
+      // Animation frames never fire in hidden tabs; the timeout fallback
+      // keeps the batch draining (throttled to ~1s by the browser) so state
+      // stays current and bounded while the game runs in the background.
       creatureFrame ??= window.requestAnimationFrame(flushCreatureMessages);
+      creatureFlushTimer ??= window.setTimeout(flushCreatureMessages, 250);
     };
 
     const syncViewport = () => {
@@ -251,6 +263,9 @@ export function GameWindowConnectionController() {
       resizeObserver.disconnect();
       if (creatureFrame !== null) {
         window.cancelAnimationFrame(creatureFrame);
+      }
+      if (creatureFlushTimer !== null) {
+        window.clearTimeout(creatureFlushTimer);
       }
       creatureMessages = [];
       client?.disconnect();

@@ -5,5 +5,5 @@ export const characterColumns = `
   progression_definition_version,
   position_x, position_y, position_z, direction, outfit_look_type,
   outfit_head, outfit_body, outfit_legs, outfit_feet, outfit_addons,
-  town_id, action_bar, potion_action_bar, loot_filter, aim_at_target_spells, skull, skull_expires_at, created_at, updated_at,
+  town_id, action_bar, potion_action_bar, loot_filter, hunting_bot, aim_at_target_spells, skull, skull_expires_at, created_at, updated_at,
   last_login_at, namelocked, mount_id, version`;

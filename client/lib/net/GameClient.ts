@@ -40,6 +40,7 @@ import {
   type ServerMessage,
   type ActionBar,
   type ActionBotSettings,
+  type HuntingBotRoute,
   type LootFilter,
   type UiSettings,
   type ViewRange,
@@ -1093,6 +1094,23 @@ export class GameClient {
 
   requestLootFilterItems(): boolean {
     return this.send({ type: "loot-filter-items-get" });
+  }
+
+  updateHuntingBotRoute(route: HuntingBotRoute): boolean {
+    return this.send({ type: "update-hunting-bot-route", route });
+  }
+
+  setHuntingBotEnabled(enabled: boolean): boolean {
+    return this.send({ type: "set-hunting-bot-enabled", enabled });
+  }
+
+  /**
+   * Asks the server to turn a hunting guide's straight-line route into a
+   * walkable one. Only the points to visit are sent; the server owns
+   * walkability and computes the path itself.
+   */
+  traceHuntingBotRoute(points: ReadonlyArray<Position>): boolean {
+    return this.send({ type: "hunting-bot-trace", points: [...points] });
   }
 
   disconnect(): void {

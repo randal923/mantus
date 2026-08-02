@@ -21,8 +21,12 @@ export function useHuntingPlaces(): HuntingPlacesState {
 
   useEffect(() => {
     const controller = new AbortController();
+    // The /assets/* cache policy is tuned for sprite atlases (fresh for a
+    // day); this catalog is hand-edited data, so always revalidate — an
+    // unchanged file still answers with a cheap 304.
     void fetch("/assets/hunting/hunting_places.json", {
       signal: controller.signal,
+      cache: "no-cache",
     })
       .then((response) => {
         if (!response.ok) {

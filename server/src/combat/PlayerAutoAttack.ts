@@ -62,7 +62,14 @@ export class PlayerAutoAttack {
       (plan.lineOfSight &&
         !this.world.hasLineOfSight(player.position, target.position))
     ) {
-      this.chase.chaseTarget(session, player, target, now, plan.range);
+      this.chase.chaseTarget(
+        session,
+        player,
+        target,
+        now,
+        plan.range,
+        session.huntingBotEnabled,
+      );
       return;
     }
     if (now < player.nextAttackAt || session.itemOperationPending) return;

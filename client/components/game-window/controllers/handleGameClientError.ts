@@ -43,6 +43,12 @@ export function handleGameClientError(
   ) {
     return;
   }
+  // A refused bot action belongs in the hunting-bot window, not behind a
+  // blocking banner: the window explains why it could not start.
+  if (code.startsWith("hunting-bot-")) {
+    state.setHuntingBotError(code);
+    return;
+  }
   runtime.resumeCharacterIdRef.current = null;
   if (code !== "language-update-pending") state.setLanguageSaving(false);
   state.setCharacterBusy(false);
