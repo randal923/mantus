@@ -538,8 +538,10 @@
     "yourBalance": "Suas Mantus Coins",
     "currentPremium": "{{count}} dias premium restantes",
     "loading": "Abrindo a loja…",
-    "purchaseComplete": "Compra concluída. Seu tempo premium está ativo.",
-    "confirmDescription": "Esta compra custa {{price}} Mantus Coins.",
+    "purchaseComplete": "Compra concluída.",
+    "confirmTitle": "Confirmar compra",
+    "confirmDescription": "Tem certeza de que deseja resgatar este item? {{price}} Mantus Coins serão descontadas do seu saldo.",
+    "balanceAfter": "Saldo após a compra: {{balance}}",
     "confirm": "Confirmar compra",
     "purchasing": "Comprando…",
     "errors": {

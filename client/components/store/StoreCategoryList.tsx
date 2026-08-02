@@ -31,16 +31,16 @@ export function StoreCategoryList({
   return (
     <nav
       aria-label={t("store.categories")}
-      className="flex min-h-0 flex-col gap-0.5 overflow-y-auto rounded-xl border border-ui-gold/15 bg-black/25 p-2"
+      className="ui-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto"
     >
       <button
         type="button"
         aria-current={selectedId === null ? "page" : undefined}
         onClick={onHome}
-        className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors ${
+        className={`flex min-h-12 items-center gap-3 border px-3 py-2 text-left transition-[border-color,background-color,color] ${
           selectedId === null
-            ? "border border-cyan-300/40 bg-cyan-950/30 text-ui-text-bright"
-            : "border border-transparent text-ui-text hover:bg-white/5"
+            ? "border-ui-gold/55 bg-ui-panel-light/80 text-ui-text-bright shadow-inner shadow-black/40"
+            : "border-ui-gold/10 bg-black/20 text-ui-muted hover:border-ui-gold/30 hover:bg-white/5 hover:text-ui-text"
         }`}
       >
         <Image
@@ -50,7 +50,7 @@ export function StoreCategoryList({
           height={16}
           className="shrink-0 [image-rendering:pixelated]"
         />
-        <span className="font-display text-sm tracking-wide">
+        <span className="font-display text-sm font-bold tracking-wide uppercase">
           {t("store.home")}
         </span>
       </button>
@@ -70,12 +70,12 @@ export function StoreCategoryList({
           );
         }
         return (
-          <div key={parent.id} className="mt-1">
+          <div key={parent.id} className="space-y-2">
             {/*
               A div, not a <p>: the icon renders element boxes, which are not
               phrasing content and cannot legally sit inside a paragraph.
             */}
-            <div className="flex items-center gap-2.5 px-2.5 py-1.5 font-display text-xs tracking-[0.18em] text-ui-muted uppercase">
+            <div className="flex items-center gap-2.5 px-3 pt-2 font-display text-xs tracking-[0.18em] text-ui-muted uppercase">
               <StoreProductIcon icon={parent.icon} size={18} />
               {parent.name}
             </div>

@@ -538,8 +538,10 @@
     "yourBalance": "Your Mantus Coins",
     "currentPremium": "{{count}} premium days remaining",
     "loading": "Opening the store…",
-    "purchaseComplete": "Purchase complete. Your premium time is active.",
-    "confirmDescription": "This purchase costs {{price}} Mantus Coins.",
+    "purchaseComplete": "Purchase complete.",
+    "confirmTitle": "Confirm purchase",
+    "confirmDescription": "Are you sure you want to redeem this item? {{price}} Mantus Coins will be deducted from your balance.",
+    "balanceAfter": "Balance after purchase: {{balance}}",
     "confirm": "Confirm purchase",
     "purchasing": "Purchasing…",
     "errors": {

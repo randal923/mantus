@@ -1453,3 +1453,32 @@ fails at startup with "No projects matched" — run it with explicit story
 file paths.
 
 **Residual risk**: none known beyond the pre-existing story failure above.
+
+## 2026-08-02 — Full-height Mantus Store and purchase dialog
+
+**Problem**: the store catalog was capped at 34rem inside the shared 900px
+modal, leaving much of the window unused. Offers were arranged as a narrow
+list/detail split, and choosing an offer opened a small inline confirmation
+strip instead of the focused purchase dialog used by the visual reference.
+
+**What changed**: the store now fills the shared modal's available height and
+uses its full-width size. Categories and the account balance form a persistent
+left rail, while the catalog uses dense two-column offer cards across the full
+remaining height. Clicking a single-offer product opens its purchase flow
+directly, while multi-offer products retain explicit price/quantity choices. Purchase
+confirmation is now a dimmed, accessible dialog with the product preview,
+price, post-purchase balance, close/cancel controls, insufficient-funds guard,
+and the existing name-change input. The underlying catalog becomes inert while
+the dialog is open, and Escape dismisses the dialog before closing the store.
+No gameplay or price authority moved client-side: the client still submits
+only the selected server offer id and the server revalidates the purchase.
+
+**Files**: `client/components/store/{StoreModal,StoreCategoryButton,StoreCategoryList,StoreProductRow,StorePriceButton,StorePurchaseConfirm}.tsx`,
+`client/locales/{en,pt-BR}.json`, `client/stories/StoreModal.stories.tsx`,
+`todo/{done,status}.md`.
+
+**Verified**: focused ESLint and client TypeScript pass; the production
+Storybook build passes; all 6 StoreModal stories pass in headless Chromium,
+including direct product-click confirmation and the name-change submission.
+
+**Residual risk**: none known.

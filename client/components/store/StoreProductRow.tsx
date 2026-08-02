@@ -32,26 +32,34 @@ export function StoreProductRow({
   onBuy,
 }: StoreProductRowProps) {
   const allDisabled = product.subOffers.every((offer) => offer.disabled);
+  const onlyOffer = product.subOffers.length === 1 ? product.subOffers[0] : null;
 
   return (
     <li
-      className={`flex gap-3 rounded-xl border p-2.5 transition-[border-color,background-color] ${
+      className={`group relative grid min-h-28 grid-cols-[6rem_minmax(0,1fr)] border transition-[border-color,background-color] ${
         selected
-          ? "border-cyan-300/50 bg-cyan-950/20"
-          : "border-ui-gold/15 bg-black/20"
+          ? "border-ui-gold/50 bg-ui-panel-light/60"
+          : "border-ui-gold/15 bg-ui-panel/70 hover:border-ui-gold/35"
       } ${allDisabled ? "opacity-50" : ""}`}
     >
-      <StoreProductIcon icon={product.icon} size={48} />
-      <div className="min-w-0 flex-1">
-        <button
-          type="button"
-          aria-pressed={selected}
-          onClick={onSelect}
-          className="block max-w-full truncate rounded font-display text-sm text-ui-text-bright focus-visible:ring-2 focus-visible:ring-cyan-200/60 focus-visible:outline-none"
-        >
+      <button
+        type="button"
+        aria-label={product.name}
+        aria-pressed={selected}
+        onClick={() => {
+          onSelect();
+          if (onlyOffer && onlyOffer.disabled !== true) onBuy(onlyOffer.id);
+        }}
+        className="absolute inset-0 z-0 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-gold/60"
+      />
+      <div className="pointer-events-none relative flex items-center justify-center border-r border-ui-gold/15 bg-black/25 transition-colors group-hover:bg-black/15">
+        <StoreProductIcon icon={product.icon} size={72} />
+      </div>
+      <div className="pointer-events-none relative flex min-w-0 flex-col px-3 py-2.5">
+        <p className="block max-w-full truncate text-left font-display text-base font-bold text-ui-text-bright transition-colors group-hover:text-ui-gold">
           {product.name}
-        </button>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
+        </p>
+        <div className="pointer-events-auto relative z-10 mt-auto flex flex-wrap justify-end gap-1.5 pt-2">
           {product.subOffers.map((offer) => (
             <StorePriceButton
               key={offer.id}

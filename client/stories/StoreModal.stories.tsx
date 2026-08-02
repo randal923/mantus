@@ -152,8 +152,11 @@ export const NameChangeAsksForAName: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      canvas.getByRole("button", { name: "Buy for 250 Mantus Coins" }),
+      canvas.getByRole("button", { name: "Character Name Change" }),
     );
+    await expect(
+      canvas.getByRole("dialog", { name: "Confirm purchase" }),
+    ).toBeVisible();
     const field = canvas.getByLabelText("New character name");
     await userEvent.type(field, "Fresh Start");
     await userEvent.click(

@@ -42,7 +42,7 @@ export function StorePriceButton({
       disabled={offer.disabled === true || busy}
       title={offer.disabledReason}
       onClick={onSelect}
-      className="flex h-8 min-w-20 items-center justify-center gap-1.5 rounded-lg border border-ui-gold/25 bg-black/35 px-2.5 text-left transition-[border-color,background-color] not-disabled:hover:border-cyan-200/60 not-disabled:hover:bg-cyan-950/40 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-cyan-200/60 focus-visible:outline-none"
+      className="flex h-10 min-w-24 items-center justify-center gap-2 border border-ui-gold/25 bg-black/55 px-3 text-left shadow-inner shadow-black/50 transition-[border-color,background-color] not-disabled:hover:border-ui-gold/60 not-disabled:hover:bg-ui-panel-light/80 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
     >
       {offer.count !== undefined && (
         <span className="font-display text-xs text-ui-text-bright tabular-nums">
@@ -58,7 +58,7 @@ export function StorePriceButton({
           className="shrink-0"
         />
         <span
-          className={`font-display text-sm font-bold tabular-nums ${
+          className={`font-display text-base font-bold tabular-nums ${
             affordable ? "text-cyan-100" : "text-red-400"
           }`}
         >
