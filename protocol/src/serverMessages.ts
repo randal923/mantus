@@ -569,6 +569,12 @@ export const errorMessageSchema = z.object({
   code: serverErrorCodeSchema,
 });
 
+/** Echo of a client `ping`; the nonce comes back untouched. */
+export const pongMessageSchema = z.object({
+  type: z.literal("pong"),
+  nonce: z.number().int().nonnegative(),
+});
+
 export const serverMessageSchema = z.discriminatedUnion("type", [
   authOkMessageSchema,
   languageUpdatedMessageSchema,
@@ -721,9 +727,11 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   serverNoticeMessageSchema,
   gmResponseMessageSchema,
   errorMessageSchema,
+  pongMessageSchema,
 ]);
 
 export type MapInfo = z.infer<typeof mapInfoSchema>;
+export type PongMessage = z.infer<typeof pongMessageSchema>;
 export type MapItemState = z.infer<typeof mapItemStateSchema>;
 export type TileState = z.infer<typeof tileStateSchema>;
 export type PodiumWindowMessage = z.infer<typeof podiumWindowMessageSchema>;

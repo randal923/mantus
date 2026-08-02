@@ -58,21 +58,15 @@ function findEnterWorldButton(): HTMLButtonElement | undefined {
   );
 }
 
-/** The atlas cell background-position SpriteIcon computes for a sprite id. */
-function atlasPosition(spriteId: number): string {
-  const cell = spriteId - 1;
-  const rem = cell % 14_400;
-  const x = (rem % 120) * 34 + 1;
-  const y = Math.floor(rem / 120) * 34 + 1;
-  return `${-x}px ${-y}px`;
-}
-
-function findIconAt(position: string): HTMLElement | undefined {
-  return [...document.querySelectorAll<HTMLElement>("[style]")].find(
-    (element) =>
-      element.style.backgroundImage.includes("atlas-") &&
-      element.style.backgroundPosition === position,
-  );
+/** An icon piece currently showing one of the given sprites. */
+function findIconAmong(spriteIds: ReadonlyArray<number>): HTMLElement | undefined {
+  for (const spriteId of spriteIds) {
+    const element = document.querySelector<HTMLElement>(
+      `[data-sprite-id="${spriteId}"]`,
+    );
+    if (element) return element;
+  }
+  return undefined;
 }
 
 /** Reads the world canvas inside a frame right after Pixi has drawn it. */
@@ -148,21 +142,19 @@ test.skipIf(!ON_PROBE_SERVER)(
 
       // Paperdoll: the exercise sword icon must leave its first frame and
       // cycle through several atlas cells.
-      const firstFramePosition = atlasPosition(EXERCISE_SWORD_SPRITE);
+      const swordPhaseSprites = Array.from(
+        { length: 5 },
+        (_, phase) => EXERCISE_SWORD_SPRITE + phase,
+      );
       const icon = await waitFor(
-        () =>
-          findIconAt(firstFramePosition) ??
-          findIconAt(atlasPosition(EXERCISE_SWORD_SPRITE + 1)) ??
-          findIconAt(atlasPosition(EXERCISE_SWORD_SPRITE + 2)) ??
-          findIconAt(atlasPosition(EXERCISE_SWORD_SPRITE + 3)) ??
-          findIconAt(atlasPosition(EXERCISE_SWORD_SPRITE + 4)),
+        () => findIconAmong(swordPhaseSprites),
         "exercise sword paperdoll icon",
         30_000,
       );
       const iconPositions = new Set<string>();
       const iconDeadline = Date.now() + 3_000;
       while (Date.now() < iconDeadline) {
-        iconPositions.add(icon.style.backgroundPosition);
+        iconPositions.add(icon.dataset.spriteId ?? "");
         await sleep(40);
       }
       expect(iconPositions.size).toBeGreaterThanOrEqual(3);

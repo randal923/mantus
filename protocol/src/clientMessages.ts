@@ -258,6 +258,19 @@ export const stopMoveMessageSchema = z
   .strict();
 
 /**
+ * Latency probe. The server echoes the nonce back verbatim in a `pong` from
+ * its tick loop, so the round trip includes the intent queue the way every
+ * real action does. Fixed-size, covered by the shared message-size and rate
+ * caps; expected at most once per second per client.
+ */
+export const pingMessageSchema = z
+  .object({
+    type: z.literal("ping"),
+    nonce: z.number().int().nonnegative(),
+  })
+  .strict();
+
+/**
  * Starts one bounded client-authored path. The server accepts only directions,
  * verifies the starting revision, and revalidates every step in the tick.
  */
@@ -659,6 +672,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   listCharactersMessageSchema,
   createCharacterMessageSchema,
   selectCharacterMessageSchema,
+  pingMessageSchema,
   moveMessageSchema,
   turnMessageSchema,
   stopMoveMessageSchema,
@@ -852,6 +866,7 @@ export type SelectCharacterMessage = z.infer<
   typeof selectCharacterMessageSchema
 >;
 export type MoveMessage = z.infer<typeof moveMessageSchema>;
+export type PingMessage = z.infer<typeof pingMessageSchema>;
 export type TurnMessage = z.infer<typeof turnMessageSchema>;
 export type StopMoveMessage = z.infer<typeof stopMoveMessageSchema>;
 export type AutoWalkMessage = z.infer<typeof autoWalkMessageSchema>;

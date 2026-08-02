@@ -17,6 +17,7 @@ import { useAppTranslation } from "../i18n/useAppTranslation";
 import { ChatPanel } from "./chat/ChatPanel";
 import type { ChatChannel } from "./chat/chatTypes";
 import { ConditionBar } from "./combat/ConditionBar";
+import { FpsPingCounter } from "./FpsPingCounter";
 import { ProtectionZoneIndicator } from "./combat/ProtectionZoneIndicator";
 import { OwnSkullIndicator } from "./pvp/OwnSkullIndicator";
 import { getSpellIconArtwork } from "../lib/combat/getSpellIconArtwork";
@@ -38,6 +39,8 @@ interface GameHudProps {
   battleList?: ReactNode;
   minimap?: ReactNode;
   ownCharacter: OwnCharacterState;
+  /** Last measured server round trip in ms, shown in the HUD counter. */
+  latencyMs?: number | null;
   fightState: FightState;
   spells: ReadonlyArray<SpellCatalogEntry>;
   actionBar: ActionBarState;
@@ -77,6 +80,7 @@ export function GameHud({
   battleList,
   minimap,
   ownCharacter,
+  latencyMs = null,
   fightState,
   spells,
   actionBar,
@@ -371,6 +375,7 @@ export function GameHud({
         />
       </div>
       <div className="absolute top-24 left-4 flex flex-col items-start gap-2">
+        <FpsPingCounter latencyMs={latencyMs} />
         <ProtectionZoneIndicator active={fightState.inProtectionZone} />
         <ConditionBar conditions={fightState.conditions} />
         {fightState.skull && <OwnSkullIndicator skull={fightState.skull} />}
@@ -386,7 +391,7 @@ export function GameHud({
             max={ownCharacter.maxHealth}
           />
           <div className="ui-action-cluster-shell pointer-events-auto relative z-0 min-w-0 max-w-[calc(100vw-16rem)] sm:max-w-[calc(100vw-16rem)]">
-            <div className="absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1">
+            <div className="absolute -top-11 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
               <HudFeatureButton
                 title={t("actionBot.configure")}
                 label={t("actionBot.title").toLocaleUpperCase()}

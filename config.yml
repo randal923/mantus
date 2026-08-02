@@ -42,15 +42,15 @@ combat:
 
 rates:
   # Non-negative up to 1000. Fractional progression is floored to whole units.
-  experience: 1000
-  skill: 1000
-  magic: 1000
-  loot: 1000
+  experience: 2
+  skill: 2
+  magic: 2
+  loot: 2
   spawn: 5
   # Soul regeneration, offline-training, and exercise-weapon training speeds.
-  soulRegen: 1
-  offlineTraining: 1
-  exerciseTraining: 1
+  soulRegen: 5
+  offlineTraining: 2
+  exerciseTraining: 5
   # Kill credit per death toward bestiary/bosstiary completion (integer >= 1).
   # The boosted boss's triple credit stacks on top of bosstiaryKills.
   bestiaryKills: 2

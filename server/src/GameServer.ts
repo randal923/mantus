@@ -1581,6 +1581,11 @@ export class GameServer {
       return;
     }
     switch (intent.type) {
+      case "ping":
+        // Echoed from the tick loop on purpose: the round trip then includes
+        // the intent queue, which is the latency every real action pays.
+        session.send({ type: "pong", nonce: intent.nonce });
+        return;
       case "list-characters":
         this.characters.handleList(session, intent);
         return;

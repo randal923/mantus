@@ -230,7 +230,7 @@ export class AssetStore {
     return o.sprites[getSpriteIndex(o, p)] ?? 0;
   }
 
-  private spriteRect(spriteId: number): { sheet: number; x: number; y: number } {
+  spriteRect(spriteId: number): { sheet: number; x: number; y: number } {
     const cell = spriteId - 1;
     const sheet = Math.floor(cell / this.index.tilesPerSheet);
     const rem = cell % this.index.tilesPerSheet;
@@ -276,6 +276,11 @@ export class AssetStore {
     const texture = Texture.from(bitmap);
     texture.source.scaleMode = "nearest";
     this.sheetTextures[sheet] = texture;
+  }
+
+  /** The decoded bitmap of one atlas sheet, if `preload` has fetched it. */
+  sheetImage(sheet: number): ImageBitmap | undefined {
+    return this.sheetImages[sheet];
   }
 
   /** Sheet textures already decoded, e.g. to pre-upload them to the GPU. */

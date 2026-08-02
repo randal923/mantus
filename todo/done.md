@@ -1336,3 +1336,120 @@ action bar.
 three callbacks.
 
 **Residual risk**: none known.
+
+## 2026-08-02 — DOM item icons stop binding full 4096×4096 atlases
+
+**Problem**: user-reported lag when the inventory opens in game. Every DOM
+`SpriteIcon` piece set `background-image: url(/assets/atlas-N.png)` — a CSS
+window into a 4096×4096 RGBA sheet (~67MB decoded). Opening a panel full of
+icons forced main-thread PNG decodes and kept one full-sheet compositor
+texture per referenced atlas alive, on top of the WebGL world's own copies of
+the same sheets. A new e2e probe showed the React/DOM side of the panel is
+cheap (60fps, zero long tasks, even walking with 300 monsters and the panel
+open in headless Chromium), so the atlas-as-CSS-background pattern was the
+one structural cost left — it only bites on real GPUs, which the software
+renderer used by the probe cannot model.
+
+**What changed**: `SpriteIcon` pieces now draw a 32×32 blob-URL crop of their
+sprite, produced once per distinct sprite by the new `spriteCellIconStore`
+from the `ImageBitmap` the shared `AssetStore` already holds for the world
+renderer (no second decode of any sheet). `useItemIcon` additionally returns
+the appearance's full sprite list so all phases and stack variants are
+cropped up front — an animation never advances onto a phase whose crop is
+missing. Pieces also carry `data-sprite-id` for tests/debugging.
+`AssetStore.spriteRect` became public and `sheetImage()` was added. A new
+`inventoryPerformance.e2e.test.tsx` measures FPS/long-tasks across
+standing/walking/monster stages with the panel closed vs open and gates
+open-panel FPS at ≥50% of closed.
+
+**Files**: `client/components/inventory/SpriteIcon.tsx`,
+`client/lib/render/spriteCellIconStore.ts` (new),
+`client/lib/render/useSpriteCellUrls.ts` (new),
+`client/lib/render/useItemIcon.ts`, `client/lib/render/AssetStore.ts`,
+`client/e2e/inventoryPerformance.e2e.test.tsx` (new),
+`client/e2e/itemIconAnimation.e2e.test.tsx`,
+`client/e2e/itemAnimationWorld.e2e.test.tsx`.
+
+**Verified**: client typecheck, lint (0 errors), 353 unit tests;
+`itemIconAnimation` e2e (phases cycle, stacks differ, 2×2 draws whole,
+static stays static); `itemAnimationWorld` e2e against the 4126 probe
+server; `inventoryPerformance` e2e (panel open ≈ closed FPS);
+`gameFreeze` (worst stall 59ms) and `monsterPerformance` pass in isolation —
+full-lane runs can flake under CPU contention when the dev servers are
+running alongside.
+
+**Residual risk**: the lag report came from real hardware the headless
+software-rendered probe cannot reproduce; the structural cause is removed,
+but confirmation on the reporting machine is pending. Blob crop URLs are
+never revoked (bounded by distinct sprites seen per session, ~4KB each).
+
+## 2026-08-02 — HUD FPS + ping counter
+
+**Problem**: no in-game way to see frame rate or server latency, which made
+performance reports ("inventory makes the game lag") unverifiable on the
+player's own machine.
+
+**What changed**: new `ping`/`pong` protocol pair (client sends
+`{type:"ping", nonce}` where the nonce is its own `Date.now()`; the server
+echoes it from the tick loop, so the round trip includes the intent queue —
+the latency every real action pays). `GameHudOverlay` pings every 2s while
+the HUD is mounted (post-welcome only, well inside the 30 msg/s cap) and
+stores the round trip as `latencyMs`; implausible echoes (<0 or >60s) are
+dropped. New `FpsPingCounter` renders "FPS n · Ping n ms" top-left under the
+nav bar (first entry in the existing indicator stack), sampling rAF cadence
+in 500ms windows. EN + pt-BR strings, Storybook story, and the inventory
+perf e2e now asserts the counter renders and its ping fills from a real
+pong.
+
+**Files**: `protocol/src/clientMessages.ts`, `protocol/src/serverMessages.ts`,
+`server/src/GameServer.ts`, `client/lib/net/GameClient.ts`,
+`client/components/FpsPingCounter.tsx` (new),
+`client/components/GameHud.tsx`,
+`client/components/game-window/GameHudOverlay.tsx`,
+`client/components/game-window/messages/handlePlayerStateMessage.ts`,
+`client/components/game-window/store/createGameWindowStore.ts`,
+`client/components/game-window/types/GameWindowState.ts`,
+`client/components/game-window/types/GameWindowStoreActions.ts`,
+`client/locales/en.json`, `client/locales/pt-BR.json`,
+`client/stories/FpsPingCounter.stories.tsx` (new),
+`client/e2e/inventoryPerformance.e2e.test.tsx`.
+
+**Verified**: protocol/server/client typecheck; server unit suite (1528
+passed); client lint (0 errors) + unit tests; storybook stories pass; the
+inventory perf e2e sees the counter render and the ping populate against a
+real server.
+
+**Residual risk / deploy order**: the server must deploy before (or with)
+the client. An old server counts unknown `ping` messages as protocol
+violations, and the client sends one every 2s — a new client against an old
+server would strike itself to disconnection.
+
+## 2026-08-02 — Ghost border behind the top-left HUD chips
+
+**Problem**: a faint rounded rectangle rendered around the whole top-left
+indicator stack (FPS/ping counter, protection zone, conditions).
+`.ui-panel-frame::before` draws the decorative inner border with
+`position: absolute; inset: 5px`, but `.ui-panel-frame` set no position of
+its own — so on statically-placed panels the pseudo-element anchored to the
+nearest positioned ancestor (the `absolute top-24 left-4` stack) and framed
+it instead. Latent for every static `ui-panel-frame` (condition bar, skull,
+tracker, party, VIP…); the always-visible FPS counter made it permanent.
+
+**What changed**: `globals.css` gives `.ui-panel-frame` `position: relative`
+inside `@layer base`, so Tailwind positioning utilities (`absolute`,
+`fixed`, `relative`) still win on panels that set their own. The
+FpsPingCounter story asserts the computed position is `relative` as a
+regression guard.
+
+**Files**: `client/app/globals.css`,
+`client/stories/FpsPingCounter.stories.tsx`.
+
+**Verified**: 25 story tests across 8 panel story files (static chips plus
+absolute/fixed panels: BattleList, ContextMenu, DropUp, InventoryPanel…),
+client typecheck, lint. Note: GameHud's "Chat Hotkey Stays Enabled With Hud
+Panels" story fails identically on a clean checkout (pre-existing,
+unrelated); and `vitest run --project storybook` without file arguments
+fails at startup with "No projects matched" — run it with explicit story
+file paths.
+
+**Residual risk**: none known beyond the pre-existing story failure above.

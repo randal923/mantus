@@ -90,9 +90,10 @@ test("item icons animate, stack, and draw whole", async () => {
   const coinCells = new Set<string>();
   const deadline = Date.now() + SAMPLE_MS;
   while (Date.now() < deadline) {
-    if (sword.firstChild) swordCells.add(iconCell(sword));
-    if (potion.firstChild) potionCells.add(iconCell(potion));
-    if (singleCoin.firstChild) coinCells.add(iconCell(singleCoin));
+    // Crops land asynchronously; sample an icon once it has drawn something.
+    if (pieces(sword).length > 0) swordCells.add(iconCell(sword));
+    if (pieces(potion).length > 0) potionCells.add(iconCell(potion));
+    if (pieces(singleCoin).length > 0) coinCells.add(iconCell(singleCoin));
     await sleep(40);
   }
 

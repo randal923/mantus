@@ -15,11 +15,19 @@ import { itemIconAnimationStore } from "./itemIconAnimationStore";
  * one the sprite id alone works for every sprite that belongs to exactly one
  * appearance.
  */
+export interface ItemIcon extends ItemIconFrame {
+  /**
+   * Every sprite this item's appearance can show — all phases, stack sizes,
+   * and layers — so icon crops can be prepared before an animation needs them.
+   */
+  readonly allSprites: ReadonlyArray<number>;
+}
+
 export function useItemIcon(
   spriteId: number,
   clientId?: number,
   count = 1,
-): ItemIconFrame {
+): ItemIcon {
   const subscribe = useCallback(
     (listener: () => void) =>
       itemIconAnimationStore.subscribe(clientId, spriteId, listener),
@@ -34,7 +42,12 @@ export function useItemIcon(
   );
   const { appearance, phase } = itemIconAnimationStore.frame(clientId, spriteId);
   if (!appearance) {
-    return { columns: 1, rows: 1, pieces: [{ spriteId, column: 0, row: 0 }] };
+    return {
+      columns: 1,
+      rows: 1,
+      pieces: [{ spriteId, column: 0, row: 0 }],
+      allSprites: [spriteId],
+    };
   }
   const frame = getItemIconPieces(
     getSharedAssetStore(),
@@ -43,6 +56,11 @@ export function useItemIcon(
     count,
   );
   return frame.pieces.length > 0
-    ? frame
-    : { columns: 1, rows: 1, pieces: [{ spriteId, column: 0, row: 0 }] };
+    ? { ...frame, allSprites: appearance.sprites }
+    : {
+        columns: 1,
+        rows: 1,
+        pieces: [{ spriteId, column: 0, row: 0 }],
+        allSprites: [spriteId],
+      };
 }

@@ -1,12 +1,8 @@
 "use client";
 
 import { useItemIcon } from "../../lib/render/useItemIcon";
+import { useSpriteCellUrls } from "../../lib/render/useSpriteCellUrls";
 import { TILE_SIZE } from "../../lib/render/tileSize";
-
-const PAD = 1;
-const CELL = 34;
-const COLS = 120;
-const TILES_PER_SHEET = 14400;
 
 interface SpriteIconProps {
   spriteId: number;
@@ -26,6 +22,11 @@ interface SpriteIconProps {
  * tile is drawn whole and scaled into the slot, the way OTClient's item widget
  * does it.
  *
+ * Each piece draws a 32×32 blob-URL crop of its sprite rather than a CSS
+ * window into the 4096×4096 atlas: dozens of icons referencing full sheets
+ * kept every touched sheet decoded in the compositor and made opening an
+ * item panel jank on real GPUs.
+ *
  * Layout is inline-styled rather than utility-classed: these icons are mounted
  * by tests and stories that do not load the app stylesheet, and a piece that
  * loses `position: absolute` lands outside its slot.
@@ -37,7 +38,12 @@ export function SpriteIcon({
   scale = 2,
   className,
 }: SpriteIconProps) {
-  const { columns, rows, pieces } = useItemIcon(spriteId, clientId, count);
+  const { columns, rows, pieces, allSprites } = useItemIcon(
+    spriteId,
+    clientId,
+    count,
+  );
+  const urls = useSpriteCellUrls(pieces, allSprites);
   const tiles = Math.max(columns, rows);
   const box = TILE_SIZE * scale;
 
@@ -64,15 +70,13 @@ export function SpriteIcon({
           transform: `scale(${scale / tiles})`,
         }}
       >
-        {pieces.map((piece) => {
-          const cell = piece.spriteId - 1;
-          const sheet = Math.floor(cell / TILES_PER_SHEET);
-          const rem = cell % TILES_PER_SHEET;
-          const x = (rem % COLS) * CELL + PAD;
-          const y = Math.floor(rem / COLS) * CELL + PAD;
+        {pieces.map((piece, index) => {
+          const place = `${piece.column}:${piece.row}`;
+          const url = urls[index];
           return (
             <div
-              key={`${piece.column}:${piece.row}`}
+              key={place}
+              data-sprite-id={piece.spriteId}
               style={{
                 position: "absolute",
                 width: TILE_SIZE,
@@ -80,8 +84,7 @@ export function SpriteIcon({
                 left: piece.column * TILE_SIZE,
                 top: piece.row * TILE_SIZE,
                 imageRendering: "pixelated",
-                backgroundImage: `url(/assets/atlas-${sheet}.png)`,
-                backgroundPosition: `${-x}px ${-y}px`,
+                ...(url ? { backgroundImage: `url(${url})` } : {}),
               }}
             />
           );

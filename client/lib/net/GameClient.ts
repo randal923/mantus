@@ -81,6 +81,11 @@ export class GameClient {
     this.socket = socket;
   }
 
+  /** Latency probe; the pong echoes this send's timestamp as its nonce. */
+  ping(): void {
+    this.send({ type: "ping", nonce: Date.now() });
+  }
+
   sendMove(direction: Direction, queueStep = true): void {
     this.send({ type: "move", direction, queueStep });
   }
