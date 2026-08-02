@@ -1318,7 +1318,12 @@ export class GameServer {
       maxPendingIntents: this.config.maxPendingIntents,
       maxProtocolViolations: this.config.maxProtocolViolations,
       initialViewRange: this.config.defaultViewRange,
-    }, (queued) => this.registry.markForTick(queued));
+    }, (queued) => {
+      this.registry.markForTick(queued);
+      // A queued intent wakes the loop instead of waiting out the interval;
+      // all validation and mutation still happen inside the tick itself.
+      this.loop.requestTick();
+    });
     this.registry.add(session);
     // queue the leave; world state only changes inside the tick (charter rule 5)
     socket.on("close", () => this.disconnected.push(session));

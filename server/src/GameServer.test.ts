@@ -1541,3 +1541,44 @@ describe("auth gate", () => {
     expect(accounts.languageFor("sub-tok.language")).toBe("en");
   });
 });
+
+describe("wakeable tick", () => {
+  let server: GameServer;
+  const sockets: WebSocket[] = [];
+
+  afterEach(async () => {
+    for (const socket of sockets.splice(0)) socket.terminate();
+    await server.stop();
+  });
+
+  it("answers intents without waiting out the tick interval", async () => {
+    server = new GameServer(
+      { ...testConfig, tickMs: 200 },
+      {
+        verifier: fakeVerifier,
+        accounts: new InMemoryAccountStore(),
+        characters: new InMemoryCharacterStore(),
+        items: new MemoryItemStore(),
+        itemCatalog: new ItemCatalog([]),
+      },
+    );
+    server.start();
+    const client = await connect(server.port, "Waker");
+    sockets.push(client.socket);
+
+    for (let nonce = 1; nonce <= 5; nonce += 1) {
+      const sentAt = performance.now();
+      client.socket.send(JSON.stringify({ type: "ping", nonce }));
+      await waitFor(
+        () =>
+          client.messages.some(
+            (message) => message.type === "pong" && message.nonce === nonce,
+          ),
+        `pong ${nonce}`,
+      );
+      // Without the wake each pong waits for the 200 ms interval tick; the
+      // bound stays far above a woken tick but far below the interval.
+      expect(performance.now() - sentAt).toBeLessThan(60);
+    }
+  }, 15_000);
+});
