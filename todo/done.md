@@ -1259,3 +1259,80 @@ long-backgrounded tab outright (full page unload → disconnect); that is
 browser policy we cannot override from page JS — players AFK-hunting for
 hours should exempt the game site from Memory Saver. Recorded in
 `TODO.md`.
+
+## 2026-08-02 — Click-only Wheel selection and Tibia-layout Gem tabs
+
+**Problem**: hovering a Wheel of Destiny slice replaced the information for
+the slice the player had clicked, so the selection panel did not represent a
+stable selection. The Fragment Workshop was a wide data table that omitted
+Tibia's grade ladder, 5×6 image grid, search/filter/page controls, and most of
+the original Workshop artwork. The Gem Atelier likewise split its content
+across generic cards instead of Tibia's vessel/revelation column, selected-gem
+strip, filters, and 5×3 collection.
+
+**What changed**: hover still draws the lightweight focus overlay, but only a
+click now changes the selection panel. The Workshop now follows the original
+`fragmentMenu.otui` structure: a four-stage selected-mod grade ladder on the
+left; all 69 vocation-compatible supreme/basic mods in a searchable,
+filterable 30-card page on the right; socketed and owned markers; upgrade
+cost/action controls; and the resource strip below. Mod cards and every grade
+stage composite the original grade and mod sheets. The original ladder
+circles, animated overlays, connectors, Enhance button, and Workshop menu art
+were added through the reproducible asset importer. The Atelier now follows
+`gemMenu.otui`: the original four-corner vessel socket and stacked revelation
+column sit beside a selected-gem strip, search/affinity/quality/lock controls,
+15-gem pages, and a 5×3 grid. Gem cards show their actual gem, grade, modifier,
+lock, and equipped art; the original Reveal, Place/Remove, Switch, and Destroy
+button strips drive the existing server-authoritative intents. Supreme mod
+icons use Tibia's optical +3px/−2px offset so their art is centered inside the
+grade medallion instead of only mathematically centered by its sprite bounds.
+The Atelier side rail is widened with a larger vessel assembly, 64px
+revelation gems, and scaled Reveal/cost controls for better readability. Its
+rows remain compact and the redundant resource footer is omitted so the full
+Atelier tab fits inside the 900px Wheel modal without internal scrolling.
+Shared dropdown values are vertically centered, and the empty gem collection
+uses a balanced centered height instead of collapsing into a short message box
+or overflowing the 900px layout.
+All imported art comes from mehah otclient commit
+`9bfac7719fd5cd2d8a2cddf2ea6219e908e129f9`. English and Brazilian Portuguese
+copy now covers the new controls.
+
+**Files**: `client/components/wheel/{GemAtelierTab,GemDetails,GemList,GemRevealPanel,GemVessels}.tsx`,
+`client/components/wheel/FragmentWorkshop*.tsx`,
+`client/components/wheel/WheelModal.tsx`,
+`client/components/wheel/WheelSelectionPanel.tsx`,
+`client/lib/wheel/gemLargeIconStyle.ts`,
+`client/public/assets/wheel/{backdrop_grades_*,enhance-button.png,fragmentMenu.png,gemMenu.png,icons-modgrades-potential.png,place-vessel-button.png,remove-vessel-button.png,reveal-button.png,switch-button.png,destroy-button.png}`,
+`client/locales/{en,pt-BR}.json`, `client/stories/WheelModal.stories.tsx`,
+`client/ASSETS.md`, `tools/importWheelGemAssets.mjs`.
+
+**Verified**: `yarn --cwd client typecheck`; `yarn --cwd client lint` (0
+errors, 16 pre-existing warnings); the focused Wheel Storybook project (7
+stories, including hover-versus-click selection and Workshop search/select/
+improve interactions); and `yarn --cwd client build-storybook` all pass.
+
+**Residual risk**: the browser-control surface needed for a manual
+side-by-side screenshot comparison was unavailable in this session. The
+Workshop was rendered in Chromium by the Storybook interaction test and the
+static Storybook build includes every new sprite-position rule.
+
+## 2026-08-02 — Shared action-bar feature buttons
+
+**Problem**: Action Bot, Loot Filter, and Hunting Bot repeated the same button
+markup in `GameHud`, which made their status treatment and sizing easy to
+drift. The 28px controls were also too short for the HUD dock.
+
+**What changed**: all three controls now render through the shared
+`HudFeatureButton` component. It owns the accessible configuration label,
+enabled-status light, common styling, and a taller 36px height. The floating
+button row offset was increased to keep the taller controls clear of the
+action bar.
+
+**Files**: `client/components/action-bar/HudFeatureButton.tsx`,
+`client/components/GameHud.tsx`, `client/stories/GameHud.stories.tsx`.
+
+**Verified**: client typecheck and focused ESLint pass; all four Chromium
+`GameHud` Storybook interactions pass, including exact button heights and all
+three callbacks.
+
+**Residual risk**: none known.

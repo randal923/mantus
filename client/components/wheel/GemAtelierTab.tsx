@@ -11,7 +11,6 @@ import type {
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { GemDetails } from "./GemDetails";
 import { GemList } from "./GemList";
-import { GemResourceBar } from "./GemResourceBar";
 import { GemRevealPanel } from "./GemRevealPanel";
 import { GemVessels } from "./GemVessels";
 
@@ -24,7 +23,7 @@ interface GemAtelierTabProps {
   onAction: (action: GemAction) => void;
 }
 
-/** Gem Atelier: vessels, gem revelation, and the revealed gem collection. */
+/** Gem Atelier arranged like Tibia's vessel, details, and 5×3 collection UI. */
 export function GemAtelierTab({
   gems,
   vocation,
@@ -44,27 +43,28 @@ export function GemAtelierTab({
     );
   }
   const selectedGem =
-    gems.revealed.find((gem) => gem.id === selectedGemId) ?? null;
+    gems.revealed.find((gem) => gem.id === selectedGemId) ??
+    gems.revealed[0] ??
+    null;
+  const activeSelectedGemId = selectedGem?.id ?? null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <GemResourceBar resources={gems.resources} />
-        {error && (
-          <span
-            role="alert"
-            className="rounded-md border border-ui-accent/25 bg-ui-accent/10 px-3 py-2 text-sm text-ui-accent-light"
-          >
-            {t(`wheel.gems.errors.${error}`)}
-          </span>
-        )}
-      </div>
-      <div className="grid items-start gap-4 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)_18rem]">
-        <div className="flex flex-col gap-4 lg:row-span-2 xl:row-span-1">
+    <div className="flex min-h-full flex-col gap-3">
+      {error && (
+        <p
+          role="alert"
+          className="rounded border border-ui-accent/25 bg-ui-accent/10 px-3 py-2 text-sm text-ui-accent-light"
+        >
+          {t(`wheel.gems.errors.${error}`)}
+        </p>
+      )}
+      <div className="grid items-start gap-2 lg:grid-cols-[12rem_minmax(0,1fr)]">
+        <aside className="flex flex-col gap-2">
           <GemVessels
             gems={gems}
             vocation={vocation}
             resonances={resonances}
+            selectedGemId={activeSelectedGemId}
             onSelectGem={setSelectedGemId}
           />
           <GemRevealPanel
@@ -73,14 +73,8 @@ export function GemAtelierTab({
             pending={pending}
             onReveal={(quality) => onAction({ kind: "reveal", quality })}
           />
-        </div>
-        <GemList
-          gems={gems}
-          vocation={vocation}
-          selectedGemId={selectedGemId}
-          onSelect={setSelectedGemId}
-        />
-        {selectedGem ? (
+        </aside>
+        <div className="flex min-w-0 flex-col gap-2">
           <GemDetails
             gem={selectedGem}
             gems={gems}
@@ -88,18 +82,17 @@ export function GemAtelierTab({
             pending={pending}
             onAction={onAction}
           />
-        ) : (
-          <section className="ui-panel-inset overflow-hidden rounded-md border border-ui-stone-light/15">
-            <header className="border-b border-ui-stone-light/15 bg-white/3 px-4 py-3">
-              <h3 className="font-display text-sm tracking-wider text-ui-text-bright uppercase">
-                {t("wheel.gems.selectedTitle")}
-              </h3>
-            </header>
-            <p className="px-5 py-10 text-center text-sm leading-6 text-ui-muted">
-              {t("wheel.gems.selectGem")}
-            </p>
-          </section>
-        )}
+          <GemList
+            gems={gems}
+            vocation={vocation}
+            selectedGemId={activeSelectedGemId}
+            pending={pending}
+            onSelect={setSelectedGemId}
+            onToggleLock={(gemId) =>
+              onAction({ kind: "toggle-lock", gemId })
+            }
+          />
+        </div>
       </div>
     </div>
   );

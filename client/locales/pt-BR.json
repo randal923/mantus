@@ -2067,7 +2067,7 @@
     },
     "selection": {
       "title": "Seleção",
-      "empty": "Passe o mouse ou selecione uma fatia da roda para ver seus benefícios.",
+      "empty": "Selecione uma fatia da roda para ver seus benefícios.",
       "dedication": "Dedicação",
       "conviction": "Convicção",
       "active": "(ativo)",
@@ -2139,7 +2139,9 @@
       "resonanceCount": "Ressonância {{count}}/3",
       "collectionTitle": "Coleção de Gemas",
       "selectedTitle": "Gema Selecionada",
+      "detailsTitle": "Clique em uma gema para ver seus mods",
       "selectGem": "Selecione uma gema para inspecionar seus modificadores e ações.",
+      "domainAffinity": "Afinidade de Domínio",
       "modifiers": "Modificadores",
       "quality": {
         "lesser": "Gema Menor",
@@ -2154,10 +2156,19 @@
         "button": "Revelar"
       },
       "filters": {
+        "search": "Pesquisar gemas",
+        "searchPlaceholder": "Digite para pesquisar",
+        "clearSearch": "Limpar pesquisa",
         "quality": "Filtrar por qualidade",
         "domain": "Filtrar por domínio",
         "allQualities": "Todas as Qualidades",
-        "allDomains": "Todos os Domínios"
+        "allDomains": "Todos os Domínios",
+        "allAffinities": "Todas as Afinidades",
+        "lockedOnly": "Somente travadas",
+        "pagination": "Páginas de gemas",
+        "previousPage": "Página anterior",
+        "nextPage": "Próxima página",
+        "pageSummary": "Página {{page}} / {{total}} ({{count}} Gemas)"
       },
       "count": "{{count}} gemas",
       "empty": "Nenhuma gema corresponde aos filtros. Revele gemas para aumentar sua coleção.",
@@ -2180,6 +2191,21 @@
         "kinds": "Tipos de mod",
         "basic": "Mods Básicos",
         "supreme": "Mods Supremos",
+        "mods": "Mods",
+        "enhanceModGrade": "Aprimorar Grau do Mod",
+        "search": "Pesquisar mods",
+        "searchPlaceholder": "Digite para pesquisar",
+        "clearSearch": "Limpar pesquisa",
+        "filter": "Filtrar mods",
+        "pagination": "Páginas de mods",
+        "previousPage": "Página anterior",
+        "nextPage": "Próxima página",
+        "pageSummary": "Página {{page}} / {{total}} ({{count}} Mods)",
+        "noMatches": "Nenhum mod corresponde aos seus filtros.",
+        "filters": {
+          "all": "Todos",
+          "socketed": "Mods em Recipientes"
+        },
         "modifier": "Modificador",
         "currentGrade": "Grau atual",
         "collection": "Na coleção",

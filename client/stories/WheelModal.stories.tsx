@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
 import {
   WHEEL_LIMITS,
   type GemStateMessage,
@@ -104,7 +104,21 @@ export const Empty: Story = {
     await expect(saveButton.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       dialog.getBoundingClientRect().bottom,
     );
-    await expect(wheel.parentElement).toHaveClass("overflow-x-auto");
+    await expect(wheel.parentElement).not.toHaveClass("overflow-x-auto");
+
+    const emptySelection =
+      "Select a slice of the wheel to inspect its perks.";
+    const wheelRect = wheel.getBoundingClientRect();
+    const target = {
+      clientX: wheelRect.left + (290 / 522) * wheelRect.width,
+      clientY: wheelRect.top + (290 / 522) * wheelRect.height,
+    };
+
+    await expect(canvas.getByText(emptySelection)).toBeVisible();
+    fireEvent.mouseMove(wheel, target);
+    await expect(canvas.getByText(emptySelection)).toBeVisible();
+    fireEvent.click(wheel, target);
+    await expect(canvas.queryByText(emptySelection)).not.toBeInTheDocument();
   },
 };
 
@@ -125,7 +139,7 @@ export const KnightBuild: Story = {
 };
 
 export const GemAtelier: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("tab", { name: "Gem Atelier" }));
 
@@ -139,7 +153,12 @@ export const GemAtelier: Story = {
       canvas.getByRole("heading", { name: "Gem Collection" }),
     ).toBeVisible();
     await expect(
-      canvas.getByRole("heading", { name: "Selected Gem" }),
+      canvas.getByRole("heading", {
+        name: "Click on a gem to see its mods",
+      }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("searchbox", { name: "Search gems" }),
     ).toBeVisible();
     await expect(
       canvas.getByRole("combobox", { name: "Filter by quality" }),
@@ -147,27 +166,64 @@ export const GemAtelier: Story = {
     await expect(
       canvas.getByRole("combobox", { name: "Filter by domain" }),
     ).toBeVisible();
+    await expect(
+      canvas.getByRole("checkbox", { name: "Locked only" }),
+    ).toBeVisible();
+    await expect(canvas.getByText("Page 1 / 1 (3 Gems)")).toBeVisible();
+
+    const gemList = canvas.getByRole("list", { name: "Gem Collection" });
+    await expect(gemList.children).toHaveLength(3);
+    await userEvent.click(
+      within(gemList).getByRole("button", { name: /Greater Sage Gem/ }),
+    );
+    const equip = canvas.getByRole("button", { name: "Place in Vessel" });
+    await expect(equip).toBeEnabled();
+    await userEvent.click(equip);
+    await expect(args.onGemAction).toHaveBeenCalledWith({
+      kind: "equip",
+      gemId: "00000000-0000-4000-8000-000000000003",
+    });
   },
 };
 
 export const FragmentWorkshop: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
       canvas.getByRole("tab", { name: "Fragment Workshop" }),
     );
 
-    const table = canvas.getByRole("table", { name: "Basic Mods" });
-    const workshop = within(table);
     await expect(
-      workshop.getByRole("columnheader", { name: "Modifier" }),
+      canvas.getByRole("heading", { name: "Enhance Mod Grade" }),
     ).toBeVisible();
-    await expect(
-      workshop.getByRole("columnheader", { name: "Current grade" }),
-    ).toBeVisible();
-    await expect(
-      workshop.getByRole("columnheader", { name: "Upgrade cost" }),
-    ).toBeVisible();
+    const search = canvas.getByRole("searchbox", { name: "Search mods" });
+    await expect(search).toBeVisible();
+    const filter = canvas.getByRole("combobox", { name: "Filter mods" });
+    await expect(filter).toBeVisible();
+    await expect(canvas.getByText("Page 1 / 3 (69 Mods)")).toBeVisible();
+    const modList = canvas.getByRole("list", { name: "Mods" });
+    await expect(modList.children).toHaveLength(30);
+    const supremeIcon = modList.querySelector<HTMLElement>(
+      '[style*="icons-skillwheel-suprememods.png"]',
+    );
+    await expect(supremeIcon?.parentElement).toHaveClass(
+      "translate-x-[3px]",
+      "-translate-y-0.5",
+    );
+
+    await userEvent.type(search, "Physical Resistance");
+    const firstBasicMod = await within(modList).findByRole("button", {
+      name: /Physical Resistance.*Grade I/,
+    });
+    await userEvent.click(firstBasicMod);
+    const improve = canvas.getByRole("button", { name: "Improve" });
+    await expect(improve).toBeEnabled();
+    await userEvent.click(improve);
+    await expect(args.onGemAction).toHaveBeenCalledWith({
+      kind: "improve-grade",
+      modKind: "basic",
+      modId: 0,
+    });
   },
 };
 

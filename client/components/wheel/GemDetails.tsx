@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   GEM_DESTROY_YIELDS,
   GEM_DOMAIN_ROTATION,
@@ -11,18 +12,14 @@ import {
   type WheelBaseVocation,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { gemLargeIconStyle } from "../../lib/wheel/gemLargeIconStyle";
 import { gemModLines } from "../../lib/wheel/gemModLines";
-import {
-  basicModIconStyle,
-  domainIconStyle,
-  gemIconStyle,
-  supremeModIconStyle,
-} from "../../lib/wheel/gemSheets";
-import { Button } from "../ui/Button";
+import { domainIconStyle } from "../../lib/wheel/gemSheets";
+import { FragmentWorkshopModArtwork } from "./FragmentWorkshopModArtwork";
 import { GemSheetIcon } from "./GemSheetIcon";
 
 interface GemDetailsProps {
-  gem: RevealedGem;
+  gem: RevealedGem | null;
   gems: GemStateMessage;
   vocation: WheelBaseVocation;
   pending: boolean;
@@ -34,9 +31,7 @@ const gradeOf = (
   modId: number,
 ): number => entries.find((entry) => entry.modId === modId)?.grade ?? 0;
 
-const GRADE_NUMERALS = ["I", "II", "III", "IV"] as const;
-
-/** Selected gem: its mods at current grades, and the atelier actions. */
+/** Tibia-style selected-gem summary, modifier row, and mutation controls. */
 export function GemDetails({
   gem,
   gems,
@@ -45,165 +40,161 @@ export function GemDetails({
   onAction,
 }: GemDetailsProps) {
   const { t, i18n } = useAppTranslation();
+
+  if (!gem) {
+    return (
+      <section className="ui-panel-inset overflow-hidden rounded border border-ui-stone-light/20">
+        <header className="border-b border-ui-stone-light/15 bg-white/3 px-3 py-1 text-center">
+          <h3 className="font-display text-xs tracking-wide text-ui-text-bright">
+            {t("wheel.gems.detailsTitle")}
+          </h3>
+        </header>
+        <p className="flex min-h-32 items-center justify-center px-5 text-center text-sm text-ui-muted">
+          {t("wheel.gems.selectGem")}
+        </p>
+      </section>
+    );
+  }
+
   const equipped = Object.values(gems.equipped).includes(gem.id);
   const switchCost = GEM_SWITCH_DOMAIN_COSTS[gem.quality];
   const destroyYield = GEM_DESTROY_YIELDS[gem.quality];
   const mutable = !gem.locked && !equipped;
+  const modSlots = [
+    ...gem.basicModIds.map((modId) => ({
+      kind: "basic" as const,
+      modId,
+      grade: gradeOf(gems.grades.basic, modId),
+    })),
+    ...(gem.supremeModId === undefined
+      ? []
+      : [
+          {
+            kind: "supreme" as const,
+            modId: gem.supremeModId,
+            grade: gradeOf(gems.grades.supreme, gem.supremeModId),
+          },
+        ]),
+  ];
 
   return (
-    <section className="ui-panel-inset overflow-hidden rounded-md border border-ui-stone-light/15">
-      <header className="border-b border-ui-stone-light/15 bg-white/3 px-4 py-3">
-        <p className="font-display text-xs tracking-wider text-ui-gold uppercase">
-          {t("wheel.gems.selectedTitle")}
-        </p>
-        <div className="mt-3 flex items-center gap-3">
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-full border border-ui-gold/20 bg-black/30 shadow-inner shadow-black/60">
-            <GemSheetIcon
-              style={gemIconStyle(vocation, gem.domain, gem.quality)}
-              label={t(`wheel.gems.quality.${gem.quality}`)}
-            />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-display text-base leading-5 text-ui-text-bright">
+    <section className="ui-panel-inset overflow-hidden rounded border border-ui-stone-light/20">
+      <header className="border-b border-ui-stone-light/15 bg-white/3 px-3 py-1 text-center">
+        <h3 className="font-display text-xs tracking-wide text-ui-text-bright">
+          {t("wheel.gems.detailsTitle")}
+        </h3>
+      </header>
+      <div className="grid gap-2 px-3 pt-2 lg:grid-cols-[12rem_minmax(0,1fr)]">
+        <div className="grid min-h-24 grid-cols-[minmax(0,1fr)_4rem] items-center gap-2">
+          <div className="min-w-0 text-center">
+            <p className="font-display text-xs font-semibold leading-4 text-ui-text-bright">
               {t(`wheel.gems.gemName.${gem.quality}`, {
                 name: GEM_VOCATION_NAMES[vocation],
               })}
-            </h3>
-            <p className="mt-1 flex items-center gap-1 text-xs text-ui-muted">
-              <GemSheetIcon style={domainIconStyle(gem.domain)} />
-              {t(`wheel.domain.${gem.domain}`)}
             </p>
+            <div className="mt-2 flex items-center justify-center gap-2 text-xs text-ui-muted">
+              <span>{t("wheel.gems.domainAffinity")}</span>
+              <GemSheetIcon
+                style={domainIconStyle(gem.domain)}
+                label={t(`wheel.domain.${gem.domain}`)}
+              />
+            </div>
           </div>
+          <GemSheetIcon
+            style={gemLargeIconStyle(vocation, gem.domain, gem.quality)}
+            label={t(`wheel.gems.quality.${gem.quality}`)}
+          />
         </div>
-        {(equipped || gem.locked) && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {equipped && (
-              <span className="rounded-full border border-ui-accent-light/25 bg-ui-accent/10 px-2 py-0.5 text-xs text-ui-accent-light">
-                {t("wheel.gems.equipped")}
-              </span>
-            )}
-            {gem.locked && (
-              <span className="rounded-full border border-ui-gold/25 bg-ui-gold/10 px-2 py-0.5 text-xs text-ui-gold">
-                {t("wheel.gems.locked")}
-              </span>
-            )}
-          </div>
-        )}
-      </header>
 
-      <div className="p-3">
-        <h4 className="mb-2 font-display text-xs tracking-wider text-ui-muted uppercase">
-          {t("wheel.gems.modifiers")}
-        </h4>
-        <ul className="flex flex-col gap-2 text-sm">
-          {gem.basicModIds.map((modId, index) => {
-            const grade = gradeOf(gems.grades.basic, modId);
+        <ul className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {modSlots.map((mod) => {
+            const lines = gemModLines(
+              mod.kind,
+              mod.modId,
+              mod.grade,
+              vocation,
+            );
             return (
               <li
-                key={`basic-${modId}`}
-                className="flex items-start gap-2 rounded-md border border-ui-stone-light/10 bg-black/20 p-2"
+                key={`${mod.kind}-${mod.modId}`}
+                className="flex min-h-24 flex-col items-center justify-center px-2 text-center"
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded border border-ui-gold/10 bg-black/25">
-                  <GemSheetIcon style={basicModIconStyle(modId)} />
-                </span>
-                <span className="min-w-0 whitespace-pre-line text-ui-text-bright">
-                  {gemModLines("basic", modId, grade, vocation).join("\n")}
-                  <span className="mt-1 block text-xs text-ui-muted">
-                    {t("wheel.gems.modSlot", { slot: index + 1 })}{" "}
-                    {t("wheel.gems.grade", {
-                      grade: GRADE_NUMERALS[grade],
-                    })}
-                  </span>
+                <FragmentWorkshopModArtwork
+                  kind={mod.kind}
+                  modId={mod.modId}
+                  grade={mod.grade}
+                />
+                <span className="mt-1 whitespace-pre-line text-xs font-semibold leading-4 text-ui-text-bright">
+                  {lines.join("\n")}
                 </span>
               </li>
             );
           })}
-          {gem.supremeModId !== undefined && (
-            <li className="flex items-start gap-2 rounded-md border border-ui-gold/15 bg-ui-gold/5 p-2">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded border border-ui-gold/15 bg-black/25">
-                <GemSheetIcon
-                  style={supremeModIconStyle(gem.supremeModId)}
-                />
-              </span>
-              <span className="min-w-0 whitespace-pre-line text-ui-text-bright">
-                {gemModLines(
-                  "supreme",
-                  gem.supremeModId,
-                  gradeOf(gems.grades.supreme, gem.supremeModId),
-                  vocation,
-                ).join("\n")}
-                <span className="mt-1 block text-xs text-ui-gold">
-                  {t("wheel.gems.supremeMod")}{" "}
-                  {t("wheel.gems.grade", {
-                    grade:
-                      GRADE_NUMERALS[
-                        gradeOf(gems.grades.supreme, gem.supremeModId)
-                      ],
-                  })}
-                </span>
-              </span>
-            </li>
-          )}
         </ul>
       </div>
 
-      <footer className="grid grid-cols-2 gap-2 border-t border-ui-stone-light/15 bg-black/10 p-3">
-        {equipped ? (
-          <Button
-            size="sm"
-            className="col-span-2 w-full"
-            disabled={pending}
-            onClick={() => onAction({ kind: "unequip", domain: gem.domain })}
-          >
-            {t("wheel.gems.actions.unequip")}
-          </Button>
-        ) : (
-          <Button
-            variant="primary"
-            size="sm"
-            className="col-span-2 w-full"
-            disabled={pending}
-            onClick={() => onAction({ kind: "equip", gemId: gem.id })}
-          >
-            {t("wheel.gems.actions.equip")}
-          </Button>
-        )}
-        <Button
-          size="sm"
-          className="w-full"
+      <footer className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2">
+        <button
+          type="button"
+          aria-label={
+            equipped
+              ? t("wheel.gems.actions.unequip")
+              : t("wheel.gems.actions.equip")
+          }
           disabled={pending}
-          onClick={() => onAction({ kind: "toggle-lock", gemId: gem.id })}
-        >
-          {gem.locked
-            ? t("wheel.gems.actions.unlock")
-            : t("wheel.gems.actions.lock")}
-        </Button>
-        <Button
-          size="sm"
-          className="w-full"
-          disabled={pending || !mutable || gems.resources.gold < switchCost}
-          title={t("wheel.gems.actions.switchTitle", {
-            domain: t(`wheel.domain.${GEM_DOMAIN_ROTATION[gem.domain]}`),
-            cost: switchCost.toLocaleString(i18n.language),
-          })}
-          onClick={() => onAction({ kind: "switch-domain", gemId: gem.id })}
-        >
-          {t("wheel.gems.actions.switch")}
-        </Button>
-        <Button
-          variant="danger"
-          size="sm"
-          className="col-span-2 w-full"
-          disabled={pending || !mutable}
-          title={t("wheel.gems.actions.destroyTitle", {
-            min: destroyYield.min,
-            max: destroyYield.max,
-            fragment: t(`wheel.gems.${destroyYield.fragment}FragmentsShort`),
-          })}
-          onClick={() => onAction({ kind: "destroy", gemId: gem.id })}
-        >
-          {t("wheel.gems.actions.destroy")}
-        </Button>
+          onClick={() =>
+            equipped
+              ? onAction({ kind: "unequip", domain: gem.domain })
+              : onAction({ kind: "equip", gemId: gem.id })
+          }
+          className={`h-5 w-[108px] shrink-0 bg-no-repeat [image-rendering:pixelated] enabled:active:bg-[position:0_-20px] disabled:opacity-45 ${
+            equipped
+              ? "bg-[url('/assets/wheel/remove-vessel-button.png')]"
+              : "bg-[url('/assets/wheel/place-vessel-button.png')]"
+          }`}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t("wheel.gems.actions.switch")}
+            title={t("wheel.gems.actions.switchTitle", {
+              domain: t(`wheel.domain.${GEM_DOMAIN_ROTATION[gem.domain]}`),
+              cost: switchCost.toLocaleString(i18n.language),
+            })}
+            disabled={
+              pending || !mutable || gems.resources.gold < switchCost
+            }
+            onClick={() =>
+              onAction({ kind: "switch-domain", gemId: gem.id })
+            }
+            className="h-5 w-[86px] shrink-0 bg-[url('/assets/wheel/switch-button.png')] bg-[length:86px_60px] bg-no-repeat [image-rendering:pixelated] enabled:active:bg-[position:0_-20px] disabled:bg-[position:0_-40px]"
+          />
+          <span className="flex h-5 items-center gap-1 rounded border border-ui-stone-light/20 bg-black/35 px-2 text-[11px] font-semibold tabular-nums text-ui-text">
+            {switchCost.toLocaleString(i18n.language)}
+            <Image
+              src="/assets/cyclopedia/currency/gold.png"
+              alt=""
+              aria-hidden
+              width={12}
+              height={12}
+              className="[image-rendering:pixelated]"
+            />
+          </span>
+          <button
+            type="button"
+            aria-label={t("wheel.gems.actions.destroy")}
+            title={t("wheel.gems.actions.destroyTitle", {
+              min: destroyYield.min,
+              max: destroyYield.max,
+              fragment: t(
+                `wheel.gems.${destroyYield.fragment}FragmentsShort`,
+              ),
+            })}
+            disabled={pending || !mutable}
+            onClick={() => onAction({ kind: "destroy", gemId: gem.id })}
+            className="h-5 w-[86px] shrink-0 bg-[url('/assets/wheel/destroy-button.png')] bg-[length:86px_60px] bg-no-repeat [image-rendering:pixelated] enabled:active:bg-[position:0_-20px] disabled:bg-[position:0_-40px]"
+          />
+        </div>
       </footer>
     </section>
   );

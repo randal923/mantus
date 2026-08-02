@@ -26,8 +26,8 @@ interface WheelSelectionPanelProps {
 }
 
 /**
- * Details for the hovered/selected slice: dedication rate, conviction perk,
- * fill progress, and the point allocation controls.
+ * Details for the selected slice: dedication rate, conviction perk, fill
+ * progress, and the point allocation controls.
  */
 export function WheelSelectionPanel({
   slice,

@@ -146,8 +146,8 @@ and be stored in a web-optimized format.
 Wheel of Destiny UI art ripped from the Tibia client, taken from the
 mehah/otclient `modules/game_wheel` data (`data/images/game/wheel/`). Like the
 sprite atlases — and unlike `public/assets/ui/` — this is third-party game
-art, not original work. Only the images the wheel itself needs were copied
-(no gem-atelier / fragment-workshop / preset chrome).
+art, not original work. The imported set covers the Wheel, Gem Atelier, and
+Fragment Workshop; unsupported preset-management chrome is not copied.
 
 - `backdrop_skillwheel.png` — 522×522 base wheel frame.
 - `wheel-vocations/backdrop_skillwheel_{knight,paladin,sorcerer,druid,monk}.png`
@@ -170,6 +170,22 @@ hit-test geometry, per-node overlay paths, icon positions and per-vocation
 sheet clips, all transcribed from the otclient module's
 `wheelMenu.otui` / `buttons.lua` / `geometry.lua` / `icons.lua` /
 `wheelclass.lua` (source lines cited inline).
+
+The Gem Atelier and Fragment Workshop add their original gem/mod sheets,
+grade backdrops, grade-ladder circles and connectors, state markers, fragment
+icons, vessel socket, and original Reveal, Place/Remove, Switch, Destroy, and
+Enhance button strips. Reimport this set from a matching mehah otclient
+checkout with:
+
+```bash
+node tools/importWheelGemAssets.mjs ../otclient-mehah
+```
+
+`lib/wheel/gemSheets.ts` and `lib/wheel/gemLargeIconStyle.ts` contain the
+sheet clip math. The Atelier follows `styles/gemMenu.otui` and
+`classes/gematelier.lua`; the Workshop follows `styles/fragmentMenu.otui` and
+`classes/workshop.lua`. The currently imported reference is upstream commit
+`9bfac7719fd5cd2d8a2cddf2ea6219e908e129f9`.
 
 ## Cyclopedia art (`public/assets/cyclopedia/`)
 

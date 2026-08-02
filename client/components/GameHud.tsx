@@ -28,6 +28,7 @@ import { getActionBarActionName } from "../lib/action-bar/getActionBarActionName
 import { getSpellActionTargetMode } from "../lib/action-bar/getSpellActionTargetMode";
 import { SpriteIcon } from "./inventory/SpriteIcon";
 import { SpellIcon } from "./spells/SpellIcon";
+import { HudFeatureButton } from "./action-bar/HudFeatureButton";
 
 interface GameHudProps {
   actionHotkeysEnabled?: boolean;
@@ -337,9 +338,7 @@ export function GameHud({
   );
   const onDropItem = useCallback(
     (slotIndex: number, itemId: string) => {
-      const item = inventoryItems.find(
-        (candidate) => candidate.id === itemId,
-      );
+      const item = inventoryItems.find((candidate) => candidate.id === itemId);
       if (!item) return;
       const next = [...actionBar];
       next[slotIndex] = {
@@ -387,55 +386,25 @@ export function GameHud({
             max={ownCharacter.maxHealth}
           />
           <div className="ui-action-cluster-shell pointer-events-auto relative z-0 min-w-0 max-w-[calc(100vw-16rem)] sm:max-w-[calc(100vw-16rem)]">
-            <div className="absolute -top-7 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1">
-              <button
-                type="button"
+            <div className="absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1">
+              <HudFeatureButton
                 title={t("actionBot.configure")}
-                aria-label={t("actionBot.configure")}
+                label={t("actionBot.title").toLocaleUpperCase()}
+                enabled={actionBotEnabled}
                 onClick={() => onConfigureActionBar(0, "bot")}
-                className="ui-button ui-button-secondary flex h-7 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
-              >
-                <span
-                  className={`size-2 rounded-full ${
-                    actionBotEnabled
-                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                      : "bg-ui-stone"
-                  }`}
-                />
-                {t("actionBot.title").toLocaleUpperCase()}
-              </button>
-              <button
-                type="button"
+              />
+              <HudFeatureButton
                 title={t("lootFilter.configure")}
-                aria-label={t("lootFilter.configure")}
+                label={t("lootFilter.title").toLocaleUpperCase()}
+                enabled={lootFilterEnabled}
                 onClick={onOpenLootFilter}
-                className="ui-button ui-button-secondary flex h-7 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
-              >
-                <span
-                  className={`size-2 rounded-full ${
-                    lootFilterEnabled
-                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                      : "bg-ui-stone"
-                  }`}
-                />
-                {t("lootFilter.title").toLocaleUpperCase()}
-              </button>
-              <button
-                type="button"
+              />
+              <HudFeatureButton
                 title={t("huntingBot.configure")}
-                aria-label={t("huntingBot.configure")}
+                label={t("huntingBot.title").toLocaleUpperCase()}
+                enabled={huntingBotEnabled}
                 onClick={onOpenHuntingBot}
-                className="ui-button ui-button-secondary flex h-7 items-center justify-center gap-2 rounded border border-ui-stone-light/25 px-3 text-xs font-bold text-ui-muted hover:border-ui-gold/55 hover:text-ui-gold"
-              >
-                <span
-                  className={`size-2 rounded-full ${
-                    huntingBotEnabled
-                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                      : "bg-ui-stone"
-                  }`}
-                />
-                {t("huntingBot.title").toLocaleUpperCase()}
-              </button>
+              />
             </div>
             <div className="ui-action-cluster w-max max-w-full overflow-x-auto p-2">
               <div className="flex w-max min-w-full items-end">

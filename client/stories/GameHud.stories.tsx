@@ -155,7 +155,31 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const actionBot = canvas.getByRole("button", {
+      name: "Configure Action Bot",
+    });
+    const lootFilter = canvas.getByRole("button", {
+      name: "Configure Loot Filter",
+    });
+    const huntingBot = canvas.getByRole("button", {
+      name: "Configure the Hunting Bot",
+    });
+
+    for (const button of [actionBot, lootFilter, huntingBot]) {
+      await expect(button.getBoundingClientRect().height).toBe(36);
+    }
+
+    await userEvent.click(actionBot);
+    await userEvent.click(lootFilter);
+    await userEvent.click(huntingBot);
+    await expect(args.onConfigureActionBar).toHaveBeenCalledWith(0, "bot");
+    await expect(args.onOpenLootFilter).toHaveBeenCalledOnce();
+    await expect(args.onOpenHuntingBot).toHaveBeenCalledOnce();
+  },
+};
 
 export const MinimapAnchoredBottomRight: Story = {
   args: {
@@ -210,7 +234,10 @@ export const ChatHoverIsNotBlocked: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const chat = canvas.getByRole("region", { name: "Game chat" });
-    await expect(chat.parentElement).toHaveClass("left-0", "bottom-0");
+    await expect(chat.parentElement?.parentElement).toHaveClass(
+      "left-0",
+      "bottom-0",
+    );
 
     const chatBounds = chat.getBoundingClientRect();
     const hitTarget = canvasElement.ownerDocument.elementFromPoint(

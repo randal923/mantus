@@ -2067,7 +2067,7 @@
     },
     "selection": {
       "title": "Selection",
-      "empty": "Hover or select a slice of the wheel to inspect its perks.",
+      "empty": "Select a slice of the wheel to inspect its perks.",
       "dedication": "Dedication",
       "conviction": "Conviction",
       "active": "(active)",
@@ -2139,7 +2139,9 @@
       "resonanceCount": "Resonance {{count}}/3",
       "collectionTitle": "Gem Collection",
       "selectedTitle": "Selected Gem",
+      "detailsTitle": "Click on a gem to see its mods",
       "selectGem": "Select a gem to inspect its modifiers and actions.",
+      "domainAffinity": "Domain Affinity",
       "modifiers": "Modifiers",
       "quality": {
         "lesser": "Lesser Gem",
@@ -2154,10 +2156,19 @@
         "button": "Reveal"
       },
       "filters": {
+        "search": "Search gems",
+        "searchPlaceholder": "Type to search",
+        "clearSearch": "Clear search",
         "quality": "Filter by quality",
         "domain": "Filter by domain",
         "allQualities": "All Qualities",
-        "allDomains": "All Domains"
+        "allDomains": "All Domains",
+        "allAffinities": "All Affinities",
+        "lockedOnly": "Locked only",
+        "pagination": "Gem pages",
+        "previousPage": "Previous page",
+        "nextPage": "Next page",
+        "pageSummary": "Page {{page}} / {{total}} ({{count}} Gems)"
       },
       "count": "{{count}} gems",
       "empty": "No gems match your filters. Reveal gems to grow your collection.",
@@ -2180,6 +2191,21 @@
         "kinds": "Mod kinds",
         "basic": "Basic Mods",
         "supreme": "Supreme Mods",
+        "mods": "Mods",
+        "enhanceModGrade": "Enhance Mod Grade",
+        "search": "Search mods",
+        "searchPlaceholder": "Type to search",
+        "clearSearch": "Clear search",
+        "filter": "Filter mods",
+        "pagination": "Mod pages",
+        "previousPage": "Previous page",
+        "nextPage": "Next page",
+        "pageSummary": "Page {{page}} / {{total}} ({{count}} Mods)",
+        "noMatches": "There is no mod that matches your filters.",
+        "filters": {
+          "all": "All",
+          "socketed": "In-Vessel Mods"
+        },
         "modifier": "Modifier",
         "currentGrade": "Current grade",
         "collection": "In collection",
