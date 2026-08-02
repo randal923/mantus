@@ -1482,3 +1482,37 @@ Storybook build passes; all 6 StoreModal stories pass in headless Chromium,
 including direct product-click confirmation and the name-change submission.
 
 **Residual risk**: none known.
+
+## 2026-08-02 — Protocol strikes are now logged (stale-server ping rejections)
+
+**Problem**: the "The game server rejected an invalid request." toast appeared
+every ~10 seconds during play. Root cause was not a code bug at HEAD: the
+local game server had been started (via the non-watch `start` script) minutes
+before the commit that added the 2-second HUD latency `ping`, so its
+still-loaded `clientMessageSchema` rejected every ping. Five silent strikes
+later `Session.strike()` sent `invalid-message` and closed the socket, on
+every reconnect, forever. Diagnosing this took a live WebSocket probe because
+strikes were completely silent — nothing in the server log named the rejected
+message.
+
+**What changed**: `Session.strike()` now takes a reason and logs one
+`console.warn` line per strike: violation count, remote address, and either
+"unparsable JSON" or the rejected message's `type` — sanitized (truncated to
+40 chars, non-`[\w-]` replaced) and never the payload, which may carry an
+auth token. Log volume is bounded: at most `maxProtocolViolations` (5) lines
+per connection, and connection/rate caps already bound connections per IP.
+A future schema mismatch now announces itself as
+`protocol strike 1/5 from <ip>: rejected message type "ping"` instead of
+failing silently.
+
+**Files**: `server/src/Session.ts`, `todo/done.md`.
+
+**Verified**: server typecheck passes; `Session.test.ts` (4) and
+`GameServer.test.ts` (31, includes the invalid-message strike path) pass.
+Live reproduction confirmed separately: probing the stale running server with
+6 valid pings returned exactly one `invalid-message` error then close; the
+stale process was stopped gracefully (SIGTERM, saves ran).
+
+**Residual risk**: strike logs identify the message type only; if a mismatch
+ever hides in a field rather than the type, the log narrows it to the type
+but the zod issue paths still have to be reproduced manually.

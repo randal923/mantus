@@ -193,12 +193,18 @@ export class Session {
     try {
       json = JSON.parse(data.toString());
     } catch {
-      this.strike();
+      this.strike("unparsable JSON");
       return;
     }
     const result = clientMessageSchema.safeParse(json);
     if (!result.success) {
-      this.strike();
+      const type =
+        typeof json === "object" && json !== null && "type" in json
+          ? String((json as { type: unknown }).type)
+              .slice(0, 40)
+              .replace(/[^\w-]/g, "?")
+          : "<no type>";
+      this.strike(`rejected message type "${type}"`);
       return;
     }
     if (this.pendingIntents.length >= this.limits.maxPendingIntents) return;
@@ -216,8 +222,16 @@ export class Session {
     return this.messagesInWindow <= PROTOCOL_LIMITS.maxMessagesPerSecond;
   }
 
-  private strike(): void {
+  /**
+   * Counts one malformed message. The reason names only the message type —
+   * never the payload, which may carry an auth token — so a client/server
+   * protocol mismatch shows up in the log instead of failing silently.
+   */
+  private strike(reason: string): void {
     this.violations += 1;
+    console.warn(
+      `protocol strike ${this.violations}/${this.limits.maxProtocolViolations} from ${this.remoteAddress}: ${reason}`,
+    );
     if (this.violations >= this.limits.maxProtocolViolations) {
       this.sendError("invalid-message");
       this.socket.close();
