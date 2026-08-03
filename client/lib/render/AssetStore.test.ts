@@ -170,4 +170,35 @@ describe("AssetStore", () => {
 
     expect(sheetAttempts).toBe(2);
   });
+
+  it("gives up after three spaced attempts but recovers on a later preload", async () => {
+    vi.useFakeTimers();
+    try {
+      let sheetAttempts = 0;
+      let healthy = false;
+      fetchMock.mockImplementation(async (url: string) => {
+        if (url.split("?")[0]?.endsWith(".png")) {
+          sheetAttempts += 1;
+          if (!healthy) return { ok: false };
+        }
+        return route(url);
+      });
+
+      const store = new AssetStore();
+      await store.load();
+      const failing = store.preload([1]);
+      const failure = expect(failing).rejects.toThrow("failed to load");
+      await vi.advanceTimersByTimeAsync(2_000);
+      await failure;
+      expect(sheetAttempts).toBe(3);
+
+      // A sheet that exhausted its attempts is not poisoned: the next caller
+      // (e.g. a creature-load retry) fetches it fresh.
+      healthy = true;
+      await store.preload([1]);
+      expect(sheetAttempts).toBe(4);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

@@ -31,6 +31,8 @@ import { TILE_SIZE } from "./tileSize";
 
 const ZOOM = 3;
 const NAME_PLATE_CULL_MARGIN_PX = 32;
+const CREATURE_LOAD_RETRY_INITIAL_MS = 2_000;
+const CREATURE_LOAD_RETRY_MAX_MS = 30_000;
 const NAME_COLORS: Record<CreatureState["kind"], number> = {
   player: 0x44dd44,
   monster: 0xff7777,
@@ -113,6 +115,11 @@ export class WorldRenderer {
   private creatureOrderDirty = false;
   private readonly pendingCreatures = new Map<string, CreatureState>();
   private readonly loadingCreatureIds = new Set<string>();
+  private readonly creatureLoadRetryTimers = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
+  private readonly creatureLoadRetryDelaysMs = new Map<string, number>();
   private ownPlayerId = "";
   private ownPosition: Position | null = null;
   /** Walk-then-use QoL: defers an out-of-reach use/pickup until arrival. */
@@ -449,6 +456,11 @@ export class WorldRenderer {
 
   destroy(): void {
     this.destroyed = true;
+    for (const timer of this.creatureLoadRetryTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.creatureLoadRetryTimers.clear();
+    this.creatureLoadRetryDelaysMs.clear();
     this.hideMapDragIcon();
     this.app.canvas.removeEventListener("pointerdown", this.onMapPointerDown);
     this.app.canvas.removeEventListener("mousedown", this.onMapMouseDown);
@@ -472,13 +484,44 @@ export class WorldRenderer {
     this.pendingCreatures.set(creature.id, creature);
     if (this.loadingCreatureIds.has(creature.id)) return;
     this.loadingCreatureIds.add(creature.id);
-    void this.loadCreature(creature.id, creature.outfit).catch(
+    void this.loadCreature(creature.id, creature.outfit).then(
+      () => {
+        this.creatureLoadRetryDelaysMs.delete(creature.id);
+      },
       (cause: unknown) => {
-        this.pendingCreatures.delete(creature.id);
+        // The creature stays pending and the load is retried while it remains
+        // in view: an atlas fetch failing during a deploy or network blip must
+        // not leave the creature invisible for the rest of the session.
         const reason = cause instanceof Error ? cause.message : "unknown";
         console.warn(`failed to render creature ${creature.id}: ${reason}`);
+        this.scheduleCreatureLoadRetry(creature.id);
       },
     );
+  }
+
+  private scheduleCreatureLoadRetry(creatureId: string): void {
+    if (this.destroyed || this.creatureLoadRetryTimers.has(creatureId)) return;
+    const delayMs =
+      this.creatureLoadRetryDelaysMs.get(creatureId) ??
+      CREATURE_LOAD_RETRY_INITIAL_MS;
+    this.creatureLoadRetryDelaysMs.set(
+      creatureId,
+      Math.min(delayMs * 2, CREATURE_LOAD_RETRY_MAX_MS),
+    );
+    const timer = setTimeout(() => {
+      this.creatureLoadRetryTimers.delete(creatureId);
+      if (this.destroyed || this.creatureViews.has(creatureId)) return;
+      const pending = this.pendingCreatures.get(creatureId);
+      if (pending) this.addCreature(pending);
+    }, delayMs);
+    this.creatureLoadRetryTimers.set(creatureId, timer);
+  }
+
+  private clearCreatureLoadRetry(creatureId: string): void {
+    const timer = this.creatureLoadRetryTimers.get(creatureId);
+    if (timer !== undefined) clearTimeout(timer);
+    this.creatureLoadRetryTimers.delete(creatureId);
+    this.creatureLoadRetryDelaysMs.delete(creatureId);
   }
 
   private async loadCreature(
@@ -531,6 +574,7 @@ export class WorldRenderer {
 
   private removeCreature(creatureId: string, clearTarget = true): void {
     this.pendingCreatures.delete(creatureId);
+    this.clearCreatureLoadRetry(creatureId);
     if (clearTarget && this.attackTargetId === creatureId) {
       this.attackTargetId = null;
     }

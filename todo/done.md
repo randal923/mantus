@@ -2408,3 +2408,50 @@ heavy async traffic, the wake could become selective. The 25 ms alignment is
 gone per round trip, but login is still ~28 sequential round trips — the
 statement collapse (audit §3) remains the big lever, blocked on a reachable
 integration Postgres.
+
+## 2026-08-03 — "NPCs not spawned after prod push" root-caused to client atlas discard
+
+**Problem**: after some prod deploys, specific NPCs (classic case: Asima, the
+Darashia potion seller) appeared missing — no sprite, no name plate. The
+server was exonerated by a deep investigation: SpawnManager slot logic
+survived static review plus a 30-seed churn simulation on the real map and
+content, two full-stack deploy-cycle probes (real server + wire-protocol
+client, including a player restored onto Asima's home tile from a
+forced-logout save) always respawned her within `retryMs`, and the prod DB
+showed no tile blockers while the audit log showed her trading again in the
+current run. The real defect was the residual risk left by the 2026-08-02
+atlas-retry fix: `WorldRenderer.addCreature` deleted a creature from
+`pendingCreatures` when its atlas sheet fetch failed (the single immediate
+retry in `AssetStore.preload` fails too inside a deploy/network outage
+window), leaving every creature on that sheet invisible for the rest of the
+session. NPC moves don't recover it (`applyCreatureMove` only updates
+*existing* pending entries), so an idle shop NPC stayed "not spawned" until a
+page reload — and deploys are exactly when reconnect-driven fetch bursts and
+cache-busted asset versions make a failed sheet likely.
+
+**What changed**: `AssetStore.preload` now makes up to 3 attempts per sheet
+with 500 ms/1 s spacing (replacing the immediate double-attempt), and a
+failed sheet is never poisoned — later callers fetch it fresh.
+`WorldRenderer` no longer discards a creature whose load failed: it stays in
+`pendingCreatures` and a per-creature timer retries the load with doubling
+delay (2 s → 30 s cap) until it renders, the creature leaves view, or the
+renderer is destroyed; success resets the backoff. Timers are cleaned up in
+`removeCreature` and `destroy`.
+
+**Files**: `client/lib/render/AssetStore.ts`,
+`client/lib/render/WorldRenderer.ts`,
+`client/lib/render/AssetStore.test.ts`,
+`client/lib/render/WorldRenderer.test.ts` (new), `todo/{done,status}.md`.
+
+**Verified**: new regression tests fail against the pre-fix renderer
+(verified by stashing the fix) and pass with it — recovery on first retry,
+doubling delays, retry stop on creature-left and destroy, and AssetStore
+attempt-exhaustion recovery; full client unit suite 85 files / 376 tests
+green; client `tsc --noEmit` and focused ESLint clean.
+
+**Residual risk**: a creature whose outfit id is missing from the catalog
+retries forever at the 30 s cap (cheap no-op lookups, but a console.warn per
+attempt); map region fetches and combat-effect preloads keep their existing
+single-shot behavior (regions self-heal on the next `refresh`, effects are
+transient). Server-side spawn behavior is unchanged and now has a documented
+clean bill of health for this symptom.

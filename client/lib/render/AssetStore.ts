@@ -258,10 +258,19 @@ export class AssetStore {
     }
     for (const s of [...sheets].sort((a, b) => a - b)) {
       if (this.sheetImages[s]) continue;
-      try {
-        await this.preloadSheet(s);
-      } catch {
-        await this.preloadSheet(s);
+      // A failed request is dropped from sheetLoads, so each attempt (and any
+      // later preload call) fetches fresh — a sheet is never poisoned for the
+      // session by transient failures.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await this.preloadSheet(s);
+          break;
+        } catch (cause) {
+          if (attempt >= SHEET_LOAD_ATTEMPTS) throw cause;
+          await new Promise((resolve) =>
+            setTimeout(resolve, SHEET_RETRY_BASE_DELAY_MS * attempt),
+          );
+        }
       }
     }
   }
