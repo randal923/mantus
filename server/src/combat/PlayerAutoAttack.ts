@@ -51,6 +51,7 @@ export class PlayerAutoAttack {
       player,
       target,
       this.proficiencyHooks?.effectsFor(player.id),
+      now,
     );
     if (!plan) {
       this.feedback.reject(session, now);

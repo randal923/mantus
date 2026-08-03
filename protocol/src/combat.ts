@@ -133,7 +133,7 @@ export const spellCatalogEntrySchema = z
     requiredLevel: z.number().int().min(0).max(10_000),
     requiredMagicLevel: z.number().int().min(0).max(1_000),
     needWeapon: z.boolean(),
-    cooldownMs: z.number().int().min(0).max(60 * 60 * 1000),
+    cooldownMs: z.number().int().min(0).max(2 * 60 * 60 * 1000),
     cooldownGroups: z.array(z.string().min(1).max(128)).min(1).max(8),
     targetKind: spellTargetKindSchema,
     parameterKind: spellParameterKindSchema,
@@ -173,8 +173,8 @@ export const combatCooldownStateSchema = z
   .object({
     group: z.string().min(1).max(64),
     readyAt: z.number().int().nonnegative(),
-    remainingMs: z.number().int().min(0).max(60 * 60 * 1000),
-    totalMs: z.number().int().positive().max(60 * 60 * 1000),
+    remainingMs: z.number().int().min(0).max(2 * 60 * 60 * 1000),
+    totalMs: z.number().int().positive().max(2 * 60 * 60 * 1000),
   })
   .strict();
 

@@ -3467,6 +3467,127 @@ describe("Combat", () => {
     ).toBe(false);
   });
 
+  /**
+   * Avatars: the outfit condition and the crit/damage-reduction window come
+   * from the server-owned purple stage, and the 2 h cooldown loses 30 min
+   * per grade past the first (never below the half-base floor).
+   */
+  it("transforms an avatar cast into the outfit, buff window, and graded cooldown", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elite Knight", 10),
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 0, red: 0, blue: 0, purple: 2 },
+        spellGrades: { "Avatar of Steel": 2 },
+      },
+    });
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "uteta-res-eq",
+        target: { kind: "self" },
+      },
+      1_000,
+    );
+
+    expect(harness.player.avatarStage).toBe(2);
+    expect(harness.player.avatarUntil).toBe(16_000);
+    expect(harness.player.conditions.has("outfit")).toBe(true);
+    expect(
+      harness.session.combatCooldowns.get("spell:uteta-res-eq")?.totalMs,
+    ).toBe(5_400_000);
+  });
+
+  /**
+   * Divine Grenade arms a fuse instead of dealing damage at cast time; the
+   * detonation runs through the tick-owned queue and re-resolves the blast
+   * against live world state.
+   */
+  it("detonates Divine Grenade only after its fuse through the tick queue", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Royal Paladin", 30),
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 0, red: 1, blue: 0, purple: 0 },
+        spellGrades: { "Divine Grenade": 1 },
+      },
+    });
+    const monster = makeMonster(
+      "monster-instance:grenade-target:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 5_000, maxHealth: 5_000 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exevo-tempo-mas-san",
+        target: { kind: "creature", creatureId: monster.id },
+      },
+      1_000,
+    );
+    expect(monster.health).toBe(monster.maxHealth);
+
+    harness.combat.tick(3_999);
+    expect(monster.health).toBe(monster.maxHealth);
+
+    harness.combat.tick(4_000);
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+  });
+
+  /**
+   * Executioner's Throw resolves its chain hop by hop from live positions
+   * and applies the red-stage execute bonus against low-health targets.
+   */
+  it("chains Executioner's Throw and hits the chained monster too", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(300, "Elite Knight", 10),
+      inventory: [
+        ownedItem(WEAPON_ID, 3273, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+      wheelBonuses: {
+        ...EMPTY_WHEEL_BONUSES,
+        revelationStages: { green: 0, red: 1, blue: 0, purple: 0 },
+        spellGrades: { "Executioner's Throw": 1 },
+      },
+    });
+    const primary = makeMonster(
+      "monster-instance:execute-target:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 100, maxHealth: 100_000 }),
+    );
+    const chained = makeMonster(
+      "monster-instance:execute-target:1",
+      { x: 5, y: 1, z: 7 },
+      makeMonsterType({ health: 50_000, maxHealth: 50_000 }),
+    );
+    harness.world.addCreature(primary);
+    harness.world.addCreature(chained);
+    harness.session.knownCreatureIds.add(primary.id);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exori-amp-kor",
+        target: { kind: "creature", creatureId: primary.id },
+      },
+      1_000,
+    );
+
+    expect(primary.health).toBeLessThan(100);
+    expect(chained.health).toBeLessThan(chained.maxHealth);
+  });
+
   it("applies wheel life and mana leech at damage execution time", async () => {
     const harness = await makeHarness({
       character: makeLeveledCharacter(300, "Elder Druid", 30),

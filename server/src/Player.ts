@@ -68,6 +68,15 @@ export class Player extends Creature<Character["outfit"]> {
    * Server-owned; never persisted (Canary's on-think timer is not either).
    */
   focusMasteryUntil = 0;
+  /**
+   * Avatar transform window (Canary PlayerWheel::checkAvatarSkill): while
+   * `avatarUntil` is in the future the purple revelation stage in
+   * `avatarStage` drives 100 % crit chance, +5 %/stage crit damage, and
+   * 5 %/stage damage reduction. Server-owned; never persisted, like the
+   * outfit condition that rides along with it.
+   */
+  avatarStage = 0;
+  avatarUntil = 0;
   private mountSpeedBonus = 0;
   private currentWheelBonuses: WheelBonuses;
 

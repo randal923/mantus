@@ -980,3 +980,42 @@ limitations accepted during a session are recorded in the owning feature file
   the game server wants it, so every migration needs the port swapped by hand.
   Recommended fix: a separate `MIGRATION_DATABASE_URL`, or drop the advisory
   lock in favour of a `migrations` table row lock that works under either mode.
+
+- Wheel revelation actives (all 10: 5 avatars, Executioner's Throw, Divine
+  Grenade, Divine Empowerment, Great Death Beam, Spiritual Outburst) shipped
+  2026-08-03 with deliberate deviations. (a) **Divine Empowerment** is a flat
+  5 s self damage buff (+8 %, +10 % at grade 3) instead of Canary's 3x3
+  owned-item zone that buffs only while standing in it; and because the blue
+  extra grant collapses stages 2/3 into grade 3, Canary's stage-3 values
+  (24 s cooldown, +12 %) are unreachable — stage 3 behaves as stage 2.
+  Recommended fix: a Combat-owned buff-zone record checked at damage time,
+  plus reading `revelationStages.blue` directly for the cooldown/percent.
+  (b) **Spiritual Outburst** has no harmony legs (echo recast at 5 harmony,
+  harmony multiplier, spend + cooldown clearing); they land with the harmony
+  system. (c) Chain spells draw no per-hop chain visual and Executioner's
+  Throw has no weapon-type missile (`CONST_ANI_WEAPONTYPE`). (d) In-avatar
+  100 % crit is not mirrored into the Cyclopedia stat display
+  (`CyclopediaService` calls `playerSpecials` without `now`). Owner:
+  Feature 79-81 (wheel).
+- **Long spell cooldowns reset on relog** (2026-08-03). All combat cooldowns
+  live in `Session.combatCooldowns` (memory only), which was harmless at
+  ≤30 min but is now an exploit: relogging clears an avatar's 1-2 h cooldown
+  (and Intense Wound Cleansing's 10 min one). Recommended fix: persist
+  cooldowns above some threshold (e.g. >60 s) per character on logout and
+  rehydrate at login, like Canary's serialized condition/cooldown state.
+  Owner: Feature 79-81 (wheel) / combat core.
+- The Sorcerer blue revelation's **Drain Body leech** (2-5 % life/mana leech
+  against monsters debuffed by Sap Strength / Expose Weakness) is not
+  implemented — the spells apply their debuffs but no leech reads the wheel
+  stage (2026-08-03). Owner: Feature 79-81 (wheel).
+- `content/spells/canary-spells.json` still records the 10 revelation actives
+  as `supported: false` (2026-08-03): the server modules were added as "extra
+  modules" (allowed by the parity design) without extending the importer.
+  The parity inventory therefore undercounts shipped spells and the client's
+  `castableSpellIds` icon gate does not cover their new icon entries.
+  Recommended fix: extend `parseCanarySpells.mjs` (`reviewedWheelRevelation`
+  + the special-combat tables) for the 10 Lua files, re-run
+  `yarn spells:import` + `yarn parity:inventory`, and update the pinned
+  budgets in `SPELL_DEFINITIONS.test.ts` (169→179 upstream-supported,
+  disabled buckets) and `getSpellIconArtwork.test.ts`. Owner: Feature 26
+  (spell parity).

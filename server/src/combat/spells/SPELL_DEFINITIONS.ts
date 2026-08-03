@@ -12,12 +12,15 @@ import { exevoGranVisLux } from "./attack/exevo-gran-vis-lux";
 import { exevoInfirFlamHur } from "./attack/exevo-infir-flam-hur";
 import { exevoInfirFrigoHur } from "./attack/exevo-infir-frigo-hur";
 import { exevoMasSan } from "./attack/exevo-mas-san";
+import { exevoMaxMort } from "./attack/exevo-max-mort";
+import { exevoTempoMasSan } from "./attack/exevo-tempo-mas-san";
 import { exevoTeraHur } from "./attack/exevo-tera-hur";
 import { exevoUlusFrigo } from "./attack/exevo-ulus-frigo";
 import { exevoUlusTera } from "./attack/exevo-ulus-tera";
 import { exevoVisHur } from "./attack/exevo-vis-hur";
 import { exevoVisLux } from "./attack/exevo-vis-lux";
 import { exori } from "./attack/exori";
+import { exoriAmpKor } from "./attack/exori-amp-kor";
 import { exoriAmpVis } from "./attack/exori-amp-vis";
 import { exoriCon } from "./attack/exori-con";
 import { exoriFlam } from "./attack/exori-flam";
@@ -27,6 +30,7 @@ import { exoriGranCon } from "./attack/exori-gran-con";
 import { exoriGranFlam } from "./attack/exori-gran-flam";
 import { exoriGranFrigo } from "./attack/exori-gran-frigo";
 import { exoriGranIco } from "./attack/exori-gran-ico";
+import { exoriGranMasNia } from "./attack/exori-gran-mas-nia";
 import { exoriGranTera } from "./attack/exori-gran-tera";
 import { exoriGranVis } from "./attack/exori-gran-vis";
 import { exoriHur } from "./attack/exori-hur";
@@ -161,8 +165,14 @@ import { utanaVid } from "./support/utana-vid";
 import { utaniGranHur } from "./support/utani-gran-hur";
 import { utaniHur } from "./support/utani-hur";
 import { utaniTempoHur } from "./support/utani-tempo-hur";
+import { utetaResDru } from "./support/uteta-res-dru";
+import { utetaResEq } from "./support/uteta-res-eq";
+import { utetaResSac } from "./support/uteta-res-sac";
+import { utetaResTio } from "./support/uteta-res-tio";
+import { utetaResVen } from "./support/uteta-res-ven";
 import { utetaTio } from "./support/uteta-tio";
 import { utevoGranLux } from "./support/utevo-gran-lux";
+import { utevoGravSan } from "./support/utevo-grav-san";
 import { utevoLux } from "./support/utevo-lux";
 import { utevoRes } from "./support/utevo-res";
 import { utevoResIna } from "./support/utevo-res-ina";
@@ -189,12 +199,15 @@ export const SPELL_DEFINITIONS: ReadonlyArray<SpellDefinition> = [
   exevoInfirFlamHur,
   exevoInfirFrigoHur,
   exevoMasSan,
+  exevoMaxMort,
+  exevoTempoMasSan,
   exevoTeraHur,
   exevoUlusFrigo,
   exevoUlusTera,
   exevoVisHur,
   exevoVisLux,
   exori,
+  exoriAmpKor,
   exoriAmpVis,
   exoriCon,
   exoriFlam,
@@ -204,6 +217,7 @@ export const SPELL_DEFINITIONS: ReadonlyArray<SpellDefinition> = [
   exoriGranFlam,
   exoriGranFrigo,
   exoriGranIco,
+  exoriGranMasNia,
   exoriGranTera,
   exoriGranVis,
   exoriHur,
@@ -338,8 +352,14 @@ export const SPELL_DEFINITIONS: ReadonlyArray<SpellDefinition> = [
   utaniGranHur,
   utaniHur,
   utaniTempoHur,
+  utetaResDru,
+  utetaResEq,
+  utetaResSac,
+  utetaResTio,
+  utetaResVen,
   utetaTio,
   utevoGranLux,
+  utevoGravSan,
   utevoLux,
   utevoRes,
   utevoResIna,

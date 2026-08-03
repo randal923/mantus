@@ -2618,3 +2618,67 @@ use instead.
 experience, capped at 1e9 per award) and converts inward; only the running
 total is bigint. Level itself remains a `number` throughout, which is correct
 — `integer` columns and `uint32_t` in Canary both stop far below 2^53.
+
+## 2026-08-03 — Gem grant tool + Wheel revelation actives in the spell picker
+
+**Problem**: (1) No operator tool existed for stocking a character's Gem
+Atelier balances during testing. (2) The action-bar spell picker showed no
+Wheel of Destiny spells for any vocation except the Druid Twin Bursts: the
+other ten revelation actives (five avatars, Executioner's Throw, Divine
+Grenade, Divine Empowerment, Great Death Beam, Spiritual Outburst) had never
+been ported from Canary — they sat `supported: false` in the content catalog,
+so the server catalog (`SpellRegistry.projectFor`) had nothing to send.
+
+**What changed**: `tools/grantGems.mjs` (`yarn gems:grant "Name" [--count]
+[--dry-run]`) tops up `character_gem_resources` (lesser/regular/greater) in
+one serializable transaction, idempotent GREATEST semantics, reading
+`WHEEL_BASE_VOCATION`/`GEM_VOCATION_NAMES` from protocol source so the
+vocation gem-family naming can't drift; mirrors the unaudited
+`creditGemDrops` path. Ran it for "Shui Sorc" (Master Sorcerer): 1000 Sage
+Gems of each quality (was 20/1/5).
+
+All ten revelation actives implemented server-side with Canary mechanics and
+gated `wheelRevelation` stage checks: chain damage resolution (new
+`SpellDefinition.chain`, hop-by-hop nearest-first with per-hop
+LoS/harm checks) for Executioner's Throw (3-5 targets by grade, +100/125/150 %
+execute below 30 % health via `wheelExecutionersThrow.ts`) and Spiritual
+Outburst (6 targets, `flatDamageHealing` level baseline); a tick-owned fuse
+queue (new `SpellDefinition.delayed` + `DelayedSpellDetonation`, drained in
+`Combat.tick`) for Divine Grenade's 3 s clamped-position blast with all
+targets re-validated at detonation; Great Death Beam as a BEAM6 death beam
+whose grades lengthen to BEAM7/BEAM8 and which joins Beam Mastery's
+per-target legs; Divine Empowerment as a 5 s self damage buff; avatars as a
+new `playerAction: "avatar"` applying the real Canary outfit condition
+(lookTypes 1593-1596/1823, all present in our assets) plus a
+`Player.avatarStage/avatarUntil` window read by `playerSpecials` (100 % crit,
++5 %/stage crit damage) and `DamageResolver` (5 %/stage damage reduction),
+with 2 h/1.5 h/1 h graded cooldowns. Grade/stage scaling rides
+`wheelSpellAugments` entries; `executeWorldSpell` now applies augment
+cooldown reductions (also fixes Divine Dazzle grade 2's missing reduction).
+Protocol cooldown caps raised 1 h→2 h; `REVELATION_SPELL_GRADES` exported;
+client icon map gained the ten indices from otclient `spells.lua`.
+
+**Files**: `tools/grantGems{,.test}.mjs`, `package.json`,
+`protocol/src/{combat,wheelSpellGrades}.ts`, `server/src/Player.ts`,
+`server/src/combat/{Spell,SpellCaster,Combat,DamageResolver,DeathHandler,
+PlayerSpellActions,PlayerAutoAttack,playerAttackPlan,playerSpecials,
+wheelBeamMastery,wheelSpellAugments,wheelUpgradedAreas,
+wheelExecutionersThrow,flatDamageHealing,DelayedSpellDetonation}.ts`, ten new
+modules under `server/src/combat/spells/{attack,support}/`,
+`SPELL_DEFINITIONS{,.test}.ts`, `client/lib/combat/getSpellIconArtwork.ts`.
+
+**Verified**: new Combat tests (avatar buff window + graded cooldown, grenade
+fuse-then-detonate through the tick queue, executioner chain + low-health
+hit) and a definitions test asserting every castable revelation grant has a
+definition for exactly its vocation pair with the right domain gate — 81
+combat tests green; per-vocation tsx report confirms all revelation actives
+now project into each vocation's picker; server suite green except the four
+pre-existing exercise-weapon failures (confirmed on a clean stash); client
+376 unit tests, `yarn test:tools` + `yarn parity:check` green; protocol,
+server, client typechecks clean.
+
+**Residual risk / deferred** (all in TODO.md): Divine Empowerment zone
+semantics + stage-3 collapse, Spiritual Outburst harmony legs, Drain Body
+leech passive, long-cooldown relog reset (avatar exploit), content-catalog
+`supported` flags not regenerated (parity inventory undercounts), no chain
+visuals/weapon-type missile, Cyclopedia not showing in-avatar crit.

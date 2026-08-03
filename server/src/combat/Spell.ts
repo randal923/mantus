@@ -117,6 +117,26 @@ export interface SpellDefinition {
     readonly excludedVocations: ReadonlyArray<CharacterVocation>;
     readonly casterEffectId: number;
   } | null;
+  /**
+   * Canary chain-damage spells (doCombatChain): targets are picked hop by
+   * hop, nearest first, each within `hopDistance` of the previous one.
+   * `maxTargets` is the base count; wheel augments may add more.
+   */
+  readonly chain?: {
+    readonly maxTargets: number;
+    readonly hopDistance: number;
+  };
+  /**
+   * Divine Grenade-style fuse: the cast only marks the position (clamped to
+   * `clampRange` tiles of the caster) and the damage detonates `delayMs`
+   * later, re-validating every target at execution time.
+   */
+  readonly delayed?: {
+    readonly delayMs: number;
+    readonly clampRange: number;
+    /** One-shot effect drawn at the armed position when the fuse starts. */
+    readonly fuseEffectId: number;
+  };
   /** Floor-moving support spells resolved by the movement rules, not combat. */
   readonly worldAction: "magic-rope" | "levitate" | null;
   /**
@@ -145,6 +165,7 @@ export const PLAYER_SPELL_ACTIONS = [
   "summon-creature",
   "mentor-other",
   "balanced-brawl",
+  "avatar",
 ] as const;
 
 export type PlayerSpellAction = (typeof PLAYER_SPELL_ACTIONS)[number];

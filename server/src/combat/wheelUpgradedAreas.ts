@@ -64,6 +64,20 @@ export const WHEEL_AREA_BEAM7: SpellArea = {
   ],
 };
 
+/** AREA_BEAM8 / AREADIAGONAL_BEAM8 — Great Death Beam grade 3. */
+export const WHEEL_AREA_BEAM8: SpellArea = {
+  shape: "tiles",
+  directional: true,
+  offsets: [
+    { x: 0, y: -7 }, { x: 0, y: -6 }, { x: 0, y: -5 }, { x: 0, y: -4 },
+    { x: 0, y: -3 }, { x: 0, y: -2 }, { x: 0, y: -1 }, { x: 0, y: 0 },
+  ],
+  diagonalOffsets: [
+    { x: -7, y: -7 }, { x: -6, y: -6 }, { x: -5, y: -5 }, { x: -4, y: -4 },
+    { x: -3, y: -3 }, { x: -2, y: -2 }, { x: -1, y: -1 }, { x: 0, y: 0 },
+  ],
+};
+
 /** AREA_BEAM10 — Great Energy Beam with Beam Mastery (no diagonal form). */
 export const WHEEL_AREA_BEAM10: SpellArea = {
   shape: "tiles",

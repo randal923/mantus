@@ -31,6 +31,15 @@ const ILLUSION_MS = 180_000;
 const MENTOR_MS = 60_000;
 /** Canary balanced_brawl.lua `challengeTime`: a 16 s melee pull. */
 const BALANCED_BRAWL_PULL_MS = 16_000;
+/** Canary avatar_of_*.lua: the transform lasts 15 s at every stage. */
+const AVATAR_MS = 15_000;
+const AVATAR_LOOK_TYPES: Readonly<Record<string, number>> = {
+  "uteta-res-eq": 1593,
+  "uteta-res-sac": 1594,
+  "uteta-res-ven": 1595,
+  "uteta-res-dru": 1596,
+  "uteta-res-tio": 1823,
+};
 
 /**
  * The reviewed TypeScript bodies of Canary's procedural player-spell
@@ -94,9 +103,47 @@ export class PlayerSpellActions {
         return this.mentorOther(session, player, spell, parameter, now);
       case "balanced-brawl":
         return this.balancedBrawl(session, player, spell, now);
+      case "avatar":
+        return this.avatar(session, player, spell, now);
       default:
         return false;
     }
+  }
+
+  /**
+   * Canary avatar_of_*.lua: the outfit condition carries the transform while
+   * the Player avatar window drives 100 % crit and the per-stage damage
+   * reduction (playerSpecials / DamageResolver), all keyed to the
+   * server-owned purple revelation stage.
+   */
+  private avatar(
+    session: Session,
+    player: Player,
+    spell: SpellDefinition,
+    now: number,
+  ): boolean {
+    const lookType = AVATAR_LOOK_TYPES[spell.id];
+    if (!lookType) {
+      this.fizzle(session, player, now, "spell-not-possible");
+      return false;
+    }
+    const stage = Math.min(
+      Math.max(player.wheelBonuses.revelationStages.purple, 1),
+      3,
+    );
+    this.conditions.applyCondition(
+      player,
+      {
+        type: "outfit",
+        sourceId: player.id,
+        durationMs: AVATAR_MS,
+        outfit: { lookType, head: 0, body: 0, legs: 0, feet: 0, addons: 0 },
+      },
+      now,
+    );
+    player.avatarStage = stage;
+    player.avatarUntil = now + AVATAR_MS;
+    return true;
   }
 
   /** Canary challenge.lua: challenges every monster in the 3x3 square. */

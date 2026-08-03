@@ -31,16 +31,28 @@ function combatMasteryCriticalDamage(
   return COMBAT_MASTERY_CRITICAL[Math.min(stage, 3) - 1] ?? 0;
 }
 
+/** In-avatar crit damage per purple stage (player_wheel.cpp:3262-3311). */
+const AVATAR_CRITICAL_DAMAGE = [5, 10, 15] as const;
+
 export function playerSpecials(
   equipment: ReadonlyArray<{ item: unknown; type: ItemType }>,
   player?: Player,
+  now?: number,
 ): PlayerSpecials {
   const wheel: WheelBonuses | undefined = player?.wheelBonuses;
+  // Canary overwrites SKILL_CRITICAL_HIT_CHANCE with 100 % while an avatar
+  // is active (player.cpp:7378-7381) and adds 5 %/stage crit damage.
+  const avatarStage =
+    player && now !== undefined && now < player.avatarUntil
+      ? Math.min(Math.max(player.avatarStage, 0), 3)
+      : 0;
   const criticalChance =
-    equipment.reduce(
-      (total, entry) => total + (entry.type.criticalHitChance ?? 0),
-      0,
-    ) / 100;
+    avatarStage > 0
+      ? 100
+      : equipment.reduce(
+          (total, entry) => total + (entry.type.criticalHitChance ?? 0),
+          0,
+        ) / 100;
   // Gem-supreme critical damage is additive with equipment, like Canary's
   // SKILL_CRITICAL_HIT_DAMAGE folding in WheelStat_t::CRITICAL_DAMAGE
   // (player.cpp:7365); Combat Mastery's two-handed leg rides the same skill
@@ -49,6 +61,7 @@ export function playerSpecials(
     50 +
     (wheel?.criticalDamagePercent ?? 0) +
     (player ? combatMasteryCriticalDamage(equipment, player) : 0) +
+    (avatarStage > 0 ? AVATAR_CRITICAL_DAMAGE[avatarStage - 1] ?? 0 : 0) +
     equipment.reduce(
       (total, entry) => total + (entry.type.criticalHitDamage ?? 0),
       0,

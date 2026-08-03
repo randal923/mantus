@@ -63,6 +63,7 @@ export function playerAttackPlan(
   player: Player,
   target: Creature,
   proficiency: ProficiencyPerkEffects = EMPTY_PROFICIENCY_EFFECTS,
+  now?: number,
 ): PlayerAttackPlan | null {
   const equipment = items.combatEquipment(player.id);
   const weapon = equipment.find(
@@ -70,7 +71,7 @@ export function playerAttackPlan(
       entry.item.location.kind === "equipment" &&
       entry.item.location.slot === "weapon",
   );
-  const equipmentSpecials = playerSpecials(equipment, player);
+  const equipmentSpecials = playerSpecials(equipment, player, now);
   // Running imbuements add rolled criticals on top of the equipment stats
   // (Feature 78); their always-on leech rides the wheel-style leg in
   // PlayerAutoAttack so the equipment leech keeps its own chance roll.

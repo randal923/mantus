@@ -28,6 +28,11 @@ import { playerForSession } from "./playerForSession";
 import { playerMagicLevel } from "./playerMagicLevel";
 import { playerSpecials } from "./playerSpecials";
 import { resolveSpellTarget } from "./resolveSpellTarget";
+import type { Creature } from "../creature/Creature";
+import type { DelayedSpellDetonation } from "./DelayedSpellDetonation";
+import type { ResolvedSpellTarget } from "./resolveSpellTarget";
+import type { WheelAugmentGrade } from "./wheelSpellAugments";
+import { wheelExecutionersThrowPercent } from "./wheelExecutionersThrow";
 import { skillForWeapon } from "./skillForWeapon";
 import type { SpellDefinition } from "./Spell";
 import { spellCondition } from "./spellCondition";
@@ -53,6 +58,10 @@ export class SpellCaster {
     private readonly conjuringSpellFor?: (
       runeItemTypeId: number,
     ) => SpellDefinition | undefined,
+    /** Hands fuse spells (Divine Grenade) to the tick-owned detonation queue. */
+    private readonly queueDetonation?: (
+      detonation: DelayedSpellDetonation,
+    ) => void,
   ) {}
 
   /** Reports whether the spell was actually cast; a false result was rejected. */
@@ -171,14 +180,26 @@ export class SpellCaster {
       minimum,
       Math.floor(Math.abs(spell.formula.maximum(variables))),
     );
+    if (spell.delayed) {
+      this.queueDelayedDetonation(
+        session,
+        player,
+        spell,
+        target,
+        augment,
+        equipment,
+        minimum,
+        maximum,
+        now,
+      );
+      this.feedback.sendFightState(session, now);
+      return true;
+    }
     // Beam Mastery and grade-2 augments swap in the upgraded combat area.
     const area = beamMastery?.area ?? augment.area ?? spell.area;
-    const affected = creaturesInArea(
-      this.world,
-      player.position,
-      target.position,
-      area,
-    );
+    const affected = spell.chain
+      ? this.chainAffected(session, player, spell, target, augment)
+      : creaturesInArea(this.world, player.position, target.position, area);
     const usesAreaEffect = area.shape !== "single";
     if (usesAreaEffect && spell.effectId > 0) {
       const effectPositions = areaPositions(
@@ -194,10 +215,15 @@ export class SpellCaster {
         this.visibility.broadcastMagicEffect(position, spell.effectId);
       }
     }
-    if (area.shape === "single" && target.creature && affected.length === 0) {
+    if (
+      !spell.chain &&
+      area.shape === "single" &&
+      target.creature &&
+      affected.length === 0
+    ) {
       affected.push(target.creature);
     }
-    const specials = playerSpecials(equipment, player);
+    const specials = playerSpecials(equipment, player, now);
     // Focus Mastery: the armed window boosts the next spell damage once
     // (Canary player_wheel.cpp:3313-3319); casting a focus-group spell arms
     // it for twelve seconds afterwards.
@@ -255,7 +281,10 @@ export class SpellCaster {
               (augment.criticalDamagePercent ?? 0),
             leechTargets: damageTargets.length,
             wheelDamagePercent:
-              (augment.damagePercent ?? 0) + beamPercent + focusMasteryPercent,
+              (augment.damagePercent ?? 0) +
+              beamPercent +
+              focusMasteryPercent +
+              wheelExecutionersThrowPercent(player, spell, creature),
             wheelHealingPercent: augment.healPercent ?? 0,
             wheelLifeLeechPercent: augment.lifeLeechPercent ?? 0,
             wheelManaLeechPercent: augment.manaLeechPercent ?? 0,
@@ -338,6 +367,122 @@ export class SpellCaster {
   }
 
   /**
+   * Arms a fuse spell (Divine Grenade): the impact position is clamped to
+   * the caster's side like Canary's getWithinRange, the roll is snapshotted,
+   * and the detonation itself runs in a later tick where every target is
+   * re-validated.
+   */
+  private queueDelayedDetonation(
+    session: Session,
+    player: Player,
+    spell: SpellDefinition,
+    target: ResolvedSpellTarget,
+    augment: WheelAugmentGrade,
+    equipment: Parameters<typeof playerSpecials>[0],
+    minimum: number,
+    maximum: number,
+    now: number,
+  ): void {
+    const delayed = spell.delayed;
+    if (!delayed || !this.queueDetonation) return;
+    const clamp = (delta: number) =>
+      Math.max(-delayed.clampRange, Math.min(delayed.clampRange, delta));
+    const position = {
+      x: player.position.x + clamp(target.position.x - player.position.x),
+      y: player.position.y + clamp(target.position.y - player.position.y),
+      z: player.position.z,
+    };
+    if (delayed.fuseEffectId > 0) {
+      this.visibility.broadcastMagicEffect(position, delayed.fuseEffectId);
+    }
+    const specials = playerSpecials(equipment, player, now);
+    this.queueDetonation({
+      executeAt: now + delayed.delayMs,
+      casterId: player.id,
+      position,
+      area: spell.area,
+      damageType: spell.damageType,
+      minimum,
+      maximum,
+      effectId: spell.effectId,
+      ignoreArmor: !spell.blockArmor,
+      ignoreShield: !spell.blockShield,
+      specials: {
+        ...specials,
+        criticalChance:
+          specials.criticalChance + (augment.criticalChance ?? 0),
+        criticalDamagePercent:
+          specials.criticalDamagePercent +
+          (augment.criticalDamagePercent ?? 0),
+      },
+      wheelDamagePercent: augment.damagePercent ?? 0,
+      wheelLifeLeechPercent: augment.lifeLeechPercent ?? 0,
+      wheelManaLeechPercent: augment.manaLeechPercent ?? 0,
+    });
+  }
+
+  /**
+   * Canary doCombatChain target picking: nearest first, each hop within
+   * `hopDistance` of the previous target, never revisiting one, and every
+   * candidate re-checked against the harm rules at execution time.
+   */
+  private chainAffected(
+    session: Session,
+    player: Player,
+    spell: SpellDefinition,
+    target: ResolvedSpellTarget,
+    augment: WheelAugmentGrade,
+  ): Creature[] {
+    const chain = spell.chain;
+    if (!chain) return [];
+    const limit = chain.maxTargets + (augment.additionalTargets ?? 0);
+    const distance = (from: Creature | Player, to: Creature) =>
+      Math.max(
+        Math.abs(from.position.x - to.position.x),
+        Math.abs(from.position.y - to.position.y),
+      );
+    const targets: Creature[] = [];
+    const visited = new Set([player.id]);
+    let current: Creature | Player = player;
+    if (target.creature && target.creature !== player) {
+      if (
+        !canPlayerHarm(this.world, session, player, target.creature, this.pvpHooks)
+      ) {
+        return [];
+      }
+      targets.push(target.creature);
+      visited.add(target.creature.id);
+      current = target.creature;
+    }
+    while (targets.length < limit) {
+      const next = this.world
+        .creaturesNear(current.position, {
+          x: chain.hopDistance,
+          y: chain.hopDistance,
+        })
+        .filter(
+          (creature) =>
+            !visited.has(creature.id) &&
+            creature.health > 0 &&
+            creature.position.z === current.position.z &&
+            isInRange(current.position, creature.position, chain.hopDistance) &&
+            canPlayerHarm(this.world, session, player, creature, this.pvpHooks) &&
+            this.world.hasLineOfSight(current.position, creature.position),
+        )
+        .sort(
+          (left, right) =>
+            distance(current, left) - distance(current, right) ||
+            left.id.localeCompare(right.id),
+        )[0];
+      if (!next) break;
+      targets.push(next);
+      visited.add(next.id);
+      current = next;
+    }
+    return targets;
+  }
+
+  /**
    * Floor-moving spells (magic rope, levitate). The movement attempt runs
    * before resources are spent; everything here is synchronous inside the
    * tick and mana/soul were pre-checked, so success can never underpay.
@@ -379,7 +524,13 @@ export class SpellCaster {
     if (!player.spendMana(spell.manaCost) || !player.spendSoul(spell.soulCost)) {
       throw new Error("world spell resources diverged");
     }
-    applySpellCooldowns(this.feedback, session, spell, now);
+    // Wheel grades shorten procedural-spell cooldowns too (Divine Dazzle's
+    // grade 2, the avatars' 30-minute revelation steps).
+    const augment = wheelSpellAugmentFor(player, spell);
+    applySpellCooldowns(this.feedback, session, spell, now, {
+      spellMs: augment.cooldownReductionMs ?? 0,
+      secondaryGroupMs: augment.secondaryGroupCooldownReductionMs ?? 0,
+    });
     if (spell.manaCost > 0) {
       this.progression.awardMagicProgress(
         player.id,

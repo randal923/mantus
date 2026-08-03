@@ -1,6 +1,8 @@
 import type { Player } from "../Player";
 import type { SpellDefinition } from "./Spell";
 import {
+  WHEEL_AREA_BEAM7,
+  WHEEL_AREA_BEAM8,
   WHEEL_AREA_CIRCLE5X5,
   WHEEL_AREA_WAVE7,
 } from "./wheelUpgradedAreas";
@@ -42,8 +44,7 @@ interface WheelSpellAugment {
  * the revelation bonus registrations in player_wheel.cpp (grades 2-3 for
  * Twin Burst). Values follow Canary's units: percents raw, cooldowns in ms,
  * leech in percent. Unsupported spells (Sharpshooter, Swift Foot, Mass
- * Healing, Great Death Beam, the Monk set) gain their augments when they
- * ship.
+ * Healing, the augment-pair Monk set) gain their augments when they ship.
  */
 const AUGMENTS_BY_SPELL_ID: Readonly<Record<string, WheelSpellAugment>> = {
   // --- Knight (io_wheel.cpp:256-276) ----------------------------------
@@ -167,6 +168,96 @@ const AUGMENTS_BY_SPELL_ID: Readonly<Record<string, WheelSpellAugment>> = {
       {},
       { cooldownReductionMs: 4_000, secondaryGroupCooldownReductionMs: 4_000 },
       { cooldownReductionMs: 4_000, secondaryGroupCooldownReductionMs: 4_000 },
+    ],
+  },
+  // --- Revelation actives (player_wheel.cpp:2181-2374) ----------------
+  // Grade equals the revelation stage for these, so the stage-driven
+  // addSpellBonus cooldown steps translate directly into grade steps.
+  "exori-amp-kor": {
+    grantName: "Executioner's Throw",
+    grades: [
+      {},
+      { cooldownReductionMs: 4_000, additionalTargets: 1 },
+      { cooldownReductionMs: 4_000, additionalTargets: 1 },
+    ],
+  },
+  // Damage folds Canary's per-grade Lua multiplier (1.3/1.6/2.0) together
+  // with the checkDivineGrenade stage bonus (+30/60/100 %): both stack
+  // multiplicatively there, so the cumulative percents are 69/156/300.
+  "exevo-tempo-mas-san": {
+    grantName: "Divine Grenade",
+    grades: [
+      { damagePercent: 69 },
+      { damagePercent: 87, cooldownReductionMs: 6_000 },
+      { damagePercent: 144, cooldownReductionMs: 6_000 },
+    ],
+  },
+  "exevo-max-mort": {
+    grantName: "Great Death Beam",
+    grades: [
+      {},
+      { damagePercent: 6, cooldownReductionMs: 2_000, area: WHEEL_AREA_BEAM7 },
+      { damagePercent: 6, cooldownReductionMs: 2_000, area: WHEEL_AREA_BEAM8 },
+    ],
+  },
+  "exori-gran-mas-nia": {
+    grantName: "Spiritual Outburst",
+    grades: [
+      {},
+      { cooldownReductionMs: 4_000 },
+      { cooldownReductionMs: 4_000 },
+    ],
+  },
+  // Divine Empowerment's grade is stage + 1 (the blue extra grant), so the
+  // grade-3 step covers stages 2 and 3 alike; Canary's stage-3 values
+  // (24 s cooldown, +12 % damage) are unreachable through spellGrades and
+  // stay a recorded deviation.
+  "utevo-grav-san": {
+    grantName: "Divine Empowerment",
+    grades: [
+      {},
+      {},
+      { cooldownReductionMs: 4_000, conditionDamageDealtPercent: 110 },
+    ],
+  },
+  "uteta-res-eq": {
+    grantName: "Avatar of Steel",
+    grades: [
+      {},
+      { cooldownReductionMs: 1_800_000 },
+      { cooldownReductionMs: 1_800_000 },
+    ],
+  },
+  "uteta-res-sac": {
+    grantName: "Avatar of Light",
+    grades: [
+      {},
+      { cooldownReductionMs: 1_800_000 },
+      { cooldownReductionMs: 1_800_000 },
+    ],
+  },
+  "uteta-res-ven": {
+    grantName: "Avatar of Storm",
+    grades: [
+      {},
+      { cooldownReductionMs: 1_800_000 },
+      { cooldownReductionMs: 1_800_000 },
+    ],
+  },
+  "uteta-res-dru": {
+    grantName: "Avatar of Nature",
+    grades: [
+      {},
+      { cooldownReductionMs: 1_800_000 },
+      { cooldownReductionMs: 1_800_000 },
+    ],
+  },
+  "uteta-res-tio": {
+    grantName: "Avatar of Balance",
+    grades: [
+      {},
+      { cooldownReductionMs: 1_800_000 },
+      { cooldownReductionMs: 1_800_000 },
     ],
   },
 };

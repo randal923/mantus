@@ -186,6 +186,8 @@ export class DeathHandler {
     this.pvpHooks?.applyRespawnState(target);
     target.invulnerableUntil = now + PLAYER_DEATH_INVULNERABILITY_MS;
     target.nextAttackAt = target.invulnerableUntil;
+    target.avatarStage = 0;
+    target.avatarUntil = 0;
     const spawn = this.world.findSpawn(this.world.templePosition);
     if (spawn) {
       const from = this.world.relocateCreature(target, spawn);

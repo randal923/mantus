@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { spellCatalogEntrySchema } from "@tibia/protocol";
+import {
+  REVELATION_SPELL_GRADES,
+  WHEEL_BASE_VOCATION,
+  spellCatalogEntrySchema,
+} from "@tibia/protocol";
 import { Player } from "../../Player";
 import { makeCharacter } from "../../test/makeCharacter";
 import { SpellRegistry } from "../SpellRegistry";
@@ -25,7 +29,7 @@ describe("spell definitions", () => {
     const magicRope = spells.find((spell) => spell.name === "Magic Rope");
     const levitate = spells.find((spell) => spell.name === "Levitate");
 
-    expect(spells).toHaveLength(169);
+    expect(spells).toHaveLength(179);
     expect(magicRope).toMatchObject({
       id: "exani-tera",
       worldAction: "magic-rope",
@@ -156,6 +160,32 @@ describe("spell definitions", () => {
     expect(balancedBrawl?.area.offsets).toHaveLength(51);
     expect(balancedBrawl?.area.offsets).not.toContainEqual({ x: 0, y: 0 });
     expect(balancedBrawl?.area.offsets).toContainEqual({ x: 0, y: -5 });
+  });
+
+  /**
+   * Every castable Wheel of Destiny revelation grant has a definition for
+   * exactly its vocation pair, gated on the granting domain. "Drain Body"
+   * is the one non-spell grant: it upgrades Sap Strength / Expose Weakness
+   * leech instead of being castable itself.
+   */
+  it("implements every castable wheel revelation grant per vocation", () => {
+    const byName = new Map(SPELL_DEFINITIONS.map((spell) => [spell.name, spell]));
+    for (const grant of REVELATION_SPELL_GRADES) {
+      for (const name of grant.spells) {
+        if (name === "Drain Body") continue;
+        const spell = byName.get(name);
+        expect(spell, `missing revelation spell: ${name}`).toBeDefined();
+        expect(spell?.wheelRevelation, name).toEqual({
+          domain: grant.domain,
+          minimumStage: 1,
+        });
+        const bases = new Set(
+          spell?.vocations.map((vocation) => WHEEL_BASE_VOCATION[vocation]),
+        );
+        expect([...bases], name).toEqual([grant.vocation]);
+        expect(spell?.vocations, name).toHaveLength(2);
+      }
+    }
   });
 
   /**

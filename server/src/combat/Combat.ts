@@ -35,7 +35,9 @@ import type { World } from "../World";
 import { positionKey } from "../positionKey";
 import { areaPositions } from "./areaPositions";
 import { canMonsterAffect } from "./canMonsterAffect";
+import { canPlayerHarm } from "./canPlayerHarm";
 import { canPlayerTarget } from "./canPlayerTarget";
+import type { DelayedSpellDetonation } from "./DelayedSpellDetonation";
 import { ChaseController } from "./ChaseController";
 import { CombatFeedback } from "./CombatFeedback";
 import {
@@ -134,6 +136,7 @@ export class Combat {
     readonly playerId: string;
     readonly position: Position;
   }> = [];
+  private readonly queuedDetonations: DelayedSpellDetonation[] = [];
   private readonly lastFieldByCreature = new WeakMap<Creature, string>();
   private readonly nextGiftOfLifeTickAt = new WeakMap<Player, number>();
   private readonly nextMomentumRollAt = new WeakMap<Player, number>();
@@ -253,6 +256,9 @@ export class Combat {
       partyHooks,
       this.formula,
       (runeItemTypeId) => this.spells.conjuringSpellFor(runeItemTypeId),
+      (detonation) => {
+        this.queuedDetonations.push(detonation);
+      },
     );
     this.playerActions = new PlayerSpellActions(
       world,
@@ -742,6 +748,7 @@ export class Combat {
 
   tick(now: number): void {
     this.executeQueuedMonsterAbilities(now);
+    this.executeQueuedDetonations(now);
     this.executeQueuedTeleports(now);
     this.world.combatFields.tick(now);
     for (const creature of this.world.allCreatures()) {
@@ -1760,6 +1767,61 @@ export class Combat {
         entry.targetAlreadyValidated,
         entry.pathOrigin,
       );
+    }
+  }
+
+  /**
+   * Fuse-spell detonations (Divine Grenade): the caster and every creature
+   * in the blast are re-resolved from live world state when the fuse runs
+   * out; a caster who logged out or died takes the grenade with them.
+   */
+  private executeQueuedDetonations(now: number): void {
+    for (const detonation of drainDue(this.queuedDetonations, now)) {
+      const caster = this.world.getPlayer(detonation.casterId);
+      const session = caster
+        ? this.registry.sessionFor(caster.id)
+        : undefined;
+      if (!caster || !session || caster.health <= 0) continue;
+      const positions = areaPositions(
+        detonation.position,
+        detonation.position,
+        detonation.area,
+      ).filter(
+        (position) =>
+          this.world.getTile(position) &&
+          this.world.hasLineOfSight(detonation.position, position),
+      );
+      for (const position of positions) {
+        this.visibility.broadcastMagicEffect(position, detonation.effectId);
+      }
+      const targets = creaturesInArea(
+        this.world,
+        detonation.position,
+        detonation.position,
+        detonation.area,
+      ).filter((creature) =>
+        canPlayerHarm(this.world, session, caster, creature, this.pvpHooks),
+      );
+      for (const creature of targets) {
+        this.damage.applyDamage(
+          creature,
+          {
+            sourceId: caster.id,
+            origin: "spell",
+            type: detonation.damageType,
+            minimum: detonation.minimum,
+            maximum: detonation.maximum,
+            ignoreArmor: detonation.ignoreArmor,
+            ignoreShield: detonation.ignoreShield,
+            ...detonation.specials,
+            leechTargets: targets.length,
+            wheelDamagePercent: detonation.wheelDamagePercent,
+            wheelLifeLeechPercent: detonation.wheelLifeLeechPercent,
+            wheelManaLeechPercent: detonation.wheelManaLeechPercent,
+          },
+          now,
+        );
+      }
     }
   }
 

@@ -330,6 +330,19 @@ export class DamageResolver {
       }
       amount += source.wheelBonuses.damageAndHealing;
     }
+    // In-avatar damage reduction: 5 %/purple-stage off the final amount
+    // (Canary PlayerWheel::checkAvatarSkill DAMAGE_REDUCTION, applied in
+    // adjustDamageBasedOnResistanceAndSkill after every block step).
+    if (
+      target instanceof Player &&
+      amount > 0 &&
+      request.type !== "mana-drain" &&
+      now < target.avatarUntil &&
+      target.avatarStage > 0
+    ) {
+      const reduction = 5 * Math.min(target.avatarStage, 3);
+      amount -= Math.ceil((amount * reduction) / 100);
+    }
     if (target instanceof Monster && amount > 0) {
       amount = this.monsterEventHooks?.beforeMonsterDamage(
         target,

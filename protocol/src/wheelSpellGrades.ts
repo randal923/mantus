@@ -64,7 +64,7 @@ export const WHEEL_AUGMENT_SPELLS: ReadonlyArray<
  * many times (player_wheel.cpp:2714-2791). Divine Empowerment and Drain
  * Body use Canary's `i <= stageValue` loop, i.e. stage + 1 grants.
  */
-const REVELATION_SPELL_GRADES: ReadonlyArray<{
+export const REVELATION_SPELL_GRADES: ReadonlyArray<{
   readonly domain: WheelDomain;
   readonly vocation: WheelBaseVocation;
   readonly spells: ReadonlyArray<string>;

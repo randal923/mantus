@@ -20,9 +20,10 @@ export interface WheelBeamMastery {
 }
 
 /**
- * The Sorcerer red revelation. Active from stage 1 for Energy Beam and
- * Great Energy Beam (Great Death Beam joins when that spell ships); read
- * from the server-owned wheel state at cast time.
+ * The Sorcerer red revelation. Active from stage 1 for Energy Beam, Great
+ * Energy Beam, and Great Death Beam (Canary m_beamMasterySpells); read from
+ * the server-owned wheel state at cast time. Great Death Beam's length is
+ * grade-driven through its augment areas, so it keeps `area: null` here.
  */
 export function wheelBeamMasteryFor(
   player: Player,
@@ -31,13 +32,19 @@ export function wheelBeamMasteryFor(
   if (WHEEL_BASE_VOCATION[player.vocation] !== "Sorcerer") return null;
   const stage = player.wheelBonuses.revelationStages.red;
   if (stage < 1) return null;
+  if (
+    spell.id !== "exevo-vis-lux" &&
+    spell.id !== "exevo-gran-vis-lux" &&
+    spell.id !== "exevo-max-mort"
+  ) {
+    return null;
+  }
   const area =
     spell.id === "exevo-vis-lux"
       ? WHEEL_AREA_BEAM7
       : spell.id === "exevo-gran-vis-lux"
         ? WHEEL_AREA_BEAM10
         : null;
-  if (!area) return null;
   return {
     area,
     damagePercentPerTarget:
