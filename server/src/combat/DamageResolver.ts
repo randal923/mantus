@@ -172,13 +172,15 @@ export class DamageResolver {
     const source = request.sourceId
       ? this.world.getCreature(request.sourceId)
       : undefined;
-    if (
-      source instanceof Player &&
-      target instanceof Player &&
-      request.type !== "healing"
-    ) {
-      amount = Math.round(amount / 2);
-    }
+    // PvP damage halving (Canary parity) — disabled: player-vs-player hits
+    // now land at full damage. Uncomment to restore.
+    // if (
+    //   source instanceof Player &&
+    //   target instanceof Player &&
+    //   request.type !== "healing"
+    // ) {
+    //   amount = Math.round(amount / 2);
+    // }
     // Canary buff conditions scale the roll before mitigation: the caster's
     // outgoing buff, then the victim's incoming buff. Both are server-owned
     // conditions, so a client can never influence either factor.
