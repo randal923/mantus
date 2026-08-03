@@ -51,6 +51,47 @@ describe("loadItemCatalog", () => {
     expect(catalog.require(3031).stowable).toBeUndefined();
   });
 
+  it("mints this server's own exercise tiers over a stock appearance", () => {
+    const lasting = catalog.require(35_285);
+    const epic = catalog.require(60_002);
+
+    expect(epic).toMatchObject({
+      id: 60_002,
+      // Its own id is what the client aliases, so both sides agree on one key.
+      clientId: 60_002,
+      name: "epic exercise sword",
+      charges: 14_000,
+      spriteId: lasting.spriteId,
+      weight: lasting.weight,
+      pickupable: true,
+    });
+    expect(epic.description).toContain("twice as fast");
+    expect(catalog.require(60_102)).toMatchObject({
+      name: "legendary exercise sword",
+      charges: 30_000,
+    });
+  });
+
+  it("counts a charged item's own charges, not its type's, in the tooltip", () => {
+    const type = catalog.require(60_002);
+
+    expect(toItemTooltip(type).charges).toBe(14_000);
+    expect(
+      toItemTooltip(type, {
+        id: "00000000-0000-4000-8000-000000000001",
+        typeId: 60_002,
+        count: 1,
+        attributes: { charges: 13_998 },
+        version: 4,
+        location: {
+          kind: "container",
+          containerId: "00000000-0000-4000-8000-000000000002",
+          slot: 0,
+        },
+      }).charges,
+    ).toBe(13_998);
+  });
+
   it("projects server-owned potion resource metadata for configuration UIs", () => {
     const baseItem = {
       id: "00000000-0000-4000-8000-000000000001",

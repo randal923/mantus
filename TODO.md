@@ -811,6 +811,31 @@ limitations accepted during a session are recorded in the owning feature file
   their services only need `items.setBankBalance` + a `bank-updated` send;
   forge, house and NPC travel additionally have to return the post-debit
   balance their SQL already reads. Owner: economy/bank.
+- **A training exercise weapon pushes a full inventory per charge write**
+  (2026-08-02). Every charge write commits through `ItemIntentHandler
+  .consumeCharges`, and `ItemOperationRunner` answers every committed mutation
+  with a whole `inventory-updated` — equipment, open containers and the carried
+  summary, tens of kilobytes. Bundling capped how often that happens (one
+  message per bundle, not per hit: ~5/s at the epic tier's 200 ms pace against
+  a fast database, fewer against a slow one), so this is no longer urgent, but
+  it still scales with the number of players training at once. No correctness
+  risk: the charge spend is one serializable transaction and the client applies
+  each snapshot through the optimistic queue as before. Recommended fix: a
+  compact `item-charges { itemId, revision, charges }` server message that
+  patches the one item in place, sent instead of the full snapshot while the
+  item survives — with the full `inventory-updated` kept for the write that
+  destroys it, and the client patch routed through `actions.inventory` so the
+  optimistic queue still sees the revision bump. Owner: items/inventory.
+- **A custom item tier's tint is applied by DOM icons only** (2026-08-02).
+  `spriteCellIconStore` bakes `CustomItemAppearance.tint` into the crop it
+  makes, so the epic and legendary exercise weapons animate their spark in
+  purple and dark orange in the inventory, the store and tooltips. The Pixi
+  world renderer bakes its own frames in `AssetStore.bakeFrame` and knows
+  nothing of tints, so one of these weapons lying on the ground still shows the
+  stock magenta spark. Cosmetic only. Recommended fix: `bakeFrame` already
+  takes an optional colour transform for outfit masks — give it the same
+  `tintSpritePixels` pass keyed by the item's client id, and have the frame
+  cache key include the tint. Owner: client/rendering.
 
 
 ## Repo-wide known breakage

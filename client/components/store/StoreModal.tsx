@@ -131,6 +131,11 @@ export function StoreModal({
             </div>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col">
+              {session.categoryId === null && (
+                <p className="mb-3 shrink-0 border border-ui-gold/15 bg-black/25 px-4 py-3 text-sm leading-6 text-ui-muted">
+                  {t("store.description")}
+                </p>
+              )}
               <ul className="ui-scrollbar grid min-h-0 flex-1 auto-rows-min grid-cols-1 gap-3 overflow-y-auto pr-1 xl:grid-cols-2">
                 {products.map((product) => (
                   <StoreProductRow

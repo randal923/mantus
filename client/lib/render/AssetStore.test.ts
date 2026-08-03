@@ -32,6 +32,20 @@ const objectsFile = {
       flags: { ground: false, groundSpeed: 0 },
       sprites: [1],
     },
+    {
+      // The lasting exercise sword, whose art the server's epic tier borrows.
+      category: "item",
+      clientId: 35_285,
+      width: 1,
+      height: 1,
+      layers: 1,
+      px: 0,
+      py: 0,
+      pz: 0,
+      phases: 1,
+      flags: { ground: false, groundSpeed: 0 },
+      sprites: [7],
+    },
   ],
 };
 
@@ -57,7 +71,7 @@ const route = (url: string, manifestOk = true) => {
   return { ok: false };
 };
 
-describe("AssetStore cache-busting", () => {
+describe("AssetStore", () => {
   const fetchMock = vi.fn();
 
   beforeEach(() => {
@@ -121,6 +135,21 @@ describe("AssetStore cache-busting", () => {
     expect(urls).toContain(`/assets/objects.json`);
     expect(urls).toContain(`/assets/atlas-0.png`);
     expect(urls.some((url) => url.includes("?v="))).toBe(false);
+  });
+
+  it("draws a server-added item id as the appearance it aliases", async () => {
+    fetchMock.mockImplementation(async (url: string) => route(url));
+
+    const store = new AssetStore();
+    await store.load();
+
+    // 60002 is the epic exercise sword: past the ripped appearance range, so
+    // only the alias makes its id resolvable at all.
+    expect(store.item(60_002)).toMatchObject({
+      clientId: 60_002,
+      sprites: [7],
+    });
+    expect(() => store.item(60_003)).toThrow("unknown item");
   });
 
   it("retries one failed atlas sheet load for every waiting creature", async () => {

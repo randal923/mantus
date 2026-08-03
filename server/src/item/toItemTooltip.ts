@@ -1,6 +1,7 @@
 import type { ItemTooltipData } from "@tibia/protocol";
 import { itemImbuementsOf } from "../forge/itemImbuementsOf";
 import { itemTierOf } from "../forge/itemTierOf";
+import { chargesOf } from "./chargesOf";
 import type { Item } from "./Item";
 import type { ItemType } from "./ItemType";
 
@@ -132,7 +133,11 @@ export function toItemTooltip(
       : item.description
         ? { description: item.description }
         : {}),
-    ...(item.charges !== undefined ? { charges: item.charges } : {}),
+    // What this one has left, not what the type ships with: an item losing a
+    // charge sends a fresh inventory, so the count ticks down while training.
+    ...(item.charges !== undefined
+      ? { charges: instance ? chargesOf(instance, item.charges) : item.charges }
+      : {}),
     ...(item.containerCapacity !== undefined
       ? { containerCapacity: item.containerCapacity }
       : {}),

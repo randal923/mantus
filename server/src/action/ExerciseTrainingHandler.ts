@@ -25,29 +25,50 @@ const START_EXHAUST_MS = 10_000;
 const MAX_PLAYERS_PER_HOUSE_DUMMY = 1;
 /** The free dummy's rate; anything above it is a house dummy. */
 const FREE_DUMMY_RATE = 100;
-/** CONST_ME_HITAREA, the puff Canary draws on the dummy every tick. */
-const HIT_EFFECT_ID = 10;
 /** Canary allowFarUse still requires the same floor and line of sight. */
 const FAR_USE_RANGE = { x: 7, y: 5 } as const;
+
+/** Charges one write may buy, so a stall cannot spend a weapon outright. */
+const MAX_CHARGES_PER_WRITE = 64;
 
 interface ActiveTraining {
   readonly weaponItemId: string;
   readonly weaponTypeId: number;
   readonly dummyPosition: Position;
   readonly dummyTypeId: number;
+  /** When the next paid-for hit is drawn. */
   nextAt: number;
+  /** Charges committed and awarded, whose hits have not been drawn yet. */
+  creditedHits: number;
+  /** How long the last charge write took, which sets the next bundle's size. */
+  lastWriteMs: number;
+  writeStartedAt: number | null;
+  /** True once a write spent the weapon's last charge and removed the row. */
+  spentOut: boolean;
 }
 
 /**
  * Exercise-weapon training, ported from Canary's
  * `data/scripts/actions/items/exercise_training_weapons.lua`.
  *
- * Every rule is re-checked on the tick that awards, not when the intent
- * arrived (charter rule 4): the dummy must still be on its tile, the trainer
- * must still stand in a protection zone, and the weapon must still be carried
- * at the revision the charge is spent against. The charge is spent by a single
+ * Every rule is re-checked on the tick that pays, not when the intent arrived
+ * (charter rule 4): the dummy must still be on its tile, the trainer must
+ * still stand in a protection zone, and the weapon must still be carried at
+ * the revision the charges are spent against. Charges are spent by a single
  * atomic store operation and the skill is awarded only once that commits, so a
  * failed write can never hand out free progress.
+ *
+ * Charges are bought in bundles rather than one per hit. One charge write is a
+ * serializable transaction, so its round trip — a millisecond against a local
+ * database, near half a second against a remote one — used to be the real
+ * ceiling on the training rate: a tier could only hit as fast as the database
+ * answered, which made the fast tiers no faster than the slow ones wherever
+ * the database was not next door. Each write now buys
+ * as many charges as the previous write's latency covers, the tick draws and
+ * paces the hits it has already paid for, and the bundle collapses to a single
+ * charge when the database is quick. Charges are always deducted and awarded
+ * before their hits are drawn, so a crash or a logout mid-bundle can only cost
+ * the player the drawing, never hand out an unpaid try.
  */
 export class ExerciseTrainingHandler {
   private readonly active = new Map<string, ActiveTraining>();
@@ -114,6 +135,10 @@ export class ExerciseTrainingHandler {
       dummyTypeId: dummy.typeId,
       // Canary's first addEvent fires with no delay.
       nextAt: now,
+      creditedHits: 0,
+      lastWriteMs: 0,
+      writeStartedAt: null,
+      spentOut: false,
     });
     this.say(session, "You have started training on an exercise dummy.");
     return true;
@@ -127,7 +152,6 @@ export class ExerciseTrainingHandler {
 
   tick(now: number): void {
     for (const [playerId, training] of this.active) {
-      if (now < training.nextAt) continue;
       this.runTrainingTick(playerId, training, now);
     }
   }
@@ -141,6 +165,15 @@ export class ExerciseTrainingHandler {
     const session = this.registry.sessionFor(playerId);
     if (!player || !session) {
       this.active.delete(playerId);
+      return;
+    }
+    const definition = getExerciseWeaponDefinition(training.weaponTypeId);
+    if (!definition) {
+      this.finish(
+        playerId,
+        session,
+        "The selected item is not a training weapon, the training has stopped.",
+      );
       return;
     }
     const dummy = this.dummyAt(training.dummyPosition);
@@ -160,63 +193,108 @@ export class ExerciseTrainingHandler {
       );
       return;
     }
+
+    // A faster tier shortens the interval and nothing else: the same tries per
+    // hit against the same charge, simply landed more often.
+    const intervalMs = exerciseTrainingIntervalMs(
+      player.progression.attackSpeedMs,
+      this.speedRate * definition.speedMultiplier,
+    );
+    if (training.creditedHits > 0 && now >= training.nextAt) {
+      training.creditedHits -= 1;
+      this.drawTrainingHit(player, training, definition);
+      // Scheduled from the last due time rather than from `now`, so an
+      // interval shorter than the tick averages out instead of rounding up to
+      // a whole tick. Clamped to `now` so a stall cannot bank a backlog to
+      // repay in a burst.
+      training.nextAt = Math.max(now, training.nextAt + intervalMs);
+    }
+
     const weapon = this.items
       .inventorySnapshot(playerId)
       ?.items.find((candidate) => candidate.id === training.weaponItemId);
     if (!weapon || weapon.typeId !== training.weaponTypeId) {
+      // Hits already paid for still land: the charges are spent either way,
+      // and stopping mid-bundle would swallow the animation the player bought.
+      if (training.creditedHits > 0) return;
       this.finish(
         playerId,
         session,
-        "You need the training weapon in the backpack, the training has stopped.",
+        training.spentOut
+          ? "Your training weapon has disappeared."
+          : "You need the training weapon in the backpack, the training has stopped.",
       );
       return;
     }
-    const definition = getExerciseWeaponDefinition(weapon.typeId);
-    if (!definition) {
-      this.finish(
-        playerId,
-        session,
-        "The selected item is not a training weapon, the training has stopped.",
-      );
+    if (training.writeStartedAt !== null) return;
+    const available = chargesOf(
+      weapon,
+      this.catalog.require(weapon.typeId).charges,
+    );
+    if (available < 1) {
+      if (training.creditedHits === 0) {
+        this.finish(playerId, session, "Your training weapon has disappeared.");
+      }
       return;
     }
-    const remaining =
-      chargesOf(weapon, this.catalog.require(weapon.typeId).charges) - 1;
-    if (remaining < 0) {
-      this.finish(
-        playerId,
-        session,
-        "Your training weapon has disappeared.",
-      );
-      return;
-    }
+
+    // Buy ahead by exactly the last write's round trip. One charge write is a
+    // serializable transaction, so waiting for each one before drawing the
+    // next hit caps the rate at the database's latency — half a second per hit
+    // against a remote database, which is what made the fast tiers no faster
+    // than the slow ones. A quick database measures ~0ms and falls back to one
+    // charge per write, exactly as before.
+    const dueOfNextUnpaid = training.nextAt + training.creditedHits * intervalMs;
+    if (now + training.lastWriteMs < dueOfNextUnpaid) return;
+    const wanted = Math.min(
+      MAX_CHARGES_PER_WRITE,
+      available,
+      Math.max(1, Math.ceil(training.lastWriteMs / intervalMs)),
+    );
+
     // An item write already in flight for this character would race the charge
-    // decrement, so `consumeCharge` declines and this tick simply retries on
+    // decrement, so `consumeCharges` declines and this tick simply retries on
     // the next one rather than spending against a stale revision.
-    const started = this.items.consumeCharge(
+    training.writeStartedAt = now;
+    const started = this.items.consumeCharges(
       session,
       weapon.id,
       weapon.version,
-      (committedAt) =>
-        this.awardTrainingTick(playerId, training, definition, dummy.rate, committedAt),
+      wanted,
+      (spent, committedAt) => {
+        training.lastWriteMs = Math.max(0, committedAt - now);
+        training.writeStartedAt = null;
+        training.creditedHits += spent;
+        training.spentOut ||= !this.items
+          .inventorySnapshot(playerId)
+          ?.items.some((candidate) => candidate.id === training.weaponItemId);
+        this.awardTrainingHits(
+          playerId,
+          training,
+          definition,
+          dummy.rate,
+          spent,
+          committedAt,
+        );
+      },
     );
-    if (!started) return;
-    training.nextAt =
-      now + exerciseTrainingIntervalMs(player.progression.attackSpeedMs, this.speedRate);
-    if (remaining === 0) {
-      this.finish(playerId, session, "Your training weapon has disappeared.");
-    }
+    if (!started) training.writeStartedAt = null;
   }
 
-  private awardTrainingTick(
+  /**
+   * Credits the tries the committed charges bought. Awarded whole rather than
+   * as each hit is drawn: the charges are already spent, so holding progress
+   * back would let a logout mid-bundle lose tries the player paid for.
+   */
+  private awardTrainingHits(
     playerId: string,
     training: ActiveTraining,
     definition: ExerciseWeaponDefinition,
     dummyRate: number,
+    hits: number,
     now: number,
   ): void {
-    const player = this.world.getPlayer(playerId);
-    if (!player) return;
+    if (hits < 1) return;
     const gain = computeExerciseTrainingGain({
       target: definition.target,
       dummyRate,
@@ -227,18 +305,29 @@ export class ExerciseTrainingHandler {
         playerId,
         eventId,
         gain.skill,
-        gain.skillTries,
+        gain.skillTries * hits,
         now,
       );
     } else if (gain.magicManaSpent > 0) {
       this.progression.awardMagicProgress(
         playerId,
         eventId,
-        gain.magicManaSpent,
+        gain.magicManaSpent * hits,
         now,
       );
     }
-    this.visibility.broadcastMagicEffect(training.dummyPosition, HIT_EFFECT_ID);
+  }
+
+  /** One paid-for hit landing on the dummy; decoration, never progress. */
+  private drawTrainingHit(
+    player: { readonly id: string; readonly position: Position },
+    training: ActiveTraining,
+    definition: ExerciseWeaponDefinition,
+  ): void {
+    this.visibility.broadcastMagicEffect(
+      training.dummyPosition,
+      definition.hitEffectId,
+    );
     if (definition.missileId > 0) {
       this.visibility.broadcastDistanceMissile(
         player.position,

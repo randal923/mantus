@@ -1,3 +1,4 @@
+import { CUSTOM_ITEM_APPEARANCES } from "@tibia/protocol";
 import { Rectangle, Texture } from "pixi.js";
 import { addonPatternYs } from "./addonPatternYs";
 import type { AppearanceAnimationEntry } from "./decodeAppearanceAnimation";
@@ -194,6 +195,12 @@ export class AssetStore {
       else if (o.category === "outfit") this.outfits.set(o.clientId, o);
       else if (o.category === "effect") this.effects.set(o.clientId, o);
       else if (o.category === "missile") this.missiles.set(o.clientId, o);
+    }
+    // Server-added item types live above the ripped appearance range and draw
+    // as an existing object; without the alias their id resolves to nothing.
+    for (const alias of CUSTOM_ITEM_APPEARANCES) {
+      const base = this.items.get(alias.appearanceOf);
+      if (base) this.items.set(alias.typeId, { ...base, clientId: alias.typeId });
     }
   }
 

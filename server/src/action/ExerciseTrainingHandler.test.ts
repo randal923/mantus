@@ -19,6 +19,8 @@ import { ExerciseTrainingHandler } from "./ExerciseTrainingHandler";
 
 const EXERCISE_SWORD = 28_552;
 const EXERCISE_ROD = 28_556;
+const EPIC_EXERCISE_SWORD = 60_002;
+const LEGENDARY_EXERCISE_BOW = 60_106;
 const EXERCISE_DUMMY = 28_558;
 const BACKPACK_ID = "00000000-0000-4000-8000-000000000099";
 const WEAPON_ID = "00000000-0000-4000-8000-000000000001";
@@ -146,12 +148,16 @@ async function makeHarness(
   session.knownCreatureIds.add("actor");
   items.attach(await items.load("actor", 400));
 
-  /** Runs one training tick and lets its store operation commit. */
-  const tick = async (now: number) => {
+  /**
+   * Runs one training tick and lets its store operation commit. `commitAt`
+   * moves the clock the outcome lands on, which is how a slow charge write is
+   * simulated: the handler measures the round trip from exactly that gap.
+   */
+  const tick = async (now: number, commitAt = now) => {
     training.tick(now);
     // `load` awaits the character's in-flight store operation first.
     await items.load("actor", 400);
-    items.applyResolvedOutcomes(now);
+    items.applyResolvedOutcomes(commitAt);
   };
 
   const use = (now: number, target: Position = DUMMY_POSITION) =>
@@ -166,10 +172,13 @@ async function makeHarness(
       now,
     );
 
-  const chargesLeft = () =>
-    items
+  /** Charges left on the training weapon; 0 once it has been spent away. */
+  const chargesLeft = (): number => {
+    const stored = items
       .inventorySnapshot("actor")
       ?.items.find((item) => item.id === WEAPON_ID)?.attributes.charges;
+    return typeof stored === "number" ? stored : 0;
+  };
 
   return {
     training,
@@ -195,7 +204,9 @@ describe("ExerciseTrainingHandler", () => {
     const harness = await makeHarness();
 
     expect(harness.use(1_000)).toBe(true);
+    // The first tick buys the charge; the hit it paid for lands on the next.
     await harness.tick(1_000);
+    await harness.tick(1_005);
 
     expect(harness.chargesLeft()).toBe(499);
     expect(harness.progression.awardSkillTries).toHaveBeenCalledWith(
@@ -224,6 +235,30 @@ describe("ExerciseTrainingHandler", () => {
     await harness.tick(1_100);
 
     expect(harness.chargesLeft()).toBe(499);
+  });
+
+  it("buys charges ahead when a write is slower than the tier's interval", async () => {
+    // A charge write that takes three intervals to commit. Spending one charge
+    // per round trip would cap the tier at a third of its rate, so the next
+    // write buys the hits that fall inside the latency instead.
+    const harness = await makeHarness({
+      weaponTypeId: EPIC_EXERCISE_SWORD,
+      charges: 100,
+    });
+    harness.use(1_000);
+
+    // First write measures the round trip; the second sizes itself from it.
+    await harness.tick(1_000, 4_000);
+    await harness.tick(4_000, 7_000);
+
+    const spent = 100 - harness.chargesLeft();
+    const hits = harness.sent.filter(
+      (message) => message.type === "magic-effect",
+    ).length;
+    expect(spent).toBe(4);
+    // Charges are bought ahead of the hits they pay for, never behind them.
+    expect(hits).toBeGreaterThan(0);
+    expect(hits).toBeLessThanOrEqual(spent);
   });
 
   it("refuses a second training run while one is already active", async () => {
@@ -269,6 +304,7 @@ describe("ExerciseTrainingHandler", () => {
 
     expect(harness.use(1_000, FAR_DUMMY_POSITION)).toBe(true);
     await harness.tick(1_000);
+    await harness.tick(1_005);
 
     expect(harness.progression.awardMagicProgress).toHaveBeenCalledWith(
       "actor",
@@ -290,6 +326,8 @@ describe("ExerciseTrainingHandler", () => {
     harness.use(1_000);
 
     await harness.tick(1_000);
+    await harness.tick(1_005);
+    await harness.tick(1_010);
 
     expect(
       harness.items
@@ -298,6 +336,73 @@ describe("ExerciseTrainingHandler", () => {
     ).toBeUndefined();
     expect(conditionTexts(harness.sent)).toContain(
       "Your training weapon has disappeared.",
+    );
+  });
+
+  it("lands two epic hits for every one a stock weapon lands", async () => {
+    // Twenty seconds sampled every 100ms, long enough that the tick grid does
+    // not round the ratio away.
+    const hitTimes = Array.from({ length: 201 }, (_, tick) => 1_000 + tick * 100);
+    const epic = await makeHarness({
+      weaponTypeId: EPIC_EXERCISE_SWORD,
+      charges: 100,
+    });
+    const stock = await makeHarness({ charges: 100 });
+    epic.use(1_000);
+    stock.use(1_000);
+
+    for (const now of hitTimes) {
+      await epic.tick(now);
+      await stock.tick(now);
+    }
+
+    const epicHits = 100 - epic.chargesLeft();
+    const stockHits = 100 - stock.chargesLeft();
+    expect(stockHits).toBeGreaterThan(5);
+    // One tick of slack: the two paces cannot land on the grid identically.
+    expect(epicHits).toBeGreaterThanOrEqual(stockHits * 2 - 1);
+    expect(epicHits).toBeLessThanOrEqual(stockHits * 2 + 1);
+    // Same tries per hit as the stock tier: only the pace differs.
+    expect(epic.progression.awardSkillTries).toHaveBeenLastCalledWith(
+      "actor",
+      expect.any(String),
+      "sword",
+      7,
+      expect.any(Number),
+    );
+    expect(epic.sent).toContainEqual(
+      expect.objectContaining({
+        type: "magic-effect",
+        position: { ...DUMMY_POSITION },
+        effectId: 303,
+      }),
+    );
+  });
+
+  it("draws the legendary tier's own missile and hit effect", async () => {
+    const harness = await makeHarness({
+      weaponTypeId: LEGENDARY_EXERCISE_BOW,
+      charges: 10,
+      dummyPositions: [FAR_DUMMY_POSITION],
+    });
+
+    expect(harness.use(1_000, FAR_DUMMY_POSITION)).toBe(true);
+    await harness.tick(1_000);
+    await harness.tick(1_005);
+
+    expect(harness.sent).toContainEqual(
+      expect.objectContaining({
+        type: "distance-missile",
+        to: { ...FAR_DUMMY_POSITION },
+        missileId: 4,
+      }),
+    );
+    expect(harness.sent).toContainEqual(
+      expect.objectContaining({
+        type: "magic-effect",
+        position: { ...FAR_DUMMY_POSITION },
+        effectId: 177,
+      }),
     );
   });
 

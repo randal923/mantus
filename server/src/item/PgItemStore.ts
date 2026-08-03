@@ -217,12 +217,13 @@ export class PgItemStore implements ItemStore {
     return this.uses.writeText(characterId, itemId, expectedVersion, text);
   }
 
-  consumeCharge(
+  consumeCharges(
     characterId: string,
     itemId: string,
     expectedVersion: number,
+    count: number,
   ): Promise<ItemMutation> {
-    return this.uses.consumeCharge(characterId, itemId, expectedVersion);
+    return this.uses.consumeCharges(characterId, itemId, expectedVersion, count);
   }
 
   consume(

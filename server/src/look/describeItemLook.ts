@@ -1,3 +1,4 @@
+import { chargesOf } from "../item/chargesOf";
 import type { ItemType } from "../item/ItemType";
 import { imbuementLookLine } from "./imbuementLookLine";
 import { itemLookSegments } from "./itemLookSegments";
@@ -49,7 +50,12 @@ export function describeItemLook(
   let head = itemNameDescription(type, count);
   if (segments.length > 0) head += ` (${segments.join(", ")})`;
   if (type.charges !== undefined) {
-    head += ` that has ${type.charges} charge${type.charges === 1 ? "" : "s"} left`;
+    // What this one has left, so a look mid-training reads the same number the
+    // tooltip does.
+    const charges = attributes
+      ? chargesOf({ attributes }, type.charges)
+      : type.charges;
+    head += ` that has ${charges} charge${charges === 1 ? "" : "s"} left`;
   }
 
   const lines: string[] = [];

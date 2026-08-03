@@ -5,6 +5,7 @@ export * from "./bank";
 export * from "./bestiary";
 export * from "./boosted";
 export * from "./bosstiarySlots";
+export * from "./customItemAppearances";
 export * from "./cyclopedia";
 export * from "./forge";
 export * from "./imbuements";

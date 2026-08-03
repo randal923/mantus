@@ -453,10 +453,11 @@ export class MemoryItemStore implements ItemStore {
     return { before, after: [after] };
   }
 
-  async consumeCharge(
+  async consumeCharges(
     characterId: string,
     itemId: string,
     expectedVersion: number,
+    count: number,
   ): Promise<ItemMutation> {
     const before = requireOwnedMemoryItem(
       this.items,
@@ -464,9 +465,9 @@ export class MemoryItemStore implements ItemStore {
       itemId,
       expectedVersion,
     );
-    const remaining =
-      chargesOf(before, this.catalog?.get(before.typeId)?.charges) - 1;
-    if (remaining < 0) throw new Error("item has no charges left");
+    const available = chargesOf(before, this.catalog?.get(before.typeId)?.charges);
+    if (available < 1) throw new Error("item has no charges left");
+    const remaining = available - Math.min(count, available);
     if (remaining === 0) {
       this.items.delete(itemId);
       return { before, after: [], removedItemIds: [itemId] };

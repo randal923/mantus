@@ -5,6 +5,7 @@ import type {
   StoreProductKind,
 } from "@tibia/protocol";
 
+import { EXERCISE_WEAPON_CATEGORY } from "./EXERCISE_WEAPON_CATEGORY";
 import { STORE_CATALOG_CATEGORIES } from "./storeCatalogData";
 
 /**
@@ -93,8 +94,18 @@ export interface StoreCatalogCategory {
   readonly products: ReadonlyArray<StoreCatalogProduct>;
 }
 
+/**
+ * The imported catalog with this server's own shelves substituted in place, so
+ * a deviation from Canary is one named module rather than an edit to generated
+ * data. Substituting keeps the category where the import put it, which is what
+ * the client's tree order follows.
+ */
 export const STORE_CATEGORIES: ReadonlyArray<StoreCatalogCategory> =
-  STORE_CATALOG_CATEGORIES;
+  STORE_CATALOG_CATEGORIES.map((category) =>
+    category.id === EXERCISE_WEAPON_CATEGORY.id
+      ? EXERCISE_WEAPON_CATEGORY
+      : category,
+  );
 
 export const STORE_CATEGORIES_BY_ID: ReadonlyMap<string, StoreCatalogCategory> =
   new Map(STORE_CATEGORIES.map((category) => [category.id, category]));

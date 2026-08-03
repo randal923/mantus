@@ -1,4 +1,6 @@
 import type { ExerciseTrainingTarget } from "../progression/exerciseTraining";
+import { CUSTOM_EXERCISE_TIERS } from "./CUSTOM_EXERCISE_TIERS";
+import { EXERCISE_WEAPON_FAMILIES } from "./EXERCISE_WEAPON_FAMILIES";
 
 export interface ExerciseWeaponDefinition {
   /** Which skill the weapon trains; "magic" spends mana instead. */
@@ -7,70 +9,48 @@ export interface ExerciseWeaponDefinition {
   readonly allowFarUse: boolean;
   /** Distance missile drawn from the trainer to the dummy, 0 for melee. */
   readonly missileId: number;
+  /** Magic effect drawn on the dummy on every training hit. */
+  readonly hitEffectId: number;
+  /** Hits — and therefore charges — per hit of a stock exercise weapon. */
+  readonly speedMultiplier: number;
 }
 
-/** CONST_ANI_FIRE, CONST_ANI_SMALLICE, CONST_ANI_SIMPLEARROW. */
-const FIRE = 4;
-const SMALL_ICE = 37;
-const SIMPLE_ARROW = 54;
+/** CONST_ME_HITAREA, the puff Canary draws on the dummy every tick. */
+const HIT_AREA = 10;
 
 /**
- * Every weapon's four tiers — training / exercise / durable / lasting — differ
- * only in charge count, so they share one row here.
- */
-const WEAPON_TIERS: ReadonlyArray<{
-  readonly ids: ReadonlyArray<number>;
-  readonly definition: ExerciseWeaponDefinition;
-}> = [
-  {
-    ids: [50292, 50293, 50294, 50295],
-    definition: { target: "fist", allowFarUse: false, missileId: 0 },
-  },
-  {
-    ids: [28540, 28552, 35279, 35285],
-    definition: { target: "sword", allowFarUse: false, missileId: 0 },
-  },
-  {
-    ids: [28541, 28553, 35280, 35286],
-    definition: { target: "axe", allowFarUse: false, missileId: 0 },
-  },
-  {
-    ids: [28542, 28554, 35281, 35287],
-    definition: { target: "club", allowFarUse: false, missileId: 0 },
-  },
-  {
-    ids: [44064, 44065, 44066, 44067],
-    definition: { target: "shielding", allowFarUse: false, missileId: 0 },
-  },
-  {
-    ids: [28543, 28555, 35282, 35288],
-    definition: {
-      target: "distance",
-      allowFarUse: true,
-      missileId: SIMPLE_ARROW,
-    },
-  },
-  {
-    ids: [28544, 28556, 35283, 35289],
-    definition: { target: "magic", allowFarUse: true, missileId: SMALL_ICE },
-  },
-  {
-    ids: [28545, 28557, 35284, 35290],
-    definition: { target: "magic", allowFarUse: true, missileId: FIRE },
-  },
-];
-
-/**
- * Exercise and training weapons by catalog type id, transcribed from Canary's
- * `data/scripts/actions/items/exercise_training_weapons.lua`.
+ * Exercise and training weapons by catalog type id. Canary's four tiers are
+ * transcribed from `data/scripts/actions/items/exercise_training_weapons.lua`
+ * and differ only in charge count, so they share one row per family; the epic
+ * and legendary tiers this server adds differ in pace and colour as well.
  */
 const EXERCISE_WEAPONS: ReadonlyMap<number, ExerciseWeaponDefinition> = new Map(
-  WEAPON_TIERS.flatMap((tier) =>
-    tier.ids.map((id): [number, ExerciseWeaponDefinition] => [
+  EXERCISE_WEAPON_FAMILIES.flatMap((family) => [
+    ...family.canaryIds.map((id): [number, ExerciseWeaponDefinition] => [
       id,
-      tier.definition,
+      {
+        target: family.target,
+        allowFarUse: family.allowFarUse,
+        missileId: family.missileId,
+        hitEffectId: HIT_AREA,
+        speedMultiplier: 1,
+      },
     ]),
-  ),
+    ...CUSTOM_EXERCISE_TIERS.map(
+      (tier): [number, ExerciseWeaponDefinition] => [
+        family[tier.idKey],
+        {
+          target: family.target,
+          allowFarUse: family.allowFarUse,
+          // A melee weapon throws nothing; the tier's colour is the dummy's
+          // hit effect alone.
+          missileId: family.allowFarUse ? tier.missileId : 0,
+          hitEffectId: tier.hitEffectId,
+          speedMultiplier: tier.speedMultiplier,
+        },
+      ],
+    ),
+  ]),
 );
 
 export function getExerciseWeaponDefinition(

@@ -533,6 +533,7 @@
   },
   "store": {
     "title": "Mantus Store",
+    "description": "Mantus Coins buy premium time, outfits, mounts, boosts and supplies for every character on your account. Purchases are delivered to your Store inbox, and coins are added to your account, never to a single character.",
     "open": "Open Mantus Store",
     "categories": "Store categories",
     "yourBalance": "Your Mantus Coins",

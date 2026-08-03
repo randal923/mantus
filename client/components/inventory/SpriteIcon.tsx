@@ -1,5 +1,6 @@
 "use client";
 
+import { getItemTint } from "../../lib/render/getItemTint";
 import { useItemIcon } from "../../lib/render/useItemIcon";
 import { useSpriteCellUrls } from "../../lib/render/useSpriteCellUrls";
 import { TILE_SIZE } from "../../lib/render/tileSize";
@@ -43,7 +44,9 @@ export function SpriteIcon({
     clientId,
     count,
   );
-  const urls = useSpriteCellUrls(pieces, allSprites);
+  // A server-added tier borrows stock art and recolours the spark that art
+  // already animates, so the crop it draws is a tinted variant of the sprite.
+  const urls = useSpriteCellUrls(pieces, allSprites, getItemTint(clientId));
   const tiles = Math.max(columns, rows);
   const box = TILE_SIZE * scale;
 

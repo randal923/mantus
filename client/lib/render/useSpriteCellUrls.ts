@@ -1,5 +1,6 @@
 "use client";
 
+import type { CustomItemTint } from "@tibia/protocol";
 import { useCallback, useSyncExternalStore } from "react";
 import type { ItemIconPiece } from "./getItemIconPieces";
 import { spriteCellIconStore } from "./spriteCellIconStore";
@@ -14,19 +15,20 @@ import { spriteCellIconStore } from "./spriteCellIconStore";
 export function useSpriteCellUrls(
   pieces: ReadonlyArray<ItemIconPiece>,
   allSprites: ReadonlyArray<number>,
+  tint?: CustomItemTint,
 ): Array<string | null> {
   const key = [...pieces.map((piece) => piece.spriteId), ...allSprites].join(
     ":",
   );
   const subscribe = useCallback(
     (listener: () => void) =>
-      spriteCellIconStore.subscribe(key.split(":").map(Number), listener),
-    [key],
+      spriteCellIconStore.subscribe(key.split(":").map(Number), listener, tint),
+    [key, tint],
   );
   useSyncExternalStore(
     subscribe,
     () => spriteCellIconStore.revision(),
     () => 0,
   );
-  return pieces.map((piece) => spriteCellIconStore.url(piece.spriteId));
+  return pieces.map((piece) => spriteCellIconStore.url(piece.spriteId, tint));
 }

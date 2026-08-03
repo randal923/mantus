@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { EQUIPMENT_SLOTS } from "@tibia/protocol";
+import { buildCustomItemTypes } from "./custom/buildCustomItemTypes";
+import { CUSTOM_ITEM_TYPES } from "./custom/CUSTOM_ITEM_TYPES";
 import { ItemCatalog } from "./ItemCatalog";
 import type { ItemType } from "./ItemType";
 import { applyItemOverrides } from "./overrides/applyItemOverrides";
@@ -140,14 +142,15 @@ export async function loadItemCatalog(): Promise<ItemCatalog> {
     throw new Error("stowable item types do not match the pinned Canary source");
   }
   const stowableItemTypeIds = new Set<number>(stowable.itemTypeIds);
+  const generated = Object.entries(parsed.items).map(([key, item]) => {
+    const parsedItem = parseItem(item, key);
+    return stowableItemTypeIds.has(parsedItem.id)
+      ? { ...parsedItem, stowable: true }
+      : parsedItem;
+  });
   return new ItemCatalog(
     applyItemOverrides(
-      Object.entries(parsed.items).map(([key, item]) => {
-        const parsedItem = parseItem(item, key);
-        return stowableItemTypeIds.has(parsedItem.id)
-          ? { ...parsedItem, stowable: true }
-          : parsedItem;
-      }),
+      [...generated, ...buildCustomItemTypes(generated, CUSTOM_ITEM_TYPES)],
       ITEM_OVERRIDES,
     ),
   );

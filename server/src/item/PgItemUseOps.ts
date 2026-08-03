@@ -93,17 +93,26 @@ export class PgItemUseOps {
   }
 
   /**
-   * Spends one charge of a charged item (Canary's
-   * `item:setAttribute(ITEM_ATTRIBUTE_CHARGES, charges - 1)` plus the
+   * Spends charges of a charged item (Canary's
+   * `item:setAttribute(ITEM_ATTRIBUTE_CHARGES, charges - n)` plus the
    * `item:remove(1)` that follows the last charge). Read, decrement and the
    * final destruction are one transaction under the row lock, so two racing
    * training ticks can never spend the same charge twice.
+   *
+   * `count` above what the item has left spends the remainder rather than
+   * failing: the caller cannot know the true balance until it holds the lock,
+   * and a training bundle asking for ten on a weapon with three should burn
+   * those three and end.
    */
-  consumeCharge(
+  consumeCharges(
     characterId: string,
     itemId: string,
     expectedVersion: number,
+    count: number,
   ): Promise<ItemMutation> {
+    if (!Number.isInteger(count) || count < 1) {
+      throw new Error("charge count must be a positive integer");
+    }
     return withSerializableTransaction(this.pool, async (client) => {
       await this.locks.lockCharacter(client, characterId);
       const row = await this.locks.lockItem(client, itemId);
@@ -111,8 +120,9 @@ export class PgItemUseOps {
       await this.guards.requireOwned(client, row.id, characterId);
       const before = itemFromRow(row);
       const type = this.catalog.require(row.item_type_id);
-      const remaining = chargesOf(before, type.charges) - 1;
-      if (remaining < 0) throw new Error("item has no charges left");
+      const available = chargesOf(before, type.charges);
+      if (available < 1) throw new Error("item has no charges left");
+      const remaining = available - Math.min(count, available);
       if (remaining === 0) {
         await client.query(deleteItemById, [row.id]);
         await client.query(insertItemDestroyedAudit, [

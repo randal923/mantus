@@ -1,4 +1,6 @@
+import type { CustomItemTint } from "@tibia/protocol";
 import { getSharedAssetStore } from "./getSharedAssetStore";
+import { tintSpritePixels } from "./tintSpritePixels";
 
 /**
  * 32×32 blob-URL crops of individual atlas sprites, for DOM item icons.
@@ -9,13 +11,22 @@ import { getSharedAssetStore } from "./getSharedAssetStore";
  * forces those decodes at once. Cropping each cell once from the ImageBitmap
  * the world renderer already holds costs one tiny image per distinct sprite
  * and nothing per icon.
+ *
+ * A tinted crop is a second variant of the same sprite, cached under its own
+ * key: server-added item tiers borrow stock art and recolour its animated
+ * spark, so the tint has to be baked into the pixels rather than filtered over
+ * them — a CSS filter would drag the weapon's own colours along with it.
  */
-const urls = new Map<number, string>();
-const pending = new Set<number>();
+const urls = new Map<string, string>();
+const pending = new Set<string>();
 const listeners = new Set<() => void>();
 let revisionValue = 0;
 
-async function generate(spriteId: number): Promise<void> {
+function keyOf(spriteId: number, tint?: CustomItemTint): string {
+  return tint ? `${spriteId}:${tint}` : String(spriteId);
+}
+
+async function generate(spriteId: number, tint?: CustomItemTint): Promise<void> {
   const store = getSharedAssetStore();
   await store.load();
   await store.preload([spriteId]);
@@ -29,23 +40,29 @@ async function generate(spriteId: number): Promise<void> {
   const context = canvas.getContext("2d");
   if (!context) return;
   context.drawImage(bitmap, rect.x, rect.y, tile, tile, 0, 0, tile, tile);
+  if (tint) {
+    const frame = context.getImageData(0, 0, tile, tile);
+    tintSpritePixels(frame.data, tint);
+    context.putImageData(frame, 0, 0);
+  }
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve),
   );
   if (!blob) return;
-  urls.set(spriteId, URL.createObjectURL(blob));
+  urls.set(keyOf(spriteId, tint), URL.createObjectURL(blob));
 }
 
-function request(spriteId: number): void {
-  if (spriteId <= 0 || urls.has(spriteId) || pending.has(spriteId)) return;
-  pending.add(spriteId);
-  generate(spriteId)
+function request(spriteId: number, tint?: CustomItemTint): void {
+  const key = keyOf(spriteId, tint);
+  if (spriteId <= 0 || urls.has(key) || pending.has(key)) return;
+  pending.add(key);
+  generate(spriteId, tint)
     // A sheet that cannot load leaves the icon blank, exactly like the world;
     // the next subscriber retries.
     .catch(() => undefined)
     .finally(() => {
-      pending.delete(spriteId);
-      if (!urls.has(spriteId)) return;
+      pending.delete(key);
+      if (!urls.has(key)) return;
       revisionValue += 1;
       for (const listener of listeners) listener();
     });
@@ -56,9 +73,10 @@ export const spriteCellIconStore = {
   subscribe(
     spriteIds: ReadonlyArray<number>,
     notify: () => void,
+    tint?: CustomItemTint,
   ): () => void {
     listeners.add(notify);
-    for (const spriteId of spriteIds) request(spriteId);
+    for (const spriteId of spriteIds) request(spriteId, tint);
     return () => {
       listeners.delete(notify);
     };
@@ -69,7 +87,7 @@ export const spriteCellIconStore = {
     return revisionValue;
   },
 
-  url(spriteId: number): string | null {
-    return urls.get(spriteId) ?? null;
+  url(spriteId: number, tint?: CustomItemTint): string | null {
+    return urls.get(keyOf(spriteId, tint)) ?? null;
   },
 };

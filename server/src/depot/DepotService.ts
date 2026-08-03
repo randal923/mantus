@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { DepotLocation, Position } from "@tibia/protocol";
+import { dropUnknownItemTypes } from "../item/dropUnknownItemTypes";
 import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
@@ -60,7 +61,14 @@ export class DepotService {
   async load(characterId: string): Promise<LoadedDepot | null> {
     if (!this.store) return null;
     this.caches.beginLoad(characterId, monotonicNow());
-    return this.store.loadForCharacter(characterId);
+    const loaded = await this.store.loadForCharacter(characterId);
+    // Same guard the carried load applies: a row whose type the catalog no
+    // longer knows would throw out of `projectDepotState` when the player
+    // opens the depot, inside the tick.
+    return {
+      ...loaded,
+      items: dropUnknownItemTypes(loaded.items, this.catalog, characterId),
+    };
   }
 
   attach(loaded: LoadedDepot): void {

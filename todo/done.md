@@ -1590,3 +1590,185 @@ clean.
 interval tick, so multi-round-trip flows — login's ~28 sequential queries
 above all — keep paying up to 25 ms of tick alignment per round trip.
 Recorded in `TODO.md` under accepted gaps with the recommended fix.
+
+## 2026-08-02 — Epic and legendary exercise weapons, sold only in the Mantus Store
+
+**Problem**: the Mantus Store's Exercise Weapons shelf sold the same three
+Canary tiers players already buy from NPCs and win from the daily reward
+wall, so a store purchase bought convenience and nothing else. The store had
+no offer of its own, and no exercise weapon trained faster than 7 tries per
+hit at one hit per attack-speed interval.
+
+**What changed**: two server-only tiers on top of Canary's four — epic
+(14,000 charges, 30 Mantus Coins) and legendary (30,000 charges, 60 coins),
+one per weapon family, sixteen items in total. Both train faster in the only
+sense that matters: the interval between hits is divided by the tier's
+multiplier, so the same 7 skill tries (or 600 mana) land per hit against the
+same one charge, and the weapon burns through its charges just as much faster.
+(Shipped at ten times; revised to twice in the second follow-up below.) The epic
+tier draws `CONST_ME_PURPLE_ELECTRIC_SPARK` on the dummy (and a violet
+`CONST_ANI_ENERGY` missile from bows/rods/wands), the legendary tier
+`CONST_ME_ORANGE_ENERGY_SPARK` and an orange `CONST_ANI_FIRE` missile.
+
+The sprite pack ends at appearance 51,950, so a custom item cannot invent
+art. New types therefore take ids above that range and *alias* an existing
+appearance: `protocol/src/customItemAppearances.ts` holds the id → appearance
+pairs both sides must agree on, `AssetStore` registers the aliases when it
+loads `objects.json`, and the server mints the types in `loadItemCatalog`
+from the family's lasting tier. `buildCustomItemTypes` refuses to boot if a
+custom type has no alias, collides with a catalog id, or copies an unknown
+base — the client being unable to draw an item the server hands out is
+exactly the failure worth refusing to start on.
+
+`EXERCISE_WEAPON_FAMILIES` is now the single source for every exercise-weapon
+id, reach and skill; the catalog, the store shelf and the training handler
+all derive from it. `EXERCISE_WEAPON_CATEGORY` substitutes for the imported
+`exercise-weapons` category in `storeCatalog.ts` rather than editing
+generated data, keeping the shelf where the import put it in the tree. The
+stock exercise, durable and lasting weapons stay everywhere else in the game
+— NPC shops, quests, the daily reward chooser — they are simply no longer
+sold for coins.
+
+Two fixes came with it. Tooltips and look descriptions reported the *type's*
+full charge count, not the instance's: both now go through `chargesOf`, so a
+weapon's charges tick down live while training (each spent charge already
+pushes a fresh inventory). And the training interval was scheduled from the
+tick that fired rather than from the last due time, which rounded any
+interval finer than the 25 ms tick up to a whole tick — at the epic tier's
+40 ms that cost a fifth of the rate. It now accumulates from `nextAt`,
+clamped to `now` so a stalled charge write is dropped rather than repaid as a
+burst.
+
+**Files**: `protocol/src/{customItemAppearances,index}.ts`,
+`server/src/action/{EXERCISE_WEAPON_FAMILIES,CUSTOM_EXERCISE_TIERS}.ts` (new),
+`server/src/action/{getExerciseWeaponDefinition,ExerciseTrainingHandler}.ts`,
+`server/src/item/custom/{CustomItemType,CUSTOM_ITEM_TYPES,buildCustomItemTypes}.ts`
+(new), `server/src/item/{loadItemCatalog,toItemTooltip,chargesOf}.ts`,
+`server/src/look/describeItemLook.ts`,
+`server/src/store/{EXERCISE_WEAPON_CATEGORY,storeCatalog}.ts`,
+`client/lib/render/AssetStore.ts`, `client/components/store/StoreModal.tsx`,
+`client/locales/{en,pt-BR}.json`,
+`server/src/playtest/scenarios/exerciseTraining.ts` (new),
+`server/package.json`, plus tests and `todo/{done,status}.md`.
+
+**Verified**: a new playtest (`yarn playtest:exercise`) against the real
+server, catalog and wire protocol — the shelf returns exactly the 16 epic and
+legendary offers at 30 and 60 coins and nothing Canary sold, a purchase debits
+30 coins and delivers to the store inbox, and training 4 s with each tier
+side by side on a free dummy gives 10 stock hits against 100 epic hits with
+charges falling one per hit in both, i.e. exactly 10.0× at the multiplier this
+entry shipped — and against a *local* database, which is what hid the latency
+bug the second follow-up below fixes. Unit coverage: the
+catalog mints the tiers over the right appearance; the tooltip counts the
+instance's charges; the shelf's grants agree with the catalog and the trainer;
+the epic tier lands ten hits in a stock tier's one and draws effect 303, the
+legendary bow missile 4 and effect 177; `AssetStore` resolves an aliased id
+and still throws on an unaliased one. Full suites: 1,542 server + 355 client
+passed, `yarn test:tools` and `yarn typecheck` clean. All five browser e2e
+probes pass individually (item-icon animation, inventory FPS, game-freeze,
+1000-monster FPS, world item animation skipped); running all five back to back
+in one WSL session fails the game-freeze and 1000-monster probes on frame
+budget. Not re-run against a clean tree, but both pass alone here and neither
+touches the changed code paths.
+
+**Residual risk**: every spent charge pushes a full `inventory-updated`, so an
+epic weapon at 40 ms per hit sends ~25 inventory snapshots a second per
+trainer — the same total traffic a lasting weapon sends over its life, but
+ten times the burst. Recorded in `TODO.md` with a compact charge-delta message
+as the recommended fix. The new tiers are also absent from the public site's
+`wiki-items.json`, which is built from the ripped catalog and knows nothing of
+custom types.
+
+**Follow-up 2026-08-02** — a stale row crashed the server at login. Item
+`b003f4c9…` in the dev database carries `item_type_id 60010`, a legendary
+exercise weapon minted by an earlier, reverted attempt at this feature whose
+ids were numbered differently (created 03:53 EDT, 314 charges spent by 04:29
+EDT — both before this work started; the working tree was clean at 48b9b0d).
+The catalog has no 60010, so `projectInventory`'s weight reduce hit
+`catalog.require` and threw out of `CharacterHandler.enterWorld`, killing the
+whole process every time that character tried to enter the world.
+
+Until custom types existed this was unreachable: every `item_type_id` came
+from the pinned Canary catalog, which only grows. `dropUnknownItemTypes` now
+filters unresolvable rows out of both the carried load
+(`ItemIntentHandler.load`) and the depot/inbox load (`DepotService.load`,
+where the same row would have thrown out of `projectDepotState` inside the
+tick when the player opened their depot). The rows stay in the database
+untouched — nothing is destroyed to recover from a renumbering — they log a
+warning and do not load, and a dropped container takes its contents with it so
+no child is left in the cache with no reachable parent.
+
+**Verified**: 3 unit cases (all-known rows returned unchanged by identity, an
+unknown row hidden with a warning naming the type, a hidden container taking
+its whole subtree), plus a read-only replay against the real database and the
+real character: `projectInventory` throws `unknown item type 60010` on the raw
+17 rows and projects 16 rows cleanly after the filter. Server suite 1,545
+passed, typecheck clean.
+
+**Follow-up 2026-08-02 (2)** — the tier trained at ordinary speed, and the
+weapon looked like the one it copies. Two separate faults.
+
+*Speed.* One charge write is a serializable transaction, and the handler
+waited for each one before drawing the next hit, so the database round trip —
+not the tier — set the training rate. Measured against the dev server's own
+`DATABASE_URL` (a Supabase pooler): 95ms for a bare `SELECT 1`, **481ms** for a
+charge-spend-shaped transaction. At that latency a tier meant to hit every
+200ms and a stock tier hitting every 400ms both land ~2 hits a second, which is
+exactly the "regular speed" reported. The earlier 10.0× measurement came from
+the playtest's *local* database, where a transaction is ~1ms — the design was
+never wrong, it was latency-bound, and the local playtest could not see it.
+
+Charges are now bought in bundles: each write asks for as many charges as the
+previous write's measured latency covers (`lastWriteMs / intervalMs`, capped at
+64), the tick draws and paces the hits it has already paid for, and the bundle
+collapses to a single charge when the database is quick, which is the old
+behaviour exactly. Charges are deducted and the tries awarded *before* their
+hits are drawn, so a crash or logout mid-bundle can only cost the player the
+animation, never hand out an unpaid try. `ItemStore.consumeCharge` became
+`consumeCharges(count)`, clamping to what the row really holds so the last
+bundle of a dying weapon spends the remainder instead of failing.
+
+*The weapon's own look.* The lightning was drawn on the dummy, not on the
+weapon. Custom types borrow a stock appearance, so an epic exercise sword and
+the lasting one it copies were the same pixels in a slot.
+
+The first attempt overlaid a magic effect on the icon, which buried the weapon
+under a second animation — not what was asked for. Exercise weapons already
+animate: the art is a wooden weapon with a magenta spark crawling along it over
+five phases, and *that* is the animation to recolour. The wood sits at hue
+30–42 and the spark at a flat 320, so `tintSpritePixels` moves only the magenta
+band to the tier's hue (purple 282; dark orange 26, darkened to 0.78 lightness
+so it reads as orange rather than skin) and leaves saturation, lightness and
+the weapon itself alone. `CustomItemAppearance` carries a semantic
+`tint: "purple" | "dark-orange"`, and `spriteCellIconStore` bakes it into a
+second cached crop per sprite — a CSS filter could not do this, it would drag
+the wood along with the spark. Every DOM item icon picks it up: inventory,
+store, tooltips.
+
+The multiplier is 2× (was 10×, then 5×), on the user's call.
+
+**Files**: `server/src/action/{ExerciseTrainingHandler,CUSTOM_EXERCISE_TIERS}.ts`,
+`server/src/item/{ItemStore,ItemIntentHandler,PgItemStore,PgItemUseOps,MemoryItemStore}.ts`,
+`server/src/store/EXERCISE_WEAPON_CATEGORY.ts`,
+`protocol/src/customItemAppearances.ts`,
+`client/lib/render/{tintSpritePixels,getItemTint}.ts` (new),
+`client/lib/render/{spriteCellIconStore,useSpriteCellUrls}.ts`,
+`client/components/inventory/SpriteIcon.tsx`, plus tests and the playtest.
+
+**Verified**: an A/B against a local Postgres behind a TCP relay adding 50ms to
+every response packet (~300ms per charge transaction, standing in for the
+remote database). Bundling disabled: stock 5 hits, epic 5 hits in the same 4s
+window — **1.0×**, the reported bug reproduced. Bundling on: stock 8, epic 14 —
+**1.8×**. Against the local database the scenario reads a clean **2.0×** (10
+stock hits, 20 epic). Browser e2e: the epic sword's icon resolves through the
+alias, animates through ≥3 frames in 20s, and shares no frame with the stock
+lasting sword it copies — the tint is baked per crop. Unit: the tint moves the
+spark's hue and leaves the wood byte-identical; a write slower than the
+interval buys a bundle of 4 rather than 1, and hits never outrun the charges
+that paid for them. Suites 1,546 server + 360 client, typecheck and lint clean.
+
+**Residual risk**: the tint is applied by the DOM icon path only — a
+custom-tier weapon lying on the ground renders through Pixi with the stock
+magenta spark. Awarding a bundle up front means a player who logs out
+mid-bundle keeps the tries but loses the remaining animation; that direction is
+deliberate.

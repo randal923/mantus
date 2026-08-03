@@ -533,6 +533,7 @@
   },
   "store": {
     "title": "Loja Mantus",
+    "description": "Moedas Mantus compram tempo premium, outfits, montarias, bônus e suprimentos para todos os personagens da sua conta. As compras são entregues na sua caixa de entrada da Loja, e as moedas ficam na conta, nunca em um único personagem.",
     "open": "Abrir Loja Mantus",
     "categories": "Categorias da loja",
     "yourBalance": "Suas Mantus Coins",
