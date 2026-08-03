@@ -81,9 +81,13 @@ export class CombatFormula {
         options.attack +
         minimum,
     );
-    if (options.targetIsPlayer) {
-      minimum = Math.floor(minimum / (options.hasElement ? 4 : 2));
-    } else if (options.hasElement) {
+    // PvP minimum reduction (Canary parity) — disabled: distance rolls keep
+    // their full floor against players. To restore, uncomment this branch and
+    // turn the one below back into a plain `else if (options.hasElement)`.
+    // if (options.targetIsPlayer) {
+    //   minimum = Math.floor(minimum / (options.hasElement ? 4 : 2));
+    // } else
+    if (!options.targetIsPlayer && options.hasElement) {
       minimum = Math.floor(minimum / 2);
       maximum = Math.floor(maximum / 2);
     }
