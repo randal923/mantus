@@ -2314,6 +2314,9 @@
     "cancel": "Cancel",
     "claim": "Claim",
     "claimed": "Claimed today",
+    "available": "Reward ready to collect!",
+    "expiresIn": "Expires in {{time}}",
+    "nextRewardIn": "Next reward in {{time}}",
     "dayLabel": "Day {{day}}: {{reward}} ({{state}})",
     "states": {
       "collected": "collected",

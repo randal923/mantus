@@ -1884,6 +1884,9 @@ export class GameServer {
       case "daily-history-get":
         this.daily.handleHistoryGet(session, now);
         return;
+      case "daily-state-get":
+        this.daily.handleStateGet(session, now);
+        return;
       case "quest-log-get": {
         const questPlayer = session.playerId
           ? this.world.getPlayer(session.playerId)

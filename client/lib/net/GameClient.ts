@@ -953,6 +953,11 @@ export class GameClient {
     return this.send({ type: "daily-history-get" });
   }
 
+  /** Re-reads the open reward wall once its countdown crosses the day end. */
+  requestDailyState(): boolean {
+    return this.send({ type: "daily-state-get" });
+  }
+
   requestQuestLog(): boolean {
     return this.send({ type: "quest-log-get" });
   }

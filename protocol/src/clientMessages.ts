@@ -138,6 +138,7 @@ import {
 import {
   dailyClaimMessageSchema,
   dailyHistoryGetMessageSchema,
+  dailyStateGetMessageSchema,
 } from "./dailyRewards";
 import { podiumSetMessageSchema } from "./podium";
 import {
@@ -821,6 +822,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   rewardCollectMessageSchema,
   dailyClaimMessageSchema,
   dailyHistoryGetMessageSchema,
+  dailyStateGetMessageSchema,
   questLogGetMessageSchema,
   questLineGetMessageSchema,
   highscoresGetMessageSchema,
@@ -918,6 +920,7 @@ export type DailyClaimMessage = z.infer<typeof dailyClaimMessageSchema>;
 export type DailyHistoryGetMessage = z.infer<
   typeof dailyHistoryGetMessageSchema
 >;
+export type DailyStateGetMessage = z.infer<typeof dailyStateGetMessageSchema>;
 export type QuestLogGetMessage = z.infer<typeof questLogGetMessageSchema>;
 export type QuestLineGetMessage = z.infer<typeof questLineGetMessageSchema>;
 export type SetLanguageMessage = z.infer<typeof setLanguageMessageSchema>;

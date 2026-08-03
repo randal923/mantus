@@ -15,6 +15,8 @@ export const DAILY_REWARD_RULES = {
   claimCooldownMs: 300,
   /** One history request per second per session. */
   historyCooldownMs: 1_000,
+  /** One open-window state refresh per second per session. */
+  stateCooldownMs: 1_000,
   /** Entries the history reply carries (Canary daily_reward.lua:220). */
   historyLimit: 15,
   /**
@@ -126,6 +128,18 @@ export type DailyRewardHistoryEntry = z.infer<typeof historyEntrySchema>;
  */
 export const dailyHistoryGetMessageSchema = z
   .object({ type: z.literal("daily-history-get") })
+  .strict();
+
+/**
+ * Re-project this character's own state into an already-open reward wall.
+ * The window asks for it when its countdown runs out: the server-local day
+ * has flipped, so today's claim is live and the deadline moved, and only the
+ * server can say so (Canary re-sends the wall state on every shrine use and
+ * pushes the collection state at login for the same reason).
+ * One request per second per session; requires a shrine to have been used.
+ */
+export const dailyStateGetMessageSchema = z
+  .object({ type: z.literal("daily-state-get") })
   .strict();
 
 export const dailyRewardHistoryMessageSchema = z

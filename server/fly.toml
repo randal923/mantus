@@ -4,8 +4,10 @@
 #
 
 app = "mantus"
-# Match your Supabase project's region (fly regions list ↔ supabase dashboard).
-primary_region = "iad"
+# dfw picked 2026-08-03: Spectrum Florida ingresses at Fly's Dallas edge, so
+# dfw hosting removes the dfw→iad backbone leg for those players. Note the DB
+# region decision is still open (no Managed Postgres in dfw; see TODO.md).
+primary_region = "dfw"
 
 # No [build] section: the dockerfile is passed on the CLI (see deploy command
 # above) so the build context can be the repo root instead of server/.

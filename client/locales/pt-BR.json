@@ -2314,6 +2314,9 @@
     "cancel": "Cancelar",
     "claim": "Coletar",
     "claimed": "Coletado hoje",
+    "available": "Recompensa pronta para coletar!",
+    "expiresIn": "Expira em {{time}}",
+    "nextRewardIn": "Próxima recompensa em {{time}}",
     "dayLabel": "Dia {{day}}: {{reward}} ({{state}})",
     "states": {
       "collected": "coletado",

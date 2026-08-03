@@ -2242,3 +2242,66 @@ way with these changes stashed.
 `exevo gran mort` (Conjure Wand of Darkness) to the same icon 141 while icons
 139/140 (wand art) go unused, so one of those two is probably showing the
 other's wand. Left as OTClient ships it rather than guessed at.
+
+## 2026-08-03 — Reward wall says when a reward is claimable
+
+**Problem**: inside the reward wall, a claimable day and a day still waiting
+for the boundary drew identically — the same gold card over the same ticking
+countdown plate. The only difference was the cursor, so the player could not
+tell a reward was ready and only found out by clicking it, and the countdown
+appeared stuck on a reward that was already unlocked. On top of that the
+window's state was pushed once, at shrine use: if the server-local day flipped
+while the window stood open, the countdown sat at zero and the wall kept
+showing yesterday.
+
+**What changed**:
+
+- `getDailyRewardDayState` now puts the countdown on the day that is actually
+  waiting. While today is claimable that is the day *after* it, so the timer
+  moves off the reward you can take right now; once today's claim is in, the
+  cycle position itself is the waiting day, as before. When the last day of a
+  cycle is claimable nothing waits behind it and no card carries a countdown.
+- `DailyRewardDay` draws a claimable day as a claim call — amber card, pulsing
+  CLAIM plate, amber hover/focus — instead of another countdown, and only a
+  `next` day draws the countdown.
+- The window carries the deadline in words beside the streak ribbon: "Reward
+  ready to collect! / Expires in …" while claimable, "Next reward in …"
+  otherwise. That is also the only place the deadline shows on the last day of
+  a cycle.
+- New `daily-state-get` intent (`DailyRewardService.handleStateGet`): the open
+  window asks for a fresh projection once its countdown crosses the day end,
+  then every 10 s until the state advances, so a wall left open across
+  midnight flips to claimable on its own. Same gate as the history request —
+  the session must have opened a shrine, one request per second, own state
+  only — and the claim itself still re-checks reach, the pool, the allowance
+  and the once-per-day gate at execution time. This is Canary's reason for
+  re-sending the wall on every `DailyReward.loadDailyReward` and pushing
+  `sendDailyRewardCollectionState` at login (daily_reward.lua:234-252, 322).
+
+**Files**: `protocol/src/{dailyRewards,clientMessages}.ts`,
+`server/src/daily/DailyRewardService.ts`, `server/src/GameServer.ts`,
+`server/src/daily/DailyRewardService.test.ts` (new),
+`client/lib/daily/getDailyRewardDayState.ts` (+ test),
+`client/lib/net/GameClient.ts`,
+`client/components/daily/{DailyRewardDay,DailyRewardsModal}.tsx`,
+`client/components/game-window/GameCommerceOverlays.tsx`,
+`client/locales/{en,pt-BR}.json`,
+`client/stories/DailyRewardsModal.stories.tsx`, `todo/status.md`, `TODO.md`.
+
+**Verified**: protocol/server/client typechecks pass; client lint reports no
+errors (17 pre-existing warnings). New `DailyRewardService` test covers the
+already-claimed projection, the flip to claimable after the day boundary, the
+refusal for a session that never opened a shrine, and the one-per-second
+limit. Client unit suite 371 passed; the 7 reward-wall Storybook stories pass
+in chromium, including a new last-day-of-cycle story. Screenshots of the
+claimable, claimed and last-day states were rendered and eyeballed. Four
+server failures (`loadItemCatalog`, `EXERCISE_WEAPON_CATEGORY`,
+`ExerciseTrainingHandler`) fail identically with these changes stashed and are
+unrelated exercise-weapon tier work.
+
+**Residual risk**: a player still has no way to learn a reward is waiting
+without walking to a shrine and opening the wall — Canary's golden icon
+(`sendDailyRewardCollectionState` at login) has no counterpart here; recorded
+in `TODO.md`. The 10 s refresh loop keeps polling while the window is open if
+the client clock runs ahead of the server's day boundary; the server's
+one-per-second limit bounds it and a fresh state stops it.

@@ -7,8 +7,11 @@ export type DailyRewardDayState =
 /**
  * How one of the seven days draws (OTClient game_rewardwall.lua's
  * updateDailyRewards): every day before the cycle position is already
- * collected, the position itself is either claimable now or the next reward
- * waiting for the server-local day boundary, and the rest stay locked.
+ * collected, and the position itself is the day this cycle still owes — either
+ * claimable right now, which is the card that takes the click, or, once
+ * today's claim is in, the reward waiting on the server-local day boundary.
+ * The countdown belongs to that waiting day, so while today is claimable it
+ * sits on the day after it rather than on the reward already unlocked.
  */
 export function getDailyRewardDayState(
   dayIndex: number,
@@ -16,6 +19,7 @@ export function getDailyRewardDayState(
   claimableToday: boolean,
 ): DailyRewardDayState {
   if (dayIndex < streakPosition) return "collected";
-  if (dayIndex > streakPosition) return "locked";
-  return claimableToday ? "current" : "next";
+  if (dayIndex === streakPosition) return claimableToday ? "current" : "next";
+  if (claimableToday && dayIndex === streakPosition + 1) return "next";
+  return "locked";
 }

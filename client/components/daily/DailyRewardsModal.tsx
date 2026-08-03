@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DAILY_REWARD_TABLE,
   type DailyRewardHistoryEntry,
@@ -8,6 +8,7 @@ import {
   type DailyRewardsStateMessage,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { formatRewardCountdown } from "../../lib/daily/formatRewardCountdown";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { PixelImage } from "../ui/PixelImage";
@@ -23,6 +24,8 @@ interface DailyRewardsModalProps {
   history?: ReadonlyArray<DailyRewardHistoryEntry> | null;
   onClaim: (picks: ReadonlyArray<DailyRewardPick>) => void;
   onRequestHistory?: () => void;
+  /** Re-reads the wall after the countdown crosses the server's day end. */
+  onRefreshState?: () => void;
   onClose: () => void;
 }
 
@@ -37,6 +40,7 @@ export function DailyRewardsModal({
   history,
   onClaim,
   onRequestHistory,
+  onRefreshState,
   onClose,
 }: DailyRewardsModalProps) {
   const { t } = useAppTranslation();
@@ -54,6 +58,24 @@ export function DailyRewardsModal({
   const todayEntry = DAILY_REWARD_TABLE[state.streakPosition];
   const premium = state.accountTier === "premium";
   const remainingMs = Math.max(0, state.dayEndsAtMs - now);
+  const expired = remainingMs === 0;
+
+  const refreshRef = useRef(onRefreshState);
+  useEffect(() => {
+    refreshRef.current = onRefreshState;
+  }, [onRefreshState]);
+
+  // The countdown ran out, so the server-local day has flipped and the state
+  // in hand is a day old: today's reward is claimable again and the deadline
+  // moved. Only the server can confirm that, so ask it — and keep asking on a
+  // slow beat, since a client clock running ahead gets here first.
+  useEffect(() => {
+    if (!expired) return;
+    const refresh = () => refreshRef.current?.();
+    refresh();
+    const timer = window.setInterval(refresh, 10_000);
+    return () => window.clearInterval(timer);
+  }, [expired]);
 
   const activateCurrentReward = () => {
     if (!state.claimableToday || !todayEntry) return;
@@ -120,7 +142,7 @@ export function DailyRewardsModal({
             {t("dailyRewards.description")}
           </p>
           <div className="flex min-w-0 flex-col items-center gap-5 border border-ui-stone-light/10 bg-ui-panel/60 p-4 lg:flex-row lg:items-stretch">
-            <div className="flex shrink-0 items-center justify-center px-4 lg:w-56">
+            <div className="flex shrink-0 flex-col items-center justify-center gap-2 px-4 lg:w-56">
               <RewardStreakBanner
                 streakLevel={state.streakLevel}
                 label={t("dailyRewards.streakLevel", {
@@ -128,6 +150,22 @@ export function DailyRewardsModal({
                 })}
                 size="large"
               />
+              {state.claimableToday ? (
+                <p className="text-center text-sm font-bold text-amber-200">
+                  {t("dailyRewards.available")}
+                  <span className="block font-normal text-ui-muted">
+                    {t("dailyRewards.expiresIn", {
+                      time: formatRewardCountdown(remainingMs),
+                    })}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-center text-sm text-ui-muted">
+                  {t("dailyRewards.nextRewardIn", {
+                    time: formatRewardCountdown(remainingMs),
+                  })}
+                </p>
+              )}
             </div>
             <DailyRewardCycle
               streakPosition={state.streakPosition}

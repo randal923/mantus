@@ -222,6 +222,20 @@ limitations accepted during a session are recorded in the owning feature file
   day-6 training weapons grant without Canary's 50-charge stamp (charges
   are not modeled on these items yet). Panel (non-shrine) claiming needs
   Feature 43's collection tokens.
+- **No claimable-reward indicator outside the reward wall** (2026-08-03,
+  Feature 84): Canary pushes `sendDailyRewardCollectionState` (0xDE) at login
+  and after every claim, and OTClient lights the reward-wall button gold while
+  the day is uncollected (daily_reward.lua:251, 322-331). Mantus has no
+  equivalent: the wall's state is only projected when a shrine is used, so the
+  only way to learn a reward is waiting is to walk to a shrine and open the
+  window. The wall itself now says so clearly and refreshes across midnight
+  (done.md 2026-08-03), but the out-of-window signal is missing. Fix: push the
+  claimable flag on login and after each claim, keep it in the game-window
+  store separately from the open-window state (today `dailyRewards !== null`
+  *is* "window open", so a login push would pop the window open), and hang a
+  badge off a HUD affordance — or, cheapest, a login message pointing at the
+  nearest shrine. Panel claiming stays shrine-only until Feature 43's
+  collection tokens land.
 - **Protection-zone regeneration now needs a reward streak** (2026-07-30,
   Feature 84): `CharacterProgression.tick` transcribes Canary
   condition.cpp:1490-1535, which *blocks* base health regeneration inside a

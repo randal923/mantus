@@ -18,8 +18,9 @@ interface DailyRewardDayProps {
 
 /**
  * One day of the cycle: the reward-type icon, dimmed unless it is today's
- * claim, over the plate that says which it is — green check for collected,
- * red padlock for a day still out of reach.
+ * claim, over the plate that says which it is — the Claim call when the
+ * server says today is claimable, the countdown on the day still waiting for
+ * the boundary, a green check for collected, a red padlock out of reach.
  */
 export function DailyRewardDay({
   day,
@@ -42,10 +43,13 @@ export function DailyRewardDay({
       className={highlighted ? "" : "opacity-40 grayscale"}
     />
   );
+  const claimable = state === "current";
   const cardClass = `relative flex aspect-square min-h-28 w-full items-center justify-center overflow-hidden rounded-sm border bg-ui-panel-deep/80 transition-colors ${
-    highlighted
-      ? "border-ui-gold/80 bg-ui-panel-light/75 shadow-inner shadow-ui-gold/10"
-      : "border-black/70"
+    claimable
+      ? "border-amber-300/90 bg-amber-950/40 shadow-[0_0_12px_rgb(252_211_77_/_25%)]"
+      : highlighted
+        ? "border-ui-gold/80 bg-ui-panel-light/75 shadow-inner shadow-ui-gold/10"
+        : "border-black/70"
   }`;
 
   return (
@@ -56,7 +60,7 @@ export function DailyRewardDay({
           aria-label={label}
           aria-current="step"
           title={`${t(`dailyRewards.kinds.${kind}`)} · ${allowance}`}
-          className={`${cardClass} cursor-pointer hover:border-ui-gold hover:bg-ui-panel-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-gold`}
+          className={`${cardClass} cursor-pointer hover:border-amber-200 hover:bg-amber-900/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300`}
           onClick={onActivate}
         >
           {icon}
@@ -72,7 +76,11 @@ export function DailyRewardDay({
           {icon}
         </div>
       )}
-      {highlighted ? (
+      {claimable ? (
+        <span className="flex h-12 animate-pulse items-center justify-center rounded-sm border border-amber-300/70 bg-amber-500/25 font-display text-base font-bold tracking-wide text-amber-100 uppercase">
+          {t("dailyRewards.claim")}
+        </span>
+      ) : state === "next" ? (
         <span className="flex h-12 items-center justify-center rounded-sm border border-ui-gold/35 bg-amber-950/70 font-display text-base font-bold text-ui-text-bright">
           {formatRewardCountdown(remainingMs)}
         </span>

@@ -427,6 +427,9 @@ export function GameCommerceOverlays() {
           onClaim={(picks) => {
             runtime.clientRef.current?.claimDailyReward(picks);
           }}
+          onRefreshState={() => {
+            runtime.clientRef.current?.requestDailyState();
+          }}
           onRequestHistory={() => {
             runtime.clientRef.current?.requestDailyHistory();
           }}

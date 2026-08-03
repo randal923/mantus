@@ -44,6 +44,7 @@ export class DailyRewardService {
   private readonly accessBySession = new WeakMap<Session, Position>();
   private readonly lastClaimBySession = new WeakMap<Session, number>();
   private readonly lastHistoryBySession = new WeakMap<Session, number>();
+  private readonly lastStateBySession = new WeakMap<Session, number>();
   private readonly claimsInFlight = new Set<string>();
 
   constructor(
@@ -283,6 +284,30 @@ export class DailyRewardService {
       );
     this.track(resolution);
     this.items.trackExternalOperation(playerId, resolution);
+  }
+
+  /**
+   * Re-projects the open window's own state once its countdown expires: the
+   * server-local day has flipped, so today's reward is claimable again and
+   * the deadline moved. Same gate as the history request — the window must
+   * have been opened at a shrine, and one request per second — and the same
+   * reasoning for skipping the reach check: this is the caller's own state,
+   * and the claim itself re-checks reach at execution time.
+   */
+  handleStateGet(session: Session, now: number): void {
+    const playerId = session.playerId;
+    const player = playerId ? this.world.getPlayer(playerId) : undefined;
+    if (!player || !this.accessBySession.has(session)) {
+      this.fail(session, "invalid-request");
+      return;
+    }
+    const last = this.lastStateBySession.get(session) ?? 0;
+    if (now - last < DAILY_REWARD_RULES.stateCooldownMs) {
+      this.fail(session, "rate-limited");
+      return;
+    }
+    this.lastStateBySession.set(session, now);
+    this.sendState(session, player, now);
   }
 
   /**

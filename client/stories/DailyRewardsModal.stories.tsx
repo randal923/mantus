@@ -80,6 +80,21 @@ export const WildcardDay: Story = {
   args: { state: WILDCARD_DAY },
 };
 
+/**
+ * The last day of the cycle is claimable, so no day is left waiting behind it
+ * and the deadline lives only in the panel beside the streak ribbon.
+ */
+export const LastDayClaimable: Story = {
+  args: {
+    state: {
+      ...EXERCISE_WEAPON_DAY,
+      streakPosition: 6,
+      pool: [],
+      allowance: 2,
+    },
+  },
+};
+
 /** Already claimed today; the whole run up to here shows as collected. */
 export const Claimed: Story = {
   args: {
