@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-const MAX_CHARACTER_LEVEL = 1_000;
+// Mirrors MAX_CHARACTER_LEVEL in protocol/src/progression.ts and the
+// characters_level_check constraint; keep all three in step.
+const MAX_CHARACTER_LEVEL = 50_000;
 const CHARACTER_NAME_PATTERN = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 const VOCATION_GAINS = {
   Knight: { health: 15, mana: 5 },

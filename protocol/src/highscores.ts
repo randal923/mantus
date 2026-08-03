@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { characterVocationSchema } from "./character";
 import { PROTOCOL_LIMITS } from "./limits";
+import { MAX_CHARACTER_LEVEL } from "./progression";
 
 export const HIGHSCORE_LIMITS = {
   pageSize: 50,
@@ -50,7 +51,7 @@ export const highscoreEntrySchema = z
   .object({
     rank: z.number().int().min(1).max(HIGHSCORE_LIMITS.maxRankDepth),
     name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
-    level: z.number().int().min(1).max(1000),
+    level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL),
     vocation: characterVocationSchema,
     value: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
   })

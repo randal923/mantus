@@ -10,7 +10,13 @@ export const SKILLS = [
   "fishing",
 ] as const;
 
-export const MAX_CHARACTER_LEVEL = 1_000;
+/**
+ * Not a gameplay cap — a technical one. Every experience path checks
+ * `Number.isSafeInteger`, and `getExperienceForLevel` stops producing exact
+ * values above level 81,456 (its XP passes `Number.MAX_SAFE_INTEGER`), so the
+ * ceiling stays well clear of that.
+ */
+export const MAX_CHARACTER_LEVEL = 50_000;
 export const MAX_MAGIC_LEVEL = 200;
 export const MAX_SKILL_LEVEL = 200;
 export const MIN_SKILL_LEVEL = 10;

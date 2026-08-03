@@ -26,12 +26,12 @@ test("rejects invalid character names and levels before opening the database", (
   );
   const invalidLevel = spawnSync(
     process.execPath,
-    [SCRIPT_PATH, "Test Hero", "1001"],
+    [SCRIPT_PATH, "Test Hero", "50001"],
     { encoding: "utf8" },
   );
 
   assert.equal(invalidName.status, 1);
   assert.match(invalidName.stderr, /character name is invalid/);
   assert.equal(invalidLevel.status, 1);
-  assert.match(invalidLevel.stderr, /level must be an integer from 1 to 1000/);
+  assert.match(invalidLevel.stderr, /level must be an integer from 1 to 50000/);
 });
