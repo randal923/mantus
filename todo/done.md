@@ -2305,3 +2305,55 @@ without walking to a shrine and opening the wall — Canary's golden icon
 in `TODO.md`. The 10 s refresh loop keeps polling while the window is open if
 the client clock runs ahead of the server's day boundary; the server's
 one-per-second limit bounds it and a fresh state stops it.
+
+## 2026-08-03 — Combat try awards stop saving the character on every swing
+
+**Problem**: `ProgressionSystem.persistAward` called `persistence.saveNow` on
+every processed award, and try awards land on every auto-attack swing
+(`PlayerAutoAttack`), every blocked hit (`DamageResolver`), and every spell
+or rune cast (`SpellCaster`). Tries change on each swing, so the skills
+fingerprint never suppressed the write and the 30 s `saveIntervalMs` cadence
+was bypassed entirely for anyone in combat — the top code-side finding of the
+2026-07-31 optimization audit ("the largest write reduction available",
+todo/optimization.md §1b, recoverable at `99db5b2~1`). Against the
+cross-region database (server dfw, Supabase Oregon, ~45 ms per round trip;
+a save transaction measured in the hundreds of ms through the pooler) that
+meant roughly one save transaction per combatant per swing: tens of
+transactions per second at scale on a 10-connection pool, and every item
+operation a fighting character made queued behind that character's pending
+saves in `beginExternalMutation`/`CharacterWriteLane`.
+
+**What changed**: `persistAward` takes an `immediate` flag. Experience awards
+keep the in-place save (death durability; kills are far rarer than swings).
+Skill-try and magic-progress awards mark the character dirty and ride the
+30 s interval save instead — except when the award crosses a level boundary
+(skill level or magic level up), detected with a cheap before/after read in
+the system layer, which still saves immediately so a level-up is never left
+in memory. The mana-already-spent edge branches (rate-scaled progress below
+1, replayed event id after restart) keep their immediate save and their
+documented ordering invariant. Everything that already guaranteed durability
+elsewhere is untouched: atomic item/economy actions flush dirty state in
+`beginExternalMutation`, logout/untrack flushes on the way out, death saves
+via `syncPlayer(..., immediate)`, and `progression_events` idempotency
+covers replay. Pending progression events accumulate between interval saves
+and persist as one array-batched insert, so the bigger snapshot costs no
+extra round trips.
+
+**Files**: `server/src/progression/ProgressionSystem.ts`,
+`server/src/progression/ProgressionSystem.test.ts`, `TODO.md`,
+`todo/status.md`.
+
+**Verified**: four new unit tests — an ordinary try award marks dirty and
+never calls `saveNow`, a try award that levels a skill saves immediately, a
+magic level-up saves immediately, an experience award saves immediately —
+plus the five existing rate/replay cases still green. Full server suite:
+1,581 passed with only the four pre-existing exercise-weapon failures from
+`b8f82b6` (documented in done.md 2026-08-02, reproduced on a clean tree).
+Repo typecheck clean.
+
+**Residual risk**: a hard crash (power loss, OOM kill) can now lose up to
+30 s of skill/magic *tries* — never a level-up, never experience — recorded
+in `TODO.md` Accepted gaps. The bestiary and proficiency per-kill upserts
+are the next write-coalescing candidates (audit §3 "coalesce per-kill
+writes"), and the login statement collapse remains the biggest open
+round-trip lever, still blocked on a reachable integration Postgres.

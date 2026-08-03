@@ -38,6 +38,7 @@ export class ProgressionSystem {
       player,
       player.awardExperience(eventId, amount),
       now,
+      true,
     );
   }
 
@@ -54,6 +55,7 @@ export class ProgressionSystem {
       this.syncPlayer(player, now, true);
       return true;
     }
+    const levelBefore = player.progression.magicLevel;
     const result = player.awardMagicProgress(eventId, progress);
     if (!result.processed) {
       // Mana was already spent by the spell/weapon path. Even if a stale
@@ -62,7 +64,12 @@ export class ProgressionSystem {
       this.persistence.saveNow(player, now);
       return false;
     }
-    return this.persistAward(player, result, now);
+    return this.persistAward(
+      player,
+      result,
+      now,
+      player.progression.magicLevel !== levelBefore,
+    );
   }
 
   awardSkillTries(
@@ -79,10 +86,13 @@ export class ProgressionSystem {
       this.skillRate(player, skill),
     );
     if (progress < 1) return false;
+    const levelBefore = this.skillLevel(player, skill);
+    const result = player.awardSkillTries(eventId, skill, progress);
     return this.persistAward(
       player,
-      player.awardSkillTries(eventId, skill, progress),
+      result,
       now,
+      this.skillLevel(player, skill) !== levelBefore,
     );
   }
 
@@ -160,13 +170,22 @@ export class ProgressionSystem {
     return true;
   }
 
+  /**
+   * Try awards land on every swing, blocked hit, and spell cast, so they ride
+   * the dirty flag onto the interval save; `immediate` (experience and
+   * level-ups) still saves in place. Ordering stays safe either way: atomic
+   * actions flush dirty state in `beginExternalMutation`, and logout/death
+   * flush explicitly.
+   */
   private persistAward(
     player: Player,
     result: { processed: boolean; changed: boolean },
     now: number,
+    immediate: boolean,
   ): boolean {
     if (!result.processed) return false;
-    this.persistence.saveNow(player, now);
+    if (immediate) this.persistence.saveNow(player, now);
+    else this.persistence.markDirty(player);
     if (result.changed) {
       this.sendProgression(player, now);
       const inventory = this.items.updateCapacity(player.id, player.capacity);
@@ -192,10 +211,18 @@ export class ProgressionSystem {
   }
 
   private skillRate(player: Player, skill: Skill): number {
-    const level =
-      player.progression.skills.find((state) => state.skill === skill)?.level ??
-      0;
-    return getStageRate(this.stages.skill, level, this.rates.skill);
+    return getStageRate(
+      this.stages.skill,
+      this.skillLevel(player, skill),
+      this.rates.skill,
+    );
+  }
+
+  private skillLevel(player: Player, skill: Skill): number {
+    return (
+      player.progression.skills.find((state) => state.skill === skill)
+        ?.level ?? 0
+    );
   }
 
   private magicRate(player: Player): number {

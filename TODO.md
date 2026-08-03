@@ -29,6 +29,19 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **A hard crash can lose up to 30 seconds of skill/magic tries**
+  (2026-08-03). Try awards no longer save the character per swing — they mark
+  it dirty and ride the 30 s interval save (see `todo/done.md` 2026-08-03),
+  which is what stops combat from generating one save transaction per
+  combatant per swing against the cross-region database. Level-ups,
+  experience, deaths, logouts, and atomic actions all still save in place, so
+  only ordinary tries inside the current interval are exposed, and only to a
+  hard process kill — a clean shutdown flushes every dirty character.
+  Accepted deliberately; Canary's periodic player save has the same window.
+  Revisit only if crash reports show try loss in practice — the fix would be
+  a flush-on-combat-end trigger, not a return to per-swing saves. Owner:
+  Feature 106/107 (performance budgets).
+
 - **Async DB outcomes still wait for the interval tick** (2026-08-02).
   Queued client intents now wake the tick loop immediately
   (`TickLoop.requestTick()`, see `todo/done.md` 2026-08-02), which removes
@@ -924,6 +937,21 @@ limitations accepted during a session are recorded in the owning feature file
   `config.progression.stages.enabled = false` in `writeParityConfig` alongside
   the rate flattening, then re-run the combat parity suite to confirm no
   scenario was silently relying on the staged numbers. Owner: playtest harness.
+- **Logout discards up to 59 seconds of aggressive imbuement decay**
+  (2026-08-03). `ImbuementService` counts burned seconds in a per-item ledger
+  and only writes a durable checkpoint every 60 qualifying seconds, so a
+  character who leaves a fight mid-window carries pending seconds that are
+  billed on the next fight. `detachCharacter` flushes that ledger through
+  `checkpointCharacter`, but it recomputes `aggressiveBurns` at flush time —
+  and `leaveWorld` only runs once the combat lock has expired, so the flag is
+  always false there and `checkpointItem` skips every aggressive slot. The
+  pending seconds are dropped instead of billed. Bounded at 59 s per equipped
+  item per session, but it is farmable: fight, wait out the 60 s lock, relog.
+  Recommended fix: flush on the transition instead of at detach — when
+  `aggressiveBurns` goes true→false in `sweepCharacter`, checkpoint the item
+  with the old flag before continuing; the write budget stays at one per
+  combat window. Add a regression test for "fight 30 s, leave combat, log
+  out" asserting the attribute lost 30 s. Owner: imbuements (Feature 78).
 
 
 ## Repo-wide known breakage

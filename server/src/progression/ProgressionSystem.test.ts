@@ -6,6 +6,9 @@ import { Player } from "../Player";
 import type { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
 import { World } from "../World";
+import { getManaForNextMagicLevel } from "./getManaForNextMagicLevel";
+import { getSkillTriesForNextLevel } from "./getSkillTriesForNextLevel";
+import { getVocation } from "./getVocation";
 import { ProgressionSystem } from "./ProgressionSystem";
 import { NO_STAGES, type StageTables } from "./stageRates";
 
@@ -115,6 +118,102 @@ describe("ProgressionSystem rates", () => {
         1_000,
       ),
     ).toBe(false);
+    expect(harness.persistence.saveNow).toHaveBeenCalledWith(
+      harness.player,
+      1_000,
+    );
+  });
+});
+
+describe("ProgressionSystem save cadence", () => {
+  it("rides ordinary try awards on the dirty flag instead of saving per swing", () => {
+    const harness = makeHarness({ skill: 1, magic: 1 });
+
+    expect(
+      harness.progression.awardSkillTries(
+        PLAYER_ID,
+        "cadence:sword:1",
+        "sword",
+        5,
+        1_000,
+      ),
+    ).toBe(true);
+    expect(
+      harness.progression.awardMagicProgress(
+        PLAYER_ID,
+        "cadence:spell:1",
+        5,
+        1_000,
+      ),
+    ).toBe(true);
+
+    expect(harness.persistence.saveNow).not.toHaveBeenCalled();
+    expect(harness.persistence.markDirty).toHaveBeenCalledWith(harness.player);
+  });
+
+  it("saves immediately when a try award levels a skill up", () => {
+    const harness = makeHarness({ skill: 1, magic: 1 });
+    const swordLevel = harness.player.progression.skills.find(
+      ({ skill }) => skill === "sword",
+    )!.level;
+    const needed = getSkillTriesForNextLevel(
+      getVocation("Knight"),
+      "sword",
+      swordLevel,
+    );
+
+    expect(
+      harness.progression.awardSkillTries(
+        PLAYER_ID,
+        "cadence:sword:levelup",
+        "sword",
+        needed,
+        1_000,
+      ),
+    ).toBe(true);
+
+    expect(
+      harness.player.progression.skills.find(({ skill }) => skill === "sword")
+        ?.level,
+    ).toBe(swordLevel + 1);
+    expect(harness.persistence.saveNow).toHaveBeenCalledWith(
+      harness.player,
+      1_000,
+    );
+  });
+
+  it("saves immediately when magic progress levels up", () => {
+    const harness = makeHarness({ skill: 1, magic: 1 });
+    const needed = getManaForNextMagicLevel(getVocation("Knight"), 0);
+
+    expect(
+      harness.progression.awardMagicProgress(
+        PLAYER_ID,
+        "cadence:magic:levelup",
+        needed,
+        1_000,
+      ),
+    ).toBe(true);
+
+    expect(harness.player.progression.magicLevel).toBe(1);
+    expect(harness.persistence.saveNow).toHaveBeenCalledWith(
+      harness.player,
+      1_000,
+    );
+  });
+
+  it("saves experience awards immediately", () => {
+    const harness = makeHarness({ skill: 1, magic: 1 });
+
+    expect(
+      harness.progression.awardExperience(
+        PLAYER_ID,
+        "cadence:experience:1",
+        50,
+        1_000,
+      ),
+    ).toBe(true);
+
     expect(harness.persistence.saveNow).toHaveBeenCalledWith(
       harness.player,
       1_000,
