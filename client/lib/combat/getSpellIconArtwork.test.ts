@@ -76,7 +76,7 @@ describe("getSpellIconArtwork", () => {
   it("gives every castable spell an icon", () => {
     const ids = castableSpellIds();
 
-    expect(ids).toHaveLength(169);
+    expect(ids).toHaveLength(179);
     expect(ids.filter((id) => !getSpellIconArtwork(id))).toEqual([]);
   });
 

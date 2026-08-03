@@ -256,11 +256,11 @@ function reviewedCastRules(path) {
 }
 
 /**
- * Spells whose whole procedural body is Canary's `revelationStageWOD` gate
- * followed by a literal `combat:execute`. The gate is the only rule in the
- * body, so it is imported as data and enforced by the cast pipeline; the
- * Twin Burst stage is the Druid's blue-domain revelation
- * (`WHEEL_REVELATION_PERKS.blue.Druid`).
+ * Spells whose procedural body opens with Canary's `revelationStageWOD`
+ * gate. The gate is imported as data and enforced by the cast pipeline; for
+ * the Twin Bursts it is the whole body, while the other revelation actives
+ * pair it with a reviewed special-combat entry (chain resolution, the
+ * grenade fuse, the avatar transform) that carries the rest.
  */
 function reviewedWheelRevelation(path) {
   const gates = {
@@ -270,6 +270,46 @@ function reviewedWheelRevelation(path) {
     },
     "data/scripts/spells/attack/terra_burst.lua": {
       domain: "blue",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/attack/executioners_throw.lua": {
+      domain: "red",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/attack/divine_grenade.lua": {
+      domain: "red",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/attack/great_death_beam.lua": {
+      domain: "red",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/attack/spiritual_outburst.lua": {
+      domain: "red",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/support/divine_empowerment.lua": {
+      domain: "blue",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/support/avatar_of_steel.lua": {
+      domain: "purple",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/support/avatar_of_light.lua": {
+      domain: "purple",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/support/avatar_of_storm.lua": {
+      domain: "purple",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/support/avatar_of_nature.lua": {
+      domain: "purple",
+      minimumStage: 1,
+    },
+    "data/scripts/spells/support/avatar_of_balance.lua": {
+      domain: "purple",
       minimumStage: 1,
     },
   };
@@ -507,6 +547,76 @@ function parseSpecialCombat(path) {
     // The beam and wave spells build their combat inside a local helper, so
     // only the formula and the effect ids are pinned here; the area itself is
     // the real `AREA_*` matrix resolved from the pinned tables.
+    // --- Wheel revelation actives (Feature 79-81) -------------------------
+    // Executioner's Throw: the parsed skill formula and physical type stand;
+    // the chain picking and low-health execute bonus are the reviewed body
+    // (SpellDefinition.chain + wheelExecutionersThrow.ts).
+    "data/scripts/spells/attack/executioners_throw.lua": {
+      allowsProceduralCombat: true,
+    },
+    // Divine Grenade: the 3 s fuse and grade multipliers are the reviewed
+    // body (SpellDefinition.delayed + the wheel augment table); the base
+    // formula and holy blast are pinned here.
+    "data/scripts/spells/attack/divine_grenade.lua": {
+      damageType: "holy",
+      formula: levelMagicFormula(4, 0, 6, 0),
+      effectId: 40,
+      missileId: 38,
+      dispel: null,
+      allowsProceduralCast: true,
+      allowsProceduralCombat: true,
+    },
+    // Great Death Beam: three grade-length combats in Lua; the base BEAM6
+    // and its BEAM7/BEAM8 upgrades live in the module + augment table.
+    "data/scripts/spells/attack/great_death_beam.lua": {
+      damageType: "death",
+      formula: levelMagicFormula(5.5, 0, 9, 0),
+      effectId: 18,
+      missileId: null,
+      dispel: null,
+      allowsProceduralCast: true,
+    },
+    // Spiritual Outburst: 42 * (skill/100) * (attack/10) plus the level
+    // baseline (level/5 below level 500; the tier taper lives in the
+    // server's flatDamageHealing). Harmony legs are a recorded deviation.
+    "data/scripts/spells/attack/spiritual_outburst.lua": {
+      damageType: "physical",
+      formula: spiritualOutburstFormula(),
+      effectId: 285,
+      missileId: null,
+      dispel: null,
+      allowsProceduralCast: true,
+      allowsProceduralCombat: true,
+    },
+    // Divine Empowerment: Canary's owned-item zone is simplified to a 5 s
+    // self buff (recorded deviation in TODO.md).
+    "data/scripts/spells/support/divine_empowerment.lua": attributeCondition(
+      5_000,
+      { damageDealtPercent: 108 },
+      { effectId: 50 },
+    ),
+    // Avatars: outfit transform + crit/damage-reduction window, reviewed as
+    // the "avatar" player action (CONST_ME_AVATAR_APPEAR = 244).
+    "data/scripts/spells/support/avatar_of_steel.lua": playerCallback(
+      "avatar",
+      { effectId: 244 },
+    ),
+    "data/scripts/spells/support/avatar_of_light.lua": playerCallback(
+      "avatar",
+      { effectId: 244 },
+    ),
+    "data/scripts/spells/support/avatar_of_storm.lua": playerCallback(
+      "avatar",
+      { effectId: 244 },
+    ),
+    "data/scripts/spells/support/avatar_of_nature.lua": playerCallback(
+      "avatar",
+      { effectId: 244 },
+    ),
+    "data/scripts/spells/support/avatar_of_balance.lua": playerCallback(
+      "avatar",
+      { effectId: 244 },
+    ),
     "data/scripts/spells/attack/energy_beam.lua": {
       damageType: "energy",
       formula: levelMagicFormula(1.8, 11, 3, 19),
@@ -648,6 +758,34 @@ function levelMagicFormula(
     kind: "level-magic",
     minimum: expression(minimumMagicMultiplier, minimumConstant),
     maximum: expression(maximumMagicMultiplier, maximumConstant),
+  };
+}
+
+/**
+ * Spiritual Outburst's monk formula: SPELL_BASE_POWER 42 scaled by skill and
+ * attack, plus the flat level baseline, at ±10 %. The baseline is level/5
+ * until level 500; the tier taper beyond that is Canary C++
+ * (Player::calculateFlatDamageHealing) and lives server-side in
+ * flatDamageHealing.ts, so this reference expression carries the sub-500 leg.
+ */
+function spiritualOutburstFormula() {
+  const base = binary(
+    "add",
+    binary(
+      "multiply",
+      binary(
+        "multiply",
+        number(42),
+        binary("divide", variable("skill"), number(100)),
+      ),
+      binary("divide", variable("attack"), number(10)),
+    ),
+    binary("divide", variable("level"), number(5)),
+  );
+  return {
+    kind: "skill",
+    minimum: binary("multiply", base, number(0.9)),
+    maximum: binary("multiply", base, number(1.1)),
   };
 }
 

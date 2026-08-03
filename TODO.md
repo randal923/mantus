@@ -997,25 +997,7 @@ limitations accepted during a session are recorded in the owning feature file
   100 % crit is not mirrored into the Cyclopedia stat display
   (`CyclopediaService` calls `playerSpecials` without `now`). Owner:
   Feature 79-81 (wheel).
-- **Long spell cooldowns reset on relog** (2026-08-03). All combat cooldowns
-  live in `Session.combatCooldowns` (memory only), which was harmless at
-  ≤30 min but is now an exploit: relogging clears an avatar's 1-2 h cooldown
-  (and Intense Wound Cleansing's 10 min one). Recommended fix: persist
-  cooldowns above some threshold (e.g. >60 s) per character on logout and
-  rehydrate at login, like Canary's serialized condition/cooldown state.
-  Owner: Feature 79-81 (wheel) / combat core.
 - The Sorcerer blue revelation's **Drain Body leech** (2-5 % life/mana leech
   against monsters debuffed by Sap Strength / Expose Weakness) is not
   implemented — the spells apply their debuffs but no leech reads the wheel
   stage (2026-08-03). Owner: Feature 79-81 (wheel).
-- `content/spells/canary-spells.json` still records the 10 revelation actives
-  as `supported: false` (2026-08-03): the server modules were added as "extra
-  modules" (allowed by the parity design) without extending the importer.
-  The parity inventory therefore undercounts shipped spells and the client's
-  `castableSpellIds` icon gate does not cover their new icon entries.
-  Recommended fix: extend `parseCanarySpells.mjs` (`reviewedWheelRevelation`
-  + the special-combat tables) for the 10 Lua files, re-run
-  `yarn spells:import` + `yarn parity:inventory`, and update the pinned
-  budgets in `SPELL_DEFINITIONS.test.ts` (169→179 upstream-supported,
-  disabled buckets) and `getSpellIconArtwork.test.ts`. Owner: Feature 26
-  (spell parity).

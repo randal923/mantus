@@ -32,6 +32,9 @@ import type { TradeService } from "./trade/TradeService";
 import type { GuildService } from "./guild/GuildService";
 import type { ModerationService } from "./moderation/ModerationService";
 import type { PvpTracker } from "./pvp/PvpTracker";
+import type { PersistedCooldown } from "./combat/CooldownStore";
+import type { CooldownTracker } from "./combat/CooldownTracker";
+import { persistableCooldowns } from "./combat/persistableCooldowns";
 import type { PvpKillRecord } from "./pvp/PvpStore";
 import type { MarkerService } from "./minimap/MarkerService";
 import type { OutfitService } from "./outfit/OutfitService";
@@ -86,6 +89,7 @@ export class CharacterHandler {
     private readonly bestiary: BestiaryTracker,
     private readonly wheel: WheelTracker,
     private readonly gems: GemTracker,
+    private readonly cooldowns: CooldownTracker,
     /**
      * Reclaims a character still lingering in the world after an in-fight
      * disconnect. Returns the combat locks to carry onto the reconnecting
@@ -242,6 +246,7 @@ export class CharacterHandler {
       let depot: LoadedDepot | null = null;
       let pvpFrags: ReadonlyArray<PvpKillRecord> = [];
       let bestiaryKills: ReadonlyMap<number, number> = new Map();
+      let cooldowns: ReadonlyArray<PersistedCooldown> = [];
       if (character) {
         // Sequential, not Promise.all: each load checks out its own pooled
         // client, and the fan-out let one login hold five at once (more —
@@ -252,6 +257,7 @@ export class CharacterHandler {
         depot = await this.depot.load(character.id);
         pvpFrags = await this.pvp.load(character.id);
         bestiaryKills = await this.bestiary.load(character.id);
+        cooldowns = await this.cooldowns.load(character.id);
       }
       const wheelBonuses = character
         ? computeWheelBonuses(
@@ -311,6 +317,7 @@ export class CharacterHandler {
           wheelSlices,
           gemData,
           wheelBonuses ?? computeWheelBonuses([], character.vocation),
+          cooldowns,
         );
       });
     } catch (cause) {
@@ -328,6 +335,7 @@ export class CharacterHandler {
     wheelSlices: ReadonlyArray<number>,
     gemData: GemCharacterData | null,
     wheelBonuses: WheelBonuses,
+    cooldowns: ReadonlyArray<PersistedCooldown> = [],
   ): void {
     if (session.playerId) {
       session.sendError("already-joined");
@@ -399,6 +407,17 @@ export class CharacterHandler {
     session.huntingBotEnabled = false;
     session.huntingBotWaypointIndex = 0;
     session.aimAtTargetSpellIds = new Set(character.aimAtTargetSpellIds);
+    // Cooldowns persisted at the last logout; expired rows drop here and
+    // the first fight-state projection (the welcome below) carries the rest,
+    // so relogging never shortens a cooldown (charter rule 8).
+    for (const cooldown of cooldowns) {
+      if (cooldown.readyAt <= now) continue;
+      if (session.combatCooldowns.has(cooldown.key)) continue;
+      session.combatCooldowns.set(cooldown.key, {
+        readyAt: cooldown.readyAt,
+        totalMs: cooldown.totalMs,
+      });
+    }
     this.registry.bindPlayer(session);
     const inventory = this.items.attach(loadedInventory);
     if (loadedDepot) this.depot.attach(loadedDepot);
@@ -476,6 +495,14 @@ export class CharacterHandler {
     existing.movementDirection = null;
     existing.bufferedMovementDirection = null;
     existing.attackTargetId = null;
+    // The evicted session's cooldowns are flushed before the replacement's
+    // load runs (the tracker orders the write ahead of the read), so a
+    // dual-login cannot shed them either.
+    this.cooldowns.flush(
+      characterId,
+      persistableCooldowns(existing.combatCooldowns, monotonicNow()),
+    );
+    existing.combatCooldowns.clear();
     existing.actionBotRuleReadyAt.clear();
     existing.itemOperationPending = false;
     existing.potionPersistPending = false;

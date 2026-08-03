@@ -2682,3 +2682,62 @@ semantics + stage-3 collapse, Spiritual Outburst harmony legs, Drain Body
 leech passive, long-cooldown relog reset (avatar exploit), content-catalog
 `supported` flags not regenerated (parity inventory undercounts), no chain
 visuals/weapon-type missile, Cyclopedia not showing in-avatar crit.
+
+## 2026-08-03 — Cooldowns survive relog + revelation actives marked supported
+
+**Problem**: (1) All combat cooldowns lived only in `Session.combatCooldowns`,
+so relogging cleared them — harmless at ≤30 min, an exploit once the avatars
+shipped with 1-2 h cooldowns. (2) `content/spells/canary-spells.json` still
+recorded the ten revelation actives as `supported: false`, so the parity
+inventory undercounted shipped spells.
+
+**What changed**: New `character_spell_cooldowns` table (migration 073,
+applied to the dev database; `ready_at` epoch-ms like prey's timestamps,
+`total_ms` capped at the 2 h protocol maximum) with a `CooldownStore`
+trio (`Memory`/`Pg` + `sql/{select,replace}CooldownsQuery`, full-replace CTE
+like `replaceCharacterStoragesQuery`) and a `CooldownTracker` whose
+per-character write chain orders every logout flush ahead of the next
+login's read. Flush points: `processDisconnects` (both the lingering and
+leave-world branches), `evictExistingSession` (dual login), and a
+`finishStop` sweep before sockets terminate; load in `resolveWorldEntry`'s
+sequential block, applied in `enterWorld` before the welcome fight-state, so
+the client's HUD shows restored timers immediately. Death still wipes the
+map, and the unconditional full replace erases the rows on the next flush.
+`persistableCooldowns` bounds what is written to what the table's checks
+accept.
+
+For the catalog: `parseCanarySpells.mjs` gained `reviewedWheelRevelation`
+entries for all ten revelation actives plus special-combat entries
+(executioner keeps its parsed skill formula with `allowsProceduralCombat`;
+grenade/beam pin their level-magic formulas; Spiritual Outburst gets a
+reference AST with the sub-500 flat leg; Divine Empowerment is its reviewed
+condition; avatars are `playerCallback("avatar")`). Regenerated
+`canary-spells.json` (179 supported / 56 disabled) + parity inventory,
+reconciled the converter hash in `content/source-manifest.json`, and updated
+the pinned budgets (`SPELL_DEFINITIONS.test.ts` byOwner/disabled/callbacks,
+`getSpellIconArtwork.test.ts` 169→179).
+
+**Files**: `server/db/migrations/073_character_spell_cooldowns.sql`,
+`server/src/combat/{CooldownStore,MemoryCooldownStore,PgCooldownStore,
+CooldownTracker,persistableCooldowns,sql/selectCooldownsQuery,
+sql/replaceCooldownsQuery}.ts`, `server/src/{GameServer,CharacterHandler,
+index}.ts`, `tools/parseCanarySpells.mjs`, `content/spells/canary-spells.json`,
+`content/canary-parity-inventory.json`, `content/source-manifest.json`,
+`server/src/combat/spells/SPELL_DEFINITIONS.test.ts`,
+`client/lib/combat/getSpellIconArtwork.test.ts`, plus new tests.
+
+**Verified**: new unit tests (tracker write-before-read ordering, empty-set
+replace, persistable bounds), a Pg integration suite against a migrated
+schema (round trip, wholesale replace, per-character scoping — run with
+TEST_DATABASE_URL), and an end-to-end GameServer test that relogs twice and
+asserts the welcome fight-state still carries a seeded 2 h avatar cooldown
+and that the logout flush round-trips it. Full server suite: 1610 passed,
+only the four pre-existing exercise-weapon failures. `yarn test:tools` +
+parity check green after the regeneration.
+
+**Residual risk**: cooldowns flush when the session leaves the world, not on
+every cast — a hard crash between cast and logout loses at most that
+session's cooldowns (same durability class as the character snapshot).
+Death-while-lingering keeps the pre-death rows (death only clears the map
+when a session is attached); cooldowns surviving death matches Canary, so
+the wipe-on-death-with-session is the stricter branch.

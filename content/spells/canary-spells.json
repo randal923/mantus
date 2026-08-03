@@ -8,29 +8,29 @@
     "total": 236,
     "nonContent": 1,
     "registered": 235,
-    "supported": 169,
+    "supported": 179,
     "disabled": {
-      "total": 66,
-      "spells": 49,
+      "total": 56,
+      "spells": 39,
       "runes": 17,
       "byOwner": {
-        "07-combat": 33,
+        "07-combat": 28,
         "08c-decay": 12,
         "14a-parties": 5,
         "14d-houses": 4,
         "14e-social-services": 2,
-        "15-optional-features": 10
+        "15-optional-features": 5
       }
     },
     "ignoredFormulaFields": 0,
-    "unreviewedCallbacks": 47,
+    "unreviewedCallbacks": 37,
     "reasons": {
-      "condition mechanics require a dedicated importer": 15,
+      "condition mechanics require a dedicated importer": 9,
       "field or item creation is not implemented": 9,
-      "procedural cast callback": 41,
-      "procedural combat callback": 11,
-      "unsupported or missing combat formula": 65,
-      "unsupported or missing combat type": 43
+      "procedural cast callback": 31,
+      "procedural combat callback": 8,
+      "unsupported or missing combat formula": 56,
+      "unsupported or missing combat type": 36
     }
   },
   "spells": [
@@ -5620,24 +5620,192 @@
       "targetKind": "target",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "holy",
+        "formula": {
+          "kind": "level-magic",
+          "minimum": {
+            "type": "binary",
+            "operator": "add",
+            "left": {
+              "type": "binary",
+              "operator": "add",
+              "left": {
+                "type": "binary",
+                "operator": "divide",
+                "left": {
+                  "type": "variable",
+                  "name": "level"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 5
+                }
+              },
+              "right": {
+                "type": "binary",
+                "operator": "multiply",
+                "left": {
+                  "type": "variable",
+                  "name": "magicLevel"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 4
+                }
+              }
+            },
+            "right": {
+              "type": "number",
+              "value": 0
+            }
+          },
+          "maximum": {
+            "type": "binary",
+            "operator": "add",
+            "left": {
+              "type": "binary",
+              "operator": "add",
+              "left": {
+                "type": "binary",
+                "operator": "divide",
+                "left": {
+                  "type": "variable",
+                  "name": "level"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 5
+                }
+              },
+              "right": {
+                "type": "binary",
+                "operator": "multiply",
+                "left": {
+                  "type": "variable",
+                  "name": "magicLevel"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 6
+                }
+              }
+            },
+            "right": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        },
+        "effectId": 40,
+        "missileId": 38,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": -1,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 1,
+              "y": -2
+            },
+            {
+              "x": -2,
+              "y": -1
+            },
+            {
+              "x": -1,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": -1
+            },
+            {
+              "x": 1,
+              "y": -1
+            },
+            {
+              "x": 2,
+              "y": -1
+            },
+            {
+              "x": -2,
+              "y": 0
+            },
+            {
+              "x": -1,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": -2,
+              "y": 1
+            },
+            {
+              "x": -1,
+              "y": 1
+            },
+            {
+              "x": 0,
+              "y": 1
+            },
+            {
+              "x": 1,
+              "y": 1
+            },
+            {
+              "x": 2,
+              "y": 1
+            },
+            {
+              "x": -1,
+              "y": 2
+            },
+            {
+              "x": 0,
+              "y": 2
+            },
+            {
+              "x": 1,
+              "y": 2
+            }
+          ],
+          "directional": false
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "red",
+        "minimumStage": 1
+      },
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula",
-        "condition mechanics require a dedicated importer",
-        "procedural combat callback"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer, procedural combat callback."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -7169,18 +7337,17 @@
       },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "red",
+        "minimumStage": 1
+      },
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "procedural combat callback"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, procedural combat callback."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -8095,21 +8262,132 @@
       "targetKind": "direction",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "death",
+        "formula": {
+          "kind": "level-magic",
+          "minimum": {
+            "type": "binary",
+            "operator": "add",
+            "left": {
+              "type": "binary",
+              "operator": "add",
+              "left": {
+                "type": "binary",
+                "operator": "divide",
+                "left": {
+                  "type": "variable",
+                  "name": "level"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 5
+                }
+              },
+              "right": {
+                "type": "binary",
+                "operator": "multiply",
+                "left": {
+                  "type": "variable",
+                  "name": "magicLevel"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 5.5
+                }
+              }
+            },
+            "right": {
+              "type": "number",
+              "value": 0
+            }
+          },
+          "maximum": {
+            "type": "binary",
+            "operator": "add",
+            "left": {
+              "type": "binary",
+              "operator": "add",
+              "left": {
+                "type": "binary",
+                "operator": "divide",
+                "left": {
+                  "type": "variable",
+                  "name": "level"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 5
+                }
+              },
+              "right": {
+                "type": "binary",
+                "operator": "multiply",
+                "left": {
+                  "type": "variable",
+                  "name": "magicLevel"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 9
+                }
+              }
+            },
+            "right": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        },
+        "effectId": 18,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "tiles",
+          "offsets": [
+            {
+              "x": 0,
+              "y": -5
+            },
+            {
+              "x": 0,
+              "y": -4
+            },
+            {
+              "x": 0,
+              "y": -3
+            },
+            {
+              "x": 0,
+              "y": -2
+            },
+            {
+              "x": 0,
+              "y": -1
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "directional": true
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "red",
+        "minimumStage": 1
+      },
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat formula"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -11940,22 +12218,153 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "physical",
+        "formula": {
+          "kind": "skill",
+          "minimum": {
+            "type": "binary",
+            "operator": "multiply",
+            "left": {
+              "type": "binary",
+              "operator": "add",
+              "left": {
+                "type": "binary",
+                "operator": "multiply",
+                "left": {
+                  "type": "binary",
+                  "operator": "multiply",
+                  "left": {
+                    "type": "number",
+                    "value": 42
+                  },
+                  "right": {
+                    "type": "binary",
+                    "operator": "divide",
+                    "left": {
+                      "type": "variable",
+                      "name": "skill"
+                    },
+                    "right": {
+                      "type": "number",
+                      "value": 100
+                    }
+                  }
+                },
+                "right": {
+                  "type": "binary",
+                  "operator": "divide",
+                  "left": {
+                    "type": "variable",
+                    "name": "attack"
+                  },
+                  "right": {
+                    "type": "number",
+                    "value": 10
+                  }
+                }
+              },
+              "right": {
+                "type": "binary",
+                "operator": "divide",
+                "left": {
+                  "type": "variable",
+                  "name": "level"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 5
+                }
+              }
+            },
+            "right": {
+              "type": "number",
+              "value": 0.9
+            }
+          },
+          "maximum": {
+            "type": "binary",
+            "operator": "multiply",
+            "left": {
+              "type": "binary",
+              "operator": "add",
+              "left": {
+                "type": "binary",
+                "operator": "multiply",
+                "left": {
+                  "type": "binary",
+                  "operator": "multiply",
+                  "left": {
+                    "type": "number",
+                    "value": 42
+                  },
+                  "right": {
+                    "type": "binary",
+                    "operator": "divide",
+                    "left": {
+                      "type": "variable",
+                      "name": "skill"
+                    },
+                    "right": {
+                      "type": "number",
+                      "value": 100
+                    }
+                  }
+                },
+                "right": {
+                  "type": "binary",
+                  "operator": "divide",
+                  "left": {
+                    "type": "variable",
+                    "name": "attack"
+                  },
+                  "right": {
+                    "type": "number",
+                    "value": 10
+                  }
+                }
+              },
+              "right": {
+                "type": "binary",
+                "operator": "divide",
+                "left": {
+                  "type": "variable",
+                  "name": "level"
+                },
+                "right": {
+                  "type": "number",
+                  "value": 5
+                }
+              }
+            },
+            "right": {
+              "type": "number",
+              "value": 1.1
+            }
+          }
+        },
+        "effectId": 285,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "red",
+        "minimumStage": 1
+      },
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat formula",
-        "procedural combat callback"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat formula, procedural combat callback."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -21543,23 +21952,42 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 244,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "purple",
+        "minimumStage": 1
+      },
+      "playerAction": "avatar",
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula",
-        "condition mechanics require a dedicated importer"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "15-optional-features",
-        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -21591,23 +22019,42 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 244,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "purple",
+        "minimumStage": 1
+      },
+      "playerAction": "avatar",
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula",
-        "condition mechanics require a dedicated importer"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "15-optional-features",
-        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -21639,23 +22086,42 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 244,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "purple",
+        "minimumStage": 1
+      },
+      "playerAction": "avatar",
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula",
-        "condition mechanics require a dedicated importer"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "15-optional-features",
-        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -21687,23 +22153,42 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 244,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "purple",
+        "minimumStage": 1
+      },
+      "playerAction": "avatar",
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula",
-        "condition mechanics require a dedicated importer"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "15-optional-features",
-        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -21735,23 +22220,42 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 244,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "purple",
+        "minimumStage": 1
+      },
+      "playerAction": "avatar",
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula",
-        "condition mechanics require a dedicated importer"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "15-optional-features",
-        "reason": "Requires 15-optional-features before its registered behavior can be enabled: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula, condition mechanics require a dedicated importer."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {
@@ -22772,22 +23276,46 @@
       "targetKind": "self",
       "aggressive": false,
       "needWeapon": false,
-      "combat": null,
+      "combat": {
+        "damageType": "healing",
+        "formula": {
+          "kind": "fixed",
+          "minimum": {
+            "type": "number",
+            "value": 0
+          },
+          "maximum": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "effectId": 50,
+        "missileId": null,
+        "blockArmor": false,
+        "blockShield": false,
+        "area": {
+          "shape": "single"
+        },
+        "dispel": null,
+        "condition": {
+          "type": "attributes",
+          "durationMs": 5000,
+          "damageDealtPercent": 108
+        }
+      },
       "conjure": null,
       "castRules": null,
-      "wheelRevelation": null,
+      "wheelRevelation": {
+        "domain": "blue",
+        "minimumStage": 1
+      },
       "ignoredFormulaFields": [],
-      "supported": false,
-      "unsupportedReasons": [
-        "procedural cast callback",
-        "unsupported or missing combat type",
-        "unsupported or missing combat formula"
-      ],
+      "supported": true,
+      "unsupportedReasons": [],
       "parity": {
         "ownerTodo": "07-combat",
-        "status": "blocked",
-        "blockedBy": "07-combat",
-        "reason": "Requires a reviewed TypeScript combat implementation: procedural cast callback, unsupported or missing combat type, unsupported or missing combat formula."
+        "status": "implemented",
+        "reason": "Executable through the project-native authoritative spell registry."
       }
     },
     {

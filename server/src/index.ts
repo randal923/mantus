@@ -24,6 +24,7 @@ import { PgHouseStore } from "./house/PgHouseStore";
 import { PgModerationStore } from "./moderation/PgModerationStore";
 import { PgPvpStore } from "./pvp/PgPvpStore";
 import { PgBestiaryStore } from "./bestiary/PgBestiaryStore";
+import { PgCooldownStore } from "./combat/PgCooldownStore";
 import { PgGemStore } from "./wheel/PgGemStore";
 import { PgWheelStore } from "./wheel/PgWheelStore";
 import { PgHighscoreStore } from "./social/PgHighscoreStore";
@@ -142,6 +143,7 @@ const highscores = new PgHighscoreStore(pool);
 const bestiary = new PgBestiaryStore(pool);
 const wheel = new PgWheelStore(pool);
 const gems = new PgGemStore(pool);
+const cooldowns = new PgCooldownStore(pool);
 const moderation = new PgModerationStore(pool);
 const store = new PgMantusStore(pool, itemCatalog);
 const chests = new PgChestStore(pool, itemCatalog);
@@ -193,6 +195,7 @@ const server = new GameServer(serverConfig, {
   bestiary,
   wheel,
   gems,
+  cooldowns,
   moderation,
   store,
   chests,

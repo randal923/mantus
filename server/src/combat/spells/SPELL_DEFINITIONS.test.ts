@@ -215,20 +215,20 @@ describe("spell definitions", () => {
     // Not yet zero. Each entry names the feature that owns driving it down.
     expect(report.disabled.byOwner).toEqual({
       // Todo 8 Feature 24 (remaining support-spell callbacks).
-      "07-combat": 33,
+      "07-combat": 28,
       // Todo 8 Feature 30 (item decay: fields, walls, bombs).
       "08c-decay": 12,
       // Todo 14 party/house/social spell callbacks.
       "14a-parties": 5,
       "14d-houses": 4,
       "14e-social-services": 2,
-      // Todo 15 Features 55-57 and 61-66 (familiars, avatars).
-      "15-optional-features": 10,
+      // Todo 15 Features 55-57 (familiars; the avatars shipped 2026-08-03).
+      "15-optional-features": 5,
     });
-    expect(report.disabled.spells).toBe(49);
+    expect(report.disabled.spells).toBe(39);
     expect(report.disabled.runes).toBe(17);
-    expect(report.disabled.total).toBe(66);
-    expect(report.unreviewedCallbacks).toBe(47);
+    expect(report.disabled.total).toBe(56);
+    expect(report.unreviewedCallbacks).toBe(37);
   });
 
   it("projects only the player's server-owned instant spell metadata", () => {

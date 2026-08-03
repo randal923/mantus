@@ -115,6 +115,9 @@ import { BestiaryTracker } from "./bestiary/BestiaryTracker";
 import { loadBestiaryCatalog } from "./bestiary/loadBestiaryCatalog";
 import { GemAtelierService } from "./wheel/GemAtelierService";
 import { GemDropHooks } from "./wheel/GemDropHooks";
+import type { CooldownStore } from "./combat/CooldownStore";
+import { CooldownTracker } from "./combat/CooldownTracker";
+import { persistableCooldowns } from "./combat/persistableCooldowns";
 import type { GemStore } from "./wheel/GemStore";
 import { GemTracker } from "./wheel/GemTracker";
 import { WheelService } from "./wheel/WheelService";
@@ -204,6 +207,7 @@ export interface GameServerDeps {
   bestiary?: BestiaryStore;
   wheel?: WheelStore;
   gems?: GemStore;
+  cooldowns?: CooldownStore;
   moderation?: ModerationStore;
   store?: MantusStoreStore;
   chests?: ChestStore;
@@ -296,6 +300,7 @@ export class GameServer {
   private readonly bestiaryTracker: BestiaryTracker;
   private readonly wheel: WheelService;
   private readonly wheelTracker: WheelTracker;
+  private readonly cooldownTracker: CooldownTracker;
   private readonly gems: GemAtelierService;
   private readonly gemTracker: GemTracker;
   private readonly gemDrops: GemDropHooks;
@@ -635,6 +640,7 @@ export class GameServer {
     );
     this.wheelTracker = new WheelTracker(deps.wheel);
     this.gemTracker = new GemTracker(deps.gems);
+    this.cooldownTracker = new CooldownTracker(deps.cooldowns);
     this.wheel = new WheelService(
       this.world,
       this.wheelTracker,
@@ -713,6 +719,7 @@ export class GameServer {
       this.bestiaryTracker,
       this.wheelTracker,
       this.gemTracker,
+      this.cooldownTracker,
       (characterId, now) => this.reclaimLingeringPlayer(characterId, now),
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
@@ -1468,6 +1475,13 @@ export class GameServer {
         player &&
         this.registry.sessionFor(playerId) === session
       ) {
+        // The cooldowns become durable the moment the session goes away —
+        // the next login re-reads them, so relogging cannot shed an
+        // avatar's two-hour cooldown (charter rule 8).
+        this.cooldownTracker.flush(
+          playerId,
+          persistableCooldowns(session.combatCooldowns, now),
+        );
         // Canary keeps an in-fight character in the world until the combat
         // lock expires, so logging out cannot dodge the frag or the skull.
         // Only the session-scoped systems detach; the entity keeps ticking.
@@ -2098,7 +2112,17 @@ export class GameServer {
     await this.wheelTracker.stop();
     await this.gems.stop();
     this.gems.applyResolvedOutcomes(monotonicNow());
-    await this.gemTracker.stop();
+    // Sessions never pass through processDisconnects at shutdown, so their
+    // cooldowns are swept here before the sockets are terminated.
+    for (const session of this.registry.all()) {
+      const { playerId } = session;
+      if (!playerId) continue;
+      this.cooldownTracker.flush(
+        playerId,
+        persistableCooldowns(session.combatCooldowns, monotonicNow()),
+      );
+    }
+    await this.cooldownTracker.stop();
     await this.depot.stop();
     this.depot.applyResolvedOutcomes();
     await this.items.stopPersists();

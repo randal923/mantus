@@ -9,7 +9,8 @@ import {
 } from "@tibia/protocol";
 import type { ServerConfig } from "./config";
 import { NO_STAGES } from "./progression/stageRates";
-import { GameServer } from "./GameServer";
+import { GameServer, type GameServerDeps } from "./GameServer";
+import { MemoryCooldownStore } from "./combat/MemoryCooldownStore";
 import { ItemCatalog } from "./item/ItemCatalog";
 import { MemoryItemStore } from "./item/MemoryItemStore";
 import { InMemoryAccountStore } from "./test/InMemoryAccountStore";
@@ -470,6 +471,7 @@ describe("auth gate", () => {
     accounts = new InMemoryAccountStore(),
     characters = new InMemoryCharacterStore(),
     verifier: TokenVerifier = fakeVerifier,
+    extraDeps: Partial<GameServerDeps> = {},
   ) => {
     server = new GameServer(
       { ...testConfig, ...overrides },
@@ -479,6 +481,7 @@ describe("auth gate", () => {
         characters,
         items: new MemoryItemStore(),
         itemCatalog: new ItemCatalog([]),
+        ...extraDeps,
       },
     );
     server.start();
@@ -1245,6 +1248,61 @@ describe("auth gate", () => {
         addons: 0,
       },
     });
+  });
+
+  it("carries live spell cooldowns across a relog", async () => {
+    class CountingCooldownStore extends MemoryCooldownStore {
+      replaces = 0;
+      override async replace(
+        characterId: string,
+        cooldowns: Parameters<MemoryCooldownStore["replace"]>[1],
+      ): Promise<void> {
+        await super.replace(characterId, cooldowns);
+        this.replaces += 1;
+      }
+    }
+    const cooldowns = new CountingCooldownStore();
+    startServer(
+      {},
+      new InMemoryAccountStore(),
+      new InMemoryCharacterStore(),
+      fakeVerifier,
+      { cooldowns },
+    );
+    const first = await connect(server.port, "Chiller", "tok.chiller");
+    sockets.push(first.socket);
+    first.socket.terminate();
+    // The disconnect flush writes the (empty) live map before the seed.
+    await waitFor(() => cooldowns.replaces >= 1, "first logout flush");
+
+    const readyAt = Date.now() + 3_600_000;
+    await cooldowns.replace(first.playerId, [
+      { key: "spell:uteta-res-eq", readyAt, totalMs: 7_200_000 },
+    ]);
+
+    const second = await connect(server.port, "Chiller", "tok.chiller");
+    sockets.push(second.socket);
+    const welcome = second.messages.find(
+      (message) => message.type === "welcome",
+    );
+    if (welcome?.type !== "welcome") throw new Error("missing relog welcome");
+    const restored = welcome.fightState.cooldowns.find(
+      (cooldown) => cooldown.group === "spell:uteta-res-eq",
+    );
+    expect(restored).toBeDefined();
+    expect(restored?.totalMs).toBe(7_200_000);
+    expect(restored?.remainingMs).toBeGreaterThan(3_500_000);
+
+    // A second relog proves the logout write round-trips the same rows.
+    const flushesBefore = cooldowns.replaces;
+    second.socket.terminate();
+    await waitFor(
+      () => cooldowns.replaces > flushesBefore,
+      "second logout flush",
+    );
+    expect(await cooldowns.load(first.playerId)).toEqual([
+      { key: "spell:uteta-res-eq", readyAt, totalMs: 7_200_000 },
+    ]);
   });
 
   it("restores the authoritative floor after a transition and reconnect", async () => {
