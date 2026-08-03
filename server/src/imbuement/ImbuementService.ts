@@ -24,6 +24,7 @@ import {
   planImbuementMaterials,
   type ImbuementMaterialPlan,
 } from "./planImbuementMaterials";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Imbuement shrine actions (Feature 78), transcribed from pinned Canary
@@ -54,7 +55,7 @@ interface DecayLedgerEntry {
 }
 
 export class ImbuementService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly decayLedger = new Map<string, Map<string, DecayLedgerEntry>>();
@@ -71,7 +72,7 @@ export class ImbuementService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

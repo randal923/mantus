@@ -21,6 +21,7 @@ import { TradeSession, type TradeSide } from "./TradeSession";
 import type { TradeCommitResult, TradeStore } from "./TradeStore";
 import { tradeOfferSubtree } from "./tradeOfferSubtree";
 import { withinTradeRange } from "./withinTradeRange";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Player-to-player trade (Canary-parity rules on project-native storage).
@@ -33,7 +34,7 @@ import { withinTradeRange } from "./withinTradeRange";
  * crash or offline cancel are restored at the owner's next login.
  */
 export class TradeService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly tradesByCharacter = new Map<string, TradeSession>();
@@ -51,7 +52,7 @@ export class TradeService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

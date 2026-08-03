@@ -30,6 +30,7 @@ import type { GemStore, GemTransactionResult } from "./GemStore";
 import type { GemTracker } from "./GemTracker";
 import { rollRevealedGem } from "./rollRevealedGem";
 import type { WheelTracker } from "./WheelTracker";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 const MAX_TRACKED_REQUEST_IDS = 64;
 
@@ -40,7 +41,7 @@ const MAX_TRACKED_REQUEST_IDS = 64;
  * commit, inside the tick via applyResolvedOutcomes (charter rules 2-4).
  */
 export class GemAtelierService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly requestIdsBySession = new Map<string, Set<string>>();
@@ -62,7 +63,7 @@ export class GemAtelierService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

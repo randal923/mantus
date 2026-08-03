@@ -1,6 +1,7 @@
 import { monotonicNow } from "./monotonicNow";
 
 export class TickLoop {
+  private static readonly running = new Set<TickLoop>();
   private timer: NodeJS.Timeout | undefined;
   private wakeImmediate: NodeJS.Immediate | undefined;
   private wakeTimer: NodeJS.Timeout | undefined;
@@ -12,9 +13,20 @@ export class TickLoop {
     private readonly minWakeSpacingMs = 5,
   ) {}
 
+  /**
+   * Wakes every running loop. Resolved async outcomes use this instead of a
+   * callback threaded through every handler: a wake is only a hint — a
+   * spurious one is a no-op tick bounded by the wake spacing — so the
+   * broadcast reaching another instance's loop (tests) is harmless.
+   */
+  static wakeAll(): void {
+    for (const loop of TickLoop.running) loop.requestTick();
+  }
+
   start(): void {
     if (this.timer) return;
     this.timer = setInterval(() => this.runTick(), this.intervalMs);
+    TickLoop.running.add(this);
   }
 
   stop(): void {
@@ -22,6 +34,7 @@ export class TickLoop {
     clearInterval(this.timer);
     this.timer = undefined;
     this.cancelWake();
+    TickLoop.running.delete(this);
   }
 
   /**

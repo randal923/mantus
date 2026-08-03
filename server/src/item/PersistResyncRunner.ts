@@ -4,6 +4,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { ItemIntentHandler } from "./ItemIntentHandler";
 import type { LoadedInventory } from "./LoadedInventory";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 interface ReloadedState {
   readonly inventory: LoadedInventory;
@@ -23,7 +24,7 @@ interface ReloadedState {
  */
 export class PersistResyncRunner {
   private readonly inFlight = new Set<string>();
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
   private readonly pendingOperations = new Set<Promise<void>>();
 
   constructor(
@@ -33,7 +34,7 @@ export class PersistResyncRunner {
   ) {}
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   async stop(): Promise<void> {

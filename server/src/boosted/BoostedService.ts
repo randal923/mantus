@@ -9,6 +9,7 @@ import type { BoostedHooks } from "./BoostedHooks";
 import type { BoostedSelectionRecord, BoostedStore } from "./BoostedStore";
 import { localDayKey } from "./localDayKey";
 import { normalRandomIndex } from "./normalRandomIndex";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Daily boosted creature/boss (Feature 76), transcribed from pinned Canary
@@ -25,7 +26,7 @@ import { normalRandomIndex } from "./normalRandomIndex";
  * where Canary compares the primary name only.
  */
 export class BoostedService implements BoostedHooks {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private current: BoostedSelectionRecord | null = null;
   private rotating = false;
@@ -45,7 +46,7 @@ export class BoostedService implements BoostedHooks {
   }
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

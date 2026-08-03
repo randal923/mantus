@@ -10,6 +10,7 @@ import type { DepotIntent } from "./DepotIntent";
 import type { DepotPersistPlan } from "./DepotPersistPlan";
 import type { DepotStore } from "./DepotStore";
 import { failMail } from "./failMail";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Owns the async edges of the depot system: mail delivery, reward injection,
@@ -18,7 +19,7 @@ import { failMail } from "./failMail";
  * shared with carried-item writes so per-character DB writes stay ordered.
  */
 export class DepotOperationRunner {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
   private readonly pendingOperations = new Set<Promise<void>>();
   /** Per-session mail pacing; the durable daily cap is in the transaction. */
   private readonly nextMailAtBySession = new Map<string, number>();
@@ -31,7 +32,7 @@ export class DepotOperationRunner {
   ) {}
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   pushOutcome(outcome: () => void): void {

@@ -29,6 +29,7 @@ import {
 } from "./storeCatalog";
 import { storeOfferAvailability } from "./storeOfferAvailability";
 import { xpBoostPrice } from "./xpBoostPrice";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type StoreIntent =
   | StoreOpenMessage
@@ -61,7 +62,7 @@ const UNIQUE_ITEM_TYPE_IDS: ReadonlyArray<number> = [
  * tick, never from the socket callback (charter rules 3, 4 and 5).
  */
 export class MantusStoreService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   /** Cached per-character DB facts for the availability display. */
@@ -85,7 +86,7 @@ export class MantusStoreService {
   };
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

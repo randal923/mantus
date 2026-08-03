@@ -18,6 +18,7 @@ import type { BestiaryTracker } from "./BestiaryTracker";
 import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { BossSlotRecord, BossSlotStore } from "./BossSlotStore";
 import { getBossMilestones } from "./getBossMilestones";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Bosstiary boss slots (Feature 76), transcribed from pinned Canary
@@ -30,7 +31,7 @@ import { getBossMilestones } from "./getBossMilestones";
  * The slot loot bonus feeds Feature 84's reward-chest rolls when they land.
  */
 export class BossSlotService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly recordsByCharacter = new Map<string, BossSlotRecord>();
@@ -47,7 +48,7 @@ export class BossSlotService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

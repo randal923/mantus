@@ -13,6 +13,7 @@ import type { BestiaryTracker } from "./BestiaryTracker";
 import { getBestiaryStage } from "./getBestiaryStage";
 import { getBossMilestones } from "./getBossMilestones";
 import type { TrackerStore } from "./TrackerStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 interface TrackedSets {
   readonly bestiary: Set<number>;
@@ -27,7 +28,7 @@ interface TrackedSets {
  * `bestiary-entry-changed` push.
  */
 export class TrackerService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly trackedByCharacter = new Map<string, TrackedSets>();
@@ -41,7 +42,7 @@ export class TrackerService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

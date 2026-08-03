@@ -2,9 +2,10 @@ import type { SetLanguageMessage } from "@tibia/protocol";
 import type { AccountStore } from "./AccountStore";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
+import { ResolvedOutcomes } from "./ResolvedOutcomes";
 
 export class LanguageHandler {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
 
   constructor(
     private readonly registry: SessionRegistry,
@@ -26,7 +27,7 @@ export class LanguageHandler {
   }
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   private async persist(

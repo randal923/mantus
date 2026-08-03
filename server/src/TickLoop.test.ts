@@ -94,4 +94,28 @@ describe("TickLoop", () => {
     await sleep(90);
     expect(ticks).toBeGreaterThanOrEqual(2);
   });
+
+  it("wakeAll wakes running loops and skips stopped or unstarted ones", async () => {
+    let runningTicks = 0;
+    let stoppedTicks = 0;
+    let unstartedTicks = 0;
+    const running = makeLoop(10_000, () => {
+      runningTicks += 1;
+    });
+    const stopped = makeLoop(10_000, () => {
+      stoppedTicks += 1;
+    });
+    const unstarted = makeLoop(10_000, () => {
+      unstartedTicks += 1;
+    });
+    running.start();
+    stopped.start();
+    stopped.stop();
+    void unstarted;
+    TickLoop.wakeAll();
+    await twoEventLoopTurns();
+    expect(runningTicks).toBe(1);
+    expect(stoppedTicks).toBe(0);
+    expect(unstartedTicks).toBe(0);
+  });
 });

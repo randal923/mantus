@@ -11,13 +11,14 @@ import type { NpcTravelOffer } from "./DialogueGraph";
 import { evaluateDialogueConditions } from "./evaluateDialogueConditions";
 import type { NpcTravelStore } from "./NpcTravelStore";
 import { travelFareFor } from "./travelFareFor";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 const TRAVEL_EXHAUST_MS = 3_000;
 const DESTINATION_FALLBACK_RADIUS = 2;
 
 export class TravelService {
   private readonly nextTravelAt = new Map<string, number>();
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
 
   constructor(
@@ -29,7 +30,7 @@ export class TravelService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

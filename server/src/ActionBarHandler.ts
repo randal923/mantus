@@ -11,9 +11,10 @@ import { sanitizeActionBarAction } from "./sanitizeActionBarAction";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { World } from "./World";
+import { ResolvedOutcomes } from "./ResolvedOutcomes";
 
 export class ActionBarHandler {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
 
   constructor(
     private readonly registry: SessionRegistry,
@@ -48,7 +49,7 @@ export class ActionBarHandler {
   }
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   private sanitizeActionBar(

@@ -3,6 +3,7 @@ import { STORE_LIMITS } from "@tibia/protocol";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { MantusStoreStore } from "./MantusStoreStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Operator-side coin grants and refunds. The account credited is always the
@@ -12,7 +13,7 @@ import type { MantusStoreStore } from "./MantusStoreStore";
  * keyed, so a retried command is a no-op rather than a second credit.
  */
 export class StoreOperatorService {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
   private readonly pendingOperations = new Set<Promise<void>>();
 
   constructor(
@@ -21,7 +22,7 @@ export class StoreOperatorService {
   ) {}
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   async stop(): Promise<void> {

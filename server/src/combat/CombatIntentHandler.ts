@@ -19,6 +19,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { Combat } from "./Combat";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type CombatIntent =
   | AttackTargetMessage
@@ -40,7 +41,7 @@ interface PendingFightModeUpdate {
 }
 
 export class CombatIntentHandler {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
   private readonly pendingFightModes = new Map<
     string,
     PendingFightModeUpdate
@@ -109,7 +110,7 @@ export class CombatIntentHandler {
   }
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   /**

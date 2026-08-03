@@ -9,6 +9,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { MarkerStore } from "./MarkerStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type MarkerIntent = MinimapMarkerSetMessage | MinimapMarkerDeleteMessage;
 
@@ -19,7 +20,7 @@ type MarkerIntent = MinimapMarkerSetMessage | MinimapMarkerDeleteMessage;
  * the store's transaction (charter rules 6 and 10).
  */
 export class MarkerService {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
 
@@ -31,7 +32,7 @@ export class MarkerService {
   ) {}
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   async stop(): Promise<void> {

@@ -13,6 +13,7 @@ import type { World } from "../World";
 import { buildRouteAnchors } from "./buildRouteAnchors";
 import type { HuntingBot } from "./HuntingBot";
 import { traceRouteLeg } from "./traceRouteLeg";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 export type HuntingBotIntent =
   | UpdateHuntingBotRouteMessage
@@ -30,7 +31,7 @@ export type HuntingBotIntent =
  * therefore costs the player a skipped waypoint, never a teleport.
  */
 export class HuntingBotHandler {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
 
   constructor(
     private readonly registry: SessionRegistry,
@@ -57,7 +58,7 @@ export class HuntingBotHandler {
   }
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
     // Work that arrived while its lane was busy runs as soon as the lane
     // clears; nothing a window asks for is ever silently dropped.
     for (const session of this.registry.all()) {

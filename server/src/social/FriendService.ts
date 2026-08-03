@@ -12,6 +12,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { FriendRecord, FriendSnapshot, FriendStore } from "./FriendStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type FriendIntent =
   | FriendRequestMessage
@@ -31,7 +32,7 @@ type FriendIntent =
  * rather than on relogin.
  */
 export class FriendService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly opPendingByCharacter = new Set<string>();
@@ -45,7 +46,7 @@ export class FriendService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

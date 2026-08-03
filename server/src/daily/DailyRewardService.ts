@@ -29,6 +29,7 @@ import {
 } from "./dailyRewardPools";
 import { localDayEndMs } from "./localDayEndMs";
 import { validateDailyRewardPicks } from "./validateDailyRewardPicks";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Daily rewards (Feature 84, Canary daily_reward.lua). The shrine use
@@ -38,7 +39,7 @@ import { validateDailyRewardPicks } from "./validateDailyRewardPicks";
  * store transaction (charter rules 1, 2, 4, 11).
  */
 export class DailyRewardService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly recordsByCharacter = new Map<string, DailyRewardSnapshot>();
   private readonly accessBySession = new WeakMap<Session, Position>();
@@ -60,7 +61,7 @@ export class DailyRewardService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

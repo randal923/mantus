@@ -7,6 +7,7 @@ import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { ChestLootRequest, ChestStore } from "./ChestStore";
 import type { QuestService } from "../quest/QuestService";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 const SECONDS_PER_HOUR = 3_600;
 
@@ -18,7 +19,7 @@ const SECONDS_PER_HOUR = 3_600;
  * (charter rules 1, 2, 4).
  */
 export class ChestService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
 
   constructor(
@@ -30,7 +31,7 @@ export class ChestService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

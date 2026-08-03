@@ -22,6 +22,7 @@ import {
   rollBonusType,
 } from "./preyBonusRoll";
 import { rollMonsterGrid, type GridCandidate } from "./rollMonsterGrid";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 interface PoolEntry extends GridCandidate {
   readonly name: string;
@@ -46,7 +47,7 @@ interface PoolEntry extends GridCandidate {
  * insufficient funds.
  */
 export class PreyService implements PreyHooks {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly slotsByCharacter = new Map<string, PreySlotRecord[]>();
@@ -83,7 +84,7 @@ export class PreyService implements PreyHooks {
 
   applyResolvedOutcomes(now: number): void {
     this.clockNow = now;
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

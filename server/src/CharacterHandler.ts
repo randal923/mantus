@@ -51,9 +51,10 @@ import { equippedGemsOf } from "./wheel/equippedGemsOf";
 import type { GemCharacterData } from "./wheel/GemStore";
 import type { GemTracker } from "./wheel/GemTracker";
 import type { WheelTracker } from "./wheel/WheelTracker";
+import { ResolvedOutcomes } from "./ResolvedOutcomes";
 
 export class CharacterHandler {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
 
   constructor(
     private readonly service: CharacterService,
@@ -119,7 +120,7 @@ export class CharacterHandler {
   }
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   private beginOperation(session: Session): Session["account"] {

@@ -9,6 +9,7 @@ import {
   learnedSpellStorageKey,
   type SpellTeacherStore,
 } from "./SpellTeacherStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 export type LearnSpellFailure =
   | "already-known"
@@ -31,7 +32,7 @@ export type LearnSpellStart =
  * grant, and the audit row are one transaction (charter rules 2/11).
  */
 export class SpellTeacherService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
 
   constructor(
@@ -42,7 +43,7 @@ export class SpellTeacherService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

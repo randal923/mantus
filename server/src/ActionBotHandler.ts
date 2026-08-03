@@ -11,6 +11,7 @@ import { sanitizeActionBarAction } from "./sanitizeActionBarAction";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { World } from "./World";
+import { ResolvedOutcomes } from "./ResolvedOutcomes";
 
 /**
  * Owns the action bot configuration. Rules carry their own action, so nothing
@@ -18,7 +19,7 @@ import type { World } from "./World";
  * own spell list and the item catalog, exactly like a bar button is.
  */
 export class ActionBotHandler {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
 
   constructor(
     private readonly registry: SessionRegistry,
@@ -50,7 +51,7 @@ export class ActionBotHandler {
   }
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   private sanitize(

@@ -20,6 +20,7 @@ import {
   type ProficiencyPerkEffects,
 } from "./ProficiencyPerkEffects";
 import type { ProficiencyRecord, ProficiencyStore } from "./ProficiencyStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 interface WeaponProgress {
   experience: number;
@@ -37,7 +38,7 @@ interface WeaponProgress {
  * so a lost trailing write can under-count but never mint experience.
  */
 export class ProficiencyService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly progressByCharacter = new Map<
@@ -56,7 +57,7 @@ export class ProficiencyService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

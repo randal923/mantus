@@ -5,7 +5,7 @@ import { isItemNotFoundError } from "./isItemNotFoundError";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
-import type { ItemOutcomeQueue } from "./ItemOutcomeQueue";
+import type { ResolvedOutcomes } from "../ResolvedOutcomes";
 import type { ItemStore } from "./ItemStore";
 import { PendingItemOperations } from "./PendingItemOperations";
 
@@ -17,7 +17,7 @@ export class WorldItemDecayRunner {
     private readonly store: ItemStore,
     private readonly world: World,
     private readonly visibility: Visibility,
-    private readonly outcomes: ItemOutcomeQueue,
+    private readonly outcomes: ResolvedOutcomes<[number]>,
     /** Serializes the decay write behind pending memory-first persists. */
     private readonly runOrdered: <T>(operation: () => Promise<T>) => Promise<T>,
     private readonly catalog: ItemCatalog,

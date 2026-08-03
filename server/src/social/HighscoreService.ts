@@ -7,6 +7,7 @@ import {
 import type { Session } from "../Session";
 import type { World } from "../World";
 import type { HighscoreStore } from "./HighscoreStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 interface CachedPage {
   readonly expiresAt: number;
@@ -20,7 +21,7 @@ interface CachedPage {
  * fields the store projects (charter rule 6).
  */
 export class HighscoreService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly pendingBySession = new Set<string>();
@@ -32,7 +33,7 @@ export class HighscoreService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

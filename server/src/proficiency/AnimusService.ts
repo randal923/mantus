@@ -5,6 +5,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { ProficiencyStore } from "./ProficiencyStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Animus mastery (Feature 82), transcribed from pinned Canary
@@ -15,7 +16,7 @@ import type { ProficiencyStore } from "./ProficiencyStore";
  * come from server-side systems through `grant`.
  */
 export class AnimusService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly masteriesByCharacter = new Map<string, Set<number>>();
 
@@ -27,7 +28,7 @@ export class AnimusService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

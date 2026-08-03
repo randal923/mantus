@@ -10,6 +10,7 @@ import type { SessionRegistry } from "../SessionRegistry";
 import { monotonicNow } from "../monotonicNow";
 import type { ChatModerationHooks } from "./ChatModerationHooks";
 import type { ModerationStore } from "./ModerationStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 interface CachedMute {
   readonly mutedUntil: number;
@@ -34,7 +35,7 @@ const DEFAULT_RETENTION_DAYS = 365;
  * character inside the store transaction).
  */
 export class ModerationService implements ChatModerationHooks {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly muteByCharacter = new Map<string, CachedMute>();
   private readonly autoMuteUntilByCharacter = new Map<string, number>();
@@ -51,7 +52,7 @@ export class ModerationService implements ChatModerationHooks {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   /**

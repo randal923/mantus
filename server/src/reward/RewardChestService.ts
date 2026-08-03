@@ -20,6 +20,7 @@ import { RewardBossTracker } from "./RewardBossTracker";
 import type { RewardHooks } from "./RewardHooks";
 import { rollBossRewardLoot, type BossRewardRoll } from "./rollBossRewardLoot";
 import type { RewardChestSnapshot, RewardStore } from "./RewardStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /** Canary ITEM_REWARD_CHEST (utils_definitions.hpp:610). */
 const REWARD_CHEST_ITEM_ID = 19_250;
@@ -42,7 +43,7 @@ export interface RewardBossBonusHooks {
  */
 export class RewardChestService implements RewardHooks {
   private readonly tracker = new RewardBossTracker();
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly stateByCharacter = new Map<string, RewardChestSnapshot>();
   private readonly accessBySession = new WeakMap<Session, Position>();
@@ -64,7 +65,7 @@ export class RewardChestService implements RewardHooks {
   }
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

@@ -21,6 +21,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { CyclopediaStore } from "./CyclopediaStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 const ABSORB_ELEMENTS: ReadonlyArray<DamageType> = [
   "physical",
@@ -41,7 +42,7 @@ const ABSORB_ELEMENTS: ReadonlyArray<DamageType> = [
  * caches — never another character's, never raw rows.
  */
 export class CyclopediaService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   /** One page query in flight per session; a second request is dropped. */
@@ -57,7 +58,7 @@ export class CyclopediaService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

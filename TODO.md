@@ -42,20 +42,6 @@ limitations accepted during a session are recorded in the owning feature file
   a flush-on-combat-end trigger, not a return to per-swing saves. Owner:
   Feature 106/107 (performance budgets).
 
-- **Async DB outcomes still wait for the interval tick** (2026-08-02).
-  Queued client intents now wake the tick loop immediately
-  (`TickLoop.requestTick()`, see `todo/done.md` 2026-08-02), which removes
-  the 0–25 ms queue delay for player actions. But the results of async
-  work — the ~30 `applyResolvedOutcomes` queues that handlers fill when a
-  DB read or write settles — are only applied by the next 25 ms interval
-  tick, so multi-round-trip flows (login's ~28 sequential queries above
-  all) still pay up to 25 ms of tick alignment per round trip.
-  Recommended fix: let resolution completions request a wake the way
-  queued intents do — a shared resolved-outcome queue that calls
-  `loop.requestTick()` when a handler enqueues an outcome, rather than
-  threading the callback through all ~30 handlers by hand. Owner:
-  Feature 106/107 (performance budgets).
-
 - **A long-backgrounded tab can still be discarded by the browser**
   (2026-08-01). The client now stays correct while its tab is hidden
   (cosmetic effects skip creation, the creature-store flush has a timeout

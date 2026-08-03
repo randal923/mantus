@@ -25,6 +25,7 @@ import type {
 import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import { itemImbuementsOf } from "./itemImbuementsOf";
 import { itemTierOf } from "./itemTierOf";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /**
  * Exaltation Forge conversions (Feature 78), transcribed from pinned Canary
@@ -37,7 +38,7 @@ import { itemTierOf } from "./itemTierOf";
  * the transaction guards are exactly the rows memory validated.
  */
 export class ForgeService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly resourcesByCharacter = new Map<
@@ -56,7 +57,7 @@ export class ForgeService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

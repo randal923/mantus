@@ -15,6 +15,7 @@ import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { VipEntryRecord, VipGroupRecord, VipStore } from "./VipStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type VipIntent =
   | VipAddMessage
@@ -33,7 +34,7 @@ type VipIntent =
  * apply through the outcomes queue inside the tick (charter rules 3–5).
  */
 export class VipService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly opPendingByCharacter = new Set<string>();
@@ -50,7 +51,7 @@ export class VipService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

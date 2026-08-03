@@ -8,6 +8,7 @@ import { getVocation } from "../progression/getVocation";
 import type { Session } from "../Session";
 import type { World } from "../World";
 import type { PromotionStore } from "./PromotionStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type PromotionFailure =
   | "already-promoted"
@@ -16,7 +17,7 @@ type PromotionFailure =
   | "failed";
 
 export class PromotionService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
 
   constructor(
@@ -29,7 +30,7 @@ export class PromotionService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

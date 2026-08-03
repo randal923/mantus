@@ -93,6 +93,8 @@ export interface OutfitColors {
 }
 
 const ASSET_BASE = "/assets";
+const SHEET_LOAD_ATTEMPTS = 3;
+const SHEET_RETRY_BASE_DELAY_MS = 500;
 
 interface AssetManifest {
   version?: string;

@@ -5,10 +5,11 @@ import type { SessionRegistry } from "./SessionRegistry";
 import type { TokenVerifier } from "./TokenVerifier";
 import { getAccountStatus } from "./getAccountStatus";
 import { monotonicNow } from "./monotonicNow";
+import { ResolvedOutcomes } from "./ResolvedOutcomes";
 
 export class AuthHandler {
   /** Outcomes of async token checks, applied at the top of the next tick. */
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
 
   constructor(
     private readonly registry: SessionRegistry,
@@ -27,7 +28,7 @@ export class AuthHandler {
   }
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   enforceDeadline(session: Session, now: number): void {

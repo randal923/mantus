@@ -26,7 +26,7 @@ import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemIntent } from "./ItemIntent";
 import type { ItemMutation } from "./ItemMutation";
 import { ItemOperationRunner } from "./ItemOperationRunner";
-import { ItemOutcomeQueue } from "./ItemOutcomeQueue";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 import type { ItemStore } from "./ItemStore";
 import type { ItemType } from "./ItemType";
 import type { LoadedInventory } from "./LoadedInventory";
@@ -58,7 +58,7 @@ interface PendingPotionUse {
 }
 
 export class ItemIntentHandler {
-  private readonly outcomes = new ItemOutcomeQueue();
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly inventories: InventoryCacheManager;
   private readonly operations: ItemOperationRunner;
   private readonly corpses: CorpseCreator;

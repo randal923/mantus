@@ -18,6 +18,7 @@ import type { EconomyPersistStore } from "./EconomyPersistStore";
 import { inNpcTalkRange } from "./inNpcTalkRange";
 import { planBankDeposit } from "./plan/planBankDeposit";
 import { planBankWithdraw } from "./plan/planBankWithdraw";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type BankIntent =
   | BankDepositMessage
@@ -38,7 +39,7 @@ type BankIntent =
  * ordering it could read a balance that a pending purchase has already spent.
  */
 export class BankService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
 
   constructor(
@@ -51,7 +52,7 @@ export class BankService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

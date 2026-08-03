@@ -2357,3 +2357,54 @@ in `TODO.md` Accepted gaps. The bestiary and proficiency per-kill upserts
 are the next write-coalescing candidates (audit §3 "coalesce per-kill
 writes"), and the login statement collapse remains the biggest open
 round-trip lever, still blocked on a reachable integration Postgres.
+
+## 2026-08-03 — Resolved DB outcomes wake the tick instead of waiting out the interval
+
+**Problem**: the 2026-08-02 wakeable-tick work covered queued client intents
+only. The results of async work — the 43 `applyResolvedOutcomes` queues that
+handlers fill when a DB read or write settles — were still applied only by
+the next 25 ms interval tick, so every DB round trip paid up to 25 ms
+(~12.5 ms average) of tick alignment on top of the ~45 ms cross-region
+latency. Sequential flows compound it: login's ~28 serialized queries carried
+~350 ms of pure alignment on average. Recorded as a TODO.md accepted gap
+(Feature 106/107) with this exact fix specced.
+
+**What changed**: new `ResolvedOutcomes<Args>` (`server/src/
+ResolvedOutcomes.ts`) — the queue-of-settled-closures shape every handler
+already hand-rolled (`push` from promise continuations, drained in order
+inside the tick). Its `push` calls the new static `TickLoop.wakeAll()`, which
+wakes every *running* loop through the existing `requestTick` path — so the
+wake inherits the coalescing and the 5 ms minimum spacing that already guard
+against wake floods, and no callback had to be threaded through the ~43
+handler constructors (a wake is a hint; a spurious one, including a
+cross-instance one in tests, is a bounded no-op tick). All 43 handler queues
+were converted mechanically (`Array<(now: number) => void>` →
+`ResolvedOutcomes<[number]>`, drain loop → `applyAll(now)`), and
+`ItemOutcomeQueue` — the item path's identical hand-written wrapper — was
+deleted in favor of the shared class (`ItemIntentHandler`,
+`ItemOperationRunner`, `WorldItemDecayRunner`).
+
+**Files**: `server/src/ResolvedOutcomes.ts` (+ test, new),
+`server/src/TickLoop.ts` (+ test), 43 handler/service files (one-line
+declaration + one-line drain each), `server/src/item/ItemOutcomeQueue.ts`
+(deleted), `TODO.md`, `todo/status.md`.
+
+**Verified**: 4 new `ResolvedOutcomes` unit tests (in-order apply with drain
+args, one-shot drain, push-during-drain held for the next drain, push wakes a
+running loop and not a stopped one) and a new `TickLoop.wakeAll` case
+(running loop ticks once, stopped and unstarted loops do not). Full server
+suite 1,586 passed with only the four pre-existing exercise-weapon failures
+(`b8f82b6`); server typecheck clean over these changes — the full-repo
+`yarn typecheck` run picked up an unrelated failure in
+`server/src/deployCycleProbe.tmp.ts`, an untracked probe file another session
+dropped mid-run, left untouched.
+
+**Residual risk**: an outcome enqueued *during* a tick, in a phase after its
+own drain point, schedules a wake ~5 ms out that mostly no-ops — bounded by
+the wake coalescing, accepted. Background async completions (decay persists,
+sweeps) now also wake the loop; a tick with nothing due is cheap (every phase
+is time-gated), but if tick-rate telemetry ever shows sustained 200 Hz under
+heavy async traffic, the wake could become selective. The 25 ms alignment is
+gone per round trip, but login is still ~28 sequential round trips — the
+statement collapse (audit §3) remains the big lever, blocked on a reachable
+integration Postgres.

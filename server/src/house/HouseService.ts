@@ -38,6 +38,7 @@ import type {
 } from "./HouseStore";
 import { projectHouseStateFor } from "./projectHouseStateFor";
 import { rentWarningLetterText } from "./rentWarningLetterText";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type HouseIntent =
   | HouseOpenMessage
@@ -92,7 +93,7 @@ const AUCTION_DURATION_MS = HOUSE_LIMITS.auctionDurationDays * DAY_MS;
  * tick (charter rules 2-5).
  */
 export class HouseService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly opPendingByCharacter = new Set<string>();
@@ -127,7 +128,7 @@ export class HouseService {
   }
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

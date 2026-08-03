@@ -9,6 +9,7 @@ import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { Session } from "./Session";
 import type { SessionRegistry } from "./SessionRegistry";
 import type { World } from "./World";
+import { ResolvedOutcomes } from "./ResolvedOutcomes";
 
 /** Minimum gap between loot-filter item listings for one session. */
 const ITEMS_COOLDOWN_MS = 1_000;
@@ -20,7 +21,7 @@ const ITEMS_COOLDOWN_MS = 1_000;
  * must not make the whole setting unsaveable.
  */
 export class LootFilterHandler {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
 
   constructor(
     private readonly registry: SessionRegistry,
@@ -93,7 +94,7 @@ export class LootFilterHandler {
   }
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   private sanitize(filter: LootFilter): LootFilter | null {

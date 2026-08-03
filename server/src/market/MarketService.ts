@@ -34,6 +34,7 @@ import type {
 } from "./MarketStore";
 import { pickEscrowSources } from "./pickEscrowSources";
 import { sellableDepotCounts } from "./sellableDepotCounts";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 const EXPIRY_SCAN_INTERVAL_MS = 60_000;
 const EXPIRY_BATCH_LIMIT = 10;
@@ -48,7 +49,7 @@ const EXPIRY_BATCH_LIMIT = 10;
  * and the DB stay ordered.
  */
 export class MarketService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private expiryOperation: Promise<void> | null = null;
@@ -63,7 +64,7 @@ export class MarketService {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

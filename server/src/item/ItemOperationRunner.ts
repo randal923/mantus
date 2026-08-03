@@ -5,7 +5,7 @@ import type { World } from "../World";
 import type { DecayManager } from "./DecayManager";
 import type { InventoryCacheManager } from "./InventoryCacheManager";
 import type { ItemMutation } from "./ItemMutation";
-import type { ItemOutcomeQueue } from "./ItemOutcomeQueue";
+import type { ResolvedOutcomes } from "../ResolvedOutcomes";
 import { PendingItemOperations } from "./PendingItemOperations";
 
 export interface ItemOperationOptions {
@@ -25,7 +25,7 @@ export class ItemOperationRunner {
     private readonly world: World,
     private readonly visibility: Visibility,
     private readonly inventories: InventoryCacheManager,
-    private readonly outcomes: ItemOutcomeQueue,
+    private readonly outcomes: ResolvedOutcomes<[number]>,
     private readonly decay?: DecayManager,
   ) {}
 

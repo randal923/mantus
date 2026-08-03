@@ -14,6 +14,7 @@ import type { World } from "../World";
 import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import { MOUNTS, OUTFITS, STARTER_LOOK_TYPES } from "./outfitCatalog";
 import type { OutfitSnapshot, OutfitStore } from "./OutfitStore";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 type OutfitIntent = OutfitGetMessage | OutfitSelectMessage;
 
@@ -30,7 +31,7 @@ type OutfitIntent = OutfitGetMessage | OutfitSelectMessage;
  * than from anything the client sends (charter rule 8).
  */
 export class OutfitService {
-  private readonly outcomes: Array<() => void> = [];
+  private readonly outcomes = new ResolvedOutcomes();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly snapshots = new Map<string, OutfitSnapshot>();
@@ -45,7 +46,7 @@ export class OutfitService {
   ) {}
 
   applyResolvedOutcomes(): void {
-    for (const outcome of this.outcomes.splice(0)) outcome();
+    this.outcomes.applyAll();
   }
 
   async stop(): Promise<void> {

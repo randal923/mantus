@@ -17,6 +17,7 @@ import type { World } from "../World";
 import { LoginLoadQueue } from "../character/LoginLoadQueue";
 import type { HuntingTaskStore, TaskSlotRecord } from "./HuntingTaskStore";
 import { rollTaskRarity } from "./rollTaskRarity";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 interface PoolEntry extends GridCandidate {
   readonly name: string;
@@ -35,7 +36,7 @@ interface PoolEntry extends GridCandidate {
  * kills, and state at execution, so racing claims grant exactly once.
  */
 export class HuntingTaskService {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly slotsByCharacter = new Map<string, TaskSlotRecord[]>();
@@ -74,7 +75,7 @@ export class HuntingTaskService {
 
   applyResolvedOutcomes(now: number): void {
     this.clockNow = now;
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {

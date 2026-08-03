@@ -36,6 +36,7 @@ import type { GuildHooks } from "./GuildHooks";
 import type { GuildSnapshot, GuildStore } from "./GuildStore";
 import { isValidGuildName } from "./isValidGuildName";
 import { projectGuildStateFor } from "./projectGuildStateFor";
+import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 /** Guild points a recorded war frag is worth (project balance choice). */
 const WAR_KILL_GUILD_POINTS = 1;
@@ -80,7 +81,7 @@ const WAR_EXPIRY_CHECK_INTERVAL_MS = 60_000;
  * the world sees nothing beyond the public guildName/atWar creature flags.
  */
 export class GuildService implements GuildHooks {
-  private readonly outcomes: Array<(now: number) => void> = [];
+  private readonly outcomes = new ResolvedOutcomes<[number]>();
   private readonly pendingOperations = new Set<Promise<void>>();
   private readonly cooldownBySession = new Map<string, number>();
   private readonly chatLimiter = new ChatRateLimiter();
@@ -103,7 +104,7 @@ export class GuildService implements GuildHooks {
   ) {}
 
   applyResolvedOutcomes(now: number): void {
-    for (const outcome of this.outcomes.splice(0)) outcome(now);
+    this.outcomes.applyAll(now);
   }
 
   async stop(): Promise<void> {
