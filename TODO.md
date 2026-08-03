@@ -194,13 +194,21 @@ limitations accepted during a session are recorded in the owning feature file
   fix when the world-item write joins that transaction: turn `discard` into a
   ground placement at the drinker's tile.
 - **The game server and its database are in different regions**
-  (2026-07-29). `server/fly.toml` pins `primary_region = "iad"` while
-  `DATABASE_URL` points at `aws-1-us-west-2`, i.e. ~60 ms per round trip on
-  every query. Login is now serialized onto one connection (Feature 106), so
-  its ~28 round trips are paid sequentially and this latency sets login time
-  directly. Recommended fix: move the Supabase project to `us-east-1` (or the
-  Fly app to a west-coast region) before collapsing login into a single
-  statement, since co-location is worth more than the query-count work.
+  (2026-07-29, updated 2026-08-03). The app moved `iad` → `dfw` on 2026-08-03
+  (machine `781e0e3c270078`) because Spectrum Florida BGP ingresses at Fly's
+  Dallas edge — Randal's in-game ping was ~70 ms (35 ms Orlando→dfw edge +
+  33 ms dfw→iad backbone); hosting in dfw removes the backbone leg (~38-42 ms
+  expected). Caveat: this bets on the ISP's anycast routing persisting — if
+  Spectrum/Fly reroute Florida to iad, revisit (check with
+  `curl -s https://debug.fly.dev | grep Fly-Region`). `DATABASE_URL` still
+  points at `aws-1-us-west-2` (~45 ms per round trip from dfw, down from
+  ~60 ms). Login is serialized onto one connection (Feature 106), so its ~28
+  sequential round trips still set login time directly. The DB endgame is
+  open because **Fly Managed Postgres has no dfw region**: options are
+  unmanaged Fly Postgres in dfw (self-managed backups/failover) or MPG in
+  `ord` (~22 ms/query — undermines co-location). Decide before the planned
+  two-world split (US world + BR world in `gru`, which does have MPG);
+  co-location is worth more than the login query-count work.
 - **Four pre-existing Postgres integration failures at HEAD** (updated
   2026-07-26: the six `PgChestStore.integration.test.ts` failures are
   fixed — the store was always correct; the tests asserted `character_id`
