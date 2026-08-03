@@ -2192,3 +2192,53 @@ from b8f82b6 (reproduced with these changes stashed). Typecheck clean.
 parity playtests but leaves stages enabled, so staged multipliers still apply
 there — true before this change too, and now a one-line
 `config.progression.stages.enabled = false` away. Recorded in `TODO.md`.
+
+## 2026-08-02 — Every castable spell has an action-bar icon
+
+**Problem**: 20 of the 169 castable spells had no icon at all — `exani tera`
+(Magic Rope), `utevo res`, `exeta res`, `utamo tempo`, `exevo ulus tera` and 15
+more rendered as a bare `?` in the action bar, the spell picker and the spell
+list. `getSpellIconArtwork`'s table had been written against an earlier spell
+catalog and never grew with it; only 2 of the 20 were actually known
+(`todo/status.md` carried them as "2 icons external").
+
+**What changed**:
+
+- 18 of the 20 do have artwork on the sheet the client already ships
+  (`spell-icons-32x32.png`): their icon indexes were read from OTClient's own
+  `modules/gamelib/spells.lua` (`clientId`, checkout at 465b7a2) and
+  cross-checked against the legacy `SpellIcons` table, which agrees index for
+  index on every spell old enough to appear in both. Added to
+  `CURRENT_SPELL_ICON_INDEXES`.
+- Neither OTClient sheet draws `adori blank` (Blank Rune) or `exevo gran con
+  grav` (Conjure Royal Star) — they are absent from the modern `spells.lua`,
+  from the generator's `MAP_ICON_INDEX`, and from the legacy icon table, and
+  there is no free slot in either sheet holding their art. Rather than borrow
+  an unrelated spell's icon, these two now draw what they conjure: the blank
+  rune (client id 3147) and the royal star (25759), through the existing
+  `SpriteIcon` item path.
+- `SpellIconArtwork` became a discriminated union (`kind: "sheet" | "item"`)
+  and `SpellIcon` renders either a sheet crop or a `SpriteIcon` inside the same
+  frame. All five call sites spread the artwork, so none of them changed.
+
+**Files**: `client/lib/combat/getSpellIconArtwork.ts`,
+`client/components/spells/SpellIcon.tsx`,
+`client/lib/combat/getSpellIconArtwork.test.ts`,
+`client/stories/SpellIcon.stories.tsx` (new), `todo/status.md`.
+
+**Verified**: the unit test now derives its expectations from the shipped
+catalog — every `supported` spell in `content/spells/canary-spells.json` (169)
+resolves to artwork, and every sheet index stays inside its sheet (0–186
+current, 0–131 legacy), so a spell added without an icon fails the suite. Each
+of the 18 sheet mappings was also eyeballed against the rendered sheet (rope,
+bear head for Summon Creature, apple for Food, shield for Protector, and so
+on). A new `SpellIcon` story renders all 20; its `ConjuredItems` play function
+asserts in a real browser that the two conjures draw sprites 7614 and 24886.
+Client suite: 368 unit tests passed; storybook project passes except
+`ActionBar > Empty` and `SpellListModal > Knight`, both of which fail the same
+way with these changes stashed.
+
+**Residual risk**: OTClient's own table maps `exeta vis` (Enchant Staff) and
+`exevo gran mort` (Conjure Wand of Darkness) to the same icon 141 while icons
+139/140 (wand art) go unused, so one of those two is probably showing the
+other's wand. Left as OTClient ships it rather than guessed at.

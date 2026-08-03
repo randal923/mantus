@@ -1,9 +1,17 @@
-interface SpellIconArtwork {
-  sheet: "current" | "legacy";
-  index: number;
-}
+export type SpellIconArtwork =
+  | {
+      readonly kind: "sheet";
+      readonly sheet: "current" | "legacy";
+      readonly index: number;
+    }
+  | {
+      readonly kind: "item";
+      readonly clientId: number;
+      readonly spriteId: number;
+    };
 
-// Synced with OpenTibiaBR OTClient spell client IDs at bdea0b23b4a738809d698cb7e4f88a299dd6bffc.
+// Synced with OpenTibiaBR OTClient spell client IDs at bdea0b23b4a738809d698cb7e4f88a299dd6bffc,
+// topped up from its `modules/gamelib/spells.lua` at 465b7a2.
 const CURRENT_SPELL_ICON_INDEXES: Readonly<Record<string, number>> = {
   "adana-ani": 70,
   "adana-mort": 92,
@@ -43,6 +51,7 @@ const CURRENT_SPELL_ICON_INDEXES: Readonly<Record<string, number>> = {
   "adura-vita": 61,
   "antidote-rune": 88,
   "avalanche-rune": 91,
+  "exana-amp-res": 138,
   "exana-flam": 12,
   "exana-ina": 94,
   "exana-kor": 11,
@@ -50,7 +59,11 @@ const CURRENT_SPELL_ICON_INDEXES: Readonly<Record<string, number>> = {
   "exana-pox": 9,
   "exana-vis": 13,
   "exana-vita": 146,
+  "exani-hur": 124,
+  "exani-tera": 104,
+  "exeta-amp-res": 111,
   "exeta-con": 103,
+  "exeta-res": 96,
   "exeta-vis": 141,
   "exevo-con": 105,
   "exevo-con-flam": 108,
@@ -69,7 +82,10 @@ const CURRENT_SPELL_ICON_INDEXES: Readonly<Record<string, number>> = {
   "exevo-infir-flam-hur": 131,
   "exevo-infir-frigo-hur": 135,
   "exevo-mas-san": 39,
+  "exevo-pan": 98,
   "exevo-tera-hur": 46,
+  "exevo-ulus-frigo": 153,
+  "exevo-ulus-tera": 154,
   "exevo-vis-hur": 42,
   "exevo-vis-lux": 40,
   "exori": 20,
@@ -90,13 +106,16 @@ const CURRENT_SPELL_ICON_INDEXES: Readonly<Record<string, number>> = {
   "exori-infir-min": 160,
   "exori-infir-tera": 136,
   "exori-infir-vis": 132,
+  "exori-kor": 110,
   "exori-mas": 24,
+  "exori-mas-res": 168,
   "exori-max-flam": 27,
   "exori-max-frigo": 33,
   "exori-max-tera": 36,
   "exori-max-vis": 30,
   "exori-min": 19,
   "exori-min-flam": 126,
+  "exori-moe": 109,
   "exori-moe-ico": 16,
   "exori-mort": 37,
   "exori-san": 38,
@@ -135,17 +154,24 @@ const CURRENT_SPELL_ICON_INDEXES: Readonly<Record<string, number>> = {
   "sudden-death-rune": 63,
   "thunderstorm-rune": 62,
   "ultimate-healing-rune": 61,
+  "utamo-tempo": 121,
   "utamo-vita": 123,
   "utana-vid": 93,
   "utani-gran-hur": 101,
   "utani-hur": 100,
+  "utani-tempo-hur": 97,
+  "uteta-tio": 165,
   "utevo-gran-lux": 115,
   "utevo-lux": 116,
+  "utevo-res": 117,
+  "utevo-res-ina": 99,
   "utevo-vis-lux": 114,
+  "utito-tempo": 95,
   "utori-flam": 54,
   "utori-kor": 56,
   "utori-mort": 53,
   "utori-pox": 57,
+  "utori-san": 52,
   "utori-vis": 55,
   "utura": 14,
   "utura-gran": 15,
@@ -159,17 +185,35 @@ const LEGACY_SPELL_ICON_INDEXES: Readonly<Record<string, number>> = {
   "exevo-con-vis": 107,
 };
 
+/**
+ * Neither OTClient sheet draws these two conjures, so they show what they
+ * conjure — a blank rune and a royal star — rather than borrowing an unrelated
+ * spell's artwork. Sprite ids are the appearance's first sprite, used only
+ * until the object catalog resolves the client id.
+ */
+const CONJURED_ITEM_ICONS: Readonly<
+  Record<string, { readonly clientId: number; readonly spriteId: number }>
+> = {
+  "adori-blank": { clientId: 3147, spriteId: 7614 },
+  "exevo-gran-con-grav": { clientId: 25_759, spriteId: 24_886 },
+};
+
 export function getSpellIconArtwork(
   spellId: string,
 ): SpellIconArtwork | undefined {
   const currentIndex = CURRENT_SPELL_ICON_INDEXES[spellId];
   if (currentIndex !== undefined) {
-    return { sheet: "current", index: currentIndex };
+    return { kind: "sheet", sheet: "current", index: currentIndex };
   }
 
   const legacyIndex = LEGACY_SPELL_ICON_INDEXES[spellId];
   if (legacyIndex !== undefined) {
-    return { sheet: "legacy", index: legacyIndex };
+    return { kind: "sheet", sheet: "legacy", index: legacyIndex };
+  }
+
+  const conjured = CONJURED_ITEM_ICONS[spellId];
+  if (conjured) {
+    return { kind: "item", ...conjured };
   }
 
   return undefined;
