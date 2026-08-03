@@ -13,7 +13,7 @@ describe("CharacterProgression", () => {
     );
     const experience = getExperienceForLevel(4);
 
-    expect(player.awardExperience("kill:rat:1", experience)).toEqual({
+    expect(player.awardExperience("kill:rat:1", Number(experience))).toEqual({
       processed: true,
       changed: true,
     });
@@ -25,7 +25,7 @@ describe("CharacterProgression", () => {
     expect(player.mana).toBe(70);
     expect(player.capacity).toBe(475);
 
-    expect(player.awardExperience("kill:rat:1", experience)).toEqual({
+    expect(player.awardExperience("kill:rat:1", Number(experience))).toEqual({
       processed: false,
       changed: false,
     });
@@ -40,7 +40,7 @@ describe("CharacterProgression", () => {
       10_000,
     );
     expect(
-      reconnected.awardExperience("kill:rat:1", experience),
+      reconnected.awardExperience("kill:rat:1", Number(experience)),
     ).toMatchObject({ processed: false, changed: false });
     expect(reconnected.level).toBe(1);
   });
@@ -262,10 +262,10 @@ describe("CharacterProgression", () => {
       { x: 0, y: 0, z: 7 },
       0,
     );
-    player.awardExperience("kill:boss:1", getExperienceForLevel(8));
+    player.awardExperience("kill:boss:1", Number(getExperienceForLevel(8)));
     expect(player.level).toBe(8);
     const experienceBefore = player.experience;
-    const expectedLoss = Math.floor(experienceBefore / 10);
+    const expectedLoss = experienceBefore / 10n;
 
     expect(player.applyDeathPenalty("player-death:1")).toMatchObject({
       lostExperience: expectedLoss,
@@ -276,7 +276,7 @@ describe("CharacterProgression", () => {
     expect(player.mana).toBeLessThanOrEqual(player.maxMana);
 
     expect(player.applyDeathPenalty("player-death:1")).toMatchObject({
-      lostExperience: 0,
+      lostExperience: 0n,
     });
     expect(player.experience).toBe(experienceBefore - expectedLoss);
   });
@@ -288,9 +288,9 @@ describe("CharacterProgression", () => {
       0,
     );
     expect(player.applyDeathPenalty("player-death:broke")).toMatchObject({
-      lostExperience: 0,
+      lostExperience: 0n,
     });
-    expect(player.experience).toBe(0);
+    expect(player.experience).toBe(0n);
     expect(player.level).toBe(1);
 
     const reconnected = new Player(
@@ -301,10 +301,13 @@ describe("CharacterProgression", () => {
       { x: 0, y: 0, z: 7 },
       0,
     );
-    reconnected.awardExperience("kill:boss:2", getExperienceForLevel(8));
+    reconnected.awardExperience(
+      "kill:boss:2",
+      Number(getExperienceForLevel(8)),
+    );
     const experienceBefore = reconnected.experience;
     expect(reconnected.applyDeathPenalty("player-death:2")).toMatchObject({
-      lostExperience: 0,
+      lostExperience: 0n,
     });
     expect(reconnected.experience).toBe(experienceBefore);
   });

@@ -621,7 +621,8 @@
     "attackSpeed": "Attack speed",
     "healthAbbreviation": "HP",
     "manaAbbreviation": "MP",
-    "stamina": "Stamina"
+    "stamina": "Stamina",
+    "experienceRate": "XP rate"
   },
   "inventory": {
     "label": "{{name}}'s inventory",
@@ -1201,7 +1202,13 @@
     "maximum": "Maximum",
     "regeneration": "{{amount}} every {{seconds}}s",
     "seconds": "{{seconds}}s",
-    "staminaValue": "{{hours}}h {{minutes}}m"
+    "staminaValue": "{{hours}}h {{minutes}}m",
+    "base": "Base",
+    "equipment": "Equipment",
+    "boosts": "Boosts",
+    "total": "Total",
+    "serverRate": "Server rate",
+    "xpBoost": "XP boost"
   },
   "skills": {
     "fist": "Fist Fighting",

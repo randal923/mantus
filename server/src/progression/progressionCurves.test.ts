@@ -9,13 +9,13 @@ import { getVocation } from "./getVocation";
 
 describe("progression curves", () => {
   it("keeps experience boundaries deterministic", () => {
-    expect(getExperienceForLevel(1)).toBe(0);
-    expect(getExperienceForLevel(2)).toBe(100);
-    expect(getExperienceForLevel(8)).toBe(4_200);
-    expect(getLevelForExperience(99)).toBe(1);
-    expect(getLevelForExperience(100)).toBe(2);
-    expect(getLevelForExperience(4_199)).toBe(7);
-    expect(getLevelForExperience(4_200)).toBe(8);
+    expect(getExperienceForLevel(1)).toBe(0n);
+    expect(getExperienceForLevel(2)).toBe(100n);
+    expect(getExperienceForLevel(8)).toBe(4_200n);
+    expect(getLevelForExperience(99n)).toBe(1);
+    expect(getLevelForExperience(100n)).toBe(2);
+    expect(getLevelForExperience(4_199n)).toBe(7);
+    expect(getLevelForExperience(4_200n)).toBe(8);
   });
 
   it("uses vocation-specific skill and magic curves", () => {

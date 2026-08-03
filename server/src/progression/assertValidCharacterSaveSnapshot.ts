@@ -1,5 +1,4 @@
 import {
-  MAX_CHARACTER_LEVEL,
   MAX_MAGIC_LEVEL,
   MAX_SKILL_LEVEL,
   MAX_STAMINA_MINUTES,
@@ -19,11 +18,9 @@ const EVENT_ID_PATTERN = /^[A-Za-z0-9:_-]{1,128}$/;
 export function assertValidCharacterSaveSnapshot(
   snapshot: CharacterSaveSnapshot,
 ): void {
-  const experience = Number(snapshot.experience);
+  const experience = snapshot.experience;
   if (
-    !Number.isSafeInteger(experience) ||
-    experience < 0 ||
-    experience > getExperienceForLevel(MAX_CHARACTER_LEVEL) ||
+    experience < 0n ||
     getLevelForExperience(experience) !== snapshot.level
   ) {
     throw new Error("character snapshot experience is invalid");

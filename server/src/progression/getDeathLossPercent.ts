@@ -22,7 +22,7 @@ const LOW_LEVEL_REDUCTION_PERCENT = 50;
 export interface DeathLossInput {
   readonly level: number;
   /** Total experience at the moment of death. */
-  readonly experience: number;
+  readonly experience: bigint;
   /** Progress into the current level, 0–100, as Canary's `levelPercent`. */
   readonly levelPercent: number;
   readonly promoted: boolean;
@@ -53,7 +53,7 @@ export function getDeathLossPercent(input: DeathLossInput): number {
   if (!Number.isInteger(level) || level < 1) {
     throw new Error("level is out of range");
   }
-  if (!Number.isSafeInteger(experience) || experience < 0) {
+  if (experience < 0n) {
     throw new Error("experience is out of range");
   }
   if (!Number.isFinite(levelPercent) || levelPercent < 0 || levelPercent > 100) {
@@ -73,7 +73,7 @@ export function getDeathLossPercent(input: DeathLossInput): number {
   ) {
     throw new Error("unfair fight reduction is out of range");
   }
-  const onCurve = level >= LOW_LEVEL_THRESHOLD && experience > 0;
+  const onCurve = level >= LOW_LEVEL_THRESHOLD && experience > 0n;
   const basePercent = onCurve
     ? curveLossPercent(level + levelPercent / 100, experience)
     : LOW_LEVEL_LOSS_PERCENT;
@@ -97,8 +97,9 @@ export function getDeathLossPercent(input: DeathLossInput): number {
  * current level rather than a flat share of the total, so the relative cost
  * of a death falls as the character grows.
  */
-function curveLossPercent(level: number, experience: number): number {
+function curveLossPercent(level: number, experience: bigint): number {
   return (
-    ((level + 50) * 50 * (level * level - 5 * level + 8)) / experience
+    ((level + 50) * 50 * (level * level - 5 * level + 8)) /
+      Number(experience)
   );
 }

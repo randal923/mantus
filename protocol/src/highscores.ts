@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { characterVocationSchema } from "./character";
 import { PROTOCOL_LIMITS } from "./limits";
-import { MAX_CHARACTER_LEVEL } from "./progression";
+import {
+  bigintStringSchema,
+  MAX_STORABLE_CHARACTER_LEVEL,
+} from "./progression";
 
 export const HIGHSCORE_LIMITS = {
   pageSize: 50,
@@ -51,9 +54,11 @@ export const highscoreEntrySchema = z
   .object({
     rank: z.number().int().min(1).max(HIGHSCORE_LIMITS.maxRankDepth),
     name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
-    level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL),
+    level: z.number().int().min(1).max(MAX_STORABLE_CHARACTER_LEVEL),
     vocation: characterVocationSchema,
-    value: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    // Decimal string: the experience board carries raw experience, which
+    // outgrows Number.MAX_SAFE_INTEGER long before the storage ceiling.
+    value: bigintStringSchema,
   })
   .strict();
 

@@ -2,9 +2,13 @@
 
 import type { OwnCharacterState } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { experienceProgress } from "../../lib/inventory/experienceProgress";
+import { formatSignedValue } from "../../lib/inventory/formatSignedValue";
 import { formatSkillBoost } from "../../lib/inventory/formatSkillBoost";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { ProgressionBar } from "./ProgressionBar";
+import { StatBreakdown } from "./StatBreakdown";
+import { StatDetailRow } from "./StatDetailRow";
 
 interface InventoryCharacterStatsProps {
   character: OwnCharacterState;
@@ -17,10 +21,8 @@ export function InventoryCharacterStats({
 }: InventoryCharacterStatsProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
-  const experienceInLevel =
-    character.experience - character.experienceForCurrentLevel;
-  const experienceForLevel =
-    character.experienceForNextLevel - character.experienceForCurrentLevel;
+  const { inLevel: experienceInLevel, forLevel: experienceForLevel } =
+    experienceProgress(character);
   const staminaBonusLabel =
     character.staminaBonusPercent === 100
       ? null
@@ -41,6 +43,77 @@ export function InventoryCharacterStats({
       : character.staminaBonusPercent < 100
         ? "from-ui-health to-ui-health/65"
         : "from-ui-gold to-ui-gold/65";
+
+  const bonuses = character.equipmentBonuses;
+  const rate = character.experienceRate;
+  const multiplier = (percent: number) => `×${(percent / 100).toFixed(2)}`;
+  /**
+   * A stat's hover body: what the character has on its own, what the gear
+   * adds, then the effective total. Returns undefined when gear changes
+   * nothing, which leaves the row plain and un-hoverable.
+   */
+  const breakdown = (label: string, total: number, bonus: number) =>
+    bonus === 0 ? undefined : (
+      <StatBreakdown
+        terms={[
+          {
+            label: t("characterStats.base"),
+            value: (total - bonus).toLocaleString(language),
+          },
+          {
+            label: t("characterStats.equipment"),
+            value: formatSignedValue(bonus, language),
+            signed: true,
+          },
+        ]}
+        totalLabel={label}
+        totalValue={total.toLocaleString(language)}
+      />
+    );
+  /**
+   * Skills and magic level can also carry wheel/condition boosts, so their
+   * hover keeps those as a separate term and the parts always sum to the
+   * effective level the combat formulas use.
+   */
+  const skillBreakdown = (
+    label: string,
+    base: number,
+    boosted: number | undefined,
+    equipment: number,
+  ) => {
+    if (boosted === undefined || boosted === base) return undefined;
+    const other = boosted - base - equipment;
+    return (
+      <StatBreakdown
+        terms={[
+          {
+            label: t("characterStats.base"),
+            value: base.toLocaleString(language),
+          },
+          ...(equipment !== 0
+            ? [
+                {
+                  label: t("characterStats.equipment"),
+                  value: formatSignedValue(equipment, language),
+                  signed: true,
+                },
+              ]
+            : []),
+          ...(other !== 0
+            ? [
+                {
+                  label: t("characterStats.boosts"),
+                  value: formatSignedValue(other, language),
+                  signed: true,
+                },
+              ]
+            : []),
+        ]}
+        totalLabel={label}
+        totalValue={boosted.toLocaleString(language)}
+      />
+    );
+  };
 
   return (
     <aside
@@ -92,9 +165,21 @@ export function InventoryCharacterStats({
               character.magicLevel,
               character.boostedMagicLevel,
             )}
+            boostTooltip={skillBreakdown(
+              t("skills.magic"),
+              character.magicLevel,
+              character.boostedMagicLevel,
+              bonuses.magicLevel,
+            )}
             value={character.manaSpent}
             max={character.manaSpentForNextMagicLevel}
-            valueLabel={character.magicLevel.toLocaleString(language)}
+            valueLabel={(
+              character.boostedMagicLevel ?? character.magicLevel
+            ).toLocaleString(language)}
+            valueBonus={
+              (character.boostedMagicLevel ?? character.magicLevel) -
+              character.magicLevel
+            }
             fillClassName="from-ui-mana-light to-ui-mana"
           />
           <ProgressionBar
@@ -122,50 +207,105 @@ export function InventoryCharacterStats({
             {t("characterStats.details")}
           </h3>
           <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 text-sm">
-            <dt className="text-ui-muted">{t("stats.maxHealth")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {character.maxHealth.toLocaleString(language)}
-            </dd>
-            <dt className="text-ui-muted">{t("stats.healthRegeneration")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {t("characterStats.regeneration", {
+            <StatDetailRow
+              label={t("stats.maxHealth")}
+              value={character.maxHealth.toLocaleString(language)}
+              bonus={bonuses.maxHealth}
+              tooltip={breakdown(
+                t("stats.maxHealth"),
+                character.maxHealth,
+                bonuses.maxHealth,
+              )}
+            />
+            <StatDetailRow
+              label={t("stats.healthRegeneration")}
+              value={t("characterStats.regeneration", {
                 amount: character.healthRegeneration.amount,
                 seconds: character.healthRegeneration.intervalMs / 1_000,
               })}
-            </dd>
-            <dt className="text-ui-muted">{t("stats.maxMana")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {character.maxMana.toLocaleString(language)}
-            </dd>
-            <dt className="text-ui-muted">{t("stats.manaRegeneration")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {t("characterStats.regeneration", {
+            />
+            <StatDetailRow
+              label={t("stats.maxMana")}
+              value={character.maxMana.toLocaleString(language)}
+              bonus={bonuses.maxMana}
+              tooltip={breakdown(
+                t("stats.maxMana"),
+                character.maxMana,
+                bonuses.maxMana,
+              )}
+            />
+            <StatDetailRow
+              label={t("stats.manaRegeneration")}
+              value={t("characterStats.regeneration", {
                 amount: character.manaRegeneration.amount,
                 seconds: character.manaRegeneration.intervalMs / 1_000,
               })}
-            </dd>
-            <dt className="text-ui-muted">{t("inventory.capacity")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {capacityUsed.toLocaleString(language)} /{" "}
-              {character.capacity.toLocaleString(language)}
-            </dd>
-            <dt className="text-ui-muted">{t("stats.soulRegeneration")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {t("characterStats.regeneration", {
+            />
+            <StatDetailRow
+              label={t("inventory.capacity")}
+              value={`${capacityUsed.toLocaleString(language)} / ${character.capacity.toLocaleString(language)}`}
+              bonus={bonuses.capacity}
+              tooltip={breakdown(
+                t("inventory.capacity"),
+                character.capacity,
+                bonuses.capacity,
+              )}
+            />
+            <StatDetailRow
+              label={t("stats.soulRegeneration")}
+              value={t("characterStats.regeneration", {
                 amount: character.soulRegeneration.amount,
                 seconds: character.soulRegeneration.intervalMs / 1_000,
               })}
-            </dd>
-            <dt className="text-ui-muted">{t("stats.speed")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {character.speed.toLocaleString(language)}
-            </dd>
-            <dt className="text-ui-muted">{t("stats.attackSpeed")}</dt>
-            <dd className="text-right font-semibold tabular-nums text-ui-text">
-              {t("characterStats.seconds", {
+            />
+            <StatDetailRow
+              label={t("stats.speed")}
+              value={character.speed.toLocaleString(language)}
+              bonus={bonuses.speed}
+              tooltip={breakdown(
+                t("stats.speed"),
+                character.speed,
+                bonuses.speed,
+              )}
+            />
+            <StatDetailRow
+              label={t("stats.attackSpeed")}
+              value={t("characterStats.seconds", {
                 seconds: character.attackSpeedMs / 1_000,
               })}
-            </dd>
+              bonus={bonuses.attackSpeedMs}
+            />
+            <StatDetailRow
+              label={t("stats.experienceRate")}
+              value={multiplier(rate.totalPercent)}
+              bonus={rate.totalPercent - rate.basePercent}
+              tooltip={
+                <StatBreakdown
+                  terms={[
+                    {
+                      label: t("characterStats.serverRate"),
+                      value: multiplier(rate.basePercent),
+                    },
+                    ...(rate.xpBoostPercent > 0
+                      ? [
+                          {
+                            label: t("characterStats.xpBoost"),
+                            value: `+${rate.xpBoostPercent}%`,
+                            signed: true,
+                          },
+                        ]
+                      : []),
+                    {
+                      label: t("stats.stamina"),
+                      value: multiplier(rate.staminaPercent),
+                      signed: rate.staminaPercent !== 100,
+                    },
+                  ]}
+                  totalLabel={t("characterStats.total")}
+                  totalValue={multiplier(rate.totalPercent)}
+                />
+              }
+            />
           </dl>
         </section>
 
@@ -179,9 +319,18 @@ export function InventoryCharacterStats({
                 key={skill.skill}
                 label={t(`skills.${skill.skill}`)}
                 boost={formatSkillBoost(skill.level, skill.boostedLevel)}
+                boostTooltip={skillBreakdown(
+                  t(`skills.${skill.skill}`),
+                  skill.level,
+                  skill.boostedLevel,
+                  skill.equipmentBonus ?? 0,
+                )}
                 value={skill.tries}
                 max={skill.triesForNextLevel}
-                valueLabel={skill.level.toLocaleString(language)}
+                valueLabel={(skill.boostedLevel ?? skill.level).toLocaleString(
+                  language,
+                )}
+                valueBonus={(skill.boostedLevel ?? skill.level) - skill.level}
                 fillClassName="from-ui-accent-light to-ui-accent"
               />
             ))}

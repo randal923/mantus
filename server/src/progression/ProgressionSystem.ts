@@ -4,6 +4,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
+import { playerEquipmentBonuses } from "./playerEquipmentBonuses";
 import { projectOwnProgression } from "./projectOwnProgression";
 import { NO_STAGES, type StageTables, getStageRate } from "./stageRates";
 
@@ -148,18 +149,27 @@ export class ProgressionSystem {
   }
 
   /**
-   * Push equipment-derived bonuses (imbuement Swiftness/Featherweight) into
-   * the progression stats. Effects are memoized per inventory cache, so the
-   * per-tick call is a lookup unless equipment actually changed; derived
-   * stats are never persisted, so no dirty mark.
+   * Push equipment-derived bonuses into the progression stats: the item
+   * `speed` attribute (boots of haste and friends) plus imbuement
+   * Swiftness/Featherweight, and the display-only skill/magic-level deltas the
+   * character panel breaks down. Equipment and imbuement effects are both
+   * memoized per inventory cache, so the per-tick call is a lookup unless
+   * equipment actually changed; derived stats are never persisted, so no
+   * dirty mark.
    */
   private syncEquipmentStats(player: Player): boolean {
     const effects = this.items.imbuementEffects(player.id);
-    const changed = player.progression.setEquipmentModifier({
-      speed: effects.speed,
+    const equipment = this.items.combatEquipment(player.id);
+    const bonuses = playerEquipmentBonuses(equipment, effects);
+    const statsChanged = player.progression.setEquipmentModifier({
+      speed: bonuses.speed,
       capacityPercentOfBase: effects.capacityPercent,
     });
-    if (!changed) return false;
+    const skillsChanged = player.progression.setEquipmentSkillBonuses({
+      skills: bonuses.skills,
+      magicLevel: bonuses.magicLevel,
+    });
+    if (!statsChanged) return skillsChanged;
     const inventory = this.items.updateCapacity(player.id, player.capacity);
     if (inventory) {
       this.registry.sessionFor(player.id)?.send({

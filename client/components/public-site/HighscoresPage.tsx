@@ -160,7 +160,7 @@ export function HighscoresPage() {
                         {entry.level.toLocaleString()}
                       </td>
                       <td className="px-5 py-3 text-right font-medium text-ui-text-bright">
-                        {entry.value.toLocaleString()}
+                        {BigInt(entry.value).toLocaleString()}
                       </td>
                     </tr>
                   ))}

@@ -14,9 +14,9 @@ export const OWN_CHARACTER: OwnCharacterState = {
   vocation: "Knight",
   definitionVersion: 1,
   level: 47,
-  experience: 1_842_000,
-  experienceForCurrentLevel: 1_780_000,
-  experienceForNextLevel: 1_920_000,
+  experience: "1842000",
+  experienceForCurrentLevel: "1780000",
+  experienceForNextLevel: "1920000",
   experienceRate: {
     basePercent: 500,
     xpBoostPercent: 50,
@@ -51,6 +51,14 @@ export const OWN_CHARACTER: OwnCharacterState = {
     { skill: "shielding", level: 58, tries: 2_018, triesForNextLevel: 9_702 },
     { skill: "fishing", level: 14, tries: 8, triesForNextLevel: 29 },
   ],
+  equipmentBonuses: {
+    magicLevel: 0,
+    maxHealth: 0,
+    maxMana: 0,
+    capacity: 0,
+    speed: 0,
+    attackSpeedMs: 0,
+  },
   outfit: {
     lookType: 128,
     head: 78,

@@ -9,7 +9,7 @@ function makeVeteran(id: string): Player {
   const player = new Player(makeCharacter(id), POSITION, 0);
   // Below level 25 the loss is the flat tenth, so the drain is large enough
   // to cost a skill level outright.
-  player.awardExperience(`${id}:exp`, getExperienceForLevel(20));
+  player.awardExperience(`${id}:exp`, Number(getExperienceForLevel(20)));
   player.awardSkillTries(`${id}:sword`, "sword", 20_000);
   player.awardMagicProgress(`${id}:magic`, 40_000);
   return player;
@@ -63,7 +63,7 @@ describe("player death penalty", () => {
     const replay = player.applyDeathPenalty("player-death:replayer");
 
     expect(replay).toEqual({
-      lostExperience: 0,
+      lostExperience: 0n,
       lostMagicLevels: 0,
       lostSkillLevels: [],
     });
@@ -77,8 +77,8 @@ describe("player death penalty", () => {
 
     const penalty = player.applyDeathPenalty("player-death:novice");
 
-    expect(penalty.lostExperience).toBe(0);
-    expect(player.experience).toBe(0);
+    expect(penalty.lostExperience).toBe(0n);
+    expect(player.experience).toBe(0n);
     expect(skillLevel(player, "sword")).toBe(10);
     expect(player.progression.magicLevel).toBe(0);
     expect(

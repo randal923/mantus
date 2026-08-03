@@ -1,6 +1,5 @@
 import {
   DAILY_REWARD_RULES,
-  MAX_CHARACTER_LEVEL,
   MAX_STAMINA_MINUTES,
   type OwnProgressionState,
 } from "@tibia/protocol";
@@ -40,23 +39,25 @@ export function projectOwnProgression(
     progression.definitionVersion,
     player.accountTierAt(now),
   );
+  // Equipment contributions are synced onto the progression each tick, so
+  // every call site gets them without threading the item handler through.
+  const equipmentSkills = progression.equipmentSkillBonus;
+  const equipmentStats = progression.equipmentStatBonuses;
   return {
     definitionVersion: progression.definitionVersion,
     level: progression.level,
-    experience: progression.experience,
-    experienceForCurrentLevel: getExperienceForLevel(progression.level),
-    experienceForNextLevel:
-      progression.level === MAX_CHARACTER_LEVEL
-        ? getExperienceForLevel(progression.level)
-        : getExperienceForLevel(progression.level + 1),
+    // Decimal strings: there is no level cap, so these outgrow `number`.
+    experience: progression.experience.toString(),
+    experienceForCurrentLevel: getExperienceForLevel(
+      progression.level,
+    ).toString(),
+    experienceForNextLevel: getExperienceForLevel(
+      progression.level + 1,
+    ).toString(),
     magicLevel: progression.magicLevel,
     boostedMagicLevel: Math.max(
       0,
-      progression.magicLevel +
-        player.wheelBonuses.skillBoosts.magic +
-        player.conditions.magicLevelModifier(
-          progression.magicLevel + player.wheelBonuses.skillBoosts.magic,
-        ),
+      player.boostedMagicLevel + equipmentSkills.magicLevel,
     ),
     manaSpent: progression.manaSpent,
     manaSpentForNextMagicLevel: getManaForNextMagicLevel(
@@ -98,14 +99,30 @@ export function projectOwnProgression(
       amount: regeneration.soulAmount,
       intervalMs: regeneration.soulIntervalMs,
     },
-    skills: progression.skills.map((state) => ({
-      ...state,
-      triesForNextLevel: getSkillTriesForNextLevel(
-        vocation,
-        state.skill,
-        state.level,
-      ),
-      boostedLevel: player.skillLevel(state.skill),
-    })),
+    skills: progression.skills.map((state) => {
+      const equipmentBonus = equipmentSkills.skills[state.skill] ?? 0;
+      return {
+        ...state,
+        triesForNextLevel: getSkillTriesForNextLevel(
+          vocation,
+          state.skill,
+          state.level,
+        ),
+        boostedLevel: Math.max(
+          0,
+          player.skillLevel(state.skill) + equipmentBonus,
+        ),
+        equipmentBonus,
+      };
+    }),
+    equipmentBonuses: {
+      magicLevel: equipmentSkills.magicLevel,
+      maxHealth: equipmentStats.maxHealth,
+      maxMana: equipmentStats.maxMana,
+      capacity: equipmentStats.capacity,
+      speed: equipmentStats.speed,
+      // No item or imbuement moves attack speed yet; it stays vocation-only.
+      attackSpeedMs: 0,
+    },
   };
 }

@@ -111,7 +111,7 @@ describe("HighscoreService", () => {
       name: "Alice",
       level: 30,
       vocation: "Knight",
-      value: 100_000,
+      value: "100000",
     });
     // Exactly the public projection: no ids, positions, or private stats.
     expect(Object.keys(state?.entries[0] ?? {}).sort()).toEqual([

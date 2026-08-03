@@ -2,6 +2,7 @@
 
 import type { OwnCharacterState } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { experienceProgress } from "../../lib/inventory/experienceProgress";
 import { formatSkillBoost } from "../../lib/inventory/formatSkillBoost";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import {
@@ -24,10 +25,8 @@ export function WikiCharacterGeneral({
 }: WikiCharacterGeneralProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
-  const experienceInLevel =
-    character.experience - character.experienceForCurrentLevel;
-  const experienceForLevel =
-    character.experienceForNextLevel - character.experienceForCurrentLevel;
+  const { inLevel: experienceInLevel, forLevel: experienceForLevel } =
+    experienceProgress(character);
   const staminaValue = t("characterStats.staminaValue", {
     hours: Math.floor(character.stamina / 60),
     minutes: String(character.stamina % 60).padStart(2, "0"),
@@ -68,7 +67,7 @@ export function WikiCharacterGeneral({
     {
       key: "experience",
       icon: "experience",
-      value: character.experience.toLocaleString(language),
+      value: BigInt(character.experience).toLocaleString(language),
     },
   ];
 

@@ -176,7 +176,8 @@ try {
   );
   check(
     "melee-experience-progression",
-    knight.progression.experience - xpBefore >= melee.kills * 40,
+    BigInt(knight.progression.experience) - BigInt(xpBefore) >=
+      BigInt(melee.kills * 40),
     `experience ${xpBefore} -> ${knight.progression.experience}`,
   );
   knight.client.terminate();

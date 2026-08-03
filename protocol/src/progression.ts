@@ -11,12 +11,21 @@ export const SKILLS = [
 ] as const;
 
 /**
- * Not a gameplay cap — a technical one. Every experience path checks
- * `Number.isSafeInteger`, and `getExperienceForLevel` stops producing exact
- * values above level 81,456 (its XP passes `Number.MAX_SAFE_INTEGER`), so the
- * ceiling stays well clear of that.
+ * There is no gameplay level cap, exactly as in Canary — its `level` is a
+ * plain `uint32_t` and its `experience` a `uint64_t`, with no constant and no
+ * database CHECK bounding either.
+ *
+ * This is the storage ceiling and nothing more: 821009 is the highest level
+ * whose required experience still fits in the signed 64-bit column that holds
+ * it, the same wall Canary's `uint64_t` runs into. It exists so schemas and
+ * command input have *a* bound; it is never a rule about how far a character
+ * may progress. Experience is carried as `bigint` end to end and serialised as
+ * a decimal string, so nothing loses precision on the way there.
  */
-export const MAX_CHARACTER_LEVEL = 50_000;
+export const MAX_STORABLE_CHARACTER_LEVEL = 821_009;
+
+/** A non-negative integer too large for `number`, e.g. experience. */
+export const bigintStringSchema = z.string().regex(/^\d+$/);
 export const MAX_MAGIC_LEVEL = 200;
 export const MAX_SKILL_LEVEL = 200;
 export const MIN_SKILL_LEVEL = 10;
@@ -32,27 +41,43 @@ export const characterSkillStateSchema = z.object({
   tries: z.number().int().min(0).max(MAX_PROGRESSION_VALUE),
   triesForNextLevel: z.number().int().min(0).max(MAX_PROGRESSION_VALUE),
   /**
-   * Server-computed effective level including Wheel of Destiny conviction
-   * boosts and active condition modifiers; display-only (the panel shows it
-   * green when it differs from `level`). The server never reads it back.
+   * Server-computed effective level including equipped gear, Wheel of Destiny
+   * conviction boosts and active condition modifiers; display-only (the panel
+   * shows it green when it differs from `level`). The server never reads it
+   * back. This is the value the combat formulas actually use.
    */
   boostedLevel: z.number().int().min(0).optional(),
+  /**
+   * The part of `boostedLevel` contributed by equipped items and their running
+   * imbuements, so the panel can break the total down. Display only.
+   */
+  equipmentBonus: z.number().int().optional(),
 });
+
+/**
+ * What equipped gear (items plus their running imbuements) contributes to the
+ * character panel's detail stats, so a hover can show base + equipment.
+ * Display only — the server already applied every one of these.
+ */
+export const equipmentStatBonusesSchema = z
+  .object({
+    magicLevel: z.number().int(),
+    maxHealth: z.number().int(),
+    maxMana: z.number().int(),
+    capacity: z.number().int(),
+    speed: z.number().int(),
+    attackSpeedMs: z.number().int(),
+  })
+  .strict();
 
 export const ownProgressionStateSchema = z.object({
   definitionVersion: z.number().int().positive(),
-  level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL),
-  experience: z.number().int().min(0).max(MAX_PROGRESSION_VALUE),
-  experienceForCurrentLevel: z
-    .number()
-    .int()
-    .min(0)
-    .max(MAX_PROGRESSION_VALUE),
-  experienceForNextLevel: z
-    .number()
-    .int()
-    .min(0)
-    .max(MAX_PROGRESSION_VALUE),
+  level: z.number().int().min(1).max(MAX_STORABLE_CHARACTER_LEVEL),
+  // Decimal strings: past level ~81k these exceed Number.MAX_SAFE_INTEGER, and
+  // JSON has no bigint. The client parses them back with BigInt.
+  experience: bigintStringSchema,
+  experienceForCurrentLevel: bigintStringSchema,
+  experienceForNextLevel: bigintStringSchema,
   magicLevel: z.number().int().min(0).max(MAX_MAGIC_LEVEL),
   /** Effective magic level with wheel/condition boosts; display-only. */
   boostedMagicLevel: z.number().int().min(0).optional(),
@@ -117,8 +142,10 @@ export const ownProgressionStateSchema = z.object({
     intervalMs: z.number().int().positive(),
   }),
   skills: z.array(characterSkillStateSchema).length(SKILLS.length),
+  equipmentBonuses: equipmentStatBonusesSchema,
 });
 
 export type Skill = z.infer<typeof skillSchema>;
 export type CharacterSkillState = z.infer<typeof characterSkillStateSchema>;
+export type EquipmentStatBonuses = z.infer<typeof equipmentStatBonusesSchema>;
 export type OwnProgressionState = z.infer<typeof ownProgressionStateSchema>;

@@ -1,6 +1,5 @@
 import {
   DAILY_REWARD_RULES,
-  MAX_CHARACTER_LEVEL,
   MAX_MAGIC_LEVEL,
   MAX_PROGRESSION_VALUE,
   MAX_SKILL_LEVEL,
@@ -22,6 +21,11 @@ import {
   deriveCharacterStats,
   type DerivedStatModifier,
 } from "./deriveCharacterStats";
+import {
+  EMPTY_SKILL_BONUSES,
+  sameSkillBonuses,
+  type EquipmentSkillBonuses,
+} from "./EquipmentSkillBonuses";
 import { getExperienceForLevel } from "./getExperienceForLevel";
 import { getLevelForExperience } from "./getLevelForExperience";
 import { getAccountRegeneration } from "./getAccountRegeneration";
@@ -80,7 +84,7 @@ interface DueTicks {
 export class CharacterProgression {
   private currentVocation: CharacterVocation;
   private currentLevel: number;
-  private currentExperience: number;
+  private currentExperience: bigint;
   private currentMagicLevel: number;
   private currentManaSpent: number;
   private currentMana: number;
@@ -107,6 +111,12 @@ export class CharacterProgression {
   private regeneration: ReturnType<typeof getAccountRegeneration>;
   private wheelModifier: DerivedStatModifier;
   private equipmentModifier: DerivedStatModifier = {};
+  /**
+   * Skill and magic-level deltas from equipped gear. Display-only bookkeeping
+   * for the character panel: combat re-reads the equipment itself at execution
+   * time, so nothing here is ever an input to a formula.
+   */
+  private equipmentSkillBonuses: EquipmentSkillBonuses = EMPTY_SKILL_BONUSES;
   private cachedStats: {
     vocation: CharacterVocation;
     level: number;
@@ -121,7 +131,7 @@ export class CharacterProgression {
     accountTier: AccountTier,
     state: {
       level: number;
-      experience: number;
+      experience: bigint;
       magicLevel: number;
       manaSpent: number;
       mana: number;
@@ -145,9 +155,7 @@ export class CharacterProgression {
       accountTier,
     );
     if (
-      !Number.isSafeInteger(state.experience) ||
-      state.experience < 0 ||
-      state.experience > getExperienceForLevel(MAX_CHARACTER_LEVEL) ||
+      state.experience < 0n ||
       getLevelForExperience(state.experience) !== state.level
     ) {
       throw new Error("persisted experience and level are inconsistent");
@@ -283,7 +291,7 @@ export class CharacterProgression {
     this.nextSoulAt = now + this.regeneration.soulIntervalMs;
   }
 
-  get experience(): number {
+  get experience(): bigint {
     return this.currentExperience;
   }
 
@@ -433,8 +441,7 @@ export class CharacterProgression {
     if (!this.recordEvent(eventId, "experience")) {
       return { processed: false, changed: false };
     }
-    const maximum = getExperienceForLevel(MAX_CHARACTER_LEVEL);
-    const experience = Math.min(maximum, this.currentExperience + amount);
+    const experience = this.currentExperience + BigInt(Math.floor(amount));
     const level = getLevelForExperience(experience);
     const changed =
       experience !== this.currentExperience || level !== this.currentLevel;
@@ -457,7 +464,7 @@ export class CharacterProgression {
     percent: number,
   ): {
     processed: boolean;
-    lostExperience: number;
+    lostExperience: bigint;
     lostMagicLevels: number;
     lostSkillLevels: ReadonlyArray<{ skill: Skill; levels: number }>;
   } {
@@ -467,17 +474,18 @@ export class CharacterProgression {
     }
     const none = {
       processed: false,
-      lostExperience: 0,
+      lostExperience: 0n,
       lostMagicLevels: 0,
       lostSkillLevels: [],
     };
     if (!this.recordEvent(eventId, "experience")) return none;
     const vocation = getVocation(this.vocation, this.definitionVersion);
-    const lostExperience = Math.min(
-      this.currentExperience,
-      Math.floor(this.currentExperience * percent),
-    );
-    if (lostExperience > 0) {
+    // Scaled integer arithmetic: bigint has no fractional multiply, and the
+    // percent carries at most six decimals of resolution.
+    const lostExperience =
+      (this.currentExperience * BigInt(Math.round(percent * 1_000_000))) /
+      1_000_000n;
+    if (lostExperience > 0n) {
       this.currentExperience -= lostExperience;
       const level = getLevelForExperience(this.currentExperience);
       if (level !== this.currentLevel) {
@@ -557,7 +565,10 @@ export class CharacterProgression {
     if (!this.recordEvent(eventId, "experience")) {
       return { processed: false, changed: false };
     }
-    const experience = Math.max(0, this.currentExperience - amount);
+    const experience =
+      this.currentExperience > BigInt(Math.floor(amount))
+        ? this.currentExperience - BigInt(Math.floor(amount))
+        : 0n;
     const level = getLevelForExperience(experience);
     const changed =
       experience !== this.currentExperience || level !== this.currentLevel;
@@ -827,6 +838,43 @@ export class CharacterProgression {
       value,
     };
     return value;
+  }
+
+  get equipmentSkillBonus(): EquipmentSkillBonuses {
+    return this.equipmentSkillBonuses;
+  }
+
+  /**
+   * What equipped gear alone adds to each derived stat, for the character
+   * panel's hover breakdown. Re-runs the same derivation without the equipment
+   * modifier and diffs, so it stays right whatever ends up feeding it.
+   */
+  get equipmentStatBonuses(): {
+    maxHealth: number;
+    maxMana: number;
+    capacity: number;
+    speed: number;
+  } {
+    const withEquipment = this.stats;
+    const without = deriveCharacterStats({
+      vocation: this.vocation,
+      definitionVersion: this.definitionVersion,
+      level: this.currentLevel,
+      wheel: this.wheelModifier,
+    });
+    return {
+      maxHealth: withEquipment.maxHealth - without.maxHealth,
+      maxMana: withEquipment.maxMana - without.maxMana,
+      capacity: withEquipment.capacity - without.capacity,
+      speed: withEquipment.speed - without.speed,
+    };
+  }
+
+  /** Display-only; returns whether the stored value actually changed. */
+  setEquipmentSkillBonuses(bonuses: EquipmentSkillBonuses): boolean {
+    if (sameSkillBonuses(this.equipmentSkillBonuses, bonuses)) return false;
+    this.equipmentSkillBonuses = bonuses;
+    return true;
   }
 
   setWheelModifier(modifier: DerivedStatModifier): void {

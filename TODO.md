@@ -958,3 +958,25 @@ limitations accepted during a session are recorded in the owning feature file
   was reconciled 2026-07-25 (Feature 53): `importTibiaAssets.mjs`,
   `importCanaryCreatures.mjs` and `importCanaryNpcs.mjs` had all drifted from
   their `content/source-manifest.json` entries. `yarn test:tools` passes.
+
+- Equipment can only move skills, magic level, walk speed, and the
+  imbuement-driven capacity/health/mana stats (2026-08-03). Three display
+  rows are therefore always base-only, and the panel silently shows a zero
+  bonus for them: **regeneration** (items carry `healthGain`/`manaGain`/
+  `healthTicks`/`manaTicks` in the catalog but nothing reads them — regen
+  comes solely from vocation + account tier), **attack speed** (no item or
+  imbuement source; `equipmentBonuses.attackSpeedMs` is hardcoded 0), and the
+  **XP rate** (no equipment term at all). Recommended fix: feed the regen
+  attributes through `setEquipmentModifier` the way item `speed` now is, and
+  add an `attackSpeedMs` leg to the same modifier before any item claims it.
+  The panel and protocol already carry all three fields, so each is a
+  server-side wiring change only. Owner: Feature 18 (stats/progression).
+
+- `yarn db:migrate` must not be pointed at Supabase's transaction-mode pooler
+  (port 6543): the session-level advisory lock deadlocks the run and strands
+  the lock on a pooled backend, needing `pg_terminate_backend` to clear
+  (2026-08-03). `migrate.ts` now rejects that port and prints the session-mode
+  (5432) command, but the root `.env` `DATABASE_URL` still uses 6543 because
+  the game server wants it, so every migration needs the port swapped by hand.
+  Recommended fix: a separate `MIGRATION_DATABASE_URL`, or drop the advisory
+  lock in favour of a `migrations` table row lock that works under either mode.

@@ -621,7 +621,8 @@
     "attackSpeed": "Velocidade de ataque",
     "healthAbbreviation": "PV",
     "manaAbbreviation": "PM",
-    "stamina": "Stamina"
+    "stamina": "Stamina",
+    "experienceRate": "Taxa de XP"
   },
   "inventory": {
     "label": "Inventário de {{name}}",
@@ -1201,7 +1202,13 @@
     "maximum": "Máximo",
     "regeneration": "{{amount}} a cada {{seconds}}s",
     "seconds": "{{seconds}}s",
-    "staminaValue": "{{hours}}h {{minutes}}m"
+    "staminaValue": "{{hours}}h {{minutes}}m",
+    "base": "Base",
+    "equipment": "Equipamento",
+    "boosts": "Bônus",
+    "total": "Total",
+    "serverRate": "Taxa do servidor",
+    "xpBoost": "Bônus de XP"
   },
   "skills": {
     "fist": "Combate sem Armas",

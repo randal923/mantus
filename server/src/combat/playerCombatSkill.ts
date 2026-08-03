@@ -1,6 +1,7 @@
 import type { Skill } from "@tibia/protocol";
 import type { ItemType } from "../item/ItemType";
 import type { Player } from "../Player";
+import { equipmentSkillModifier } from "./equipmentSkillModifier";
 
 export function playerCombatSkill(
   player: Player,
@@ -9,19 +10,10 @@ export function playerCombatSkill(
   /** Flat additions from running imbuements (Feature 78). */
   imbuementBoost = 0,
 ): number {
-  const modifierKey =
-    skill === "distance"
-      ? "dist"
-      : skill === "shielding"
-        ? "shield"
-        : skill;
-  const modifier = equipment.reduce(
-    (total, entry) =>
-      total +
-      (modifierKey === "fishing"
-        ? 0
-        : (entry.type.skillModifiers?.[modifierKey] ?? 0)),
+  return Math.max(
     0,
+    player.skillLevel(skill) +
+      equipmentSkillModifier(equipment, skill) +
+      imbuementBoost,
   );
-  return Math.max(0, player.skillLevel(skill) + modifier + imbuementBoost);
 }

@@ -6,7 +6,7 @@ import {
   characterVocationSchema,
 } from "./character";
 import { CYCLOPEDIA_LIMITS } from "./cyclopedia";
-import { MAX_CHARACTER_LEVEL } from "./progression";
+import { MAX_STORABLE_CHARACTER_LEVEL } from "./progression";
 import {
   HIGHSCORE_LIMITS,
   highscoreCategorySchema,
@@ -70,7 +70,7 @@ export const publicHighscoresDataSchema = z
 export const publicOnlinePlayerSchema = z
   .object({
     name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
-    level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL),
+    level: z.number().int().min(1).max(MAX_STORABLE_CHARACTER_LEVEL),
     vocation: characterVocationSchema,
     guildName: z.string().max(29).nullable(),
   })
@@ -89,7 +89,7 @@ export const publicOnlineDataSchema = z
 export const publicCharacterProfileDataSchema = z
   .object({
     name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
-    level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL),
+    level: z.number().int().min(1).max(MAX_STORABLE_CHARACTER_LEVEL),
     vocation: characterVocationSchema,
     sex: characterSexSchema,
     outfit: characterOutfitSchema,
@@ -111,7 +111,7 @@ export const publicCharacterProfileDataSchema = z
         z
           .object({
             occurredAt: z.string().datetime(),
-            level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL),
+            level: z.number().int().min(1).max(MAX_STORABLE_CHARACTER_LEVEL),
             cause: z
               .string()
               .min(1)

@@ -126,7 +126,7 @@ export function HighscoresModal({
                   {t(`vocations.${entry.vocation}.name`)}
                 </td>
                 <td className="py-1.5 text-right font-medium text-ui-gold">
-                  {entry.value.toLocaleString()}
+                  {BigInt(entry.value).toLocaleString()}
                 </td>
               </tr>
             ))}

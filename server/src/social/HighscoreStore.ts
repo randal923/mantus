@@ -5,7 +5,8 @@ export interface HighscoreRowRecord {
   readonly name: string;
   readonly level: number;
   readonly vocation: CharacterVocation;
-  readonly value: number;
+  /** Decimal string: the experience board outgrows `number`. */
+  readonly value: string;
 }
 
 export interface HighscorePageRecord {

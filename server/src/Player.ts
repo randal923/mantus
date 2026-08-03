@@ -126,7 +126,7 @@ export class Player extends Creature<Character["outfit"]> {
       this.accountTierAt(now),
       {
         level: character.level,
-        experience: Number(character.experience),
+        experience: character.experience,
         magicLevel: character.magicLevel,
         manaSpent: Number(character.manaSpent),
         mana: character.mana,
@@ -301,7 +301,7 @@ export class Player extends Creature<Character["outfit"]> {
     return { ...this.storageValues };
   }
 
-  get experience(): number {
+  get experience(): bigint {
     return this.progression.experience;
   }
 
@@ -347,6 +347,20 @@ export class Player extends Creature<Character["outfit"]> {
         naturalRegeneration: true,
       },
       now,
+    );
+  }
+
+  /**
+   * Magic level with wheel boosts and condition modifiers, but without
+   * equipment — the sibling of {@link skillLevel}. Combat adds the equipped
+   * points on top via `playerMagicLevel`.
+   */
+  get boostedMagicLevel(): number {
+    const boosted =
+      this.progression.magicLevel + this.currentWheelBonuses.skillBoosts.magic;
+    return Math.max(
+      0,
+      boosted + this.conditions.magicLevelModifier(boosted),
     );
   }
 
@@ -414,7 +428,7 @@ export class Player extends Creature<Character["outfit"]> {
     eventId: string,
     options: { unfairFightReduction?: number } = {},
   ): {
-    lostExperience: number;
+    lostExperience: bigint;
     lostMagicLevels: number;
     lostSkillLevels: ReadonlyArray<{ skill: Skill; levels: number }>;
   } {
@@ -429,7 +443,7 @@ export class Player extends Creature<Character["outfit"]> {
     const previousLevel = this.level;
     const result = this.progression.applyDeathLoss(eventId, percent);
     if (!result.processed) {
-      return { lostExperience: 0, lostMagicLevels: 0, lostSkillLevels: [] };
+      return { lostExperience: 0n, lostMagicLevels: 0, lostSkillLevels: [] };
     }
     if (this.level !== previousLevel) {
       this.setMaxHealth(this.progression.maxHealth);
@@ -446,9 +460,11 @@ export class Player extends Creature<Character["outfit"]> {
     const start = getExperienceForLevel(this.level);
     const next = getExperienceForLevel(this.level + 1);
     if (next <= start) return 0;
+    // The span of one level always fits a number comfortably, so the
+    // percentage is computed on the narrowed difference, not the raw total.
     return Math.min(
       100,
-      Math.max(0, ((this.experience - start) * 100) / (next - start)),
+      Math.max(0, (Number(this.experience - start) * 100) / Number(next - start)),
     );
   }
 

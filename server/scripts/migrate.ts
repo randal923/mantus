@@ -14,6 +14,21 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
+// A session-level advisory lock cannot survive a transaction-mode pooler: the
+// lock is taken on one server connection and the next statement is handed a
+// different one, so the run blocks forever on a lock it holds itself — and the
+// lock is left stranded on a pooled backend afterwards. Supabase serves
+// transaction mode on 6543 and session mode on 5432; migrations need 5432.
+if (/:6543(\/|$)/.test(databaseUrl)) {
+  console.error(
+    "DATABASE_URL points at a transaction-mode pooler (port 6543), where the " +
+      "migration advisory lock deadlocks. Re-run against the session-mode " +
+      "port instead:\n" +
+      "  DATABASE_URL=\"${DATABASE_URL/:6543//:5432/}\" yarn db:migrate",
+  );
+  process.exit(1);
+}
+
 const here = dirname(fileURLToPath(import.meta.url));
 const migrationsDir = join(here, "../db/migrations");
 

@@ -129,14 +129,14 @@ describe("PublicApi", () => {
           name: "Aster",
           level: 90,
           vocation: "Knight",
-          value: 9_000_000,
+          value: "9000000",
         },
         {
           rank: 2,
           name: "Briar",
           level: 80,
           vocation: "Druid",
-          value: 8_000_000,
+          value: "8000000",
         },
       ],
     });

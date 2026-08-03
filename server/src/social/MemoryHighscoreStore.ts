@@ -1,3 +1,4 @@
+import { compareBigints } from "./compareBigints";
 import {
   HIGHSCORE_LIMITS,
   type CharacterVocation,
@@ -51,7 +52,11 @@ export class MemoryHighscoreStore implements HighscoreStore {
         vocation: character.vocation,
         value: this.valueOf(character, input.category),
       }))
-      .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
+      .sort(
+        (a, b) =>
+          compareBigints(BigInt(b.value), BigInt(a.value)) ||
+          a.name.localeCompare(b.name),
+      )
       .slice(0, HIGHSCORE_LIMITS.maxRankDepth);
     const start = page * HIGHSCORE_LIMITS.pageSize;
     return {
@@ -63,9 +68,9 @@ export class MemoryHighscoreStore implements HighscoreStore {
   private valueOf(
     character: MemoryHighscoreCharacter,
     category: HighscoreCategory,
-  ): number {
-    if (category === "experience") return character.experience;
-    if (category === "magic") return character.magicLevel;
-    return character.skills[category] ?? 10;
+  ): string {
+    if (category === "experience") return character.experience.toString();
+    if (category === "magic") return String(character.magicLevel);
+    return String(character.skills[category] ?? 10);
   }
 }

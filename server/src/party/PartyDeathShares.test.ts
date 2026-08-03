@@ -207,13 +207,13 @@ describe("party experience shares at death resolution", () => {
 
     harness.death.handleDeath(monster, A, now + 1_000);
     // Two knights: V = 1 → multiplier 1.2 → ceil(100 · 1.2 / 2) = 60 each.
-    expect(harness.players.get(A)?.experience).toBe(60);
-    expect(harness.players.get(B)?.experience).toBe(60);
+    expect(harness.players.get(A)?.experience).toBe(60n);
+    expect(harness.players.get(B)?.experience).toBe(60n);
 
     // Replaying the same death is a no-op: claimDeath already consumed it.
     harness.death.handleDeath(monster, A, now + 1_001);
-    expect(harness.players.get(A)?.experience).toBe(60);
-    expect(harness.players.get(B)?.experience).toBe(60);
+    expect(harness.players.get(A)?.experience).toBe(60n);
+    expect(harness.players.get(B)?.experience).toBe(60n);
   });
 
   it("applies the global experience rate before splitting the party award", () => {
@@ -226,8 +226,8 @@ describe("party experience shares at death resolution", () => {
     harness.death.handleDeath(monster, A, now + 1_000);
 
     // 100 base · 2 global · 1.2 party bonus / 2 members = 120 each.
-    expect(harness.players.get(A)?.experience).toBe(120);
-    expect(harness.players.get(B)?.experience).toBe(120);
+    expect(harness.players.get(A)?.experience).toBe(120n);
+    expect(harness.players.get(B)?.experience).toBe(120n);
     // The synchronous corpse broadcast (tile-states) may follow the award.
     expect(harness.sentByPlayer.get(A)).toContainEqual(
       expect.objectContaining({
@@ -245,7 +245,7 @@ describe("party experience shares at death resolution", () => {
 
     harness.death.handleDeath(monster, A, 1_000_000);
 
-    expect(harness.players.get(A)?.experience).toBe(7);
+    expect(harness.players.get(A)?.experience).toBe(7n);
     expect(harness.sentByPlayer.get(A)).toContainEqual(
       expect.objectContaining({
         type: "combat-log",
@@ -261,7 +261,7 @@ describe("party experience shares at death resolution", () => {
     harness.world.addCreature(monster);
 
     harness.death.handleDeath(monster, A, 1_000_000);
-    expect(harness.players.get(A)?.experience).toBe(0);
+    expect(harness.players.get(A)?.experience).toBe(0n);
     expect(harness.sentByPlayer.get(A) ?? []).not.toContainEqual(
       expect.objectContaining({ type: "combat-log", kind: "experience" }),
     );
@@ -277,7 +277,7 @@ describe("party experience shares at death resolution", () => {
     expect(
       harness.progression.awardExperience(A, eventId, 60, now),
     ).toBe(false);
-    expect(harness.players.get(A)?.experience).toBe(60);
+    expect(harness.players.get(A)?.experience).toBe(60n);
   });
 
   it("awards killer-only when the member left before death resolution", () => {
@@ -291,8 +291,8 @@ describe("party experience shares at death resolution", () => {
     harness.world.addCreature(monster);
 
     harness.death.handleDeath(monster, A, now + 1_000);
-    expect(harness.players.get(A)?.experience).toBe(100);
-    expect(harness.players.get(B)?.experience).toBe(0);
+    expect(harness.players.get(A)?.experience).toBe(100n);
+    expect(harness.players.get(B)?.experience).toBe(0n);
   });
 
   it("awards killer-only when shared experience is off at execution time", () => {
@@ -314,7 +314,7 @@ describe("party experience shares at death resolution", () => {
     harness.world.addCreature(monster);
 
     harness.death.handleDeath(monster, A, now + 2_000);
-    expect(harness.players.get(A)?.experience).toBe(100);
-    expect(harness.players.get(B)?.experience).toBe(0);
+    expect(harness.players.get(A)?.experience).toBe(100n);
+    expect(harness.players.get(B)?.experience).toBe(0n);
   });
 });

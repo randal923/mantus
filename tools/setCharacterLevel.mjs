@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 
-// Mirrors MAX_CHARACTER_LEVEL in protocol/src/progression.ts and the
-// characters_level_check constraint; keep all three in step.
-const MAX_CHARACTER_LEVEL = 50_000;
+// There is no level cap; this is the storage ceiling only — the highest level
+// whose experience still fits the bigint column. Mirrors
+// MAX_STORABLE_CHARACTER_LEVEL in protocol/src/progression.ts.
+const MAX_CHARACTER_LEVEL = 821_009;
 const CHARACTER_NAME_PATTERN = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 const VOCATION_GAINS = {
   Knight: { health: 15, mana: 5 },
@@ -15,10 +16,10 @@ const VOCATION_GAINS = {
   "Elder Druid": { health: 5, mana: 30 },
 };
 
+/** bigint like the server's: past level ~81k a number is no longer exact. */
 function getExperienceForLevel(level) {
-  return Math.floor(
-    ((((level - 6) * level + 17) * level - 12) * 100) / 6,
-  );
+  const value = BigInt(level);
+  return ((((value - 6n) * value + 17n) * value - 12n) / 6n) * 100n;
 }
 
 function getMaximumStats(vocation, level) {

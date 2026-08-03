@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import {
-  MAX_CHARACTER_LEVEL,
   MAX_MAGIC_LEVEL,
   MAX_SKILL_LEVEL,
+  MAX_STORABLE_CHARACTER_LEVEL,
   MIN_SKILL_LEVEL,
   SKILLS,
   type GmResponseMessage,
@@ -412,13 +412,17 @@ export class GmCommandHandler {
     if (
       !Number.isInteger(level) ||
       level < 2 ||
-      level > MAX_CHARACTER_LEVEL
+      level > MAX_STORABLE_CHARACTER_LEVEL
     ) {
-      this.reply(session, false, `Usage: /level <2..${MAX_CHARACTER_LEVEL}>`);
+      this.reply(
+        session,
+        false,
+        `Usage: /level <2..${MAX_STORABLE_CHARACTER_LEVEL}>`,
+      );
       return;
     }
     const gap = getExperienceForLevel(level) - player.experience;
-    if (gap <= 0) {
+    if (gap <= 0n) {
       this.reply(
         session,
         false,
@@ -427,11 +431,12 @@ export class GmCommandHandler {
       return;
     }
     // Progression awards are capped at 1e9 apiece; high levels need several.
-    for (let remaining = gap; remaining > 0; remaining -= 1_000_000_000) {
+    const step = 1_000_000_000n;
+    for (let remaining = gap; remaining > 0n; remaining -= step) {
       this.progression.awardExperience(
         player.id,
         `gm:level:${randomUUID()}`,
-        Math.min(remaining, 1_000_000_000),
+        Number(remaining < step ? remaining : step),
         now,
       );
     }

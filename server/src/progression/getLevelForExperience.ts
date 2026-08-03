@@ -1,12 +1,22 @@
-import { MAX_CHARACTER_LEVEL } from "@tibia/protocol";
 import { getExperienceForLevel } from "./getExperienceForLevel";
 
-export function getLevelForExperience(experience: number): number {
-  if (!Number.isSafeInteger(experience) || experience < 0) {
+/**
+ * The level a given experience total buys. There is no level cap to search up
+ * to, so the upper bound is found by doubling first and only then bisected —
+ * the cost is logarithmic in the level either way.
+ */
+export function getLevelForExperience(experience: bigint): number {
+  if (experience < 0n) {
     throw new Error("experience is out of range");
   }
   let low = 1;
-  let high = MAX_CHARACTER_LEVEL;
+  let high = 2;
+  while (getExperienceForLevel(high) <= experience) {
+    low = high;
+    high *= 2;
+  }
+  // `high` now costs more than we have, so the answer is at most `high - 1`.
+  high -= 1;
   while (low < high) {
     const middle = Math.ceil((low + high) / 2);
     if (getExperienceForLevel(middle) <= experience) low = middle;

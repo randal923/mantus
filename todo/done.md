@@ -2455,3 +2455,166 @@ attempt); map region fetches and combat-effect preloads keep their existing
 single-shot behavior (regions self-heal on the next `refresh`, effects are
 transient). Server-side spawn behavior is unchanged and now has a documented
 clean bill of health for this symptom.
+
+## 2026-08-03 — Equipment bonuses reach the character panel (and item speed finally reaches walk speed)
+
+**Problem**: equipping gear changed nothing visible in Character Details.
+Skill and magic-level modifiers from items were applied by the combat path
+(`playerCombatSkill` / `playerMagicLevel`) but the panel projected
+`player.skillLevel()` / a hand-rolled magic-level expression, both of which
+exclude equipment — so a +5 sword ring moved damage but not the number the
+player reads. Worse, the item `speed` attribute (35 catalog items, e.g. boots
+of haste +20, time ring +30) was never applied at all: only imbuement
+Swiftness fed `setEquipmentModifier`, so haste boots were pure decoration.
+
+**What changed**:
+- `playerEquipmentBonuses` (new, pure) aggregates equipped gear + running
+  imbuements into skill/magic-level/speed deltas. Skills go through the new
+  shared `equipmentSkillModifier`, which `playerCombatSkill` now also calls —
+  the panel and the swing read one lookup, so they cannot drift.
+- `ProgressionSystem.syncEquipmentStats` feeds item `speed` into the derived
+  stat modifier (the gameplay fix) and stores the display deltas on the
+  progression, so all four `projectOwnProgression` call sites get them without
+  threading the item handler through.
+- `projectOwnProgression` now emits `equipmentBonuses` (magicLevel, maxHealth,
+  maxMana, capacity, speed, attackSpeedMs) and a per-skill `equipmentBonus`;
+  `boostedLevel`/`boostedMagicLevel` now include equipment, matching combat.
+- Client: `HoverTooltip` extracted from `ProgressionBar` into
+  `components/ui/` and reused by the new `StatDetailRow` + `StatBreakdown`.
+  It self-fits: a start/end/pointer anchor, then a measured nudge on both
+  axes plus an above/below flip against the nearest clipping ancestor
+  (`lib/ui/{clippingAncestor,fitsBelow}.ts`) — the details panel scrolls
+  vertically, which clips the horizontal axis too, so an unfitted bubble got
+  cut off. Every correction is derived from geometry that does not depend on
+  the correction (unshifted edges, the *target's* box), which is what stops
+  the measure/apply cycle from oscillating.
+- Skill and magic-level rows now show the **effective** value (the one combat
+  uses), tinted, with the delta chip beside the label; the details rows tint
+  the same way. Hover gives base + equipment (+ a Boosts term for wheel and
+  conditions, so the parts always sum to the displayed total). Added an XP
+  rate row with a server-rate / XP-boost / stamina breakdown.
+
+**Files**: `protocol/src/progression.ts`,
+`server/src/{Player.ts,progression/{playerEquipmentBonuses,EquipmentSkillBonuses,CharacterProgression,ProgressionSystem,projectOwnProgression}.ts,combat/{equipmentSkillModifier,playerCombatSkill}.ts}`,
+`client/components/{ui/HoverTooltip,inventory/{StatDetailRow,StatBreakdown,StatDetailRow,ProgressionBar,InventoryCharacterStats}}.tsx`,
+`client/lib/inventory/formatSignedValue.ts`, `client/locales/{en,pt-BR}.json`,
+story fixtures, plus tests.
+
+**Verified**: new `playerEquipmentBonuses` tests pin the item-speed sum and
+assert the skill delta equals `playerCombatSkill`'s own result (including the
+aliased `dist`/`shield` catalog keys); new `projectOwnProgression` tests cover
+the bonus split and the bare-character zero case. Full server suite 1593
+passed, client unit 376 passed, Storybook 331 passed, `yarn typecheck` and
+focused ESLint clean. Verified visually in headless chromium: both tooltips
+render fully inside the scroll container, which clips horizontally — the new
+story asserts that bound so the clipping cannot regress.
+
+**Residual risk**: pre-existing and untouched — 4 server tests
+(exercise-weapon catalog/charges) and 4 Storybook stories fail identically on
+a clean tree. Equipment still cannot move regeneration, attack speed, or the
+XP rate; see TODO.md.
+
+## 2026-08-03 — Level ceiling raised to 50000, and the stat bounds it left behind
+
+**Problem**: the character level ceiling was pinned at 1000 in three places
+that had to agree — `MAX_CHARACTER_LEVEL`, `characters_level_check`, and
+`characters_experience_check` (bounded by `getExperienceForLevel(1000)`).
+Raising it to 50000 then exposed a second, unlinked pair: 007's
+`characters_health_upper_bound` and `characters_mana_upper_bound` still capped
+the stored pools at 100000. A level-5000 sorcerer has 150025 max mana, so once
+its mana passed 100000 *every* save failed on the constraint — surfacing in
+play as `potion persist failed ... violates check constraint
+"characters_mana_upper_bound"` followed by `item persist failed; resyncing
+caches from DB`.
+
+**What changed**: migration 070 raised the level and experience bounds;
+migration 071 raised the health and mana bounds to 5000000, re-derived from
+`deriveCharacterStats` at the new ceiling (peak health 750135 Knight, peak
+mana 1500025 Sorcerer/Druid) with better than 3x headroom for equipment,
+imbuement, and wheel bonuses. `MAX_CHARACTER_LEVEL` moved to 50000 — a
+technical ceiling, not a gameplay one: every experience path checks
+`Number.isSafeInteger`, and `getExperienceForLevel` stops being exact above
+level 81456. The hardcoded `max(1000)` level bounds in `highscores.ts` and
+`publicWebsite.ts` now reference the constant instead.
+
+**Files**: `protocol/src/{progression,highscores,publicWebsite}.ts`,
+`server/db/migrations/{070_raise_character_level_cap,071_raise_health_mana_bounds}.sql`,
+`tools/setCharacterLevel.mjs` + test,
+`server/src/progression/characterStatBounds.test.ts` (new).
+
+**Verified**: both migrations applied to the live database; the level-5000
+character round-trips again. The new `characterStatBounds` test reads the
+newest definition of each of the four constraints out of the migrations
+directory and asserts it covers the peak `deriveCharacterStats` produces at
+`MAX_CHARACTER_LEVEL` — confirmed it fails on exactly this bug by reverting
+071's bound to 100000 (`expected 100000 to be greater than or equal to
+1500025`) and passing once restored.
+
+**Residual risk**: the four bounds are still only *implicitly* tied to
+`MAX_CHARACTER_LEVEL` — the test is what links them, so a new level-derived
+column bound would need adding to it by hand. Capacity has no stored column
+and so no bound. Raising the ceiling past 81456 would silently break the
+experience math; the constant carries that warning.
+
+## 2026-08-03 — The level cap is gone: experience is bigint end to end
+
+**Problem**: the previous entry raised the ceiling from 1000 to 50000 and
+patched the constraints it had left behind. That was still the wrong shape.
+Canary has no level cap at all — `uint32_t level`, `uint64_t experience`, and
+`schema.sql` declares `level int(11)` / `experience bigint(20)` with no CHECK
+on any of it. Every limit here was ours: DB check constraints, zod `.max()`
+bounds, and `MAX_CHARACTER_LEVEL` itself. Only the last was real, and only
+because the experience arithmetic ran in JS `number`, which stops being exact
+at 2^53 — level ~81456. Past that, levels silently resolve wrong.
+
+**What changed**:
+- `getExperienceForLevel` returns `bigint` and is written in Canary's own
+  order (`P / 6 * 100`, verified identical to the previous `P * 100 / 6` for
+  every level to 200000). `getLevelForExperience` takes a `bigint` and finds
+  its upper bound by doubling instead of searching up to a constant.
+- `CharacterProgression` holds experience as `bigint`; awards, death loss
+  (scaled integer arithmetic, no fractional multiply), and `loseExperience`
+  all stay exact. `assertValidCharacterSaveSnapshot` compares bigints.
+- Migration 072 drops all four upper bounds — level, experience, health, mana
+  — leaving only `>= 0`. The column widths are the limit now, as in Canary.
+- `MAX_CHARACTER_LEVEL` is replaced by `MAX_STORABLE_CHARACTER_LEVEL = 821009`:
+  not a rule, just the highest level whose experience fits the signed 64-bit
+  column, the same wall Canary's `uint64_t` hits. It exists so schemas and
+  command input have a bound.
+- Wire: `experience`, `experienceForCurrentLevel`, `experienceForNextLevel`,
+  and the highscore `value` are decimal strings (JSON has no bigint). The
+  client narrows only the *difference* for the XP bar via
+  `experienceProgress`, which stays far inside the safe range at any level,
+  and formats totals with `BigInt(...).toLocaleString()`.
+
+**Files**: `protocol/src/{progression,highscores,publicWebsite}.ts`,
+`server/src/progression/{getExperienceForLevel,getLevelForExperience,CharacterProgression,assertValidCharacterSaveSnapshot,getDeathLossPercent,projectOwnProgression}.ts`,
+`server/src/{Player,gm/GmCommandHandler,social/*}.ts`,
+`server/db/migrations/072_remove_progression_ceilings.sql`,
+`server/scripts/migrate.ts`, `client/lib/inventory/experienceProgress.ts`,
+`client/components/{inventory,wiki,social,public-site}/*`,
+`tools/setCharacterLevel.mjs`, plus tests.
+
+**Verified**: migration applied to the live database — all four constraints
+now read `>= 0` only, and the level-5000 character persists mana of 135456,
+past the old 100000 wall that had been failing every save. New
+`uncappedProgression.test.ts` round-trips levels to 800000, asserts exactness
+where `Number()` demonstrably rounds, and pins the storage ceiling;
+`characterStatBounds.test.ts` was inverted to fail if an upper bound ever
+returns. Server 1601 passed, client unit 376, Storybook 331, typecheck and
+lint clean. The 4 server (exercise-weapon catalog) and 4 Storybook failures
+are pre-existing and were confirmed against a clean tree earlier.
+
+**Operational finding**: `yarn db:migrate` cannot run through Supabase's
+transaction-mode pooler (port 6543). Its session-level advisory lock is taken
+on one server connection while the next statement is handed another, so the
+run deadlocks against its own lock and then strands that lock on a pooled
+backend — which is exactly what happened here, and had to be cleared with
+`pg_terminate_backend`. Migrations 070 and 071 only succeeded by luck.
+`migrate.ts` now refuses port 6543 with the session-mode (5432) command to
+use instead.
+
+**Residual risk**: `awardExperience` still takes a `number` amount (kill
+experience, capped at 1e9 per award) and converts inward; only the running
+total is bigint. Level itself remains a `number` throughout, which is correct
+— `integer` columns and `uint32_t` in Canary both stop far below 2^53.

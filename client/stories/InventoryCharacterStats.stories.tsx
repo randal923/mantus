@@ -9,9 +9,9 @@ const CHARACTER: OwnCharacterState = {
   vocation: "Knight",
   definitionVersion: 1,
   level: 47,
-  experience: 1_842_000,
-  experienceForCurrentLevel: 1_780_000,
-  experienceForNextLevel: 1_920_000,
+  experience: "1842000",
+  experienceForCurrentLevel: "1780000",
+  experienceForNextLevel: "1920000",
   experienceRate: {
     basePercent: 500,
     xpBoostPercent: 50,
@@ -46,6 +46,14 @@ const CHARACTER: OwnCharacterState = {
     { skill: "shielding", level: 58, tries: 2_018, triesForNextLevel: 9_702 },
     { skill: "fishing", level: 14, tries: 8, triesForNextLevel: 29 },
   ],
+  equipmentBonuses: {
+    magicLevel: 0,
+    maxHealth: 0,
+    maxMana: 0,
+    capacity: 0,
+    speed: 0,
+    attackSpeedMs: 0,
+  },
   outfit: {
     lookType: 128,
     head: 78,
@@ -105,17 +113,81 @@ export const ProgressTooltips: Story = {
       await userEvent.hover(bar);
       const tooltip = await within(row).findByText(percent);
 
-      // Above the bar the pointer is on, and inside the scrolling panel.
+      // Clear of the bar the pointer is on — above it when the panel has room
+      // above, below it when it does not — and never outside the scroller.
       const box = tooltip.getBoundingClientRect();
+      const barBox = bar.getBoundingClientRect();
       const bounds = scroller!.getBoundingClientRect();
-      await expect(box.bottom).toBeLessThanOrEqual(
-        bar.getBoundingClientRect().top,
-      );
+      await expect(
+        box.bottom <= barBox.top || box.top >= barBox.bottom,
+      ).toBe(true);
       await expect(box.top).toBeGreaterThanOrEqual(bounds.top);
       await expect(box.bottom).toBeLessThanOrEqual(bounds.bottom);
 
       await userEvent.unhover(bar);
       await waitFor(() => expect(within(row).queryByText(percent)).toBeNull());
+    }
+  },
+};
+
+/**
+ * Gear that moves the numbers: boots of haste, a capacity imbuement, and a
+ * skill/magic-level ring. Bonused stats are tinted and explain themselves on
+ * hover as base + equipment.
+ */
+export const EquipmentBonuses: Story = {
+  args: {
+    character: {
+      ...CHARACTER,
+      speed: 176,
+      capacity: 1_680,
+      maxHealth: 890,
+      boostedMagicLevel: 10,
+      equipmentBonuses: {
+        magicLevel: 2,
+        maxHealth: 50,
+        maxMana: 0,
+        capacity: 130,
+        speed: 20,
+        attackSpeedMs: 0,
+      },
+      skills: CHARACTER.skills.map((skill) =>
+        skill.skill === "sword"
+          ? { ...skill, boostedLevel: skill.level + 5, equipmentBonus: 5 }
+          : skill.skill === "shielding"
+            ? { ...skill, boostedLevel: skill.level + 3, equipmentBonus: 2 }
+            : skill,
+      ),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const speed = canvas.getByText("176");
+    await userEvent.hover(speed);
+    await within(speed.parentElement!).findByText("+20");
+    await userEvent.unhover(speed);
+
+    // Every breakdown must land fully inside the panel, which clips on both
+    // axes because it scrolls vertically. The magic-level chip is the hard
+    // case: it sits against the top edge, so its bubble has to flip below.
+    const bounds = canvasElement
+      .querySelector(".ui-scrollbar")!
+      .getBoundingClientRect();
+    for (const [chipText, termText] of [
+      ["(+2)", "+2"],
+      ["(+5)", "+5"],
+    ]) {
+      const chip = canvas.getByText(chipText);
+      await userEvent.hover(chip);
+      const tooltip = await within(chip.parentElement!).findByText(termText, {
+        selector: "span",
+      });
+      const box = tooltip.getBoundingClientRect();
+      await expect(box.left).toBeGreaterThanOrEqual(bounds.left);
+      await expect(box.right).toBeLessThanOrEqual(bounds.right);
+      await expect(box.top).toBeGreaterThanOrEqual(bounds.top);
+      await expect(box.bottom).toBeLessThanOrEqual(bounds.bottom);
+      await userEvent.unhover(chip);
     }
   },
 };

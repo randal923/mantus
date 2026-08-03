@@ -29,7 +29,9 @@ describe("getDeathLossPercent", () => {
     const level = 24;
     const experience = getExperienceForLevel(level);
     const expected =
-      ((level + 50) * 50 * (level * level - 5 * level + 8)) / experience / 100;
+      ((level + 50) * 50 * (level * level - 5 * level + 8)) /
+      Number(experience) /
+      100;
     expect(percentFor({ level, experience })).toBeCloseTo(expected, 12);
     expect(percentFor({ level, experience })).not.toBeCloseTo(0.1, 4);
   });
@@ -67,7 +69,7 @@ describe("getDeathLossPercent", () => {
     const experience = getExperienceForLevel(level);
     const expected =
       ((level + 50) * 50 * (level * level - 5 * level + 8)) /
-      experience /
+      Number(experience) /
       100;
 
     expect(percentFor({ level, experience })).toBeCloseTo(expected, 12);

@@ -92,7 +92,7 @@ export class PgHighscoreStore implements HighscoreStore {
         name: row.display_name,
         level: row.level,
         vocation: row.vocation,
-        value: Number(row.value),
+        value: String(row.value),
       })),
     };
   }

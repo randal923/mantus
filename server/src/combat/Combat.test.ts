@@ -510,7 +510,7 @@ describe("Combat", () => {
     expect(monster.health).toBe(0);
     expect(harness.world.getCreature(monster.id)).toBeUndefined();
     expect(harness.deaths.count).toBe(1);
-    expect(harness.player.experience).toBe(5);
+    expect(harness.player.experience).toBe(5n);
     expect(
       harness.sent.filter(
         (message) => message.type === "experience-text",
@@ -3059,7 +3059,7 @@ describe("Combat", () => {
     harness.world.addCreature(attacker);
     harness.session.knownCreatureIds.add(attacker.id);
     const experienceBefore = harness.player.experience;
-    const expectedLoss = Math.floor(experienceBefore / 10);
+    const expectedLoss = experienceBefore / 10n;
     const lethal: MonsterAbility = {
       kind: "damage",
       intervalMs: 1_000,
