@@ -11,16 +11,18 @@ import { getAccountRegeneration } from "./getAccountRegeneration";
 import { getManaForNextMagicLevel } from "./getManaForNextMagicLevel";
 import { getSkillTriesForNextLevel } from "./getSkillTriesForNextLevel";
 import { getVocation } from "./getVocation";
+import type { StageRow } from "./stageRates";
 
 /** The server's own experience-rate configuration, for the display panel. */
 export interface ExperienceRateConfig {
   readonly baseRate: number;
-  readonly useStages: boolean;
+  /** Experience stage bands; empty means the flat `baseRate` applies. */
+  readonly stages: ReadonlyArray<StageRow>;
 }
 
 const DEFAULT_EXPERIENCE_RATES: ExperienceRateConfig = {
   baseRate: 1,
-  useStages: false,
+  stages: [],
 };
 
 export function projectOwnProgression(
@@ -76,7 +78,7 @@ export function projectOwnProgression(
     experienceRate: getExperienceRate({
       level: progression.level,
       baseRate: rates.baseRate,
-      useStages: rates.useStages,
+      stages: rates.stages,
       staminaMultiplier: player.staminaExperienceMultiplier(now),
       xpBoostPercent: DAILY_REWARD_RULES.xpBoostPercent,
       xpBoostUntilMs: player.xpBoostUntilMs,

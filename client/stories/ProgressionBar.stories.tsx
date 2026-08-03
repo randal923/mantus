@@ -28,29 +28,29 @@ export const Experience: Story = {
 
 export const MagicLevel: Story = {
   args: {
-    label: "Magic Level · 8",
+    label: "Magic Level",
     value: 2_100,
     max: 4_800,
-    valueLabel: "2,100 / 4,800",
+    valueLabel: "8",
     fillClassName: "from-ui-mana-light to-ui-mana",
   },
 };
 
 export const Skill: Story = {
   args: {
-    label: "Sword · 61",
+    label: "Sword Fighting",
     value: 3_820,
     max: 6_456,
-    valueLabel: "3,820 / 6,456",
+    valueLabel: "61",
     fillClassName: "from-ui-accent-light to-ui-accent",
   },
 };
 
 export const Maxed: Story = {
   args: {
-    label: "Fishing · 200",
+    label: "Fishing",
     value: 0,
     max: 0,
-    valueLabel: "Maximum",
+    valueLabel: "200",
   },
 };

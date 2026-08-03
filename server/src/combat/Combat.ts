@@ -27,6 +27,7 @@ import type { PvpHooks } from "../pvp/PvpHooks";
 import type { RewardHooks } from "../reward/RewardHooks";
 import { PotionService } from "../potion/PotionService";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
+import type { StageRow } from "../progression/stageRates";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
@@ -163,7 +164,7 @@ export class Combat {
     ) => boolean,
     private readonly worldSpells?: WorldSpellHooks,
     staminaSystem = false,
-    useStages = false,
+    experienceStages: ReadonlyArray<StageRow> = [],
     preyHooks?: PreyHooks,
     boostedHooks?: BoostedHooks,
     animusHooks?: {
@@ -199,7 +200,7 @@ export class Combat {
       bestiaryHooks,
       monsterEventHooks,
       staminaSystem,
-      useStages,
+      experienceStages,
       preyHooks,
       boostedHooks,
       animusHooks,

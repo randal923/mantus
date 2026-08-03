@@ -1,5 +1,5 @@
 import type { OwnProgressionState } from "@tibia/protocol";
-import { EXPERIENCE_STAGES, getStageRate } from "./stageRates";
+import { type StageRow, getStageRate } from "./stageRates";
 
 /**
  * Tibia's XP-gain-rate panel, composed from the same terms the kill path
@@ -17,15 +17,13 @@ import { EXPERIENCE_STAGES, getStageRate } from "./stageRates";
 export function getExperienceRate(input: {
   readonly level: number;
   readonly baseRate: number;
-  readonly useStages: boolean;
+  readonly stages: ReadonlyArray<StageRow>;
   readonly staminaMultiplier: number;
   readonly xpBoostPercent: number;
   readonly xpBoostUntilMs: number;
   readonly nowMs: number;
 }): OwnProgressionState["experienceRate"] {
-  const base = input.useStages
-    ? getStageRate(EXPERIENCE_STAGES, input.level, input.baseRate)
-    : input.baseRate;
+  const base = getStageRate(input.stages, input.level, input.baseRate);
   const boostActive = input.xpBoostUntilMs > input.nowMs;
   const xpBoostPercent = boostActive ? input.xpBoostPercent : 0;
   const staminaPercent = Math.round(input.staminaMultiplier * 100);

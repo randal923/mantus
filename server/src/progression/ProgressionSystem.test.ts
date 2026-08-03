@@ -7,8 +7,15 @@ import type { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
 import { World } from "../World";
 import { ProgressionSystem } from "./ProgressionSystem";
+import { NO_STAGES, type StageTables } from "./stageRates";
 
 const PLAYER_ID = "00000000-0000-4000-8000-000000000001";
+/** Stand-in for the config.yml tables: skill level 10 → 15×, magic 0 → 10×. */
+const STAGES: StageTables = {
+  experience: [{ minLevel: 1, multiplier: 50 }],
+  skill: [{ minLevel: 10, maxLevel: 60, multiplier: 15 }],
+  magic: [{ minLevel: 0, maxLevel: 60, multiplier: 10 }],
+};
 
 describe("ProgressionSystem rates", () => {
   it("scales server-authored skill and magic progress", () => {
@@ -117,7 +124,7 @@ describe("ProgressionSystem rates", () => {
 
 describe("ProgressionSystem stages", () => {
   it("applies level-banded stage multipliers when enabled", () => {
-    const harness = makeHarness({ skill: 1, magic: 1 }, [], true);
+    const harness = makeHarness({ skill: 1, magic: 1 }, [], STAGES);
 
     // Skill level 10 sits in the 15× band; magic level 0 in the 10× band.
     harness.progression.awardSkillTries(
@@ -145,7 +152,7 @@ describe("ProgressionSystem stages", () => {
 function makeHarness(
   rates: { experience?: number; skill: number; magic: number },
   progressionEventIds: ReadonlyArray<string> = [],
-  useStages = false,
+  stages: StageTables = NO_STAGES,
 ) {
   const world = new World(
     gridMapData({
@@ -173,7 +180,7 @@ function makeHarness(
     persistence,
     { updateCapacity: () => null } as unknown as ItemIntentHandler,
     { experience: 1, ...rates },
-    useStages,
+    stages,
   );
   return { player, persistence, progression };
 }

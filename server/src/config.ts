@@ -3,6 +3,7 @@ import type { ChatFloodLimits } from "./chat/ChatFloodLimits";
 import type { MapAction } from "./MapAction";
 import type { MapItem } from "./MapItem";
 import type { MapTransition } from "./MapTransition";
+import type { StageTables } from "./progression/stageRates";
 import type { MapCleanupConfig } from "./world/MapCleanupService";
 
 export type MapConfig =
@@ -75,7 +76,11 @@ export interface ServerConfig {
   };
   progression: {
     staminaSystem: boolean;
-    useStages: boolean;
+    /**
+     * Level-banded rate tables from `progression.stages` in config.yml. Empty
+     * tables mean stages are off and the flat `rates.*` multipliers apply.
+     */
+    stages: StageTables;
   };
   starterTownId: number;
   characterSaveIntervalMs: number;

@@ -10,7 +10,7 @@ import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import type { PreyHooks } from "../prey/PreyHooks";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
-import { EXPERIENCE_STAGES, getStageRate } from "../progression/stageRates";
+import { type StageRow, getStageRate } from "../progression/stageRates";
 import type { PvpHooks } from "../pvp/PvpHooks";
 import type { RewardHooks } from "../reward/RewardHooks";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -40,7 +40,7 @@ export class DeathHandler {
     private readonly bestiaryHooks?: BestiaryHooks,
     private readonly monsterEventHooks?: MonsterEventHooks,
     private readonly staminaSystem = false,
-    private readonly useStages = false,
+    private readonly experienceStages: ReadonlyArray<StageRow> = [],
     private readonly preyHooks?: PreyHooks,
     private readonly boostedHooks?: BoostedHooks,
     private readonly animusHooks?: {
@@ -245,12 +245,12 @@ export class DeathHandler {
 
   /** Experience rate for a kill, using the killer's stage band when enabled. */
   private experienceRateFor(killerId: string | null): number {
-    if (!this.useStages) return this.experienceRate;
+    if (this.experienceStages.length === 0) return this.experienceRate;
     const killerLevel = killerId
       ? this.world.getPlayer(killerId)?.level
       : undefined;
     if (killerLevel === undefined) return this.experienceRate;
-    return getStageRate(EXPERIENCE_STAGES, killerLevel, this.experienceRate);
+    return getStageRate(this.experienceStages, killerLevel, this.experienceRate);
   }
 
   /**

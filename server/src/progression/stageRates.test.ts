@@ -1,47 +1,39 @@
 import { describe, expect, it } from "vitest";
-import {
-  EXPERIENCE_STAGES,
-  MAGIC_STAGES,
-  SKILL_STAGES,
-  getStageRate,
-} from "./stageRates";
+import { NO_STAGES, type StageRow, getStageRate } from "./stageRates";
+
+/** Shaped like a config.yml table: ascending bands, unbounded tail. */
+const STAGES: ReadonlyArray<StageRow> = [
+  { minLevel: 10, maxLevel: 60, multiplier: 15 },
+  { minLevel: 61, maxLevel: 80, multiplier: 10 },
+  { minLevel: 81, multiplier: 2 },
+];
 
 describe("getStageRate", () => {
-  it("resolves experience bands at their boundaries", () => {
-    expect(getStageRate(EXPERIENCE_STAGES, 1, 1)).toBe(50);
-    expect(getStageRate(EXPERIENCE_STAGES, 8, 1)).toBe(50);
-    expect(getStageRate(EXPERIENCE_STAGES, 9, 1)).toBe(80);
-    expect(getStageRate(EXPERIENCE_STAGES, 50, 1)).toBe(80);
-    expect(getStageRate(EXPERIENCE_STAGES, 51, 1)).toBe(60);
-    expect(getStageRate(EXPERIENCE_STAGES, 101, 1)).toBe(40);
-    expect(getStageRate(EXPERIENCE_STAGES, 201, 1)).toBe(15);
-    expect(getStageRate(EXPERIENCE_STAGES, 900, 1)).toBe(4);
-    expect(getStageRate(EXPERIENCE_STAGES, 1_000, 1)).toBe(3);
+  it("resolves bands at their boundaries", () => {
+    expect(getStageRate(STAGES, 10, 1)).toBe(15);
+    expect(getStageRate(STAGES, 60, 1)).toBe(15);
+    expect(getStageRate(STAGES, 61, 1)).toBe(10);
+    expect(getStageRate(STAGES, 80, 1)).toBe(10);
+    expect(getStageRate(STAGES, 81, 1)).toBe(2);
   });
 
-  it("keeps x2 for every level past the last band", () => {
-    expect(getStageRate(EXPERIENCE_STAGES, 1_001, 1)).toBe(2);
-    expect(getStageRate(EXPERIENCE_STAGES, 5_000, 1)).toBe(2);
-  });
-
-  it("leaves no gap between experience bands", () => {
-    for (let level = 1; level <= 2_000; level += 1) {
-      expect(getStageRate(EXPERIENCE_STAGES, level, 0)).toBeGreaterThan(0);
-    }
-  });
-
-  it("resolves skill and magic bands", () => {
-    expect(getStageRate(SKILL_STAGES, 10, 1)).toBe(15);
-    expect(getStageRate(SKILL_STAGES, 60, 1)).toBe(15);
-    expect(getStageRate(SKILL_STAGES, 61, 1)).toBe(10);
-    expect(getStageRate(SKILL_STAGES, 126, 1)).toBe(2);
-    expect(getStageRate(MAGIC_STAGES, 0, 1)).toBe(10);
-    expect(getStageRate(MAGIC_STAGES, 100, 1)).toBe(5);
-    expect(getStageRate(MAGIC_STAGES, 111, 1)).toBe(3);
+  it("keeps the last band for every level past it", () => {
+    expect(getStageRate(STAGES, 5_000, 1)).toBe(2);
   });
 
   it("falls back when no band matches the level", () => {
-    // Skill stages start at level 10; below that uses the fallback rate.
-    expect(getStageRate(SKILL_STAGES, 0, 42)).toBe(42);
+    // This table starts at level 10; below that uses the fallback rate.
+    expect(getStageRate(STAGES, 0, 42)).toBe(42);
+    expect(getStageRate(STAGES, 9, 42)).toBe(42);
+  });
+
+  it("falls back for every level when stages are switched off", () => {
+    expect(getStageRate(NO_STAGES.experience, 1, 3)).toBe(3);
+    expect(getStageRate(NO_STAGES.skill, 500, 3)).toBe(3);
+  });
+
+  it("rejects an out-of-range level", () => {
+    expect(() => getStageRate(STAGES, -1, 1)).toThrow();
+    expect(() => getStageRate(STAGES, 1.5, 1)).toThrow();
   });
 });

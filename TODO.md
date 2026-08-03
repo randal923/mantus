@@ -869,6 +869,40 @@ limitations accepted during a session are recorded in the owning feature file
   surviving row matches the plan), or stop retrying a transaction whose commit
   outcome is unknown, as `PgEconomyPersistOps` already does. Owner: items.
 
+- **Diagonal steps animate over the 3x duration instead of the cardinal one**
+  (2026-08-02). The server sends the diagonal-multiplied step duration
+  (`getStepDurationMs`, `DIAGONAL_COST = 3`) and `CreatureView.pixelPosition()`
+  interpolates position — and paces the foot animation — across all of it, so a
+  diagonal reads as a slow smooth glide. OTClient derives pixel progress from
+  `getStepDuration(true)`, the *cardinal* duration (`creature.cpp:788`): the
+  creature crosses the tile at normal speed, then stands still for the
+  remaining 2x with the idle phase forced during the tail
+  (`creature.cpp:687-690`). Deferred deliberately when the walk-cycle fixes
+  landed — it is correct parity but makes diagonal movement visibly jerkier, so
+  it wants a call on the feel first. Recommended fix: carry the cardinal
+  duration alongside the full one on the move message, drive `moveT` from the
+  cardinal duration, and hold the idle phase once `moveT` reaches 1 until the
+  full duration elapses. Owner: rendering.
+- **Mounted walk cycles use the rider's phase count, not the mount's**
+  (2026-08-02). OTClient sets `footAnimPhases` from the *mount's* thing type
+  when mounted (`creature.cpp:677`); `CreatureView.tick()` uses the rider
+  outfit's `phases` and `updateFrame()` clamps the mount to its own last phase.
+  Identical whenever both are 3-phase, which is every current pair, so this is
+  latent: a 1-phase mount under a 3-phase rider would animate the rider's legs
+  where OTClient freezes them on phase 1. Recommended fix: pass the mount
+  object's phase count into the foot-animation step when `mountObject` is set.
+  Owner: rendering.
+- **Parity playtests run flat rates but staged multipliers** (2026-08-02).
+  `writeParityConfig` in `server/src/playtest/startPlaytestServer.ts` rewrites
+  `config.rates` to 1x so parity scenarios compare against Canary's own
+  numbers, but it leaves `progression.stages.enabled` alone, so experience,
+  skill and magic awards still get the level-banded multiplier. Pre-dates the
+  move of the tables into `config.yml`; no current scenario asserts a raw
+  award, so nothing fails today. Recommended fix: set
+  `config.progression.stages.enabled = false` in `writeParityConfig` alongside
+  the rate flattening, then re-run the combat parity suite to confirm no
+  scenario was silently relying on the staged numbers. Owner: playtest harness.
+
 
 ## Repo-wide known breakage
 

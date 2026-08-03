@@ -5,7 +5,7 @@ import type { Player } from "../Player";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import { projectOwnProgression } from "./projectOwnProgression";
-import { MAGIC_STAGES, SKILL_STAGES, getStageRate } from "./stageRates";
+import { NO_STAGES, type StageTables, getStageRate } from "./stageRates";
 
 export class ProgressionSystem {
   private nextTickAt = 0;
@@ -23,7 +23,7 @@ export class ProgressionSystem {
       skill: 1,
       magic: 1,
     },
-    private readonly useStages = false,
+    private readonly stages: StageTables = NO_STAGES,
   ) {}
 
   awardExperience(
@@ -186,23 +186,21 @@ export class ProgressionSystem {
       playerId: player.id,
       progression: projectOwnProgression(player, now, {
         baseRate: this.rates.experience,
-        useStages: this.useStages,
+        stages: this.stages.experience,
       }),
     });
   }
 
   private skillRate(player: Player, skill: Skill): number {
-    if (!this.useStages) return this.rates.skill;
     const level =
       player.progression.skills.find((state) => state.skill === skill)?.level ??
       0;
-    return getStageRate(SKILL_STAGES, level, this.rates.skill);
+    return getStageRate(this.stages.skill, level, this.rates.skill);
   }
 
   private magicRate(player: Player): number {
-    if (!this.useStages) return this.rates.magic;
     return getStageRate(
-      MAGIC_STAGES,
+      this.stages.magic,
       player.progression.magicLevel,
       this.rates.magic,
     );

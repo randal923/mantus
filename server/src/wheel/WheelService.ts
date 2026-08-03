@@ -40,7 +40,7 @@ export class WheelService {
     private readonly items?: ItemIntentHandler,
     private readonly experienceRates: ExperienceRateConfig = {
       baseRate: 1,
-      useStages: false,
+      stages: [],
     },
   ) {}
 

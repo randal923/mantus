@@ -2072,3 +2072,123 @@ that still holds loot; that is Canary's behaviour too, but it is the one case
 where a clean destroys something a player might have wanted. There is no GM
 `/clean` talkaction yet (Canary has one) and no admin visibility into the next
 scheduled sweep beyond `MapCleanupService.scheduledAt`.
+
+## 2026-08-02 — Walk animation matches OTClient frame for frame
+
+**Problem**: characters walked with a visible shuffle that OTClient/Canary
+does not have. `CreatureView` had ported OTClient's foot-delay *formula*
+faithfully — for our classic 3-phase outfits (`objects.json` holds only
+`phases: 1` or `3`, so OTClient's legacy `--footAnimPhases` path applies)
+`footDelay = clamp(stepDuration / 2, 20, 205)` matched `Creature::
+updateWalkAnimation` exactly — but the phase state machine around it did not.
+
+Two divergences, both in `tick()`:
+
+1. The walk phase snapped back to the idle phase the first frame `moveT >= 1`.
+   OTClient does not: `Creature::terminateWalk` (creature.cpp:834) *schedules*
+   the reset one server beat (50ms) later, and `Creature::walk`
+   (creature.cpp:524) cancels that event when the next step starts. So a held
+   walk in OTClient never returns to the standing pose; ours did, every step.
+2. The foot timer only accrued `movementMs` and the phase restarted from 0
+   each step, so every step began on the same foot. OTClient's `m_footTimer`
+   is a free-running wall clock restarted only when a phase advances
+   (creature.cpp:705-710), so it carries across the step boundary and the feet
+   alternate.
+
+A third divergence was found and deliberately **not** fixed — see residual
+risk.
+
+**What changed**: `tick()` now accrues the foot timer from `dtMs` on every
+tick, walking or not (clamped to the largest delay it is compared against);
+the return to the idle phase is deferred by a new
+`WALK_FINISH_ANIMATION_DELAY_MS = 50` and cancelled by `applyMove` when the
+next step arrives. `updateFrame()` draws `walkAnimationPhase` directly rather
+than gating it on "is moving" — the phase itself is what OTClient's
+`getCurrentAnimationPhase` returns, and `tick()` is now the only thing that
+clears it. Teleports/snaps still zero the phase inline, so a floor transition
+cannot show a stale walk frame.
+
+**Files touched**: `client/lib/render/CreatureView.ts`,
+`client/lib/render/CreatureView.test.ts`.
+
+**Verified**: a standalone simulation of both algorithms (500ms steps, 30ms
+packet gap, 60fps) now produces an identical phase-per-frame string to
+OTClient's, where before the fix ours drew the standing sprite for 35 frames
+mid-glide against OTClient's 12 (all of them the pre-walk ramp-up) and started
+every step on phase 1 (`[0,0,0,0,0]` vs OTClient's `[0,2,1,1,1]`). Two tests
+cover it: the idle reset now asserts the frame holds at 100ms and 149ms and
+only flips at 150ms, and a new case walks two steps with a 16ms gap and
+asserts no standing-pose flash plus a phase-2 resume on the second step (both
+assertions fail against the old code). Client unit suite 366 passed / 84
+files, typecheck clean. The repo-root run also sweeps the server suite, which
+has pre-existing failures needing a test database; no server file imports
+`CreatureView`.
+
+**Residual risk**: diagonal steps are still wrong. The server sends the
+3x-multiplied duration (`getStepDurationMs`, `DIAGONAL_COST = 3`) and
+`pixelPosition()` interpolates position and animates feet across all of it, so
+diagonals read as a slow smooth glide. OTClient derives pixel progress from
+`getStepDuration(true)` — the *cardinal* duration (creature.cpp:788) — so the
+creature crosses the tile at normal speed and then stands still for the
+remaining 2x, with `updateWalkAnimation` forcing the idle phase during that
+tail (creature.cpp:687-690). Fixing it is correct parity but makes diagonal
+movement visibly jerkier, so it was left alone pending a call on the feel.
+Also unfixed: when mounted, OTClient drives `footAnimPhases` from the
+*mount's* phase count (creature.cpp:677) while we use the rider's — only
+observable for a 1-phase mount under a 3-phase rider. Both are recorded in
+`TODO.md`. `MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS` (80ms) stays unreachable
+until a modern outfit re-rip introduces outfits with more than 3 phases.
+
+## 2026-08-02 — Stage rate tables moved into config.yml
+
+**Problem**: `config.yml` carried the `progression.useStages` toggle but not
+the tables it switched on — the experience/skill/magic bands were hardcoded
+constants in `server/src/progression/stageRates.ts`. Retuning the curve meant a
+code change and a redeploy, and the config file advertised a staged server
+without saying what the stages were.
+
+**What changed**:
+
+- `progression.useStages` became `progression.stages`, a block holding
+  `enabled` plus the three tables (`experience`, `skill`, `magic`), each a list
+  of `{minLevel, maxLevel?, multiplier}` rows. The committed values are the
+  same curves as before: Mantus experience (x50 1–8 … unbounded x2 from 1001),
+  Canary `skillsStages` and `magicLevelStages`.
+- `loadServerConfig` validates each table: levels are integers 0–100000,
+  multipliers reuse the 0–1000 `rateSchema`, at most
+  `PUBLIC_WEBSITE_LIMITS.stageRows` (32) rows so the table always fits the
+  public `/server-info` payload, bands must ascend and not overlap, and only
+  the last band may omit `maxLevel`. `enabled: false` resolves to empty tables
+  rather than a second flag, so every `getStageRate` lookup misses and falls
+  back to the flat `rates.*` multiplier exactly as before.
+- `stageRates.ts` keeps only `StageRow`, the new `StageTables`/`NO_STAGES`, and
+  `getStageRate`; the tables themselves are gone from code. The `useStages`
+  boolean threaded through `ProgressionSystem`, `Combat`, `DeathHandler`,
+  `projectOwnProgression`/`getExperienceRate` and `publicStageRates` is
+  replaced by the tables (`StageTables`, or `ReadonlyArray<StageRow>` where
+  only the experience curve is needed). `/server-info`'s
+  `systems.experienceStages` is now `stages.experience.length > 0`.
+
+**Files**: `config.yml`, `server/src/loadServerConfig.ts`,
+`server/src/config.ts`, `server/src/progression/{stageRates,getExperienceRate,
+projectOwnProgression,publicStageRates,ProgressionSystem}.ts`,
+`server/src/combat/{Combat,DeathHandler}.ts`, `server/src/GameServer.ts`,
+`server/src/character/CharacterService.ts`,
+`server/src/wheel/{WheelService,GemAtelierService}.ts`, playtest server
+fixtures, plus tests.
+
+**Verified**: `loadServerConfig.test.ts` now loads the committed tables and
+asserts the first/last experience bands, that the experience bands leave no gap
+(each `minLevel` is the previous `maxLevel + 1`), that `enabled: false` yields
+empty tables, and rejects overlapping bands, an unbounded band before the last,
+`maxLevel < minLevel`, and an out-of-range multiplier. `stageRates`,
+`publicStageRates`, `getExperienceRate` and `ProgressionSystem` tests moved to
+local fixture tables (they test the lookup, not the world's tuning). Server
+suite: 1,573 passed, with the same 4 pre-existing `exercise weapon` failures
+from b8f82b6 (reproduced with these changes stashed). Typecheck clean.
+
+**Residual risk**: `writeParityConfig` in
+`server/src/playtest/startPlaytestServer.ts` flattens `config.rates` to 1x for
+parity playtests but leaves stages enabled, so staged multipliers still apply
+there — true before this change too, and now a one-line
+`config.progression.stages.enabled = false` away. Recorded in `TODO.md`.

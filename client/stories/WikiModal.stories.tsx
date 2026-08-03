@@ -85,9 +85,7 @@ export const CharacterTab: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("tab", { name: "Character" }));
-    await expect(
-      await canvas.findByText(/Sword Fighting · 61/),
-    ).toBeVisible();
+    await expect(await canvas.findByText("Sword Fighting")).toBeVisible();
   },
 };
 

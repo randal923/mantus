@@ -1,15 +1,18 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { PROTOCOL_LIMITS } from "@tibia/protocol";
+import { PROTOCOL_LIMITS, PUBLIC_WEBSITE_LIMITS } from "@tibia/protocol";
 import { parse } from "yaml";
 import { z } from "zod";
 import type { ServerConfig } from "./config";
+import { NO_STAGES } from "./progression/stageRates";
 
 const DEFAULT_CONFIG_PATH = fileURLToPath(
   new URL("../../config.yml", import.meta.url),
 );
 const UINT32_MAX = 0xffff_ffff;
 const MAX_RATE = 1_000;
+/** Matches the bound the public server-info stage rows carry. */
+const MAX_STAGE_LEVEL = 100_000;
 
 const stringSchema = z.string().min(1).max(100);
 const trimmedStringSchema = stringSchema
@@ -42,6 +45,58 @@ const positiveRateSchema = z
   .number()
   .positive(`must be greater than 0 and at most ${MAX_RATE}`)
   .max(MAX_RATE, `must be greater than 0 and at most ${MAX_RATE}`);
+const stageLevelSchema = z.number().int().safe().min(0).max(MAX_STAGE_LEVEL);
+
+function stageBandIssue(
+  row: { minLevel: number; maxLevel?: number },
+  index: number,
+  total: number,
+  previousMax: number,
+): string | undefined {
+  if (row.maxLevel === undefined && index !== total - 1) {
+    return "may omit maxLevel only in the last band";
+  }
+  if (row.maxLevel !== undefined && row.maxLevel < row.minLevel) {
+    return "maxLevel must be at least minLevel";
+  }
+  if (row.minLevel <= previousMax) {
+    return "bands must ascend and must not overlap";
+  }
+  return undefined;
+}
+
+/**
+ * One stage table: ascending, non-overlapping level bands, capped at the row
+ * count the public server-info payload can carry. Only the final band may omit
+ * maxLevel (the unbounded tail); a level outside every band falls back to the
+ * flat rate, so an empty table means "no stages".
+ */
+const stageTableSchema = z
+  .array(
+    z
+      .object({
+        minLevel: stageLevelSchema,
+        maxLevel: stageLevelSchema.optional(),
+        multiplier: rateSchema,
+      })
+      .strict(),
+  )
+  .max(PUBLIC_WEBSITE_LIMITS.stageRows)
+  .superRefine((rows, context) => {
+    let previousMax = -1;
+    for (const [index, row] of rows.entries()) {
+      const issue = stageBandIssue(row, index, rows.length, previousMax);
+      if (issue) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [index],
+          message: issue,
+        });
+        return;
+      }
+      previousMax = row.maxLevel ?? Number.MAX_SAFE_INTEGER;
+    }
+  });
 
 const serverConfigFileSchema = z
   .object({
@@ -102,7 +157,14 @@ const serverConfigFileSchema = z
     progression: z
       .object({
         staminaSystem: z.boolean(),
-        useStages: z.boolean(),
+        stages: z
+          .object({
+            enabled: z.boolean(),
+            experience: stageTableSchema,
+            skill: stageTableSchema,
+            magic: stageTableSchema,
+          })
+          .strict(),
       })
       .strict(),
     characters: z
@@ -230,7 +292,18 @@ export async function loadServerConfig(
     moderationRetentionDays: config.moderation.retentionDays,
     combatSeed: config.combat.seed,
     rates: config.rates,
-    progression: config.progression,
+    progression: {
+      staminaSystem: config.progression.staminaSystem,
+      // Switching stages off drops the tables here rather than carrying a
+      // second flag: every lookup then misses and falls back to `rates.*`.
+      stages: config.progression.stages.enabled
+        ? {
+            experience: config.progression.stages.experience,
+            skill: config.progression.stages.skill,
+            magic: config.progression.stages.magic,
+          }
+        : NO_STAGES,
+    },
     starterTownId: config.characters.starterTownId,
     characterSaveIntervalMs: config.characters.saveIntervalMs,
     maxCharacterSaveRetries: config.characters.maxSaveRetries,

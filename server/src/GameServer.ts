@@ -743,7 +743,7 @@ export class GameServer {
       this.persistence,
       this.items,
       config.rates,
-      config.progression.useStages,
+      config.progression.stages,
     );
     this.travel = new TravelService(
       this.world,
@@ -1111,7 +1111,7 @@ export class GameServer {
           this.movement.handleLevitateSpell(session, parameter, now),
       },
       config.progression.staminaSystem,
-      config.progression.useStages,
+      config.progression.stages.experience,
       this.prey,
       this.boosted,
       this.animus,
@@ -1244,10 +1244,10 @@ export class GameServer {
         maxPlayers: config.maxSessions,
         pvpType: "open-pvp",
         rates: config.rates,
-        stages: publicStageRates(config.progression.useStages),
+        stages: publicStageRates(config.progression.stages),
         systems: {
           stamina: config.progression.staminaSystem,
-          experienceStages: config.progression.useStages,
+          experienceStages: config.progression.stages.experience.length > 0,
           market: true,
           houses: true,
           guildWars: true,

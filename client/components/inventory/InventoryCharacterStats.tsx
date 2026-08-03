@@ -3,7 +3,6 @@
 import type { OwnCharacterState } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { formatSkillBoost } from "../../lib/inventory/formatSkillBoost";
-import { getProgressPercent } from "../../lib/inventory/getProgressPercent";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { ProgressionBar } from "./ProgressionBar";
 
@@ -73,7 +72,9 @@ export function InventoryCharacterStats({
 
       <div aria-hidden className="ui-divider my-4" />
 
-      <div className="ui-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto pr-2">
+      {/* pt-2 leaves room for the first bar's hover tooltip, which the
+          scroll container would otherwise clip. */}
+      <div className="ui-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto pt-2 pr-2">
         <section className="space-y-3">
           <ProgressionBar
             label={t("characterStats.experience")}
@@ -86,20 +87,14 @@ export function InventoryCharacterStats({
             }
           />
           <ProgressionBar
-            label={t("characterStats.magicLevel", {
-              level: character.magicLevel,
-            })}
+            label={t("skills.magic")}
             boost={formatSkillBoost(
               character.magicLevel,
               character.boostedMagicLevel,
             )}
             value={character.manaSpent}
             max={character.manaSpentForNextMagicLevel}
-            valueLabel={
-              character.manaSpentForNextMagicLevel > 0
-                ? `${getProgressPercent(character.manaSpent, character.manaSpentForNextMagicLevel)}/100`
-                : t("characterStats.maximum")
-            }
+            valueLabel={character.magicLevel.toLocaleString(language)}
             fillClassName="from-ui-mana-light to-ui-mana"
           />
           <ProgressionBar
@@ -182,15 +177,11 @@ export function InventoryCharacterStats({
             {character.skills.map((skill) => (
               <ProgressionBar
                 key={skill.skill}
-                label={`${t(`skills.${skill.skill}`)} · ${skill.level}`}
+                label={t(`skills.${skill.skill}`)}
                 boost={formatSkillBoost(skill.level, skill.boostedLevel)}
                 value={skill.tries}
                 max={skill.triesForNextLevel}
-                valueLabel={
-                  skill.triesForNextLevel > 0
-                    ? `${getProgressPercent(skill.tries, skill.triesForNextLevel)}/100`
-                    : t("characterStats.maximum")
-                }
+                valueLabel={skill.level.toLocaleString(language)}
                 fillClassName="from-ui-accent-light to-ui-accent"
               />
             ))}

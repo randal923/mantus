@@ -48,7 +48,7 @@ export class CharacterService {
     private readonly starter: StarterPosition,
     private readonly experienceRates: ExperienceRateConfig = {
       baseRate: 1,
-      useStages: false,
+      stages: [],
     },
   ) {}
 

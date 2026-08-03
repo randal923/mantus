@@ -57,7 +57,7 @@ export class GemAtelierService {
     private readonly items?: ItemIntentHandler,
     private readonly experienceRates: ExperienceRateConfig = {
       baseRate: 1,
-      useStages: false,
+      stages: [],
     },
   ) {}
 

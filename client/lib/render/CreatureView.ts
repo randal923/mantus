@@ -6,6 +6,12 @@ import { TILE_SIZE } from "./tileSize";
 const MIN_FOOT_ANIMATION_DELAY_MS = 20;
 const MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS = 205;
 const MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS = 80;
+/**
+ * OTClient holds the last walk frame for one server beat after a step lands
+ * (`Creature::terminateWalk`) and cancels that reset when the next step
+ * starts, so a held walk never flashes the standing pose between steps.
+ */
+const WALK_FINISH_ANIMATION_DELAY_MS = 50;
 const SPRITE_DISPLACEMENT = 8;
 
 export type PartyShieldKind =
@@ -114,6 +120,7 @@ export class CreatureView {
   private fromY: number;
   private moveT = 1;
   private footAnimationElapsedMs = 0;
+  private walkFinishElapsedMs = 0;
   private walkAnimationPhase = 0;
   private stepDurationMs = 1;
   private positionRevision: number;
@@ -456,6 +463,9 @@ export class CreatureView {
     this.positionRevision = revision;
     this.stepDurationMs = Math.max(1, durationMs);
     this.moveT = adjacent ? 0 : 1;
+    // A new step cancels the pending return to the idle phase, the way
+    // `Creature::walk` cancels OTClient's walk-finish event.
+    this.walkFinishElapsedMs = 0;
     if (adjacent) {
       this.walkDirection = direction;
     } else {
@@ -491,16 +501,24 @@ export class CreatureView {
     this.positionRevision = revision;
     this.moveT = 1;
     this.walkAnimationPhase = 0;
+    this.walkFinishElapsedMs = 0;
     this.updateFrame();
   }
 
   tick(dtMs: number): void {
+    // OTClient's foot timer is a free-running wall clock that only restarts
+    // when a phase advances — it keeps counting between steps, so a held walk
+    // resumes the cycle on the other foot instead of restarting it. The clamp
+    // is the largest delay it is ever compared against.
+    this.footAnimationElapsedMs = Math.min(
+      MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS,
+      this.footAnimationElapsedMs + dtMs,
+    );
+
     if (this.moveT >= 1) {
-      this.footAnimationElapsedMs = Math.min(
-        MAX_CLASSIC_FOOT_ANIMATION_DELAY_MS,
-        this.footAnimationElapsedMs + dtMs,
-      );
-      if (this.walkAnimationPhase !== 0) {
+      if (this.walkAnimationPhase === 0) return;
+      this.walkFinishElapsedMs += dtMs;
+      if (this.walkFinishElapsedMs >= WALK_FINISH_ANIMATION_DELAY_MS) {
         this.walkAnimationPhase = 0;
         this.updateFrame();
       }
@@ -515,7 +533,6 @@ export class CreatureView {
 
     const walkPhases = (this.outfit?.phases ?? 1) - 1;
     if (walkPhases > 0) {
-      this.footAnimationElapsedMs += movementMs;
       const maxDelayMs =
         walkPhases > 2
           ? MAX_MULTI_PHASE_FOOT_ANIMATION_DELAY_MS
@@ -566,7 +583,10 @@ export class CreatureView {
     }
     const walkPhases = this.outfit.phases - 1;
     const moving = this.moveT < 1;
-    const phase = moving && walkPhases > 0 ? this.walkAnimationPhase : 0;
+    // The drawn phase is the walk phase itself (OTClient's
+    // `getCurrentAnimationPhase`), not a "is moving" gate — tick() is what
+    // returns it to the idle phase, one server beat after the step lands.
+    const phase = walkPhases > 0 ? this.walkAnimationPhase : 0;
     const dir = DIR_INDEX[moving ? this.walkDirection : this.direction];
     // Mounted riders use pattern-Z 1 (the riding pose); getSpriteIndex wraps
     // it away again for outfits without a mount pattern. Addon passes are

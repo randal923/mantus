@@ -139,6 +139,106 @@ describe("loadServerConfig", () => {
       "config.rates.spawn must be greater than 0 and at most 1000",
     );
   });
+
+  it("loads the committed stage tables with an unbounded last band", async () => {
+    const { stages } = (await loadServerConfig(CONFIG_PATH, {})).progression;
+
+    expect(stages.experience[0]).toEqual({
+      minLevel: 1,
+      maxLevel: 8,
+      multiplier: 50,
+    });
+    expect(stages.experience.at(-1)).toEqual({ minLevel: 1_001, multiplier: 2 });
+    expect(stages.skill[0]).toEqual({
+      minLevel: 10,
+      maxLevel: 60,
+      multiplier: 15,
+    });
+    expect(stages.magic[0]).toEqual({
+      minLevel: 0,
+      maxLevel: 60,
+      multiplier: 10,
+    });
+  });
+
+  it("leaves no gap between the committed experience bands", async () => {
+    const { experience } = (await loadServerConfig(CONFIG_PATH, {})).progression
+      .stages;
+
+    for (const [index, band] of experience.entries()) {
+      if (index === 0) continue;
+      expect(band.minLevel).toBe((experience[index - 1]?.maxLevel ?? 0) + 1);
+    }
+  });
+
+  it("drops the tables when stages are switched off", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const path = await temporaryConfig(
+      source.replace(/^    enabled: true$/m, "    enabled: false"),
+    );
+
+    expect((await loadServerConfig(path, {})).progression.stages).toEqual({
+      experience: [],
+      skill: [],
+      magic: [],
+    });
+  });
+
+  it("rejects overlapping stage bands", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const path = await temporaryConfig(
+      source.replace(
+        "- { minLevel: 9, maxLevel: 50, multiplier: 80 }",
+        "- { minLevel: 8, maxLevel: 50, multiplier: 80 }",
+      ),
+    );
+
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      "config.progression.stages.experience.1 bands must ascend and must not overlap",
+    );
+  });
+
+  it("rejects an unbounded band before the last one", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const path = await temporaryConfig(
+      source.replace(
+        "- { minLevel: 9, maxLevel: 50, multiplier: 80 }",
+        "- { minLevel: 9, multiplier: 80 }",
+      ),
+    );
+
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      "config.progression.stages.experience.1 may omit maxLevel only in the last band",
+    );
+  });
+
+  it("rejects a band whose maxLevel is below its minLevel", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const path = await temporaryConfig(
+      source.replace(
+        "- { minLevel: 10, maxLevel: 60, multiplier: 15 }",
+        "- { minLevel: 10, maxLevel: 9, multiplier: 15 }",
+      ),
+    );
+
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      "config.progression.stages.skill.0 maxLevel must be at least minLevel",
+    );
+  });
+
+  it("rejects an out-of-range stage multiplier", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const path = await temporaryConfig(
+      source.replace(
+        "- { minLevel: 1, maxLevel: 8, multiplier: 50 }",
+        "- { minLevel: 1, maxLevel: 8, multiplier: 5000 }",
+      ),
+    );
+
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      "config.progression.stages.experience.0.multiplier must be a number from 0 to 1000",
+    );
+  });
 });
 
 async function temporaryConfig(source: string): Promise<string> {

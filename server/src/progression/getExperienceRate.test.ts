@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { getExperienceRate } from "./getExperienceRate";
+import type { StageRow } from "./stageRates";
+
+/** Stand-in for the config.yml experience table. */
+const STAGES: ReadonlyArray<StageRow> = [
+  { minLevel: 1, maxLevel: 8, multiplier: 50 },
+  { minLevel: 9, maxLevel: 50, multiplier: 80 },
+  { minLevel: 51, maxLevel: 150, multiplier: 40 },
+  { minLevel: 151, multiplier: 2 },
+];
 
 const BASE = {
   level: 30,
   baseRate: 1,
-  useStages: true,
+  stages: STAGES,
   staminaMultiplier: 1,
   xpBoostPercent: 50,
   xpBoostUntilMs: 0,
@@ -13,7 +22,6 @@ const BASE = {
 
 describe("getExperienceRate", () => {
   it("reads the base rate from the level's stage band", () => {
-    // Mantus stages: levels 9-50 award x80.
     expect(getExperienceRate(BASE).basePercent).toBe(8_000);
     expect(getExperienceRate({ ...BASE, level: 5 }).basePercent).toBe(5_000);
     expect(getExperienceRate({ ...BASE, level: 150 }).basePercent).toBe(4_000);
@@ -22,7 +30,7 @@ describe("getExperienceRate", () => {
 
   it("uses the flat rate when stages are off", () => {
     expect(
-      getExperienceRate({ ...BASE, useStages: false, baseRate: 3 }).basePercent,
+      getExperienceRate({ ...BASE, stages: [], baseRate: 3 }).basePercent,
     ).toBe(300);
   });
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { OwnCharacterState } from "@tibia/protocol";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { InventoryCharacterStats } from "../components/inventory/InventoryCharacterStats";
 
 const CHARACTER: OwnCharacterState = {
@@ -82,6 +83,42 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Knight: Story = {};
+
+/** Hovering a bar reveals its percentage, unclipped by the scroll container. */
+export const ProgressTooltips: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const scroller = canvasElement.querySelector(".ui-scrollbar");
+    await expect(scroller).not.toBeNull();
+
+    // Top row and bottom row: the two rows nearest the clipping edges.
+    // Percentages are what is *missing*: experience sits at 44%, fishing 27%.
+    for (const [name, percent] of [
+      ["Experience", "56%"],
+      ["Fishing", "73%"],
+    ]) {
+      if (name === "Fishing") {
+        scroller!.scrollTop = scroller!.scrollHeight;
+      }
+      const bar = canvas.getByRole("progressbar", { name });
+      const row = bar.parentElement!;
+      await userEvent.hover(bar);
+      const tooltip = await within(row).findByText(percent);
+
+      // Above the bar the pointer is on, and inside the scrolling panel.
+      const box = tooltip.getBoundingClientRect();
+      const bounds = scroller!.getBoundingClientRect();
+      await expect(box.bottom).toBeLessThanOrEqual(
+        bar.getBoundingClientRect().top,
+      );
+      await expect(box.top).toBeGreaterThanOrEqual(bounds.top);
+      await expect(box.bottom).toBeLessThanOrEqual(bounds.bottom);
+
+      await userEvent.unhover(bar);
+      await waitFor(() => expect(within(row).queryByText(percent)).toBeNull());
+    }
+  },
+};
 
 export const MaxedMagicLevel: Story = {
   args: {

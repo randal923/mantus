@@ -185,7 +185,7 @@ describe("CreatureView", () => {
     view.destroy();
   });
 
-  it("returns to the idle frame when a step finishes", () => {
+  it("returns to the idle frame one server beat after a step finishes", () => {
     const view = new CreatureView(
       animationStore,
       outfit,
@@ -201,7 +201,39 @@ describe("CreatureView", () => {
     view.tick(100);
 
     expect(view.pixelPosition().x).toBe(11 * TILE_SIZE);
+    // OTClient's terminateWalk defers the idle reset by one server beat.
+    expect(sprite.texture).toBe(animationTextures[1]);
+    view.tick(49);
+    expect(sprite.texture).toBe(animationTextures[1]);
+    view.tick(1);
     expect(sprite.texture).toBe(animationTextures[0]);
+    view.destroy();
+  });
+
+  it("carries the foot cycle across consecutive steps", () => {
+    const view = new CreatureView(
+      animationStore,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    const sprite = view.container.children[0];
+    if (!(sprite instanceof Sprite)) throw new Error("expected player sprite");
+
+    view.tick(205);
+    view.applyMove({ x: 11, y: 10, z: 7 }, "east", 1, 100);
+    view.tick(100);
+
+    // The gap between two server steps must not flash the standing pose.
+    view.tick(16);
+    expect(sprite.texture).toBe(animationTextures[1]);
+
+    // The foot timer kept the 16ms of that gap, so the second step resumes
+    // the cycle on the other foot instead of restarting on the first one.
+    view.applyMove({ x: 12, y: 10, z: 7 }, "east", 2, 100);
+    view.tick(34);
+    expect(sprite.texture).toBe(animationTextures[2]);
     view.destroy();
   });
 

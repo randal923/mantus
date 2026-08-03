@@ -37,7 +37,10 @@ type Story = StoryObj<typeof meta>;
 export const General: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(/Sword Fighting · 61/)).toBeVisible();
+    await expect(canvas.getByText("Sword Fighting")).toBeVisible();
+    await expect(
+      canvas.getByRole("progressbar", { name: "Sword Fighting" }),
+    ).toBeVisible();
     await expect(canvas.getByText("320 / 1,550")).toBeVisible();
   },
 };

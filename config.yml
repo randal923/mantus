@@ -59,10 +59,47 @@ rates:
 progression:
   # Stamina gates hunting experience (green +50% / orange -50% / 0 = none).
   staminaSystem: true
-  # Use the level-banded experience/skill/magic stage tables (stageRates.ts)
-  # instead of the flat rates above. Experience runs x50 (1-8), x80 (9-50),
-  # x60 (51-100), then tapers to x2 from level 1001 upwards.
-  useStages: true
+  # Level-banded rate tables (Canary's data/stages.lua). While enabled they
+  # replace the flat rates.experience/skill/magic multipliers above; switch
+  # `enabled` off to run the flat rates instead.
+  #
+  # Bands must ascend and must not overlap. Only the last band of a table may
+  # omit maxLevel, which makes it unbounded; a level outside every band falls
+  # back to the flat rate. Up to 32 bands per table.
+  stages:
+    enabled: true
+    # Fast through the early levels, then a long taper that settles at x2 from
+    # level 1001 upwards.
+    experience:
+      - { minLevel: 1, maxLevel: 8, multiplier: 50 }
+      - { minLevel: 9, maxLevel: 50, multiplier: 80 }
+      - { minLevel: 51, maxLevel: 100, multiplier: 60 }
+      - { minLevel: 101, maxLevel: 150, multiplier: 40 }
+      - { minLevel: 151, maxLevel: 200, multiplier: 30 }
+      - { minLevel: 201, maxLevel: 300, multiplier: 15 }
+      - { minLevel: 301, maxLevel: 400, multiplier: 12 }
+      - { minLevel: 401, maxLevel: 500, multiplier: 10 }
+      - { minLevel: 501, maxLevel: 600, multiplier: 7 }
+      - { minLevel: 601, maxLevel: 700, multiplier: 6 }
+      - { minLevel: 701, maxLevel: 800, multiplier: 5 }
+      - { minLevel: 801, maxLevel: 900, multiplier: 4 }
+      - { minLevel: 901, maxLevel: 1000, multiplier: 3 }
+      - { minLevel: 1001, multiplier: 2 }
+    # Banded on the skill's own level (Canary skillsStages).
+    skill:
+      - { minLevel: 10, maxLevel: 60, multiplier: 15 }
+      - { minLevel: 61, maxLevel: 80, multiplier: 10 }
+      - { minLevel: 81, maxLevel: 110, multiplier: 6 }
+      - { minLevel: 111, maxLevel: 125, multiplier: 4 }
+      - { minLevel: 126, multiplier: 2 }
+    # Banded on magic level (Canary magicLevelStages).
+    magic:
+      - { minLevel: 0, maxLevel: 60, multiplier: 10 }
+      - { minLevel: 61, maxLevel: 80, multiplier: 7 }
+      - { minLevel: 81, maxLevel: 100, multiplier: 5 }
+      - { minLevel: 101, maxLevel: 110, multiplier: 4 }
+      - { minLevel: 111, maxLevel: 125, multiplier: 3 }
+      - { minLevel: 126, multiplier: 2 }
 
 characters:
   starterTownId: 1
