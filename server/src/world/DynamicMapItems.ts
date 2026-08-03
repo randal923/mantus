@@ -179,6 +179,19 @@ export class DynamicMapItems {
     return this.worldItems.get(this.seedKeyToId.get(instanceId) ?? instanceId);
   }
 
+  /**
+   * Every tracked item lying on the ground: dropped loot, corpses, and map
+   * seeds that have been materialized. Pristine map items are not here — they
+   * live in the map data until something touches them.
+   */
+  worldItemRoots(): Item[] {
+    const roots: Item[] = [];
+    for (const item of this.worldItems.values()) {
+      if (item.location.kind === "world") roots.push(item);
+    }
+    return roots;
+  }
+
   /** A world root plus its contained subtree, parents before children. */
   getWorldSubtree(rootId: string): Item[] {
     const root = this.worldItems.get(rootId);

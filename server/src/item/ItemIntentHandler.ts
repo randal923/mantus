@@ -1149,6 +1149,58 @@ export class ItemIntentHandler {
     return true;
   }
 
+  /**
+   * Sweeps ground items away for the periodic map clean. The memory mutation
+   * for every item runs synchronously here inside the tick (charter rule 3),
+   * and the row deletes trail behind on the same ordered lane world decay
+   * uses, so they can never overtake a pending write for the same item.
+   * Memory-only loot simply has no row to delete.
+   *
+   * Returns how many items left the ground, contents included.
+   */
+  cleanWorldItems(items: ReadonlyArray<Item>, now: number): number {
+    const removedItemIds: string[] = [];
+    for (const item of items) {
+      const live = this.world.getWorldItem(item.id);
+      // Re-checked at execution: the list was collected before this tick's
+      // mutations, so anything picked up or decayed since is skipped.
+      if (
+        !live ||
+        live.location.kind !== "world" ||
+        live.version !== item.version
+      ) {
+        continue;
+      }
+      // Only a container can hold anything, and the subtree walk scans every
+      // tracked world item; most swept items are loose gold or gear, so the
+      // sweep stays linear instead of quadratic in the size of the backlog.
+      const subtree = this.catalog.require(live.typeId).containerCapacity
+        ? this.world.getWorldSubtree(live.id)
+        : [live];
+      const mutation: ItemMutation = {
+        before: live,
+        after: [],
+        removedItemIds: subtree.map((entry) => entry.id),
+      };
+      const changed = this.world.applyItemMutation(mutation);
+      this.visibility.onMapItemsChanged(changed);
+      this.decay?.observeMutation(mutation, now);
+      removedItemIds.push(...subtree.map((entry) => entry.id));
+    }
+    if (removedItemIds.length === 0) return 0;
+    const removal = this.runOrderedInternalOperation(() =>
+      this.store.removeCleanedWorldItems(removedItemIds),
+    );
+    void removal.catch((cause: unknown) => {
+      // The rows outlive their tiles until the next clean sweeps them again:
+      // the items are gone from memory either way, so this never resurrects
+      // one mid-session.
+      const reason = cause instanceof Error ? cause.message : "unknown";
+      console.warn(`map clean persist failed: ${reason}`);
+    });
+    return removedItemIds.length;
+  }
+
   transformEquippedItemForEvent(
     session: Session,
     characterId: string,

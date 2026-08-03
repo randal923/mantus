@@ -1571,4 +1571,52 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
     expect(staleAge).toBeLessThan(95_000);
     expect(Number.isInteger(staleAge)).toBe(true);
   });
+
+  it("deletes cleaned ground items with their contents and audits each row", async () => {
+    const bag = await insertItem(BACKPACK_TYPE, 1, {
+      kind: "world",
+      x: 310,
+      y: 310,
+      z: 7,
+      stackIndex: 0,
+    });
+    const insideBag = await insertItem(GOLD_TYPE, 25, {
+      kind: "container",
+      containerId: bag,
+      slot: 0,
+    });
+    const loose = await insertItem(GOLD_TYPE, 3, {
+      kind: "world",
+      x: 311,
+      y: 310,
+      z: 7,
+      stackIndex: 0,
+    });
+
+    await store.removeCleanedWorldItems([bag, loose, randomUUID()]);
+
+    expect(await itemRow(bag)).toBeUndefined();
+    expect(await itemRow(insideBag)).toBeUndefined();
+    expect(await itemRow(loose)).toBeUndefined();
+    const audits = await auditRows("item-destroyed");
+    expect(audits.map((row) => row.item_id).sort()).toEqual(
+      [bag, insideBag, loose].sort(),
+    );
+    expect(
+      audits.find((row) => row.item_id === loose)?.details,
+    ).toMatchObject({ itemTypeId: GOLD_TYPE, count: 3, reason: "map-clean" });
+  });
+
+  it("leaves a carried item alone when its id reaches the clean sweep", async () => {
+    const carried = await insertItem(GOLD_TYPE, 7, {
+      kind: "container",
+      containerId: backpackId,
+      slot: 0,
+    });
+
+    await store.removeCleanedWorldItems([carried]);
+
+    expect(await itemRow(carried)).toMatchObject({ count: 7 });
+    expect(await auditRows("item-destroyed")).toEqual([]);
+  });
 });

@@ -3,6 +3,7 @@ import type { ChatFloodLimits } from "./chat/ChatFloodLimits";
 import type { MapAction } from "./MapAction";
 import type { MapItem } from "./MapItem";
 import type { MapTransition } from "./MapTransition";
+import type { MapCleanupConfig } from "./world/MapCleanupService";
 
 export type MapConfig =
   | {
@@ -83,6 +84,8 @@ export interface ServerConfig {
   /** Fallback used until an authenticated client reports its bounded viewport. */
   defaultViewRange: ViewRange;
   map: MapConfig;
+  /** Absent when the periodic ground-item sweep is switched off. */
+  mapCleanup?: MapCleanupConfig;
   creatures?: {
     contentName: string;
     activationRange: { x: number; y: number };

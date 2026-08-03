@@ -74,6 +74,17 @@ map:
   name: otservbr
   spawnTown: Thais
 
+# Periodic sweep of items left lying on the ground (Canary's cleanMap), with a
+# broadcast every minute of the countdown. Map furniture, house floors and
+# items inside containers players carry are never touched.
+mapCleanup:
+  enabled: true
+  intervalMs: 7200000
+  # First warning this many minutes out, then one per minute down to 1.
+  warningMinutes: 5
+  # Canary's cleanProtectionZones: off, so depot and temple floors keep theirs.
+  cleanProtectionZones: false
+
 creatures:
   enabled: true
   contentName: world

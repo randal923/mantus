@@ -862,6 +862,34 @@ export class MemoryItemStore implements ItemStore {
     return { hiddenSeedKeys: [], items: [], agesMs: new Map() };
   }
 
+  async removeCleanedWorldItems(
+    itemIds: ReadonlyArray<string>,
+  ): Promise<void> {
+    for (const itemId of itemIds) {
+      const item = this.items.get(itemId);
+      if (item?.location.kind !== "world") continue;
+      for (const doomed of this.subtreeIds(itemId)) this.items.delete(doomed);
+    }
+  }
+
+  /** The item plus everything nested inside it, as the recursive delete sees it. */
+  private subtreeIds(rootId: string): string[] {
+    const ids = [rootId];
+    for (let index = 0; index < ids.length; index++) {
+      const parentId = ids[index];
+      for (const candidate of this.items.values()) {
+        const location = candidate.location;
+        if (
+          (location.kind === "container" || location.kind === "corpse") &&
+          location.containerId === parentId
+        ) {
+          ids.push(candidate.id);
+        }
+      }
+    }
+    return ids;
+  }
+
   async persist(plan: CarriedPersistPlan): Promise<void> {
     for (const op of plan.rowOps) {
       if (op.kind === "stage") {

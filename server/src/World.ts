@@ -214,6 +214,10 @@ export class World {
     return this.mapItems.getWorldSubtree(rootId);
   }
 
+  worldItemRoots() {
+    return this.mapItems.worldItemRoots();
+  }
+
   removeMapItem(instanceId: string, position: Position): boolean {
     return this.mapItems.removeMapItem(instanceId, position);
   }

@@ -119,6 +119,14 @@ const serverConfigFileSchema = z
         spawnTown: trimmedStringSchema,
       })
       .strict(),
+    mapCleanup: z
+      .object({
+        enabled: z.boolean(),
+        intervalMs: positiveIntegerSchema,
+        warningMinutes: nonnegativeIntegerSchema.max(60),
+        cleanProtectionZones: z.boolean(),
+      })
+      .strict(),
     creatures: z
       .object({
         enabled: z.boolean(),
@@ -233,6 +241,15 @@ export async function loadServerConfig(
       name: mapName,
       spawnTown: overrides.SPAWN_TOWN ?? config.map.spawnTown,
     },
+    ...(config.mapCleanup.enabled
+      ? {
+          mapCleanup: {
+            intervalMs: config.mapCleanup.intervalMs,
+            warningMinutes: config.mapCleanup.warningMinutes,
+            cleanProtectionZones: config.mapCleanup.cleanProtectionZones,
+          },
+        }
+      : {}),
     creatures:
       creaturesEnabled && mapName === "otservbr" ? creatureConfig : undefined,
   };

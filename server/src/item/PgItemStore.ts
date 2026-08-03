@@ -24,6 +24,7 @@ import { PgItemLocks } from "./PgItemLocks";
 import { PgItemPersistOps } from "./PgItemPersistOps";
 import { PgItemReads } from "./PgItemReads";
 import { PgItemUseOps } from "./PgItemUseOps";
+import { PgMapCleanOps } from "./PgMapCleanOps";
 import { PgStackOps } from "./PgStackOps";
 import { PgWorldItemMaterializer } from "./PgWorldItemMaterializer";
 import { PgWorldItemOps } from "./PgWorldItemOps";
@@ -41,6 +42,7 @@ export class PgItemStore implements ItemStore {
   private readonly creations: PgItemCreationOps;
   private readonly decays: PgDecayOps;
   private readonly persists: PgItemPersistOps;
+  private readonly mapCleans: PgMapCleanOps;
 
   constructor(pool: Pool, catalog: ItemCatalog, mapName: string) {
     const locks = new PgItemLocks(catalog, mapName);
@@ -78,6 +80,7 @@ export class PgItemStore implements ItemStore {
     );
     this.decays = new PgDecayOps(pool, catalog, locks, audit);
     this.persists = new PgItemPersistOps(pool, mapName);
+    this.mapCleans = new PgMapCleanOps(pool);
   }
 
   setImbuementCatalog(catalog: ImbuementCatalog): void {
@@ -275,6 +278,10 @@ export class PgItemStore implements ItemStore {
     expectedVersion: number,
   ): Promise<ItemMutation> {
     return this.decays.decayWorldItem(itemId, expectedVersion);
+  }
+
+  removeCleanedWorldItems(itemIds: ReadonlyArray<string>): Promise<void> {
+    return this.mapCleans.removeCleanedWorldItems(itemIds);
   }
 
   loadWorldDeltas(

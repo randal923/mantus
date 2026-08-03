@@ -16,6 +16,7 @@ import { AuthHandler } from "./AuthHandler";
 import { CharacterHandler } from "./CharacterHandler";
 import { CharacterPersistence } from "./character/CharacterPersistence";
 import { CharacterWriteLane } from "./character/CharacterWriteLane";
+import { MapCleanupService } from "./world/MapCleanupService";
 import { LoginLoadQueue } from "./character/LoginLoadQueue";
 import { CharacterService } from "./character/CharacterService";
 import { MonsterEventService } from "./creature/MonsterEventService";
@@ -229,6 +230,8 @@ export class GameServer {
   private readonly auth: AuthHandler;
   private readonly characters: CharacterHandler;
   private readonly persistence: CharacterPersistence;
+  /** Unset when the periodic ground-item sweep is switched off in config. */
+  private readonly mapCleanup: MapCleanupService | null;
   private readonly language: LanguageHandler;
   private readonly uiSettings: UiSettingsHandler;
   private readonly actionBar: ActionBarHandler;
@@ -366,6 +369,16 @@ export class GameServer {
       (characterId) => this.registry.sessionFor(characterId),
     );
     this.items.setCharacterWriteLane(characterWriteLane);
+    this.mapCleanup = config.mapCleanup
+      ? new MapCleanupService(
+          this.world,
+          deps.itemCatalog,
+          this.items,
+          this.registry,
+          config.mapCleanup,
+          monotonicNow(),
+        )
+      : null;
     this.items.scheduleWorldDecay(
       deps.worldItemDeltas?.items ?? [],
       deps.worldItemDeltas?.agesMs ?? new Map(),
@@ -1428,6 +1441,7 @@ export class GameServer {
       this.npcs.tick(now);
       this.items.tickDecay(now);
       this.items.tickWorldContainers();
+      this.mapCleanup?.tick(now);
       this.depot.tick(now);
       this.shopRestock.tick(now);
       this.currencyConservation.tick(now);

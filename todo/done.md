@@ -1994,3 +1994,81 @@ appears frozen out of combat until the next 60-second checkpoint corrects it —
 same backfill that fixes the placeholder-icon gap (TODO.md) fixes this.
 OTClient's four duration filters and the settings persistence behind them were
 not ported; recorded in TODO.md.
+
+## 2026-08-02 — Recurring map clean with a broadcast countdown
+
+**Problem.** Nothing swept the ground: every item a player dropped or a monster
+left behind stayed on its tile until something else touched it, growing the
+dynamic world-item set (and its rows) without bound. Canary has this — `/clean`
+(`Map::clean()` behind `Item::isCleanable`) plus the per-minute broadcast
+countdown its global server save uses — and the server had neither.
+
+**What changed.** A tick-owned scheduled sweep, off the same clock as every
+other subsystem (charter rules 3 and 5: the countdown is checked against tick
+time, the mutation is synchronous inside the tick, the row deletes trail on the
+ordered write lane).
+
+- `MapCleanupService` (new) runs the schedule: every `intervalMs` it announces
+  the sweep once per remaining minute, then collects and drains it. Warnings
+  collapse if a tick skips minutes (only the nearest is broadcast), the next
+  countdown arms itself when a sweep finishes, and the sweep is drained at
+  200 items per tick so a long-uncleaned map never stalls one. It announces
+  `Cleaned N items from the map.` — Canary's `/clean` wording — or that there
+  was nothing to clean.
+- `collectCleanableWorldItems` (new) is the selection rule, mirroring Canary's
+  `Item::isCleanable`: pickupable and movable, no `uniqueId`/`actionId`, and
+  not loaded from the map — which here means no `seedKey`, so map furniture is
+  never eaten. House tiles are excluded (a house floor is storage, not
+  clutter), and protection zones are spared unless `cleanProtectionZones` is
+  on, exactly as Canary's tile rule reads.
+- `ItemIntentHandler.cleanWorldItems` applies the removals: each item is
+  re-checked against live world state at execution (id, world location and
+  version), its subtree goes with it, and the row deletes run through
+  `runOrderedInternalOperation` — the same lane world decay uses — so they can
+  never overtake a pending write for the same item. Memory-only loot simply has
+  no row to drop. A failed delete is logged, not retried: the items are gone
+  from memory either way and the next sweep re-collects the rows.
+- `ItemStore.removeCleanedWorldItems` is the new store op. The Pg side
+  (`PgMapCleanOps` + `deleteCleanedWorldItems`) does it in one serializable
+  statement: a recursive CTE walks the contents (so the `container_id` restrict
+  constraint never blocks the parent), the delete is guarded on
+  `location_type = 'world'`, and the `item-destroyed` audit rows are inserted
+  from its `RETURNING` — so exactly the rows that existed are audited, with
+  `reason: 'map-clean'` (charter rule 11).
+- `config.yml` gains `mapCleanup` (`enabled`, `intervalMs: 7200000`,
+  `warningMinutes: 5`, `cleanProtectionZones: false`); the service is only
+  constructed when it is enabled, so the playtest harnesses are unaffected.
+
+**Files**: `server/src/world/MapCleanupService.ts` (new),
+`server/src/item/collectCleanableWorldItems.ts` (new),
+`server/src/item/PgMapCleanOps.ts` (new),
+`server/src/item/sql/deleteCleanedWorldItems.ts` (new),
+`server/src/item/ItemIntentHandler.ts`, `server/src/item/ItemStore.ts`,
+`server/src/item/PgItemStore.ts`, `server/src/item/MemoryItemStore.ts`,
+`server/src/world/DynamicMapItems.ts`, `server/src/World.ts`,
+`server/src/GameServer.ts`, `server/src/config.ts`,
+`server/src/loadServerConfig.ts`, `config.yml`, plus
+`MapCleanupService.test.ts`, `collectCleanableWorldItems.test.ts`,
+`ItemIntentHandler.mapClean.test.ts` (new) and two `PgItemStore.integration`
+cases.
+
+**Verified**: unit tests cover the countdown (5→1 broadcasts, collapse on
+skipped ticks, re-arm after a sweep, the empty-map message), the selection
+rules (seed items, house tiles, unique/action ids, a non-pickupable fresh
+corpse and protection zones all spared; the opt-in flag flips PZ), and the
+removal itself (tile and rows cleared with contents, a version-changed item
+skipped, memory-only corpse loot swept with no rows). The new SQL was planned
+against the live schema with `EXPLAIN` inside a rolled-back transaction —
+recursive CTE, guarded delete and audit insert all resolve — and the two
+integration cases assert the real behaviour when `TEST_DATABASE_URL` is set.
+`loadServerConfig()` parses the real `config.yml` with the new section.
+Typecheck clean; suite 1,566 passed with the same 4 pre-existing `exercise
+weapon` failures from b8f82b6.
+
+**Residual risk**: the integration cases have not run — no test database in
+this environment — so the Pg path is verified by plan, not by execution.
+Decayed corpse stages are pickupable, so a sweep can take a decayed corpse
+that still holds loot; that is Canary's behaviour too, but it is the one case
+where a clean destroys something a player might have wanted. There is no GM
+`/clean` talkaction yet (Canary has one) and no admin visibility into the next
+scheduled sweep beyond `MapCleanupService.scheduledAt`.

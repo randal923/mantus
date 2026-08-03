@@ -126,6 +126,11 @@ export interface ItemStore {
     itemId: string,
     expectedVersion: number,
   ): Promise<ItemMutation>;
+  /**
+   * Drops the rows behind ground items the periodic map clean removed from
+   * memory, contents included, with an `item-destroyed` audit per row.
+   */
+  removeCleanedWorldItems(itemIds: ReadonlyArray<string>): Promise<void>;
   loadWorldDeltas(
     mapName: string,
     mapVersion: string,
