@@ -2741,3 +2741,44 @@ session's cooldowns (same durability class as the character snapshot).
 Death-while-lingering keeps the pre-death rows (death only clears the map
 when a session is attached); cooldowns surviving death matches Canary, so
 the wipe-on-death-with-session is the stricter branch.
+
+## 2026-08-03 — Imbuement picker lists worn gear only, blank scroll dropped
+
+**Problem**: the shrine's "Pick an item to imbue" grid was
+`getInventoryItems(inventory).filter(slots > 0)` — every carried piece,
+including the spare backpacks nested inside the worn one, and (because
+`projectInventory` sends the equipped backpack's contents both as
+`inventory.items` and as an open container) the same item twice with the same
+React key. The grid also offered a blank-scroll tile whenever the player held
+one, which nothing in the intended flow uses.
+
+**What changed**: new `client/lib/imbuement/collectImbuableItems.ts` — keyed
+by item id (so an open bag cannot list its contents twice), worn pieces
+first, and containers only qualify while equipped, so exactly one backpack
+can ever appear. It returns `{ item, equipped }`, and `ImbuementItemPanel`
+renders a small "Equipped" badge on the worn ones (with an `aria-label` that
+keeps the item's name as the button's accessible name). The blank-scroll tile
+and the whole scroll branch of the window UI are gone:
+`ImbuementItemPanel`'s scroll pane, `ImbuementModal`'s `onSelectScroll` /
+`onForgeScroll` props and `mode` handling, `ImbuementApplyPanel`'s `mode`
+prop, the two overlay handlers, and the `imbuement.blankScroll` /
+`forgeScroll` / `forgeScrollWith` strings in both locales (new:
+`imbuement.equipped`). Server and protocol are untouched — scroll forging
+still exists, it just has no client entry point (recorded in `TODO.md`).
+
+**Files**: `client/lib/imbuement/collectImbuableItems.ts` (+ test),
+`client/components/imbuement/{ImbuementItemPanel,ImbuementModal,
+ImbuementApplyPanel}.tsx`, `client/components/game-window/
+GameForgeOverlays.tsx`, `client/locales/{en,pt-BR}.json`,
+`client/stories/ImbuementModal.stories.tsx`.
+
+**Verified**: 4 new unit cases (spare bags dropped while the worn one stays,
+worn-first ordering with the `equipped` flag, an item listed once when its
+bag is also open, no-slot pieces dropped); the six ImbuementModal stories
+pass, with the PickItem story now asserting the "Equipped" badge renders;
+`yarn typecheck` and `yarn lint` clean.
+
+**Residual risk**: display only. The server still accepts an imbuement window
+request for any carried item, a spare backpack included — nothing is gained
+by imbuing one, so the filter was left on the client rather than narrowing a
+server rule.

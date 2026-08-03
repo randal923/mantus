@@ -5,10 +5,10 @@ import { useMemo, useState } from "react";
 import {
   IMBUEMENT_RULES,
   type ImbuementWindowStateMessage,
-  type InventoryItem,
 } from "@tibia/protocol";
 import { useWikiItems } from "../../hooks/useWikiItems";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import type { ImbuableItem } from "../../lib/imbuement/collectImbuableItems";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
 import { ImbuementApplyPanel } from "./ImbuementApplyPanel";
@@ -20,16 +20,14 @@ import { ImbuementShrineDialog } from "./ImbuementShrineDialog";
 interface ImbuementModalProps {
   window: ImbuementWindowStateMessage | null;
   /** Carried items with imbuement slots, shown directly in the item panel. */
-  imbuableItems: ReadonlyArray<InventoryItem>;
+  imbuableItems: ReadonlyArray<ImbuableItem>;
   /** Resolves an astral source's sprite; supplied by the caller's catalog. */
   spriteIdOf: (itemTypeId: number) => number | undefined;
   pending: boolean;
   error: string | null;
   onPickItem: (itemId: string) => void;
-  onSelectMode: (mode: "item" | "scroll") => void;
   onApply: (slot: number, imbuementId: number) => void;
   onClear: (slot: number) => void;
-  onForgeScroll: (imbuementId: number) => void;
   onClose: () => void;
 }
 
@@ -44,10 +42,8 @@ export function ImbuementModal({
   pending,
   error,
   onPickItem,
-  onSelectMode,
   onApply,
   onClear,
-  onForgeScroll,
   onClose,
 }: ImbuementModalProps) {
   const { t } = useAppTranslation();
@@ -57,7 +53,6 @@ export function ImbuementModal({
   const [tierChoice, setTierChoice] = useState<number | null>(null);
   const [imbuementChoice, setImbuementChoice] = useState<number | null>(null);
 
-  const mode = windowState?.mode ?? "item";
   const slots = useMemo(() => windowState?.slots ?? [], [windowState]);
   const options = useMemo(() => windowState?.options ?? [], [windowState]);
   const wikiSpriteIds = useMemo(
@@ -86,8 +81,7 @@ export function ImbuementModal({
         option.imbuementId === imbuementChoice &&
         option.baseId === tier,
     ) ?? null;
-  const clearing =
-    mode === "item" && activeSlot !== null && activeSlot.imbuementId !== null;
+  const clearing = activeSlot !== null && activeSlot.imbuementId !== null;
 
   return (
     <ImbuementShrineDialog
@@ -134,12 +128,6 @@ export function ImbuementModal({
               setImbuementChoice(null);
               onPickItem(itemId);
             }}
-            onSelectScroll={() => {
-              setSlotChoice(null);
-              setTierChoice(null);
-              setImbuementChoice(null);
-              onSelectMode("scroll");
-            }}
             onSelectSlot={(slot) => {
               setSlotChoice(slot);
               setTierChoice(null);
@@ -173,13 +161,8 @@ export function ImbuementModal({
                   wikiSpriteIds.get(itemTypeId) ?? spriteIdOf(itemTypeId)
                 }
                 pending={pending}
-                mode={mode}
                 onApply={() => {
                   if (!selectedOption) return;
-                  if (mode === "scroll") {
-                    onForgeScroll(selectedOption.imbuementId);
-                    return;
-                  }
                   if (selectedSlot === null) return;
                   onApply(selectedSlot, selectedOption.imbuementId);
                 }}

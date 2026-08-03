@@ -13,8 +13,6 @@ interface ImbuementApplyPanelProps {
   /** Sprite ids for the astral sources, keyed by item type. */
   spriteIdOf: (itemTypeId: number) => number | undefined;
   pending: boolean;
-  /** Scroll mode forges a scroll instead of imbuing the picked item. */
-  mode: "item" | "scroll";
   onApply: () => void;
 }
 
@@ -23,7 +21,6 @@ export function ImbuementApplyPanel({
   option,
   spriteIdOf,
   pending,
-  mode,
   onApply,
 }: ImbuementApplyPanelProps) {
   const { t } = useAppTranslation();
@@ -93,9 +90,7 @@ export function ImbuementApplyPanel({
             disabled={pending || !option?.canApply}
             onClick={onApply}
           >
-            {mode === "scroll"
-              ? t("imbuement.forgeScroll")
-              : t("imbuement.apply")}
+            {t("imbuement.apply")}
           </Button>
         </div>
       </div>

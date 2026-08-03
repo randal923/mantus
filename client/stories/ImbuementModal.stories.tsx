@@ -16,15 +16,16 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     window: IMBUEMENT_WINDOW,
-    imbuableItems: FORGE_INVENTORY.items.map((entry) => entry.item),
+    imbuableItems: FORGE_INVENTORY.items.map((entry, index) => ({
+      item: entry.item,
+      equipped: index === 0,
+    })),
     spriteIdOf: (itemTypeId) => MATERIAL_SPRITE_IDS.get(itemTypeId),
     pending: false,
     error: null,
     onPickItem: fn(),
-    onSelectMode: fn(),
     onApply: fn(),
     onClear: fn(),
-    onForgeScroll: fn(),
     onClose: fn(),
   },
 } satisfies Meta<typeof ImbuementModal>;
@@ -72,6 +73,7 @@ export const ClearSlot: Story = {
 export const PickItem: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+    await expect(await canvas.findByText("Equipped")).toBeVisible();
     await userEvent.click(
       await canvas.findByRole("button", { name: "crown armor" }),
     );

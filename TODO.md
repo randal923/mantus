@@ -29,6 +29,13 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Imbuement scrolls can no longer be forged from the client** (2026-08-03).
+  The shrine window's blank-scroll tile was removed on request, and with it
+  the only UI that sent `imbuement-scroll-create`. The server side (forging a
+  scroll, applying a filled one) is untouched and still tested, so restoring
+  the flow is a UI change — give it its own surface rather than a tile in the
+  "pick an item to imbue" grid, which is what made it confusing.
+
 - **A hard crash can lose up to 30 seconds of skill/magic tries**
   (2026-08-03). Try awards no longer save the character per swing — they mark
   it dirty and ride the 30 s interval save (see `todo/done.md` 2026-08-03),

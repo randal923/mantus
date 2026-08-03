@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { itemImbuementSlotCountOf } from "../../lib/forge/itemImbuementSlotCountOf";
+import { collectImbuableItems } from "../../lib/imbuement/collectImbuableItems";
 import { getInventoryItems } from "../../lib/inventory/getInventoryItems";
 import { ForgeModal } from "../forge/ForgeModal";
 import { ImbuementModal } from "../imbuement/ImbuementModal";
@@ -93,9 +93,7 @@ export function GameForgeOverlays() {
       {imbuementOpen && (
         <ImbuementModal
           window={imbuementWindow}
-          imbuableItems={carried.filter(
-            (item) => itemImbuementSlotCountOf(item) > 0,
-          )}
+          imbuableItems={collectImbuableItems(inventory)}
           spriteIdOf={(itemTypeId) =>
             carried.find((item) => item.typeId === itemTypeId)?.spriteId
           }
@@ -105,15 +103,6 @@ export function GameForgeOverlays() {
             const sent =
               runtime.clientRef.current?.requestImbuementWindow(itemId) ??
               false;
-            sessionActions.imbuement.begin(sent);
-          }}
-          onSelectMode={(mode) => {
-            const itemId = mode === "scroll" ? null : imbuementItemId;
-            const sent =
-              runtime.clientRef.current?.requestImbuementWindow(
-                itemId,
-                mode,
-              ) ?? false;
             sessionActions.imbuement.begin(sent);
           }}
           onApply={(slot, imbuementId) => {
@@ -133,12 +122,6 @@ export function GameForgeOverlays() {
                 imbuementItemId,
                 slot,
               ) ?? false;
-            sessionActions.imbuement.begin(sent);
-          }}
-          onForgeScroll={(imbuementId) => {
-            const sent =
-              runtime.clientRef.current?.forgeImbuementScroll(imbuementId) ??
-              false;
             sessionActions.imbuement.begin(sent);
           }}
           onClose={() => {
