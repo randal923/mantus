@@ -155,6 +155,22 @@ limitations accepted during a session are recorded in the owning feature file
   the inventory badge until the imbuement is re-applied. Recommended fix if it
   matters before those decay: a one-off backfill mapping stored `imbuementId`
   to `iconid + (baseid - 1)`.
+- **The same gear also projects `aggressive: true` regardless of category**
+  (2026-08-02, see `todo/done.md`). `aggressive` is denormalized alongside
+  `iconId` for the same reason, and entries written before the imbuement
+  tracker shipped have neither. The safe default makes the tracker's display
+  countdown stall out of combat rather than run faster than the server's decay
+  ledger, so it self-corrects at the next 60-second checkpoint — but a
+  non-aggressive imbuement on old gear looks frozen until then. Recommended
+  fix: the same one-off backfill, writing `aggressive` from the imbuement's
+  category in the same pass.
+- **The imbuement tracker has no duration filters** (2026-08-02, see
+  `todo/done.md`). OTClient's tracker offers four persisted checkboxes —
+  show under 1 h, 1–3 h, over 3 h, and items with no active imbuement — behind
+  a context-menu button on the mini-window. Our panel always shows every
+  equipped piece with slots. Recommended fix if the list gets long: add the
+  four toggles to `ImbuementTrackerPanel` and persist them in `uiSettings`
+  next to the other client-side display preferences, not in a new store.
 - **The Postgres connection budget is per-process, not shared** (2026-07-26,
   largely resolved 2026-07-29 — see `todo/done.md`). `DATABASE_URL` now uses
   the transaction pooler (port 6543), which multiplexes instead of pinning one
@@ -836,6 +852,22 @@ limitations accepted during a session are recorded in the owning feature file
   takes an optional colour transform for outfit masks — give it the same
   `tintSpritePixels` pass keyed by the item's client id, and have the frame
   cache key include the tint. Owner: client/rendering.
+
+- **An item persist that dies at `COMMIT` can still orphan or duplicate a
+  world item** (2026-08-02). Dropped persist plans now put back the loot/seed
+  origins they were going to materialize (`restoreUnpersistedOrigins`), so a
+  failed or skipped write leaves the corpse/field memory-only instead of
+  row-less. The one case that stays wrong is the ambiguous commit:
+  `withSerializableTransaction` retries connection-class errors (`08*`,
+  `ECONNRESET`), so a drop right after `COMMIT` re-runs a transaction that
+  already landed, the retry fails on the duplicate key, and the compensation
+  then marks an item memory-only that does have a row — the next touch hits the
+  same duplicate key, poisons the character again and resyncs. Rare, and
+  ambiguous commits already diverged before the compensation existed.
+  Recommended fix: make first-touch materialization idempotent (insert the row
+  keyed on `items.id` with `ON CONFLICT (id) DO NOTHING` and verify the
+  surviving row matches the plan), or stop retrying a transaction whose commit
+  outcome is unknown, as `PgEconomyPersistOps` already does. Owner: items.
 
 
 ## Repo-wide known breakage

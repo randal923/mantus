@@ -142,6 +142,8 @@ export interface GameWindowState {
   imbuementItemId: string | null;
   /** The docked kill-tracker panel toggle; renders only with entries. */
   trackerVisible: boolean;
+  /** The docked imbuement-tracker panel toggle; timers for equipped gear. */
+  imbuementTrackerVisible: boolean;
   preyWindowOpen: boolean;
   huntingTasksOpen: boolean;
   huntFinderOpen: boolean;

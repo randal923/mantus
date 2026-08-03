@@ -204,6 +204,29 @@ describe("ImbuementService apply", () => {
     expect(harness.stash.get(SOURCE)).toBe(45);
   });
 
+  it("denormalizes the category's aggressiveness onto the slot", async () => {
+    const harness = makeHarness({ carried: 25 });
+    harness.service.handleApply(
+      harness.session,
+      { type: "imbuement-apply", itemId: ITEM, slot: 0, imbuementId: 1 },
+      1_000,
+    );
+    await harness.flush();
+
+    // The tracker's countdown reads this to know the slot only burns in a
+    // fight; item projections run without the imbuement catalog.
+    expect(harness.store.requests[0]?.attributes.imbuements).toEqual([
+      {
+        slot: 0,
+        imbuementId: 1,
+        remainingSeconds: 72_000,
+        name: "Basic Scorch",
+        iconId: 13,
+        aggressive: true,
+      },
+    ]);
+  });
+
   it("counts the stash toward availability", async () => {
     const harness = makeHarness({ carried: 0, stashed: 25 });
     harness.service.handleApply(

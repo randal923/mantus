@@ -15,6 +15,7 @@ import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
 import { CharacterHandler } from "./CharacterHandler";
 import { CharacterPersistence } from "./character/CharacterPersistence";
+import { CharacterWriteLane } from "./character/CharacterWriteLane";
 import { LoginLoadQueue } from "./character/LoginLoadQueue";
 import { CharacterService } from "./character/CharacterService";
 import { MonsterEventService } from "./creature/MonsterEventService";
@@ -346,11 +347,15 @@ export class GameServer {
       ...this.world.templePosition,
       townId: config.starterTownId,
     });
+    // One lane per character shared by the two writers of their `characters`
+    // row, so a snapshot save never aborts an item persist mid-transaction.
+    const characterWriteLane = new CharacterWriteLane();
     this.persistence = new CharacterPersistence(
       deps.characters,
       config.characterSaveIntervalMs,
       config.maxCharacterSaveRetries,
       config.characterSaveRetryDelayMs,
+      characterWriteLane,
     );
     this.items = new ItemIntentHandler(
       deps.items,
@@ -360,6 +365,7 @@ export class GameServer {
       new DecayManager(deps.itemCatalog),
       (characterId) => this.registry.sessionFor(characterId),
     );
+    this.items.setCharacterWriteLane(characterWriteLane);
     this.items.scheduleWorldDecay(
       deps.worldItemDeltas?.items ?? [],
       deps.worldItemDeltas?.agesMs ?? new Map(),

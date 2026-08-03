@@ -533,7 +533,9 @@
     "huntFinder": "Guia de Caças",
     "forge": "Forja da Exaltação",
     "proficiency": "Proficiência",
-    "tracker": "Rastreador de Abates"
+    "tracker": "Rastreador de Abates",
+    "characterMenu": "Menu do Personagem",
+    "imbuementTracker": "Rastreador de Imbuements"
   },
   "currency": {
     "wallet": "Carteira de moedas",
@@ -2871,5 +2873,10 @@
     "total": "Total",
     "remaining": "{{count}} min restantes",
     "staminaDepleted": "Sua stamina acabou; você não ganha experiência ao caçar."
+  },
+  "imbuementTracker": {
+    "title": "Imbuements",
+    "close": "Fechar rastreador de imbuements",
+    "empty": "Nada que você está usando tem espaços de imbuement."
   }
 }

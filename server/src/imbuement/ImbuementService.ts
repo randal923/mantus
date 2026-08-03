@@ -177,6 +177,8 @@ export class ImbuementService {
         remainingSeconds: base.durationSeconds,
         name: label,
         iconId: definition.iconId + (definition.baseId - 1),
+        aggressive:
+          catalog.categories.get(definition.categorySlug)?.aggressive ?? true,
       },
     ];
     this.runMutation(session, characterId, item, nextEntries, {
@@ -356,6 +358,8 @@ export class ImbuementService {
         remainingSeconds: base.durationSeconds,
         name: label,
         iconId: definition.iconId + (definition.baseId - 1),
+        aggressive:
+          catalog.categories.get(definition.categorySlug)?.aggressive ?? true,
       },
     ], {
       plan: {

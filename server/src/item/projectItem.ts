@@ -13,12 +13,15 @@ export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
   const useKind = getItemUseKind(type);
   // Running imbuements, so equipped gear can show its icons and time left
   // without a shrine. Entries written before the icon was denormalized fall
-  // back to the placeholder rather than dropping the badge.
+  // back to the placeholder rather than dropping the badge, and to aggressive
+  // so the tracker's display countdown stalls rather than outrunning the
+  // server's own decay ledger.
   const imbuements = itemImbuementsOf(item).map((entry) => ({
     slot: entry.slot,
     name: entry.name ?? "imbuement",
     iconId: entry.iconId ?? 0,
     remainingSeconds: entry.remainingSeconds,
+    aggressive: entry.aggressive ?? true,
   }));
   return {
     id: item.id,

@@ -1,6 +1,7 @@
 import type { Player } from "../Player";
 import type { CharacterSaveSnapshot } from "./Character";
 import type { CharacterStore } from "./CharacterStore";
+import { CharacterWriteLane } from "./CharacterWriteLane";
 import { isTransientDatabaseError } from "./isTransientDatabaseError";
 import { monotonicNow } from "../monotonicNow";
 
@@ -42,6 +43,11 @@ export class CharacterPersistence {
     private readonly saveIntervalMs: number,
     private readonly maxRetries: number,
     private readonly retryDelayMs: number,
+    /**
+     * Shared with the item persist lane: both write this character's row, and
+     * overlapping them aborts the item side with a serialization failure.
+     */
+    private readonly writeLane = new CharacterWriteLane(),
   ) {}
 
   get unsavedPlayerCount(): number {
@@ -307,7 +313,10 @@ export class CharacterPersistence {
   ): Promise<number> {
     for (let attempt = 0; ; attempt++) {
       try {
-        return await this.store.saveSnapshot(snapshot);
+        // Per attempt, so a retry's backoff is not spent holding the lane.
+        return await this.writeLane.run(snapshot.characterId, () =>
+          this.store.saveSnapshot(snapshot),
+        );
       } catch (cause) {
         if (
           attempt >= this.maxRetries ||

@@ -1823,3 +1823,174 @@ first skill/magic band (skill stages start at skill level 10), and the site
 labels those rows "Staged" without qualifying the gap. Live characters keep
 their existing experience totals — the new curve only changes what future kills
 award, so pre-change levels were earned on the old rates.
+
+## 2026-08-02 — Item persists stop racing character saves; no more phantom world items
+
+**Problem.** Live logs showed a repeating pair of errors: `item persist failed
+for <character>: could not serialize access due to concurrent update`, each one
+followed by a full cache resync, and then `decay failed for item <id>: item not
+found` for the same three ids over and over. A read-only probe of the live DB
+confirmed those three ids had **no `items` row at all**, while the character
+they belonged to was on `characters.version` 1337.
+
+Two linked causes:
+
+1. *Contention.* `PgItemPersistOps.applyPlan` opens a SERIALIZABLE transaction
+   whose first statement is `lockCharacterQuery` — `SELECT … FROM characters
+   WHERE id = $1 FOR UPDATE`, whose result it never reads; it is purely a
+   mutex. `CharacterPersistence` updates that same row on every progression
+   award (`saveNow`: kill experience, magic progress, skill tries) plus the
+   30 s interval save. When a save is in flight the persist waits on the row
+   lock and is aborted with SQLSTATE 40001 the moment the save commits. The
+   retry ladder (5 attempts inside `withSerializableTransaction` × 3 in
+   `enqueuePersist`, all inside ~500 ms) is tuned for a local database; against
+   the remote pooler in `DATABASE_URL` a single save transaction can outlive
+   the whole ladder, so a looting player in combat burns every attempt.
+2. *Orphaning.* A persist that fails poisons the character, and every write
+   queued behind it — plus every new one until the resync finishes — is
+   dropped. `DynamicMapItems.applyItemMutation` had already deleted the loot or
+   seed origin of any memory-only world item in that plan, on the assumption
+   the plan carries its row insert. A dropped plan therefore left a world item
+   with no origin *and* no row: nothing could ever insert it, any guarded op
+   against it missed (poisoning the next player to touch it), and
+   `WorldItemDecayRunner` routed its decay to the store, got `item not found`,
+   re-armed the record with a full duration, and repeated forever.
+
+**What changed.**
+
+- `CharacterWriteLane` (new) serializes, per character, the two lanes that
+  write that character's row. `CharacterPersistence` takes it as a constructor
+  dependency and holds it per save attempt (not across the retry backoff);
+  `ItemIntentHandler.setCharacterWriteLane` receives the same instance from
+  `GameServer` and holds it around each persist attempt. The two can no longer
+  overlap, so the 40001 class disappears rather than being retried through. The
+  wait is the one Postgres would have imposed on the row lock anyway.
+- `restoreUnpersistedOrigins` (new) rebuilds the loot/seed origins a dropped
+  plan was going to materialize, reading them back out of the plan's own
+  `insert` row ops and `loot-created` audits. `enqueuePersist` gained an
+  optional `onDropped` compensation that runs **inside the tick** on both drop
+  paths — the write that failed and every write skipped because the character
+  is poisoned — and the seven item-plan call sites now go through
+  `enqueueItemPersist`, which wires it. Only items still present in world
+  memory are restored; one the plan moved into an inventory is reconciled by
+  the resync instead.
+- `WorldItemDecayRunner` treats `item not found` as terminal via the new
+  `isItemNotFoundError`: it drops the phantom from memory (version- and
+  type-guarded, exactly like the in-memory decay path) instead of re-arming a
+  record that can only fail again. `MemoryItemStore.decayWorldItem` now splits
+  `item not found` from `stale item revision` the way the Pg store does, so the
+  fake exercises the same branch.
+
+**Files**: `server/src/character/CharacterWriteLane.ts` (new),
+`server/src/character/CharacterPersistence.ts`,
+`server/src/item/restoreUnpersistedOrigins.ts` (new),
+`server/src/item/isItemNotFoundError.ts` (new),
+`server/src/item/ItemIntentHandler.ts`,
+`server/src/item/WorldItemDecayRunner.ts`, `server/src/item/MemoryItemStore.ts`,
+`server/src/GameServer.ts`, plus
+`CharacterWriteLane.test.ts`, `restoreUnpersistedOrigins.test.ts`,
+`ItemIntentHandler.persistDrop.test.ts` (new) and a decay regression.
+
+**Verified**: new tests cover the lane (same character never overlaps,
+different characters still run concurrently, a rejection does not strand the
+next write), the origin restore (world item re-marked, seed origin restored
+from its insert, inventory-bound item left alone), the compensation wiring
+(failed write and poisoned skip both compensate, a committed write does not),
+and the phantom drop end to end — a corpse whose materializing plan never
+committed now leaves the ground on its decay tick instead of logging forever.
+Server typecheck clean; suite 1,556 passed with the same 4 pre-existing
+`exercise weapon` failures from b8f82b6 (`loadItemCatalog`,
+`EXERCISE_WEAPON_CATEGORY`, `ExerciseTrainingHandler` — `speedMultiplier` 5 vs
+tests still expecting 2, untouched by this work).
+
+**Residual risk**: the compensation restores an origin whenever the write did
+not report success, including the ambiguous case where a connection drops after
+`COMMIT` — the row would then exist while memory calls the item memory-only, so
+the next touch hits a duplicate key, poisons once more and resyncs. Ambiguous
+commits already diverged before this change; making the item inserts
+idempotent (or refusing to retry a possibly-committed transaction) is the real
+fix and is not done here. A dropped plan still *loses* the item leg it moved
+(the accepted "intents in the window are lost, never duplicated" semantic) —
+only the world side is now self-consistent. `WorldItemDecayRunner.start` still
+checks only `lootOrigin`, not `seedOrigin`, so a decaying map-seed item that
+was never materialized would be dropped rather than transformed; no such item
+type ships today.
+
+## 2026-08-02 — Character menu in the top bar and the imbuement tracker
+
+The top navigation bar had grown to twenty-one flat icon buttons and there was
+no way to see how much time was left on the imbuements a character is wearing
+without walking to a shrine, or hovering each equipment slot one at a time.
+
+**Character menu.** `client/components/navigation/CharacterMenuButton.tsx` is a
+new top-bar button (character icon) that drops an anchored `role="menu"` panel
+under itself: Kill Tracker, Imbuement Tracker, Battle List, Profile, Outfits,
+Proficiency, Guild, Quests, Party, VIP List. It closes on outside pointerdown,
+Escape, window blur, or picking a row. The panels behind it are toggles, so
+every row is a `menuitemcheckbox` reporting its own open state, and the trigger
+lights up while any of them is open. Those nine buttons were *removed* from the
+flat row rather than duplicated — the row keeps the world and account panels
+(character stats, inventory, house, highscores, wiki, wheel, forge, prey,
+hunting tasks, hunt finder, map, market, settings). Icons live in
+`CharacterMenuIcon.tsx` in the same 24×24 stroked style as the row, and the
+entry shape in `CharacterMenuEntry.ts`.
+
+**Imbuement tracker.** `client/components/imbuement/ImbuementTrackerPanel.tsx`
+lists every equipped piece with imbuement slots and the time left on each
+running imbuement, docked in the left tracker column under the kill tracker
+(`GameTrackerOverlays` now owns that column and stacks both panels).
+Empty slots keep their place as placeholders. Durations are colour-banded on
+OTClient's thresholds (`imbuementTrackerTimeOf`): seconds and minutes red,
+under three hours yellow, longer plain.
+
+**Canary/OTClient parity and where we deviate.** Canary answers a client
+`isTrackerOpen` byte (`parseInventoryImbuements`) by pushing the whole tracker
+in packet 0x5D, re-sent roughly once a second while the window is open
+(`Player::updateImbuementTrackerStats`, throttled at 1000 ms), each slot
+carrying name, icon, duration and a "currently decaying" byte. We do not add
+that packet. Our equipped imbuements already ride the inventory projection, and
+`ImbuementService` checkpoints decay durably every 60 qualifying seconds, which
+pushes `inventory-updated` — so the panel anchors on the server's numbers and
+counts down locally between checkpoints (`useImbuementBurnClock`, the pattern
+`OwnSkullIndicator` already uses for skull timers). Nothing about decay moved
+client-side: a checkpoint that disagrees wins within the minute.
+
+That local countdown needs to know which slots are burning, which is the one
+thing the wire did not carry. `aggressive` was added to the projected imbuement
+entry (`protocol/src/item.ts`), denormalized into the item's attribute bag at
+apply time next to `name`/`iconId` (item projections run without the imbuement
+catalog), and the client gates aggressive slots on its own `combat-lock`
+condition plus `fightState.inProtectionZone` — the same rule
+`ImbuementService.sweepCharacter` enforces. Legacy entries with no `aggressive`
+project as aggressive, so a stale slot stalls rather than outrunning the server.
+
+Row selection also deviates: OTClient narrows to six hardcoded inventory slots,
+we keep Canary's rule (any equipped item that has imbuement slots) because
+which of our types carry slots is catalog data.
+
+Files: `protocol/src/item.ts`; `server/src/forge/itemImbuementsOf.ts`,
+`server/src/item/projectItem.ts`, `server/src/imbuement/ImbuementService.ts`
+(+`.test.ts`); `client/components/navigation/{CharacterMenuButton,
+CharacterMenuIcon}.tsx`, `CharacterMenuEntry.ts`, `TopNavigationBar.tsx`;
+`client/components/imbuement/{ImbuementTrackerPanel,ImbuementTrackerRow,
+ImbuementTrackerSlot}.tsx`; `client/hooks/useImbuementBurnClock.ts`;
+`client/lib/imbuement/{collectTrackedEquipment,imbuementTrackerTimeOf}.ts`
+(+`collectTrackedEquipment.test.ts`);
+`client/components/game-window/{GameTrackerOverlays,GameNavigation}.tsx` and the
+store's `imbuementTrackerVisible` flag; `client/locales/{en,pt-BR}.json`;
+`client/stories/{TopNavigationBar,ImbuementTrackerPanel}.stories.tsx` +
+`imbuementTrackerFixtures.ts`.
+
+Verified: `yarn typecheck` clean; `ImbuementService.test.ts` (9) asserts the
+applied slot carries `aggressive: true` for an aggressive category;
+`collectTrackedEquipment.test.ts` (5) covers row selection and every colour
+band; both Storybook stories run in headless chromium — the nav story opens the
+dropdown and asserts the picked row fires its handler and closes the menu, the
+panel story asserts one label per band. Screenshot-checked at 960×720.
+
+Residual risk: gear imbued before this change projects `aggressive: true`
+regardless of its real category, so a non-aggressive imbuement on old gear
+appears frozen out of combat until the next 60-second checkpoint corrects it —
+same backfill that fixes the placeholder-icon gap (TODO.md) fixes this.
+OTClient's four duration filters and the settings persistence behind them were
+not ported; recorded in TODO.md.

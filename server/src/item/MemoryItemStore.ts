@@ -823,8 +823,11 @@ export class MemoryItemStore implements ItemStore {
   ): Promise<ItemMutation> {
     if (!this.catalog) throw new Error("memory decay is not configured");
     const before = this.items.get(itemId);
-    if (!before || before.version !== expectedVersion) {
-      throw new Error("item is missing or stale");
+    // Same split the Pg store makes: a missing row can never be retried into
+    // existence, a stale version can.
+    if (!before) throw new Error("item not found");
+    if (before.version !== expectedVersion) {
+      throw new Error("stale item revision");
     }
     if (before.location.kind !== "world") {
       throw new Error("item is not on the map");

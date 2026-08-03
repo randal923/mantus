@@ -2,6 +2,7 @@
 
 import type { CharacterOutfit, FightMode } from "@tibia/protocol";
 import { FightControls } from "../combat/FightControls";
+import { CharacterMenuButton } from "./CharacterMenuButton";
 import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { NavigationIconButton } from "./NavigationIconButton";
@@ -34,6 +35,7 @@ interface TopNavigationBarProps {
   battleListVisible: boolean;
   minimapVisible: boolean;
   trackerVisible: boolean;
+  imbuementTrackerVisible: boolean;
   vipVisible: boolean;
   partyVisible: boolean;
   gold: number;
@@ -62,6 +64,7 @@ interface TopNavigationBarProps {
   onBattleList: () => void;
   onMinimap: () => void;
   onTracker?: () => void;
+  onImbuementTracker?: () => void;
   onStore: () => void;
   onMarket?: () => void;
   onSettings?: () => void;
@@ -76,6 +79,7 @@ export function TopNavigationBar({
   battleListVisible,
   minimapVisible,
   trackerVisible,
+  imbuementTrackerVisible,
   vipVisible,
   partyVisible,
   gold,
@@ -104,11 +108,79 @@ export function TopNavigationBar({
   onBattleList,
   onMinimap,
   onTracker,
+  onImbuementTracker,
   onStore,
   onMarket,
   onSettings,
 }: TopNavigationBarProps) {
   const { t } = useAppTranslation();
+  // The character's own windows live behind the character button instead of
+  // the icon row, which had grown to twenty-one flat buttons.
+  const characterMenuEntries = [
+    {
+      id: "tracker" as const,
+      label: t("navigation.tracker"),
+      active: trackerVisible,
+      ...(onTracker ? { onSelect: onTracker } : {}),
+    },
+    {
+      id: "imbuementTracker" as const,
+      label: t("navigation.imbuementTracker"),
+      active: imbuementTrackerVisible,
+      ...(onImbuementTracker ? { onSelect: onImbuementTracker } : {}),
+    },
+    {
+      id: "battleList" as const,
+      label: t("navigation.battleList"),
+      active: battleListVisible,
+      onSelect: onBattleList,
+    },
+    {
+      id: "profile" as const,
+      label: t("navigation.profile"),
+      active: activePanel === "profile",
+      ...(onProfile ? { onSelect: onProfile } : {}),
+    },
+    {
+      id: "outfit" as const,
+      label: t("navigation.outfit"),
+      active: activePanel === "outfit",
+      ...(onOutfits ? { onSelect: onOutfits } : {}),
+    },
+    {
+      id: "proficiency" as const,
+      label: t("navigation.proficiency"),
+      active: activePanel === "proficiency",
+      ...(onProficiency ? { onSelect: onProficiency } : {}),
+    },
+    {
+      id: "guild" as const,
+      label: t("navigation.guild"),
+      hotkey: "G",
+      active: activePanel === "guild",
+      ...(onGuild ? { onSelect: onGuild } : {}),
+    },
+    {
+      id: "quests" as const,
+      label: t("navigation.quests"),
+      active: activePanel === "quests",
+      ...(onQuests ? { onSelect: onQuests } : {}),
+    },
+    {
+      id: "party" as const,
+      label: t("navigation.party"),
+      hotkey: "P",
+      active: partyVisible,
+      ...(onParty ? { onSelect: onParty } : {}),
+    },
+    {
+      id: "vip" as const,
+      label: t("navigation.vip"),
+      hotkey: "V",
+      active: vipVisible,
+      ...(onVip ? { onSelect: onVip } : {}),
+    },
+  ];
 
   return (
     <header className="relative isolate z-40 flex min-h-16 w-full items-center gap-2 border-b border-ui-gold/25 bg-ui-panel-deep/95 px-2 font-tibia text-ui-text shadow-[0_12px_40px_rgba(0,0,0,0.55),inset_0_-1px_0_rgba(0,0,0,0.8)] backdrop-blur-md select-none sm:gap-4 sm:px-4">
@@ -212,94 +284,10 @@ export function TopNavigationBar({
           </svg>
         </NavigationIconButton>
 
-        <NavigationIconButton
-          label={t("navigation.vip")}
-          hotkey="V"
-          active={vipVisible}
-          disabled={!onVip}
-          onClick={onVip}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="9" cy="8" r="3.5" />
-            <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
-            <path d="m18 5 .9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.party")}
-          hotkey="P"
-          active={partyVisible}
-          disabled={!onParty}
-          onClick={onParty}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="8" cy="8" r="3" />
-            <circle cx="17" cy="9" r="2.5" />
-            <path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 19.5a4.5 4.5 0 0 1 8.5 0" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.quests")}
-          active={activePanel === "quests"}
-          disabled={!onQuests}
-          onClick={onQuests}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M6 4.5h10.5A1.5 1.5 0 0 1 18 6v14H7.5A1.5 1.5 0 0 1 6 18.5z" />
-            <path d="M6 18.5A1.5 1.5 0 0 1 7.5 17H18M9 8h6M9 11h4" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.guild")}
-          hotkey="G"
-          active={activePanel === "guild"}
-          disabled={!onGuild}
-          onClick={onGuild}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M6 3.5v17M6 4.5h11.5l-2.5 3.5 2.5 3.5H6" />
-            <path d="M4 20.5h4" />
-          </svg>
-        </NavigationIconButton>
+        <CharacterMenuButton
+          label={t("navigation.characterMenu")}
+          entries={characterMenuEntries}
+        />
 
         <NavigationIconButton
           label={t("navigation.house")}
@@ -412,28 +400,6 @@ export function TopNavigationBar({
         </NavigationIconButton>
 
         <NavigationIconButton
-          label={t("navigation.proficiency")}
-          active={activePanel === "proficiency"}
-          disabled={!onProficiency}
-          onClick={onProficiency}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m5 19 8.5-8.5" />
-            <path d="M13 4.5 19.5 4l-.5 6.5L9.5 20 4 14.5z" />
-            <path d="M16 8.5 18.5 6" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
           label={t("navigation.prey")}
           active={activePanel === "prey"}
           disabled={!onPrey}
@@ -497,92 +463,6 @@ export function TopNavigationBar({
             <circle cx="12" cy="12" r="8.5" />
             <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9z" />
             <path d="M12 1.5v2M12 20.5v2M1.5 12h2M20.5 12h2" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.outfit")}
-          active={activePanel === "outfit"}
-          disabled={!onOutfits}
-          onClick={onOutfits}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 4.5 5 7l1.5 3.5L8 9.5V20h8V9.5l1.5 1L19 7l-4-2.5a3 3 0 0 1-6 0z" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.profile")}
-          active={activePanel === "profile"}
-          disabled={!onProfile}
-          onClick={onProfile}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="9" r="4.5" />
-            <path d="m9.5 12.8-2 7.2 4.5-2.5 4.5 2.5-2-7.2" />
-            <path d="M12 7v2.5l1.5 1" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.battleList")}
-          active={battleListVisible}
-          onClick={onBattleList}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="5.5" cy="6.5" r="1.5" />
-            <circle cx="5.5" cy="12" r="1.5" />
-            <circle cx="5.5" cy="17.5" r="1.5" />
-            <path d="M9.5 6.5H20M9.5 12H20M9.5 17.5H20" />
-          </svg>
-        </NavigationIconButton>
-
-        <NavigationIconButton
-          label={t("navigation.tracker")}
-          active={trackerVisible}
-          disabled={!onTracker}
-          onClick={onTracker}
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="size-4 sm:size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="6.5" />
-            <circle cx="12" cy="12" r="1.5" />
-            <path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4" />
           </svg>
         </NavigationIconButton>
 

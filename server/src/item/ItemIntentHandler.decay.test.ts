@@ -195,7 +195,38 @@ describe("world item decay", () => {
     });
     await expect(
       store.decayWorldItem("00000000-0000-4000-8000-00000000d003", 1),
-    ).rejects.toThrow("item is missing or stale");
+    ).rejects.toThrow("stale item revision");
+  });
+
+  it("drops a world item the store has no row for instead of retrying it", async () => {
+    const harness = makeHarness();
+    harness.items.createCorpse(
+      "killer-1",
+      "death:test-2",
+      POSITION,
+      0,
+      CORPSE_TYPE,
+      [{ typeId: GOLD_TYPE, count: 10 }],
+      0,
+    );
+    await settle(harness, 0);
+    const instanceId = mapItemAt(harness)[0]?.instanceId ?? "";
+    const corpse = harness.world.getWorldItem(instanceId);
+    if (!corpse) throw new Error("corpse was not created");
+
+    // A plan mutated the memory-only corpse — clearing its loot origin, since
+    // the plan was meant to insert the row — and then never committed.
+    const mutation = { before: corpse, after: [{ ...corpse, version: 2 }] };
+    harness.world.applyItemMutation(mutation);
+    harness.decay.observeMutation(mutation, 0);
+    expect(harness.world.lootOrigin(corpse.id)).toBeUndefined();
+
+    harness.items.tickDecay(10_000);
+    await settle(harness, 10_000);
+
+    expect(mapItemAt(harness)).toEqual([]);
+    expect(harness.decay.scheduledCount).toBe(0);
+    expect(harness.world.getWorldItem(corpse.id)).toBeUndefined();
   });
 
   it("destroys contents the next stage cannot hold and clears loot ownership", async () => {

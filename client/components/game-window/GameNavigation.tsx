@@ -35,6 +35,9 @@ export function GameNavigation() {
     (state) => state.proficiencyOpen,
   );
   const trackerVisible = useGameWindowStore((state) => state.trackerVisible);
+  const imbuementTrackerVisible = useGameWindowStore(
+    (state) => state.imbuementTrackerVisible,
+  );
   const preyWindowOpen = useGameWindowStore((state) => state.preyWindowOpen);
   const questLogOpen = useGameWindowStore((state) => state.questLogOpen);
   const huntingTasksOpen = useGameWindowStore(
@@ -99,6 +102,9 @@ export function GameNavigation() {
   );
   const setTrackerVisible = useGameWindowStore(
     (state) => state.setTrackerVisible,
+  );
+  const setImbuementTrackerVisible = useGameWindowStore(
+    (state) => state.setImbuementTrackerVisible,
   );
   const setQuestLogOpen = useGameWindowStore(
     (state) => state.setQuestLogOpen,
@@ -179,6 +185,7 @@ export function GameNavigation() {
         battleListVisible={battleListVisible}
         minimapVisible={minimapVisible}
         trackerVisible={trackerVisible}
+        imbuementTrackerVisible={imbuementTrackerVisible}
         vipVisible={vipPanelVisible}
         partyVisible={partyPanelVisible}
         gold={inventory ? countMoneyWorth(inventory) : 0}
@@ -325,6 +332,11 @@ export function GameNavigation() {
           });
         }}
         onTracker={() => setTrackerVisible((visible) => !visible)}
+        onImbuementTracker={() =>
+          // Timers come from the inventory the server already pushes; there is
+          // nothing to fetch when the panel opens.
+          setImbuementTrackerVisible((visible) => !visible)
+        }
         onPrey={() => {
           setGameMenuOpen(false);
           setInventoryOpen(false);

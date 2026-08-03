@@ -7,12 +7,14 @@ import type {
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
+import type { CharacterWriteLane } from "../character/CharacterWriteLane";
 import type { ImbuementCatalog } from "../imbuement/ImbuementCatalog";
 import {
   playerImbuementEffects,
   type PlayerImbuementEffects,
 } from "../imbuement/playerImbuementEffects";
 import { monotonicNow } from "../monotonicNow";
+import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import { chargesOf } from "./chargesOf";
 import { CorpseCreator } from "./CorpseCreator";
 import type { DecayManager } from "./DecayManager";
@@ -30,6 +32,7 @@ import type { ItemType } from "./ItemType";
 import type { LoadedInventory } from "./LoadedInventory";
 import type { LootItemCreation } from "./LootItemCreation";
 import type { PotionUseResult } from "./PotionUseResult";
+import { restoreUnpersistedOrigins } from "./restoreUnpersistedOrigins";
 import type { CarriedPlan } from "./plan/CarriedPlan";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
 import { planCarriedDecay } from "./plan/planCarriedDecay";
@@ -107,6 +110,12 @@ export class ItemIntentHandler {
   private persistResync:
     | ((session: Session, characterId: string) => void)
     | null = null;
+  /** Orders persists against the character's own snapshot saves; unset ⇒ none. */
+  private characterWriteLane: CharacterWriteLane | null = null;
+
+  setCharacterWriteLane(lane: CharacterWriteLane): void {
+    this.characterWriteLane = lane;
+  }
 
   setHousePolicy(
     policy: (characterId: string, position: Position) => boolean,
@@ -738,22 +747,30 @@ export class ItemIntentHandler {
    * poisons the character and skips their remaining writes, then hands the
    * session to the resync path, which rebuilds their caches from committed DB
    * state in place (or disconnects when no resync is wired).
+   *
+   * `onDropped` runs inside the tick when the write never reaches the DB —
+   * failed or skipped — so the caller can undo memory state that assumed it
+   * committed.
    */
   enqueuePersist(
     session: Session,
     characterId: string,
     persist: () => Promise<void>,
+    onDropped?: () => void,
   ): void {
     session.itemPersistsPending += 1;
     const settled = this.persistChain
       .then(async () => {
-        if (this.poisonedPersistCharacters.has(characterId)) return;
+        if (this.poisonedPersistCharacters.has(characterId)) {
+          if (onDropped) this.outcomes.push(onDropped);
+          return;
+        }
         // Serialization conflicts (SQLSTATE 40001) come from racing a
         // concurrent character save on the same rows; the memory state is
         // already the source of truth, so re-running the write is safe.
         for (let attempt = 0; ; attempt++) {
           try {
-            await persist();
+            await this.runOnCharacterLane(characterId, persist);
             return;
           } catch (cause) {
             if (attempt >= 2 || !isSerializationFailure(cause)) throw cause;
@@ -772,6 +789,7 @@ export class ItemIntentHandler {
           const reason = cause instanceof Error ? cause.message : "unknown";
           this.outcomes.push(() => {
             this.finishPersist(session);
+            onDropped?.();
             console.error(`item persist failed for ${characterId}: ${reason}`);
             this.recoverFromPersistFailure(session, characterId);
           });
@@ -781,6 +799,40 @@ export class ItemIntentHandler {
     this.operations.pending.trackSwallowingErrors(characterId, settled);
     this.pendingPersistOperations.add(settled);
     void settled.finally(() => this.pendingPersistOperations.delete(settled));
+  }
+
+  /**
+   * Queues an item-store plan. A plan that never commits gets the memory-only
+   * origins it was going to materialize put back, so the corpse or field it
+   * touched stays insertable on the next touch instead of becoming a row-less
+   * phantom nothing can ever write.
+   */
+  private enqueueItemPersist(
+    session: Session,
+    characterId: string,
+    plan: CarriedPersistPlan,
+  ): void {
+    this.enqueuePersist(
+      session,
+      characterId,
+      () => this.store.persist(plan),
+      () => restoreUnpersistedOrigins(this.world, plan),
+    );
+  }
+
+  /**
+   * Holds the character's shared write lane for the duration of the write, so
+   * a snapshot save cannot commit against the same row mid-transaction and
+   * abort it with a serialization failure. Unset (tests, memory store) means
+   * nothing else writes that row concurrently.
+   */
+  private runOnCharacterLane(
+    characterId: string,
+    operation: () => Promise<void>,
+  ): Promise<void> {
+    return this.characterWriteLane
+      ? this.characterWriteLane.run(characterId, operation)
+      : operation();
   }
 
   /**
@@ -866,7 +918,7 @@ export class ItemIntentHandler {
     }
     onCommitted(now);
     const persist = planned.persist;
-    this.enqueuePersist(session, characterId, () => this.store.persist(persist));
+    this.enqueueItemPersist(session, characterId, persist);
   }
 
   /**
@@ -930,7 +982,7 @@ export class ItemIntentHandler {
         session.send({ type: "inventory-updated", inventory });
       }
       const persist = plan.persist;
-      this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+      this.enqueueItemPersist(session, playerId, persist);
       this.analyzerHooks?.onLooted(playerId, item.typeId, item.count);
       taken += 1;
     }
@@ -992,7 +1044,7 @@ export class ItemIntentHandler {
         session.send({ type: "inventory-updated", inventory });
       }
       const persist = plan.persist;
-      this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+      this.enqueueItemPersist(session, playerId, persist);
       this.analyzerHooks?.onLooted(playerId, item.typeId, item.count);
     }
   }
@@ -1129,18 +1181,11 @@ export class ItemIntentHandler {
     if (inventory && session.playerId === characterId) {
       session.send({ type: "inventory-updated", inventory });
     }
-    this.enqueuePersist(session, characterId, () =>
-      this.store.persist({
-        characterId,
-        rowOps: [{ kind: "write", expectedVersion: item.version, item: after }],
-        audits: [{
-          kind: "transform",
-          itemId: item.id,
-          fromTypeId,
-          toTypeId,
-        }],
-      }),
-    );
+    this.enqueueItemPersist(session, characterId, {
+      characterId,
+      rowOps: [{ kind: "write", expectedVersion: item.version, item: after }],
+      audits: [{ kind: "transform", itemId: item.id, fromTypeId, toTypeId }],
+    });
     return true;
   }
 
@@ -1197,9 +1242,7 @@ export class ItemIntentHandler {
         session.send({ type: "inventory-updated", inventory });
       }
       const persist = plan.persist;
-      this.enqueuePersist(session, record.characterId, () =>
-        this.store.persist(persist),
-      );
+      this.enqueueItemPersist(session, record.characterId, persist);
     }
   }
 
@@ -1223,7 +1266,7 @@ export class ItemIntentHandler {
       session.send({ type: "inventory-updated", inventory });
     }
     const persist = plan.persist;
-    this.enqueuePersist(session, characterId, () => this.store.persist(persist));
+    this.enqueueItemPersist(session, characterId, persist);
   }
 
   /** Opens a world container (corpse) at the tile if one is present. */
@@ -1411,7 +1454,7 @@ export class ItemIntentHandler {
       );
     }
     const persist = planned.plan.persist;
-    this.enqueuePersist(session, playerId, () => this.store.persist(persist));
+    this.enqueueItemPersist(session, playerId, persist);
   }
 }
 

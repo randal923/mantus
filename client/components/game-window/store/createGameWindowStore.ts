@@ -129,6 +129,7 @@ export function createGameWindowStore({
     imbuementOpen: false,
     imbuementItemId: null,
     trackerVisible: false,
+    imbuementTrackerVisible: false,
     preyWindowOpen: false,
     huntingTasksOpen: false,
     huntFinderOpen: false,
@@ -394,6 +395,13 @@ export function createGameWindowStore({
     setTrackerVisible: (value) =>
       set((state) => ({
         trackerVisible: resolveStateAction(value, state.trackerVisible),
+      })),
+    setImbuementTrackerVisible: (value) =>
+      set((state) => ({
+        imbuementTrackerVisible: resolveStateAction(
+          value,
+          state.imbuementTrackerVisible,
+        ),
       })),
     setPreyWindowOpen: (value) =>
       set((state) => ({

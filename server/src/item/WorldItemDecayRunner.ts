@@ -1,6 +1,7 @@
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import type { DecayManager, DecayRecord } from "./DecayManager";
+import { isItemNotFoundError } from "./isItemNotFoundError";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemMutation } from "./ItemMutation";
@@ -75,6 +76,11 @@ export class WorldItemDecayRunner {
         });
       })
       .catch((cause: unknown) => {
+        if (isItemNotFoundError(cause)) {
+          console.warn(`decay dropped phantom world item ${record.itemId}`);
+          this.outcomes.push((appliedAt) => this.dropPhantom(record, appliedAt));
+          return;
+        }
         const reason = cause instanceof Error ? cause.message : "unknown";
         console.warn(`decay failed for item ${record.itemId}: ${reason}`);
         this.outcomes.push((appliedAt) => {
@@ -82,6 +88,33 @@ export class WorldItemDecayRunner {
         });
       });
     this.pending.track(record.itemId, resolution);
+  }
+
+  /**
+   * Removes a world item the database has no row for. It only exists in memory
+   * — a persist that was going to insert it never committed — so re-arming the
+   * record would fail the same way forever, and leaving it on the ground would
+   * poison the next player to touch it (every guarded op against a missing row
+   * misses). The DB is the truth after a failed persist, so memory follows it.
+   */
+  private dropPhantom(record: DecayRecord, appliedAt: number): void {
+    const root = this.world.getWorldItem(record.itemId);
+    if (
+      !root ||
+      root.location.kind !== "world" ||
+      root.version !== record.version ||
+      root.typeId !== record.typeId
+    ) {
+      return;
+    }
+    const mutation: ItemMutation = {
+      before: root,
+      after: [],
+      removedItemIds: this.world.getWorldSubtree(root.id).map((item) => item.id),
+    };
+    const changedWorldTiles = this.world.applyItemMutation(mutation);
+    this.visibility.onMapItemsChanged(changedWorldTiles);
+    this.decay?.observeMutation(mutation, appliedAt);
   }
 
   private decayInMemory(record: DecayRecord, appliedAt: number): void {

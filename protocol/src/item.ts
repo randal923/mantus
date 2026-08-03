@@ -105,6 +105,14 @@ export const inventoryItemPresentationSchema = z
             name: z.string().min(1).max(80),
             iconId: z.number().int().min(0).max(1_000),
             remainingSeconds: z.number().int().min(0).max(72_000),
+            /**
+             * Whether the category only burns in a fight outside a protection
+             * zone, mirroring the byte Canary's imbuement-tracker packet sends
+             * (protocolgame.cpp sendInventoryImbuements). Public catalog data,
+             * and the only thing the tracker needs to know when to run its
+             * display countdown between server checkpoints.
+             */
+            aggressive: z.boolean(),
           })
           .strict(),
       )

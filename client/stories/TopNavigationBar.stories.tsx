@@ -36,6 +36,7 @@ const meta = {
     battleListVisible: true,
     minimapVisible: true,
     trackerVisible: false,
+    imbuementTrackerVisible: false,
     vipVisible: false,
     partyVisible: false,
     gold: 5_228,
@@ -50,6 +51,7 @@ const meta = {
     onQuests: fn(),
     onWiki: fn(),
     onHuntFinder: fn(),
+    onImbuementTracker: fn(),
     onFightModeChange: fn(),
     onBattleList: fn(),
     onMinimap: fn(),
@@ -65,16 +67,23 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
+    const openMenu = async () =>
+      userEvent.click(canvas.getByRole("button", { name: "Character Menu" }));
 
+    // The character's own panels moved behind the dropdown; picking one
+    // fires its handler and closes the menu again.
+    await openMenu();
     await userEvent.click(
-      canvas.getByRole("button", { name: "VIP List [V]" }),
+      canvas.getByRole("menuitemcheckbox", { name: "VIP List" }),
     );
     await expect(args.onVip).toHaveBeenCalledOnce();
+    await expect(canvas.queryByRole("menu")).toBeNull();
 
+    await openMenu();
     await userEvent.click(
-      canvas.getByRole("button", { name: "Party [P]" }),
+      canvas.getByRole("menuitemcheckbox", { name: "Imbuement Tracker" }),
     );
-    await expect(args.onParty).toHaveBeenCalledOnce();
+    await expect(args.onImbuementTracker).toHaveBeenCalledOnce();
 
     await userEvent.click(
       canvas.getByRole("button", { name: "Hunt Finder" }),

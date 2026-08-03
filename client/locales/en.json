@@ -533,7 +533,9 @@
     "huntFinder": "Hunt Finder",
     "forge": "Exaltation Forge",
     "proficiency": "Proficiency",
-    "tracker": "Kill Tracker"
+    "tracker": "Kill Tracker",
+    "characterMenu": "Character Menu",
+    "imbuementTracker": "Imbuement Tracker"
   },
   "currency": {
     "wallet": "Currency wallet",
@@ -2871,5 +2873,10 @@
     "total": "Total",
     "remaining": "{{count}} min left",
     "staminaDepleted": "Your stamina is depleted; you gain no experience from hunting."
+  },
+  "imbuementTracker": {
+    "title": "Imbuements",
+    "close": "Close imbuement tracker",
+    "empty": "Nothing you are wearing has imbuement slots."
   }
 }
