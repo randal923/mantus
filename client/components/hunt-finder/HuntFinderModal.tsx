@@ -49,7 +49,7 @@ export function HuntFinderModal({
   const { t } = useAppTranslation();
   const catalog = useHuntingPlaces();
   const wikiItems = useWikiItems();
-  const [minimumLevel, setMinimumLevel] = useState("");
+  const [level, setLevel] = useState("");
   const [vocation, setVocation] = useState<HuntingVocation | "all">(
     () => baseVocation(characterVocation),
   );
@@ -60,13 +60,13 @@ export function HuntFinderModal({
   const places = useMemo(
     () =>
       filterHuntingPlaces(catalog.places, {
-        minimumLevel: Number(minimumLevel),
+        characterLevel: level ? Number(level) : null,
         vocation,
         teamSize,
         sort,
         search,
       }),
-    [catalog.places, minimumLevel, search, sort, teamSize, vocation],
+    [catalog.places, level, search, sort, teamSize, vocation],
   );
   const itemsByName = useMemo(
     () =>
@@ -94,12 +94,12 @@ export function HuntFinderModal({
     <Modal size="full" title={t("huntFinder.title")} onClose={onClose}>
       <div className="flex min-h-full min-w-0 flex-col gap-4">
         <HuntFinderFilters
-          minimumLevel={minimumLevel}
+          level={level}
           vocation={vocation}
           teamSize={teamSize}
           sort={sort}
           search={search}
-          onMinimumLevelChange={setMinimumLevel}
+          onLevelChange={setLevel}
           onVocationChange={setVocation}
           onTeamSizeChange={setTeamSize}
           onSortChange={setSort}

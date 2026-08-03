@@ -14,7 +14,7 @@ const PLACES = parseHuntingPlaces(
 describe("filterHuntingPlaces", () => {
   it("filters by level, vocation, team size, and creature search", () => {
     const result = filterHuntingPlaces(PLACES, {
-      minimumLevel: 8,
+      characterLevel: 8,
       vocation: "Knight",
       teamSize: "Solo",
       sort: "balanced",
@@ -27,16 +27,30 @@ describe("filterHuntingPlaces", () => {
     expect(
       result.every(
         (place) =>
-          Number(place.Level) >= 8 &&
+          Number(place.Level) <= 8 &&
           place.Vocation.includes("Knight") &&
           place.Type.includes("Solo"),
       ),
     ).toBe(true);
   });
 
+  it("keeps only the hunts a character of that level can already do", () => {
+    const result = filterHuntingPlaces(PLACES, {
+      characterLevel: 50,
+      vocation: "all",
+      teamSize: "all",
+      sort: "balanced",
+      search: "",
+    });
+
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((place) => Number(place.Level) <= 50)).toBe(true);
+    expect(result.length).toBeLessThan(PLACES.length);
+  });
+
   it("sorts the matching guides by the selected hourly metric", () => {
     const result = filterHuntingPlaces(PLACES, {
-      minimumLevel: 0,
+      characterLevel: null,
       vocation: "all",
       teamSize: "all",
       sort: "experience",

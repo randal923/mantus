@@ -2566,7 +2566,7 @@
     "none": "None",
     "trackOnMap": "Track the path on the live map",
     "filters": {
-      "level": "Level Range",
+      "level": "Your Level",
       "vocation": "Vocation",
       "teamSize": "Team Size",
       "type": "Type",

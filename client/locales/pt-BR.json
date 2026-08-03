@@ -2566,7 +2566,7 @@
     "none": "Nenhum",
     "trackOnMap": "Rastrear o caminho no mapa ao vivo",
     "filters": {
-      "level": "Faixa de Nível",
+      "level": "Seu Nível",
       "vocation": "Vocação",
       "teamSize": "Tamanho do Grupo",
       "type": "Tipo",

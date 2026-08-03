@@ -71,7 +71,7 @@ export function HuntingBotModal({
 }: HuntingBotModalProps) {
   const { t } = useAppTranslation();
   const catalog = useHuntingPlaces();
-  const [minimumLevel, setMinimumLevel] = useState("");
+  const [level, setLevel] = useState("");
   const [vocation, setVocation] = useState<HuntingVocation | "all">(() =>
     baseHuntingVocation(characterVocation),
   );
@@ -85,13 +85,13 @@ export function HuntingBotModal({
   const places = useMemo(
     () =>
       filterHuntingPlaces(catalog.places, {
-        minimumLevel: Number(minimumLevel),
+        characterLevel: level ? Number(level) : null,
         vocation,
         teamSize,
         sort,
         search,
       }),
-    [catalog.places, minimumLevel, search, sort, teamSize, vocation],
+    [catalog.places, level, search, sort, teamSize, vocation],
   );
   const creaturesByName = useMemo(
     () =>
@@ -144,12 +144,12 @@ export function HuntingBotModal({
           <>
             <p className="text-sm text-ui-muted">{t("huntingBot.intro")}</p>
             <HuntFinderFilters
-              minimumLevel={minimumLevel}
+              level={level}
               vocation={vocation}
               teamSize={teamSize}
               sort={sort}
               search={search}
-              onMinimumLevelChange={setMinimumLevel}
+              onLevelChange={setLevel}
               onVocationChange={setVocation}
               onTeamSizeChange={setTeamSize}
               onSortChange={setSort}

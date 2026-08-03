@@ -24,12 +24,12 @@ const TEAM_SIZES: ReadonlyArray<HuntingTeamSize> = [
 
 interface HuntFinderFiltersProps {
   /** Digits-only text; empty means no level filter. */
-  minimumLevel: string;
+  level: string;
   vocation: HuntingVocation | "all";
   teamSize: HuntingTeamSize | "all";
   sort: HuntingGuideSort;
   search: string;
-  onMinimumLevelChange: (level: string) => void;
+  onLevelChange: (level: string) => void;
   onVocationChange: (vocation: HuntingVocation | "all") => void;
   onTeamSizeChange: (teamSize: HuntingTeamSize | "all") => void;
   onSortChange: (sort: HuntingGuideSort) => void;
@@ -37,12 +37,12 @@ interface HuntFinderFiltersProps {
 }
 
 export function HuntFinderFilters({
-  minimumLevel,
+  level,
   vocation,
   teamSize,
   sort,
   search,
-  onMinimumLevelChange,
+  onLevelChange,
   onVocationChange,
   onTeamSizeChange,
   onSortChange,
@@ -57,9 +57,9 @@ export function HuntFinderFilters({
         inputMode="numeric"
         maxLength={4}
         placeholder={t("huntFinder.filters.all")}
-        value={minimumLevel}
+        value={level}
         onChange={(event) =>
-          onMinimumLevelChange(event.currentTarget.value.replace(/\D/g, ""))
+          onLevelChange(event.currentTarget.value.replace(/\D/g, ""))
         }
       />
       <Dropdown

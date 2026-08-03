@@ -9,7 +9,8 @@ import { parseHuntMetric } from "./parseHuntMetric";
 export type HuntingGuideSort = "balanced" | "experience" | "loot";
 
 export interface HuntingPlaceFilters {
-  readonly minimumLevel: number;
+  /** Hunts requiring a higher level are hidden; null keeps every hunt. */
+  readonly characterLevel: number | null;
   readonly vocation: HuntingVocation | "all";
   readonly teamSize: HuntingTeamSize | "all";
   readonly sort: HuntingGuideSort;
@@ -30,7 +31,11 @@ export function filterHuntingPlaces(
 ): ReadonlyArray<HuntingPlace> {
   const query = normalizeHuntName(filters.search);
   return places
-    .filter((place) => Number(place.Level) >= filters.minimumLevel)
+    .filter(
+      (place) =>
+        filters.characterLevel === null ||
+        Number(place.Level) <= filters.characterLevel,
+    )
     .filter(
       (place) =>
         filters.vocation === "all" ||
