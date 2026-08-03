@@ -8,12 +8,26 @@ import {
 
 describe("getStageRate", () => {
   it("resolves experience bands at their boundaries", () => {
-    expect(getStageRate(EXPERIENCE_STAGES, 1, 1)).toBe(7);
-    expect(getStageRate(EXPERIENCE_STAGES, 8, 1)).toBe(7);
-    expect(getStageRate(EXPERIENCE_STAGES, 9, 1)).toBe(6);
-    expect(getStageRate(EXPERIENCE_STAGES, 50, 1)).toBe(5);
-    expect(getStageRate(EXPERIENCE_STAGES, 101, 1)).toBe(2);
+    expect(getStageRate(EXPERIENCE_STAGES, 1, 1)).toBe(50);
+    expect(getStageRate(EXPERIENCE_STAGES, 8, 1)).toBe(50);
+    expect(getStageRate(EXPERIENCE_STAGES, 9, 1)).toBe(80);
+    expect(getStageRate(EXPERIENCE_STAGES, 50, 1)).toBe(80);
+    expect(getStageRate(EXPERIENCE_STAGES, 51, 1)).toBe(60);
+    expect(getStageRate(EXPERIENCE_STAGES, 101, 1)).toBe(40);
+    expect(getStageRate(EXPERIENCE_STAGES, 201, 1)).toBe(15);
+    expect(getStageRate(EXPERIENCE_STAGES, 900, 1)).toBe(4);
+    expect(getStageRate(EXPERIENCE_STAGES, 1_000, 1)).toBe(3);
+  });
+
+  it("keeps x2 for every level past the last band", () => {
+    expect(getStageRate(EXPERIENCE_STAGES, 1_001, 1)).toBe(2);
     expect(getStageRate(EXPERIENCE_STAGES, 5_000, 1)).toBe(2);
+  });
+
+  it("leaves no gap between experience bands", () => {
+    for (let level = 1; level <= 2_000; level += 1) {
+      expect(getStageRate(EXPERIENCE_STAGES, level, 0)).toBeGreaterThan(0);
+    }
   });
 
   it("resolves skill and magic bands", () => {

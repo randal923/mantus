@@ -196,6 +196,11 @@
     "openPvp": "Open PvP",
     "ratesTitle": "Taxas do Jogo",
     "systemsTitle": "Sistemas do Mundo",
+    "stagesTitle": "Taxas por Estágio",
+    "stagesDescription": "As taxas mudam conforme o seu nível: o começo é rápido e a subida longa é mais lenta. Todo nível acima da última faixa mantém aquele multiplicador para sempre.",
+    "stageBand": "{{min}}–{{max}}",
+    "stageOpenBand": "{{min}}+",
+    "staged": "Por estágio",
     "enabled": "Ativado",
     "disabled": "Desativado",
     "rulesEyebrow": "As leis de Mantus",
@@ -211,6 +216,11 @@
       "exerciseTraining": "Treino com Armas de Exercício",
       "bestiaryKills": "Crédito de Abates no Bestiário",
       "bosstiaryKills": "Crédito de Abates no Bosstiário"
+    },
+    "stages": {
+      "experience": "Experiência",
+      "skill": "Habilidades",
+      "magic": "Magia"
     },
     "systems": {
       "stamina": "Stamina",

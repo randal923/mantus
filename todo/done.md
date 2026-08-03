@@ -1772,3 +1772,54 @@ custom-tier weapon lying on the ground renders through Pixi with the stock
 magenta spark. Awarding a bundle up front means a player who logs out
 mid-bundle keeps the tries but loses the remaining animation; that direction is
 deliberate.
+
+## 2026-08-02 — Mantus experience stages, turned on and published
+
+**Problem**: the server ran flat rates (`rates.experience: 2`) with the staged
+tables disabled, and the stage table it carried was still Canary's stock
+`data/stages.lua` curve (x7 → x2 by level 101). The world wanted a much faster
+early game with a long taper, and the public site had no way to show a curve
+even if one were enabled — `/server-info` advertised a single "Experience 2x"
+row that would silently be wrong the moment stages were switched on.
+
+**What changed**:
+
+- `EXPERIENCE_STAGES` is now the Mantus curve: x50 (1–8), x80 (9–50), x60
+  (51–100), x40 (101–150), x30 (151–200), x15 (201–300), x12 (301–400), x10
+  (401–500), x7 (501–600), x6 (601–700), x5 (701–800), x4 (801–900), x3
+  (901–1000), and an unbounded x2 band from 1001 up, so every level past 1000
+  keeps x2 forever. Skill and magic stages are untouched.
+- `config.yml` sets `progression.useStages: true`. The flat rates stay as the
+  fallback `getStageRate` uses when a level matches no band (it never does for
+  experience now, since band one starts at level 1 and the last is open-ended).
+- The public server-info payload carries the tables it is actually applying:
+  new `stages: { experience, skill, magic }` field on
+  `publicServerInfoDataSchema` (rows are `{minLevel, maxLevel|null,
+  multiplier}`, capped at `PUBLIC_WEBSITE_LIMITS.stageRows`), filled by
+  `publicStageRates()` — which returns empty lists whenever stages are off, so
+  the site can never advertise a curve that is not in effect (charter rule 8).
+- `/server-info` renders a "Stage Rates" panel with the three bands tables, and
+  the experience/skill/magic rows in "Game Rates" read "Staged" instead of the
+  flat multiplier while the stage tables are live. Both locales updated.
+
+**Files**: `server/src/progression/stageRates.ts`,
+`server/src/progression/publicStageRates.ts` (new), `server/src/GameServer.ts`,
+`protocol/src/publicWebsite.ts`, `config.yml`,
+`client/components/public-site/ServerInfoPage.tsx`,
+`client/components/public-site/ServerInfoStageTable.tsx` (new),
+`client/locales/{en,pt-BR}.json`, plus tests.
+
+**Verified**: stage-band tests now walk levels 1–2000 and assert no gap between
+bands plus x2 past 1000; `getExperienceRate` reads x80 at level 30 and x2 at
+level 2000, and composes 8000% × boost × stamina = 18000% (both protocol caps —
+`basePercent` 100k, `totalPercent` 1M — have headroom). A probe loaded the real
+`config.yml` and parsed the full public payload: `useStages true`, 14 bands
+ending `1001-inf:x2`. Suites: 360 client passed; server 1,546 passed with the
+4 pre-existing `exercise weapon` failures from b8f82b6 (reproduced on a clean
+tree, unrelated). Typecheck and client lint clean.
+
+**Residual risk**: the flat `rates.skill`/`rates.magic` still apply below the
+first skill/magic band (skill stages start at skill level 10), and the site
+labels those rows "Staged" without qualifying the gap. Live characters keep
+their existing experience totals — the new curve only changes what future kills
+award, so pre-change levels were earned on the old rates.

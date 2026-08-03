@@ -10,13 +10,26 @@ export interface StageRow {
   readonly multiplier: number;
 }
 
-/** Canary data/stages.lua experienceStages. */
+/**
+ * Mantus experience stages: fast through the early levels, then a long taper
+ * that settles at x2 from level 1001 upwards (the last band is unbounded, so
+ * every level past 1000 keeps x2 forever).
+ */
 export const EXPERIENCE_STAGES: ReadonlyArray<StageRow> = [
-  { minLevel: 1, maxLevel: 8, multiplier: 7 },
-  { minLevel: 9, maxLevel: 20, multiplier: 6 },
-  { minLevel: 21, maxLevel: 50, multiplier: 5 },
-  { minLevel: 51, maxLevel: 100, multiplier: 4 },
-  { minLevel: 101, multiplier: 2 },
+  { minLevel: 1, maxLevel: 8, multiplier: 50 },
+  { minLevel: 9, maxLevel: 50, multiplier: 80 },
+  { minLevel: 51, maxLevel: 100, multiplier: 60 },
+  { minLevel: 101, maxLevel: 150, multiplier: 40 },
+  { minLevel: 151, maxLevel: 200, multiplier: 30 },
+  { minLevel: 201, maxLevel: 300, multiplier: 15 },
+  { minLevel: 301, maxLevel: 400, multiplier: 12 },
+  { minLevel: 401, maxLevel: 500, multiplier: 10 },
+  { minLevel: 501, maxLevel: 600, multiplier: 7 },
+  { minLevel: 601, maxLevel: 700, multiplier: 6 },
+  { minLevel: 701, maxLevel: 800, multiplier: 5 },
+  { minLevel: 801, maxLevel: 900, multiplier: 4 },
+  { minLevel: 901, maxLevel: 1000, multiplier: 3 },
+  { minLevel: 1001, multiplier: 2 },
 ];
 
 /** Canary data/stages.lua skillsStages. */

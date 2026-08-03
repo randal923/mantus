@@ -13,10 +13,11 @@ const BASE = {
 
 describe("getExperienceRate", () => {
   it("reads the base rate from the level's stage band", () => {
-    // Canary's stages: levels 21-50 award x5.
-    expect(getExperienceRate(BASE).basePercent).toBe(500);
-    expect(getExperienceRate({ ...BASE, level: 5 }).basePercent).toBe(700);
-    expect(getExperienceRate({ ...BASE, level: 150 }).basePercent).toBe(200);
+    // Mantus stages: levels 9-50 award x80.
+    expect(getExperienceRate(BASE).basePercent).toBe(8_000);
+    expect(getExperienceRate({ ...BASE, level: 5 }).basePercent).toBe(5_000);
+    expect(getExperienceRate({ ...BASE, level: 150 }).basePercent).toBe(4_000);
+    expect(getExperienceRate({ ...BASE, level: 2_000 }).basePercent).toBe(200);
   });
 
   it("uses the flat rate when stages are off", () => {
@@ -36,14 +37,14 @@ describe("getExperienceRate", () => {
   });
 
   it("composes base, boost and stamina the way the kill path does", () => {
-    // x5 base, +50% boost, 150% stamina → 500 * 1.5 * 1.5 = 1125%.
+    // x80 base, +50% boost, 150% stamina → 8000 * 1.5 * 1.5 = 18000%.
     expect(
       getExperienceRate({
         ...BASE,
         xpBoostUntilMs: 61_000,
         staminaMultiplier: 1.5,
       }).totalPercent,
-    ).toBe(1_125);
+    ).toBe(18_000);
   });
 
   it("reports a total of zero once stamina has run out", () => {

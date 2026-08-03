@@ -60,8 +60,9 @@ progression:
   # Stamina gates hunting experience (green +50% / orange -50% / 0 = none).
   staminaSystem: true
   # Use the level-banded experience/skill/magic stage tables (stageRates.ts)
-  # instead of the flat rates above.
-  useStages: false
+  # instead of the flat rates above. Experience runs x50 (1-8), x80 (9-50),
+  # x60 (51-100), then tapers to x2 from level 1001 upwards.
+  useStages: true
 
 characters:
   starterTownId: 1

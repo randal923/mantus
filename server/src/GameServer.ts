@@ -103,6 +103,7 @@ import type { SpellTeacherStore } from "./npc/SpellTeacherStore";
 import { TravelService } from "./npc/TravelService";
 import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
+import { publicStageRates } from "./progression/publicStageRates";
 import { PublicApi } from "./PublicApi";
 import { Session } from "./Session";
 import { SessionRegistry } from "./SessionRegistry";
@@ -1224,6 +1225,7 @@ export class GameServer {
         maxPlayers: config.maxSessions,
         pvpType: "open-pvp",
         rates: config.rates,
+        stages: publicStageRates(config.progression.useStages),
         systems: {
           stamina: config.progression.staminaSystem,
           experienceStages: config.progression.useStages,

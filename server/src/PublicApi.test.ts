@@ -20,9 +20,17 @@ const SERVER_INFO = {
     bestiaryKills: 1,
     bosstiaryKills: 1,
   },
+  stages: {
+    experience: [
+      { minLevel: 1, maxLevel: 8, multiplier: 50 },
+      { minLevel: 9, maxLevel: null, multiplier: 2 },
+    ],
+    skill: [],
+    magic: [],
+  },
   systems: {
     stamina: true,
-    experienceStages: false,
+    experienceStages: true,
     market: true,
     houses: true,
     guildWars: true,
@@ -231,6 +239,12 @@ describe("PublicApi", () => {
       maxPlayers: 500,
       pvpType: "open-pvp",
       rates: { experience: 2 },
+      stages: {
+        experience: [
+          { minLevel: 1, maxLevel: 8, multiplier: 50 },
+          { minLevel: 9, maxLevel: null, multiplier: 2 },
+        ],
+      },
     });
   });
 

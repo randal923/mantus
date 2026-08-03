@@ -7,6 +7,20 @@ import {
 import { usePublicApiData } from "../../hooks/usePublicApiData";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { PublicSiteLayout } from "./PublicSiteLayout";
+import { ServerInfoStageTable } from "./ServerInfoStageTable";
+
+/** Rates the stage tables override whenever experience stages are enabled. */
+const STAGED_RATE_KEYS: ReadonlySet<string> = new Set([
+  "experience",
+  "skill",
+  "magic",
+]);
+
+const STAGE_KEYS = [
+  "experience",
+  "skill",
+  "magic",
+] as const satisfies ReadonlyArray<keyof PublicServerInfoData["stages"]>;
 
 const RATE_KEYS = [
   "experience",
@@ -106,7 +120,10 @@ export function ServerInfoPage() {
                       {t(`serverInfo.rates.${key}`)}
                     </dt>
                     <dd className="font-display text-sm font-bold text-ui-gold">
-                      {data.rates[key]}x
+                      {data.stages.experience.length > 0 &&
+                      STAGED_RATE_KEYS.has(key)
+                        ? t("serverInfo.staged")
+                        : `${data.rates[key]}x`}
                     </dd>
                   </div>
                 ))}
@@ -141,6 +158,26 @@ export function ServerInfoPage() {
                 ))}
               </dl>
             </section>
+
+            {data.stages.experience.length > 0 && (
+              <section className="ui-panel-frame relative overflow-hidden lg:col-span-2">
+                <h2 className="border-b border-ui-stone-light/15 bg-black/30 px-5 py-4 font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
+                  {t("serverInfo.stagesTitle")}
+                </h2>
+                <p className="border-b border-ui-stone-light/10 px-5 py-3 text-sm text-ui-muted">
+                  {t("serverInfo.stagesDescription")}
+                </p>
+                <div className="grid md:grid-cols-3">
+                  {STAGE_KEYS.map((key) => (
+                    <ServerInfoStageTable
+                      key={key}
+                      title={t(`serverInfo.stages.${key}`)}
+                      rows={data.stages[key]}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="ui-panel-frame relative overflow-hidden p-6 lg:col-span-2">
               <p className="font-display text-xs font-bold tracking-widest text-ui-accent-light uppercase">

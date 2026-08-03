@@ -196,6 +196,11 @@
     "openPvp": "Open PvP",
     "ratesTitle": "Game Rates",
     "systemsTitle": "World Systems",
+    "stagesTitle": "Stage Rates",
+    "stagesDescription": "Rates change with your level: the early road is fast, the long climb is slower. Every level past the last band keeps its multiplier forever.",
+    "stageBand": "{{min}}–{{max}}",
+    "stageOpenBand": "{{min}}+",
+    "staged": "Staged",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "rulesEyebrow": "The laws of Mantus",
@@ -211,6 +216,11 @@
       "exerciseTraining": "Exercise Training",
       "bestiaryKills": "Bestiary Kill Credit",
       "bosstiaryKills": "Bosstiary Kill Credit"
+    },
+    "stages": {
+      "experience": "Experience",
+      "skill": "Skills",
+      "magic": "Magic"
     },
     "systems": {
       "stamina": "Stamina",

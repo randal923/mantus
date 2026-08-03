@@ -19,6 +19,7 @@ export const PUBLIC_WEBSITE_LIMITS = {
   onlinePlayers: 1_000,
   profileAchievements: 5,
   profileBadges: 10,
+  stageRows: 32,
   cacheEntries: 128,
   landingCacheTtlMs: 30_000,
   liveCacheTtlMs: 5_000,
@@ -123,6 +124,18 @@ export const publicCharacterProfileDataSchema = z
   })
   .strict();
 
+/**
+ * One level band of a stage table (`maxLevel: null` = unbounded, the band that
+ * keeps applying forever). Display only — the server keeps its own tables.
+ */
+export const publicStageRowSchema = z
+  .object({
+    minLevel: z.number().int().min(0).max(100_000),
+    maxLevel: z.number().int().min(0).max(100_000).nullable(),
+    multiplier: z.number().min(0).max(10_000),
+  })
+  .strict();
+
 export const publicServerInfoDataSchema = z
   .object({
     worldName: z.string().min(1).max(100),
@@ -142,6 +155,20 @@ export const publicServerInfoDataSchema = z
         exerciseTraining: z.number().min(0).max(10_000),
         bestiaryKills: z.number().min(0).max(10_000),
         bosstiaryKills: z.number().min(0).max(10_000),
+      })
+      .strict(),
+    /** Level-banded rates while stages are on; empty lists when they are off. */
+    stages: z
+      .object({
+        experience: z
+          .array(publicStageRowSchema)
+          .max(PUBLIC_WEBSITE_LIMITS.stageRows),
+        skill: z
+          .array(publicStageRowSchema)
+          .max(PUBLIC_WEBSITE_LIMITS.stageRows),
+        magic: z
+          .array(publicStageRowSchema)
+          .max(PUBLIC_WEBSITE_LIMITS.stageRows),
       })
       .strict(),
     systems: z
@@ -174,3 +201,4 @@ export type PublicCharacterProfileData = z.infer<
 export type PublicServerInfoData = z.infer<
   typeof publicServerInfoDataSchema
 >;
+export type PublicStageRow = z.infer<typeof publicStageRowSchema>;
