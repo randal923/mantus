@@ -593,6 +593,12 @@ export class GameServer {
       },
       deps.daily,
       this.loginLoads,
+      {
+        // `this.progression` is constructed later; the closure resolves it
+        // lazily, and the hook only fires from applied outcomes inside ticks.
+        notifyCommitted: (player, nowMs) =>
+          this.progression.notifyCommittedPlayer(player, nowMs),
+      },
     );
     this.huntingTasks = new HuntingTaskService(
       this.world,
@@ -627,8 +633,8 @@ export class GameServer {
         applyHuntingSlotUnlock: (characterId, slot) =>
           this.huntingTasks.applyStoreSlotUnlock(characterId, slot),
         xpBoostUntilMs: (characterId) => this.daily.xpBoostUntilMs(characterId),
-        applyXpBoost: (characterId, untilMs) =>
-          this.daily.applyXpBoost(characterId, untilMs),
+        applyXpBoost: (characterId, untilMs, nowMs) =>
+          this.daily.applyXpBoost(characterId, untilMs, nowMs),
         injectDelivery: (characterId, item) =>
           this.depot.injectDelivery(characterId, item),
         applySexChange: (characterId, sex, lookType) =>

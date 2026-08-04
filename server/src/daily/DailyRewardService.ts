@@ -58,6 +58,9 @@ export class DailyRewardService {
     },
     private readonly store?: DailyRewardStore,
     private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
+    private readonly progressionHooks?: {
+      notifyCommitted(player: Player, nowMs: number): void;
+    },
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -77,9 +80,9 @@ export class DailyRewardService {
     this.track(
       loaded.then(
         (snapshot) => {
-          this.outcomes.push(() => {
+          this.outcomes.push((at) => {
             if (this.registry.sessionFor(characterId) !== session) return;
-            this.setRecord(characterId, snapshot);
+            this.setRecord(characterId, snapshot, at);
           });
         },
         (cause: unknown) => this.warn(characterId, cause),
@@ -102,7 +105,7 @@ export class DailyRewardService {
    * kill-experience path needs no new branch and a character can never carry
    * two boosts at once.
    */
-  applyXpBoost(characterId: string, untilMs: number): void {
+  applyXpBoost(characterId: string, untilMs: number, nowMs: number): void {
     const record = this.recordsByCharacter.get(characterId);
     // A character whose streak row has not loaded yet still gets the boost it
     // paid for: the deadline is the only field the experience path reads, and
@@ -119,6 +122,7 @@ export class DailyRewardService {
             lastJokerMonth: null,
             xpBoostUntilMs: untilMs,
           },
+      nowMs,
     );
   }
 
@@ -126,14 +130,22 @@ export class DailyRewardService {
    * The single writer for a character's streak record. It also mirrors the XP
    * boost deadline and the streak level onto the live player, so the character
    * panel's rate breakdown, the kill-experience path and the resting-area
-   * bonuses in the progression tick can never disagree with this record.
+   * bonuses in the progression tick can never disagree with this record — and
+   * pushes a fresh progression projection, because the tick only re-projects
+   * when regeneration or stamina changes something: an idle full-health player
+   * would otherwise keep a stale rate panel until the boost had already run out.
    */
-  private setRecord(characterId: string, record: DailyRewardSnapshot): void {
+  private setRecord(
+    characterId: string,
+    record: DailyRewardSnapshot,
+    nowMs: number,
+  ): void {
     this.recordsByCharacter.set(characterId, record);
     const player = this.world.getPlayer(characterId);
     if (!player) return;
     player.setXpBoostUntilMs(record.xpBoostUntilMs);
     player.setDailyStreakLevel(record.streakLevel);
+    this.progressionHooks?.notifyCommitted(player, nowMs);
   }
 
   /** Day-7 boost for the kill-experience path; zero once expired. */
@@ -246,7 +258,7 @@ export class DailyRewardService {
             if (session.playerId !== playerId) return;
             session.itemOperationPending = false;
             if (result.status === "committed") {
-              this.setRecord(playerId, result.state);
+              this.setRecord(playerId, result.state, at);
               if (result.wildcardsAfter !== null) {
                 this.preyHooks?.applyWildcardBalance(
                   playerId,

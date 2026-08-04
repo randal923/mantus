@@ -333,7 +333,7 @@ export class MantusStoreService {
                   ?.setPremiumUntil(result.premiumUntil);
               }
               if (result.effect) {
-                this.applyEffect(characterId, result.effect);
+                this.applyEffect(characterId, result.effect, committedAt);
               }
               for (const item of result.deliveredItems) {
                 this.hooks?.injectDelivery(characterId, item);
@@ -371,6 +371,7 @@ export class MantusStoreService {
   private applyEffect(
     characterId: string,
     effect: StorePurchaseEffect,
+    nowMs: number,
   ): void {
     const hooks = this.hooks;
     if (!hooks) return;
@@ -389,7 +390,7 @@ export class MantusStoreService {
         hooks.applyHuntingSlotUnlock(characterId, effect.slot);
         return;
       case "exp-boost":
-        hooks.applyXpBoost(characterId, effect.untilMs);
+        hooks.applyXpBoost(characterId, effect.untilMs, nowMs);
         return;
       case "sex-change":
         hooks.applySexChange(characterId, effect.sex, effect.lookType);

@@ -53,6 +53,7 @@ function makeHarness(snapshot: DailyRewardSnapshot) {
     claim: async () => ({ status: "already-claimed" as const }),
     history: async () => [],
   } satisfies DailyRewardStore;
+  const notified: Array<{ playerId: string; nowMs: number }> = [];
   const service = new DailyRewardService(
     world,
     registry,
@@ -60,8 +61,13 @@ function makeHarness(snapshot: DailyRewardSnapshot) {
     { get: () => undefined } as unknown as ItemCatalog,
     undefined,
     store,
+    undefined,
+    {
+      notifyCommitted: (target, nowMs) =>
+        notified.push({ playerId: target.id, nowMs }),
+    },
   );
-  return { player, service, session, sent };
+  return { player, service, session, sent, notified };
 }
 
 async function attach(
@@ -133,6 +139,24 @@ describe("DailyRewardService", () => {
     expect(stateMessages(sent)).toHaveLength(0);
     expect(sent).toEqual([
       { type: "daily-action-failed", reason: "invalid-request" },
+    ]);
+  });
+
+  it("pushes a progression projection whenever a boost is mirrored onto the player", async () => {
+    const { player, service, session, notified } = makeHarness(CLAIMED_TODAY);
+    // The login mirror already projects once: the welcome state was built
+    // before the streak row loaded, so a boost surviving a relog needs it.
+    await attach(service, session, NOW);
+    expect(notified).toEqual([{ playerId: A, nowMs: NOW }]);
+
+    // The store purchase path: an idle full-health player never ticks, so
+    // without this push the rate panel would stay stale past the boost.
+    service.applyXpBoost(A, NOW + 600_000, NOW + 1_000);
+
+    expect(player.xpBoostUntilMs).toBe(NOW + 600_000);
+    expect(notified).toEqual([
+      { playerId: A, nowMs: NOW },
+      { playerId: A, nowMs: NOW + 1_000 },
     ]);
   });
 

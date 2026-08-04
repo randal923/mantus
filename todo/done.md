@@ -2837,3 +2837,37 @@ dense traced chain until the player resets it — harmless, the bot walks it
 the same way. Unreachable hand-placed waypoints are no longer flagged red in
 the editor; the bot's runtime skip/`unreachable` stop reason is now the only
 signal.
+
+## 2026-08-04 — XP boost now refreshes the character panel the moment it lands
+
+**Problem**: claiming the daily reward's XP boost (or buying the store
+boost) mirrored the new deadline onto the live player but never pushed a
+`progression-updated`, and `ProgressionSystem.tick` only re-projects when
+regeneration/stamina actually change something. An idle full-health player
+in a PZ saw a stale XP-rate panel — with the free 10-minute daily boost the
+whole boost could expire without ever appearing. Same gap at login: the
+`welcome` state is built before the streak row loads, so a boost surviving
+a relog stayed hidden until the first tick.
+
+**What changed**: `DailyRewardService.setRecord` (the single writer that
+mirrors the boost/streak onto the player) now takes the tick timestamp and
+calls a new optional `progressionHooks.notifyCommitted(player, nowMs)`,
+wired in `GameServer` to `ProgressionSystem.notifyCommittedPlayer` (the
+`PotionService`/`PromotionService` pattern). All three mirror paths are
+covered: login attach, daily claim commit, and the store purchase —
+`StoreLiveHooks.applyXpBoost` and `MantusStoreService.applyEffect` now
+thread the committed timestamp through.
+
+**Files**: `server/src/daily/DailyRewardService.ts`,
+`server/src/store/{StoreLiveHooks,MantusStoreService}.ts`,
+`server/src/GameServer.ts`, `server/src/daily/DailyRewardService.test.ts`.
+
+**Verified**: server typecheck clean; new regression test asserts the
+projection push on login mirror and on `applyXpBoost` with the mirrored
+deadline; daily + store suites pass (14 tests). Full server suite: only the
+4 pre-existing exercise-training failures, confirmed present on a clean
+tree via `git stash`.
+
+**Residual risk**: the panel countdown is still a snapshot — the client
+does not re-request when the boost expires, so the boost line disappears on
+the next progression push after expiry rather than at the exact second.

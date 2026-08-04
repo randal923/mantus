@@ -24,7 +24,7 @@ export interface StoreLiveHooks {
   applyPreySlotUnlock(characterId: string, slot: number): void;
   applyHuntingSlotUnlock(characterId: string, slot: number): void;
   xpBoostUntilMs(characterId: string): number;
-  applyXpBoost(characterId: string, untilMs: number): void;
+  applyXpBoost(characterId: string, untilMs: number, nowMs: number): void;
   /** Puts a delivered product into the buyer's live inbox cache. */
   injectDelivery(characterId: string, item: Item): void;
   /** Applies a committed sex change to the live creature. */
