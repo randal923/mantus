@@ -62,8 +62,6 @@ export function handleGameClientStatus(
     state.setHuntingBotOpen(false);
     state.setHuntingBotStatus(null);
     state.setHuntingBotError(null);
-    state.setHuntingBotUnresolved([]);
-    state.setHuntingBotTracing(false);
     state.setCombatLog([]);
     state.setItemText(null);
     state.setNpcDialogue(null);

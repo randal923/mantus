@@ -182,7 +182,7 @@ export class MovementHandler {
       return false;
     }
     const from = player.position;
-    const margin = HUNTING_BOT_LIMITS.traceLegMargin;
+    const margin = HUNTING_BOT_LIMITS.pathSearchMargin;
     const { steps } = findRoutePath({
       map: this.world,
       start: from,

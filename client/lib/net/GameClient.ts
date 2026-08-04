@@ -1114,15 +1114,6 @@ export class GameClient {
     return this.send({ type: "set-hunting-bot-enabled", enabled });
   }
 
-  /**
-   * Asks the server to turn a hunting guide's straight-line route into a
-   * walkable one. Only the points to visit are sent; the server owns
-   * walkability and computes the path itself.
-   */
-  traceHuntingBotRoute(points: ReadonlyArray<Position>): boolean {
-    return this.send({ type: "hunting-bot-trace", points: [...points] });
-  }
-
   disconnect(): void {
     this.authenticated = false;
     this.ownPlayerId = null;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_HUNTING_BOT_ROUTE,
-  HUNTING_BOT_LIMITS,
   type Position,
   type ServerMessage,
 } from "@tibia/protocol";
@@ -57,8 +56,6 @@ function makeSession(playerId: string | null) {
   const session = {
     playerId,
     huntingBotRouteUpdatePending: false,
-    huntingBotTracePending: false,
-    huntingBotTraceReadyAt: 0,
     huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
     huntingBotEnabled: false,
     huntingBotWaypointIndex: 0,
@@ -80,13 +77,6 @@ function seededStore() {
 
 async function settle(handler: HuntingBotHandler, now = 0) {
   await new Promise((resolve) => setImmediate(resolve));
-  handler.applyResolvedOutcomes(now);
-}
-
-async function settleTrace(handler: HuntingBotHandler, legs: number, now = 0) {
-  for (let index = 0; index <= legs + 2; index++) {
-    await new Promise((resolve) => setImmediate(resolve));
-  }
   handler.applyResolvedOutcomes(now);
 }
 
@@ -154,28 +144,6 @@ describe("HuntingBotHandler", () => {
 
     expect(session.huntingBotRoute.huntName).toBe("B");
     expect(store.get("char-1")?.huntingBotRoute.huntName).toBe("B");
-  });
-
-  it("answers a trace sent during the cooldown once the cooldown ends", async () => {
-    const { session, sent } = makeSession("char-1");
-    const { handler, sessions } = makeHandler(seededStore());
-    sessions.push(session);
-    const traced = () =>
-      sent.filter((message) => message.type === "hunting-bot-traced").length;
-
-    handler.handle(session, { type: "hunting-bot-trace", points: [...RING] }, 0);
-    await settleTrace(handler, RING.length);
-    expect(traced()).toBe(1);
-
-    // Inside the cooldown the request is held, not dropped...
-    handler.handle(session, { type: "hunting-bot-trace", points: [...RING] }, 500);
-    handler.applyResolvedOutcomes(1_000);
-    expect(traced()).toBe(1);
-
-    // ...and starts by itself the moment the cooldown expires.
-    handler.applyResolvedOutcomes(2_000);
-    await settleTrace(handler, RING.length, 2_000);
-    expect(traced()).toBe(2);
   });
 
   it("rolls the session route back when the durable write fails", async () => {
@@ -271,63 +239,4 @@ describe("HuntingBotHandler", () => {
     expect(session.huntingBotEnabled).toBe(false);
   });
 
-  it("traces a guide route into a walkable chain", async () => {
-    const world = makeWorld(
-      gridMapData({
-        name: "test",
-        width: 40,
-        height: 40,
-        // A wall the guide's straight line runs right through.
-        blocked: Array.from({ length: 9 }, (_, y) => [15, y] as const),
-      }),
-      { x: 10, y: 2, z: 7 },
-    );
-    const { session, sent } = makeSession("char-1");
-    const { handler } = makeHandler(seededStore(), world);
-
-    handler.handle(
-      session,
-      {
-        type: "hunting-bot-trace",
-        points: [
-          { x: 10, y: 2, z: 7 },
-          { x: 20, y: 2, z: 7 },
-        ],
-      },
-      0,
-    );
-    await settleTrace(handler, 4);
-
-    const traced = sent.at(-1);
-    expect(traced).toMatchObject({ type: "hunting-bot-traced" });
-    const waypoints = (traced as { waypoints: Position[] }).waypoints;
-    expect(waypoints.at(-1)).toEqual({ x: 20, y: 2, z: 7 });
-    for (const waypoint of waypoints) {
-      expect(world.isWalkable(waypoint)).toBe(true);
-    }
-    expect(session.huntingBotTracePending).toBe(false);
-  });
-
-  it("throttles trace requests and refuses a concurrent one", () => {
-    const { session } = makeSession("char-1");
-    const { handler } = makeHandler(seededStore());
-    const intent = {
-      type: "hunting-bot-trace" as const,
-      points: [
-        { x: 10, y: 10, z: 7 },
-        { x: 12, y: 10, z: 7 },
-      ],
-    };
-
-    handler.handle(session, intent, 0);
-    expect(session.huntingBotTracePending).toBe(true);
-    expect(session.huntingBotTraceReadyAt).toBe(
-      HUNTING_BOT_LIMITS.traceCooldownMs,
-    );
-
-    session.huntingBotTracePending = false;
-    handler.handle(session, intent, 100);
-    // Still inside the cooldown, so nothing new was started.
-    expect(session.huntingBotTracePending).toBe(false);
-  });
 });

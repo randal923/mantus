@@ -1,7 +1,5 @@
 import {
-  HUNTING_BOT_LIMITS,
   type HuntingBotRoute,
-  type HuntingBotTraceMessage,
   type Position,
   type SetHuntingBotEnabledMessage,
   type UpdateHuntingBotRouteMessage,
@@ -10,19 +8,15 @@ import type { CharacterStore } from "../character/CharacterStore";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
-import { buildRouteAnchors } from "./buildRouteAnchors";
 import type { HuntingBot } from "./HuntingBot";
-import { traceRouteLeg } from "./traceRouteLeg";
 import { ResolvedOutcomes } from "../ResolvedOutcomes";
 
 export type HuntingBotIntent =
   | UpdateHuntingBotRouteMessage
-  | SetHuntingBotEnabledMessage
-  | HuntingBotTraceMessage;
+  | SetHuntingBotEnabledMessage;
 
 /**
- * Owns the character's saved hunting route and the one-shot route tracing the
- * window asks for.
+ * Owns the character's saved hunting route.
  *
  * The route itself is inert data — a list of tiles the character would like
  * to visit. Nothing about it is trusted as movement: `HuntingBot` hands each
@@ -50,11 +44,7 @@ export class HuntingBotHandler {
       this.handleRoute(session, playerId, intent, now);
       return;
     }
-    if (intent.type === "set-hunting-bot-enabled") {
-      this.handleEnabled(session, intent, now);
-      return;
-    }
-    this.handleTrace(session, intent, now);
+    this.handleEnabled(session, intent, now);
   }
 
   applyResolvedOutcomes(now: number): void {
@@ -71,15 +61,6 @@ export class HuntingBotHandler {
     if (route && !session.huntingBotRouteUpdatePending) {
       session.huntingBotDeferredRoute = null;
       if (session.playerId) this.applyRoute(session, session.playerId, route, now);
-    }
-    const points = session.huntingBotDeferredTracePoints;
-    if (
-      points &&
-      !session.huntingBotTracePending &&
-      now >= session.huntingBotTraceReadyAt
-    ) {
-      session.huntingBotDeferredTracePoints = null;
-      this.beginTrace(session, points, now);
     }
   }
 
@@ -135,81 +116,6 @@ export class HuntingBotHandler {
     } else if (started === "out-of-range") {
       session.sendError("hunting-bot-out-of-range");
     }
-  }
-
-  private handleTrace(
-    session: Session,
-    intent: HuntingBotTraceMessage,
-    now: number,
-  ): void {
-    if (session.huntingBotTracePending || now < session.huntingBotTraceReadyAt) {
-      // Busy or cooling down: hold the newest request instead of dropping
-      // it — the window is waiting on a reply, and its own auto-trace plus
-      // one "reset to guide" click land inside a single cooldown.
-      session.huntingBotDeferredTracePoints = [...intent.points];
-      return;
-    }
-    this.beginTrace(session, [...intent.points], now);
-  }
-
-  private beginTrace(
-    session: Session,
-    points: ReadonlyArray<Position>,
-    now: number,
-  ): void {
-    session.huntingBotTraceReadyAt = now + HUNTING_BOT_LIMITS.traceCooldownMs;
-    session.huntingBotTracePending = true;
-    void this.trace(session, [...points]);
-  }
-
-  /**
-   * Turns a hunting guide's straight lines into a walkable chain.
-   *
-   * This runs *between* ticks, one leg at a time: a whole route is far more
-   * search than a 25 ms tick can absorb, and it reads nothing but map
-   * geometry, so yielding is safe. The reply is queued and delivered from
-   * inside the tick like every other trailing result (charter rules 3, 5).
-   */
-  private async trace(
-    session: Session,
-    points: ReadonlyArray<Position>,
-  ): Promise<void> {
-    const anchors = buildRouteAnchors(this.world, points);
-    const waypoints: Position[] = [];
-    const unresolvedWaypointIndexes: number[] = [];
-    let spent = 0;
-    let cursor = anchors[0]?.position;
-    if (cursor) waypoints.push({ ...cursor });
-    for (let index = 1; index < anchors.length; index++) {
-      await new Promise((resolve) => setImmediate(resolve));
-      if (!this.registry.contains(session)) return;
-      const anchor = anchors[index];
-      if (!anchor || !cursor) break;
-      const leg = traceRouteLeg(this.world, cursor, anchor.position);
-      spent += leg.visited;
-      if (leg.resolved) {
-        for (const point of leg.waypoints) waypoints.push(point);
-      } else {
-        unresolvedWaypointIndexes.push(waypoints.length);
-        waypoints.push({ ...anchor.position });
-      }
-      cursor = anchor.position;
-      if (waypoints.length >= HUNTING_BOT_LIMITS.maxWaypoints) break;
-      // Whatever was asked for, one request only ever costs this much search.
-      if (spent >= HUNTING_BOT_LIMITS.maxTraceVisited) break;
-    }
-    const capped = waypoints.slice(0, HUNTING_BOT_LIMITS.maxWaypoints);
-    this.outcomes.push(() => {
-      session.huntingBotTracePending = false;
-      if (!this.registry.contains(session)) return;
-      session.send({
-        type: "hunting-bot-traced",
-        waypoints: capped,
-        unresolvedWaypointIndexes: unresolvedWaypointIndexes.filter(
-          (index) => index < capped.length,
-        ),
-      });
-    });
   }
 
   private async persist(

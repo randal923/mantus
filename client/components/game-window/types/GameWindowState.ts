@@ -113,10 +113,6 @@ export interface GameWindowState {
   } | null;
   /** Last refusal from the hunting-bot window; shown inside it, not as a banner. */
   huntingBotError: ServerErrorCode | null;
-  /** Waypoints the last trace could not reach; cleared by any manual edit. */
-  huntingBotUnresolved: ReadonlyArray<number>;
-  /** A route trace is in flight; the window shows it and blocks a second one. */
-  huntingBotTracing: boolean;
   /** What the loot-filter window draws; refreshed when the window opens. */
   lootFilterItems: {
     readonly carried: ReadonlyArray<LootFilterItem>;

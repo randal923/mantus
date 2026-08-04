@@ -52,15 +52,6 @@ export class Session {
    * it is never refused (intermediate ones coalesce away).
    */
   huntingBotDeferredRoute: HuntingBotRoute | null = null;
-  /** One route trace may be in flight per connection; the search is not free. */
-  huntingBotTracePending = false;
-  huntingBotTraceReadyAt = 0;
-  /**
-   * The newest trace request that arrived during the cooldown or while one
-   * was running. Started as soon as both clear, so a trace is never silently
-   * dropped — the window would wait on a reply that never comes.
-   */
-  huntingBotDeferredTracePoints: Position[] | null = null;
   itemOperationPending = false;
   /**
    * Ready-time for the next generic item/object use. Canary applies a 200 ms

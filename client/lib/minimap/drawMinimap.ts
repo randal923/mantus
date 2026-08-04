@@ -38,8 +38,6 @@ export interface MinimapDrawInput {
   waypoints?: ReadonlyArray<Position>;
   /** Waypoint under the cursor or being dragged; drawn larger. */
   activeWaypointIndex?: number | null;
-  /** Waypoints the server reported it could not reach; drawn in red. */
-  brokenWaypointIndexes?: ReadonlySet<number>;
 }
 
 /** Unexplored/absent terrain is black, like the classic automap. */
@@ -53,7 +51,6 @@ const OUTLINE_COLOR = "rgba(0, 0, 0, 0.85)";
 const FLAG_COLOR = "#ffd166";
 const TOWN_LABEL_COLOR = "rgba(242, 239, 230, 0.9)";
 const ROUTE_COLOR = "#45d9ff";
-const EMPTY_INDEXES: ReadonlySet<number> = new Set();
 
 function drawRoute(
   context: CanvasRenderingContext2D,
@@ -220,7 +217,6 @@ export function drawMinimap(input: MinimapDrawInput): MinimapMarker[] {
       top,
       pixelsPerTile,
       activeIndex: input.activeWaypointIndex ?? null,
-      brokenIndexes: input.brokenWaypointIndexes ?? EMPTY_INDEXES,
     });
   }
 

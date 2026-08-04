@@ -39,12 +39,8 @@ interface HuntingBotRouteEditorProps {
     readonly stopReason: HuntingBotStopReason | null;
   } | null;
   error: ServerErrorCode | null;
-  /** Waypoints the last trace could not reach; drawn red so they stand out. */
-  unresolvedIndexes: ReadonlyArray<number>;
-  tracing: boolean;
   ownPosition: Position | null;
   onRouteChange: (route: HuntingBotRoute) => void;
-  onTrace: (points: ReadonlyArray<Position>) => void;
   onStart: () => void;
   onStop: () => void;
   onBack: () => void;
@@ -53,11 +49,9 @@ interface HuntingBotRouteEditorProps {
 /**
  * Turns one hunting guide into a route the bot can walk, and arms it.
  *
- * The guide's own coordinates are only a starting point — they are drawn on a
- * wiki map and run through walls — so opening a hunt seeds them and
- * immediately asks the server, which owns walkability, to re-walk them around
- * the geometry. Everything after that is the player's to drag, insert and
- * delete.
+ * The route is the guide's own hunt-route waypoints, kept as drawn: the bot
+ * pathfinds to each one as a destination, so the sparse ring is enough. The
+ * player can drag, insert and delete freely.
  */
 export function HuntingBotRouteEditor({
   place,
@@ -65,11 +59,8 @@ export function HuntingBotRouteEditor({
   route,
   status,
   error,
-  unresolvedIndexes,
-  tracing,
   ownPosition,
   onRouteChange,
-  onTrace,
   onStart,
   onStop,
   onBack,
@@ -77,10 +68,7 @@ export function HuntingBotRouteEditor({
   const { t } = useAppTranslation();
   const [tool, setTool] = useState<"select" | "add">("select");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const brokenIndexes = useMemo(
-    () => new Set(unresolvedIndexes),
-    [unresolvedIndexes],
-  );
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const guideFloors = useMemo(
     () =>
@@ -115,7 +103,6 @@ export function HuntingBotRouteEditor({
     const { waypoints } = guideRouteFor(place, target);
     onRouteChange({ huntName: place.Name, waypoints });
     setSelectedIndex(null);
-    if (waypoints.length >= 2) onTrace(waypoints);
   };
 
   const setWaypoints = (waypoints: ReadonlyArray<Position>): void => {
@@ -174,58 +161,61 @@ export function HuntingBotRouteEditor({
         </p>
       )}
 
-      <div className="flex min-h-0 min-w-0 flex-col gap-3 lg:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex overflow-hidden rounded-md border border-ui-stone-light/25">
-              {(["select", "add"] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={tool === value}
-                  onClick={() => setTool(value)}
-                  className={`px-3 py-1 text-xs uppercase transition-colors ${
-                    tool === value
-                      ? "bg-ui-gold/20 text-ui-gold"
-                      : "text-ui-muted hover:text-ui-text"
-                  }`}
-                >
-                  {t(`huntingBot.tool.${value}`)}
-                </button>
-              ))}
-            </div>
-            {floors.length > 1 && (
-              <div className="flex flex-wrap gap-1">
-                {floors.map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={value === activeFloor}
-                    onClick={() => setFloor(value)}
-                    title={t("huntingBot.floor", { floor: value })}
-                    className={`min-w-8 rounded-sm border px-2 py-0.5 text-xs transition-colors ${
-                      value === activeFloor
-                        ? "border-ui-gold/60 bg-ui-gold/15 text-ui-gold"
-                        : "border-ui-stone-light/20 bg-black/30 text-ui-muted hover:text-ui-text"
-                    }`}
-                  >
-                    {value}
-                  </button>
-                ))}
-              </div>
-            )}
-            <span className="text-xs text-ui-muted">
-              {t(`huntingBot.tool.${tool}Hint`)}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex overflow-hidden rounded-md border border-ui-stone-light/25">
+          {(["select", "add"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={tool === value}
+              onClick={() => setTool(value)}
+              className={`px-5 py-2 text-sm uppercase transition-colors ${
+                tool === value
+                  ? "bg-ui-gold/20 text-ui-gold"
+                  : "text-ui-muted hover:text-ui-text"
+              }`}
+            >
+              {t(`huntingBot.tool.${value}`)}
+            </button>
+          ))}
+        </div>
+        {floors.length > 1 && (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="mr-1 text-xs tracking-widest text-ui-muted uppercase">
+              {t("huntingBot.floorLabel")}
             </span>
+            {floors.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={value === activeFloor}
+                onClick={() => setFloor(value)}
+                title={t("huntingBot.floor", { floor: value })}
+                className={`min-w-9 rounded-sm border px-2 py-1.5 text-sm transition-colors ${
+                  value === activeFloor
+                    ? "border-ui-gold/60 bg-ui-gold/15 text-ui-gold"
+                    : "border-ui-stone-light/20 bg-black/30 text-ui-muted hover:text-ui-text"
+                }`}
+              >
+                {value}
+              </button>
+            ))}
           </div>
+        )}
+        <span className="text-xs text-ui-muted">
+          {t(`huntingBot.tool.${tool}Hint`)}
+        </span>
+      </div>
 
+      <div className="flex min-h-0 min-w-0 flex-col gap-3 lg:flex-row lg:items-stretch">
+        <div className="min-w-0 flex-1">
           <HuntingBotRouteMap
             mapName={mapName}
             huntName={place.Name}
             waypoints={waypoints}
-            brokenIndexes={brokenIndexes}
             selectedIndex={selectedIndex}
             runningIndex={running ? (status?.waypointIndex ?? null) : null}
+            highlightIndex={hoveredIndex}
             floor={activeFloor}
             ownPosition={ownPosition}
             tool={tool}
@@ -244,77 +234,69 @@ export function HuntingBotRouteEditor({
           />
         </div>
 
-        <div className="flex min-h-0 w-full flex-col gap-2 lg:w-72">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="font-display text-sm text-ui-gold uppercase">
-              {t("huntingBot.route")}
-            </h3>
-            <span className="text-xs text-ui-muted">
-              {t("huntingBot.waypoints", { count: waypoints.length })}
-            </span>
-          </div>
-          {brokenIndexes.size > 0 && (
-            <p role="status" className="text-xs text-red-300">
-              {t("huntingBot.unresolvedCount", { count: brokenIndexes.size })}
-            </p>
-          )}
-          <HuntingBotWaypointList
-            waypoints={waypoints}
-            brokenIndexes={brokenIndexes}
-            selectedIndex={selectedIndex}
-            runningIndex={running ? (status?.waypointIndex ?? null) : null}
-            onSelect={setSelectedIndex}
-            onDelete={(index) => {
-              setWaypoints(waypoints.toSpliced(index, 1));
-              setSelectedIndex(null);
-            }}
-            onMove={(index, direction) => {
-              const target = index + direction;
-              const moved = waypoints[index];
-              const displaced = waypoints[target];
-              if (!moved || !displaced) return;
-              setWaypoints(
-                waypoints.with(index, displaced).with(target, moved),
-              );
-              setSelectedIndex(target);
-            }}
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              onClick={() => onTrace(waypoints)}
-              disabled={tracing || waypoints.length < 2}
-            >
-              {tracing ? t("huntingBot.tracing") : t("huntingBot.trace")}
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => ownPosition && setWaypoints([...waypoints, ownPosition])}
-              disabled={!ownPosition}
-            >
-              {t("huntingBot.addHere")}
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => seedFromGuide(activeFloor)}
-              disabled={!guideFloors.includes(activeFloor)}
-            >
-              {t("huntingBot.resetGuide")}
-            </Button>
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={() => {
-                setWaypoints([]);
+        {/* The absolute inner keeps a long list from stretching the row, so
+            the route column can only ever be as tall as the map. */}
+        <div className="relative h-80 w-full lg:h-auto lg:w-72 lg:shrink-0">
+          <div className="flex h-full flex-col gap-2 lg:absolute lg:inset-0">
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className="font-display text-sm text-ui-gold uppercase">
+                {t("huntingBot.route")}
+              </h3>
+              <span className="text-xs text-ui-muted">
+                {t("huntingBot.waypoints", { count: waypoints.length })}
+              </span>
+            </div>
+            <HuntingBotWaypointList
+              waypoints={waypoints}
+              selectedIndex={selectedIndex}
+              runningIndex={running ? (status?.waypointIndex ?? null) : null}
+              onSelect={setSelectedIndex}
+              onHover={setHoveredIndex}
+              onDelete={(index) => {
+                setWaypoints(waypoints.toSpliced(index, 1));
                 setSelectedIndex(null);
               }}
-              disabled={waypoints.length === 0}
-            >
-              {t("huntingBot.clear")}
-            </Button>
+              onMove={(index, direction) => {
+                const target = index + direction;
+                const moved = waypoints[index];
+                const displaced = waypoints[target];
+                if (!moved || !displaced) return;
+                setWaypoints(
+                  waypoints.with(index, displaced).with(target, moved),
+                );
+                setSelectedIndex(target);
+              }}
+            />
           </div>
-          <p className="text-xs text-ui-muted">{t("huntingBot.traceHint")}</p>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="sm"
+          onClick={() => ownPosition && setWaypoints([...waypoints, ownPosition])}
+          disabled={!ownPosition}
+        >
+          {t("huntingBot.addHere")}
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => seedFromGuide(activeFloor)}
+          disabled={!guideFloors.includes(activeFloor)}
+        >
+          {t("huntingBot.resetGuide")}
+        </Button>
+        <Button
+          size="sm"
+          variant="danger"
+          onClick={() => {
+            setWaypoints([]);
+            setSelectedIndex(null);
+          }}
+          disabled={waypoints.length === 0}
+        >
+          {t("huntingBot.clear")}
+        </Button>
       </div>
     </div>
   );

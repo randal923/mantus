@@ -165,8 +165,6 @@ export function handleCharacterSessionMessage(
   // The bot never survives a login, so the window starts from a clean slate.
   state.setHuntingBotStatus(null);
   state.setHuntingBotError(null);
-  state.setHuntingBotUnresolved([]);
-  state.setHuntingBotTracing(false);
   state.setActionBarEditorRequest(null);
   state.setCharacterBusy(false);
   state.setServerError(null);

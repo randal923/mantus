@@ -3,10 +3,11 @@ import { PlaytestClient } from "../PlaytestClient";
 import { startPlaytestServer } from "../startPlaytestServer";
 
 /**
- * Scenario: drive the hunting bot over the real wire protocol — trace a
- * guide's straight-line route into a walkable chain, save it, arm the bot,
- * and watch the character actually walk it. Also checks the two refusals a
- * player can hit: arming an empty route and arming from outside the hunt.
+ * Scenario: drive the hunting bot over the real wire protocol — save a
+ * guide-style sparse waypoint ring, arm the bot, and watch the character
+ * actually walk it (the server pathfinds each leg at runtime). Also checks
+ * the two refusals a player can hit: arming an empty route and arming from
+ * outside the hunt.
  * Run with: yarn playtest:hunting-bot
  */
 const TOKEN = "dev-hunting-bot-scenario";
@@ -71,52 +72,26 @@ try {
   }
   ok("arming an empty route is refused");
 
-  step("tracing a guide-style straight-line loop into a walkable chain");
-  // Exactly the shape a hunting guide stores: corners of a box, joined by
-  // dead-reckoned lines that ignore every wall between them.
+  step("saving a guide-style sparse waypoint ring");
+  // Exactly the shape a hunting guide stores: corners of a box. The bot
+  // pathfinds each leg at runtime, so the sparse ring is all it needs.
   const guidePoints: Position[] = [
     ANCHOR,
     { x: ANCHOR.x + 12, y: ANCHOR.y, z: ANCHOR.z },
     { x: ANCHOR.x + 12, y: ANCHOR.y + 12, z: ANCHOR.z },
     { x: ANCHOR.x, y: ANCHOR.y + 12, z: ANCHOR.z },
-    ANCHOR,
   ];
-  const traceMark = client.mark();
-  client.send({ type: "hunting-bot-trace", points: guidePoints });
-  const traced = await client.waitFor(
-    isType("hunting-bot-traced"),
-    "hunting-bot-traced",
-    { since: traceMark },
-  );
-  if (traced.waypoints.length < guidePoints.length) {
-    throw new Error(
-      `trace returned ${traced.waypoints.length} waypoints, expected a denser chain`,
-    );
-  }
-  let widestGap = 0;
-  for (let index = 1; index < traced.waypoints.length; index++) {
-    widestGap = Math.max(
-      widestGap,
-      chebyshev(traced.waypoints[index - 1]!, traced.waypoints[index]!),
-    );
-  }
-  ok(
-    `traced ${traced.waypoints.length} waypoints, widest gap ${widestGap} tiles, ` +
-      `${traced.unresolvedWaypointIndexes.length} unreachable`,
-  );
-
-  step("saving the traced route");
   const saveMark = client.mark();
   client.send({
     type: "update-hunting-bot-route",
-    route: { huntName: "Playtest Loop", waypoints: traced.waypoints },
+    route: { huntName: "Playtest Loop", waypoints: guidePoints },
   });
   const saved = await client.waitFor(
     isType("hunting-bot-route"),
     "hunting-bot-route echo",
     { since: saveMark },
   );
-  if (saved.route.waypoints.length !== traced.waypoints.length) {
+  if (saved.route.waypoints.length !== guidePoints.length) {
     throw new Error("the server stored a different route than it was sent");
   }
   ok(`server stored ${saved.route.waypoints.length} waypoints`);
@@ -219,7 +194,7 @@ try {
   await client.waitFor(isType("gm-response"), "gm-response for /goto", {
     since: awayMark,
   });
-  const farRoute = traced.waypoints.map((waypoint) => ({
+  const farRoute = guidePoints.map((waypoint) => ({
     x: waypoint.x + 400,
     y: waypoint.y + 400,
     z: waypoint.z,

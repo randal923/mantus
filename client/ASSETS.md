@@ -203,10 +203,14 @@ yarn cyclopedia:assets
 
 ## Hunt Finder data (`public/assets/hunting/`)
 
-`hunting_places.json` is the 131-entry hunting-place catalog copied from the
+`hunting_places.json` is the hunting-place catalog originally copied from the
 locally installed RubinOT 21.0 client (`bin/assets.rtc`, internal path
-`data/json/hunting_places.json`, SHA-256
-`18d505adaea8ef3e449e1c3656b3100e1c5a5cd284a1dbbcd667bc5cbc5d2832`). It
+`data/json/hunting_places.json`, original SHA-256
+`18d505adaea8ef3e449e1c3656b3100e1c5a5cd284a1dbbcd667bc5cbc5d2832`) and since
+edited locally (added entries, tuned guide routes); the current file's hash is
+pinned as `huntingPlacesSha256` in `content/source-manifest.json` and must be
+re-computed after any edit or `tools/importCanaryCreatures.mjs` refuses to
+run. It
 contains guide text, filters, recommended gear/supplies/imbuements, creature
 resistances and charms, valuable drops, and world-coordinate segments for the
 approach and in-hunt routes. It contains no sprites: the Hunt Finder resolves

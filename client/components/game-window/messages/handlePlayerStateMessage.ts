@@ -85,26 +85,6 @@ export function handlePlayerStateMessage(
     return true;
   }
 
-  if (message.type === "hunting-bot-traced") {
-    // The trace is the server's answer to the route the window asked about,
-    // so it replaces the live one and is saved straight away rather than
-    // waiting on the edit debounce.
-    const route = {
-      huntName: runtime.huntingBotRouteRef.current.huntName,
-      waypoints: [...message.waypoints],
-    };
-    state.setHuntingBotRoute(route);
-    runtime.huntingBotRouteRef.current = route;
-    state.setHuntingBotUnresolved(message.unresolvedWaypointIndexes);
-    state.setHuntingBotTracing(false);
-    if (runtime.huntingBotSaveTimerRef.current) {
-      clearTimeout(runtime.huntingBotSaveTimerRef.current);
-      runtime.huntingBotSaveTimerRef.current = null;
-    }
-    runtime.clientRef.current?.updateHuntingBotRoute(route);
-    return true;
-  }
-
   if (message.type === "loot-filter-items") {
     state.setLootFilterItems({
       carried: message.carried,

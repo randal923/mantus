@@ -154,7 +154,6 @@ import {
 } from "./profile";
 import { preyActionMessageSchema } from "./prey";
 import {
-  huntingBotTraceMessageSchema,
   setHuntingBotEnabledMessageSchema,
   updateHuntingBotRouteMessageSchema,
 } from "./huntingBot";
@@ -724,7 +723,6 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   lootFilterItemsGetMessageSchema,
   updateHuntingBotRouteMessageSchema,
   setHuntingBotEnabledMessageSchema,
-  huntingBotTraceMessageSchema,
   npcDialogueGreetMessageSchema,
   npcDialogueChoiceMessageSchema,
   bankDepositMessageSchema,

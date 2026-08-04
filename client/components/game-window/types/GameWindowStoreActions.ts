@@ -107,8 +107,6 @@ export interface GameWindowStoreActions {
   setHuntingBotRoute: (value: SetStateAction<HuntingBotRoute>) => void;
   setHuntingBotStatus: (value: GameWindowState["huntingBotStatus"]) => void;
   setHuntingBotError: (value: ServerErrorCode | null) => void;
-  setHuntingBotUnresolved: (value: ReadonlyArray<number>) => void;
-  setHuntingBotTracing: (value: boolean) => void;
   setLootFilterItems: (value: GameWindowState["lootFilterItems"]) => void;
   setActionBarEditorRequest: (
     value: SetStateAction<ActionBarEditorRequest | null>,

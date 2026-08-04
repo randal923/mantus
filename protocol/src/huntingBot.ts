@@ -2,40 +2,17 @@ import { z } from "zod";
 import { positionSchema } from "./position";
 
 export const HUNTING_BOT_LIMITS = {
-  /** Waypoints one saved route may hold, traced or hand-edited. */
+  /** Waypoints one saved route may hold. */
   maxWaypoints: 200,
-  /** Raw guide points one trace request may carry. */
-  maxTracePoints: 256,
   maxHuntNameLength: 64,
-  /** One trace request per two seconds per session; the search is not free. */
-  traceCooldownMs: 2_000,
   /**
-   * Search budgets for the one-shot trace: the whole request and a single
-   * leg of it. The tick runs at 25 ms, so a trace has to stay small enough
-   * that one request cannot stall the loop for everyone else.
+   * How far outside a leg's bounding box a runtime path search may wander.
+   * Measured against the real guide catalog: 20 leaves 5.8 % of legs
+   * unsolved, 40 leaves 5.0 % for 17 % more search, and anything beyond that
+   * buys almost nothing — the rest need a ladder or a rope, which a walker
+   * cannot use.
    */
-  maxTraceVisited: 30_000,
-  maxTraceLegVisited: 3_000,
-  /** Straight-line spacing a long guide leg is subdivided into. */
-  traceAnchorSpacing: 16,
-  /**
-   * Samples one guide segment may be broken into. The longest segment in the
-   * real catalog is 135 tiles, so 32 is far past anything a guide draws; the
-   * cap only exists so a caller cannot ask for a segment across the map and
-   * turn it into thousands of searches.
-   */
-  maxLegSamples: 32,
-  /**
-   * How far outside a leg's bounding box the search may wander. Measured
-   * against the real guide catalog: 20 leaves 5.8 % of legs unsolved, 40
-   * leaves 5.0 % for 17 % more search, and anything beyond that buys almost
-   * nothing — the rest need a ladder or a rope, which a walker cannot use.
-   */
-  traceLegMargin: 40,
-  /** Longest straight run the tracer leaves without emitting a waypoint. */
-  maxWaypointSpacing: 12,
-  /** How far a raw guide point may be nudged to reach walkable ground. */
-  maxSnapRadius: 4,
+  pathSearchMargin: 40,
   /**
    * How far the character may stand from the route when the bot is armed.
    * The distance is only a cheap pre-filter: arming actually searches for
@@ -129,22 +106,6 @@ export const setHuntingBotEnabledMessageSchema = z
   })
   .strict();
 
-/**
- * Asks the server to turn a hunting guide's straight-line route into a
- * walkable one. The client supplies only the points it wants visited; the
- * server owns walkability and computes the path itself, exactly as it does
- * for minimap click-to-walk (charter rules 1 and 4).
- */
-export const huntingBotTraceMessageSchema = z
-  .object({
-    type: z.literal("hunting-bot-trace"),
-    points: z
-      .array(positionSchema)
-      .min(2)
-      .max(HUNTING_BOT_LIMITS.maxTracePoints),
-  })
-  .strict();
-
 /** Echoes the server-stored route after an accepted save, or after a rollback. */
 export const huntingBotRouteMessageSchema = z
   .object({
@@ -168,21 +129,6 @@ export const huntingBotStatusMessageSchema = z
   })
   .strict();
 
-/**
- * The traced route. `unresolvedWaypointIndexes` names the waypoints the
- * server could not reach from their predecessor, so the window can highlight
- * exactly the legs a player has to fix by hand.
- */
-export const huntingBotTracedMessageSchema = z
-  .object({
-    type: z.literal("hunting-bot-traced"),
-    waypoints: z.array(positionSchema).max(HUNTING_BOT_LIMITS.maxWaypoints),
-    unresolvedWaypointIndexes: z
-      .array(z.number().int().min(0).max(HUNTING_BOT_LIMITS.maxWaypoints))
-      .max(HUNTING_BOT_LIMITS.maxWaypoints),
-  })
-  .strict();
-
 export type HuntingBotRoute = z.infer<typeof huntingBotRouteSchema>;
 export type HuntingBotStopReason = z.infer<typeof huntingBotStopReasonSchema>;
 export type UpdateHuntingBotRouteMessage = z.infer<
@@ -191,15 +137,9 @@ export type UpdateHuntingBotRouteMessage = z.infer<
 export type SetHuntingBotEnabledMessage = z.infer<
   typeof setHuntingBotEnabledMessageSchema
 >;
-export type HuntingBotTraceMessage = z.infer<
-  typeof huntingBotTraceMessageSchema
->;
 export type HuntingBotRouteMessage = z.infer<
   typeof huntingBotRouteMessageSchema
 >;
 export type HuntingBotStatusMessage = z.infer<
   typeof huntingBotStatusMessageSchema
->;
-export type HuntingBotTracedMessage = z.infer<
-  typeof huntingBotTracedMessageSchema
 >;

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { BestiaryCreatureEntry, HuntingBotRoute, Position } from "@tibia/protocol";
+import type { BestiaryCreatureEntry, HuntingBotRoute } from "@tibia/protocol";
 import { HuntingBotModal } from "../hunting-bot/HuntingBotModal";
 import { useGameWindowStore } from "./store/useGameWindowStore";
 import { useGameWindowStoreApi } from "./store/useGameWindowStoreApi";
@@ -19,24 +19,13 @@ export function GameHuntingBotOverlay() {
   const route = useGameWindowStore((state) => state.huntingBotRoute);
   const status = useGameWindowStore((state) => state.huntingBotStatus);
   const error = useGameWindowStore((state) => state.huntingBotError);
-  const unresolvedIndexes = useGameWindowStore(
-    (state) => state.huntingBotUnresolved,
-  );
-  const tracing = useGameWindowStore((state) => state.huntingBotTracing);
   const setRoute = useGameWindowStore((state) => state.setHuntingBotRoute);
-  const setUnresolved = useGameWindowStore(
-    (state) => state.setHuntingBotUnresolved,
-  );
-  const setTracing = useGameWindowStore((state) => state.setHuntingBotTracing);
   const setOpen = useGameWindowStore((state) => state.setHuntingBotOpen);
 
   const onRouteChange = useCallback(
     (next: HuntingBotRoute) => {
       const runtime = store.getState().runtime;
       setRoute(next);
-      // Any hand edit renumbers the chain, so the last trace's flags no
-      // longer point at the waypoints they were about.
-      setUnresolved([]);
       runtime.huntingBotRouteRef.current = next;
       if (runtime.huntingBotSaveTimerRef.current) {
         clearTimeout(runtime.huntingBotSaveTimerRef.current);
@@ -48,15 +37,7 @@ export function GameHuntingBotOverlay() {
         );
       }, SAVE_DEBOUNCE_MS);
     },
-    [setRoute, setUnresolved, store],
-  );
-
-  const onTrace = useCallback(
-    (points: ReadonlyArray<Position>) => {
-      setTracing(true);
-      store.getState().runtime.clientRef.current?.traceHuntingBotRoute(points);
-    },
-    [setTracing, store],
+    [setRoute, store],
   );
 
   const onStart = useCallback(() => {
@@ -90,10 +71,7 @@ export function GameHuntingBotOverlay() {
       route={route}
       status={status}
       error={error}
-      unresolvedIndexes={unresolvedIndexes}
-      tracing={tracing}
       onRouteChange={onRouteChange}
-      onTrace={onTrace}
       onStart={onStart}
       onStop={onStop}
       onClose={onClose}

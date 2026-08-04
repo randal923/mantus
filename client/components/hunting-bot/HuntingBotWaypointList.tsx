@@ -6,11 +6,12 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 interface HuntingBotWaypointListProps {
   waypoints: ReadonlyArray<Position>;
-  brokenIndexes: ReadonlySet<number>;
   selectedIndex: number | null;
   /** The waypoint the running bot is walking toward, if any. */
   runningIndex: number | null;
   onSelect: (index: number) => void;
+  /** Fires with the hovered row's index, and null when the pointer leaves. */
+  onHover: (index: number | null) => void;
   onDelete: (index: number) => void;
   onMove: (index: number, direction: -1 | 1) => void;
 }
@@ -18,10 +19,10 @@ interface HuntingBotWaypointListProps {
 /** The route as an ordered list: the half of the editor a mouse cannot do. */
 export function HuntingBotWaypointList({
   waypoints,
-  brokenIndexes,
   selectedIndex,
   runningIndex,
   onSelect,
+  onHover,
   onDelete,
   onMove,
 }: HuntingBotWaypointListProps) {
@@ -51,12 +52,13 @@ export function HuntingBotWaypointList({
       className="ui-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto pr-1"
     >
       {waypoints.map((waypoint, index) => {
-        const broken = brokenIndexes.has(index);
         const selected = index === selectedIndex;
         return (
           <li
             key={`${waypoint.x}.${waypoint.y}.${waypoint.z}.${index}`}
             data-waypoint={index}
+            onPointerEnter={() => onHover(index)}
+            onPointerLeave={() => onHover(null)}
             className={`flex items-center gap-2 rounded-sm border px-2 py-1 text-xs ${
               selected
                 ? "border-ui-gold/60 bg-ui-gold/10"
@@ -71,11 +73,9 @@ export function HuntingBotWaypointList({
             >
               <span
                 className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                  broken
-                    ? "bg-red-500/80 text-white"
-                    : index === runningIndex
-                      ? "bg-emerald-400/80 text-black"
-                      : "bg-ui-stone/60 text-ui-text"
+                  index === runningIndex
+                    ? "bg-emerald-400/80 text-black"
+                    : "bg-ui-stone/60 text-ui-text"
                 }`}
               >
                 {index + 1}

@@ -2,14 +2,12 @@ import type { Position } from "@tibia/protocol";
 
 const WAYPOINT_COLOR = "#ffd166";
 const WAYPOINT_ACTIVE_COLOR = "#45d9ff";
-const WAYPOINT_BROKEN_COLOR = "#ff6b6b";
 const LINE_COLOR = "rgba(255, 209, 102, 0.85)";
 const OUTLINE_COLOR = "rgba(0, 0, 0, 0.85)";
 
 /**
  * Draws an editable waypoint ring: a solid line through consecutive
- * same-floor waypoints, a numbered dot on each, and a red dot on any the
- * server could not reach so the leg that needs fixing is obvious.
+ * same-floor waypoints and a numbered dot on each.
  *
  * The ring closes back onto its first waypoint because that is what the bot
  * walks — it loops forever rather than stopping at the end.
@@ -23,7 +21,6 @@ export function drawMinimapWaypoints(
     readonly top: number;
     readonly pixelsPerTile: number;
     readonly activeIndex: number | null;
-    readonly brokenIndexes: ReadonlySet<number>;
   },
 ): void {
   if (waypoints.length === 0) return;
@@ -60,11 +57,7 @@ export function drawMinimapWaypoints(
     const radius = active ? 8 : 6;
     context.beginPath();
     context.arc(x, y, radius, 0, Math.PI * 2);
-    context.fillStyle = options.brokenIndexes.has(index)
-      ? WAYPOINT_BROKEN_COLOR
-      : active
-        ? WAYPOINT_ACTIVE_COLOR
-        : WAYPOINT_COLOR;
+    context.fillStyle = active ? WAYPOINT_ACTIVE_COLOR : WAYPOINT_COLOR;
     context.strokeStyle = OUTLINE_COLOR;
     context.lineWidth = active ? 2 : 1;
     context.fill();

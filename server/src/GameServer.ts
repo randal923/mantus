@@ -2025,7 +2025,6 @@ export class GameServer {
         return;
       case "update-hunting-bot-route":
       case "set-hunting-bot-enabled":
-      case "hunting-bot-trace":
         this.huntingBotHandler.handle(session, intent, now);
         return;
     }

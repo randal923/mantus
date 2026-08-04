@@ -29,7 +29,6 @@ import {
   huntingBotRouteMessageSchema,
   huntingBotRouteSchema,
   huntingBotStatusMessageSchema,
-  huntingBotTracedMessageSchema,
 } from "./huntingBot";
 import {
   channelClosedMessageSchema,
@@ -585,7 +584,6 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   lootFilterItemsMessageSchema,
   huntingBotRouteMessageSchema,
   huntingBotStatusMessageSchema,
-  huntingBotTracedMessageSchema,
   actionBarActivationResultMessageSchema,
   characterListMessageSchema,
   welcomeMessageSchema,

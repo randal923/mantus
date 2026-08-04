@@ -20,14 +20,10 @@ const maximalRoute = {
 };
 
 describe("hunting bot intent schemas", () => {
-  it("accepts a saved route, an arm intent and a trace request", () => {
+  it("accepts a saved route and an arm intent", () => {
     for (const message of [
       { type: "update-hunting-bot-route", route: maximalRoute },
       { type: "set-hunting-bot-enabled", enabled: true },
-      {
-        type: "hunting-bot-trace",
-        points: [waypoint(0), waypoint(1)],
-      },
     ]) {
       expect(clientMessageSchema.safeParse(message).success).toBe(true);
     }
@@ -75,15 +71,8 @@ describe("hunting bot intent schemas", () => {
       },
       { type: "set-hunting-bot-enabled" },
       { type: "set-hunting-bot-enabled", enabled: "yes" },
-      // A trace needs at least two points and no more than the cap.
-      { type: "hunting-bot-trace", points: [waypoint(0)] },
-      {
-        type: "hunting-bot-trace",
-        points: Array.from(
-          { length: HUNTING_BOT_LIMITS.maxTracePoints + 1 },
-          (_, index) => waypoint(index),
-        ),
-      },
+      // Removed message types stay removed.
+      { type: "hunting-bot-trace", points: [waypoint(0), waypoint(1)] },
     ];
     for (const message of rejected) {
       expect(clientMessageSchema.safeParse(message).success).toBe(false);
@@ -93,22 +82,7 @@ describe("hunting bot intent schemas", () => {
   it("keeps the largest schema-valid messages within the transport cap", () => {
     const messages: ReadonlyArray<unknown> = [
       { type: "update-hunting-bot-route", route: maximalRoute },
-      {
-        type: "hunting-bot-trace",
-        points: Array.from(
-          { length: HUNTING_BOT_LIMITS.maxTracePoints },
-          (_, index) => waypoint(index),
-        ),
-      },
       { type: "hunting-bot-route", route: maximalRoute },
-      {
-        type: "hunting-bot-traced",
-        waypoints: maximalRoute.waypoints,
-        unresolvedWaypointIndexes: Array.from(
-          { length: HUNTING_BOT_LIMITS.maxWaypoints },
-          (_, index) => index,
-        ),
-      },
     ];
     for (const message of messages) {
       expect(
@@ -131,11 +105,6 @@ describe("hunting bot intent schemas", () => {
         enabled: false,
         waypointIndex: 0,
         stopReason: "unreachable",
-      },
-      {
-        type: "hunting-bot-traced",
-        waypoints: [waypoint(0)],
-        unresolvedWaypointIndexes: [0],
       },
     ]) {
       expect(serverMessageSchema.safeParse(message).success).toBe(true);

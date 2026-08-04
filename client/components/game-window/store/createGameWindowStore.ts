@@ -110,8 +110,6 @@ export function createGameWindowStore({
     huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
     huntingBotStatus: null,
     huntingBotError: null,
-    huntingBotUnresolved: [],
-    huntingBotTracing: false,
     actionBarEditorRequest: null,
     marketSelectedItem: null,
     marketToast: null,
@@ -322,8 +320,6 @@ export function createGameWindowStore({
       })),
     setHuntingBotStatus: (value) => set({ huntingBotStatus: value }),
     setHuntingBotError: (value) => set({ huntingBotError: value }),
-    setHuntingBotUnresolved: (value) => set({ huntingBotUnresolved: value }),
-    setHuntingBotTracing: (value) => set({ huntingBotTracing: value }),
     setActionBarEditorRequest: (value) =>
       set((state) => ({
         actionBarEditorRequest: resolveStateAction(
@@ -694,8 +690,6 @@ export function createGameWindowStore({
         huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
         huntingBotStatus: null,
         huntingBotError: null,
-        huntingBotUnresolved: [],
-        huntingBotTracing: false,
         actionBarEditorRequest: null,
         combatLog: [],
         chatChannels: [],

@@ -39,10 +39,7 @@ interface HuntingBotModalProps {
     readonly stopReason: HuntingBotStopReason | null;
   } | null;
   error: ServerErrorCode | null;
-  unresolvedIndexes: ReadonlyArray<number>;
-  tracing: boolean;
   onRouteChange: (route: HuntingBotRoute) => void;
-  onTrace: (points: ReadonlyArray<Position>) => void;
   onStart: () => void;
   onStop: () => void;
   onClose: () => void;
@@ -61,10 +58,7 @@ export function HuntingBotModal({
   route,
   status,
   error,
-  unresolvedIndexes,
-  tracing,
   onRouteChange,
-  onTrace,
   onStart,
   onStop,
   onClose,
@@ -109,15 +103,14 @@ export function HuntingBotModal({
     [catalog.places, selectedName],
   );
 
-  // Opening a hunt the saved route is not for seeds it from the guide, then
-  // asks the server to re-walk it: the guide's own line runs through walls,
-  // so it is never what the bot should be handed.
+  // Opening a hunt the saved route is not for seeds it from the guide's own
+  // hunt-route waypoints, kept as drawn: the bot pathfinds to each one as a
+  // destination, so no tracing happens unless the player asks for it.
   const selectPlace = (place: HuntingPlace): void => {
     setSelectedName(place.Name);
     if (route.huntName === place.Name && route.waypoints.length > 0) return;
     const { waypoints } = guideRouteFor(place, ownPosition?.z ?? null);
     onRouteChange({ huntName: place.Name, waypoints });
-    if (waypoints.length >= 2) onTrace(waypoints);
   };
 
   return (
@@ -130,11 +123,8 @@ export function HuntingBotModal({
             route={route}
             status={status}
             error={error}
-            unresolvedIndexes={unresolvedIndexes}
-            tracing={tracing}
             ownPosition={ownPosition}
             onRouteChange={onRouteChange}
-            onTrace={onTrace}
             onStart={onStart}
             onStop={onStop}
             onBack={() => setSelectedName(null)}

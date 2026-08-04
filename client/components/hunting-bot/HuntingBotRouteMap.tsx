@@ -15,7 +15,7 @@ import { worldToMinimapPixel } from "../../lib/minimap/worldToMinimapPixel";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const ZOOM_LEVELS = [1, 2, 3, 4, 6, 8] as const;
-const MAP_HEIGHT = 420;
+const MAP_HEIGHT = 600;
 const GRAB_RADIUS = 9;
 /** Pointer travel below this is a click, not a drag (matches the minimap). */
 const DRAG_SLOP = 4;
@@ -37,10 +37,11 @@ interface HuntingBotRouteMapProps {
   mapName: string;
   huntName: string;
   waypoints: ReadonlyArray<Position>;
-  brokenIndexes: ReadonlySet<number>;
   selectedIndex: number | null;
   /** The waypoint the running bot is walking toward, if any. */
   runningIndex: number | null;
+  /** Waypoint hovered in the route list; highlighted like a map hover. */
+  highlightIndex: number | null;
   floor: number;
   ownPosition: Position | null;
   tool: "select" | "add";
@@ -58,9 +59,9 @@ export function HuntingBotRouteMap({
   mapName,
   huntName,
   waypoints,
-  brokenIndexes,
   selectedIndex,
   runningIndex,
+  highlightIndex,
   floor,
   ownPosition,
   tool,
@@ -167,13 +168,13 @@ export function HuntingBotRouteMap({
       towns: store.towns,
       showTownLabels: pixelsPerTile <= 2,
       waypoints,
-      activeWaypointIndex: hoverIndex ?? selectedIndex ?? runningIndex,
-      brokenWaypointIndexes: brokenIndexes,
+      activeWaypointIndex:
+        hoverIndex ?? highlightIndex ?? selectedIndex ?? runningIndex,
     });
   }, [
-    brokenIndexes,
     center,
     floor,
+    highlightIndex,
     hoverIndex,
     ownPosition,
     pixelsPerTile,

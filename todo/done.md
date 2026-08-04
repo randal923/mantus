@@ -2782,3 +2782,58 @@ pass, with the PickItem story now asserting the "Equipped" badge renders;
 request for any carried item, a spare backpack included — nothing is gained
 by imbuing one, so the filter was left on the client rather than narrowing a
 server rule.
+
+## 2026-08-04 — Hunting bot: sparse guide routes only, trace pipeline removed
+
+**Problem**: opening a hunt (and "Reset to guide route") auto-fired a
+`hunting-bot-trace`, and the traced reply replaced the just-seeded sparse
+guide ring with a ~180-point tile-by-tile expansion — to the player, the
+clean guide route flashed and then "reverted". The expansion was never
+functionally needed: `HuntingBot` hands each waypoint to
+`MovementHandler.walkPathTo` as a destination and the server pathfinds every
+leg at execution time, so a sparse ring already walks correctly.
+
+**What changed**: the whole trace pipeline is gone, end to end. Protocol:
+`hunting-bot-trace` / `hunting-bot-traced` schemas, their types, and the
+trace-only `HUNTING_BOT_LIMITS` (`maxTracePoints`, `traceCooldownMs`,
+`maxTraceVisited`, `maxTraceLegVisited`, `traceAnchorSpacing`,
+`maxLegSamples`, `maxWaypointSpacing`, `maxSnapRadius`) removed;
+`traceLegMargin` renamed `pathSearchMargin` since its only remaining user is
+runtime pathing. Server: `traceRouteLeg` / `buildRouteAnchors` /
+`snapToWalkable` (+ tests) deleted, `HuntingBotHandler` handles only route
+saves and arming, `Session` lost its three trace fields, `GameServer`
+dropped the intent case. Client: routes now seed straight from the guide's
+`RoutePath` and stay as drawn; the "Trace walkable route" button,
+`traceHuntingBotRoute`, the `hunting-bot-traced` handler (which also saved
+the replacement), `huntingBotTracing` / `huntingBotUnresolved` store state,
+and all broken-waypoint (red dot) rendering in the editor, list, and
+`drawMinimap(Waypoints)` are removed, along with the `trace`/`tracing`/
+`unresolved*` locale strings. The playtest scenario saves the sparse
+guide-style ring directly. Also this session: Darashia Dragon Lords'
+floor-11 guide route replaced with a hand-tuned 11-point ring
+(`hunting_places.json`; `huntingPlacesSha256` in
+`content/source-manifest.json` recomputed — it had already drifted).
+
+**Files**: `protocol/src/{huntingBot,clientMessages,serverMessages}.ts`,
+`server/src/{GameServer,Session,MovementHandler}.ts`,
+`server/src/huntingBot/{HuntingBotHandler,HuntingBotHandler.test,
+HuntingBotIntentSchemas.test}.ts` (5 files deleted),
+`server/src/playtest/scenarios/huntingBot.ts`,
+`client/components/hunting-bot/*`, `client/components/game-window/
+{GameHuntingBotOverlay.tsx,types/*,store/createGameWindowStore.ts,
+messages/*,controllers/handleGameClientStatus.ts}`,
+`client/lib/minimap/{drawMinimap,drawMinimapWaypoints}.ts`,
+`client/lib/net/GameClient.ts`, `client/locales/{en,pt-BR}.json`,
+`client/stories/HuntingBotModal.stories.tsx`, `client/ASSETS.md`.
+
+**Verified**: typecheck clean in protocol, server, and client; server
+hunting-bot suite (38 tests) and client hunt/minimap/game-window suites
+pass; the schema test now asserts `hunting-bot-trace` is rejected. Full
+server suite: 4 pre-existing exercise-training failures, confirmed present
+on a clean tree via `git stash`.
+
+**Residual risk**: a saved route that predates this change still holds its
+dense traced chain until the player resets it — harmless, the bot walks it
+the same way. Unreachable hand-placed waypoints are no longer flagged red in
+the editor; the bot's runtime skip/`unreachable` stop reason is now the only
+signal.
