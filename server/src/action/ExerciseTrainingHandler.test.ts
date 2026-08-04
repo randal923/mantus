@@ -238,9 +238,9 @@ describe("ExerciseTrainingHandler", () => {
   });
 
   it("buys charges ahead when a write is slower than the tier's interval", async () => {
-    // A charge write that takes three intervals to commit. Spending one charge
-    // per round trip would cap the tier at a third of its rate, so the next
-    // write buys the hits that fall inside the latency instead.
+    // A charge write that takes seven and a half intervals to commit. Spending
+    // one charge per round trip would cap the tier at a fraction of its rate,
+    // so the next write buys the hits that fall inside the latency instead.
     const harness = await makeHarness({
       weaponTypeId: EPIC_EXERCISE_SWORD,
       charges: 100,
@@ -255,7 +255,7 @@ describe("ExerciseTrainingHandler", () => {
     const hits = harness.sent.filter(
       (message) => message.type === "magic-effect",
     ).length;
-    expect(spent).toBe(4);
+    expect(spent).toBe(9);
     // Charges are bought ahead of the hits they pay for, never behind them.
     expect(hits).toBeGreaterThan(0);
     expect(hits).toBeLessThanOrEqual(spent);
@@ -339,7 +339,7 @@ describe("ExerciseTrainingHandler", () => {
     );
   });
 
-  it("lands two epic hits for every one a stock weapon lands", async () => {
+  it("lands five epic hits for every one a stock weapon lands", async () => {
     // Twenty seconds sampled every 100ms, long enough that the tick grid does
     // not round the ratio away.
     const hitTimes = Array.from({ length: 201 }, (_, tick) => 1_000 + tick * 100);
@@ -359,9 +359,10 @@ describe("ExerciseTrainingHandler", () => {
     const epicHits = 100 - epic.chargesLeft();
     const stockHits = 100 - stock.chargesLeft();
     expect(stockHits).toBeGreaterThan(5);
-    // One tick of slack: the two paces cannot land on the grid identically.
-    expect(epicHits).toBeGreaterThanOrEqual(stockHits * 2 - 1);
-    expect(epicHits).toBeLessThanOrEqual(stockHits * 2 + 1);
+    // Both paces land their first hit at once, so the ratio holds between the
+    // hits after it; one tick of slack, as the grids cannot align identically.
+    expect(epicHits - 1).toBeGreaterThanOrEqual((stockHits - 1) * 5 - 1);
+    expect(epicHits - 1).toBeLessThanOrEqual((stockHits - 1) * 5 + 1);
     // Same tries per hit as the stock tier: only the pace differs.
     expect(epic.progression.awardSkillTries).toHaveBeenLastCalledWith(
       "actor",

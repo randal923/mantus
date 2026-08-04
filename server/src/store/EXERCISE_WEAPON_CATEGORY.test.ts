@@ -51,7 +51,7 @@ describe("EXERCISE_WEAPON_CATEGORY", () => {
       expect(product.description).toContain(`usable ${type.charges} times`);
       expect(
         getExerciseWeaponDefinition(offer.grant.itemTypeId)?.speedMultiplier,
-      ).toBe(2);
+      ).toBe(5);
     }
   });
 });

@@ -223,9 +223,9 @@ try {
     }
   }
   const ratio = epicRun.hits / stockRun.hits;
-  if (ratio < 1.5 || ratio > 2.5) {
+  if (ratio < 3 || ratio > 6) {
     throw new Error(
-      `the epic tier hit ${ratio.toFixed(1)}x as often as the stock tier, not 2x`,
+      `the epic tier hit ${ratio.toFixed(1)}x as often as the stock tier, not ~5x`,
     );
   }
   ok(

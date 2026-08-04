@@ -65,7 +65,7 @@ describe("loadItemCatalog", () => {
       weight: lasting.weight,
       pickupable: true,
     });
-    expect(epic.description).toContain("twice as fast");
+    expect(epic.description).toContain("5x as fast");
     expect(catalog.require(60_102)).toMatchObject({
       name: "legendary exercise sword",
       charges: 30_000,

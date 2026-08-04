@@ -46,7 +46,11 @@ const AUTOMAP = {
   wall: [255, 51, 0],
   lava: [255, 102, 0],
   floorChange: [255, 255, 0],
+  solid: [0, 0, 0],
 };
+
+/** Tibia floors 8..15 are underground; solid rock there is black, not dirt. */
+const UNDERGROUND_Z = 8;
 
 function loadItems() {
   const data = JSON.parse(readFileSync(join(ASSETS, "objects.json"), "utf8"));
@@ -151,6 +155,9 @@ function buildItemStats(items, usedIds, spriteStats) {
       // Coverage of the anchor tile, not the whole multi-tile footprint.
       coverage: Math.min(1, coverageSum / (item.width * item.height)),
       ground: Boolean(flags.ground || flags.fullGround),
+      // Impassable ground that also stops projectiles is solid rock (cave
+      // filler like item 101), unlike water/lava which projectiles cross.
+      solidGround: Boolean(flags.notWalkable && flags.blockProjectile),
       groundBorder: Boolean(flags.groundBorder),
       // Walls and fences carry the onBottom draw flag and block projectiles.
       wallLike: Boolean(flags.onBottom && flags.blockProjectile),
@@ -212,7 +219,7 @@ function isTreeLike(stat) {
   return h >= 60 && h < 170 && s >= 0.14;
 }
 
-function tileColor(tile, itemStats) {
+function tileColor(tile, itemStats, underground) {
   let color = null;
   let floorChange = false;
   for (let i = 2; i < tile.length; i++) {
@@ -220,10 +227,18 @@ function tileColor(tile, itemStats) {
     if (!stat) continue;
     if (stat.floorChange) floorChange = true;
     if (stat.ground) {
-      color = classifyGround(stat);
+      // Underground solid rock (cave filler) is black on the classic automap,
+      // not the brown its dirt sprite would suggest.
+      color =
+        underground && stat.solidGround ? AUTOMAP.solid : classifyGround(stat);
       continue;
     }
     if (stat.wallLike && stat.coverage >= 0.15) {
+      if (underground) {
+        // Natural cave walls read as solid rock, not red city walls.
+        color = AUTOMAP.solid;
+        continue;
+      }
       // Gray rock faces share the wall flags; only man-made walls go red.
       const { s } = rgbToHsl(stat.r, stat.g, stat.b);
       color = s < 0.12 ? AUTOMAP.mountain : AUTOMAP.wall;
@@ -243,12 +258,12 @@ function tileColor(tile, itemStats) {
   return color;
 }
 
-async function renderRegion(sourcePath, outPath, regionSize, itemStats) {
+async function renderRegion(sourcePath, outPath, regionSize, itemStats, underground) {
   const region = JSON.parse(readFileSync(sourcePath, "utf8"));
   const pixels = Buffer.alloc(regionSize * regionSize * 4);
   let painted = 0;
   for (const tile of region.tiles) {
-    const color = tileColor(tile, itemStats);
+    const color = tileColor(tile, itemStats, underground);
     if (!color) continue;
     const offset = (tile[1] * regionSize + tile[0]) * 4;
     pixels[offset] = color[0];
@@ -314,6 +329,7 @@ async function buildMap(name, items) {
           outPath,
           manifest.regionSize,
           itemStats,
+          z >= UNDERGROUND_Z,
         )
       ) {
         written++;

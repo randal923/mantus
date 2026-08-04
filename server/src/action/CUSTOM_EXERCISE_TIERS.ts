@@ -3,9 +3,9 @@
  *
  * They train the same skills for the same tries per hit; what they change is
  * pace. `speedMultiplier` divides the interval between training hits, so a
- * tier that hits twice as fast also burns through its charges twice as fast —
- * the weapon is not stronger, it is quicker, and it is priced and stocked
- * accordingly.
+ * tier that hits five times as fast also burns through its charges five times
+ * as fast — the weapon is not stronger, it is quicker, and it is priced and
+ * stocked accordingly.
  */
 export interface CustomExerciseTier {
   /** Which id of a family this tier occupies. */

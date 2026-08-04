@@ -2871,3 +2871,73 @@ tree via `git stash`.
 **Residual risk**: the panel countdown is still a snapshot — the client
 does not re-request when the boost expires, so the boost line disappears on
 the next progression push after expiry rather than at the exact second.
+
+## 2026-08-04 — Exercise-weapon tiers retuned to 5x; charge audit
+
+**Problem**: a charge-persistence audit (are exercise-weapon charges ever
+reset?) found the persistence sound but the epic/legendary pace inconsistent:
+`CUSTOM_EXERCISE_TIERS.ts` shipped with `speedMultiplier: 5` (and 5x tooltip
+copy) while the handler tests, the store shelf blurb, the catalog test, and
+the playtest scenario all still asserted the originally documented 2x —
+two unit tests failed, and the store advertised a slower pace than sold.
+
+**What changed**: 5x confirmed as the intended balance. The two
+`ExerciseTrainingHandler` tests now expect the 5x cadence (bundle write buys
+9 charges across a 3s round trip; epic lands 5 hits per stock hit,
+fencepost-corrected), the store description derives its pace line from
+`tier.speedMultiplier` instead of hardcoding "twice", the catalog test
+expects the 5x description, the playtest ratio gate moved to 3–6 around 5x,
+and the tier-file header comment says five times.
+
+**Charge audit findings (no fixes needed)**: charges live in
+`items.attributes.charges`, written by `jsonb_set` inside a serializable
+row-locked transaction; the catalog-count fallback only applies to pristine
+items that never spent a charge; spending clamps to what remains and the row
+is deleted + audited (`charges-spent`) at zero; moves never touch attributes,
+merges require identical attribute bags, trade copies attributes verbatim,
+and the market escrows only pristine (empty-attribute) items, so a used
+weapon can never re-mint at full charges.
+
+**Files touched**: `server/src/action/{ExerciseTrainingHandler,EXERCISE_WEAPON_CATEGORY}`
+tests, `server/src/store/EXERCISE_WEAPON_CATEGORY.ts`,
+`server/src/item/loadItemCatalog.test.ts`,
+`server/src/playtest/scenarios/exerciseTraining.ts`,
+`server/src/action/CUSTOM_EXERCISE_TIERS.ts` (comment only), `todo/status.md`.
+
+**Verified**: full server unit suite green (233 files, 1597 tests; DB-gated
+integration tests skipped as usual).
+
+**Residual risk**: the exerciseTraining playtest scenario was not re-run
+(needs a live server); its 3–6 ratio window is generous to absorb the 4s
+window's fenceposts and network jitter.
+
+## 2026-08-04 — Underground minimap: solid rock painted brown instead of black
+
+**Problem**: On underground floors (z8+) the minimap looked "inverted" —
+the whole map was a dirt-brown mass with cave rooms as black holes ringed
+in red. `tools/buildMinimapTiles.mjs` classified every `ground` item by
+sprite hue, so the solid-earth cave filler (item 101 and friends,
+`ground + notWalkable + blockProjectile`, ~25k of 47k tiles in the
+Rookgaard z8 region) painted as walkable dirt, and natural cave-wall faces
+painted red like city walls.
+
+**What changed**: `tileColor()` now takes an `underground` flag (folder
+z ≥ 8). Underground, ground items that are `notWalkable + blockProjectile`
+paint automap black (`AUTOMAP.solid`), and wall-like items paint black
+instead of red/gray. Water/lava are unaffected: they are `notWalkable` but
+do not block projectiles, so the flag pair uniquely identifies solid rock.
+Surface floors are untouched (mountains stay gray, city walls red).
+Rebuilt all tiles via `yarn minimap:build`; `minimapVersion` bumped to
+`155dad44f2ae` so client caches bust.
+
+**Files touched**: `tools/buildMinimapTiles.mjs`,
+`client/public/assets/map/otservbr/minimap/**` (regenerated),
+`client/public/assets/map/otservbr/manifest.json` (minimapVersion).
+
+**Verified**: visually compared baked tiles before/after for z8/z10
+(black rock + brown tunnels + lava/floor-change accents, classic automap
+look) and z7 (unchanged: green land, blue sea, gray mountains, red walls).
+
+**Residual risk**: brick-walled dungeon rooms underground now also outline
+black rather than red; matches tibia-style automaps but is a deliberate
+simplification.

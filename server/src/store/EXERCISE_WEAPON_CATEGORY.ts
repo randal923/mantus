@@ -14,7 +14,7 @@ if (!SWORD) throw new Error("the exercise-weapon families have no sword");
  * Canary sells its exercise, durable and lasting tiers here for gold-priced
  * coin bundles. This server does not: those three stay in the world — NPCs,
  * daily rewards, quests — and the shelf stocks only the two tiers that exist
- * nowhere else, the epic and legendary weapons that train twice as fast.
+ * nowhere else, the epic and legendary weapons that train five times as fast.
  * That keeps the Mantus Store the sole source of the fast tiers without
  * removing any way a player already had to train.
  *
@@ -37,7 +37,7 @@ export const EXERCISE_WEAPON_CATEGORY: StoreCatalogCategory = {
           `Use it to train ${family.trains} on an exercise dummy!\n\n` +
           "{character}\n{storeinbox}\n" +
           `{info} use it on an exercise dummy to train ${family.trains}\n` +
-          "{info} trains twice as fast as an ordinary exercise weapon\n" +
+          `{info} trains ${tier.speedMultiplier}x as fast as an ordinary exercise weapon\n` +
           `{info} usable ${tier.charges} times a piece`,
         icon: { kind: "item" as const, itemTypeId },
         subOffers: [
