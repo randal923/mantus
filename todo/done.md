@@ -3110,7 +3110,7 @@ reach combat and the panels; affix stats were only unit/integration tested.
   passes none and is unchanged.
 - **Playtest harness**: `startPlaytestServer` accepts `rarityChances` and
   `lootRate` (parity runs still delete the block / pin loot to 1x).
-- **Scenario** `src/playtest/scenarios/rarityAffixes.ts` (30 checks over
+- **Scenario** `src/playtest/scenarios/rarityAffixes.ts` (31 checks over
   the real wire): per-grade affix counts on tooltips; all 12 affixes
   equipped one by one with assertions on progression max HP/mana, attack
   speed (1800ms from a 10% roll), cyclopedia attack/defense deltas, the
@@ -3118,7 +3118,8 @@ reach combat and the panels; affix stats were only unit/integration tested.
   bonuses revert on unequip; edge cases — 50% attack-speed floor from an
   80% roll, 100% leech cap from a 150 roll, two-slot stacking, unequip at
   full health clamps current health, /rare refuses ineligible items
-  (stackables) and duplicate-affix specs; a live-combat crit-burst check;
+  (stackables) and duplicate-affix specs; live-combat crit-burst checks for both melee (knight/sword) and the
+  resolver path (sorcerer/wand);
   a real minotaur kill dropping forced-legendary gear through auto-loot;
   and an affix-max-health relog at full health.
 - **Real bug #1 (caught by the crit check)**: one-shot-kill crits never
@@ -3142,7 +3143,7 @@ ItemIntentHandler,sql/insertConjuredItem}.ts`,
 `server/src/playtest/{startPlaytestServer,scenarios/rarityAffixes}.ts`,
 `server/package.json` (`playtest:rarity`).
 
-**Verified**: three consecutive clean 30/30 scenario runs (~16s each);
+**Verified**: consecutive clean full-suite scenario runs (31/31, ~25s);
 full unit suite green (1,622). Scenario gotchas baked in: busy-retry
 around GM/equip intents (trailing persists), drop pacing under the
 per-session intent rate cap, drops spread over a tile ring (10-item tile

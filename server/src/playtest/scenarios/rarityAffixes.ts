@@ -25,6 +25,7 @@ const SPOT = { x: 32_369, y: 32_260, z: 7 };
 const LEATHER_ARMOR = 3_361;
 const LEATHER_HELMET = 3_355;
 const SWORD = 3_264;
+const WAND_OF_VORTEX = 3_074;
 const KNIGHT_ATTACK_SPEED_MS = 2_000;
 const CRITICAL_DAMAGE_EFFECT_ID = 173;
 
@@ -740,6 +741,44 @@ try {
   );
   await unequipSlot(rig, "armor");
   await discardRareArmors(rig);
+
+  console.log("▶ phase: wand crits burst through the resolver path");
+  const sorcerer = await ParityRig.create(
+    url,
+    `${TOKEN}-sorc`,
+    randomName("Raritywand"),
+    "Sorcerer",
+  );
+  await sorcerer.goto(SPOT.x + 3, SPOT.y + 2, SPOT.z);
+  await sorcerer.setupStats({ level: 100, magicLevel: 30 });
+  await sorcerer.giveAndEquip(WAND_OF_VORTEX, "weapon");
+  const sorcererArmor = await conjureRare(
+    sorcerer,
+    `/rare epic ${LEATHER_ARMOR} critChance=100`,
+  );
+  await equipById(sorcerer, sorcererArmor, "armor");
+  await eventually(
+    () => sorcerer.progression.combat?.criticalChancePercent === 100,
+  );
+  const wandMark = sorcerer.client.mark();
+  const wandTarget = await sorcerer.spawnMonster("rotworm", "Rotworm");
+  await killCreature(sorcerer, wandTarget.id);
+  const wandBurst = sorcerer.client.messages
+    .slice(wandMark)
+    .some(
+      (m) =>
+        m.type === "magic-effect" &&
+        m.effectId === CRITICAL_DAMAGE_EFFECT_ID,
+    );
+  const wandHit = sorcerer.client.messages
+    .slice(wandMark)
+    .some((m) => m.type === "combat-log" && /^Rotworm: \d+ /.test(m.text));
+  check(
+    "wand-crit-burst-effect",
+    wandBurst && wandHit,
+    `wand damage landed: ${wandHit}, effect ${CRITICAL_DAMAGE_EFFECT_ID} seen: ${wandBurst}`,
+  );
+  sorcerer.client.terminate();
 
   console.log("▶ phase: forced-legendary drops come out of real kills");
   // Auto-loot ships disabled; the sweep is what carries the kill's loot into
