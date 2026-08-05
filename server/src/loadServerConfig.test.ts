@@ -50,6 +50,69 @@ describe("loadServerConfig", () => {
     });
   });
 
+  it("loads the committed rarity block with its tuning tables", async () => {
+    const config = await loadServerConfig(CONFIG_PATH, {});
+    // Chances are live-tuned in config.yml; assert shape, not exact values.
+    for (const grade of ["uncommon", "rare", "epic", "legendary"] as const) {
+      expect(config.rarity.chances[grade]).toBeGreaterThanOrEqual(0);
+    }
+    expect(config.rarity.affixCounts).toEqual({
+      uncommon: 1,
+      rare: 2,
+      epic: 3,
+      legendary: 4,
+    });
+    expect(config.rarity.valueMultipliers.legendary).toBe(3);
+    expect(config.rarity.affixes.maxHealth).toEqual({
+      minimum: 15,
+      maximum: 40,
+    });
+    expect(config.rarity.affixes.magicLevel).toEqual({
+      minimum: 1,
+      maximum: 1,
+      minimumRarity: "rare",
+    });
+  });
+
+  it("defaults rarity off with the built-in tables when the block is absent", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const directory = await mkdtemp(join(tmpdir(), "server-config-"));
+    temporaryDirectories.push(directory);
+    const path = join(directory, "config.yml");
+    await writeFile(
+      path,
+      source.replace(/^rarity:\n(?:(?: +.*)?\n)+?(?=^\S)/m, ""),
+    );
+    const withoutBlock = await loadServerConfig(path, {});
+    expect(withoutBlock.rarity.chances).toEqual({
+      uncommon: 0,
+      rare: 0,
+      epic: 0,
+      legendary: 0,
+    });
+    expect(withoutBlock.rarity.affixes.resistance).toEqual({
+      minimum: 3,
+      maximum: 8,
+    });
+  });
+
+  it("rejects an inverted affix band", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const directory = await mkdtemp(join(tmpdir(), "server-config-"));
+    temporaryDirectories.push(directory);
+    const path = join(directory, "config.yml");
+    await writeFile(
+      path,
+      source.replace(
+        "maxHealth: { min: 15, max: 40 }",
+        "maxHealth: { min: 41, max: 40 }",
+      ),
+    );
+    await expect(loadServerConfig(path, {})).rejects.toThrow(
+      /config\.rarity\.affixes\.maxHealth/,
+    );
+  });
+
   it("rejects out-of-range chat flood limits", async () => {
     const source = await readFile(CONFIG_PATH, "utf8");
     const directory = await mkdtemp(join(tmpdir(), "server-config-"));

@@ -219,6 +219,7 @@ export class MarketTxHelper {
     amount: number,
     unitPrice: number,
     state: "accepted" | "cancelled" | "expired",
+    rarity: string | null = null,
   ): Promise<void> {
     await client.query(insertMarketHistoryQuery, [
       offerId,
@@ -229,6 +230,7 @@ export class MarketTxHelper {
       amount,
       unitPrice,
       state,
+      rarity,
     ]);
   }
 

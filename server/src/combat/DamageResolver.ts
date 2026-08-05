@@ -32,6 +32,7 @@ import {
   giftOfLifeCooldownSeconds,
   giftOfLifeHealPercent,
 } from "./giftOfLife";
+import { combineSkillBoosts } from "./combineSkillBoosts";
 import { playerDefense } from "./playerDefense";
 import { playerMitigation } from "./playerMitigation";
 
@@ -684,6 +685,7 @@ export class DamageResolver {
     }
     if (target instanceof Player) {
       const equipment = this.items.combatEquipment(target.id);
+      const affixes = this.items.affixEffects(target.id);
       const absorbType = catalogDamageType(request.type);
       const gemResistances: Partial<Record<DamageType, number>> =
         target.wheelBonuses.resistances;
@@ -692,7 +694,11 @@ export class DamageResolver {
           (total, entry) =>
             total + (entry.type.absorbPercent?.[absorbType] ?? 0),
           0,
-        ) + (request.type === "healing" ? 0 : (gemResistances[request.type] ?? 0));
+        ) +
+        (request.type === "healing"
+          ? 0
+          : (gemResistances[request.type] ?? 0) +
+            (affixes.resistances[absorbType] ?? 0));
       if (absorb >= 100) return { amount: 0, block: "immunity" };
       amount = this.formula.applyAbsorbPercent(amount, absorb);
       // Elemental-protection imbuements reduce sequentially per running
@@ -733,8 +739,12 @@ export class DamageResolver {
               equipment,
               session?.fightMode.attack ?? "offensive",
               now,
-              this.items.imbuementEffects(target.id).skills,
+              combineSkillBoosts(
+                this.items.imbuementEffects(target.id).skills,
+                affixes.skills,
+              ),
             ) +
+              affixes.defense +
               Math.round(
                 (proficiencyDefense?.defenseBonus ?? 0) +
                   (proficiencyDefense?.shieldModifier ?? 0),
@@ -798,7 +808,8 @@ export class DamageResolver {
           target,
           equipment,
           fightSession?.fightMode?.attack ?? "balanced",
-          this.items.imbuementEffects(target.id).skills.shielding ?? 0,
+          (this.items.imbuementEffects(target.id).skills.shielding ?? 0) +
+            (affixes.skills.shielding ?? 0),
         );
         if (mitigation > 0) {
           amount = Math.max(

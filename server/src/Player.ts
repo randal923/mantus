@@ -13,7 +13,10 @@ import { CombatAnalyzerTotals } from "./combat/CombatAnalyzerTotals";
 import { PartyAnalyzerTotals } from "./party/PartyAnalyzerTotals";
 import { Creature } from "./creature/Creature";
 import { CharacterProgression } from "./progression/CharacterProgression";
-import { deriveCharacterStats } from "./progression/deriveCharacterStats";
+import {
+  deriveCharacterStats,
+  type DerivedStatModifier,
+} from "./progression/deriveCharacterStats";
 import { getDeathLossPercent } from "./progression/getDeathLossPercent";
 import { getExperienceForLevel } from "./progression/getExperienceForLevel";
 import { getVocation } from "./progression/getVocation";
@@ -86,11 +89,14 @@ export class Player extends Creature<Character["outfit"]> {
     now = monotonicNow(),
     premiumUntil: Date | null = null,
     wheelBonuses: WheelBonuses = EMPTY_WHEEL_BONUSES,
+    /** Affix max HP/mana from the already-loaded inventory, seeded like wheel. */
+    equipmentModifier: DerivedStatModifier = {},
   ) {
     const stats = deriveCharacterStats({
       vocation: character.vocation,
       definitionVersion: character.progressionDefinitionVersion,
       level: character.level,
+      equipment: [equipmentModifier],
       wheel: wheelBonuses,
     });
     if (!Number.isInteger(character.health) || character.health < 0) {
@@ -147,7 +153,16 @@ export class Player extends Creature<Character["outfit"]> {
       },
       now,
       wheelBonuses,
+      equipmentModifier,
     );
+  }
+
+  /** Equipment contribution to max stats, for save-snapshot checks. */
+  get equipmentStatModifier(): {
+    readonly maxHealth: number;
+    readonly maxMana: number;
+  } {
+    return this.progression.equipmentMaxStatModifier;
   }
 
   get stamina(): number {

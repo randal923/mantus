@@ -2,6 +2,10 @@ import { SKILLS, type Skill } from "@tibia/protocol";
 import { equipmentSkillModifier } from "../combat/equipmentSkillModifier";
 import type { PlayerImbuementEffects } from "../imbuement/playerImbuementEffects";
 import type { ItemType } from "../item/ItemType";
+import {
+  EMPTY_AFFIX_EFFECTS,
+  type PlayerAffixEffects,
+} from "../rarity/playerAffixEffects";
 
 /**
  * What equipped gear and its running imbuements contribute on top of the
@@ -21,11 +25,14 @@ export interface PlayerEquipmentBonuses {
 export function playerEquipmentBonuses(
   equipment: ReadonlyArray<{ type: ItemType }>,
   imbuements: PlayerImbuementEffects,
+  affixes: PlayerAffixEffects = EMPTY_AFFIX_EFFECTS,
 ): PlayerEquipmentBonuses {
   const skills: Partial<Record<Skill, number>> = {};
   for (const skill of SKILLS) {
     const bonus =
-      equipmentSkillModifier(equipment, skill) + (imbuements.skills[skill] ?? 0);
+      equipmentSkillModifier(equipment, skill) +
+      (imbuements.skills[skill] ?? 0) +
+      (affixes.skills[skill] ?? 0);
     if (bonus !== 0) skills[skill] = bonus;
   }
   return {
@@ -34,7 +41,9 @@ export function playerEquipmentBonuses(
       equipment.reduce(
         (total, entry) => total + (entry.type.magicLevelPoints ?? 0),
         0,
-      ) + imbuements.magicLevel,
+      ) +
+      imbuements.magicLevel +
+      affixes.magicLevel,
     speed:
       equipment.reduce((total, entry) => total + (entry.type.speed ?? 0), 0) +
       imbuements.speed,

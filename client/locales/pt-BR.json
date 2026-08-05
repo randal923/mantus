@@ -761,7 +761,10 @@
       "duplicate-request": "Esta solicitação já foi processada.",
       "balance-limit": "Isso excederia o limite de saldo bancário.",
       "failed": "O mercado não pôde concluir esta ação."
-    }
+    },
+    "itemToList": "Item a listar",
+    "standardStock": "Estoque comum ({{count}} em posse)",
+    "uniqueListingNotice": "Isso lista exatamente este item como uma oferta única; compradores veem o tooltip completo."
   },
   "trade": {
     "title": "Negociar com {{name}}",
@@ -1234,7 +1237,13 @@
     "vocations": "Vocações: {{vocations}}",
     "weight": "{{weight}} oz",
     "charges": "Cargas: {{count}}",
-    "containerSlots": "Capacidade: {{count}} espaços"
+    "containerSlots": "Capacidade: {{count}} espaços",
+    "rarity": {
+      "uncommon": "Incomum",
+      "rare": "Raro",
+      "epic": "Épico",
+      "legendary": "Lendário"
+    }
   },
   "spells": {
     "bar": "Barra de magias",

@@ -31,6 +31,7 @@ import { reduceItemCountUpdate } from "./sql/reduceItemCountUpdate";
 import { randomUUID } from "node:crypto";
 import type { Item } from "../item/Item";
 import type { ItemMutation } from "../item/ItemMutation";
+import { itemRarityOf } from "../rarity/itemRarityOf";
 import { drawFromStash } from "./drawFromStash";
 import { insertStashEscrowAudit } from "./sql/insertStashEscrowAudit";
 import { spendMarketFunds } from "./spendMarketFunds";
@@ -85,7 +86,15 @@ export class PgMarketCreateOps {
         ) {
           throw this.fail("not-owned");
         }
-        if (!this.isPristine(row)) throw this.fail("invalid-item");
+        if (request.attributed) {
+          // A unique rarity listing escrows exactly this whole row; every
+          // other attribute bag (tier, imbuements without a grade) stays
+          // unlistable.
+          if (!this.hasRarity(row)) throw this.fail("invalid-item");
+          if (source.take !== row.count) throw this.fail("invalid-item");
+        } else if (!this.isPristine(row)) {
+          throw this.fail("invalid-item");
+        }
         const children = await client.query(childExistsQuery, [row.id]);
         if (children.rows.length > 0) throw this.fail("invalid-item");
         if (source.take < 1 || source.take > row.count) {
@@ -216,6 +225,18 @@ export class PgMarketCreateOps {
         feeFromBank: payment.bankPaid,
         escrowItems: lockedRows.length + stashRowCount,
         stashItems: request.stashTake,
+        ...(request.attributed
+          ? {
+              attributedItemId: lockedRows[0]?.row.id,
+              rarity:
+                lockedRows[0] && this.hasRarity(lockedRows[0].row)
+                  ? itemRarityOf({
+                      attributes: lockedRows[0].row
+                        .attributes as Readonly<Record<string, unknown>>,
+                    })
+                  : undefined,
+            }
+          : {}),
       });
       return {
         status: "committed",
@@ -453,6 +474,17 @@ export class PgMarketCreateOps {
       typeof row.attributes === "object" &&
       row.attributes !== null &&
       Object.keys(row.attributes).length === 0
+    );
+  }
+
+  private hasRarity(row: DepotItemRow): boolean {
+    if (typeof row.attributes !== "object" || row.attributes === null) {
+      return false;
+    }
+    return (
+      itemRarityOf({
+        attributes: row.attributes as Readonly<Record<string, unknown>>,
+      }) !== undefined
     );
   }
 

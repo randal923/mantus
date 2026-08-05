@@ -7,7 +7,9 @@ import { useLanguageStore } from "../../stores/useLanguageStore";
 import { SpriteIcon } from "../inventory/SpriteIcon";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { AuctionRarityBadge } from "./AuctionRarityBadge";
 import type {
+  AuctionAttributedItem,
   AuctionHouseItem,
   AuctionOfferSide,
   AuctionOrderIntent,
@@ -18,12 +20,15 @@ const GOLD_COIN_SPRITE = 7384;
 interface AuctionOrderTicketProps {
   item?: AuctionHouseItem;
   goldBalance: number;
+  /** The viewer's own listable rarity items of the browsed type. */
+  attributedItems?: ReadonlyArray<AuctionAttributedItem>;
   onCreateOrder?: (intent: AuctionOrderIntent) => void;
 }
 
 export function AuctionOrderTicket({
   item,
   goldBalance,
+  attributedItems,
   onCreateOrder,
 }: AuctionOrderTicketProps) {
   const { t } = useAppTranslation();
@@ -33,7 +38,14 @@ export function AuctionOrderTicket({
   const [priceInput, setPriceInput] = useState(
     String(item?.averagePrice ?? 0),
   );
-  const amount = Number(amountInput);
+  const [specificItemId, setSpecificItemId] = useState<string | null>(null);
+  // A stale id from a previously browsed type simply resolves to nothing.
+  const specificItem =
+    side === "sell" && specificItemId
+      ? (attributedItems?.find((entry) => entry.itemId === specificItemId) ??
+        null)
+      : null;
+  const amount = specificItem ? 1 : Number(amountInput);
   const pricePerItem = Number(priceInput);
   const total = amount * pricePerItem;
   const hasValidValues =
@@ -46,7 +58,9 @@ export function AuctionOrderTicket({
     total <= MARKET_LIMITS.maxTotalPrice;
   const hasEnoughGold = side === "sell" || total <= goldBalance;
   const hasEnoughItems =
-    side === "buy" || (item !== undefined && amount <= item.ownedCount);
+    side === "buy" ||
+    specificItem !== null ||
+    (item !== undefined && amount <= item.ownedCount);
   const canSubmit =
     item !== undefined &&
     onCreateOrder !== undefined &&
@@ -63,6 +77,7 @@ export function AuctionOrderTicket({
       side,
       amount,
       pricePerItem,
+      ...(specificItem ? { specificItemId: specificItem.itemId } : {}),
     });
   };
 
@@ -123,6 +138,49 @@ export function AuctionOrderTicket({
             </div>
           </fieldset>
 
+          {side === "sell" && (attributedItems?.length ?? 0) > 0 && (
+            <fieldset>
+              <legend className="mb-2 font-display text-xs font-semibold tracking-[0.16em] text-ui-gold uppercase">
+                {t("auction.itemToList")}
+              </legend>
+              <div className="flex flex-col gap-1.5 rounded-lg border border-ui-stone-light/15 bg-black/25 p-1.5">
+                <button
+                  type="button"
+                  aria-pressed={specificItem === null}
+                  onClick={() => setSpecificItemId(null)}
+                  className={`rounded-md border px-3 py-2 text-left text-sm outline-none transition-[border-color,background-color,color] focus-visible:ring-2 focus-visible:ring-ui-gold/60 ${
+                    specificItem === null
+                      ? "border-ui-accent-light/55 bg-ui-accent-deep/60 text-ui-text-bright"
+                      : "border-transparent text-ui-muted hover:border-ui-gold/25 hover:text-ui-text"
+                  }`}
+                >
+                  {t("auction.standardStock", { count: item.ownedCount })}
+                </button>
+                {attributedItems?.map((entry) => (
+                  <button
+                    key={entry.itemId}
+                    type="button"
+                    aria-pressed={specificItem?.itemId === entry.itemId}
+                    onClick={() => setSpecificItemId(entry.itemId)}
+                    className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-left text-sm outline-none transition-[border-color,background-color,color] focus-visible:ring-2 focus-visible:ring-ui-gold/60 ${
+                      specificItem?.itemId === entry.itemId
+                        ? "border-ui-accent-light/55 bg-ui-accent-deep/60 text-ui-text-bright"
+                        : "border-transparent text-ui-muted hover:border-ui-gold/25 hover:text-ui-text"
+                    }`}
+                  >
+                    <span className="truncate">{entry.tooltip.name}</span>
+                    <AuctionRarityBadge tooltip={entry.tooltip} />
+                  </button>
+                ))}
+              </div>
+              {specificItem && (
+                <p className="mt-2 text-xs leading-5 text-ui-muted">
+                  {t("auction.uniqueListingNotice")}
+                </p>
+              )}
+            </fieldset>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <Input
               label={t("auction.amount")}
@@ -131,7 +189,8 @@ export function AuctionOrderTicket({
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={String(MARKET_LIMITS.maxAmountStackable).length}
-              value={amountInput}
+              value={specificItem ? "1" : amountInput}
+              disabled={specificItem !== null}
               onChange={(event) => {
                 const next = event.currentTarget.value;
                 if (/^\d*$/.test(next)) setAmountInput(next);

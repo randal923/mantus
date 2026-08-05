@@ -89,6 +89,19 @@ const draftOf = (items: ReadonlyArray<Item>, capacityMax = 10_000) =>
   new CarriedItemDraft(catalog, CHARACTER_ID, items, capacityMax);
 
 describe("CarriedItemDraft", () => {
+  it("never counts or vendors a rarity-graded item in a bulk sale", () => {
+    const graded: Item = {
+      ...inSlot("axe-epic", AXE, 1, 0),
+      attributes: { rarity: "epic", affixes: [{ id: "attack", value: 4 }] },
+    };
+    const draft = draftOf([backpack, graded, inSlot("axe-plain", AXE, 1, 1)]);
+
+    expect(draft.countOf(AXE)).toBe(1);
+    expect(draft.destroy(AXE, 1, "shop-sale")).toBe(true);
+    const built = draft.build();
+    expect(built.mutation.removedItemIds).toEqual(["axe-plain"]);
+  });
+
   it("frees a destroyed row's slot for a later grant in the same draft", () => {
     // Both slots are taken, so the grant only fits because paying empties one.
     const draft = draftOf([

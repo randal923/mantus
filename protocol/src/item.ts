@@ -39,9 +39,23 @@ export const quickLootCategorySchema = z.enum(QUICK_LOOT_CATEGORIES);
 /** The buckets a client may ask a quick-loot sweep to restrict itself to. */
 export const quickLootFilterSchema = quickLootCategorySchema.exclude(["none"]);
 
+/**
+ * Rarity grades a dropped equipable can roll, weakest first. Common items
+ * carry no grade at all — absence is the common case on the wire.
+ */
+export const ITEM_RARITIES = ["uncommon", "rare", "epic", "legendary"] as const;
+
+export const itemRaritySchema = z.enum(ITEM_RARITIES);
+
 export const itemAffixSchema = z
   .object({
     text: z.string().min(1).max(200),
+    /**
+     * Display grouping so the client can style a line without parsing its
+     * text: `imbuement` for the imbuement-slots line, `rolled` for rarity
+     * affixes. Absent lines keep the neutral catalog styling.
+     */
+    kind: z.enum(["imbuement", "rolled"]).optional(),
   })
   .strict();
 
@@ -51,6 +65,7 @@ export const itemTooltipSchema = z
     name: z.string().min(1).max(120),
     typeLine: z.string().min(1).max(80),
     spriteId: z.number().int().positive(),
+    rarity: itemRaritySchema.optional(),
     primaryStat: z.string().min(1).max(100).optional(),
     affixes: z.array(itemAffixSchema).max(20),
     requiredLevel: z.number().int().positive().optional(),
@@ -59,6 +74,13 @@ export const itemTooltipSchema = z
     description: z.string().min(1).max(500).optional(),
     charges: z.number().int().nonnegative().optional(),
     containerCapacity: z.number().int().nonnegative().optional(),
+    /** NPC gold value; omitted when the type has none. */
+    worth: z.number().int().positive().optional(),
+    /**
+     * Structured imbuement slot count backing the composed `Imbuements:`
+     * affix line, so client actions never parse display text.
+     */
+    imbuementSlots: z.number().int().min(0).max(3).optional(),
   })
   .strict();
 
@@ -209,6 +231,7 @@ export const inventoryStateSchema = z
 export type EquipmentSlot = z.infer<typeof equipmentSlotSchema>;
 export type QuickLootCategory = z.infer<typeof quickLootCategorySchema>;
 export type QuickLootFilter = z.infer<typeof quickLootFilterSchema>;
+export type ItemRarity = z.infer<typeof itemRaritySchema>;
 export type ItemAffix = z.infer<typeof itemAffixSchema>;
 export type ItemTooltipData = z.infer<typeof itemTooltipSchema>;
 export type ItemUseKind = z.infer<typeof itemUseKindSchema>;

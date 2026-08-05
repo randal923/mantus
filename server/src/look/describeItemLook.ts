@@ -1,5 +1,8 @@
 import { chargesOf } from "../item/chargesOf";
 import type { ItemType } from "../item/ItemType";
+import { formatAffixText } from "../rarity/formatAffixText";
+import { itemAffixesOf } from "../rarity/itemAffixesOf";
+import { itemRarityOf } from "../rarity/itemRarityOf";
 import { imbuementLookLine } from "./imbuementLookLine";
 import { itemLookSegments } from "./itemLookSegments";
 import { itemNameDescription } from "./itemNameDescription";
@@ -69,6 +72,18 @@ export function describeItemLook(
   if (wieldInfo) lines.push(wieldInfo);
 
   if (attributes) {
+    const holder = { attributes };
+    const rarity = itemRarityOf(holder);
+    if (rarity) {
+      const affixLines = itemAffixesOf(holder)
+        .map((affix) => formatAffixText(affix))
+        .join(", ");
+      lines.push(
+        `It is ${rarity === "uncommon" || rarity === "epic" ? "an" : "a"} ${rarity} item${
+          affixLines ? ` (${affixLines})` : ""
+        }.`,
+      );
+    }
     const imbuements = imbuementLookLine(type, attributes);
     if (imbuements) lines.push(imbuements);
     if (type.classification !== undefined && type.classification >= 1) {

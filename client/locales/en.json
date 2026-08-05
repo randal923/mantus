@@ -761,7 +761,10 @@
       "duplicate-request": "That request was already processed.",
       "balance-limit": "That would exceed the bank balance limit.",
       "failed": "The market could not complete that action."
-    }
+    },
+    "itemToList": "Item to list",
+    "standardStock": "Standard stock ({{count}} owned)",
+    "uniqueListingNotice": "This lists that exact item as a single-piece offer; buyers see its full tooltip."
   },
   "trade": {
     "title": "Trade with {{name}}",
@@ -1234,7 +1237,13 @@
     "vocations": "Vocations: {{vocations}}",
     "weight": "{{weight}} oz",
     "charges": "Charges: {{count}}",
-    "containerSlots": "Capacity: {{count}} slots"
+    "containerSlots": "Capacity: {{count}} slots",
+    "rarity": {
+      "uncommon": "Uncommon",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    }
   },
   "spells": {
     "bar": "Spell bar",

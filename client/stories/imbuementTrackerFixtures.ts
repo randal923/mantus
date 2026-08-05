@@ -23,7 +23,8 @@ function makeTrackedItem(input: {
       name: input.name,
       typeLine: "Armors",
       spriteId: input.spriteId,
-      affixes: [{ text: `Imbuement Slots ${input.slots}` }],
+      affixes: [],
+      imbuementSlots: input.slots,
       weight: 12_000,
     },
   };

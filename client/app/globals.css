@@ -20,6 +20,12 @@
   --color-ui-mana: #284962;
   --color-ui-mana-light: #527792;
   --color-ui-success: #617758;
+  --color-ui-success-light: #8faf7f;
+  --color-ui-imbuement: #9d7fe0;
+  --color-rarity-uncommon: #a8adb5;
+  --color-rarity-rare: #d9b23c;
+  --color-rarity-epic: #a678d4;
+  --color-rarity-legendary: #cf7a24;
   --font-tibia: var(--font-geist-sans, Arial), sans-serif;
   --font-display: var(--font-cinzel, Georgia), serif;
   --font-button: var(--font-cinzel, Georgia), serif;

@@ -53,6 +53,9 @@ export function assertValidCharacterSaveSnapshot(
     vocation: snapshot.vocation,
     definitionVersion: snapshot.progressionDefinitionVersion,
     level: snapshot.level,
+    // Affix max HP/mana raise the valid ceiling exactly like the wheel leg;
+    // both are snapshot metadata, never persisted columns.
+    equipment: snapshot.equipmentBonus ? [snapshot.equipmentBonus] : undefined,
     wheel: snapshot.wheelBonus,
   });
   if (

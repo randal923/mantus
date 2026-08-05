@@ -9,6 +9,7 @@ import {
 } from "@tibia/protocol";
 import type { ServerConfig } from "./config";
 import { NO_STAGES } from "./progression/stageRates";
+import { DISABLED_RARITY_CONFIG } from "./rarity/RarityConfig";
 import { GameServer, type GameServerDeps } from "./GameServer";
 import { MemoryCooldownStore } from "./combat/MemoryCooldownStore";
 import { ItemCatalog } from "./item/ItemCatalog";
@@ -48,6 +49,7 @@ const testConfig: ServerConfig = {
     bestiaryKills: 1,
     bosstiaryKills: 1,
   },
+  rarity: DISABLED_RARITY_CONFIG,
   progression: { staminaSystem: true, stages: NO_STAGES },
   starterTownId: 1,
   characterSaveIntervalMs: 30_000,

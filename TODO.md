@@ -1008,3 +1008,27 @@ limitations accepted during a session are recorded in the owning feature file
   against monsters debuffed by Sap Strength / Expose Weakness) is not
   implemented — the spells apply their debuffs but no leech reads the wheel
   stage (2026-08-03). Owner: Feature 79-81 (wheel).
+- Item rarity (shipped 2026-08-05) — deliberate limits and polish left open.
+  (a) Affix life/mana leech applies to auto-attacks only, mirroring how
+  imbuement leech works here today; if spell leech ever lands for
+  imbuements, add the affix leg beside it in `DamageResolver`. (b) Ground
+  tiles carry no attribute data (`mapItemStateSchema`), so rarity shows
+  only in corpse/container views, inventory, look text, and the market —
+  a tint on dropped map items needs a protocol field. (c) World-decay
+  transforms (`WorldItemDecayRunner`) mint empty attribute bags —
+  deliberate for corpse owner-protection expiry, and no unequipped gear
+  decays today, but a future decaying-equipment type would silently lose
+  its affixes there (carried decay spreads the bag correctly). (d) Rarity
+  items are excluded from supply stash, NPC bulk sales, and generic market
+  buy-offer fills by design; the only sale paths are unique market
+  listings and player trade. (e) Polish: kill/loot announcements could
+  color grades; the bestiary drop-chance palette (green/blue/purple/
+  yellow) overlaps the rarity palette with different semantics; cyclopedia
+  item summary could group by grade. Owner: rarity system (done.md
+  2026-08-05).
+- Pre-existing Pg integration failures (unrelated to rarity, reproduce on
+  a clean tree, 2026-08-05): `PgGuildStore` (3: gold conservation, racing
+  withdrawals, war stake), `PgSocialStores` (3: highscore pages/categories/
+  staff filter), `PgItemStore` clean-sweep ("leaves a carried item alone",
+  duplicate `items_container_slot_key` in test setup). Likely stale rows in
+  the persistent test DB or drifted fixtures; diagnose separately.

@@ -13,5 +13,6 @@ export function toAuctionOffer(
     pricePerItem: entry.unitPrice,
     expiresAt: entry.expiresAt,
     mine: entry.mine,
+    ...(entry.tooltip ? { tooltip: entry.tooltip } : {}),
   };
 }

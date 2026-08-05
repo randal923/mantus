@@ -11,6 +11,7 @@ import type {
 } from "./MarketStore";
 import { averagePricesQuery } from "./sql/averagePricesQuery";
 import { buyOffersForTypeQuery } from "./sql/buyOffersForTypeQuery";
+import { escrowAttributesForOffersQuery } from "./sql/escrowAttributesForOffersQuery";
 import { offerByIdQuery } from "./sql/offerByIdQuery";
 import { marketOpenDataQuery } from "./sql/marketOpenDataQuery";
 import { ownHistoryQuery } from "./sql/ownHistoryQuery";
@@ -75,14 +76,50 @@ export class PgMarketReadOps {
         limitPerSide,
       ]),
     ]);
-    return [...sell.rows, ...buy.rows].map((row) => ({
-      id: row.id,
-      characterId: row.character_id,
-      side: row.side,
-      remainingAmount: row.remaining_amount,
-      unitPrice: parseBalance(row.unit_price),
-      expiresAt: row.expires_at,
-    }));
+    const attributesByOffer = await this.escrowAttributesFor(
+      sell.rows.map((row) => row.id),
+    );
+    return [...sell.rows, ...buy.rows].map((row) => {
+      const attributes = attributesByOffer.get(row.id);
+      return {
+        id: row.id,
+        characterId: row.character_id,
+        side: row.side,
+        remainingAmount: row.remaining_amount,
+        unitPrice: parseBalance(row.unit_price),
+        expiresAt: row.expires_at,
+        ...(attributes ? { attributes } : {}),
+      };
+    });
+  }
+
+  /**
+   * Attribute bags for unique rarity sell offers. An offer with several
+   * escrow rows (bulk pristine stock) never appears here — only amount-1
+   * attributed listings escrow an attributed row.
+   */
+  private async escrowAttributesFor(
+    offerIds: ReadonlyArray<string>,
+  ): Promise<ReadonlyMap<string, Readonly<Record<string, unknown>>>> {
+    if (offerIds.length === 0) return new Map();
+    const result = await this.pool.query<{
+      offer_id: string;
+      attributes: unknown;
+    }>(escrowAttributesForOffersQuery, [offerIds]);
+    const byOffer = new Map<string, Readonly<Record<string, unknown>>>();
+    for (const row of result.rows) {
+      if (
+        typeof row.attributes === "object" &&
+        row.attributes !== null &&
+        !Array.isArray(row.attributes)
+      ) {
+        byOffer.set(
+          row.offer_id,
+          row.attributes as Readonly<Record<string, unknown>>,
+        );
+      }
+    }
+    return byOffer;
   }
 
   async offerById(offerId: string): Promise<MarketOfferSummary | null> {
@@ -115,14 +152,21 @@ export class PgMarketReadOps {
         "id" | "side" | "item_type_id" | "remaining_amount" | "unit_price" | "expires_at"
       >
     >(ownOffersQuery, [characterId, limit]);
-    return result.rows.map((row) => ({
-      id: row.id,
-      side: row.side,
-      itemTypeId: row.item_type_id,
-      remainingAmount: row.remaining_amount,
-      unitPrice: parseBalance(row.unit_price),
-      expiresAt: row.expires_at,
-    }));
+    const attributesByOffer = await this.escrowAttributesFor(
+      result.rows.flatMap((row) => (row.side === "sell" ? [row.id] : [])),
+    );
+    return result.rows.map((row) => {
+      const attributes = attributesByOffer.get(row.id);
+      return {
+        id: row.id,
+        side: row.side,
+        itemTypeId: row.item_type_id,
+        remainingAmount: row.remaining_amount,
+        unitPrice: parseBalance(row.unit_price),
+        expiresAt: row.expires_at,
+        ...(attributes ? { attributes } : {}),
+      };
+    });
   }
 
   async ownHistory(

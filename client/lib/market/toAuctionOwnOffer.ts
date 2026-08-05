@@ -11,5 +11,6 @@ export function toAuctionOwnOffer(entry: MarketOwnOfferEntry): AuctionOwnOffer {
     amount: entry.amount,
     pricePerItem: entry.unitPrice,
     expiresAt: entry.expiresAt,
+    ...(entry.rarity ? { rarity: entry.rarity } : {}),
   };
 }

@@ -29,6 +29,12 @@ export interface ItemType {
   /** Canary stores weight as hundredths of one ounce. */
   readonly weight: number;
   readonly worth?: number;
+  /**
+   * Best gold price an NPC pays for one unit, merged from the pinned shop
+   * content for display (tooltip gold-value row). Never a trade price by
+   * itself — shops quote their own entries.
+   */
+  readonly npcValue?: number;
   readonly equipmentSlot?: EquipmentSlot;
   readonly slotType?: string;
   readonly weaponType?: string;

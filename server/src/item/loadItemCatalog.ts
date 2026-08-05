@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { EQUIPMENT_SLOTS } from "@tibia/protocol";
+import { loadNpcSaleValues } from "../economy/loadNpcSaleValues";
 import { buildCustomItemTypes } from "./custom/buildCustomItemTypes";
 import { CUSTOM_ITEM_TYPES } from "./custom/CUSTOM_ITEM_TYPES";
 import { ItemCatalog } from "./ItemCatalog";
@@ -100,9 +101,10 @@ function parseItem(value: unknown, key: string): ItemType {
 }
 
 export async function loadItemCatalog(): Promise<ItemCatalog> {
-  const [catalogContents, stowableContents] = await Promise.all([
+  const [catalogContents, stowableContents, npcSaleValues] = await Promise.all([
     readFile(CATALOG_PATH, "utf8"),
     readFile(STOWABLE_TYPES_PATH, "utf8"),
+    loadNpcSaleValues(),
   ]);
   const parsed: unknown = JSON.parse(catalogContents);
   if (!isRecord(parsed) || parsed.formatVersion !== 3) {
@@ -148,10 +150,14 @@ export async function loadItemCatalog(): Promise<ItemCatalog> {
       ? { ...parsedItem, stowable: true }
       : parsedItem;
   });
+  const types = applyItemOverrides(
+    [...generated, ...buildCustomItemTypes(generated, CUSTOM_ITEM_TYPES)],
+    ITEM_OVERRIDES,
+  );
   return new ItemCatalog(
-    applyItemOverrides(
-      [...generated, ...buildCustomItemTypes(generated, CUSTOM_ITEM_TYPES)],
-      ITEM_OVERRIDES,
-    ),
+    types.map((type) => {
+      const npcValue = npcSaleValues.get(type.id);
+      return npcValue === undefined ? type : { ...type, npcValue };
+    }),
   );
 }

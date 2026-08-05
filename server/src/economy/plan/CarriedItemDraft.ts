@@ -9,6 +9,7 @@ import type {
 import type { Item } from "../../item/Item";
 import type { ItemCatalog } from "../../item/ItemCatalog";
 import type { ItemMutation } from "../../item/ItemMutation";
+import { itemRarityOf } from "../../rarity/itemRarityOf";
 import {
   backpackContainers,
   type BackpackContainerView,
@@ -311,8 +312,11 @@ export class CarriedItemDraft {
           item.typeId === typeId &&
           item.location.kind !== "equipment" &&
           !parentIds.has(item.id) &&
-          (wanted === undefined ||
-            JSON.stringify(item.attributes) === wanted),
+          (wanted === undefined
+            ? // A bulk sale must never silently vendor a rarity-graded item
+              // at the base price; those leave only via market or trade.
+              itemRarityOf(item) === undefined
+            : JSON.stringify(item.attributes) === wanted),
       )
       .sort((left, right) => left.id.localeCompare(right.id));
   }

@@ -5,6 +5,14 @@ import { parse } from "yaml";
 import { z } from "zod";
 import type { ServerConfig } from "./config";
 import { NO_STAGES } from "./progression/stageRates";
+import {
+  DEFAULT_AFFIX_RANGES,
+  DEFAULT_RARITY_AFFIX_COUNTS,
+  DEFAULT_RARITY_VALUE_MULTIPLIERS,
+  type AffixValueRange,
+} from "./rarity/affixDefinitions";
+import { DISABLED_RARITY_CONFIG } from "./rarity/RarityConfig";
+import type { AffixId } from "./rarity/RolledAffix";
 
 const DEFAULT_CONFIG_PATH = fileURLToPath(
   new URL("../../config.yml", import.meta.url),
@@ -46,6 +54,48 @@ const positiveRateSchema = z
   .positive(`must be greater than 0 and at most ${MAX_RATE}`)
   .max(MAX_RATE, `must be greater than 0 and at most ${MAX_RATE}`);
 const stageLevelSchema = z.number().int().safe().min(0).max(MAX_STAGE_LEVEL);
+
+function perRaritySchema<Schema extends z.ZodTypeAny>(value: Schema) {
+  return z
+    .object({
+      uncommon: value,
+      rare: value,
+      epic: value,
+      legendary: value,
+    })
+    .strict();
+}
+
+/** Yaml `min`/`max` bands to the domain's `minimum`/`maximum` shape. */
+function affixRangesFrom(
+  affixes: Record<
+    AffixId,
+    { min: number; max: number; minimumRarity?: AffixValueRange["minimumRarity"] }
+  >,
+): Readonly<Record<AffixId, AffixValueRange>> {
+  return Object.fromEntries(
+    Object.entries(affixes).map(([id, range]) => [
+      id,
+      {
+        minimum: range.min,
+        maximum: range.max,
+        ...(range.minimumRarity ? { minimumRarity: range.minimumRarity } : {}),
+      },
+    ]),
+  ) as Record<AffixId, AffixValueRange>;
+}
+
+/** One affix's base roll band; `min`/`max` in the yaml, checked min <= max. */
+const affixRangeSchema = z
+  .object({
+    min: z.number().int().min(1).max(100_000),
+    max: z.number().int().min(1).max(100_000),
+    minimumRarity: z.enum(["uncommon", "rare", "epic", "legendary"]).optional(),
+  })
+  .strict()
+  .refine((range) => range.min <= range.max, {
+    message: "min must not exceed max",
+  });
 
 function stageBandIssue(
   row: { minLevel: number; maxLevel?: number },
@@ -154,6 +204,46 @@ const serverConfigFileSchema = z
         bosstiaryKills: positiveIntegerSchema.max(MAX_RATE),
       })
       .strict(),
+    // Rarity drops: per-grade chances (percent of eligible equipment drops,
+    // resolution 0.001%) plus the affix tuning tables. The whole block is
+    // optional (absent = off) and every table falls back to the built-in
+    // defaults, so harness-written configs stay valid.
+    rarity: z
+      .object({
+        chances: z
+          .object({
+            uncommon: z.number().min(0).max(100),
+            rare: z.number().min(0).max(100),
+            epic: z.number().min(0).max(100),
+            legendary: z.number().min(0).max(100),
+          })
+          .strict(),
+        affixCounts: perRaritySchema(
+          z.number().int().min(0).max(12),
+        ).optional(),
+        valueMultipliers: perRaritySchema(
+          z.number().min(0).max(100),
+        ).optional(),
+        affixes: z
+          .object({
+            maxHealth: affixRangeSchema,
+            maxMana: affixRangeSchema,
+            attackSpeed: affixRangeSchema,
+            attack: affixRangeSchema,
+            defense: affixRangeSchema,
+            lifeLeech: affixRangeSchema,
+            manaLeech: affixRangeSchema,
+            critChance: affixRangeSchema,
+            critDamage: affixRangeSchema,
+            skill: affixRangeSchema,
+            magicLevel: affixRangeSchema,
+            resistance: affixRangeSchema,
+          })
+          .strict()
+          .optional(),
+      })
+      .strict()
+      .optional(),
     progression: z
       .object({
         staminaSystem: z.boolean(),
@@ -292,6 +382,19 @@ export async function loadServerConfig(
     moderationRetentionDays: config.moderation.retentionDays,
     combatSeed: config.combat.seed,
     rates: config.rates,
+    rarity: config.rarity
+      ? {
+          chances: config.rarity.chances,
+          affixCounts:
+            config.rarity.affixCounts ?? DEFAULT_RARITY_AFFIX_COUNTS,
+          valueMultipliers:
+            config.rarity.valueMultipliers ??
+            DEFAULT_RARITY_VALUE_MULTIPLIERS,
+          affixes: config.rarity.affixes
+            ? affixRangesFrom(config.rarity.affixes)
+            : DEFAULT_AFFIX_RANGES,
+        }
+      : DISABLED_RARITY_CONFIG,
     progression: {
       staminaSystem: config.progression.staminaSystem,
       // Switching stages off drops the tables here rather than carrying a

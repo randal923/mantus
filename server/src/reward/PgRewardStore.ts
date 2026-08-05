@@ -92,6 +92,7 @@ export class PgRewardStore implements RewardStore {
           randomUUID(),
           item.typeId,
           item.count,
+          JSON.stringify(item.attributes ?? {}),
           bagItemId,
           index,
         ]);

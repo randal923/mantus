@@ -111,6 +111,7 @@ export class CharacterProgression {
   private regeneration: ReturnType<typeof getAccountRegeneration>;
   private wheelModifier: DerivedStatModifier;
   private equipmentModifier: DerivedStatModifier = {};
+  private equipmentAttackSpeedPercent = 0;
   /**
    * Skill and magic-level deltas from equipped gear. Display-only bookkeeping
    * for the character panel: combat re-reads the equipment itself at execution
@@ -144,9 +145,13 @@ export class CharacterProgression {
     },
     now: number,
     wheelModifier: DerivedStatModifier = {},
+    equipmentModifier: DerivedStatModifier = {},
   ) {
     this.currentVocation = vocation;
     this.wheelModifier = wheelModifier;
+    // Seeded at login from the loaded inventory (affix max HP/mana), so the
+    // constructor's health clamp never eats equipment-granted health.
+    this.equipmentModifier = equipmentModifier;
     const definition = getVocation(vocation, definitionVersion);
     this.accountTier = accountTier;
     this.regeneration = getAccountRegeneration(
@@ -366,10 +371,33 @@ export class CharacterProgression {
   }
 
   get attackSpeedMs(): number {
-    return getVocation(
+    const base = getVocation(
       this.vocation,
       this.definitionVersion,
     ).attackSpeedMs;
+    if (this.equipmentAttackSpeedPercent <= 0) return base;
+    // Equipment affixes shorten the swing; the floor keeps stacked rolls
+    // from ever halving the vocation base.
+    return Math.max(
+      Math.round(base / 2),
+      Math.round(base * (1 - this.equipmentAttackSpeedPercent / 100)),
+    );
+  }
+
+  /** Display-only companion to `attackSpeedMs`: the equipment delta in ms. */
+  get equipmentAttackSpeedBonusMs(): number {
+    return (
+      this.attackSpeedMs -
+      getVocation(this.vocation, this.definitionVersion).attackSpeedMs
+    );
+  }
+
+  /** Returns whether the stored percent actually changed. */
+  setEquipmentAttackSpeedPercent(percent: number): boolean {
+    const clamped = Math.max(0, percent);
+    if (clamped === this.equipmentAttackSpeedPercent) return false;
+    this.equipmentAttackSpeedPercent = clamped;
+    return true;
   }
 
   get sessionProgressionEvents(): ReadonlyArray<ProgressionEvent> {
@@ -867,6 +895,17 @@ export class CharacterProgression {
       maxMana: withEquipment.maxMana - without.maxMana,
       capacity: withEquipment.capacity - without.capacity,
       speed: withEquipment.speed - without.speed,
+    };
+  }
+
+  /** Equipment contribution to max stats, for save-snapshot checks. */
+  get equipmentMaxStatModifier(): {
+    readonly maxHealth: number;
+    readonly maxMana: number;
+  } {
+    return {
+      maxHealth: this.equipmentModifier.maxHealth ?? 0,
+      maxMana: this.equipmentModifier.maxMana ?? 0,
     };
   }
 

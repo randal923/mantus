@@ -13,7 +13,7 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-08-03
+**Last updated:** 2026-08-05
 
 ## World & engine
 
@@ -35,14 +35,15 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Bank (45)                                                                            | ✅     | ✅     | Memory-first deposit/withdraw (2026-07-30); balance in the top-bar wallet counter (2026-08-01); `change gold`/`change platinum` conversions; six gold sinks still charge the bank without reporting the new balance (`TODO.md`) |
 | Depot, inbox, mail, supply stash (11c)                                               | ✅     | ✅     | Carried pane lists nested-backpack contents (2026-08-01); mailbox still mails top-level items only (`TODO.md`) |
 | Player trade (48)                                                                    | ✅     | ✅     | Ground-item offers; store/unique/house-tile restrictions (wait on 43/78/houses)                               |
-| Market with escrow (49)                                                              | ✅     | ✅     | Full-catalog browser (asset pass 108), pristineness extensions, expiry decision; selection retention (client) |
+| Market with escrow (49)                                                              | ✅     | ✅     | Unique rarity-item listings with per-offer tooltips shipped 2026-08-05 (graded sales stay out of the price average); full-catalog browser (asset pass 108), expiry decision; selection retention (client) |
+| Item rarity & affixes (2026-08-05)                                                   | ✅     | ✅     | Grades on equipable drops (config chances), 12-affix pool wired into combat/progression, tinted tooltip, market listings, NPC bulk-sell guard; affix leech is auto-attack-only, ground tiles show no rarity, loot announce/bestiary palette polish (TODO.md) |
 | Mantus Store: full Canary catalog (43)                                               | ✅     | ✅     | 631 products/670 offers incl. house furniture/decorations/upgrades as decoration kits (exercise dummies purchasable, unwrap on owned house tiles) shipped 2026-07-29; full-height catalog + purchase dialog shipped 2026-08-02 (integration tests unrun — no DB); store-exclusive epic/legendary exercise weapons (5x training, own icon aura) replaced the stock exercise shelf + store blurb on the home page 2026-08-02; payment provider, coin transfers, history tab (client), kit wrap-back still open |
 
 ## Progression & combat
 
 | System (features)                                                                          | Server | Client | Still missing                                                                                                                                                                                      |
 | ------------------------------------------------------------------------------------------ | ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Vocations, stats, progression, promotion, Monk (18–20)                                     | ✅     | ✅     | No level cap — experience is bigint end to end and the DB carries no upper bounds, matching Canary (2026-08-03); Character Details shows equipment bonuses with a base+equipment hover, and item `speed` finally reaches walk speed; equipment still cannot move regeneration, attack speed, or the XP rate (TODO.md) |
+| Vocations, stats, progression, promotion, Monk (18–20)                                     | ✅     | ✅     | No level cap — experience is bigint end to end and the DB carries no upper bounds, matching Canary (2026-08-03); Character Details shows equipment bonuses with a base+equipment hover, and item `speed` finally reaches walk speed; attack-speed affixes reach the swing timer since 2026-08-05; equipment still cannot move regeneration or the XP rate (TODO.md) |
 | Combat core, conditions, potions, all 171 monster spells, action bars, spell words (22–28) | ✅     | ✅     | 56 disabled player spells: Monk harmony unit + 2 conditions + 17 field/wall runes + mass heals (24), house words (109), exiva (65), familiars' 5 (85); revelation actives incl. Divine Empowerment shipped 2026-08-03 |
 | Monster death, loot rolls, corpses, quick-loot sweep, auto-loot filter (29–31)             | ✅     | ✅     | Child loot containers, `unique` flag, loot subType, reward-boss rules, 175 death callbacks; auto-loot ✅ (2026-07-30) needs one-tile reach and has no per-category container routing                |
 | Player death penalty — full Canary formula (32)                                            | ◐      | ✅     | Blessing consumption + item/container drop into player corpse (needs 72)                                                                                                                           |

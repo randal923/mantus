@@ -4,6 +4,7 @@ import type { MapAction } from "./MapAction";
 import type { MapItem } from "./MapItem";
 import type { MapTransition } from "./MapTransition";
 import type { StageTables } from "./progression/stageRates";
+import type { RarityConfig } from "./rarity/RarityConfig";
 import type { MapCleanupConfig } from "./world/MapCleanupService";
 
 export type MapConfig =
@@ -74,6 +75,8 @@ export interface ServerConfig {
     bestiaryKills: number;
     bosstiaryKills: number;
   };
+  /** Rarity drop chances plus the affix tuning tables; disabled = zero chances. */
+  rarity: RarityConfig;
   progression: {
     staminaSystem: boolean;
     /**

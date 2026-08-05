@@ -121,8 +121,9 @@ export function projectOwnProgression(
       maxMana: equipmentStats.maxMana,
       capacity: equipmentStats.capacity,
       speed: equipmentStats.speed,
-      // No item or imbuement moves attack speed yet; it stays vocation-only.
-      attackSpeedMs: 0,
+      // Negative when attack-speed affixes shorten the swing (ms delta from
+      // the vocation base).
+      attackSpeedMs: progression.equipmentAttackSpeedBonusMs,
     },
   };
 }

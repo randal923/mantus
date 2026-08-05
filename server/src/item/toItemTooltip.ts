@@ -1,6 +1,9 @@
 import type { ItemTooltipData } from "@tibia/protocol";
 import { itemImbuementsOf } from "../forge/itemImbuementsOf";
 import { itemTierOf } from "../forge/itemTierOf";
+import { formatAffixText } from "../rarity/formatAffixText";
+import { itemAffixesOf } from "../rarity/itemAffixesOf";
+import { itemRarityOf } from "../rarity/itemRarityOf";
 import { chargesOf } from "./chargesOf";
 import type { Item } from "./Item";
 import type { ItemType } from "./ItemType";
@@ -38,6 +41,11 @@ export function toItemTooltip(
   }
 
   const affixes: ItemTooltipData["affixes"] = [];
+  // Rolled rarity affixes lead the list; they are the lines a drop is
+  // opened for.
+  for (const affix of instance ? itemAffixesOf(instance) : []) {
+    affixes.push({ text: formatAffixText(affix), kind: "rolled" });
+  }
   if (item.extraDefense !== undefined) {
     affixes.push({ text: `Extra Defense ${signed(item.extraDefense)}` });
   }
@@ -57,8 +65,21 @@ export function toItemTooltip(
   if (item.breakChance !== undefined) {
     affixes.push({ text: `Break Chance ${item.breakChance}%` });
   }
-  if (item.imbuementSlots !== undefined) {
-    affixes.push({ text: `Imbuement Slots ${item.imbuementSlots}` });
+  if (item.imbuementSlots !== undefined && item.imbuementSlots > 0) {
+    // One Canary-style line naming every slot: running imbuements show their
+    // label and time left, the rest read "Empty Slot".
+    const running = instance ? itemImbuementsOf(instance) : [];
+    const slots = Array.from({ length: item.imbuementSlots }, (_, slot) => {
+      const entry = running.find((imbuement) => imbuement.slot === slot);
+      if (!entry) return "Empty Slot";
+      const hours = Math.floor(entry.remainingSeconds / 3_600);
+      const minutes = Math.floor((entry.remainingSeconds % 3_600) / 60);
+      return `${entry.name ?? "Imbuement"} ${hours}:${String(minutes).padStart(2, "0")}h`;
+    });
+    affixes.push({
+      text: `Imbuements: (${slots.join(", ")})`,
+      kind: "imbuement",
+    });
   }
   for (const [type, damage] of Object.entries(item.elementDamage ?? {})) {
     affixes.push({ text: `${titleCase(type)} Damage ${signed(damage)}` });
@@ -101,22 +122,13 @@ export function toItemTooltip(
       text: `Classification: ${item.classification} Tier: ${tier}`,
     });
   }
-  if (instance) {
-    for (const imbuement of itemImbuementsOf(instance)) {
-      const hours = Math.floor(imbuement.remainingSeconds / 3_600);
-      const minutes = Math.floor((imbuement.remainingSeconds % 3_600) / 60);
-      affixes.push({
-        text: `${imbuement.name ?? "Imbuement"} ${hours}:${String(
-          minutes,
-        ).padStart(2, "0")}h`,
-      });
-    }
-  }
+  const rarity = instance ? itemRarityOf(instance) : undefined;
 
   return {
     name: titleCase(item.name),
     typeLine: titleCase(itemTypeLine(item)),
     spriteId: item.spriteId,
+    ...(rarity ? { rarity } : {}),
     ...(headline.length > 0 ? { primaryStat: headline.join(" · ") } : {}),
     affixes,
     ...(item.requirements?.level
@@ -140,6 +152,12 @@ export function toItemTooltip(
       : {}),
     ...(item.containerCapacity !== undefined
       ? { containerCapacity: item.containerCapacity }
+      : {}),
+    ...(item.npcValue !== undefined && item.npcValue > 0
+      ? { worth: item.npcValue }
+      : {}),
+    ...(item.imbuementSlots !== undefined
+      ? { imbuementSlots: item.imbuementSlots }
       : {}),
   };
 }

@@ -334,6 +334,10 @@ export function GameCommerceOverlays() {
               : []
           }
           goldBalance={marketSession.balance}
+          attributedItems={marketItemOffers?.ownAttributedItems.map((entry) => ({
+            itemId: entry.itemId,
+            tooltip: entry.tooltip,
+          }))}
           selectedItemId={marketSelectedItem}
           ownOffers={marketSession.ownOffers.map(toAuctionOwnOffer)}
           history={marketSession.history.map(toAuctionHistoryEntry)}
@@ -378,6 +382,7 @@ export function GameCommerceOverlays() {
                       itemTypeId,
                       intent.amount,
                       intent.pricePerItem,
+                      intent.specificItemId,
                     ) ?? false;
                   sessionActions.market.begin(sent);
                 }

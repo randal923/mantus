@@ -26,10 +26,8 @@ function makeItem(input: {
       name: input.name,
       typeLine: "Armors",
       spriteId: 1652,
-      affixes:
-        input.slots > 0
-          ? [{ text: `Imbuement Slots ${input.slots}` }]
-          : [],
+      affixes: [],
+      ...(input.slots > 0 ? { imbuementSlots: input.slots } : {}),
       weight: 100,
     },
   };

@@ -218,6 +218,7 @@ export class PgItemPersistOps {
         audit.eventId,
         audit.typeId,
         audit.count,
+        audit.rarity ?? null,
       ]);
       return;
     }

@@ -10,11 +10,14 @@ import type {
   MarketOwnOfferEntry,
   MarketOwnOffersStateMessage,
   MarketTransactedMessage,
+  MarketAttributedItem,
 } from "@tibia/protocol";
 
 export interface MarketItemOffers {
   readonly itemTypeId: number;
   readonly offers: ReadonlyArray<MarketOfferEntry>;
+  /** The viewer's own listable rarity items of this type. */
+  readonly ownAttributedItems: ReadonlyArray<MarketAttributedItem>;
 }
 
 export interface MarketSessionState {
@@ -92,6 +95,7 @@ export function useMarketSession(): MarketSession {
             itemOffers: {
               itemTypeId: message.itemTypeId,
               offers: message.offers,
+              ownAttributedItems: message.ownAttributedItems ?? [],
             },
             error: null,
           }

@@ -4,6 +4,13 @@ import { SpriteIcon } from "../inventory/SpriteIcon";
 import { Button } from "../ui/Button";
 import type { AuctionHistoryEntry, AuctionOwnOffer } from "./auctionTypes";
 
+const RARITY_NAME_TEXT = {
+  uncommon: "text-rarity-uncommon",
+  rare: "text-rarity-rare",
+  epic: "text-rarity-epic",
+  legendary: "text-rarity-legendary",
+} as const;
+
 interface AuctionMyOffersProps {
   ownOffers: ReadonlyArray<AuctionOwnOffer>;
   history: ReadonlyArray<AuctionHistoryEntry>;
@@ -85,7 +92,13 @@ export function AuctionMyOffers({
                         <td className="px-3 py-2.5">
                           <span className="flex items-center gap-2">
                             <SpriteIcon spriteId={offer.spriteId} scale={0.9} />
-                            <span className="max-w-40 truncate font-semibold text-ui-text-bright">
+                            <span
+                              className={`max-w-40 truncate font-semibold ${
+                                offer.rarity
+                                  ? RARITY_NAME_TEXT[offer.rarity]
+                                  : "text-ui-text-bright"
+                              }`}
+                            >
                               {offer.name}
                             </span>
                           </span>

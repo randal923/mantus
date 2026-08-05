@@ -88,7 +88,10 @@ export async function startPlaytestServer(
 function writeParityConfig(): string {
   const config = parse(
     readFileSync(join(serverRoot, "../config.yml"), "utf8"),
-  ) as { rates?: Record<string, number> };
+  ) as {
+    rates?: Record<string, number>;
+    rarity?: unknown;
+  };
   config.rates = {
     ...config.rates,
     experience: 1,
@@ -98,6 +101,9 @@ function writeParityConfig(): string {
     bestiaryKills: 1,
     bosstiaryKills: 1,
   };
+  // Parity scenarios compare fixed loot expectations; a surprise rarity roll
+  // would shift both drop contents and combat numbers.
+  delete config.rarity;
   const directory = mkdtempSync(join(tmpdir(), "tibia-playtest-"));
   const path = join(directory, "config.yml");
   writeFileSync(path, stringify(config));

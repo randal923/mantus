@@ -116,6 +116,8 @@ export type CarriedPersistAudit =
       readonly killerCharacterId: string | null;
       readonly typeId: number;
       readonly count: number;
+      /** Rarity grade rolled at drop time; absent on common loot. */
+      readonly rarity?: string;
     };
 
 /**

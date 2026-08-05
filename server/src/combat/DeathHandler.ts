@@ -9,6 +9,7 @@ import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PartyHooks } from "../party/PartyHooks";
 import { Player } from "../Player";
 import type { PreyHooks } from "../prey/PreyHooks";
+import type { RarityConfig } from "../rarity/RarityConfig";
 import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import { type StageRow, getStageRate } from "../progression/stageRates";
 import type { PvpHooks } from "../pvp/PvpHooks";
@@ -53,6 +54,7 @@ export class DeathHandler {
     private readonly dailyHooks?: {
       xpBoostPercent(recipientId: string, nowMs: number): number;
     },
+    private readonly rarityConfig?: RarityConfig,
   ) {}
 
   handleDeath(
@@ -137,6 +139,7 @@ export class DeathHandler {
         this.lootRate,
         this.preyHooks,
         this.boostedHooks,
+        this.rarityConfig,
       );
       // Auto-loot sweeps the corpse for the killer in this same tick, before
       // any other intent can touch it. Reach, ownership and the blacklist are

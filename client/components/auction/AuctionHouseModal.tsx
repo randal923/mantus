@@ -10,6 +10,7 @@ import { AuctionMyOffers } from "./AuctionMyOffers";
 import { AuctionOrderBook } from "./AuctionOrderBook";
 import { AuctionOrderTicket } from "./AuctionOrderTicket";
 import type {
+  AuctionAttributedItem,
   AuctionHistoryEntry,
   AuctionHouseItem,
   AuctionItemCategory,
@@ -33,6 +34,8 @@ const TAB_LABEL_KEYS: Record<AuctionHouseTab, string> = {
 interface AuctionHouseModalProps {
   items: ReadonlyArray<AuctionHouseItem>;
   offers: ReadonlyArray<AuctionOffer>;
+  /** The viewer's own listable rarity items of the browsed type. */
+  attributedItems?: ReadonlyArray<AuctionAttributedItem>;
   goldBalance: number;
   initialItemId?: string;
   /**
@@ -55,6 +58,7 @@ interface AuctionHouseModalProps {
 export function AuctionHouseModal({
   items,
   offers,
+  attributedItems,
   goldBalance,
   initialItemId,
   selectedItemId,
@@ -243,6 +247,7 @@ export function AuctionHouseModal({
               key={selectedItem?.id ?? "no-selected-item"}
               item={selectedItem}
               goldBalance={goldBalance}
+              attributedItems={attributedItems}
               onCreateOrder={onCreateOrder}
             />
           </div>

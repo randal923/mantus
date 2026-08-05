@@ -1523,4 +1523,143 @@ databaseDescribe("PgMarketStore integration", () => {
       expect(await systemGoldTotal()).toBe(goldBefore);
     });
   });
+
+  describe("unique rarity listings", () => {
+    const EPIC_ATTRIBUTES = {
+      rarity: "epic",
+      affixes: [
+        { id: "maxHealth", value: 40 },
+        { id: "resistance", value: 6, element: "fire" },
+      ],
+    };
+
+    const insertAttributedHelmet = async (): Promise<string> => {
+      const id = randomUUID();
+      await pool.query(
+        `INSERT INTO items (
+           id, item_type_id, count, attributes, location_type, character_id,
+           slot_index, depot_id
+         ) VALUES ($1, $2, 1, $3::jsonb, 'depot', $4, 0, $5)`,
+        [id, HELMET_TYPE, JSON.stringify(EPIC_ATTRIBUTES), sellerId, DEPOT_ID],
+      );
+      return id;
+    };
+
+    const attributedSellRequest = (itemId: string) =>
+      sellRequest(sellerId, HELMET_TYPE, 1, 5_000, {
+        sources: [{ itemId, itemRevision: 1, take: 1 }],
+        attributed: true,
+      });
+
+    it("lists, browses, and delivers the exact item with its attributes", async () => {
+      const itemId = await insertAttributedHelmet();
+      await setBalance(sellerId, 1_000);
+
+      const created = await store.createSellOffer(
+        await attributedSellRequest(itemId),
+      );
+      expect(created.status).toBe("committed");
+      if (created.status !== "committed") return;
+
+      const offers = await store.offersForType(HELMET_TYPE, 10);
+      expect(offers).toHaveLength(1);
+      expect(offers[0]?.attributes).toEqual(EPIC_ATTRIBUTES);
+
+      await setBalance(buyerId, 60_000);
+      const accepted = await store.acceptSellOffer({
+        requestId: randomUUID(),
+        offerId: created.offerId,
+        buyerCharacterId: buyerId,
+        amount: 1,
+      });
+      expect(accepted.status).toBe("committed");
+      const delivered = await pool.query<{ attributes: unknown }>(
+        `SELECT attributes FROM items
+         WHERE id = $1 AND location_type = 'inbox' AND character_id = $2`,
+        [itemId, buyerId],
+      );
+      expect(delivered.rows[0]?.attributes).toEqual(EPIC_ATTRIBUTES);
+
+      // The graded sale stays out of the plain per-type price average.
+      const history = await pool.query<{ rarity: string | null }>(
+        `SELECT rarity FROM market_history WHERE state = 'accepted'`,
+      );
+      expect(history.rows).toHaveLength(2);
+      expect(history.rows.every((row) => row.rarity === "epic")).toBe(true);
+      const averages = await store.averagePrices([HELMET_TYPE]);
+      expect(averages.get(HELMET_TYPE)).toBeUndefined();
+    });
+
+    it("cancel returns the item to the owner with its attributes intact", async () => {
+      const itemId = await insertAttributedHelmet();
+      await setBalance(sellerId, 1_000);
+      const created = await store.createSellOffer(
+        await attributedSellRequest(itemId),
+      );
+      expect(created.status).toBe("committed");
+      if (created.status !== "committed") return;
+
+      const cancelled = await store.cancelOffer({
+        requestId: randomUUID(),
+        characterId: sellerId,
+        offerId: created.offerId,
+      });
+      expect(cancelled.status).toBe("committed");
+      const returned = await pool.query<{ attributes: unknown }>(
+        `SELECT attributes FROM items
+         WHERE id = $1 AND location_type = 'inbox' AND character_id = $2`,
+        [itemId, sellerId],
+      );
+      expect(returned.rows[0]?.attributes).toEqual(EPIC_ATTRIBUTES);
+    });
+
+    it("the bulk pristine path still rejects an attributed item", async () => {
+      const itemId = await insertAttributedHelmet();
+      await setBalance(sellerId, 1_000);
+
+      const result = await store.createSellOffer(
+        await sellRequest(sellerId, HELMET_TYPE, 1, 5_000, {
+          sources: [{ itemId, itemRevision: 1, take: 1 }],
+        }),
+      );
+      expect(result.status).toBe("invalid-item");
+      expect(await offerRows()).toHaveLength(0);
+    });
+
+    it("an attributed listing requires an actual rarity grade", async () => {
+      const itemId = await insertDepotItem(sellerId, HELMET_TYPE, 1, 0);
+      await setBalance(sellerId, 1_000);
+
+      const result = await store.createSellOffer(
+        await attributedSellRequest(itemId),
+      );
+      expect(result.status).toBe("invalid-item");
+      expect(await offerRows()).toHaveLength(0);
+    });
+
+    it("an attributed item can never fill a generic buy offer", async () => {
+      const itemId = await insertAttributedHelmet();
+      await setBalance(buyerId, 60_000);
+      const buy = await store.createBuyOffer(
+        buyRequest(buyerId, HELMET_TYPE, 1, 5_000),
+      );
+      expect(buy.status).toBe("committed");
+      if (buy.status !== "committed") return;
+
+      const result = await store.acceptBuyOffer({
+        requestId: randomUUID(),
+        offerId: buy.offerId,
+        sellerCharacterId: sellerId,
+        amount: 1,
+        sources: [{ itemId, itemRevision: 1, take: 1 }],
+        stashTake: 0,
+      });
+      expect(result.status).toBe("invalid-item");
+      const untouched = await pool.query<{ location_type: string }>(
+        `SELECT location_type FROM items WHERE id = $1`,
+        [itemId],
+      );
+      expect(untouched.rows[0]?.location_type).toBe("depot");
+    });
+  });
 });

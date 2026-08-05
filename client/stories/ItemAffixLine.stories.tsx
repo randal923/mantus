@@ -45,3 +45,18 @@ export const Multiple: Story = {
     </>
   ),
 };
+
+export const Rolled: Story = {
+  args: {
+    affix: { text: "+40 Maximum Health", kind: "rolled" },
+  },
+};
+
+export const Imbuement: Story = {
+  args: {
+    affix: {
+      text: "Imbuements: (Powerful Scorch 19:58h, Empty Slot)",
+      kind: "imbuement",
+    },
+  },
+};

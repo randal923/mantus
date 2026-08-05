@@ -273,7 +273,35 @@ export function InventoryCharacterStats({
               value={t("characterStats.seconds", {
                 seconds: character.attackSpeedMs / 1_000,
               })}
-              bonus={bonuses.attackSpeedMs}
+              // A negative ms delta is a faster swing, so the tint flips sign.
+              bonus={-bonuses.attackSpeedMs}
+              tooltip={
+                bonuses.attackSpeedMs === 0 ? undefined : (
+                  <StatBreakdown
+                    terms={[
+                      {
+                        label: t("characterStats.base"),
+                        value: t("characterStats.seconds", {
+                          seconds:
+                            (character.attackSpeedMs -
+                              bonuses.attackSpeedMs) /
+                            1_000,
+                        }),
+                      },
+                      {
+                        label: t("characterStats.equipment"),
+                        value: t("characterStats.seconds", {
+                          seconds: bonuses.attackSpeedMs / 1_000,
+                        }),
+                      },
+                    ]}
+                    totalLabel={t("stats.attackSpeed")}
+                    totalValue={t("characterStats.seconds", {
+                      seconds: character.attackSpeedMs / 1_000,
+                    })}
+                  />
+                )
+              }
             />
             <StatDetailRow
               label={t("stats.experienceRate")}

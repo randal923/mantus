@@ -120,4 +120,9 @@ export interface CharacterSaveSnapshot {
     readonly maxMana: number;
     readonly capacity: number;
   };
+  /** Equipment-affix contribution to max stats at snapshot time. */
+  readonly equipmentBonus?: {
+    readonly maxHealth: number;
+    readonly maxMana: number;
+  };
 }

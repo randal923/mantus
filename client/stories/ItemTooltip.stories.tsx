@@ -65,3 +65,19 @@ export const Ring: Story = {
 export const Amulet: Story = {
   args: { item: TIBIA_TOOLTIP_ITEMS.amulet },
 };
+
+export const Uncommon: Story = {
+  args: { item: TIBIA_TOOLTIP_ITEMS.uncommonWand },
+};
+
+export const Rare: Story = {
+  args: { item: TIBIA_TOOLTIP_ITEMS.rareSword },
+};
+
+export const Epic: Story = {
+  args: { item: TIBIA_TOOLTIP_ITEMS.epicArmor },
+};
+
+export const Legendary: Story = {
+  args: { item: TIBIA_TOOLTIP_ITEMS.legendaryHelmet },
+};

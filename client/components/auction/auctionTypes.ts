@@ -1,3 +1,5 @@
+import type { ItemRarity, ItemTooltipData } from "@tibia/protocol";
+
 export type AuctionItemCategory =
   | "weapons"
   | "armor"
@@ -28,6 +30,14 @@ export interface AuctionOffer {
   expiresAt: string;
   /** True when the viewing character created this offer. */
   mine?: boolean;
+  /** Present on unique rarity-item sell offers: the escrowed item's tooltip. */
+  tooltip?: ItemTooltipData;
+}
+
+/** One of the viewer's own depot rarity items, listable as a unique offer. */
+export interface AuctionAttributedItem {
+  itemId: string;
+  tooltip: ItemTooltipData;
 }
 
 export interface AuctionOwnOffer {
@@ -39,6 +49,8 @@ export interface AuctionOwnOffer {
   amount: number;
   pricePerItem: number;
   expiresAt: string;
+  /** Grade of the escrowed rarity item on a unique sell offer. */
+  rarity?: ItemRarity;
 }
 
 export type AuctionHistoryState = "accepted" | "cancelled" | "expired";
@@ -64,4 +76,6 @@ export interface AuctionOrderIntent {
   side: AuctionOfferSide;
   amount: number;
   pricePerItem: number;
+  /** Lists this exact rarity item as a unique amount-1 sell offer. */
+  specificItemId?: string;
 }

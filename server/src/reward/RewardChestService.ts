@@ -21,6 +21,7 @@ import type { RewardHooks } from "./RewardHooks";
 import { rollBossRewardLoot, type BossRewardRoll } from "./rollBossRewardLoot";
 import type { RewardChestSnapshot, RewardStore } from "./RewardStore";
 import { ResolvedOutcomes } from "../ResolvedOutcomes";
+import type { RarityConfig } from "../rarity/RarityConfig";
 
 /** Canary ITEM_REWARD_CHEST (utils_definitions.hpp:610). */
 const REWARD_CHEST_ITEM_ID = 19_250;
@@ -60,6 +61,7 @@ export class RewardChestService implements RewardHooks {
     seed: number,
     private readonly lootRate = 1,
     private readonly store?: RewardStore,
+    private readonly rarityConfig?: RarityConfig,
   ) {
     this.formula = new CombatFormula(seed ^ 0x52e3_7a1d);
   }
@@ -124,6 +126,7 @@ export class RewardChestService implements RewardHooks {
         equipmentOnly: false,
         capacity: REWARD_LIMITS.maxItemsPerBag,
         roll,
+        rarityConfig: this.rarityConfig,
       });
       for (let extra = 2; extra <= rolls; extra++) {
         loot.push(
@@ -135,6 +138,7 @@ export class RewardChestService implements RewardHooks {
             equipmentOnly: true,
             capacity: REWARD_LIMITS.maxItemsPerBag - loot.length,
             roll,
+            rarityConfig: this.rarityConfig,
           }),
         );
       }

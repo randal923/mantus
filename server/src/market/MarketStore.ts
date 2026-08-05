@@ -22,6 +22,8 @@ export interface MarketOfferView {
   readonly remainingAmount: number;
   readonly unitPrice: number;
   readonly expiresAt: Date;
+  /** Escrowed item's attribute bag on a unique rarity sell offer. */
+  readonly attributes?: Readonly<Record<string, unknown>>;
 }
 
 export interface MarketOpenData {
@@ -37,6 +39,8 @@ export interface MarketOwnOfferRecord {
   readonly remainingAmount: number;
   readonly unitPrice: number;
   readonly expiresAt: Date;
+  /** Escrowed item's attribute bag on a unique rarity sell offer. */
+  readonly attributes?: Readonly<Record<string, unknown>>;
 }
 
 export interface MarketOwnHistoryRecord {
@@ -66,6 +70,12 @@ export interface CreateSellOfferRequest {
   readonly sources: ReadonlyArray<EscrowSource>;
   /** Units drawn from the supply stash once `sources` run out. */
   readonly stashTake: number;
+  /**
+   * A unique amount-1 listing of one rarity item: the single source row must
+   * carry a valid rarity grade instead of being pristine, and is escrowed
+   * whole (never split).
+   */
+  readonly attributed?: boolean;
 }
 
 export interface CreateBuyOfferRequest {

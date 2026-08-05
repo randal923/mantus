@@ -1,6 +1,8 @@
 import type { MonsterLoot } from "../creature/MonsterType";
 import type { ItemType } from "../item/ItemType";
 import type { LootItemCreation } from "../item/LootItemCreation";
+import type { RarityConfig } from "../rarity/RarityConfig";
+import { rollRarityAttributes } from "../rarity/rollRarityAttributes";
 
 /** Canary's `MAX_LOOTCHANCE`: loot chances are per hundred thousand. */
 const MAX_LOOT_CHANCE = 100_000;
@@ -29,6 +31,7 @@ export function rollMonsterLoot(
   capacity: number,
   lootRate: number,
   roll: MonsterLootRoll,
+  rarityConfig?: RarityConfig,
 ): LootItemCreation[] {
   const loot: LootItemCreation[] = [];
   if (capacity < 1) return loot;
@@ -46,7 +49,12 @@ export function rollMonsterLoot(
           Math.min(entry.maxCount, type.maxCount),
         )
       : 1;
-    loot.push({ typeId: type.id, count });
+    // With all-zero chances this draws no RNG, keeping seeded parity runs
+    // byte-identical to a build without rarity.
+    const attributes = rarityConfig
+      ? rollRarityAttributes(type, roll, rarityConfig)
+      : undefined;
+    loot.push({ typeId: type.id, count, ...(attributes ? { attributes } : {}) });
     if (loot.length >= capacity) break;
   }
   return loot;

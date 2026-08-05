@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BANK_LIMITS } from "./bank";
+import { itemRaritySchema, itemTooltipSchema } from "./item";
 
 export const MARKET_LIMITS = {
   /** Fee is 2% of the total price, clamped to [feeMinimum, feeMaximum]. */
@@ -85,6 +86,12 @@ export const marketCreateOfferMessageSchema = z
     itemTypeId: itemTypeIdSchema,
     amount: marketAmountSchema,
     unitPrice: marketUnitPriceSchema,
+    /**
+     * Lists one specific rarity item from the seller's depot as a unique
+     * amount-1 sell offer. Sell-only; the server re-validates ownership,
+     * location, type and rarity at execution time.
+     */
+    itemId: z.string().uuid().optional(),
   })
   .strict();
 
@@ -160,6 +167,20 @@ export const marketOfferEntrySchema = z
     expiresAt: z.string().datetime(),
     /** True only for the receiving character's own offers; no names leak. */
     mine: z.boolean(),
+    /**
+     * Present on unique rarity-item sell offers: the escrowed item's own
+     * tooltip (grade, affixes, imbuements), composed server-side from the
+     * escrow row. Carries no owner information.
+     */
+    tooltip: itemTooltipSchema.optional(),
+  })
+  .strict();
+
+/** One of the browsing player's own listable rarity items of the type. */
+export const marketAttributedItemSchema = z
+  .object({
+    itemId: z.string().uuid(),
+    tooltip: itemTooltipSchema,
   })
   .strict();
 
@@ -170,6 +191,14 @@ export const marketOffersMessageSchema = z
     offers: z
       .array(marketOfferEntrySchema)
       .max(2 * MARKET_LIMITS.maxOffersPerSide),
+    /**
+     * The browsing player's own rarity items of this type sitting in the
+     * depot, so the sell ticket can offer "list this specific item".
+     */
+    ownAttributedItems: z
+      .array(marketAttributedItemSchema)
+      .max(50)
+      .optional(),
   })
   .strict();
 
@@ -183,6 +212,8 @@ export const marketOwnOfferEntrySchema = z
     amount: marketAmountSchema,
     unitPrice: marketUnitPriceSchema,
     expiresAt: z.string().datetime(),
+    /** Grade of the escrowed rarity item on a unique sell offer. */
+    rarity: itemRaritySchema.optional(),
   })
   .strict();
 
@@ -278,6 +309,7 @@ export type MarketOwnHistoryMessage = z.infer<
   typeof marketOwnHistoryMessageSchema
 >;
 export type MarketItemEntry = z.infer<typeof marketItemEntrySchema>;
+export type MarketAttributedItem = z.infer<typeof marketAttributedItemSchema>;
 export type MarketOpenedMessage = z.infer<typeof marketOpenedMessageSchema>;
 export type MarketOfferEntry = z.infer<typeof marketOfferEntrySchema>;
 export type MarketOffersMessage = z.infer<typeof marketOffersMessageSchema>;

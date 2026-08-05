@@ -159,17 +159,26 @@ export class ProgressionSystem {
    */
   private syncEquipmentStats(player: Player): boolean {
     const effects = this.items.imbuementEffects(player.id);
+    const affixes = this.items.affixEffects(player.id);
     const equipment = this.items.combatEquipment(player.id);
-    const bonuses = playerEquipmentBonuses(equipment, effects);
+    const bonuses = playerEquipmentBonuses(equipment, effects, affixes);
     const statsChanged = player.progression.setEquipmentModifier({
       speed: bonuses.speed,
       capacityPercentOfBase: effects.capacityPercent,
+      maxHealth: affixes.maxHealth,
+      maxMana: affixes.maxMana,
     });
+    const attackSpeedChanged = player.progression.setEquipmentAttackSpeedPercent(
+      affixes.attackSpeedPercent,
+    );
+    // progression.maxHealth is not player.maxHealth: the creature carries its
+    // own max (the health bar's clamp), refreshed the way setWheelBonuses does.
+    if (statsChanged) player.setMaxHealth(player.progression.maxHealth);
     const skillsChanged = player.progression.setEquipmentSkillBonuses({
       skills: bonuses.skills,
       magicLevel: bonuses.magicLevel,
     });
-    if (!statsChanged) return skillsChanged;
+    if (!statsChanged) return skillsChanged || attackSpeedChanged;
     const inventory = this.items.updateCapacity(player.id, player.capacity);
     if (inventory) {
       this.registry.sessionFor(player.id)?.send({

@@ -1085,6 +1085,7 @@ export class GameServer {
       config.combatSeed,
       config.rates.loot,
       deps.rewards,
+      config.rarity,
     );
     this.combatSystem = new Combat(
       this.world,
@@ -1147,6 +1148,7 @@ export class GameServer {
         xpBoostPercent: (recipientId, nowMs) =>
           this.daily.xpBoostPercent(recipientId, nowMs),
       },
+      config.rarity,
     );
     this.combat = new CombatIntentHandler(
       this.combatSystem,

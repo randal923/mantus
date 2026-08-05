@@ -75,6 +75,7 @@ import { selectAutoTarget } from "../huntingBot/selectAutoTarget";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
 import { drainDue } from "../drainDue";
+import type { RarityConfig } from "../rarity/RarityConfig";
 
 /** Spell target kinds whose spoken parameter names a creature to cast at. */
 const TARGETED_SPELL_KINDS = new Set<SpellDefinition["targetKind"]>([
@@ -181,6 +182,7 @@ export class Combat {
     dailyHooks?: {
       xpBoostPercent(recipientId: string, nowMs: number): number;
     },
+    rarityConfig?: RarityConfig,
   ) {
     this.spells = spells;
     this.formula = new CombatFormula(seed);
@@ -210,6 +212,7 @@ export class Combat {
       deathHistoryHooks,
       rewardHooks,
       dailyHooks,
+      rarityConfig,
     );
     this.damage = new DamageResolver(
       world,

@@ -3,6 +3,7 @@ import type { BoostedHooks } from "../boosted/BoostedHooks";
 import type { Monster } from "../creature/Monster";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { PreyHooks } from "../prey/PreyHooks";
+import type { RarityConfig } from "../rarity/RarityConfig";
 import type { World } from "../World";
 import type { CombatFormula } from "./CombatFormula";
 import { resolveMonsterLootType } from "./resolveMonsterLootType";
@@ -19,6 +20,7 @@ export function createMonsterCorpse(
   lootRate = 1,
   preyHooks?: PreyHooks,
   boostedHooks?: BoostedHooks,
+  rarityConfig?: RarityConfig,
 ): string | null {
   const corpseType = items.itemType(monster.type.corpseItemTypeId);
   if (!corpseType || (corpseType.containerCapacity ?? 0) < 1) return null;
@@ -33,7 +35,13 @@ export function createMonsterCorpse(
     integer: (minimum: number, maximum: number) =>
       formula.integer(minimum, maximum),
   };
-  const loot = rollMonsterLoot(monster.type.loot, capacity, lootRate, roll);
+  const loot = rollMonsterLoot(
+    monster.type.loot,
+    capacity,
+    lootRate,
+    roll,
+    rarityConfig,
+  );
   // Improved-loot prey: pct% chance of ONE extra full loot roll for the
   // killer (Canary ondroploot_prey.lua) — not a per-item boost. The chance
   // and the extra roll are both server RNG at death execution.
@@ -45,6 +53,7 @@ export function createMonsterCorpse(
       Math.max(0, capacity - loot.length),
       lootRate,
       roll,
+      rarityConfig,
     );
     loot.push(...extra);
   }
@@ -60,6 +69,7 @@ export function createMonsterCorpse(
       Math.max(0, capacity - loot.length),
       lootRate,
       roll,
+      rarityConfig,
     );
     loot.push(...extra);
   }

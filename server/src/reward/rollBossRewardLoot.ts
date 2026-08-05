@@ -1,6 +1,8 @@
 import type { MonsterLoot } from "../creature/MonsterType";
 import type { ItemType } from "../item/ItemType";
 import type { LootItemCreation } from "../item/LootItemCreation";
+import type { RarityConfig } from "../rarity/RarityConfig";
+import { rollRarityAttributes } from "../rarity/rollRarityAttributes";
 import { isBossEquipmentReward } from "./isBossEquipmentReward";
 
 export interface BossRewardRoll {
@@ -24,6 +26,7 @@ export function rollBossRewardLoot(input: {
   readonly equipmentOnly: boolean;
   readonly capacity: number;
   readonly roll: BossRewardRoll;
+  readonly rarityConfig?: RarityConfig;
 }): LootItemCreation[] {
   const loot: LootItemCreation[] = [];
   for (const entry of input.entries) {
@@ -47,7 +50,10 @@ export function rollBossRewardLoot(input: {
           )
         : 1;
     if (count < 1) continue;
-    loot.push({ typeId: type.id, count });
+    const attributes = input.rarityConfig
+      ? rollRarityAttributes(type, input.roll, input.rarityConfig)
+      : undefined;
+    loot.push({ typeId: type.id, count, ...(attributes ? { attributes } : {}) });
   }
   return loot;
 }

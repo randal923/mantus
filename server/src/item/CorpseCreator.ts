@@ -69,7 +69,9 @@ export class CorpseCreator {
       id: randomUUID(),
       typeId: entry.typeId,
       count: entry.count,
-      attributes: {},
+      // Rolled rarity/affixes ride along; the first-touch insert persists
+      // whatever bag the item was born with.
+      attributes: entry.attributes ? { ...entry.attributes } : {},
       version: 1,
       location: { kind: "corpse", containerId: corpseId, slot },
     }));

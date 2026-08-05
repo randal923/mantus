@@ -55,6 +55,7 @@ import type { GemCharacterData } from "./wheel/GemStore";
 import type { GemTracker } from "./wheel/GemTracker";
 import type { WheelTracker } from "./wheel/WheelTracker";
 import { ResolvedOutcomes } from "./ResolvedOutcomes";
+import { playerAffixEffects } from "./rarity/playerAffixEffects";
 
 export class CharacterHandler {
   private readonly outcomes = new ResolvedOutcomes();
@@ -355,12 +356,20 @@ export class CharacterHandler {
     const account = session.account;
     if (!account) return;
     const accountStatus = getAccountStatus(account, now);
+    // Affix max HP/mana are seeded from the already-loaded inventory before
+    // the constructor clamps health, exactly like the wheel contribution.
+    const wornAffixes = playerAffixEffects(
+      loadedInventory.items.flatMap((item) =>
+        item.location.kind === "equipment" ? [{ item }] : [],
+      ),
+    );
     const player = new Player(
       character,
       spawn,
       now,
       account.premiumUntil,
       wheelBonuses,
+      { maxHealth: wornAffixes.maxHealth, maxMana: wornAffixes.maxMana },
     );
     // Combat locks survive the reconnect: a killer who relogs mid-fight is
     // still locked, and still pz-locked out of protection zones.

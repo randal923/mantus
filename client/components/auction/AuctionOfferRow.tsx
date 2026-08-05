@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
+import { AuctionRarityBadge } from "./AuctionRarityBadge";
 import type {
   AuctionHouseItem,
   AuctionOffer,
@@ -50,6 +51,11 @@ export function AuctionOfferRow({
   return (
     <tr className="border-t border-ui-stone-light/10 transition-colors hover:bg-white/3">
       <td className="px-3 py-2.5">
+        {offer.tooltip && (
+          <div className="mb-1">
+            <AuctionRarityBadge tooltip={offer.tooltip} />
+          </div>
+        )}
         <label className="flex items-center gap-2">
           <span className="sr-only">
             {t("auction.amountToTrade", { item: item.name })}

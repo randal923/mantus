@@ -15,6 +15,7 @@ import { playerSpecials } from "../combat/playerSpecials";
 import { playerTierBonuses } from "../combat/playerTierBonuses";
 import { playerCombatSkill } from "../combat/playerCombatSkill";
 import { playerDefense } from "../combat/playerDefense";
+import { combineSkillBoosts } from "../combat/combineSkillBoosts";
 import { skillForWeapon } from "../combat/skillForWeapon";
 import type { ProficiencyHooks } from "../proficiency/ProficiencyHooks";
 import type { Session } from "../Session";
@@ -120,6 +121,7 @@ export class CyclopediaService {
     const equipment = this.items.combatEquipment(characterId);
     const specials = playerSpecials(equipment, player);
     const imbuements = this.items.imbuementEffects(characterId);
+    const affixes = this.items.affixEffects(characterId);
     const proficiency = this.proficiencyHooks?.effectsFor(characterId);
     const tier = playerTierBonuses(equipment);
     const weapon = equipment.find(
@@ -143,7 +145,10 @@ export class CyclopediaService {
         (total, percent) => total + percent,
         0,
       );
-      const percent = Math.min(100, equipmentPercent + imbuementPercent);
+      const percent = Math.min(
+        100,
+        equipmentPercent + imbuementPercent + (affixes.resistances[element] ?? 0),
+      );
       return percent !== 0 ? [{ element, percent }] : [];
     });
     session.send({
@@ -151,23 +156,27 @@ export class CyclopediaService {
       criticalChancePercent: round2(
         specials.criticalChance +
           imbuements.criticalChancePercent +
+          affixes.criticalChancePercent +
           (proficiency?.criticalChancePercent ?? 0),
       ),
       criticalDamagePercent: round2(
         specials.criticalDamagePercent +
           imbuements.criticalDamagePercent +
+          affixes.criticalDamagePercent +
           (proficiency?.criticalDamagePercent ?? 0),
       ),
       lifeLeechPercent: round2(
         specials.lifeLeechPercent +
           player.wheelBonuses.lifeLeechPercent +
           imbuements.lifeLeechPercent +
+          affixes.lifeLeechPercent +
           (proficiency?.lifeLeechPercent ?? 0),
       ),
       manaLeechPercent: round2(
         specials.manaLeechPercent +
           player.wheelBonuses.manaLeechPercent +
           imbuements.manaLeechPercent +
+          affixes.manaLeechPercent +
           (proficiency?.manaLeechPercent ?? 0),
       ),
       attackSkill: playerCombatSkill(
@@ -175,22 +184,25 @@ export class CyclopediaService {
         equipment,
         attackSkill,
         (imbuements.skills[attackSkill] ?? 0) +
+          (affixes.skills[attackSkill] ?? 0) +
           (proficiency?.skills[attackSkill] ?? 0),
       ),
       attackValue: Math.max(
         0,
         Math.round(
           (weapon ? (weapon.type.attack ?? 0) : 7) +
+            affixes.attack +
             (proficiency?.attackDamage ?? 0),
         ),
       ),
-      defenseValue: playerDefense(
-        player,
-        equipment,
-        session.fightMode.attack,
-        now,
-        imbuements.skills,
-      ),
+      defenseValue:
+        playerDefense(
+          player,
+          equipment,
+          session.fightMode.attack,
+          now,
+          combineSkillBoosts(imbuements.skills, affixes.skills),
+        ) + affixes.defense,
       armorValue: equipment.reduce(
         (total, entry) => total + (entry.type.armor ?? 0),
         0,
@@ -200,7 +212,8 @@ export class CyclopediaService {
           player,
           equipment,
           session.fightMode.attack,
-          imbuements.skills.shielding ?? 0,
+          (imbuements.skills.shielding ?? 0) +
+            (affixes.skills.shielding ?? 0),
         ),
       ),
       onslaughtPercent: round2(tier.fatalChancePercent),

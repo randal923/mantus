@@ -76,15 +76,20 @@ export function playerAttackPlan(
   // (Feature 78); their always-on leech rides the wheel-style leg in
   // PlayerAutoAttack so the equipment leech keeps its own chance roll.
   const imbuementSpecials = items.imbuementEffects(player.id);
+  // Rolled rarity affixes join the same additive legs; their always-on leech
+  // rides PlayerAutoAttack next to the imbuement leech.
+  const affixes = items.affixEffects(player.id);
   const specials: PlayerSpecials = {
     ...equipmentSpecials,
     criticalChance:
       equipmentSpecials.criticalChance +
       imbuementSpecials.criticalChancePercent +
+      affixes.criticalChancePercent +
       proficiency.criticalChancePercent,
     criticalDamagePercent:
       equipmentSpecials.criticalDamagePercent +
       imbuementSpecials.criticalDamagePercent +
+      affixes.criticalDamagePercent +
       proficiency.criticalDamagePercent,
   };
   if (weapon && !meetsItemRequirements(player, weapon.type)) {
@@ -104,8 +109,11 @@ export function playerAttackPlan(
           sourceId: player.id,
           origin: "wand",
           type: damageType,
-          minimum: type.minimumDamage ?? 1,
-          maximum: type.maximumDamage ?? type.minimumDamage ?? 1,
+          // A wand has no attack stat, so the +attack affix raises its
+          // damage band instead of rolling dead.
+          minimum: (type.minimumDamage ?? 1) + affixes.attack,
+          maximum:
+            (type.maximumDamage ?? type.minimumDamage ?? 1) + affixes.attack,
           missileId: missileForItem(type),
           effectId: effectForDamage(damageType),
           ...specials,
@@ -125,7 +133,10 @@ export function playerAttackPlan(
   // Canary: an unarmed fist attacks with value 7, but a weapon without an
   // attack stat (bow, crossbow) contributes 0 — the ammunition carries it.
   // Proficiency flat attack joins the combined attack (weapons.cpp:646).
-  let attack = (weapon ? (weapon.type.attack ?? 0) : 7) + proficiency.attackDamage;
+  let attack =
+    (weapon ? (weapon.type.attack ?? 0) : 7) +
+    proficiency.attackDamage +
+    affixes.attack;
   const range =
     (distance ? (weapon?.type.range ?? 3) : 1) + proficiency.attackRange;
   let hitChanceType = weapon?.type;
@@ -168,7 +179,9 @@ export function playerAttackPlan(
     player,
     equipment,
     skill,
-    (imbuements.skills[skill] ?? 0) + (proficiency.skills[skill] ?? 0),
+    (imbuements.skills[skill] ?? 0) +
+      (affixes.skills[skill] ?? 0) +
+      (proficiency.skills[skill] ?? 0),
   );
   const rolled = distance
     ? formula.playerDistanceDamage({

@@ -2941,3 +2941,101 @@ look) and z7 (unchanged: green land, blue sea, gray mountains, red walls).
 **Residual risk**: brick-walled dungeon rooms underground now also outline
 black rather than red; matches tibia-style automaps but is a deliberate
 simplification.
+
+## 2026-08-05 — Item rarity & affixes for equipable gear (drops, stats, tooltip, market)
+
+**Problem**: No item-rarity system existed — every drop of a type was
+identical, the equipment tooltip was common-only, and per-instance gear
+could never be listed on the market.
+
+**What changed**:
+
+- **Rarity domain** (`server/src/rarity/`): uncommon/rare/epic/legendary
+  grades rolling 1/2/3/4 affixes from a 12-affix pool (max HP/mana, attack
+  speed, attack, defense, life/mana leech, crit chance/damage, weapon
+  skill, magic level, elemental resistance). Values scale ×1/×1.5/×2.25/×3
+  by grade; `magicLevel` is rare+. Stored compactly on
+  `items.attributes` (`{rarity, affixes:[{id, value, element?, skill?}]}`),
+  read by validating readers modeled on `itemTierOf`/`itemImbuementsOf`.
+  No DB migration needed for items.
+- **Drops**: `rollMonsterLoot` grades eligible gear (non-stackable
+  equipment, `isBossEquipmentReward` filter minus stackables) with
+  `CombatFormula` RNG; prey/boosted extra rolls and boss reward bags
+  (`rollBossRewardLoot` + parameterized reward insert) participate. Chances
+  live in `config.yml` (`rarity: {uncommon: 5, rare: 1, epic: 0.2,
+  legendary: 0.04}` percent, per-100k thresholds, best grade first);
+  absent block = off; all-zero draws no RNG so seeded parity stays
+  byte-identical. Parity playtests pin the block off
+  (`writeParityConfig`). Loot-created audits carry the grade.
+- **Stats**: `playerAffixEffects` aggregate (memoized per inventory cache
+  like imbuements) wired into attack plan (flat attack; wand min/max),
+  defense/shield/mitigation legs, always-on auto-attack leech beside
+  imbuement leech, crit specials, skills + magic level (melee, spells,
+  requirements), elemental absorb, and progression: max HP/mana ride the
+  equipment `DerivedStatModifier` (constructor-seeded at login from the
+  loaded inventory, snapshot `equipmentBonus` extends the save invariant
+  exactly like `wheelBonus`), attack speed gets its first modifier input
+  (percent, capped at 50% of vocation base) and fills the reserved
+  `equipmentBonuses.attackSpeedMs` wire field. Caps: attack speed 50%,
+  leech 100%. Character Details shows the bonuses with hover breakdowns
+  (attack-speed row gained one); cyclopedia combat sums include affixes;
+  look text gains "It is an epic item (+40 Maximum Health, ...)".
+- **Tooltip refactor**: protocol `itemTooltipSchema` gained `rarity`,
+  `worth` (NPC sale value merged into the catalog from
+  `canary-shops.json` as `ItemType.npcValue` — `worth` stays coins-only),
+  and structured `imbuementSlots`; `itemAffixSchema` gained
+  `kind: imbuement|rolled`. The old "Imbuement Slots N" line became a
+  Canary-style `Imbuements: (Powerful Scorch 19:58h, Empty Slot)` line
+  (purple), rolled affixes lead the list in green, rarity tints the
+  border/header gradient (grey/yellow/purple/dark orange tokens in
+  `globals.css`), and a gold-coin footer shows the NPC value.
+  `itemImbuementSlotCountOf` reads the structured field instead of regex.
+  Storybook stories per grade.
+- **Market**: rarity items list as unique amount-1 sell offers bound to
+  the exact depot item (`market-create-offer.itemId`, `attributed` escrow
+  path re-verifying grade + whole-row escrow in the transaction). Browse
+  joins escrow attributes and serves the item's real tooltip on the offer
+  (anonymous); `ownAttributedItems` powers a "list this specific item"
+  picker in the sell ticket; own offers color by grade. Buy offers stay
+  pristine-only — an attributed item can never fill one. `market_history`
+  gained a `rarity` column (migration 074) recorded on fills;
+  `averagePrices` filters graded sales out of the per-type average.
+- **NPC shops**: bulk sales skip rarity-graded rows
+  (`CarriedItemDraft.sellableRows`), so a legendary can't be vendored at
+  base price.
+
+**Files touched**: `protocol/src/{item,market,progression}.ts`;
+`server/src/rarity/*` (new); `server/src/combat/{rollMonsterLoot,
+createMonsterCorpse,DeathHandler,Combat,playerAttackPlan,PlayerAutoAttack,
+DamageResolver,SpellCaster,combineSkillBoosts}.ts`;
+`server/src/item/{toItemTooltip,CorpseCreator,LootItemCreation,ItemType,
+loadItemCatalog,ItemIntentHandler,CarriedPersistPlan,PgItemPersistOps,
+plan/appendUnpersistedLootInserts,sql/insertLootCreatedAudit}.ts`;
+`server/src/progression/{CharacterProgression,ProgressionSystem,
+playerEquipmentBonuses,projectOwnProgression,
+assertValidCharacterSaveSnapshot}.ts`; `server/src/{Player,
+CharacterHandler,GameServer,config,loadServerConfig}.ts`;
+`server/src/character/{Character,CharacterPersistence}.ts`;
+`server/src/reward/{rollBossRewardLoot,RewardChestService,PgRewardStore,
+sql/insertRewardChildQuery}.ts`; `server/src/market/*`;
+`server/src/economy/{loadNpcSaleValues,plan/CarriedItemDraft}.ts`;
+`server/src/cyclopedia/CyclopediaService.ts`;
+`server/src/look/describeItemLook.ts`; `server/db/migrations/074_*.sql`;
+`config.yml`; client tooltip/auction/character-stats components, market
+session hook, `GameClient`, locales, stories.
+
+**Verified**: protocol/server/client typechecks; server unit suite (1619
+passing incl. new rarity/tooltip/loot/affix/config/draft tests); client
+unit suite (380) and Storybook build; Pg integration: market (45 incl. 5
+new unique-listing tests: round-trip with attributes, cancel return,
+pristine-path rejection, grade requirement, buy-offer fill rejection) and
+reward store. Pre-existing integration failures in guild/social/one
+item-store clean-sweep test reproduce on a clean tree and are unrelated.
+
+**Residual risk / deferred** (also in TODO.md): affix leech is
+auto-attack-only (mirrors imbuement leech today); rarity is invisible on
+ground tiles (`mapItemStateSchema` carries no attributes); world-decay
+transforms mint empty bags (deliberate for corpse owner-expiry; no
+unequipped gear decays today); graded items are stash/NPC-sale excluded by
+design; bestiary drop-chance colors overlap the rarity palette with
+different semantics; no manual e2e playtest run yet.

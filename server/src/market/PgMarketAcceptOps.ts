@@ -10,6 +10,7 @@ import { debitBankBalance } from "../economy/debitBankBalance";
 import { lockBankBalance } from "../economy/lockBankBalance";
 import { parseBalance } from "../economy/parseBalance";
 import { runSerializableTransaction } from "../economy/runSerializableTransaction";
+import { itemRarityOf } from "../rarity/itemRarityOf";
 import { insertBankAccountPairQuery } from "../economy/sql/insertBankAccountPairQuery";
 import { lockBankAccountPairQuery } from "../economy/sql/lockBankAccountPairQuery";
 import { TransactionRollback } from "../economy/TransactionRollback";
@@ -157,6 +158,7 @@ export class PgMarketAcceptOps {
         request.buyerCharacterId,
         request.amount,
         totalPrice,
+        this.escrowRarityOf(escrowRows.rows),
       );
       const coinMutation =
         spend.after.size > 0 || spend.removedItemIds.length > 0
@@ -444,6 +446,7 @@ export class PgMarketAcceptOps {
     acceptorCharacterId: string,
     amount: number,
     totalPrice: number,
+    rarity: string | null = null,
   ): Promise<void> {
     const acceptorSide = offer.side === "sell" ? "buy" : "sell";
     await this.helper.appendHistory(
@@ -456,6 +459,7 @@ export class PgMarketAcceptOps {
       amount,
       offer.unitPrice,
       "accepted",
+      rarity,
     );
     await this.helper.appendHistory(
       client,
@@ -467,6 +471,7 @@ export class PgMarketAcceptOps {
       amount,
       offer.unitPrice,
       "accepted",
+      rarity,
     );
     await this.helper.appendAudit(
       client,
@@ -480,7 +485,22 @@ export class PgMarketAcceptOps {
         amount,
         unitPrice: offer.unitPrice,
         totalPrice,
+        ...(rarity ? { rarity } : {}),
       },
+    );
+  }
+
+  /** Grade of a unique rarity listing's single escrow row, else null. */
+  private escrowRarityOf(rows: ReadonlyArray<DepotItemRow>): string | null {
+    const first = rows[0];
+    if (rows.length !== 1 || !first) return null;
+    if (typeof first.attributes !== "object" || first.attributes === null) {
+      return null;
+    }
+    return (
+      itemRarityOf({
+        attributes: first.attributes as Readonly<Record<string, unknown>>,
+      }) ?? null
     );
   }
 

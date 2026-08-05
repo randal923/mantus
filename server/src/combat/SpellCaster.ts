@@ -152,19 +152,25 @@ export class SpellCaster {
         entry.item.location.slot === "ammo",
     );
     const imbuements = this.items.imbuementEffects(player.id);
+    const affixes = this.items.affixEffects(player.id);
     const weaponSkill = skillForWeapon(weapon?.type.weaponType);
     const variables = {
       level: player.level,
       magicLevel: this.runicMasteryMagicLevel(
         player,
         spell,
-        playerMagicLevel(player, equipment, imbuements.magicLevel),
+        playerMagicLevel(
+          player,
+          equipment,
+          imbuements.magicLevel + affixes.magicLevel,
+        ),
       ),
       skill: playerCombatSkill(
         player,
         equipment,
         weaponSkill,
-        imbuements.skills[weaponSkill] ?? 0,
+        (imbuements.skills[weaponSkill] ?? 0) +
+          (affixes.skills[weaponSkill] ?? 0),
       ),
       attack:
         (weapon?.type.attack ?? 7) +
@@ -717,7 +723,8 @@ export class SpellCaster {
       playerMagicLevel(
         player,
         equipment,
-        this.items.imbuementEffects(player.id).magicLevel,
+        this.items.imbuementEffects(player.id).magicLevel +
+          this.items.affixEffects(player.id).magicLevel,
       ) < spell.requiredMagicLevel
     ) {
       return "spell-magic-level-restricted";

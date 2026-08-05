@@ -13,6 +13,11 @@ import {
   playerImbuementEffects,
   type PlayerImbuementEffects,
 } from "../imbuement/playerImbuementEffects";
+import {
+  EMPTY_AFFIX_EFFECTS,
+  playerAffixEffects,
+  type PlayerAffixEffects,
+} from "../rarity/playerAffixEffects";
 import { monotonicNow } from "../monotonicNow";
 import type { CarriedPersistPlan } from "./CarriedPersistPlan";
 import { chargesOf } from "./chargesOf";
@@ -79,6 +84,10 @@ export class ItemIntentHandler {
   private readonly imbuementEffectsByItems = new WeakMap<
     ReadonlyArray<Item>,
     PlayerImbuementEffects
+  >();
+  private readonly affixEffectsByItems = new WeakMap<
+    ReadonlyArray<Item>,
+    PlayerAffixEffects
   >();
   private readonly poisonedPersistCharacters = new Set<string>();
   private readonly pendingPersistOperations = new Set<Promise<void>>();
@@ -271,6 +280,17 @@ export class ItemIntentHandler {
    */
   setBankBalance(characterId: string, balance: number): void {
     this.inventories.setBankBalance(characterId, balance);
+  }
+
+  /** Rolled rarity-affix effects for combat reads, memoized like equipment. */
+  affixEffects(characterId: string): PlayerAffixEffects {
+    const cache = this.inventories.get(characterId);
+    if (!cache) return EMPTY_AFFIX_EFFECTS;
+    const memoized = this.affixEffectsByItems.get(cache.items);
+    if (memoized) return memoized;
+    const effects = playerAffixEffects(this.combatEquipment(characterId));
+    this.affixEffectsByItems.set(cache.items, effects);
+    return effects;
   }
 
   /** Running imbuement effects for combat reads, memoized like equipment. */

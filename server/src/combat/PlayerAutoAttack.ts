@@ -236,12 +236,14 @@ export class PlayerAutoAttack {
     // imbuement chance — game.cpp:8983). Single-target, so no falloff.
     const wheel = player.wheelBonuses;
     const imbuements = this.items.imbuementEffects(player.id);
+    const affixes = this.items.affixEffects(player.id);
     const lifePercent =
       (this.formula.chance(specials.lifeLeechChance)
         ? specials.lifeLeechPercent
         : 0) +
       wheel.lifeLeechPercent +
       imbuements.lifeLeechPercent +
+      affixes.lifeLeechPercent +
       proficiencyLifePercent;
     const manaPercent =
       (this.formula.chance(specials.manaLeechChance)
@@ -249,6 +251,7 @@ export class PlayerAutoAttack {
         : 0) +
       wheel.manaLeechPercent +
       imbuements.manaLeechPercent +
+      affixes.manaLeechPercent +
       proficiencyManaPercent;
     const health = Math.min(
       damage,

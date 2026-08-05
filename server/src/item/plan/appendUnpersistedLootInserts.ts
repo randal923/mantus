@@ -30,6 +30,9 @@ export function appendUnpersistedLootInserts(
         killerCharacterId: origin.killerCharacterId,
         typeId: item.typeId,
         count: item.count,
+        ...(typeof item.attributes.rarity === "string"
+          ? { rarity: item.attributes.rarity }
+          : {}),
       });
       continue;
     }

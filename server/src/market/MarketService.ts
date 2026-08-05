@@ -16,6 +16,8 @@ import { countMoneyWorth } from "../economy/countMoneyWorth";
 import { getAccountStatus } from "../getAccountStatus";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
+import { toItemTooltip } from "../item/toItemTooltip";
+import { itemRarityOf } from "../rarity/itemRarityOf";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
 import { monotonicNow } from "../monotonicNow";
@@ -249,17 +251,39 @@ export class MarketService {
       .offersForType(itemTypeId, MARKET_LIMITS.maxOffersPerSide)
       .then((offers) => {
         this.outcomes.push(() => {
+          // The browsing player's own rarity items of this type, so the sell
+          // ticket can offer listing a specific one.
+          const cache = this.depot.cacheFor(characterId);
+          const ownAttributedItems = (cache?.items ?? [])
+            .filter(
+              (item) =>
+                item.location.kind === "depot" &&
+                item.typeId === itemTypeId &&
+                itemRarityOf(item) !== undefined,
+            )
+            .slice(0, 50)
+            .flatMap((item) => {
+              const tooltip = this.rarityTooltipFor(itemTypeId, item.attributes);
+              return tooltip ? [{ itemId: item.id, tooltip }] : [];
+            });
           session.send({
             type: "market-offers",
             itemTypeId,
-            offers: offers.map((offer) => ({
-              offerId: offer.id,
-              side: offer.side,
-              amount: offer.remainingAmount,
-              unitPrice: offer.unitPrice,
-              expiresAt: offer.expiresAt.toISOString(),
-              mine: offer.characterId === characterId,
-            })),
+            offers: offers.map((offer) => {
+              const tooltip = offer.attributes
+                ? this.rarityTooltipFor(itemTypeId, offer.attributes)
+                : undefined;
+              return {
+                offerId: offer.id,
+                side: offer.side,
+                amount: offer.remainingAmount,
+                unitPrice: offer.unitPrice,
+                expiresAt: offer.expiresAt.toISOString(),
+                mine: offer.characterId === characterId,
+                ...(tooltip ? { tooltip } : {}),
+              };
+            }),
+            ...(ownAttributedItems.length > 0 ? { ownAttributedItems } : {}),
           });
         });
       })
@@ -268,6 +292,28 @@ export class MarketService {
         this.outcomes.push(() => this.fail(session, "failed"));
       });
     this.track(operation);
+  }
+
+  /**
+   * Tooltip for a rarity item's attribute bag, composed the way inventory
+   * projection does it. Non-rarity bags return nothing — a bulk offer never
+   * shows per-instance data.
+   */
+  private rarityTooltipFor(
+    itemTypeId: number,
+    attributes: Readonly<Record<string, unknown>>,
+  ) {
+    if (itemRarityOf({ attributes }) === undefined) return undefined;
+    const type = this.catalog.get(itemTypeId);
+    if (!type) return undefined;
+    return toItemTooltip(type, {
+      id: "00000000-0000-4000-8000-000000000000",
+      typeId: itemTypeId,
+      count: 1,
+      attributes,
+      version: 1,
+      location: { kind: "market-escrow", characterId: "", slot: 0 },
+    });
   }
 
   private sendOwnOffers(session: Session, characterId: string): void {
@@ -308,6 +354,9 @@ export class MarketService {
       offers: records.flatMap((record) => {
         const type = this.catalog.get(record.itemTypeId);
         if (!type) return [];
+        const rarity = record.attributes
+          ? itemRarityOf({ attributes: record.attributes })
+          : undefined;
         return [
           {
             offerId: record.id,
@@ -318,6 +367,7 @@ export class MarketService {
             amount: record.remainingAmount,
             unitPrice: record.unitPrice,
             expiresAt: record.expiresAt.toISOString(),
+            ...(rarity ? { rarity } : {}),
           },
         ];
       }),
@@ -383,7 +433,32 @@ export class MarketService {
       fee,
     };
     let commit: () => Promise<CreateOfferResult>;
-    if (intent.side === "sell") {
+    if (intent.itemId !== undefined) {
+      // Unique rarity listing: sell-only, exactly one specific depot item.
+      if (intent.side !== "sell" || intent.amount !== 1) {
+        this.fail(session, "invalid-item");
+        return;
+      }
+      const itemId = intent.itemId;
+      const cache = this.depot.cacheFor(characterId);
+      const item = cache?.items.find((candidate) => candidate.id === itemId);
+      if (
+        !item ||
+        item.location.kind !== "depot" ||
+        item.typeId !== intent.itemTypeId ||
+        itemRarityOf(item) === undefined
+      ) {
+        this.fail(session, "invalid-item");
+        return;
+      }
+      commit = () =>
+        store.createSellOffer({
+          ...base,
+          sources: [{ itemId, itemRevision: item.version, take: item.count }],
+          stashTake: 0,
+          attributed: true,
+        });
+    } else if (intent.side === "sell") {
       const cache = this.depot.cacheFor(characterId);
       const plan = cache
         ? pickEscrowSources(cache, intent.itemTypeId, intent.amount)

@@ -488,6 +488,7 @@ export class GameClient {
     itemTypeId: number,
     amount: number,
     unitPrice: number,
+    itemId?: string,
   ): boolean {
     return this.send({
       type: "market-create-offer",
@@ -496,6 +497,7 @@ export class GameClient {
       itemTypeId,
       amount,
       unitPrice,
+      ...(itemId !== undefined ? { itemId } : {}),
     });
   }
 

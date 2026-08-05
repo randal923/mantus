@@ -1,6 +1,7 @@
 import type { TokenVerifier } from "../TokenVerifier";
 import type { ServerConfig } from "../config";
 import { NO_STAGES } from "../progression/stageRates";
+import { DISABLED_RARITY_CONFIG } from "../rarity/RarityConfig";
 import { GameServer } from "../GameServer";
 import { MemoryItemStore } from "../item/MemoryItemStore";
 import { loadItemCatalog } from "../item/loadItemCatalog";
@@ -77,6 +78,7 @@ const config: ServerConfig = {
     bestiaryKills: 1,
     bosstiaryKills: 1,
   },
+  rarity: DISABLED_RARITY_CONFIG,
   progression: { staminaSystem: true, stages: NO_STAGES },
   starterTownId: 1,
   characterSaveIntervalMs: 30_000,

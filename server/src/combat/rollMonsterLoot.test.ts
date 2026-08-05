@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MonsterLoot } from "../creature/MonsterType";
 import type { ItemType } from "../item/ItemType";
+import { DISABLED_RARITY_CONFIG } from "../rarity/RarityConfig";
 import { rollMonsterLoot, type MonsterLootRoll } from "./rollMonsterLoot";
 
 function itemType(overrides: Partial<ItemType> & { id: number }): ItemType {
@@ -149,5 +150,40 @@ describe("rollMonsterLoot", () => {
     const context = roll([GOLD], { rolls: [1] });
 
     expect(rollMonsterLoot([entry({ chance: 0 })], 10, 1, context)).toEqual([]);
+  });
+
+  it("rolls rarity attributes onto eligible gear only", () => {
+    const BLADE = itemType({ id: 3_265, weaponType: "sword" });
+    const chances = {
+      ...DISABLED_RARITY_CONFIG,
+      chances: { uncommon: 100, rare: 0, epic: 0, legendary: 0 },
+    };
+    // pick=minimum: rarity roll 1 → uncommon; affix pick index 0 → maxHealth
+    // at its range minimum.
+    const [drop] = rollMonsterLoot(
+      [entry({ itemTypeId: BLADE.id })],
+      10,
+      1,
+      roll([BLADE], { pick: "minimum" }),
+      chances,
+    );
+    expect(drop?.attributes).toEqual({
+      rarity: "uncommon",
+      affixes: [{ id: "maxHealth", value: 15 }],
+    });
+
+    // Stackables never roll, however certain the chance.
+    const [gold] = rollMonsterLoot([entry()], 10, 1, roll([GOLD]), chances);
+    expect(gold?.attributes).toBeUndefined();
+
+    // A losing roll leaves the drop common with no attribute bag at all.
+    const [common] = rollMonsterLoot(
+      [entry({ itemTypeId: BLADE.id })],
+      10,
+      1,
+      roll([BLADE], { pick: "maximum" }),
+      { ...chances, chances: { ...chances.chances, uncommon: 50 } },
+    );
+    expect(common?.attributes).toBeUndefined();
   });
 });
