@@ -21,8 +21,11 @@ const MONSTER_NAME = "Butterfly";
 const STAGES = [100, 300, 500, 1_000] as const;
 const TEST_POSITION = { x: 32_369, y: 32_260, z: 7 } satisfies Position;
 const GREAT_FIREBALL_RUNE_TYPE_ID = 3_191;
-const MIN_AVERAGE_FPS = 15;
-const MAX_P95_FRAME_MS = 100;
+// Raised from 15/100 after the 2026-08 optimization pass (measured ~34-37
+// average, p95 33-50ms at every stage under SwiftShader) so regressions
+// can't silently eat the gains while slower rigs keep headroom.
+const MIN_AVERAGE_FPS = 20;
+const MAX_P95_FRAME_MS = 75;
 
 interface FrameMetrics {
   readonly averageFps: number;

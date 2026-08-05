@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type {
   CreatureState,
@@ -75,7 +75,7 @@ interface MinimapPanelProps {
   onToggleMarker: (position: Position) => void;
 }
 
-export function MinimapPanel({
+export const MinimapPanel = memo(function MinimapPanel({
   mapName,
   ownPlayerId,
   ownPosition,
@@ -147,8 +147,11 @@ export function MinimapPanel({
     const canvas = canvasRef.current;
     if (!canvas || !store) return;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvasWidth * dpr;
-    canvas.height = canvasHeight * dpr;
+    // Assigning width/height resets the bitmap even when unchanged.
+    const bitmapWidth = Math.round(canvasWidth * dpr);
+    const bitmapHeight = Math.round(canvasHeight * dpr);
+    if (canvas.width !== bitmapWidth) canvas.width = bitmapWidth;
+    if (canvas.height !== bitmapHeight) canvas.height = bitmapHeight;
     markersRef.current = drawMinimap({
       canvas,
       store,
@@ -522,4 +525,4 @@ export function MinimapPanel({
       />
     </section>
   );
-}
+});

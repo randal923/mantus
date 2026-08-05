@@ -46,7 +46,31 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const AtSpawn: Story = {};
+export const AtSpawn: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = canvasElement.querySelector("canvas");
+    if (!canvas) throw new Error("minimap canvas missing");
+    // The creature markers and the own-position dot must actually land on
+    // the bitmap (the draw pipeline runs through the marker throttle).
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("2d context missing");
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    let monsterPixels = 0;
+    let npcPixels = 0;
+    let ownPixels = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
+      // MONSTER_COLOR #ff7777, NPC_COLOR #66ccff, OWN_COLOR #f2efe6.
+      if (r === 0xff && g === 0x77 && b === 0x77) monsterPixels++;
+      if (r === 0x66 && g === 0xcc && b === 0xff) npcPixels++;
+      if (r === 0xf2 && g === 0xef && b === 0xe6) ownPixels++;
+    }
+    await expect(monsterPixels).toBeGreaterThan(0);
+    await expect(npcPixels).toBeGreaterThan(0);
+    await expect(ownPixels).toBeGreaterThan(0);
+  },
+};
 
 export const NoCreatures: Story = {
   args: { creatures: [] },

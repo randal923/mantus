@@ -3153,3 +3153,67 @@ equipment-sync tick before healing against a new maximum.
 
 **Residual risk**: the wipe assumes the probed Thais spot; moving SPOT
 moves the box. Heal crits still show no burst (deliberate, damage-only).
+
+## 2026-08-05 — Client FPS optimization pass (measured, probe-gated)
+
+**Problem**: Steady-state FPS in crowded scenes degraded with creature count
+(29.2 avg FPS at the monsterPerformance 1000-butterfly stage, p95 frame 50 ms,
+software renderer baseline).
+
+**What changed** (each kept only after 2× before/after probe runs showed a
+gain beyond the ±0.3 FPS run-to-run noise, plus a green full suite):
+
+1. **Store notify skip + own-creature guard** — `createGameWindowStore` wraps
+   `set` to skip the notify when every resolved key is `Object.is`-equal, and
+   `handlePlayerStateMessage` no longer calls `setOwnCharacter` for other
+   creatures' moves/state changes (each of which was re-running all ~341
+   mounted selectors). +2.3 FPS @1000.
+2. **Render-path allocation cuts** — `MapView` memoizes the visible-floor
+   list/Set per center floor (was one `getVisibleFloors` array per creature
+   per frame) and keys the tile-elevation cache by packed numbers (was 4
+   string keys per creature per frame); `CreatureView.updateFrame` memoizes
+   baked frame textures per packed (direction, pose, phase) — safe because
+   appearance is constructor-immutable and appearance changes recreate the
+   view. +1.25 FPS @1000, p95 frame 50→33 ms.
+3. **Minimap decoupled from the rAF flood** — creature markers redraw at
+   ~10 Hz via `useThrottledValue` in `GameMinimapOverlay` (trailing edge, so
+   the last state always lands), `MinimapPanel` is `memo`ed with stable
+   callbacks, and the canvas bitmap is no longer reset when dimensions did
+   not change. +2.0 FPS @1000 (draw throttle) plus +1.05 (render memo),
+   biggest single win.
+
+**Net effect**: 29.2 → 35.8–36.2 avg FPS at 1000 monsters (+23%), combat
+29.5 → 34.1–35.6, p95 frame 33.4 ms at every stage. e2e gates raised
+(MIN_AVERAGE_FPS 15→20, MAX_P95_FRAME_MS 100→75) to lock the gains in.
+
+**Tried and reverted** (measured, no probe-visible gain; analyses kept in
+`gaps/gap-8.md`): chat-channel memo split in `GameHudOverlay` (combat-log
+volume in the probe is too low to register) and routing 13 creature-viewer
+`world.canSee` sites through the cached `canCreatureSee` (single-player load
+scenarios exercise ~0.03 ms/tick of canSee — needs the combined
+players+monsters harness, `gaps/gap-6.md`).
+
+**New tests**: `handlePlayerStateMessage.test.ts`,
+`createGameWindowStore.test.ts` (notify semantics),
+`MapViewElevationAndFloors.test.ts`, CreatureView bake-count test,
+`toChatMessage.test.ts`, `World.test.ts` canCreatureSee-equivalence, minimap
+`AtSpawn` canvas-pixel play assertion. The unit project now also collects
+`components/**/*.test.ts`.
+
+**Verification**: full `yarn test` + `yarn typecheck` green; monsterPerformance
+(software profile) ×2 per kept change; gameFreeze e2e (worst stall 71 ms,
+bar 250); inventoryPerformance + itemIconAnimation e2e green; storybook lane
+has 4 pre-existing reds + 1 flake, reproduced on a clean tree and recorded in
+`gaps/gap-7.md`/`gap-9.md`.
+
+**Residual risk**: minimap markers now trail live positions by up to ~100 ms
+(matches the classic automap feel; pan/zoom/floor changes stay immediate).
+Verified gaps found along the way live in `gaps/gap-1.md`…`gap-9.md`.
+
+**Files touched**: `client/components/game-window/store/createGameWindowStore.ts`,
+`client/components/game-window/messages/handlePlayerStateMessage.ts`,
+`client/components/game-window/GameMinimapOverlay.tsx`,
+`client/components/minimap/MinimapPanel.tsx`,
+`client/lib/minimap/useThrottledValue.ts`, `client/lib/render/{MapView,CreatureView}.ts`,
+`client/e2e/monsterPerformance.e2e.test.tsx`, `client/vitest.config.ts`,
+`client/stories/MinimapPanel.stories.tsx`, plus the test files above.

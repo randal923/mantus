@@ -124,6 +124,13 @@ export class CreatureView {
   private walkAnimationPhase = 0;
   private stepDurationMs = 1;
   private positionRevision: number;
+  /**
+   * Frames already baked for this view, keyed by packed direction/pose/phase.
+   * Safe without invalidation: outfit, colors, addons, and mount are fixed at
+   * construction — an appearance change recreates the whole view.
+   */
+  private readonly frameTextures = new Map<number, Texture>();
+  private readonly mountTextures = new Map<number, Texture>();
 
   constructor(
     private readonly store: AssetStore,
@@ -576,9 +583,12 @@ export class CreatureView {
       return;
     }
     if (this.outfit.category !== "outfit") {
-      this.sprite.texture = this.store.cachedFrameTexture(this.outfit, {
-        phase: 0,
-      });
+      let texture = this.frameTextures.get(0);
+      if (!texture) {
+        texture = this.store.cachedFrameTexture(this.outfit, { phase: 0 });
+        this.frameTextures.set(0, texture);
+      }
+      this.sprite.texture = texture;
       return;
     }
     const walkPhases = this.outfit.phases - 1;
@@ -591,19 +601,33 @@ export class CreatureView {
     // Mounted riders use pattern-Z 1 (the riding pose); getSpriteIndex wraps
     // it away again for outfits without a mount pattern. Addon passes are
     // composited over the base by cachedOutfitFrameTexture.
-    this.sprite.texture = this.store.cachedOutfitFrameTexture(
-      this.outfit,
-      { x: dir, z: this.mountObject ? 1 : 0, phase },
-      this.colors,
-      this.appearance.addons,
-    );
+    const mountPose = this.mountObject ? 1 : 0;
+    const key = (dir * 2 + mountPose) * 256 + phase;
+    let texture = this.frameTextures.get(key);
+    if (!texture) {
+      texture = this.store.cachedOutfitFrameTexture(
+        this.outfit,
+        { x: dir, z: mountPose, phase },
+        this.colors,
+        this.appearance.addons,
+      );
+      this.frameTextures.set(key, texture);
+    }
+    this.sprite.texture = texture;
     if (this.mountObject) {
       // The mount animates from the same direction and walk phase as its
       // rider and is never colorized (mounts bake with a single layer).
-      this.mount.texture = this.store.cachedFrameTexture(this.mountObject, {
-        x: dir,
-        phase: Math.min(phase, this.mountObject.phases - 1),
-      });
+      const mountPhase = Math.min(phase, this.mountObject.phases - 1);
+      const mountKey = dir * 256 + mountPhase;
+      let mountTexture = this.mountTextures.get(mountKey);
+      if (!mountTexture) {
+        mountTexture = this.store.cachedFrameTexture(this.mountObject, {
+          x: dir,
+          phase: mountPhase,
+        });
+        this.mountTextures.set(mountKey, mountTexture);
+      }
+      this.mount.texture = mountTexture;
     }
   }
 }

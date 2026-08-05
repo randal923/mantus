@@ -411,6 +411,50 @@ describe("CreatureView", () => {
     view.destroy();
   });
 
+  it("bakes each walk frame once and reuses the texture across ticks", () => {
+    let bakes = 0;
+    const countingStore = {
+      cachedFrameTexture: (_outfit: TibiaObject, pattern: SpritePattern) => {
+        bakes++;
+        return animationTextures[pattern.phase ?? 0] ?? Texture.EMPTY;
+      },
+      cachedOutfitFrameTexture: (
+        _outfit: TibiaObject,
+        pattern: SpritePattern,
+      ) => {
+        bakes++;
+        return animationTextures[pattern.phase ?? 0] ?? Texture.EMPTY;
+      },
+    } as unknown as AssetStore;
+    const view = new CreatureView(
+      countingStore,
+      outfit,
+      state,
+      { head: [0, 0, 0], body: [0, 0, 0], legs: [0, 0, 0], feet: [0, 0, 0] },
+      0xffffff,
+    );
+    const sprite = view.container.children[0];
+    if (!(sprite instanceof Sprite)) throw new Error("expected sprite");
+
+    view.tick(205);
+    view.applyMove({ x: 11, y: 10, z: 7 }, "east", 1, 100);
+    for (let i = 0; i < 10; i++) view.tick(10);
+    // Land the step (guarding against float dust), then wait out the
+    // one-server-beat walk-finish delay for the idle frame.
+    view.tick(50);
+    view.tick(50);
+    expect(sprite.texture).toBe(animationTextures[0]);
+
+    // Only the three distinct east-facing frames were ever baked; every
+    // other tick reused the already-baked texture.
+    expect(bakes).toBe(3);
+
+    // A direction change is a different frame and must bake anew.
+    view.applyCorrection({ x: 11, y: 10, z: 7 }, "north", 2);
+    expect(bakes).toBe(4);
+    view.destroy();
+  });
+
   it("reports a changed appearance when only the mount differs", () => {
     const view = new CreatureView(
       store,

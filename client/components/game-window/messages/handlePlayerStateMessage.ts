@@ -190,11 +190,12 @@ export function handlePlayerStateMessage(
   }
 
   // An own outfit change is broadcast as ordinary creature state; keep the
-  // top-bar portrait's copy fresh and fall through to the renderer.
+  // top-bar portrait's copy fresh and fall through to the renderer. Other
+  // creatures' updates arrive at combat rates and must not touch the store.
   if (message.type === "creature-state-changed") {
     const { lookType, head, body, legs, feet, addons } =
       message.creature.outfit;
-    if (lookType > 0) {
+    if (lookType > 0 && message.creature.id === state.ownCharacter?.id) {
       state.setOwnCharacter((current) =>
         current?.id === message.creature.id
           ? { ...current, outfit: { lookType, head, body, legs, feet, addons } }
@@ -212,15 +213,17 @@ export function handlePlayerStateMessage(
       message.type === "creature-moved"
         ? message.creatureId
         : message.playerId;
-    state.setOwnCharacter((current) =>
-      current?.id === playerId
-        ? {
-            ...current,
-            position: { ...message.position },
-            direction: message.direction,
-          }
-        : current,
-    );
+    if (playerId === state.ownCharacter?.id) {
+      state.setOwnCharacter((current) =>
+        current?.id === playerId
+          ? {
+              ...current,
+              position: { ...message.position },
+              direction: message.direction,
+            }
+          : current,
+      );
+    }
   }
 
   return false;

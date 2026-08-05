@@ -1032,3 +1032,10 @@ limitations accepted during a session are recorded in the owning feature file
   staff filter), `PgItemStore` clean-sweep ("leaves a carried item alone",
   duplicate `items_container_slot_key` in test setup). Likely stale rows in
   the persistent test DB or drifted fixtures; diagnose separately.
+
+- 2026-08-05: `gaps/gap-1.md`…`gap-9.md` record verified open gaps from the
+  optimization pass: set-viewport resync amplification (charter rule 10),
+  drainDue spread crash risk, missing pg pool timeouts, missing
+  audit_log/items sweep indexes, 35-RT login, perf-harness blind spots
+  (monsterCapacity asserts nothing / 1900-stage spawn flake / single-player
+  only), one flaky + four pre-existing red storybook tests.

@@ -969,3 +969,53 @@ describe("World underground multi-floor visibility", () => {
     expect(ids(world, viewer.position)).not.toContain("deep");
   });
 });
+
+describe("World.canCreatureSee cache equivalence", () => {
+  const RANGE = { x: 8, y: 6 };
+
+  it("matches the uncached position overload before and after moves", () => {
+    const world = makeWorld();
+    const viewer = makePlayer(5, 5, 7, "viewer");
+    const target = makePlayer(2, 3, 7, "target");
+    world.addPlayer(viewer);
+    world.addPlayer(target);
+
+    expect(world.canCreatureSee(viewer, target.position, RANGE)).toBe(
+      world.canSee(viewer.position, target.position, RANGE),
+    );
+    expect(world.canCreatureSee(viewer, target.position, RANGE)).toBe(true);
+
+    // Moving the viewer must invalidate its cached first-visible floor.
+    world.tryMove(viewer, "east", 1_000);
+    expect(world.canCreatureSee(viewer, target.position, RANGE)).toBe(
+      world.canSee(viewer.position, target.position, RANGE),
+    );
+
+    // Out-of-range targets stay invisible through the cached path.
+    const far = { x: viewer.position.x + RANGE.x + 2, y: 5, z: 7 };
+    expect(world.canCreatureSee(viewer, far, RANGE)).toBe(false);
+    expect(world.canSee(viewer.position, far, RANGE)).toBe(false);
+  });
+
+  it("agrees with the position overload across floors underground", () => {
+    const world = new World(
+      gridMapData({
+        name: "underground-eq",
+        width: 14,
+        height: 14,
+        blocked: [],
+        floors: [8, 9, 10, 11],
+        groundSpeed: 50,
+      }),
+      STEP_MS,
+    );
+    const viewer = makePlayer(5, 5, 9, "viewer");
+    world.addPlayer(viewer);
+    for (const z of [8, 9, 10, 11] as const) {
+      const position = { x: 5, y: 5, z };
+      expect(world.canCreatureSee(viewer, position, RANGE)).toBe(
+        world.canSee(viewer.position, position, RANGE),
+      );
+    }
+  });
+});

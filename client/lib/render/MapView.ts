@@ -91,7 +91,8 @@ export class MapView {
   private readonly loaded = new Map<string, Region | null>();
   private readonly regionUse = new Map<string, number>();
   private readonly drawnTiles = new Map<string, RenderedTile>();
-  private readonly tileElevations = new Map<string, number>();
+  /** Keyed by packed numeric position — read per creature per frame. */
+  private readonly tileElevations = new Map<number, number>();
   /** Baked static podium outfit frames; null marks a bake in flight. */
   private readonly podiumTextures = new Map<string, Texture | null>();
   private readonly dynamicRequests = new Map<string, TileState>();
@@ -101,6 +102,10 @@ export class MapView {
   private viewRange: ViewRange = { x: 1, y: 1 };
   private generation = 0;
   private useTick = 0;
+  /** Memoized per center floor; queried per creature per frame. */
+  private visibleFloorsForZ = Number.NaN;
+  private visibleFloorList: number[] = [];
+  private visibleFloorSet = new Set<number>();
   /** Reports per-region completion of the current refresh batch. */
   onLoadProgress: ((completed: number, total: number) => void) | null = null;
 
@@ -152,7 +157,7 @@ export class MapView {
 
   isDynamicFloorVisible(z: number): boolean {
     if (!this.center || !this.isFloorVisible(z)) return false;
-    return this.visibleFloors().includes(z);
+    return this.isVisibleFloor(z);
   }
 
   projectPosition(x: number, y: number, z: number): { x: number; y: number } {
@@ -445,7 +450,18 @@ export class MapView {
   }
 
   private visibleFloors(): number[] {
-    return getVisibleFloors(this.center?.z ?? GROUND_FLOOR);
+    const z = this.center?.z ?? GROUND_FLOOR;
+    if (z !== this.visibleFloorsForZ) {
+      this.visibleFloorsForZ = z;
+      this.visibleFloorList = getVisibleFloors(z);
+      this.visibleFloorSet = new Set(this.visibleFloorList);
+    }
+    return this.visibleFloorList;
+  }
+
+  private isVisibleFloor(z: number): boolean {
+    this.visibleFloors();
+    return this.visibleFloorSet.has(z);
   }
 
   /** Resolves once the current window's regions (and their sheets) are drawn. */
@@ -570,7 +586,7 @@ export class MapView {
   private tileItems(z: number, x: number, y: number): TileRenderItem<TibiaObject>[] {
     const key = this.tileKey(z, x, y);
     const dynamicItems =
-      !this.center || this.visibleFloors().includes(z)
+      !this.center || this.isVisibleFloor(z)
         ? (this.tileOverrides.get(key) ?? this.dynamicRequests.get(key))
             ?.items ?? []
         : [];
@@ -583,7 +599,7 @@ export class MapView {
   }
 
   private tileElevation(z: number, x: number, y: number): number {
-    const key = this.tileKey(z, x, y);
+    const key = this.tileElevationKey(z, x, y);
     const cached = this.tileElevations.get(key);
     if (cached !== undefined) return cached;
     const elevation = getTileRenderLayers(this.tileItems(z, x, y)).creatureElevation;
@@ -597,7 +613,7 @@ export class MapView {
     const key = this.tileKey(z, x, y);
     const items = this.tileItems(z, x, y);
     if (items.length === 0) {
-      this.tileElevations.set(key, 0);
+      this.tileElevations.set(this.tileElevationKey(z, x, y), 0);
       this.drawnTiles.set(key, { sprites: [], animatedItemIds: [] });
       return;
     }
@@ -609,7 +625,10 @@ export class MapView {
       east: objects.some((object) => object.flags.hookEast),
     };
     const layers = getTileRenderLayers(items);
-    this.tileElevations.set(key, layers.creatureElevation);
+    this.tileElevations.set(
+      this.tileElevationKey(z, x, y),
+      layers.creatureElevation,
+    );
     for (const item of [...layers.beforeCreature, ...layers.topItems]) {
       this.drawItem(
         item,
@@ -646,7 +665,8 @@ export class MapView {
       if (!display || display.lookType <= 0) continue;
       const texture = this.podiumTextures.get(podiumTextureKey(display));
       if (!texture) continue;
-      const elevation = this.tileElevations.get(key) ?? 0;
+      const elevation =
+        this.tileElevations.get(this.tileElevationKey(z, x, y)) ?? 0;
       const sprite = new Sprite(texture);
       // Bottom-right anchored on the tile with the standard creature offset.
       sprite.x = x * TILE_SIZE + TILE_SIZE - texture.width - 8 - elevation;
@@ -781,7 +801,7 @@ export class MapView {
     const [floorText, coordinates] = key.split(":") as [string, string];
     const [x, y] = coordinates.split(",").map(Number);
     const floor = Number(floorText);
-    if (!this.visibleFloors().includes(floor)) return false;
+    if (!this.isVisibleFloor(floor)) return false;
     const center = this.floorCenter(floor);
     return (
       Math.abs(x - center.x) <= this.viewRange.x + STATIC_TILE_MARGIN &&
@@ -798,7 +818,11 @@ export class MapView {
   }
 
   private destroyRenderedTile(key: string): void {
-    this.tileElevations.delete(key);
+    const [floorText, coordinates] = key.split(":") as [string, string];
+    const [x, y] = coordinates.split(",").map(Number);
+    this.tileElevations.delete(
+      this.tileElevationKey(Number(floorText), x ?? 0, y ?? 0),
+    );
     const rendered = this.drawnTiles.get(key);
     if (!rendered) return;
     for (const id of rendered.animatedItemIds) this.animatedItems.unregister(id);
@@ -844,5 +868,10 @@ export class MapView {
 
   private tileKey(z: number, x: number, y: number): string {
     return `${z}:${x},${y}`;
+  }
+
+  /** Collision-free while coordinates stay below 2^16, as map positions do. */
+  private tileElevationKey(z: number, x: number, y: number): number {
+    return (z * 0x1_0000 + y) * 0x1_0000 + x;
   }
 }
