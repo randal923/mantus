@@ -70,6 +70,30 @@ export const equipmentStatBonusesSchema = z
   })
   .strict();
 
+/**
+ * Live combat totals for the Character Details panel: gear + running
+ * imbuements + rarity affixes + wheel, matching what the combat formulas
+ * read. Display only, like every other bonus block.
+ */
+export const equipmentCombatStatsSchema = z
+  .object({
+    criticalChancePercent: z.number().min(0).max(1_000),
+    criticalDamagePercent: z.number().min(0).max(1_000),
+    lifeLeechPercent: z.number().min(0).max(1_000),
+    manaLeechPercent: z.number().min(0).max(1_000),
+    resistances: z
+      .array(
+        z
+          .object({
+            element: z.string().min(1).max(20),
+            percent: z.number().min(-1_000).max(100),
+          })
+          .strict(),
+      )
+      .max(16),
+  })
+  .strict();
+
 export const ownProgressionStateSchema = z.object({
   definitionVersion: z.number().int().positive(),
   level: z.number().int().min(1).max(MAX_STORABLE_CHARACTER_LEVEL),
@@ -143,9 +167,12 @@ export const ownProgressionStateSchema = z.object({
   }),
   skills: z.array(characterSkillStateSchema).length(SKILLS.length),
   equipmentBonuses: equipmentStatBonusesSchema,
+  /** Optional so older payloads stay valid; the server always sends it. */
+  combat: equipmentCombatStatsSchema.optional(),
 });
 
 export type Skill = z.infer<typeof skillSchema>;
 export type CharacterSkillState = z.infer<typeof characterSkillStateSchema>;
 export type EquipmentStatBonuses = z.infer<typeof equipmentStatBonusesSchema>;
+export type EquipmentCombatStats = z.infer<typeof equipmentCombatStatsSchema>;
 export type OwnProgressionState = z.infer<typeof ownProgressionStateSchema>;

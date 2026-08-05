@@ -8,6 +8,7 @@ import {
   SKILLS,
   type AccountTier,
   type CharacterVocation,
+  type EquipmentCombatStats,
   type Skill,
 } from "@tibia/protocol";
 import {
@@ -112,6 +113,13 @@ export class CharacterProgression {
   private wheelModifier: DerivedStatModifier;
   private equipmentModifier: DerivedStatModifier = {};
   private equipmentAttackSpeedPercent = 0;
+  private combatStats: EquipmentCombatStats = {
+    criticalChancePercent: 0,
+    criticalDamagePercent: 0,
+    lifeLeechPercent: 0,
+    manaLeechPercent: 0,
+    resistances: [],
+  };
   /**
    * Skill and magic-level deltas from equipped gear. Display-only bookkeeping
    * for the character panel: combat re-reads the equipment itself at execution
@@ -896,6 +904,31 @@ export class CharacterProgression {
       capacity: withEquipment.capacity - without.capacity,
       speed: withEquipment.speed - without.speed,
     };
+  }
+
+  get equipmentCombatStats(): EquipmentCombatStats {
+    return this.combatStats;
+  }
+
+  /** Display-only; returns whether the stored value actually changed. */
+  setEquipmentCombatStats(stats: EquipmentCombatStats): boolean {
+    const current = this.combatStats;
+    if (
+      current.criticalChancePercent === stats.criticalChancePercent &&
+      current.criticalDamagePercent === stats.criticalDamagePercent &&
+      current.lifeLeechPercent === stats.lifeLeechPercent &&
+      current.manaLeechPercent === stats.manaLeechPercent &&
+      current.resistances.length === stats.resistances.length &&
+      current.resistances.every(
+        (entry, index) =>
+          entry.element === stats.resistances[index]?.element &&
+          entry.percent === stats.resistances[index]?.percent,
+      )
+    ) {
+      return false;
+    }
+    this.combatStats = stats;
+    return true;
   }
 
   /** Equipment contribution to max stats, for save-snapshot checks. */

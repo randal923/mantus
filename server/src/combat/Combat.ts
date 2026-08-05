@@ -83,8 +83,6 @@ const TARGETED_SPELL_KINDS = new Set<SpellDefinition["targetKind"]>([
   "target-or-direction",
 ]);
 
-const CRITICAL_DAMAGE_EFFECT_ID = 173;
-
 /**
  * How often the hunting bot re-picks its target. Slow enough that a running
  * fight is not interrupted by every passing rat, fast enough that a fresh
@@ -1660,15 +1658,10 @@ export class Combat {
       ) {
         continue;
       }
+      // The critical burst now broadcasts inside applyDamage for every
+      // request-carried crit, this path included.
       const result = this.damage.applyDamage(creature, request, now);
       if (result.healthChanged || result.manaChanged) {
-        if (result.critical) {
-          this.visibility.broadcastMagicEffect(
-            creature.position,
-            CRITICAL_DAMAGE_EFFECT_ID,
-            creature.id,
-          );
-        }
         this.applyMonsterAbilityConditions(
           monster,
           creature,

@@ -125,5 +125,6 @@ export function projectOwnProgression(
       // the vocation base).
       attackSpeedMs: progression.equipmentAttackSpeedBonusMs,
     },
+    combat: progression.equipmentCombatStats,
   };
 }

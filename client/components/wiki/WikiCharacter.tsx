@@ -79,7 +79,9 @@ export function WikiCharacter({
   const selectTab = (next: WikiCharacterTab) => {
     setTab(next);
     if (cyclopediaPending) return;
-    if (next === "combat" && !combat) onRequestCyclopedia("combat");
+    // Combat stats move with every equip/imbuement change, so this tab
+    // re-requests on every visit; the cached copy still renders meanwhile.
+    if (next === "combat") onRequestCyclopedia("combat");
     if (next === "deaths" && !deaths) onRequestCyclopedia("deaths");
     if (next === "pvp" && !pvpKills) onRequestCyclopedia("pvp-kills");
     if (next === "items" && !itemSummary) onRequestCyclopedia("item-summary");

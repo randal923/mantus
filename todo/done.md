@@ -3039,3 +3039,116 @@ transforms mint empty bags (deliberate for corpse owner-expiry; no
 unequipped gear decays today); graded items are stash/NPC-sale excluded by
 design; bestiary drop-chance colors overlap the rarity palette with
 different semantics; no manual e2e playtest run yet.
+
+## 2026-08-05 — Rarity follow-ups: crit visuals, hundredths tooltips, live combat stats in Character Details
+
+**Problem**: (a) Player-dealt critical hits multiplied damage but never
+showed the crit burst — only monster-ability crits broadcast effect 173.
+(b) Tooltips and look text printed Canary's hundredths-of-a-percent crit/
+leech values raw ("Critical Hit Chance +1000%" on a sanguine coil instead
+of +10%), and showed vestigial leech-chance lines whose catalog data mixes
+two scales (100 and 10000, both meaning "always"). (c) The wiki > Character
+combat tab only requested state when its cache was empty, so equipping
+gear never refreshed crit/leech numbers. (d) Character Details (C) had no
+combat block at all.
+
+**What changed**:
+
+- `DamageResolver` owns the crit burst now: `broadcastCriticalEffect`
+  (Canary CONST_ME_CRITICAL_DAMAGE 173) fires inside `applyDamage` for
+  every request-carried crit (wands, spells, monster abilities — Combat's
+  local broadcast removed), and `PlayerAutoAttack` calls it when the
+  weapon-roll crit procs (melee/distance roll outside the request).
+- `toItemTooltip` and `itemLookSegments` divide crit chance/damage and
+  leech amounts by 100 ("Critical Hit Chance +10%", "Critical Extra Damage
+  +12%", "Life Leech +2%"); leech-chance lines dropped like the modern
+  client. Regression test pins the sanguine-coil numbers.
+- `WikiCharacter` re-requests the combat view on every tab visit (cached
+  copy renders while pending).
+- Character Details gained a Combat section: crit chance/damage, life/mana
+  leech, and per-element resistances, served on `ownProgressionState.combat`
+  (new optional `equipmentCombatStatsSchema`). Computed in
+  `ProgressionSystem.syncEquipmentStats` with the same sums the cyclopedia
+  combat view uses (equipment + wheel + imbuements + affixes; proficiency
+  stays in its own panel, gem resistances still only in mitigation),
+  value-diffed on `CharacterProgression.setEquipmentCombatStats` so any
+  change pushes a fresh progression. `ABSORB_ELEMENTS` extracted to
+  `combat/absorbElements.ts` and shared with the cyclopedia. The panel body
+  was already scrollable; the new section scrolls with it.
+
+**Files touched**: `server/src/combat/{DamageResolver,PlayerAutoAttack,
+Combat,absorbElements}.ts`, `server/src/item/toItemTooltip.ts`,
+`server/src/look/itemLookSegments.ts`,
+`server/src/progression/{CharacterProgression,ProgressionSystem,
+projectOwnProgression}.ts`, `server/src/cyclopedia/CyclopediaService.ts`,
+`protocol/src/progression.ts`, `client/components/wiki/WikiCharacter.tsx`,
+`client/components/inventory/InventoryCharacterStats.tsx`, locales.
+
+**Verified**: full server suite (1622 passing) + client suite (380) +
+typechecks. Manual: pending live playtest.
+
+**Residual risk**: heal crits still show no burst (damage-only broadcast);
+the Character Details combat block updates on the tick after an equipment
+change (same cadence as every equipment bonus); cyclopedia combat still
+sums without `now` (no in-avatar 100% crit display, pre-existing TODO).
+
+## 2026-08-05 — Rarity e2e playtest suite (`yarn playtest:rarity`), /rare dev command, and the two bugs it caught
+
+**Problem**: No in-game verification existed that rarity affixes actually
+reach combat and the panels; affix stats were only unit/integration tested.
+
+**What changed**:
+
+- **`/rare` GM command** (dev-only, DEV_COMMANDS servers):
+  `/rare <grade> <item name|id> [affix=value,...]` conjures a graded item —
+  rolling from the live config tables, or from an explicit spec
+  (`maxHealth=40,resistance=fire:6,skill=sword:2`) for deterministic
+  assertions. Validates grade, eligibility, affix ids/values/parameters,
+  and duplicates. Implemented by threading an optional attribute bag
+  through the conjure stack (`ItemStore.conjure` → Pg/Memory stores +
+  `insertConjuredItem` now parameterizes attributes); spell/tool conjuring
+  passes none and is unchanged.
+- **Playtest harness**: `startPlaytestServer` accepts `rarityChances` and
+  `lootRate` (parity runs still delete the block / pin loot to 1x).
+- **Scenario** `src/playtest/scenarios/rarityAffixes.ts` (30 checks over
+  the real wire): per-grade affix counts on tooltips; all 12 affixes
+  equipped one by one with assertions on progression max HP/mana, attack
+  speed (1800ms from a 10% roll), cyclopedia attack/defense deltas, the
+  combat block (crit/leech/resists), skill and magic-level bonuses;
+  bonuses revert on unequip; edge cases — 50% attack-speed floor from an
+  80% roll, 100% leech cap from a 150 roll, two-slot stacking, unequip at
+  full health clamps current health, /rare refuses ineligible items
+  (stackables) and duplicate-affix specs; a live-combat crit-burst check;
+  a real minotaur kill dropping forced-legendary gear through auto-loot;
+  and an affix-max-health relog at full health.
+- **Real bug #1 (caught by the crit check)**: one-shot-kill crits never
+  showed the burst — death processing tore the victim out of every
+  session's known-creature set before the effect broadcast, whose
+  relatedCreatureId filter then swallowed it. The burst now broadcasts
+  before death handling and as a plain tile effect
+  (`DamageResolver.broadcastCriticalEffect`).
+- **Real bug #2 (found chasing the relog check)**: a progression tick
+  running between inventory detach and the final logout save read "no
+  equipment", zeroed the modifier, and clamped an affix-boosted health
+  right before persisting. `syncEquipmentStats` now treats a missing
+  inventory cache as unknown (`ItemIntentHandler.hasLoadedInventory`).
+
+**Files touched**: `server/src/gm/GmCommandHandler.ts`,
+`server/src/item/{ItemStore,PgItemStore,PgItemCreationOps,MemoryItemStore,
+ItemIntentHandler,sql/insertConjuredItem}.ts`,
+`server/src/combat/{DamageResolver,PlayerAutoAttack,SpellCaster}.ts`,
+`server/src/action/ToolUseHandler.ts`,
+`server/src/progression/ProgressionSystem.ts`, `server/src/GameServer.ts`,
+`server/src/playtest/{startPlaytestServer,scenarios/rarityAffixes}.ts`,
+`server/package.json` (`playtest:rarity`).
+
+**Verified**: three consecutive clean 30/30 scenario runs (~16s each);
+full unit suite green (1,622). Scenario gotchas baked in: busy-retry
+around GM/equip intents (trailing persists), drop pacing under the
+per-session intent rate cap, drops spread over a tile ring (10-item tile
+cap), a pre-boot wipe of unseeded ground items near the test spot
+(playtest world persists between runs), and waiting for the 100ms
+equipment-sync tick before healing against a new maximum.
+
+**Residual risk**: the wipe assumes the probed Thais spot; moving SPOT
+moves the box. Heal crits still show no burst (deliberate, damage-only).

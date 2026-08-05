@@ -662,6 +662,7 @@ export class MemoryItemStore implements ItemStore {
     sourceItemTypeId: number,
     targetItemTypeId: number,
     count: number,
+    attributes?: Readonly<Record<string, unknown>>,
   ): Promise<ConjureItemResult> {
     if (
       !Number.isInteger(expectedCharacterVersion) ||
@@ -705,7 +706,7 @@ export class MemoryItemStore implements ItemStore {
         ...source,
         typeId: targetItemTypeId,
         count,
-        attributes: {},
+        attributes: { ...(attributes ?? {}) },
         version: source.version + 1,
       };
       this.items.set(after.id, after);
@@ -755,7 +756,7 @@ export class MemoryItemStore implements ItemStore {
       id: randomUUID(),
       typeId: targetItemTypeId,
       count,
-      attributes: {},
+      attributes: { ...(attributes ?? {}) },
       version: 1,
       location: { kind: "container", containerId: backpack.id, slot },
     };

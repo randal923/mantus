@@ -142,6 +142,7 @@ export class PlayerAutoAttack {
     let attackBlock: DamageResult["block"] = "none";
     let requests = plan.requests;
     let totalDamage = 0;
+    let criticalHit = false;
     if (plan.weaponRoll) {
       const request = requests[0];
       if (!request || !this.formula.chance(plan.weaponRoll.hitChance)) {
@@ -153,6 +154,7 @@ export class PlayerAutoAttack {
           plan.weaponRoll.maximum,
         );
         if (this.formula.chance(plan.weaponRoll.specials.criticalChance)) {
+          criticalHit = true;
           total = Math.floor(
             total *
               (1 +
@@ -192,6 +194,11 @@ export class PlayerAutoAttack {
         if (result.block === "miss") break;
         if (target.health <= 0) break;
       }
+    }
+    // The weapon-roll crit multiplies before the requests split the total,
+    // so the resolver never sees it — show the burst from here.
+    if (criticalHit && totalDamage > 0) {
+      this.damage.broadcastCriticalEffect(target);
     }
     if (plan.weaponRoll && totalDamage > 0) {
       this.applyPlayerLeech(

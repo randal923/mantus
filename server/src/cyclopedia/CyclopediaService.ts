@@ -15,6 +15,7 @@ import { playerSpecials } from "../combat/playerSpecials";
 import { playerTierBonuses } from "../combat/playerTierBonuses";
 import { playerCombatSkill } from "../combat/playerCombatSkill";
 import { playerDefense } from "../combat/playerDefense";
+import { ABSORB_ELEMENTS } from "../combat/absorbElements";
 import { combineSkillBoosts } from "../combat/combineSkillBoosts";
 import { skillForWeapon } from "../combat/skillForWeapon";
 import type { ProficiencyHooks } from "../proficiency/ProficiencyHooks";
@@ -23,16 +24,6 @@ import type { SessionRegistry } from "../SessionRegistry";
 import type { World } from "../World";
 import type { CyclopediaStore } from "./CyclopediaStore";
 import { ResolvedOutcomes } from "../ResolvedOutcomes";
-
-const ABSORB_ELEMENTS: ReadonlyArray<DamageType> = [
-  "physical",
-  "fire",
-  "earth",
-  "energy",
-  "ice",
-  "holy",
-  "death",
-];
 
 /**
  * Cyclopedia character views (Feature 83). Every view is a bounded

@@ -79,19 +79,21 @@ export function itemLookSegments(type: ItemType): ReadonlyArray<string> {
   if (type.magicLevelPoints) {
     segments.push(`magic level ${formatSigned(type.magicLevelPoints)}`);
   }
+  // Crit and leech amounts are stored in hundredths of a percent
+  // (Canary's scale: 1000 = 10%).
   if (type.criticalHitChance) {
-    segments.push(`critical hit chance ${type.criticalHitChance}%`);
+    segments.push(`critical hit chance ${type.criticalHitChance / 100}%`);
   }
   if (type.criticalHitDamage) {
     segments.push(
-      `critical extra damage ${formatSigned(type.criticalHitDamage)}%`,
+      `critical extra damage ${formatSigned(type.criticalHitDamage / 100)}%`,
     );
   }
   if (type.lifeLeechAmount) {
-    segments.push(`life leech ${formatSigned(type.lifeLeechAmount)}%`);
+    segments.push(`life leech ${formatSigned(type.lifeLeechAmount / 100)}%`);
   }
   if (type.manaLeechAmount) {
-    segments.push(`mana leech ${formatSigned(type.manaLeechAmount)}%`);
+    segments.push(`mana leech ${formatSigned(type.manaLeechAmount / 100)}%`);
   }
 
   const protection = protectionSegment(type.absorbPercent ?? {}, "protection");

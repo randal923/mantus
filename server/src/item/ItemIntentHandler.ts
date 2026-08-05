@@ -212,6 +212,15 @@ export class ItemIntentHandler {
     return state;
   }
 
+  /**
+   * Whether this character's inventory is attached. False around login and
+   * logout — readers deriving stats must treat that as "unknown", never as
+   * "wearing nothing", or a logout tick clamps health before the final save.
+   */
+  hasLoadedInventory(characterId: string): boolean {
+    return this.inventories.get(characterId) !== undefined;
+  }
+
   detach(characterId: string): void {
     this.inventories.detach(characterId);
     this.decay?.forgetCarried(characterId);
@@ -675,6 +684,7 @@ export class ItemIntentHandler {
     sourceItemTypeId: number,
     targetItemTypeId: number,
     count: number,
+    attributes: Readonly<Record<string, unknown>> | undefined,
     onCommitted: (
       expectedVersion: number,
       characterVersion: number,
@@ -704,6 +714,7 @@ export class ItemIntentHandler {
         sourceItemTypeId,
         targetItemTypeId,
         count,
+        attributes,
       ),
     }));
     const resolution = operation

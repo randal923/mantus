@@ -98,6 +98,26 @@ describe("toItemTooltip", () => {
     });
   });
 
+  it("scales Canary hundredths for crit/leech and drops vestigial chance lines", () => {
+    // Sanguine coil's catalog values: 1000 = 10%, 1200 = 12%, amounts 2%/1%.
+    const texts = toItemTooltip(
+      itemType({
+        id: 1,
+        criticalHitChance: 1_000,
+        criticalHitDamage: 1_200,
+        lifeLeechChance: 100,
+        lifeLeechAmount: 200,
+        manaLeechChance: 100,
+        manaLeechAmount: 100,
+      }),
+    ).affixes.map((affix) => affix.text);
+    expect(texts).toContain("Critical Hit Chance +10%");
+    expect(texts).toContain("Critical Extra Damage +12%");
+    expect(texts).toContain("Life Leech +2%");
+    expect(texts).toContain("Mana Leech +1%");
+    expect(texts.some((text) => text.includes("Leech Chance"))).toBe(false);
+  });
+
   it("carries the NPC gold value as worth", () => {
     expect(toItemTooltip(itemType({ id: 1, npcValue: 1_500 })).worth).toBe(
       1_500,

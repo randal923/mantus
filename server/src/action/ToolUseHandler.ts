@@ -238,6 +238,7 @@ export class ToolUseHandler {
       consumeTypeId ?? 0,
       typeId,
       Math.max(1, Math.min(count, type.maxCount)),
+      undefined,
       (version, characterVersion, committedAt) => {
         this.persistence.completeExternalMutation(
           player,

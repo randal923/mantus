@@ -45,7 +45,7 @@ rates:
   experience: 2
   skill: 2
   magic: 2
-  loot: 1000
+  loot: 2
   spawn: 5
   # Soul regeneration, offline-training, and exercise-weapon training speeds.
   soulRegen: 5
@@ -67,7 +67,7 @@ rarity:
     uncommon: 5
     rare: 1
     epic: 0.2
-    legendary: 90
+    legendary: 0.04
   # How many distinct affixes each grade rolls (an affix id never repeats
   # on one item).
   affixCounts:

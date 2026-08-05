@@ -23,6 +23,7 @@ import { MonsterEventService } from "./creature/MonsterEventService";
 import type { CharacterStore } from "./character/CharacterStore";
 import { ChatHandler } from "./chat/ChatHandler";
 import { Combat } from "./combat/Combat";
+import { CombatFormula } from "./combat/CombatFormula";
 import { CombatIntentHandler } from "./combat/CombatIntentHandler";
 import { projectFightState } from "./combat/projectFightState";
 import { SpellRegistry } from "./combat/SpellRegistry";
@@ -1211,6 +1212,8 @@ export class GameServer {
           this.moderation,
           this.storeOperator,
           this.worldEvents,
+          config.rarity,
+          new CombatFormula(config.combatSeed ^ 0x5a7e_11d3),
         )
       : undefined;
     this.chat = new ChatHandler(

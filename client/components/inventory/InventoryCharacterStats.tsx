@@ -337,6 +337,44 @@ export function InventoryCharacterStats({
           </dl>
         </section>
 
+        {character.combat && (
+          <section>
+            <h3 className="mb-2 border-b border-ui-gold/15 pb-2 font-display text-sm tracking-[0.16em] text-ui-gold uppercase">
+              {t("characterStats.combat")}
+            </h3>
+            <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 text-sm">
+              <StatDetailRow
+                label={t("stats.criticalChance")}
+                value={`${character.combat.criticalChancePercent.toLocaleString(language)}%`}
+              />
+              <StatDetailRow
+                label={t("stats.criticalDamage")}
+                value={`${character.combat.criticalDamagePercent.toLocaleString(language)}%`}
+              />
+              <StatDetailRow
+                label={t("stats.lifeLeech")}
+                value={`${character.combat.lifeLeechPercent.toLocaleString(language)}%`}
+              />
+              <StatDetailRow
+                label={t("stats.manaLeech")}
+                value={`${character.combat.manaLeechPercent.toLocaleString(language)}%`}
+              />
+              {character.combat.resistances.map((resistance) => (
+                <StatDetailRow
+                  key={resistance.element}
+                  label={t("characterStats.resistance", {
+                    element: t(`bestiary.element.${resistance.element}`, {
+                      defaultValue: resistance.element,
+                    }),
+                  })}
+                  value={`${formatSignedValue(resistance.percent, language)}%`}
+                  bonus={resistance.percent}
+                />
+              ))}
+            </dl>
+          </section>
+        )}
+
         <section>
           <h3 className="mb-3 border-b border-ui-gold/15 pb-2 font-display text-sm tracking-[0.16em] text-ui-gold uppercase">
             {t("characterStats.skills")}

@@ -36,6 +36,7 @@ export class PgItemCreationOps {
     sourceItemTypeId: number,
     targetItemTypeId: number,
     count: number,
+    attributes?: Readonly<Record<string, unknown>>,
   ): Promise<ConjureItemResult> {
     return withSerializableTransaction(this.pool, async (client) => {
       const character = await this.locks.lockCharacter(client, characterId);
@@ -161,6 +162,7 @@ export class PgItemCreationOps {
         count,
         backpack.id,
         slot,
+        JSON.stringify(attributes ?? {}),
       ]);
       const created = requireReturnedItem(inserted.rows[0]);
       after.push(created);

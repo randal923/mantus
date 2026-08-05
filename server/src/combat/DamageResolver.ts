@@ -36,6 +36,9 @@ import { combineSkillBoosts } from "./combineSkillBoosts";
 import { playerDefense } from "./playerDefense";
 import { playerMitigation } from "./playerMitigation";
 
+/** Canary CONST_ME_CRITICAL_DAMAGE: the burst shown on any critical hit. */
+const CRITICAL_DAMAGE_EFFECT_ID = 173;
+
 const ARMOR_SLOTS = new Set([
   "helmet",
   "amulet",
@@ -500,6 +503,13 @@ export class DamageResolver {
         );
       }
     }
+    // Request-carried crits (wands, spells, monster abilities) show their
+    // burst here; auto-attack crits roll outside the request and call
+    // broadcastCriticalEffect themselves. Ordered before death handling — a
+    // killing crit must still flash on the corpse tile.
+    if (critical && amount > 0 && (healthChanged || manaChanged)) {
+      this.broadcastCriticalEffect(target);
+    }
     if (healthChanged && target.health <= 0) {
       this.death.handleDeath(target, request.sourceId, now);
     }
@@ -510,6 +520,19 @@ export class DamageResolver {
       healthChanged,
       manaChanged,
     };
+  }
+
+  /**
+   * The critical-hit burst on the victim's tile, for every crit source.
+   * A plain tile effect on purpose: gating it on the victim being a known
+   * creature would swallow the flash on one-shot kills, where the death
+   * already tore the victim out of every session's known set.
+   */
+  broadcastCriticalEffect(target: Creature): void {
+    this.visibility.broadcastMagicEffect(
+      target.position,
+      CRITICAL_DAMAGE_EFFECT_ID,
+    );
   }
 
   /**

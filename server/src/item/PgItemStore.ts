@@ -259,6 +259,7 @@ export class PgItemStore implements ItemStore {
     sourceItemTypeId: number,
     targetItemTypeId: number,
     count: number,
+    attributes?: Readonly<Record<string, unknown>>,
   ): Promise<ConjureItemResult> {
     return this.creations.conjure(
       characterId,
@@ -270,6 +271,7 @@ export class PgItemStore implements ItemStore {
       sourceItemTypeId,
       targetItemTypeId,
       count,
+      attributes,
     );
   }
 

@@ -28,7 +28,17 @@ export interface PlaytestServer {
  * touch the remote database.
  */
 export async function startPlaytestServer(
-  options: { port?: number; log?: boolean } = {},
+  options: {
+    port?: number;
+    log?: boolean;
+    /**
+     * Forces rarity drop chances (percent per grade) in the child server —
+     * parity runs delete the block, so a rarity scenario opts in explicitly.
+     */
+    rarityChances?: Record<string, number>;
+    /** Overrides the pinned 1x loot rate, to force loot-table drops. */
+    lootRate?: number;
+  } = {},
 ): Promise<PlaytestServer> {
   const log = process.env.PLAYTEST_LOG === "1" || (options.log ?? false);
   const port = options.port ?? Number(process.env.PLAYTEST_PORT ?? DEFAULT_PORT);
@@ -47,7 +57,7 @@ export async function startPlaytestServer(
     SERVER_PORT: String(port),
     // Playtests assert Canary-parity numbers, so the boosted dev rates are
     // pinned back to 1x for the child server.
-    CONFIG_PATH: writeParityConfig(),
+    CONFIG_PATH: writeParityConfig(options),
   };
 
   await runToCompletion("db:migrate", ["scripts/migrate.ts"], env);
@@ -85,7 +95,9 @@ export async function startPlaytestServer(
   };
 }
 
-function writeParityConfig(): string {
+function writeParityConfig(
+  options: { rarityChances?: Record<string, number>; lootRate?: number } = {},
+): string {
   const config = parse(
     readFileSync(join(serverRoot, "../config.yml"), "utf8"),
   ) as {
@@ -97,13 +109,17 @@ function writeParityConfig(): string {
     experience: 1,
     skill: 1,
     magic: 1,
-    loot: 1,
+    loot: options.lootRate ?? 1,
     bestiaryKills: 1,
     bosstiaryKills: 1,
   };
   // Parity scenarios compare fixed loot expectations; a surprise rarity roll
-  // would shift both drop contents and combat numbers.
+  // would shift both drop contents and combat numbers. Rarity scenarios opt
+  // back in with explicit chances (default tuning tables).
   delete config.rarity;
+  if (options.rarityChances) {
+    config.rarity = { chances: options.rarityChances };
+  }
   const directory = mkdtempSync(join(tmpdir(), "tibia-playtest-"));
   const path = join(directory, "config.yml");
   writeFileSync(path, stringify(config));

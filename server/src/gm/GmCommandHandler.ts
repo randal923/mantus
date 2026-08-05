@@ -1,13 +1,29 @@
 import { randomUUID } from "node:crypto";
 import {
+  ITEM_RARITIES,
   MAX_MAGIC_LEVEL,
   MAX_SKILL_LEVEL,
   MAX_STORABLE_CHARACTER_LEVEL,
   MIN_SKILL_LEVEL,
   SKILLS,
   type GmResponseMessage,
+  type ItemRarity,
   type Skill,
 } from "@tibia/protocol";
+import { formatAffixText } from "../rarity/formatAffixText";
+import { isRarityEligible } from "../rarity/isRarityEligible";
+import type { RarityConfig } from "../rarity/RarityConfig";
+import type { RarityRoll } from "../rarity/RarityRoll";
+import { rollItemAffixes } from "../rarity/rollItemAffixes";
+import {
+  AFFIX_ELEMENTS,
+  AFFIX_IDS,
+  AFFIX_SKILLS,
+  type AffixElement,
+  type AffixId,
+  type AffixSkill,
+  type RolledAffix,
+} from "../rarity/RolledAffix";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { ModerationService } from "../moderation/ModerationService";
@@ -49,6 +65,8 @@ export class GmCommandHandler {
     private readonly moderation: ModerationService | null,
     private readonly storeOperator: StoreOperatorService | null = null,
     private readonly worldEvents: WorldEventManager | null = null,
+    private readonly rarityConfig: RarityConfig | null = null,
+    private readonly rarityRoll: RarityRoll | null = null,
   ) {}
 
   /** Returns true when the text was a slash command and has been consumed. */
@@ -66,6 +84,9 @@ export class GmCommandHandler {
       case "i":
       case "item":
         this.createItem(session, player, args, now);
+        break;
+      case "rare":
+        this.createRareItem(session, player, args, now);
         break;
       case "spawn":
         this.spawnMonster(session, player, args, now);
@@ -282,6 +303,7 @@ export class GmCommandHandler {
       0,
       type.id,
       clamped,
+      undefined,
       (version, characterVersion, committedAt) => {
         this.persistence.completeExternalMutation(
           player,
@@ -298,6 +320,156 @@ export class GmCommandHandler {
       },
     );
     if (!started) this.persistence.cancelExternalMutation(player);
+  }
+
+  /**
+   * `/rare <grade> <item name or id> [affix=value,...]` — dev-only rarity
+   * conjuring for playtests. Without a spec the affixes roll from the live
+   * config tables exactly like a drop; an explicit spec such as
+   * `maxHealth=40,resistance=fire:6,skill=sword:2` makes assertions
+   * deterministic.
+   */
+  private createRareItem(
+    session: Session,
+    player: Player,
+    args: string[],
+    now: number,
+  ): void {
+    const usage =
+      "Usage: /rare <uncommon|rare|epic|legendary> <item> [affix=value,...]";
+    const config = this.rarityConfig;
+    const roll = this.rarityRoll;
+    if (!config || !roll) {
+      this.reply(session, false, "Rarity conjuring is unavailable.");
+      return;
+    }
+    const [gradeArg, ...rest] = args;
+    if (
+      !gradeArg ||
+      !(ITEM_RARITIES as ReadonlyArray<string>).includes(gradeArg) ||
+      rest.length === 0
+    ) {
+      this.reply(session, false, usage);
+      return;
+    }
+    const grade = gradeArg as ItemRarity;
+    const nameParts = [...rest];
+    const last = nameParts[nameParts.length - 1];
+    const spec = nameParts.length > 1 && last?.includes("=")
+      ? (nameParts.pop() ?? "")
+      : null;
+    const query = nameParts.join(" ");
+    const type = /^\d+$/.test(query)
+      ? this.items.itemType(Number(query))
+      : this.items.itemTypeByName(query);
+    if (!type) {
+      this.reply(session, false, `Unknown item "${query}".`);
+      return;
+    }
+    if (!isRarityEligible(type)) {
+      this.reply(session, false, `${type.name} cannot carry a rarity grade.`);
+      return;
+    }
+    let affixes: RolledAffix[];
+    if (spec) {
+      const parsed = this.parseAffixSpec(spec);
+      if (typeof parsed === "string") {
+        this.reply(session, false, parsed);
+        return;
+      }
+      affixes = parsed;
+    } else {
+      affixes = rollItemAffixes(grade, type, roll, config);
+    }
+    const attributes = { rarity: grade, affixes };
+    const expectedMana = player.mana;
+    const expectedSoul = player.progression.soul;
+    const expectedVersion = this.persistence.beginExternalMutation(player, now);
+    const summary = affixes.map((affix) => formatAffixText(affix)).join(", ");
+    const started = this.items.conjureForCombat(
+      session,
+      expectedVersion,
+      expectedMana,
+      expectedSoul,
+      0,
+      0,
+      0,
+      type.id,
+      1,
+      attributes,
+      (version, characterVersion, committedAt) => {
+        this.persistence.completeExternalMutation(
+          player,
+          version,
+          characterVersion,
+        );
+        this.progression.syncPlayer(player, committedAt, true);
+        this.reply(
+          session,
+          true,
+          `Created ${grade} ${type.name} (${summary}).`,
+        );
+      },
+      (failedAt) => {
+        this.persistence.cancelExternalMutation(player);
+        this.persistence.saveNow(player, failedAt);
+        this.reply(session, false, `Could not create ${type.name}.`);
+      },
+    );
+    if (!started) this.persistence.cancelExternalMutation(player);
+  }
+
+  /** `maxHealth=40,resistance=fire:6,skill=sword:2` -> rolled affix list. */
+  private parseAffixSpec(spec: string): RolledAffix[] | string {
+    const affixes: RolledAffix[] = [];
+    for (const part of spec.split(",")) {
+      const [id, rawValue] = part.split("=");
+      if (!id || !rawValue) return `Bad affix "${part}".`;
+      if (!(AFFIX_IDS as ReadonlyArray<string>).includes(id)) {
+        return `Unknown affix "${id}".`;
+      }
+      if (affixes.some((affix) => affix.id === id)) {
+        return `Duplicate affix "${id}".`;
+      }
+      let parameter: string | null = null;
+      let valueText = rawValue;
+      if (rawValue.includes(":")) {
+        const [head, tail] = rawValue.split(":");
+        parameter = head ?? null;
+        valueText = tail ?? "";
+      }
+      const value = Number(valueText);
+      if (!Number.isInteger(value) || value < 1 || value > 100_000) {
+        return `Bad value in "${part}".`;
+      }
+      if (id === "resistance") {
+        if (
+          !parameter ||
+          !(AFFIX_ELEMENTS as ReadonlyArray<string>).includes(parameter)
+        ) {
+          return `resistance needs an element, e.g. resistance=fire:6.`;
+        }
+        affixes.push({
+          id,
+          value,
+          element: parameter as AffixElement,
+        });
+      } else if (id === "skill") {
+        if (
+          !parameter ||
+          !(AFFIX_SKILLS as ReadonlyArray<string>).includes(parameter)
+        ) {
+          return `skill needs a skill, e.g. skill=sword:2.`;
+        }
+        affixes.push({ id, value, skill: parameter as AffixSkill });
+      } else if (parameter) {
+        return `Affix "${id}" takes a plain value.`;
+      } else {
+        affixes.push({ id: id as AffixId, value });
+      }
+    }
+    if (affixes.length === 0) return "Empty affix spec.";
+    return affixes;
   }
 
   private spawnMonster(

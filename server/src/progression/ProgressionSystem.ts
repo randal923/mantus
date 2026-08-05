@@ -1,5 +1,7 @@
 import type { Skill } from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
+import { ABSORB_ELEMENTS } from "../combat/absorbElements";
+import { playerSpecials } from "../combat/playerSpecials";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { Player } from "../Player";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -158,6 +160,10 @@ export class ProgressionSystem {
    * dirty mark.
    */
   private syncEquipmentStats(player: Player): boolean {
+    // No attached inventory means the equipment is unknown (mid-login or
+    // mid-logout), not absent: zeroing the modifier here would clamp an
+    // affix-boosted health right before the final logout save.
+    if (!this.items.hasLoadedInventory(player.id)) return false;
     const effects = this.items.imbuementEffects(player.id);
     const affixes = this.items.affixEffects(player.id);
     const equipment = this.items.combatEquipment(player.id);
@@ -178,7 +184,60 @@ export class ProgressionSystem {
       skills: bonuses.skills,
       magicLevel: bonuses.magicLevel,
     });
-    if (!statsChanged) return skillsChanged || attackSpeedChanged;
+    // Character Details' combat block: the same sums the cyclopedia combat
+    // view serves (equipment + wheel + imbuements + affixes; proficiency
+    // perks stay in their own panel), diffed so a crit/leech/resist change
+    // pushes a fresh progression like every other bonus.
+    const specials = playerSpecials(equipment, player);
+    const wheel = player.wheelBonuses;
+    const combatChanged = player.progression.setEquipmentCombatStats({
+      criticalChancePercent: round2(
+        specials.criticalChance +
+          effects.criticalChancePercent +
+          affixes.criticalChancePercent,
+      ),
+      criticalDamagePercent: round2(
+        specials.criticalDamagePercent +
+          effects.criticalDamagePercent +
+          affixes.criticalDamagePercent,
+      ),
+      lifeLeechPercent: round2(
+        specials.lifeLeechPercent +
+          wheel.lifeLeechPercent +
+          effects.lifeLeechPercent +
+          affixes.lifeLeechPercent,
+      ),
+      manaLeechPercent: round2(
+        specials.manaLeechPercent +
+          wheel.manaLeechPercent +
+          effects.manaLeechPercent +
+          affixes.manaLeechPercent,
+      ),
+      resistances: ABSORB_ELEMENTS.flatMap((element) => {
+        const equipmentPercent = equipment.reduce(
+          (total, entry) =>
+            total +
+            (entry.type.absorbPercent?.[
+              element as keyof NonNullable<typeof entry.type.absorbPercent>
+            ] ?? 0),
+          0,
+        );
+        const imbuementPercent = (effects.absorb[element] ?? []).reduce(
+          (total, percent) => total + percent,
+          0,
+        );
+        const percent = Math.min(
+          100,
+          equipmentPercent +
+            imbuementPercent +
+            (affixes.resistances[element] ?? 0),
+        );
+        return percent !== 0 ? [{ element, percent }] : [];
+      }),
+    });
+    if (!statsChanged) {
+      return skillsChanged || attackSpeedChanged || combatChanged;
+    }
     const inventory = this.items.updateCapacity(player.id, player.capacity);
     if (inventory) {
       this.registry.sessionFor(player.id)?.send({
@@ -262,4 +321,8 @@ export class ProgressionSystem {
     }
     return progress;
   }
+}
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
 }

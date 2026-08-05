@@ -121,6 +121,8 @@ export interface ItemStore {
     sourceItemTypeId: number,
     targetItemTypeId: number,
     count: number,
+    /** Attribute bag born with the item (dev-only rarity conjuring). */
+    attributes?: Readonly<Record<string, unknown>>,
   ): Promise<ConjureItemResult>;
   decayWorldItem(
     itemId: string,

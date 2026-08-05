@@ -622,7 +622,11 @@
     "healthAbbreviation": "HP",
     "manaAbbreviation": "MP",
     "stamina": "Stamina",
-    "experienceRate": "XP rate"
+    "experienceRate": "XP rate",
+    "criticalChance": "Critical chance",
+    "criticalDamage": "Critical damage",
+    "lifeLeech": "Life leech",
+    "manaLeech": "Mana leech"
   },
   "inventory": {
     "label": "{{name}}'s inventory",
@@ -1211,7 +1215,9 @@
     "boosts": "Boosts",
     "total": "Total",
     "serverRate": "Server rate",
-    "xpBoost": "XP boost"
+    "xpBoost": "XP boost",
+    "combat": "Combat",
+    "resistance": "{{element}} resistance"
   },
   "skills": {
     "fist": "Fist Fighting",

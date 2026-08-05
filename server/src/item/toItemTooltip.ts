@@ -16,6 +16,15 @@ function signed(value: number): string {
   return value > 0 ? `+${value}` : String(value);
 }
 
+/**
+ * Canary stores crit and leech-amount values in hundredths of a percent
+ * (sanguine coil's `criticalhitchance` 1000 = 10%); scale for display.
+ */
+function signedHundredths(value: number): string {
+  const scaled = Math.round(value) / 100;
+  return scaled > 0 ? `+${scaled}` : String(scaled);
+}
+
 function itemTypeLine(item: ItemType): string {
   if (item.primaryType) return item.primaryType;
   if (item.weaponType === "wand") return "wands";
@@ -97,22 +106,26 @@ export function toItemTooltip(
     affixes.push({ text: `Speed ${signed(item.speed)}` });
   }
   if (item.criticalHitChance !== undefined) {
-    affixes.push({ text: `Critical Hit Chance ${signed(item.criticalHitChance)}%` });
+    affixes.push({
+      text: `Critical Hit Chance ${signedHundredths(item.criticalHitChance)}%`,
+    });
   }
   if (item.criticalHitDamage !== undefined) {
-    affixes.push({ text: `Critical Hit Damage ${signed(item.criticalHitDamage)}%` });
+    affixes.push({
+      text: `Critical Extra Damage ${signedHundredths(item.criticalHitDamage)}%`,
+    });
   }
-  if (item.lifeLeechChance !== undefined) {
-    affixes.push({ text: `Life Leech Chance ${signed(item.lifeLeechChance)}%` });
-  }
+  // Leech chance is vestigial (both catalog scales mean "always applies"),
+  // so only the amounts are shown, like the modern client.
   if (item.lifeLeechAmount !== undefined) {
-    affixes.push({ text: `Life Leech Amount ${signed(item.lifeLeechAmount)}%` });
-  }
-  if (item.manaLeechChance !== undefined) {
-    affixes.push({ text: `Mana Leech Chance ${signed(item.manaLeechChance)}%` });
+    affixes.push({
+      text: `Life Leech ${signedHundredths(item.lifeLeechAmount)}%`,
+    });
   }
   if (item.manaLeechAmount !== undefined) {
-    affixes.push({ text: `Mana Leech Amount ${signed(item.manaLeechAmount)}%` });
+    affixes.push({
+      text: `Mana Leech ${signedHundredths(item.manaLeechAmount)}%`,
+    });
   }
   // Instance state: forge classification/tier and running imbuements are
   // server-authored display lines (the client renders, never computes).

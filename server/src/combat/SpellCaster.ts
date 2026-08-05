@@ -605,6 +605,7 @@ export class SpellCaster {
       conjure.sourceItemTypeId,
       conjure.targetItemTypeId,
       conjure.count,
+      undefined,
       (version, characterVersion, committedAt) => {
         this.persistence.completeExternalMutation(
           player,
