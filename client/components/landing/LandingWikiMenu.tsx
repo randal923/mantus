@@ -5,7 +5,10 @@ import { useId, useState } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { LandingMenuLink } from "./LandingMenuLink";
 
-const WIKI_LINKS = [{ key: "items", href: "/wiki/items" }] as const;
+const WIKI_LINKS = [
+  { key: "items", href: "/wiki/items" },
+  { key: "pvp", href: "/wiki/pvp" },
+] as const;
 
 /** Collapsible Wiki group in the landing sidebar; opens on /wiki pages. */
 export function LandingWikiMenu() {

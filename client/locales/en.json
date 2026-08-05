@@ -37,6 +37,25 @@
       }
     }
   },
+  "websiteWikiPvp": {
+    "eyebrow": "World Wiki",
+    "title": "PvP",
+    "description": "Mantus is an open PvP world where the power you earn matters. Here is how player-versus-player damage works and where we are taking it.",
+    "sections": {
+      "formula": {
+        "title": "No Halved Damage",
+        "body": "Classic Tibia applies a PvP formula: damage dealt to another player is cut in half, so a hit that would deal 500 to a monster lands for only about 250 in PvP. Mantus removes that rule entirely — your attacks deal their full damage against players, the same as against monsters."
+      },
+      "goal": {
+        "title": "Built for Real Duels",
+        "body": "Our goal is PvP where a 1v1 is genuinely worth fighting — and where high-level characters actually feel, and are, strong. The levels, skills, and gear you earn carry their full weight against other players."
+      },
+      "balance": {
+        "title": "Ongoing Balance",
+        "body": "Removing the halving changes the shape of every fight, and we treat that as something to tune, not a side effect. We will keep balancing the game and the damage of every vocation toward strong, fair 1v1 PvP."
+      }
+    }
+  },
   "websiteWikiItems": {
     "eyebrow": "World Wiki",
     "title": "Items & Rarity",
@@ -325,7 +344,8 @@
       },
       "wiki": {
         "title": "Wiki",
-        "items": "Items"
+        "items": "Items",
+        "pvp": "PvP"
       },
       "account": {
         "title": "Your Account",

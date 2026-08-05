@@ -37,6 +37,25 @@
       }
     }
   },
+  "websiteWikiPvp": {
+    "eyebrow": "Wiki do Mundo",
+    "title": "PvP",
+    "description": "Mantus é um mundo de PvP aberto onde o poder que você conquista importa. Veja como funciona o dano entre jogadores e para onde estamos levando o PvP.",
+    "sections": {
+      "formula": {
+        "title": "Dano Sem Redução",
+        "body": "O Tibia clássico aplica uma fórmula de PvP: o dano causado a outro jogador é cortado pela metade, então um golpe que causaria 500 em um monstro acerta por volta de 250 no PvP. Mantus remove essa regra por completo — seus ataques causam o dano cheio contra jogadores, igual ao que causam contra monstros."
+      },
+      "goal": {
+        "title": "Feito Para Duelos de Verdade",
+        "body": "Nosso objetivo é um PvP em que o 1v1 realmente vale a pena — e em que personagens de nível alto de fato se sintam, e sejam, fortes. Os níveis, as habilidades e os equipamentos que você conquista valem seu peso inteiro contra outros jogadores."
+      },
+      "balance": {
+        "title": "Balanceamento Contínuo",
+        "body": "Remover a redução muda a forma de cada luta, e tratamos isso como algo a ajustar, não como efeito colateral. Vamos continuar balanceando o jogo e o dano de todas as vocações em direção a um PvP 1v1 forte e justo."
+      }
+    }
+  },
   "websiteWikiItems": {
     "eyebrow": "Wiki do Mundo",
     "title": "Itens e Raridade",
@@ -325,7 +344,8 @@
       },
       "wiki": {
         "title": "Wiki",
-        "items": "Itens"
+        "items": "Itens",
+        "pvp": "PvP"
       },
       "account": {
         "title": "Sua Conta",

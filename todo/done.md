@@ -3259,3 +3259,28 @@ with `whitespace-nowrap`). Storybook's `next/navigation` mock returns
 **Residual risk**: the page hand-mirrors the `config.yml` rarity tuning
 and goes stale if tuning changes — recorded in TODO.md (owner: rarity
 system) with the recommended fix (public API endpoint or protocol move).
+
+## 2026-08-05 — Public wiki: PvP page (/wiki/pvp) on the full-damage PvP stance
+
+**Problem**: Nothing public told players that Mantus drops classic Tibia's
+PvP formula (player-vs-player damage halved) or what the PvP design goal is.
+
+**What changed**: Second entry in the landing-nav Wiki dropdown and a new
+`/wiki/pvp` page with three sections: classic Tibia halves damage between
+players and Mantus removes that rule entirely (full damage in PvP, same as
+against monsters); the goal is PvP where 1v1s are genuinely worth fighting
+and high-level characters actually feel — and are — strong; and vocation
+damage/game balance will keep being tuned toward that. Localized en + pt-BR.
+The claim was verified against `server/src/combat/DamageResolver.ts:179`,
+where the Canary-parity halving exists but is deliberately disabled.
+
+**Files**: `client/components/public-site/PvpWikiPage.tsx`,
+`client/app/wiki/pvp/page.tsx`, `client/components/landing/LandingWikiMenu.tsx`
+(links const), `client/stories/PvpWikiPage.stories.tsx`,
+`client/locales/{en,pt-BR}.json` (`landing.menu.wiki.pvp`, `websiteWikiPvp`).
+
+**Verified**: tsc + lint clean (same 20 pre-existing warnings); Storybook
+built; headless screenshots of `PvpWikiPage` at 1440/420 and the landing
+dropdown open showing Items + PvP. No residual risk — static editorial
+content; if the halving stance ever changes in `DamageResolver`, update
+this page with it.
