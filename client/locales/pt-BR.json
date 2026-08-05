@@ -37,6 +37,31 @@
       }
     }
   },
+  "websiteWikiItems": {
+    "eyebrow": "Wiki do Mundo",
+    "title": "Itens e Raridade",
+    "description": "Equipamentos derrubados por criaturas têm chance de receber um grau de raridade. Itens graduados carregam afixos — bônus aleatórios somados aos atributos base do item. Graus mais altos sorteiam mais afixos, e cada bônus vem mais forte.",
+    "rarities": {
+      "title": "Graus de Raridade",
+      "description": "Cada item graduado sorteia seus afixos do conjunto compartilhado abaixo, e um afixo nunca se repete no mesmo item. Equipamentos comuns não têm grau nem afixos sorteados.",
+      "affixCountLabel": "Afixos sorteados",
+      "powerLabel": "Poder dos afixos"
+    },
+    "affixes": {
+      "title": "Afixos",
+      "description": "Todo afixo sorteia um valor dentro da sua faixa e o multiplica pelo poder do grau. A tabela mostra a faixa resultante em cada grau.",
+      "affix": "Afixo",
+      "unavailable": "Não disponível neste grau",
+      "notes": {
+        "attackSpeed": "Limitado à metade da velocidade de ataque base da sua vocação.",
+        "lifeLeech": "Cura apenas com ataques automáticos.",
+        "manaLeech": "Recupera mana apenas com ataques automáticos.",
+        "skill": "Aumenta a habilidade da própria arma; sorteia Shielding em itens que não são armas.",
+        "magicLevel": "Aparece apenas no grau Raro ou melhor.",
+        "resistance": "Sorteia um elemento: Físico, Energia, Terra, Fogo, Gelo, Sagrado ou Morte."
+      }
+    }
+  },
   "websiteVocations": {
     "eyebrow": "Escolha seu caminho",
     "title": "Vocações",
@@ -297,6 +322,10 @@
         "highscores": "Recordes",
         "online": "Quem Está Online",
         "guilds": "Guildas"
+      },
+      "wiki": {
+        "title": "Wiki",
+        "items": "Itens"
       },
       "account": {
         "title": "Sua Conta",

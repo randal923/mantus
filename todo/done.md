@@ -3217,3 +3217,45 @@ Verified gaps found along the way live in `gaps/gap-1.md`…`gap-9.md`.
 `client/lib/minimap/useThrottledValue.ts`, `client/lib/render/{MapView,CreatureView}.ts`,
 `client/e2e/monsterPerformance.e2e.test.tsx`, `client/vitest.config.ts`,
 `client/stories/MinimapPanel.stories.tsx`, plus the test files above.
+
+## 2026-08-05 — Public website: Wiki dropdown in the landing nav + /wiki/items rarity & affix guide
+
+**Problem**: The public site had no wiki. The item rarity system (shipped
+2026-08-05) was undocumented for players: nothing public explained the four
+grades, how many affixes each rolls, or the affix pool and its value bands.
+
+**What changed**: Added a collapsible "Wiki" group to the landing sidebar
+nav (Tibia-style dropdown: chevron header button, closed by default, opens
+automatically on `/wiki` routes) with its first entry, Items, and a new
+public page at `/wiki/items`. The page shows the four rarity grades as
+cards — grade name in its rarity color, rolled-affix count, affix power
+multiplier, and a real `ItemTooltip` render of an example graded item
+(reusing the `TIBIA_TOOLTIP_ITEMS` fixtures, sprites drawn live from the
+atlas via `SpriteIcon`) — plus an affix table listing all 12 affixes with
+their roll range on every grade, computed with the server's exact scaling
+(`max(1, round(value × multiplier))`) and per-affix caveats (attack-speed
+cap, auto-attack-only leech, Rare+ magic level, resistance elements,
+weapon-skill matching). Localized in en and pt-BR; affix names stay in
+English to match in-game tooltip text. The nav link rows shared by the
+static groups and the new dropdown were extracted into `LandingMenuLink`.
+
+**Files**: `client/components/landing/{LandingNavigation,LandingMenuLink,LandingWikiMenu}.tsx`,
+`client/components/public-site/{ItemsWikiPage,RarityGuideCard,AffixGuideTable}.tsx`,
+`client/app/wiki/items/page.tsx`,
+`client/lib/wiki/{wikiAffixGuide,wikiRarityGuide,formatAffixRange,isAffixOnGrade}.ts`
+(+ `formatAffixRange.test.ts`), `client/stories/ItemsWikiPage.stories.tsx`,
+`client/locales/{en,pt-BR}.json` (`landing.menu.wiki`, `websiteWikiItems`).
+
+**Verified**: `formatAffixRange` unit tests against the server rounding
+(incl. ×2.25 and the flat magic-level band); full client suite 403/403;
+tsc + lint clean; headless screenshots of the built Storybook
+(`ItemsWikiPage` story at 1440/768, `LandingPage` story with the dropdown
+closed and clicked open — the 768px pass caught a heading/tooltip overlap,
+fixed by stacking the card below `lg`, and mid-range line wraps, fixed
+with `whitespace-nowrap`). Storybook's `next/navigation` mock returns
+`null` from `usePathname` (typed `string`), which crashed every
+`PublicSiteLayout` story until `LandingWikiMenu` guarded the null.
+
+**Residual risk**: the page hand-mirrors the `config.yml` rarity tuning
+and goes stale if tuning changes — recorded in TODO.md (owner: rarity
+system) with the recommended fix (public API endpoint or protocol move).

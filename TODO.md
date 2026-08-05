@@ -1026,7 +1026,15 @@ limitations accepted during a session are recorded in the owning feature file
   yellow) overlaps the rarity palette with different semantics; cyclopedia
   item summary could group by grade. Owner: rarity system (done.md
   2026-08-05).
-- Pre-existing Pg integration failures (unrelated to rarity, reproduce on
+- The public wiki page (`/wiki/items`, 2026-08-05) hand-mirrors the rarity
+  tuning: `client/lib/wiki/wikiAffixGuide.ts` and `wikiRarityGuide.ts`
+  duplicate the bands/counts/multipliers from `config.yml` (defaults in
+  `server/src/rarity/affixDefinitions.ts`), and `formatAffixRange` copies
+  the `max(1, round(value × multiplier))` rounding from `rollItemAffixes`.
+  If the tuning changes, the page silently goes stale. Recommended fix if
+  tuning starts moving: serve the live `ServerConfig.rarity` tables through
+  a `PublicApi` endpoint (or lift the affix definitions into `protocol/`)
+  instead of the client copy. Owner: rarity system.
   a clean tree, 2026-08-05): `PgGuildStore` (3: gold conservation, racing
   withdrawals, war stake), `PgSocialStores` (3: highscore pages/categories/
   staff filter), `PgItemStore` clean-sweep ("leaves a carried item alone",

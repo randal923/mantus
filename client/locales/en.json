@@ -37,6 +37,31 @@
       }
     }
   },
+  "websiteWikiItems": {
+    "eyebrow": "World Wiki",
+    "title": "Items & Rarity",
+    "description": "Equipment dropped by creatures has a chance to roll a rarity grade. Graded items carry affixes — random bonuses on top of the item's base stats. Higher grades roll more affixes, and every bonus rolls stronger.",
+    "rarities": {
+      "title": "Rarity Grades",
+      "description": "Each graded drop rolls its affixes from the shared pool below, and an affix never repeats on the same item. Common equipment carries no grade and no rolled affixes.",
+      "affixCountLabel": "Rolled affixes",
+      "powerLabel": "Affix power"
+    },
+    "affixes": {
+      "title": "Affixes",
+      "description": "Every affix rolls a value inside its band, then scales it by the grade's affix power. The table shows the resulting roll range on each grade.",
+      "affix": "Affix",
+      "unavailable": "Not available on this grade",
+      "notes": {
+        "attackSpeed": "Capped at half of your vocation's base attack speed.",
+        "lifeLeech": "Heals you from auto attacks only.",
+        "manaLeech": "Restores mana from auto attacks only.",
+        "skill": "Boosts the weapon's own skill; rolls Shielding on non-weapons.",
+        "magicLevel": "Only rolls on Rare grade or better.",
+        "resistance": "Rolls one element: Physical, Energy, Earth, Fire, Ice, Holy or Death."
+      }
+    }
+  },
   "websiteVocations": {
     "eyebrow": "Choose your path",
     "title": "Vocations",
@@ -297,6 +322,10 @@
         "highscores": "Highscores",
         "online": "Who Is Online",
         "guilds": "Guilds"
+      },
+      "wiki": {
+        "title": "Wiki",
+        "items": "Items"
       },
       "account": {
         "title": "Your Account",

@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { PublicAuthAction } from "../public-site/PublicAuthAction";
+import { LandingMenuLink } from "./LandingMenuLink";
+import { LandingWikiMenu } from "./LandingWikiMenu";
 
 const MENU_GROUPS = [
   {
@@ -55,21 +56,16 @@ export function LandingNavigation() {
             <ul className="py-1.5">
               {group.links.map((link) => (
                 <li key={link.key}>
-                  <Link
+                  <LandingMenuLink
                     href={link.href}
-                    className="group flex min-h-9 items-center gap-2.5 px-4 text-sm text-ui-text transition-colors hover:bg-white/5 hover:text-ui-text-bright"
-                  >
-                    <span
-                      aria-hidden
-                      className="size-1.5 rotate-45 border border-ui-accent-light/70 bg-ui-accent-deep transition-colors group-hover:bg-ui-accent"
-                    />
-                    {t(`landing.menu.${group.key}.${link.key}`)}
-                  </Link>
+                    label={t(`landing.menu.${group.key}.${link.key}`)}
+                  />
                 </li>
               ))}
             </ul>
           </section>
         ))}
+        <LandingWikiMenu />
       </nav>
 
       <section className="ui-panel-frame relative overflow-hidden p-4">

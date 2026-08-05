@@ -1,0 +1,63 @@
+"use client";
+
+import type { ItemRarity, ItemTooltipData } from "@tibia/protocol";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { WIKI_RARITY_GUIDE } from "../../lib/wiki/wikiRarityGuide";
+import { TIBIA_TOOLTIP_ITEMS } from "../inventory/tibiaTooltipItems";
+import { AffixGuideTable } from "./AffixGuideTable";
+import { PublicSiteLayout } from "./PublicSiteLayout";
+import { RarityGuideCard } from "./RarityGuideCard";
+
+const RARITY_EXAMPLES: Readonly<Record<ItemRarity, ItemTooltipData>> = {
+  uncommon: TIBIA_TOOLTIP_ITEMS.uncommonWand,
+  rare: TIBIA_TOOLTIP_ITEMS.rareSword,
+  epic: TIBIA_TOOLTIP_ITEMS.epicArmor,
+  legendary: TIBIA_TOOLTIP_ITEMS.legendaryHelmet,
+};
+
+export function ItemsWikiPage() {
+  const { t } = useAppTranslation();
+
+  return (
+    <PublicSiteLayout>
+      <div className="grid gap-5">
+        <header className="ui-panel-frame relative overflow-hidden p-5 sm:p-6">
+          <p className="font-display text-xs font-bold tracking-widest text-ui-accent-light uppercase">
+            {t("websiteWikiItems.eyebrow")}
+          </p>
+          <h1 className="mt-2 font-display text-xl font-bold tracking-wide text-ui-text-bright uppercase">
+            {t("websiteWikiItems.title")}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-ui-muted">
+            {t("websiteWikiItems.description")}
+          </p>
+        </header>
+
+        <section aria-labelledby="rarity-grades" className="grid gap-4">
+          <div className="px-1">
+            <h2
+              id="rarity-grades"
+              className="font-display text-lg font-bold tracking-wide text-ui-text-bright uppercase"
+            >
+              {t("websiteWikiItems.rarities.title")}
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-ui-muted">
+              {t("websiteWikiItems.rarities.description")}
+            </p>
+          </div>
+          {WIKI_RARITY_GUIDE.map((grade) => (
+            <RarityGuideCard
+              key={grade.rarity}
+              rarity={grade.rarity}
+              affixCount={grade.affixCount}
+              valueMultiplier={grade.valueMultiplier}
+              example={RARITY_EXAMPLES[grade.rarity]}
+            />
+          ))}
+        </section>
+
+        <AffixGuideTable />
+      </div>
+    </PublicSiteLayout>
+  );
+}
