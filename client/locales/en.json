@@ -1323,6 +1323,7 @@
     "charges": "Charges: {{count}}",
     "containerSlots": "Capacity: {{count}} slots",
     "rarity": {
+      "common": "Common",
       "uncommon": "Uncommon",
       "rare": "Rare",
       "epic": "Epic",

@@ -34,8 +34,10 @@ export function AuctionRarityBadge({ tooltip }: AuctionRarityBadgeProps) {
   const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(
     null,
   );
+  // Every eligible equipable now carries a display grade; the chip only
+  // exists to flag graded listings, so common stays badge-less.
   const rarity = tooltip.rarity;
-  if (!rarity) return null;
+  if (!rarity || rarity === "common") return null;
 
   const show = (bounds: DOMRect) => {
     setAnchor({

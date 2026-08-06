@@ -47,6 +47,15 @@ export const ITEM_RARITIES = ["uncommon", "rare", "epic", "legendary"] as const;
 
 export const itemRaritySchema = z.enum(ITEM_RARITIES);
 
+/**
+ * Grades a tooltip may display: the rollable grades plus "common" for
+ * rarity-eligible gear that rolled nothing. Only tooltips use this — market
+ * offers, affix rolls, and configs stay keyed to the rollable grades.
+ */
+export const ITEM_DISPLAY_RARITIES = ["common", ...ITEM_RARITIES] as const;
+
+export const itemDisplayRaritySchema = z.enum(ITEM_DISPLAY_RARITIES);
+
 export const itemAffixSchema = z
   .object({
     text: z.string().min(1).max(200),
@@ -65,7 +74,7 @@ export const itemTooltipSchema = z
     name: z.string().min(1).max(120),
     typeLine: z.string().min(1).max(80),
     spriteId: z.number().int().positive(),
-    rarity: itemRaritySchema.optional(),
+    rarity: itemDisplayRaritySchema.optional(),
     primaryStat: z.string().min(1).max(100).optional(),
     affixes: z.array(itemAffixSchema).max(20),
     requiredLevel: z.number().int().positive().optional(),
@@ -232,6 +241,7 @@ export type EquipmentSlot = z.infer<typeof equipmentSlotSchema>;
 export type QuickLootCategory = z.infer<typeof quickLootCategorySchema>;
 export type QuickLootFilter = z.infer<typeof quickLootFilterSchema>;
 export type ItemRarity = z.infer<typeof itemRaritySchema>;
+export type ItemDisplayRarity = z.infer<typeof itemDisplayRaritySchema>;
 export type ItemAffix = z.infer<typeof itemAffixSchema>;
 export type ItemTooltipData = z.infer<typeof itemTooltipSchema>;
 export type ItemUseKind = z.infer<typeof itemUseKindSchema>;

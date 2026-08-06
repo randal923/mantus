@@ -2,6 +2,7 @@ import type { ItemTooltipData } from "@tibia/protocol";
 import { itemImbuementsOf } from "../forge/itemImbuementsOf";
 import { itemTierOf } from "../forge/itemTierOf";
 import { formatAffixText } from "../rarity/formatAffixText";
+import { isRarityEligible } from "../rarity/isRarityEligible";
 import { itemAffixesOf } from "../rarity/itemAffixesOf";
 import { itemRarityOf } from "../rarity/itemRarityOf";
 import { chargesOf } from "./chargesOf";
@@ -135,7 +136,11 @@ export function toItemTooltip(
       text: `Classification: ${item.classification} Tier: ${tier}`,
     });
   }
-  const rarity = instance ? itemRarityOf(instance) : undefined;
+  // Gear that could have rolled a grade but didn't is labelled "common";
+  // non-gradable items (runes, food, containers) show no grade at all.
+  const rarity =
+    (instance ? itemRarityOf(instance) : undefined) ??
+    (isRarityEligible(item) ? ("common" as const) : undefined);
 
   return {
     name: titleCase(item.name),

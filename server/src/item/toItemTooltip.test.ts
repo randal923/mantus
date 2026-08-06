@@ -65,10 +65,16 @@ describe("toItemTooltip", () => {
     expect(tooltip.affixes[2]).toEqual({ text: "Extra Defense +1" });
   });
 
-  it("omits rarity for common items and catalog-only calls", () => {
+  it("labels ungraded eligible gear common, even catalog-only", () => {
     const type = itemType({ id: 1, equipmentSlot: "armor" });
-    expect(toItemTooltip(type).rarity).toBeUndefined();
-    expect(toItemTooltip(type, instance({})).rarity).toBeUndefined();
+    expect(toItemTooltip(type).rarity).toBe("common");
+    expect(toItemTooltip(type, instance({})).rarity).toBe("common");
+  });
+
+  it("omits rarity for items that cannot roll a grade", () => {
+    const rune = itemType({ id: 1 });
+    expect(toItemTooltip(rune).rarity).toBeUndefined();
+    expect(toItemTooltip(rune, instance({})).rarity).toBeUndefined();
   });
 
   it("composes one imbuement line naming every slot", () => {

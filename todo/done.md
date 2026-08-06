@@ -3340,3 +3340,36 @@ desktop and 420px.
 projection, so a member's online dot can lag up to a minute (same tradeoff
 as the character profile endpoint). Guild emblems/logos don't exist anywhere
 in the schema — the directory is text-only until an emblem system lands.
+
+## 2026-08-05 — Rarity display: "Common" grade on equipment tooltips, uncommon recolored green
+
+**Problem**: Ungraded equipment tooltips showed no rarity subtitle and no
+header tint, so common gear read as a different kind of item rather than the
+bottom grade of the same ladder; uncommon's grey (#a8adb5) barely read as a
+grade at all.
+
+**What changed**: New protocol enum `ITEM_DISPLAY_RARITIES` ("common" +
+the four rollable grades) backs `itemTooltipSchema.rarity`; the rollable
+`ITEM_RARITIES` (affix rolls, configs, GM /rare, market offers) is untouched.
+`toItemTooltip` labels rarity-eligible gear (`isRarityEligible`) with no
+rolled grade as "common" — instance and catalog-only calls alike, so market
+browse/shop tooltips agree with inventory. Client: `--color-rarity-common`
+takes the old grey, `--color-rarity-uncommon` becomes green (#7bb356, ARPG
+convention between grey commons and gold rares); ItemTooltip gained the
+common style row; AuctionRarityBadge explicitly skips "common" so market
+rows only badge graded listings; en/pt-BR "Common"/"Comum"; the 13 plain
+equipment Storybook fixtures now carry `rarity: "common"`.
+
+**Files**: `protocol/src/item.ts`, `server/src/item/toItemTooltip.ts`,
+`server/src/item/toItemTooltip.test.ts`, `client/app/globals.css`,
+`client/components/inventory/{ItemTooltip.tsx,tibiaTooltipItems.ts}`,
+`client/components/auction/AuctionRarityBadge.tsx`,
+`client/locales/{en,pt-BR}.json`.
+
+**Verified**: toItemTooltip tests updated (eligible gear → "common",
+non-gradable items still omit rarity) and passing alongside catalog,
+bestiary, rarity, and market suites (55 tests); client unit suite 403
+passed; tsc clean in protocol, server, and client.
+
+**Residual risk**: none known — market unique-listing semantics key off the
+market schema's rollable-grade field, not the tooltip, and were left as-is.

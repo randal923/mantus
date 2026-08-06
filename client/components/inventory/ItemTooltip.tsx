@@ -17,6 +17,11 @@ interface ItemTooltipProps {
  * (same pattern as BestiaryLootList).
  */
 const RARITY_STYLES = {
+  common: {
+    line: "text-rarity-common",
+    border: "border-rarity-common/40",
+    tint: "from-rarity-common/15 via-rarity-common/5 to-transparent",
+  },
   uncommon: {
     line: "text-rarity-uncommon",
     border: "border-rarity-uncommon/40",
