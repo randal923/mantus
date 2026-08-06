@@ -3424,3 +3424,38 @@ unit suite 403 passed, tsc clean in protocol, server, client.
 as quick-loot; bounded by container capacity). World/loot container windows
 (`ContainerInventorySection`) intentionally have no Stack/Sort buttons —
 carried containers only.
+
+## 2026-08-06 — Exercise-weapon chooser: unclickable dropdown replaced by animated item art
+
+**Problem**: on an exercise-weapon reward day the chooser could not be used at
+all. Its `Dropdown` was rendered dimmed and inert: `components/ui/Dropdown.tsx`
+puts `has-disabled:pointer-events-none has-disabled:opacity-45` on the `<label>`
+wrapping the `<select>`, and the chooser passed a *disabled* placeholder option
+("Select an exercise weapon"). A disabled `<option>` matches `:disabled`, so
+`:has(:disabled)` killed pointer events on the whole control — the trap the
+component's own comment warns about. The player also had to read names instead
+of seeing the weapons.
+
+**What changed**: the dropdown is gone. The chooser now shows the eight
+server-projected weapons as a grid of `SpriteIcon` tiles, so each one renders
+its real, animated item art (same phase cycling as in the world and inventory);
+click selects, double-click claims outright, and the claim button stays disabled
+until something is picked. Selection state is a plain `aria-pressed` toggle
+button per tile, matching `ActionBarItemPicker`. No other `Dropdown` caller
+passes a disabled option, so the shared component was left alone.
+
+The pool is unchanged and still regular-tier only: `EXERCISE_WEAPON_POOL` is the
+500-charge `canaryIds[1]` entry of every family (28552-28557, 44065, 50293) —
+no durable/lasting tiers and none of the store-only epic/legendary ids
+(60001-60008 / 60101-60108).
+
+**Files**: `client/components/daily/ExerciseWeaponSelectionModal.tsx`.
+
+**Verified**: client TypeScript and focused lint passed. Storybook build served
+headless and driven with Playwright: opening `Game/DailyRewardsModal →
+ExerciseWeaponDay` and clicking today's card renders 8 animated weapon tiles,
+clicking one sets `aria-pressed="true"` and enables "Claim Weapon" — screenshot
+confirmed the sprites and the selected-tile highlight.
+
+**Residual risk**: none new. The claim path is untouched and the server still
+re-validates pool membership, count, capacity, reach, and the daily gate.

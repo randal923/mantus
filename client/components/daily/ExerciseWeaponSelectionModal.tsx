@@ -5,7 +5,6 @@ import type { DailyRewardPoolEntry } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { SpriteIcon } from "../inventory/SpriteIcon";
 import { Button } from "../ui/Button";
-import { Dropdown } from "../ui/Dropdown";
 import { Modal } from "../ui/Modal";
 
 interface ExerciseWeaponSelectionModalProps {
@@ -14,7 +13,11 @@ interface ExerciseWeaponSelectionModalProps {
   onClose: () => void;
 }
 
-/** Server-projected exercise weapons available for today's reward. */
+/**
+ * Server-projected exercise weapons available for today's reward, shown as the
+ * animated item art itself rather than a list of names. The selection is a
+ * hint: the server re-checks pool membership when the claim arrives.
+ */
 export function ExerciseWeaponSelectionModal({
   weapons,
   onConfirm,
@@ -22,9 +25,6 @@ export function ExerciseWeaponSelectionModal({
 }: ExerciseWeaponSelectionModalProps) {
   const { t } = useAppTranslation();
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const selectedWeapon = weapons.find(
-    (weapon) => weapon.itemTypeId === selectedId,
-  );
 
   return (
     <Modal
@@ -59,42 +59,47 @@ export function ExerciseWeaponSelectionModal({
             {t("dailyRewards.noWeapons")}
           </p>
         ) : (
-          <div className="flex flex-col gap-4">
-            <Dropdown
-              ariaLabel={t("dailyRewards.weaponPickerLabel")}
-              label={t("dailyRewards.weaponPickerLabel")}
-              value={selectedId === null ? "" : String(selectedId)}
-              options={[
-                {
-                  value: "",
-                  label: t("dailyRewards.selectWeapon"),
-                  disabled: true,
-                },
-                ...weapons.map((weapon) => ({
-                  value: String(weapon.itemTypeId),
-                  label: weapon.name,
-                })),
-              ]}
-              onChange={(value) => {
-                const weapon = weapons.find(
-                  (entry) => String(entry.itemTypeId) === value,
+          <section
+            aria-label={t("dailyRewards.selectWeapon")}
+            className="flex flex-col gap-2"
+          >
+            <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
+              {t("dailyRewards.weaponPickerLabel")}
+            </h3>
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {weapons.map((weapon) => {
+                const active = weapon.itemTypeId === selectedId;
+                return (
+                  <li key={weapon.itemTypeId}>
+                    <button
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setSelectedId(weapon.itemTypeId)}
+                      onDoubleClick={() => onConfirm(weapon.itemTypeId)}
+                      className={`flex w-full flex-col items-center gap-2 rounded-sm border p-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ui-gold/60 ${
+                        active
+                          ? "border-ui-gold/70 bg-ui-gold/10"
+                          : "border-ui-stone-light/15 bg-ui-panel-deep/55 hover:border-ui-gold/40"
+                      }`}
+                    >
+                      <SpriteIcon
+                        spriteId={weapon.spriteId}
+                        clientId={weapon.itemTypeId}
+                        scale={2}
+                      />
+                      <span
+                        className={`w-full truncate text-center text-sm capitalize ${
+                          active ? "text-ui-text-bright" : "text-ui-text"
+                        }`}
+                      >
+                        {weapon.name}
+                      </span>
+                    </button>
+                  </li>
                 );
-                setSelectedId(weapon?.itemTypeId ?? null);
-              }}
-            />
-            {selectedWeapon && (
-              <div className="flex items-center gap-4 rounded-sm border border-ui-gold/40 bg-ui-panel-deep/70 p-4 text-ui-text-bright">
-                <SpriteIcon
-                  spriteId={selectedWeapon.spriteId}
-                  clientId={selectedWeapon.itemTypeId}
-                  scale={2}
-                />
-                <span className="font-medium capitalize">
-                  {selectedWeapon.name}
-                </span>
-              </div>
-            )}
-          </div>
+              })}
+            </ul>
+          </section>
         )}
       </div>
     </Modal>
