@@ -8,7 +8,12 @@ import type {
   HuntingVocation,
 } from "./HuntingPlace";
 
-const MAX_HUNTING_PLACES = 500;
+/**
+ * Hunts one catalog may hold. Generous because the catalog is generated as
+ * well as hand-written — a world sweep finds hundreds of hunting grounds —
+ * and this exists to bound a hostile response, not to budget the content.
+ */
+const MAX_HUNTING_PLACES = 2_000;
 /** Caves one hunt may gather; a city has a handful, never hundreds. */
 const MAX_SPOTS = 40;
 const MAX_STRING_LENGTH = 2_000;

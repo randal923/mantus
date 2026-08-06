@@ -13,6 +13,7 @@ import { DecayManager } from "./DecayManager";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import { ItemIntentHandler } from "./ItemIntentHandler";
+import type { LootItemCreation } from "./LootItemCreation";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { MemoryItemStore } from "./MemoryItemStore";
 
@@ -78,6 +79,8 @@ async function makeHarness(input: {
   carriedItems?: ReadonlyArray<Item>;
   /** Oz of capacity; raise it when the filler items would hit the cap first. */
   capacityMax?: number;
+  /** Corpse contents; defaults to one gold stack and one ungraded axe. */
+  loot?: ReadonlyArray<LootItemCreation>;
 }) {
   const world = new World(
     gridMapData({ name: "auto-loot-test", width: 12, height: 12, blocked: [] }),
@@ -118,7 +121,7 @@ async function makeHarness(input: {
     CORPSE_POSITION,
     0,
     CORPSE_TYPE,
-    [
+    input.loot ?? [
       { typeId: GOLD_TYPE, count: 10 },
       { typeId: AXE_TYPE, count: 1 },
     ],
@@ -185,12 +188,20 @@ function carriedTypeIds(
 }
 
 describe("auto loot", () => {
-  it("sweeps the whole corpse when nothing is blacklisted", async () => {
+  it("sweeps every listed type off the corpse", async () => {
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [] },
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toEqual([]);
@@ -199,28 +210,114 @@ describe("auto loot", () => {
     );
   });
 
-  it("leaves a blacklisted type in the corpse and takes the rest", async () => {
+  it("leaves an unlisted type in the corpse and takes the rest", async () => {
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [AXE_TYPE] },
+      filter: { enabled: true, pickupRules: [{ typeId: GOLD_TYPE }] },
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(
-      corpseChildren(harness.world, harness.corpseId).map((item) => item.typeId),
+      corpseChildren(harness.world, harness.corpseId).map(
+        (item) => item.typeId,
+      ),
     ).toEqual([AXE_TYPE]);
     const carried = carriedTypeIds(harness.items, KILLER_ID);
     expect(carried).toContain(GOLD_TYPE);
     expect(carried).not.toContain(AXE_TYPE);
   });
 
-  it("takes nothing while the filter is switched off", async () => {
+  it("takes nothing while the pick-up list is empty", async () => {
     const harness = await makeHarness({
-      filter: { enabled: false, ignoredItemTypeIds: [] },
+      filter: { enabled: true, pickupRules: [] },
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
+    expect(carriedTypeIds(harness.items, KILLER_ID)).not.toContain(GOLD_TYPE);
+  });
+
+  it("takes only the grades the rule names", async () => {
+    const harness = await makeHarness({
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: AXE_TYPE, rarities: ["rare"] }],
+      },
+      loot: [
+        { typeId: AXE_TYPE, count: 1, attributes: { rarity: "rare" } },
+        { typeId: AXE_TYPE, count: 1, attributes: { rarity: "epic" } },
+        // No grade rolled at all: "common" to the player, and not asked for.
+        { typeId: AXE_TYPE, count: 1 },
+      ],
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    expect(
+      corpseChildren(harness.world, harness.corpseId).map(
+        (item) => item.attributes.rarity,
+      ),
+    ).toEqual(["epic", undefined]);
+    const carried = (
+      harness.items.inventorySnapshot(KILLER_ID)?.items ?? []
+    ).filter((item) => item.typeId === AXE_TYPE);
+    expect(carried.map((item) => item.attributes.rarity)).toEqual(["rare"]);
+  });
+
+  it("takes an ungraded drop of a type listed by grade only when common is named", async () => {
+    const harness = await makeHarness({
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: AXE_TYPE, rarities: ["common"] }],
+      },
+      loot: [{ typeId: AXE_TYPE, count: 1 }],
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    expect(corpseChildren(harness.world, harness.corpseId)).toEqual([]);
+    expect(carriedTypeIds(harness.items, KILLER_ID)).toContain(AXE_TYPE);
+  });
+
+  it("takes nothing while the filter is switched off", async () => {
+    const harness = await makeHarness({
+      filter: {
+        enabled: false,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
@@ -229,11 +326,19 @@ describe("auto loot", () => {
 
   it("takes nothing when the killer is out of reach of the corpse", async () => {
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [] },
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
       killerPosition: FAR_POSITION,
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
@@ -241,11 +346,19 @@ describe("auto loot", () => {
 
   it("never sweeps a corpse owned by someone else", async () => {
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [] },
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
       corpseOwnerId: RIVAL_ID,
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
@@ -255,12 +368,20 @@ describe("auto loot", () => {
   it("fills a bag nested inside a full backpack instead of giving up", async () => {
     const nestedBagId = randomUUID();
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [] },
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
       carriedItems: fullBackpackWithNestedBag(nestedBagId),
       capacityMax: 5_000,
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toEqual([]);
@@ -276,7 +397,7 @@ describe("auto loot", () => {
     const existingGoldId = randomUUID();
     const carried = fullBackpackWithNestedBag(nestedBagId);
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [AXE_TYPE] },
+      filter: { enabled: true, pickupRules: [{ typeId: GOLD_TYPE }] },
       carriedItems: [
         ...carried,
         {
@@ -291,7 +412,12 @@ describe("auto loot", () => {
       capacityMax: 5_000,
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     const gold = childrenOf(harness.items, KILLER_ID, nestedBagId).filter(
@@ -305,7 +431,10 @@ describe("auto loot", () => {
     const nestedBagId = randomUUID();
     const carried = fullBackpackWithNestedBag(nestedBagId);
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [] },
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
       carriedItems: [
         ...carried,
         ...Array.from({ length: 20 }, (_, slot) => ({
@@ -324,7 +453,12 @@ describe("auto loot", () => {
       capacityMax: 5_000,
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
@@ -332,11 +466,24 @@ describe("auto loot", () => {
 
   it("cannot duplicate loot when the same corpse is swept twice", async () => {
     const harness = await makeHarness({
-      filter: { enabled: true, ignoredItemTypeIds: [] },
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
     });
 
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
-    harness.items.autoLoot(harness.killer.session, KILLER_ID, harness.corpseId, 0);
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toEqual([]);

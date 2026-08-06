@@ -1,36 +1,64 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { LootFilter, LootFilterItem } from "@tibia/protocol";
+import { useCallback, useMemo, useState } from "react";
+import type {
+  BestiaryCreatureEntry,
+  BestiaryMonsterStateMessage,
+  ItemDisplayRarity,
+  LootFilter,
+  LootFilterItem,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useCreatureLootItems } from "../../hooks/useCreatureLootItems";
+import { activeLootFilterEntries } from "../../lib/loot-filter/activeLootFilterEntries";
+import { carriedLootFilterEntries } from "../../lib/loot-filter/carriedLootFilterEntries";
+import { expandLootFilterItem } from "../../lib/loot-filter/expandLootFilterItem";
+import { isLootFilterSelected } from "../../lib/loot-filter/isLootFilterSelected";
+import { lootFilterRuleIndex } from "../../lib/loot-filter/lootFilterRuleIndex";
 import { mergeLootFilterItems } from "../../lib/loot-filter/mergeLootFilterItems";
+import { toggleLootFilterRule } from "../../lib/loot-filter/toggleLootFilterRule";
 import { Button } from "../ui/Button";
 import { Checkbox } from "../ui/Checkbox";
 import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
+import { LootFilterCreaturePanel } from "./LootFilterCreaturePanel";
 import { LootFilterPane } from "./LootFilterPane";
+
+/** Item types one search may draw; each gradable one expands to five cells. */
+const MAX_SEARCH_TYPES = 60;
 
 interface LootFilterModalProps {
   readonly filter: LootFilter;
-  /** Item types the character carries, from the server. */
+  /** What the character is holding, split by rolled grade, from the server. */
   readonly carried: ReadonlyArray<LootFilterItem>;
-  /** Blacklisted types the character no longer carries, from the server. */
-  readonly ignored: ReadonlyArray<LootFilterItem>;
+  /** One ungraded entry per type the character carries or lists. */
+  readonly types: ReadonlyArray<LootFilterItem>;
+  /** Bestiary creatures, for the drop-table browser. */
+  readonly creatures: ReadonlyArray<BestiaryCreatureEntry>;
+  readonly monster: BestiaryMonsterStateMessage | null;
+  readonly monsterPending: boolean;
+  readonly onRequestMonster: (raceId: number) => void;
   readonly onChange: (filter: LootFilter) => void;
   readonly onClose: () => void;
 }
 
 /**
- * The auto-loot window. The left pane lists what the character is carrying;
- * typing in its search box widens the list to every item any creature in the
- * game drops, so a drop can be blacklisted before it is ever picked up. The
- * right pane is the blacklist itself — drag or click between the two.
+ * The auto-loot window. The top left pane lists what the character is
+ * carrying, each stack at the grade it rolled; typing in its search box
+ * replaces that with every item any creature in the game drops, there split
+ * into one cell per grade for gear that rolls one. The top right pane is the
+ * pick-up list itself — drag or click between the two — and the panel below
+ * finds a creature and lists what it drops, grades and all, so a spot can be
+ * filled without knowing the item's name.
  */
 export function LootFilterModal({
   filter,
   carried,
-  ignored,
+  types,
+  creatures,
+  monster,
+  monsterPending,
+  onRequestMonster,
   onChange,
   onClose,
 }: LootFilterModalProps) {
@@ -38,54 +66,66 @@ export function LootFilterModal({
   const [search, setSearch] = useState("");
   const catalog = useCreatureLootItems();
 
-  const ignoredTypeIds = useMemo(
-    () => new Set(filter.ignoredItemTypeIds),
-    [filter.ignoredItemTypeIds],
-  );
+  const rules = useMemo(() => lootFilterRuleIndex(filter), [filter]);
   const known = useMemo(
-    () => mergeLootFilterItems(carried, ignored, catalog.items),
-    [carried, ignored, catalog.items],
+    () => mergeLootFilterItems(types, catalog.items),
+    [types, catalog.items],
+  );
+  const carriedEntries = useMemo(
+    () => carriedLootFilterEntries(carried),
+    [carried],
   );
 
   const query = search.trim().toLowerCase();
-  const sourcePane =
-    query.length === 0
-      ? carried
-      : [...known.values()]
-          .filter((item) => item.name.toLowerCase().includes(query))
-          .sort((left, right) => left.name.localeCompare(right.name));
-  const ignoredPane = filter.ignoredItemTypeIds.flatMap((typeId) => {
-    const item = known.get(typeId);
-    return item ? [item] : [];
-  });
+  const searchEntries = useMemo(() => {
+    if (query.length === 0) return [];
+    return [...known.values()]
+      .filter((item) => item.name.toLowerCase().includes(query))
+      .sort((left, right) => left.name.localeCompare(right.name))
+      .slice(0, MAX_SEARCH_TYPES)
+      .flatMap((item) => expandLootFilterItem(item));
+  }, [known, query]);
+  const activeEntries = useMemo(
+    () => activeLootFilterEntries(filter, known),
+    [filter, known],
+  );
 
-  const add = (typeId: number) => {
-    if (ignoredTypeIds.has(typeId)) return;
-    onChange({
-      ...filter,
-      ignoredItemTypeIds: [...filter.ignoredItemTypeIds, typeId],
-    });
-  };
-  const remove = (typeId: number) => {
-    if (!ignoredTypeIds.has(typeId)) return;
-    onChange({
-      ...filter,
-      ignoredItemTypeIds: filter.ignoredItemTypeIds.filter(
-        (candidate) => candidate !== typeId,
-      ),
-    });
-  };
+  const isSelected = useCallback(
+    (typeId: number, rarity?: ItemDisplayRarity) =>
+      isLootFilterSelected(rules, typeId, rarity),
+    [rules],
+  );
+  const toggle = useCallback(
+    (typeId: number, rarity?: ItemDisplayRarity) => {
+      onChange(toggleLootFilterRule(filter, typeId, rarity));
+    },
+    [filter, onChange],
+  );
+  const remove = useCallback(
+    (typeId: number, rarity?: ItemDisplayRarity) => {
+      if (!isLootFilterSelected(rules, typeId, rarity)) return;
+      onChange(toggleLootFilterRule(filter, typeId, rarity));
+    },
+    [filter, onChange, rules],
+  );
+  const add = useCallback(
+    (typeId: number, rarity?: ItemDisplayRarity) => {
+      if (isLootFilterSelected(rules, typeId, rarity)) return;
+      onChange(toggleLootFilterRule(filter, typeId, rarity));
+    },
+    [filter, onChange, rules],
+  );
 
   return (
     <Modal
       title={t("lootFilter.title")}
-      size="wide"
+      size="extra-wide"
       onClose={onClose}
       footer={
         <>
           <Button
-            disabled={filter.ignoredItemTypeIds.length === 0}
-            onClick={() => onChange({ ...filter, ignoredItemTypeIds: [] })}
+            disabled={filter.pickupRules.length === 0}
+            onClick={() => onChange({ ...filter, pickupRules: [] })}
           >
             {t("lootFilter.reset")}
           </Button>
@@ -95,7 +135,9 @@ export function LootFilterModal({
         </>
       }
     >
-      <div className="flex h-[28rem] flex-col gap-3">
+      {/* h-full, not flex-1: the modal body is a scroll container, so the
+          panes only get their own scrollbars once this box has a height. */}
+      <div className="flex h-full min-h-0 flex-col gap-3">
         <Checkbox
           checked={filter.enabled}
           onChange={(event) =>
@@ -119,13 +161,13 @@ export function LootFilterModal({
                 ? t("lootFilter.carried")
                 : t("lootFilter.searchResults")
             }
-            items={sourcePane}
-            ignoredTypeIds={ignoredTypeIds}
+            entries={query.length === 0 ? carriedEntries : searchEntries}
             emptyMessage={
               query.length === 0
                 ? t("lootFilter.carriedEmpty")
                 : t("lootFilter.searchEmpty")
             }
+            isSelected={isSelected}
             toolbar={
               <Input
                 name="loot-filter-search"
@@ -137,20 +179,26 @@ export function LootFilterModal({
                 className="shrink-0"
               />
             }
-            onActivateItem={(typeId) =>
-              ignoredTypeIds.has(typeId) ? remove(typeId) : add(typeId)
-            }
-            onDropItem={remove}
+            onActivateEntry={toggle}
+            onDropEntry={remove}
           />
           <LootFilterPane
-            title={t("lootFilter.ignored")}
-            items={ignoredPane}
-            ignoredTypeIds={ignoredTypeIds}
-            emptyMessage={t("lootFilter.ignoredEmpty")}
-            onActivateItem={remove}
-            onDropItem={add}
+            title={t("lootFilter.selected")}
+            entries={activeEntries}
+            emptyMessage={t("lootFilter.selectedEmpty")}
+            isSelected={isSelected}
+            onActivateEntry={remove}
+            onDropEntry={add}
           />
         </div>
+        <LootFilterCreaturePanel
+          creatures={creatures}
+          monster={monster}
+          pending={monsterPending}
+          onRequestMonster={onRequestMonster}
+          isSelected={isSelected}
+          onToggleEntry={toggle}
+        />
       </div>
     </Modal>
   );

@@ -116,7 +116,7 @@ export interface GameWindowState {
   /** What the loot-filter window draws; refreshed when the window opens. */
   lootFilterItems: {
     readonly carried: ReadonlyArray<LootFilterItem>;
-    readonly ignored: ReadonlyArray<LootFilterItem>;
+    readonly types: ReadonlyArray<LootFilterItem>;
   };
   actionBarEditorRequest: ActionBarEditorRequest | null;
   marketSelectedItem: string | null;

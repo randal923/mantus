@@ -31,10 +31,11 @@ export function LootPanel({
   onClose,
 }: LootPanelProps) {
   return (
-    <div className="ui-panel-frame w-64 p-2 font-tibia text-ui-text select-none">
+    <div className="ui-panel-frame w-80 p-2 font-tibia text-ui-text select-none">
       <ContainerInventorySection
         state={state}
         dragSourceKind="loot"
+        fitContents
         onActivate={(item) =>
           item.containerCapacity ? onOpenContainer(item) : onLootItem(item)
         }

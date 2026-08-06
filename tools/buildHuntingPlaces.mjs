@@ -63,6 +63,30 @@ const RING = {
   maxSnapDistance: 4,
 };
 
+/** The floor a character walks the world on; below it is underground. */
+const SURFACE_FLOOR = 7;
+
+/**
+ * Towns no hunt is run from: the tutorial islands, whose temples sit close
+ * enough to real ground to steal its name.
+ */
+const NON_HUNTING_TOWNS = new Set(["dawnport tutorial", "island of destiny"]);
+
+/** Why the last `buildPlace` gave up, for a report a human reads. */
+let lastSkipReason = "";
+
+/**
+ * Every route tile in the catalog, bucketed so a cave can ask "is this ground
+ * already hunted?" without walking hundreds of routes. It grows as the run
+ * adds caves, which is what lets a world sweep run after a hand-listed batch
+ * without generating the same cave twice.
+ */
+const ROUTE_CELL = 32;
+const routeIndex = new Map();
+
+/** Entry fields written on one line: routes are thousands of coordinates. */
+const DENSE_KEYS = new Set(["RoutePath", "WayPath", "Spots"]);
+
 /** How far a hand-written route may sit from a cave and still own it. */
 const COVERAGE_MARGIN = 25;
 
@@ -71,6 +95,20 @@ const POPULATION_RADIUS = 12;
 
 const EMPTY_RING = { waypoints: [], cavern: new Set() };
 
+const LIMITS = {
+  /** Spawns a cave needs before it is worth walking. */
+  minSpawns: 20,
+  /** Caves one hunt may gather, biggest first. */
+  cavesPerHunt: 6,
+  /** Creatures worth no more than this are scenery, not a hunt. */
+  minExperience: 15,
+};
+
+const world = process.argv.includes("--world");
+const limitIndex = process.argv.indexOf("--limit");
+/** Caves to process, for a quick smoke run over a world sweep. */
+const limit =
+  limitIndex === -1 ? Infinity : Number(process.argv[limitIndex + 1] ?? 0);
 const dryRun = process.argv.includes("--dry-run");
 const outIndex = process.argv.indexOf("--out");
 const outPath = outIndex === -1 ? catalogPath : process.argv[outIndex + 1];
@@ -113,18 +151,20 @@ for (const [index, place] of catalog.entries()) {
 
 const levelCurve = fitLevelCurve();
 
+for (const place of curated) indexPlace(place);
+
 const generated = [];
+// Only the hand-written names are reserved: last run's generated hunts are
+// being rebuilt, so their names are free again and stay stable across runs.
+const takenNames = new Set(curated.map((place) => place.Name));
 const report = [];
-for (const target of TARGETS) {
-  const targeted = enabledSlots.filter(
-    (slot) =>
-      target.typeIds.includes(slot.typeId) && inArea(slot.home, target.area),
-  );
-  const groups = clusterSpawnGroups(targeted);
+for (const batch of world
+  ? [...batchesFromTargets(), ...sweepWorld()]
+  : batchesFromTargets()) {
   const built = [];
   const owners = new Map();
-  for (const group of groups) {
-    const covered = curatedCovering(group, target.typeIds);
+  for (const group of batch.groups) {
+    const covered = curatedCovering(group, creatureIdsOf(group));
     if (covered) {
       owners.set(covered, (owners.get(covered) ?? 0) + 1);
       report.push(
@@ -132,19 +172,12 @@ for (const target of TARGETS) {
       );
       continue;
     }
-    const place = buildPlace(group, target);
+    const place = buildPlace(group, batch.target);
     if (!place) {
-      report.push(`skip ${describe(group)} — no walkable ring, or no way in`);
+      report.push(`skip ${describe(group)} — ${lastSkipReason}`);
       continue;
     }
     built.push({ place, group });
-    report.push(
-      `cave ${place.Name} — ${group.slots.length} spawns, ${
-        Object.entries(place.RoutePath.Coordinates)
-          .map(([floor, segments]) => `floor ${floor}: ${segments.length} legs`)
-          .join(", ")
-      }`,
-    );
   }
   if (built.length === 0) continue;
 
@@ -154,30 +187,58 @@ for (const target of TARGETS) {
   const [owner] = [...owners.entries()].sort(
     (left, right) => right[1] - left[1],
   )[0] ?? [];
-  const host = owner ?? built[0].place;
-  if (!owner) host.Name = target.groupName ?? `${target.name}s`;
-  const rest = owner ? built : built.slice(1);
+  // The biggest caves first, then trimmed: a picker with forty pins on it is
+  // not a choice, and the small ones are the poor hunts anyway.
+  built.sort((left, right) => right.group.slots.length - left.group.slots.length);
+  const kept = built;
+  const host = owner ?? kept[0].place;
+  if (!owner) {
+    // Named after the creature actually met on the route, not the one that
+    // dominated the raw cluster: the two disagree when a cluster spans two
+    // caverns, and a hunt must not advertise a creature it does not hold.
+    const lead = host.Monsters[0]?.Name ?? batch.target.name;
+    host.Name = uniqueName(
+      `${batch.target.town || "Wild"} ${lead} Caves`,
+      takenNames,
+    );
+  }
+  const rest = owner ? kept : kept.slice(1);
   const town = map.towns.find(
-    (candidate) => candidate.name.toLowerCase() === target.town.toLowerCase(),
+    (candidate) =>
+      candidate.name.toLowerCase() === batch.target.town.toLowerCase(),
   );
+  const existing = host.Spots ?? [];
+  const room = Math.max(0, LIMITS.cavesPerHunt - 1 - existing.length);
+  const additions = rest.slice(0, room);
   const named = nameSpots(
     [
       { place: host, box: routeBox(host) },
-      ...rest.map(({ place, group }) => ({ place, box: group.box })),
+      ...additions.map(({ place, group }) => ({ place, box: group.box })),
     ],
     town,
   );
-  host.SpotName = named[0];
-  host.Spots = rest.map(({ place }, index) => ({
-    Name: named[index + 1],
-    Generated: true,
-    Position: place.SpotPosition,
-    WayPath: place.WayPath,
-    RoutePath: place.RoutePath,
-  }));
+  // A hunt can be reached by more than one pass — a hand-listed batch and
+  // then the world sweep — so caves are added to the ones it already has
+  // rather than replacing them.
+  const takenSpotNames = new Set([
+    host.SpotName ?? named[0],
+    ...existing.map((spot) => spot.Name),
+  ]);
+  host.SpotName ??= named[0];
+  host.Spots = [
+    ...existing,
+    ...additions.map(({ place }, index) => ({
+      Name: uniqueName(named[index + 1], takenSpotNames),
+      Generated: true,
+      Position: place.SpotPosition,
+      WayPath: place.WayPath,
+      RoutePath: place.RoutePath,
+    })),
+  ];
   // The hand-written host describes its own cave but never says where it is
   // entered from the surface, so the same trace answers for it too.
-  host.SpotPosition = surfaceEntranceOf(host, town);
+  host.SpotPosition ??= surfaceEntranceOf(host, town);
+  for (const spot of host.Spots) indexRoute(host, spot.RoutePath);
   if (owner) {
     edited.add(catalog.indexOf(owner));
     report.push(
@@ -186,17 +247,113 @@ for (const target of TARGETS) {
         .join(", ")}`,
     );
   } else {
+    indexRoute(host, host.RoutePath);
     generated.push(host);
     report.push(
-      `add "${host.Name}" with ${host.Spots.length} more caves`,
+      `add "${host.Name}" with ${host.Spots.length + 1} caves`,
     );
   }
 }
 
+/** A catalog name no other hunt has taken. */
+function uniqueName(name, taken) {
+  let candidate = name;
+  for (let suffix = 2; taken.has(candidate); suffix += 1) {
+    candidate = `${name} ${suffix}`;
+  }
+  taken.add(candidate);
+  return candidate;
+}
+
+/** One batch per hand-listed target: its creatures inside its region. */
+function batchesFromTargets() {
+  return TARGETS.map((target) => ({
+    target,
+    groups: clusterSpawnGroups(
+      enabledSlots.filter(
+        (slot) =>
+          target.typeIds.includes(slot.typeId) && inArea(slot.home, target.area),
+      ),
+    ),
+  }));
+}
+
+/**
+ * Every huntable population on the map, gathered into hunts.
+ *
+ * A cluster is a cave; caves are grouped by the town they are hunted from and
+ * the creature that dominates them, which is how a player names a hunt —
+ * "the rotworm caves out of Darashia" — rather than by which cluster the
+ * union-find happened to produce.
+ */
+function sweepWorld() {
+  const huntable = enabledSlots.filter((slot) => {
+    const type = monsterById.get(slot.typeId);
+    return (
+      type?.flags?.hostile === true && (type.experience ?? 0) >= LIMITS.minExperience
+    );
+  });
+  const groups = clusterSpawnGroups(huntable, { minSize: LIMITS.minSpawns });
+  const batches = new Map();
+  for (const group of groups.slice(0, limit)) {
+    const town = nearestTown(group.box);
+    const creature = dominantCreature(group);
+    if (!creature) continue;
+    const key = `${town?.name ?? "wilds"}|${creature.id}`;
+    const batch = batches.get(key) ?? {
+      target: {
+        location: town?.name ?? "The Wilds",
+        town: town?.name ?? "",
+        name: `${town?.name ?? "Wild"} ${creature.name} Caves`,
+      },
+      groups: [],
+    };
+    batch.groups.push(group);
+    batches.set(key, batch);
+  }
+  return [...batches.values()];
+}
+
+function creatureIdsOf(group) {
+  return [...new Set(group.slots.map((slot) => slot.typeId))];
+}
+
+function dominantCreature(group) {
+  const counts = new Map();
+  for (const slot of group.slots) {
+    counts.set(slot.typeId, (counts.get(slot.typeId) ?? 0) + 1);
+  }
+  const [typeId] = [...counts.entries()].sort(
+    (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
+  )[0] ?? [];
+  return typeId ? monsterById.get(typeId) : undefined;
+}
+
+/** The town a hunt is run from: the closest temple, floors ignored. */
+function nearestTown(box) {
+  const x = (box.minX + box.maxX) / 2;
+  const y = (box.minY + box.maxY) / 2;
+  let best;
+  let bestDistance = Infinity;
+  for (const town of map.towns) {
+    if (NON_HUNTING_TOWNS.has(town.name.toLowerCase())) continue;
+    const distance = Math.max(Math.abs(town.x - x), Math.abs(town.y - y));
+    if (distance >= bestDistance) continue;
+    bestDistance = distance;
+    best = town;
+  }
+  return best;
+}
+
 const merged = [...curated, ...generated];
 for (const line of report) console.log(line);
+const spotCount = merged.reduce(
+  (total, place) => total + (place.Spots?.length ?? 0),
+  0,
+);
 console.log(
-  `hunting places: ${curated.length} curated + ${generated.length} generated`,
+  `hunting places: ${curated.length} curated + ${generated.length} generated, ` +
+    `${spotCount} gathered caves, ${edited.size} hand-written hunts extended`,
 );
 if (!dryRun) {
   const rendered = renderCatalog();
@@ -240,15 +397,28 @@ function renderCatalog() {
         : catalogText.slice(span.start, span.end),
     ];
   });
-  const added = generated.map(indented);
+  const added = generated.map((place) => indented(place));
   return `[\n    ${[...kept, ...added].join(",\n    ")}\n]`;
 }
 
-function indented(place) {
-  return JSON.stringify(place, null, 4)
-    .split("\n")
-    .map((line, index) => (index === 0 ? line : `    ${line}`))
-    .join("\n");
+/**
+ * One catalog entry as text: readable where a human reads it, dense where the
+ * machine does. Routes are thousands of coordinates — pretty-printing them
+ * costs megabytes in a file the client fetches whole — so they go on one
+ * line each while the hunt's own fields keep the shape the hand-written
+ * entries are in.
+ */
+function indented(place, indent = "    ") {
+  const inner = `${indent}    `;
+  const fields = Object.entries(place)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => {
+      const text = DENSE_KEYS.has(key)
+        ? JSON.stringify(value)
+        : JSON.stringify(value, null, 4).split("\n").join(`\n${inner}`);
+      return `${inner}${JSON.stringify(key)}: ${text}`;
+    });
+  return `{\n${fields.join(",\n")}\n${indent}}`;
 }
 
 /** Byte spans of the array's top-level entries, quotes and escapes respected. */
@@ -313,21 +483,74 @@ function curatedCovering(group, typeIds) {
       return type ? [type.name.toLowerCase()] : [];
     }),
   );
-  return curated.find(
-    (place) =>
-      place.Monsters.some((monster) =>
-        targeted.has(monster.Name.toLowerCase()),
-      ) &&
-      routePositions(place).some(
-        (position) =>
-          position.z >= group.box.minZ - 1 &&
-          position.z <= group.box.maxZ + 1 &&
-          position.x >= group.box.minX - COVERAGE_MARGIN &&
-          position.x <= group.box.maxX + COVERAGE_MARGIN &&
-          position.y >= group.box.minY - COVERAGE_MARGIN &&
-          position.y <= group.box.maxY + COVERAGE_MARGIN,
+  const cells = new Set();
+  for (
+    let x = group.box.minX - COVERAGE_MARGIN;
+    x <= group.box.maxX + COVERAGE_MARGIN;
+    x += ROUTE_CELL
+  ) {
+    for (
+      let y = group.box.minY - COVERAGE_MARGIN;
+      y <= group.box.maxY + COVERAGE_MARGIN;
+      y += ROUTE_CELL
+    ) {
+      for (let z = group.box.minZ - 1; z <= group.box.maxZ + 1; z += 1) {
+        cells.add(cellKey(x, y, z));
+      }
+    }
+  }
+  // The far corner of the query box needs its own cell.
+  for (let z = group.box.minZ - 1; z <= group.box.maxZ + 1; z += 1) {
+    cells.add(
+      cellKey(
+        group.box.maxX + COVERAGE_MARGIN,
+        group.box.maxY + COVERAGE_MARGIN,
+        z,
       ),
-  );
+    );
+  }
+  for (const cell of cells) {
+    for (const entry of routeIndex.get(cell) ?? []) {
+      if (
+        entry.position.z < group.box.minZ - 1 ||
+        entry.position.z > group.box.maxZ + 1 ||
+        entry.position.x < group.box.minX - COVERAGE_MARGIN ||
+        entry.position.x > group.box.maxX + COVERAGE_MARGIN ||
+        entry.position.y < group.box.minY - COVERAGE_MARGIN ||
+        entry.position.y > group.box.maxY + COVERAGE_MARGIN
+      ) {
+        continue;
+      }
+      if (
+        entry.place.Monsters.some((monster) =>
+          targeted.has(monster.Name.toLowerCase()),
+        )
+      ) {
+        return entry.place;
+      }
+    }
+  }
+  return undefined;
+}
+
+function cellKey(x, y, z) {
+  return `${Math.floor(x / ROUTE_CELL)},${Math.floor(y / ROUTE_CELL)},${z}`;
+}
+
+function indexRoute(place, path) {
+  for (const position of Object.values(path?.Coordinates ?? {}).flatMap(
+    (segments) => segments.flat(),
+  )) {
+    const key = cellKey(position.x, position.y, position.z);
+    const bucket = routeIndex.get(key) ?? [];
+    bucket.push({ place, position });
+    routeIndex.set(key, bucket);
+  }
+}
+
+function indexPlace(place) {
+  indexRoute(place, place.RoutePath);
+  for (const spot of place.Spots ?? []) indexRoute(place, spot.RoutePath);
 }
 
 function routePositions(place) {
@@ -337,6 +560,7 @@ function routePositions(place) {
 }
 
 function buildPlace(group, target) {
+  lastSkipReason = "no walkable ring";
   const floors = [...new Set(group.slots.map((slot) => slot.home.z))].sort(
     (left, right) => left - right,
   );
@@ -351,6 +575,7 @@ function buildPlace(group, target) {
     caverns.set(floor, cavern);
   }
   if (Object.keys(coordinates).length === 0) return null;
+  lastSkipReason = "no way in";
 
   const population = populationOf(coordinates, caverns);
   const profile = bestProfile(population);
@@ -358,8 +583,13 @@ function buildPlace(group, target) {
     (candidate) => candidate.name.toLowerCase() === target.town.toLowerCase(),
   );
   const entrance = firstWaypoint(coordinates);
-  const { wayPath, surface } = traceApproach(entrance, town);
-  if (!reachableFromApproach(wayPath, entrance)) return null;
+  const { wayPath, surface, descents } = traceApproach(entrance, town);
+  // A traced way in has to open into the cave the route walks. When none was
+  // traced at all — a hole this tool cannot follow, a teleport, a quest door —
+  // the hunt still ships: its ring is proven walkable, and the pin falls back
+  // to the ring itself rather than the hunt being dropped for want of an
+  // entrance a player already knows.
+  if (descents > 0 && !reachableFromApproach(wayPath, entrance)) return null;
 
   return {
     Name: `${target.name} ${compassOf(group.box, town)}`.trim(),
@@ -437,10 +667,21 @@ function bestProfile(population) {
   const wanted = new Set(population.map(({ type }) => type.name.toLowerCase()));
   let best = null;
   let bestScore = 0;
+  let byLevel = null;
+  let bestLevelGap = Infinity;
+  const target = derivedLevel(population);
   for (const place of curated) {
     const names = new Set(
       place.Monsters.map((monster) => monster.Name.toLowerCase()),
     );
+    // Nothing in the catalog fights these creatures for some of the map, so
+    // a hunt of the same difficulty lends its gear and supplies instead.
+    const level = Number(place.Level);
+    const gap = Number.isFinite(level) ? Math.abs(level - target) : Infinity;
+    if (gap < bestLevelGap) {
+      bestLevelGap = gap;
+      byLevel = place;
+    }
     const shared = [...names].filter((name) => wanted.has(name)).length;
     if (shared === 0) continue;
     const score = shared / (names.size + wanted.size - shared);
@@ -449,12 +690,22 @@ function bestProfile(population) {
       best = place;
     }
   }
-  if (!best) {
+  const chosen = best ?? byLevel;
+  if (!chosen) {
     throw new Error(
-      `no curated hunt shares creatures with ${[...wanted].join(", ")}`,
+      `no curated hunt to model ${[...wanted].join(", ")} on`,
     );
   }
-  return best;
+  return chosen;
+}
+
+/** The level the fitted curve puts on this cave's strongest creature. */
+function derivedLevel(population) {
+  const strongest = Math.max(
+    ...population.map(({ type }) => type.experience ?? 0),
+    1,
+  );
+  return levelCurve.a * strongest ** levelCurve.b;
 }
 
 /**
@@ -464,11 +715,7 @@ function bestProfile(population) {
  * inheriting "level 8" there would be an invitation to die.
  */
 function recommendedLevel(population, profile) {
-  const strongest = Math.max(
-    ...population.map(({ type }) => type.experience ?? 0),
-    1,
-  );
-  const derived = levelCurve.a * strongest ** levelCurve.b;
+  const derived = derivedLevel(population);
   const inherited = Number(profile.Level);
   if (!Number.isFinite(inherited) || derived <= inherited * 1.5) {
     return profile.Level;
@@ -548,9 +795,13 @@ function buildRing(slots, box) {
     minY: box.minY - RING.pathSearchMargin,
     maxY: box.maxY + RING.pathSearchMargin,
   };
+  // Spawn tiles themselves make poor waypoints: a creature that never leaves
+  // its home — a golem, a stationary guard — sits on one forever, and the bot
+  // cannot path onto an occupied tile.
+  const homes = new Set(slots.map((slot) => `${slot.home.x},${slot.home.y}`));
   const anchors = [];
   for (const slot of slots) {
-    const anchor = snapToWalkable(slot.home);
+    const anchor = snapToWalkable(slot.home, homes);
     if (!anchor) continue;
     if (anchors.some((existing) => chebyshev(existing, anchor) === 0)) continue;
     anchors.push(anchor);
@@ -596,24 +847,48 @@ function buildRing(slots, box) {
   });
   if (tour.length < 3) return EMPTY_RING;
 
-  // Every hop the bot makes must be solvable inside its runtime budget, so
-  // split any leg that is not into pieces cut from the walk we already have.
+  // Every hop the bot makes must be solvable inside its runtime budget. A leg
+  // that is not gets intermediate stops cut from a walk found with a wider
+  // search; one that cannot be fixed even then costs its anchor, because a
+  // ring is only as good as its worst leg.
   const waypoints = [];
-  for (const [index, anchor] of tour.entries()) {
-    waypoints.push(anchor);
-    const next = tour[(index + 1) % tour.length];
-    for (const extra of legFillers(anchor, next, walk)) waypoints.push(extra);
+  for (const anchor of tour) {
+    const previous = waypoints.at(-1);
+    if (!previous) {
+      waypoints.push(anchor);
+      continue;
+    }
+    const fillers = legFillers(previous, anchor, walk);
+    if (fillers === null) continue;
+    waypoints.push(...fillers, anchor);
   }
+  // The ring closes, so the way home has to hold up as well.
+  while (waypoints.length >= 3) {
+    const fillers = legFillers(waypoints.at(-1), waypoints[0], walk);
+    if (fillers === null) {
+      waypoints.pop();
+      continue;
+    }
+    waypoints.push(...fillers);
+    break;
+  }
+  if (waypoints.length < 3) return EMPTY_RING;
   // Truncating a ring would leave its closing leg unproven, so an oversized
   // one is dropped whole instead.
   if (waypoints.length > RING.maxWaypointsPerFloor) return EMPTY_RING;
   return { waypoints, cavern: cavern.tiles };
 }
 
+/**
+ * Stops to insert so a leg the bot could not solve in one search becomes a
+ * chain of legs it can. Empty when the leg is already fine, and null when no
+ * chain works — the caller drops the anchor rather than ship a leg the walker
+ * will fail at.
+ */
 function legFillers(from, to, walk) {
   if (solvableAtRuntime(from, to)) return [];
   const path = walk(from, to);
-  if (!path) return [];
+  if (!path) return null;
   const fillers = [];
   let anchor = from;
   for (const step of path) {
@@ -622,7 +897,7 @@ function legFillers(from, to, walk) {
     fillers.push(step);
     anchor = step;
   }
-  return solvableAtRuntime(anchor, to) ? fillers : [];
+  return solvableAtRuntime(anchor, to) ? fillers : null;
 }
 
 function solvableAtRuntime(from, to) {
@@ -641,19 +916,30 @@ function solvableAtRuntime(from, to) {
   return path !== null;
 }
 
-function snapToWalkable(home) {
+function snapToWalkable(home, avoid = new Set()) {
+  let fallback = null;
   for (let radius = 0; radius <= RING.maxSnapDistance; radius += 1) {
     for (let dx = -radius; dx <= radius; dx += 1) {
       for (let dy = -radius; dy <= radius; dy += 1) {
         if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
         const candidate = { x: home.x + dx, y: home.y + dy, z: home.z };
-        if (map.isWalkable(candidate) && map.getGroundSpeed(candidate)) {
-          return candidate;
+        // A protection zone cannot be fought in, so a ring through one is not
+        // a hunt — town rats and depot pests drop out here.
+        if (
+          !map.isWalkable(candidate) ||
+          !map.getGroundSpeed(candidate) ||
+          map.isProtectionZone(candidate)
+        ) {
+          continue;
         }
+        if (!avoid.has(`${candidate.x},${candidate.y}`)) return candidate;
+        fallback ??= candidate;
       }
     }
   }
-  return null;
+  // Every walkable tile around this spawn is another spawn's home; standing
+  // on one is better than dropping the anchor.
+  return fallback;
 }
 
 /** The biggest walkable cavern the anchors share, flood-filled on their floor. */
@@ -730,9 +1016,8 @@ function firstWaypoint(coordinates) {
  */
 function traceApproach(entrance, town) {
   const descents = [];
-  const SURFACE_FLOOR = 7;
   let arrival = entrance;
-  for (let hop = 0; hop < 6 && arrival.z > SURFACE_FLOOR; hop += 1) {
+  for (let hop = 0; hop < 8 && arrival.z > SURFACE_FLOOR; hop += 1) {
     const link = nearestDescentTo(arrival);
     if (!link) break;
     descents.push(link);
@@ -768,6 +1053,7 @@ function traceApproach(entrance, town) {
       `${accessVerb(link.kind)} at ${link.source.x}, ${link.source.y} to floor ${floorLabel(link.destination.z).trim()}`,
   );
   return {
+    descents: descents.length,
     wayPath: {
       Coordinates: coordinates,
       Markers: [],
@@ -791,6 +1077,9 @@ function traceApproach(entrance, town) {
  * can enter is worse than no hunt at all.
  */
 function reachableFromApproach(approach, entrance) {
+  // A hunting ground on open ground is entered by walking to it: there is no
+  // way down to trace, and demanding one dropped every surface hunt.
+  if (entrance.z <= SURFACE_FLOOR) return true;
   const segments = approach.Coordinates[String(entrance.z)] ?? [];
   const arrival = segments.at(-1)?.[0];
   if (!arrival) return false;
@@ -826,8 +1115,8 @@ function nearestDescentTo(arrival) {
     (link) =>
       link.destination.z === arrival.z &&
       link.source.z < link.destination.z &&
-      Math.abs(link.destination.x - arrival.x) <= 60 &&
-      Math.abs(link.destination.y - arrival.y) <= 60,
+      Math.abs(link.destination.x - arrival.x) <= 80 &&
+      Math.abs(link.destination.y - arrival.y) <= 80,
   );
   let best = null;
   let bestDistance = Infinity;

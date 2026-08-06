@@ -8,6 +8,8 @@ import type {
   HuntingVocation,
 } from "../../lib/hunt-finder/HuntingPlace";
 import { huntingSpots } from "../../lib/hunt-finder/huntingSpots";
+import { trackedSpotRoute } from "../../lib/hunt-finder/trackedSpotRoute";
+import type { MinimapRoute } from "../../lib/minimap/MinimapRoute";
 import type { WikiItem } from "../../lib/wiki/WikiItem";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
@@ -25,8 +27,9 @@ interface HuntingPlaceDetailsProps {
   mapName: string;
   itemsByName: ReadonlyMap<string, WikiItem>;
   creaturesByName: ReadonlyMap<string, BestiaryCreatureEntry>;
-  tracked: boolean;
-  onTrackChange: (tracked: boolean) => void;
+  /** Name of the route the live map is drawing, if any. */
+  trackedName: string | null;
+  onTrackChange: (route: MinimapRoute | null) => void;
   onBack: () => void;
 }
 
@@ -36,7 +39,7 @@ export function HuntingPlaceDetails({
   mapName,
   itemsByName,
   creaturesByName,
-  tracked,
+  trackedName,
   onTrackChange,
   onBack,
 }: HuntingPlaceDetailsProps) {
@@ -45,6 +48,15 @@ export function HuntingPlaceDetails({
   const spots = useMemo(() => huntingSpots(place), [place]);
   const [spotName, setSpotName] = useState<string | null>(null);
   const spot = spots.find((candidate) => candidate.Name === spotName) ?? spots[0];
+  const tracked =
+    spot !== undefined && trackedName === trackedSpotRoute(place, spot).name;
+
+  // Switching cave while the live map follows this hunt moves the drawn path
+  // with it: tracking is "show me the way to what I am reading".
+  const selectSpot = (picked: (typeof spots)[number]): void => {
+    setSpotName(picked.Name);
+    if (tracked) onTrackChange(trackedSpotRoute(place, picked));
+  };
   const path: HuntingPath =
     routeView === "way" ? (spot?.WayPath ?? place.WayPath) : (spot?.RoutePath ?? place.RoutePath);
   const imbues =
@@ -206,7 +218,7 @@ export function HuntingPlaceDetails({
                   mapName={mapName}
                   spots={spots}
                   selectedName={spot?.Name ?? null}
-                  onSelect={(picked) => setSpotName(picked.Name)}
+                  onSelect={selectSpot}
                 />
               </div>
             )}
@@ -270,7 +282,13 @@ export function HuntingPlaceDetails({
             <input
               type="checkbox"
               checked={tracked}
-              onChange={(event) => onTrackChange(event.currentTarget.checked)}
+              onChange={(event) =>
+                onTrackChange(
+                  event.currentTarget.checked && spot
+                    ? trackedSpotRoute(place, spot)
+                    : null,
+                )
+              }
               className="size-4 accent-cyan-300"
             />
             {t("huntFinder.trackOnMap")}

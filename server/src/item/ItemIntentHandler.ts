@@ -26,6 +26,8 @@ import type { DecayManager } from "./DecayManager";
 import { dropUnknownItemTypes } from "./dropUnknownItemTypes";
 import { InventoryCacheManager } from "./InventoryCacheManager";
 import { isNear } from "./isNear";
+import { itemDisplayRarityOf } from "./itemDisplayRarityOf";
+import { lootFilterTakes } from "./lootFilterTakes";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemIntent } from "./ItemIntent";
@@ -1149,7 +1151,7 @@ export class ItemIntentHandler {
 
   /**
    * Sweeps a freshly created corpse into the killer's backpack, honouring the
-   * character's auto-loot blacklist. Nothing here comes from the client: the
+   * character's auto-loot pick-up list. Nothing here comes from the client: the
    * corpse, its contents, the reach check and the ownership check are all read
    * from live world state inside the tick, and each take is the same
    * `planLoot` + apply + persist as a hand-made loot move. Failures are
@@ -1170,16 +1172,25 @@ export class ItemIntentHandler {
     if (!isNear(player.position, corpse.location.position)) return;
     const owner = corpse.attributes.ownerCharacterId;
     if (typeof owner === "string" && owner !== playerId) return;
-    const ignored = new Set(filter.ignoredItemTypeIds);
     const eligible = this.world
       .getWorldSubtree(corpseId)
-      .filter(
-        (item) =>
-          item.location.kind === "corpse" &&
-          item.location.containerId === corpseId &&
-          !ignored.has(item.typeId) &&
-          quickLootCategory(this.catalog.require(item.typeId)) !== "none",
-      );
+      .filter((item) => {
+        if (
+          item.location.kind !== "corpse" ||
+          item.location.containerId !== corpseId
+        ) {
+          return false;
+        }
+        const type = this.catalog.require(item.typeId);
+        if (quickLootCategory(type) === "none") return false;
+        // The grade is read off the live drop, never off the request: the
+        // list names what the player wants, the server decides what it is.
+        return lootFilterTakes(
+          filter.pickupRules,
+          item.typeId,
+          itemDisplayRarityOf(type, item),
+        );
+      });
     for (const item of eligible) {
       const cache = this.inventories.get(playerId);
       if (!cache) break;

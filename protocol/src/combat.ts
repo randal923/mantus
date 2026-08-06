@@ -137,6 +137,8 @@ export const spellCatalogEntrySchema = z
     cooldownGroups: z.array(z.string().min(1).max(128)).min(1).max(8),
     targetKind: spellTargetKindSchema,
     parameterKind: spellParameterKindSchema,
+    /** "single" for one-target spells; anything else marks an area spell. */
+    areaShape: areaShapeSchema,
   })
   .strict();
 

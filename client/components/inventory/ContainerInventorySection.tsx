@@ -1,18 +1,19 @@
 "use client";
 
-import type {
-  ContainerState,
-  InventoryItem,
-} from "@tibia/protocol";
+import type { ContainerState, InventoryItem } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { CloseButton } from "../ui/CloseButton";
 import { ItemSlot } from "./ItemSlot";
 import type { ItemDragSource } from "./ItemDragSource";
 
+const COLUMNS = 4;
+
 interface ContainerInventorySectionProps {
   state: ContainerState;
   /** "loot" marks a world container (corpse): drags loot instead of moving. */
   dragSourceKind?: "owned" | "loot";
+  /** Render only the rows the contents need, for windows that take no drops. */
+  fitContents?: boolean;
   onActivate(item: InventoryItem): void;
   onDragStart(source: ItemDragSource): void;
   onDragEnd(): void;
@@ -23,6 +24,7 @@ interface ContainerInventorySectionProps {
 export function ContainerInventorySection({
   state,
   dragSourceKind = "owned",
+  fitContents = false,
   onActivate,
   onDragStart,
   onDragEnd,
@@ -31,6 +33,14 @@ export function ContainerInventorySection({
 }: ContainerInventorySectionProps) {
   const { t } = useAppTranslation();
   const bySlot = new Map(state.items.map((entry) => [entry.slot, entry.item]));
+  const usedSlots = state.items.reduce(
+    (highest, entry) => Math.max(highest, entry.slot + 1),
+    0,
+  );
+  const rows = Math.max(Math.ceil(usedSlots / COLUMNS), 1);
+  const slotCount = fitContents
+    ? Math.min(state.capacity, rows * COLUMNS)
+    : state.capacity;
 
   return (
     <section
@@ -52,7 +62,7 @@ export function ContainerInventorySection({
         />
       </header>
       <div className="grid grid-cols-4 justify-items-center gap-2">
-        {Array.from({ length: state.capacity }, (_, slot) => {
+        {Array.from({ length: slotCount }, (_, slot) => {
           const item = bySlot.get(slot);
           return (
             <ItemSlot

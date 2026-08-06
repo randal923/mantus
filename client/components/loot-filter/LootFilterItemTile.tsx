@@ -1,59 +1,52 @@
 "use client";
 
-import type { LootFilterItem } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import type { LootFilterEntry } from "../../lib/loot-filter/LootFilterEntry";
 import { LOOT_TYPE_DRAG_MIME_TYPE } from "../../lib/loot-filter/lootTypeDragMimeType";
-import { SpriteIcon } from "../inventory/SpriteIcon";
+import { ItemCell } from "../inventory/ItemCell";
 
 interface LootFilterItemTileProps {
-  readonly item: LootFilterItem;
-  /** Marks the tile with the red cross: this type is on the ignore list. */
-  readonly ignored: boolean;
+  readonly entry: LootFilterEntry;
+  /** Marks the tile with the check badge: this cell is on the pick-up list. */
+  readonly selected: boolean;
   readonly onActivate: () => void;
 }
 
-/** One draggable item-type cell in either pane of the loot-filter window. */
+/** One draggable cell of the loot-filter window: an item type at one grade. */
 export function LootFilterItemTile({
-  item,
-  ignored,
+  entry,
+  selected,
   onActivate,
 }: LootFilterItemTileProps) {
   const { t } = useAppTranslation();
+  // The grade is spelled out for screen readers and drawn as the ring colour
+  // for everyone else; the tooltip names it in full on hover.
+  const label = entry.rarity
+    ? `${t(`itemTooltip.rarity.${entry.rarity}`)} ${entry.name}`
+    : entry.name;
+
   return (
-    <button
-      type="button"
-      draggable
-      title={item.name}
-      aria-label={
-        ignored
-          ? t("lootFilter.removeItem", { name: item.name })
-          : t("lootFilter.addItem", { name: item.name })
+    <ItemCell
+      spriteId={entry.spriteId}
+      count={entry.count}
+      tooltip={entry.tooltip}
+      rarity={entry.rarity}
+      label={
+        selected
+          ? t("lootFilter.removeItem", { name: label })
+          : t("lootFilter.addItem", { name: label })
       }
-      aria-pressed={ignored}
+      pressed={selected}
+      dimmed={!selected}
+      marker={
+        selected ? <span className="text-ui-success-light">✓</span> : undefined
+      }
+      draggable
+      onClick={onActivate}
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData(
-          LOOT_TYPE_DRAG_MIME_TYPE,
-          String(item.typeId),
-        );
+        event.dataTransfer.setData(LOOT_TYPE_DRAG_MIME_TYPE, entry.key);
       }}
-      onClick={onActivate}
-      className="group relative flex size-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
-    >
-      <SpriteIcon spriteId={item.spriteId} className={ignored ? "opacity-45" : undefined} />
-      {ignored && (
-        <span
-          aria-hidden
-          className="absolute top-0.5 right-0.5 text-sm leading-none font-bold text-red-400 [text-shadow:0_1px_3px_rgba(0,0,0,0.95)]"
-        >
-          ✕
-        </span>
-      )}
-      {item.count !== undefined && item.count > 1 && (
-        <span className="absolute right-0.5 bottom-0.5 rounded-md border border-ui-gold/15 bg-black/80 px-1.5 text-xs leading-4 font-semibold text-ui-text">
-          {item.count}
-        </span>
-      )}
-    </button>
+    />
   );
 }

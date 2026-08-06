@@ -123,18 +123,8 @@ export function HuntFinderModal({
             mapName={mapName}
             itemsByName={itemsByName}
             creaturesByName={creaturesByName}
-            tracked={trackedRoute?.name === selectedPlace.Name}
-            onTrackChange={(tracked) =>
-              onTrackedRouteChange(
-                tracked
-                  ? {
-                      name: selectedPlace.Name,
-                      coordinates: selectedPlace.WayPath.Coordinates,
-                      destination: selectedPlace.WayPath.Position,
-                    }
-                  : null,
-              )
-            }
+            trackedName={trackedRoute?.name ?? null}
+            onTrackChange={onTrackedRouteChange}
             onBack={() => setSelectedPlace(null)}
           />
         )}

@@ -1,18 +1,17 @@
 import type { LootFilterItem } from "@tibia/protocol";
 
 /**
- * Everything the loot-filter window can draw, keyed by type id. Server data
- * wins over the static creature-loot asset, so a carried item keeps its live
- * count while the catalog only fills in types the character does not hold.
+ * Every item type the window can search or name, keyed by type id. Server
+ * data wins over the static creature-loot asset, so a type the character
+ * carries or lists is described by the live catalog while the asset only
+ * fills in everything else a creature can drop.
  */
 export function mergeLootFilterItems(
-  carried: ReadonlyArray<LootFilterItem>,
-  ignored: ReadonlyArray<LootFilterItem>,
+  types: ReadonlyArray<LootFilterItem>,
   catalog: ReadonlyArray<LootFilterItem>,
 ): ReadonlyMap<number, LootFilterItem> {
   const merged = new Map<number, LootFilterItem>();
   for (const item of catalog) merged.set(item.typeId, item);
-  for (const item of ignored) merged.set(item.typeId, item);
-  for (const item of carried) merged.set(item.typeId, item);
+  for (const item of types) merged.set(item.typeId, item);
   return merged;
 }

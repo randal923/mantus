@@ -122,7 +122,7 @@ export class Session {
    */
   lootFilter: LootFilter = {
     ...DEFAULT_LOOT_FILTER,
-    ignoredItemTypeIds: [],
+    pickupRules: [],
   };
   /**
    * The character's saved hunting route. Held per session so the tick can

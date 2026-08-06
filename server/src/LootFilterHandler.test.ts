@@ -19,13 +19,41 @@ const AXE = 3274;
 const UNKNOWN = 60_001;
 
 const CATALOG = new Map([
-  [GOLD, { id: GOLD, name: "gold coin", spriteId: 100, pickupable: true }],
-  [AXE, { id: AXE, name: "axe", spriteId: 200, pickupable: true }],
+  [
+    GOLD,
+    {
+      id: GOLD,
+      name: "gold coin",
+      spriteId: 100,
+      pickupable: true,
+      stackable: true,
+      weight: 10,
+    },
+  ],
+  // Rarity-eligible: a one-handed sword is exactly the gear a grade rolls on.
+  [
+    AXE,
+    {
+      id: AXE,
+      name: "axe",
+      spriteId: 200,
+      pickupable: true,
+      stackable: false,
+      weight: 4_000,
+      weaponType: "axe",
+    },
+  ],
 ]);
+
+interface CarriedStub {
+  readonly typeId: number;
+  readonly count: number;
+  readonly attributes?: Readonly<Record<string, unknown>>;
+}
 
 function makeHandler(
   store: CharacterStore,
-  carried: ReadonlyArray<{ typeId: number; count: number }> = [],
+  carried: ReadonlyArray<CarriedStub> = [],
 ) {
   const registry = { contains: () => true } as unknown as SessionRegistry;
   const world = {
@@ -33,7 +61,11 @@ function makeHandler(
   } as unknown as World;
   const items = {
     itemType: (typeId: number) => CATALOG.get(typeId),
-    inventorySnapshot: () => ({ items: carried, capacityMax: 400, bankBalance: 0 }),
+    inventorySnapshot: () => ({
+      items: carried.map((item) => ({ attributes: {}, ...item })),
+      capacityMax: 400,
+      bankBalance: 0,
+    }),
   } as unknown as ItemIntentHandler;
   return new LootFilterHandler(registry, world, items, store);
 }
@@ -45,7 +77,7 @@ function makeSession(playerId: string | null, filter?: LootFilter) {
     playerId,
     lootFilterUpdatePending: false,
     lootFilterItemsReadyAt: 0,
-    lootFilter: filter ?? { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+    lootFilter: filter ?? { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
     send: (message: ServerMessage) => sent.push(message),
     sendError: (code: string) => errors.push(code),
   } as unknown as Session;
@@ -80,22 +112,55 @@ describe("LootFilterHandler", () => {
 
     handler.handleUpdate(session, {
       type: "update-loot-filter",
-      filter: { enabled: true, ignoredItemTypeIds: [GOLD, UNKNOWN, GOLD, AXE] },
+      filter: {
+        enabled: true,
+        pickupRules: [
+          { typeId: GOLD },
+          { typeId: UNKNOWN },
+          { typeId: GOLD },
+          { typeId: AXE },
+        ],
+      },
     });
     await settle(handler);
 
     expect(errors).toEqual([]);
     expect(session.lootFilter).toEqual({
       enabled: true,
-      ignoredItemTypeIds: [GOLD, AXE],
+      pickupRules: [{ typeId: GOLD }, { typeId: AXE }],
     });
     expect(sent.at(-1)).toMatchObject({
       type: "loot-filter-updated",
-      filter: { enabled: true, ignoredItemTypeIds: [GOLD, AXE] },
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD }, { typeId: AXE }],
+      },
     });
-    expect(store.get("char-1")?.lootFilter.ignoredItemTypeIds).toEqual([
-      GOLD,
-      AXE,
+    expect(store.get("char-1")?.lootFilter.pickupRules).toEqual([
+      { typeId: GOLD },
+      { typeId: AXE },
+    ]);
+  });
+
+  it("keeps grades on gear that can roll one and strips them elsewhere", async () => {
+    const handler = makeHandler(seededStore());
+    const { session } = makeSession("char-1");
+
+    handler.handleUpdate(session, {
+      type: "update-loot-filter",
+      filter: {
+        enabled: true,
+        pickupRules: [
+          { typeId: AXE, rarities: ["rare", "epic", "rare"] },
+          { typeId: GOLD, rarities: ["legendary"] },
+        ],
+      },
+    });
+    await settle(handler);
+
+    expect(session.lootFilter.pickupRules).toEqual([
+      { typeId: AXE, rarities: ["rare", "epic"] },
+      { typeId: GOLD },
     ]);
   });
 
@@ -105,11 +170,11 @@ describe("LootFilterHandler", () => {
 
     handler.handleUpdate(session, {
       type: "update-loot-filter",
-      filter: { enabled: true, ignoredItemTypeIds: [AXE] },
+      filter: { enabled: true, pickupRules: [{ typeId: AXE }] },
     });
 
     expect(session.lootFilter.enabled).toBe(true);
-    expect(session.lootFilter.ignoredItemTypeIds).toEqual([AXE]);
+    expect(session.lootFilter.pickupRules).toEqual([{ typeId: AXE }]);
   });
 
   it("refuses a second update while one is still in flight", () => {
@@ -118,11 +183,11 @@ describe("LootFilterHandler", () => {
 
     handler.handleUpdate(session, {
       type: "update-loot-filter",
-      filter: { enabled: true, ignoredItemTypeIds: [] },
+      filter: { enabled: true, pickupRules: [] },
     });
     handler.handleUpdate(session, {
       type: "update-loot-filter",
-      filter: { enabled: false, ignoredItemTypeIds: [] },
+      filter: { enabled: false, pickupRules: [] },
     });
 
     expect(errors).toEqual(["loot-filter-update-pending"]);
@@ -140,39 +205,72 @@ describe("LootFilterHandler", () => {
 
     handler.handleUpdate(session, {
       type: "update-loot-filter",
-      filter: { enabled: true, ignoredItemTypeIds: [AXE] },
+      filter: { enabled: true, pickupRules: [{ typeId: AXE }] },
     });
     await settle(handler);
 
     expect(errors).toEqual(["loot-filter-update-failed"]);
     expect(session.lootFilter).toEqual({
       enabled: false,
-      ignoredItemTypeIds: [],
+      pickupRules: [],
     });
     expect(sent.at(-1)).toMatchObject({
       type: "loot-filter-updated",
-      filter: { enabled: false, ignoredItemTypeIds: [] },
+      filter: { enabled: false, pickupRules: [] },
     });
   });
 
-  it("lists carried types with summed counts plus blacklisted types not held", () => {
+  it("lists carried stacks by grade, with one ungraded entry per type", () => {
     const handler = makeHandler(seededStore(), [
       { typeId: GOLD, count: 40 },
       { typeId: GOLD, count: 60 },
+      { typeId: AXE, count: 1, attributes: { rarity: "legendary" } },
+      { typeId: AXE, count: 1 },
     ]);
     const { session, sent } = makeSession("char-1", {
       enabled: true,
-      ignoredItemTypeIds: [GOLD, AXE],
+      pickupRules: [{ typeId: GOLD }, { typeId: AXE }],
     });
 
     handler.handleItemsGet(session, 0);
 
-    expect(sent.at(-1)).toEqual({
+    const listing = sent.at(-1);
+    if (listing?.type !== "loot-filter-items") throw new Error("no listing");
+    expect(
+      listing.carried.map((item) => [
+        item.name,
+        item.tooltip.rarity,
+        item.count,
+      ]),
+    ).toEqual([
+      // The axe in the bag is a legendary axe and an ordinary one, not five
+      // hypothetical grades of "axe"; stackable currency carries no grade.
+      ["axe", "common", 1],
+      ["axe", "legendary", 1],
+      ["gold coin", undefined, 100],
+    ]);
+    expect(
+      listing.types.map((item) => [item.typeId, item.tooltip.rarity]),
+    ).toEqual([
+      [AXE, "common"],
+      [GOLD, undefined],
+    ]);
+    expect(listing.types.every((item) => item.count === undefined)).toBe(true);
+  });
+
+  it("lists a type it no longer carries so the rule stays removable", () => {
+    const handler = makeHandler(seededStore());
+    const { session, sent } = makeSession("char-1", {
+      enabled: true,
+      pickupRules: [{ typeId: AXE, rarities: ["rare"] }],
+    });
+
+    handler.handleItemsGet(session, 0);
+
+    expect(sent.at(-1)).toMatchObject({
       type: "loot-filter-items",
-      carried: [
-        { typeId: GOLD, name: "gold coin", spriteId: 100, count: 100 },
-      ],
-      ignored: [{ typeId: AXE, name: "axe", spriteId: 200 }],
+      carried: [],
+      types: [{ typeId: AXE, name: "axe", tooltip: { name: "Axe" } }],
     });
   });
 

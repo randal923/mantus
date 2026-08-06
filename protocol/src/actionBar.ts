@@ -130,6 +130,34 @@ export const actionBotTriggerSchema = z.discriminatedUnion("kind", [
     .strict(),
 ]);
 
+/** Upper bound on the monster count an area rule can wait for. */
+export const ACTION_BOT_MONSTER_COUNT_MAX = 12;
+
+export const actionBotMonsterComparisonSchema = z.enum([
+  "at-least",
+  "at-most",
+  "exactly",
+]);
+
+/**
+ * Extra gate for area actions (exori, avalanche runes, waves): how many
+ * monsters the action's own area has to cover before the bot fires it. The
+ * server recounts from the live world at execution time — the client never
+ * supplies the count itself.
+ */
+export const actionBotMonstersAroundSchema = z
+  .object({
+    comparison: actionBotMonsterComparisonSchema,
+    count: z.number().int().min(0).max(ACTION_BOT_MONSTER_COUNT_MAX),
+  })
+  .strict();
+
+/** What an area rule starts on: fires as soon as the area covers anything. */
+export const DEFAULT_ACTION_BOT_MONSTERS_AROUND = {
+  comparison: "at-least",
+  count: 1,
+} as const satisfies z.infer<typeof actionBotMonstersAroundSchema>;
+
 export const actionBotRuleSchema = z
   .object({
     id: z
@@ -141,6 +169,7 @@ export const actionBotRuleSchema = z
     action: actionBotActionSchema,
     trigger: actionBotTriggerSchema,
     unequipWhenInactive: z.boolean(),
+    monstersAround: actionBotMonstersAroundSchema.optional(),
   })
   .strict();
 
@@ -191,6 +220,12 @@ export type ActionBarSlot = z.infer<typeof actionBarSlotSchema>;
 export type ActionBar = z.infer<typeof actionBarSchema>;
 export type ActionBotAction = z.infer<typeof actionBotActionSchema>;
 export type ActionBotTrigger = z.infer<typeof actionBotTriggerSchema>;
+export type ActionBotMonsterComparison = z.infer<
+  typeof actionBotMonsterComparisonSchema
+>;
+export type ActionBotMonstersAround = z.infer<
+  typeof actionBotMonstersAroundSchema
+>;
 export type ActionBotRule = z.infer<typeof actionBotRuleSchema>;
 export type ActionBotAutoHaste = z.infer<typeof actionBotAutoHasteSchema>;
 export type ActionBotSettings = z.infer<typeof actionBotSettingsSchema>;

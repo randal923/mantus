@@ -97,6 +97,7 @@ export class SpellRegistry {
         ],
         targetKind: spell.targetKind,
         parameterKind: spellParameterKind(spell),
+        areaShape: spell.area.shape,
       }))
       .sort(
         (left, right) =>

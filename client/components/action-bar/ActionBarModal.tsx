@@ -76,7 +76,7 @@ export function ActionBarModal({
   };
 
   return (
-    <Modal title="Action Bar" size="wide" onClose={onClose}>
+    <Modal title="Action Bar" size="full" onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div className="rounded-lg border border-ui-gold/15 bg-black/25 px-3 py-2.5">
           <p className="text-sm leading-6 text-ui-muted">

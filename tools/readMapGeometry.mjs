@@ -54,6 +54,8 @@ export function readMapGeometry(dataDir, name) {
 
   const groundSpeeds = meta.groundSpeeds ?? [];
   const walkableOffset = BITSET_PROPERTIES.indexOf("walkable") * BITSET_BYTES;
+  const protectionOffset =
+    BITSET_PROPERTIES.indexOf("protectionZone") * BITSET_BYTES;
   const groundSpeedOffset = BITSET_PROPERTIES.length * BITSET_BYTES;
 
   const sectorOffset = (position) =>
@@ -69,6 +71,15 @@ export function readMapGeometry(dataDir, name) {
     const bit = tileBit(position);
     return (
       (navigation[base + walkableOffset + (bit >> 3)] & (1 << (bit & 7))) !== 0
+    );
+  };
+
+  const isProtectionZone = (position) => {
+    const base = sectorOffset(position);
+    if (base === undefined) return false;
+    const bit = tileBit(position);
+    return (
+      (navigation[base + protectionOffset + (bit >> 3)] & (1 << (bit & 7))) !== 0
     );
   };
 
@@ -96,6 +107,7 @@ export function readMapGeometry(dataDir, name) {
     bounds: meta.bounds,
     towns: meta.towns,
     isWalkable,
+    isProtectionZone,
     getGroundSpeed,
     getTransition: (position) => transitions.get(positionKey(position)),
     transitions: [...transitions.values()],

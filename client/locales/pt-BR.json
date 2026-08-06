@@ -1386,6 +1386,7 @@
       "action": "Ação",
       "activateWhen": "Executar quando",
       "setting": "Configuração",
+      "monsters": "Monstros na área",
       "options": "Opções"
     },
     "noRules": "Nenhuma regra automática",
@@ -1416,6 +1417,19 @@
       "condition": "Executa quando {{condition}} não estiver ativo.",
       "resource": "Executa quando {{resource}} estiver {{direction}} {{percent}}%."
     },
+    "comparisons": {
+      "at-least": "No mínimo (≥)",
+      "at-most": "No máximo (≤)",
+      "exactly": "Exatamente (=)"
+    },
+    "monsterDescriptions": {
+      "at-least": "Só lança enquanto a área da magia cobrir no mínimo {{count}} monstros.",
+      "at-most": "Só lança enquanto a área da magia cobrir no máximo {{count}} monstros.",
+      "exactly": "Só lança enquanto a área da magia cobrir exatamente {{count}} monstros."
+    },
+    "monsterComparisonForRule": "Comparação de monstros da regra {{number}}",
+    "decreaseMonsters": "Diminuir monstros exigidos na regra {{number}}",
+    "increaseMonsters": "Aumentar monstros exigidos na regra {{number}}",
     "enableRule": "Ativar regra {{number}}",
     "actionForRule": "Ação da regra {{number}}",
     "activationForRule": "Condição da regra {{number}}",
@@ -1442,17 +1456,22 @@
     "title": "Filtro de Loot",
     "configure": "Configurar Filtro de Loot",
     "enabled": "Auto loot ativado",
-    "enabledDescription": "Pega tudo o que você matar, exceto os itens da lista de ignorados.",
+    "enabledDescription": "Pega apenas os itens da sua lista, nos graus que você escolheu.",
     "carried": "Loot nas suas mochilas",
     "carriedEmpty": "Você não está carregando nada.",
     "searchResults": "Resultados da busca",
     "searchEmpty": "Nenhum drop de criatura corresponde a esse nome.",
     "searchPlaceholder": "Buscar em todos os drops de criaturas…",
-    "ignored": "Filtro ativo (não pegar)",
-    "ignoredEmpty": "Arraste itens para cá para parar de pegá-los.",
-    "addItem": "Parar de pegar {{name}}",
-    "removeItem": "Voltar a pegar {{name}}",
-    "reset": "Resetar filtro",
+    "selected": "Lista de coleta",
+    "selectedEmpty": "Arraste itens para cá para começar a pegá-los.",
+    "creatures": "Drops de criaturas",
+    "creatureSearchPlaceholder": "Buscar uma criatura…",
+    "creatureHint": "Busque uma criatura para ver o que ela dropa.",
+    "creatureEmpty": "Nenhuma criatura corresponde a esse nome.",
+    "creaturePick": "Escolha uma criatura para ver seus drops.",
+    "addItem": "Pegar {{name}}",
+    "removeItem": "Parar de pegar {{name}}",
+    "reset": "Limpar lista",
     "close": "Fechar"
   },
   "huntingBot": {

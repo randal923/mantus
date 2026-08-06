@@ -120,7 +120,7 @@ function makeHarness(experienceRate = 1): Harness {
       knownCreatureIds: new Set([id]),
       knownMapItemTiles: new Map(),
       attackTargetId: null,
-      lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+      lootFilter: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
       send: (message: ServerMessage) => sent.push(message),
       sendError: () => {},
     } as unknown as Session);

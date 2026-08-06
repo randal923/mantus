@@ -16,10 +16,18 @@ const RING: ReadonlyArray<Position> = [
 function makeWorld(
   player: { id: string; position: Position; health: number } | null,
   target?: Creature,
+  occupied: ReadonlyArray<Position> = [],
 ) {
   return {
     getPlayer: (id: string) => (id === "char-1" ? player ?? undefined : undefined),
     getCreature: (id: string) => (target?.id === id ? target : undefined),
+    isOccupied: (position: Position) =>
+      occupied.some(
+        (taken) =>
+          taken.x === position.x &&
+          taken.y === position.y &&
+          taken.z === position.z,
+      ),
   } as unknown as World;
 }
 
@@ -353,6 +361,41 @@ describe("HuntingBot", () => {
 
     player.position = { x: 10, y: 11, z: 5 };
     for (let tick = 1; tick <= 60 && session.huntingBotEnabled; tick++) {
+      session.huntingBotRepathReadyAt = 0;
+      bot.tick(session, tick * 1_000);
+    }
+
+    expect(session.huntingBotEnabled).toBe(false);
+  });
+
+  it("moves on at once when a creature is standing on the waypoint", () => {
+    // Stationary creatures hold their spawn tile forever, and that is exactly
+    // where a guide's waypoints sit.
+    const { session } = makeSession();
+    const player = makePlayer({ x: 10, y: 11, z: 7 });
+    const bot = new HuntingBot(
+      makeWorld(player, undefined, [RING[0]!]),
+      makeMovement((target) => target !== RING[0]).movement,
+    );
+    session.huntingBotEnabled = true;
+    session.huntingBotWaypointIndex = 0;
+
+    bot.tick(session, 1_000);
+
+    expect(session.huntingBotWaypointIndex).toBe(1);
+    expect(session.huntingBotEnabled).toBe(true);
+  });
+
+  it("still gives up when every waypoint is stood on", () => {
+    const { session } = makeSession();
+    const player = makePlayer({ x: 10, y: 11, z: 7 });
+    const bot = new HuntingBot(
+      makeWorld(player, undefined, [...RING]),
+      makeMovement(() => false).movement,
+    );
+    session.huntingBotEnabled = true;
+
+    for (let tick = 1; tick <= 40 && session.huntingBotEnabled; tick++) {
       session.huntingBotRepathReadyAt = 0;
       bot.tick(session, tick * 1_000);
     }

@@ -1,4 +1,4 @@
-import type { LootFilterItem } from "@tibia/protocol";
+import { itemTooltipSchema, type LootFilterItem } from "@tibia/protocol";
 
 /**
  * Reads the generated creature-loot asset. It is a build artefact rather than
@@ -14,7 +14,7 @@ export function parseCreatureLootCatalog(
   const parsed: LootFilterItem[] = [];
   for (const entry of items) {
     if (typeof entry !== "object" || entry === null) continue;
-    const { id, name, spriteId } = entry as Record<string, unknown>;
+    const { id, name, spriteId, tooltip } = entry as Record<string, unknown>;
     if (
       typeof id !== "number" ||
       !Number.isInteger(id) ||
@@ -26,7 +26,9 @@ export function parseCreatureLootCatalog(
     ) {
       continue;
     }
-    parsed.push({ typeId: id, name, spriteId });
+    const parsedTooltip = itemTooltipSchema.safeParse(tooltip);
+    if (!parsedTooltip.success) continue;
+    parsed.push({ typeId: id, name, spriteId, tooltip: parsedTooltip.data });
   }
   return parsed;
 }

@@ -158,7 +158,7 @@ export function handleCharacterSessionMessage(
   state.setLootFilter(message.lootFilter);
   runtime.lootFilterRef.current = message.lootFilter;
   state.setLootFilterOpen(false);
-  state.setLootFilterItems({ carried: [], ignored: [] });
+  state.setLootFilterItems({ carried: [], types: [] });
   state.setHuntingBotRoute(message.huntingBotRoute);
   runtime.huntingBotRouteRef.current = message.huntingBotRoute;
   state.setHuntingBotOpen(false);

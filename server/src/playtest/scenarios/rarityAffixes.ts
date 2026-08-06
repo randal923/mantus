@@ -26,6 +26,14 @@ const LEATHER_ARMOR = 3_361;
 const LEATHER_HELMET = 3_355;
 const SWORD = 3_264;
 const WAND_OF_VORTEX = 3_074;
+/**
+ * The minotaur drops that can roll a grade (bronze amulet, sword, axe, mace,
+ * brass helmet, chain armor, plate shield) — its other drops are gold, food
+ * and crafting parts, which never carry one.
+ */
+const MINOTAUR_GRADABLE_DROPS = [
+  3_056, 3_264, 3_274, 3_286, 3_354, 3_358, 3_410,
+];
 const KNIGHT_ATTACK_SPEED_MS = 2_000;
 const CRITICAL_DAMAGE_EFFECT_ID = 173;
 
@@ -41,7 +49,8 @@ const check = (name: string, ok: boolean, detail: string) => {
   console.log(`  ${ok ? "✓" : "✗"} ${name}: ${detail}`);
 };
 
-const isType = <T extends ServerMessage["type"]>(type: T) =>
+const isType =
+  <T extends ServerMessage["type"]>(type: T) =>
   (m: ServerMessage): m is Extract<ServerMessage, { type: T }> =>
     m.type === type;
 
@@ -79,8 +88,18 @@ const seenRareIds = new Set<string>();
  * scenario's ~17 conjured armors run out.
  */
 const DROP_OFFSETS: ReadonlyArray<readonly [number, number]> = [
-  [0, 0], [1, 0], [-1, 0], [0, 1], [0, -1],
-  [1, 1], [-1, -1], [1, -1], [-1, 1], [2, 0], [-2, 0], [0, 2],
+  [0, 0],
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [1, 1],
+  [-1, -1],
+  [1, -1],
+  [-1, 1],
+  [2, 0],
+  [-2, 0],
+  [0, 2],
 ];
 let dropCursor = 0;
 async function discardRareArmors(
@@ -659,9 +678,7 @@ try {
 
   // (d) unequipping at full health clamps back to the unbuffed maximum.
   await gmText(rig, "/heal");
-  await eventually(
-    () => rig.progression.health === baseline.maxHealth + 65,
-  );
+  await eventually(() => rig.progression.health === baseline.maxHealth + 65);
   await unequipSlot(rig, "armor");
   await unequipSlot(rig, "helmet");
   const clampedOk = await eventually(
@@ -707,7 +724,9 @@ try {
         .filter(isType("error"))
         .slice(-5)
         .map((m) => m.code);
-      console.log(`  giveAndEquip retry ${attempt}: recent errors ${errors.join(",")}`);
+      console.log(
+        `  giveAndEquip retry ${attempt}: recent errors ${errors.join(",")}`,
+      );
       if (attempt >= 3) throw cause;
     }
   }
@@ -716,9 +735,7 @@ try {
     `/rare epic ${LEATHER_ARMOR} critChance=100,critDamage=50`,
   );
   await equipById(rig, critArmor, "armor");
-  await eventually(
-    () => rig.progression.combat?.criticalChancePercent === 100,
-  );
+  await eventually(() => rig.progression.combat?.criticalChancePercent === 100);
   const critMark = rig.client.mark();
   const rotworm = await rig.spawnMonster("rotworm", "Rotworm");
   await killCreature(rig, rotworm.id);
@@ -726,14 +743,11 @@ try {
     .slice(critMark)
     .some(
       (m) =>
-        m.type === "magic-effect" &&
-        m.effectId === CRITICAL_DAMAGE_EFFECT_ID,
+        m.type === "magic-effect" && m.effectId === CRITICAL_DAMAGE_EFFECT_ID,
     );
   const landedHit = rig.client.messages
     .slice(critMark)
-    .some(
-      (m) => m.type === "combat-log" && /^Rotworm: \d+ /.test(m.text),
-    );
+    .some((m) => m.type === "combat-log" && /^Rotworm: \d+ /.test(m.text));
   check(
     "crit-burst-effect",
     burstSeen && landedHit,
@@ -767,8 +781,7 @@ try {
     .slice(wandMark)
     .some(
       (m) =>
-        m.type === "magic-effect" &&
-        m.effectId === CRITICAL_DAMAGE_EFFECT_ID,
+        m.type === "magic-effect" && m.effectId === CRITICAL_DAMAGE_EFFECT_ID,
     );
   const wandHit = sorcerer.client.messages
     .slice(wandMark)
@@ -781,11 +794,16 @@ try {
   sorcerer.client.terminate();
 
   console.log("▶ phase: forced-legendary drops come out of real kills");
-  // Auto-loot ships disabled; the sweep is what carries the kill's loot into
-  // the inventory this phase scans.
+  // Auto-loot ships disabled and is a pick-up list, so the sweep that carries
+  // the kill's loot into the inventory this phase scans has to name the
+  // minotaur's gradable drops. Every grade of each: the point is to catch
+  // whichever one the forced-legendary roll produces.
   rig.client.send({
     type: "update-loot-filter",
-    filter: { enabled: true, ignoredItemTypeIds: [] },
+    filter: {
+      enabled: true,
+      pickupRules: MINOTAUR_GRADABLE_DROPS.map((typeId) => ({ typeId })),
+    },
   });
   await sleep(300);
   let drop: InventoryItem | null = null;
@@ -822,13 +840,9 @@ try {
   await equipById(rig, relogArmor, "armor");
   // The equipment sync runs on the next progression tick; healing before the
   // new maximum lands would top up against the stale one.
-  await eventually(
-    () => rig.progression.maxHealth === baseline.maxHealth + 40,
-  );
+  await eventually(() => rig.progression.maxHealth === baseline.maxHealth + 40);
   await gmText(rig, "/heal");
-  await eventually(
-    () => rig.progression.health === baseline.maxHealth + 40,
-  );
+  await eventually(() => rig.progression.health === baseline.maxHealth + 40);
   rig.client.terminate();
   await sleep(1_000);
   const rig2 = await ParityRig.create(url, TOKEN, characterName, "Knight");

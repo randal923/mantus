@@ -358,9 +358,17 @@ export function GameHudOverlay() {
     [setActionBarEditorRequest],
   );
   const onOpenLootFilter = useCallback(() => {
+    const state = store.getState();
     // The carried list is only meaningful at the moment the window opens, so
     // it is fetched here rather than pushed on every inventory change.
-    store.getState().runtime.clientRef.current?.requestLootFilterItems();
+    state.runtime.clientRef.current?.requestLootFilterItems();
+    // The window's creature browser reads the same cached bestiary the wiki
+    // does; ask for it once if nothing has loaded it yet.
+    if (!state.sessions?.bestiary.creatures) {
+      const sent =
+        state.runtime.clientRef.current?.requestBestiaryCreatures() ?? false;
+      state.sessionActions?.bestiary.begin(sent);
+    }
     setLootFilterOpen(true);
   }, [setLootFilterOpen, store]);
 

@@ -150,11 +150,25 @@ export class HuntingBot {
       session.huntingBotPathFailures = 0;
       return;
     }
-    // No route right now — usually a creature standing on the goal, sometimes
-    // a closed door or a waypoint hand-placed somewhere unreachable. Wait and
-    // retry the same waypoint first: advancing on one failure spins the ring
-    // far faster than the character walks. Only a waypoint that stays
-    // unreachable is skipped, and a whole run of those stops the bot.
+    // A creature is standing on the goal. Waiting five repaths for it to move
+    // is wasted time when it never will — guide waypoints sit on spawn tiles,
+    // and plenty of creatures hold theirs — so the ring moves on at once. The
+    // skip still counts, so a route blocked end to end stops the bot.
+    if (this.world.isOccupied(waypoint)) {
+      session.huntingBotPathFailures = 0;
+      session.huntingBotSkips++;
+      if (session.huntingBotSkips >= HUNTING_BOT_LIMITS.maxConsecutiveSkips) {
+        this.stop(session, "unreachable");
+        return;
+      }
+      this.advance(session, waypoints.length);
+      return;
+    }
+    // No route right now — a closed door, a creature in the corridor, or a
+    // waypoint hand-placed somewhere unreachable. Wait and retry the same
+    // waypoint first: advancing on one failure spins the ring far faster than
+    // the character walks. Only a waypoint that stays unreachable is skipped,
+    // and a whole run of those stops the bot.
     session.huntingBotPathFailures++;
     if (
       session.huntingBotPathFailures < HUNTING_BOT_LIMITS.skipAfterFailedRepaths

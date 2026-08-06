@@ -17,7 +17,7 @@
     "chests:import": "node tools/importCanaryChests.mjs",
     "raids:import": "node tools/importCanaryRaids.mjs",
     "item:override": "node tools/createItemOverride.mjs",
-    "items:catalog": "node tools/buildItemCatalog.mjs && node tools/buildWikiItemCatalog.mjs && node tools/buildCreatureLootCatalog.mjs && node tools/buildProficiencySprites.mjs && node tools/buildItemAnimations.mjs",
+    "items:catalog": "node tools/buildItemCatalog.mjs && node tools/buildWikiItemCatalog.mjs && yarn workspace server creature-loot:build && node tools/buildProficiencySprites.mjs && node tools/buildItemAnimations.mjs",
     "animations:import": "node tools/importAppearanceAnimations.mjs",
     "map:convert": "node tools/convertOtbm.mjs map/otservbr.otbm && node tools/buildMinimapTiles.mjs",
     "minimap:build": "node tools/buildMinimapTiles.mjs",

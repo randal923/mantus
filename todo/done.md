@@ -3814,3 +3814,236 @@ instead of giving up. `yarn typecheck` and the client/server suites are clean.
 
 **Residual risk**: the bot still cannot use the ladder between the rings — the
 player makes the climb (TODO.md, Feature 112).
+
+## 2026-08-06 — Action bot: area spells wait for a crowd
+
+**Problem**: an action bot rule fired its spell the moment the trigger held,
+so an area spell (exori, the waves, avalanche runes) burned its mana and
+cooldown on a single monster — or on nothing at all when the attack target
+stood outside the area. There was no way to say "only exori when three of
+them are on me".
+
+**What changed**: a rule may now carry `monstersAround` — a comparison
+(`at-least` / `at-most` / `exactly`) and a count up to 12. The bot counts the
+monsters the action's own combat area covers, live, every tick: the spell (or
+the rune's spell), its wheel-augmented area, the aim direction the cast would
+use, and `creaturesInArea` — the same resolution the real cast performs — then
+filters to living monsters this session already knows about and excludes the
+player's own summons. Nothing about the count comes from the client. An
+action with no area of its own falls back to the eight surrounding tiles.
+
+The setting shows in the rule row only for area actions, which the client
+recognises from the new `areaShape` field on the spell catalog entry. Picking
+a single-target action drops the setting rather than leaving a hidden gate;
+picking an area action seeds it at "at least 1". The Action Bar modal moved
+from `wide` to `full` (up to 1920px, like the Hunt Finder and Store) and the
+rule grid from 12 to 16 columns to seat the new column.
+
+**Files**: `protocol/src/{actionBar,combat}.ts`,
+`server/src/combat/{ActionBot,Combat,SpellRegistry}.ts`,
+`client/components/action-bar/{ActionBotRuleRow,ActionBotSettingsPanel,ActionBarModal}.tsx`,
+`client/lib/action-bar/getActionBotAreaSpell.ts` (new), both locales, plus
+the story/test catalog literals that gained `areaShape`.
+
+**Verified**: a new `Combat.test.ts` case arms an exori rule at "at least 3",
+ticks with two monsters adjacent (no cast, bystander untouched), adds a third
+(both bystanders take damage), then flips the rule to "at most 1" and ticks
+again with the same crowd (no further cast). `yarn typecheck`, the client
+suite (428) and the action-bot server suites (119) are clean; the new
+`grid-cols-16` / `col-start-15` utilities were compiled against Tailwind 4.3
+to confirm they generate.
+
+**Residual risk**: the count is taken when the bot evaluates the rule, and the
+cast happens in the same tick, so it cannot drift — but a monster that walks
+out between two ticks simply means the next evaluation sees the smaller crowd,
+as intended.
+
+
+## 2026-08-06 — Feature 111: the whole map's hunting grounds, generated
+
+**Problem**: the generator proved itself on Darashia's rotworm caves, but the
+rest of the map still had only what the 132 hand-copied guides happened to
+document. Measured against the world's own spawn data, that is a fraction of
+it: 846 spawn populations of 20 creatures or more exist, and most had no Hunt
+Finder entry and nothing for the hunting bot to walk.
+
+**What changed**: `yarn hunts:build --world` sweeps the whole map. Everything
+the batch mode did per region now runs over every huntable population —
+hostile, worth at least 15 experience — with the pieces that only mattered at
+scale added:
+
+- **Clustering scales.** A spatial hash replaces the pairwise scan (80k
+  spawns), and floors merge only when the smaller footprint is half covered by
+  the larger. The old "touching is enough" rule chained cave into cave across
+  whole continents — one "cluster" held 14,929 spawns. A field still too wide
+  to patrol (over 140 tiles) is diced into hunt-sized pieces.
+- **Hunts, not clusters.** Caves are grouped by the town they are hunted from
+  and the creature that dominates them, then named after the creature the
+  route actually meets — a cluster spanning two caverns must not advertise a
+  creature its ring never passes. Tutorial-island temples are excluded from
+  the naming.
+- **Caves gather.** A cave whose ground a hand-written route already walks
+  joins that hunt as a spot; otherwise the biggest cave of a group hosts the
+  rest, up to six per hunt. A route index (32-tile buckets, grown as caves are
+  added) answers "is this ground already hunted?" without walking hundreds of
+  routes, which also lets the hand-listed batches run before the sweep without
+  either pass generating the same cave twice.
+- **Difficulty for creatures no guide covers.** When nothing in the catalog
+  fights this cave's creatures, the hunt of the closest difficulty lends its
+  gear, supplies and imbuements, and the level comes from the curve fitted
+  over the curated catalog.
+- **Surface hunts and untraceable entrances ship.** Demanding a traced way
+  down dropped every open-ground hunting spot, and 94 more caves are entered
+  through something the tracer cannot follow; those keep their ring and pin
+  the entrance on the ring itself.
+- **The catalog stays fetchable.** Routes are written one line each, so the
+  file holding 320 hunts is 2.7 MB (229 KB gzipped) rather than the ~17 MB a
+  pretty-printed sweep would have produced. The parser's catalog cap moved to
+  2,000 entries.
+
+Result: **317 hunts — 132 hand-written and 185 generated — over 28 regions,
+310 caves in all, with 21 hand-written hunts gaining caves they never
+described.** The catalog is 2.7 MB, 226 KB over the wire.
+
+**Files**: `tools/buildHuntingPlaces.mjs`, `tools/clusterSpawnGroups.mjs`
+(+ tests), `tools/readMapGeometry.mjs` (protection zones),
+`client/public/assets/hunting/hunting_places.json`,
+`content/source-manifest.json`,
+`client/lib/hunt-finder/parseHuntingPlaces.ts`.
+
+Two faults the sweep exposed, both fixed:
+
+- The ring builder shipped legs it could not repair. `legFillers` returned an
+  empty list both for "already fine" and for "cannot be fixed", so nine rings
+  went out with a leg the walker fails at. It now returns null for the second
+  case and the ring drops that anchor — including, if need be, from the
+  closing leg.
+- Waypoints sat on spawn tiles, which is exactly where a creature that never
+  moves stands forever. Anchors now prefer a walkable tile that is nobody's
+  home, and the bot skips a waypoint occupied by a creature at once instead
+  of waiting five repaths for a tile that will never clear.
+
+**Verified**: the server gate re-walks every generated ring and entrance
+through the real `findRoutePath` — 2,206 checks green, 4 s — and it is what
+caught the nine broken rings. Live, `playtest:generated-hunt` armed and hunted
+brand-new hunts outside Darashia (Kazordoon dwarf guards: 112 steps, 5
+waypoints, 9 targets, and the floor change). Client unit suites, browser
+stories, `yarn test:tools` and `yarn typecheck` clean.
+
+**Residual risk**: ~140 caves are still dropped because the way in traced to
+somewhere the ring cannot be reached from, and a few more have no walkable
+ring at all. Hunts inside quest-locked or instanced areas cannot be told apart from
+ordinary ones by spawn data, so a few may be unreachable in practice — they
+are marked "Estimated" like every generated hunt. Levels and hourly figures
+remain inherited estimates.
+
+
+## 2026-08-06 — Feature 112 follow-up: the hunt probe tells a death from a bad route
+
+**Problem**: `playtest:generated-hunt` reported "the server stopped the bot on
+this route: unreachable" for a crystal-golem cave. The route was fine — the
+probe character, level 200 with no equipment, had been killed and respawned at
+Thais temple, floors away from its ring, where of course nothing was
+reachable. A probe that blames the content for its own death is worse than no
+probe.
+
+**What changed**: the scenario watches its own health, and on death says so
+and stops judging the route rather than failing it. The teleport back to the
+temple is no longer counted as a walking step, and the run ends without
+waiting for a stop the server has already performed. `PLAYTEST_LEVEL` sets the
+probe's level, and `PLAYTEST_DEBUG=1` prints the status and movement trace
+that made this diagnosable in the first place.
+
+**Files**: `server/src/playtest/scenarios/generatedHuntRoute.ts`.
+
+**Verified**: the crystal-golem hunt now reports "the probe died in this hunt
+(level 200, no equipment) — route not judged" and exits clean; hunts the probe
+survives still assert every step, waypoint and target as before.
+
+**Residual risk**: hunts above the probe's survivable tier are checked
+statically only — every leg through the server's pathfinder — never walked.
+
+## 2026-08-06 — Auto-loot becomes a pick-up list, per rarity, with tooltips and a drop browser
+
+**Problem**: the loot filter was a blacklist — "sweep everything except
+these" — which is backwards for how players hunt: you know the handful of
+things worth carrying, not the hundreds worth leaving. It could not tell a
+legendary dragon slayer from a common one, its tiles were bare sprites with no
+stats to judge them by, and the only way to list a drop was to already know
+its name.
+
+**What changed**:
+
+- `lootFilterSchema` now carries `pickupRules`: one rule per item type, with
+  an optional set of rarity grades. Absent grades means the whole type, which
+  is the only reading for items that never roll one. The server sweeps only
+  what a rule names, and reads each drop's grade off the live item
+  (`itemDisplayRarityOf`), never off the request; `lootFilterTakes` is the
+  single predicate, and a grade list on a type that cannot roll one is
+  stripped at save time so it can only ever narrow the sweep.
+- `075_character_loot_pickup_filter.sql` resets every stored filter to the
+  disabled default (a blacklist cannot be honestly inverted) and raises the
+  column cap to 32 KB. A regression test pins the worst legal list under the
+  16 KB transport cap.
+- `loot-filter-items` now sends a server-composed `tooltip` per type, and the
+  generated `creature-loot-items.json` carries one for all 1,511 creature
+  drops — built by `server/scripts/buildCreatureLootCatalog.ts` under tsx so
+  the tooltips are `toItemTooltip`'s, not a second implementation of them.
+  A tooltip with a rarity on it is also how the client knows a type can roll
+  a grade, so the search pane draws five cells for it and one for everything
+  else.
+- The window: hover tooltips on every cell (`useItemTooltipAnchor` +
+  `ItemTooltipPortal`, now shared with `BestiaryLootItem` and `ItemSlot`),
+  grade-coloured tiles, a "pick up list" pane, and a full-width creature-drop
+  browser that reuses the bestiary's own creature entries and monster
+  request — same server-composed drop tables, no new protocol. The browser
+  shows one thing at a time: a wall of creatures, or one creature's drops
+  behind a back button, and a new search drops out of whatever was open.
+- The two panes answer different questions, so the listing has two shapes.
+  `carried` is what the character actually holds, split by the grade each
+  stack rolled — a legendary sword in the bag draws as a legendary sword, not
+  as five hypothetical grades of "sword". `types` is one ungraded entry per
+  type carried or listed, and that is what the search pane expands into grade
+  cells and what the pick-up list reads its names from.
+- Rarity now tints items everywhere, not just here: `ITEM_RARITY_STYLES` is
+  shared, and any slot holding gear above common gets a ring and a soft inner
+  glow — inventory, equipment, trade offers. "Common" is deliberately
+  untinted, since every ordinary sword and helmet reads as one, and the grade
+  is never spelled out on the cell: the ring colour carries it, the tooltip
+  names it, and the accessible label says it in full.
+- One component draws every item in the game now. `ItemCell` owns the frame,
+  sprite, stack badge, rarity ring and hover tooltip; `ItemSlot` (inventory,
+  equipment, trade), `BestiaryLootItem` and `LootFilterItemTile` are thin
+  wrappers over it that supply what a click means and their own drag
+  handlers. The bestiary keeps its own ring colours through one documented
+  override — it grades drops by drop chance, not by item rarity.
+
+**Files**: `protocol/src/lootFilter.ts`; `server/src/LootFilterHandler.ts`,
+`server/src/item/{lootFilterTakes,itemDisplayRarityOf,ItemIntentHandler}.ts`,
+`server/src/character/parseLootFilter.ts`, `server/src/CharacterHandler.ts`,
+`server/db/migrations/075_character_loot_pickup_filter.sql`,
+`server/scripts/buildCreatureLootCatalog.ts` (replacing
+`tools/buildCreatureLootCatalog.mjs`),
+`server/src/playtest/scenarios/rarityAffixes.ts`;
+`client/components/loot-filter/*`, `client/lib/loot-filter/*`,
+`client/lib/items/itemRarityStyles.ts`,
+`client/hooks/useItemTooltipAnchor.ts`,
+`client/components/inventory/{ItemCell,ItemTooltipPortal,ItemSlot}.tsx`,
+`client/components/bestiary/BestiaryLootItem.tsx`,
+`client/components/game-window/{GameLootFilterOverlay,GameHudOverlay}.tsx`,
+store/state/message files, both locale files, and the window's stories.
+
+**Verified**: server suite (3,816 tests) and client unit suite (441) green,
+including new cases for grade-scoped sweeps — a `rarities: ["rare"]` rule
+takes the rare axe off a corpse and leaves the epic and the ungraded one —
+and for the toggle algebra (carving one grade out of a whole type, collapsing
+five back into one, the entry cap). Eight browser stories drive the real
+window: picking one grade of an item, removing a listed type, adding a drop
+straight out of a creature's table, coming back out of a drop table, clearing
+the creature search, and the carried pane showing a legendary axe and a
+common one side by side rather than five grade cells. `yarn typecheck`, `yarn test:tools`
+and prettier clean; the rebuilt asset resolves the same 1,511 items as before.
+
+**Residual risk**: stored filters are reset by the migration, the creature
+browser lists a whole type rather than a grade, and the search pane caps at 60
+item types per query — all recorded in `TODO.md`.

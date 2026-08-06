@@ -2,6 +2,7 @@
 
 import {
   ACTION_BOT_RULE_COUNT,
+  DEFAULT_ACTION_BOT_MONSTERS_AROUND,
   type ActionBotAction,
   type ActionBotRule,
   type ActionBotSettings,
@@ -12,6 +13,7 @@ import {
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { createSpellAction } from "../../lib/action-bar/createSpellAction";
 import { createItemAction } from "../../lib/action-bar/createItemAction";
+import { getActionBotAreaSpell } from "../../lib/action-bar/getActionBotAreaSpell";
 import { ActionBotRuleRow } from "./ActionBotRuleRow";
 import { ActionBarActionIcon } from "./ActionBarActionIcon";
 import { Button } from "../ui/Button";
@@ -101,6 +103,9 @@ export function ActionBotSettingsPanel({
       action: newRuleAction,
       trigger: defaultTrigger(newRuleAction, spells, items),
       unequipWhenInactive: false,
+      ...(getActionBotAreaSpell(newRuleAction, spells)
+        ? { monstersAround: DEFAULT_ACTION_BOT_MONSTERS_AROUND }
+        : {}),
     };
     onChange({ ...settings, rules: [...settings.rules, rule] });
   };
@@ -302,11 +307,11 @@ export function ActionBotSettingsPanel({
         </div>
       </div>
       {settings.rules.length > 0 && (
-        <div className="hidden grid-cols-12 gap-3 px-3 font-display text-xs font-bold tracking-widest text-ui-gold uppercase lg:grid">
+        <div className="hidden grid-cols-16 gap-3 px-3 font-display text-xs font-bold tracking-widest text-ui-gold uppercase lg:grid">
           <span className="col-span-1 text-center">
             {t("actionBot.columns.on")}
           </span>
-          <span className="col-span-3">
+          <span className="col-span-4">
             {t("actionBot.columns.action")}
           </span>
           <span className="col-span-3">
@@ -314,6 +319,9 @@ export function ActionBotSettingsPanel({
           </span>
           <span className="col-span-3">
             {t("actionBot.columns.setting")}
+          </span>
+          <span className="col-span-3">
+            {t("actionBot.columns.monsters")}
           </span>
           <span className="col-span-2 text-right">
             {t("actionBot.columns.options")}

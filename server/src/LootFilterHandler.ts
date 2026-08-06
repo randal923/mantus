@@ -2,8 +2,13 @@ import {
   LOOT_FILTER_MAX_CARRIED_TYPES,
   type LootFilter,
   type LootFilterItem,
+  type LootFilterRule,
   type UpdateLootFilterMessage,
 } from "@tibia/protocol";
+import { isRarityEligible } from "./rarity/isRarityEligible";
+import { itemDisplayRarityOf } from "./item/itemDisplayRarityOf";
+import type { ItemType } from "./item/ItemType";
+import { toItemTooltip } from "./item/toItemTooltip";
 import type { CharacterStore } from "./character/CharacterStore";
 import type { ItemIntentHandler } from "./item/ItemIntentHandler";
 import type { Session } from "./Session";
@@ -15,10 +20,11 @@ import { ResolvedOutcomes } from "./ResolvedOutcomes";
 const ITEMS_COOLDOWN_MS = 1_000;
 
 /**
- * Owns the auto-loot blacklist and the carried-item-type listing its window
- * shows. The filter only ever says what *not* to take, so an id the catalog
- * does not know is dropped rather than rejected — a stale blacklist entry
- * must not make the whole setting unsaveable.
+ * Owns the auto-loot pick-up list and the carried-item-type listing its
+ * window shows. The filter only ever says what the player *wants*, so an id
+ * the catalog does not know is dropped rather than rejected — a stale entry
+ * must not make the whole setting unsaveable, and dropping one can only ever
+ * make the sweep take less.
  */
 export class LootFilterHandler {
   private readonly outcomes = new ResolvedOutcomes();
@@ -54,10 +60,11 @@ export class LootFilterHandler {
   }
 
   /**
-   * Answers with what the loot-filter window draws: every distinct item type
-   * the character carries, summed across all of its containers, plus the
-   * blacklisted types it no longer holds so they stay removable. Both are the
-   * player's own data — nothing about anyone else is derivable from it.
+   * Answers with what the loot-filter window draws: what the character is
+   * actually holding, summed across all of its containers and split by the
+   * grade each stack rolled, plus one ungraded entry per type it carries or
+   * lists. All of it is the player's own data — nothing about anyone else is
+   * derivable from it.
    */
   handleItemsGet(session: Session, now: number): void {
     const playerId = session.playerId;
@@ -67,30 +74,49 @@ export class LootFilterHandler {
     }
     if (now < session.lootFilterItemsReadyAt) return;
     session.lootFilterItemsReadyAt = now + ITEMS_COOLDOWN_MS;
+    const byGrade = new Map<string, LootFilterItem>();
     const byType = new Map<number, LootFilterItem>();
     for (const item of this.items.inventorySnapshot(playerId)?.items ?? []) {
       const type = this.items.itemType(item.typeId);
       if (!type || !type.pickupable) continue;
-      const current = byType.get(item.typeId);
-      byType.set(item.typeId, {
-        typeId: type.id,
-        name: type.name,
-        spriteId: type.spriteId,
+      const base = byType.get(type.id) ?? this.toListing(type);
+      byType.set(type.id, base);
+      const rarity = itemDisplayRarityOf(type, item);
+      const key = `${type.id}:${rarity ?? ""}`;
+      const current = byGrade.get(key);
+      byGrade.set(key, {
+        ...base,
         count: (current?.count ?? 0) + item.count,
+        // The type's tooltip at this stack's grade — not this one instance's,
+        // whose rolled affixes belong to it alone and say nothing about the
+        // next drop of the same grade the sweep will judge.
+        tooltip: rarity ? { ...base.tooltip, rarity } : base.tooltip,
       });
     }
-    const carried = [...byType.values()]
-      .sort((left, right) => left.name.localeCompare(right.name))
-      .slice(0, LOOT_FILTER_MAX_CARRIED_TYPES);
-    const ignored = session.lootFilter.ignoredItemTypeIds.flatMap<LootFilterItem>(
-      (typeId) => {
-        if (byType.has(typeId)) return [];
-        const type = this.items.itemType(typeId);
-        if (!type) return [];
-        return [{ typeId: type.id, name: type.name, spriteId: type.spriteId }];
-      },
-    );
-    session.send({ type: "loot-filter-items", carried, ignored });
+    for (const rule of session.lootFilter.pickupRules) {
+      if (byType.has(rule.typeId)) continue;
+      const type = this.items.itemType(rule.typeId);
+      if (type) byType.set(type.id, this.toListing(type));
+    }
+    const byName = (left: LootFilterItem, right: LootFilterItem) =>
+      left.name.localeCompare(right.name) ||
+      (left.tooltip.rarity ?? "").localeCompare(right.tooltip.rarity ?? "");
+    session.send({
+      type: "loot-filter-items",
+      carried: [...byGrade.values()]
+        .sort(byName)
+        .slice(0, LOOT_FILTER_MAX_CARRIED_TYPES),
+      types: [...byType.values()].sort(byName),
+    });
+  }
+
+  private toListing(type: ItemType): LootFilterItem {
+    return {
+      typeId: type.id,
+      name: type.name,
+      spriteId: type.spriteId,
+      tooltip: toItemTooltip(type),
+    };
   }
 
   applyResolvedOutcomes(): void {
@@ -98,15 +124,26 @@ export class LootFilterHandler {
   }
 
   private sanitize(filter: LootFilter): LootFilter | null {
-    const ignoredItemTypeIds: number[] = [];
+    const pickupRules: LootFilterRule[] = [];
     const seen = new Set<number>();
-    for (const typeId of filter.ignoredItemTypeIds) {
-      if (seen.has(typeId)) continue;
-      if (!this.items.itemType(typeId)) continue;
-      seen.add(typeId);
-      ignoredItemTypeIds.push(typeId);
+    for (const rule of filter.pickupRules) {
+      if (seen.has(rule.typeId)) continue;
+      const type = this.items.itemType(rule.typeId);
+      if (!type) continue;
+      seen.add(rule.typeId);
+      // Grades only mean something on gear that can roll one. Keeping a list
+      // on anything else would silently narrow the sweep to nothing, since
+      // such a drop never carries a grade to match.
+      const rarities =
+        rule.rarities && isRarityEligible(type)
+          ? [...new Set(rule.rarities)]
+          : undefined;
+      pickupRules.push({
+        typeId: type.id,
+        ...(rarities ? { rarities } : {}),
+      });
     }
-    return { enabled: filter.enabled, ignoredItemTypeIds };
+    return { enabled: filter.enabled, pickupRules };
   }
 
   private async persist(

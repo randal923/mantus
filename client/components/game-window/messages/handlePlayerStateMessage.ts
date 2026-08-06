@@ -88,7 +88,7 @@ export function handlePlayerStateMessage(
   if (message.type === "loot-filter-items") {
     state.setLootFilterItems({
       carried: message.carried,
-      ignored: message.ignored,
+      types: message.types,
     });
     return true;
   }

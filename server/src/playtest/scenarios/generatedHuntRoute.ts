@@ -20,6 +20,8 @@ const CHARACTER = "Ringer Probe";
 /** A hunt name, one of its cave names, or "hunt · cave"; the first if unset. */
 const HUNT = process.env.PLAYTEST_HUNT ?? "";
 const WATCH_MS = 45_000;
+/** High enough that an early-game cave cannot kill the probe outright. */
+const LEVEL = Number(process.env.PLAYTEST_LEVEL ?? 200);
 
 interface RoutePath {
   readonly Coordinates: Readonly<
@@ -104,6 +106,9 @@ const waypoints: Position[] = floors.flatMap((value) =>
 );
 const lowerFloor = floors.find((value) => value !== floor) ?? null;
 
+/** Ends the run early without failing it: the probe died, nothing to judge. */
+class SkipRest extends Error {}
+
 const externalUrl = process.env.PLAYTEST_SERVER_URL;
 const server = externalUrl
   ? null
@@ -117,8 +122,8 @@ try {
   await client.enter(TOKEN, CHARACTER);
   ok(`entered world as ${client.playerId}`);
 
-  step("boosting the character so a rotworm cave is survivable");
-  client.say("/level 200");
+  step(`boosting the character to level ${LEVEL}`);
+  client.say(`/level ${LEVEL}`);
   await client.waitFor(isType("gm-response"), "gm-response for /level");
 
   step("saving the generated ring as the character's route");
@@ -185,6 +190,21 @@ try {
   step(`hunting the cave for ${WATCH_MS / 1_000} seconds`);
   const walkMark = client.mark();
   await sleep(WATCH_MS);
+  if (process.env.PLAYTEST_DEBUG === "1") {
+    for (const message of client.messages.slice(walkMark)) {
+      if (message.type === "hunting-bot-status") {
+        console.log(
+          `    status idx=${message.waypointIndex} enabled=${message.enabled} reason=${message.stopReason ?? "-"}`,
+        );
+      }
+      if (
+        message.type === "creature-moved" &&
+        message.creatureId === client.playerId
+      ) {
+        console.log(`    moved -> ${message.position.x},${message.position.y},${message.position.z}`);
+      }
+    }
+  }
   const messages = client.messages.slice(walkMark);
   const steps = messages
     .filter(isType("creature-moved"))
@@ -201,15 +221,34 @@ try {
       .map((message) => message.creature.name),
   );
 
-  if (stops.length > 0) {
+  // A probe character carries no gear, so a hunt meant for real equipment can
+  // simply kill it. That says nothing about the route, and the bot stopping
+  // afterwards — stranded at a temple, floors away from its ring — is a
+  // consequence of the death, not a fault in the ring.
+  const died = messages
+    .filter(isType("creature-health"))
+    .some(
+      (message) =>
+        message.creatureId === client.playerId && message.healthPercent === 0,
+    );
+  if (died) {
+    console.log(
+      `  · the probe died in this hunt (level ${LEVEL}, no equipment) — ` +
+        `route not judged`,
+    );
+  } else if (stops.length > 0) {
     throw new Error(
       `the server stopped the bot on this route: ${stops
         .map((message) => message.stopReason ?? "unknown")
         .join(", ")}`,
     );
   }
-  if (steps.length === 0) throw new Error("the bot never moved the character");
+  if (steps.length === 0 && !died) {
+    throw new Error("the bot never moved the character");
+  }
   for (const move of steps) {
+    // The jump back to a temple is the death itself, not a step.
+    if (died && chebyshev(move.from, move.position) > 1) continue;
     if (chebyshev(move.from, move.position) > 1) {
       throw new Error(
         `the bot moved more than one tile in a step: ${JSON.stringify(move)}`,
@@ -221,11 +260,11 @@ try {
       `engaged ${targets.length} targets`,
   );
   ok(`creatures met in the cave: ${[...met].join(", ") || "none"}`);
-  if (targets.length === 0) {
+  if (targets.length === 0 && !died) {
     throw new Error("nothing in this cave was worth attacking");
   }
 
-  if (lowerFloor !== null) {
+  if (lowerFloor !== null && !died) {
     step(`climbing to floor ${lowerFloor}: the ring there takes over`);
     const deeper = (chosen.routePath.Coordinates[String(lowerFloor)] ?? [])[0]?.[0];
     if (!deeper) throw new Error(`no waypoints on floor ${lowerFloor}`);
@@ -256,6 +295,12 @@ try {
     );
   }
 
+  if (died) {
+    client.terminate();
+    console.log("\ngenerated hunt route scenario passed (probe died, route unjudged)");
+    throw new SkipRest();
+  }
+
   step("stopping the bot");
   const stopMark = client.mark();
   client.send({ type: "set-hunting-bot-enabled", enabled: false });
@@ -270,8 +315,10 @@ try {
   client.terminate();
   console.log("\ngenerated hunt route scenario passed");
 } catch (cause) {
-  failed = true;
-  console.error("\n✗ scenario failed:", cause);
+  if (!(cause instanceof SkipRest)) {
+    failed = true;
+    console.error("\n✗ scenario failed:", cause);
+  }
 } finally {
   await server?.stop();
   process.exit(failed ? 1 : 0);

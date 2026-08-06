@@ -1,5 +1,6 @@
 import type {
   ActionBotAction,
+  ActionBotMonstersAround,
   ActionBotRule,
   CombatTarget,
 } from "@tibia/protocol";
@@ -32,12 +33,19 @@ type ActivateSpell = (
   readonly nextAttemptAt: number;
 };
 
+/** Live count of the monsters the action's own area covers right now. */
+type CountAreaMonsters = (
+  session: Session,
+  action: ActionBotAction,
+) => number;
+
 export class ActionBot {
   constructor(
     private readonly world: World,
     private readonly activate: ActivateAction,
     private readonly deactivate: DeactivateAction,
     private readonly activateSpell: ActivateSpell,
+    private readonly countAreaMonsters: CountAreaMonsters,
   ) {}
 
   tick(session: Session, now: number): void {
@@ -84,7 +92,9 @@ export class ActionBot {
     for (const rule of settings.rules) {
       if (!rule.enabled) continue;
       if ((session.actionBotRuleReadyAt.get(rule.id) ?? 0) > now) continue;
-      const active = this.triggerActive(rule, player, session);
+      const active =
+        this.triggerActive(rule, player, session) &&
+        this.monsterCountActive(rule, session);
       if (!active) {
         if (
           rule.unequipWhenInactive &&
@@ -104,6 +114,28 @@ export class ActionBot {
       session.actionBotRuleReadyAt.set(rule.id, result.nextAttemptAt);
       if (result.started) return;
     }
+  }
+
+  /**
+   * Area rules wait for a crowd: the monsters the action would actually cover
+   * are counted from the live world every tick, never from anything the rule
+   * carries, so the gate cannot be stale when the cast happens.
+   */
+  private monsterCountActive(
+    rule: ActionBotRule,
+    session: Session,
+  ): boolean {
+    const requirement: ActionBotMonstersAround | undefined =
+      rule.monstersAround;
+    if (!requirement) return true;
+    const monsters = this.countAreaMonsters(session, rule.action);
+    if (requirement.comparison === "at-most") {
+      return monsters <= requirement.count;
+    }
+    if (requirement.comparison === "exactly") {
+      return monsters === requirement.count;
+    }
+    return monsters >= requirement.count;
   }
 
   private triggerActive(

@@ -51,7 +51,7 @@ export function createGameWindowStore({
     },
     actionBotSaveTimerRef: { current: null },
     lootFilterRef: {
-      current: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+      current: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
     },
     lootFilterSaveTimerRef: { current: null },
     huntingBotRouteRef: {
@@ -121,9 +121,9 @@ export function createGameWindowStore({
       uiSettings: {},
       actionBar: createDefaultActionBar(),
       actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },
-      lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+      lootFilter: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
       lootFilterOpen: false,
-      lootFilterItems: { carried: [], ignored: [] },
+      lootFilterItems: { carried: [], types: [] },
       huntingBotOpen: false,
       huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
       huntingBotStatus: null,
@@ -619,7 +619,7 @@ export function createGameWindowStore({
         }
         runtime.lootFilterRef.current = {
           ...DEFAULT_LOOT_FILTER,
-          ignoredItemTypeIds: [],
+          pickupRules: [],
         };
         if (runtime.lootFilterSaveTimerRef.current) {
           clearTimeout(runtime.lootFilterSaveTimerRef.current);
@@ -696,9 +696,9 @@ export function createGameWindowStore({
             ...DEFAULT_ACTION_BOT_SETTINGS,
             rules: [],
           },
-          lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+          lootFilter: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
           lootFilterOpen: false,
-          lootFilterItems: { carried: [], ignored: [] },
+          lootFilterItems: { carried: [], types: [] },
           huntingBotOpen: false,
           huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
           huntingBotStatus: null,

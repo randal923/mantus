@@ -417,7 +417,10 @@ export class CharacterHandler {
     };
     session.lootFilter = {
       ...character.lootFilter,
-      ignoredItemTypeIds: [...character.lootFilter.ignoredItemTypeIds],
+      pickupRules: character.lootFilter.pickupRules.map((rule) => ({
+        ...rule,
+        ...(rule.rarities ? { rarities: [...rule.rarities] } : {}),
+      })),
     };
     session.huntingBotRoute = {
       ...character.huntingBotRoute,

@@ -55,3 +55,36 @@ export const Catalog: Story = {
     );
   },
 };
+
+/**
+ * A hunt with several caves tracks the one being read: ticking "track" while
+ * looking at the north cave must draw the way to *that* hole.
+ */
+export const TracksTheChosenCave: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dialog = await canvas.findByRole("dialog", { name: "Hunt Finder" });
+    const search = within(dialog).getByRole("textbox", { name: "Search" });
+    await userEvent.type(search, "Darashia Rotworm Caves");
+    await userEvent.click(
+      await within(dialog).findByRole("button", {
+        name: /Darashia Rotworm Caves/,
+      }),
+    );
+    await userEvent.click(
+      await within(dialog).findByRole("button", {
+        name: /^North Cave — enter at/,
+      }),
+    );
+    await userEvent.click(
+      within(dialog).getByRole("checkbox", {
+        name: "Track the path on the live map",
+      }),
+    );
+    await expect(args.onTrackedRouteChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Darashia Rotworm Caves · North Cave",
+      }),
+    );
+  },
+};

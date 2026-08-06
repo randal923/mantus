@@ -69,6 +69,7 @@ const meta = {
         ],
         targetKind: "self",
         parameterKind: "none",
+        areaShape: "single",
       },
     ],
     actionBar,

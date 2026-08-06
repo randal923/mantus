@@ -1,13 +1,17 @@
-import type {
-  ActionBotRule,
-  ActionBotTrigger,
-  CarriedItemSummary,
-  SpellCatalogEntry,
+import {
+  ACTION_BOT_MONSTER_COUNT_MAX,
+  DEFAULT_ACTION_BOT_MONSTERS_AROUND,
+  type ActionBotMonsterComparison,
+  type ActionBotRule,
+  type ActionBotTrigger,
+  type CarriedItemSummary,
+  type SpellCatalogEntry,
 } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { createActionBotAction } from "../../lib/action-bar/createActionBotAction";
 import { getActionBarActionName } from "../../lib/action-bar/getActionBarActionName";
 import { getActionBotActionValue } from "../../lib/action-bar/getActionBotActionValue";
+import { getActionBotAreaSpell } from "../../lib/action-bar/getActionBotAreaSpell";
 import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/Dropdown";
 import { DropUp, type DropUpOption } from "../ui/DropUp";
@@ -37,6 +41,12 @@ const CONDITIONS = [
   "haste",
   "magic-shield",
 ] as const;
+
+const MONSTER_COMPARISONS: ReadonlyArray<ActionBotMonsterComparison> = [
+  "at-least",
+  "at-most",
+  "exactly",
+];
 
 function triggerForKind(
   kind: ActionBotTrigger["kind"],
@@ -87,6 +97,10 @@ export function ActionBotRuleRow({
   const { t } = useAppTranslation();
   const action = rule.action;
   const isEquip = action.kind === "item" && action.mode === "equip";
+  const areaSpell = getActionBotAreaSpell(action, spells);
+  // A rule saved before this setting existed reads as "no crowd required",
+  // which is exactly what "at least 0" means.
+  const monsters = rule.monstersAround ?? { comparison: "at-least", count: 0 };
   const resourceTrigger =
     rule.trigger.kind === "resource-below" ||
     rule.trigger.kind === "resource-above"
@@ -151,6 +165,10 @@ export function ActionBotRuleRow({
     value: condition,
     label: t(`actionBot.conditions.${condition}`),
   }));
+  const comparisonOptions = MONSTER_COMPARISONS.map((comparison) => ({
+    value: comparison,
+    label: t(`actionBot.comparisons.${comparison}`),
+  }));
   const triggerDescription =
     rule.trigger.kind === "target-present"
       ? t("actionBot.triggerDescriptions.target")
@@ -171,9 +189,15 @@ export function ActionBotRuleRow({
             ),
             percent: rule.trigger.percent,
           });
+  const ruleDescription = areaSpell
+    ? `${triggerDescription} ${t(
+        `actionBot.monsterDescriptions.${monsters.comparison}`,
+        { count: monsters.count },
+      )}`
+    : triggerDescription;
   return (
     <article className="overflow-hidden rounded-lg border border-ui-stone-light/20 bg-ui-panel-deep/75 shadow-inner shadow-black/30">
-      <div className="grid items-center gap-3 p-3 lg:grid-cols-12">
+      <div className="grid items-center gap-3 p-3 lg:grid-cols-16">
         <div className="flex items-center justify-between lg:col-span-1 lg:justify-center">
           <span className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase lg:hidden">
             {t("actionBot.enabled")}
@@ -188,7 +212,7 @@ export function ActionBotRuleRow({
             }
           />
         </div>
-        <div className="flex min-w-0 flex-col gap-2 lg:col-span-3">
+        <div className="flex min-w-0 flex-col gap-2 lg:col-span-4">
           <span className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase lg:hidden">
             {t("actionBot.columns.action")}
           </span>
@@ -203,7 +227,18 @@ export function ActionBotRuleRow({
               emptyLabel={t("actionBot.noMatchingActions")}
               onChange={(value) => {
                 const next = createActionBotAction(value, spells, items);
-                if (next) onChange({ ...rule, action: next });
+                if (!next) return;
+                // The crowd setting belongs to the area action that carries
+                // it; a single-target action drops it rather than keeping a
+                // hidden gate the panel no longer shows.
+                onChange({
+                  ...rule,
+                  action: next,
+                  monstersAround: getActionBotAreaSpell(next, spells)
+                    ? (rule.monstersAround ??
+                      DEFAULT_ACTION_BOT_MONSTERS_AROUND)
+                    : undefined,
+                });
               }}
               className="flex-1"
             />
@@ -330,13 +365,80 @@ export function ActionBotRuleRow({
             />
           </div>
         )}
-        <div className="flex items-center justify-end gap-1 lg:col-span-2">
+        {areaSpell && (
+          <div className="flex min-w-0 flex-col gap-2 lg:col-span-3">
+            <span className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase lg:hidden">
+              {t("actionBot.columns.monsters")}
+            </span>
+            <div className="flex min-w-0 items-center gap-2">
+              <Dropdown
+                ariaLabel={t("actionBot.monsterComparisonForRule", {
+                  number: ruleNumber,
+                })}
+                value={monsters.comparison}
+                options={comparisonOptions}
+                onChange={(comparison) =>
+                  onChange({
+                    ...rule,
+                    monstersAround: { ...monsters, comparison },
+                  })
+                }
+                className="flex-1"
+              />
+              <div className="flex h-10 w-24 shrink-0 overflow-hidden rounded-md border border-ui-stone-light/25 bg-black/35">
+                <button
+                  type="button"
+                  aria-label={t("actionBot.decreaseMonsters", {
+                    number: ruleNumber,
+                  })}
+                  onClick={() =>
+                    onChange({
+                      ...rule,
+                      monstersAround: {
+                        ...monsters,
+                        count: Math.max(0, monsters.count - 1),
+                      },
+                    })
+                  }
+                  className="w-8 border-r border-ui-stone-light/20 text-lg text-ui-muted hover:bg-white/5 hover:text-ui-text-bright"
+                >
+                  −
+                </button>
+                <output className="flex min-w-8 flex-1 items-center justify-center px-1 text-sm font-bold tabular-nums text-ui-text-bright">
+                  {monsters.count}
+                </output>
+                <button
+                  type="button"
+                  aria-label={t("actionBot.increaseMonsters", {
+                    number: ruleNumber,
+                  })}
+                  onClick={() =>
+                    onChange({
+                      ...rule,
+                      monstersAround: {
+                        ...monsters,
+                        count: Math.min(
+                          ACTION_BOT_MONSTER_COUNT_MAX,
+                          monsters.count + 1,
+                        ),
+                      },
+                    })
+                  }
+                  className="w-8 border-l border-ui-stone-light/20 text-lg text-ui-muted hover:bg-white/5 hover:text-ui-text-bright"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-end gap-1 lg:col-span-2 lg:col-start-15">
           <button
             type="button"
             aria-label={t("actionBot.explainRule", {
               number: ruleNumber,
             })}
-            title={triggerDescription}
+            title={ruleDescription}
             className="ui-button ui-button-secondary size-8 text-ui-gold"
           >
             ⓘ

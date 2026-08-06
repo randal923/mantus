@@ -1386,6 +1386,7 @@
       "action": "Action",
       "activateWhen": "Activate when",
       "setting": "Setting",
+      "monsters": "Monsters in area",
       "options": "Options"
     },
     "noRules": "No automation rules yet",
@@ -1416,6 +1417,19 @@
       "condition": "Runs whenever {{condition}} is not active.",
       "resource": "Runs when {{resource}} is {{direction}} {{percent}}%."
     },
+    "comparisons": {
+      "at-least": "At least (≥)",
+      "at-most": "At most (≤)",
+      "exactly": "Exactly (=)"
+    },
+    "monsterDescriptions": {
+      "at-least": "Only casts while the spell's area covers at least {{count}} monsters.",
+      "at-most": "Only casts while the spell's area covers at most {{count}} monsters.",
+      "exactly": "Only casts while the spell's area covers exactly {{count}} monsters."
+    },
+    "monsterComparisonForRule": "Monster count comparison for rule {{number}}",
+    "decreaseMonsters": "Decrease required monsters for rule {{number}}",
+    "increaseMonsters": "Increase required monsters for rule {{number}}",
     "enableRule": "Enable rule {{number}}",
     "actionForRule": "Action for rule {{number}}",
     "activationForRule": "Activation condition for rule {{number}}",
@@ -1442,17 +1456,22 @@
     "title": "Loot Filter",
     "configure": "Configure Loot Filter",
     "enabled": "Auto loot enabled",
-    "enabledDescription": "Picks up everything you kill except the items on the ignore list.",
+    "enabledDescription": "Picks up only the items on your pick-up list, in the grades you chose.",
     "carried": "Loot in your backpacks",
     "carriedEmpty": "You are not carrying anything.",
     "searchResults": "Search results",
     "searchEmpty": "No creature drops match that name.",
     "searchPlaceholder": "Search every creature drop…",
-    "ignored": "Active filter (do not pick up)",
-    "ignoredEmpty": "Drag items here to stop picking them up.",
-    "addItem": "Stop picking up {{name}}",
-    "removeItem": "Pick up {{name}} again",
-    "reset": "Reset filter",
+    "selected": "Pick up list",
+    "selectedEmpty": "Drag items here to start picking them up.",
+    "creatures": "Creature drops",
+    "creatureSearchPlaceholder": "Search a creature…",
+    "creatureHint": "Search a creature to browse what it drops.",
+    "creatureEmpty": "No creature matches that name.",
+    "creaturePick": "Pick a creature to see its drops.",
+    "addItem": "Pick up {{name}}",
+    "removeItem": "Stop picking up {{name}}",
+    "reset": "Clear list",
     "close": "Close"
   },
   "huntingBot": {

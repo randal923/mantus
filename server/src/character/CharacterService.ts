@@ -131,7 +131,7 @@ export class CharacterService {
       townId: this.starter.townId,
       actionBar: createDefaultActionBar(),
       actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS, rules: [] },
-      lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+      lootFilter: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
       huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
       aimAtTargetSpellIds: [],
       skull: "none",

@@ -32,6 +32,7 @@ const meta = {
         ],
         targetKind: "self",
         parameterKind: "none",
+        areaShape: "single",
       },
       {
         id: "exori-infir-min",
@@ -53,6 +54,7 @@ const meta = {
         ],
         targetKind: "direction",
         parameterKind: "none",
+        areaShape: "tiles",
       },
     ],
     onClose: fn(),

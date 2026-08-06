@@ -53,7 +53,7 @@ export function makeCharacter(id: string, displayName = id): Character {
     townId: 1,
     actionBar: createDefaultActionBar(),
     actionBotSettings: { ...DEFAULT_ACTION_BOT_SETTINGS },
-    lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+    lootFilter: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
     huntingBotRoute: { ...DEFAULT_HUNTING_BOT_ROUTE, waypoints: [] },
     aimAtTargetSpellIds: [],
     skull: "none",

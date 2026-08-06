@@ -353,18 +353,14 @@ export function handleCommerceMessage(
   }
 
   if (message.type === "world-container-state") {
-    // One window per open container: the server may hold several views at
-    // once (a corpse and the bag inside it), and each reconciles on its own.
-    state.setLootSessions((current) => {
-      const index = current.findIndex(
-        (session) =>
-          session.state.container.id === message.state.container.id,
-      );
-      if (index < 0) return [...current, message];
-      const next = [...current];
-      next[index] = message;
-      return next;
-    });
+    // Only one loot window is ever open: a second corpse (or a bag opened
+    // inside one) replaces the current view, and the server-side views it
+    // supersedes are closed so they stop streaming updates.
+    for (const session of state.lootSessions) {
+      if (session.state.container.id === message.state.container.id) continue;
+      client.closeWorldContainer(session.state.container.id);
+    }
+    state.setLootSessions([message]);
     state.setInventoryOpen(true);
     return true;
   }

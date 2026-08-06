@@ -72,15 +72,22 @@ limitations accepted during a session are recorded in the owning feature file
   `mailbox-opened`-adjacent state message, or push it on open, and render it
   in `MailboxModal` the way `DepotModal` now does. Owner: depot/mail.
 
-- **Only Darashia's rotworm caves are generated; the rest of the map waits**
-  (2026-08-06, Feature 111). `tools/buildHuntingPlaces.mjs` generates hunts for
-  the creature themes and regions listed in its `TARGETS` array, and that array
-  holds exactly one entry so each batch can be walked in-game before the next.
-  Every other uncovered cave on the map — hundreds of spawn clusters — still
-  has no Hunt Finder entry. Recommended fix: add a target per theme/region,
-  run `yarn hunts:build`, and check the new rings with
-  `yarn workspace server playtest:generated-hunt` before shipping the batch.
+- **145 spawn populations still have no generated hunt** (2026-08-06, Feature
+  111). The world sweep drops a cave when the way in it traced does not open
+  into the ring (142 caves) or when no walkable ring can be built at all (3).
+  The tracer follows ladders, holes, ropes and floor changes within 80 tiles
+  and 8 hops; teleports, quest doors and long shaft chains defeat it.
+  Recommended fix: fall back to a reachability flood fill from the nearest
+  town over the whole floor stack, or let a target name the entrance by hand.
   Owner: Hunt Finder (111).
+
+- **Generated hunts cannot be told apart from quest-locked ground**
+  (2026-08-06, Feature 111). Spawn data says where creatures stand, not
+  whether a player may go there, so a hunt generated inside an instanced or
+  quest-gated area looks like any other. None is known to be wrong today, but
+  nothing checks it. Recommended fix: cross the entrance tile against the
+  quest/teleport tables the map already carries, and drop or flag the ones
+  behind a gate. Owner: Hunt Finder (111).
 
 - **Generated hunts inherit xp/hour, loot/hour and level rather than measuring
   them** (2026-08-06, Feature 111). A generated entry copies those figures from
@@ -108,9 +115,12 @@ limitations accepted during a session are recorded in the owning feature file
   one-tile pocket behind it — refuses with `hunting-bot-out-of-range`. It was
   hit repeatedly on a freshly spawned rotworm cave (74 spawns), where the
   message reads as "you are too far away" while the character stands one tile
-  from the route. Recommended fix: distinguish "no walk right now" from "too
-  far", and either retry the join for a few ticks or say that something is in
-  the way. Owner: hunting bot (112).
+  from the route. The same root cause can stop a *running* bot: a crowded
+  cave that blocks eight waypoints in a row ends the hunt with "unreachable",
+  seen once in a 74-spawn rotworm cave. Recommended fix: distinguish "no walk
+  right now" from "too far", and either retry the join for a few ticks or say
+  that something is in the way; consider not counting creature-blocked
+  failures toward the give-up budget. Owner: hunting bot (112).
 
 - **The hunting bot only walks; it never uses a ladder, hole, rope or door**
   (2026-08-01, Feature 112). Floor changes come in two shapes on this map:
@@ -832,16 +842,36 @@ limitations accepted during a session are recorded in the owning feature file
   pointing at a local Postgres before this reaches production, and treat a
   failure there as blocking. Owner: Feature 46.
 
-- **Auto-loot migration `066_character_loot_filter.sql` is unapplied** (added
-  2026-07-30). `characters.loot_filter` is read by `toCharacter` and written
-  by `PgCharacterStore.updateLootFilter`, but the migration has never run:
-  this environment has no Docker and no reachable Postgres. The SQL mirrors
-  `039_character_aim_at_target.sql` in shape and is reviewed but unexecuted,
-  so every loot-filter save will fail against a database that has not been
-  migrated (the handler rolls the session back and reports
-  `loot-filter-update-failed`, so it degrades rather than corrupts).
+- **Auto-loot migrations `066_character_loot_filter.sql` and
+  `075_character_loot_pickup_filter.sql` are unapplied** (added 2026-07-30,
+  extended 2026-08-06). `characters.loot_filter` is read by `toCharacter` and
+  written by `PgCharacterStore.updateLootFilter`, but neither migration has
+  run: this environment has no Docker and no reachable Postgres. Both are
+  reviewed but unexecuted, so every loot-filter save will fail against a
+  database that has not been migrated (the handler rolls the session back and
+  reports `loot-filter-update-failed`, so it degrades rather than corrupts).
   Recommended fix: run `yarn db:migrate` before this reaches any live server.
-  Owner: the auto-loot work recorded in `todo/done.md` (2026-07-30).
+  Owner: the auto-loot work recorded in `todo/done.md` (2026-07-30, 2026-08-06).
+- **Every stored auto-loot filter is reset by the pick-up-list switch**
+  (accepted 2026-08-06). The filter went from a blacklist ("skip these") to a
+  whitelist ("take these"), and 075 rewrites every row to the disabled default
+  rather than inverting it — an inverted list would either take what the
+  player chose to leave or leave what they chose to take. Players who had
+  configured auto-loot must open the window and pick again; auto-loot stays
+  off until they do, so nothing is swept unasked. Recommended fix: none —
+  announce it with the release. Owner: the loot filter work (2026-08-06).
+- **A creature's drop table can reach 320 cells** (accepted 2026-08-06).
+  `LootFilterCreaturePanel` expands every gradable drop into five grade cells,
+  so a table at the protocol's 64-drop ceiling draws 320 of them. Real tables
+  are a fraction of that (a rotworm: 14) and the panel scrolls, so it is left
+  alone. Recommended fix if a boss table makes it crawl: collapse each drop to
+  one cell with a grade strip on hover. Owner: the loot filter work
+  (2026-08-06).
+- **The loot-filter search draws at most 60 item types per query** (accepted
+  2026-08-06). A one-letter query matches hundreds, and each gradable one is
+  five cells; the cap keeps that under ~300 tiles. Types past the cap are
+  dropped silently rather than paged. Recommended fix: a result count with a
+  "refine your search" note, or paging like the wiki bestiary's. Owner: same.
 - **Auto-loot needs the killer within one tile of the corpse** (accepted
   2026-07-30). `ItemIntentHandler.autoLoot` reuses `isNear`, the same reach
   rule a hand-made loot move obeys, so a ranged or run-away kill auto-loots
@@ -850,7 +880,7 @@ limitations accepted during a session are recorded in the owning feature file
   revisit if playtest finds it annoying. Recommended fix if changed: widen
   the check inside `autoLoot` only, never in `planLoot`. Owner: same.
 - **Auto-loot has no per-category container routing** (accepted 2026-07-30).
-  Everything not blacklisted goes through `planBackpackPlacement`, which fills
+  Everything on the pick-up list goes through `planBackpackPlacement`, which fills
   the equipped backpack and every bag nested inside it depth-first — correct
   and recursive, but it cannot send gold to one bag and gems to another.
   `planLoot` already accepts an explicit `destination`, so routing is a matter

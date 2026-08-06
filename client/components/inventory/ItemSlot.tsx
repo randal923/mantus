@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { InventoryItem } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { ItemCell } from "./ItemCell";
 import { ItemSlotImbuements } from "./ItemSlotImbuements";
-import { ItemTooltip } from "./ItemTooltip";
 import { SpriteIcon } from "./SpriteIcon";
 
 interface ItemSlotProps {
@@ -30,7 +30,12 @@ export function ItemSlot({
   const optimistic = Boolean(
     item && "optimistic" in item && item.optimistic === true,
   );
-  const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
+  // Only a rolled grade tints the slot: "common" is what every ordinary
+  // sword and helmet reads as, and tinting those tints the whole bag.
+  const rarity =
+    item?.tooltip.rarity && item.tooltip.rarity !== "common"
+      ? item.tooltip.rarity
+      : undefined;
   const [dragPosition, setDragPosition] = useState<{
     left: number;
     top: number;
@@ -39,8 +44,13 @@ export function ItemSlot({
 
   return (
     <span className="group/slot relative inline-flex">
-      <button
-        type="button"
+      <ItemCell
+        spriteId={item?.spriteId}
+        clientId={item?.clientId}
+        count={item?.count}
+        tooltip={item && !optimistic ? item.tooltip : undefined}
+        rarity={rarity}
+        dimmed={optimistic}
         disabled={!item && !onDrop}
         draggable={Boolean(item && onDragStart && !optimistic)}
         title={
@@ -66,7 +76,6 @@ export function ItemSlot({
           if (emptyDragImageRef.current) {
             event.dataTransfer.setDragImage(emptyDragImageRef.current, 0, 0);
           }
-          setAnchor(null);
           setDragPosition({ left: event.clientX, top: event.clientY });
           onDragStart();
         }}
@@ -96,47 +105,14 @@ export function ItemSlot({
           event.preventDefault();
           onDrop();
         }}
-        onMouseEnter={(event) => {
-          if (!item || optimistic) return;
-          const bounds = event.currentTarget.getBoundingClientRect();
-          setAnchor({
-            left: Math.max(8, bounds.left - 328),
-            top: Math.min(bounds.top, window.innerHeight - 420),
-          });
-        }}
-        onMouseLeave={() => setAnchor(null)}
-        onFocus={(event) => {
-          if (!item || optimistic) return;
-          const bounds = event.currentTarget.getBoundingClientRect();
-          setAnchor({
-            left: Math.max(8, bounds.left - 328),
-            top: Math.min(bounds.top, window.innerHeight - 420),
-          });
-        }}
-        onBlur={() => setAnchor(null)}
-        className="group relative flex size-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] enabled:hover:border-ui-gold/40 enabled:hover:bg-white/5 disabled:cursor-default"
       >
-        {item ? (
+        {!item && placeholderSpriteId !== undefined && (
           <SpriteIcon
-            spriteId={item.spriteId}
-            clientId={item.clientId}
-            count={item.count}
-            className={optimistic ? "animate-pulse opacity-60" : undefined}
+            spriteId={placeholderSpriteId}
+            className="opacity-15 grayscale brightness-150"
           />
-        ) : (
-          placeholderSpriteId !== undefined && (
-            <SpriteIcon
-              spriteId={placeholderSpriteId}
-              className="opacity-15 grayscale brightness-150"
-            />
-          )
         )}
-        {item && item.count > 1 && (
-          <span className="absolute right-0.5 bottom-0.5 rounded-md border border-ui-gold/15 bg-black/80 px-1.5 text-xs leading-4 font-semibold text-ui-text">
-            {item.count}
-          </span>
-        )}
-      </button>
+      </ItemCell>
       {item && item.imbuements && item.imbuements.length > 0 && (
         <ItemSlotImbuements imbuements={item.imbuements} />
       )}
@@ -145,7 +121,8 @@ export function ItemSlot({
         aria-hidden
         className="pointer-events-none fixed size-px opacity-0"
       />
-      {item && dragPosition &&
+      {item &&
+        dragPosition &&
         createPortal(
           <div
             aria-hidden
@@ -158,16 +135,6 @@ export function ItemSlot({
               count={item.count}
               scale={1}
             />
-          </div>,
-          document.body,
-        )}
-      {item && !optimistic && anchor &&
-        createPortal(
-          <div
-            className="pointer-events-none fixed z-[100]"
-            style={{ left: anchor.left, top: Math.max(8, anchor.top) }}
-          >
-            <ItemTooltip item={item.tooltip} />
           </div>,
           document.body,
         )}

@@ -33,6 +33,7 @@ import type { SessionRegistry } from "../SessionRegistry";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import { positionKey } from "../positionKey";
+import { aimDirectionFor } from "./aimDirectionFor";
 import { areaPositions } from "./areaPositions";
 import { canMonsterAffect } from "./canMonsterAffect";
 import { canPlayerHarm } from "./canPlayerHarm";
@@ -64,12 +65,15 @@ import { playerForSession } from "./playerForSession";
 import { playerTierBonuses } from "./playerTierBonuses";
 import { PlayerSpellActions } from "./PlayerSpellActions";
 import { projectCombatAnalyzer } from "./projectCombatAnalyzer";
+import { resolveSpellTarget } from "./resolveSpellTarget";
 import type { SpellDefinition } from "./Spell";
 import { SpellCaster } from "./SpellCaster";
 import { SpellRegistry } from "./SpellRegistry";
 import type { SpokenSpellOutcome } from "./SpokenSpellOutcome";
 import type { TargetingHooks } from "./TargetingHooks";
 import type { WorldSpellHooks } from "./WorldSpellHooks";
+import { wheelBeamMasteryFor } from "./wheelBeamMastery";
+import { wheelSpellAugmentFor } from "./wheelSpellAugments";
 import { ActionBot } from "./ActionBot";
 import { selectAutoTarget } from "../huntingBot/selectAutoTarget";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
@@ -89,6 +93,26 @@ const TARGETED_SPELL_KINDS = new Set<SpellDefinition["targetKind"]>([
  * wounded monster is picked up promptly.
  */
 const HUNTING_BOT_TARGET_INTERVAL_MS = 1_000;
+
+/**
+ * "Around you" for an action bot rule whose action carries no area of its
+ * own: the player's tile and the eight surrounding ones.
+ */
+const ADJACENT_TILES_AREA = {
+  shape: "tiles",
+  offsets: [
+    { x: -1, y: -1 },
+    { x: 0, y: -1 },
+    { x: 1, y: -1 },
+    { x: -1, y: 0 },
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: -1, y: 1 },
+    { x: 0, y: 1 },
+    { x: 1, y: 1 },
+  ],
+  directional: false,
+} as const satisfies SpellDefinition["area"];
 
 const FEAR_DIRECTIONS: ReadonlyArray<readonly [Direction, number, number]> = [
   ["north", 0, -1],
@@ -300,6 +324,7 @@ export class Combat {
         this.deactivateAction(session, action, now),
       (session, spellId, now) =>
         this.activateAutomaticSpell(session, spellId, now),
+      (session, action) => this.countActionAreaMonsters(session, action),
     );
   }
 
@@ -989,6 +1014,94 @@ export class Combat {
         getSpellActionTargetMode(spell.targetKind, action.targetMode) ===
           "direction",
     );
+  }
+
+  /**
+   * How many monsters the action's own combat area covers right now, for the
+   * action bot's "monsters around" gate. The area, the aim and the creatures
+   * are all re-read from live server state at the moment of the check
+   * (charter rule 4), and only creatures the session already knows about are
+   * counted, so the gate can never act on a monster the player cannot see.
+   */
+  private countActionAreaMonsters(
+    session: Session,
+    action: ActionBotAction,
+  ): number {
+    const player = playerForSession(this.world, session);
+    if (!player) return 0;
+    const spell =
+      action.kind === "spell"
+        ? this.spells.get(action.spellId)
+        : this.spells.getRune(action.itemTypeId);
+    if (!spell) {
+      return this.countMonstersInArea(
+        session,
+        player,
+        player.position,
+        ADJACENT_TILES_AREA,
+      );
+    }
+    const area =
+      wheelBeamMasteryFor(player, spell)?.area ??
+      wheelSpellAugmentFor(player, spell).area ??
+      spell.area;
+    // A rule on a single-target action still asks about the monsters around
+    // the player, so it falls back to the eight surrounding tiles.
+    if (area.shape === "single") {
+      return this.countMonstersInArea(
+        session,
+        player,
+        player.position,
+        ADJACENT_TILES_AREA,
+      );
+    }
+    const center = this.actionAreaCenter(session, player, spell, action);
+    if (!center) return 0;
+    return this.countMonstersInArea(session, player, center, area);
+  }
+
+  /** The tile an automatic cast of this action would lay its area around. */
+  private actionAreaCenter(
+    session: Session,
+    player: Player,
+    spell: SpellDefinition,
+    action: ActionBotAction,
+  ): Position | null {
+    const mode =
+      action.kind === "spell"
+        ? getSpellActionTargetMode(spell.targetKind, action.targetMode)
+        : action.mode === "use-on-self"
+          ? "self"
+          : "attack-target";
+    const target =
+      this.actionTarget(mode, undefined) ??
+      this.automaticTarget(session, spell.targetKind === "position");
+    if (!target) return null;
+    return (
+      resolveSpellTarget(
+        this.world,
+        session,
+        player,
+        target,
+        aimDirectionFor(this.world, session, player, spell),
+      )?.position ?? null
+    );
+  }
+
+  private countMonstersInArea(
+    session: Session,
+    player: Player,
+    center: Position,
+    area: SpellDefinition["area"],
+  ): number {
+    const targeting = this.targeting;
+    return creaturesInArea(this.world, player.position, center, area).filter(
+      (creature) =>
+        creature instanceof Monster &&
+        creature.health > 0 &&
+        session.knownCreatureIds.has(creature.id) &&
+        !targeting?.isSummon(creature),
+    ).length;
   }
 
   private activateAutomaticAction(

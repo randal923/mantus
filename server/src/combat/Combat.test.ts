@@ -266,7 +266,7 @@ function makeBystander(
     followTargetId: null,
     aimAtTargetSpellIds: new Set<string>(),
     combatCooldowns: new Map(),
-    lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+    lootFilter: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
     send: (message: ServerMessage) => sent.push(message),
     sendSerialized: (message: string) =>
       sent.push(JSON.parse(message) as ServerMessage),
@@ -312,7 +312,7 @@ async function makeHarness(options: {
     combatCooldowns: new Map(),
     followTargetId: null,
     aimAtTargetSpellIds: new Set<string>(),
-    lootFilter: { ...DEFAULT_LOOT_FILTER, ignoredItemTypeIds: [] },
+    lootFilter: { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
     nextCombatAnalyzerAt: 0,
     itemOperationPending: false,
     potionPersistPending: false,
@@ -2102,6 +2102,86 @@ describe("Combat", () => {
         .inventorySnapshot(PLAYER_ID)
         ?.items.find((item) => item.id === RUNE_ID),
     ).toMatchObject({ count: 1, version: 3 });
+  });
+
+  it("holds an area rule until the live monster count matches its comparison", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(50, "Knight"),
+      position: { x: 5, y: 5, z: 7 },
+      inventory: [
+        ownedItem(WEAPON_ID, 3273, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+      actionBar: createDefaultActionBar(),
+      actionBotSettings: {
+        ...DEFAULT_ACTION_BOT_SETTINGS,
+        enabled: true,
+        rules: [
+          {
+            id: "exori",
+            enabled: true,
+            action: {
+              kind: "spell",
+              spellId: "exori",
+              targetMode: "self",
+            },
+            trigger: { kind: "target-present" },
+            unequipWhenInactive: false,
+            monstersAround: { comparison: "at-least", count: 3 },
+          },
+        ],
+      },
+    });
+    const crowd = [
+      { x: 4, y: 5, z: 7 },
+      { x: 6, y: 5, z: 7 },
+      { x: 5, y: 4, z: 7 },
+    ].map((position, index) => {
+      const monster = makeMonster(
+        `monster-instance:exori-crowd:${index}`,
+        position,
+        makeMonsterType({ health: 2_000, maxHealth: 2_000 }),
+      );
+      return monster;
+    });
+    const [target, bystander, third] = crowd;
+    if (!target || !bystander || !third) throw new Error("expected 3 monsters");
+    for (const monster of [target, bystander]) {
+      harness.world.addCreature(monster);
+      harness.session.knownCreatureIds.add(monster.id);
+    }
+    harness.session.fightMode = {
+      ...harness.session.fightMode,
+      chase: false,
+    };
+    harness.combat.selectTarget(harness.session, target.id, 1_000);
+
+    // Two monsters in the area is one short of the rule's requirement.
+    harness.combat.tick(1_000);
+    expect(bystander.health).toBe(bystander.maxHealth);
+
+    harness.world.addCreature(third);
+    harness.session.knownCreatureIds.add(third.id);
+    harness.combat.tick(2_000);
+
+    expect(bystander.health).toBeLessThan(bystander.maxHealth);
+    expect(third.health).toBeLessThan(third.maxHealth);
+
+    // Flipping the comparison holds the same crowd back again.
+    const healthAfterCast = bystander.health;
+    harness.session.actionBotSettings = {
+      ...harness.session.actionBotSettings,
+      rules: harness.session.actionBotSettings.rules.map((rule) => ({
+        ...rule,
+        monstersAround: { comparison: "at-most", count: 1 } as const,
+      })),
+    };
+    harness.combat.tick(20_000);
+
+    expect(bystander.health).toBe(healthAfterCast);
   });
 
   it("atomically equips and unequips one configured item as its trigger changes", async () => {
