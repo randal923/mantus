@@ -828,10 +828,11 @@ limitations accepted during a session are recorded in the owning feature file
   Feature 110). The portal layout, live world status, boosted rotation,
   highscores, online list, character lookup/profile, server-info, and vocation
   guide pages are real, but the featured Astral Vault dispatch is explicitly a
-  development preview. The news archive and public guild destination do not
-  yet have durable content sources. Recommended fix: replace the preview with
-  approved launch copy and add those bounded read-only pages as their server
-  projections become available. Owner: public website.
+  development preview. The news archive does not yet have a durable content
+  source. Recommended fix: replace the preview with approved launch copy and
+  add that bounded read-only page as its server projection becomes available.
+  (The public guild directory + rosters shipped 2026-08-05 — see done.md.)
+  Owner: public website.
 - **Public sibling-character lists need an explicit account opt-in**
   (2026-07-31, Feature 110/101). The Tibia-style profile preserves the
   Characters section but does not reveal which characters share an account:

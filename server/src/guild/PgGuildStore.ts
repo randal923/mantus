@@ -8,12 +8,14 @@ import type {
   DeclareWarResult,
   EndWarResult,
   ExpiredWarRecord,
+  GuildDirectoryEntry,
   GuildInviteResult,
   GuildBankResult,
   GuildOpFailure,
   GuildOpResult,
   GuildSnapshot,
   GuildStore,
+  PublicGuildRecord,
   RecordWarKillResult,
   RespondInviteResult,
   RespondWarResult,
@@ -29,6 +31,7 @@ import { deleteGuildMemberQuery } from "./sql/deleteGuildMemberQuery";
 import { deleteGuildQuery } from "./sql/deleteGuildQuery";
 import { deleteInvitesForCharacterQuery } from "./sql/deleteInvitesForCharacterQuery";
 import { expirePendingWarsQuery } from "./sql/expirePendingWarsQuery";
+import { guildDirectoryQuery } from "./sql/guildDirectoryQuery";
 import { guildIdForCharacterQuery } from "./sql/guildIdForCharacterQuery";
 import { guildInvitesQuery } from "./sql/guildInvitesQuery";
 import { guildMembersQuery } from "./sql/guildMembersQuery";
@@ -44,6 +47,8 @@ import { insertGuildWarQuery } from "./sql/insertGuildWarQuery";
 import { insertWarKillQuery } from "./sql/insertWarKillQuery";
 import { invitationsForCharacterQuery } from "./sql/invitationsForCharacterQuery";
 import { membershipForUpdateQuery } from "./sql/membershipForUpdateQuery";
+import { publicGuildMembersQuery } from "./sql/publicGuildMembersQuery";
+import { publicGuildRowByNameQuery } from "./sql/publicGuildRowByNameQuery";
 import { rankIdByLevelQuery } from "./sql/rankIdByLevelQuery";
 import { updateGuildMotdQuery } from "./sql/updateGuildMotdQuery";
 import { updateGuildOwnerQuery } from "./sql/updateGuildOwnerQuery";
@@ -177,6 +182,61 @@ export class PgGuildStore implements GuildStore {
         fragLimit: war.frag_limit,
         guild1Kills: war.guild1_kills,
         guild2Kills: war.guild2_kills,
+      })),
+    };
+  }
+
+  async loadDirectory(): Promise<ReadonlyArray<GuildDirectoryEntry>> {
+    const result = await this.pool.query<{
+      name: string;
+      motd: string;
+      level: number;
+      created_at: Date;
+      member_count: number;
+    }>(guildDirectoryQuery);
+    return result.rows.map((row) => ({
+      name: row.name,
+      motd: row.motd,
+      level: row.level,
+      memberCount: row.member_count,
+      createdAt: row.created_at,
+    }));
+  }
+
+  async loadPublicGuild(name: string): Promise<PublicGuildRecord | null> {
+    const guild = await this.pool.query<{
+      id: string;
+      name: string;
+      motd: string;
+      level: number;
+      created_at: Date;
+    }>(publicGuildRowByNameQuery, [name]);
+    const row = guild.rows[0];
+    if (!row) return null;
+    const members = await this.pool.query<{
+      character_id: string;
+      name: string;
+      nick: string;
+      joined_at: Date;
+      rank_level: number;
+      rank_name: string;
+      vocation: string;
+      level: number;
+    }>(publicGuildMembersQuery, [row.id]);
+    return {
+      name: row.name,
+      motd: row.motd,
+      level: row.level,
+      createdAt: row.created_at,
+      members: members.rows.map((member) => ({
+        characterId: member.character_id,
+        name: member.name,
+        nick: member.nick,
+        rankLevel: member.rank_level,
+        rankName: member.rank_name,
+        vocation: member.vocation,
+        level: member.level,
+        joinedAt: member.joined_at,
       })),
     };
   }

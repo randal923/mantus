@@ -1,6 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
 import { MemoryCyclopediaStore } from "./cyclopedia/MemoryCyclopediaStore";
+import { MemoryGuildStore } from "./guild/MemoryGuildStore";
 import { MemoryProfileStore } from "./profile/MemoryProfileStore";
 import { MemoryHighscoreStore } from "./social/MemoryHighscoreStore";
 import { PublicApi } from "./PublicApi";
@@ -285,5 +286,87 @@ describe("PublicApi", () => {
       ).status,
     ).toBe(400);
     expect((await fetch(`${origin}/api/private`)).status).toBe(404);
+  });
+
+  it("serves the guild directory and public rosters without private fields", async () => {
+    const guilds = new MemoryGuildStore();
+    guilds.registerCharacter("aster-id", "Aster", {
+      vocation: "Knight",
+      level: 90,
+    });
+    guilds.registerCharacter("briar-id", "Briar", {
+      vocation: "Druid",
+      level: 80,
+    });
+    const created = await guilds.createGuild({
+      ownerCharacterId: "aster-id",
+      name: "Wardens",
+    });
+    if (created.status !== "created") throw new Error("guild not created");
+    await guilds.createInvite({
+      actorCharacterId: "aster-id",
+      targetName: "Briar",
+    });
+    await guilds.respondInvite({
+      characterId: "briar-id",
+      guildId: created.guildId,
+      accept: true,
+    });
+    const api = new PublicApi({
+      worldName: "Mantus",
+      onlinePlayers: () => [],
+      isOnline: (characterId) => characterId === "aster-id",
+      residenceFor: () => undefined,
+      boosted: () => ({ creature: null, boss: null }),
+      guilds,
+      serverInfo: SERVER_INFO,
+    });
+    server = createServer((request, response) => {
+      void api.handle(request, response);
+    });
+    await new Promise<void>((resolve) => server?.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") {
+      throw new Error("test HTTP server has no TCP address");
+    }
+    const origin = `http://127.0.0.1:${address.port}`;
+
+    const directory = await fetch(`${origin}/api/public/guilds`);
+    expect(directory.status).toBe(200);
+    expect(await directory.json()).toMatchObject({
+      guilds: [{ name: "Wardens", memberCount: 2, level: 1 }],
+    });
+
+    const roster = await fetch(`${origin}/api/public/guilds/wardens`);
+    expect(roster.status).toBe(200);
+    const rosterBody = await roster.text();
+    expect(rosterBody).not.toContain("characterId");
+    expect(rosterBody).not.toContain("balance");
+    expect(JSON.parse(rosterBody)).toMatchObject({
+      name: "Wardens",
+      membersOnline: 1,
+      members: [
+        {
+          name: "Aster",
+          rankName: "The Leader",
+          rankLevel: 3,
+          vocation: "Knight",
+          level: 90,
+          online: true,
+        },
+        {
+          name: "Briar",
+          rankName: "Member",
+          rankLevel: 1,
+          vocation: "Druid",
+          level: 80,
+          online: false,
+        },
+      ],
+    });
+
+    expect((await fetch(`${origin}/api/public/guilds/Unknown`)).status).toBe(
+      404,
+    );
   });
 });

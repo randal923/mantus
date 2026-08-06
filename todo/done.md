@@ -3284,3 +3284,59 @@ built; headless screenshots of `PvpWikiPage` at 1440/420 and the landing
 dropdown open showing Items + PvP. No residual risk — static editorial
 content; if the halving stance ever changes in `DamageResolver`, update
 this page with it.
+
+## 2026-08-05 — Public guild directory (/guilds) + Tibia-style guild rosters, no login
+
+**Problem**: The landing nav's Community → Guilds link was a placeholder
+pointing at /play (the logged-in game), recorded in TODO.md as a provisional
+Feature 110 destination. There was no public way to browse guilds or see a
+guild's members and ranks, and the guild store had no public read methods at
+all (its GuildService caches only cover guilds with online members).
+
+**What changed**: Full public read path, modeled on tibia.com's guild pages
+(list = name + description rows; guild page = info block + members table with
+Name and Title | Vocation | Level | Joining Date | Status, each rank rendered
+as a full-width section-header row above its members). Server: two new GuildStore reads — `loadDirectory()`
+(alphabetical, member counts, LIMIT 500) and `loadPublicGuild(name)`
+(case-insensitive normalized-name lookup; roster joins characters for
+vocation/level and guild_ranks for rank names, selects the previously-unread
+`guild_members.joined_at` and `guilds.created_at`, and excludes namelocked
+characters like the public profile lookup) — implemented in PgGuildStore
+(three new sql/ files) and MemoryGuildStore (which grew createdAt/joinedAt
+and optional per-character vocation/level registration). PublicApi gained
+`/api/public/guilds` and `/api/public/guilds/:name` (strict zod projections
+in protocol `publicGuildsDataSchema` / `publicGuildProfileDataSchema`,
+60 s DB-cache TTL, per-member online flags from the existing `isOnline`
+session check, 404 on unknown names, 400 on malformed/oversized names, 503
+without a store; no characterIds, balances, invites, or wars are exposed).
+GameServer passes the already-present `deps.guild` into PublicApi. Client:
+`/guilds` (GuildsPage: name + motd, member count, founded date) and
+`/guilds/[name]` (GuildProfilePage: guild header with motd/founded/guild
+level/members-online, rank-grouped roster with character-profile links,
+nicks in parentheses, online dots), nav link switched to /guilds, en+pt-BR
+`websiteGuilds` namespace, stories with a scoped fetch mock (guild endpoints
+served from fixtures, all else passes through).
+
+**Files**: `protocol/src/publicWebsite.ts`,
+`server/src/guild/{GuildStore,PgGuildStore,MemoryGuildStore}.ts`,
+`server/src/guild/sql/{guildDirectoryQuery,publicGuildRowByNameQuery,publicGuildMembersQuery}.ts`,
+`server/src/{PublicApi,GameServer}.ts`, `server/src/PublicApi.test.ts`,
+`server/src/guild/PgGuildStore.integration.test.ts`,
+`client/components/public-site/{GuildsPage,GuildProfilePage}.tsx`,
+`client/app/guilds/{page.tsx,[name]/page.tsx}`,
+`client/components/landing/LandingNavigation.tsx`,
+`client/stories/{GuildsPage,GuildProfilePage}.stories.tsx`,
+`client/locales/{en,pt-BR}.json`, `TODO.md`, `todo/status.md`.
+
+**Verified**: new PublicApi unit test (directory + roster shapes, normalized
+lowercase lookup, online flags, 404, and a no-private-fields assertion on the
+raw body); new Pg integration test for both queries passes against the local
+DB (the 3 pre-existing guild-bank failures remain and are unrelated); full
+suites green (server 1625 passed, client 403 passed); tsc clean in both
+packages; lint 0 errors; headless Storybook screenshots of both pages at
+desktop and 420px.
+
+**Residual risk**: roster online flags are computed inside the 60 s cached
+projection, so a member's online dot can lag up to a minute (same tradeoff
+as the character profile endpoint). Guild emblems/logos don't exist anywhere
+in the schema — the directory is text-only until an emblem system lands.

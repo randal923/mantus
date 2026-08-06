@@ -132,6 +132,51 @@ databaseDescribe("PgGuildStore integration", () => {
     expect(await guildRows()).toHaveLength(1);
   });
 
+  it("serves the public directory and roster projections", async () => {
+    const [alice, bob] = await Promise.all([
+      createCharacter("alice"),
+      createCharacter("bob"),
+    ]);
+    const created = await store.createGuild({
+      ownerCharacterId: alice,
+      name: "Bright Banner",
+    });
+    if (created.status !== "created") throw new Error("guild setup failed");
+    await store.createInvite({
+      actorCharacterId: alice,
+      targetName: "Guilder bob",
+    });
+    await store.respondInvite({
+      characterId: bob,
+      guildId: created.guildId,
+      accept: true,
+    });
+
+    const directory = await store.loadDirectory();
+    expect(directory).toHaveLength(1);
+    expect(directory[0]).toMatchObject({
+      name: "Bright Banner",
+      memberCount: 2,
+      level: 1,
+    });
+    expect(directory[0]?.createdAt).toBeInstanceOf(Date);
+
+    const roster = await store.loadPublicGuild("bright BANNER");
+    expect(roster).not.toBeNull();
+    expect(roster?.members.map((member) => member.rankName)).toEqual([
+      "The Leader",
+      "Member",
+    ]);
+    expect(roster?.members[0]).toMatchObject({
+      name: "Guilder alice",
+      rankLevel: 3,
+      vocation: "Knight",
+      level: expect.any(Number),
+    });
+    expect(roster?.members[0]?.joinedAt).toBeInstanceOf(Date);
+    expect(await store.loadPublicGuild("missing")).toBeNull();
+  });
+
   it("resolves concurrent invite acceptances to exactly one membership", async () => {
     const [alice, bob, carol] = await Promise.all([
       createCharacter("alice"),

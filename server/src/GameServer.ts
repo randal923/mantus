@@ -1258,6 +1258,7 @@ export class GameServer {
       highscores: deps.highscores,
       profiles: deps.profiles,
       cyclopedia: deps.cyclopedia,
+      guilds: deps.guild,
       serverInfo: {
         maxPlayers: config.maxSessions,
         pvpType: "open-pvp",

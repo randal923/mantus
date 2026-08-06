@@ -1,9 +1,12 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   CYCLOPEDIA_LIMITS,
+  GUILD_LIMITS,
   HIGHSCORE_LIMITS,
   PUBLIC_WEBSITE_LIMITS,
   publicCharacterProfileDataSchema,
+  publicGuildProfileDataSchema,
+  publicGuildsDataSchema,
   publicHighscoresDataSchema,
   publicHighscoresQuerySchema,
   publicLandingDataSchema,
@@ -11,6 +14,8 @@ import {
   publicServerInfoDataSchema,
   type BoostedEntry,
   type PublicCharacterProfileData,
+  type PublicGuildProfileData,
+  type PublicGuildsData,
   type PublicHighscoresData,
   type PublicLandingData,
   type PublicOnlineData,
@@ -19,6 +24,8 @@ import {
 } from "@tibia/protocol";
 import { normalizeCharacterName } from "./character/normalizeCharacterName";
 import type { CyclopediaStore } from "./cyclopedia/CyclopediaStore";
+import type { GuildStore } from "./guild/GuildStore";
+import { normalizeGuildName } from "./guild/normalizeGuildName";
 import {
   ACHIEVEMENTS,
   BADGE_NAMES,
@@ -33,6 +40,8 @@ type PublicApiData =
   | PublicOnlineData
   | PublicCharacterProfileData
   | PublicServerInfoData
+  | PublicGuildsData
+  | PublicGuildProfileData
   | null;
 
 interface CachedResponse {
@@ -52,6 +61,7 @@ interface PublicApiOptions {
   readonly highscores?: HighscoreStore;
   readonly profiles?: ProfileStore;
   readonly cyclopedia?: CyclopediaStore;
+  readonly guilds?: GuildStore;
   readonly serverInfo: Omit<
     PublicServerInfoData,
     "worldName" | "status" | "playersOnline" | "generatedAt"
@@ -117,6 +127,17 @@ export class PublicApi {
       }
       if (url.pathname === "/api/public/server-info" && url.search === "") {
         this.sendJson(response, 200, await this.loadServerInfo());
+        return;
+      }
+      if (url.pathname === "/api/public/guilds" && url.search === "") {
+        await this.handleGuildDirectory(response);
+        return;
+      }
+      if (
+        url.pathname.startsWith("/api/public/guilds/") &&
+        url.search === ""
+      ) {
+        await this.handleGuild(url.pathname, response);
         return;
       }
       this.sendJson(response, 404, { error: "not-found" });
@@ -280,6 +301,98 @@ export class PublicApi {
             cause: entry.cause,
           })),
           online: this.options.isOnline(record.characterId),
+          generatedAt: new Date().toISOString(),
+        });
+      },
+    );
+    if (!data) {
+      this.sendJson(response, 404, { error: "not-found" });
+      return;
+    }
+    this.sendJson(response, 200, data);
+  }
+
+  private async handleGuildDirectory(
+    response: ServerResponse,
+  ): Promise<void> {
+    const store = this.options.guilds;
+    if (!store) {
+      this.sendJson(response, 503, { error: "temporarily-unavailable" });
+      return;
+    }
+    const data = await this.loadCached(
+      "guilds",
+      PUBLIC_WEBSITE_LIMITS.databaseCacheTtlMs,
+      async () => {
+        const entries = await store.loadDirectory();
+        return publicGuildsDataSchema.parse({
+          guilds: entries
+            .slice(0, PUBLIC_WEBSITE_LIMITS.guildDirectoryEntries)
+            .map((entry) => ({
+              name: entry.name,
+              motd: entry.motd,
+              level: entry.level,
+              memberCount: entry.memberCount,
+              createdAt: entry.createdAt.toISOString(),
+            })),
+          generatedAt: new Date().toISOString(),
+        });
+      },
+    );
+    this.sendJson(response, 200, data);
+  }
+
+  private async handleGuild(
+    pathname: string,
+    response: ServerResponse,
+  ): Promise<void> {
+    const encodedName = pathname.slice("/api/public/guilds/".length);
+    if (!encodedName || encodedName.includes("/")) {
+      this.sendJson(response, 404, { error: "not-found" });
+      return;
+    }
+    let decodedName: string;
+    try {
+      decodedName = decodeURIComponent(encodedName);
+    } catch {
+      this.sendJson(response, 400, { error: "invalid-request" });
+      return;
+    }
+    const name = normalizeGuildName(decodedName);
+    if (!name || name.length > GUILD_LIMITS.maxNameLength) {
+      this.sendJson(response, 400, { error: "invalid-request" });
+      return;
+    }
+    const store = this.options.guilds;
+    if (!store) {
+      this.sendJson(response, 503, { error: "temporarily-unavailable" });
+      return;
+    }
+    const data = await this.loadCached(
+      `guild:${name}`,
+      PUBLIC_WEBSITE_LIMITS.databaseCacheTtlMs,
+      async () => {
+        const record = await store.loadPublicGuild(name);
+        if (!record) return null;
+        const members = record.members
+          .slice(0, GUILD_LIMITS.maxMembers)
+          .map((member) => ({
+            name: member.name,
+            nick: member.nick,
+            rankName: member.rankName,
+            rankLevel: member.rankLevel,
+            vocation: member.vocation,
+            level: member.level,
+            joinedAt: member.joinedAt.toISOString(),
+            online: this.options.isOnline(member.characterId),
+          }));
+        return publicGuildProfileDataSchema.parse({
+          name: record.name,
+          motd: record.motd,
+          level: record.level,
+          createdAt: record.createdAt.toISOString(),
+          membersOnline: members.filter((member) => member.online).length,
+          members,
           generatedAt: new Date().toISOString(),
         });
       },

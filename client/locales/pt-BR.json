@@ -37,6 +37,35 @@
       }
     }
   },
+  "websiteGuilds": {
+    "title": "Guildas de Mantus",
+    "count_one": "{{count}} guilda",
+    "count_other": "{{count}} guildas",
+    "empty": "Nenhuma guilda foi fundada ainda. A sua pode ser a primeira.",
+    "guild": "Guilda",
+    "members": "Membros",
+    "founded": "Fundada em",
+    "profile": {
+      "eyebrow": "Guilda de Mantus",
+      "founded": "Fundada em",
+      "guildLevel": "Nível da guilda",
+      "memberCount_one": "{{count}} membro",
+      "memberCount_other": "{{count}} membros",
+      "membersOnline_one": "{{count}} online",
+      "membersOnline_other": "{{count}} online",
+      "membersTitle": "Membros",
+      "name": "Nome e Título",
+      "vocation": "Vocação",
+      "level": "Nível",
+      "joined": "Data de Entrada",
+      "status": "Status",
+      "online": "Online",
+      "offline": "Offline",
+      "notFoundTitle": "Guilda não encontrada",
+      "notFoundDescription": "Nenhuma guilda chamada “{{name}}” existe em Mantus.",
+      "backToGuilds": "Todas as guildas"
+    }
+  },
   "websiteWikiPvp": {
     "eyebrow": "Wiki do Mundo",
     "title": "PvP",

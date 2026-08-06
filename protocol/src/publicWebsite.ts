@@ -6,6 +6,7 @@ import {
   characterVocationSchema,
 } from "./character";
 import { CYCLOPEDIA_LIMITS } from "./cyclopedia";
+import { GUILD_LIMITS } from "./guild";
 import { MAX_STORABLE_CHARACTER_LEVEL } from "./progression";
 import {
   HIGHSCORE_LIMITS,
@@ -20,6 +21,7 @@ export const PUBLIC_WEBSITE_LIMITS = {
   onlinePlayers: 1_000,
   profileAchievements: 5,
   profileBadges: 10,
+  guildDirectoryEntries: 500,
   stageRows: 32,
   cacheEntries: 128,
   landingCacheTtlMs: 30_000,
@@ -125,6 +127,50 @@ export const publicCharacterProfileDataSchema = z
   })
   .strict();
 
+export const publicGuildSummarySchema = z
+  .object({
+    name: z.string().min(1).max(GUILD_LIMITS.maxNameLength),
+    motd: z.string().max(GUILD_LIMITS.maxMotdLength),
+    level: z.number().int().min(1).max(1000),
+    memberCount: z.number().int().min(0).max(GUILD_LIMITS.maxMembers),
+    createdAt: z.string().datetime(),
+  })
+  .strict();
+
+export const publicGuildsDataSchema = z
+  .object({
+    guilds: z
+      .array(publicGuildSummarySchema)
+      .max(PUBLIC_WEBSITE_LIMITS.guildDirectoryEntries),
+    generatedAt: z.string().datetime(),
+  })
+  .strict();
+
+export const publicGuildMemberSchema = z
+  .object({
+    name: z.string().min(1).max(PROTOCOL_LIMITS.maxCharacterNameLength),
+    nick: z.string().max(GUILD_LIMITS.maxNickLength),
+    rankName: z.string().min(1).max(GUILD_LIMITS.maxRankNameLength),
+    rankLevel: z.number().int().min(1).max(3),
+    vocation: characterVocationSchema,
+    level: z.number().int().min(1).max(MAX_STORABLE_CHARACTER_LEVEL),
+    joinedAt: z.string().datetime(),
+    online: z.boolean(),
+  })
+  .strict();
+
+export const publicGuildProfileDataSchema = z
+  .object({
+    name: z.string().min(1).max(GUILD_LIMITS.maxNameLength),
+    motd: z.string().max(GUILD_LIMITS.maxMotdLength),
+    level: z.number().int().min(1).max(1000),
+    createdAt: z.string().datetime(),
+    membersOnline: z.number().int().min(0).max(GUILD_LIMITS.maxMembers),
+    members: z.array(publicGuildMemberSchema).max(GUILD_LIMITS.maxMembers),
+    generatedAt: z.string().datetime(),
+  })
+  .strict();
+
 /**
  * One level band of a stage table (`maxLevel: null` = unbounded, the band that
  * keeps applying forever). Display only — the server keeps its own tables.
@@ -203,3 +249,9 @@ export type PublicServerInfoData = z.infer<
   typeof publicServerInfoDataSchema
 >;
 export type PublicStageRow = z.infer<typeof publicStageRowSchema>;
+export type PublicGuildSummary = z.infer<typeof publicGuildSummarySchema>;
+export type PublicGuildsData = z.infer<typeof publicGuildsDataSchema>;
+export type PublicGuildMember = z.infer<typeof publicGuildMemberSchema>;
+export type PublicGuildProfileData = z.infer<
+  typeof publicGuildProfileDataSchema
+>;

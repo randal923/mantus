@@ -22,7 +22,7 @@ const MENU_GROUPS = [
     links: [
       { key: "highscores", href: "/highscores" },
       { key: "online", href: "/online" },
-      { key: "guilds", href: "/play" },
+      { key: "guilds", href: "/guilds" },
     ],
   },
 ] as const;

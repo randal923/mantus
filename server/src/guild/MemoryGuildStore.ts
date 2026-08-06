@@ -7,12 +7,14 @@ import type {
   DeclareWarResult,
   EndWarResult,
   ExpiredWarRecord,
+  GuildDirectoryEntry,
   GuildInviteResult,
   GuildBankResult,
   GuildOpFailure,
   GuildOpResult,
   GuildSnapshot,
   GuildStore,
+  PublicGuildRecord,
   RecordWarKillResult,
   RespondInviteResult,
   RespondWarResult,
@@ -28,12 +30,19 @@ interface MemoryGuild {
   balance: number;
   points: number;
   level: number;
+  createdAt: Date;
 }
 
 interface MemoryMember {
   guildId: string;
   rankLevel: number;
   nick: string;
+  joinedAt: Date;
+}
+
+interface MemoryCharacterDetails {
+  readonly vocation: string;
+  readonly level: number;
 }
 
 interface MemoryInvite {
@@ -72,6 +81,7 @@ const WAR_ENDED = 4;
  */
 export class MemoryGuildStore implements GuildStore {
   private readonly characterNames = new Map<string, string>();
+  private readonly characterDetails = new Map<string, MemoryCharacterDetails>();
   private readonly guilds = new Map<string, MemoryGuild>();
   private readonly members = new Map<string, MemoryMember>();
   private readonly invites = new Map<string, MemoryInvite>();
@@ -80,8 +90,13 @@ export class MemoryGuildStore implements GuildStore {
   private clock = 0;
   private readonly bankBalances = new Map<string, number>();
 
-  registerCharacter(characterId: string, name: string): void {
+  registerCharacter(
+    characterId: string,
+    name: string,
+    details?: MemoryCharacterDetails,
+  ): void {
     this.characterNames.set(characterId, name);
+    if (details) this.characterDetails.set(characterId, details);
   }
 
   async loadGuildIdFor(characterId: string): Promise<string | null> {
@@ -147,6 +162,50 @@ export class MemoryGuildStore implements GuildStore {
     };
   }
 
+  async loadDirectory(): Promise<ReadonlyArray<GuildDirectoryEntry>> {
+    return [...this.guilds.values()]
+      .map((guild) => ({
+        name: guild.name,
+        motd: guild.motd,
+        level: guild.level,
+        memberCount: [...this.members.values()].filter(
+          (member) => member.guildId === guild.id,
+        ).length,
+        createdAt: guild.createdAt,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async loadPublicGuild(name: string): Promise<PublicGuildRecord | null> {
+    const normalized = normalizeGuildName(name);
+    const guild = [...this.guilds.values()].find(
+      (candidate) => normalizeGuildName(candidate.name) === normalized,
+    );
+    if (!guild) return null;
+    const members = [...this.members.entries()]
+      .filter(([, member]) => member.guildId === guild.id)
+      .map(([characterId, member]) => ({
+        characterId,
+        name: this.characterNames.get(characterId) ?? "?",
+        nick: member.nick,
+        rankLevel: member.rankLevel,
+        rankName: guild.rankNames.get(member.rankLevel) ?? "?",
+        vocation: this.characterDetails.get(characterId)?.vocation ?? "Knight",
+        level: this.characterDetails.get(characterId)?.level ?? 1,
+        joinedAt: member.joinedAt,
+      }))
+      .sort(
+        (a, b) => b.rankLevel - a.rankLevel || a.name.localeCompare(b.name),
+      );
+    return {
+      name: guild.name,
+      motd: guild.motd,
+      level: guild.level,
+      createdAt: guild.createdAt,
+      members,
+    };
+  }
+
   async loadInvitationsFor(
     characterId: string,
   ): Promise<ReadonlyArray<GuildInvitationEntry>> {
@@ -188,11 +247,13 @@ export class MemoryGuildStore implements GuildStore {
       balance: 0,
       points: 0,
       level: 1,
+      createdAt: new Date(),
     });
     this.members.set(input.ownerCharacterId, {
       guildId,
       rankLevel: 3,
       nick: "",
+      joinedAt: new Date(),
     });
     this.deleteInvitesFor(input.ownerCharacterId);
     return { status: "created", guildId };
@@ -254,6 +315,7 @@ export class MemoryGuildStore implements GuildStore {
       guildId: input.guildId,
       rankLevel: 1,
       nick: "",
+      joinedAt: new Date(),
     });
     this.deleteInvitesFor(input.characterId);
     return { status: "joined", guildId: input.guildId };

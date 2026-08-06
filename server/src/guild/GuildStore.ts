@@ -45,6 +45,33 @@ export interface GuildSnapshot {
   readonly wars: ReadonlyArray<GuildWarRecord>;
 }
 
+export interface GuildDirectoryEntry {
+  readonly name: string;
+  readonly motd: string;
+  readonly level: number;
+  readonly memberCount: number;
+  readonly createdAt: Date;
+}
+
+export interface PublicGuildMemberRecord {
+  readonly characterId: string;
+  readonly name: string;
+  readonly nick: string;
+  readonly rankLevel: number;
+  readonly rankName: string;
+  readonly vocation: string;
+  readonly level: number;
+  readonly joinedAt: Date;
+}
+
+export interface PublicGuildRecord {
+  readonly name: string;
+  readonly motd: string;
+  readonly level: number;
+  readonly createdAt: Date;
+  readonly members: ReadonlyArray<PublicGuildMemberRecord>;
+}
+
 export interface GuildOpFailure {
   readonly status: "failed";
   readonly reason: GuildActionFailedReason;
@@ -129,6 +156,13 @@ export interface ExpiredWarRecord {
 export interface GuildStore {
   loadGuildIdFor(characterId: string): Promise<string | null>;
   loadSnapshot(guildId: string): Promise<GuildSnapshot | null>;
+  /** Alphabetical bounded directory for the public website. */
+  loadDirectory(): Promise<ReadonlyArray<GuildDirectoryEntry>>;
+  /**
+   * Public roster by case-insensitive guild name; null when absent.
+   * Namelocked members are excluded, matching the public profile lookup.
+   */
+  loadPublicGuild(name: string): Promise<PublicGuildRecord | null>;
   loadInvitationsFor(
     characterId: string,
   ): Promise<ReadonlyArray<GuildInvitationEntry>>;
