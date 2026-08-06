@@ -24,6 +24,8 @@ const SPELLS = [
 const ITEMS = [
   {
     typeId: 266,
+    clientId: 266,
+    spriteId: 4321,
     name: "health potion",
     useKind: "potion",
   },
@@ -38,11 +40,12 @@ describe("createActionBotAction", () => {
     });
   });
 
-  it("builds an object action from a carried item", () => {
+  it("builds an object action carrying the item's display", () => {
     expect(createActionBotAction("item:266", SPELLS, ITEMS)).toEqual({
       kind: "item",
       itemTypeId: 266,
       mode: "use-on-self",
+      display: { name: "health potion", clientId: 266, spriteId: 4321 },
     });
   });
 

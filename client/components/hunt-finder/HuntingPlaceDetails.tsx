@@ -65,6 +65,11 @@ export function HuntingPlaceDetails({
             {place.Type.join(" · ")} · {place.Vocation.join(" · ")}
           </p>
         </div>
+        {place.Generated && (
+          <span className="rounded-sm border border-ui-stone-light/30 bg-black/40 px-2 py-1 text-xs font-bold tracking-wide text-ui-muted uppercase">
+            {t("huntFinder.generated")}
+          </span>
+        )}
         <span
           className={`rounded-sm border px-2 py-1 text-xs font-bold tracking-wide uppercase ${
             place.PremiumRequired

@@ -87,9 +87,23 @@ function makeHandler(store: InMemoryCharacterStore) {
   } as unknown as SpellRegistry;
   const items = {
     itemType: (itemTypeId: number) => {
-      if (itemTypeId === 266) return { id: 266, useKind: "potion" };
+      if (itemTypeId === 266) {
+        return {
+          id: 266,
+          name: "health potion",
+          clientId: 266,
+          spriteId: 4321,
+          useKind: "potion",
+        };
+      }
       if (itemTypeId === 3273) {
-        return { id: 3273, equipmentSlot: "weapon" };
+        return {
+          id: 3273,
+          name: "sword",
+          clientId: 3273,
+          spriteId: 5678,
+          equipmentSlot: "weapon",
+        };
       }
       return undefined;
     },

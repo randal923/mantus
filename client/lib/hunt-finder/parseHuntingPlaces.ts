@@ -143,6 +143,7 @@ function isHuntingPlace(value: unknown): value is HuntingPlace {
     ) &&
     typeof value.PremiumRequired === "boolean" &&
     (value.New === undefined || typeof value.New === "boolean") &&
+    (value.Generated === undefined || typeof value.Generated === "boolean") &&
     isBoundedString(value.RouteRequirements) &&
     isStringArrayRecord(value.RecommendedImbues) &&
     isStringArrayRecord(value.RecommendedSupplies) &&

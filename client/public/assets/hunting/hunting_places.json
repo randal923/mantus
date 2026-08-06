@@ -1743,7 +1743,7 @@
              }
         }
     },
-	{
+    {
         "Name": "Cemetery Quarter",
         "Level": "10",
         "Type": [
@@ -7578,7 +7578,7 @@
              }
         }
     },
- {
+    {
         "Name": "Hive Surface",
         "Level": "50",
         "Type": [
@@ -13003,8 +13003,8 @@
                 "ammo": ""
             }
         }
-    },   
-{
+    },
+    {
         "Name": "Exotic Cave",
         "Level": "100",
         "Type": [
@@ -13199,7 +13199,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Drillworm Cave",
         "Level": "100",
@@ -13432,7 +13432,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Yalahar Sunken Quarter",
         "Level": "100",
@@ -13698,7 +13698,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Putrid Mummies",
         "Level": "100",
@@ -13916,7 +13916,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Edron Vampires",
         "Level": "100",
@@ -14162,8 +14162,8 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
-	{
+    },
+    {
         "Name": "Lava Lurkers",
         "Level": "100",
         "Type": [
@@ -14373,7 +14373,7 @@
                 "ammo": "Sun Catcher"
             }
         }
-    },	
+    },
     {
         "Name": "Old Fortress - Hero Cave",
         "Level": "100",
@@ -14638,7 +14638,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Edron Were Creatures",
         "Level": "100",
@@ -14904,7 +14904,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Barkless",
         "Level": "150",
@@ -15132,7 +15132,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Pirats Mine",
         "Level": "150",
@@ -15371,8 +15371,8 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
-{
+    },
+    {
         "Name": "Werehyenna North",
         "Level": "150",
         "Type": [
@@ -15593,7 +15593,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Yalahar Grim Reapers",
         "Level": "150",
@@ -15837,7 +15837,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Oramond Hydras",
         "Level": "150",
@@ -16079,7 +16079,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Drefia Wyrm's Lair",
         "Level": "180",
@@ -16359,7 +16359,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Haunted Temple",
         "Level": "180",
@@ -16567,7 +16567,7 @@
                 "ammo": "Sun Catcher"
             }
         }
-    },	
+    },
     {
         "Name": "Pirats The Wreconing",
         "Level": "200",
@@ -16801,7 +16801,7 @@
                 "ammo": ""
             }
         }
-    },	
+    },
     {
         "Name": "Zaoan Draken Walls",
         "Level": "200",
@@ -17119,7 +17119,7 @@
                 "ammo": "Sun Catcher"
             }
         }
-    },	
+    },
     {
         "Name": "Nightmare Isles",
         "Level": "200",
@@ -17425,7 +17425,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Glooth Bandits East",
         "Level": "200",
@@ -17869,7 +17869,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Prison -3",
         "Level": "200",
@@ -18127,7 +18127,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Kazordoon Mini Otherworld",
         "Level": "250",
@@ -18378,7 +18378,7 @@
                 "ammo": ""
             }
         }
-    },	
+    },
     {
         "Name": "Asura Palace",
         "Level": "250",
@@ -18868,7 +18868,7 @@
                 "ammo": ""
             }
         }
-    },	
+    },
     {
         "Name": "Wild Life Oramond",
         "Level": "250",
@@ -19112,7 +19112,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Glooth Tower",
         "Level": "250",
@@ -19355,7 +19355,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Medusa Tower",
         "Level": "250",
@@ -19614,7 +19614,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Golems Catacombs",
         "Level": "250",
@@ -19835,7 +19835,7 @@
                 "ammo": ""
             }
         }
-    },	
+    },
     {
         "Name": "Winter Dream Court",
         "Level": "250",
@@ -20098,7 +20098,7 @@
                 "ammo": "Conch Shell Horn"
             }
         }
-    },	
+    },
     {
         "Name": "Deeper Banuta -8",
         "Level": "250",
@@ -20370,7 +20370,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Marapur Nagas",
         "Level": "300",
@@ -20596,7 +20596,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Cobra Bastion",
         "Level": "300",
@@ -20873,7 +20873,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Candia Mines -2",
         "Level": "300",
@@ -21102,7 +21102,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Diremaw Task Area",
         "Level": "300",
@@ -22303,7 +22303,7 @@
 			
 		}
 	},
-     {
+    {
         "Name": "POI DT Seal",
         "Level": "400",
         "Type": [
@@ -24499,8 +24499,6 @@
             }
         }
     },
-
-
     {
         "Name": "Falcon Bastion",
         "Level": "400",
@@ -25284,7 +25282,7 @@
                 "ammo": "Starlight Vial"
             }
 		}
-	},		
+	},
     {
         "Name": "Marapur Turtles",
         "Level": "400",
@@ -27518,8 +27516,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
-
+    },
     {
         "Name": "Carnisylvans",
         "Level": "550",
@@ -28043,7 +28040,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "West Roshamuul",
         "Level": "550",
@@ -28282,7 +28279,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Roshamuul Bones",
         "Level": "600",
@@ -28553,7 +28550,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Temple of the Sun and Sea",
         "Level": "600",
@@ -29472,7 +29469,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Deeper Ingol",
         "Level": "700",
@@ -29774,7 +29771,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Azzilon Walls",
         "Level": "700",
@@ -30018,7 +30015,7 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
+    },
     {
         "Name": "Warzone 8",
         "Level": "700",
@@ -30259,8 +30256,8 @@
                 "ammo": "Sun Catcher"
             }
         }
-    },	
-{
+    },
+    {
         "Name": "Upper Roshamuul",
         "Level": "750",
         "Type": [
@@ -30491,7 +30488,7 @@
                 "ammo": "Bone Fiddle"
             }
         }
-    },	
+    },
     {
         "Name": "Roshamuul Mines",
         "Level": "850",
@@ -30744,8 +30741,7 @@
                 "ammo": "Stalight Vial"
             }
         }
-    },	
-
+    },
     {
         "Name": "Warzone 3",
         "Level": "900",
@@ -30975,7 +30971,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Jaded Roots",
         "Level": "950",
@@ -31265,7 +31261,7 @@
                 "ammo": "Scarab Ocarina"
             }
         }
-    },	
+    },
     {
         "Name": "Infernatil Seal",
         "Level": "950",
@@ -31540,7 +31536,7 @@
                 "ammo": "Sun Catcher"
             }
         }
-    },	
+    },
     {
         "Name": "Iksupan Occupied Sanctuary",
         "Level": "1000",
@@ -31814,8 +31810,8 @@
                 "ammo": "Moon Mirror"
             }
         }
-    },	
-{
+    },
+    {
         "Name": "Podzilla Quara",
         "Level": "1100",
         "Type": [
@@ -32065,6 +32061,2010 @@
                 "backpack": "Rubini Backpack",
                 "rightHand": "",
                 "ammo": "Moon Mirror"
+            }
+        }
+    },
+    {
+        "Name": "Darashia Rotworm Cave North",
+        "Level": "8",
+        "Type": [
+            "Solo",
+            "Duo"
+        ],
+        "Xp/Hour": "10K",
+        "Loot/Hour": "2K",
+        "Location": "Darashia",
+        "Vocation": [
+            "Knight",
+            "Paladin",
+            "Druid",
+            "Sorcerer",
+            "Monk"
+        ],
+        "PremiumRequired": false,
+        "Generated": true,
+        "RouteRequirements": "None",
+        "RecommendedImbues": {
+            "Druid": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Sorcerer": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Knight": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Paladin": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Monk": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ]
+        },
+        "RecommendedSupplies": {
+            "Knight": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Paladin": [
+                "Health Potion",
+                "Mana Potion",
+                "Arrow",
+                "Bolt",
+                "spear"
+            ],
+            "Druid": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Sorcerer": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Monk": [
+                "Health Potion",
+                "Mana Potion"
+            ]
+        },
+        "ValuableDrops": [
+            "Carrion Worm Fang",
+            "Coal",
+            "Gold Coin",
+            "Ham",
+            "Legion Helmet",
+            "Lump Of Dirt"
+        ],
+        "Monsters": [
+            {
+                "Name": "Rotworm",
+                "Resistances": "Fire: 100%, Ice: 100%, Earth: 100%, Energy: 100%, Holy: 100%, Death: 100%, Physical: 100%"
+            },
+            {
+                "Name": "Carrion Worm",
+                "Resistances": "Fire: 105%, Ice: 105%, Earth: 80%, Energy: 90%, Holy: 100%, Death: 100%, Physical: 100%"
+            }
+        ],
+        "WayPath": {
+            "Coordinates": {
+                "7": [
+                    [
+                        {
+                            "x": 33213,
+                            "y": 32454,
+                            "z": 7
+                        },
+                        {
+                            "x": 33225,
+                            "y": 32300,
+                            "z": 7
+                        }
+                    ]
+                ],
+                "8": [
+                    [
+                        {
+                            "x": 33225,
+                            "y": 32300,
+                            "z": 8
+                        },
+                        {
+                            "x": 33217,
+                            "y": 32262,
+                            "z": 8
+                        }
+                    ]
+                ]
+            },
+            "Markers": [],
+            "Paths": [
+                "From Darashia: climb down at 33225, 32300 to floor -1."
+            ],
+            "Position": {
+                "x": 33217,
+                "y": 32262,
+                "z": 8
+            },
+            "TemplePosition": {
+                "x": 33213,
+                "y": 32454,
+                "z": 1
+            }
+        },
+        "RoutePath": {
+            "Coordinates": {
+                "8": [
+                    [
+                        {
+                            "x": 33217,
+                            "y": 32262,
+                            "z": 8
+                        },
+                        {
+                            "x": 33212,
+                            "y": 32268,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33212,
+                            "y": 32268,
+                            "z": 8
+                        },
+                        {
+                            "x": 33210,
+                            "y": 32275,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33210,
+                            "y": 32275,
+                            "z": 8
+                        },
+                        {
+                            "x": 33214,
+                            "y": 32281,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33214,
+                            "y": 32281,
+                            "z": 8
+                        },
+                        {
+                            "x": 33216,
+                            "y": 32288,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33216,
+                            "y": 32288,
+                            "z": 8
+                        },
+                        {
+                            "x": 33203,
+                            "y": 32312,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33203,
+                            "y": 32312,
+                            "z": 8
+                        },
+                        {
+                            "x": 33207,
+                            "y": 32336,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33207,
+                            "y": 32336,
+                            "z": 8
+                        },
+                        {
+                            "x": 33212,
+                            "y": 32329,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33212,
+                            "y": 32329,
+                            "z": 8
+                        },
+                        {
+                            "x": 33215,
+                            "y": 32318,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33215,
+                            "y": 32318,
+                            "z": 8
+                        },
+                        {
+                            "x": 33213,
+                            "y": 32311,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33213,
+                            "y": 32311,
+                            "z": 8
+                        },
+                        {
+                            "x": 33224,
+                            "y": 32304,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33224,
+                            "y": 32304,
+                            "z": 8
+                        },
+                        {
+                            "x": 33234,
+                            "y": 32308,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33234,
+                            "y": 32308,
+                            "z": 8
+                        },
+                        {
+                            "x": 33244,
+                            "y": 32318,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33244,
+                            "y": 32318,
+                            "z": 8
+                        },
+                        {
+                            "x": 33251,
+                            "y": 32326,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33251,
+                            "y": 32326,
+                            "z": 8
+                        },
+                        {
+                            "x": 33234,
+                            "y": 32322,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33234,
+                            "y": 32322,
+                            "z": 8
+                        },
+                        {
+                            "x": 33229,
+                            "y": 32294,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33229,
+                            "y": 32294,
+                            "z": 8
+                        },
+                        {
+                            "x": 33242,
+                            "y": 32286,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33242,
+                            "y": 32286,
+                            "z": 8
+                        },
+                        {
+                            "x": 33243,
+                            "y": 32275,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33243,
+                            "y": 32275,
+                            "z": 8
+                        },
+                        {
+                            "x": 33199,
+                            "y": 32284,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33199,
+                            "y": 32284,
+                            "z": 8
+                        },
+                        {
+                            "x": 33193,
+                            "y": 32280,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33193,
+                            "y": 32280,
+                            "z": 8
+                        },
+                        {
+                            "x": 33190,
+                            "y": 32274,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33190,
+                            "y": 32274,
+                            "z": 8
+                        },
+                        {
+                            "x": 33217,
+                            "y": 32262,
+                            "z": 8
+                        }
+                    ]
+                ],
+                "9": [
+                    [
+                        {
+                            "x": 33253,
+                            "y": 32259,
+                            "z": 9
+                        },
+                        {
+                            "x": 33205,
+                            "y": 32287,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33205,
+                            "y": 32287,
+                            "z": 9
+                        },
+                        {
+                            "x": 33213,
+                            "y": 32296,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33213,
+                            "y": 32296,
+                            "z": 9
+                        },
+                        {
+                            "x": 33217,
+                            "y": 32305,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33217,
+                            "y": 32305,
+                            "z": 9
+                        },
+                        {
+                            "x": 33211,
+                            "y": 32315,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33211,
+                            "y": 32315,
+                            "z": 9
+                        },
+                        {
+                            "x": 33205,
+                            "y": 32315,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33205,
+                            "y": 32315,
+                            "z": 9
+                        },
+                        {
+                            "x": 33195,
+                            "y": 32326,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33195,
+                            "y": 32326,
+                            "z": 9
+                        },
+                        {
+                            "x": 33189,
+                            "y": 32299,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33189,
+                            "y": 32299,
+                            "z": 9
+                        },
+                        {
+                            "x": 33183,
+                            "y": 32297,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33183,
+                            "y": 32297,
+                            "z": 9
+                        },
+                        {
+                            "x": 33195,
+                            "y": 32295,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33195,
+                            "y": 32295,
+                            "z": 9
+                        },
+                        {
+                            "x": 33196,
+                            "y": 32276,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33196,
+                            "y": 32276,
+                            "z": 9
+                        },
+                        {
+                            "x": 33190,
+                            "y": 32262,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33190,
+                            "y": 32262,
+                            "z": 9
+                        },
+                        {
+                            "x": 33186,
+                            "y": 32269,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33186,
+                            "y": 32269,
+                            "z": 9
+                        },
+                        {
+                            "x": 33174,
+                            "y": 32274,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33174,
+                            "y": 32274,
+                            "z": 9
+                        },
+                        {
+                            "x": 33165,
+                            "y": 32267,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33165,
+                            "y": 32267,
+                            "z": 9
+                        },
+                        {
+                            "x": 33207,
+                            "y": 32279,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33207,
+                            "y": 32279,
+                            "z": 9
+                        },
+                        {
+                            "x": 33218,
+                            "y": 32281,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33218,
+                            "y": 32281,
+                            "z": 9
+                        },
+                        {
+                            "x": 33230,
+                            "y": 32280,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33230,
+                            "y": 32280,
+                            "z": 9
+                        },
+                        {
+                            "x": 33242,
+                            "y": 32277,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33242,
+                            "y": 32277,
+                            "z": 9
+                        },
+                        {
+                            "x": 33248,
+                            "y": 32277,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33248,
+                            "y": 32277,
+                            "z": 9
+                        },
+                        {
+                            "x": 33253,
+                            "y": 32289,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33253,
+                            "y": 32289,
+                            "z": 9
+                        },
+                        {
+                            "x": 33253,
+                            "y": 32296,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33253,
+                            "y": 32296,
+                            "z": 9
+                        },
+                        {
+                            "x": 33254,
+                            "y": 32312,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33254,
+                            "y": 32312,
+                            "z": 9
+                        },
+                        {
+                            "x": 33242,
+                            "y": 32308,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33242,
+                            "y": 32308,
+                            "z": 9
+                        },
+                        {
+                            "x": 33240,
+                            "y": 32315,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33240,
+                            "y": 32315,
+                            "z": 9
+                        },
+                        {
+                            "x": 33238,
+                            "y": 32323,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33238,
+                            "y": 32323,
+                            "z": 9
+                        },
+                        {
+                            "x": 33232,
+                            "y": 32328,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33232,
+                            "y": 32328,
+                            "z": 9
+                        },
+                        {
+                            "x": 33228,
+                            "y": 32335,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33228,
+                            "y": 32335,
+                            "z": 9
+                        },
+                        {
+                            "x": 33253,
+                            "y": 32259,
+                            "z": 9
+                        }
+                    ]
+                ]
+            },
+            "Paths": []
+        },
+        "Equipments": {
+            "Druid": {
+                "neck": "Scarf",
+                "leftHand": "snakebite rod",
+                "finger": "",
+                "head": "Mage Hat",
+                "body": "Magician's Robe",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "spellbook",
+                "ammo": ""
+            },
+            "Sorcerer": {
+                "neck": "Scarf",
+                "leftHand": "wand of vortex",
+                "finger": "",
+                "head": "Mage Hat",
+                "body": "Magician's Robe",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "spellbook",
+                "ammo": ""
+            },
+            "Paladin": {
+                "neck": "Scarf",
+                "leftHand": "spear",
+                "finger": "",
+                "head": "soldier helmet",
+                "body": "ranger's cloak",
+                "leg": "ranger legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "steel shield",
+                "ammo": ""
+            },
+            "Knight": {
+                "neck": "Scarf",
+                "leftHand": "jagged sword",
+                "finger": "",
+                "head": "soldier helmet",
+                "body": "brass armor",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "steel shield",
+                "ammo": ""
+            },
+            "Monk": {
+                "neck": "Harmony Amulet",
+                "leftHand": "Jo Staff",
+                "finger": "Power Ring",
+                "head": "Light Bandana",
+                "body": "Monk Robe",
+                "leg": "Plate Legs",
+                "feet": "Boots of Enlightenment",
+                "backpack": "Rubini Backpack",
+                "rightHand": "",
+                "ammo": ""
+            }
+        }
+    },
+    {
+        "Name": "Darashia Rotworm Cave NorthEast",
+        "Level": "8",
+        "Type": [
+            "Solo",
+            "Duo"
+        ],
+        "Xp/Hour": "10K",
+        "Loot/Hour": "2K",
+        "Location": "Darashia",
+        "Vocation": [
+            "Knight",
+            "Paladin",
+            "Druid",
+            "Sorcerer",
+            "Monk"
+        ],
+        "PremiumRequired": false,
+        "Generated": true,
+        "RouteRequirements": "None",
+        "RecommendedImbues": {
+            "Druid": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Sorcerer": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Knight": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Paladin": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Monk": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ]
+        },
+        "RecommendedSupplies": {
+            "Knight": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Paladin": [
+                "Health Potion",
+                "Mana Potion",
+                "Arrow",
+                "Bolt",
+                "spear"
+            ],
+            "Druid": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Sorcerer": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Monk": [
+                "Health Potion",
+                "Mana Potion"
+            ]
+        },
+        "ValuableDrops": [
+            "Carrion Worm Fang",
+            "Coal",
+            "Gold Coin",
+            "Ham",
+            "Legion Helmet",
+            "Lump Of Dirt"
+        ],
+        "Monsters": [
+            {
+                "Name": "Rotworm",
+                "Resistances": "Fire: 100%, Ice: 100%, Earth: 100%, Energy: 100%, Holy: 100%, Death: 100%, Physical: 100%"
+            },
+            {
+                "Name": "Carrion Worm",
+                "Resistances": "Fire: 105%, Ice: 105%, Earth: 80%, Energy: 90%, Holy: 100%, Death: 100%, Physical: 100%"
+            }
+        ],
+        "WayPath": {
+            "Coordinates": {
+                "7": [
+                    [
+                        {
+                            "x": 33213,
+                            "y": 32454,
+                            "z": 7
+                        },
+                        {
+                            "x": 33293,
+                            "y": 32314,
+                            "z": 7
+                        }
+                    ]
+                ],
+                "8": [
+                    [
+                        {
+                            "x": 33293,
+                            "y": 32314,
+                            "z": 8
+                        },
+                        {
+                            "x": 33290,
+                            "y": 32308,
+                            "z": 8
+                        }
+                    ]
+                ]
+            },
+            "Markers": [],
+            "Paths": [
+                "From Darashia: climb down at 33293, 32314 to floor -1."
+            ],
+            "Position": {
+                "x": 33290,
+                "y": 32308,
+                "z": 8
+            },
+            "TemplePosition": {
+                "x": 33213,
+                "y": 32454,
+                "z": 1
+            }
+        },
+        "RoutePath": {
+            "Coordinates": {
+                "8": [
+                    [
+                        {
+                            "x": 33290,
+                            "y": 32308,
+                            "z": 8
+                        },
+                        {
+                            "x": 33297,
+                            "y": 32314,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33297,
+                            "y": 32314,
+                            "z": 8
+                        },
+                        {
+                            "x": 33300,
+                            "y": 32322,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33300,
+                            "y": 32322,
+                            "z": 8
+                        },
+                        {
+                            "x": 33304,
+                            "y": 32334,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33304,
+                            "y": 32334,
+                            "z": 8
+                        },
+                        {
+                            "x": 33321,
+                            "y": 32351,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33321,
+                            "y": 32351,
+                            "z": 8
+                        },
+                        {
+                            "x": 33317,
+                            "y": 32342,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33317,
+                            "y": 32342,
+                            "z": 8
+                        },
+                        {
+                            "x": 33313,
+                            "y": 32336,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33313,
+                            "y": 32336,
+                            "z": 8
+                        },
+                        {
+                            "x": 33310,
+                            "y": 32328,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33310,
+                            "y": 32328,
+                            "z": 8
+                        },
+                        {
+                            "x": 33315,
+                            "y": 32320,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33315,
+                            "y": 32320,
+                            "z": 8
+                        },
+                        {
+                            "x": 33319,
+                            "y": 32311,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33319,
+                            "y": 32311,
+                            "z": 8
+                        },
+                        {
+                            "x": 33290,
+                            "y": 32308,
+                            "z": 8
+                        }
+                    ]
+                ],
+                "9": [
+                    [
+                        {
+                            "x": 33283,
+                            "y": 32300,
+                            "z": 9
+                        },
+                        {
+                            "x": 33290,
+                            "y": 32309,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33290,
+                            "y": 32309,
+                            "z": 9
+                        },
+                        {
+                            "x": 33298,
+                            "y": 32305,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33298,
+                            "y": 32305,
+                            "z": 9
+                        },
+                        {
+                            "x": 33306,
+                            "y": 32309,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33306,
+                            "y": 32309,
+                            "z": 9
+                        },
+                        {
+                            "x": 33312,
+                            "y": 32311,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33312,
+                            "y": 32311,
+                            "z": 9
+                        },
+                        {
+                            "x": 33312,
+                            "y": 32319,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33312,
+                            "y": 32319,
+                            "z": 9
+                        },
+                        {
+                            "x": 33319,
+                            "y": 32314,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33319,
+                            "y": 32314,
+                            "z": 9
+                        },
+                        {
+                            "x": 33333,
+                            "y": 32317,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33333,
+                            "y": 32317,
+                            "z": 9
+                        },
+                        {
+                            "x": 33328,
+                            "y": 32331,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33328,
+                            "y": 32331,
+                            "z": 9
+                        },
+                        {
+                            "x": 33325,
+                            "y": 32340,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33325,
+                            "y": 32340,
+                            "z": 9
+                        },
+                        {
+                            "x": 33328,
+                            "y": 32347,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33328,
+                            "y": 32347,
+                            "z": 9
+                        },
+                        {
+                            "x": 33337,
+                            "y": 32341,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33337,
+                            "y": 32341,
+                            "z": 9
+                        },
+                        {
+                            "x": 33334,
+                            "y": 32357,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33334,
+                            "y": 32357,
+                            "z": 9
+                        },
+                        {
+                            "x": 33328,
+                            "y": 32364,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33328,
+                            "y": 32364,
+                            "z": 9
+                        },
+                        {
+                            "x": 33319,
+                            "y": 32365,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33319,
+                            "y": 32365,
+                            "z": 9
+                        },
+                        {
+                            "x": 33307,
+                            "y": 32363,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33307,
+                            "y": 32363,
+                            "z": 9
+                        },
+                        {
+                            "x": 33309,
+                            "y": 32356,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33309,
+                            "y": 32356,
+                            "z": 9
+                        },
+                        {
+                            "x": 33313,
+                            "y": 32350,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33313,
+                            "y": 32350,
+                            "z": 9
+                        },
+                        {
+                            "x": 33309,
+                            "y": 32340,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33309,
+                            "y": 32340,
+                            "z": 9
+                        },
+                        {
+                            "x": 33308,
+                            "y": 32334,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33308,
+                            "y": 32334,
+                            "z": 9
+                        },
+                        {
+                            "x": 33297,
+                            "y": 32328,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33297,
+                            "y": 32328,
+                            "z": 9
+                        },
+                        {
+                            "x": 33291,
+                            "y": 32324,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33291,
+                            "y": 32324,
+                            "z": 9
+                        },
+                        {
+                            "x": 33279,
+                            "y": 32321,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33279,
+                            "y": 32321,
+                            "z": 9
+                        },
+                        {
+                            "x": 33279,
+                            "y": 32314,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33279,
+                            "y": 32314,
+                            "z": 9
+                        },
+                        {
+                            "x": 33271,
+                            "y": 32311,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33271,
+                            "y": 32311,
+                            "z": 9
+                        },
+                        {
+                            "x": 33270,
+                            "y": 32305,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33270,
+                            "y": 32305,
+                            "z": 9
+                        },
+                        {
+                            "x": 33283,
+                            "y": 32300,
+                            "z": 9
+                        }
+                    ]
+                ]
+            },
+            "Paths": []
+        },
+        "Equipments": {
+            "Druid": {
+                "neck": "Scarf",
+                "leftHand": "snakebite rod",
+                "finger": "",
+                "head": "Mage Hat",
+                "body": "Magician's Robe",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "spellbook",
+                "ammo": ""
+            },
+            "Sorcerer": {
+                "neck": "Scarf",
+                "leftHand": "wand of vortex",
+                "finger": "",
+                "head": "Mage Hat",
+                "body": "Magician's Robe",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "spellbook",
+                "ammo": ""
+            },
+            "Paladin": {
+                "neck": "Scarf",
+                "leftHand": "spear",
+                "finger": "",
+                "head": "soldier helmet",
+                "body": "ranger's cloak",
+                "leg": "ranger legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "steel shield",
+                "ammo": ""
+            },
+            "Knight": {
+                "neck": "Scarf",
+                "leftHand": "jagged sword",
+                "finger": "",
+                "head": "soldier helmet",
+                "body": "brass armor",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "steel shield",
+                "ammo": ""
+            },
+            "Monk": {
+                "neck": "Harmony Amulet",
+                "leftHand": "Jo Staff",
+                "finger": "Power Ring",
+                "head": "Light Bandana",
+                "body": "Monk Robe",
+                "leg": "Plate Legs",
+                "feet": "Boots of Enlightenment",
+                "backpack": "Rubini Backpack",
+                "rightHand": "",
+                "ammo": ""
+            }
+        }
+    },
+    {
+        "Name": "Darashia Rotworm Cave NorthWest",
+        "Level": "8",
+        "Type": [
+            "Solo",
+            "Duo"
+        ],
+        "Xp/Hour": "10K",
+        "Loot/Hour": "2K",
+        "Location": "Darashia",
+        "Vocation": [
+            "Knight",
+            "Paladin",
+            "Druid",
+            "Sorcerer",
+            "Monk"
+        ],
+        "PremiumRequired": false,
+        "Generated": true,
+        "RouteRequirements": "None",
+        "RecommendedImbues": {
+            "Druid": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Sorcerer": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Knight": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Paladin": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ],
+            "Monk": [
+                "Strike",
+                "Vampirism",
+                "Void"
+            ]
+        },
+        "RecommendedSupplies": {
+            "Knight": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Paladin": [
+                "Health Potion",
+                "Mana Potion",
+                "Arrow",
+                "Bolt",
+                "spear"
+            ],
+            "Druid": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Sorcerer": [
+                "Health Potion",
+                "Mana Potion"
+            ],
+            "Monk": [
+                "Health Potion",
+                "Mana Potion"
+            ]
+        },
+        "ValuableDrops": [
+            "Carrion Worm Fang",
+            "Coal",
+            "Gold Coin",
+            "Ham",
+            "Legion Helmet",
+            "Lump Of Dirt"
+        ],
+        "Monsters": [
+            {
+                "Name": "Rotworm",
+                "Resistances": "Fire: 100%, Ice: 100%, Earth: 100%, Energy: 100%, Holy: 100%, Death: 100%, Physical: 100%"
+            },
+            {
+                "Name": "Carrion Worm",
+                "Resistances": "Fire: 105%, Ice: 105%, Earth: 80%, Energy: 90%, Holy: 100%, Death: 100%, Physical: 100%"
+            }
+        ],
+        "WayPath": {
+            "Coordinates": {
+                "7": [
+                    [
+                        {
+                            "x": 33213,
+                            "y": 32454,
+                            "z": 7
+                        },
+                        {
+                            "x": 33017,
+                            "y": 32357,
+                            "z": 7
+                        }
+                    ]
+                ],
+                "8": [
+                    [
+                        {
+                            "x": 33017,
+                            "y": 32357,
+                            "z": 8
+                        },
+                        {
+                            "x": 33010,
+                            "y": 32349,
+                            "z": 8
+                        }
+                    ]
+                ]
+            },
+            "Markers": [],
+            "Paths": [
+                "From Darashia: climb down at 33017, 32357 to floor -1."
+            ],
+            "Position": {
+                "x": 33010,
+                "y": 32349,
+                "z": 8
+            },
+            "TemplePosition": {
+                "x": 33213,
+                "y": 32454,
+                "z": 1
+            }
+        },
+        "RoutePath": {
+            "Coordinates": {
+                "8": [
+                    [
+                        {
+                            "x": 33010,
+                            "y": 32349,
+                            "z": 8
+                        },
+                        {
+                            "x": 33025,
+                            "y": 32349,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33025,
+                            "y": 32349,
+                            "z": 8
+                        },
+                        {
+                            "x": 33059,
+                            "y": 32364,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33059,
+                            "y": 32364,
+                            "z": 8
+                        },
+                        {
+                            "x": 33052,
+                            "y": 32369,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33052,
+                            "y": 32369,
+                            "z": 8
+                        },
+                        {
+                            "x": 33043,
+                            "y": 32375,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33043,
+                            "y": 32375,
+                            "z": 8
+                        },
+                        {
+                            "x": 33029,
+                            "y": 32371,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33029,
+                            "y": 32371,
+                            "z": 8
+                        },
+                        {
+                            "x": 33017,
+                            "y": 32358,
+                            "z": 8
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33017,
+                            "y": 32358,
+                            "z": 8
+                        },
+                        {
+                            "x": 33010,
+                            "y": 32349,
+                            "z": 8
+                        }
+                    ]
+                ],
+                "9": [
+                    [
+                        {
+                            "x": 33032,
+                            "y": 32332,
+                            "z": 9
+                        },
+                        {
+                            "x": 33044,
+                            "y": 32329,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33044,
+                            "y": 32329,
+                            "z": 9
+                        },
+                        {
+                            "x": 33060,
+                            "y": 32332,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33060,
+                            "y": 32332,
+                            "z": 9
+                        },
+                        {
+                            "x": 33069,
+                            "y": 32333,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33069,
+                            "y": 32333,
+                            "z": 9
+                        },
+                        {
+                            "x": 33062,
+                            "y": 32341,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33062,
+                            "y": 32341,
+                            "z": 9
+                        },
+                        {
+                            "x": 33055,
+                            "y": 32349,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33055,
+                            "y": 32349,
+                            "z": 9
+                        },
+                        {
+                            "x": 33062,
+                            "y": 32357,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33062,
+                            "y": 32357,
+                            "z": 9
+                        },
+                        {
+                            "x": 33064,
+                            "y": 32364,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33064,
+                            "y": 32364,
+                            "z": 9
+                        },
+                        {
+                            "x": 33066,
+                            "y": 32379,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33066,
+                            "y": 32379,
+                            "z": 9
+                        },
+                        {
+                            "x": 33060,
+                            "y": 32371,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33060,
+                            "y": 32371,
+                            "z": 9
+                        },
+                        {
+                            "x": 33042,
+                            "y": 32374,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33042,
+                            "y": 32374,
+                            "z": 9
+                        },
+                        {
+                            "x": 33030,
+                            "y": 32374,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33030,
+                            "y": 32374,
+                            "z": 9
+                        },
+                        {
+                            "x": 33029,
+                            "y": 32381,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33029,
+                            "y": 32381,
+                            "z": 9
+                        },
+                        {
+                            "x": 33020,
+                            "y": 32371,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33020,
+                            "y": 32371,
+                            "z": 9
+                        },
+                        {
+                            "x": 33023,
+                            "y": 32363,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33023,
+                            "y": 32363,
+                            "z": 9
+                        },
+                        {
+                            "x": 33032,
+                            "y": 32360,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33032,
+                            "y": 32360,
+                            "z": 9
+                        },
+                        {
+                            "x": 33007,
+                            "y": 32365,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33007,
+                            "y": 32365,
+                            "z": 9
+                        },
+                        {
+                            "x": 32993,
+                            "y": 32353,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 32993,
+                            "y": 32353,
+                            "z": 9
+                        },
+                        {
+                            "x": 33004,
+                            "y": 32347,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33004,
+                            "y": 32347,
+                            "z": 9
+                        },
+                        {
+                            "x": 33004,
+                            "y": 32338,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33004,
+                            "y": 32338,
+                            "z": 9
+                        },
+                        {
+                            "x": 32996,
+                            "y": 32335,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 32996,
+                            "y": 32335,
+                            "z": 9
+                        },
+                        {
+                            "x": 33014,
+                            "y": 32344,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33014,
+                            "y": 32344,
+                            "z": 9
+                        },
+                        {
+                            "x": 33022,
+                            "y": 32337,
+                            "z": 9
+                        }
+                    ],
+                    [
+                        {
+                            "x": 33022,
+                            "y": 32337,
+                            "z": 9
+                        },
+                        {
+                            "x": 33032,
+                            "y": 32332,
+                            "z": 9
+                        }
+                    ]
+                ]
+            },
+            "Paths": []
+        },
+        "Equipments": {
+            "Druid": {
+                "neck": "Scarf",
+                "leftHand": "snakebite rod",
+                "finger": "",
+                "head": "Mage Hat",
+                "body": "Magician's Robe",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "spellbook",
+                "ammo": ""
+            },
+            "Sorcerer": {
+                "neck": "Scarf",
+                "leftHand": "wand of vortex",
+                "finger": "",
+                "head": "Mage Hat",
+                "body": "Magician's Robe",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "spellbook",
+                "ammo": ""
+            },
+            "Paladin": {
+                "neck": "Scarf",
+                "leftHand": "spear",
+                "finger": "",
+                "head": "soldier helmet",
+                "body": "ranger's cloak",
+                "leg": "ranger legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "steel shield",
+                "ammo": ""
+            },
+            "Knight": {
+                "neck": "Scarf",
+                "leftHand": "jagged sword",
+                "finger": "",
+                "head": "soldier helmet",
+                "body": "brass armor",
+                "leg": "brass legs",
+                "feet": "leather boots",
+                "backpack": "rubini backpack",
+                "rightHand": "steel shield",
+                "ammo": ""
+            },
+            "Monk": {
+                "neck": "Harmony Amulet",
+                "leftHand": "Jo Staff",
+                "finger": "Power Ring",
+                "head": "Light Bandana",
+                "body": "Monk Robe",
+                "leg": "Plate Legs",
+                "feet": "Boots of Enlightenment",
+                "backpack": "Rubini Backpack",
+                "rightHand": "",
+                "ammo": ""
             }
         }
     }

@@ -2,7 +2,7 @@ import { MonsterBrain } from "../ai/MonsterBrain";
 import { NpcBrain } from "../ai/NpcBrain";
 import type { Combat } from "../combat/Combat";
 import type { Creature } from "../creature/Creature";
-import { PROTOCOL_LIMITS } from "@tibia/protocol";
+import { PROTOCOL_LIMITS, type Position } from "@tibia/protocol";
 import { Monster } from "../creature/Monster";
 import type { MonsterType } from "../creature/MonsterType";
 import { Npc } from "../creature/Npc";
@@ -472,12 +472,8 @@ export class SpawnManager {
 
   private trySpawn(slot: SlotState, now: number): void {
     const { definition } = slot;
-    const position = slot.dormantCreature?.position ?? definition.home;
-    if (
-      !this.world.getTile(position) ||
-      !this.world.isPathable(position) ||
-      this.world.isOccupied(position)
-    ) {
+    const position = this.spawnPositionFor(slot);
+    if (!position) {
       slot.nextSpawnAt = now + this.config.retryMs;
       return;
     }
@@ -485,6 +481,7 @@ export class SpawnManager {
       slot,
       `${definition.kind}-instance:${definition.id}:${slot.generation}`,
     );
+    creature.moveTo(position);
     this.world.addCreature(creature);
     if (!slot.dormantCreature) slot.generation++;
     slot.dormantCreature = null;
@@ -495,6 +492,33 @@ export class SpawnManager {
     if (creature instanceof Monster) {
       this.combat?.onMonsterSpawn?.(creature, now);
     }
+  }
+
+  /**
+   * Where this slot may put its creature, or null while every candidate is
+   * taken. A dormant creature prefers the tile it idled on, but falls back to
+   * its own home — Canary always respawns at the slot position
+   * (spawn_npc.cpp/spawn_monster.cpp), so a creature that wandered onto an
+   * unusable tile before the last player left must not be stranded there.
+   */
+  private spawnPositionFor(slot: SlotState): Position | null {
+    const dormant = slot.dormantCreature?.position;
+    if (dormant && this.canPlaceAt(dormant)) return dormant;
+    return this.canPlaceAt(slot.definition.home) ? slot.definition.home : null;
+  }
+
+  /**
+   * Canary places spawns with `FLAG_IGNOREBLOCKITEM` and without
+   * `FLAG_PATHFINDING` (map.cpp `Map::placeCreature`): a "blockpath" tile — a
+   * table, a counter, a stone pile — blocks pathfinding but never a spawn.
+   * Only ground and another creature do.
+   */
+  private canPlaceAt(position: Position): boolean {
+    return (
+      Boolean(this.world.getTile(position)) &&
+      this.world.isWalkable(position) &&
+      !this.world.isOccupied(position)
+    );
   }
 
   private createCreature(slot: SlotState, id: string): Creature {

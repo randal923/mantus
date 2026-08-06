@@ -211,6 +211,9 @@ export function GameHud({
             ? cooldowns.find((entry) => entry.group === "potion")
             : undefined;
         const name = getActionBarActionName(action, spells, carriedItems);
+        // The stored display keeps the button's sprite when the character
+        // carries none of the object; the slot greys out via `unavailable`.
+        const artwork = item ?? action.display;
         return {
           action,
           hotkey: slot.hotkey,
@@ -218,12 +221,15 @@ export function GameHud({
           emptyTitle,
           emptyAriaLabel,
           item: {
-            icon: item ? (
-              <SpriteIcon spriteId={item.spriteId} clientId={item.clientId} />
+            icon: artwork ? (
+              <SpriteIcon
+                spriteId={artwork.spriteId}
+                clientId={artwork.clientId}
+              />
             ) : null,
             title: `${name} · ${action.mode.replaceAll("-", " ")}`,
             ariaLabel: `Use ${name}`,
-            badge: count > 0 ? count : undefined,
+            badge: count,
             badgeTone: "count" as const,
             unavailable: count === 0,
             ...(cooldown

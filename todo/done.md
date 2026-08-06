@@ -3459,3 +3459,45 @@ confirmed the sprites and the selected-tile highlight.
 
 **Residual risk**: none new. The claim path is untouched and the server still
 re-validates pool membership, count, capacity, reach, and the daily gate.
+
+## 2026-08-06 — Action bar/bot object buttons no longer blank out at carried count 0
+
+**Problem**: assigning a health potion to an action button (or bot rule) looked
+like it "vanished": the moment the character's carried count for the type hit 0
+— e.g. the freshly enabled below-80%-health rule legitimately drinking the last
+potion — the slot lost its sprite and the bot rule row degraded to "? Object
+#266". Every renderer resolved the action's name and icon exclusively from the
+live `InventoryState.carried` summary, which only contains types the character
+currently owns, so a still-assigned action for an out-of-stock object had
+nothing to draw. Real Tibia keeps the greyed object with a 0 count.
+
+**What changed**: object actions now carry a server-derived `display`
+(`name`/`clientId`/`spriteId`). `sanitizeActionBarAction` stamps it from the
+item catalog on every bar/bot update (overwriting anything the client sent, so
+nothing client-supplied is ever trusted or persisted), `withActionDisplay`
+backfills it at login for rows persisted before the field existed, and
+`createItemAction` seeds it optimistically client-side. Renderers fall back to
+the stored display when the type is absent from the carried summary: the HUD
+slot keeps its sprite greyed out with a 0 badge, and the bot rule row keeps the
+item's icon and name.
+
+**Files**: `protocol/src/actionBar.ts`, `server/src/sanitizeActionBarAction.ts`,
+`server/src/character/withActionDisplay.ts` (new), `server/src/CharacterHandler.ts`,
+`client/lib/action-bar/createItemAction.ts`,
+`client/lib/action-bar/getActionBarActionName.ts`,
+`client/components/action-bar/ActionBarActionIcon.tsx`,
+`client/components/GameHud.tsx`, plus tests
+(`server/src/sanitizeActionBarAction.test.ts`,
+`server/src/character/withActionDisplay.test.ts`,
+`client/lib/action-bar/getActionBarActionName.test.ts`, updated
+`ActionBarHandler`/`ActionBotHandler`/`createActionBotAction` tests).
+
+**Verified**: full server unit suite (241 files) and client unit suite (92
+files) pass; server and client typechecks clean apart from unrelated in-flight
+huntingBot WIP; focused eslint clean.
+
+**Residual risk**: actions saved before this fix only gain a display after the
+next login (the `withActionDisplay` backfill) or the next bar/bot edit; until
+then an out-of-stock object still shows the "Object #N" fallback. Types
+removed from the catalog keep rendering their last stored display, which is the
+desired behaviour.

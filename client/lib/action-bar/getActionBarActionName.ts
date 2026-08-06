@@ -19,6 +19,7 @@ export function getActionBarActionName(
   }
   return (
     items.find((item) => item.typeId === action.itemTypeId)?.name ??
+    action.display?.name ??
     `Object #${action.itemTypeId}`
   );
 }

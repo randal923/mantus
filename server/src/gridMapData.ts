@@ -14,6 +14,11 @@ interface GridMapConfig {
   voids?: ReadonlyArray<readonly [number, number, number]>;
   /** Tiles flagged as a protection zone, as [x, y, z]. */
   protectionZones?: ReadonlyArray<readonly [number, number, number]>;
+  /**
+   * Walkable tiles pathfinding avoids (Canary's `TILESTATE_BLOCKPATH`: a
+   * table, a counter, a stone pile), as [x, y, z].
+   */
+  blocksPath?: ReadonlyArray<readonly [number, number, number]>;
   /** Designated pvp-zone (arena) tiles, as [x, y, z]. */
   pvpZones?: ReadonlyArray<readonly [number, number, number]>;
   /**
@@ -60,6 +65,9 @@ export function gridMapData(config: GridMapConfig): MapData {
   const pvpZones = new Set(
     (config.pvpZones ?? []).map(([x, y, z]) => positionKey({ x, y, z })),
   );
+  const blocksPath = new Set(
+    (config.blocksPath ?? []).map(([x, y, z]) => positionKey({ x, y, z })),
+  );
   const transparentFloorView = new Set(
     (config.transparentFloorView ?? []).map(([x, y, z]) =>
       positionKey({ x, y, z }),
@@ -97,7 +105,7 @@ export function gridMapData(config: GridMapConfig): MapData {
       const limitsFloorView = !transparentFloorView.has(positionKey(position));
       return {
         walkable,
-        pathable: walkable,
+        pathable: walkable && !blocksPath.has(positionKey(position)),
         groundSpeed:
           groundSpeeds.get(positionKey(position)) ?? config.groundSpeed ?? 150,
         blocksProjectile: !walkable,

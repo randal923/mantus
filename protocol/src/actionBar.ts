@@ -51,6 +51,20 @@ const itemActionSchema = z
     kind: z.literal("item"),
     itemTypeId: z.number().int().positive().max(65_535),
     mode: actionBarItemModeSchema,
+    /**
+     * Display identity of the object so the button keeps its icon and name
+     * while the character carries none (count 0). The server's sanitizer
+     * rewrites it from the item catalog on every update — a client-supplied
+     * value is never trusted or kept.
+     */
+    display: z
+      .object({
+        name: z.string().min(1).max(120),
+        clientId: z.number().int().positive().max(65_535),
+        spriteId: z.number().int().positive(),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 

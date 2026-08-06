@@ -44,7 +44,15 @@ function makeHandler(store: InMemoryCharacterStore) {
   } as unknown as SpellRegistry;
   const items = {
     itemType: (itemTypeId: number) =>
-      itemTypeId === 266 ? { id: 266, useKind: "potion" } : undefined,
+      itemTypeId === 266
+        ? {
+            id: 266,
+            name: "health potion",
+            clientId: 266,
+            spriteId: 4321,
+            useKind: "potion",
+          }
+        : undefined,
   } as unknown as ItemIntentHandler;
   return new ActionBotHandler(registry, world, spells, items, store);
 }
@@ -113,12 +121,29 @@ describe("ActionBotHandler", () => {
     handler.handle(session, { type: "update-action-bot", settings });
     await settle(handler);
 
+    // The sanitizer stamps the catalog display onto object actions.
+    const stored = {
+      ...settings,
+      rules: [
+        {
+          ...settings.rules[0]!,
+          action: {
+            ...settings.rules[0]!.action,
+            display: {
+              name: "health potion",
+              clientId: 266,
+              spriteId: 4321,
+            },
+          },
+        },
+      ],
+    };
     expect(errors).toEqual([]);
-    expect(session.actionBotSettings).toEqual(settings);
+    expect(session.actionBotSettings).toEqual(stored);
     expect(session.actionBar).toEqual(createDefaultActionBar());
-    expect(sent).toEqual([{ type: "action-bot-updated", settings }]);
+    expect(sent).toEqual([{ type: "action-bot-updated", settings: stored }]);
     const character = await store.findByIdForAccount("account-id", "char-1");
-    expect(character?.actionBotSettings).toEqual(settings);
+    expect(character?.actionBotSettings).toEqual(stored);
     expect(character?.actionBar).toEqual(createDefaultActionBar());
   });
 

@@ -20,7 +20,16 @@ export function sanitizeActionBarAction(
     if (!type || (action.mode === "equip" && !type.equipmentSlot)) {
       return null;
     }
-    return { ...action };
+    // Rewritten from the catalog so a client can never smuggle a fake label
+    // or sprite in, and the button stays drawable when the carried count is 0.
+    return {
+      ...action,
+      display: {
+        name: type.name,
+        clientId: type.clientId,
+        spriteId: type.spriteId,
+      },
+    };
   }
   const spell = spells.get(action.spellId);
   if (

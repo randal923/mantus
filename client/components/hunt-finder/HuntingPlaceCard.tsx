@@ -29,6 +29,11 @@ export function HuntingPlaceCard({
           {t("huntFinder.new")}
         </span>
       )}
+      {place.Generated && (
+        <span className="absolute end-0 mt-2 me-2 rounded-sm border border-ui-stone-light/30 bg-black/70 px-2 py-0.5 text-[10px] font-bold tracking-widest text-ui-muted uppercase">
+          {t("huntFinder.generated")}
+        </span>
+      )}
       <LazyMount
         placeholderHeight={128}
         className="flex h-32 w-full items-center justify-center gap-1 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(151,118,62,0.16),transparent_65%)] px-3"

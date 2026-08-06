@@ -247,6 +247,83 @@ describe("SpawnManager", () => {
     expect(world.getCreature(first)?.health).toBe(7);
   });
 
+  it("restores a creature that went dormant on a blockpath tile", () => {
+    // The Darashia NPC report: she idled onto a tile a table makes
+    // unpathable, the region went quiet, and the restore kept retrying that
+    // one tile forever — she never came back until the process restarted.
+    const blockpath = { x: 4, y: 3, z: 7 };
+    const world = new World(
+      gridMapData({
+        name: "test",
+        width: 8,
+        height: 8,
+        blocked: [],
+        blocksPath: [[blockpath.x, blockpath.y, blockpath.z]],
+      }),
+      25,
+    );
+    world.addPlayer(new Player(makeCharacter("viewer"), { x: 1, y: 1, z: 7 }));
+    const manager = new SpawnManager(world, visibility, makeContent(), config);
+    manager.tick(1_000);
+    const first = manager.activeCreatureId("monster:slot-1");
+    if (!first) throw new Error("expected initial creature");
+    const creature = world.getCreature(first);
+    if (!creature) throw new Error("expected creature in world");
+    world.relocateCreature(creature, blockpath);
+
+    world.removePlayer("viewer");
+    manager.tick(1_250);
+    expect(manager.activeCreatureId("monster:slot-1")).toBeNull();
+
+    world.addPlayer(new Player(makeCharacter("viewer"), { x: 1, y: 1, z: 7 }));
+    manager.tick(1_500);
+
+    expect(manager.activeCreatureId("monster:slot-1")).toBe(first);
+    expect(world.getCreature(first)?.position).toEqual(blockpath);
+  });
+
+  it("falls back to the slot home when the dormant tile is taken", () => {
+    const world = makeWorld();
+    const manager = new SpawnManager(world, visibility, makeContent(), config);
+    manager.tick(1_000);
+    const first = manager.activeCreatureId("monster:slot-1");
+    if (!first) throw new Error("expected initial creature");
+    const creature = world.getCreature(first);
+    if (!creature) throw new Error("expected creature in world");
+    const wandered = { x: 4, y: 3, z: 7 };
+    world.relocateCreature(creature, wandered);
+
+    world.removePlayer("viewer");
+    manager.tick(1_250);
+    expect(manager.activeCreatureId("monster:slot-1")).toBeNull();
+
+    // Someone arrives standing exactly where it went dormant.
+    world.addPlayer(new Player(makeCharacter("viewer"), wandered));
+    manager.tick(1_500);
+
+    expect(manager.activeCreatureId("monster:slot-1")).toBe(first);
+    expect(world.getCreature(first)?.position).toEqual({ x: 3, y: 3, z: 7 });
+  });
+
+  it("spawns on a blockpath home tile, as Canary's placeCreature does", () => {
+    const world = new World(
+      gridMapData({
+        name: "test",
+        width: 8,
+        height: 8,
+        blocked: [],
+        blocksPath: [[3, 3, 7]],
+      }),
+      25,
+    );
+    world.addPlayer(new Player(makeCharacter("viewer"), { x: 1, y: 1, z: 7 }));
+    const manager = new SpawnManager(world, visibility, makeContent(), config);
+
+    manager.tick(1_000);
+
+    expect(manager.activeCreatureId("monster:slot-1")).not.toBeNull();
+  });
+
   it("transforms a live monster without detaching its ordinary spawn slot", () => {
     const transformedType: MonsterType = {
       ...monsterType,

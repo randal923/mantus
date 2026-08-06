@@ -23,8 +23,10 @@ const NEAR = { x: 33221, y: 32405, z: 7 };
 /** Thais depot, far outside the 32-tile spawn activation range. */
 const FAR = { x: 32342, y: 32230, z: 7 };
 const TOKEN = "dev-npc-spawn-scenario";
+/** A second account, so the watcher's login never kicks the first session. */
+const SECOND_TOKEN = "dev-npc-spawn-watcher";
 const CHARACTER = "Npc Spawn Tester";
-const SECOND_CHARACTER = "Npc Spawn Watcher";
+const SECOND_CHARACTER = "Npc Spawn Observer";
 
 const step = (text: string) => console.log(`\n▶ ${text}`);
 const ok = (text: string) => console.log(`  ✓ ${text}`);
@@ -93,6 +95,7 @@ async function npcAnswersGreeting(client: PlaytestClient): Promise<boolean> {
 async function classifyFailure(
   client: PlaytestClient,
   label: string,
+  since = 0,
 ): Promise<void> {
   const inWorld = await npcAnswersGreeting(client);
   const verdict = inWorld
@@ -100,6 +103,20 @@ async function classifyFailure(
       "was never sent creature-joined"
     : "SPAWN FAULT: she is not in the world (no greeting reply)";
   bad(`${label} -> ${verdict}`);
+  const joined = client.messages
+    .slice(since)
+    .filter((message) => message.type === "creature-joined")
+    .map((message) =>
+      message.type === "creature-joined" ? message.creature.name : "",
+    );
+  const known = client.messages
+    .filter(
+      (message): message is Extract<ServerMessage, { type: "welcome" }> =>
+        message.type === "welcome",
+    )
+    .flatMap((message) => message.creatures.map((creature) => creature.name));
+  console.log(`    creature-joined since the mark: ${joined.join(", ") || "none"}`);
+  console.log(`    creatures in the welcome snapshots: ${known.join(", ") || "none"}`);
   failures.push(`${label}: ${inWorld ? "visibility" : "spawn"}`);
 }
 
@@ -127,7 +144,7 @@ try {
           `(player at ${landed.x},${landed.y},${landed.z})`,
       );
     } else {
-      await classifyFailure(client, "phase 1 first approach");
+      await classifyFailure(client, "phase 1 first approach", since);
     }
   }
 
@@ -235,7 +252,7 @@ try {
     step("phase 7: two clients leave and return one at a time");
     {
       const watcher = await PlaytestClient.connect(url);
-      await watcher.enter(TOKEN, SECOND_CHARACTER);
+      await watcher.enter(SECOND_TOKEN, SECOND_CHARACTER);
       await goto(watcher, NEAR);
       await goto(session, NEAR);
       await goto(watcher, FAR);
@@ -257,8 +274,9 @@ try {
     // ---------------------------------------------------------------- phase 8
     step("phase 8: stand next to her for 60s and watch for a vanish");
     {
+      const arrival = session.mark();
       await goto(session, NEAR);
-      const npc = await sawNpc(session, session.mark() - 200, 8_000);
+      const npc = await sawNpc(session, arrival, 8_000);
       const since = session.mark();
       await sleep(60_000);
       const left = session.messages

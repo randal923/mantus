@@ -13,6 +13,7 @@ import type { Character } from "./character/Character";
 import { CharacterError } from "./character/CharacterError";
 import type { CharacterPersistence } from "./character/CharacterPersistence";
 import type { CharacterService } from "./character/CharacterService";
+import { withActionDisplay } from "./character/withActionDisplay";
 import { getAccountStatus } from "./getAccountStatus";
 import type { CarriedCombatLocks } from "./LingeringPlayers";
 import { monotonicNow } from "./monotonicNow";
@@ -394,13 +395,25 @@ export class CharacterHandler {
       this.persistence.saveNow(player, now);
     }
     session.playerId = player.id;
-    session.actionBar = character.actionBar.map((slot) => ({
+    const itemType = (itemTypeId: number) => this.items.itemType(itemTypeId);
+    const actionBar = character.actionBar.map((slot) => ({
+      ...slot,
+      action: withActionDisplay(slot.action, itemType),
+    }));
+    const actionBotSettings = {
+      ...character.actionBotSettings,
+      rules: character.actionBotSettings.rules.map((rule) => ({
+        ...rule,
+        action: withActionDisplay(rule.action, itemType),
+      })),
+    };
+    session.actionBar = actionBar.map((slot) => ({
       ...slot,
       action: slot.action ? { ...slot.action } : null,
     }));
     session.actionBotSettings = {
-      ...character.actionBotSettings,
-      rules: [...character.actionBotSettings.rules],
+      ...actionBotSettings,
+      rules: [...actionBotSettings.rules],
     };
     session.lootFilter = {
       ...character.lootFilter,
@@ -467,8 +480,8 @@ export class CharacterHandler {
       fightState: projectFightState(session, this.world, now),
       spells: this.spells.projectFor(player),
       uiSettings: session.account?.uiSettings ?? {},
-      actionBar: character.actionBar,
-      actionBotSettings: character.actionBotSettings,
+      actionBar,
+      actionBotSettings,
       lootFilter: character.lootFilter,
       huntingBotRoute: character.huntingBotRoute,
       aimAtTargetSpellIds: [...character.aimAtTargetSpellIds],

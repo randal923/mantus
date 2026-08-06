@@ -41,6 +41,13 @@ export interface HuntingPlace {
   readonly Vocation: ReadonlyArray<HuntingVocation>;
   readonly PremiumRequired: boolean;
   readonly New?: boolean;
+  /**
+   * Built by `tools/buildHuntingPlaces.mjs` from the world's own spawn and
+   * walkability data rather than written by hand. The route is real geometry;
+   * the level, xp and loot figures are inherited estimates, so the window
+   * says so.
+   */
+  readonly Generated?: boolean;
   readonly RouteRequirements: string;
   readonly RecommendedImbues: Readonly<Record<string, ReadonlyArray<string>>>;
   readonly RecommendedSupplies: Readonly<Record<string, ReadonlyArray<string>>>;
