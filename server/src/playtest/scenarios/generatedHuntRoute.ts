@@ -83,18 +83,6 @@ try {
   client.say("/level 200");
   await client.waitFor(isType("gm-response"), "gm-response for /level");
 
-  step(`walking into "${HUNT}" at its first waypoint`);
-  const first = waypoints[0]!;
-  const gotoMark = client.mark();
-  client.say(`/goto ${first.x} ${first.y} ${first.z}`);
-  const gotoReply = await client.waitFor(
-    isType("gm-response"),
-    "gm-response for /goto",
-    { since: gotoMark },
-  );
-  if (!gotoReply.ok) throw new Error(`/goto failed: ${gotoReply.text}`);
-  ok(`${gotoReply.text} (floor ${floor}, ${waypoints.length} waypoints)`);
-
   step("saving the generated ring as the character's route");
   const saveMark = client.mark();
   client.send({
@@ -109,18 +97,50 @@ try {
   if (saved.route.waypoints.length !== waypoints.length) {
     throw new Error("the server stored a different route than it was sent");
   }
-  ok(`server stored ${saved.route.waypoints.length} waypoints`);
+  ok(`server stored ${saved.route.waypoints.length} waypoints (floor ${floor})`);
 
-  step("arming the bot");
-  const armMark = client.mark();
-  client.send({ type: "set-hunting-bot-enabled", enabled: true });
-  const armed = await client.waitFor(
-    isType("hunting-bot-status"),
-    "hunting-bot-status",
-    { since: armMark },
-  );
-  if (!armed.enabled) throw new Error("the bot refused to arm on this route");
-  ok(`armed at waypoint ${armed.waypointIndex + 1}`);
+  // A creature standing on the tile pushes /goto to a neighbour, which in a
+  // cave can be a pocket with no walk back to the route, so the entry tile is
+  // whichever of the first few waypoints the bot will actually arm from.
+  step(`walking into "${HUNT}" and arming the bot`);
+  let armedAt: number | null = null;
+  for (const entry of [...waypoints.slice(0, 8), ...waypoints.slice(0, 8)]) {
+    const gotoMark = client.mark();
+    client.say(`/goto ${entry.x} ${entry.y} ${entry.z}`);
+    const gotoReply = await client.waitFor(
+      isType("gm-response"),
+      "gm-response for /goto",
+      { since: gotoMark },
+    );
+    if (!gotoReply.ok) throw new Error(`/goto failed: ${gotoReply.text}`);
+    const armMark = client.mark();
+    client.send({ type: "set-hunting-bot-enabled", enabled: true });
+    const armed = await client.waitFor(
+      (message): message is Extract<
+        ServerMessage,
+        { type: "hunting-bot-status" | "error" }
+      > => message.type === "hunting-bot-status" || message.type === "error",
+      "hunting-bot-status",
+      { since: armMark },
+    );
+    if (armed.type === "hunting-bot-status" && armed.enabled) {
+      armedAt = armed.waypointIndex + 1;
+      ok(`${gotoReply.text} armed at waypoint ${armedAt}`);
+      break;
+    }
+    // Arming needs a clear walk to the route, and a cave this crowded can
+    // have a rotworm standing in the only corridor. Give the pack a moment to
+    // wander and try the next waypoint.
+    console.log(
+      `  · ${gotoReply.text} refused (${
+        armed.type === "error" ? armed.code : "not enabled"
+      }), trying the next waypoint`,
+    );
+    await sleep(1_500);
+  }
+  if (armedAt === null) {
+    throw new Error("the bot would not arm from any of the route's first tiles");
+  }
 
   step(`hunting the cave for ${WATCH_MS / 1_000} seconds`);
   const walkMark = client.mark();

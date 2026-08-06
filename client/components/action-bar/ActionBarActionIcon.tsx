@@ -2,6 +2,7 @@ import type {
   ActionBarAction,
   CarriedItemSummary,
 } from "@tibia/protocol";
+import { getActionBarActionArtwork } from "../../lib/action-bar/getActionBarActionArtwork";
 import { getSpellIconArtwork } from "../../lib/combat/getSpellIconArtwork";
 import { SpriteIcon } from "../inventory/SpriteIcon";
 import { SpellIcon } from "../spells/SpellIcon";
@@ -39,10 +40,7 @@ export function ActionBarActionIcon({
       </span>
     );
   }
-  const item = items.find((candidate) => candidate.typeId === action.itemTypeId);
-  // Falling back to the action's stored display keeps the object drawable
-  // while the character carries none of it (count 0).
-  const artwork = item ?? action.display;
+  const artwork = getActionBarActionArtwork(action, items);
   return artwork ? (
     <span className="flex size-11 shrink-0 items-center justify-center">
       <SpriteIcon

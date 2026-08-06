@@ -25,6 +25,7 @@ import { getCarriedItems } from "../lib/inventory/getCarriedItems";
 import { getInventoryItems } from "../lib/inventory/getInventoryItems";
 import { formatActionBarHotkey } from "../lib/hotkeys/formatActionBarHotkey";
 import { createItemAction } from "../lib/action-bar/createItemAction";
+import { getActionBarActionArtwork } from "../lib/action-bar/getActionBarActionArtwork";
 import { getActionBarActionName } from "../lib/action-bar/getActionBarActionName";
 import { getSpellActionTargetMode } from "../lib/action-bar/getSpellActionTargetMode";
 import { SpriteIcon } from "./inventory/SpriteIcon";
@@ -213,7 +214,7 @@ export function GameHud({
         const name = getActionBarActionName(action, spells, carriedItems);
         // The stored display keeps the button's sprite when the character
         // carries none of the object; the slot greys out via `unavailable`.
-        const artwork = item ?? action.display;
+        const artwork = getActionBarActionArtwork(action, carriedItems);
         return {
           action,
           hotkey: slot.hotkey,

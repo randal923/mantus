@@ -3485,11 +3485,14 @@ item's icon and name.
 `server/src/character/withActionDisplay.ts` (new), `server/src/CharacterHandler.ts`,
 `client/lib/action-bar/createItemAction.ts`,
 `client/lib/action-bar/getActionBarActionName.ts`,
+`client/lib/action-bar/getActionBarActionArtwork.ts` (new — the icon
+fallback as a pure rule so it stays unit-testable),
 `client/components/action-bar/ActionBarActionIcon.tsx`,
 `client/components/GameHud.tsx`, plus tests
 (`server/src/sanitizeActionBarAction.test.ts`,
 `server/src/character/withActionDisplay.test.ts`,
-`client/lib/action-bar/getActionBarActionName.test.ts`, updated
+`client/lib/action-bar/getActionBarActionName.test.ts`,
+`client/lib/action-bar/getActionBarActionArtwork.test.ts`, updated
 `ActionBarHandler`/`ActionBotHandler`/`createActionBotAction` tests).
 
 **Verified**: full server unit suite (241 files) and client unit suite (92

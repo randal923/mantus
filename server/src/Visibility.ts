@@ -96,8 +96,21 @@ export class Visibility {
   }
 
   announceCreatureSpawn(creature: Creature): void {
+    let viewers = 0;
     for (const session of this.viewerSessionsFor(creature.position, 0)) {
+      viewers++;
+      const knownBefore = session.knownCreatureIds.has(creature.id);
       this.introduce(session, creature);
+      if (process.env.SPAWN_DEBUG === "1") {
+        console.log(
+          `[spawn-announce] ${creature.name} ${creature.id} at ${creature.position.x},${creature.position.y},${creature.position.z} session=${session.id} known=${knownBefore} sent=${session.knownCreatureIds.has(creature.id) && !knownBefore}`,
+        );
+      }
+    }
+    if (process.env.SPAWN_DEBUG === "1" && viewers === 0) {
+      console.log(
+        `[spawn-announce] ${creature.name} at ${creature.position.x},${creature.position.y},${creature.position.z} NO VIEWERS (players=${[...this.world.allPlayers()].map((p) => `${p.name}@${p.position.x},${p.position.y},${p.position.z}`).join("|")})`,
+      );
     }
   }
 
