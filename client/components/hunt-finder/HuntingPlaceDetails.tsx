@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { BestiaryCreatureEntry } from "@tibia/protocol";
 import type {
   HuntingPath,
   HuntingPlace,
   HuntingVocation,
 } from "../../lib/hunt-finder/HuntingPlace";
+import { huntingSpots } from "../../lib/hunt-finder/huntingSpots";
 import type { WikiItem } from "../../lib/wiki/WikiItem";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
@@ -14,6 +15,7 @@ import { HuntEquipmentGrid } from "./HuntEquipmentGrid";
 import { HuntItemTile } from "./HuntItemTile";
 import { HuntMonsterSprite } from "./HuntMonsterSprite";
 import { HuntRouteMap } from "./HuntRouteMap";
+import { HuntSpotMap } from "./HuntSpotMap";
 
 type RouteView = "way" | "route";
 
@@ -40,8 +42,11 @@ export function HuntingPlaceDetails({
 }: HuntingPlaceDetailsProps) {
   const { t } = useAppTranslation();
   const [routeView, setRouteView] = useState<RouteView>("way");
+  const spots = useMemo(() => huntingSpots(place), [place]);
+  const [spotName, setSpotName] = useState<string | null>(null);
+  const spot = spots.find((candidate) => candidate.Name === spotName) ?? spots[0];
   const path: HuntingPath =
-    routeView === "way" ? place.WayPath : place.RoutePath;
+    routeView === "way" ? (spot?.WayPath ?? place.WayPath) : (spot?.RoutePath ?? place.RoutePath);
   const imbues =
     place.RecommendedImbues[vocation] ??
     (["Druid", "Sorcerer"].includes(vocation)
@@ -195,11 +200,22 @@ export function HuntingPlaceDetails({
                 </Button>
               </div>
             </div>
+            {spots.length > 1 && (
+              <div className="mb-3 flex h-80 flex-col">
+                <HuntSpotMap
+                  mapName={mapName}
+                  spots={spots}
+                  selectedName={spot?.Name ?? null}
+                  onSelect={(picked) => setSpotName(picked.Name)}
+                />
+              </div>
+            )}
             <HuntRouteMap
-              key={`${place.Name}:${routeView}`}
+              key={`${place.Name}:${spot?.Name ?? ""}:${routeView}`}
               mapName={mapName}
-              name={place.Name}
+              name={spots.length > 1 ? `${place.Name} — ${spot?.Name ?? ""}` : place.Name}
               path={path}
+              isolate={routeView === "route"}
             />
             {routeNotes.length > 0 && (
               <ul className="mt-3 list-disc space-y-1 pl-5 text-xs leading-5 text-ui-text/80">

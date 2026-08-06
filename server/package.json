@@ -23,6 +23,7 @@
     "playtest:monsters": "tsx src/playtest/scenarios/monsterParity.ts",
     "playtest:bestiary": "tsx src/playtest/scenarios/bestiaryUnlock.ts",
     "playtest:hunting-bot": "tsx src/playtest/scenarios/huntingBot.ts",
+    "playtest:generated-hunt": "tsx src/playtest/scenarios/generatedHuntRoute.ts",
     "playtest:wheel": "tsx src/playtest/scenarios/wheelAllocation.ts",
     "playtest:gate": "tsx src/playtest/scenarios/gateOfExpertise.ts",
     "playtest:exercise": "tsx src/playtest/scenarios/exerciseTraining.ts",

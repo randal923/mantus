@@ -1,6 +1,7 @@
 import { IMBUEMENT_RULES, type ImbuementOption } from "@tibia/protocol";
 import type { ItemImbuementEntry } from "../forge/itemImbuementsOf";
 import type { ItemCatalog } from "../item/ItemCatalog";
+import { toItemTooltip } from "../item/toItemTooltip";
 import type { ImbuementCatalog } from "./ImbuementCatalog";
 import { imbuementBlockedReasonOf } from "./imbuementBlockedReasonOf";
 
@@ -31,12 +32,16 @@ export function buildImbuementOptions(input: {
     if (mode === "scroll" && definition.scrollItemTypeId === undefined) continue;
     const materials = definition.astralSources.map((source) => {
       const stashAvailable = input.stashCountOf(source.itemTypeId);
+      const sourceType = itemCatalog.get(source.itemTypeId);
       return {
         itemTypeId: source.itemTypeId,
-        name: itemCatalog.get(source.itemTypeId)?.name ?? "unknown",
+        name: sourceType?.name ?? "unknown",
         count: source.count,
         available: input.carriedCountOf(source.itemTypeId) + stashAvailable,
         stashAvailable,
+        // Type-level card only: an astral source is a stack the player may not
+        // even own yet, so there is no instance to project.
+        ...(sourceType ? { tooltip: toItemTooltip(sourceType) } : {}),
       };
     });
     const blockedReason = imbuementBlockedReasonOf({

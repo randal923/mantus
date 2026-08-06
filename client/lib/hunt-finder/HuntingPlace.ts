@@ -31,6 +31,20 @@ export interface HuntingMonster {
   readonly Charm?: string;
 }
 
+/**
+ * One cave of a hunt that has several. A city's rotworm caves are one hunting
+ * place with one set of creatures, gear and drops — what differs between them
+ * is where you climb in and which ring you walk once inside.
+ */
+export interface HuntingSpot {
+  readonly Name: string;
+  readonly Generated?: boolean;
+  /** Where the map marker sits: the tile the route is entered from. */
+  readonly Position: HuntingPosition;
+  readonly WayPath?: HuntingPath;
+  readonly RoutePath: HuntingPath;
+}
+
 export interface HuntingPlace {
   readonly Name: string;
   readonly Level: string;
@@ -55,6 +69,19 @@ export interface HuntingPlace {
   readonly Monsters: ReadonlyArray<HuntingMonster>;
   readonly WayPath: HuntingPath;
   readonly RoutePath: HuntingPath;
+  /**
+   * What to call this entry's own route once it is one cave among several.
+   * Absent while a hunt has a single cave, where the hunt's name says it all.
+   */
+  readonly SpotName?: string;
+  /**
+   * Where this hunt's own cave is entered from open ground — the tile a pin
+   * goes on. The way in is on the surface even when the hunt is three floors
+   * down, which is where a player starts the walk.
+   */
+  readonly SpotPosition?: HuntingPosition;
+  /** The hunt's other caves; its own route is always the first spot. */
+  readonly Spots?: ReadonlyArray<HuntingSpot>;
   readonly Equipments: Readonly<
     Partial<Record<HuntingVocation, Readonly<Record<string, string>>>>
   >;

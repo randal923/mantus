@@ -57,7 +57,7 @@
       "sha256": "4fbbac606a6282b07a601cb77ff7cd3a38991c02f0787a0c65f19fe4c9c6461c",
       "mapSha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2",
       "huntingPlacesPath": "client/public/assets/hunting/hunting_places.json",
-      "huntingPlacesSha256": "c420a0da2b4826b4d14aeb09aa3e7def9dccc8d829ea2d9247b3aae0ac435f5e"
+      "huntingPlacesSha256": "f452701b643fd0891a713ad3ef6d14289ec7b87bdcbbb1fc92c236e96f75baf5"
     },
     "canaryProgression": {
       "vocationsPath": "data/XML/vocations.xml",

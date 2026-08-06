@@ -61,16 +61,58 @@ async function goto(
   };
 }
 
-/** Did the client hear about the NPC (welcome or creature-joined)? */
+/**
+ * What the real client would be drawing: replay the whole message log the way
+ * the renderer does (welcome + creature-joined add, creature-left removes) and
+ * report the NPC's live entry. Asking "did a creature-joined arrive since a
+ * mark?" would miss an NPC the client already knew about before the mark.
+ */
+function npcOnScreen(
+  client: PlaytestClient,
+): { id: string; position: { x: number; y: number; z: number } } | null {
+  const live = new Map<
+    string,
+    { id: string; name: string; position: { x: number; y: number; z: number } }
+  >();
+  for (const message of client.messages) {
+    if (message.type === "welcome") {
+      for (const creature of message.creatures) {
+        live.set(creature.id, {
+          id: creature.id,
+          name: creature.name,
+          position: creature.position,
+        });
+      }
+    } else if (message.type === "creature-joined") {
+      live.set(message.creature.id, {
+        id: message.creature.id,
+        name: message.creature.name,
+        position: message.creature.position,
+      });
+    } else if (message.type === "creature-left") {
+      live.delete(message.creatureId);
+    } else if (message.type === "creature-moved") {
+      const known = live.get(message.creatureId);
+      if (known) known.position = message.position;
+    }
+  }
+  for (const creature of live.values()) {
+    if (creature.name === NPC_NAME) return creature;
+  }
+  return null;
+}
+
+/** Waits until the client's own view holds the NPC. */
 async function sawNpc(
   client: PlaytestClient,
-  since: number,
   timeoutMs: number,
 ): Promise<{ id: string; position: { x: number; y: number; z: number } } | null> {
-  try {
-    return await client.waitForCreatureNamed(NPC_NAME, { since, timeoutMs });
-  } catch {
-    return null;
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const found = npcOnScreen(client);
+    if (found) return found;
+    if (Date.now() > deadline) return null;
+    await sleep(50);
   }
 }
 
@@ -137,7 +179,7 @@ try {
   {
     const since = client.mark();
     const landed = await goto(client, NEAR);
-    const npc = await sawNpc(client, since, 20_000);
+    const npc = await sawNpc(client, 20_000);
     if (npc) {
       ok(
         `${NPC_NAME} joined at ${npc.position.x},${npc.position.y},${npc.position.z} ` +
@@ -155,9 +197,8 @@ try {
     for (let cycle = 1; cycle <= cycles; cycle++) {
       await goto(client, FAR);
       await sleep(1_500);
-      const since = client.mark();
       await goto(client, NEAR);
-      const npc = await sawNpc(client, since, 8_000);
+      const npc = await sawNpc(client, 8_000);
       if (!npc) {
         missed++;
         await classifyFailure(client, `phase 2 cycle ${cycle}`);
@@ -173,9 +214,8 @@ try {
     let missed = 0;
     for (let cycle = 1; cycle <= cycles; cycle++) {
       await goto(client, FAR);
-      const since = client.mark();
       await goto(client, NEAR);
-      const npc = await sawNpc(client, since, 8_000);
+      const npc = await sawNpc(client, 8_000);
       if (!npc) {
         missed++;
         await classifyFailure(client, `phase 3 cycle ${cycle}`);
@@ -198,16 +238,14 @@ try {
         (onHome ? " (exactly on her home tile)" : " (snapped off her tile)"),
     );
     if (onHome) {
-      const blockedSince = client.mark();
-      const whileBlocked = await sawNpc(client, blockedSince, 4_000);
+      const whileBlocked = await sawNpc(client, 4_000);
       ok(
         whileBlocked
           ? `she spawned anyway at ${whileBlocked.position.x},${whileBlocked.position.y}`
           : "she stayed unspawned while the tile was taken (expected)",
       );
-      const since = client.mark();
       await goto(client, NEAR);
-      const npc = await sawNpc(client, since, 8_000);
+      const npc = await sawNpc(client, 8_000);
       if (npc) ok("she spawned once the tile was free again");
       else await classifyFailure(client, "phase 4 blocked home tile");
     }
@@ -222,9 +260,8 @@ try {
       session.terminate();
       await sleep(500);
       const next = await PlaytestClient.connect(url);
-      const since = next.mark();
       await next.enter(TOKEN, CHARACTER);
-      const npc = await sawNpc(next, since, 10_000);
+      const npc = await sawNpc(next, 10_000);
       if (npc) ok(`relogin ${attempt}: ${NPC_NAME} present`);
       else await classifyFailure(next, `phase 5 relogin ${attempt}`);
       session = next;
@@ -238,9 +275,8 @@ try {
         const landed = await goto(session, above);
         ok(`upstairs at ${landed.x},${landed.y},${landed.z}`);
         await sleep(1_500);
-        const since = session.mark();
         await goto(session, NEAR);
-        const npc = await sawNpc(session, since, 8_000);
+        const npc = await sawNpc(session, 8_000);
         if (npc) ok("she is back after the floor round trip");
         else await classifyFailure(session, "phase 6 floor churn");
       } catch (error) {
@@ -258,14 +294,12 @@ try {
       await goto(watcher, FAR);
       await goto(session, FAR);
       await sleep(1_500);
-      const sinceA = session.mark();
       await goto(session, NEAR);
-      const seenByA = await sawNpc(session, sinceA, 8_000);
+      const seenByA = await sawNpc(session, 8_000);
       if (seenByA) ok("first client saw her on return");
       else await classifyFailure(session, "phase 7 first client");
-      const sinceB = watcher.mark();
       await goto(watcher, NEAR);
-      const seenByB = await sawNpc(watcher, sinceB, 8_000);
+      const seenByB = await sawNpc(watcher, 8_000);
       if (seenByB) ok("second client saw her on return");
       else await classifyFailure(watcher, "phase 7 second client");
       watcher.terminate();
@@ -274,18 +308,11 @@ try {
     // ---------------------------------------------------------------- phase 8
     step("phase 8: stand next to her for 60s and watch for a vanish");
     {
-      const arrival = session.mark();
       await goto(session, NEAR);
-      const npc = await sawNpc(session, arrival, 8_000);
-      const since = session.mark();
+      const npc = await sawNpc(session, 8_000);
+      if (!npc) throw new Error("she was gone before the idle watch started");
       await sleep(60_000);
-      const left = session.messages
-        .slice(since)
-        .filter(
-          (message): message is Extract<ServerMessage, { type: "creature-left" }> =>
-            message.type === "creature-left" && message.creatureId === npc?.id,
-        );
-      if (left.length === 0) ok("she stayed put for the whole minute");
+      if (npcOnScreen(session)) ok("she stayed put for the whole minute");
       else await classifyFailure(session, "phase 8 vanished while standing by");
     }
 

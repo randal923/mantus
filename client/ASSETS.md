@@ -217,7 +217,21 @@ approach and in-hunt routes. It contains no sprites: the Hunt Finder resolves
 names against this project's item catalog and server-authored bestiary, and
 draws its coordinates over the project's own minimap tiles.
 
-The source JSON remains verbatim so no guide content is silently discarded.
+Entries carrying `"Generated": true`, and the `Spots` gathered onto
+hand-written entries, were not copied from anywhere: they are written by
+`yarn hunts:build` (`tools/buildHuntingPlaces.mjs`) from
+`content/spawns/world-spawns.json` and the converted map's walkability. A city
+whose caves the guides do not cover keeps one entry: the extra caves become
+`Spots`, each with its own surface entrance (`Position`) and route, and the
+window asks which one to walk. Their routes are
+real walkable geometry — `server/src/huntingBot/generatedHuntRoutes.test.ts`
+re-walks every leg through the server's own pathfinder — while their level and
+hourly figures are inherited from the closest curated hunt, which is why the
+Hunt Finder labels them "Estimated". The generator copies curated entries byte
+for byte, replaces only what it wrote last time, and re-pins
+`huntingPlacesSha256` itself.
+
+The copied guide content remains verbatim so nothing is silently discarded.
 `parseHuntingPlaces` validates its bounds and structure before the UI uses it.
 Live tracking uses the floor-keyed `WayPath.Coordinates` only: the regular
 minimap continues following the character while the matching viewed-floor

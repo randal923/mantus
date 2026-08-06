@@ -5,6 +5,7 @@ import type { HuntingPath } from "../../lib/hunt-finder/HuntingPlace";
 import { MinimapRegionStore } from "../../lib/minimap/MinimapRegionStore";
 import type { MinimapRoute } from "../../lib/minimap/MinimapRoute";
 import { drawMinimap } from "../../lib/minimap/drawMinimap";
+import { maskOutsideRoute } from "../../lib/minimap/maskOutsideRoute";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const MAP_HEIGHT = 300;
@@ -31,13 +32,26 @@ function floorCenter(
   };
 }
 
+/** Ground kept lit around an isolated route, in tiles. */
+const ISOLATION_RADIUS_TILES = 14;
+
 interface HuntRouteMapProps {
   mapName: string;
   name: string;
   path: HuntingPath;
+  /**
+   * Black out everything the route does not reach. Wanted for the ring walked
+   * inside a cave, never for the way there, which is all context.
+   */
+  isolate?: boolean;
 }
 
-export function HuntRouteMap({ mapName, name, path }: HuntRouteMapProps) {
+export function HuntRouteMap({
+  mapName,
+  name,
+  path,
+  isolate = false,
+}: HuntRouteMapProps) {
   const { t } = useAppTranslation();
   const hostRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -104,7 +118,19 @@ export function HuntRouteMap({ mapName, name, path }: HuntRouteMapProps) {
       showTownLabels: view.pixelsPerTile <= 2,
       route,
     });
-  }, [floor, path, regionVersion, route, store, width]);
+    if (isolate) {
+      maskOutsideRoute({
+        canvas,
+        waypoints: (path.Coordinates[String(floor)] ?? []).flatMap(
+          ([start, end]) => [start, end],
+        ),
+        center: view.center,
+        floor,
+        pixelsPerTile: view.pixelsPerTile,
+        radiusTiles: ISOLATION_RADIUS_TILES,
+      });
+    }
+  }, [floor, isolate, path, regionVersion, route, store, width]);
 
   return (
     <div ref={hostRef} className="overflow-hidden rounded-sm border border-black/70 bg-black">

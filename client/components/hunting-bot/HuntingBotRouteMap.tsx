@@ -10,6 +10,7 @@ import {
 import type { Position } from "@tibia/protocol";
 import { MinimapRegionStore } from "../../lib/minimap/MinimapRegionStore";
 import { drawMinimap } from "../../lib/minimap/drawMinimap";
+import { maskOutsideRoute } from "../../lib/minimap/maskOutsideRoute";
 import { minimapPixelToTile } from "../../lib/minimap/minimapPixelToTile";
 import { worldToMinimapPixel } from "../../lib/minimap/worldToMinimapPixel";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -17,6 +18,8 @@ import { useAppTranslation } from "../../i18n/useAppTranslation";
 const ZOOM_LEVELS = [1, 2, 3, 4, 6, 8] as const;
 const MAP_HEIGHT = 600;
 const GRAB_RADIUS = 9;
+/** Ground kept lit around an isolated route, in tiles. */
+const ISOLATION_RADIUS_TILES = 14;
 /** Pointer travel below this is a click, not a drag (matches the minimap). */
 const DRAG_SLOP = 4;
 
@@ -45,6 +48,8 @@ interface HuntingBotRouteMapProps {
   floor: number;
   ownPosition: Position | null;
   tool: "select" | "add";
+  /** Black out everything the route does not reach. */
+  isolate: boolean;
   onSelect: (index: number | null) => void;
   onMoveWaypoint: (index: number, position: Position) => void;
   onInsertWaypoint: (position: Position) => void;
@@ -65,6 +70,7 @@ export function HuntingBotRouteMap({
   floor,
   ownPosition,
   tool,
+  isolate,
   onSelect,
   onMoveWaypoint,
   onInsertWaypoint,
@@ -171,7 +177,19 @@ export function HuntingBotRouteMap({
       activeWaypointIndex:
         hoverIndex ?? highlightIndex ?? selectedIndex ?? runningIndex,
     });
+    if (isolate) {
+      maskOutsideRoute({
+        canvas,
+        waypoints,
+        ownPosition,
+        center,
+        floor,
+        pixelsPerTile,
+        radiusTiles: ISOLATION_RADIUS_TILES,
+      });
+    }
   }, [
+    isolate,
     center,
     floor,
     highlightIndex,

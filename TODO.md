@@ -72,17 +72,60 @@ limitations accepted during a session are recorded in the owning feature file
   `mailbox-opened`-adjacent state message, or push it on open, and render it
   in `MailboxModal` the way `DepotModal` now does. Owner: depot/mail.
 
+- **Only Darashia's rotworm caves are generated; the rest of the map waits**
+  (2026-08-06, Feature 111). `tools/buildHuntingPlaces.mjs` generates hunts for
+  the creature themes and regions listed in its `TARGETS` array, and that array
+  holds exactly one entry so each batch can be walked in-game before the next.
+  Every other uncovered cave on the map — hundreds of spawn clusters — still
+  has no Hunt Finder entry. Recommended fix: add a target per theme/region,
+  run `yarn hunts:build`, and check the new rings with
+  `yarn workspace server playtest:generated-hunt` before shipping the batch.
+  Owner: Hunt Finder (111).
+
+- **Generated hunts inherit xp/hour, loot/hour and level rather than measuring
+  them** (2026-08-06, Feature 111). A generated entry copies those figures from
+  the hand-written hunt whose creatures match most closely, raised by a
+  level-vs-experience curve fitted over the curated catalog when something far
+  stronger shares the cave. Spawn density, respawn time and walking distance —
+  all of which the generator knows — do not move the numbers, so a cave with
+  twice the worms claims the same xp/hour as its neighbour. The Hunt Finder
+  marks these entries "Estimated". Recommended fix: scale the inherited rate by
+  spawn count and creature experience per ring length, or measure it in a
+  playtest and write the measured value back. Owner: Hunt Finder (111).
+
+- **Generated cave names are compass bearings, not what players call them**
+  (2026-08-06, Feature 111). A gathered cave is named from its bearing and
+  distance out of town — "North Cave", "Far NorthWest Cave" — which is
+  unambiguous but not the name in anybody's head. The picker draws them on a
+  map, so the bearing is mostly redundant. Recommended fix: allow a name
+  override per cave in the tool's `TARGETS`, and use it when set. Owner: Hunt
+  Finder (111).
+
+- **Arming the bot inside a crowded cave can be refused as "out of range"**
+  (2026-08-06, Feature 112). Arming proves a walk from the character to the
+  nearest waypoint through live occupancy, so a route tile with a creature
+  standing on it — and a `/goto` or a step that lands the character in a
+  one-tile pocket behind it — refuses with `hunting-bot-out-of-range`. It was
+  hit repeatedly on a freshly spawned rotworm cave (74 spawns), where the
+  message reads as "you are too far away" while the character stands one tile
+  from the route. Recommended fix: distinguish "no walk right now" from "too
+  far", and either retry the join for a few ticks or say that something is in
+  the way. Owner: hunting bot (112).
+
 - **The hunting bot only walks; it never uses a ladder, hole, rope or door**
   (2026-08-01, Feature 112). Floor changes come in two shapes on this map:
   ramps are step-activated transitions, which the route search follows, but the
   8805 ladders, dropdowns, rope spots and rope holes are `use`/`use-with`
   actions that need their own intent, and a closed door needs opening. A route
   leg that depends on one cannot be traced (about 5 % of the 1669 legs across
-  all 131 guides) and, if hand-placed anyway, is skipped at run time. Multi-
-  floor guides — 49 of 131 — are therefore seeded one floor at a time.
-  Recommended fix: extend the waypoint chain with a typed `use` waypoint that
-  the bot executes through the existing `use-map` / `use-with` paths, and let
-  the tracer emit one when a leg's only connection is an action tile.
+  all 131 guides) and, if hand-placed anyway, is skipped at run time. Since
+  2026-08-06 a multi-floor guide seeds every floor's ring into one route and
+  the bot walks the ring of whichever floor the character stands on, so the
+  gap is now only the climb itself: the player takes the ladder, the bot
+  takes it from there. Recommended fix: extend the waypoint chain with a typed
+  `use` waypoint that the bot executes through the existing `use-map` /
+  `use-with` paths, and let the tracer emit one when a leg's only connection
+  is an action tile.
 - **The hunting bot's per-tick path budget is unprofiled at scale**
   (2026-08-01, Feature 112). Each running bot spends up to 4000 search nodes
   (~1.5 ms) once per waypoint, paced by a 400 ms cooldown, and the tick is
@@ -1048,3 +1091,17 @@ limitations accepted during a session are recorded in the owning feature file
   audit_log/items sweep indexes, 35-RT login, perf-harness blind spots
   (monsterCapacity asserts nothing / 1900-stage spawn flake / single-player
   only), one flaky + four pre-existing red storybook tests.
+
+- 2026-08-06: NPCs and monsters may still *idle onto* "blockpath" tiles
+  (tables, counters, stone piles). They are no longer stranded there —
+  `SpawnManager.spawnPositionFor` restores them and falls back to the slot
+  home (done.md 2026-08-06) — but Canary's `Npc::canWalkTo`
+  (`src/creatures/npcs/npc.cpp:1177`) additionally refuses a destination with
+  `toTile->hasHeight(1)` unless the NPC sets `ignoreHeight`, and
+  `Monster`'s random step goes through `Map::canWalkTo` with
+  `FLAG_PATHFINDING`, which refuses `TILESTATE_BLOCKPATH` outright. Ours uses
+  plain walkability for both, so a shopkeeper can be found standing on her
+  own counter. Recommended fix: gate idle wandering (`NpcBrain`/`MonsterBrain`
+  random steps, not chases and not player movement) on `world.isPathable`, and
+  carry an item `hasHeight` bit through the map converter if the NPC-only
+  height rule is wanted too. Owner: creatures/spawns/AI (Feature 9/10).

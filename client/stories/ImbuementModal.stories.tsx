@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { ImbuementModal } from "../components/imbuement/ImbuementModal";
 import { FORGE_INVENTORY, IMBUEMENT_WINDOW } from "./forgeFixtures";
 
@@ -57,6 +57,35 @@ export const BlockedOption: Story = {
     );
     await expect(await canvas.findByText("4/15")).toBeVisible();
     await expect(await canvas.findByRole("button", { name: "Imbue" })).toBeDisabled();
+  },
+};
+
+/**
+ * Hovering an astral source opens the same server-authored item card the
+ * inventory uses, with the stash share of what is held spelled out.
+ */
+export const MaterialTooltip: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    await userEvent.click(await canvas.findByRole("tab", { name: /Intricate/ }));
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "Intricate Vampirism" }),
+    );
+
+    const box = (await canvas.findByText("4/15")).closest("li");
+    await userEvent.hover(box!);
+    await expect(
+      await body.findByRole("tooltip", { name: "Bloody Pincers" }),
+    ).toBeVisible();
+    await expect(
+      await body.findByText("4 of these come from your stash."),
+    ).toBeVisible();
+
+    await userEvent.unhover(box!);
+    await waitFor(() =>
+      expect(body.queryByRole("tooltip", { name: "Bloody Pincers" })).toBeNull(),
+    );
   },
 };
 

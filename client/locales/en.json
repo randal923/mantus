@@ -1460,6 +1460,7 @@
     "configure": "Configure the Hunting Bot",
     "intro": "Pick a hunting ground, adjust its route, then start the hunt. Your character walks the waypoints and attacks the weakest monster in sight.",
     "selectHunt": "Choose a hunting ground",
+    "selectSpot": "Pick the cave you want to hunt — click an entrance on the map.",
     "back": "All hunts",
     "start": "Start hunt",
     "stop": "Stop hunt",
@@ -1481,6 +1482,7 @@
     "centre": "Centre the map on waypoint {{index}}",
     "floor": "Floor {{floor}}",
     "floorLabel": "Floor",
+    "isolate": "Isolate hunt",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "addHere": "Add my position",
@@ -2684,6 +2686,10 @@
       "huntingRoute": "Hunting Route",
       "way": "Way there",
       "route": "Hunt route"
+    },
+    "spots": {
+      "pick": "Choose a cave ({{count}})",
+      "tooltip": "{{name}} — enter at {{x}}, {{y}} (floor {{floor}})"
     }
   },
   "boosted": {
@@ -2861,6 +2867,7 @@
     "timeRemaining": "Time remaining",
     "effectAndDuration": "{{description}} Lasts for {{duration}} while equipped.",
     "materialFromStash": "{{name}} — {{stash}} from your stash",
+    "materialStashShare": "{{stash}} of these come from your stash.",
     "requiresSources": "Requires the following sources:",
     "successRate": "Success Rate",
     "activeCount": "{{count}} active",

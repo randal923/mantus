@@ -1460,6 +1460,7 @@
     "configure": "Configurar o Bot de Caça",
     "intro": "Escolha um local de caça, ajuste a rota e inicie a caçada. Seu personagem percorre os pontos e ataca o monstro mais fraco à vista.",
     "selectHunt": "Escolha um local de caça",
+    "selectSpot": "Escolha a caverna que quer caçar — clique em uma entrada no mapa.",
     "back": "Todas as caças",
     "start": "Iniciar caçada",
     "stop": "Parar caçada",
@@ -1481,6 +1482,7 @@
     "centre": "Centralizar o mapa no ponto {{index}}",
     "floor": "Andar {{floor}}",
     "floorLabel": "Andar",
+    "isolate": "Isolar caça",
     "zoomIn": "Aproximar",
     "zoomOut": "Afastar",
     "addHere": "Adicionar minha posição",
@@ -2684,6 +2686,10 @@
       "huntingRoute": "Rota de Caça",
       "way": "Caminho",
       "route": "Rota da caça"
+    },
+    "spots": {
+      "pick": "Escolha uma caverna ({{count}})",
+      "tooltip": "{{name}} — entrada em {{x}}, {{y}} (andar {{floor}})"
     }
   },
   "boosted": {
@@ -2861,6 +2867,7 @@
     "timeRemaining": "Tempo restante",
     "effectAndDuration": "{{description}} Dura {{duration}} enquanto equipado.",
     "materialFromStash": "{{name}} — {{stash}} do seu estoque",
+    "materialStashShare": "{{stash}} deles vêm do seu estoque.",
     "requiresSources": "Requer as seguintes fontes:",
     "successRate": "Taxa de sucesso",
     "activeCount": "{{count}} ativo(s)",

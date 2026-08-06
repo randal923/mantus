@@ -3,11 +3,14 @@ import type {
   HuntingPath,
   HuntingPlace,
   HuntingPosition,
+  HuntingSpot,
   HuntingTeamSize,
   HuntingVocation,
 } from "./HuntingPlace";
 
 const MAX_HUNTING_PLACES = 500;
+/** Caves one hunt may gather; a city has a handful, never hundreds. */
+const MAX_SPOTS = 40;
 const MAX_STRING_LENGTH = 2_000;
 const HUNTING_VOCATIONS = new Set<HuntingVocation>([
   "Druid",
@@ -112,6 +115,18 @@ function isEquipmentRecord(value: unknown): boolean {
   );
 }
 
+function isSpot(value: unknown): value is HuntingSpot {
+  return (
+    isRecord(value) &&
+    isBoundedString(value.Name) &&
+    value.Name.length > 0 &&
+    (value.Generated === undefined || typeof value.Generated === "boolean") &&
+    isPosition(value.Position) &&
+    (value.WayPath === undefined || isPath(value.WayPath)) &&
+    isPath(value.RoutePath)
+  );
+}
+
 function isMonster(value: unknown): value is HuntingMonster {
   return (
     isRecord(value) &&
@@ -154,6 +169,12 @@ function isHuntingPlace(value: unknown): value is HuntingPlace {
     value.Monsters.every(isMonster) &&
     isPath(value.WayPath) &&
     isPath(value.RoutePath) &&
+    (value.SpotName === undefined || isBoundedString(value.SpotName)) &&
+    (value.SpotPosition === undefined || isPosition(value.SpotPosition)) &&
+    (value.Spots === undefined ||
+      (Array.isArray(value.Spots) &&
+        value.Spots.length <= MAX_SPOTS &&
+        value.Spots.every(isSpot))) &&
     isEquipmentRecord(value.Equipments)
   );
 }

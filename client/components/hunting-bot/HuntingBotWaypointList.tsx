@@ -9,6 +9,8 @@ interface HuntingBotWaypointListProps {
   selectedIndex: number | null;
   /** The waypoint the running bot is walking toward, if any. */
   runningIndex: number | null;
+  /** The floor being shown on the map; other floors' rows are dimmed. */
+  activeFloor: number;
   onSelect: (index: number) => void;
   /** Fires with the hovered row's index, and null when the pointer leaves. */
   onHover: (index: number | null) => void;
@@ -21,6 +23,7 @@ export function HuntingBotWaypointList({
   waypoints,
   selectedIndex,
   runningIndex,
+  activeFloor,
   onSelect,
   onHover,
   onDelete,
@@ -53,6 +56,10 @@ export function HuntingBotWaypointList({
     >
       {waypoints.map((waypoint, index) => {
         const selected = index === selectedIndex;
+        // A cave's route holds a ring per floor. Rows for the floors the map
+        // is not showing stay readable but recede, so the ring on screen is
+        // the one the eye follows.
+        const onFloor = waypoint.z === activeFloor;
         return (
           <li
             key={`${waypoint.x}.${waypoint.y}.${waypoint.z}.${index}`}
@@ -63,7 +70,7 @@ export function HuntingBotWaypointList({
               selected
                 ? "border-ui-gold/60 bg-ui-gold/10"
                 : "border-ui-stone-light/15 bg-black/20"
-            }`}
+            } ${onFloor ? "" : "opacity-45"}`}
           >
             <button
               type="button"

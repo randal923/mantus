@@ -3504,3 +3504,313 @@ next login (the `withActionDisplay` backfill) or the next bar/bot edit; until
 then an out-of-stock object still shows the "Object #N" fallback. Types
 removed from the catalog keep rendering their last stored display, which is the
 desired behaviour.
+
+## 2026-08-06 — Feature 111 follow-up: hunts generated from the world's own spawn data
+
+**Problem**: the Hunt Finder shipped RubinOT's 132 hand-written guides, so a
+region got as many hunts as that guide happened to document. Darashia is the
+clearest case: one "Darashia Rotworm Caves" entry, while the map holds six
+separate rotworm cave systems around the city. Every uncovered cave is a hunt
+the finder cannot show and the hunting bot cannot be seeded with, and no amount
+of hand-copying scales to a map with thousands of spawn clusters.
+
+**What changed**: `tools/buildHuntingPlaces.mjs` (`yarn hunts:build`) writes
+hunts from data the repo already owns. `content/spawns/world-spawns.json` says
+where creatures stand, `server/data/otservbr.map.bin` says which tiles a
+character may walk, and clustering the first against the second finds the caves:
+
+- `clusterSpawnGroups.mjs` unions spawns within 12 tiles on a floor and merges
+  vertically overlapping groups, so one cave dug through three floors is one
+  hunt rather than three.
+- A cave already covered by a hand-written route is skipped, matched on both
+  geometry *and* creatures — a minotaur route two floors above a worm cave
+  shares coordinates without sharing a hunt.
+- Per floor, spawn homes snap to walkable tiles, the biggest shared cavern is
+  flood-filled, anchors are thinned to 6 tiles apart, and `orderHuntRing.mjs`
+  (nearest-neighbour then 2-opt over *walked* distances) closes the loop. Every
+  leg is then re-proved solvable under the bot's own runtime budget
+  (`pathSearchMargin` 40, `maxRuntimeVisited` 4000) by `findWalkPath.mjs`,
+  which mirrors `findRoutePath`'s step rules; a leg that fails is split at
+  tiles cut from the generous path, and an oversized ring is dropped whole
+  rather than truncated with an unproven closing leg.
+- `WayPath` is traced backwards from the ring through the map's own ladders,
+  holes, ropes and floor-change transitions, and a cave whose way down does not
+  actually open into the ring is rejected outright.
+- Creatures, resistances and valuable drops come from the monster and item
+  catalogs, counted only for spawns sharing the walked cavern. Level, xp/hour,
+  supplies, imbuements and equipment are inherited from the hand-written hunt
+  with the closest creature match, with a difficulty floor from a level-vs-xp
+  curve fitted over the curated catalog — a shared wall can otherwise put a
+  4800-xp creature on a "level 8" patrol.
+
+Entries carry `"Generated": true`; hand-written ones always win a rerun, and
+the catalog is rewritten by splicing curated entries in byte for byte, so a
+rerun diffs as the hunts it changed. The Hunt Finder card and detail header
+show an "Estimated" badge, since the route is real geometry but the hourly
+figures are inherited.
+
+First batch: the three uncovered Darashia rotworm cave systems (North,
+NorthEast, NorthWest — 74, 73 and 55 spawns), 135 hunts total.
+
+**Files**: `tools/buildHuntingPlaces.mjs`, `tools/clusterSpawnGroups.mjs`,
+`tools/orderHuntRing.mjs`, `tools/findWalkPath.mjs`,
+`tools/readMapGeometry.mjs` (+ three `.test.mjs`),
+`client/public/assets/hunting/hunting_places.json`,
+`client/lib/hunt-finder/{HuntingPlace.ts,parseHuntingPlaces.ts}`,
+`client/components/hunt-finder/{HuntingPlaceCard,HuntingPlaceDetails}.tsx`,
+client locales, `server/src/huntingBot/generatedHuntRoutes.test.ts`,
+`server/src/playtest/scenarios/generatedHuntRoute.ts`, root and server
+`package.json`.
+
+**Verified**: `server/src/huntingBot/generatedHuntRoutes.test.ts` walks every
+generated ring through the *server's* `findRoutePath` over the real map — 22
+checks, all green — and was proved able to fail by moving one waypoint 500
+tiles (2 failures, restored). `yarn test:tools` (13 new tool tests), client
+hunt-finder/hunting-bot suites, and `yarn typecheck` are clean. End to end,
+`yarn workspace server playtest:generated-hunt` seeded the bot with "Darashia
+Rotworm Cave North" exactly as the Hunt Finder does: it armed on the generated
+ring, walked 37 single-tile steps, advanced a waypoint and engaged 10 rotworms
+in a cave that had no hunt at all before.
+
+**Residual risk**: xp/hour and loot/hour on generated hunts are inherited, not
+measured (TODO.md). Only the Darashia rotworm batch is generated so far; the
+rest of the world's uncovered caves wait on `TARGETS` (TODO.md). Arming inside
+a freshly spawned, crowded cave can be refused with "out of range" when
+creatures block the joining walk (TODO.md).
+
+## 2026-08-06 — NPCs and monsters permanently deleted by a dormant "blockpath" tile
+
+**Problem**: reported as "the Asima NPC in Darashia is sometimes not spawned",
+the same symptom that was blamed on the client's atlas discard on 2026-08-03.
+That client fix was real, but a second, purely server-side fault was still
+live: once it hit, the NPC was gone for the whole life of the process, so a
+player only ever saw an empty shop.
+
+`SpawnManager.trySpawn` gated a spawn on `world.isPathable(position)`, while
+creature movement gates on `world.isWalkable(position)`. The two disagree on
+"blockpath" tiles — walkable ground a table, counter or stone pile makes
+unpathable (`appearance.flags.notPathable` → `blocksPath` in the converter,
+Canary's `TILESTATE_BLOCKPATH`). Asima's home is 33220,32403,7; the counter
+tile one step west, 33219,32403,7 (items 2434 + 2816), is `walkable=true,
+pathable=false`. Her idle walk (radius 1) may step onto it — but when the last
+player left the area and the slot went dormant *there*, the restore kept
+retrying that one tile every `retryMs` forever: `slot.dormantCreature.position`
+never resets, so she never came back.
+
+Systemic, not one NPC: over the world spawn file, **8,275 of 83,576 enabled
+slots (9.9 %), 168 of them NPCs**, have a blockpath tile inside their wander
+box and could be deleted this way, and **79 slots could never spawn at all**
+because their home tile is blockpath (lion warlock, several dragon lords, fire
+elementals).
+
+**Canary** (a879c93): `Map::placeCreature` calls
+`tile->queryAdd(0, creature, 1, FLAG_IGNOREBLOCKITEM | FLAG_IGNOREFIELDDAMAGE)`
+— no `FLAG_PATHFINDING`, so blockpath never blocks a placement (tile.cpp:741
+only refuses it *with* that flag), and it then falls back to a shuffled ring of
+neighbours. `SpawnNpc::spawnNpc` always places at the slot's own `sb.pos` and
+passes `forced=true`; Canary never remembers where a creature was standing.
+
+**What changed**: `SpawnManager.trySpawn` now asks `spawnPositionFor(slot)`,
+which prefers the dormant creature's own tile and falls back to the slot home,
+each checked by `canPlaceAt` = tile exists + `isWalkable` + not occupied
+(Canary's placement gate). The chosen tile is applied with `creature.moveTo`
+before `world.addCreature`. `gridMapData` gained a `blocksPath` list so the
+fixture map can model those tiles.
+
+**Files**: `server/src/spawn/SpawnManager.ts`,
+`server/src/spawn/SpawnManager.test.ts`, `server/src/gridMapData.ts`,
+`server/src/playtest/scenarios/npcSpawnCycle.ts` (new), `server/package.json`.
+
+**Verified**: three new SpawnManager cases — restore from a dormant blockpath
+tile, fall back to home when that tile is taken, and spawn on a blockpath home
+tile — all three proved able to fail by restoring the old `isPathable` gate (3
+failures, then 15/15 green). End to end, the new `yarn workspace server
+playtest:npc-spawn` drives the real server over the real map through eight
+phases (first approach, 10 dormancy cycles, 10 instant cycles, standing on her
+home tile, 3 relogins, a floor round trip, two clients, and a 60 s idle watch),
+replaying the client's own creature model to decide whether she is on screen,
+and greeting her ("hi" ignores the client's known-creature set) to tell a spawn
+fault from a visibility fault. Before the fix it failed every phase after the
+first with "SPAWN FAULT: she is not in the world"; after it, all eight pass.
+Full server suite (1660) and `yarn typecheck` clean.
+
+**Residual risk**: a running production server still has whatever creatures it
+already stranded — they come back on the next restart. NPCs idling *onto*
+tables at all is still a parity gap (Canary's `Npc::canWalkTo` refuses tiles
+with `hasHeight(1)`); recorded in TODO.md.
+
+
+## 2026-08-06 — Feature 111 follow-up: a city's caves are one hunt with pickable entrances
+
+**Problem**: the first generated batch shipped Darashia's three uncovered
+rotworm caves as three cards, so the Hunt Finder listed four near-identical
+"Darashia Rotworm ..." tiles with the same creatures, level, gear and drops.
+The catalog is browsed by hunt, not by cave; four cards for one hunt is noise.
+
+**What changed**: caves gather onto the hunt that describes them. A hunting
+place may now carry `SpotName` (what to call its own cave), `SpotPosition`
+(where that cave is entered) and `Spots` — the other caves, each with its own
+entrance and route. `huntingSpots` normalises any entry into a list of caves,
+own cave first, so a hunt with a single cave needs no special case anywhere.
+
+Picking a multi-cave hunt now asks *which* cave on a map of every entrance:
+`HuntSpotMap` draws the surface around them, pins each entrance with its name
+and a tooltip carrying the walk-to coordinates, and clicking one opens that
+cave's waypoints in the route editor. Saved routes name the cave they came
+from (`Darashia Rotworm Caves · North Cave`), which `parseHuntRouteName` reads
+back so reopening the window lands on the same cave; a route saved before this
+existed still matches its hunt.
+
+Entrances are traced to the surface rather than left underground: the
+generator walks its descent chain up through the map's ladders, holes and
+ropes and pins the tile on open ground, so the picker shows where a player
+starts walking rather than a tile inside the rock two floors down. The map
+fills its container and reserves pixel room at the edges so a pin's name is
+never clipped.
+
+**Files**: `tools/buildHuntingPlaces.mjs`,
+`client/public/assets/hunting/hunting_places.json`,
+`content/source-manifest.json`,
+`client/lib/hunt-finder/{HuntingPlace.ts,parseHuntingPlaces.ts,huntingSpots.ts,
+spotMapView.ts}`, `client/lib/hunting-bot/{guideRouteFor,huntRouteName,
+parseHuntRouteName}.ts`, `client/components/hunt-finder/{HuntSpotMap.tsx,
+HuntingPlaceDetails.tsx}`, `client/components/hunting-bot/{HuntingBotModal,
+HuntingBotRouteEditor}.tsx`, client locales, plus tests
+(`huntingSpots.test.ts`, `spotMapView.test.ts`, `huntRouteName.test.ts`,
+`HuntingBotModal.stories.tsx` ChooseCave, updated
+`server/src/huntingBot/generatedHuntRoutes.test.ts` and the
+`generatedHuntRoute` playtest, which now address caves by name).
+
+**Verified**: the Darashia catalog collapsed from 4 cards to 1 with 4 caves
+(`NorthWest`, `North`, `NorthEast`, `Far NorthWest`), every entrance on floor
+7. The server gate re-walks all 3 generated rings *and* their entrances
+through `findRoutePath` (25 checks). A headless-Chromium Storybook run drives
+the whole flow — search → one card → pin → editor titled "Darashia Rotworm
+Caves · North Cave" with the matching saved route — and a screenshot of that
+step confirmed the map fills the panel with every pin labelled. Client unit
+(28 hunt tests), `yarn test:tools`, and `yarn typecheck` clean.
+
+**Residual risk**: cave names are compass-derived ("Far NorthWest Cave"), not
+what players call them. The picker shows every cave of a hunt at once, so a
+hunt gathering a dozen caves would crowd its labels — none does today.
+
+
+## 2026-08-06 — Feature 112 follow-up: the route map shows one hunt, not the whole floor
+
+**Problem**: a cave floor on the baked minimap is a warren of unrelated caves
+that all look alike, so the route being edited was lost among a dozen
+neighbours — most of the map was ground the hunt never touches.
+
+**What changed**: `maskOutsideRoute` lights only what the route reaches. The
+lit shape is a round-capped stroke along the waypoint ring (closing leg
+included) plus a disc on the character, drawn 14 tiles wide; everything else
+becomes the automap's own unexplored black. It runs after the map is drawn and
+changes no state, so panning, zooming and dragging behave exactly as before —
+and because the shape follows the waypoints, a waypoint being dragged carries
+its lit ground with it and editing never happens blind.
+
+The hunting-bot editor isolates by default behind an "Isolate hunt" checkbox,
+and the Hunt Finder isolates its "Hunt route" view while leaving "How to get
+there" as the wide-context map it needs to be.
+
+The lit shape is composited once from an off-screen stencil: `destination-in`
+clips to whatever it is handed, so drawing the ring and then the character's
+disc straight onto the map erased the ring instead of joining it — which is
+exactly what the first attempt did, leaving a lone circle of cave.
+
+**Files**: `client/lib/minimap/maskOutsideRoute.ts` (new),
+`client/components/hunting-bot/{HuntingBotRouteMap,HuntingBotRouteEditor}.tsx`,
+`client/components/hunt-finder/{HuntRouteMap,HuntingPlaceDetails}.tsx`, client
+locales, `client/stories/HuntingBotModal.stories.tsx` (IsolatedRoute).
+
+**Verified**: a headless-Chromium story reads the map canvas back and asserts
+that unchecking the box more than triples the lit pixels; screenshots of both
+states confirmed the isolated view shows the cave and its numbered ring on
+black. Client unit suite (409), `yarn typecheck` clean.
+
+**Residual risk**: isolation is geometric, not a cave flood fill — the client
+has only baked colour tiles, no walkability — so a neighbouring cave within 14
+tiles of the ring stays partly lit.
+
+
+## 2026-08-06 — Astral sources explain themselves: item cards on the imbuing window
+
+**Problem**: the imbuing window lists the astral sources an imbuement needs,
+but hovering one showed nothing beyond a browser `title` with its name — no
+weight, no gold value, no description, while every other item in the client
+(inventory, bestiary loot, market, auctions) opens a proper card on hover.
+
+**What changed**: `ImbuementMaterial` now carries the same server-authored
+`tooltip` the inventory sends. `buildImbuementOptions` fills it from
+`toItemTooltip(itemType)` — type-level only, since an astral source is a stack
+the player may not own yet, so there is no instance to project; the field stays
+optional and is omitted for the `name: "unknown"` case where the item catalog
+has no such type (the `title` fallback survives for that). The material box
+renders `ItemTooltip` through a portal on hover and on keyboard focus, with the
+stash share of what is held spelled out on a chip below the card, so the hint
+that used to live in `title` is not lost.
+
+Placement differs from the inventory's cards on purpose: those sit in a narrow
+right-hand panel and open to their left, which inside the shrine's max-w-6xl
+dialog dropped the card on top of the very sources it describes. Here it is
+centred on the hovered box and anchored by its *bottom* edge whenever the row
+sits in the lower half of the screen — where the apply panel always is — so a
+card of any height clears the row without being measured first, and flips
+below only when the panel is near the top of a short viewport.
+
+**Files**: `protocol/src/imbuements.ts`,
+`server/src/imbuement/buildImbuementOptions.ts`,
+`client/components/imbuement/ImbuementMaterialBox.tsx`, client locales (en,
+pt-BR: `imbuement.materialStashShare`), `client/stories/forgeFixtures.ts`,
+`client/stories/ImbuementModal.stories.tsx` (MaterialTooltip).
+
+**Verified**: a headless-Chromium story hovers the intricate tier's bloody
+pincers, asserts the card and the "4 of these come from your stash." line
+appear and that both vanish on unhover; a screenshot confirmed the card clears
+the source row. Server imbuement suite (18) and client unit suite (425) pass,
+`yarn typecheck` clean.
+
+**Residual risk**: the window now carries one card per material row (144 rows
+across the whole pinned catalog, ~20 KB) instead of a name. It is sent on
+open/apply/clear only, so no tick cost — but if the catalog grows much larger
+this is the field to dedupe by item type.
+
+
+## 2026-08-06 — Feature 112 follow-up: a cave's floors are one route
+
+**Problem**: a generated cave describes a ring on each floor it occupies, but
+seeding took one floor only. The editor offered floor 8 and floor 9 buttons
+while floor 9 was empty, so half of every multi-floor cave was invisible and
+unhuntable — and the hand-written guides (49 of 131 cover several floors) had
+the same hole.
+
+**What changed**: `guideRouteFor` seeds every floor the cave describes, one
+floor's ring after another, with the character's own floor leading so arming
+joins the nearest one. The bot then walks the ring belonging to the floor the
+character is standing on and steps over the rest in the same tick
+(`nextIndexOnFloor`), rather than burning its skip budget on waypoints it can
+never path to and stopping with "unreachable". Climb a ladder yourself and the
+ring below takes over; a floor the route never visits still stops the bot
+exactly as before.
+
+The editor's waypoint list dims the rows belonging to floors the map is not
+showing, and the isolation mask already worked per floor, so each floor draws
+its own lit cave.
+
+**Files**: `server/src/huntingBot/HuntingBot.ts`,
+`client/lib/hunting-bot/guideRouteFor.ts`,
+`client/components/hunting-bot/{HuntingBotWaypointList,HuntingBotRouteEditor}.tsx`,
+plus tests (`HuntingBot.test.ts` ×3, `guideRouteFor.test.ts` new,
+`HuntingBotModal.stories.tsx` ChooseCave) and the `generatedHuntRoute`
+playtest, which now seeds all floors and dives to the lower one mid-run.
+
+**Verified**: seeding the Far NorthWest cave yields 7 waypoints on floor 8 and
+23 on floor 9 (was 7 and none); screenshots of both floors show each ring
+drawn, numbered and isolated. Server unit tests cover walking the standing
+floor, picking up the other ring after a floor change, and still stopping on a
+floor the route never visits. End to end, `playtest:generated-hunt` armed on
+floor 8, then `/goto` to floor 9 mid-hunt and the bot kept hunting there
+instead of giving up. `yarn typecheck` and the client/server suites are clean.
+
+**Residual risk**: the bot still cannot use the ladder between the rings — the
+player makes the climb (TODO.md, Feature 112).

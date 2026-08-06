@@ -109,8 +109,29 @@ export class HuntingBot {
     if (session.huntingBotWaypointIndex >= waypoints.length) {
       session.huntingBotWaypointIndex = 0;
     }
-    const waypoint = waypoints[session.huntingBotWaypointIndex];
+    let waypoint = waypoints[session.huntingBotWaypointIndex];
     if (!waypoint) return;
+    // One saved route covers a cave's several floors, and the bot cannot use
+    // a ladder: it walks the ring on the floor the character is standing on
+    // and steps over the rest, in the same tick so no walking time is lost.
+    // Climb down yourself and the ring below picks up. A floor with no
+    // waypoints at all falls through to the path failure below, which stops
+    // the bot the way it always did.
+    if (waypoint.z !== player.position.z) {
+      const next = nextIndexOnFloor(
+        waypoints,
+        session.huntingBotWaypointIndex,
+        player.position.z,
+      );
+      const onFloor = next === null ? undefined : waypoints[next];
+      if (next !== null && onFloor) {
+        session.huntingBotSkips = 0;
+        session.huntingBotPathFailures = 0;
+        session.huntingBotWaypointIndex = next;
+        waypoint = onFloor;
+        this.sendStatus(session, null);
+      }
+    }
     if (samePosition(player.position, waypoint)) {
       session.huntingBotSkips = 0;
       session.huntingBotPathFailures = 0;
@@ -170,6 +191,23 @@ export class HuntingBot {
 
 function samePosition(left: Position, right: Position): boolean {
   return left.x === right.x && left.y === right.y && left.z === right.z;
+}
+
+/**
+ * The next waypoint on `floor`, searching forward from `from` and wrapping,
+ * so the ring keeps its walking order instead of jumping to whichever one
+ * happens to be nearest. Null when the floor holds none.
+ */
+function nextIndexOnFloor(
+  waypoints: ReadonlyArray<Position>,
+  from: number,
+  floor: number,
+): number | null {
+  for (let step = 0; step < waypoints.length; step++) {
+    const index = (from + step) % waypoints.length;
+    if (waypoints[index]?.z === floor) return index;
+  }
+  return null;
 }
 
 /**

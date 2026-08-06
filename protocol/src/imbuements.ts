@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { itemTooltipSchema } from "./item";
 
 /**
  * Imbuements (Feature 78), transcribed from pinned Canary
@@ -99,6 +100,12 @@ const imbuementMaterialSchema = z
     available: z.number().int().min(0),
     /** The stash share of `available`; drives the "from your stash" hint. */
     stashAvailable: z.number().int().min(0),
+    /**
+     * The same server-authored hover card the inventory shows, so an astral
+     * source can be inspected without leaving the shrine. Absent only when the
+     * item catalog has no such type (the `name: "unknown"` case).
+     */
+    tooltip: itemTooltipSchema.optional(),
   })
   .strict();
 

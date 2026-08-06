@@ -5,6 +5,7 @@ import type {
   ImbuementWindowStateMessage,
   InventoryItem,
   InventoryState,
+  ItemTooltipData,
 } from "@tibia/protocol";
 
 function makeForgeItem(input: {
@@ -170,6 +171,43 @@ export const FORGE_INVENTORY: InventoryState = {
   slotCount: 20,
 };
 
+/** Type-level cards the server ships with every astral source. */
+const MATERIAL_TOOLTIPS = {
+  9685: {
+    name: "Vampire Teeth",
+    typeLine: "Creature Products",
+    spriteId: 13_587,
+    affixes: [],
+    weight: 30,
+    description: "They are still dripping with blood.",
+    worth: 100,
+  },
+  9633: {
+    name: "Bloody Pincers",
+    typeLine: "Creature Products",
+    spriteId: 13_547,
+    affixes: [],
+    weight: 90,
+    worth: 200,
+  },
+  9663: {
+    name: "Piece Of Dead Brain",
+    typeLine: "Creature Products",
+    spriteId: 13_579,
+    affixes: [],
+    weight: 230,
+    worth: 500,
+  },
+  9640: {
+    name: "Rope Belt",
+    typeLine: "Creature Products",
+    spriteId: 13_556,
+    affixes: [],
+    weight: 40,
+    worth: 200,
+  },
+} satisfies Record<number, ItemTooltipData>;
+
 export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
   type: "imbuement-window-state",
   mode: "item",
@@ -212,6 +250,7 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
           count: 25,
           available: 25,
           stashAvailable: 0,
+          tooltip: MATERIAL_TOOLTIPS[9685],
         },
       ],
       canApply: true,
@@ -234,6 +273,7 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
           count: 25,
           available: 25,
           stashAvailable: 0,
+          tooltip: MATERIAL_TOOLTIPS[9685],
         },
         {
           itemTypeId: 9633,
@@ -241,6 +281,7 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
           count: 15,
           available: 4,
           stashAvailable: 4,
+          tooltip: MATERIAL_TOOLTIPS[9633],
         },
       ],
       canApply: false,
@@ -263,6 +304,7 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
           count: 25,
           available: 25,
           stashAvailable: 0,
+          tooltip: MATERIAL_TOOLTIPS[9685],
         },
         {
           itemTypeId: 9633,
@@ -270,6 +312,7 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
           count: 15,
           available: 4,
           stashAvailable: 4,
+          tooltip: MATERIAL_TOOLTIPS[9633],
         },
         {
           itemTypeId: 9663,
@@ -277,6 +320,7 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
           count: 5,
           available: 0,
           stashAvailable: 0,
+          tooltip: MATERIAL_TOOLTIPS[9663],
         },
       ],
       canApply: false,
@@ -299,6 +343,7 @@ export const IMBUEMENT_WINDOW: ImbuementWindowStateMessage = {
           count: 25,
           available: 30,
           stashAvailable: 5,
+          tooltip: MATERIAL_TOOLTIPS[9640],
         },
       ],
       canApply: true,

@@ -17,17 +17,27 @@ const TOKEN = "dev-generated-hunt-scenario";
 // One fixed character, reused every run: the playtest database persists, and
 // a fresh name per run fills the account's character slots.
 const CHARACTER = "Ringer Probe";
-const HUNT = process.env.PLAYTEST_HUNT ?? "Darashia Rotworm Cave North";
+/** A hunt name, one of its cave names, or "hunt · cave"; the first if unset. */
+const HUNT = process.env.PLAYTEST_HUNT ?? "";
 const WATCH_MS = 45_000;
+
+interface RoutePath {
+  readonly Coordinates: Readonly<
+    Record<string, ReadonlyArray<readonly [Position, Position]>>
+  >;
+}
+
+interface HuntingSpot {
+  readonly Name: string;
+  readonly Generated?: boolean;
+  readonly RoutePath: RoutePath;
+}
 
 interface HuntingPlace {
   readonly Name: string;
   readonly Generated?: boolean;
-  readonly RoutePath: {
-    readonly Coordinates: Readonly<
-      Record<string, ReadonlyArray<readonly [Position, Position]>>
-    >;
-  };
+  readonly RoutePath: RoutePath;
+  readonly Spots?: ReadonlyArray<HuntingSpot>;
 }
 
 const step = (text: string) => console.log(`\n▶ ${text}`);
@@ -52,19 +62,47 @@ const places = JSON.parse(
   ),
 ) as ReadonlyArray<HuntingPlace>;
 
-const place = places.find((candidate) => candidate.Name === HUNT);
-if (!place?.Generated) {
-  throw new Error(`"${HUNT}" is not a generated hunt in the catalog`);
+// Every route the generator wrote: whole hunts, and caves gathered onto a
+// hand-written hunt. Named exactly as the Hunt Finder names them for the bot.
+const routes = places.flatMap((place) => [
+  ...(place.Generated === true
+    ? [{ name: place.Name, routePath: place.RoutePath }]
+    : []),
+  ...(place.Spots ?? [])
+    .filter((spot) => spot.Generated === true)
+    .map((spot) => ({
+      name: `${place.Name} · ${spot.Name}`,
+      routePath: spot.RoutePath,
+    })),
+]);
+const chosen =
+  routes.find((route) => route.name === HUNT) ??
+  routes.find((route) => route.name.endsWith(`· ${HUNT}`)) ??
+  (HUNT === "" ? routes[0] : undefined);
+if (!chosen) {
+  throw new Error(
+    `no generated hunt matches "${HUNT}"; have ${routes
+      .map((route) => route.name)
+      .join(", ")}`,
+  );
 }
+const huntName = chosen.name;
 
-// The floor the Hunt Finder would seed from: the lowest one the guide covers.
-const floor = Object.keys(place.RoutePath.Coordinates)
+// Seeded exactly as the Hunt Finder seeds it: every floor the cave covers,
+// the entry floor first, since the bot walks the ring of whichever floor the
+// character is standing on.
+const floors = Object.keys(chosen.routePath.Coordinates)
   .map(Number)
-  .sort((left, right) => left - right)[0]!;
-const waypoints: Position[] = [];
-for (const [start] of place.RoutePath.Coordinates[String(floor)] ?? []) {
-  waypoints.push({ x: start.x, y: start.y, z: start.z });
-}
+  .sort((left, right) => left - right);
+const floor = floors[0]!;
+const waypoints: Position[] = floors.flatMap((value) =>
+  (chosen.routePath.Coordinates[String(value)] ?? []).map(([start]) => ({
+    x: start.x,
+    y: start.y,
+    z: start.z,
+  })),
+);
+const lowerFloor = floors.find((value) => value !== floor) ?? null;
 
 const externalUrl = process.env.PLAYTEST_SERVER_URL;
 const server = externalUrl
@@ -87,7 +125,7 @@ try {
   const saveMark = client.mark();
   client.send({
     type: "update-hunting-bot-route",
-    route: { huntName: HUNT.slice(0, 64), waypoints },
+    route: { huntName: huntName.slice(0, 64), waypoints },
   });
   const saved = await client.waitFor(
     isType("hunting-bot-route"),
@@ -97,12 +135,14 @@ try {
   if (saved.route.waypoints.length !== waypoints.length) {
     throw new Error("the server stored a different route than it was sent");
   }
-  ok(`server stored ${saved.route.waypoints.length} waypoints (floor ${floor})`);
+  ok(
+    `server stored ${saved.route.waypoints.length} waypoints across floors ${floors.join(", ")}`,
+  );
 
   // A creature standing on the tile pushes /goto to a neighbour, which in a
   // cave can be a pocket with no walk back to the route, so the entry tile is
   // whichever of the first few waypoints the bot will actually arm from.
-  step(`walking into "${HUNT}" and arming the bot`);
+  step(`walking into "${huntName}" and arming the bot`);
   let armedAt: number | null = null;
   for (const entry of [...waypoints.slice(0, 8), ...waypoints.slice(0, 8)]) {
     const gotoMark = client.mark();
@@ -185,6 +225,37 @@ try {
     throw new Error("nothing in this cave was worth attacking");
   }
 
+  if (lowerFloor !== null) {
+    step(`climbing to floor ${lowerFloor}: the ring there takes over`);
+    const deeper = (chosen.routePath.Coordinates[String(lowerFloor)] ?? [])[0]?.[0];
+    if (!deeper) throw new Error(`no waypoints on floor ${lowerFloor}`);
+    const diveMark = client.mark();
+    client.say(`/goto ${deeper.x} ${deeper.y} ${deeper.z}`);
+    await client.waitFor(isType("gm-response"), "gm-response for /goto", {
+      since: diveMark,
+    });
+    await sleep(12_000);
+    const below = client.messages
+      .slice(diveMark)
+      .filter(isType("creature-moved"))
+      .filter((message) => message.creatureId === client.playerId);
+    const stoppedBelow = client.messages
+      .slice(diveMark)
+      .filter(isType("hunting-bot-status"))
+      .filter((message) => !message.enabled);
+    if (stoppedBelow.length > 0) {
+      throw new Error(
+        `the bot gave up after the floor change: ${stoppedBelow
+          .map((message) => message.stopReason ?? "unknown")
+          .join(", ")}`,
+      );
+    }
+    ok(
+      `still hunting on floor ${lowerFloor}: ${below.length} steps, ` +
+        `${below.filter((move) => move.position.z === lowerFloor).length} of them there`,
+    );
+  }
+
   step("stopping the bot");
   const stopMark = client.mark();
   client.send({ type: "set-hunting-bot-enabled", enabled: false });
@@ -197,11 +268,11 @@ try {
   ok("stopped");
 
   client.terminate();
+  console.log("\ngenerated hunt route scenario passed");
 } catch (cause) {
   failed = true;
   console.error("\n✗ scenario failed:", cause);
 } finally {
   await server?.stop();
+  process.exit(failed ? 1 : 0);
 }
-
-process.exit(failed ? 1 : 0);

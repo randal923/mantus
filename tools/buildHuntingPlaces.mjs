@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { clusterSpawnGroups } from "./clusterSpawnGroups.mjs";
@@ -99,6 +100,17 @@ const enabledSlots = spawns.slots.filter(
   (slot) => slot.kind === "monster" && slot.enabled,
 );
 
+// Spots are generated data living on a hand-written entry, so a rerun starts
+// from the entry as its author left it and re-attaches what it finds today.
+const edited = new Set();
+for (const [index, place] of catalog.entries()) {
+  if (place.Generated === true) continue;
+  if (place.Spots === undefined && place.SpotName === undefined) continue;
+  delete place.Spots;
+  delete place.SpotName;
+  edited.add(index);
+}
+
 const levelCurve = fitLevelCurve();
 
 const generated = [];
@@ -109,9 +121,12 @@ for (const target of TARGETS) {
       target.typeIds.includes(slot.typeId) && inArea(slot.home, target.area),
   );
   const groups = clusterSpawnGroups(targeted);
+  const built = [];
+  const owners = new Map();
   for (const group of groups) {
     const covered = curatedCovering(group, target.typeIds);
     if (covered) {
+      owners.set(covered, (owners.get(covered) ?? 0) + 1);
       report.push(
         `skip ${describe(group)} — already covered by "${covered.Name}"`,
       );
@@ -122,24 +137,60 @@ for (const target of TARGETS) {
       report.push(`skip ${describe(group)} — no walkable ring, or no way in`);
       continue;
     }
-    generated.push(place);
+    built.push({ place, group });
     report.push(
-      `add  "${place.Name}" — ${group.slots.length} spawns, ${
+      `cave ${place.Name} — ${group.slots.length} spawns, ${
         Object.entries(place.RoutePath.Coordinates)
           .map(([floor, segments]) => `floor ${floor}: ${segments.length} legs`)
           .join(", ")
       }`,
     );
   }
-}
+  if (built.length === 0) continue;
 
-const named = new Set(curated.map((place) => place.Name));
-for (const place of generated) {
-  let name = place.Name;
-  let suffix = 2;
-  while (named.has(name)) name = `${place.Name} ${suffix++}`;
-  place.Name = name;
-  named.add(name);
+  // One city's rotworm caves are one hunt with several ways in, not several
+  // hunts: the creatures, the gear and the drops are the same, so they gather
+  // onto the hand-written entry that already describes them when there is one.
+  const [owner] = [...owners.entries()].sort(
+    (left, right) => right[1] - left[1],
+  )[0] ?? [];
+  const host = owner ?? built[0].place;
+  if (!owner) host.Name = target.groupName ?? `${target.name}s`;
+  const rest = owner ? built : built.slice(1);
+  const town = map.towns.find(
+    (candidate) => candidate.name.toLowerCase() === target.town.toLowerCase(),
+  );
+  const named = nameSpots(
+    [
+      { place: host, box: routeBox(host) },
+      ...rest.map(({ place, group }) => ({ place, box: group.box })),
+    ],
+    town,
+  );
+  host.SpotName = named[0];
+  host.Spots = rest.map(({ place }, index) => ({
+    Name: named[index + 1],
+    Generated: true,
+    Position: place.SpotPosition,
+    WayPath: place.WayPath,
+    RoutePath: place.RoutePath,
+  }));
+  // The hand-written host describes its own cave but never says where it is
+  // entered from the surface, so the same trace answers for it too.
+  host.SpotPosition = surfaceEntranceOf(host, town);
+  if (owner) {
+    edited.add(catalog.indexOf(owner));
+    report.push(
+      `gather ${host.Spots.length} caves onto "${host.Name}" as ${host.Spots
+        .map((spot) => spot.Name)
+        .join(", ")}`,
+    );
+  } else {
+    generated.push(host);
+    report.push(
+      `add "${host.Name}" with ${host.Spots.length} more caves`,
+    );
+  }
 }
 
 const merged = [...curated, ...generated];
@@ -148,8 +199,30 @@ console.log(
   `hunting places: ${curated.length} curated + ${generated.length} generated`,
 );
 if (!dryRun) {
-  writeFileSync(outPath, renderCatalog());
+  const rendered = renderCatalog();
+  writeFileSync(outPath, rendered);
   console.log(`written: ${outPath}`);
+  if (outPath === catalogPath) repinCatalogHash(rendered);
+}
+
+/**
+ * `tools/importCanaryCreatures.mjs` refuses to run unless the catalog matches
+ * the hash pinned in the source manifest — it is what keeps a hand edit from
+ * silently desyncing the Hunt Finder's creatures from the world's spawns. A
+ * generated edit has to move that pin with it.
+ */
+function repinCatalogHash(rendered) {
+  const manifestPath = join(repoRoot, "content/source-manifest.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const source = manifest.sources?.huntingGroundSpawns;
+  if (!source?.huntingPlacesSha256) {
+    throw new Error("source manifest has no hunting-place hash to re-pin");
+  }
+  source.huntingPlacesSha256 = createHash("sha256")
+    .update(rendered)
+    .digest("hex");
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(`re-pinned huntingPlacesSha256: ${source.huntingPlacesSha256}`);
 }
 
 /**
@@ -158,16 +231,24 @@ if (!dryRun) {
  * changed rather than as a reformat of a thousand curated lines.
  */
 function renderCatalog() {
-  const kept = entrySpans
-    .filter((_, index) => catalog[index]?.Generated !== true)
-    .map((span) => catalogText.slice(span.start, span.end));
-  const added = generated.map((place) =>
-    JSON.stringify(place, null, 4)
-      .split("\n")
-      .map((line, index) => (index === 0 ? line : `    ${line}`))
-      .join("\n"),
-  );
+  const kept = entrySpans.flatMap((span, index) => {
+    const place = catalog[index];
+    if (!place || place.Generated === true) return [];
+    return [
+      edited.has(index)
+        ? indented(place)
+        : catalogText.slice(span.start, span.end),
+    ];
+  });
+  const added = generated.map(indented);
   return `[\n    ${[...kept, ...added].join(",\n    ")}\n]`;
+}
+
+function indented(place) {
+  return JSON.stringify(place, null, 4)
+    .split("\n")
+    .map((line, index) => (index === 0 ? line : `    ${line}`))
+    .join("\n");
 }
 
 /** Byte spans of the array's top-level entries, quotes and escapes respected. */
@@ -277,8 +358,8 @@ function buildPlace(group, target) {
     (candidate) => candidate.name.toLowerCase() === target.town.toLowerCase(),
   );
   const entrance = firstWaypoint(coordinates);
-  const approach = traceApproach(entrance, town);
-  if (!reachableFromApproach(approach, entrance)) return null;
+  const { wayPath, surface } = traceApproach(entrance, town);
+  if (!reachableFromApproach(wayPath, entrance)) return null;
 
   return {
     Name: `${target.name} ${compassOf(group.box, town)}`.trim(),
@@ -298,7 +379,8 @@ function buildPlace(group, target) {
       Name: type.name,
       Resistances: resistancesOf(type),
     })),
-    WayPath: approach,
+    SpotPosition: surface,
+    WayPath: wayPath,
     RoutePath: { Coordinates: coordinates, Paths: [] },
     Equipments: profile.Equipments,
   };
@@ -648,8 +730,9 @@ function firstWaypoint(coordinates) {
  */
 function traceApproach(entrance, town) {
   const descents = [];
+  const SURFACE_FLOOR = 7;
   let arrival = entrance;
-  for (let hop = 0; hop < 6 && arrival.z > 7; hop += 1) {
+  for (let hop = 0; hop < 6 && arrival.z > SURFACE_FLOOR; hop += 1) {
     const link = nearestDescentTo(arrival);
     if (!link) break;
     descents.push(link);
@@ -685,14 +768,19 @@ function traceApproach(entrance, town) {
       `${accessVerb(link.kind)} at ${link.source.x}, ${link.source.y} to floor ${floorLabel(link.destination.z).trim()}`,
   );
   return {
-    Coordinates: coordinates,
-    Markers: [],
-    Paths:
-      steps.length > 0
-        ? [`From ${town?.name ?? "the nearest temple"}: ${steps.join("; ")}.`]
-        : [],
-    Position: entrance,
-    ...(templePosition ? { TemplePosition: templePosition } : {}),
+    wayPath: {
+      Coordinates: coordinates,
+      Markers: [],
+      Paths:
+        steps.length > 0
+          ? [`From ${town?.name ?? "the nearest temple"}: ${steps.join("; ")}.`]
+          : [],
+      Position: entrance,
+      ...(templePosition ? { TemplePosition: templePosition } : {}),
+    },
+    // Where the cave is entered from open ground. A pin belongs on the floor a
+    // player walks the world on, not two floors down inside the rock.
+    surface: descents[0]?.source ?? entrance,
   };
 }
 
@@ -755,12 +843,91 @@ function nearestDescentTo(arrival) {
 
 function compassOf(box, town) {
   if (!town) return "";
+  return `${compassWord(box, town)} `;
+}
+
+/**
+ * Which way out of town the cave lies, by the dominant axis rather than a
+ * fixed dead zone: a cave twice as far north as it is west is "North", not
+ * "NorthWest", which is how a player would describe the walk.
+ */
+function compassWord(box, town) {
   const dx = (box.minX + box.maxX) / 2 - town.x;
   const dy = (box.minY + box.maxY) / 2 - town.y;
-  const vertical = Math.abs(dy) < 25 ? "" : dy < 0 ? "North" : "South";
-  const horizontal = Math.abs(dx) < 25 ? "" : dx < 0 ? "West" : "East";
-  const compass = `${vertical}${horizontal}`;
-  return compass === "" ? "Central " : `${compass} `;
+  if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return "Central";
+  const ratio = Math.abs(dy) / Math.max(Math.abs(dx), 1);
+  const vertical = dy < 0 ? "North" : "South";
+  const horizontal = dx < 0 ? "West" : "East";
+  if (ratio < 0.45) return horizontal;
+  if (ratio > 2.2) return vertical;
+  return `${vertical}${horizontal}`;
+}
+
+/** Names the caves of one hunt, nearest to town keeping the plain name. */
+function nameSpots(caves, town) {
+  const withDistance = caves.map((cave, index) => ({
+    index,
+    word: town ? compassWord(cave.box, town) : "",
+    distance: town
+      ? chebyshev(
+          { x: (cave.box.minX + cave.box.maxX) / 2, y: (cave.box.minY + cave.box.maxY) / 2 },
+          town,
+        )
+      : index,
+  }));
+  const names = new Array(caves.length);
+  for (const word of new Set(withDistance.map((cave) => cave.word))) {
+    const sharing = withDistance
+      .filter((cave) => cave.word === word)
+      .sort((left, right) => left.distance - right.distance);
+    for (const [rank, cave] of sharing.entries()) {
+      const prefix = rank === 0 ? "" : rank === 1 ? "Far " : `Far ${rank} `;
+      names[cave.index] = `${prefix}${word} Cave`.trim();
+    }
+  }
+  return names;
+}
+
+/**
+ * Where a hunt's own cave is entered from open ground, traced up through the
+ * map's ladders and holes the same way a generated cave's is.
+ */
+function surfaceEntranceOf(place, town) {
+  const box = routeBox(place);
+  const start =
+    place.WayPath?.Position ??
+    Object.values(place.RoutePath?.Coordinates ?? {})[0]?.[0]?.[0] ?? {
+      x: box.minX,
+      y: box.minY,
+      z: box.z,
+    };
+  return traceApproach(start, town).surface;
+}
+
+/** The bounding box of a hunt's own drawn route, for naming it like a cave. */
+function routeBox(place) {
+  const points = Object.values(place.RoutePath?.Coordinates ?? {}).flatMap(
+    (segments) => segments.flat(),
+  );
+  if (points.length === 0) {
+    const position = place.WayPath?.Position ?? { x: 0, y: 0, z: 7 };
+    return {
+      minX: position.x,
+      maxX: position.x,
+      minY: position.y,
+      maxY: position.y,
+      z: position.z,
+    };
+  }
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+    z: points[0].z,
+  };
 }
 
 function floorLabel(floor) {

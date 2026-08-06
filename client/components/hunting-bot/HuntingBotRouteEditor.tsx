@@ -9,7 +9,11 @@ import type {
 } from "@tibia/protocol";
 import { guideRouteFor } from "../../lib/hunting-bot/guideRouteFor";
 import { insertWaypointAt } from "../../lib/hunting-bot/insertWaypointAt";
-import type { HuntingPlace } from "../../lib/hunt-finder/HuntingPlace";
+import type {
+  HuntingPlace,
+  HuntingSpot,
+} from "../../lib/hunt-finder/HuntingPlace";
+import { huntRouteName } from "../../lib/hunting-bot/huntRouteName";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
 import { HuntingBotRouteMap } from "./HuntingBotRouteMap";
@@ -31,6 +35,8 @@ const ERROR_MESSAGE: Partial<Record<ServerErrorCode, string>> = {
 
 interface HuntingBotRouteEditorProps {
   place: HuntingPlace;
+  /** The cave of that hunt being walked; hunts with one cave pass their own. */
+  spot: HuntingSpot;
   mapName: string;
   route: HuntingBotRoute;
   status: {
@@ -55,6 +61,7 @@ interface HuntingBotRouteEditorProps {
  */
 export function HuntingBotRouteEditor({
   place,
+  spot,
   mapName,
   route,
   status,
@@ -67,16 +74,20 @@ export function HuntingBotRouteEditor({
 }: HuntingBotRouteEditorProps) {
   const { t } = useAppTranslation();
   const [tool, setTool] = useState<"select" | "add">("select");
+  // On by default: a cave floor is a warren of unrelated caves, and the point
+  // of this map is the one being edited.
+  const [isolate, setIsolate] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  const huntName = huntRouteName(place.Name, spot.Name);
   const guideFloors = useMemo(
     () =>
-      Object.keys(place.RoutePath.Coordinates)
+      Object.keys(spot.RoutePath.Coordinates)
         .map(Number)
         .filter((floor) => Number.isInteger(floor))
         .toSorted((left, right) => left - right),
-    [place],
+    [spot],
   );
   const routeFloors = useMemo(
     () =>
@@ -100,13 +111,13 @@ export function HuntingBotRouteEditor({
         (ownPosition?.z ?? 7));
 
   const seedFromGuide = (target: number): void => {
-    const { waypoints } = guideRouteFor(place, target);
-    onRouteChange({ huntName: place.Name, waypoints });
+    const { waypoints } = guideRouteFor(spot, target);
+    onRouteChange({ huntName, waypoints });
     setSelectedIndex(null);
   };
 
   const setWaypoints = (waypoints: ReadonlyArray<Position>): void => {
-    onRouteChange({ huntName: place.Name, waypoints: [...waypoints] });
+    onRouteChange({ huntName, waypoints: [...waypoints] });
   };
 
   const running = status?.enabled ?? false;
@@ -121,7 +132,7 @@ export function HuntingBotRouteEditor({
             {t("huntingBot.back")}
           </Button>
           <p className="truncate font-display text-ui-gold uppercase">
-            {t("huntingBot.editing", { name: place.Name })}
+            {t("huntingBot.editing", { name: huntName })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -202,6 +213,15 @@ export function HuntingBotRouteEditor({
             ))}
           </div>
         )}
+        <label className="flex cursor-pointer items-center gap-2 text-xs tracking-widest text-ui-muted uppercase">
+          <input
+            type="checkbox"
+            checked={isolate}
+            onChange={(event) => setIsolate(event.currentTarget.checked)}
+            className="size-4 accent-ui-gold"
+          />
+          {t("huntingBot.isolate")}
+        </label>
         <span className="text-xs text-ui-muted">
           {t(`huntingBot.tool.${tool}Hint`)}
         </span>
@@ -211,7 +231,7 @@ export function HuntingBotRouteEditor({
         <div className="min-w-0 flex-1">
           <HuntingBotRouteMap
             mapName={mapName}
-            huntName={place.Name}
+            huntName={huntName}
             waypoints={waypoints}
             selectedIndex={selectedIndex}
             runningIndex={running ? (status?.waypointIndex ?? null) : null}
@@ -219,6 +239,7 @@ export function HuntingBotRouteEditor({
             floor={activeFloor}
             ownPosition={ownPosition}
             tool={tool}
+            isolate={isolate}
             onSelect={setSelectedIndex}
             onMoveWaypoint={(index, position) => {
               setWaypoints(waypoints.with(index, position));
@@ -250,6 +271,7 @@ export function HuntingBotRouteEditor({
               waypoints={waypoints}
               selectedIndex={selectedIndex}
               runningIndex={running ? (status?.waypointIndex ?? null) : null}
+              activeFloor={activeFloor}
               onSelect={setSelectedIndex}
               onHover={setHoveredIndex}
               onDelete={(index) => {

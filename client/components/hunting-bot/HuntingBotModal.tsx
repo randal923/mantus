@@ -11,9 +11,11 @@ import type {
 import { useHuntingPlaces } from "../../hooks/useHuntingPlaces";
 import type {
   HuntingPlace,
+  HuntingSpot,
   HuntingTeamSize,
   HuntingVocation,
 } from "../../lib/hunt-finder/HuntingPlace";
+import { huntingSpots } from "../../lib/hunt-finder/huntingSpots";
 import {
   filterHuntingPlaces,
   type HuntingGuideSort,
@@ -21,9 +23,13 @@ import {
 import { normalizeHuntName } from "../../lib/hunt-finder/normalizeHuntName";
 import { baseHuntingVocation } from "../../lib/hunting-bot/baseHuntingVocation";
 import { guideRouteFor } from "../../lib/hunting-bot/guideRouteFor";
+import { huntRouteName } from "../../lib/hunting-bot/huntRouteName";
+import { parseHuntRouteName } from "../../lib/hunting-bot/parseHuntRouteName";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { HuntFinderFilters } from "../hunt-finder/HuntFinderFilters";
 import { HuntingPlaceCard } from "../hunt-finder/HuntingPlaceCard";
+import { HuntSpotMap } from "../hunt-finder/HuntSpotMap";
+import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { HuntingBotRouteEditor } from "./HuntingBotRouteEditor";
 
@@ -72,8 +78,12 @@ export function HuntingBotModal({
   const [teamSize, setTeamSize] = useState<HuntingTeamSize | "all">("Solo");
   const [sort, setSort] = useState<HuntingGuideSort>("balanced");
   const [search, setSearch] = useState("");
+  const saved = parseHuntRouteName(route.huntName);
   const [selectedName, setSelectedName] = useState<string | null>(
-    () => (route.waypoints.length > 0 ? route.huntName : null) || null,
+    () => (route.waypoints.length > 0 ? saved.placeName : null) || null,
+  );
+  const [selectedSpotName, setSelectedSpotName] = useState<string | null>(
+    () => (route.waypoints.length > 0 ? saved.spotName : null),
   );
 
   const places = useMemo(
@@ -102,23 +112,45 @@ export function HuntingBotModal({
       catalog.places.find((place) => place.Name === selectedName) ?? null,
     [catalog.places, selectedName],
   );
+  const spots = useMemo(
+    () => (selectedPlace ? huntingSpots(selectedPlace) : []),
+    [selectedPlace],
+  );
+  const selectedSpot =
+    spots.find((spot) => spot.Name === selectedSpotName) ??
+    (spots.length === 1 ? spots[0] : null);
 
   // Opening a hunt the saved route is not for seeds it from the guide's own
   // hunt-route waypoints, kept as drawn: the bot pathfinds to each one as a
   // destination, so no tracing happens unless the player asks for it.
-  const selectPlace = (place: HuntingPlace): void => {
+  const selectSpot = (place: HuntingPlace, spot: HuntingSpot): void => {
     setSelectedName(place.Name);
-    if (route.huntName === place.Name && route.waypoints.length > 0) return;
-    const { waypoints } = guideRouteFor(place, ownPosition?.z ?? null);
-    onRouteChange({ huntName: place.Name, waypoints });
+    setSelectedSpotName(spot.Name);
+    const huntName = huntRouteName(place.Name, spot.Name);
+    if (route.huntName === huntName && route.waypoints.length > 0) return;
+    const { waypoints } = guideRouteFor(spot, ownPosition?.z ?? null);
+    onRouteChange({ huntName, waypoints });
+  };
+
+  // A hunt with several caves asks which one first: they share creatures and
+  // gear but not a way in, so the choice is a place on the map.
+  const selectPlace = (place: HuntingPlace): void => {
+    const places = huntingSpots(place);
+    if (places.length > 1) {
+      setSelectedName(place.Name);
+      setSelectedSpotName(null);
+      return;
+    }
+    selectSpot(place, places[0]);
   };
 
   return (
     <Modal size="full" title={t("huntingBot.title")} onClose={onClose}>
       <div className="flex min-h-full min-w-0 flex-col gap-4">
-        {selectedPlace && (
+        {selectedPlace && selectedSpot && (
           <HuntingBotRouteEditor
             place={selectedPlace}
+            spot={selectedSpot}
             mapName={mapName}
             route={route}
             status={status}
@@ -127,8 +159,37 @@ export function HuntingBotModal({
             onRouteChange={onRouteChange}
             onStart={onStart}
             onStop={onStop}
-            onBack={() => setSelectedName(null)}
+            onBack={() => {
+              if (spots.length > 1) {
+                setSelectedSpotName(null);
+                return;
+              }
+              setSelectedName(null);
+            }}
           />
+        )}
+        {selectedPlace && !selectedSpot && (
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button size="sm" onClick={() => setSelectedName(null)}>
+                ← {t("huntFinder.back")}
+              </Button>
+              <h3 className="min-w-0 flex-1 truncate font-display text-lg font-bold tracking-wide text-ui-text-bright">
+                {selectedPlace.Name}
+              </h3>
+            </div>
+            <p className="text-sm text-ui-muted">
+              {t("huntingBot.selectSpot")}
+            </p>
+            <div className="flex min-h-0 flex-1 flex-col">
+              <HuntSpotMap
+                mapName={mapName}
+                spots={spots}
+                selectedName={null}
+                onSelect={(spot) => selectSpot(selectedPlace, spot)}
+              />
+            </div>
+          </div>
         )}
         {!selectedPlace && (
           <>

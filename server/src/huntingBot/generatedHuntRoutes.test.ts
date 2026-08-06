@@ -14,14 +14,24 @@ import { findRoutePath } from "./findRoutePath";
  * generated one may not.
  */
 
+interface RoutePath {
+  readonly Coordinates: Readonly<
+    Record<string, ReadonlyArray<readonly [Position, Position]>>
+  >;
+}
+
+interface HuntingSpot {
+  readonly Name: string;
+  readonly Generated?: boolean;
+  readonly Position: Position;
+  readonly RoutePath: RoutePath;
+}
+
 interface HuntingPlace {
   readonly Name: string;
   readonly Generated?: boolean;
-  readonly RoutePath: {
-    readonly Coordinates: Readonly<
-      Record<string, ReadonlyArray<readonly [Position, Position]>>
-    >;
-  };
+  readonly RoutePath: RoutePath;
+  readonly Spots?: ReadonlyArray<HuntingSpot>;
 }
 
 const places = JSON.parse(
@@ -36,7 +46,22 @@ const places = JSON.parse(
   ),
 ) as ReadonlyArray<HuntingPlace>;
 
-const generated = places.filter((place) => place.Generated === true);
+/**
+ * Every generated route in the catalog, whether it is a hunt of its own or one
+ * cave gathered onto a hand-written hunt.
+ */
+const generated = places.flatMap((place) => [
+  ...(place.Generated === true
+    ? [{ name: place.Name, routePath: place.RoutePath, entrance: null }]
+    : []),
+  ...(place.Spots ?? [])
+    .filter((spot) => spot.Generated === true)
+    .map((spot) => ({
+      name: `${place.Name} · ${spot.Name}`,
+      routePath: spot.RoutePath,
+      entrance: spot.Position,
+    })),
+]);
 
 const map = loadMapData(
   fileURLToPath(new URL("../../data", import.meta.url)),
@@ -83,8 +108,14 @@ describe("generated hunting routes", () => {
   });
 
   for (const place of generated) {
-    describe(place.Name, () => {
-      const floors = Object.entries(place.RoutePath.Coordinates);
+    describe(place.name, () => {
+      const floors = Object.entries(place.routePath.Coordinates);
+
+      it("marks its entrance on walkable ground", () => {
+        if (!place.entrance) return;
+        expect(map.isWalkable(place.entrance)).toBe(true);
+        expect(map.getGroundSpeed(place.entrance)).toBeTruthy();
+      });
 
       it("patrols at least one floor", () => {
         expect(floors.length).toBeGreaterThan(0);

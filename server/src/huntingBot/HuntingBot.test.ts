@@ -290,4 +290,73 @@ describe("HuntingBot", () => {
 
     expect(requests.length).toBe(1);
   });
+
+  it("walks the ring on the floor the character is standing on", () => {
+    // One cave, two floors: a saved route holds both rings back to back.
+    const { session } = makeSession([
+      { x: 10, y: 10, z: 8 },
+      { x: 14, y: 10, z: 8 },
+      { x: 30, y: 30, z: 9 },
+      { x: 34, y: 30, z: 9 },
+    ]);
+    const player = makePlayer({ x: 30, y: 31, z: 9 });
+    const { movement, requests } = makeMovement();
+    const bot = new HuntingBot(makeWorld(player), movement);
+
+    expect(bot.start(session, 0)).toBe("ok");
+    expect(session.huntingBotWaypointIndex).toBe(2);
+
+    // Reaching one waypoint advances to the next on the same floor, and the
+    // ring wraps back to that floor's own start rather than the route's.
+    player.position = { x: 34, y: 30, z: 9 };
+    session.huntingBotWaypointIndex = 3;
+    session.autoWalkDirections = [];
+    bot.tick(session, 1_000);
+    session.autoWalkDirections = [];
+    bot.tick(session, 2_000);
+
+    expect(session.huntingBotWaypointIndex).toBe(2);
+    expect(requests.every((target) => target.z === 9)).toBe(true);
+  });
+
+  it("picks up the other floor's ring after the character climbs down", () => {
+    const { session } = makeSession([
+      { x: 10, y: 10, z: 8 },
+      { x: 14, y: 10, z: 8 },
+      { x: 30, y: 30, z: 9 },
+      { x: 34, y: 30, z: 9 },
+    ]);
+    const player = makePlayer({ x: 10, y: 11, z: 8 });
+    const { movement, requests } = makeMovement();
+    const bot = new HuntingBot(makeWorld(player), movement);
+
+    expect(bot.start(session, 0)).toBe("ok");
+    player.position = { x: 30, y: 31, z: 9 };
+    session.autoWalkDirections = [];
+    bot.tick(session, 1_000);
+
+    expect(session.huntingBotWaypointIndex).toBe(2);
+    expect(requests.at(-1)?.z).toBe(9);
+  });
+
+  it("stops on a floor the route never visits, as it always did", () => {
+    const { session } = makeSession([
+      { x: 10, y: 10, z: 8 },
+      { x: 14, y: 10, z: 8 },
+    ]);
+    const player = makePlayer({ x: 10, y: 11, z: 8 });
+    const bot = new HuntingBot(
+      makeWorld(player),
+      makeMovement(() => false).movement,
+    );
+    session.huntingBotEnabled = true;
+
+    player.position = { x: 10, y: 11, z: 5 };
+    for (let tick = 1; tick <= 60 && session.huntingBotEnabled; tick++) {
+      session.huntingBotRepathReadyAt = 0;
+      bot.tick(session, tick * 1_000);
+    }
+
+    expect(session.huntingBotEnabled).toBe(false);
+  });
 });
