@@ -13,6 +13,8 @@ export type ItemIntent = Extract<
       | "loot-item"
       | "open-world-container"
       | "quick-loot"
+      | "stack-container"
+      | "sort-container"
       | "close-world-container"
       | "use-item"
       | "use-item-with"

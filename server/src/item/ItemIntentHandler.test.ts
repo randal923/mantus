@@ -108,6 +108,124 @@ describe("ItemIntentHandler", () => {
     });
   });
 
+  it("consolidates partial stacks inside one carried container", async () => {
+    const store = new MemoryItemStore();
+    const [backpack] = nestedItems();
+    store.seed(backpack!);
+    const gold = (id: string, slot: number, count: number): Item => ({
+      id,
+      typeId: 3031,
+      count,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot },
+    });
+    store.seed(gold("8b1f64f9-15a1-4d5e-9d54-40c2b4de1a01", 0, 60));
+    store.seed({
+      id: ITEM_ID,
+      typeId: 3273,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 1 },
+    });
+    store.seed(gold("8b1f64f9-15a1-4d5e-9d54-40c2b4de1a02", 2, 60));
+    store.seed(gold("8b1f64f9-15a1-4d5e-9d54-40c2b4de1a03", 3, 30));
+    const { handler, session, sent } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "stack-container",
+      containerId: BACKPACK_ID,
+    });
+    await handler.stopPersists();
+
+    expect(sent.some((message) => message.type === "error")).toBe(false);
+    const goldCounts = handler
+      .inventorySnapshot(CHARACTER_ID)!
+      .items.filter((entry) => entry.typeId === 3031)
+      .map((entry) => entry.count)
+      .sort((a, b) => b - a);
+    expect(goldCounts).toEqual([100, 50]);
+  });
+
+  it("sorts a carried container into contiguous slots and stays idempotent", async () => {
+    const store = new MemoryItemStore();
+    const [backpack] = nestedItems();
+    store.seed(backpack!);
+    store.seed({
+      id: ITEM_ID,
+      typeId: 3273,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 5 },
+    });
+    store.seed({
+      id: "8b1f64f9-15a1-4d5e-9d54-40c2b4de1a04",
+      typeId: 3031,
+      count: 30,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 3 },
+    });
+    store.seed({
+      id: "8b1f64f9-15a1-4d5e-9d54-40c2b4de1a05",
+      typeId: 3031,
+      count: 20,
+      attributes: {},
+      version: 1,
+      location: { kind: "container", containerId: BACKPACK_ID, slot: 7 },
+    });
+    const { handler, session, sent } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(session, {
+      type: "sort-container",
+      containerId: BACKPACK_ID,
+    });
+    await handler.stopPersists();
+
+    expect(sent.some((message) => message.type === "error")).toBe(false);
+    const slots = handler
+      .inventorySnapshot(CHARACTER_ID)!
+      .items.flatMap((entry) =>
+        entry.location.kind === "container" &&
+        entry.location.containerId === BACKPACK_ID
+          ? [entry.location.slot]
+          : [],
+      )
+      .sort((a, b) => a - b);
+    expect(slots).toEqual([0, 1, 2]);
+
+    const sentBefore = sent.length;
+    handler.handle(session, {
+      type: "sort-container",
+      containerId: BACKPACK_ID,
+    });
+    await handler.stopPersists();
+    expect(sent.length).toBe(sentBefore);
+  });
+
+  it("rejects stack and sort for containers the character does not carry", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const { handler, session, sent } = makeHarness(store);
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    const foreignId = "d6a7e8f9-0a1b-4c2d-8e3f-4a5b6c7d8e9f";
+    handler.handle(session, {
+      type: "stack-container",
+      containerId: foreignId,
+    });
+    expect(sent.at(-1)).toMatchObject({ type: "error" });
+    handler.handle(session, {
+      type: "sort-container",
+      containerId: foreignId,
+    });
+    expect(sent.at(-1)).toMatchObject({ type: "error" });
+  });
+
   it("throws a visible map item onto a nearby tile", async () => {
     const store = new MemoryItemStore();
     for (const item of nestedItems()) store.seed(item);

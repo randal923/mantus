@@ -32,8 +32,8 @@ interface InventoryPanelProps {
   containers?: ContainerState[];
   onClose?: () => void;
   onToggleCharacterStats?: () => void;
-  onStack?: () => void;
-  onSort?: () => void;
+  onStack?: (containerId: string) => void;
+  onSort?: (containerId: string) => void;
   onEquip?: (item: InventoryItem) => void;
   onUnequip?: (item: InventoryItem, slot: keyof Equipment) => void;
   onUseRune?: (item: InventoryItem) => void;
@@ -274,15 +274,15 @@ export function InventoryPanel({
             onOpenBackpack={openEquippedBackpack}
           />
 
-          {(onStack || onSort) && (
+          {(onStack || onSort) && dropContainer && (
             <div className="flex justify-end gap-2">
               {onStack && (
-                <Button size="sm" onClick={onStack}>
+                <Button size="sm" onClick={() => onStack(dropContainer.id)}>
                   {t("inventory.stack")}
                 </Button>
               )}
               {onSort && (
-                <Button size="sm" onClick={onSort}>
+                <Button size="sm" onClick={() => onSort(dropContainer.id)}>
                   {t("inventory.sort")}
                 </Button>
               )}

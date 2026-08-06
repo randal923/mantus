@@ -1748,6 +1748,8 @@ export class GameServer {
       case "loot-item":
       case "open-world-container":
       case "quick-loot":
+      case "stack-container":
+      case "sort-container":
       case "close-world-container":
       case "split-stack":
       case "rotate-item":

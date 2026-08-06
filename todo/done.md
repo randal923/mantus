@@ -3379,3 +3379,48 @@ passed; tsc clean in protocol, server, and client.
 
 **Residual risk**: none known — market unique-listing semantics key off the
 market schema's rollable-grade field, not the tooltip, and were left as-is.
+
+## 2026-08-05 — Inventory Stack & Sort buttons (whole-container server sweeps)
+
+**Problem**: `InventoryPanel` shipped with Stack/Sort buttons as unwired
+optional props (translations included) and `todo/status.md` listed container
+sorting as a Canary-parity gap — no protocol message, server handler, or
+client caller existed.
+
+**What changed**: Two new client intents, `stack-container` and
+`sort-container` (`{ type, containerId }`, strict, no client-authored
+outcome), modeled on `quick-loot`. Server handles them in
+`ItemIntentHandler` as whole-container sweeps of ordinary container moves:
+each step re-reads the live inventory cache, plans one `planMoveToContainer`
+op with full version guards, applies it in-memory and enqueues its own
+persist — no new SQL or store methods. Stack repeatedly merges the earliest
+partial stack that can absorb a later same-type stack
+(`findContainerMergeStep`, honoring `canMergeItems` attribute equality and
+per-type `maxCount`, partial merges included). Sort is a selection sort over
+slots using a canonical server order (`compareContainerSortOrder`:
+primaryType, name, count desc, id) that compacts gaps and reuses
+swap/merge/plain-move semantics; already-tidy containers are silent no-ops,
+a container not in the character's own cache errors. Client: `GameClient`
+gained `stackContainer`/`sortContainer` senders; `InventoryPanel`'s
+`onStack`/`onSort` props now receive the visible container's id (backpack or
+drilled-into container) and the buttons hide without a live drop container;
+`GameInventoryOverlays` wires both to the senders.
+
+**Files**: `protocol/src/clientMessages.ts`, `server/src/item/ItemIntent.ts`,
+`server/src/GameServer.ts`, `server/src/item/ItemIntentHandler.ts`,
+`server/src/item/plan/{containerChildren,findContainerMergeStep,compareContainerSortOrder}.ts`,
+`server/src/item/{ItemIntentSchemas,ItemIntentHandler}.test.ts`,
+`client/lib/net/GameClient.ts`,
+`client/components/inventory/InventoryPanel.tsx`,
+`client/components/game-window/GameInventoryOverlays.tsx`.
+
+**Verified**: new schema-bounds test (uuid required, no rider fields) and
+three handler tests (partial+full stack consolidation to [100, 50] gold,
+sort to contiguous slots + idempotent second sort sends nothing, foreign
+container id rejected for both intents); server suite 1630 passed, client
+unit suite 403 passed, tsc clean in protocol, server, client.
+
+**Residual risk**: sort emits one `inventory-updated` per step (same shape
+as quick-loot; bounded by container capacity). World/loot container windows
+(`ContainerInventorySection`) intentionally have no Stack/Sort buttons —
+carried containers only.

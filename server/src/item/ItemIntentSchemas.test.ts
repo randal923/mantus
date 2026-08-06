@@ -215,4 +215,33 @@ describe("item intent schemas", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("bounds the container stack and sort intents", () => {
+    expect(
+      clientMessageSchema.safeParse({
+        type: "stack-container",
+        containerId: CONTAINER_ID,
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "sort-container",
+        containerId: CONTAINER_ID,
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "stack-container",
+        containerId: "not-a-uuid",
+      }).success,
+    ).toBe(false);
+    // The order is a server rule; no client-authored ordering may ride along.
+    expect(
+      clientMessageSchema.safeParse({
+        type: "sort-container",
+        containerId: CONTAINER_ID,
+        order: ["gold first"],
+      }).success,
+    ).toBe(false);
+  });
 });

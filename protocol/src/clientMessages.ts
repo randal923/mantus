@@ -566,6 +566,31 @@ export const quickLootMessageSchema = z
   })
   .strict();
 
+/**
+ * Consolidates the partial stacks inside one owned, carried container. Only
+ * the container reference comes from the client: which stacks merge, in what
+ * order, and how much moves are all derived from live server state at
+ * execution time. Fixed size, shared rate caps.
+ */
+export const stackContainerMessageSchema = z
+  .object({
+    type: z.literal("stack-container"),
+    containerId: z.string().uuid(),
+  })
+  .strict();
+
+/**
+ * Reorders the items inside one owned, carried container into the server's
+ * canonical order. Only the container reference comes from the client; the
+ * order itself is a server rule. Fixed size, shared rate caps.
+ */
+export const sortContainerMessageSchema = z
+  .object({
+    type: z.literal("sort-container"),
+    containerId: z.string().uuid(),
+  })
+  .strict();
+
 /** Closes this session's open world container view (corpse). */
 export const closeWorldContainerMessageSchema = z
   .object({
@@ -701,6 +726,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   lootItemMessageSchema,
   openWorldContainerMessageSchema,
   quickLootMessageSchema,
+  stackContainerMessageSchema,
+  sortContainerMessageSchema,
   closeWorldContainerMessageSchema,
   useItemMessageSchema,
   useItemWithMessageSchema,
@@ -902,6 +929,8 @@ export type OpenWorldContainerMessage = z.infer<
   typeof openWorldContainerMessageSchema
 >;
 export type QuickLootMessage = z.infer<typeof quickLootMessageSchema>;
+export type StackContainerMessage = z.infer<typeof stackContainerMessageSchema>;
+export type SortContainerMessage = z.infer<typeof sortContainerMessageSchema>;
 export type CloseWorldContainerMessage = z.infer<
   typeof closeWorldContainerMessageSchema
 >;

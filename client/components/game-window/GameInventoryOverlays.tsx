@@ -135,6 +135,12 @@ export function GameInventoryOverlays() {
             onToggleCharacterStats={() =>
               setCharacterStatsOpen((open) => !open)
             }
+            onStack={(containerId) =>
+              runtime.clientRef.current?.stackContainer(containerId)
+            }
+            onSort={(containerId) =>
+              runtime.clientRef.current?.sortContainer(containerId)
+            }
             onEquip={(item) => {
               if (!item.equipmentSlot) return;
               dispatchItemOp({

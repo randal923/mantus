@@ -39,7 +39,11 @@ import type { LootItemCreation } from "./LootItemCreation";
 import type { PotionUseResult } from "./PotionUseResult";
 import { restoreUnpersistedOrigins } from "./restoreUnpersistedOrigins";
 import type { CarriedPlan } from "./plan/CarriedPlan";
+import { compareContainerSortOrder } from "./plan/compareContainerSortOrder";
+import { containerChildren } from "./plan/containerChildren";
+import { findContainerMergeStep } from "./plan/findContainerMergeStep";
 import { planCarriedIntent } from "./plan/planCarriedIntent";
+import { planMoveToContainer } from "./plan/planMoveToContainer";
 import { planCarriedDecay } from "./plan/planCarriedDecay";
 import { planConsume } from "./plan/planConsume";
 import { firstFreeWorldStackIndex } from "./plan/firstFreeWorldStackIndex";
@@ -1021,6 +1025,129 @@ export class ItemIntentHandler {
   }
 
   /**
+   * Consolidates the partial stacks inside one carried container. Like quick
+   * loot, the sweep is a run of ordinary container moves: each step re-reads
+   * the live cache, plans one merge with its own version guards, applies it
+   * and persists it on its own. The client contributes only the container
+   * reference — which stacks merge and how much moves are server decisions.
+   * An already-consolidated container is a silent no-op, not an error.
+   */
+  private stackContainer(
+    session: Session,
+    playerId: string,
+    intent: Extract<ItemIntent, { type: "stack-container" }>,
+    now: number,
+  ): void {
+    // Each merge fills a stack to its cap or removes an item, so the sweep
+    // converges; the bound is a backstop, not the terminator.
+    for (let step = 0; step < 200; step += 1) {
+      const cache = this.inventories.get(playerId);
+      if (!cache) return;
+      const container = cache.items.find(
+        (entry) => entry.id === intent.containerId,
+      );
+      if (!container) {
+        if (step === 0) session.sendError("item-action-failed");
+        return;
+      }
+      const merge = findContainerMergeStep(
+        this.catalog,
+        cache.items,
+        container.id,
+      );
+      if (!merge) return;
+      const plan = planMoveToContainer({
+        characterId: playerId,
+        catalog: this.catalog,
+        items: cache.items,
+        itemId: merge.source.id,
+        expectedVersion: merge.source.version,
+        destinationContainerId: container.id,
+        destinationVersion: container.version,
+        destinationSlot: merge.targetSlot,
+        requestedCount: merge.count,
+      });
+      if (!plan) return;
+      const inventory = this.operations.applyMutation(
+        playerId,
+        plan.mutation,
+        now,
+      );
+      if (inventory && session.playerId === playerId) {
+        session.send({ type: "inventory-updated", inventory });
+      }
+      this.enqueueItemPersist(session, playerId, plan.persist);
+    }
+  }
+
+  /**
+   * Reorders one carried container into the server's canonical order.
+   * Selection sort over slots: each iteration re-reads the live cache, picks
+   * the item that belongs at the next slot and issues one ordinary container
+   * move (a plain move, swap or merge) with full version guards. The client
+   * contributes only the container reference; a step that fails to plan just
+   * stops the sweep, and an already-sorted container is a silent no-op.
+   */
+  private sortContainer(
+    session: Session,
+    playerId: string,
+    intent: Extract<ItemIntent, { type: "sort-container" }>,
+    now: number,
+  ): void {
+    const opening = this.inventories
+      .get(playerId)
+      ?.items.find((entry) => entry.id === intent.containerId);
+    if (!opening) {
+      session.sendError("item-action-failed");
+      return;
+    }
+    const capacity =
+      this.catalog.require(opening.typeId).containerCapacity ?? 0;
+    for (let slot = 0; slot < capacity; ) {
+      const cache = this.inventories.get(playerId);
+      if (!cache) return;
+      const container = cache.items.find(
+        (entry) => entry.id === intent.containerId,
+      );
+      if (!container) return;
+      const remaining = containerChildren(cache.items, container.id).filter(
+        (child) => child.location.slot >= slot,
+      );
+      if (remaining.length === 0) return;
+      const desired = remaining.reduce((best, candidate) =>
+        compareContainerSortOrder(this.catalog, candidate, best) < 0
+          ? candidate
+          : best,
+      );
+      if (desired.location.slot === slot) {
+        slot += 1;
+        continue;
+      }
+      const plan = planMoveToContainer({
+        characterId: playerId,
+        catalog: this.catalog,
+        items: cache.items,
+        itemId: desired.id,
+        expectedVersion: desired.version,
+        destinationContainerId: container.id,
+        destinationVersion: container.version,
+        destinationSlot: slot,
+      });
+      if (!plan) return;
+      const inventory = this.operations.applyMutation(
+        playerId,
+        plan.mutation,
+        now,
+      );
+      if (inventory && session.playerId === playerId) {
+        session.send({ type: "inventory-updated", inventory });
+      }
+      this.enqueueItemPersist(session, playerId, plan.persist);
+      slot += 1;
+    }
+  }
+
+  /**
    * Sweeps a freshly created corpse into the killer's backpack, honouring the
    * character's auto-loot blacklist. Nothing here comes from the client: the
    * corpse, its contents, the reach check and the ownership check are all read
@@ -1387,6 +1514,14 @@ export class ItemIntentHandler {
     }
     if (intent.type === "quick-loot") {
       this.quickLoot(session, playerId, intent, now);
+      return;
+    }
+    if (intent.type === "stack-container") {
+      this.stackContainer(session, playerId, intent, now);
+      return;
+    }
+    if (intent.type === "sort-container") {
+      this.sortContainer(session, playerId, intent, now);
       return;
     }
     // A view may be nested (a bag inside a corpse); the plans work from the

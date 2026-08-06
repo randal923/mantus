@@ -205,6 +205,16 @@ export class GameClient {
     return this.send({ type: "close-container", containerId });
   }
 
+  /** Consolidates a carried container's partial stacks; the server owns the result. */
+  stackContainer(containerId: string): boolean {
+    return this.send({ type: "stack-container", containerId });
+  }
+
+  /** Reorders a carried container into the server's canonical order. */
+  sortContainer(containerId: string): boolean {
+    return this.send({ type: "sort-container", containerId });
+  }
+
   lootItem(
     item: InventoryItem,
     containerId: string,
