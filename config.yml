@@ -91,7 +91,7 @@ rarity:
     maxMana: { min: 20, max: 50 }
     attackSpeed: { min: 3, max: 8 }
     attack: { min: 1, max: 4 }
-    defense: { min: 1, max: 4 }
+    defense: { min: 2, max: 6 }
     lifeLeech: { min: 1, max: 3 }
     manaLeech: { min: 1, max: 2 }
     critChance: { min: 1, max: 3 }

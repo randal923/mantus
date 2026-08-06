@@ -24,7 +24,7 @@ export const WIKI_AFFIX_GUIDE: ReadonlyArray<WikiAffixGuideEntry> = [
   { id: "maxMana", name: "Maximum Mana", minimum: 20, maximum: 50, percent: false },
   { id: "attackSpeed", name: "Attack Speed", minimum: 3, maximum: 8, percent: true, noteKey: "attackSpeed" },
   { id: "attack", name: "Attack", minimum: 1, maximum: 4, percent: false },
-  { id: "defense", name: "Defense", minimum: 1, maximum: 4, percent: false },
+  { id: "defense", name: "Defense", minimum: 2, maximum: 6, percent: false },
   { id: "lifeLeech", name: "Life Leech", minimum: 1, maximum: 3, percent: true, noteKey: "lifeLeech" },
   { id: "manaLeech", name: "Mana Leech", minimum: 1, maximum: 2, percent: true, noteKey: "manaLeech" },
   { id: "critChance", name: "Critical Hit Chance", minimum: 1, maximum: 3, percent: true },

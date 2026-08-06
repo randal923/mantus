@@ -39,7 +39,7 @@ export const DEFAULT_AFFIX_RANGES: Readonly<Record<AffixId, AffixValueRange>> =
     maxMana: { minimum: 20, maximum: 50 },
     attackSpeed: { minimum: 3, maximum: 8 },
     attack: { minimum: 1, maximum: 4 },
-    defense: { minimum: 1, maximum: 4 },
+    defense: { minimum: 2, maximum: 6 },
     lifeLeech: { minimum: 1, maximum: 3 },
     manaLeech: { minimum: 1, maximum: 2 },
     critChance: { minimum: 1, maximum: 3 },
