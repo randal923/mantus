@@ -91,7 +91,7 @@
     "description": "Equipment dropped by creatures has a chance to roll a rarity grade. Graded items carry affixes — random bonuses on top of the item's base stats. Higher grades roll more affixes, and every bonus rolls stronger.",
     "rarities": {
       "title": "Rarity Grades",
-      "description": "Each graded drop rolls its affixes from the shared pool below, and an affix never repeats on the same item. Common equipment carries no grade and no rolled affixes.",
+      "description": "Each graded drop rolls its affixes from the shared pool below, and an affix never repeats on the same item. Common is the baseline: the item's base stats with no rolled affixes.",
       "affixCountLabel": "Rolled affixes",
       "powerLabel": "Affix power"
     },

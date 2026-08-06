@@ -1,13 +1,14 @@
 "use client";
 
-import type { ItemRarity, ItemTooltipData } from "@tibia/protocol";
+import type { ItemDisplayRarity, ItemTooltipData } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { ItemTooltip } from "../inventory/ItemTooltip";
 
 interface RarityGuideCardProps {
-  readonly rarity: ItemRarity;
+  readonly rarity: ItemDisplayRarity;
   readonly affixCount: number;
-  readonly valueMultiplier: number;
+  /** Absent on common, which never scales an affix. */
+  readonly valueMultiplier?: number;
   readonly example: ItemTooltipData;
 }
 
@@ -16,6 +17,7 @@ interface RarityGuideCardProps {
  * (same pattern as ItemTooltip).
  */
 const RARITY_TEXT = {
+  common: "text-rarity-common",
   uncommon: "text-rarity-uncommon",
   rare: "text-rarity-rare",
   epic: "text-rarity-epic",
@@ -51,7 +53,7 @@ export function RarityGuideCard({
                 {t("websiteWikiItems.rarities.powerLabel")}
               </dt>
               <dd className="text-ui-text tabular-nums">
-                ×{valueMultiplier}
+                {valueMultiplier === undefined ? "—" : `×${valueMultiplier}`}
               </dd>
             </div>
           </dl>

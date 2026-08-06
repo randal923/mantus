@@ -3358,12 +3358,18 @@ takes the old grey, `--color-rarity-uncommon` becomes green (#7bb356, ARPG
 convention between grey commons and gold rares); ItemTooltip gained the
 common style row; AuctionRarityBadge explicitly skips "common" so market
 rows only badge graded listings; en/pt-BR "Common"/"Comum"; the 13 plain
-equipment Storybook fixtures now carry `rarity: "common"`.
+equipment Storybook fixtures now carry `rarity: "common"`. The /wiki/items
+rarity guide gained a leading Common baseline card (Leather Armor example,
+0 affixes, affix power "—"): RarityGuideCard now takes `ItemDisplayRarity`
+with an optional valueMultiplier, while `WIKI_RARITY_GUIDE` stays
+rolled-grades-only so the affix table keeps its four columns; both locales'
+grade-section copy reworded (common no longer "carries no grade").
 
 **Files**: `protocol/src/item.ts`, `server/src/item/toItemTooltip.ts`,
 `server/src/item/toItemTooltip.test.ts`, `client/app/globals.css`,
 `client/components/inventory/{ItemTooltip.tsx,tibiaTooltipItems.ts}`,
 `client/components/auction/AuctionRarityBadge.tsx`,
+`client/components/public-site/{ItemsWikiPage,RarityGuideCard}.tsx`,
 `client/locales/{en,pt-BR}.json`.
 
 **Verified**: toItemTooltip tests updated (eligible gear → "common",

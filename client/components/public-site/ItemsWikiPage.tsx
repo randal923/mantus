@@ -1,6 +1,6 @@
 "use client";
 
-import type { ItemRarity, ItemTooltipData } from "@tibia/protocol";
+import type { ItemDisplayRarity, ItemTooltipData } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { WIKI_RARITY_GUIDE } from "../../lib/wiki/wikiRarityGuide";
 import { TIBIA_TOOLTIP_ITEMS } from "../inventory/tibiaTooltipItems";
@@ -8,7 +8,8 @@ import { AffixGuideTable } from "./AffixGuideTable";
 import { PublicSiteLayout } from "./PublicSiteLayout";
 import { RarityGuideCard } from "./RarityGuideCard";
 
-const RARITY_EXAMPLES: Readonly<Record<ItemRarity, ItemTooltipData>> = {
+const RARITY_EXAMPLES: Readonly<Record<ItemDisplayRarity, ItemTooltipData>> = {
+  common: TIBIA_TOOLTIP_ITEMS.armor,
   uncommon: TIBIA_TOOLTIP_ITEMS.uncommonWand,
   rare: TIBIA_TOOLTIP_ITEMS.rareSword,
   epic: TIBIA_TOOLTIP_ITEMS.epicArmor,
@@ -45,6 +46,13 @@ export function ItemsWikiPage() {
               {t("websiteWikiItems.rarities.description")}
             </p>
           </div>
+          {/* Common is the ungraded baseline, so it lives outside the
+              rolled-grade guide that also drives the affix table columns. */}
+          <RarityGuideCard
+            rarity="common"
+            affixCount={0}
+            example={RARITY_EXAMPLES.common}
+          />
           {WIKI_RARITY_GUIDE.map((grade) => (
             <RarityGuideCard
               key={grade.rarity}

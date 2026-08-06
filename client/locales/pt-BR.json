@@ -91,7 +91,7 @@
     "description": "Equipamentos derrubados por criaturas têm chance de receber um grau de raridade. Itens graduados carregam afixos — bônus aleatórios somados aos atributos base do item. Graus mais altos sorteiam mais afixos, e cada bônus vem mais forte.",
     "rarities": {
       "title": "Graus de Raridade",
-      "description": "Cada item graduado sorteia seus afixos do conjunto compartilhado abaixo, e um afixo nunca se repete no mesmo item. Equipamentos comuns não têm grau nem afixos sorteados.",
+      "description": "Cada item graduado sorteia seus afixos do conjunto compartilhado abaixo, e um afixo nunca se repete no mesmo item. Comum é a base: os atributos originais do item, sem afixos sorteados.",
       "affixCountLabel": "Afixos sorteados",
       "powerLabel": "Poder dos afixos"
     },
