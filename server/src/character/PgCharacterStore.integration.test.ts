@@ -454,7 +454,7 @@ databaseDescribe("PgCharacterStore integration", () => {
     );
 
     expect(items.rows.map((item) => item.item_type_id)).toEqual(
-      expect.arrayContaining([2854, 3066, 3035, 266]),
+      expect.arrayContaining([2854, 3066, 3043, 266]),
     );
     expect(Number(audits.rows[0]?.count)).toBe(items.rowCount);
   });

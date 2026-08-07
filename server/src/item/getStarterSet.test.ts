@@ -27,7 +27,7 @@ describe("getStarterSet", () => {
       expect(weapon).toBeDefined();
       expect(starterSet.backpackContents).toEqual(
         expect.arrayContaining([
-          { typeId: 3035, count: 50 },
+          { typeId: 3043, count: 5 },
           { typeId: 266, count: 5 },
         ]),
       );
