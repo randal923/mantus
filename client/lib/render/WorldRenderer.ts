@@ -26,10 +26,15 @@ import {
 } from "./CreatureView";
 import { CombatEffectRenderer } from "./CombatEffectRenderer";
 import { isDocumentHidden } from "./isDocumentHidden";
+import { LightOverlay } from "./LightOverlay";
 import { SpeechTextRenderer } from "./SpeechTextRenderer";
 import { TILE_SIZE } from "./tileSize";
 
 const ZOOM = 3;
+const GROUND_FLOOR = 7;
+/** Below this ambient level the own player glows faintly (OTClient rule). */
+const DARK_AMBIENT_LEVEL = 64;
+const MIN_PLAYER_LIGHT = { intensity: 2, color: 215 } as const;
 const NAME_PLATE_CULL_MARGIN_PX = 32;
 const CREATURE_LOAD_RETRY_INITIAL_MS = 2_000;
 const CREATURE_LOAD_RETRY_MAX_MS = 30_000;
@@ -108,6 +113,8 @@ export class WorldRenderer {
     this.mapView,
     this.speechLayer,
   );
+  private readonly lightOverlay = new LightOverlay();
+  private worldLight = { level: 250, color: 215 };
   private viewRange: ViewRange = { x: 1, y: 1 };
   private readonly creatureViews = new Map<string, CreatureView>();
   private orderedCreatureViews: ReadonlyArray<readonly [string, CreatureView]> =
@@ -187,7 +194,13 @@ export class WorldRenderer {
 
     this.world.scale.set(ZOOM);
     this.overlay.sortableChildren = true;
-    this.world.addChild(this.mapView.container, this.speechLayer);
+    // The lightmap multiplies over everything drawn before it (map,
+    // creatures, effects) but leaves speech text at full brightness.
+    this.world.addChild(
+      this.mapView.container,
+      this.lightOverlay.sprite,
+      this.speechLayer,
+    );
     this.app.stage.addChild(this.world, this.overlay);
     this.app.ticker.add(() => this.tick(this.app.ticker.deltaMS));
   }
@@ -345,6 +358,9 @@ export class WorldRenderer {
       case "tile-states":
         void this.mapView.applyTileStates(message.visible, message.hidden);
         return;
+      case "world-light":
+        this.worldLight = { level: message.level, color: message.color };
+        return;
       case "error":
         return;
     }
@@ -475,6 +491,7 @@ export class WorldRenderer {
     this.app.canvas.removeEventListener("contextmenu", this.onMapContextMenu);
     this.combatEffects.destroy();
     this.speechTexts.destroy();
+    this.lightOverlay.destroy();
     this.mapView.destroy();
     if (this.app.renderer) this.app.destroy(true, { children: true });
   }
@@ -1232,6 +1249,54 @@ export class WorldRenderer {
       view.plate.position.set(screenX, screenY);
       view.plate.zIndex = view.container.zIndex;
     }
+
+    this.renderLights();
+  }
+
+  /**
+   * Rebuilds the frame's lightmap: ambient from the server world light
+   * (fixed darkness underground), then every visible floor deepest-first —
+   * its covering tiles shade off deeper floors' lights, then its item and
+   * creature lights join in. Mirrors OTClient's MapView::drawLights.
+   */
+  private renderLights(): void {
+    const window = this.mapView.lightWindow();
+    const center = this.mapView.centerPosition();
+    if (!window || !center) {
+      this.lightOverlay.hide();
+      return;
+    }
+    const underground = center.z > GROUND_FLOOR;
+    const ambient = underground ? { level: 0, color: 215 } : this.worldLight;
+    this.lightOverlay.beginFrame(window, ambient.level, ambient.color);
+    const playerNeedsLight = underground || ambient.level < DARK_AMBIENT_LEVEL;
+    for (const z of this.mapView.drawableLightFloors()) {
+      this.mapView.collectFloorLight(z, this.lightOverlay);
+      for (const [id, view] of this.creatureViews) {
+        if (view.floor !== z || !view.container.visible) continue;
+        let light = view.light;
+        if (id === this.ownPlayerId && playerNeedsLight) {
+          if (!light) light = MIN_PLAYER_LIGHT;
+          else if (light.color === 0 || light.color > 215) {
+            light = { intensity: light.intensity, color: 215 };
+          }
+        }
+        if (!light) continue;
+        const position = view.pixelPosition();
+        const projected = this.mapView.projectPosition(
+          position.x,
+          position.y,
+          z,
+        );
+        this.lightOverlay.addLightSource(
+          projected.x + TILE_SIZE / 2,
+          projected.y + TILE_SIZE / 2,
+          light.intensity,
+          light.color,
+        );
+      }
+    }
+    this.lightOverlay.endFrame();
   }
 
   private sortedCreatureViews(): ReadonlyArray<

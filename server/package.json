@@ -17,6 +17,7 @@
     "playtest:players:server": "tsx src/playtest/playerLoadServer.ts",
     "playtest:monster-capacity:server": "tsx src/playtest/monsterLoadServer.ts",
     "playtest:animation-probe:server": "tsx src/playtest/itemAnimationProbeServer.ts",
+    "playtest:lighting-probe:server": "tsx src/playtest/lightingProbeServer.ts",
     "playtest:monster-capacity": "tsx src/playtest/scenarios/monsterCapacity.ts",
     "playtest:spells": "tsx src/playtest/scenarios/spellParity.ts",
     "playtest:weapons": "tsx src/playtest/scenarios/weaponParity.ts",

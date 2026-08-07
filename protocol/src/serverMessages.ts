@@ -440,6 +440,17 @@ export const distanceMissileMessageSchema = z.object({
   durationMs: z.number().int().positive().max(5_000),
 });
 
+/**
+ * Global ambient light from the server day/night cycle. Sent once after
+ * welcome and re-broadcast whenever the level changes (~every 10s during
+ * sunrise/sunset). Color is an 8-bit Tibia palette index (215 = white).
+ */
+export const worldLightMessageSchema = z.object({
+  type: z.literal("world-light"),
+  level: z.number().int().min(0).max(255),
+  color: z.number().int().min(0).max(255),
+});
+
 export const combatLogMessageSchema = z.object({
   type: z.literal("combat-log"),
   kind: z.enum([
@@ -607,6 +618,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   experienceTextMessageSchema,
   magicEffectMessageSchema,
   distanceMissileMessageSchema,
+  worldLightMessageSchema,
   combatLogMessageSchema,
   tileStatesMessageSchema,
   worldContainerStateMessageSchema,
@@ -758,6 +770,7 @@ export type QuestLogFailedMessage = z.infer<
 >;
 export type CharacterListMessage = z.infer<typeof characterListMessageSchema>;
 export type WelcomeMessage = z.infer<typeof welcomeMessageSchema>;
+export type WorldLightMessage = z.infer<typeof worldLightMessageSchema>;
 export type WorldContainerStateMessage = z.infer<
   typeof worldContainerStateMessageSchema
 >;

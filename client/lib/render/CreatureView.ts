@@ -97,7 +97,7 @@ export class CreatureView {
 
   private readonly sprite = new Sprite();
   private readonly mount = new Sprite();
-  private readonly light = new Graphics();
+  private lightState: { intensity: number; color: number } | null = null;
   private readonly attackTarget = new Graphics();
   private readonly health = new Graphics();
   private readonly partyShield = new Graphics();
@@ -172,8 +172,7 @@ export class CreatureView {
       .stroke({ color: 0xff2222, width: 2 });
     this.attackTarget.visible = false;
     this.container.sortableChildren = true;
-    this.light.zIndex = -1;
-    this.container.addChild(this.sprite, this.attackTarget, this.light);
+    this.container.addChild(this.sprite, this.attackTarget);
     this.container.addChild(this.mount);
 
     const name = new Text({
@@ -416,16 +415,16 @@ export class CreatureView {
       .fill({ color });
   }
 
+  /** Stores the server-announced light for the world lightmap pass. */
   updateLight(light: CreatureState["light"]): void {
-    this.light.clear();
-    if (!light || light.intensity <= 0) return;
-    this.light
-      .circle(
-        TILE_SIZE / 2,
-        TILE_SIZE / 2,
-        Math.min(48, 10 + light.intensity * 2),
-      )
-      .fill({ color: 0xffd37a, alpha: Math.min(0.35, light.intensity / 100) });
+    this.lightState =
+      light && light.intensity > 0
+        ? { intensity: light.intensity, color: light.color }
+        : null;
+  }
+
+  get light(): { intensity: number; color: number } | null {
+    return this.lightState;
   }
 
   /** Applies only a fresh authoritative position revision. */

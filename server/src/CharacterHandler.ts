@@ -92,6 +92,8 @@ export class CharacterHandler {
     private readonly wheel: WheelTracker,
     private readonly gems: GemTracker,
     private readonly cooldowns: CooldownTracker,
+    /** Snapshot of the current world light, sent right after the welcome. */
+    private readonly worldLight: () => { level: number; color: number },
     /**
      * Reclaims a character still lingering in the world after an in-fight
      * disconnect. Returns the combat locks to carry onto the reconnecting
@@ -489,6 +491,7 @@ export class CharacterHandler {
       huntingBotRoute: character.huntingBotRoute,
       aimAtTargetSpellIds: [...character.aimAtTargetSpellIds],
     });
+    session.send({ type: "world-light", ...this.worldLight() });
     this.visibility.syncMapItems(session, player);
     void this.service
       .recordLogin(character.accountId, character.id, new Date(monotonicNow()))

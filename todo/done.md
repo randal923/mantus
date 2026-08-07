@@ -4246,3 +4246,77 @@ file — a future `yarn items:convert` would silently revert the pouch to
 Canary's gold pouch (recorded in `TODO.md` accepted gaps). Players who
 bought the Gold Pouch before this change keep the same item row; it simply
 starts routing loot once moved into the backpack.
+
+## 2026-08-07 — Real Tibia lighting: day/night cycle + client lightmap (Feature 87, lighting slice)
+
+**Problem**: the world rendered at full brightness forever. Light data was
+already flowing everywhere — item light flags in `objects.json`, monster
+base light and spell light conditions in creature state, `utevo lux/gran
+lux` applying conditions — but nothing consumed it: no ambient light
+concept, no day/night cycle, and the client's only nod to light was a
+placeholder yellow alpha circle under glowing creatures.
+
+**What changed**:
+
+- **Protocol**: new `world-light` server message `{level 0-255, color
+  0-255}` (color is an 8-bit Tibia palette index, always 215/white from
+  the cycle).
+- **Server**: `world/WorldLightCycle.ts` reimplements Canary's cycle
+  verbatim — one game day per real hour, checks every 10s, sunrise at game
+  minute 360 / sunset at 1050, ramping between 250 (day) and 40 (night) in
+  steps of 7 (~5 real minutes per transition). GameServer broadcasts on
+  change to every playing session (`registry.all()` + playerId — NOT
+  `tickable()`, which is only the drained intent work-queue); the login
+  flow sends the current light right after `welcome`. Dev-only `/light
+  <0-255|day|night>` GM command forces a level for testing.
+- **Client**: `render/LightOverlay.ts` is an OTClient-faithful lightmap:
+  one RGB pixel per visible tile, painted from `computeLightmapPixels`
+  (per-channel `max(ambient, (intensity − distance) · 0.2)` radial
+  falloff, 8-bit palette via `from8bitColor`), held in a tiny 2D canvas
+  texture, bilinearly upscaled and drawn over the world with `multiply`
+  blend — under the speech/nameplate layers, so text stays bright.
+  `MapView` records per-tile static item lights and "shade" tiles (any
+  ground) as it draws; the per-frame pass walks visible floors deepest
+  first, resetting shaded pixels so lights can't bleed up through floors
+  (OTClient's `resetShade`), then adds item lights, creature lights, and
+  the own player's minimum glow (intensity 2 when ambient < 64 or
+  underground). Underground ambient is 0 regardless of the surface cycle.
+  The pixel buffer only recomputes when a fingerprint of its inputs
+  changes. The old placeholder glow circle in `CreatureView` is gone;
+  creature light is now state consumed by the lightmap.
+- **Playtest**: `server/src/playtest/lightingProbeServer.ts` (port 4127,
+  `yarn playtest:lighting-probe:server`) seeds "Light Probe" on open
+  ground 35+ tiles from any map light plus a "Gm Helper" on a second
+  account (same-account logins kick each other); the browser e2e
+  `client/e2e/worldLighting.e2e.test.tsx` drives `/light` through the
+  helper's own socket and asserts canvas brightness: night < 50% of day,
+  above pitch black (player glow), and `/light day` restores ≥ 90%. It
+  also saves `__screenshots__/lighting-{day,night}.png` artifacts.
+
+**Files**: `protocol/src/serverMessages.ts`,
+`server/src/world/WorldLightCycle.ts` (+test), `server/src/GameServer.ts`,
+`server/src/CharacterHandler.ts`, `server/src/gm/GmCommandHandler.ts`,
+`server/src/GameServer.test.ts`, `server/src/playtest/lightingProbeServer.ts`,
+`client/lib/render/{LightOverlay,computeLightmapPixels,from8bitColor}.ts`
+(+tests), `client/lib/render/{WorldRenderer,MapView,CreatureView}.ts`,
+`client/e2e/worldLighting.e2e.test.tsx`.
+
+**Verified**: WorldLightCycle unit tests (ramp shape, catch-up ticks,
+forced-level broadcast-once); GameServer integration test asserts the
+world-light lands right after welcome; client unit tests for the palette
+decode and lightmap math (falloff, radius cutoff, per-channel max,
+shading); the browser e2e passes end to end against the probe server, and
+the monster-performance e2e still holds ~36 FPS at 1000 monsters with the
+overlay active. Protocol/server/client typechecks and full unit suites
+green (the 4 storybook failures and 2 e2e-under-load failures pre-exist on
+main).
+
+**Residual risk / deferred** (recorded in `TODO.md` accepted gaps):
+equipped torches don't light the carrier (server items carry no light
+metadata yet); effect/missile flashes emit no light; no minimum-ambient
+comfort setting; shade predicate treats any ground as fully covering. Two
+debugging traps worth remembering: the Thais temple viewport is fully
+torch-saturated, so a correct lightmap there multiplies by ~1.0 and looks
+like a no-op — verify lighting on open ground; and chat-UI automation in
+browser e2e is unreliable (composer/canSend races) — drive GM commands
+through a second-account socket instead.
