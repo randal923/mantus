@@ -23,6 +23,7 @@ describe("planTrashDrop", () => {
       item,
       count: 10,
       position: POSITION,
+      effectId: 3,
     });
 
     expect(plan.mutation).toEqual({
@@ -53,6 +54,7 @@ describe("planTrashDrop", () => {
       item,
       count: 3,
       position: POSITION,
+      effectId: 3,
     });
 
     expect(plan.mutation.after).toEqual([
@@ -104,6 +106,7 @@ describe("planTrashDrop", () => {
       item: backpack,
       count: 1,
       position: POSITION,
+      effectId: 3,
     });
 
     // Deepest child first, root last (RESTRICT container FK).

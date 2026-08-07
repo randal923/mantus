@@ -1,6 +1,8 @@
 // "trashholder" is deliberately absent: Canary types water/lava/tar grounds
 // as trashholders (throwing an item in destroys it), but the tiles themselves
-// are immutable scenery and must stay in the static client map.
+// are immutable scenery and must stay in the static client map. The converter
+// still emits them under their own "trashholder" classification so the server
+// knows the tile destroys thrown items without owning a world item there.
 // Types the server must own on the tile. "dummy" is here even though the free
 // exercise dummies are bolted-down scenery: `loadMapItems` only surfaces
 // mutable entries, and the exercise-weapon action has to be able to ask "is
@@ -29,6 +31,18 @@ const MUTABLE_TYPES = new Set([
 const MUTABLE_ITEM_IDS = new Set([
   593, 606, 608, 2772, 2773, 9110, 9111, 25_720, 25_721, 25_722, 25_723,
   25_802, 25_803,
+  // Harvestable plants (sync with HARVEST_DEFINITIONS in
+  // server/src/action/harvestDefinitions.ts and the scythe/sickle tables in
+  // server/src/action/harvestTables.ts): immovable scenery that must be
+  // server-owned so cutting can transform it and decay can regrow it.
+  // Blueberry bush (full/picked):
+  3_699, 3_700,
+  // Wheat growth stages (sprouting -> growing -> ripe):
+  3_651, 3_652, 3_653,
+  // Sugar cane stages (harvested 5462 -> 5470 -> 5465; ripe 5463; burning 5464):
+  5_462, 5_463, 5_464, 5_465, 5_470,
+  // Reed (full/cut):
+  30_623, 30_624,
   // Imbuing shrines and crystals (server/src/imbuement/imbuementShrineItemIds
   // .ts), for the same reason as the reward shrines above: immovable,
   // untyped decoration that would stay baked draw-only, so the server would

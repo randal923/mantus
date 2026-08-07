@@ -68,6 +68,11 @@ export interface ItemType {
   readonly transformDeEquipTo?: number;
   readonly rotateTo?: number;
   readonly kind?: string;
+  /**
+   * Magic effect a trashholder shows when it destroys an item (Canary's
+   * items.xml `effect`); absent means the generic poff.
+   */
+  readonly trashEffectId?: number;
   readonly levelDoor?: number;
   /** Canary door pair this type belongs to, and this type's role within it. */
   readonly door?: {

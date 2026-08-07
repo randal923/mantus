@@ -65,6 +65,18 @@ export const WORLD_ACTION_REQUIREMENTS: Readonly<
     houseAccess: true,
     exclusive: true,
   },
+  food: {
+    reach: "adjacent",
+    itemStillPlaced: true,
+    houseAccess: true,
+    exclusive: true,
+  },
+  harvest: {
+    reach: "adjacent",
+    itemStillPlaced: true,
+    houseAccess: true,
+    exclusive: true,
+  },
   lever: {
     reach: "adjacent",
     itemStillPlaced: true,

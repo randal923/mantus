@@ -95,6 +95,25 @@ for (const pair of doorsDocument.doors) {
   }
 }
 
+// Canary's magic-effect names (src/utils/tools.cpp) for the `effect`
+// attribute trashholders carry in items.xml, resolved to wire effect ids.
+const TRASH_EFFECT_IDS = {
+  redspark: 1, // CONST_ME_DRAWBLOOD
+  bluebubble: 2, // CONST_ME_LOSEENERGY, the blue rings water shows
+  poff: 3, // CONST_ME_POFF
+  greenbubble: 9, // CONST_ME_GREEN_RINGS
+  teleport: 11, // CONST_ME_TELEPORT
+  fire: 16, // CONST_ME_HITBYFIRE
+};
+
+function trashEffectId(effect, clientId) {
+  const id = TRASH_EFFECT_IDS[effect];
+  if (id === undefined) {
+    throw new Error(`item ${clientId} uses unmapped trashholder effect ${effect}`);
+  }
+  return id;
+}
+
 const EQUIPMENT_SLOT_BY_SOURCE = {
   head: "helmet",
   necklace: "amulet",
@@ -256,6 +275,9 @@ for (const appearance of appearancesDocument.objects) {
       : {}),
     ...(semantics.rotateTo !== undefined ? { rotateTo: semantics.rotateTo } : {}),
     ...(semantics.type ? { kind: semantics.type } : {}),
+    ...(semantics.type === "trashholder" && semantics.effect !== undefined
+      ? { trashEffectId: trashEffectId(semantics.effect, appearance.clientId) }
+      : {}),
     ...(semantics.levelDoor !== undefined
       ? { levelDoor: semantics.levelDoor }
       : {}),

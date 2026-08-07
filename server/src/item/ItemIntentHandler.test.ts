@@ -593,6 +593,97 @@ describe("ItemIntentHandler", () => {
     expect(durable.items.find((item) => item.id === ITEM_ID)).toBeUndefined();
   });
 
+  it("destroys an item dropped into static map water and shows the blue rings", async () => {
+    const store = new MemoryItemStore();
+    for (const item of nestedItems()) store.seed(item);
+    const waterTile = { x: 1, y: 2, z: 7 };
+    // Water is static client scenery: no MapItem, only the tile side channel.
+    const { handler, session, sent, world } = makeHarness(store, {
+      trashholders: [{ position: waterTile, itemId: 622 }],
+    });
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(
+      session,
+      { type: "drop-item", itemId: ITEM_ID, revision: 1, position: waterTile },
+      0,
+    );
+
+    expect(
+      handler
+        .inventorySnapshot(CHARACTER_ID)
+        ?.items.find((item) => item.id === ITEM_ID),
+    ).toBeUndefined();
+    expect(world.getMapItems(waterTile)).toEqual([]);
+    expect(sent).toContainEqual({
+      type: "magic-effect",
+      position: waterTile,
+      effectId: 2,
+    });
+    // The unchanged tile is re-broadcast so the thrower's optimistic render
+    // of the item on the water clears without waiting for a relog.
+    expect(sent).toContainEqual({
+      type: "tile-states",
+      visible: [{ position: waterTile, revision: 0, items: [] }],
+      hidden: [],
+    });
+    const durable = await handler.load(CHARACTER_ID, 400);
+    expect(durable.items.find((item) => item.id === ITEM_ID)).toBeUndefined();
+  });
+
+  it("destroys a pristine map item thrown into water without writing a row", async () => {
+    const store = new MemoryItemStore();
+    const waterTile = { x: 1, y: 2, z: 7 };
+    const meatTile = { x: 0, y: 1, z: 7 };
+    const instanceId = "test:0:1:7:1";
+    const meat: MapItem = {
+      instanceId,
+      itemId: 3_577,
+      stackIndex: 1,
+      mutable: true,
+      revision: 1,
+      source: {
+        seedKey: instanceId,
+        mapName: "test",
+        mapVersion: "v1",
+        typeId: 3_577,
+        attributes: {},
+        position: meatTile,
+        stackIndex: 1,
+        contents: [],
+      },
+    };
+    const { handler, session, sent, world } = makeHarness(store, {
+      mapItems: [{ position: meatTile, item: meat }],
+      trashholders: [{ position: waterTile, itemId: 622 }],
+    });
+    handler.attach(await handler.load(CHARACTER_ID, 400));
+
+    handler.handle(
+      session,
+      {
+        type: "move-map-item",
+        itemId: instanceId,
+        revision: 1,
+        fromPosition: meatTile,
+        toPosition: waterTile,
+      },
+      0,
+    );
+
+    expect(sent.filter((message) => message.type === "error")).toHaveLength(0);
+    expect(world.getMapItems(meatTile)).toEqual([]);
+    expect(world.getMapItems(waterTile)).toEqual([]);
+    expect(sent).toContainEqual({
+      type: "magic-effect",
+      position: waterTile,
+      effectId: 2,
+    });
+    // No row was ever written: a reboot restores the map seed (map reset).
+    await handler.stopPersists();
+    expect(store.allItems()).toHaveLength(0);
+  });
+
   it("reads and atomically writes bounded owned item text", async () => {
     const store = new MemoryItemStore();
     for (const item of nestedItems()) store.seed(item);
@@ -841,6 +932,7 @@ interface HarnessOptions {
   readonly playerPosition?: Position;
   readonly viewRange?: ViewRange;
   readonly mapItems?: ReadonlyArray<{ position: Position; item: MapItem }>;
+  readonly trashholders?: ReadonlyArray<{ position: Position; itemId: number }>;
 }
 
 function makeHarness(
@@ -860,6 +952,7 @@ function makeHarness(
       height: options.height ?? 3,
       blocked: options.blocked ?? [],
       items: options.mapItems,
+      trashholders: options.trashholders,
     }),
     25,
   );
@@ -883,12 +976,16 @@ function makeHarness(
     initialViewRange: options.viewRange ?? { x: 9, y: 7 },
   });
   session.playerId = CHARACTER_ID;
+  // Registered so tile updates and magic effects reach `sent` like production.
+  const registry = new SessionRegistry();
+  registry.add(session);
+  registry.bindPlayer(session);
   return {
     handler: new ItemIntentHandler(
       store,
       catalog,
       world,
-      new Visibility(world, new SessionRegistry()),
+      new Visibility(world, registry),
     ),
     player,
     session,

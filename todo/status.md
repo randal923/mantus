@@ -13,7 +13,7 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-08-05
+**Last updated:** 2026-08-07
 
 ## World & engine
 
@@ -22,9 +22,9 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Map conversion, multi-floor movement, visibility (4)                                                | ✅     | ✅     | All 123 enabled sewer grates preserve their click target (32/32 in Thais); per-entry content review: 348 disabled map actions, 2,225 unresolved floor transitions |
 | Rendering, animation, floors, occlusion (5–8)                                                       | —      | ✅     | Creature atlas failures self-heal (2026-08-03): sheet loads back off and retry, and a creature stays pending with a capped-backoff reload instead of vanishing for the session ("NPC not spawned after prod push"); walk cycle matches OTClient frame for frame since 2026-08-02, but diagonal steps still animate over the 3x duration and mounted cycles use the rider's phase count (both TODO.md); creature idle animation needs a modern outfit re-rip; fluid-subtype patterns unprojected; permanent effects play once |
 | Creatures, spawns, AI, all 84,377 placements (9, 10)                                                | ✅     | ✅     | Spawn placement matches Canary's `placeCreature` since 2026-08-06 (walkability, not pathfinding, plus a home fallback): a creature that idled onto a blockpath tile is no longer deleted for the life of the process, and the 79 slots whose home is a blockpath tile now spawn. Four route-validated Hunt Finder grounds gained 11 types/83 placements; idle wandering still ignores Canary's height/pathfinding rule so NPCs can stand on counters (TODO.md); Carnisylvan Sapling's dynamic self-destruct trigger, typed-data buckets (3 NPC entries), placement review, Harlow duplicate |
-| World actions: doors, levers, readables, rope, shovel, chests, plates, traps, teleports (12, 50–52) | ✅     | ✅     | Fields (50), trap disarm, tool remainder + sand digging (51), transform-on-use/`ignoreLook` flags (asset pass 108); look is server-authored since 2026-07-29 — carried/corpse items and a shift+click alias still missing (52) |
+| World actions: doors, levers, readables, rope, shovel, chests, plates, traps, teleports (12, 50–52) | ✅     | ✅     | Fields (50), trap disarm, tool remainder + sand digging (51), transform-on-use/`ignoreLook` flags (asset pass 108); look is server-authored since 2026-07-29 — carried/corpse items and a shift+click alias still missing (52); 2026-08-07 added eating food off the ground, blueberry-bush picking (703 bushes server-owned, 300 s regrow), the sickle, the fire bug (cane ignition, rare crumble/explode outcomes collapsed to fizzle), and woke wheat/cane/reed harvests (targets now server-owned); machete grass, pick digs, and fire-bug webs/basins stay dormant (targets not mutable); harvest yields don't merge into an existing tile stack, and the ground-food context menu still says "Use" not "Eat" |
 | World events engine + 18 raids (54)                                                                 | ◐      | —      | Other global events, daily resets (boosted rotation shipped with 76), reward steps, `/raid` capability     |
-| Exhausts, trash holders, pz-lock, crash harness (3, 12–15)                                          | ✅     | ✅     | Nothing — closed                                                                                           |
+| Exhausts, trash holders, pz-lock, crash harness (3, 12–15)                                          | ✅     | ✅     | Nothing — closed; 2026-08-07 closed the real-map gap: static water/lava/swamp/dustbin tiles now destroy thrown items (classification-3 side channel in items.bin) with each liquid's own effect (water blue rings) |
 
 ## Items & economy
 

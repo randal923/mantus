@@ -29,6 +29,17 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Fire bug rare outcomes are a fizzle; several tool targets stay dormant**
+  (2026-08-07). The fire bug ignites (60%) or poffs — Canary's 10% "bug
+  crumbles" and 10% "explodes for 5 fire damage" branches need a
+  consume-carried helper and a direct-damage hook on `ToolUseContext` that
+  don't exist yet. Separately, machete jungle grass / wild growth, pick digs
+  and the crushable stone, and fire-bug spider webs / coal basins never fire
+  on the real map because their target ids are not in `MUTABLE_ITEM_IDS`
+  (tools/getMapItemSemantics.mjs) — the fix is adding them to that list plus
+  a `yarn map:convert` + `db:reconcile-world-seed`, deferred because jungle
+  grass moves many tiles from baked client regions into tile-states.
+
 - **Imbuement scrolls can no longer be forged from the client** (2026-08-03).
   The shrine window's blank-scroll tile was removed on request, and with it
   the only UI that sent `imbuement-scroll-create`. The server side (forging a

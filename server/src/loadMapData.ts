@@ -156,6 +156,8 @@ export function loadMapData(
     throw new Error(`${name} map metadata does not match its navigation data`);
   }
   let getItems: MapData["getItems"] = () => [];
+  let getTrashholderTypeId: (position: Position) => number | undefined = () =>
+    undefined;
   let houseTiles: HouseTileIndex = {
     byPosition: new Map(),
     byHouse: new Map(),
@@ -187,7 +189,7 @@ export function loadMapData(
       throw new Error(`${name} map metadata has an invalid world-item count`);
     }
     const mapVersion = sha256(`${source.mapSha256}:${source.itemsSha256}`);
-    getItems = loadMapItems(
+    const loadedItems = loadMapItems(
       items,
       name,
       Number(meta.worldItemCount),
@@ -195,6 +197,8 @@ export function loadMapData(
       loadWorldItemSources(content, name),
       itemCatalog,
     );
+    getItems = loadedItems.getItems;
+    getTrashholderTypeId = loadedItems.getTrashholderTypeId;
     const parsedContent = JSON.parse(content.toString("utf8")) as {
       tileMetadata?: unknown;
     };
@@ -358,6 +362,9 @@ export function loadMapData(
       return actions.get(`${positionKey(position)}|${activation}`);
     },
     getItems,
+    getTrashholderTypeId(position) {
+      return getTrashholderTypeId(position);
+    },
     getTownName(townId) {
       return meta.towns.find((town) => town.id === townId)?.name;
     },

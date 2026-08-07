@@ -475,6 +475,21 @@ function finishTile(tile) {
       });
       if (semantics.mutable) stats.mutableItems++;
       else stats.interactiveItems++;
+    } else if (staticItem.type === "trashholder") {
+      // Water/lava/swamp grounds and dustbins stay static client scenery
+      // (never mutable — recorded 2026-07-20), but the server must still know
+      // the tile destroys thrown items, so they get their own classification
+      // that surfaces as a tile flag rather than a world item.
+      worldItems.push({
+        instanceId: `${mapName}:${x}:${y}:${z}:${stackIndex}`,
+        position: { x, y, z },
+        stackIndex,
+        itemId: placedItem.id,
+        classification: "trashholder",
+        attributes: {},
+        contents: [],
+      });
+      stats.trashholderItems = (stats.trashholderItems ?? 0) + 1;
     }
     if (!semantics.mutable) drawIds.push(placedItem.id);
 
@@ -1174,7 +1189,14 @@ for (const [index, item] of worldItems.entries()) {
   itemData.writeUInt8(item.position.z, offset + 4);
   itemData.writeUInt8(item.stackIndex, offset + 5);
   itemData.writeUInt16LE(item.itemId, offset + 6);
-  itemData.writeUInt8(item.classification === "mutable" ? 1 : 2, offset + 8);
+  itemData.writeUInt8(
+    item.classification === "mutable"
+      ? 1
+      : item.classification === "trashholder"
+        ? 3
+        : 2,
+    offset + 8,
+  );
 }
 const itemsBuffer = Buffer.concat([itemHeader, itemData]);
 writeFileSync(serverItemsStage, itemsBuffer);
@@ -1281,7 +1303,7 @@ console.log(`spawn: ${spawn.x},${spawn.y},${spawn.z}`);
 console.log(`client regions written: ${regions.size} (floors ${[...FLOORS].join(",")})`);
 console.log(`server sectors written: ${sectors.size}`);
 console.log(
-  `server-owned map items written: ${worldItems.length} (${stats.mutableItems} mutable, ${stats.interactiveItems} interactive)`,
+  `server-owned map items written: ${worldItems.length} (${stats.mutableItems} mutable, ${stats.interactiveItems} interactive, ${stats.trashholderItems ?? 0} trashholder)`,
 );
 console.log(`enabled step transitions written: ${transitions.length}`);
 console.log(`world actions written: ${worldActions.length}`);

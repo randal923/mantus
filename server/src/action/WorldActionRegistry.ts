@@ -13,6 +13,8 @@ import { handleDailyShrineUse } from "./handleDailyShrineUse";
 import { handleImbuementShrineUse } from "./handleImbuementShrineUse";
 import { handleDecorationKitUse } from "./handleDecorationKitUse";
 import { handleDoorUse } from "./handleDoorUse";
+import { handleFoodEat } from "./handleFoodEat";
+import { handleHarvestUse } from "./handleHarvestUse";
 import { handleLeverUse } from "./handleLeverUse";
 import { handleMapRotate } from "./handleMapRotate";
 import { handleMapWrite } from "./handleMapWrite";
@@ -50,6 +52,8 @@ export class WorldActionRegistry {
     "imbuement-shrine": handleImbuementShrineUse,
     "decoration-kit": handleDecorationKitUse,
     door: handleDoorUse,
+    food: handleFoodEat,
+    harvest: handleHarvestUse,
     lever: handleLeverUse,
     podium: handlePodiumUse,
     read: handleSignRead,
@@ -218,6 +222,12 @@ export class WorldActionRegistry {
         return true;
       case "door":
         this.handlers.door(context, action);
+        return true;
+      case "food":
+        this.handlers.food(context, action);
+        return true;
+      case "harvest":
+        this.handlers.harvest(context, action);
         return true;
       case "lever":
         this.handlers.lever(context, action);

@@ -6,7 +6,6 @@ import type {
 } from "../CarriedPersistPlan";
 import type { Item } from "../Item";
 import type { CarriedPlan } from "./CarriedPlan";
-import { TRASH_DESTRUCTION_EFFECT_ID } from "./isTrashholderTile";
 
 /**
  * Destroys a carried item dropped onto a trashholder tile instead of placing
@@ -23,9 +22,11 @@ export function planTrashDrop(input: {
   readonly item: Item;
   readonly count: number;
   readonly position: Position;
+  /** The destroying trashholder's effect (water rings, lava fire, poff). */
+  readonly effectId: number;
 }): CarriedPlan {
   const { characterId, carriedItems, item, count, position } = input;
-  const effect = { position: { ...position }, effectId: TRASH_DESTRUCTION_EFFECT_ID };
+  const effect = { position: { ...position }, effectId: input.effectId };
 
   if (count < item.count) {
     // Only stackables reach a partial count, so there is no nested subtree.
@@ -52,6 +53,7 @@ export function planTrashDrop(input: {
         ],
       },
       effect,
+      refreshTiles: [{ ...position }],
     };
   }
 
@@ -82,5 +84,6 @@ export function planTrashDrop(input: {
     },
     persist: { characterId, rowOps, audits },
     effect,
+    refreshTiles: [{ ...position }],
   };
 }

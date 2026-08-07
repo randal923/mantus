@@ -10,10 +10,7 @@ import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
 import { firstFreeWorldStackIndex } from "./firstFreeWorldStackIndex";
-import {
-  isTrashholderTile,
-  TRASH_DESTRUCTION_EFFECT_ID,
-} from "./isTrashholderTile";
+import { trashDestructionEffectId, trashholderTypeAt } from "./isTrashholderTile";
 import { materializeWorldSource } from "./materializeWorldSource";
 import type { WorldItemsView } from "./WorldItemsView";
 
@@ -57,18 +54,19 @@ export function planMoveMapItem(input: {
   const type = catalog.require(root.typeId);
   if (!type.movable) return null;
 
-  // Pristine static-seed items are excluded: destroying one would leave the
-  // static map seed to reappear on reload (there is no world row to hide), so
-  // they fall through to normal placement, which properly consumes the seed.
-  if (!pristine && isTrashholderTile(world.getMapItems(toPosition), catalog)) {
+  const trashTypeId = trashholderTypeAt(world, catalog, toPosition);
+  if (trashTypeId !== undefined) {
     // Thrown onto trash: destroy the whole world subtree instead of placing it.
     const destroyed = [root, ...children];
     const trashRowOps: CarriedPersistRowOp[] = [];
     const trashAudits: CarriedPersistAudit[] = [];
-    // Leaf-first delete for the RESTRICT container FK; memory-only items
-    // (untouched kill loot) have no row to delete.
+    // Leaf-first delete for the RESTRICT container FK. Memory-only items —
+    // untouched kill loot and pristine map seeds — have no row to delete; a
+    // destroyed pristine seed stays hidden in memory for this uptime and a
+    // reboot restores the map placement, the same map-reset a Canary restart
+    // performs.
     for (const victim of [...destroyed].reverse()) {
-      if (world.lootOrigin(victim.id) === undefined) {
+      if (!pristine && world.lootOrigin(victim.id) === undefined) {
         trashRowOps.push({
           kind: "delete",
           itemId: victim.id,
@@ -90,7 +88,11 @@ export function planMoveMapItem(input: {
         removedItemIds: destroyed.map((victim) => victim.id),
       },
       persist: { characterId, rowOps: trashRowOps, audits: trashAudits },
-      effect: { position: { ...toPosition }, effectId: TRASH_DESTRUCTION_EFFECT_ID },
+      effect: {
+        position: { ...toPosition },
+        effectId: trashDestructionEffectId(catalog, trashTypeId),
+      },
+      refreshTiles: [{ ...toPosition }],
     };
   }
 

@@ -16,6 +16,8 @@ import { handleFishingUse } from "./handleFishingUse";
 import { handleMacheteUse } from "./handleMacheteUse";
 import { handlePickUse } from "./handlePickUse";
 import { handleScytheUse } from "./handleScytheUse";
+import { handleFireBugUse } from "./handleFireBugUse";
+import { handleSickleUse } from "./handleSickleUse";
 import type { RopePullHandler } from "./RopePullHandler";
 import { SHOVEL_HOLE_PAIRS } from "./shovelHolePairs";
 import type { ToolUseContext } from "./ToolUseContext";
@@ -105,6 +107,10 @@ export class ToolUseHandler {
         return handleMacheteUse(context);
       case "scythe":
         return handleScytheUse(context);
+      case "sickle":
+        return handleSickleUse(context);
+      case "fire-bug":
+        return handleFireBugUse(context);
       case "pick":
         return handlePickUse(context);
       case "fishing-rod":

@@ -58,6 +58,9 @@ export function overrideMapData(
     getItems(position) {
       return map.getItems(position);
     },
+    getTrashholderTypeId: map.getTrashholderTypeId
+      ? (position) => map.getTrashholderTypeId!(position)
+      : undefined,
     getTownName: map.getTownName
       ? (townId) => map.getTownName!(townId)
       : undefined,

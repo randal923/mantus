@@ -427,6 +427,75 @@ describe("ToolUseHandler", () => {
     expect(ids).toContain(BUNCH_OF_WHEAT);
   });
 
+  it("sickle cuts ripe sugar cane and drops one bunch on the tile", async () => {
+    const SICKLE = 3_293;
+    const RIPE_CANE = 5_463;
+    const HARVESTED_CANE = 5_462;
+    const BUNCH_OF_CANE = 5_466;
+    const harness = await makeHarness(
+      [carriedItem("44444444-4444-4444-8444-444444444444", SICKLE, "actor")],
+      { items: [seededAt(RIPE_CANE, PILE)] },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("44444444-4444-4444-8444-444444444444", 1, PILE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    const ids = harness.world.getMapItems(PILE).map((item) => item.itemId);
+    expect(ids).toContain(HARVESTED_CANE);
+    expect(ids).toContain(BUNCH_OF_CANE);
+  });
+
+  it("sickle does nothing to unripe or burning cane", async () => {
+    const SICKLE = 3_293;
+    const BURNING_CANE = 5_464;
+    const harness = await makeHarness(
+      [carriedItem("44444444-4444-4444-8444-444444444444", SICKLE, "actor")],
+      { items: [seededAt(BURNING_CANE, PILE)] },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith("44444444-4444-4444-8444-444444444444", 1, PILE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    expect(harness.world.getMapItems(PILE).map((item) => item.itemId)).toEqual([
+      BURNING_CANE,
+    ]);
+  });
+
+  it("fire bug ignites standing sugar cane or fizzles, never anything else", async () => {
+    const FIRE_BUG = 5_467;
+    const STANDING_CANE = 5_465;
+    const BURNING_CANE = 5_464;
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const harness = await makeHarness(
+        [carriedItem("88888888-8888-4888-8888-888888888888", FIRE_BUG, "actor")],
+        { items: [seededAt(STANDING_CANE, PILE)], seed },
+      );
+      const consumed = harness.toolUse.handle(
+        harness.session,
+        useWith("88888888-8888-4888-8888-888888888888", 1, PILE),
+        1000,
+      );
+      expect(consumed).toBe(true);
+      const ids = harness.world.getMapItems(PILE).map((item) => item.itemId);
+      // Either the roll caught (burning cane) or it fizzled (cane intact) —
+      // the field never disappears or becomes anything else.
+      expect(ids).toHaveLength(1);
+      expect([STANDING_CANE, BURNING_CANE]).toContain(ids[0]);
+    }
+  });
+
   it("rejects a harvest on a tile that holds nothing cuttable", async () => {
     const harness = await makeHarness([
       carriedItem("44444444-4444-4444-8444-444444444444", SCYTHE, "actor"),

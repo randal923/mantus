@@ -3,8 +3,10 @@ export type ToolKind =
   | "shovel"
   | "machete"
   | "scythe"
+  | "sickle"
   | "pick"
   | "crowbar"
+  | "fire-bug"
   | "fishing-rod";
 
 export interface ToolDefinition {
@@ -27,6 +29,8 @@ const TOOL_DEFINITIONS: ReadonlyMap<number, ToolDefinition> = new Map([
   [5710, { kind: "shovel" }], // light shovel
   [3308, { kind: "machete" }],
   [3453, { kind: "scythe" }],
+  [3293, { kind: "sickle" }],
+  [5467, { kind: "fire-bug" }],
   [9596, { kind: "scythe" }], // squeezing gear of girlpower
   [3456, { kind: "pick" }],
   [3304, { kind: "crowbar" }],

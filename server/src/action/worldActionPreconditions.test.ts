@@ -15,6 +15,8 @@ const REGISTERED_KINDS = [
   "daily-shrine",
   "decoration-kit",
   "door",
+  "food",
+  "harvest",
   "imbuement-shrine",
   "lever",
   "podium",

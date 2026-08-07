@@ -54,7 +54,8 @@ export type CarriedCreationReason =
   | "shop-sale"
   | "shop-sale-currency"
   | "bank-deposit-change"
-  | "bank-withdraw";
+  | "bank-withdraw"
+  | "harvest";
 
 export type CarriedPersistAudit =
   | {

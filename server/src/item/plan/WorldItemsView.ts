@@ -7,6 +7,12 @@ import type { MapItem } from "../../MapItem";
 /** The slice of World state the ground-op planners read. */
 export interface WorldItemsView {
   getMapItems(position: Position): ReadonlyArray<MapItem>;
+  /**
+   * The static trashholder type at a tile (water, lava, dustbin). Liquid
+   * grounds never surface as MapItems, so planners must use this alongside
+   * the tile's items to know a drop target destroys items.
+   */
+  trashholderTypeAt?(position: Position): number | undefined;
   getWorldItem(instanceId: string): Item | undefined;
   getWorldSubtree(rootId: string): ReadonlyArray<Item>;
   /** Set for corpse/loot items that have no DB row yet (memory-only). */

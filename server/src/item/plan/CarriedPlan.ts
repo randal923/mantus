@@ -12,4 +12,11 @@ export interface CarriedPlan {
   readonly persist: CarriedPersistPlan;
   /** Magic effect to broadcast at execution time (e.g. a trash-destroy poff). */
   readonly effect?: { readonly position: Position; readonly effectId: number };
+  /**
+   * Tiles to re-broadcast after the mutation even though their state did not
+   * change: a trash destruction leaves the target tile untouched, but viewers
+   * rendered the throw optimistically and need the authoritative state to
+   * clear it.
+   */
+  readonly refreshTiles?: ReadonlyArray<Position>;
 }

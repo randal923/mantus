@@ -206,6 +206,11 @@ export class World {
     return this.mapItems.getMapItems(position);
   }
 
+  /** The static trashholder type (water, lava, dustbin) at a tile, if any. */
+  trashholderTypeAt(position: Position): number | undefined {
+    return this.map.getTrashholderTypeId?.(position);
+  }
+
   getWorldItem(instanceId: string) {
     return this.mapItems.getWorldItem(instanceId);
   }

@@ -11,7 +11,7 @@ import { appendMergeTargetPersist } from "./appendMergeTargetPersist";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
 import { firstFreeWorldStackIndex } from "./firstFreeWorldStackIndex";
-import { isTrashholderTile } from "./isTrashholderTile";
+import { trashDestructionEffectId, trashholderTypeAt } from "./isTrashholderTile";
 import { planTrashDrop } from "./planTrashDrop";
 import type { WorldItemsView } from "./WorldItemsView";
 
@@ -39,13 +39,15 @@ export function planDrop(input: {
   ) {
     return null;
   }
-  if (isTrashholderTile(world.getMapItems(position), catalog)) {
+  const trashTypeId = trashholderTypeAt(world, catalog, position);
+  if (trashTypeId !== undefined) {
     return planTrashDrop({
       characterId,
       carriedItems: carried.items,
       item,
       count,
       position,
+      effectId: trashDestructionEffectId(catalog, trashTypeId),
     });
   }
   const mergeTarget =

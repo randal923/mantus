@@ -36,6 +36,12 @@ export interface MapData {
     activation: MapAction["activation"],
   ): MapAction | undefined;
   getItems(position: Position): ReadonlyArray<MapItem>;
+  /**
+   * The trashholder ground/scenery type at a tile (water, lava, swamp,
+   * dustbin): items dropped or thrown here are destroyed. Liquids never
+   * become MapItems (static client scenery), so this is a side channel.
+   */
+  getTrashholderTypeId?(position: Position): number | undefined;
   getTownName?(townId: number): string | undefined;
   /** Every town's temple position, for temple-proximity rules (wheel respec). */
   getTownTemples?(): ReadonlyArray<Position>;

@@ -31,6 +31,11 @@ export const SCYTHE_CUTS: ReadonlyMap<number, HarvestCut> = new Map([
   [30_623, { toTypeId: 30_624, yieldTypeId: 30_975 }],
 ]);
 
+/** sickle.lua: ripe sugar cane (5463, the stage burning cane decays into). */
+export const SICKLE_CUTS: ReadonlyMap<number, HarvestCut> = new Map([
+  [5_463, { toTypeId: 5_462, yieldTypeId: 5_466 }],
+]);
+
 /** onUsePick: the non-quest earth dig. */
 export const PICK_DIGS: ReadonlyMap<number, HarvestCut> = new Map([
   [372, { toTypeId: 394 }],

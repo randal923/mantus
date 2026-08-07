@@ -1486,6 +1486,9 @@ export class ItemIntentHandler {
     if (inventory && session.playerId === characterId) {
       session.send({ type: "inventory-updated", inventory });
     }
+    if (plan.refreshTiles) {
+      this.visibility.onMapItemsChanged(plan.refreshTiles);
+    }
     const persist = plan.persist;
     this.enqueueItemPersist(session, characterId, persist);
   }
@@ -1681,6 +1684,11 @@ export class ItemIntentHandler {
         planned.plan.effect.position,
         planned.plan.effect.effectId,
       );
+    }
+    if (planned.plan.refreshTiles) {
+      // Unchanged tiles viewers rendered optimistically (a throw a trash
+      // tile destroyed): the authoritative state clears their preview.
+      this.visibility.onMapItemsChanged(planned.plan.refreshTiles);
     }
     const persist = planned.plan.persist;
     this.enqueueItemPersist(session, playerId, persist);

@@ -788,6 +788,7 @@ databaseDescribe("PgItemStore.moveToContainer integration", () => {
       item,
       count: item.count,
       position: { x: 1, y: 1, z: 7 },
+      effectId: 3,
     });
 
     await store.persist(plan.persist);

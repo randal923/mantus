@@ -1,4 +1,5 @@
 import type { ChestDefinition } from "./ChestDefinition";
+import type { HarvestDefinition } from "./harvestDefinitions";
 import type { ItemType } from "../item/ItemType";
 import type { MapItem } from "../MapItem";
 import type { PodiumDefinition } from "../podium/PodiumDefinition";
@@ -43,6 +44,18 @@ export type WorldAction =
       /** An imbuement shrine: use opens the window with no item picked. */
       readonly kind: "imbuement-shrine";
       readonly item: MapItem;
+    }
+  | {
+      /** A harvestable plant: use drops its fruit onto the tile. */
+      readonly kind: "harvest";
+      readonly item: MapItem;
+      readonly harvest: HarvestDefinition;
+    }
+  | {
+      /** Food on the ground: use eats one unit off the tile (Canary parity). */
+      readonly kind: "food";
+      readonly item: MapItem;
+      readonly food: NonNullable<ItemType["food"]>;
     }
   | { readonly kind: "read"; readonly item: MapItem; readonly type: ItemType }
   | { readonly kind: "rotate"; readonly item: MapItem; readonly toTypeId: number }

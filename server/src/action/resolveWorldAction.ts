@@ -1,5 +1,6 @@
 import type { Position } from "@tibia/protocol";
 import { DECORATION_KIT_ITEM_ID } from "../item/decorationKitItemId";
+import { HARVEST_DEFINITIONS } from "./harvestDefinitions";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { positionKey } from "../positionKey";
 import type { ChestDefinition } from "./ChestDefinition";
@@ -56,6 +57,11 @@ export function resolveWorldAction(
       if (scripted) return { kind: "unsupported" };
       return { kind: "clock", item };
     }
+    const harvest = HARVEST_DEFINITIONS.get(item.itemId);
+    if (harvest) {
+      if (scripted) return { kind: "unsupported" };
+      return { kind: "harvest", item, harvest };
+    }
     const leverTarget = LEVER_TOGGLE_PAIRS.get(item.itemId);
     if (leverTarget !== undefined) {
       if (scripted) return { kind: "unsupported" };
@@ -82,6 +88,12 @@ export function resolveWorldAction(
         return { kind: "unsupported" };
       }
       return { kind: "decoration-kit", item, toTypeId: toTypeId as number };
+    }
+    // Canary registers foods.lua by item id, so food outranks the generic
+    // readable/rotate behaviours the same type could otherwise resolve to.
+    if (type.food) {
+      if (scripted) return { kind: "unsupported" };
+      return { kind: "food", item, food: type.food };
     }
     if (type.text?.readable) {
       if (scripted) return { kind: "unsupported" };

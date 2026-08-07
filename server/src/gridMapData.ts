@@ -32,6 +32,8 @@ interface GridMapConfig {
   transitions?: ReadonlyArray<MapTransition>;
   actions?: ReadonlyArray<MapAction>;
   items?: ReadonlyArray<{ position: Position; item: MapItem }>;
+  /** Static trashholder tiles (water, lava, dustbin), as position + type id. */
+  trashholders?: ReadonlyArray<{ position: Position; itemId: number }>;
   towns?: ReadonlyArray<{ id: number; name: string }>;
 }
 
@@ -77,6 +79,12 @@ export function gridMapData(config: GridMapConfig): MapData {
     (config.groundSpeeds ?? []).map(([x, y, z, speed]) => [
       positionKey({ x, y, z }),
       speed,
+    ]),
+  );
+  const trashholders = new Map(
+    (config.trashholders ?? []).map((entry) => [
+      positionKey(entry.position),
+      entry.itemId,
     ]),
   );
   const items = new Map<string, MapItem[]>();
@@ -135,6 +143,9 @@ export function gridMapData(config: GridMapConfig): MapData {
     },
     getItems(position) {
       return items.get(positionKey(position)) ?? [];
+    },
+    getTrashholderTypeId(position) {
+      return trashholders.get(positionKey(position));
     },
     getTownName(townId) {
       return config.towns?.find((town) => town.id === townId)?.name;

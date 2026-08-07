@@ -1047,3 +1047,167 @@ describe("WorldActionRegistry decoration kits", () => {
     expect(tileItemIds(harness, TILE)).toEqual([DECORATION_KIT]);
   });
 });
+
+describe("WorldActionRegistry ground food", () => {
+  const MEAT = 3_577;
+
+  it("eats one unit off an adjacent ground stack and persists the shrunk row", async () => {
+    const harness = makeHarness({
+      items: [
+        { position: TILE, item: seededMapItem(MEAT, TILE, { count: 3 }) },
+      ],
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "combat-log",
+      kind: "condition",
+      text: "Munch.",
+    });
+    const [stack] = harness.world.getMapItems(TILE);
+    expect(stack).toMatchObject({ itemId: MEAT, count: 2 });
+
+    await harness.items.stopPersists();
+    const rows = harness.store.allItems();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ typeId: MEAT, count: 2 });
+    expect(sent.filter((message) => message.type === "error")).toHaveLength(0);
+  });
+
+  it("removes the item from the tile when the last unit is eaten", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(MEAT, TILE) }],
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(tileItemIds(harness, TILE)).toEqual([]);
+    expect(sent.at(-1)).toMatchObject({ type: "combat-log", text: "Munch." });
+
+    // A pristine seed eaten whole never had a row, so nothing persists.
+    await harness.items.stopPersists();
+    expect(harness.store.allItems()).toHaveLength(0);
+
+    // The seed stays hidden for this uptime: a second use finds nothing.
+    expect(harness.worldActions.handleUseMap(session, TILE, 2_000)).toBe(false);
+  });
+
+  it("refuses to eat when the player is full and leaves the stack intact", async () => {
+    const harness = makeHarness({
+      items: [
+        { position: TILE, item: seededMapItem(MEAT, TILE, { count: 3 }) },
+      ],
+    });
+    const { player, session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    player.feed(1_150, 500);
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({ type: "error", code: "player-full" });
+    // The seed was never touched: still pristine, nothing persisted.
+    expect(tileItemIds(harness, TILE)).toEqual([MEAT]);
+    await harness.items.stopPersists();
+    expect(harness.store.allItems()).toHaveLength(0);
+  });
+
+  it("rejects eating food that is out of reach", async () => {
+    const harness = makeHarness({
+      items: [
+        { position: TILE, item: seededMapItem(MEAT, TILE, { count: 3 }) },
+      ],
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 2,
+      y: 4,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    expect(tileItemIds(harness, TILE)).toEqual([MEAT]);
+    await harness.items.stopPersists();
+    expect(harness.store.allItems()).toHaveLength(0);
+  });
+});
+
+describe("WorldActionRegistry harvest", () => {
+  const FULL_BUSH = 3_699;
+  const PICKED_BUSH = 3_700;
+  const BLUEBERRY = 3_588;
+
+  it("picks a blueberry bush: fruit drops on the tile, bush depletes, one atomic plan", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(FULL_BUSH, TILE) }],
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.filter((message) => message.type === "error")).toHaveLength(0);
+
+    const tile = harness.world.getMapItems(TILE);
+    expect(tile.map((item) => item.itemId).sort()).toEqual([
+      BLUEBERRY,
+      PICKED_BUSH,
+    ]);
+    expect(tile.find((item) => item.itemId === BLUEBERRY)).toMatchObject({
+      count: 3,
+    });
+
+    await harness.items.stopPersists();
+    const rows = harness.store.allItems();
+    expect(rows.map((row) => row.typeId).sort()).toEqual([
+      BLUEBERRY,
+      PICKED_BUSH,
+    ]);
+  });
+
+  it("does nothing on an already picked bush", async () => {
+    const harness = makeHarness({
+      items: [{ position: TILE, item: seededMapItem(PICKED_BUSH, TILE) }],
+    });
+    const { session } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    // No harvest registered for the depleted type: falls through to movement.
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(false);
+    expect(tileItemIds(harness, TILE)).toEqual([PICKED_BUSH]);
+  });
+
+  it("fails closed on a scripted bush placement", async () => {
+    const harness = makeHarness({
+      items: [
+        {
+          position: TILE,
+          item: seededMapItem(FULL_BUSH, TILE, { actionId: 1_234 }),
+        },
+      ],
+    });
+    const { session, sent } = await harness.makeSession("actor", {
+      x: 5,
+      y: 5,
+      z: 7,
+    });
+    expect(harness.worldActions.handleUseMap(session, TILE, 1_000)).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
+    expect(tileItemIds(harness, TILE)).toEqual([FULL_BUSH]);
+  });
+});

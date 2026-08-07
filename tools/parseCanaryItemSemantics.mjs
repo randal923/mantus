@@ -87,6 +87,11 @@ function applyAttribute(semantics, attributes, itemLabel) {
     case "type":
       if (ITEM_TYPES.has(value)) semantics.type = value;
       return;
+    case "effect":
+      // Only trashholders act on this server-side (destruction effect); the
+      // raw name is kept and mapped to an effect id at catalog build time.
+      semantics.effect = value;
+      return;
     case "floorchange":
       if (!FLOOR_CHANGES.has(value)) {
         throw new Error(`${itemLabel} has unknown floorchange ${value}`);

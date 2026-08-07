@@ -4047,3 +4047,133 @@ and prettier clean; the rebuilt asset resolves the same 1,511 items as before.
 **Residual risk**: stored filters are reset by the migration, the creature
 browser lists a whole type rather than a grade, and the search pane caps at 60
 item types per query — all recorded in `TODO.md`.
+
+## 2026-08-07 — Ground food, water that destroys, and blueberry bushes
+
+**Problem**: three map interactions existed only in fragments. Eating worked
+solely on carried items (`use-item` resolves against the carried cache; the
+position-based `use-map` had no food branch, so clicking a ham on the floor
+did nothing). Trashholder destruction was fully implemented in the plan layer
+but could never fire on the live map: the void-ocean fix (2026-07-20) keeps
+liquid grounds out of every server-visible surface, so thrown items simply
+piled up on the ocean — and the effect was always the generic poff rather
+than water's blue rings. Blueberry bushes were baked draw-only scenery.
+
+**What changed**:
+
+- **Eat from the ground** — new `food` world-action kind: `resolveWorldAction`
+  maps a tile item with `type.food` to it (scripted placements fail closed),
+  the shared requirements table gives it adjacency/stale-item/house/busy
+  checks, and `planEatMapItem` consumes one unit atomically (stack shrinks in
+  place; the last unit removes the item; a fully eaten pristine seed writes
+  no row — the in-memory removal hides the seed for this uptime and a reboot
+  restores the map placement, Canary's own restart semantics). Satiation
+  (`canFeed`/1,200 s cap) and the "Munch." message mirror the carried path;
+  the existing client use-map + auto-walk-adjacent flow needed no changes.
+- **Water destroys thrown items** — the OTBM converter now emits every
+  static trashholder (water/lava/tar/swamp grounds, dustbins) as a new
+  classification-3 entry in `items.bin` (2,212,433 entries, +20 MB); they are
+  *not* MapItems (no tile-states bloat, no double-render, no void-ocean
+  regression — regions/navigation bins byte-identical on conversion) but
+  surface through `MapData.getTrashholderTypeId` → `World.trashholderTypeAt`
+  → the planners' `trashholderTypeAt()` check. `planDrop`/`planMoveMapItem`
+  now destroy onto these tiles, and the effect comes from the trashholder's
+  own items.xml `effect` (new catalog field `trashEffectId`: water=2 blue
+  rings, lava=16 fire, swamp=9 green rings, tar=3 poff; dustbins keep the
+  generic poff — a deliberate feedback deviation from Canary's silence).
+  Pristine map items thrown into trash are now destroyed too (previously
+  they were placed on the trash tile) with the same no-row seed semantics.
+- **Blueberry bushes** — new `harvest` world-action kind driven by
+  `HARVEST_DEFINITIONS` (3699 → depleted 3700 + 3 blueberries dropped on the
+  tile, Canary's blueberry_bush.lua). `planHarvestMapItem` transforms the
+  bush and inserts the audited (`creation`/`harvest`) fruit row in one plan;
+  regrowth is the depleted type's existing catalog decay (300 s → 3699)
+  through the world decay runner. 3699/3700 joined `MUTABLE_ITEM_IDS`, so
+  the map's 703 bushes are now server-owned; blueberries are food, so the
+  new ground-eat action covers eating them straight off the bush tile.
+
+**Files**: `server/src/action/{WorldAction,resolveWorldAction,
+worldActionPreconditions,WorldActionRegistry,handleFoodEat,handleHarvestUse,
+harvestDefinitions}.ts`, `server/src/item/plan/{planEatMapItem,
+planHarvestMapItem,isTrashholderTile,planDrop,planTrashDrop,planMoveMapItem,
+WorldItemsView}.ts`, `server/src/item/{ItemType,CarriedPersistPlan}.ts`,
+`server/src/{loadMapItems,loadMapData,MapData,World,gridMapData}.ts`,
+`server/src/world/overrideMapData.ts`, `tools/{convertOtbm,
+getMapItemSemantics,parseCanaryItemSemantics,buildItemCatalog}.mjs`;
+regenerated `content/canary-item-semantics.json`,
+`server/data/{item-catalog.json,otservbr.items.bin,otservbr.map.json}` and
+the region/minimap tiles that lost their baked bushes.
+
+**Verified**: server suite green (3,826 passed); new regression tests cover
+eating an adjacent ground stack (row shrinks), the last-unit removal (no row,
+seed stays hidden on re-use), the satiation refusal, out-of-reach rejection,
+drop-into-static-water destruction with effect 2 reaching the session,
+pristine-throw-into-water leaving zero rows, bush picking (fruit + depleted
+bush in one plan and both rows persisted), the depleted bush resolving to
+nothing, and scripted bushes failing closed. Real-map smoke: ocean tile
+(33871,31489,1) reports trashholder 622 with zero map items; bush tile
+(32141,32173,3) serves MapItem 3699 with no trashholder.
+
+**Residual risk**: harvest yields never merge into an existing same-type
+stack on the tile (a full 16-slot tile fails the pick); the client context
+menu still labels ground food with the generic "Use" rather than "Eat";
+dustbins poff where Canary is silent (deliberate).
+
+## 2026-08-07 — Sickle, fire bug, and waking the dormant harvests
+
+**Problem**: scythe/machete/pick harvest handlers shipped earlier but were
+dormant on the real map — none of their targets (wheat, sugar cane, reed,
+jungle grass, diggable earth) were in `MUTABLE_ITEM_IDS`, so the server owned
+no map item to cut (the same data-dormancy trap the water trashholders had).
+The sickle did not exist at all, and sugar cane could never reach its
+harvestable stage because nothing could ignite the standing field.
+
+**What changed**: added the sickle (3293, `handleSickleUse`: ripe cane 5463 →
+harvested 5462 + a bunch of sugar cane on the tile, Canary sickle.lua) and
+the fire bug (5467, `handleFireBugUse`: 60% roll ignites — webs burn, coal
+basins light, standing cane 5465 → burning 5464, which decays in 10 s to the
+sickle-able 5463 — otherwise a poff fizzle). Wheat (3651/3652/3653), the full
+cane cycle (5462/5463/5464/5465/5470), and reed (30623/30624) joined
+`MUTABLE_ITEM_IDS`, so the map now serves 2,278 ripe wheat, 2,565 standing
+cane, and 559 reed placements as server-owned items with catalog decay
+driving regrowth. Also ran `db:reconcile-world-seed` twice for the two map
+regenerations this session (8 + 1 stale rows, audited).
+
+**Files**: `server/src/action/{handleSickleUse,handleFireBugUse,fireBugTable,
+harvestTables,ToolUseHandler}.ts`, `server/src/item/getToolDefinition.ts`,
+`tools/getMapItemSemantics.mjs`, regenerated map binaries/regions/minimap.
+
+**Verified**: ToolUseHandler suite (27 tests) including new cases: sickle
+cuts ripe cane and drops the bunch; sickle refuses burning/unripe cane; fire
+bug across six RNG seeds either ignites or fizzles and never destroys the
+field. Full server suite green.
+
+**Residual risk**: fire bug's rare Canary outcomes (bug crumbles 10%,
+explodes for 5 fire damage 10%) are collapsed into the fizzle — the tool
+context has no consume-carried or direct-damage hook yet. Machete jungle
+grass, wild growth, pick digs/crushable stone, and fire-bug webs/coal basins
+remain dormant (targets not in `MUTABLE_ITEM_IDS`); adding them is the same
+one-list change + map regen, deferred because jungle grass volume shifts many
+tiles from static regions to tile-states.
+
+## 2026-08-07 — Trash-destroyed throws clear on the client immediately
+
+**Problem**: throwing an item into water destroyed it server-side, but the
+thrower kept seeing it float until relog. The client renders every drag
+optimistically as a tile override and only reverts it when an authoritative
+`tile-states` arrives for that tile — and a trash destruction never sent one,
+because the destination tile's state genuinely did not change.
+
+**What changed**: `CarriedPlan` gained an optional `refreshTiles` list;
+`planTrashDrop` and `planMoveMapItem`'s trash branch set it to the
+destination tile, and both apply paths (`ItemIntentHandler.handle`,
+`applyWorldPlan`) re-broadcast those tiles via `onMapItemsChanged` after the
+mutation, so every viewer's optimistic preview reconciles against the real
+(empty) tile.
+
+**Files**: `server/src/item/plan/{CarriedPlan,planTrashDrop,
+planMoveMapItem}.ts`, `server/src/item/ItemIntentHandler.ts`.
+
+**Verified**: water drop test now asserts the session receives
+`tile-states { visible: [{ position: waterTile, items: [] }] }` alongside the
+blue-rings effect; full server suite green.

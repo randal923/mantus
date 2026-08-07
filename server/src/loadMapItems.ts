@@ -68,6 +68,16 @@ function mapItemCount(
   return Number(rawCount);
 }
 
+export interface LoadedMapItems {
+  readonly getItems: (position: Position) => ReadonlyArray<MapItem>;
+  /**
+   * The trashholder ground/scenery type at a tile, if any. Liquids stay
+   * static client scenery (never MapItems — that was the void-ocean bug), so
+   * "does this tile destroy thrown items?" is answered by this side channel.
+   */
+  readonly getTrashholderTypeId: (position: Position) => number | undefined;
+}
+
 export function loadMapItems(
   buffer: Buffer,
   mapName: string,
@@ -75,7 +85,7 @@ export function loadMapItems(
   mapVersion: string,
   sources: ReadonlyMap<string, WorldItemSourceData>,
   catalog?: ItemCatalog,
-): (position: Position) => ReadonlyArray<MapItem> {
+): LoadedMapItems {
   if (buffer.length < HEADER_SIZE || buffer.toString("ascii", 0, 4) !== "TITM") {
     throw new Error(`${mapName}.items.bin is not a TITM file`);
   }
@@ -90,7 +100,7 @@ export function loadMapItems(
   let itemsOnTile = 0;
   for (let index = 0; index < count; index++) {
     const entry = readEntry(buffer, index);
-    if (entry.z > 15 || entry.itemId === 0 || ![1, 2].includes(entry.classification)) {
+    if (entry.z > 15 || entry.itemId === 0 || ![1, 2, 3].includes(entry.classification)) {
       throw new Error(`${mapName}.items.bin contains invalid item data`);
     }
     if (previous) {
@@ -112,7 +122,7 @@ export function loadMapItems(
     previous = entry;
   }
 
-  return (position) => {
+  const firstEntryIndexAt = (position: Position): number | undefined => {
     let low = 0;
     let high = count;
     while (low < high) {
@@ -121,8 +131,34 @@ export function loadMapItems(
       else high = middle;
     }
     if (low >= count || comparePositionAt(buffer, low, position) !== 0) {
-      return NO_ITEMS;
+      return undefined;
     }
+    return low;
+  };
+
+  const getTrashholderTypeId = (position: Position): number | undefined => {
+    const first = firstEntryIndexAt(position);
+    if (first === undefined) return undefined;
+    for (let index = first; index < count; index++) {
+      const entry = readEntry(buffer, index);
+      if (comparePosition(entry, position) !== 0) break;
+      if (entry.classification === 3) return entry.itemId;
+      // Scripted liquids (action/unique ids) were classified interactive
+      // before the trashholder classification existed; the catalog kind
+      // still identifies them.
+      if (
+        entry.classification === 2 &&
+        catalog?.get(entry.itemId)?.kind === "trashholder"
+      ) {
+        return entry.itemId;
+      }
+    }
+    return undefined;
+  };
+
+  const getItems = (position: Position): ReadonlyArray<MapItem> => {
+    const low = firstEntryIndexAt(position);
+    if (low === undefined) return NO_ITEMS;
     const items: MapItem[] = [];
     for (let index = low; index < count; index++) {
       const entry = readEntry(buffer, index);
@@ -149,6 +185,10 @@ export function loadMapItems(
         },
       });
     }
+    // A tile holding only trashholder/interactive entries surfaces no items.
+    if (items.length === 0) return NO_ITEMS;
     return items;
   };
+
+  return { getItems, getTrashholderTypeId };
 }
