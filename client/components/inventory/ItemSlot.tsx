@@ -10,6 +10,8 @@ import { SpriteIcon } from "./SpriteIcon";
 
 interface ItemSlotProps {
   item?: InventoryItem;
+  /** Item drawn flipped in this empty slot — a two-handed weapon's off-hand. */
+  mirrorOf?: InventoryItem;
   placeholderSpriteId?: number;
   onActivate?: () => void;
   onDragStart?: () => void;
@@ -20,6 +22,7 @@ interface ItemSlotProps {
 /** One recessed inventory cell; owned item details are shown from server data. */
 export function ItemSlot({
   item,
+  mirrorOf,
   placeholderSpriteId,
   onActivate,
   onDragStart,
@@ -106,7 +109,14 @@ export function ItemSlot({
           onDrop();
         }}
       >
-        {!item && placeholderSpriteId !== undefined && (
+        {!item && mirrorOf && (
+          <SpriteIcon
+            spriteId={mirrorOf.spriteId}
+            clientId={mirrorOf.clientId}
+            className="-scale-x-100"
+          />
+        )}
+        {!item && !mirrorOf && placeholderSpriteId !== undefined && (
           <SpriteIcon
             spriteId={placeholderSpriteId}
             className="opacity-15 grayscale brightness-150"

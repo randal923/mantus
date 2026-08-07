@@ -63,6 +63,11 @@ export function EquipmentPaperdoll({
                   <ItemSlot
                     key={slot}
                     item={equipment[slot]}
+                    mirrorOf={
+                      slot === "shield" && equipment.weapon?.twoHanded
+                        ? equipment.weapon
+                        : undefined
+                    }
                     placeholderSpriteId={SLOT_HINT_SPRITES[slot]}
                     onActivate={
                       slot === "backpack" && equipment.backpack

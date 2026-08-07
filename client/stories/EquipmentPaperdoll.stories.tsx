@@ -49,3 +49,20 @@ type Story = StoryObj<typeof meta>;
 
 export const Equipped: Story = { args: { equipment } };
 export const Empty: Story = { args: { equipment: {} } };
+
+const twoHandedEquipment: Equipment = {
+  helmet: equipment.helmet,
+  backpack: equipment.backpack,
+  weapon: makeInventoryItem({
+    id: "00000000-0000-4000-8000-000000000005",
+    clientId: 3265,
+    spriteId: 7734,
+    name: "Two Handed Sword",
+    count: 1,
+    equipmentSlot: "weapon",
+    twoHanded: true,
+  }),
+};
+
+/** The off-hand mirrors a two-handed weapon instead of the shield hint. */
+export const TwoHanded: Story = { args: { equipment: twoHandedEquipment } };
