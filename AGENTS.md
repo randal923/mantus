@@ -157,6 +157,11 @@ Prefer small, cohesive files with one clear responsibility.
 
 ## Agent Workflow
 
+- Develop each new feature in its own git worktree, never directly on `main`.
+  Create it with `git worktree add ../tibia-worktrees/<feature-name> -b agents/<feature-name>`
+  (branch named `agents/<feature-name>`). When you create a worktree, add a row
+  to `gitworktree.md` with the branch and status `in progress`; when the
+  feature is merged, set the status to `done` and remove the worktree.
 - Do not run `yarn dev`, development servers, preview servers, or long-running watch commands in the agent session.
 - Do not start local servers unless explicitly asked.
 - Prefer static checks, tests, builds, type checks, and lint commands that exit on completion.
