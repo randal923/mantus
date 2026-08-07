@@ -29,6 +29,24 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **The Item Pouch's semantics live as a hand edit to a generated file**
+  (2026-08-07). `content/canary-item-semantics.json` entry 23721 (renamed
+  Item Pouch: `containerSize` 500, movable, new description) deviates from
+  Canary's items.xml, and `tools/convertCanaryItems.mjs` has no override
+  table — a future `yarn items:convert` regenerates the file from Canary
+  sources and would silently revert the pouch to the 20-slot gold pouch.
+  The store side is safe (`OFFER_OVERRIDES` in
+  `tools/importCanaryStoreCatalog.mjs` survives regeneration). Fix: give
+  the semantics converter the same corrected-at-import override table.
+
+- **`yarn items:catalog` fails at its last step** (pre-existing, observed
+  2026-08-07). The script still chains `node tools/buildItemAnimations.mjs`,
+  but that file was deleted in commit 7c77494 ("add item effect"). Every
+  earlier step (item catalog, wiki catalog, creature loot, proficiency
+  sprites) completes before the failure, so regenerated data is fine — but
+  the non-zero exit makes the run look broken. Fix: drop the step from
+  `package.json` or restore the script.
+
 - **Fire bug rare outcomes are a fizzle; several tool targets stay dormant**
   (2026-08-07). The fire bug ignites (60%) or poffs — Canary's 10% "bug
   crumbles" and 10% "explodes for 5 fire damage" branches need a

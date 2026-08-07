@@ -16,6 +16,13 @@ export const EQUIPMENT_SLOTS = [
 export const equipmentSlotSchema = z.enum(EQUIPMENT_SLOTS);
 
 /**
+ * The largest container the wire ever carries. Matches the server's 500-row
+ * carried-item cap, so the item pouch's "infinite" slots are genuinely never
+ * the binding constraint — weight and the carry cap bind first.
+ */
+export const MAX_CONTAINER_CAPACITY = 500;
+
+/**
  * Quick-loot buckets, Canary's `ObjectCategory` reduced to what this server
  * distinguishes. The server derives an item's bucket from its own catalog;
  * a client may name one to filter a sweep, never to change what an item is.
@@ -113,7 +120,12 @@ export const inventoryItemPresentationSchema = z
     maxCount: z.number().int().min(1).max(100),
     equipmentSlot: equipmentSlotSchema.optional(),
     twoHanded: z.boolean().optional(),
-    containerCapacity: z.number().int().min(0).max(100).optional(),
+    containerCapacity: z
+      .number()
+      .int()
+      .min(0)
+      .max(MAX_CONTAINER_CAPACITY)
+      .optional(),
     useKind: itemUseKindSchema.optional(),
     /** Forge tier (0 = untiered); only classified items ever carry one. */
     tier: z.number().int().min(0).max(10).optional(),
@@ -163,7 +175,7 @@ export const inventoryItemSchema = inventoryItemPresentationSchema
 
 export const inventorySlotEntrySchema = z
   .object({
-    slot: z.number().int().min(0).max(99),
+    slot: z.number().int().min(0).max(MAX_CONTAINER_CAPACITY - 1),
     item: inventoryItemSchema,
   })
   .strict();
@@ -187,10 +199,10 @@ export const containerStateSchema = z
   .object({
     container: inventoryItemSchema,
     parentContainerId: z.string().uuid().nullable(),
-    capacity: z.number().int().min(0).max(100),
+    capacity: z.number().int().min(0).max(MAX_CONTAINER_CAPACITY),
     items: z
       .array(inventorySlotEntrySchema)
-      .max(100),
+      .max(MAX_CONTAINER_CAPACITY),
   })
   .strict();
 

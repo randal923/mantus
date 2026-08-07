@@ -4177,3 +4177,72 @@ planMoveMapItem}.ts`, `server/src/item/ItemIntentHandler.ts`.
 **Verified**: water drop test now asserts the session receives
 `tile-states { visible: [{ position: waterTile, items: [] }] }` alongside the
 blue-rings effect; full server suite green.
+
+## 2026-08-07 — Gold Pouch becomes the Item Pouch: infinite slots, loot flows into it
+
+**Problem**: the store's Gold Pouch was a coins-only-by-description, 20-slot,
+unmovable container with no behaviour of its own. Wanted: rename it to Item
+Pouch, make it hold items of any kind with slots that never run out, and give
+it a purpose — while it is carried in the backpack, everything looted (auto
+loot and the corpse "Loot all" sweep) lands inside it.
+
+**What changed**:
+
+- Catalog: `content/canary-item-semantics.json` entry 23721 renamed to
+  "item pouch" (article "an"), new description, `containerSize` 20 → 500,
+  `movable` false → true (it must be placeable inside the backpack);
+  `yarn items:catalog` regenerated `server/data/item-catalog.json` (only
+  23721 changed) and `client/public/assets/wiki-items.json` (name-sorted, so
+  the rename shifted array positions).
+- Store: `tools/importCanaryStoreCatalog.mjs` gained an `OFFER_OVERRIDES`
+  table (the same corrected-at-import pattern as `ITEM_ID_CORRECTIONS`) that
+  renames the offer and swaps the description; regenerated
+  `storeCatalogData.ts`. The sub-offer id `item-23721-1` — what purchases
+  reference — is unchanged; only the display product id moved
+  (`useful-things-gold-pouch` → `useful-things-item-pouch`).
+- "Infinite" slots: capacity 500 equals the server's `MAX_CARRIED_ITEMS`
+  cap, so slots are genuinely never the binding constraint — weight and the
+  500-row carry cap bind first. The wire caps moved to match: new
+  `MAX_CONTAINER_CAPACITY = 500` in `protocol/src/item.ts` bounds container
+  slot indexes (was 99), container-state capacity/items (was 100), the
+  presentation `containerCapacity`, and the client's aimed-destination slot
+  (`clientMessages.ts`).
+- Presentation: a container whose capacity reaches the max renders as
+  unlimited — the open-container grid draws only the used rows plus one
+  spare drop row with an "n / ∞" header (`ContainerInventorySection`), the
+  tooltip says "Capacity: unlimited slots" (new `containerSlotsUnlimited`
+  locale key, en + pt-BR), and the look line prints `Vol:∞`
+  (`itemLookSegments`).
+- Loot routing: new `server/src/item/plan/planItemPouchPlacement.ts` — when
+  a pouch (`ITEM_POUCH_TYPE_ID`, new `item/itemPouchTypeId.ts`) sits
+  anywhere in the equipped backpack tree, destination-less loot placement
+  targets it exclusively: top up a partial stack already in the pouch, else
+  first free pouch slot; deliberately does *not* top up stacks in other
+  containers, so loot never splits away from the pouch. Wired as the first
+  choice in `planLoot`'s no-destination branch, falling back to
+  `planBackpackPlacement`; that branch serves auto loot, quick loot, and
+  hand loot without an aimed slot, so an explicit drag to a chosen slot
+  still goes exactly where the player aimed. Ordinary pickups, potion-flask
+  returns, and purchases keep normal backpack fill.
+
+**Files**: `content/canary-item-semantics.json`,
+`tools/importCanaryStoreCatalog.mjs`, `server/data/item-catalog.json`,
+`server/src/store/storeCatalogData.ts`, `protocol/src/{item,clientMessages}.ts`,
+`server/src/item/{itemPouchTypeId.ts,plan/planItemPouchPlacement.ts,plan/planLoot.ts}`,
+`server/src/look/itemLookSegments.ts`,
+`client/components/inventory/{ContainerInventorySection,ItemTooltip}.tsx`,
+`client/locales/{en,pt-BR}.json`, `client/public/assets/wiki-items.json`.
+
+**Verified**: four new regression tests — auto loot sweeps gold + an axe into
+the pouch and leaves the backpack holding only the pouch; a partial gold
+stack in the *backpack* is left alone while the pouch opens its own stack
+(anti-split rule); a partial stack *inside* the pouch tops up 50 → 60; a
+"Loot all" quick-loot sweep lands both items in the pouch. Full suites green:
+server 3,833 passed / 263 skipped, client 441 passed; protocol + server +
+client typecheck clean; eslint clean on touched client files.
+
+**Residual risk**: the 23721 semantics entry is a hand edit to a generated
+file — a future `yarn items:convert` would silently revert the pouch to
+Canary's gold pouch (recorded in `TODO.md` accepted gaps). Players who
+bought the Gold Pouch before this change keep the same item row; it simply
+starts routing loot once moved into the backpack.

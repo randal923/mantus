@@ -189,7 +189,11 @@ import {
   tradeCancelMessageSchema,
   tradeRequestMessageSchema,
 } from "./trade";
-import { equipmentSlotSchema, quickLootFilterSchema } from "./item";
+import {
+  equipmentSlotSchema,
+  MAX_CONTAINER_CAPACITY,
+  quickLootFilterSchema,
+} from "./item";
 import { positionSchema } from "./position";
 import { viewRangeSchema } from "./viewRange";
 import {
@@ -410,7 +414,7 @@ export const itemContainerDestinationSchema = z
   .object({
     containerId: z.string().uuid(),
     containerRevision: z.number().int().positive(),
-    slot: z.number().int().min(0).max(99),
+    slot: z.number().int().min(0).max(MAX_CONTAINER_CAPACITY - 1),
     /** Atomically shifts the occupied prefix so this item lands in slot 0. */
     placement: z.literal("front").optional(),
   })

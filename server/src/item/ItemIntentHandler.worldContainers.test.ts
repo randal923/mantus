@@ -13,6 +13,7 @@ import { DecayManager } from "./DecayManager";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import { ItemIntentHandler } from "./ItemIntentHandler";
+import { ITEM_POUCH_TYPE_ID } from "./itemPouchTypeId";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { MemoryItemStore } from "./MemoryItemStore";
 import type { WorldItemSource } from "./WorldItemSource";
@@ -21,6 +22,7 @@ const LOOTER_ID = "3d2af45f-e037-44f5-bd50-7bc655c6cd0e";
 const RIVAL_ID = "9c1de0aa-1111-4222-8333-abcdefabcdef";
 const LOOTER_BACKPACK_ID = "41868798-fc9b-43ac-bf28-4f52bf64c4eb";
 const RIVAL_BACKPACK_ID = "52979809-0dac-44bd-9c39-5063c075d5fc";
+const ITEM_POUCH_ID = "63a8a91a-1ebc-45ce-a44a-6174c186d60d";
 const CORPSE_TYPE = 6042;
 const BACKPACK_TYPE = 2854;
 const CHEST_TYPE = 2472;
@@ -89,7 +91,10 @@ const chestSource: WorldItemSource = {
 };
 
 async function makeHarness(
-  options: { readonly loot?: ReadonlyArray<{ typeId: number; count: number }> } = {},
+  options: {
+    readonly loot?: ReadonlyArray<{ typeId: number; count: number }>;
+    readonly carriedItems?: ReadonlyArray<Item>;
+  } = {},
 ) {
   const world = new World(
     gridMapData({
@@ -120,6 +125,7 @@ async function makeHarness(
   const store = new MemoryItemStore(catalog);
   store.seed(backpackFor(LOOTER_ID, LOOTER_BACKPACK_ID));
   store.seed(backpackFor(RIVAL_ID, RIVAL_BACKPACK_ID));
+  for (const item of options.carriedItems ?? []) store.seed(item);
   const items = new ItemIntentHandler(
     store,
     catalog,
@@ -393,6 +399,47 @@ describe("quick loot", () => {
       harness.looter.sent.some((message) => message.type === "error"),
     ).toBe(false);
     expect(childrenOf(harness.world, corpse.id)).toEqual([]);
+  });
+
+  it("sweeps into a carried item pouch when one is in the backpack", async () => {
+    const harness = await makeHarness({
+      loot: [
+        { typeId: GOLD_TYPE, count: 7 },
+        { typeId: CHEESE_TYPE, count: 2 },
+      ],
+      carriedItems: [
+        {
+          id: ITEM_POUCH_ID,
+          typeId: ITEM_POUCH_TYPE_ID,
+          count: 1,
+          attributes: {},
+          version: 1,
+          location: {
+            kind: "container",
+            containerId: LOOTER_BACKPACK_ID,
+            slot: 0,
+          },
+        },
+      ],
+    });
+    const corpse = containerAt(harness.world, CORPSE_POSITION);
+    harness.items.handleMapOpen(harness.looter.session, CORPSE_POSITION);
+
+    harness.items.handle(harness.looter.session, {
+      type: "quick-loot",
+      containerId: corpse.id,
+    });
+
+    expect(childrenOf(harness.world, corpse.id)).toEqual([]);
+    const carried = harness.items.inventorySnapshot(LOOTER_ID)?.items ?? [];
+    const pouchChildren = carried.filter(
+      (item) =>
+        item.location.kind === "container" &&
+        item.location.containerId === ITEM_POUCH_ID,
+    );
+    expect(pouchChildren.map((item) => item.typeId).sort()).toEqual(
+      [GOLD_TYPE, CHEESE_TYPE].sort(),
+    );
   });
 
   it("takes only the named category when one is given", async () => {

@@ -67,6 +67,23 @@ const ITEM_ID_CORRECTIONS = [
   { name: "Exercise Wraps", charges: 500, from: 50_294, to: 50_293 },
 ];
 
+/**
+ * Deliberate deviations from Canary's catalog, applied by offer name. This
+ * server sells Canary's Gold Pouch as the Item Pouch: a movable container
+ * with slots that never run out, holding items of any kind, that carried
+ * loot flows into (see server/src/item/plan/planItemPouchPlacement.ts).
+ * The description is stored post-`cleanDescription`, already in the store's
+ * marker format.
+ */
+const OFFER_OVERRIDES = [
+  {
+    name: "Gold Pouch",
+    rename: "Item Pouch",
+    description:
+      "Carries as many items of any kind as your capacity allows — its slots never run out.\n\n{character}\n{storeinbox}\n{once}\n{useicon} use it to open it\n{info} while it is in your backpack, all looted items go straight into it",
+  },
+];
+
 const SYMBOL_BY_KIND = {
   premium: "premium",
   "name-change": "name-change",
@@ -381,11 +398,20 @@ function importCatalog() {
         skipped.push({ module: entry.module, reason: mapped.skip });
         continue;
       }
-      const name = offerName(offer, mapped);
-      if (!name) {
+      const canaryName = offerName(offer, mapped);
+      if (!canaryName) {
         skipped.push({ module: entry.module, reason: "offer has no literal name" });
         continue;
       }
+      const override = OFFER_OVERRIDES.find(
+        (candidate) => candidate.name === canaryName,
+      );
+      if (override) {
+        context.corrections.push(
+          `"${canaryName}" sold as "${override.rename}" (deliberate deviation)`,
+        );
+      }
+      const name = override?.rename ?? canaryName;
       const price = integerOrNull(offer.price);
       if (!price || price < 1) {
         skipped.push({ module: entry.module, reason: `offer "${name}" has no price` });
@@ -432,7 +458,8 @@ function importCatalog() {
             : `${entry.id}-${slug(name)}`,
         name: mapped.kind === "premium" ? "Premium Time" : name,
         kind: mapped.kind,
-        description: cleanDescription(offer.description),
+        description:
+          override?.description ?? cleanDescription(offer.description),
         icon: mapped.icon ?? {
           kind: "symbol",
           symbol: SYMBOL_BY_KIND[mapped.kind] ?? "premium",

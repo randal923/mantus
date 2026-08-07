@@ -144,7 +144,7 @@ export const STORE_HOME_PRODUCT_IDS: ReadonlyArray<string> = [
   "outfits-full-arbalester-outfit",
   "mounts-armoured-war-horse",
   "potions-great-health-potion",
-  "useful-things-gold-pouch",
+  "useful-things-item-pouch",
 ];
 
 /** The category tree, as the client's left-hand list needs it. */

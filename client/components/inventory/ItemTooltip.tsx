@@ -1,6 +1,6 @@
 "use client";
 
-import type { ItemTooltipData } from "@tibia/protocol";
+import { MAX_CONTAINER_CAPACITY, type ItemTooltipData } from "@tibia/protocol";
 import Image from "next/image";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
@@ -148,9 +148,11 @@ export function ItemTooltip({ item }: ItemTooltipProps) {
       >
         {item.containerCapacity !== undefined && (
           <p>
-            {t("itemTooltip.containerSlots", {
-              count: item.containerCapacity,
-            })}
+            {item.containerCapacity >= MAX_CONTAINER_CAPACITY
+              ? t("itemTooltip.containerSlotsUnlimited")
+              : t("itemTooltip.containerSlots", {
+                  count: item.containerCapacity,
+                })}
           </p>
         )}
         {item.charges !== undefined && (

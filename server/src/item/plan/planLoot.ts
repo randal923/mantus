@@ -13,6 +13,7 @@ import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
 import { planBackpackPlacement } from "./planBackpackPlacement";
 import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
+import { planItemPouchPlacement } from "./planItemPouchPlacement";
 import { subtreeHeight } from "./subtreeHeight";
 import type { WorldItemsView } from "./WorldItemsView";
 
@@ -118,12 +119,21 @@ export function planLoot(input: {
       slot: input.destination.slot,
     };
   } else {
-    const placement = planBackpackPlacement({
-      catalog,
-      carried: carried.items,
-      item,
-      subtree,
-    });
+    // A carried Item Pouch claims all destination-less loot (auto loot, quick
+    // loot, hand loot without an aimed slot) before normal backpack fill.
+    const placement =
+      planItemPouchPlacement({
+        catalog,
+        carried: carried.items,
+        item,
+        subtree,
+      }) ??
+      planBackpackPlacement({
+        catalog,
+        carried: carried.items,
+        item,
+        subtree,
+      });
     if (!placement) return null;
     finalLocation = placement.location;
     mergeTarget = placement.mergeTarget;

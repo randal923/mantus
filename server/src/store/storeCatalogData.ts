@@ -13811,10 +13811,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         ]
       },
       {
-        "id": "useful-things-gold-pouch",
-        "name": "Gold Pouch",
+        "id": "useful-things-item-pouch",
+        "name": "Item Pouch",
         "kind": "item",
-        "description": "Carries as many gold, platinum or crystal coins as your capacity allows, however, no other items.\n\n{character}\n{storeinbox}\n{once}\n{useicon} use it to open it\n{info} always placed on the first position of your Store inbox",
+        "description": "Carries as many items of any kind as your capacity allows — its slots never run out.\n\n{character}\n{storeinbox}\n{once}\n{useicon} use it to open it\n{info} while it is in your backpack, all looted items go straight into it",
         "icon": {
           "kind": "item",
           "itemTypeId": 23721

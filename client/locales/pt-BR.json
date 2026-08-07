@@ -1322,6 +1322,7 @@
     "weight": "{{weight}} oz",
     "charges": "Cargas: {{count}}",
     "containerSlots": "Capacidade: {{count}} espaços",
+    "containerSlotsUnlimited": "Capacidade: espaços ilimitados",
     "rarity": {
       "common": "Comum",
       "uncommon": "Incomum",

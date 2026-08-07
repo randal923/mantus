@@ -1,3 +1,4 @@
+import { MAX_CONTAINER_CAPACITY } from "@tibia/protocol";
 import type { ItemType } from "../item/ItemType";
 import { formatSigned } from "./formatSigned";
 import { skillLookName } from "./skillLookName";
@@ -35,7 +36,12 @@ export function itemLookSegments(type: ItemType): ReadonlyArray<string> {
   const segments: string[] = [];
 
   if (type.containerCapacity !== undefined) {
-    segments.push(`Vol:${type.containerCapacity}`);
+    // A slot-unlimited container (the item pouch) looks infinite, not "500".
+    segments.push(
+      type.containerCapacity >= MAX_CONTAINER_CAPACITY
+        ? "Vol:∞"
+        : `Vol:${type.containerCapacity}`,
+    );
   }
 
   if (type.weaponType === "distance" && type.ammoType) {

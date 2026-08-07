@@ -14,6 +14,7 @@ import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import { ItemIntentHandler } from "./ItemIntentHandler";
 import type { LootItemCreation } from "./LootItemCreation";
+import { ITEM_POUCH_TYPE_ID } from "./itemPouchTypeId";
 import { loadItemCatalog } from "./loadItemCatalog";
 import { MemoryItemStore } from "./MemoryItemStore";
 
@@ -21,6 +22,7 @@ const KILLER_ID = "3d2af45f-e037-44f5-bd50-7bc655c6cd0e";
 const RIVAL_ID = "9c1de0aa-1111-4222-8333-abcdefabcdef";
 const KILLER_BACKPACK_ID = "41868798-fc9b-43ac-bf28-4f52bf64c4eb";
 const RIVAL_BACKPACK_ID = "52979809-0dac-44bd-9c39-5063c075d5fc";
+const ITEM_POUCH_ID = "63a8a91a-1ebc-45ce-a44a-6174c186d60d";
 /** Dead chicken: a container corpse. */
 const CORPSE_TYPE = 6042;
 const GOLD_TYPE = 3031;
@@ -160,6 +162,18 @@ function fullBackpackWithNestedBag(nestedBagId: string): Item[] {
     },
   }));
   return [nested, ...filler];
+}
+
+/** An item pouch sitting in the killer's equipped backpack. */
+function pouchInBackpack(slot = 0): Item {
+  return {
+    id: ITEM_POUCH_ID,
+    typeId: ITEM_POUCH_TYPE_ID,
+    count: 1,
+    attributes: {},
+    version: 1,
+    location: { kind: "container", containerId: KILLER_BACKPACK_ID, slot },
+  };
 }
 
 function childrenOf(
@@ -462,6 +476,110 @@ describe("auto loot", () => {
     await settle(harness.items, 0);
 
     expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
+  });
+
+  it("sweeps everything into a carried item pouch instead of the backpack", async () => {
+    const harness = await makeHarness({
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
+      carriedItems: [pouchInBackpack()],
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    expect(corpseChildren(harness.world, harness.corpseId)).toEqual([]);
+    expect(
+      childrenOf(harness.items, KILLER_ID, ITEM_POUCH_ID)
+        .map((item) => item.typeId)
+        .sort(),
+    ).toEqual([GOLD_TYPE, AXE_TYPE].sort());
+    // The backpack itself holds nothing new beyond the pouch.
+    expect(
+      childrenOf(harness.items, KILLER_ID, KILLER_BACKPACK_ID).map(
+        (item) => item.typeId,
+      ),
+    ).toEqual([ITEM_POUCH_TYPE_ID]);
+  });
+
+  it("opens a pouch stack rather than topping up one in the backpack", async () => {
+    const existingGoldId = randomUUID();
+    const harness = await makeHarness({
+      filter: { enabled: true, pickupRules: [{ typeId: GOLD_TYPE }] },
+      carriedItems: [
+        pouchInBackpack(),
+        {
+          id: existingGoldId,
+          typeId: GOLD_TYPE,
+          count: 50,
+          attributes: {},
+          version: 1,
+          location: {
+            kind: "container",
+            containerId: KILLER_BACKPACK_ID,
+            slot: 1,
+          },
+        },
+      ],
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    const backpackGold = childrenOf(
+      harness.items,
+      KILLER_ID,
+      KILLER_BACKPACK_ID,
+    ).filter((item) => item.typeId === GOLD_TYPE);
+    expect(backpackGold.map((item) => item.count)).toEqual([50]);
+    const pouchGold = childrenOf(harness.items, KILLER_ID, ITEM_POUCH_ID).filter(
+      (item) => item.typeId === GOLD_TYPE,
+    );
+    expect(pouchGold.map((item) => item.count)).toEqual([10]);
+  });
+
+  it("tops up a partial stack already inside the pouch", async () => {
+    const existingGoldId = randomUUID();
+    const harness = await makeHarness({
+      filter: { enabled: true, pickupRules: [{ typeId: GOLD_TYPE }] },
+      carriedItems: [
+        pouchInBackpack(),
+        {
+          id: existingGoldId,
+          typeId: GOLD_TYPE,
+          count: 50,
+          attributes: {},
+          version: 1,
+          location: { kind: "container", containerId: ITEM_POUCH_ID, slot: 0 },
+        },
+      ],
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    const pouchGold = childrenOf(harness.items, KILLER_ID, ITEM_POUCH_ID).filter(
+      (item) => item.typeId === GOLD_TYPE,
+    );
+    expect(pouchGold).toHaveLength(1);
+    expect(pouchGold[0]?.count).toBe(60);
   });
 
   it("cannot duplicate loot when the same corpse is swept twice", async () => {

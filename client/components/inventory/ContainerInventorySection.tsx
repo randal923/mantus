@@ -1,6 +1,10 @@
 "use client";
 
-import type { ContainerState, InventoryItem } from "@tibia/protocol";
+import {
+  MAX_CONTAINER_CAPACITY,
+  type ContainerState,
+  type InventoryItem,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { CloseButton } from "../ui/CloseButton";
 import { ItemSlot } from "./ItemSlot";
@@ -38,9 +42,14 @@ export function ContainerInventorySection({
     0,
   );
   const rows = Math.max(Math.ceil(usedSlots / COLUMNS), 1);
+  // Slot-unlimited containers (the item pouch) render only the rows the
+  // contents need plus one spare row of drop targets, never the full grid.
+  const unlimited = state.capacity >= MAX_CONTAINER_CAPACITY;
   const slotCount = fitContents
     ? Math.min(state.capacity, rows * COLUMNS)
-    : state.capacity;
+    : unlimited
+      ? Math.min(state.capacity, Math.ceil((usedSlots + 1) / COLUMNS) * COLUMNS)
+      : state.capacity;
 
   return (
     <section
@@ -52,7 +61,7 @@ export function ContainerInventorySection({
           {state.container.name}
         </h4>
         <span className="text-xs text-ui-muted">
-          {state.items.length} / {state.capacity}
+          {state.items.length} / {unlimited ? "∞" : state.capacity}
         </span>
         <CloseButton
           label={t("inventory.closeContainer", {
