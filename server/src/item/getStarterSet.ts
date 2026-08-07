@@ -11,6 +11,8 @@ const COMMON_SUPPLIES = [
   { typeId: 3043, count: 5 },
   { typeId: 266, count: 5 },
   { typeId: 3577, count: 3 },
+  { typeId: 3003, count: 1 },
+  { typeId: 3457, count: 1 },
 ] as const;
 
 const STARTER_SETS: Readonly<Record<StarterVocation, StarterSet>> = {

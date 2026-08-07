@@ -29,6 +29,8 @@ describe("getStarterSet", () => {
         expect.arrayContaining([
           { typeId: 3043, count: 5 },
           { typeId: 266, count: 5 },
+          { typeId: 3003, count: 1 },
+          { typeId: 3457, count: 1 },
         ]),
       );
       if (weapon) weaponIds.add(weapon.typeId);
