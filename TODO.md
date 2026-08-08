@@ -604,16 +604,18 @@ limitations accepted during a session are recorded in the owning feature file
   monster tables but not in the pinned Tibia 15.11 item catalog, so the roll
   skips them. The budget is pinned by `monsterLootParity.test.ts`, which fails
   if a thirteenth appears. Fix: a newer asset era, not a code change.
-- **Blessings are always zero** (2026-07-25, Features 32/72). The full Canary
-  death loss formula reads a blessing count through `Player.blessings`, which
-  is a seam that still returns 0. The pinned blessing catalog, both cost curves
-  and the equipment-loss table now exist as typed data
-  (`server/src/progression/blessings.ts`, Feature 72), but nothing persists or
-  grants a blessing yet, so the penalty is still only reduced by promotion and
-  the unfair-fight reduction and no items drop into a player corpse. Next
-  slice: the `characters.blessings` bitmask column + `CharacterStore`
-  load/save, then the purchase path (economy-relevant — its own PR).
-  Owner: Feature 72.
+- **Blessings protect experience but not yet equipment** (2026-08-08,
+  Features 32/72; supersedes "Blessings are always zero"). Purchase,
+  persistence (`characters.blessings` bitmask, migration 076), the death-loss
+  discount, and PvE death consumption shipped with the VIP full bless
+  (Henricus dialogue, `BlessService`/`PgBlessStore`). Still open, in Canary
+  order of impact: (1) items/containers never drop into a player corpse —
+  player corpses don't exist, so `equipmentLossChancePercent` has no
+  consumer; (2) Amulet of Loss and Twist of Fate PvP-death semantics (ToF is
+  not sold and its bit survives every death); (3) temple single-bless NPCs —
+  27 imported NPCs still carry unsupported `StdModule.bless` keyword actions
+  (parity-gate ceiling unchanged at 611); (4) the adventurer's-blessing
+  free-below-level rule. Owner: Feature 72.
 - **Ignore lists are memory-only** (2026-07-25, Feature 35 — single owner
   after the 2026-07-25 restructure; the duplicate Feature 65 entry was
   merged here). They survive a relogin (keyed by character id for the

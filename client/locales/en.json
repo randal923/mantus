@@ -3049,7 +3049,7 @@
       },
       "fullBless": {
         "name": "Full Bless",
-        "description": "When buying bless from the Inquisition NPC, the character will receive all blessings."
+        "description": "The Inquisition NPC Henricus offers VIP characters the full bless: one purchase grants every missing blessing at once."
       },
       "loginPriority": {
         "name": "Login Priority",

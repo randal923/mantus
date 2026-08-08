@@ -3049,7 +3049,7 @@
       },
       "fullBless": {
         "name": "Bless Completa",
-        "description": "Ao comprar bless do NPC da Inquisição, o personagem receberá todas as bênçãos."
+        "description": "O NPC da Inquisição, Henricus, oferece a personagens VIP a bless completa: uma única compra concede todas as bênçãos que faltam de uma vez."
       },
       "loginPriority": {
         "name": "Prioridade de Login",

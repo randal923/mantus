@@ -15,6 +15,7 @@ import { PgEconomyPersistOps } from "./economy/PgEconomyPersistOps";
 import { PgShopStore } from "./economy/PgShopStore";
 import { PgNpcTravelStore } from "./npc/PgNpcTravelStore";
 import { PgPromotionStore } from "./npc/PgPromotionStore";
+import { PgBlessStore } from "./npc/PgBlessStore";
 import { PgSpellTeacherStore } from "./npc/PgSpellTeacherStore";
 import { PgDepotStore } from "./depot/PgDepotStore";
 import { PgMarketStore } from "./market/PgMarketStore";
@@ -110,6 +111,7 @@ const items = new PgItemStore(pool, itemCatalog, serverConfig.map.name);
 const npcTravel = new PgNpcTravelStore(pool, itemCatalog);
 const promotion = new PgPromotionStore(pool, itemCatalog);
 const spellTeacher = new PgSpellTeacherStore(pool, itemCatalog);
+const bless = new PgBlessStore(pool, itemCatalog);
 const bank = new PgBankStore(pool);
 const shop = new PgShopStore(pool);
 // Memory-first shop and bank writes commit their item, money, stock and audit
@@ -168,6 +170,7 @@ const server = new GameServer(serverConfig, {
   npcTravel,
   promotion,
   spellTeacher,
+  bless,
   bank,
   shop,
   economyPersist,

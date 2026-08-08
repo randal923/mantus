@@ -47,6 +47,20 @@ export type DialogueAction =
     }
   | {
       /**
+       * Buys blessings: bank/carried money leg, audit row, grant held until
+       * death. Already-held blessings are skipped and never charged; the
+       * price is recomputed from the character's own level and mask at
+       * execution time and again from database truth inside the store.
+       */
+      readonly kind: "bless";
+      readonly blessingIds: ReadonlyArray<number>;
+      /** Canary's Inquisition surcharge on the summed single prices (10). */
+      readonly surchargePercent: number;
+      /** The VIP full-bless bundle; re-checked at execution time. */
+      readonly premium: boolean;
+    }
+  | {
+      /**
        * Canary StdModule.kick: the NPC teleports the player away for free
        * and drops the conversation. Modelled as a travel offer so the
        * destination goes through the same execution-time walkability and

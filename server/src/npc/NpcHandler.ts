@@ -19,6 +19,7 @@ import { NpcConversations } from "./NpcConversations";
 import { NpcDialogueExecutor } from "./NpcDialogueExecutor";
 import { NpcDialogueFlow } from "./NpcDialogueFlow";
 import type { TravelService } from "./TravelService";
+import type { BlessService } from "./BlessService";
 import type { PromotionService } from "./PromotionService";
 import type { SpellTeacherService } from "./SpellTeacherService";
 import type { QuestService } from "../quest/QuestService";
@@ -40,6 +41,7 @@ export class NpcHandler {
     promotion?: PromotionService,
     spellTeacher?: SpellTeacherService,
     quests?: QuestService,
+    bless?: BlessService,
   ) {
     this.flow = new NpcDialogueFlow(this.conversations, visibility, shops);
     this.executor = new NpcDialogueExecutor(
@@ -51,6 +53,7 @@ export class NpcHandler {
       promotion,
       spellTeacher,
       quests,
+      bless,
     );
   }
 

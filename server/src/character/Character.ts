@@ -39,6 +39,8 @@ export interface Character {
   readonly soul: number;
   /** Stamina in minutes (Canary: 0..2520). */
   readonly stamina: number;
+  /** Canary's blessing bitmask: bit `id - 1` per blessing, ids 1..8. */
+  readonly blessings: number;
   /** Wall-clock time of the last durable save; null for an unsaved character. */
   readonly lastSeenAt: Date | null;
   readonly skills: ReadonlyArray<CharacterSkill>;
@@ -96,6 +98,8 @@ export interface CharacterSaveSnapshot {
   readonly mana: number;
   readonly soul: number;
   readonly stamina: number;
+  /** Blessing bitmask at snapshot time; death clears it before the save. */
+  readonly blessings: number;
   /** Wall-clock time of this save; drives offline accrual on next login. */
   readonly lastSeenAt: Date;
   readonly skills: ReadonlyArray<CharacterSkill>;
