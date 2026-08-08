@@ -27,7 +27,8 @@
       "game": {
         "title": "Jogo",
         "vocations": "Vocações",
-        "serverInfo": "Informações do Servidor"
+        "serverInfo": "Informações do Servidor",
+        "vipAccount": "Conta VIP"
       },
       "community": {
         "title": "Comunidade",
@@ -363,7 +364,8 @@
       "game": {
         "title": "Jogo",
         "vocations": "Vocações",
-        "serverInfo": "Informações do Servidor"
+        "serverInfo": "Informações do Servidor",
+        "vipAccount": "Conta VIP"
       },
       "community": {
         "title": "Comunidade",
@@ -2994,10 +2996,79 @@
     "title": "Taxa de ganho de XP",
     "base": "Taxa base de XP",
     "xpBoost": "Impulso de XP",
+    "premium": "Bônus VIP",
     "stamina": "Multiplicador de stamina",
     "total": "Total",
     "remaining": "{{count}} min restantes",
     "staminaDepleted": "Sua stamina acabou; você não ganha experiência ao caçar."
+  },
+  "vipAccount": {
+    "title": "Conta VIP",
+    "intro": "Uma conta VIP concede a todos os personagens da conta um conjunto de bônus permanentes, aplicados pelo servidor enquanto seu tempo VIP estiver ativo.",
+    "howTo": "O tempo VIP é comprado com Mantus Coins na loja dentro do jogo, em Tempo Premium.",
+    "tableTitle": "Benefícios VIP",
+    "benefit": "Benefício",
+    "description": "Descrição",
+    "comingSoon": "Em breve",
+    "benefits": {
+      "wheelCooldown": {
+        "name": "Wheel Cooldown",
+        "description": "{{percent}}% menos tempo de recarga no passivo Gift of Life e nas magias de Avatar."
+      },
+      "protectedImbuement": {
+        "name": "Imbuement Protegido",
+        "description": "Nenhum imbuement é consumido dentro de zonas de proteção (incluindo capacidade e velocidade)."
+      },
+      "expBonus": {
+        "name": "Bônus de EXP",
+        "description": "Cada monstro derrotado concede {{percent}}% de experiência a mais."
+      },
+      "criticalChance": {
+        "name": "Crítico Adicional",
+        "description": "Todos os personagens da conta têm {{percent}}% a mais de chance de crítico."
+      },
+      "exerciseSpeed": {
+        "name": "Velocidade de Exercício",
+        "description": "A velocidade de todas as armas de exercício é aumentada em {{percent}}%."
+      },
+      "healthRegen": {
+        "name": "Regeneração de Vida",
+        "description": "{{amount}} de vida adicional regenera a cada {{seconds}} segundos, com ou sem comida."
+      },
+      "manaRegen": {
+        "name": "Regeneração de Mana",
+        "description": "{{amount}} de mana adicional regenera a cada {{seconds}} segundos, com ou sem comida."
+      },
+      "proficiency": {
+        "name": "Bônus de Proficiência",
+        "description": "A experiência de proficiência de arma acumula {{percent}}% mais rápido."
+      },
+      "familiar": {
+        "name": "Otimização de Familiar",
+        "description": "Familiars causarão 30% a mais de dano com suas magias."
+      },
+      "fullBless": {
+        "name": "Bless Completa",
+        "description": "Ao comprar bless do NPC da Inquisição, o personagem receberá todas as bênçãos."
+      },
+      "loginPriority": {
+        "name": "Prioridade de Login",
+        "description": "Se o servidor tiver fila, jogadores VIP terão prioridade na fila."
+      },
+      "houseAbsence": {
+        "name": "Ausência de Casa",
+        "description": "Jogadores VIP podem ficar offline por mais tempo sem perder a casa."
+      }
+    },
+    "includedTitle": "Também faz parte do VIP",
+    "included": {
+      "market": "Criar ofertas de compra e venda no Market.",
+      "houses": "Dar lances e possuir uma casa.",
+      "huntingTasks": "Um slot extra de hunting task.",
+      "imbuements": "Acesso a imbuements premium.",
+      "stamina": "O bônus de +50% de experiência da stamina verde.",
+      "vipList": "Uma lista de amigos VIP maior."
+    }
   },
   "imbuementTracker": {
     "title": "Imbuements",

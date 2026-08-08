@@ -1,4 +1,8 @@
-import type { CombatTarget, ServerErrorCode } from "@tibia/protocol";
+import {
+  PREMIUM_BENEFITS,
+  type CombatTarget,
+  type ServerErrorCode,
+} from "@tibia/protocol";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import { Monster } from "../creature/Monster";
 import { Player } from "../Player";
@@ -120,6 +124,9 @@ export class SpellCaster {
     applySpellCooldowns(this.feedback, session, spell, now, {
       spellMs: augment.cooldownReductionMs ?? 0,
       secondaryGroupMs: augment.secondaryGroupCooldownReductionMs ?? 0,
+      ...(spell.playerAction === "avatar" && player.isPremiumAt(now)
+        ? { spellMultiplier: PREMIUM_BENEFITS.wheelCooldownMultiplier }
+        : {}),
     });
     if (spendResources && manaCost > 0) {
       this.progression.awardMagicProgress(
@@ -536,6 +543,9 @@ export class SpellCaster {
     applySpellCooldowns(this.feedback, session, spell, now, {
       spellMs: augment.cooldownReductionMs ?? 0,
       secondaryGroupMs: augment.secondaryGroupCooldownReductionMs ?? 0,
+      ...(spell.playerAction === "avatar" && player.isPremiumAt(now)
+        ? { spellMultiplier: PREMIUM_BENEFITS.wheelCooldownMultiplier }
+        : {}),
     });
     if (spell.manaCost > 0) {
       this.progression.awardMagicProgress(

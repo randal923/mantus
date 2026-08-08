@@ -11,6 +11,12 @@ import type { SpellDefinition } from "./Spell";
 export interface SpellCooldownReductions {
   readonly spellMs?: number;
   readonly secondaryGroupMs?: number;
+  /**
+   * Multiplier on the spell's final cooldown, applied after the half-base
+   * floor so the premium avatar discount still bites at max wheel grade
+   * (where the flat reductions already sit exactly on the floor).
+   */
+  readonly spellMultiplier?: number;
 }
 
 const reduced = (baseMs: number, reductionMs: number): number =>
@@ -28,7 +34,10 @@ export function applySpellCooldowns(
   feedback.setCooldown(
     session,
     `spell:${spell.id}`,
-    reduced(spell.cooldownMs, reductions.spellMs ?? 0),
+    Math.round(
+      reduced(spell.cooldownMs, reductions.spellMs ?? 0) *
+        (reductions.spellMultiplier ?? 1),
+    ),
     now,
   );
   for (let index = 0; index < spell.groups.length; index++) {

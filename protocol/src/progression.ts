@@ -147,6 +147,8 @@ export const ownProgressionStateSchema = z.object({
       xpBoostRemainingMs: z.number().int().min(0),
       /** Stamina's multiplier, as a percentage (0/50/100/150). */
       staminaPercent: z.number().int().min(0).max(1_000),
+      /** The premium account bonus while premium is running; 0 otherwise. */
+      premiumPercent: z.number().int().min(0).max(100),
       /** All of the above composed, as a percentage. */
       totalPercent: z.number().int().min(0).max(1_000_000),
     })

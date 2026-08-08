@@ -71,6 +71,7 @@ async function makeHarness(
     charges?: number;
     dummyPositions?: ReadonlyArray<Position>;
     protectionZone?: boolean;
+    premium?: boolean;
   } = {},
 ) {
   const world = new World(
@@ -122,9 +123,12 @@ async function makeHarness(
     progression,
     1,
   );
-  const player = new Player(makeCharacter("actor", "Trainee"), {
-    ...PLAYER_POSITION,
-  });
+  const player = new Player(
+    makeCharacter("actor", "Trainee"),
+    { ...PLAYER_POSITION },
+    0,
+    options.premium ? new Date(9_999_999) : undefined,
+  );
   world.addPlayer(player);
   const sent: ServerMessage[] = [];
   const socket = {
@@ -235,6 +239,25 @@ describe("ExerciseTrainingHandler", () => {
     await harness.tick(1_100);
 
     expect(harness.chargesLeft()).toBe(499);
+  });
+
+  it("swings 10% faster on a premium account (VIP benefit)", async () => {
+    // Base 2000 ms interval; premium trains every round(2000 / 1.1) = 1818 ms.
+    const premium = await makeHarness({ premium: true });
+    const free = await makeHarness();
+    premium.use(1_000);
+    free.use(1_000);
+
+    await premium.tick(1_000);
+    await free.tick(1_000);
+    await premium.tick(1_005);
+    await free.tick(1_005);
+    // 2900 ms: past the premium interval (2818), inside the free one (3000).
+    await premium.tick(2_900);
+    await free.tick(2_900);
+
+    expect(premium.chargesLeft()).toBe(498);
+    expect(free.chargesLeft()).toBe(499);
   });
 
   it("buys charges ahead when a write is slower than the tier's interval", async () => {

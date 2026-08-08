@@ -110,7 +110,7 @@ export class CyclopediaService {
     const player = this.world.getPlayer(characterId);
     if (!player) return;
     const equipment = this.items.combatEquipment(characterId);
-    const specials = playerSpecials(equipment, player);
+    const specials = playerSpecials(equipment, player, now);
     const imbuements = this.items.imbuementEffects(characterId);
     const affixes = this.items.affixEffects(characterId);
     const proficiency = this.proficiencyHooks?.effectsFor(characterId);

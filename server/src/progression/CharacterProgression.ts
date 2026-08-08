@@ -5,6 +5,7 @@ import {
   MAX_SKILL_LEVEL,
   MAX_STAMINA_MINUTES,
   MIN_SKILL_LEVEL,
+  PREMIUM_BENEFITS,
   SKILLS,
   type AccountTier,
   type CharacterVocation,
@@ -108,6 +109,8 @@ export class CharacterProgression {
   private nextHealthAt: number;
   private nextManaAt: number;
   private nextSoulAt: number;
+  /** The premium extra channel's timer; 0 while the account is free. */
+  private nextPremiumRegenAt = 0;
   private accountTier: AccountTier;
   private regeneration: ReturnType<typeof getAccountRegeneration>;
   private wheelModifier: DerivedStatModifier;
@@ -765,11 +768,33 @@ export class CharacterProgression {
     this.nextManaAt = mana.nextAt;
     this.nextSoulAt = soul.nextAt;
 
+    // The premium extra channel (+10 hp / +20 mana every 3 s, VIP benefit).
+    // It needs no food and ignores the resting-area gates; only the hard
+    // "no-regeneration" condition — which `soulRegenerationBlocked` mirrors —
+    // stops it, so a premium player still regenerates in a protection zone.
+    let premiumTicks = 0;
+    if (accountTier !== "premium" || soulRegenerationBlocked) {
+      this.nextPremiumRegenAt = 0;
+    } else if (this.nextPremiumRegenAt === 0) {
+      this.nextPremiumRegenAt =
+        now + PREMIUM_BENEFITS.regeneration.intervalMs;
+    } else {
+      const premium = this.dueTicks(
+        now,
+        this.nextPremiumRegenAt,
+        PREMIUM_BENEFITS.regeneration.intervalMs,
+      );
+      premiumTicks = premium.count;
+      this.nextPremiumRegenAt = premium.nextAt;
+    }
+
     const manaBefore = this.currentMana;
     const soulBefore = this.currentSoul;
     this.currentMana = Math.min(
       this.maxMana,
-      this.currentMana + mana.count * this.regeneration.manaAmount * manaMultiplier,
+      this.currentMana +
+        mana.count * this.regeneration.manaAmount * manaMultiplier +
+        premiumTicks * PREMIUM_BENEFITS.regeneration.manaAmount,
     );
     this.currentSoul = Math.min(
       this.maxSoul,
@@ -800,7 +825,9 @@ export class CharacterProgression {
         soulBefore !== this.currentSoul ||
         restedStamina ||
         trained,
-      healthGain: health.count * this.regeneration.healthAmount * healthMultiplier,
+      healthGain:
+        health.count * this.regeneration.healthAmount * healthMultiplier +
+        premiumTicks * PREMIUM_BENEFITS.regeneration.healthAmount,
     };
   }
 

@@ -27,7 +27,8 @@
       "game": {
         "title": "Game",
         "vocations": "Vocations",
-        "serverInfo": "Server Information"
+        "serverInfo": "Server Information",
+        "vipAccount": "VIP Account"
       },
       "community": {
         "title": "Community",
@@ -363,7 +364,8 @@
       "game": {
         "title": "Game",
         "vocations": "Vocations",
-        "serverInfo": "Server Information"
+        "serverInfo": "Server Information",
+        "vipAccount": "VIP Account"
       },
       "community": {
         "title": "Community",
@@ -2994,10 +2996,79 @@
     "title": "XP Gain Rate",
     "base": "Base XP rate",
     "xpBoost": "XP boost",
+    "premium": "VIP bonus",
     "stamina": "Stamina multiplier",
     "total": "Total",
     "remaining": "{{count}} min left",
     "staminaDepleted": "Your stamina is depleted; you gain no experience from hunting."
+  },
+  "vipAccount": {
+    "title": "VIP Account",
+    "intro": "A VIP account grants every character on the account a set of standing bonuses, applied by the game server the moment your VIP time is running.",
+    "howTo": "VIP time is purchased with Mantus Coins in the in-game store, under Premium Time.",
+    "tableTitle": "VIP Benefits",
+    "benefit": "Benefit",
+    "description": "Description",
+    "comingSoon": "Coming soon",
+    "benefits": {
+      "wheelCooldown": {
+        "name": "Wheel Cooldown",
+        "description": "{{percent}}% lower cooldown on the Gift of Life passive and Avatar spells."
+      },
+      "protectedImbuement": {
+        "name": "Protected Imbuement",
+        "description": "No imbuement is consumed inside protection zones (including capacity and speed)."
+      },
+      "expBonus": {
+        "name": "EXP Bonus",
+        "description": "Every monster defeated grants a {{percent}}% experience bonus."
+      },
+      "criticalChance": {
+        "name": "Additional Critical",
+        "description": "All characters on the account have {{percent}}% more critical chance."
+      },
+      "exerciseSpeed": {
+        "name": "Exercise Speed",
+        "description": "The speed of all exercise weapons is increased by {{percent}}%."
+      },
+      "healthRegen": {
+        "name": "Health Regeneration",
+        "description": "An additional {{amount}} health regenerates every {{seconds}} seconds, with or without food."
+      },
+      "manaRegen": {
+        "name": "Mana Regeneration",
+        "description": "An additional {{amount}} mana regenerates every {{seconds}} seconds, with or without food."
+      },
+      "proficiency": {
+        "name": "Proficiency Bonus",
+        "description": "Weapon proficiency experience accrues {{percent}}% faster."
+      },
+      "familiar": {
+        "name": "Familiar Optimization",
+        "description": "Familiars will deal 30% more damage with their spells."
+      },
+      "fullBless": {
+        "name": "Full Bless",
+        "description": "When buying bless from the Inquisition NPC, the character will receive all blessings."
+      },
+      "loginPriority": {
+        "name": "Login Priority",
+        "description": "If the server has a queue, VIP players will have priority in the queue."
+      },
+      "houseAbsence": {
+        "name": "House Absence",
+        "description": "VIP players can stay offline longer without losing their house."
+      }
+    },
+    "includedTitle": "Also part of VIP",
+    "included": {
+      "market": "Create sell and buy offers on the Market.",
+      "houses": "Bid on and own a house.",
+      "huntingTasks": "An extra hunting task slot.",
+      "imbuements": "Access to premium imbuements.",
+      "stamina": "The +50% green-stamina experience bonus.",
+      "vipList": "A larger VIP buddy list."
+    }
   },
   "imbuementTracker": {
     "title": "Imbuements",

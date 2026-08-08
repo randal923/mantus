@@ -83,6 +83,7 @@ export function projectOwnProgression(
       staminaMultiplier: player.staminaExperienceMultiplier(now),
       xpBoostPercent: DAILY_REWARD_RULES.xpBoostPercent,
       xpBoostUntilMs: player.xpBoostUntilMs,
+      premium: player.isPremiumAt(now),
       nowMs: now,
     }),
     speed: progression.speed,

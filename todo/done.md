@@ -4246,3 +4246,73 @@ file — a future `yarn items:convert` would silently revert the pouch to
 Canary's gold pouch (recorded in `TODO.md` accepted gaps). Players who
 bought the Gold Pouch before this change keep the same item row; it simply
 starts routing loot once moved into the backpack.
+
+## 2026-08-08 — VIP (premium) account bonuses + /vip-account page
+
+**Problem**: premium time existed (store-sold `premium_until`, tier in every
+auth/welcome message) but granted almost nothing in play, and the public site
+never explained it. Wanted: the classic VIP benefit sheet — wheel cooldowns,
+protected imbuements, exp/crit/exercise/proficiency/regeneration bonuses —
+plus a landing page under the Game menu.
+
+**What changed**: a single `PREMIUM_BENEFITS` constant in
+`protocol/src/premiumBenefits.ts` now feeds both the server enforcement and
+the public page. Eight bonuses shipped, each gated on
+`player.isPremiumAt(now)` at execution time inside the tick: (1) +10 hp /
++20 mana every 3 s as a separate regen channel in
+`CharacterProgression.tick` — needs no food, works in PZ, stops on premium
+lapse (the long-dead `getAccountRegeneration` tier hook was left as-is; the
+channel is account-level, not vocation-level); (2) Protected Imbuement —
+`ImbuementService` now passes a `passiveBurns` flag so wall-clock categories
+(speed/capacity/paralysis deflection) pause inside protection zones for
+premium wearers; (3) +10% kill exp in `DeathHandler.awardHuntExperience`,
+mirrored in the XP-rate panel via a new `premiumPercent` protocol field;
+(4) +3% crit chance in `playerSpecials` (inherited by auto-attack, spell,
+and both display paths — `ProgressionSystem`/`CyclopediaService` now pass
+`now`); (5) +10% exercise-weapon pace in `ExerciseTrainingHandler`
+(re-read every tick, so a lapse slows mid-session); (6) +10% proficiency
+exp via a `premiumOf` hook on `ProficiencyService`; (7) −30% Gift of Life
+cooldown at proc time in `DamageResolver`; (8) −30% avatar cooldown via a
+post-floor `spellMultiplier` on `applySpellCooldowns` (the half-base floor
+already swallowed grade-3 avatars, so the multiplier applies after it).
+The public site gained `/vip-account` (nav entry in `LandingNavigation`,
+`VipAccountPage` rendering the benefits table from `PREMIUM_BENEFITS`,
+en/pt-BR locales); the four unbuildable benefits (familiars, full bless,
+login priority, house absence) render as "coming soon" and have plan files
+`todo/vip-{familiar-optimization,full-bless,login-priority,house-absence}.md`.
+
+**Bug found and fixed in passing**: `ImbuementService.tick` never stored its
+per-character sweep baseline (`lastSweepAt` defaulted to `now` every tick),
+so elapsed seconds were always 0 and **imbuement decay never ran at all**.
+The first tick now seeds the baseline; the new decay tests are the first
+coverage of the sweep actually burning time.
+
+**Files**: `protocol/src/{premiumBenefits,index,progression}.ts`,
+`server/src/progression/{CharacterProgression,getExperienceRate,projectOwnProgression,ProgressionSystem}.ts`,
+`server/src/imbuement/ImbuementService.ts`,
+`server/src/proficiency/ProficiencyService.ts`,
+`server/src/action/ExerciseTrainingHandler.ts`,
+`server/src/combat/{DeathHandler,playerSpecials,DamageResolver,applySpellCooldowns,SpellCaster}.ts`,
+`server/src/cyclopedia/CyclopediaService.ts`, `server/src/GameServer.ts`,
+`client/components/public-site/VipAccountPage.tsx`,
+`client/app/vip-account/page.tsx`,
+`client/components/landing/LandingNavigation.tsx`,
+`client/components/wiki/XpGainRatePanel.tsx`,
+`client/locales/{en,pt-BR}.json`, story fixtures, `todo/vip-*.md`.
+
+**Verified**: new premium-vs-free regression tests in
+`CharacterProgression.test.ts` (regen channel with lapse),
+`ImbuementService.test.ts` (3 decay cases), `ProficiencyService.test.ts`,
+`ExerciseTrainingHandler.test.ts` (1818 ms vs 3000 ms second swing),
+`playerSpecials.test.ts` (new file, +3% and avatar override),
+`applySpellCooldowns.test.ts` (new file, post-floor multiplier),
+`getExperienceRate.test.ts` (premiumPercent composition). Full suites:
+server 3,845 passed / 263 skipped, client 441 passed; protocol + server +
+client typecheck clean. Root `yarn test` still fails earlier at
+`test:tools` on a pre-existing converter-hash mismatch (TODO.md).
+
+**Residual risk**: premium extra regen is not shown in the character panel's
+regeneration figures (single-channel protocol shape — TODO.md); the
+per-path crit-chance source inconsistency predates this work and is now
+recorded in TODO.md; cooldowns already running when premium is bought are
+not retroactively shortened (decided at proc/cast time only).

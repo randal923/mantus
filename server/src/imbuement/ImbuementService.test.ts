@@ -350,3 +350,144 @@ describe("ImbuementService scroll flow", () => {
     ]);
   });
 });
+
+/** Decay sweep: an armor wearing one aggressive and one wall-clock imbuement. */
+function makeDecayHarness(input: {
+  premium: boolean;
+  inProtectionZone: boolean;
+}) {
+  const armor: Item = {
+    id: ITEM,
+    typeId: ARMOR_TYPE_ID,
+    count: 1,
+    attributes: {
+      imbuements: [
+        {
+          slot: 0,
+          imbuementId: 1,
+          remainingSeconds: 7_200,
+          name: "Basic Scorch",
+          aggressive: true,
+        },
+        {
+          slot: 1,
+          imbuementId: 2,
+          remainingSeconds: 7_200,
+          name: "Basic Swiftness",
+          aggressive: false,
+        },
+      ],
+    },
+    version: 3,
+    location: { kind: "equipment", characterId: A, slot: "armor" },
+  };
+  const base = makeCatalog();
+  const catalog: ImbuementCatalog = {
+    bases: base.bases,
+    categories: new Map([
+      ...base.categories,
+      [
+        "speed",
+        { id: 1, slug: "speed", name: "Increase Speed", aggressive: false },
+      ],
+    ]),
+    imbuements: new Map([
+      ...base.imbuements,
+      [
+        2,
+        {
+          id: 2,
+          name: "Swiftness",
+          baseId: 1,
+          categoryId: 1,
+          categorySlug: "speed",
+          iconId: 14,
+          premium: false,
+          description: "Raises walking speed.",
+          effect: { kind: "speed", amount: 10 } as never,
+          astralSources: [{ itemTypeId: SOURCE, count: 25 }],
+        },
+      ],
+    ]),
+  };
+  const session = {
+    id: `session-${A}`,
+    playerId: A,
+    itemOperationPending: false,
+    depotOperationPending: false,
+    itemPersistsPending: 0,
+    send: () => {},
+  } as unknown as Session;
+  const registry = {
+    all: () => [session].values(),
+    sessionFor: () => session,
+  } as unknown as SessionRegistry;
+  const world = {
+    getPlayer: (id: string) =>
+      id === A
+        ? {
+            position: { x: 10, y: 10, z: 7 },
+            conditions: new Map(),
+            isPremiumAt: () => input.premium,
+          }
+        : undefined,
+    getMapItems: () => [],
+    isProtectionZone: () => input.inProtectionZone,
+  } as unknown as World;
+  const plans: Array<{ mutation: { after: Item[] } }> = [];
+  const itemHandler = {
+    inventorySnapshot: () => ({ items: [armor], capacityMax: 400 }),
+    combatEquipment: () => [{ item: armor, type: { id: ARMOR_TYPE_ID } }],
+    applyWorldPlan: (
+      _session: Session,
+      _characterId: string,
+      plan: { mutation: { after: Item[] } },
+    ) => plans.push(plan),
+  } as unknown as ItemIntentHandler;
+  const service = new ImbuementService(
+    world,
+    registry,
+    itemHandler,
+    {} as unknown as ItemCatalog,
+    undefined,
+    catalog,
+    new MemoryImbuementStore(),
+  );
+  return { service, plans };
+}
+
+describe("ImbuementService decay (Protected Imbuement)", () => {
+  it("burns wall-clock imbuements in a protection zone for free accounts", () => {
+    const harness = makeDecayHarness({ premium: false, inProtectionZone: true });
+    harness.service.tick(0);
+    harness.service.tick(61_000);
+
+    expect(harness.plans).toHaveLength(1);
+    const after = harness.plans[0]?.mutation.after[0];
+    expect(after?.attributes.imbuements).toEqual([
+      expect.objectContaining({ slot: 0, remainingSeconds: 7_200 }),
+      expect.objectContaining({ slot: 1, remainingSeconds: 7_200 - 61 }),
+    ]);
+  });
+
+  it("burns nothing in a protection zone for premium accounts", () => {
+    const harness = makeDecayHarness({ premium: true, inProtectionZone: true });
+    harness.service.tick(0);
+    harness.service.tick(61_000);
+
+    expect(harness.plans).toHaveLength(0);
+  });
+
+  it("still burns wall-clock imbuements outside protection zones for premium", () => {
+    const harness = makeDecayHarness({ premium: true, inProtectionZone: false });
+    harness.service.tick(0);
+    harness.service.tick(61_000);
+
+    expect(harness.plans).toHaveLength(1);
+    const after = harness.plans[0]?.mutation.after[0];
+    expect(after?.attributes.imbuements).toEqual([
+      expect.objectContaining({ slot: 0, remainingSeconds: 7_200 }),
+      expect.objectContaining({ slot: 1, remainingSeconds: 7_200 - 61 }),
+    ]);
+  });
+});

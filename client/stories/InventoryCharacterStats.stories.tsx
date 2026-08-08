@@ -17,6 +17,7 @@ const CHARACTER: OwnCharacterState = {
     xpBoostPercent: 50,
     xpBoostRemainingMs: 1_800_000,
     staminaPercent: 150,
+    premiumPercent: 0,
     totalPercent: 1_125,
   },
   magicLevel: 8,

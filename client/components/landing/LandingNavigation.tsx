@@ -15,6 +15,7 @@ const MENU_GROUPS = [
     links: [
       { key: "vocations", href: "/vocations" },
       { key: "serverInfo", href: "/server-info" },
+      { key: "vipAccount", href: "/vip-account" },
     ],
   },
   {

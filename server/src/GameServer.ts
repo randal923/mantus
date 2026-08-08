@@ -544,6 +544,8 @@ export class GameServer {
       proficiencyCatalog,
       deps.proficiency,
       this.loginLoads,
+      (characterId, atMs) =>
+        this.world.getPlayer(characterId)?.isPremiumAt(atMs) ?? false,
     );
     this.animus = new AnimusService(
       this.registry,

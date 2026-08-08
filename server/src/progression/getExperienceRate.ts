@@ -1,4 +1,4 @@
-import type { OwnProgressionState } from "@tibia/protocol";
+import { PREMIUM_BENEFITS, type OwnProgressionState } from "@tibia/protocol";
 import { type StageRow, getStageRate } from "./stageRates";
 
 /**
@@ -21,11 +21,15 @@ export function getExperienceRate(input: {
   readonly staminaMultiplier: number;
   readonly xpBoostPercent: number;
   readonly xpBoostUntilMs: number;
+  readonly premium: boolean;
   readonly nowMs: number;
 }): OwnProgressionState["experienceRate"] {
   const base = getStageRate(input.stages, input.level, input.baseRate);
   const boostActive = input.xpBoostUntilMs > input.nowMs;
   const xpBoostPercent = boostActive ? input.xpBoostPercent : 0;
+  const premiumPercent = input.premium
+    ? Math.round((PREMIUM_BENEFITS.experienceMultiplier - 1) * 100)
+    : 0;
   const staminaPercent = Math.round(input.staminaMultiplier * 100);
   const basePercent = Math.round(base * 100);
   return {
@@ -33,8 +37,10 @@ export function getExperienceRate(input: {
     xpBoostPercent,
     xpBoostRemainingMs: boostActive ? input.xpBoostUntilMs - input.nowMs : 0,
     staminaPercent,
+    premiumPercent,
     totalPercent: Math.round(
-      (basePercent * (100 + xpBoostPercent) * staminaPercent) / 10_000,
+      (basePercent * (100 + xpBoostPercent) * (100 + premiumPercent) * staminaPercent) /
+        1_000_000,
     ),
   };
 }

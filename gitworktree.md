@@ -7,6 +7,7 @@ worktree is created, merged, or removed.
 | Branch                           | Status      |
 | -------------------------------- | ----------- |
 | `agents/world-lighting`          | in progress |
+| `agents/vip-account-bonuses`     | in progress |
 | `agent/wakeable-tick`            | done        |
 | `agent/fix-item-drag-npc-spawns` | done        |
 | `agent/protocol-strike-logging`  | done        |

@@ -29,6 +29,35 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **The premium extra regeneration is invisible in the character panel's
+  regeneration figures** (2026-08-08). VIP accounts regenerate +10 hp /
+  +20 mana every 3 s (`CharacterProgression.tick` premium channel), but the
+  panel's `healthRegeneration`/`manaRegeneration` protocol fields are a
+  single `{amount, intervalMs}` channel fed from the vocation table, so the
+  extra channel cannot be expressed there. The XP-rate panel does show the
+  premium +10% (new `premiumPercent` field). Fix if wanted: add an optional
+  premium channel to `OwnProgressionState` and render a second line. Owner:
+  progression display.
+
+- **Critical-chance aggregation differs per damage path** (pre-existing,
+  observed 2026-08-08 while adding the premium +3%). The weapon path
+  (`playerAttackPlan.ts`) sums equipment + imbuement + affix + proficiency
+  crit chance; the spell paths (`SpellCaster.ts:283, 418`) add only
+  equipment specials + wheel augment, dropping imbuement/affix/proficiency
+  crit for spells; `ProgressionSystem`'s display mirror omits proficiency
+  while the Cyclopedia's includes it. The premium +3% was added inside
+  `playerSpecials` so all paths inherit it, but the older sources still
+  disagree. Fix: decide the canonical source list and use it in all four
+  places. Owner: combat.
+
+- **`yarn parity:check` fails on an inherited hash mismatch** (pre-existing,
+  observed 2026-08-08). `tools/buildItemCatalog.mjs` differs from its pinned
+  manifest hash (edited in commit `2c61432 "updates"` without a re-pin), so
+  `yarn test` at the root fails at `test:tools` before reaching the suites.
+  Server/client suites and typecheck are unaffected. Fix: re-pin the
+  converter hash per the parity-inventory procedure. Owner: content
+  pipeline.
+
 - **The Item Pouch's semantics live as a hand edit to a generated file**
   (2026-08-07). `content/canary-item-semantics.json` entry 23721 (renamed
   Item Pouch: `containerSize` 500, movable, new description) deviates from

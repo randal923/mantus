@@ -238,6 +238,40 @@ describe("CharacterProgression", () => {
     expect(player.mana).toBe(8);
   });
 
+  it("adds the premium regeneration channel without food, in PZ, until premium lapses", () => {
+    const premium = new Player(
+      { ...makeCharacter("premium-hero"), health: 100, mana: 0 },
+      { x: 0, y: 0, z: 7 },
+      0,
+      new Date(8_000),
+    );
+    const free = new Player(
+      { ...makeCharacter("free-hero"), health: 100, mana: 0 },
+      { x: 0, y: 0, z: 7 },
+      0,
+    );
+
+    // No food, standing in a protection zone: natural regeneration is fully
+    // blocked, the premium channel is not.
+    premium.tickProgression(1_000, true); // arms the 3 s timer
+    free.tickProgression(1_000, true);
+    premium.tickProgression(4_000, true);
+    free.tickProgression(4_000, true);
+    expect(premium.health).toBe(110);
+    expect(premium.mana).toBe(20);
+    expect(free.health).toBe(100);
+    expect(free.mana).toBe(0);
+
+    premium.tickProgression(7_000, true);
+    expect(premium.health).toBe(120);
+    expect(premium.mana).toBe(40);
+
+    // Premium ran out at 8 s: the channel stops with it.
+    premium.tickProgression(10_000, true);
+    expect(premium.health).toBe(120);
+    expect(premium.mana).toBe(40);
+  });
+
   it("uses Canary food fullness and extends online regeneration", () => {
     const player = new Player(
       { ...makeCharacter("hero"), health: 100, mana: 0 },

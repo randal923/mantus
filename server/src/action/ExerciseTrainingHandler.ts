@@ -1,4 +1,8 @@
-import type { Position, UseItemWithMessage } from "@tibia/protocol";
+import {
+  PREMIUM_BENEFITS,
+  type Position,
+  type UseItemWithMessage,
+} from "@tibia/protocol";
 import { MISSILE_DURATION_MS } from "../combat/combatConstants";
 import { chargesOf } from "../item/chargesOf";
 import { isNear } from "../item/isNear";
@@ -195,10 +199,16 @@ export class ExerciseTrainingHandler {
     }
 
     // A faster tier shortens the interval and nothing else: the same tries per
-    // hit against the same charge, simply landed more often.
+    // hit against the same charge, simply landed more often. Premium accounts
+    // swing 10% faster on top (VIP benefit), re-read every tick so a lapse
+    // mid-session slows the pace immediately.
     const intervalMs = exerciseTrainingIntervalMs(
       player.progression.attackSpeedMs,
-      this.speedRate * definition.speedMultiplier,
+      this.speedRate *
+        definition.speedMultiplier *
+        (player.isPremiumAt(now)
+          ? PREMIUM_BENEFITS.exerciseSpeedMultiplier
+          : 1),
     );
     if (training.creditedHits > 0 && now >= training.nextAt) {
       training.creditedHits -= 1;

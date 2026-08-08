@@ -95,7 +95,14 @@ export class ImbuementService {
     for (const session of this.registry.all()) {
       const characterId = session.playerId;
       if (!characterId) continue;
-      const last = this.lastSweepAt.get(characterId) ?? now;
+      const last = this.lastSweepAt.get(characterId);
+      // First sight of this character only seeds the baseline; without the
+      // stored seed the default made every tick read zero elapsed seconds
+      // and the sweep never ran at all.
+      if (last === undefined) {
+        this.lastSweepAt.set(characterId, now);
+        continue;
+      }
       const elapsedSeconds = Math.floor((now - last) / 1_000);
       if (elapsedSeconds < 1) continue;
       this.lastSweepAt.set(characterId, last + elapsedSeconds * 1_000);
@@ -533,9 +540,13 @@ export class ImbuementService {
     if (!catalog) return;
     const player = this.world.getPlayer(characterId);
     if (!player) return;
+    const inProtectionZone = this.world.isProtectionZone(player.position);
     const aggressiveBurns =
-      player.conditions.has("combat-lock") &&
-      !this.world.isProtectionZone(player.position);
+      player.conditions.has("combat-lock") && !inProtectionZone;
+    // Premium accounts burn nothing inside a protection zone (VIP benefit):
+    // the wall-clock categories — speed, capacity, paralysis deflection —
+    // pause alongside the combat-gated ones.
+    const passiveBurns = !(inProtectionZone && player.isPremiumAt(now));
     const ledger = this.ledgerOf(characterId);
     for (const entry of this.items.combatEquipment(characterId)) {
       const states = itemImbuementsOf(entry.item);
@@ -548,7 +559,11 @@ export class ImbuementService {
         const category = definition
           ? catalog.categories.get(definition.categorySlug)
           : undefined;
-        return category ? (category.aggressive ? aggressiveBurns : true) : false;
+        return category
+          ? category.aggressive
+            ? aggressiveBurns
+            : passiveBurns
+          : false;
       });
       if (!burnsAny) continue;
       const itemLedger = ledger.get(entry.item.id) ?? { pendingSeconds: 0 };
@@ -562,7 +577,7 @@ export class ImbuementService {
         const burns = category
           ? category.aggressive
             ? aggressiveBurns
-            : true
+            : passiveBurns
           : false;
         return burns && state.remainingSeconds <= itemLedger.pendingSeconds;
       });
@@ -576,6 +591,7 @@ export class ImbuementService {
           entry.item,
           itemLedger.pendingSeconds,
           aggressiveBurns,
+          passiveBurns,
           now,
         );
         ledger.delete(entry.item.id);
@@ -590,6 +606,7 @@ export class ImbuementService {
     item: Item,
     burnedSeconds: number,
     aggressiveBurns: boolean,
+    passiveBurns: boolean,
     now: number,
   ): void {
     const catalog = this.catalog;
@@ -605,7 +622,7 @@ export class ImbuementService {
       const burns = category
         ? category.aggressive
           ? aggressiveBurns
-          : true
+          : passiveBurns
         : false;
       if (!burns) {
         next.push(state);
@@ -658,9 +675,10 @@ export class ImbuementService {
     const session = this.registry.sessionFor(characterId);
     const player = this.world.getPlayer(characterId);
     if (!session || !player) return;
+    const inProtectionZone = this.world.isProtectionZone(player.position);
     const aggressiveBurns =
-      player.conditions.has("combat-lock") &&
-      !this.world.isProtectionZone(player.position);
+      player.conditions.has("combat-lock") && !inProtectionZone;
+    const passiveBurns = !(inProtectionZone && player.isPremiumAt(now));
     for (const entry of this.items.combatEquipment(characterId)) {
       const itemLedger = ledger.get(entry.item.id);
       if (!itemLedger || (!force && itemLedger.pendingSeconds === 0)) continue;
@@ -670,6 +688,7 @@ export class ImbuementService {
         entry.item,
         itemLedger.pendingSeconds,
         aggressiveBurns,
+        passiveBurns,
         now,
       );
       ledger.delete(entry.item.id);

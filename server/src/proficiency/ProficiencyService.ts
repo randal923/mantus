@@ -1,4 +1,5 @@
 import {
+  PREMIUM_BENEFITS,
   PROFICIENCY_RULES,
   type ProficiencyActionFailedReason,
   type ProficiencySelectMessage,
@@ -54,6 +55,8 @@ export class ProficiencyService {
     private readonly catalog?: ProficiencyCatalog,
     private readonly store?: ProficiencyStore,
     private readonly loginLoads: LoginLoadQueue = new LoginLoadQueue(),
+    /** Premium check at kill time, for the VIP proficiency-experience bonus. */
+    private readonly premiumOf?: (characterId: string, atMs: number) => boolean,
   ) {}
 
   applyResolvedOutcomes(now: number): void {
@@ -109,7 +112,6 @@ export class ProficiencyService {
 
   /** Kill accrual: the killer's wielded weapon only (monster.cpp:3291). */
   onMonsterKilled(monster: Monster, killedAt: number): void {
-    void killedAt;
     const catalog = this.catalog;
     if (!catalog) return;
     const killerId = monster.topDamagerId();
@@ -146,6 +148,12 @@ export class ProficiencyService {
       );
     }
     if (gained <= 0) return;
+    // Premium accounts accrue proficiency 10% faster (VIP benefit).
+    if (this.premiumOf?.(killerId, killedAt)) {
+      gained = Math.round(
+        gained * PREMIUM_BENEFITS.proficiencyExperienceMultiplier,
+      );
+    }
     const state = progress.get(proficiencyId) ?? {
       experience: 0,
       mastered: false,

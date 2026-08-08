@@ -1,4 +1,8 @@
-import { WHEEL_BASE_VOCATION, type WheelBonuses } from "@tibia/protocol";
+import {
+  PREMIUM_BENEFITS,
+  WHEEL_BASE_VOCATION,
+  type WheelBonuses,
+} from "@tibia/protocol";
 import type { Item } from "../item/Item";
 import type { ItemType } from "../item/ItemType";
 import type { Player } from "../Player";
@@ -46,13 +50,22 @@ export function playerSpecials(
     player && now !== undefined && now < player.avatarUntil
       ? Math.min(Math.max(player.avatarStage, 0), 3)
       : 0;
+  // Premium accounts carry a flat +3% critical chance (VIP benefit); it rides
+  // this base aggregation so the auto-attack, spell, and display paths all
+  // inherit it. Moot while the avatar override pins the chance at 100%.
+  const premiumCriticalChance =
+    player && now !== undefined && player.isPremiumAt(now)
+      ? PREMIUM_BENEFITS.criticalChancePercent
+      : 0;
   const criticalChance =
     avatarStage > 0
       ? 100
       : equipment.reduce(
           (total, entry) => total + (entry.type.criticalHitChance ?? 0),
           0,
-        ) / 100;
+        ) /
+          100 +
+        premiumCriticalChance;
   // Gem-supreme critical damage is additive with equipment, like Canary's
   // SKILL_CRITICAL_HIT_DAMAGE folding in WheelStat_t::CRITICAL_DAMAGE
   // (player.cpp:7365); Combat Mastery's two-handed leg rides the same skill

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { PREMIUM_BENEFITS } from "@tibia/protocol";
 import type { BestiaryHooks } from "../bestiary/BestiaryHooks";
 import type { BoostedHooks } from "../boosted/BoostedHooks";
 import type { Creature } from "../creature/Creature";
@@ -304,6 +305,11 @@ export class DeathHandler {
     const xpBoostPercent = this.dailyHooks?.xpBoostPercent(recipientId, now) ?? 0;
     if (xpBoostPercent > 0) {
       amount = Math.floor(amount * (1 + xpBoostPercent / 100));
+    }
+    // Premium accounts hunt at +10%, composing with the boost the same way
+    // the XP-gain-rate panel advertises (getExperienceRate).
+    if (recipient.isPremiumAt(now)) {
+      amount = Math.floor(amount * PREMIUM_BENEFITS.experienceMultiplier);
     }
     if (this.staminaSystem) {
       amount = Math.floor(

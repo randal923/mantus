@@ -150,7 +150,7 @@ const CATALOG: ProficiencyCatalog = {
   ]),
 };
 
-function makeHarness(equippedWeapon = true) {
+function makeHarness(equippedWeapon = true, premium = false) {
   const sessions = new Map<string, Session>();
   const sent: ServerMessage[] = [];
   const session = {
@@ -183,6 +183,8 @@ function makeHarness(equippedWeapon = true) {
     makeBestiary(),
     CATALOG,
     store,
+    undefined,
+    premium ? () => true : undefined,
   );
   service.attachCharacter(session, A);
   return {
@@ -238,6 +240,17 @@ describe("ProficiencyService (Feature 82)", () => {
     expect(state?.weapons[0]).toMatchObject({
       proficiencyId: 6,
       experience: 33 + 1_650,
+    });
+  });
+
+  it("accrues 10% faster on a premium account (VIP benefit)", async () => {
+    const harness = makeHarness(true, true);
+    await harness.flush();
+    // A 3-star kill grants round(round(100 * 0.33) * 1.1) = 36.
+    harness.service.onMonsterKilled(monsterOf(makeBestiary(), 1), 1_000);
+    expect(lastState(harness.sent)?.weapons[0]).toMatchObject({
+      proficiencyId: 6,
+      experience: 36,
     });
   });
 

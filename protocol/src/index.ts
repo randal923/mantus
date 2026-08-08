@@ -1,5 +1,6 @@
 export * from "./direction";
 export * from "./account";
+export * from "./premiumBenefits";
 export * from "./actionBar";
 export * from "./bank";
 export * from "./bestiary";

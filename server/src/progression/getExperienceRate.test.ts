@@ -17,6 +17,7 @@ const BASE = {
   staminaMultiplier: 1,
   xpBoostPercent: 50,
   xpBoostUntilMs: 0,
+  premium: false,
   nowMs: 1_000,
 };
 
@@ -53,6 +54,17 @@ describe("getExperienceRate", () => {
         staminaMultiplier: 1.5,
       }).totalPercent,
     ).toBe(18_000);
+  });
+
+  it("adds the premium bonus only while premium is running", () => {
+    const free = getExperienceRate(BASE);
+    const premium = getExperienceRate({ ...BASE, premium: true });
+
+    expect(free.premiumPercent).toBe(0);
+    expect(free.totalPercent).toBe(8_000);
+    expect(premium.premiumPercent).toBe(10);
+    // x80 base, +10% premium → 8000 * 1.1 = 8800%.
+    expect(premium.totalPercent).toBe(8_800);
   });
 
   it("reports a total of zero once stamina has run out", () => {

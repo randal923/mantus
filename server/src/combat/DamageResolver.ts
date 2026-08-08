@@ -1,4 +1,4 @@
-import type { DamageType } from "@tibia/protocol";
+import { PREMIUM_BENEFITS, type DamageType } from "@tibia/protocol";
 import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { MonsterEventHooks } from "../creature/MonsterEventHooks";
@@ -560,9 +560,16 @@ export class DamageResolver {
       (target.maxHealth * giftOfLifeHealPercent(stage)) / 100,
     );
     target.setHealth(Math.min(target.maxHealth, target.health + heal));
+    // Premium accounts recharge the gift 30% faster (VIP benefit), decided
+    // at proc time — the tick-down itself stays one second per second.
     target.setStorageValue(
       GIFT_OF_LIFE_STORAGE_KEY,
-      giftOfLifeCooldownSeconds(stage),
+      target.isPremiumAt(now)
+        ? Math.round(
+            giftOfLifeCooldownSeconds(stage) *
+              PREMIUM_BENEFITS.wheelCooldownMultiplier,
+          )
+        : giftOfLifeCooldownSeconds(stage),
     );
     this.visibility.broadcastMagicEffect(
       target.position,

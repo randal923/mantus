@@ -36,6 +36,14 @@ export function XpGainRatePanel({ rate }: XpGainRatePanelProps) {
       muted: rate.xpBoostPercent === 0,
     },
     {
+      key: "premium",
+      value:
+        rate.premiumPercent > 0
+          ? `+${percent(rate.premiumPercent)}`
+          : percent(0),
+      muted: rate.premiumPercent === 0,
+    },
+    {
       key: "stamina",
       value: percent(rate.staminaPercent),
       muted: rate.staminaPercent === 100,

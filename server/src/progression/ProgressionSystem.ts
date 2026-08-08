@@ -142,7 +142,7 @@ export class ProgressionSystem {
     this.nextTickAt = now + 100;
     for (const player of this.world.allPlayers()) {
       if (this.persistence.isExternalMutationPending(player)) continue;
-      const equipmentChanged = this.syncEquipmentStats(player);
+      const equipmentChanged = this.syncEquipmentStats(player, now);
       const inProtectionZone = this.world.isProtectionZone(player.position);
       const ticked = player.tickProgression(now, inProtectionZone);
       if (ticked) this.persistence.markDirty(player);
@@ -159,7 +159,7 @@ export class ProgressionSystem {
    * equipment actually changed; derived stats are never persisted, so no
    * dirty mark.
    */
-  private syncEquipmentStats(player: Player): boolean {
+  private syncEquipmentStats(player: Player, now: number): boolean {
     // No attached inventory means the equipment is unknown (mid-login or
     // mid-logout), not absent: zeroing the modifier here would clamp an
     // affix-boosted health right before the final logout save.
@@ -188,7 +188,7 @@ export class ProgressionSystem {
     // view serves (equipment + wheel + imbuements + affixes; proficiency
     // perks stay in their own panel), diffed so a crit/leech/resist change
     // pushes a fresh progression like every other bonus.
-    const specials = playerSpecials(equipment, player);
+    const specials = playerSpecials(equipment, player, now);
     const wheel = player.wheelBonuses;
     const combatChanged = player.progression.setEquipmentCombatStats({
       criticalChancePercent: round2(
