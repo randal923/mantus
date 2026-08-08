@@ -4316,3 +4316,64 @@ regeneration figures (single-channel protocol shape — TODO.md); the
 per-path crit-chance source inconsistency predates this work and is now
 recorded in TODO.md; cooldowns already running when premium is bought are
 not retroactively shortened (decided at proc/cast time only).
+
+## 2026-08-08 — Blessing purchases + VIP full bless (Feature 72 slice)
+
+**Problem**: blessing *acquisition* did not exist. The math library
+(`blessings.ts` catalog/curves, `getDeathLossPercent.ts` 8%-per-bless
+discount) was typed data with zero producers: `Player.blessings` was
+hard-coded to 0, there was no DB column, no NPC dialogue action, and the
+`fullBless` VIP benefit sat "coming soon" on `/vip-account`
+(`todo/vip-full-bless.md`).
+
+**What changed**: blessings persist as Canary's bitmask in a new
+`characters.blessings` column (migration 076, plus `bless-purchase`
+audit/ledger types), load with the character, ride the save snapshot, and
+are consumed on death right after `applyDeathPenalty` reads the count
+(ids 2–8 spent, Twist of Fate bit kept — its PvP semantics stay with the
+PvP path). A new `bless` dialogue action (`DialogueGraph`/loader/executor),
+`BlessService`, and `PgBlessStore` mirror the spell-teacher purchase shape:
+every gate re-checked at execution time, price recomputed from the locked
+DB row (level + mask, already-held ids skipped and never charged), carried
+coins before bank, mask OR + version bump + audit row in one SERIALIZABLE
+transaction. Henricus (already spawned at the Thais inquisition post) got a
+reviewed dialogue: the five regular blessings sold singly at the plain
+Canary price to everyone, and a premium-only **full bless** bundle granting
+all missing ones at Canary's Inquisition price (singles × missing × 1.1 —
+the advertised 110000 gold at level 120). `|BLESSCOST|` renders the
+execution-time quote in dialogue. `/vip-account` flips `fullBless` to live
+(en/pt-BR copy updated). Canary's Inquisition-quest gate is intentionally
+dropped (quest not imported); premium is our own gate — Canary has no VIP
+bless benefit at all.
+
+**Files**: `server/db/migrations/076_blessings.sql`,
+`server/src/progression/planBlessingPurchase.ts` (new),
+`server/src/npc/{BlessService,BlessStore,PgBlessStore,findBlessAction}.ts`
+(new), `server/src/npc/{DialogueGraph,loadNpcDialogueGraphs,NpcDialogueExecutor,NpcHandler,renderNpcDialogueText}.ts`,
+`server/src/{Player,GameServer,index}.ts`,
+`server/src/combat/DeathHandler.ts`,
+`server/src/character/{Character,CharacterRow,toCharacter,CharacterPersistence,PgCharacterStore,CharacterService}.ts`
++ `sql/{characterColumns,updateCharacterSnapshotQuery}.ts`,
+`server/src/progression/assertValidCharacterSaveSnapshot.ts`,
+`server/src/economy/BankLedgerEntryType.ts`,
+`content/npcs/canary-dialogues.json` (reviewed henricus def),
+`client/components/public-site/VipAccountPage.tsx`,
+`client/locales/{en,pt-BR}.json`.
+
+**Verified**: new tests — `planBlessingPurchase.test.ts` (curves, skip-owned,
+110000 parity, floor), `BlessService.test.ts` (execution-time premium gate,
+already-blessed, commit/fail outcome paths), `henricusBlessContent.test.ts`
+(offer shape, keyword reachability, |BLESSCOST| quotes),
+`PgBlessStore.integration.test.ts` (carried+bank split, missing-only charge,
+insufficient funds leaves nothing, already-blessed, racing confirmations
+charge once), death-consumption case in `deathPenalty.test.ts`. Server suite
+3,860 passed / 268 skipped; client 441 passed; both typechecks clean.
+`PgCharacterStore.integration.test.ts` "commits conjuring resources" fails
+identically on main (pre-existing, unrelated).
+
+**Residual risk**: equipment/container drop into a player corpse still does
+not exist (no player corpses yet) — the `equipmentLossChancePercent` table
+remains consumer-less; Amulet of Loss and Twist of Fate PvP-death semantics
+unimplemented; temple single-bless NPCs (27 `StdModule.bless` keyword
+imports) still unconverted, so the parity-gate ceiling is unchanged. All
+recorded under the TODO.md blessings entry (owner: Feature 72).

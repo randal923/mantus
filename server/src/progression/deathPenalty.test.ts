@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Player } from "../Player";
 import { makeCharacter } from "../test/makeCharacter";
+import { blessingMaskOf } from "./blessings";
 import { getExperienceForLevel } from "./getExperienceForLevel";
 
 const POSITION = { x: 0, y: 0, z: 7 };
@@ -99,5 +100,27 @@ describe("player death penalty", () => {
       fairPenalty.lostExperience,
     );
     expect(gangedPenalty.lostExperience).toBeGreaterThan(0);
+  });
+
+  it("discounts the loss for held blessings and consumes them exactly once", () => {
+    const blessed = makeVeteran("blessed");
+    const unblessed = makeVeteran("unblessed");
+    blessed.grantBlessings(blessingMaskOf([1, 2, 3, 4, 5, 6]));
+    // Twist of Fate (id 1) never reduces the penalty, so the count is 5.
+    expect(blessed.blessings).toBe(5);
+
+    const blessedPenalty = blessed.applyDeathPenalty("player-death:blessed");
+    const unblessedPenalty = unblessed.applyDeathPenalty(
+      "player-death:unblessed",
+    );
+    expect(blessedPenalty.lostExperience).toBeLessThan(
+      unblessedPenalty.lostExperience,
+    );
+
+    // The DeathHandler consumes after the penalty read the count: blessings
+    // 2..8 are spent, Twist of Fate survives a PvE death (Canary parity).
+    blessed.consumeBlessingsOnDeath();
+    expect(blessed.blessingsMask).toBe(blessingMaskOf([1]));
+    expect(blessed.blessings).toBe(0);
   });
 });

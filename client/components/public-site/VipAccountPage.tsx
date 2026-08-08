@@ -68,7 +68,7 @@ const BENEFITS = [
     },
   },
   { key: "familiar", live: false, values: {} },
-  { key: "fullBless", live: false, values: {} },
+  { key: "fullBless", live: true, values: {} },
   { key: "loginPriority", live: false, values: {} },
   { key: "houseAbsence", live: false, values: {} },
 ] as const;

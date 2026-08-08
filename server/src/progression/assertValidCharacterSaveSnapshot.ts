@@ -70,7 +70,10 @@ export function assertValidCharacterSaveSnapshot(
     snapshot.soul > vocation.maxSoul ||
     !Number.isInteger(snapshot.stamina) ||
     snapshot.stamina < 0 ||
-    snapshot.stamina > MAX_STAMINA_MINUTES
+    snapshot.stamina > MAX_STAMINA_MINUTES ||
+    !Number.isInteger(snapshot.blessings) ||
+    snapshot.blessings < 0 ||
+    snapshot.blessings > 255
   ) {
     throw new Error("character snapshot current stats are invalid");
   }

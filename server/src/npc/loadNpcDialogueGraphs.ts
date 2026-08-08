@@ -361,6 +361,27 @@ function parseAction(value: unknown): DialogueAction {
       premium: action.premium,
     };
   }
+  if (action.kind === "bless") {
+    if (typeof action.premium !== "boolean") {
+      throw new Error("NPC bless offer premium flag is invalid");
+    }
+    const blessingIds = array(action.blessingIds, "NPC bless offer ids", 1, 8)
+      .map((entry) => integer(entry, "NPC bless offer id", 1, 8));
+    if (new Set(blessingIds).size !== blessingIds.length) {
+      throw new Error("NPC bless offer ids are duplicated");
+    }
+    return {
+      kind: "bless",
+      blessingIds,
+      surchargePercent: integer(
+        action.surchargePercent,
+        "NPC bless surcharge",
+        0,
+        100,
+      ),
+      premium: action.premium,
+    };
+  }
   if (action.kind === "hint") {
     return {
       kind: "hint",

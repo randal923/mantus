@@ -83,6 +83,7 @@ export class PgCharacterStore implements CharacterStore {
       mana: character.mana,
       soul: character.soul,
       stamina: character.stamina,
+      blessings: character.blessings,
       lastSeenAt: character.lastSeenAt ?? character.createdAt,
       skills: character.skills,
       skillsChanged: true,
@@ -299,6 +300,7 @@ export class PgCharacterStore implements CharacterStore {
           snapshot.skullExpiresAt,
           snapshot.stamina,
           snapshot.lastSeenAt,
+          snapshot.blessings,
         ],
       );
       const version = result.rows[0]?.version;

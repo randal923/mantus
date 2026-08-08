@@ -16,6 +16,8 @@ export interface CharacterRow {
   mana: number;
   soul: number;
   stamina: number;
+  /** Canary's blessing bitmask: bit `id - 1` per blessing, ids 1..8. */
+  blessings: number;
   last_seen_at: Date;
   progression_definition_version: number;
   position_x: number;

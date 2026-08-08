@@ -185,6 +185,10 @@ export class DeathHandler {
       unfairFightReduction:
         this.pvpHooks?.unfairFightReduction(target, now) ?? 100,
     });
+    // Blessings are spent by the death that used them: consumed only after
+    // the penalty read the count, persisted by the same immediate save the
+    // penalty rides below.
+    target.consumeBlessingsOnDeath();
     target.restoreAfterDeath();
     // Black-skulled players respawn crippled (40 hp / 0 mana).
     this.pvpHooks?.applyRespawnState(target);
