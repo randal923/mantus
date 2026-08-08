@@ -4381,7 +4381,7 @@ hard-coded to 0, there was no DB column, no NPC dialogue action, and the
 (`todo/vip-full-bless.md`).
 
 **What changed**: blessings persist as Canary's bitmask in a new
-`characters.blessings` column (migration 076, plus `bless-purchase`
+`characters.blessings` column (migration 077, plus `bless-purchase`
 audit/ledger types), load with the character, ride the save snapshot, and
 are consumed on death right after `applyDeathPenalty` reads the count
 (ids 2–8 spent, Twist of Fate bit kept — its PvP semantics stay with the
@@ -4400,7 +4400,7 @@ execution-time quote in dialogue. `/vip-account` flips `fullBless` to live
 dropped (quest not imported); premium is our own gate — Canary has no VIP
 bless benefit at all.
 
-**Files**: `server/db/migrations/076_blessings.sql`,
+**Files**: `server/db/migrations/077_blessings.sql`,
 `server/src/progression/planBlessingPurchase.ts` (new),
 `server/src/npc/{BlessService,BlessStore,PgBlessStore,findBlessAction}.ts`
 (new), `server/src/npc/{DialogueGraph,loadNpcDialogueGraphs,NpcDialogueExecutor,NpcHandler,renderNpcDialogueText}.ts`,

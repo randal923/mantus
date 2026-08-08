@@ -606,7 +606,7 @@ limitations accepted during a session are recorded in the owning feature file
   if a thirteenth appears. Fix: a newer asset era, not a code change.
 - **Blessings protect experience but not yet equipment** (2026-08-08,
   Features 32/72; supersedes "Blessings are always zero"). Purchase,
-  persistence (`characters.blessings` bitmask, migration 076), the death-loss
+  persistence (`characters.blessings` bitmask, migration 077), the death-loss
   discount, and PvE death consumption shipped with the VIP full bless
   (Henricus dialogue, `BlessService`/`PgBlessStore`). Still open, in Canary
   order of impact: (1) items/containers never drop into a player corpse —
