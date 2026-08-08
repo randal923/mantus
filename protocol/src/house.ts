@@ -14,6 +14,12 @@ export const HOUSE_LIMITS = {
   rentPeriodDays: 30,
   /** Missed rent charges before eviction. */
   maxWarnings: 7,
+  /** Days offline before the scan repossesses a free owner's house. */
+  absenceEvictionDays: 7,
+  /** Premium owners may stay offline this many days instead (VIP benefit). */
+  premiumAbsenceEvictionDays: 10,
+  /** Days offline before the absence warning letter is mailed. */
+  absenceWarningDays: 5,
   /** Guests plus subowners per house. */
   maxAccessEntries: 100,
   /** Rows per house-list page. */

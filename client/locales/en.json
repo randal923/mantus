@@ -3057,7 +3057,7 @@
       },
       "houseAbsence": {
         "name": "House Absence",
-        "description": "VIP players can stay offline longer without losing their house."
+        "description": "Stay offline for up to {{premiumDays}} days without losing your house, versus {{freeDays}} days for free accounts."
       }
     },
     "includedTitle": "Also part of VIP",

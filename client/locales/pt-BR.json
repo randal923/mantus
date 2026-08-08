@@ -3057,7 +3057,7 @@
       },
       "houseAbsence": {
         "name": "Ausência de Casa",
-        "description": "Jogadores VIP podem ficar offline por mais tempo sem perder a casa."
+        "description": "Fique offline por até {{premiumDays}} dias sem perder sua casa, contra {{freeDays}} dias para contas gratuitas."
       }
     },
     "includedTitle": "Também faz parte do VIP",

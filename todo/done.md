@@ -4316,3 +4316,57 @@ regeneration figures (single-channel protocol shape — TODO.md); the
 per-path crit-chance source inconsistency predates this work and is now
 recorded in TODO.md; cooldowns already running when premium is bought are
 not retroactively shortened (decided at proc/cast time only).
+
+## 2026-08-08 — VIP benefit: house absence eviction (7 days free / 10 premium)
+
+**Problem**: the `/vip-account` page advertised "House Absence" as coming
+soon with nothing behind it. Houses were only ever lost through missed rent;
+nothing evicted an owner for staying logged out, so there was no rule for
+premium to relax (`todo/vip-house-absence.md`, now deleted). Canary ships
+this as `houseLoseAfterInactivity` (30 days in `config.lua.dist`, checked in
+`payHouses` against `lastLoginSaved`) plus an all-or-nothing `vipKeepHouse`
+exemption; the adopted design is the tiered middle ground: 7 days offline
+for free accounts, 10 for premium, judged at scan time.
+
+**What changed**: three new `HOUSE_LIMITS` constants
+(`absenceWarningDays: 5`, `absenceEvictionDays: 7`,
+`premiumAbsenceEvictionDays: 10`) feed both the server scan and the public
+page. `HouseService.scanAbsence` (same off-tick shape as the rent scan,
+60 s interval, batch of 20) asks the store for absence-due houses —
+`characters.last_seen_at` (the Feature 18 save anchor) joined with
+`accounts.premium_until`, guildhalls excluded — and skips any owner with a
+live session, because `last_seen_at` goes stale for online-but-idle players.
+`processAbsence` (Pg + Memory stores) re-reads the anchor and the premium
+tier inside one serializable transaction: past the tier threshold it evicts
+through the existing `evictItems`/`deleteHouseQuery` path with a
+`house-eviction` audit row (`reason: "absence"`, no new event type needed);
+past day 5 it mails one stamped warning letter per absence episode
+(delivery key and new `houses.absence_warned_for` column both carry the
+`last_seen_at` they warned for, so replays skip and a fresh login re-arms).
+Migration `076_house_absence.sql` adds the column. The `/vip-account` row
+flipped to live and renders both day counts from `HOUSE_LIMITS`.
+
+**Files**: `protocol/src/house.ts`, `server/db/migrations/076_house_absence.sql`,
+`server/src/house/{HouseService,HouseStore,PgHouseStore,MemoryHouseStore,absenceWarningLetterText}.ts`,
+`server/src/house/sql/{absenceDueHouseIdsQuery,houseOwnerAbsenceQuery,updateHouseAbsenceWarnedQuery,houseRowForUpdateQuery}.ts`,
+`client/components/public-site/VipAccountPage.tsx`,
+`client/locales/{en,pt-BR}.json`, tests.
+
+**Verified**: 5 new unit tests in `HouseService.test.ts` (free-tier warning
+at day 5 once per episode + eviction at exactly day 7 with items mailed and
+replay no-op; premium 10-day window with re-warn on a new episode; premium
+lapse mid-absence judged by the free rule at scan time; online owner with a
+30-day-stale anchor never evicted or warned; guildhall exemption at the
+store). 3 new Pg integration tests in `PgHouseStore.integration.test.ts`
+(warn/evict/audit-reason/item-conservation/replay; premium tier at scan
+time incl. lapse; guildhall never listed) — full integration file 16/16
+against the local docker Postgres. Server suite 3,850 passed /
+266 skipped; protocol + server + client typecheck clean; client page lint
+clean.
+
+**Residual risk**: recorded in `TODO.md` — the online-owner protection is
+the in-process session registry (multi-process worlds would need shared
+presence), and an owner already past the threshold who logs in during the
+scan's commit window is still evicted (correct outcome, abrupt timing).
+No client-side countdown is shown for an absent owner (absence is not in
+`houseStateSchema`); the warning letter is the only in-game notice.

@@ -57,7 +57,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | ----------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------------------------------------- |
 | Parties, shared exp, analyzer, finder (55–57)                           | ✅     | ✅     | Party-spell target gating (co-lands with 24)                                                  |
 | Guilds, wars, emblems, guild bank (58, 63)                              | ✅     | ◐      | Per-rank withdraw permission; fix 3 ledger-constraint integration tests (first run 2026-07-26); bank UI section |
-| Houses: buy, rent, transfer, auctions, access lists, guildhalls (61–64) | ✅     | ◐      | House spell words (109); door-list editor UI (62)                                             |
+| Houses: buy, rent, transfer, auctions, access lists, guildhalls (61–64) | ✅     | ◐      | House spell words (109); door-list editor UI (62); absence eviction 7d free / 10d VIP with day-5 letter 2026-08-08 |
 | VIP/friends, groups, requests, typing (65)                              | ✅     | ◐      | Finder privacy setting, exiva spells; VIP-group UI                                            |
 | Chat, channels, talkactions, flood control (35, 36)                     | ✅     | ✅     | Admin talkactions, GM/broadcast modes, durable ignore lists                                   |
 | Moderation + role-authorized admin core (66, 96)                        | ✅     | —      | Role-assignment tooling, `/coins`+`/raid` capabilities, `/conservation` view                  |

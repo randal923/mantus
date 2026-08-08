@@ -35,7 +35,9 @@ import type {
   HouseAuctionSnapshot,
   HouseEvictionDelivery,
   HouseStore,
+  ProcessHouseAbsenceResult,
 } from "./HouseStore";
+import { absenceWarningLetterText } from "./absenceWarningLetterText";
 import { projectHouseStateFor } from "./projectHouseStateFor";
 import { rentWarningLetterText } from "./rentWarningLetterText";
 import { ResolvedOutcomes } from "../ResolvedOutcomes";
@@ -77,6 +79,8 @@ interface PendingHouseTransfer {
 
 const RENT_SCAN_INTERVAL_MS = 60_000;
 const RENT_BATCH_LIMIT = 20;
+const ABSENCE_SCAN_INTERVAL_MS = 60_000;
+const ABSENCE_BATCH_LIMIT = 20;
 const AUCTION_SCAN_INTERVAL_MS = 10_000;
 const AUCTION_BATCH_LIMIT = 20;
 const DAY_MS = 24 * 3600 * 1000;
@@ -103,6 +107,8 @@ export class HouseService {
   private readonly auctions = new Map<number, HouseAuctionSnapshot>();
   private nextRentScanAt = 0;
   private rentScanActive = false;
+  private nextAbsenceScanAt = 0;
+  private absenceScanActive = false;
   private nextAuctionScanAt = 0;
   private auctionScanActive = false;
   private guildIdentity: GuildIdentityLookup | null = null;
@@ -316,6 +322,7 @@ export class HouseService {
   tick(now: number): void {
     this.scanAuctions(now);
     this.scanRent(now);
+    this.scanAbsence(now);
   }
 
   /**
@@ -401,6 +408,65 @@ export class HouseService {
       .catch((cause: unknown) => this.warn("rent-scan", cause))
       .finally(() => {
         this.rentScanActive = false;
+      });
+    this.track(operation);
+  }
+
+  /**
+   * Owner-absence eviction (Canary's houseLoseAfterInactivity, tiered by
+   * premium at scan time). `last_seen_at` is the owner's last durable save,
+   * which can be arbitrarily stale for an online-but-idle owner, so houses
+   * whose owner has a live session are skipped before the store transaction;
+   * the offline threshold clock only ever runs against logged-out owners.
+   */
+  private scanAbsence(now: number): void {
+    const store = this.store;
+    if (
+      !store ||
+      !this.loaded ||
+      this.absenceScanActive ||
+      now < this.nextAbsenceScanAt
+    ) {
+      return;
+    }
+    this.nextAbsenceScanAt = now + ABSENCE_SCAN_INTERVAL_MS;
+    this.absenceScanActive = true;
+    const thresholds = {
+      warnAfterDays: HOUSE_LIMITS.absenceWarningDays,
+      evictAfterDays: HOUSE_LIMITS.absenceEvictionDays,
+      premiumEvictAfterDays: HOUSE_LIMITS.premiumAbsenceEvictionDays,
+    };
+    const operation = (async () => {
+      const dueIds = await store.listAbsenceDueHouseIds({
+        now: new Date(now),
+        ...thresholds,
+        limit: ABSENCE_BATCH_LIMIT,
+      });
+      for (const houseId of dueIds) {
+        const info = this.content.get(houseId);
+        if (!info) continue;
+        const snapshot = this.houses.get(houseId);
+        if (!snapshot || snapshot.guildId) continue;
+        if (this.registry.sessionFor(snapshot.ownerCharacterId)) continue;
+        const result = await this.orderedWrite(() =>
+          store.processAbsence({
+            houseId,
+            now: new Date(now),
+            ...thresholds,
+            mapName: this.world.mapName,
+            tilePositions: this.world.getHouseTiles(houseId),
+            warningLetterText: (daysLeft) =>
+              absenceWarningLetterText(info, daysLeft),
+          }),
+        );
+        this.outcomes.push((at) =>
+          this.applyAbsenceResult(houseId, info, result, at),
+        );
+      }
+    })()
+      .catch((cause: unknown) => this.warn("absence-scan", cause))
+      .finally(() => {
+        this.absenceScanActive = false;
       });
     this.track(operation);
   }
@@ -1025,6 +1091,37 @@ export class HouseService {
           0,
         ),
       });
+      return;
+    }
+    this.clearPendingTransfer(houseId);
+    this.houses.set(houseId, null);
+    this.applyEviction(result.evicted, now);
+    this.sweepUnauthorizedOccupants(houseId, now);
+    this.sendEventTo(result.ownerCharacterId, {
+      type: "house-event",
+      kind: "evicted",
+      houseName: info.name,
+    });
+  }
+
+  private applyAbsenceResult(
+    houseId: number,
+    info: HouseInfo,
+    result: ProcessHouseAbsenceResult,
+    now: number,
+  ): void {
+    if (result.status === "skip") return;
+    if (result.status === "warned") {
+      this.houses.set(houseId, result.snapshot);
+      // The owner was offline when the scan ran, but may have logged in
+      // between the commit and this tick — the cache event keeps a freshly
+      // loaded inbox consistent and is a no-op otherwise.
+      if (result.letter) {
+        this.depot.applyExternalCacheEvent(result.snapshot.ownerCharacterId, {
+          upserts: [result.letter],
+          bumps: [{ kind: "inbox" }],
+        });
+      }
       return;
     }
     this.clearPendingTransfer(houseId);
