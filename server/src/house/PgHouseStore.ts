@@ -27,6 +27,7 @@ import { marketFreeSlotsQuery } from "../market/sql/marketFreeSlotsQuery";
 import type {
   AbandonHouseResult,
   ChargeHouseRentResult,
+  ProcessHouseAbsenceResult,
   CloseHouseAuctionResult,
   HouseAccessRecord,
   HouseAuctionSnapshot,
@@ -60,8 +61,11 @@ import { insertHouseAuctionQuery } from "./sql/insertHouseAuctionQuery";
 import { updateHouseAuctionBidQuery } from "./sql/updateHouseAuctionBidQuery";
 import { deleteHouseAccessAllQuery } from "./sql/deleteHouseAccessAllQuery";
 import { deleteHouseAccessQuery } from "./sql/deleteHouseAccessQuery";
+import { absenceDueHouseIdsQuery } from "./sql/absenceDueHouseIdsQuery";
 import { deleteHouseQuery } from "./sql/deleteHouseQuery";
 import { dueHouseIdsQuery } from "./sql/dueHouseIdsQuery";
+import { houseOwnerAbsenceQuery } from "./sql/houseOwnerAbsenceQuery";
+import { updateHouseAbsenceWarnedQuery } from "./sql/updateHouseAbsenceWarnedQuery";
 import { houseAccessRowsForHouseQuery } from "./sql/houseAccessRowsForHouseQuery";
 import { houseAccessRowsQuery } from "./sql/houseAccessRowsQuery";
 import { houseCharacterByNameQuery } from "./sql/houseCharacterByNameQuery";
@@ -84,6 +88,8 @@ interface HouseRow {
   tenancy_id: string;
   paid_until: Date;
   rent_warnings: number;
+  /** Selected by houseRowForUpdateQuery only. */
+  absence_warned_for?: Date | null;
   owner_name?: string;
 }
 
@@ -113,6 +119,7 @@ interface AuctionRow {
 
 const ACCESS_GUEST = 0;
 const ACCESS_SUBOWNER = 1;
+const DAY_MS = 24 * 3600 * 1000;
 
 const LIST_KIND_BY_NUMBER: Readonly<Record<number, HouseListKind>> = {
   0: "guest",
@@ -870,6 +877,118 @@ export class PgHouseStore implements HouseStore {
           Math.max(input.maxWarnings - warnings, 0),
         ),
       });
+      const snapshot = await this.requireSnapshot(client, input.houseId);
+      return { status: "warned" as const, snapshot, letter };
+    });
+  }
+
+  async listAbsenceDueHouseIds(input: {
+    now: Date;
+    warnAfterDays: number;
+    evictAfterDays: number;
+    premiumEvictAfterDays: number;
+    limit: number;
+  }): Promise<ReadonlyArray<number>> {
+    const result = await this.pool.query<{ house_id: number }>(
+      absenceDueHouseIdsQuery,
+      [
+        input.now.toISOString(),
+        input.warnAfterDays,
+        input.evictAfterDays,
+        input.premiumEvictAfterDays,
+        input.limit,
+      ],
+    );
+    return result.rows.map((row) => row.house_id);
+  }
+
+  async processAbsence(input: {
+    houseId: number;
+    now: Date;
+    warnAfterDays: number;
+    evictAfterDays: number;
+    premiumEvictAfterDays: number;
+    mapName: string;
+    tilePositions: ReadonlyArray<Position>;
+    warningLetterText: (daysLeft: number) => string;
+  }): Promise<ProcessHouseAbsenceResult> {
+    return runSerializableTransaction(this.pool, async (client) => {
+      const house = await client.query<HouseRow>(houseRowForUpdateQuery, [
+        input.houseId,
+      ]);
+      const row = house.rows[0];
+      // Guildhalls never expire from absence: the hall belongs to the guild,
+      // not to the leader's login habits.
+      if (!row || row.guild_id) {
+        throw new TransactionRollback<ProcessHouseAbsenceResult>({
+          status: "skip",
+        });
+      }
+      const owner = await client.query<{
+        last_seen_at: Date;
+        premium_until: Date | null;
+      }>(houseOwnerAbsenceQuery, [row.owner_character_id]);
+      const ownerRow = owner.rows[0];
+      if (!ownerRow) {
+        throw new TransactionRollback<ProcessHouseAbsenceResult>({
+          status: "skip",
+        });
+      }
+      const absenceMs = input.now.getTime() - ownerRow.last_seen_at.getTime();
+      const premium =
+        ownerRow.premium_until !== null &&
+        ownerRow.premium_until.getTime() > input.now.getTime();
+      const evictAfterDays = premium
+        ? input.premiumEvictAfterDays
+        : input.evictAfterDays;
+      if (absenceMs >= evictAfterDays * DAY_MS) {
+        const evicted = await this.evictItems(client, {
+          houseId: input.houseId,
+          tenancyId: row.tenancy_id,
+          recipientCharacterId: row.owner_character_id,
+          mapName: input.mapName,
+          tilePositions: input.tilePositions,
+        });
+        const deleted = await client.query(deleteHouseQuery, [
+          input.houseId,
+          row.tenancy_id,
+        ]);
+        if (deleted.rowCount !== 1) throw this.rollback("invalid-request");
+        await this.audit(client, "house-eviction", row.owner_character_id, {
+          houseId: input.houseId,
+          reason: "absence",
+          absenceDays: Math.floor(absenceMs / DAY_MS),
+          premium,
+          deliveredItems: evicted.deliveredItems.length,
+          leftBehind: evicted.leftBehind,
+        });
+        return {
+          status: "evicted" as const,
+          ownerCharacterId: row.owner_character_id,
+          evicted,
+        };
+      }
+      const alreadyWarned =
+        row.absence_warned_for?.getTime() === ownerRow.last_seen_at.getTime();
+      if (absenceMs < input.warnAfterDays * DAY_MS || alreadyWarned) {
+        throw new TransactionRollback<ProcessHouseAbsenceResult>({
+          status: "skip",
+        });
+      }
+      // One letter per absence episode: the delivery key and the stored
+      // absence_warned_for both carry the last_seen_at this warning is for,
+      // so replays skip it and a fresh login re-arms it.
+      const letter = await deliverHouseLetter(client, this.depot, {
+        deliveryKey: `house-absence-letter:${input.houseId}:${row.tenancy_id}:${ownerRow.last_seen_at.getTime()}`,
+        recipientCharacterId: row.owner_character_id,
+        text: input.warningLetterText(
+          Math.max(evictAfterDays - Math.floor(absenceMs / DAY_MS), 0),
+        ),
+      });
+      await client.query(updateHouseAbsenceWarnedQuery, [
+        input.houseId,
+        ownerRow.last_seen_at,
+      ]);
       const snapshot = await this.requireSnapshot(client, input.houseId);
       return { status: "warned" as const, snapshot, letter };
     });

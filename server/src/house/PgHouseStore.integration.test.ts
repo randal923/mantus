@@ -146,6 +146,31 @@ const setEligible = async (characterId: string, level = 100) => {
   );
 };
 
+/** Pins the owner's absence anchor, as the durable save loop would. */
+const setLastSeen = async (characterId: string, lastSeenAt: Date) => {
+  await pool.query("UPDATE characters SET last_seen_at = $2 WHERE id = $1", [
+    characterId,
+    lastSeenAt,
+  ]);
+};
+
+const setPremiumUntil = async (
+  characterId: string,
+  premiumUntil: Date | null,
+) => {
+  await pool.query(
+    `UPDATE accounts SET premium_until = $2
+     WHERE id = (SELECT account_id FROM characters WHERE id = $1)`,
+    [characterId, premiumUntil],
+  );
+};
+
+const ABSENCE_THRESHOLDS = {
+  warnAfterDays: 5,
+  evictAfterDays: 7,
+  premiumEvictAfterDays: 10,
+};
+
 const auctionRow = async (houseId: number) => {
   const result = await pool.query<{ bidder_character_id: string; bid: string }>(
     "SELECT bidder_character_id, bid FROM house_auctions WHERE house_id = $1",
@@ -488,6 +513,194 @@ databaseDescribe("PgHouseStore integration", () => {
       (await store.chargeRent({ ...base, now: afterGrace })).status,
     ).toBe("skip");
     expect(await inboxItemIds(owner)).toEqual([letterId, movable]);
+  });
+
+  it("warns an absent free owner once per episode, then evicts past 7 days with an audit trail", async () => {
+    const owner = await createCharacter("absentee");
+    await setBalance(owner, 20_000);
+    const purchased = await store.purchase({
+      houseId: 55,
+      characterId: owner,
+      price: 20_000,
+      paidUntilMs: Date.now() + PERIOD_MS,
+    });
+    expect(purchased.status).toBe("purchased");
+    const movable = await placeWorldItem(GOLD_TYPE, HOUSE_TILES[0]!, 1);
+    const itemsBefore = await globalItemTotal(GOLD_TYPE);
+    await setPremiumUntil(owner, new Date(Date.now() - DAY_MS));
+    const loggedOutAt = new Date();
+    await setLastSeen(owner, loggedOutAt);
+    const base = {
+      houseId: 55,
+      ...ABSENCE_THRESHOLDS,
+      mapName: MAP_NAME,
+      tilePositions: HOUSE_TILES,
+      warningLetterText: (left: number) => `absence, ${left} left`,
+    };
+    const at = (days: number) =>
+      new Date(loggedOutAt.getTime() + days * DAY_MS);
+
+    // Day 4: below the warning threshold, nothing is due.
+    expect(
+      await store.listAbsenceDueHouseIds({
+        now: at(4),
+        ...ABSENCE_THRESHOLDS,
+        limit: 10,
+      }),
+    ).toEqual([]);
+    expect((await store.processAbsence({ ...base, now: at(4) })).status).toBe(
+      "skip",
+    );
+
+    // Day 5: due for its warning; the letter is mailed exactly once and the
+    // house drops back out of the due list until eviction.
+    expect(
+      await store.listAbsenceDueHouseIds({
+        now: at(5),
+        ...ABSENCE_THRESHOLDS,
+        limit: 10,
+      }),
+    ).toEqual([55]);
+    const warned = await store.processAbsence({ ...base, now: at(5) });
+    expect(warned.status).toBe("warned");
+    const letters = await pool.query<{ id: string; attributes: unknown }>(
+      `SELECT id, attributes FROM items
+       WHERE character_id = $1 AND item_type_id = 3506`,
+      [owner],
+    );
+    expect(letters.rows).toHaveLength(1);
+    expect(letters.rows[0]?.attributes).toEqual({ text: "absence, 2 left" });
+    expect(
+      await store.listAbsenceDueHouseIds({
+        now: at(5),
+        ...ABSENCE_THRESHOLDS,
+        limit: 10,
+      }),
+    ).toEqual([]);
+    expect((await store.processAbsence({ ...base, now: at(5) })).status).toBe(
+      "skip",
+    );
+
+    // Day 7 exactly: evicted, movables mailed home, audited as absence.
+    expect(
+      await store.listAbsenceDueHouseIds({
+        now: at(7),
+        ...ABSENCE_THRESHOLDS,
+        limit: 10,
+      }),
+    ).toEqual([55]);
+    const evicted = await store.processAbsence({ ...base, now: at(7) });
+    expect(evicted.status).toBe("evicted");
+    expect(await houseRow(55)).toBeNull();
+    const letterId = letters.rows[0]!.id;
+    expect(await inboxItemIds(owner)).toEqual([letterId, movable]);
+    expect(await globalItemTotal(GOLD_TYPE)).toBe(itemsBefore);
+    expect(await auditCount("house-eviction")).toBe(1);
+    const audit = await pool.query<{ details: { reason?: string } }>(
+      "SELECT details FROM audit_log WHERE event_type = 'house-eviction'",
+    );
+    expect(audit.rows[0]?.details.reason).toBe("absence");
+    // Replays after the eviction are no-ops.
+    expect((await store.processAbsence({ ...base, now: at(7) })).status).toBe(
+      "skip",
+    );
+    expect(await inboxItemIds(owner)).toEqual([letterId, movable]);
+  });
+
+  it("gives premium owners 10 days and judges the tier at scan time", async () => {
+    const keeper = await createCharacter("premium-keeper");
+    const lapsed = await createCharacter("premium-lapsed");
+    await setBalance(keeper, 20_000);
+    await setBalance(lapsed, 20_000);
+    for (const [houseId, owner] of [
+      [56, keeper],
+      [57, lapsed],
+    ] as const) {
+      const purchased = await store.purchase({
+        houseId,
+        characterId: owner,
+        price: 20_000,
+        paidUntilMs: Date.now() + PERIOD_MS,
+      });
+      expect(purchased.status).toBe("purchased");
+    }
+    const loggedOutAt = new Date(Date.now() - 8 * DAY_MS);
+    await setLastSeen(keeper, loggedOutAt);
+    await setLastSeen(lapsed, loggedOutAt);
+    await setPremiumUntil(keeper, new Date(Date.now() + PERIOD_MS));
+    // Premium covered most of the absence but is over at scan time.
+    await setPremiumUntil(lapsed, new Date(Date.now() - 3600 * 1000));
+    const base = {
+      ...ABSENCE_THRESHOLDS,
+      mapName: MAP_NAME,
+      tilePositions: HOUSE_TILES,
+      warningLetterText: (left: number) => `absence, ${left} left`,
+    };
+
+    // Eight days absent: the premium owner is only warned...
+    const keeperResult = await store.processAbsence({
+      ...base,
+      houseId: 56,
+      now: new Date(),
+    });
+    expect(keeperResult.status).toBe("warned");
+    expect(await houseRow(56)).not.toBeNull();
+    // ...while the lapsed owner is judged by the free 7-day rule.
+    const lapsedResult = await store.processAbsence({
+      ...base,
+      houseId: 57,
+      now: new Date(),
+    });
+    expect(lapsedResult.status).toBe("evicted");
+    expect(await houseRow(57)).toBeNull();
+
+    // Ten days absent evicts even the premium owner.
+    const tenDays = new Date(loggedOutAt.getTime() + 10 * DAY_MS);
+    const keeperEvicted = await store.processAbsence({
+      ...base,
+      houseId: 56,
+      now: tenDays,
+    });
+    expect(keeperEvicted.status).toBe("evicted");
+    expect(await houseRow(56)).toBeNull();
+  });
+
+  it("never lists a guildhall as absence-due", async () => {
+    const leader = await createCharacter("absent-leader");
+    const guild = await pool.query<{ id: string }>(
+      `INSERT INTO guilds (name, owner_character_id, balance)
+       VALUES ($1, $2, 300000)
+       RETURNING id`,
+      [`Idle Hands ${alphaSuffix()}`, leader],
+    );
+    const bought = await store.purchaseGuildhall({
+      houseId: 58,
+      characterId: leader,
+      guildId: guild.rows[0]!.id,
+      price: 100_000,
+      paidUntilMs: Date.now() + PERIOD_MS,
+    });
+    expect(bought.status).toBe("purchased");
+    await setPremiumUntil(leader, new Date(Date.now() - DAY_MS));
+    await setLastSeen(leader, new Date(Date.now() - 30 * DAY_MS));
+
+    expect(
+      await store.listAbsenceDueHouseIds({
+        now: new Date(),
+        ...ABSENCE_THRESHOLDS,
+        limit: 10,
+      }),
+    ).toEqual([]);
+    const result = await store.processAbsence({
+      houseId: 58,
+      now: new Date(),
+      ...ABSENCE_THRESHOLDS,
+      mapName: MAP_NAME,
+      tilePositions: HOUSE_TILES,
+      warningLetterText: () => "unused",
+    });
+    expect(result.status).toBe("skip");
+    expect(await houseRow(58)).not.toBeNull();
   });
 
   it("skips items whose eviction delivery key was already consumed", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { PREMIUM_BENEFITS } from "@tibia/protocol";
+import { HOUSE_LIMITS, PREMIUM_BENEFITS } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { PublicSiteLayout } from "./PublicSiteLayout";
 
@@ -70,7 +70,14 @@ const BENEFITS = [
   { key: "familiar", live: false, values: {} },
   { key: "fullBless", live: false, values: {} },
   { key: "loginPriority", live: false, values: {} },
-  { key: "houseAbsence", live: false, values: {} },
+  {
+    key: "houseAbsence",
+    live: true,
+    values: {
+      freeDays: HOUSE_LIMITS.absenceEvictionDays,
+      premiumDays: HOUSE_LIMITS.premiumAbsenceEvictionDays,
+    },
+  },
 ] as const;
 
 const INCLUDED_KEYS = [

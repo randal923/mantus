@@ -29,6 +29,20 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Absence eviction protects online owners via the in-process session
+  registry only** (2026-08-08). `characters.last_seen_at` is a durable-save
+  anchor and goes stale for an online-but-idle owner, so
+  `HouseService.scanAbsence` skips any owner with a live session before the
+  `processAbsence` transaction. Two windows remain: an owner already past
+  the threshold who logs in between that check and the commit is still
+  evicted (the outcome is correct, only abruptly timed — Canary behaves the
+  same way); and if the game ever runs multiple world processes against one
+  database, the in-process check stops protecting owners connected to
+  another process — the scan would need a shared presence source. Also: an
+  absent owner gets no client-side countdown (absence is not part of
+  `houseStateSchema`); the day-5 letter is the only in-game notice. Owner:
+  houses.
+
 - **The premium extra regeneration is invisible in the character panel's
   regeneration figures** (2026-08-08). VIP accounts regenerate +10 hp /
   +20 mana every 3 s (`CharacterProgression.tick` premium channel), but the
