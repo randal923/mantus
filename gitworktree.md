@@ -9,7 +9,7 @@ worktree is created, merged, or removed.
 | `agents/portable-seller`         | in progress |
 | `agents/world-lighting`          | in progress |
 | `agents/vip-house-absence`       | done        |
-| `agents/vip-full-bless`          | in progress |
+| `agents/vip-full-bless`          | done        |
 | `agents/vip-account-bonuses`     | done        |
 | `agent/wakeable-tick`            | done        |
 | `agent/fix-item-drag-npc-spawns` | done        |
