@@ -4556,3 +4556,37 @@ migration chain through 079 on a scratch DB.
 **Residual risk**: carried rows written outside the item lane during
 purchases (TODO.md); `{storeinbox}` description markers in imported catalog
 copy still name the old inbox.
+
+## 2026-08-09 — Coins on the default auto-loot pick-up list
+
+**Problem**: every character's auto-loot pick-up list started empty, so a
+fresh character (and anyone who never opened the loot-filter window) got
+nothing from enabling the sweep until they hand-picked items — and the one
+thing effectively everyone wants swept is money.
+
+**What changed**: gold (3031), platinum (3035), and crystal (3043) coins are
+now the default pick-up list. `createDefaultLootFilter()` in
+`protocol/src/lootFilter.ts` (rules from `DEFAULT_LOOT_PICKUP_TYPE_IDS`,
+sweep still disabled) is used at character creation and as
+`parseLootFilter`'s corrupt-row fallback; `DEFAULT_LOOT_FILTER` stays the
+empty placeholder for session/store initial state. Migration 080 sets the
+matching column default and backfills existing characters, appending only
+the denominations a list is missing (dedup-safe, `enabled` untouched,
+deterministic order) and skipping lists over 197 rules so no row can be
+pushed past the 200-rule schema cap and degrade at login. Players remove
+the coins like any other rule.
+
+**Files**: `protocol/src/lootFilter.ts`,
+`server/src/character/CharacterService.ts`,
+`server/src/character/parseLootFilter.ts` (+ new test),
+`server/src/character/CharacterService.test.ts`,
+`server/db/migrations/080_default_loot_coins.sql`.
+
+**Verified**: protocol + server typechecks; parseLootFilter,
+CharacterService, LootFilterHandler, and auto-loot suites (32 tests); the
+migration replayed by the Pg integration harness; the backfill UPDATE
+exercised case-by-case (empty list, partial list, all coins present,
+legacy blacklist shape, 198-rule near-cap list) against local Postgres.
+
+**Residual risk**: characters sitting at 198+ rules without coins are
+skipped by the backfill by design; they add coins manually.
