@@ -6,6 +6,7 @@ worktree is created, merged, or removed.
 
 | Branch                           | Status      |
 | -------------------------------- | ----------- |
+| `agents/default-loot-coins`      | done        |
 | `agents/bound-safe-art`          | done        |
 | `agents/store-bound-delivery`    | done        |
 | `agents/bound-button-art`        | done        |
