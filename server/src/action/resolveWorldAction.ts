@@ -10,6 +10,7 @@ import { DAILY_SHRINE_ITEM_IDS } from "../daily/dailyShrineItemIds";
 import { IMBUEMENT_SHRINE_ITEM_IDS } from "../imbuement/imbuementShrineItemIds";
 import { PODIUM_DEFINITIONS } from "../podium/PodiumDefinition";
 import { mapItemAttributes } from "./mapItemAttributes";
+import type { QuestTouchDefinition } from "./questTouchTables";
 import type { WorldAction } from "./WorldAction";
 import type { WorldActionWorldView } from "./WorldActionWorldView";
 
@@ -25,6 +26,7 @@ export function resolveWorldAction(
   catalog: ItemCatalog,
   position: Position,
   chests: ReadonlyMap<string, ChestDefinition> = new Map(),
+  questTouches: ReadonlyMap<string, QuestTouchDefinition> = new Map(),
 ): WorldAction | null {
   // Use-with actions (rope spots, rope holes) never resolve from a bare
   // use-map: they require the authoritative tool check in ToolUseHandler.
@@ -41,6 +43,11 @@ export function resolveWorldAction(
     const placed = items.find((item) => item.itemId === chest.itemTypeId);
     if (placed) return { kind: "chest", item: placed, chest };
   }
+  // Quest touches live on baked static scenery (Canary registers them by
+  // aid on ids the item catalog may not even carry), so they resolve purely
+  // from the position table — never from a placed item.
+  const touch = questTouches.get(positionKey(position));
+  if (touch) return { kind: "quest-touch", touch };
   for (const item of items) {
     const type = catalog.get(item.itemId);
     if (!type) continue;

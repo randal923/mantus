@@ -52,6 +52,17 @@ const MUTABLE_ITEM_IDS = new Set([
   25_182, 25_183, 25_201, 25_202,
 ]);
 
+// Single map placements the server must own, keyed "x:y:z" with the client
+// id expected at that position. MUTABLE_ITEM_IDS is too blunt for these: the
+// same type appears baked all over the map, and only this one placement is
+// quest-scripted (sync with QUEST_TOUCH_ACTIONS in
+// server/src/action/questTouchTables.ts).
+export const MUTABLE_POSITIONS = new Map([
+  // Cults of Tibia decaying wall: removed for 5 minutes by the torch bearer
+  // at (32400,31793,8).
+  ["32396:31806:8", 1295],
+]);
+
 const STATEFUL_ATTRIBUTES = [
   "charges",
   "count",
@@ -68,7 +79,12 @@ const STATEFUL_ATTRIBUTES = [
   "writtenDate",
 ];
 
-export function getMapItemSemantics(appearance, staticItem = {}, attributes = {}) {
+export function getMapItemSemantics(
+  appearance,
+  staticItem = {},
+  attributes = {},
+  position = undefined,
+) {
   const spriteId = appearance.sprites?.[0];
   const cataloged =
     typeof staticItem.name === "string" &&
@@ -88,6 +104,10 @@ export function getMapItemSemantics(appearance, staticItem = {}, attributes = {}
   const stateful = STATEFUL_ATTRIBUTES.some(
     (attribute) => attributes[attribute] !== undefined,
   );
+  const mutableByPosition =
+    position !== undefined &&
+    MUTABLE_POSITIONS.get(`${position.x}:${position.y}:${position.z}`) ===
+      appearance.clientId;
   const mutable =
     cataloged &&
     (movable ||
@@ -95,6 +115,7 @@ export function getMapItemSemantics(appearance, staticItem = {}, attributes = {}
       stateful ||
       MUTABLE_TYPES.has(staticItem.type) ||
       MUTABLE_ITEM_IDS.has(appearance.clientId) ||
+      mutableByPosition ||
       appearance.flags.container);
   const interactive =
     mutable ||

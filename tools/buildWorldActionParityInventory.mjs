@@ -20,7 +20,12 @@ const manifest = JSON.parse(
   await readFile(join(repoRoot, "content/source-manifest.json"), "utf8"),
 );
 
-/** The three registration trees todo-13 owns. */
+/**
+ * The registration trees todo-13 owns, plus the scripted quest tree: quest
+ * scripts classify deferred wholesale (todo-20 quest storage) except the
+ * entries the quest-touch table reproduces, which need to appear here to be
+ * marked implemented.
+ */
 const TREES = [
   "data/scripts/actions",
   "data/scripts/movements",
@@ -28,6 +33,7 @@ const TREES = [
   "data-otservbr-global/scripts/actions",
   "data-otservbr-global/scripts/movements",
   "data-otservbr-global/scripts/creaturescripts",
+  "data-otservbr-global/scripts/quests",
 ];
 
 async function luaFiles(directory) {

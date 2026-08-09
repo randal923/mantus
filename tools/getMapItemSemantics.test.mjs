@@ -129,6 +129,42 @@ test("gives the server the reward shrines the reward wall opens from", () => {
   }
 });
 
+test("gives the server the quest-touch wall at its scripted position only", () => {
+  // The Cults of Tibia decaying wall (32396,31806,8) must be server-owned so
+  // the torch can remove it; every other stone wall of the same type stays
+  // baked static scenery.
+  const scripted = getMapItemSemantics(
+    { ...appearance({ notWalkable: true }), clientId: 1295 },
+    { name: "stone wall" },
+    {},
+    { x: 32396, y: 31806, z: 8 },
+  );
+  assert.equal(scripted.mutable, true);
+  assert.equal(scripted.interactive, true);
+
+  const elsewhere = getMapItemSemantics(
+    { ...appearance({ notWalkable: true }), clientId: 1295 },
+    { name: "stone wall" },
+    {},
+    { x: 32396, y: 31807, z: 8 },
+  );
+  assert.equal(elsewhere.mutable, false);
+
+  const otherItemThere = getMapItemSemantics(
+    { ...appearance({ notWalkable: true }), clientId: 1296 },
+    { name: "stone wall" },
+    {},
+    { x: 32396, y: 31806, z: 8 },
+  );
+  assert.equal(otherItemThere.mutable, false);
+
+  const noPosition = getMapItemSemantics(
+    { ...appearance({ notWalkable: true }), clientId: 1295 },
+    { name: "stone wall" },
+  );
+  assert.equal(noPosition.mutable, false);
+});
+
 test("classifies subtype, action, and text attributes deliberately", () => {
   assert.equal(
     getMapItemSemantics(appearance(), { name: "coins" }, { count: 20 }).mutable,

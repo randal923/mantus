@@ -11,13 +11,21 @@ import { startPlaytestServer } from "../startPlaytestServer";
 const BOX = { x: 32376, y: 31802, z: 7 };
 const STAND = { x: 32376, y: 31803, z: 7 };
 const DOOR = { x: 32398, y: 31804, z: 8 };
+const CRYPT_DOOR_LOCKED = 6_248;
+const CRYPT_DOOR_OPEN = 6_250;
+// Cults of Tibia touch: the torch bearer removes the decaying wall.
+const TORCH = { x: 32400, y: 31793, z: 8 };
+const WALL = { x: 32396, y: 31806, z: 8 };
+const STONE_WALL = 1_295;
+const GRINDING =
+  "You hear a loud grinding sound not very far from you. something very heavy seems to have moved.";
 const BONE_KEY = 2_973;
 const TOKEN = "dev-cultist-key-scenario";
 // The playtest database persists between runs and the box is once-per-
 // character, so every run brings a fresh character (letters only: character
 // names reject digits).
 const CHARACTER = `Key Tester ${[...String(Date.now() % 1_000_000)]
-  .map((digit) => "Abcdefghij"[Number(digit)])
+  .map((digit) => "abcdefghij"[Number(digit)])
   .join("")}`;
 
 const step = (text: string) => console.log(`\n▶ ${text}`);
@@ -131,42 +139,60 @@ try {
   const closedIds = closedDoorTile?.items.map((item) => item.itemId) ?? [];
   ok(`door tile holds [${closedIds.join(", ")}]`);
 
-  step("using the locked door directly (must refuse)");
-  await useExhaust();
-  const beforeDoorUse = client.mark();
-  client.send({ type: "use-map", position: DOOR });
-  const locked = await statusText(beforeDoorUse);
-  if (locked !== "It is locked.") {
-    throw new Error(`expected "It is locked.", got: "${locked}"`);
-  }
-  ok(`server said: "${locked}"`);
+  // The playtest database persists between runs, so a previous run may have
+  // left the crypt door unlocked (closed 6249) or standing open (6250); the
+  // locked/unlock legs only make sense against the pristine locked door.
+  const waitForDoorChange = async (since: number, label: string) => {
+    const changed = await client.waitFor(
+      (m): m is Extract<typeof m, { type: "tile-states" }> =>
+        m.type === "tile-states" &&
+        m.visible.some(
+          (tile) =>
+            tile.position.x === DOOR.x &&
+            tile.position.y === DOOR.y &&
+            tile.position.z === DOOR.z &&
+            tile.items.some((item) => !closedIds.includes(item.itemId)),
+        ),
+      label,
+      { since },
+    );
+    const doorTile = changed.visible.find(
+      (tile) => tile.position.x === DOOR.x && tile.position.y === DOOR.y,
+    );
+    ok(
+      `door tile now holds [${doorTile?.items.map((i) => i.itemId).join(", ")}]`,
+    );
+  };
+  if (closedIds.includes(CRYPT_DOOR_OPEN)) {
+    ok("door already open from an earlier run; skipping the locked checks");
+  } else if (!closedIds.includes(CRYPT_DOOR_LOCKED)) {
+    step("opening the already-unlocked door from an earlier run");
+    await useExhaust();
+    const beforeOpen = client.mark();
+    client.send({ type: "use-map", position: DOOR });
+    await waitForDoorChange(beforeOpen, "tile-states with the opened door");
+  } else {
+    step("using the locked door directly (must refuse)");
+    await useExhaust();
+    const beforeDoorUse = client.mark();
+    client.send({ type: "use-map", position: DOOR });
+    const locked = await statusText(beforeDoorUse);
+    if (locked !== "It is locked.") {
+      throw new Error(`expected "It is locked.", got: "${locked}"`);
+    }
+    ok(`server said: "${locked}"`);
 
-  step("using the bone key on the door (must unlock)");
-  await useExhaust();
-  const beforeUnlock = client.mark();
-  client.send({
-    type: "use-item-with",
-    itemId: key.id,
-    revision: key.revision,
-    targetPosition: DOOR,
-  });
-  const unlocked = await client.waitFor(
-    (m): m is Extract<typeof m, { type: "tile-states" }> =>
-      m.type === "tile-states" &&
-      m.visible.some(
-        (tile) =>
-          tile.position.x === DOOR.x &&
-          tile.position.y === DOOR.y &&
-          tile.position.z === DOOR.z &&
-          tile.items.some((item) => !closedIds.includes(item.itemId)),
-      ),
-    "tile-states with the transformed door",
-    { since: beforeUnlock },
-  );
-  const openTile = unlocked.visible.find(
-    (tile) => tile.position.x === DOOR.x && tile.position.y === DOOR.y,
-  );
-  ok(`door tile now holds [${openTile?.items.map((i) => i.itemId).join(", ")}]`);
+    step("using the bone key on the door (must unlock)");
+    await useExhaust();
+    const beforeUnlock = client.mark();
+    client.send({
+      type: "use-item-with",
+      itemId: key.id,
+      revision: key.revision,
+      targetPosition: DOOR,
+    });
+    await waitForDoorChange(beforeUnlock, "tile-states with the unlocked door");
+  }
 
   step("walking through the opened door");
   const direction =
@@ -189,6 +215,148 @@ try {
     { since: beforeStep },
   );
   ok("stepped onto the opened door tile");
+
+  step("walking to the torch bearer");
+  const torchCandidates = [
+    { x: TORCH.x, y: TORCH.y - 1 },
+    { x: TORCH.x, y: TORCH.y + 1 },
+    { x: TORCH.x - 1, y: TORCH.y },
+    { x: TORCH.x + 1, y: TORCH.y },
+  ];
+  let torchStand: { x: number; y: number } | undefined;
+  for (const candidate of torchCandidates) {
+    try {
+      const reply = await goto(candidate.x, candidate.y, TORCH.z);
+      if (reply.includes(`${candidate.x}, ${candidate.y}, ${TORCH.z}`)) {
+        torchStand = candidate;
+        break;
+      }
+    } catch {
+      // Unwalkable candidate; try the next one.
+    }
+  }
+  if (!torchStand) throw new Error("no walkable tile beside the torch");
+  ok(`standing at (${torchStand.x},${torchStand.y},${TORCH.z})`);
+
+  step("using the torch (must grind the wall away)");
+  await useExhaust();
+  const beforeTorch = client.mark();
+  client.send({ type: "use-map", position: TORCH });
+  const grinding = await statusText(beforeTorch);
+  if (grinding !== GRINDING) {
+    throw new Error(`expected the grinding line, got: "${grinding}"`);
+  }
+  ok(`server said: "${grinding}"`);
+
+  step("using the torch again inside the cooldown (must stay silent)");
+  await useExhaust();
+  const beforeSecond = client.mark();
+  client.send({ type: "use-map", position: TORCH });
+  const puff = await client.waitFor(
+    (m): m is Extract<typeof m, { type: "magic-effect" }> =>
+      m.type === "magic-effect" &&
+      m.position.x === torchStand!.x &&
+      m.position.y === torchStand!.y,
+    "poff at the player during the cooldown",
+    { since: beforeSecond },
+  );
+  ok(`cooldown puffed effect ${puff.effectId} at the player`);
+  let sawCooldownLog: string | undefined;
+  try {
+    const leaked = await client.waitFor(
+      (m): m is Extract<typeof m, { type: "combat-log" }> =>
+        m.type === "combat-log",
+      "combat-log inside the cooldown",
+      { since: beforeSecond, timeoutMs: 1_000 },
+    );
+    sawCooldownLog = leaked.text;
+  } catch {
+    // Expected: the cooldown answers with the poff only.
+  }
+  if (sawCooldownLog !== undefined) {
+    throw new Error(
+      `expected silence inside the cooldown, got: "${sawCooldownLog}"`,
+    );
+  }
+  ok("no combat-log during the cooldown");
+
+  step("walking to the decaying wall");
+  // The wall was visible from the door earlier, so only tile-states sent
+  // after walking back count — the pre-removal ones still hold the wall.
+  const beforeWallLook = client.mark();
+  const wallCandidates = [
+    { x: WALL.x, y: WALL.y - 1 },
+    { x: WALL.x, y: WALL.y + 1 },
+    { x: WALL.x - 1, y: WALL.y },
+    { x: WALL.x + 1, y: WALL.y },
+  ];
+  let wallStand: { x: number; y: number } | undefined;
+  for (const candidate of wallCandidates) {
+    try {
+      const reply = await goto(candidate.x, candidate.y, WALL.z);
+      if (reply.includes(`${candidate.x}, ${candidate.y}, ${WALL.z}`)) {
+        wallStand = candidate;
+        break;
+      }
+    } catch {
+      // Unwalkable candidate; try the next one.
+    }
+  }
+  if (!wallStand) throw new Error("no walkable tile beside the wall");
+  ok(`standing at (${wallStand.x},${wallStand.y},${WALL.z})`);
+
+  step("checking the wall tile no longer holds the stone wall");
+  // A removed wall leaves the tile without server items, so it simply stops
+  // appearing in tile-states; wait for the post-teleport snapshot (the crypt
+  // door two tiles away is a server item, so one always arrives), then
+  // assert no fresh tile-states still carries the wall.
+  await client.waitFor(
+    (m): m is Extract<typeof m, { type: "tile-states" }> =>
+      m.type === "tile-states",
+    "tile-states after arriving at the wall",
+    { since: beforeWallLook },
+  );
+  const staleWall = client.messages
+    .slice(beforeWallLook)
+    .filter((m) => m.type === "tile-states")
+    .flatMap((m) => m.visible)
+    .find(
+      (tile) =>
+        tile.position.x === WALL.x &&
+        tile.position.y === WALL.y &&
+        tile.position.z === WALL.z &&
+        tile.items.some((item) => item.itemId === STONE_WALL),
+    );
+  if (staleWall) {
+    throw new Error(
+      `the stone wall is still placed: [${staleWall.items
+        .map((item) => item.itemId)
+        .join(", ")}]`,
+    );
+  }
+  ok(`no fresh tile-states carries item ${STONE_WALL} on the wall tile`);
+
+  step("stepping onto the opened wall tile");
+  const wallDirection =
+    wallStand.y < WALL.y
+      ? "south"
+      : wallStand.y > WALL.y
+        ? "north"
+        : wallStand.x < WALL.x
+          ? "east"
+          : "west";
+  const beforeWallStep = client.mark();
+  client.send({ type: "move", direction: wallDirection, queueStep: true });
+  await client.waitFor(
+    (m): m is Extract<typeof m, { type: "creature-moved" }> =>
+      m.type === "creature-moved" &&
+      m.creatureId === client.playerId &&
+      m.position.x === WALL.x &&
+      m.position.y === WALL.y,
+    "step onto the wall tile",
+    { since: beforeWallStep },
+  );
+  ok("stepped through the removed wall");
 
   console.log("\nPASS: cultist key chain works end to end");
 } catch (error) {

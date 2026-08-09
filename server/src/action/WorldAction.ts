@@ -3,6 +3,7 @@ import type { HarvestDefinition } from "./harvestDefinitions";
 import type { ItemType } from "../item/ItemType";
 import type { MapItem } from "../MapItem";
 import type { PodiumDefinition } from "../podium/PodiumDefinition";
+import type { QuestTouchDefinition } from "./questTouchTables";
 
 /**
  * A use-map intent resolved against the tile's current state. "map-movement"
@@ -27,6 +28,15 @@ export type WorldAction =
       /** A clock or sundial: reports the world time, changes nothing. */
       readonly kind: "clock";
       readonly item: MapItem;
+    }
+  | {
+      /**
+       * A position-keyed quest touch on baked scenery (Canary aid-stamped
+       * touches). There is no world item to carry: resolution is purely from
+       * the table, so this variant has no `item`.
+       */
+      readonly kind: "quest-touch";
+      readonly touch: QuestTouchDefinition;
     }
   | { readonly kind: "lever"; readonly item: MapItem; readonly toTypeId: number }
   | {

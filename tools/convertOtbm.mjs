@@ -450,6 +450,7 @@ function finishTile(tile) {
       appearance,
       staticItem,
       placedItem.attributes,
+      { x, y, z },
     );
     hasGround ||= semantics.ground;
     if (semantics.ground) groundSpeed = semantics.groundSpeed;

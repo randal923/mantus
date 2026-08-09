@@ -31,6 +31,15 @@ export const IMPLEMENTED_CHEST_UID_RANGES = [
  * registration is ever silently dropped.
  */
 const FILE_DISPOSITIONS = [
+  // Specific quest scripts the server reproduces must be named ABOVE the
+  // structural rule that defers everything under /quests/ wholesale.
+  {
+    match:
+      /^data-otservbr-global\/scripts\/quests\/cults_of_tibia\/actions_torch\.lua$/,
+    status: "implemented",
+    owner: "agents/quest-touch-actions",
+    reason: "quest-touch table + tick-driven restore",
+  },
   {
     match: /^data\/scripts\/actions\/doors\/quest_door\.lua$/,
     status: "deferred",

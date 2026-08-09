@@ -5,6 +5,7 @@ import type { MapItem } from "../MapItem";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { ChestDefinition } from "./ChestDefinition";
+import type { QuestTouchDefinition } from "./questTouchTables";
 import type { WorldActionWorldView } from "./WorldActionWorldView";
 
 /** Execution-time context handed to every registered world-action handler. */
@@ -38,4 +39,6 @@ export interface WorldActionContext {
   readonly openImbuementWindow?: () => void;
   /** Grants a chest reward atomically; absent without a chest store. */
   readonly lootChest?: (chest: ChestDefinition) => void;
+  /** Fires a quest touch; absent without a quest-touch service. */
+  readonly questTouchUse?: (touch: QuestTouchDefinition) => void;
 }
