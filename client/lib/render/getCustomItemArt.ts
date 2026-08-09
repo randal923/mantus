@@ -22,6 +22,17 @@ const CUSTOM_ART: ReadonlyMap<number, CustomItemArt> = new Map([
       restingFrame: 0,
     },
   ],
+  [
+    // The bound container (Tibia's store inbox): hand-drawn trunk, closed
+    // at rest, open as frame 1 (the bound-items button's hover/open state).
+    23_396,
+    {
+      src: "ui/bound-items-trunk.png",
+      frames: 2,
+      frameSize: 32,
+      restingFrame: 0,
+    },
+  ],
 ]);
 
 /**

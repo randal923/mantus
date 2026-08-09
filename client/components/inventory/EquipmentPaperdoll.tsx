@@ -1,7 +1,9 @@
 import type { Equipment, EquipmentSlotId } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { ItemSlot } from "./ItemSlot";
+import { CustomArtSpriteIcon } from "./CustomArtSpriteIcon";
 import { SpriteIcon } from "./SpriteIcon";
+import { getCustomItemArt } from "../../lib/render/getCustomItemArt";
 import type { ItemDragSource } from "./ItemDragSource";
 
 /** The gear slots the paperdoll draws; the bound-items root is not one. */
@@ -43,12 +45,11 @@ interface EquipmentPaperdollProps {
 }
 
 /**
- * The bound-items button draws the stock safe rather than the bound
- * container's own art (a lidless red inbox with no closed state): shut at
- * rest, ajar on hover, open while the window is in view.
+ * The bound-items button draws the bound container's own trunk art (frame 0
+ * closed, frame 1 open): shut at rest, open on hover and while the window is
+ * in view. The item renders the same strip everywhere via getCustomItemArt.
  */
-const BOUND_SAFE_CLOSED = { spriteId: 23_420, clientId: 23_409 };
-const BOUND_SAFE_OPEN = { spriteId: 23_421, clientId: 23_410 };
+const BOUND_TRUNK_ART = getCustomItemArt(23_396);
 
 export function EquipmentPaperdoll({
   equipment,
@@ -88,24 +89,38 @@ export function EquipmentPaperdoll({
                 onClick={onOpenBound}
                 className="group flex h-8 w-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
               >
-                <span className={boundOpen ? "hidden" : "group-hover:hidden"}>
+                {BOUND_TRUNK_ART ? (
+                  <>
+                    <span
+                      className={boundOpen ? "hidden" : "group-hover:hidden"}
+                    >
+                      <CustomArtSpriteIcon
+                        art={BOUND_TRUNK_ART}
+                        clientId={bound.clientId}
+                        frame={0}
+                        scale={1}
+                      />
+                    </span>
+                    <span
+                      className={
+                        boundOpen ? "" : "hidden group-hover:inline-block"
+                      }
+                    >
+                      <CustomArtSpriteIcon
+                        art={BOUND_TRUNK_ART}
+                        clientId={bound.clientId}
+                        frame={1}
+                        scale={1}
+                      />
+                    </span>
+                  </>
+                ) : (
                   <SpriteIcon
-                    spriteId={BOUND_SAFE_CLOSED.spriteId}
-                    clientId={BOUND_SAFE_CLOSED.clientId}
+                    spriteId={bound.spriteId}
+                    clientId={bound.clientId}
                     scale={1}
                   />
-                </span>
-                <span
-                  className={
-                    boundOpen ? "" : "hidden group-hover:inline-block"
-                  }
-                >
-                  <SpriteIcon
-                    spriteId={BOUND_SAFE_OPEN.spriteId}
-                    clientId={BOUND_SAFE_OPEN.clientId}
-                    scale={1}
-                  />
-                </span>
+                )}
               </button>
             )}
             {column.map(
